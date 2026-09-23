@@ -261,6 +261,9 @@ function _recordGpZeroCoding(ticker, sector) {
 // (fail-closed). Die Funktion ZAEHLT, was sie tut (FN-2-Muster), exportiert fuer den Waechter.
 const GP_DERIVED_SOURCE = 'derived_rev_minus_cogs';
 let _gpDerivedRows = 0;
+// T200: wie oft hat die Schema-Regel die Bilanzreihe entschieden (statt der Zaehlung)?
+// Gezaehlt, nie still — sonst weiss niemand, ob der Zweig ueberhaupt je greift.
+let _balanceSchemaWins = 0;
 let _gpDerivedRejected = 0;
 let _gpDerivedSkipped = 0;   // Laengen-Mismatch (Cache-Treffer ohne COGS o. ae.) — gezaehlt, nie still
 let _ftsLeadingEmptyDropped = 0;   // 06.09.: fuehrende leere FTS-Quartale (Ende ohne Werte), je Lauf gezaehlt
@@ -1506,6 +1509,59 @@ function _incomeBundleDensity(b, counter) {
   const c = counter || _nonZeroCount;
   return c(b.annualRev) + c(b.annualOpInc) + c(b.annualGP) + c(b.annualNetIncome);
 }
+// T200: die Bilanzreihe wird als GANZE Reihe gewaehlt, und der Vergleich ist jetzt
+// schema-bewusst.
+//
+// BEFUND (Messung 2026-08-30, `agent-reports/t198-t200-messung-2026-08-30.md`): entschieden
+// hat allein die Zahl "brauchbarer" Zeilen. Die aeltere quoteSummary-Reihe kann die
+// Tag-211l-Felder (currentAssets & Co.) STRUKTURELL nie tragen — ihr Zeilenbauer kennt die
+// Schluessel nicht. Trug sie ueber Cash/Debt/Assets genug Zeilen, gewann sie die Abstimmung
+// und nahm jeden currentAssets-Wert der FTS-Reihe mit. Gemessen am Live-Bestand: 2 Ticker
+// mit Total-Verlust (BLD, CWAN), beide 4 Cache-Zeilen gegen 0 im Snapshot.
+//
+// WARUM KEIN FELD-FUER-FELD-MERGE: eine Bilanzzeile traegt KEINEN Perioden-Schluessel (kein
+// endDate, kein Jahr — siehe mapFTSToBalance). Die beiden Reihen sind nur ueber ihren Index
+// an dieselbe Geschaeftsjahr-Achse gebunden, und die kann divergieren (dafuer gibt es
+// _realignFtsAnchoredSeries). Ein Merge ueber den Index waere bit-fuer-bit die
+// Zwei-Quellen-Konstruktion, die Tag 559 auf der Ertragsseite entfernt hat: ein FTS-Feld
+// Index-an-Index neben quoteSummary-Werten, durch nichts auf dasselbe Geschaeftsjahr
+// verpflichtet. Ohne Join-Schluessel gibt es dafuer keine ehrliche Umsetzung.
+//
+// DIE REGEL: traegt genau eine der beiden Reihen die Tag-211l-Klasse, gewinnt DIESE —
+// unabhaengig von der Zeilenzahl. Eine Reihe, die eine ganze Feldklasse nicht darstellen
+// kann, ist keine gueltige Vergleichsgroesse dafuer. Sonst bleibt es bei der Zaehlung.
+const BALANCE_TAG211L_FIELDS = ['currentAssets', 'currentLiabilities', 'totalLiabilities',
+  'accountsReceivable', 'netPPE'];
+const _balanceRowUsable = (r) => r != null && (r.totalDebt != null || r.totalCash != null
+  || r.totalAssets != null || BALANCE_TAG211L_FIELDS.some((k) => r[k] != null));
+const _balanceHasTag211l = (rows) => (rows || []).some(
+  (r) => r != null && BALANCE_TAG211L_FIELDS.some((k) => r[k] != null));
+
+/**
+ * Welche Bilanzreihe gilt? Gibt {rows, reason, qsUsable, ftsUsable} zurueck — `reason`
+ * benennt den Zweig, damit der Aufrufer zaehlen kann, wie oft die Schema-Regel greift.
+ * Reine Funktion, exportiert, damit der Waechter sie AUSFUEHRT statt sie nachzubauen
+ * (Fehlerklasse F1334, wie bei _nonNullCount und parseVollPullTicker).
+ */
+function chooseAnnualBalance(qsRows, ftsRows) {
+  const qs = Array.isArray(qsRows) ? qsRows : [];
+  const fts = Array.isArray(ftsRows) ? ftsRows : [];
+  const qsUsable = qs.filter(_balanceRowUsable).length;
+  const ftsUsable = fts.filter(_balanceRowUsable).length;
+  const qs211 = _balanceHasTag211l(qs);
+  const fts211 = _balanceHasTag211l(fts);
+  // Schema-Zweig: nur wenn die reichere Reihe ueberhaupt etwas Brauchbares traegt. Eine
+  // leere FTS-Reihe darf eine gefuellte quoteSummary-Reihe nie verdraengen.
+  if (fts211 && !qs211 && ftsUsable > 0) {
+    return { rows: fts, reason: 'schema-fts', qsUsable, ftsUsable };
+  }
+  if (qs211 && !fts211 && qsUsable > 0) {
+    return { rows: qs, reason: 'schema-qs', qsUsable, ftsUsable };
+  }
+  if (ftsUsable > qsUsable) return { rows: fts, reason: 'count-fts', qsUsable, ftsUsable };
+  return { rows: qs, reason: 'count-qs', qsUsable, ftsUsable };
+}
+
 function mergeAnnualIncomeBundle(qsB, ftsB, opts) {
   // Genau EINE Stelle traegt die Produktions-Zaehlung: der Default von
   // _incomeBundleDensity. `undefined` heisst hier "nimm sie" — eine zweite Kopie der
@@ -3149,6 +3205,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // pullAll im selben Prozess (Tests, Shards) zwei Laeufe zu einem Scheinausschlag.
   _gpZeroCodingRows = 0;
   _gpDerivedRows = 0; _gpDerivedRejected = 0; _gpDerivedSkipped = 0;   // A'
+  _balanceSchemaWins = 0;   // T200
   _ftsLeadingEmptyDropped = 0;   // 06.09.
   _gpZeroCodingBySuffix = Object.create(null);
   _gpZeroCodingBySector = Object.create(null);
@@ -4150,12 +4207,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // `r.totalDebt` deref on those threw "Cannot read properties of null (reading
       // 'totalDebt')" — the [mapper-bug] that silently dropped the whole ticker's
       // snapshot. Short-circuit on null so placeholder rows count as not-usable.
-      const _balanceUsable = r => r != null && (r.totalDebt != null || r.totalCash != null || r.totalAssets != null ||
-        r.currentAssets != null || r.currentLiabilities != null || r.totalLiabilities != null ||
-        r.accountsReceivable != null || r.netPPE != null);
-      const oldBalanceUsable = (canonical.annual.annualBalance || []).filter(_balanceUsable).length;
-      const newBalanceUsable = ftsBalance.filter(_balanceUsable).length;
-      if (newBalanceUsable > oldBalanceUsable) canonical.annual.annualBalance = ftsBalance;
+      // T200: die Entscheidung steht jetzt auf Modul-Ebene (chooseAnnualBalance) — EINE
+      // Regel, vom Waechter ausgefuehrt statt nachgebaut. Neu daran ist nur der
+      // Schema-Zweig; die Zaehlung entscheidet unveraendert, wenn beide Reihen dieselbe
+      // Feldklasse tragen koennen.
+      {
+        const _bal = chooseAnnualBalance(canonical.annual.annualBalance, ftsBalance);
+        canonical.annual.annualBalance = _bal.rows;
+        if (_bal.reason === 'schema-fts') {
+          _balanceSchemaWins++;
+          _log('INFO', `  ${stock.ticker}: Bilanzreihe nach Schema-Regel aus FTS (${_bal.ftsUsable} `
+            + `brauchbare Zeilen) statt nach Zaehlung aus quoteSummary (${_bal.qsUsable}) — die `
+            + 'quoteSummary-Reihe kann currentAssets & Co. nicht tragen (T200).');
+        }
+      }
       // Tag-43: annualSBC aus FTS hinzufügen
       canonical.annual.annualSBC = ftsAnnualSBC;
       // Tag-44: annualCapex aus FTS hinzufügen
@@ -4687,6 +4752,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diese Umstellung, sondern ein eigener Befund (Anbieter-Ausfall / Mapper-Regression).
   const _gpTop = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k}=${n}`).join(' ');
   _log('INFO', `GP-Ableitung (A' 05.09.): ${_gpDerivedRows} Zeilen mit annualGP = Umsatz − COGS (source ${GP_DERIVED_SOURCE}), ${_gpDerivedRejected} Zeilen mit abgelehnten Jahren (COGS > Umsatz), ${_gpDerivedSkipped} Zeilen uebersprungen (Laengen-Mismatch)`);
+  _log('INFO', `Bilanzreihe nach Schema-Regel (T200): ${_balanceSchemaWins} Ticker, bei denen die FTS-Reihe gewann, weil die quoteSummary-Reihe die Tag-211l-Felder strukturell nicht tragen kann`);
   _log('INFO', `Fuehrende leere FTS-Quartale (06.09.): ${_ftsLeadingEmptyDropped} Slot(s) mit Perioden-Ende ohne Umsatz/GP/OpInc verworfen (Reihe beginnt beim letzten gemeldeten Quartal)`);
   _log('INFO', `Null-GP-Guard (Fix 2): ${_gpZeroCodingRows} Zeilen mit verworfener GP-Null-Kodierung`
     + ` | Suffix: ${_gpTop(_gpZeroCodingBySuffix) || '-'}`
@@ -5222,6 +5288,10 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // _deriveOpIncForFinancials liegt dabei, weil BP-9 am Objekt zeigen muss, dass das
   // Nullen der GP-Reihe der Financials-Ableitung nichts entzieht — die Entlastung fuer
   // die groesste genullte Teilmenge (271 Banken).
+  // T200: die Bilanzreihen-Entscheidung + ihr Zaehler, damit der Waechter die ECHTE Regel
+  // ausfuehrt statt sie nachzubauen (Fehlerklasse F1334).
+  chooseAnnualBalance, BALANCE_TAG211L_FIELDS,
+  _balanceSchemaTally: () => _balanceSchemaWins,
   mergeAnnualIncomeBundle, _incomeBundleDensity, _nullOutAllZeroGrossProfit,
   _deriveOpIncForFinancials, _boersenSuffix, _recordGpZeroCoding, _gpZeroCodingOfWinner,
   // A' (05.09.2026): die Ableitungsregel und ihr Zaehler, exportiert fuer tests/gp-derived-cogs.test.js.
