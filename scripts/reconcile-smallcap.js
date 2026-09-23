@@ -47,6 +47,8 @@ const { route, NON_OPERATING_VEHICLE_INDUSTRY } = require('../src/scoring/router
 const { MAX_MCAP, MIN_MCAP } = require('../src/scoring/smallcap-route.js');
 
 const REPO = path.join(__dirname, '..');
+const TARGET_SIZE = 500;
+const MIN_RETAINED_RATIO = 0.95;
 
 function parseArgs(argv) {
   const a = {
@@ -177,7 +179,8 @@ function classify(snapshot, opts) {
   return { entscheidung: 'behalten', grund: 'im-band', mcap };
 }
 
-function main() {
+// Fixtures must opt out explicitly; CLI and default callers are operational.
+function main({ operational = true } = {}) {
   const args = parseArgs(process.argv);
   const now = Date.now();
   const wl = readJson(args.watchlist);
@@ -246,22 +249,13 @@ function main() {
     gesperrt = 'ueberprune-' + entferntPct.toFixed(1) + '-pct';
   }
   // SECOND LOCK: collapse guard, mirrored in .github/workflows/smallcap-pull.yml.
-  // Keep both rules and their mutual references in sync: retain at least 95% of
-  // the pre-run count. A source failure dropping many names at once is an order
-  // of magnitude larger than daily band churn (~0.4%: 2 of 500 on 2026-09-22,
-  // NRGV and NUAI). The old absolute floor could not distinguish these cases
-  // once the list sat at the target size of 500. The 5% loss limit intentionally
-  // overlaps the first lock's default 25%; neither lock replaces the other.
-  // Die Sperre greift NUR auf einer betriebsgrossen Liste. Das ist KEINE Untergrenze fuer den
-  // Bestand (die verbietet Auflage 4), sondern eine Zustaendigkeitsgrenze: eine Test- oder bewusst
-  // kleine Liste soll weiter aufraeumbar sein, und auf acht Namen ist "ein Name weniger" schon
-  // 12,5 % - eine Kollaps-Quote, die dort nichts ueber einen Quellen-Ausfall aussagt. Diese
-  // Bedingung stand auch in der alten Fassung und bleibt; ersetzt wurde nur die absolute
-  // SCHWELLE (behalten < 500) durch die relative oben.
-  const MIN_RETAINED_RATIO = 0.95;
-  const SPERRE_AB_LISTENGROESSE = 500;
-  if (!gesperrt && !args.force && vorher >= SPERRE_AB_LISTENGROESSE
-      && behalten.length < vorher * MIN_RETAINED_RATIO) {
+  // Retain at least 95% of the TARGET, including after ordinary band exits
+  // (500 -> 498). Using the previous count would allow cumulative attrition
+  // below the workflow's admission floor. Size never determines jurisdiction:
+  // only an explicit operational:false exempts a fixture from this lock.
+  // --force still overrides both locks; the relative overprune lock is unchanged.
+  if (!gesperrt && !args.force && operational !== false
+      && behalten.length < TARGET_SIZE * MIN_RETAINED_RATIO) {
     // Preserve the existing report reason and numeric suffix for consumers.
     gesperrt = 'unter-startschwelle-' + behalten.length;
   }
@@ -326,4 +320,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { classify, parseArgs, tickersOf, main };
+module.exports = { classify, parseArgs, tickersOf, main, TARGET_SIZE, MIN_RETAINED_RATIO };
