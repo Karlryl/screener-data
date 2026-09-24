@@ -34,6 +34,21 @@ eigenen Log (PR-Liste), nicht hier.
 - Bekannt lokal rot (KEIN Defekt, nicht anfassen): `tests/scoring/calibration-ref.test.js`
   (Block R2.9 Test B) und `tests/waehrung-ausliefer-waechter.test.js` (LIVE-Block).
 
+## SUBAGENTEN-PFLICHT (Karl, 19:40) und ZEITPLAN
+- Du bist KOORDINATOR. Fuer jeden Task startest du einen Codex-Subagenten mit dem vollstaendigen
+  Brief (Regeln oben + Task-Abschnitt + Worktree-Pfad). Bis zu 4 Subagenten GLEICHZEITIG, jeder
+  in seinem eigenen Worktree/Branch. Sobald einer fertig ist: naechsten Task beanspruchen und
+  den naechsten Subagenten starten. Du selbst implementierst nichts — du beanspruchst, briefst,
+  pruefst, pushst.
+- Vor jedem Push startest du einen zweiten Subagenten als REVIEWER (Diff gegen den Brief:
+  TABU-Pfade, Test-Abschwaechung, Loeschungen, Verifikations-Befehl selbst laufen lassen).
+  Nur mit Reviewer-Freigabe pushen; Befund im PR-Body unter „REVIEW" zitieren.
+- Gibt es in deiner Codex-Version keine Subagenten: sequentiell arbeiten und das im
+  Schlussbericht in einer Zeile vermerken.
+- ZEITPLAN (lokale Zeit): letzter Push 20:38. Schlussbericht 20:40 (nicht 20:45). Der PC faehrt
+  um 20:46 automatisch herunter (Timer setzt Karl; falls nicht gesetzt, EIN Thread:
+  `shutdown /s /f /t <Sekunden bis 20:46>` — Fehler 1190 = schon geplant, ignorieren).
+
 ## Lanes
 - **Lane A** = mechanisch (Effort: low/medium). **Lane B** = mittel (Effort: medium/high).
 - **Lane C** = schwer (Effort: high/xhigh). Bei nur einem Thread: Lane ALL = A, dann B, dann C.
