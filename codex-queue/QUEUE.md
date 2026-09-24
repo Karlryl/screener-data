@@ -59,6 +59,13 @@ eigenen Log (PR-Liste), nicht hier.
 
 - Temp-Fixtures in `os.tmpdir()` am Testende IMMER aufraeumen (`fs.rmSync(dir, { recursive: true, force: true })` bzw. `aufraeumen()`). Die Nie-Loeschen-Regel gilt fuer Repo-Dateien, nicht fuer eigene Temp-Ordner (Review-Befund S05/S06).
 
+## REIHENFOLGE (Audit 24.09., Details in codex-queue/AUDIT-screener-data-2026-09-24.md)
+- NICHT starten: S03 (Bestand deckt), S10 (PR 357 liegt vor), alle Tasks mit STATUS CLAUDE.
+- Welle 1 (disjunkt): S14, S09, S44, S48, S12, S07, S08, S26. Welle 4 (zwingend zuletzt): S17, S18.
+- S31: refresh-universe-Teil erst NACH Merge von claude/S35 (dort werden toYahooClassShare/_looksUS/dedupKey getestet).
+- S17: die von S07/S08 gepinnten Skripte (t135-paritaetsluecke, t-veraltung-zwei-definitionen, t-kdrift-signatur) NICHT anfassen.
+- Jeder Task mit Datei aus der Kollisionstabelle des Audits: vor dem Push auf origin/main rebasen.
+
 ## Lanes
 - **Lane A** = mechanisch (Effort: low/medium). **Lane B** = mittel (Effort: medium/high).
 - **Lane C** = schwer (Effort: high/xhigh). Bei nur einem Thread: Lane ALL = A, dann B, dann C.
@@ -90,6 +97,7 @@ FERTIG-WENN: alle 4 Exit 0, je >= 10 Assertions, Laufzeit je < 10 s.
 VERIFIKATION: `node lib/<name>.test.js` je Datei + Laufzeit.
 
 ## S03 · Lane B · Effort medium — `lib/price-history-store.js` Tests + Fehlerpfade
+STATUS: ENTFAELLT — tests/price-history-store.test.js und drei Guard-Tests existieren bereits (Audit 24.09.).
 ZIEL: Standalone-Test `lib/price-history-store.test.js`: alle Exports gegen ein tmp-Verzeichnis
 (Anlegen, Anhaengen, Lesen, korrupte Datei, fehlendes Verzeichnis, doppelte Datumszeile).
 Dokumentiere jedes Verhalten, das du fuer einen Bug haeltst, unter OFFEN — kein Produktions-Fix.
