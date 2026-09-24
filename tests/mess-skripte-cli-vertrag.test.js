@@ -3,7 +3,8 @@
  * S07: offline child-process contracts for T135 and the T326 built-in selftest.
  * Run: node tests/mess-skripte-cli-vertrag.test.js
  * Only empty temporary populations and the script's synthetic selftest are used.
- * Temporary directories are retained; neither script nor report is rewritten.
+ * Own temporary directories are removed at exit; scripts and reports stay unchanged.
+ * T326 retains its own built-in selftest fixtures, as its explicit contract requires.
  *
  * Coverage limit: the -RAUCHTEST report path and the "RAUCHTEST, KEIN BELEG"
  * heading need a populated Small-Cap universe/runSmallcapPass. They remain
@@ -23,6 +24,18 @@ const T326 = path.join(ROOT, 'scripts', 't-veraltung-zwei-definitionen.js');
 const T326_REPORT = path.join(REPORTS, 't-veraltung-zwei-definitionen-2026-09-20.md');
 const OFFLINE_GUARD = path.join(__dirname, 'helpers', 'offline-network-guard.js');
 const TEMP = fs.mkdtempSync(path.join(os.tmpdir(), 'mess-skripte-cli-'));
+// Register immediately so setup failures and failed assertions also clean up.
+process.once('exit', () => {
+  try {
+    const target = path.resolve(TEMP);
+    assert.equal(path.dirname(target), path.resolve(os.tmpdir()), 'cleanup stays in OS temp');
+    assert.equal(path.basename(target).startsWith('mess-skripte-cli-'), true, 'cleanup owns this fixture');
+    fs.rmSync(target, { recursive: true, force: true });
+  } catch (error) {
+    console.error('Fixture cleanup failed:', error);
+    process.exitCode = 1;
+  }
+});
 const EMPTY = path.join(TEMP, 'leer');
 const STALE_NAME = path.join(TEMP, 'snapshots-smallcap');
 const NETWORK_MARKER = path.join(TEMP, 'network-attempts.log');
