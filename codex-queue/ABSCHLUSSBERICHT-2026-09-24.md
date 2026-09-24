@@ -39,7 +39,7 @@ Jeder Bericht: `report-<ID>.md` (Scratchpad der Session); alle mit Verifikations
 
 ## 5. Queue-Stand fuer morgen
 - screener-data: S01–S66, Konflikt-Audit + Reihenfolge in `codex-queue/AUDIT-screener-data-2026-09-24.md` (Welle 1: S14, S09, S44, S48, S12, S07, S08, S26; zuletzt S17, S18; S03 entfaellt).
-- findash: F01–F86, Audit in `codex-queue/AUDIT-findash-2026-09-24.md` (falls vorhanden). Wichtig: viele Tasks fassen `web/src/routes/index.tsx` an → seriell.
+- findash: F01–F86, Audit in `codex-queue/AUDIT-findash-2026-09-24.md` im findash-Repo. Wichtig: viele Tasks fassen `web/src/routes/index.tsx` an → seriell.
 - Regeln: Subagenten-Ziel 50, Reviewer + Nachlauf je Task, Temp-Fixtures aufraeumen, Regel-Vorrang vor Task-Text.
 
 ## 6. Offen / Risiken
