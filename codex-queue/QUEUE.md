@@ -176,3 +176,308 @@ ZIEL: Neue Testdatei `tests/cov-scripts-betrieb.test.js` (vier klar getrennte Bl
 ZIEL-DATEIEN: `tests/cov-scripts-betrieb.test.js` (neu). Nichts anderes — die vier Skripte werden NICHT angefasst.
 FERTIG-WENN: `node tests/cov-scripts-betrieb.test.js` Exit 0 in < 20 s (ca. 25 Kindprozesse), >= 45 Assertions, kein Netz, keine Spuren ausserhalb tmp (`git status --short` zeigt nur die neue Datei; insbesondere KEINE Aenderung unter `external-data/`, `outputs/`, `prices/`, `state/`); bestehende Tests `tests/archive-old-snapshots-keep-days-parser.test.js`, `tests/archive-picks-frozen.test.js`, `tests/data-quality-report-arg-presence.test.js`, `tests/merge-price-shards-expected-count.test.js`, `tests/freshness-gate.test.js`, `tests/vintage-commit-text.test.js`, `tests/vintage-commit-date-validation.test.js`, `tests/cadence-marker-state-integrity.test.js` weiter Exit 0; Coverage: archive-old-snapshots.js >= 72 %, data-quality-report.js >= 88 %, merge-price-shards.js >= 97 %, verify-freshness.js 100 %, vintage-commit-text.js 100 %, cadence-marker.js 100 %.
 VERIFIKATION: `node tests/cov-scripts-betrieb.test.js; $LASTEXITCODE` → 0. Mit S-COV1: `node scripts/test-coverage-report.js --tests "tests/cov-scripts-betrieb.test.js,tests/archive-old-snapshots-keep-days-parser.test.js,tests/archive-picks-frozen.test.js,tests/data-quality-report-arg-presence.test.js,tests/merge-price-shards-expected-count.test.js,tests/freshness-gate.test.js,tests/vintage-commit-text.test.js,tests/vintage-commit-date-validation.test.js,tests/cadence-marker-state-integrity.test.js" --only scripts/ --fns` → die sechs Skriptzeilen zeigen die Zielwerte (Kindprozesse werden ueber die vererbte `NODE_V8_COVERAGE` mitgemessen — den Spawns `env: { ...process.env, ... }` mitgeben, bei (C) nur `RUN_DATE_UTC` entfernen). Fallback-Snippet wie in S-COV2 mit `scripts/<name>.js` als drittem Argument.
+
+## S14 · Lane A · Effort medium — screener-data lib/: Stub-Kill-Probe anlegen, 4 Ueberlebende toeten
+ZIEL:
+- Probe-Infrastruktur fuer screener-data anlegen (Namen enden bewusst NICHT auf `test.js`, damit der CI-Gate-Glob sie nicht
+  als Gate einsammelt):
+  - `tests/_mutations-preload.js` — exakt der Code aus Anhang A (Module._load-Patch, `MUT_MODULE`/`MUT_FN` aus env).
+  - `tests/_mutations-probe.js` — Standalone-Runner (Exit 0/1). Liest ALLE `tests/_mutations-pairs/*.json` (Array von
+    `{ "module": "<repo-relativ>", "fn": "<Export>", "test": "<repo-relativ>", "expect": "killed" | "cli-only" }`).
+    Je Paar: (1) Kontroll-Lauf `node <test>` muss Exit 0 liefern (sonst FAIL „Kontrolle rot"), einmal je Testdatei
+    gecacht; (2) Stub-Lauf `node -r tests/_mutations-preload.js <test>` mit env `MUT_MODULE=<abs>`, `MUT_FN`, und
+    `NODE_OPTIONS="${NODE_OPTIONS:-} -r <abs preload>"` (damit Kindprozesse den Stub erben); `expect:"killed"` =>
+    Exit != 0 verlangt, sonst FAIL „SURVIVED"; `expect:"cli-only"` => Ergebnis nur gemeldet. Summenzeile
+    `mutations-probe: <killed> killed, <survived> survived, <cli-only> cli-only, <n> Kontrollen rot` und Exit 1 bei
+    irgendeinem FAIL. Timeout je Lauf 120 s, `encoding:'utf8'`, cwd = Repo-Wurzel.
+  - `tests/_mutations-pairs/lib.json` mit diesen 19 Paaren (alle `expect:"killed"`):
+    `lib/read-json.js#readJsonExistingOrThrow`, `lib/annual-currency-guard.js#detectAnnualCurrencyLeak`,
+    `lib/artifact-path.js#baseName`, `#toPosix`, `lib/atomic-write.js#writeFileAtomic`, `#writeJsonAtomic`,
+    `lib/forward-returns.js#classify`, `#resolveWindow`, `lib/metrics.js#rankIC`, `#cohortSpread`, `#hitRate`,
+    `#quintileMonotonicity`, `#_median`, `lib/newest-qtr-guard.js#detectNewestQtrSuspect`,
+    `lib/watchlist-fs.js#loadWatchlist`, `#extractStocksArray`, `#detectShape`, `lib/spearman.js#spearman`,
+    `#averageRank` (Test jeweils die gleichnamige `lib/<modul>.test.js`; spearman/averageRank -> `lib/metrics.test.js`).
+- Die vier bewiesenen Ueberlebenden + den null-Zweig-only-Fall mit Wert-Assertions decken (jeweils >= 2 Faelle,
+  konkrete Zahlen, kein `assert.ok(result)`):
+  1. `lib/forward-returns.test.js`: `resolveWindow` — Signatur/Vertrag aus `lib/forward-returns.js` lesen; mindestens
+     ein regulaerer Fall (deepEqual auf das Fenster-Objekt) und ein Grenzfall (fehlende/zu alte Preise -> das
+     dokumentierte Ergebnis, z. B. `null` oder Flag `EXIT_STALE_FLAG_BUSINESS_DAYS`).
+  2. `lib/metrics.test.js`: `hitRate` — Trefferquote fuer ein Beispiel mit bekanntem Ergebnis (z. B. 2 von 4 => 0.5)
+     und NaN/null-Score wird gedroppt und gezaehlt; `_median` — ungerade/gerade Laenge, leeres Array.
+  3. `lib/metrics.test.js:37`: `spearman` zusaetzlich positiv pinnen: `spearman([1,2,3],[1,2,3]) === 1`,
+     `spearman([1,2,3],[3,2,1]) === -1`; `averageRank` mit Bindung (`[10,20,20]` -> `[1,2.5,2.5]`).
+  4. `lib/watchlist-fs.test.js`: `loadWatchlist` — Datei in `os.tmpdir()`, gueltige Form => deepEqual der Ticker-Liste;
+     kaputte JSON => der dokumentierte Fehlerpfad (Wurf mit Nachricht per `assert.throws(..., /.../)` oder Sentinel).
+ZIEL-DATEIEN: `tests/_mutations-preload.js` (neu), `tests/_mutations-probe.js` (neu), `tests/_mutations-pairs/lib.json`
+(neu), `lib/forward-returns.test.js`, `lib/metrics.test.js`, `lib/watchlist-fs.test.js`. Nichts sonst.
+FERTIG-WENN:
+- `node tests/_mutations-probe.js` meldet `19 killed, 0 survived, 0 cli-only, 0 Kontrollen rot` und Exit 0.
+- Vorher-Stand ist im Commit-Body festgehalten (`13 killed / 4 survived` + spearman-null-Zweig), Nachher-Stand ebenso.
+- Die Probe-Dateien werden von `GATE_GLOB` (`tests/*test.js`, `tests/scoring/*test.js`, `lib/*test.js`) NICHT gematcht
+  (Namen pruefen) und `.github/**` bleibt unberuehrt.
+- Kein Produktivcode angefasst; keine Assertion entfernt oder gelockert.
+VERIFIKATION:
+- `node tests/_mutations-probe.js` (Exit 0, Summenzeile wie oben).
+- Gegenprobe der Probe selbst: in `lib.json` voruebergehend ein Paar mit einem Export eintragen, den kein Test prueft
+  (z. B. `lib/atomic-write.js#atomicWriteStats`, falls Funktion) -> Probe muss Exit 1 mit `SURVIVED` melden; danach
+  entfernen.
+- Volle Gate-Suite gruen: `for f in tests/*test.js tests/scoring/*test.js lib/*test.js; do node "$f" >/dev/null 2>&1 || echo "FAIL $f"; done`
+  (PowerShell-Form in CLAUDE.md). Erlaubt rot: nur `tests/scoring/calibration-ref.test.js` und
+  `tests/waehrung-ausliefer-waechter.test.js`.
+- `git status --short` zeigt ausschliesslich die ZIEL-DATEIEN.
+
+## S15 · Lane B · Effort medium — screener-data tests/: doesNotThrow-only und stille Skips haerten
+ZIEL:
+- Alle 27 `assert.doesNotThrow(...)`-Stellen nach EINER Regel behandeln: (a) gibt die Funktion einen Wert zurueck
+  => Rueckgabe in eine Variable nehmen und mit `assert.equal/deepEqual/match` gegen den konkreten Fixture-Wert pruefen;
+  (b) ist sie ein reiner Waechter (void, wirft bei Verstoss) => es MUSS in derselben Datei die Gegenprobe
+  `assert.throws(() => <selbe Funktion mit kaputter Eingabe>, /<Nachricht>/)` geben; fehlt sie, ergaenzen; (c) beides
+  vorhanden => im Commit-Body als „OK" listen, Stelle unveraendert. Stellen:
+  `tests/annual-spikes.test.js:599` (`baueNeuenBestand` liefert den neuen Bestand -> `ausgeschlossen` deepEqual),
+  `tests/build-cnannual-unreadable-date-guard.test.js:17`, `tests/cn-jahresreihen.test.js:140`, `:150`, `:383`, `:391`,
+  `:463`, `tests/coverage-gate-count-integrity.test.js:478`, `tests/nrb-sk-001-impossible-zero-revenue.test.js:70`,
+  `tests/p1-welle2-datenquellen-wahrheit.test.js:129` (`assertNonEmptyUniverse([])` muss werfen — Gegenprobe fehlt),
+  `tests/silent-errors.test.js:17`, `:37`, `tests/studie-f6-abschluss.test.js:186`, `:196`,
+  `tests/studie-f6-aequivalenz-akt2.test.js:152`, `:161`, `tests/studie-f6-freeze-eintrag24.test.js:269`,
+  `tests/studie-f6-konfirmatorisch-v3.test.js:242`, `:251`, `tests/studie-f6-konfirmatorisch-v4.test.js:105`, `:291`,
+  `tests/studie-f6-konfirmatorisch.test.js:356`, `:359`, `tests/studie-f6-vorfall.test.js:92`,
+  `tests/studie-naht-vollendung.test.js:167`, `tests/studie-r1-register.test.js:175`,
+  `tests/studie-register-single-appender-rule.test.js:270`.
+- Stille Skips sichtbar UND gezaehlt machen (Konvention `tests/skip-honesty.test.js`: Statuszeile `  skip <name>` plus
+  `skipped` in der Summenzeile; Exit bleibt 0). Fuer Standalone-Runner: `skip`-Zaehler in den lokalen `test()`-Helfer
+  aufnehmen (Skip = geworfenes Sentinel-Objekt `{ skip: '<Grund>' }`, das der Helfer als Skip zaehlt), Summenzeile
+  `<n> ok, <n> fail, <n> skipped`. Fuer `node:test`-Dateien `t.skip(grund)`. Stellen:
+  `tests/studie-f6-berichtigung-bein2.test.js:139`, `tests/studie-f6-vorfall.test.js:155`,
+  `tests/studie-t173-formtyp.test.js:77`, `tests/studie-regelwerk.test.js:153`,
+  `tests/bk-sk-001-mitschnitt-stille-pannen.test.js:184`, `tests/pr-check-live-gate.test.js:66`.
+  Nach dem Umbau muss `node tests/skip-honesty.test.js` weiterhin gruen sein.
+- Paar-Datei `tests/_mutations-pairs/s-mut2.json` (Format aus S-MUT1) mit diesen Paaren anlegen und empirisch
+  einordnen (`killed` oder begruendet `cli-only`): `scripts/watch-annual-spikes.js#baueNeuenBestand` ->
+  `tests/annual-spikes.test.js`; `pull-yahoo.js#needsFullPull` -> `tests/pull-diet.test.js` (bewiesen killed);
+  `lib/alter.js#alterTage` -> `tests/alter-tage-nonfinite-now-guard.test.js`; `discovery/mcap-prefilter.js#prefilterByMcap`
+  -> `tests/mcap-prefilter.test.js`; `scripts/rank-ic.js#spearman` und `#benjaminiYekutieli` -> `tests/rank-ic.test.js`;
+  `scripts/pipeline-status.js#validateMarker` -> `tests/pipeline-status-marker.test.js`;
+  `lib/price-history-store.js#shardOf` -> `tests/price-history-store.test.js`; `scripts/update-ath-state.js#advanceEntry`
+  -> `tests/ath-state.test.js`; das Modul, aus dem `tests/silent-errors.test.js` `runLamp` importiert, `#runLamp`;
+  das Modul, aus dem `tests/p1-welle2-datenquellen-wahrheit.test.js` `smallcap` importiert, `#assertNonEmptyUniverse`.
+ZIEL-DATEIEN: die 22 oben genannten Testdateien unter `tests/` (NICHT `tests/scoring/**`), `tests/_mutations-pairs/s-mut2.json`
+(neu). Keine Produktivdatei.
+FERTIG-WENN:
+- 27/27 doesNotThrow-Stellen sind nach Regel (a)/(b) gehaertet oder als (c) „OK" begruendet; Zaehlung vorher/nachher
+  im Commit-Body: `grep -c "assert.doesNotThrow(" <datei>` je Datei vorher, und nachher die Zahl der Stellen OHNE
+  Wert-Assertion/Gegenprobe = 0.
+- 6/6 Skip-Stellen erscheinen als `skip`-Zeile und in der Summenzeile; ohne die jeweilige Fixture endet die Datei
+  weiterhin mit Exit 0, MIT Fixture laufen die Assertions.
+- `node tests/_mutations-probe.js` meldet fuer alle s-mut2-Paare `killed` (oder `cli-only` mit einzeiliger Begruendung
+  im JSON-Feld `"grund"`), Exit 0.
+VERIFIKATION:
+- Jede angefasste Datei einzeln: `node tests/<datei>` Exit 0.
+- `node tests/skip-honesty.test.js` Exit 0; `node tests/_mutations-probe.js` Exit 0.
+- Volle Gate-Suite wie in S-MUT1 (gleiche zwei erlaubte Rote).
+- Stichprobe Gegenprobe: eine der neu ergaenzten `assert.throws`-Gegenproben voruebergehend auf die gueltige Eingabe
+  umstellen -> Datei muss rot werden; zurueckdrehen.
+
+## S16 · Lane B · Effort medium — screener-data tests/: Existenz-Assertions auf Datenobjekte -> Inhalt
+ZIEL:
+- Jede gelistete `assert.ok(<objekt>)`-Stelle so ersetzen/ergaenzen, dass der INHALT gegen den Fixture-Wert derselben
+  Datei geprueft wird (`deepEqual`/`equal`/`match`), nie nur die Existenz:
+  1. `tests/board-history-p99-sidecar.test.js:61` -> `deepEqual(Object.keys(sc.byDate['2026-08-01']), ['semiconductors'])`.
+  2. `:82` -> zusaetzlich `deepEqual(Object.keys(sc.byDate).sort(), ['2026-08-01','2026-08-02'])`.
+  3. `:90` -> Sidecar nach Tag 1 einlesen, Tag-1-Eintrag nach Tag 2 per `deepEqual` byte-gleich (Merge, kein Ueberschreiben).
+  4. `tests/board-history.test.js:326` -> `deepEqual(v.cohort.profitable[0].pit, { beta: 1.5 })`.
+  5. `tests/cn-jahresreihen.test.js:672` -> `deepEqual(store['FREMD.SS'], { source: 'alt', fys: [2024] })`.
+  6. `:673` -> `store['688256.SS'].fys`/`source` gegen `FIX` deepEqual.
+  7. `tests/e1-compression.test.js:107` -> `cand.ticker === 'CHEAP_HI'` PLUS das ausloesende Regel-/Grund-Feld des Kandidaten.
+  8. `tests/in-nse-adapter.test.js:342` -> `fy2026` traegt das spaeteste Verbreitungsdatum der beiden Kandidaten (Feld
+     aus der Fixture `listen('OFSS')`).
+  9. `:655` und 10. `:702` -> `j['OFSS.NS'].nfy` (bzw. das GJ-Feld) gegen den Fixture-Wert.
+  11.-14. `tests/p0-haertung3-builder-cache-cursor.test.js:97`, `:107`, `:156`, `:176` -> `deepEqual(danach['ALT.KS'], ALT_STORE['ALT.KS'])`.
+  15. `tests/revenue-estimates-persistenz.test.js:143` -> `deepEqual(s.external.revenueEstimates['0y'], { avg: 500, growth: 0.1, numberOfAnalysts: 4 })`
+      (exakte Form aus dem Fixture derselben Datei uebernehmen).
+  16. `tests/rule40-guards.test.js:222` -> `res.bounds`: beide Schranken endlich, `lo < hi`, und `p.revGrowthPctUsed`
+      ist exakt die obere Schranke.
+  17. `tests/p1-welle9-quellen-wahrheit.test.js:386` -> `assert.match(e.failedAt, /^\d{4}-\d{2}-\d{2}T/)` und
+      `Date.parse(e.failedAt) >= Date.parse(prev.fetchedAt)`.
+  18. `tests/bk-sk-001-mitschnitt-stille-pannen.test.js:133` -> `wert` inhaltlich gegen `neu` (sortierte Schluessel
+      `['A','C']`, Werte deepEqual).
+  19. `tests/exit-event-resolver.test.js:429` -> `unresolvedReason` ist Element der im Modul exportierten Grund-Menge
+      (falls keine Enum: nicht-leerer String, `assert.match(..., /\S/)`).
+  20. `tests/studie-c0.test.js:122` -> `assert.match(eintrag.sha256, /^[0-9a-f]{64}$/)`.
+  21. `tests/studie-f6-konfirmatorisch.test.js:317` -> `restrisiko[k]` Typ pruefen (String >= 10 Zeichen bzw. Objekt mit Textfeld).
+  22. `tests/studie-e3-praereg.test.js:217` -> `fs.existsSync(P(regel.waechter.test))`.
+  23. `tests/board-history-datenschub-zuschlag.test.js:213` -> `g.verfallsZeilen[0].feld === '<im Fixture verfallenes Feld>'`.
+  24. `tests/aktienfinder-import-root-shape.test.js:53` und 25. `tests/tsx-total-failure-partial.test.js:42` ->
+      Zustandsobjekt des Offline-Guards auf seine Felder pruefen (Modul ueber `offlineGuard`/`OFFLINE_STATE` im Test
+      finden; z. B. `installed === true`, Zaehler `typeof 'number'`).
+- Paar-Datei `tests/_mutations-pairs/s-mut3.json` (Format aus S-MUT1): `scripts/write-board-history.js#run` ->
+  `tests/board-history-p99-sidecar.test.js` und `tests/board-history.test.js`; `scripts/build-krannual.js#main` ->
+  `tests/p0-haertung3-builder-cache-cursor.test.js`; Modul `B` aus `tests/cn-jahresreihen.test.js` `#main` und
+  `#pruefeSchema`; Modul `E` aus `tests/e1-compression.test.js` `#evaluateBoard`; Modul `M` aus
+  `tests/in-nse-adapter.test.js` `#waehleMeldungen`; Modul `T` aus `tests/bk-sk-001-...` `#rotiereGrundbild`;
+  Modul `R` aus `tests/exit-event-resolver.test.js` (die Resolver-Hauptfunktion). Jedes Paar empirisch einordnen.
+ZIEL-DATEIEN: die 17 oben genannten Testdateien unter `tests/`, `tests/_mutations-pairs/s-mut3.json` (neu). Keine
+Ueberschneidung mit S-MUT2 (disjunkte Dateien).
+FERTIG-WENN:
+- 25/25 Stellen pruefen Inhalt; im Commit-Body Zaehlung `vorher 25 Existenz-only -> nachher 0`, je Stelle eine Zeile
+  „file:line -> <Assertion>".
+- Alle s-mut3-Paare `killed` (oder begruendet `cli-only`); `node tests/_mutations-probe.js` Exit 0.
+- Kein Produktivcode angefasst; Auffaelligkeiten (z. B. Feld existiert, traegt aber nie den Fixture-Wert) als `BEFUND:` im Commit-Body.
+VERIFIKATION:
+- Jede angefasste Datei: `node tests/<datei>` Exit 0. `node tests/_mutations-probe.js` Exit 0.
+- Volle Gate-Suite wie in S-MUT1 (gleiche zwei erlaubte Rote).
+- Stichprobe: in einer Datei den Fixture-Wert (z. B. `beta: 1.5` -> `1.6`) voruebergehend aendern -> die neue
+  Assertion muss rot werden; zurueckdrehen.
+
+## S17 · Lane B · Effort high — Scripts-Smoke: jedes `scripts/*.js` mit `--help`, ohne Argumente und `--dry-run` in einer Wegwerf-Kopie, Report + Fix der reinen Argument-Abstuerze
+ZIEL: Bestand: 134 `scripts/*.js` (dazu 99 `.py` und 1 `.mjs` — NICHT Teil dieses Sweeps).
+Kein einziges der 134 kennt `--help` (grep `--help` in `scripts/*.js`: 0 Treffer); 54 haben einen
+Usage-Text, nur 2 nutzen die saubere Bauform von `scripts/gqs00-freeze.js:687-688`
+(`console.error('Usage: ...'); process.exitCode = 2;`); 9 kennen `--dry-run`
+(`archive-old-snapshots`, `b1-validate`, `backfill-prices-max`, `backfill-prices-research`,
+`opinc-source-migrate`, `prune-watchlist`, `reconcile-smallcap`, `write-board-history`,
+`write-newcomer-log`; Muster `scripts/archive-old-snapshots.js:53`); 111 haben einen
+`require.main === module`-Guard, 23 nicht (Liste unten). Messlauf heute (Wegwerf-Kopie per
+`git archive`, `snapshots/` LEER, 15 s Timeout, 114 Skripte gestartet, 18 netzfaehige uebersprungen):
+`--help` -> 20 Stacktrace, 13 Usage-Exit, 46 sauberer Fehler-Exit ohne Stack, 29 Exit 0 (Skript hat
+`--help` ignoriert und Default-Arbeit getan), 6 Timeout; ohne Argumente -> 17 / 14 / 43 / 30 / 9.
+Aufgabe: (1) Runner `scripts/tag<n>a-scripts-smoke.js` schreiben (Einmal-Skript-Muster laut
+`scripts/AGENTS.md`; `child_process.spawnSync(process.execPath, [skript, ...args], { cwd: kopie,
+timeout: 20000, encoding: 'utf8', env: { ...process.env, HTTPS_PROXY: '', HTTP_PROXY: '' } })`),
+der pro Skript die drei Modi faehrt und Exit-Code, Timeout-Flag, Anzahl Stacktrace-Zeilen
+(`/^\s+at .*\.js:\d+/`) und erste stderr-Zeile (max. 110 Zeichen) sammelt.
+(2) Wegwerf-Kopie AUSSERHALB von Repo und Worktree: `git archive --format=zip -o $env:TEMP\sd-smoke.zip HEAD`,
+`Expand-Archive`, `Copy-Item -Recurse node_modules`, dann `snapshots\` loeschen und LEER neu anlegen
+(die getrackte `snapshots/_manifest.json` darf NICHT drin sein). Nichts aus der Kopie wird committet.
+(3) Netz-Sperrliste (27, NIE starten, nur `node --check` + Zeile „Netz" im Report):
+`b1-instrument b1-validate backfill-form345 backfill-prices-max backfill-prices-research
+backfill-prices build-cnannual build-inannual build-jpannual build-krannual build-secannual
+build-twannual d2-submissions-bulk druckenmiller-13f enrich-q-revenue exit-event-resolver
+fetch-secbulk plan-check probe-smallcap-coverage pull-13f-institutional pull-insider-form4-daily
+pull-insider-form4 refresh-fx sec-pit-check snapshot-ticker-map test-gate value-spot-check`
+(`enrich-q-revenue` hat im Messlauf trotz statisch unauffaelligem Kopf SEC erreicht: „[SEC] Failed:
+HTTP 403"). Zeigt ein weiteres Skript im Lauf eine Netz-Meldung: sofort in die Liste, nicht zaehlen.
+(4) Fix-Klassen — NUR diese, NUR im `require.main === module`-Block bzw. in der argv-Auswertung,
+nie in exportierten Funktionen, keine Datenlogik: K1 `--help`/unbekanntes Argument wird ignoriert
+und das Skript arbeitet los (29 Faelle bei `--help`, z. B. `heartbeat-preis-abdeckung`,
+`data-quality-report`, `reconcile-smallcap`) -> `--help` erkennt Usage-Zeile (aus dem
+Kopfkommentar `Run:`/`Usage:` der Datei, sonst aus der argv-Auswertung abgeleitet) und beendet mit
+Exit 0 VOR jeder Datei-/Netz-Aktion. K2 Pflicht-Argument fehlt -> Stacktrace (TypeError auf
+`undefined`, `ENOENT ... undefined`, `AssertionError` als Usage-Ersatz; z. B. `build-findash-name-map`,
+`count-basic-coverage`, `formel-struktur-uebersicht`, `t-kdrift-signatur`, `t-veraltung-zwei-definitionen`,
+`probe-smallcap-messlauf3`) -> `console.error('Usage: ...'); process.exitCode = 2; return;`.
+K3 hart codierter fremder Absolutpfad als Default (`scripts/t-jahresausreisser-klassifikation.js:10`,
+`scripts/t-kdrift-signatur.js:13`, `scripts/t322-ads-verhaeltnis-optionen.js:10` — alle
+`C:/Users/Anwender/AppData/Local/Temp/claude/...`) -> Default entfernen, Pfad wird Pflicht-Argument
+mit Usage. K4 unbehandelter `throw` einer Daten-Vorbedingung im main-Block (z. B.
+`build-secannual-smallcap`: „kein snapshots-smallcap/ Universum") -> `try/catch` um den main-Aufruf:
+`console.error(e.message); process.exitCode = 1;` (die geworfene Funktion selbst bleibt unveraendert,
+Tests koennen den Wurf weiter erwarten). NICHT anfassen: Skripte, die ohne Argumente Exit 0 liefern
+und Default-Arbeit tun (30) — das ist CI-Verhalten (daily-pull.yml ruft sie so auf); die 9
+Timeouts (`k1-coverage-sim-a/b`, `k1-heterogen-sim`, `k1-reparatur-sim-a/b`, `rank-ic`,
+`walk-forward-perf`, `test-offline-fixtures`, `build-twannual`) sind Simulationen/Netz, nur Klasse
+„laeuft (>20 s)" im Report; die 6 weiteren hart codierten Pfade (`d2-submissions-bulk.js:67`,
+`enrich-q-revenue.js:31`, `studie-f6-konfirmatorisch.js:145` u. a.) nur unter OFFEN melden (Netz-
+oder Studien-Skripte). (5) Report `reports/codex-scripts-smoke-2026-09-24.md`: Tabelle
+Skript | Netz? | `--help` (rc/Klasse) | ohne Args (rc/Klasse) | `--dry-run` (rc/Klasse, nur die 9) |
+erste stderr-Zeile; Abschnitt „Gefixt" (Datei:Zeile, Klasse K1-K4, vorher -> nachher), Abschnitt
+„Ohne require.main-Guard (23)": `anchor-regression-nullmcap b1-instrument backfill-prices-research
+ccy-alarm-gate count-basic-coverage einmalertrag-trefferquote formel-struktur-uebersicht
+k1-boardstruktur-mess k1-coverage-sim-a k1-reparatur-sim-a migrate-price-history-shards
+pipeline-health-check probe-auflage1-messlauf probe-datenplausibilitaet probe-emittenten-zwillinge
+probe-issuer-branchenkonflikt probe-issuer-strict-key-punct rank-ic-families sec-pit-check
+t-jahresausreisser-klassifikation t135-paritaetsluecke tag229a-stale-snapshot-verify
+test-gate-node-test-probe` (nur Liste, kein Umbau), Abschnitt OFFEN.
+ZIEL-DATEIEN: `scripts/tag<n>a-scripts-smoke.js` (neu), `reports/codex-scripts-smoke-2026-09-24.md`
+(neu), geaenderte `scripts/*.js` NUR aus der Netz-freien Menge und NUR in main-Block/argv-Auswertung.
+Tabu: alles in `.codex-deny.txt`, `src/scoring/**`, `methods/**`, `README.md`, `docs/findash-export-v1*`,
+die 27 Netz-Skripte (nur lesen), `scripts/test-gate.js` (ist Gate-Infrastruktur).
+FERTIG-WENN: Report listet alle 134 Skripte (134 Tabellenzeilen, 27 davon „Netz"); zweiter
+Messlauf nach den Fixes: Klasse „Stacktrace" bei `--help` 20 -> 0 und ohne Argumente 17 -> 0
+(Daten-Vorbedingungen duerfen Exit 1 bleiben, aber ohne Stacktrace), Klasse „Exit 0 trotz --help"
+29 -> 0; jedes geaenderte Skript antwortet auf `--help` mit einer `Usage:`-Zeile (stderr bei K2,
+stdout bei K1) und Exit 0 (K1) bzw. 2 (K2/K3); `node scripts/test-gate.js --mode=blocking` gruen
+(einzige erlaubte Rote: die zwei bekannt-lokalen aus QUEUE.md).
+VERIFIKATION: `node scripts/tag<n>a-scripts-smoke.js --kopie $env:TEMP\sd-smoke --out reports/codex-scripts-smoke-2026-09-24.md`
+vor und nach den Fixes (beide Klassen-Zaehler im PR-Body, vorher -> nachher); fuer jede
+geaenderte Datei `node scripts/<datei>.js --help; echo $LASTEXITCODE` und `node --check`; fuer jede
+geaenderte Datei die passenden Tests `Get-ChildItem tests/*<basename>*.test.js | % { node $_.FullName }`
+(z. B. `tests/backfill-prices-arg-presence.test.js`, `tests/data-quality-report-arg-presence.test.js`,
+`tests/archive-old-snapshots-keep-days-parser.test.js`); zum Schluss
+`node scripts/test-gate.js --selftest` und `node scripts/test-gate.js --mode=blocking`.
+
+## S18 · Lane A · Effort medium — JSDoc fuer alle Funktions-Exports in `lib/**` (115 -> 0) + Waechter `tests/jsdoc-exports.test.js`
+ZIEL: Gemessen (statischer Parser ueber `module.exports = {...}`, `module.exports.x =`, `exports.x =`,
+Definition per `function name(` / `const name = (async)? (function|(...) =>)`): 243 Funktions-Exports
+in `lib/*.js` (25 Module, ohne `*.test.js`) + `lib/druckenmiller/*.js` (11 Module); 115 haben KEINEN
+`/** ... */`-Block direkt ueber der Definition. Verteilung (fehlend/gesamt): `lib/early-detection.js`
+33/33, `lib/studie-verfassung.js` 17/17, `lib/price-history-store.js` 11/11, `lib/sec-pit.js` 11/11,
+`lib/e1-compression.js` 10/10, `lib/e2-earnings-blowout.js` 10/11, `lib/b1-detect.js` 6/6,
+`lib/druckenmiller/ledger.js` 3/11, `lib/atomic-write.js` 2/2, `lib/druckenmiller/scoreboard.js` 2/25,
+`lib/druckenmiller/thirteenf.js` 2/12, `lib/druckenmiller/universe.js` 2/9, `lib/read-json.js` 1/1,
+`lib/sec-user-agent.js` 1/2, `lib/sub-profile.js` 1/1, `lib/zip-stream.js` 1/5,
+`lib/druckenmiller/raw.js` 1/2, `lib/druckenmiller/registration.js` 1/2. Sicher: kein Test hasht
+lib-Quelltext (`scripts/gqs00-freeze.js:255-261` pinnt nur `src/scoring/**`;
+`tests/t204-welle7b-atomic-write.test.js` hasht Datenbytes), `tests/druckenmiller/import-graph.test.js`
+prueft nur den Require-Graphen. Aufgabe: (1) Fuer jeden fehlenden Fall einen JSDoc-Block direkt
+ueber der Definition: erste Zeile = Zweck in einem Satz; je Parameter `@param {Typ} name - Bedeutung`
+(Typ aus dem Code ableiten: Destrukturierung -> `{{a: number, b?: string}}`, Arrays -> `{number[]}`,
+kein `{*}` wo der Code den Typ zeigt); `@returns {Typ}`; `@throws {Error}` wenn im Rumpf `throw` steht.
+Sprache = Sprache der Datei (deutsche Dateien wie `studie-verfassung.js` deutsch, englische wie
+`early-detection.js` englisch). Bestehende Kommentare NICHT umformulieren, keine Zeile Code
+aendern, keine Konstanten-Exports pflichtig (optional). (2) `tests/jsdoc-exports.test.js` als
+Standalone-Runner nach `tests/AGENTS.md` (`node <datei>` -> Exit 0/1, `node:assert/strict`, kein
+Framework, kein Netz): liest `lib/*.js` (ohne `*.test.js`) + `lib/druckenmiller/*.js`, ermittelt
+Exportnamen (drei Formen oben, mehrzeilige `module.exports = {` inklusive), findet die Definition
+(vier Formen oben), verlangt einen `/**`-Block, der nach dem Ueberspringen von Leerzeilen
+unmittelbar vor der Definitionszeile endet, mit nicht-leerer erster Zeile und — wenn die Funktion
+Parameter hat — mindestens einem `@param`; druckt `funktions-exports=<N> fehlend=<M>` und listet jede
+Fehlstelle als `datei:zeile name`. Nicht-Funktions-Exports (Konstanten, Klassen, Re-Exports) werden
+uebersprungen, nicht gezaehlt. (3) Beweis „nur Kommentare": Wegwerf-Skript (nicht committen), das
+aus `git show origin/main:<datei>` und der Arbeitskopie alle `/* */`- und `//`-Kommentare entfernt,
+Whitespace normalisiert und Byte-Gleichheit meldet — je Datei `IDENT` im PR-Body.
+ZIEL-DATEIEN: `lib/*.js` (nur Kommentarzeilen), `lib/druckenmiller/*.js` (nur Kommentarzeilen),
+`tests/jsdoc-exports.test.js` (neu). Nicht: `lib/*.test.js`, `src/**`, `scripts/**`.
+FERTIG-WENN: `node tests/jsdoc-exports.test.js` -> Exit 0 mit `funktions-exports=243 fehlend=0`
+(vorher: `fehlend=115`; weicht die Gesamtzahl um mehr als +-5 ab, Parser-Differenz im PR erklaeren);
+Kommentar-Strip-Vergleich fuer alle 18 geaenderten Dateien `IDENT`; alle `lib/*test.js` (8 Dateien)
+und `tests/druckenmiller/*test.js` Exit 0; `node --check` fuer jede geaenderte Datei Exit 0.
+VERIFIKATION: `node tests/jsdoc-exports.test.js; echo $LASTEXITCODE` (Zaehler vorher -> nachher im
+PR-Body); `Get-ChildItem lib/*test.js,tests/druckenmiller/*test.js | % { node $_.FullName; if ($LASTEXITCODE) { "FAIL: $($_.Name)" } }`;
+`git diff --stat origin/main -- lib/` (nur Zeilen-Zugaenge, keine Loeschungen ausser Leerzeilen-Verschiebung);
+Strip-Vergleich je Datei.
+
+## S19 · Lane A · Effort medium — Syntax-Smoke als Gate-Test: `node --check` ueber alle getrackten JS/MJS, `JSON.parse` ueber getrackte JSON, engines/Lockfile-Konsistenz
+ZIEL: Gemessen: `git ls-files '*.js' '*.mjs'` = 812 Dateien (811 `.js`: 567 unter `tests/`, 134 unter
+`scripts/`, Rest `lib/`, `src/`, Root-CLIs, `entwurf/` usw.; 1 `.mjs`:
+`scripts/early-detection-store-inventory.mjs`); `node --check` sequentiell: 0 Fehler in 52 s.
+`git ls-files '*.json'` = 1.611 Dateien, `JSON.parse` 0 Fehler in 27,6 s (der Loewenanteil sind
+History-Ordner). `package.json` engines `node >=22` == `package-lock.json` `packages[""].engines`
+`>=22`, lockfileVersion 3, 1 Dependency (`yahoo-finance2 ^3.15.4`) in beiden identisch; alle 5
+`node-version: '22'`-Stellen in `.github/workflows/*.yml` passen zum engines-Major. Heute prueft das
+KEIN Test — eine Datei mit Syntaxfehler, die kein Test importiert (z. B. ein Einmal-Skript), faellt
+erst im Nachtlauf auf. Aufgabe: `tests/syntax-smoke.test.js` (Standalone-Runner wie in
+`tests/AGENTS.md`, CommonJS, `node:assert/strict`, kein Netz): (a) Dateiliste per
+`execFileSync('git', ['ls-files', '-z', '*.js', '*.mjs'])` (nie `find`, damit node_modules/Scratch
+draussen bleiben); je Datei `spawnSync(process.execPath, ['--check', datei])`, mit 8 parallelen
+Kindprozessen (Promise-Pool ueber `child_process.spawn`), Ziel < 15 s; jede Fehlermeldung mit
+Datei + erster stderr-Zeile sammeln. (b) JSON: `git ls-files -z '*.json'` MINUS Praefixe
+`score-history/`, `board-history/`, `picks-history/`, `methods-history/`, `r40rx-history/`,
+`druckenmiller-history/`, `board-history-archive/` (gross, zudem TABU) -> `JSON.parse`, Anzahl im
+Output. (c) `package.json`: `engines.node` gleich `package-lock.json.packages[""].engines.node`;
+jede `dependencies`-Angabe identisch im Lock-Root und als `packages["node_modules/<name>"]`
+vorhanden; `lockfileVersion === 3`. (d) Nur LESEN (`.github/` bleibt TABU fuer Aenderungen): jede
+`node-version:`-Angabe in `.github/workflows/*.yml` hat denselben Major wie `engines.node`.
+Ausgabe: `js=<n> json=<m> lock=ok workflows=<k> fehler=0 ms=<t>`. Windows-tauglich (`process.execPath`,
+`path.join`, `-z`-Trennung, keine Shell-Globs).
+ZIEL-DATEIEN: `tests/syntax-smoke.test.js` (neu). Sonst nichts — findet der Test einen echten
+Syntax-/JSON-Fehler in einer Datei ausserhalb der TABU-Pfade, den Fix im selben PR mit Datei:Zeile;
+innerhalb TABU nur OFFEN melden.
+FERTIG-WENN: `node tests/syntax-smoke.test.js` -> Exit 0, Ausgabe `js=812` (+-die im Worktree
+getrackte Zahl), `json` = Anzahl der getrackten JSON ausserhalb der History-Praefixe (im PR-Body
+nennen), `fehler=0`, Laufzeit < 60 s auf Karls Maschine (ms im PR-Body); Gegenprobe: eine temporaer
+kaputte Datei (`echo "const = ;" > entwurf/_probe.js`, NICHT committen, danach loeschen) macht den
+Test rot mit Datei + Meldung; `node scripts/test-gate.js --selftest` gruen (der Waechter zaehlt die
+neue Datei ueber `tests/*test.js` automatisch mit).
+VERIFIKATION: `node tests/syntax-smoke.test.js; echo $LASTEXITCODE` (Zaehler im PR-Body);
+Gegenprobe wie oben mit Exit 1; `node scripts/test-gate.js --selftest; echo $LASTEXITCODE`;
+`git ls-files '*.js' '*.mjs' | Measure-Object -Line` zum Abgleich der Dateizahl.
