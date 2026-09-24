@@ -57,6 +57,8 @@ eigenen Log (PR-Liste), nicht hier.
 - Widerspricht ein Task-Text diesen Regeln (z. B. "kein Push", "WIP-Commit"), gelten DIESE Regeln:
   Branch `codex/<ID>` pushen und PR oeffnen; Zaehlungen/Befunde gehoeren in den PR-Body.
 
+- Temp-Fixtures in `os.tmpdir()` am Testende IMMER aufraeumen (`fs.rmSync(dir, { recursive: true, force: true })` bzw. `aufraeumen()`). Die Nie-Loeschen-Regel gilt fuer Repo-Dateien, nicht fuer eigene Temp-Ordner (Review-Befund S05/S06).
+
 ## Lanes
 - **Lane A** = mechanisch (Effort: low/medium). **Lane B** = mittel (Effort: medium/high).
 - **Lane C** = schwer (Effort: high/xhigh). Bei nur einem Thread: Lane ALL = A, dann B, dann C.
