@@ -36,13 +36,18 @@ eigenen Log (PR-Liste), nicht hier.
 
 ## SUBAGENTEN-PFLICHT (Karl, 19:40) und ZEITPLAN
 - Du bist KOORDINATOR. Fuer jeden Task startest du einen Codex-Subagenten mit dem vollstaendigen
-  Brief (Regeln oben + Task-Abschnitt + Worktree-Pfad). Bis zu 4 Subagenten GLEICHZEITIG, jeder
+  Brief (Regeln oben + Task-Abschnitt + Worktree-Pfad). Bis zu 8 Subagenten GLEICHZEITIG (Karl, 19:55), jeder
   in seinem eigenen Worktree/Branch. Sobald einer fertig ist: naechsten Task beanspruchen und
   den naechsten Subagenten starten. Du selbst implementierst nichts — du beanspruchst, briefst,
   pruefst, pushst.
 - Vor jedem Push startest du einen zweiten Subagenten als REVIEWER (Diff gegen den Brief:
   TABU-Pfade, Test-Abschwaechung, Loeschungen, Verifikations-Befehl selbst laufen lassen).
   Nur mit Reviewer-Freigabe pushen; Befund im PR-Body unter „REVIEW" zitieren.
+- NACHLAUF je Task (Pflicht, zusaetzlich zum Reviewer): nach dem PR einen dritten Subagenten starten,
+  der (a) jede neue Testdatei einmal per Sabotage rot sieht (Funktion unter Test auf `() => null`
+  stubben, Test muss Exit != 0 liefern, dann zuruecksetzen) und (b) die komplette Testsuite des Repos
+  im Worktree faehrt (screener-data: `node scripts/test-gate.js --mode=blocking`; findash: `node --test`
+  und `cd web && npm run test:render`). Ergebnis als Kommentar auf den PR (`gh pr comment`).
 - Gibt es in deiner Codex-Version keine Subagenten: sequentiell arbeiten und das im
   Schlussbericht in einer Zeile vermerken.
 - ZEITPLAN (lokale Zeit): letzter Push 20:38. Schlussbericht 20:40 (nicht 20:45). Der PC faehrt
