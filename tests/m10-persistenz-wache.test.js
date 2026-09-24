@@ -139,8 +139,10 @@ if (spawnSync('bash', ['--version'], { encoding: 'utf8' }).status !== 0) {
   process.exit(1);
 }
 
+// Keine Login-Shell (-l): /etc/profile und ~/.bash_profile waeren pro sh()-Aufruf der teuerste Teil
+// (unter Git-Bash besonders) und bringen nichts, was git hier braucht — dieselben Flags wie fahre().
 const sh = (cmd, cwd) => {
-  const r = spawnSync('bash', ['-lc', cmd], { cwd, encoding: 'utf8' });
+  const r = spawnSync('bash', ['--noprofile', '--norc', '-c', cmd], { cwd, encoding: 'utf8', env: process.env });
   if (r.status !== 0) throw new Error(cmd + '\n' + r.stdout + r.stderr);
   return r.stdout.trim();
 };
