@@ -16,6 +16,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
+// S25: PATH case-sicher setzen — auf Windows heisst der Schluessel `Path`; ein zweiter Schluessel `PATH` im
+// Env-Spread ergaebe zwei Eintraege, und welchen das Kind sieht, sichert Node nicht zu (gh-Stub unauffindbar).
+const { mitEnv } = require('../lib/env-key.js');
 
 let fail = 0;
 function check(name, fn) {
@@ -51,7 +54,7 @@ function bashMitGhStub(block, ghAusgabe, ghRc) {
     fs.chmodSync(path.join(dir, 'gh'), 0o755);
     const out = path.join(dir, 'out.txt'); fs.writeFileSync(out, '');
     const script = block.replace(/\$\{\{ github\.repository \}\}/g, 'x/y');
-    const r = spawnSync('bash', ['-c', script], { cwd: dir, encoding: 'utf8', env: { ...process.env, PATH: dir + path.delimiter + process.env.PATH, GITHUB_OUTPUT: out, GH_TOKEN: 't' } });
+    const r = spawnSync('bash', ['-c', script], { cwd: dir, encoding: 'utf8', env: mitEnv({ ...process.env, GITHUB_OUTPUT: out, GH_TOKEN: 't' }, 'PATH', dir + path.delimiter + (process.env.PATH || '')) });
     assert.ok(!r.error, 'bash nicht ausfuehrbar: ' + (r.error && r.error.message));
     return { code: r.status, out: (r.stdout || '') + (r.stderr || ''), output: fs.readFileSync(out, 'utf8') };
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
