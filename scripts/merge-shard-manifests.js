@@ -29,12 +29,12 @@
  *   node scripts/merge-shard-manifests.js --selftest
  */
 const fs = require('fs');
+const { readJsonOrNull: readJSON } = require('../lib/read-json.js');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 // NRE-SK-001 (Hard Review 2026-07-31): siehe unten bei writeFileAtomic-Aufruf.
 const { writeFileAtomic } = require(path.join(__dirname, '..', 'lib', 'atomic-write.js'));
 
-function readJSON(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 
 function watchlistSize(wl) {
   if (!wl) return 0;

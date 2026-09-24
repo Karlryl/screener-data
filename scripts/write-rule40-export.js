@@ -52,6 +52,7 @@
  * ohnehin enthaelt, und nennt eine Summe zweier exportierter Prozentzahlen.
  */
 const fs = require('node:fs');
+const { readJsonOrNull } = require('../lib/read-json.js');
 const path = require('node:path');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
@@ -205,9 +206,6 @@ function readJson(p) {
   return JSON.parse(fs.readFileSync(p, 'utf8'));
 }
 
-function readJsonOrNull(p) {
-  try { return readJson(p); } catch (_) { return null; }
-}
 
 /**
  * WELCHES BEIN TRAEGT DEN WACHSTUMSWERT. revGrowthLevel nimmt das Quartalsbein, wenn

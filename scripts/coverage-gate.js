@@ -15,6 +15,7 @@
 // It is NOT committed to main — the export must read it from the gh-pages URL.
 // Signal path is red-X + this marker only (no mail/Discord).
 const fs = require('fs');
+const { readJsonOrNull: readJSON } = require('../lib/read-json.js');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
@@ -39,7 +40,6 @@ const SHARD_COLLISION_ABS = 25, SHARD_COLLISION_PCT = 0.005;
 // wenn das Manifest den Nenner trägt (n_addressable bzw. n_skipped_mcap).
 const HONEST_TARGET = 0.90;
 
-function readJSON(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 function watchlistSize() {
   const w = readJSON(WATCHLIST);
   if (!w) return 0;

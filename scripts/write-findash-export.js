@@ -39,6 +39,7 @@
  * variants (incl. 4 simultaneous breaches on energy.json) all exit 1.
  */
 const fs = require('fs');
+const { readJsonOrNull: readJSONOrNull } = require('../lib/read-json.js');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
@@ -156,7 +157,6 @@ function athFor(ticker) {
 }
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
-function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
 
 // ---- Waehrungs-Waechter (Waehrungs-Chunk 4a, 16.08.2026, Karl-Freigabe) -----------
 // WARUM HIER: das ist die Engstelle, durch die JEDE Zeile muss, bevor Karl sie sieht.
