@@ -31,6 +31,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { liesText } = require('./helpers/lies-text.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -317,7 +318,7 @@ test('F-12-R6: der erste Namens-Fehler der Watchlist wird mitgeloggt, nicht nur 
 // Am OBJEKT gesucht (Block ab dem benannten Schritt bis zum naechsten `- name:`), nicht
 // per Volltext-Suche ueber die ganze Datei — sonst haelt ein beliebiges zweites Vorkommen
 // den Test gruen, waehrend sich genau die geschuetzte Stelle aendert.
-const YML = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+const YML = liesText(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'));
 function schrittBlock(name) {
   const start = YML.indexOf('- name: ' + name);
   assert.notEqual(start, -1, 'Schritt "' + name + '" existiert nicht mehr in daily-pull.yml');
@@ -357,7 +358,7 @@ test('Verdrahtung: der Filter laeuft VOR dem Manifest-Merge (sonst fehlt die Ein
 });
 
 test('Verdrahtung: der Eingangsordner ist git-ignoriert (der Commit-Schritt faehrt git add -A)', () => {
-  const gi = fs.readFileSync(path.join(__dirname, '..', '.gitignore'), 'utf8');
+  const gi = liesText(path.join(__dirname, '..', '.gitignore'));
   assert.match(gi, /^snapshots-eingang\/$/m,
     'ohne diesen Eintrag wuerde "git add -A" im merge-Job taeglich ~12.500 Snapshot-JSONs (30 MB) ins Repo committen');
 });

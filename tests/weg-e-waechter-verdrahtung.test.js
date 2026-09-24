@@ -30,10 +30,11 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { liesText } = require('./helpers/lies-text.js');
 
 const ROOT = path.join(__dirname, '..');
 const JOB = 'jahres-ausreisser-waechter';
-const YML = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+const YML = liesText(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'));
 const { JOB_REIHENFOLGE } = require('../scripts/pipeline-status.js');
 
 let pass = 0, fail = 0;

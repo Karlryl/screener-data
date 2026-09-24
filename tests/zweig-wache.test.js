@@ -38,9 +38,10 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { liesText } = require('./helpers/lies-text.js');
 
 const WF_DIR = path.join(__dirname, '..', '.github', 'workflows');
-const lies = (datei) => fs.readFileSync(path.join(WF_DIR, datei), 'utf8');
+const lies = (datei) => liesText(path.join(WF_DIR, datei));
 
 /** Die geschuetzten Workflows.
  *  mindestPublizierer — Blindheits-Bremse: faellt die Zahl der erkannten Publizierer

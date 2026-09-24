@@ -5,6 +5,7 @@
  * Universum endet unter dem Cap, obwohl lebende Kandidaten verfuegbar waeren. */
 const assert = require('node:assert/strict');
 const ru = require('../refresh-universe.js');
+const { liesText } = require('./helpers/lies-text.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -111,8 +112,8 @@ test('F-11: BEIDE Yahoo-Kanaele gehen durch die Schwellen-Funktion (Verdrahtung)
   // ACHTUNG (T562-M2): diese beiden Zusicherungen zaehlen DATEIWEIT und reichen NICHT —
   // ein zweiter Boden NEBEN dem Gate laesst sie gruen. Der tragende Check steht unten
   // unter "T562-M2"; diese hier bleiben als grobe Zusatzsicherung stehen.
-  const src = require('node:fs').readFileSync(
-    require('node:path').join(__dirname, '..', 'refresh-universe.js'), 'utf8');
+  const src = liesText(
+    require('node:path').join(__dirname, '..', 'refresh-universe.js'));
   const aufrufe = (src.match(/if \(!inDiscoveryMcapBand\(mcap\)\) continue;/g) || []).length;
   assert.equal(aufrufe, 2, 'Predefined-Bucket- UND Custom-Exchange-Schleife muessen den Gate rufen');
   assert.ok(!/mcap\s*<\s*(1e9|1000000000|MIN_MCAP_CUSTOM)/.test(src),
@@ -130,8 +131,8 @@ test('F-11: BEIDE Yahoo-Kanaele gehen durch die Schwellen-Funktion (Verdrahtung)
 // EIN Band-Gate, KEIN weiterer mcap-Vergleich (generisch statt Literal-Liste). Und der
 // Pruefer wird im selben Test mutiert — der gueltige Stand muss DURCHGEHEN, beide kaputten
 // Staende muessen AUFFLIEGEN, sonst ist der Pruefer selbst falsch-gruen.
-const SRC_RU = require('node:fs').readFileSync(
-  require('node:path').join(__dirname, '..', 'refresh-universe.js'), 'utf8');
+const SRC_RU = liesText(
+  require('node:path').join(__dirname, '..', 'refresh-universe.js'));
 const GATE_ZEILE = 'if (!inDiscoveryMcapBand(mcap)) continue;';
 const INGEST_MARKER = 'for (const q of quotes) {';
 
@@ -500,8 +501,8 @@ test('T567-W2: der gueltige Stand bleibt gruen (sonst waere der Pruefer falsch-r
   }
 });
 
-const YML = require('node:fs').readFileSync(
-  require('node:path').join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+const YML = liesText(
+  require('node:path').join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'));
 // T562-L1: ALLE Schritte, deren Name mit "Run Yahoo Pull" beginnt — nicht nur der erste.
 const pullSchritte = (yml) => yml.split(/^ {6}- name: /m).filter(b => b.startsWith('Run Yahoo Pull'));
 

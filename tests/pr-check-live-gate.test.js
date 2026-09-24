@@ -16,6 +16,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { liesText } = require('./helpers/lies-text.js');
 
 let fail = 0;
 function check(name, fn) {
@@ -23,8 +24,8 @@ function check(name, fn) {
   catch (e) { fail++; console.log('  FAIL ' + name + ': ' + (e && e.message || e)); }
 }
 const ROOT = path.join(__dirname, '..');
-const pr = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'pr-check.yml'), 'utf8');
-const daily = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+const pr = liesText(path.join(ROOT, '.github', 'workflows', 'pr-check.yml'));
+const daily = liesText(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'));
 const SUCHE = 'name: Letztes Tages-Snapshot-Artefakt suchen (A2)';
 const LADEN = 'name: Snapshots des letzten Tageslaufs laden (A2)';
 const GATE_PR = 'name: Live-Universum-Gate (PR-Check, Universum von gestern, A2)';

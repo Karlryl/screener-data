@@ -17,13 +17,14 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { liesText } = require('./helpers/lies-text.js');
 
 let fail = 0;
 function check(name, fn) {
   try { fn(); console.log('  ok   ' + name); }
   catch (e) { fail++; console.log('  FAIL ' + name + ': ' + (e && e.message || e)); }
 }
-const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+const yml = liesText(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'));
 const STEP = 'name: Rank-IC-Report erzeugen (2.8, Datenkanal)';
 const COMMIT = 'name: Commit board-history vintage to main';
 const F17A = 'name: Publish board-history vintages to public data channel (F-17a)';
