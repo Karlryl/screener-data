@@ -133,6 +133,20 @@ function parseConcurrency(envVal) {
   return (Number.isFinite(n) && n > 0) ? n : 10;
 }
 
+// S36: same bug class as BH-054 for PRICE_CHECKPOINT_BATCHES — '0' or 'abc' made
+// `batchIdx % CHECKPOINT_EVERY_BATCHES === 0` a `% 0` / `% NaN` -> NaN -> never true, so the
+// timeout checkpoint silently never fired and a step-kill lost the whole pull. Positive
+// integer only (String(n) === trimmed input keeps '2.5' from passing as 2); unset/blank is
+// the normal default, anything else warns and falls back to 100.
+function parseCheckpointEvery(envVal) {
+  const raw = envVal == null ? '' : String(envVal).trim();
+  if (raw === '') return 100;
+  const n = parseInt(raw, 10);
+  if (Number.isFinite(n) && n > 0 && String(n) === raw) return n;
+  _log('WARN', `PRICE_CHECKPOINT_BATCHES=${JSON.stringify(envVal)} ist keine positive Ganzzahl -> Fallback 100 (sonst feuert der Timeout-Checkpoint nie)`);
+  return 100;
+}
+
 // Shared fetch+merge core for both processOne() (per-ticker) and the dedicated
 // benchmark back-fill below, and reused by scripts/backfill-prices.js — all
 // three need the identical basis/session/positivity/window-merge contract, so
@@ -309,7 +323,7 @@ async function main() {
   //      Benchmarks (SPY/QQQ/IWM) bleiben ganz vorn (kritisch fuer alpha), dann aeltester Verlauf.
   //  (b) periodischer Checkpoint-Write unten, damit ein Timeout-Kill den Fortschritt persistiert.
   wl.stocks.sort(staleFirstComparator(history));
-  const CHECKPOINT_EVERY_BATCHES = parseInt(process.env.PRICE_CHECKPOINT_BATCHES || '100', 10);
+  const CHECKPOINT_EVERY_BATCHES = parseCheckpointEvery(process.env.PRICE_CHECKPOINT_BATCHES); // S36
 
   // Tag-84: parallel pulls
   const CONCURRENCY = parseConcurrency(process.env.PRICE_CONCURRENCY); // BH-054
@@ -452,7 +466,7 @@ async function main() {
   }
 }
 
-module.exports = { staleFirstComparator, exchangeLocalDate, isWeekendDate, fetchAndMergeSeries, parseConcurrency };
+module.exports = { staleFirstComparator, exchangeLocalDate, isWeekendDate, fetchAndMergeSeries, parseConcurrency, parseCheckpointEvery, parseArgs };
 
 // A7-fix: nur als CLI ausfuehren; require (Unit-Test) darf main() NICHT starten.
 if (require.main === module) {
