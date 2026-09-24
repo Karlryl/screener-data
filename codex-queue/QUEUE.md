@@ -49,6 +49,9 @@ eigenen Log (PR-Liste), nicht hier.
   um 20:46 automatisch herunter (Timer setzt Karl; falls nicht gesetzt, EIN Thread:
   `shutdown /s /f /t <Sekunden bis 20:46>` — Fehler 1190 = schon geplant, ignorieren).
 
+- Widerspricht ein Task-Text diesen Regeln (z. B. "kein Push", "WIP-Commit"), gelten DIESE Regeln:
+  Branch `codex/<ID>` pushen und PR oeffnen; Zaehlungen/Befunde gehoeren in den PR-Body.
+
 ## Lanes
 - **Lane A** = mechanisch (Effort: low/medium). **Lane B** = mittel (Effort: medium/high).
 - **Lane C** = schwer (Effort: high/xhigh). Bei nur einem Thread: Lane ALL = A, dann B, dann C.
@@ -227,6 +230,7 @@ VERIFIKATION:
 - `git status --short` zeigt ausschliesslich die ZIEL-DATEIEN.
 
 ## S15 · Lane B · Effort medium — screener-data tests/: doesNotThrow-only und stille Skips haerten
+VORAUSSETZUNG: Probe-Infrastruktur aus S14. Ist dessen PR noch offen: Worktree von `origin/codex/S14` statt `origin/main` anlegen.
 ZIEL:
 - Alle 27 `assert.doesNotThrow(...)`-Stellen nach EINER Regel behandeln: (a) gibt die Funktion einen Wert zurueck
   => Rueckgabe in eine Variable nehmen und mit `assert.equal/deepEqual/match` gegen den konkreten Fixture-Wert pruefen;
