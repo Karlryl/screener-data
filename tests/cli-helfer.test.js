@@ -3,7 +3,7 @@
  * S05: offline CLI contract coverage. Run: node tests/cli-helfer.test.js
  * Current limitations are named explicitly: earnings has no help handler and
  * both CLIs accept unknown options. This task documents behavior without fixes.
- * All data fixtures stay in OS temp; retained because this task forbids deletion.
+ * All data fixtures stay in OS temp and are removed when this test exits.
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -14,6 +14,18 @@ const { spawnSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 const OFFLINE_GUARD = path.join(__dirname, 'helpers', 'offline-network-guard.js');
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'screener-cli-helfer-'));
+// Register immediately so setup failures and failed assertions also clean up.
+process.once('exit', () => {
+  try {
+    const target = path.resolve(fixtureRoot);
+    assert.equal(path.dirname(target), path.resolve(os.tmpdir()), 'cleanup stays in OS temp');
+    assert.equal(path.basename(target).startsWith('screener-cli-helfer-'), true, 'cleanup owns this fixture');
+    fs.rmSync(target, { recursive: true, force: true });
+  } catch (error) {
+    console.error('Fixture cleanup failed:', error);
+    process.exitCode = 1;
+  }
+});
 const emptyDirectory = path.join(fixtureRoot, 'empty');
 const calendarDirectory = path.join(fixtureRoot, 'calendar');
 fs.mkdirSync(emptyDirectory);
