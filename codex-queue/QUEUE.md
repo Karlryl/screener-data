@@ -36,7 +36,7 @@ eigenen Log (PR-Liste), nicht hier.
 
 ## SUBAGENTEN-PFLICHT (Karl, 19:40) und ZEITPLAN
 - Du bist KOORDINATOR. Fuer jeden Task startest du einen Codex-Subagenten mit dem vollstaendigen
-  Brief (Regeln oben + Task-Abschnitt + Worktree-Pfad). Bis zu 8 Subagenten GLEICHZEITIG (Karl, 19:55), jeder
+  Brief (Regeln oben + Task-Abschnitt + Worktree-Pfad). ZIEL 50 Subagenten GLEICHZEITIG ueber alle Threads (Karl, 20:12) — pro Thread so viele, wie deine Codex-Version zulaesst (mindestens 16): je Task Implementierer + Reviewer + Nachlauf parallel, und mehrere Tasks gleichzeitig; jeder
   in seinem eigenen Worktree/Branch. Sobald einer fertig ist: naechsten Task beanspruchen und
   den naechsten Subagenten starten. Du selbst implementierst nichts — du beanspruchst, briefst,
   pruefst, pushst.
