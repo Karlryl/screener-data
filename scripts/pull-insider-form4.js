@@ -177,6 +177,29 @@ function httpGet(url, _depth) {
 }
 
 // ─── Ticker→CIK mapping ─────────────────────────────────────────────────
+// S43: parse + normalise the SEC ticker map body. A SEC maintenance page can
+// come back with HTTP 200 and HTML — the bare SyntaxError said nothing about
+// where the bytes came from. The original error is kept as `cause`.
+function parseTickerCikBody(body, url) {
+  let parsed;
+  try {
+    parsed = JSON.parse(body);
+  } catch (e) {
+    throw new Error('SEC ticker map: invalid JSON from ' + url + ': ' + e.message, { cause: e });
+  }
+  const byTicker = {};
+  // The map is keyed by row-index, with each row being
+  // { cik_str, ticker, title }. We normalise to UPPER and 10-digit CIK.
+  for (const row of Object.values(parsed)) {
+    const ticker = (row.ticker || '').toUpperCase().trim();
+    if (!ticker) continue;
+    const cik = String(row.cik_str || row.cik || '').padStart(10, '0');
+    if (cik === '0000000000') continue;
+    byTicker[ticker] = { cik, name: row.title || '' };
+  }
+  return byTicker;
+}
+
 // Loaded once at script start. Cached for a week.
 async function loadTickerCikMap() {
   const existing = readJsonSafe(TICKER_CIK_MAP_PATH);
@@ -191,17 +214,7 @@ async function loadTickerCikMap() {
   console.log('  [map] fetching ticker→CIK from SEC...');
   const res = await httpGet(SEC_TICKER_MAP_URL);
   if (res.notFound) throw new Error('SEC ticker map URL 404 (unexpected)');
-  const parsed = JSON.parse(res.body);
-  const byTicker = {};
-  // The map is keyed by row-index, with each row being
-  // { cik_str, ticker, title }. We normalise to UPPER and 10-digit CIK.
-  for (const row of Object.values(parsed)) {
-    const ticker = (row.ticker || '').toUpperCase().trim();
-    if (!ticker) continue;
-    const cik = String(row.cik_str || row.cik || '').padStart(10, '0');
-    if (cik === '0000000000') continue;
-    byTicker[ticker] = { cik, name: row.title || '' };
-  }
+  const byTicker = parseTickerCikBody(res.body, SEC_TICKER_MAP_URL);
   ensureDir(EXTERNAL_DIR);
   writeFileAtomic(TICKER_CIK_MAP_PATH, JSON.stringify({
     fetchedAt: new Date().toISOString(),
@@ -763,6 +776,8 @@ module.exports = {
     httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure,
     // F-CGPT-028: exportiert, damit der Ausfall-Pfad ohne echtes SEC-Netz fahrbar ist.
     pullTickerForm4, _filingsCoveringLookback, _softAusfallGrund, _ausfallEintrag,
+    // S43: parse + byTicker-Normalisierung ohne Netz testbar.
+    parseTickerCikBody,
   },
   _secRateLimit: SEC_RATE_LIMIT
 };

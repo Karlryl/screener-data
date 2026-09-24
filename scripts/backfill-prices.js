@@ -77,7 +77,13 @@ function loadTickerFile(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8').trim();
   // JSON array or newline-delimited
   if (raw.startsWith('[')) {
-    const arr = JSON.parse(raw);
+    let arr;
+    try {
+      arr = JSON.parse(raw);
+    } catch (e) {
+      // S43: name the user-supplied file instead of a bare SyntaxError.
+      throw new Error('ticker file ' + filePath + ': invalid JSON: ' + e.message, { cause: e });
+    }
     // audit F-A-2026-06-21: coerce/drop non-string & object-shaped JSON elements
     // identically to the newline branch — prevents non-string values flowing into
     // yf.chart() and history[ticker] keys, corrupting the store.
