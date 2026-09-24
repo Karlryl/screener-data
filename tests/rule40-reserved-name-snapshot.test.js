@@ -2,19 +2,35 @@
 
 // Run standalone: node tests/rule40-reserved-name-snapshot.test.js
 // Behavior guard for the reserved-name snapshot fix in cec884f.
-// All data lives in independent OS-temp fixtures; retain them under the no-delete rule.
+// All data lives in independent OS-temp fixtures, removed when this test exits.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { baueExport, boardZeile, laeufer } = require('./rule40-fixture.js');
 const W = require('../scripts/write-rule40-export.js');
 const { test, bilanz } = laeufer();
+const fixtures = [];
+process.once('exit', () => {
+  for (const fixture of fixtures) {
+    try {
+      const target = path.resolve(fixture.dir);
+      assert.equal(path.dirname(target), path.resolve(os.tmpdir()), 'cleanup stays in OS temp');
+      assert.equal(path.basename(target).startsWith('rule40-test-'), true, 'cleanup owns this fixture');
+      fixture.aufraeumen();
+    } catch (error) {
+      console.error('Fixture cleanup failed:', error);
+      process.exitCode = 1;
+    }
+  }
+});
 
 function fixture(withReservedName) {
   const f = baueExport([
     { row: boardZeile({ ticker: 'AAA', revGrowthYoYPct: 60 }) },
     { row: boardZeile({ ticker: 'BBB', revGrowthYoYPct: 50 }) },
   ]);
+  fixtures.push(f);
   if (withReservedName) {
     const reserved = JSON.parse(fs.readFileSync(path.join(f.snapshotsDir, 'AAA.json'), 'utf8'));
     reserved.meta.ticker = 'CON';
