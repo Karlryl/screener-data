@@ -23,6 +23,7 @@ const zlib = require('zlib');
 // F-A-2026-06-21 (audit): route the cache write through the repo's atomic writer so a
 // SIGKILL/CI-timeout mid-write can't truncate a court-screen input file (Pattern D).
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 // audit fix BH-018: the bulk companyfacts.zip path was hardcoded to a dead
 // Windows user path (C:/Users/Karlr/...), unreachable on this machine or any
@@ -210,7 +211,7 @@ function main() {
       const newestFirst = yoy.map(y => Math.round(y.yoy * 1e6) / 1e6).reverse().slice(0, STORE_CAP);
       if (!newestFirst.length) { console.warn(`[skip] ${ticker}: no quarterly YoY`); continue; }
 
-      const cacheFile = path.join(CACHE, `${ticker}.json`);
+      const cacheFile = path.join(CACHE, safeSnapshotFilename(ticker));
       if (!fs.existsSync(cacheFile)) { console.warn(`[skip] ${ticker}: no cache file`); continue; }
       const j = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
       if (!j.payload) { console.warn(`[skip] ${ticker}: no payload`); continue; }

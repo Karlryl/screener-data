@@ -25,6 +25,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 const [ordner, boardDatei] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 if (!ordner || !boardDatei) {
@@ -49,7 +50,7 @@ const melde = (z, art, regel, text) => funde.push({ art, regel, rang: z.rank, ti
 
 let geprueft = 0;
 for (const z of zeilen) {
-  const p = path.join(ordner, z.ticker + '.json');
+  const p = path.join(ordner, safeSnapshotFilename(z.ticker));
   if (!fs.existsSync(p)) continue;
   let s;
   try { s = JSON.parse(fs.readFileSync(p, 'utf8')); } catch { continue; }
