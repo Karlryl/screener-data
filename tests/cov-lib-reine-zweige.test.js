@@ -128,8 +128,20 @@ check(selftest.status, 0, 'JSON-reader selftest exit code');
 check(selftest.stdout.includes('lib/read-json.js selftest: ok'), true, 'JSON-reader selftest completion marker');
 
 // D: parsed but unrecognized watchlists preserve raw input, unlike missing/broken JSON.
-// These new fixtures are deliberately retained; this test performs no deletion.
+// Own file fixtures are removed at exit, including after failed assertions.
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cov-lib-pure-'));
+// Register immediately so setup failures and failed assertions also clean up.
+process.once('exit', () => {
+  try {
+    const target = path.resolve(dir);
+    assert.equal(path.dirname(target), path.resolve(os.tmpdir()), 'cleanup stays in OS temp');
+    assert.equal(path.basename(target).startsWith('cov-lib-pure-'), true, 'cleanup owns this fixture');
+    fs.rmSync(target, { recursive: true, force: true });
+  } catch (error) {
+    console.error('Fixture cleanup failed:', error);
+    process.exitCode = 1;
+  }
+});
 for (const [name, raw] of [['string', 'nur-ein-string'], ['bad-stocks', { stocks: 5 }]]) {
   const file = path.join(dir, name + '.json');
   fs.writeFileSync(file, JSON.stringify(raw));
