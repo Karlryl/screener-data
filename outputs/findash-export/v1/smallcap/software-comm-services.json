@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-23T09:13:04.432Z",
+  "generated_at": "2026-09-24T09:01:45.274Z",
   "branch": "software-comm-services",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.6,
-    "generated_at": "2026-09-23T09:05:35.402Z"
+    "coverage_pct": 84.7,
+    "generated_at": "2026-09-24T08:53:55.460Z"
   },
   "profitable": [
     {
@@ -436,10 +436,10 @@
         "pctl": 0.848
       },
       "ath": {
-        "distancePct": -73.4,
+        "distancePct": -72.7,
         "athDate": "2021-03-11",
         "monthsAgo": 66,
-        "lastDate": "2026-09-21"
+        "lastDate": "2026-09-23"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -467,7 +467,7 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "seit-kurzem-profitabel",
@@ -640,7 +640,7 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
@@ -1029,7 +1029,7 @@
           "weight": 0.8
         }
       ],
-      "revGrowthYoYPct": 30.119559670481898,
+      "revGrowthYoYPct": 30.119559670481877,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -1492,7 +1492,7 @@
       "sector": "Communication Services",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "seit-kurzem-profitabel",
@@ -2094,7 +2094,7 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "kurz-vor-profitabel",
@@ -3118,7 +3118,7 @@
       "rank": 1,
       "rankGrund": null,
       "ticker": "API",
-      "score": 71.2,
+      "score": 71.5,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3143,10 +3143,10 @@
       "ipoYear": 2020,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 73.5,
-      "scoreShrunk": 71.2,
+      "scoreBase": 73.7,
+      "scoreShrunk": 71.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3175,7 +3175,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 60.7,
+          "pct": 63.3,
           "weight": 0.4
         },
         {
@@ -3185,7 +3185,7 @@
         },
         {
           "key": "dilution",
-          "pct": 90,
+          "pct": 90.6,
           "weight": 1.3
         }
       ],
@@ -3204,7 +3204,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "RSVR",
-      "score": 65.8,
+      "score": 66.3,
       "track": "unprofitable",
       "lamps": [
         "burning",
@@ -3229,10 +3229,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 67.5,
-      "scoreShrunk": 65.8,
+      "scoreBase": 68,
+      "scoreShrunk": 66.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3261,7 +3261,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 32.1,
+          "pct": 36.7,
           "weight": 0.4
         },
         {
@@ -3271,7 +3271,7 @@
         },
         {
           "key": "dilution",
-          "pct": 56.7,
+          "pct": 59.4,
           "weight": 1.3
         }
       ],
@@ -3290,7 +3290,7 @@
       "rank": 3,
       "rankGrund": null,
       "ticker": "GRRR",
-      "score": 59.9,
+      "score": 60.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3319,10 +3319,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 61,
-      "scoreShrunk": 59.9,
+      "scoreBase": 61.5,
+      "scoreShrunk": 60.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3351,7 +3351,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 75,
+          "pct": 76.7,
           "weight": 0.4
         },
         {
@@ -3361,7 +3361,7 @@
         },
         {
           "key": "dilution",
-          "pct": 43.3,
+          "pct": 46.9,
           "weight": 1.3
         }
       ],
@@ -3383,7 +3383,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "MOVE",
-      "score": 56.1,
+      "score": 56.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3397,7 +3397,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 2184.3
+        "companion": 2181.2
       },
       "name": "Corvex, Inc.",
       "country": "United States",
@@ -3412,10 +3412,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/7",
       "coverageWeight": 0.54,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 59.8,
-      "scoreShrunk": 56.1,
+      "scoreBase": 60.3,
+      "scoreShrunk": 56.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3444,7 +3444,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 96.4,
+          "pct": 96.7,
           "weight": 0.4
         },
         {
@@ -3454,7 +3454,7 @@
         },
         {
           "key": "dilution",
-          "pct": 16.7,
+          "pct": 18.8,
           "weight": 1.3
         }
       ],
@@ -3476,7 +3476,7 @@
       "rank": 5,
       "rankGrund": null,
       "ticker": "AIOT",
-      "score": 55.8,
+      "score": 56.1,
       "track": "unprofitable",
       "lamps": [
         "burning",
@@ -3501,10 +3501,10 @@
       "ipoYear": 1999,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 56.4,
-      "scoreShrunk": 55.8,
+      "scoreBase": 56.7,
+      "scoreShrunk": 56.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3533,7 +3533,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 46.4,
+          "pct": 50,
           "weight": 0.4
         },
         {
@@ -3543,7 +3543,7 @@
         },
         {
           "key": "dilution",
-          "pct": 76.7,
+          "pct": 78.1,
           "weight": 1.3
         }
       ],
@@ -3562,7 +3562,7 @@
       "rank": 6,
       "rankGrund": null,
       "ticker": "PLAY",
-      "score": 53,
+      "score": 53.4,
       "track": "unprofitable",
       "lamps": [
         "burning",
@@ -3588,10 +3588,10 @@
       "ipoYear": 2014,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 53.3,
-      "scoreShrunk": 53,
+      "scoreBase": 53.8,
+      "scoreShrunk": 53.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3620,7 +3620,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 25,
+          "pct": 30,
           "weight": 0.4
         },
         {
@@ -3630,7 +3630,7 @@
         },
         {
           "key": "dilution",
-          "pct": 63.3,
+          "pct": 65.6,
           "weight": 1.3
         }
       ],
@@ -3649,7 +3649,7 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "IIIV",
-      "score": 52.7,
+      "score": 53.1,
       "track": "unprofitable",
       "lamps": [
         "burning",
@@ -3675,10 +3675,10 @@
       "ipoYear": 2018,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 53,
-      "scoreShrunk": 52.7,
+      "scoreBase": 53.4,
+      "scoreShrunk": 53.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3707,7 +3707,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 67.9,
+          "pct": 70,
           "weight": 0.4
         },
         {
@@ -3717,7 +3717,7 @@
         },
         {
           "key": "dilution",
-          "pct": 50,
+          "pct": 53.1,
           "weight": 1.3
         }
       ],
@@ -3763,7 +3763,7 @@
       "ipoYear": 2024,
       "coverageAxes": "5/7",
       "coverageWeight": 0.84,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
       "scoreBase": 52.3,
       "scoreShrunk": 52.1,
@@ -3824,7 +3824,7 @@
       "rank": 9,
       "rankGrund": null,
       "ticker": "XPER",
-      "score": 40.8,
+      "score": 41.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3850,10 +3850,10 @@
       "ipoYear": 2022,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 39.8,
-      "scoreShrunk": 40.8,
+      "scoreBase": 40.3,
+      "scoreShrunk": 41.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3882,7 +3882,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 82.1,
+          "pct": 83.3,
           "weight": 0.4
         },
         {
@@ -3892,7 +3892,7 @@
         },
         {
           "key": "dilution",
-          "pct": 36.7,
+          "pct": 40.6,
           "weight": 1.3
         }
       ],
@@ -3911,7 +3911,7 @@
       "rank": 10,
       "rankGrund": null,
       "ticker": "SOHU",
-      "score": 39,
+      "score": 39.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3936,10 +3936,10 @@
       "ipoYear": 2000,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 59.5,
-      "scoreShrunk": 58.6,
+      "scoreBase": 59.7,
+      "scoreShrunk": 58.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3968,7 +3968,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 53.6,
+          "pct": 56.7,
           "weight": 0.4
         },
         {
@@ -3978,7 +3978,7 @@
         },
         {
           "key": "dilution",
-          "pct": 83.3,
+          "pct": 84.4,
           "weight": 1.3
         }
       ],
@@ -3997,7 +3997,7 @@
       "rank": 11,
       "rankGrund": null,
       "ticker": "SWMR",
-      "score": 32.4,
+      "score": 32.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4026,10 +4026,10 @@
       "ipoYear": 2026,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 58.2,
-      "scoreShrunk": 57.4,
+      "scoreBase": 59,
+      "scoreShrunk": 58.2,
       "factors": {
         "burn": 0.564,
         "growth": 1,
@@ -4058,7 +4058,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 3.6,
+          "pct": 10,
           "weight": 0.4
         },
         {
@@ -4068,7 +4068,7 @@
         },
         {
           "key": "dilution",
-          "pct": 30,
+          "pct": 34.4,
           "weight": 1.3
         }
       ],
@@ -4086,8 +4086,96 @@
     {
       "rank": 12,
       "rankGrund": null,
+      "ticker": "STRZ",
+      "score": 23.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.046,
+        "companion": -3.8
+      },
+      "name": "Starz Entertainment Corp.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Communication Services",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 46.5,
+      "scoreShrunk": 46.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.5
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 16.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 46.4,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 53.6,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 16.7,
+          "weight": 1.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 16.7,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 69.4,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 71.9,
+          "weight": 1.3
+        }
+      ],
+      "revGrowthYoYPct": -1.637460499856358,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 13,
+      "rankGrund": null,
       "ticker": "BTQ",
-      "score": 23.3,
+      "score": 23.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4109,17 +4197,17 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2025,
       "coverageAxes": "5/7",
       "coverageWeight": 0.7,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
       "scoreBase": 31.6,
-      "scoreShrunk": 39.3,
+      "scoreShrunk": 39.2,
       "factors": {
         "burn": 0.593,
         "growth": 1,
@@ -4158,7 +4246,7 @@
         },
         {
           "key": "dilution",
-          "pct": 3.3,
+          "pct": 3.1,
           "weight": 1.3
         }
       ],
@@ -4174,98 +4262,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 13,
-      "rankGrund": null,
-      "ticker": "STRZ",
-      "score": 23.2,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.046,
-        "companion": -3.8
-      },
-      "name": "Starz Entertainment Corp.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Communication Services",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 46.1,
-      "scoreShrunk": 46.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.5
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 16.7,
-          "weight": 1.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 46.4,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 53.6,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 16.7,
-          "weight": 1.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 10.7,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 69.4,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 70,
-          "weight": 1.3
-        }
-      ],
-      "revGrowthYoYPct": -1.637460499856358,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 14,
       "rankGrund": null,
       "ticker": "OWLS",
-      "score": 20.9,
+      "score": 21,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4296,10 +4296,10 @@
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.96,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 21.6,
-      "scoreShrunk": 25.4,
+      "scoreBase": 21.8,
+      "scoreShrunk": 25.5,
       "factors": {
         "burn": 0.824,
         "growth": 1,
@@ -4338,7 +4338,7 @@
         },
         {
           "key": "dilution",
-          "pct": 16.7,
+          "pct": 18.8,
           "weight": 1.3
         }
       ],
@@ -4357,7 +4357,7 @@
       "rank": 15,
       "rankGrund": null,
       "ticker": "PLTS",
-      "score": 12.7,
+      "score": 12.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4386,10 +4386,10 @@
       "ipoYear": 2025,
       "coverageAxes": "5/7",
       "coverageWeight": 0.84,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
       "scoreBase": 15.9,
-      "scoreShrunk": 24.6,
+      "scoreShrunk": 24.5,
       "factors": {
         "burn": 0.517,
         "growth": 1,

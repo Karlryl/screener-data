@@ -1,18 +1,102 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-23T09:13:04.426Z",
+  "generated_at": "2026-09-24T09:01:45.264Z",
   "branch": "industrials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.6,
-    "generated_at": "2026-09-23T09:05:35.402Z"
+    "coverage_pct": 84.7,
+    "generated_at": "2026-09-24T08:53:55.460Z"
   },
   "profitable": [
     {
       "rank": 1,
+      "rankGrund": null,
+      "ticker": "PANL",
+      "score": 65.1,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.056,
+        "companion": 53.6
+      },
+      "name": "Pangaea Logistics Solutions Ltd.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 34,
+      "cohortFallback": false,
+      "scoreBase": 66,
+      "scoreShrunk": 65.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 77.3,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 80.3,
+          "weight": 2.4
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 14.5,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 77.3,
+          "weight": 1.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 89.4,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 82.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 47,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 19.419873635841476,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 2,
       "rankGrund": null,
       "ticker": "FIP",
       "score": 65.1,
@@ -44,7 +128,7 @@
       "ipoYear": 2022,
       "coverageAxes": "6/7",
       "coverageWeight": 0.81,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
       "scoreBase": 70.3,
       "scoreShrunk": 65.1,
@@ -81,7 +165,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 1.5,
+          "pct": 1.6,
           "weight": 1.6
         },
         {
@@ -105,94 +189,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 2,
-      "rankGrund": null,
-      "ticker": "PANL",
-      "score": 64.8,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.056,
-        "companion": 53.6
-      },
-      "name": "Pangaea Logistics Solutions Ltd.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2013,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 35,
-      "cohortFallback": false,
-      "scoreBase": 65.6,
-      "scoreShrunk": 64.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 77.3,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 80.3,
-          "weight": 2.4
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 14.5,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 77.3,
-          "weight": 1.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 89.4,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 80.3,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 47,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 19.419873635841476,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 3,
       "rankGrund": null,
       "ticker": "TWIN",
-      "score": 56.9,
+      "score": 57,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -216,10 +216,10 @@
       "ipoYear": 1980,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 57.2,
-      "scoreShrunk": 56.9,
+      "scoreBase": 57.5,
+      "scoreShrunk": 57,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -253,7 +253,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 43.9,
+          "pct": 45.3,
           "weight": 1.6
         },
         {
@@ -302,9 +302,9 @@
       "ipoYear": 2010,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 56.3,
+      "scoreBase": 56.4,
       "scoreShrunk": 56,
       "factors": {
         "burn": 1,
@@ -339,7 +339,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 16.7,
+          "pct": 17.2,
           "weight": 1.6
         },
         {
@@ -363,7 +363,7 @@
       "rank": 5,
       "rankGrund": null,
       "ticker": "EBF",
-      "score": 55.6,
+      "score": 56,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -384,10 +384,10 @@
       "ipoYear": 1980,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 55.9,
-      "scoreShrunk": 55.6,
+      "scoreBase": 56.3,
+      "scoreShrunk": 56,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -421,7 +421,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 83.3,
+          "pct": 85.9,
           "weight": 1.6
         },
         {
@@ -445,7 +445,7 @@
       "rank": 6,
       "rankGrund": null,
       "ticker": "KE",
-      "score": 55.1,
+      "score": 55.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -468,10 +468,10 @@
       "ipoYear": 2014,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 55.3,
-      "scoreShrunk": 55.1,
+      "scoreBase": 55.7,
+      "scoreShrunk": 55.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -505,7 +505,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 68.2,
+          "pct": 70.3,
           "weight": 1.6
         },
         {
@@ -529,7 +529,7 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "BWMN",
-      "score": 54.8,
+      "score": 55,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -554,10 +554,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 55,
-      "scoreShrunk": 54.8,
+      "scoreBase": 55.3,
+      "scoreShrunk": 55,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -591,7 +591,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56.1,
+          "pct": 57.8,
           "weight": 1.6
         },
         {
@@ -618,7 +618,7 @@
       "rank": 8,
       "rankGrund": null,
       "ticker": "CASS",
-      "score": 53.6,
+      "score": 53.7,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -641,10 +641,10 @@
       "ipoYear": 1996,
       "coverageAxes": "4/7",
       "coverageWeight": 0.58,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
       "scoreBase": 58.3,
-      "scoreShrunk": 53.6,
+      "scoreShrunk": 53.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -702,7 +702,7 @@
       "rank": 9,
       "rankGrund": null,
       "ticker": "ESEA",
-      "score": 51.7,
+      "score": 52.1,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -726,10 +726,10 @@
       "ipoYear": 2006,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 51.8,
-      "scoreShrunk": 51.7,
+      "scoreBase": 52.2,
+      "scoreShrunk": 52.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -763,7 +763,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 89.4,
+          "pct": 92.2,
           "weight": 1.6
         },
         {
@@ -790,7 +790,7 @@
       "rank": 10,
       "rankGrund": null,
       "ticker": "SWBI",
-      "score": 51.2,
+      "score": 51.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -811,10 +811,10 @@
       "ipoYear": 1999,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 78.3,
-      "scoreShrunk": 76.8,
+      "scoreBase": 78.7,
+      "scoreShrunk": 77.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -848,7 +848,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 92.4,
+          "pct": 95.3,
           "weight": 1.6
         },
         {
@@ -872,7 +872,7 @@
       "rank": 11,
       "rankGrund": null,
       "ticker": "TATT",
-      "score": 50.7,
+      "score": 50.8,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -889,17 +889,17 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 1987,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
       "scoreBase": 50.8,
-      "scoreShrunk": 50.7,
+      "scoreShrunk": 50.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -933,7 +933,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 7.6,
+          "pct": 7.8,
           "weight": 1.6
         },
         {
@@ -957,7 +957,7 @@
       "rank": 12,
       "rankGrund": null,
       "ticker": "CEPL",
-      "score": 50.5,
+      "score": 50.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -984,10 +984,10 @@
       "ipoYear": 2026,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 50.5,
-      "scoreShrunk": 50.5,
+      "scoreBase": 50.6,
+      "scoreShrunk": 50.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1021,7 +1021,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 13.6,
+          "pct": 14.1,
           "weight": 1.6
         },
         {
@@ -1048,7 +1048,7 @@
       "rank": 13,
       "rankGrund": null,
       "ticker": "RLGT",
-      "score": 49.9,
+      "score": 50.1,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -1065,17 +1065,17 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2006,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 49.9,
-      "scoreShrunk": 49.9,
+      "scoreBase": 50.1,
+      "scoreShrunk": 50.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1109,7 +1109,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 31.8,
+          "pct": 32.8,
           "weight": 1.6
         },
         {
@@ -1133,7 +1133,7 @@
       "rank": 14,
       "rankGrund": null,
       "ticker": "PKOH",
-      "score": 49.2,
+      "score": 49.4,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1156,10 +1156,10 @@
       "ipoYear": 1973,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 49.1,
-      "scoreShrunk": 49.2,
+      "scoreBase": 49.4,
+      "scoreShrunk": 49.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1193,7 +1193,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 47,
+          "pct": 48.4,
           "weight": 1.6
         },
         {
@@ -1217,7 +1217,7 @@
       "rank": 15,
       "rankGrund": null,
       "ticker": "OFLX",
-      "score": 47.7,
+      "score": 48.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1238,10 +1238,10 @@
       "ipoYear": 2005,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 47.6,
-      "scoreShrunk": 47.7,
+      "scoreBase": 48,
+      "scoreShrunk": 48.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1275,7 +1275,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 95.5,
+          "pct": 98.4,
           "weight": 1.6
         },
         {
@@ -1299,7 +1299,7 @@
       "rank": 16,
       "rankGrund": null,
       "ticker": "LXFR",
-      "score": 47.4,
+      "score": 47.8,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1322,10 +1322,10 @@
       "ipoYear": 2012,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 47.3,
-      "scoreShrunk": 47.4,
+      "scoreBase": 47.7,
+      "scoreShrunk": 47.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1359,7 +1359,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.4,
+          "pct": 89.1,
           "weight": 1.6
         },
         {
@@ -1383,7 +1383,7 @@
       "rank": 17,
       "rankGrund": null,
       "ticker": "ORN",
-      "score": 46.2,
+      "score": 46.3,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1409,10 +1409,10 @@
       "ipoYear": 2007,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 46,
-      "scoreShrunk": 46.2,
+      "scoreBase": 46.1,
+      "scoreShrunk": 46.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1446,7 +1446,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 34.8,
+          "pct": 35.9,
           "weight": 1.6
         },
         {
@@ -1470,7 +1470,7 @@
       "rank": 18,
       "rankGrund": null,
       "ticker": "TWI",
-      "score": 44,
+      "score": 44.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1495,10 +1495,10 @@
       "ipoYear": 1993,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 43.7,
-      "scoreShrunk": 44,
+      "scoreBase": 43.9,
+      "scoreShrunk": 44.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1532,7 +1532,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 37.9,
+          "pct": 39.1,
           "weight": 1.6
         },
         {
@@ -1556,7 +1556,7 @@
       "rank": 19,
       "rankGrund": null,
       "ticker": "ONT",
-      "score": 43.8,
+      "score": 44,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -1573,17 +1573,17 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 2020,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 43.4,
-      "scoreShrunk": 43.8,
+      "scoreBase": 43.6,
+      "scoreShrunk": 44,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1617,7 +1617,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 53,
+          "pct": 54.7,
           "weight": 1.6
         },
         {
@@ -1644,7 +1644,7 @@
       "rank": 20,
       "rankGrund": null,
       "ticker": "BBCP",
-      "score": 43.7,
+      "score": 43.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -1668,10 +1668,10 @@
       "ipoYear": 2017,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 43.3,
-      "scoreShrunk": 43.7,
+      "scoreBase": 43.5,
+      "scoreShrunk": 43.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1705,7 +1705,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 40.9,
+          "pct": 42.2,
           "weight": 1.6
         },
         {
@@ -1729,7 +1729,7 @@
       "rank": 21,
       "rankGrund": null,
       "ticker": "OPAL",
-      "score": 43.3,
+      "score": 43.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1756,10 +1756,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 42.9,
-      "scoreShrunk": 43.3,
+      "scoreBase": 43.1,
+      "scoreShrunk": 43.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1793,7 +1793,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 51.6,
           "weight": 1.6
         },
         {
@@ -1842,7 +1842,7 @@
       "ipoYear": 2013,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
       "scoreBase": 42.8,
       "scoreShrunk": 43.2,
@@ -1879,7 +1879,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 10.6,
+          "pct": 10.9,
           "weight": 1.6
         },
         {
@@ -1903,7 +1903,7 @@
       "rank": 23,
       "rankGrund": null,
       "ticker": "FSTR",
-      "score": 42.9,
+      "score": 43.1,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1928,10 +1928,10 @@
       "ipoYear": 1981,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 42.4,
-      "scoreShrunk": 42.9,
+      "scoreBase": 42.7,
+      "scoreShrunk": 43.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1965,7 +1965,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 65.2,
+          "pct": 67.2,
           "weight": 1.6
         },
         {
@@ -1989,7 +1989,7 @@
       "rank": 24,
       "rankGrund": null,
       "ticker": "JBI",
-      "score": 40.5,
+      "score": 40.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2010,10 +2010,10 @@
       "ipoYear": 2019,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 40,
-      "scoreShrunk": 40.5,
+      "scoreBase": 40.3,
+      "scoreShrunk": 40.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2047,7 +2047,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 71.2,
+          "pct": 73.4,
           "weight": 1.6
         },
         {
@@ -2096,9 +2096,9 @@
       "ipoYear": 2022,
       "coverageAxes": "6/7",
       "coverageWeight": 0.94,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 37.1,
+      "scoreBase": 37.2,
       "scoreShrunk": 38.4,
       "factors": {
         "burn": 1,
@@ -2133,7 +2133,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 4.5,
+          "pct": 4.7,
           "weight": 1.6
         },
         {
@@ -2160,7 +2160,7 @@
       "rank": 26,
       "rankGrund": null,
       "ticker": "WNC",
-      "score": 34,
+      "score": 34.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -2185,10 +2185,10 @@
       "ipoYear": 1991,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 33.1,
-      "scoreShrunk": 34,
+      "scoreBase": 33.5,
+      "scoreShrunk": 34.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2222,7 +2222,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 77.3,
+          "pct": 79.7,
           "weight": 1.6
         },
         {
@@ -2246,7 +2246,7 @@
       "rank": 27,
       "rankGrund": null,
       "ticker": "FWRD",
-      "score": 32.1,
+      "score": 32.4,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2263,17 +2263,17 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 1993,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 31,
-      "scoreShrunk": 32.1,
+      "scoreBase": 31.3,
+      "scoreShrunk": 32.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2307,7 +2307,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 62.1,
+          "pct": 64.1,
           "weight": 1.6
         },
         {
@@ -2331,7 +2331,7 @@
       "rank": 28,
       "rankGrund": null,
       "ticker": "ACCO",
-      "score": 29,
+      "score": 29.1,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2355,10 +2355,10 @@
       "ipoYear": 2005,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 43.2,
-      "scoreShrunk": 43.6,
+      "scoreBase": 43.3,
+      "scoreShrunk": 43.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2392,7 +2392,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 28.8,
+          "pct": 29.7,
           "weight": 1.6
         },
         {
@@ -2416,7 +2416,7 @@
       "rank": 29,
       "rankGrund": null,
       "ticker": "ISSC",
-      "score": 29,
+      "score": 29.1,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -2439,10 +2439,10 @@
       "ipoYear": null,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 73.8,
-      "scoreShrunk": 72.5,
+      "scoreBase": 74.1,
+      "scoreShrunk": 72.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2476,7 +2476,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74.2,
+          "pct": 76.6,
           "weight": 1.6
         },
         {
@@ -2500,7 +2500,7 @@
       "rank": 30,
       "rankGrund": null,
       "ticker": "GASS",
-      "score": 26.6,
+      "score": 26.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2524,10 +2524,10 @@
       "ipoYear": 2005,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 25.3,
-      "scoreShrunk": 26.6,
+      "scoreBase": 25.6,
+      "scoreShrunk": 26.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2561,7 +2561,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 59.1,
+          "pct": 60.9,
           "weight": 1.6
         },
         {
@@ -2608,10 +2608,10 @@
       "ipoYear": 2002,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 86.9,
-      "scoreShrunk": 84.9,
+      "scoreBase": 87,
+      "scoreShrunk": 85,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2645,7 +2645,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 22.7,
+          "pct": 23.4,
           "weight": 1.6
         },
         {
@@ -2693,10 +2693,10 @@
       "ipoYear": 2008,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 45.7,
-      "scoreShrunk": 46,
+      "scoreBase": 45.8,
+      "scoreShrunk": 46.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2730,7 +2730,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 19.7,
+          "pct": 20.3,
           "weight": 1.6
         },
         {
@@ -2779,10 +2779,10 @@
       "ipoYear": 2010,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 34,
       "cohortFallback": false,
-      "scoreBase": 36.2,
-      "scoreShrunk": 36.9,
+      "scoreBase": 36.3,
+      "scoreShrunk": 37.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2816,7 +2816,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 25.8,
+          "pct": 26.6,
           "weight": 1.6
         },
         {
@@ -4145,7 +4145,7 @@
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": -27.682819230835765,
+      "revGrowthYoYPct": -27.682819230835776,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
@@ -4347,7 +4347,7 @@
       "overview": {
         "kind": "gp",
         "value": -0.992,
-        "companion": -203.5
+        "companion": -203.3
       },
       "name": "AIAI Holdings Corporation",
       "country": "United States",
@@ -4414,10 +4414,10 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -81.1,
+        "distancePct": -82,
         "athDate": "2026-06-23",
         "monthsAgo": 3,
-        "lastDate": "2026-09-21"
+        "lastDate": "2026-09-23"
       },
       "qPunkte": null,
       "qSpanTage": null,
