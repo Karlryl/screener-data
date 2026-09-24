@@ -1,24 +1,24 @@
 {
   "schema": "coverage-status/v1",
-  "generated_at": "2026-09-23T09:05:35.402Z",
-  "run_id": "35833231709",
+  "generated_at": "2026-09-24T08:53:55.460Z",
+  "run_id": "35970339402",
   "status": "degradiert",
   "degraded": true,
   "blocked": false,
-  "n_ok": 16100,
-  "n_total": 21869,
-  "n_full": 160,
-  "n_priceonly": 15940,
+  "n_ok": 16044,
+  "n_total": 18934,
+  "n_full": 301,
+  "n_priceonly": 15743,
   "n_shard_collisions": 0,
-  "coverage_pct": 73.6,
-  "n_addressable": 17970,
-  "honest_coverage_pct": 89.6,
-  "manifest_addressable_warning": false,
-  "n_skipped_mcap": 3442,
+  "coverage_pct": 84.7,
+  "n_addressable": null,
+  "honest_coverage_pct": null,
+  "manifest_addressable_warning": true,
+  "n_skipped_mcap": 3458,
   "n_skipped_owned": 457,
   "source": "manifest",
   "reasons": [
-    "honest-coverage 89.6% < 90% of addressable 17970 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)"
+    "manifest _addressable_warnung: n_skipped_owned=457 ergibt Nenner 15019 (n_ok=16044) — unplausibel, nutze 15476"
   ],
   "manifest_partial": false
 }
