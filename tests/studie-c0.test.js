@@ -119,7 +119,12 @@ test('C0: das Register-Manifest fuehrt seine Luecken als Luecken', () => {
     assert.ok((luecke.grund || '').length > 10, `Luecke ${luecke.quelle}/${luecke.jahrgang} ohne Begruendung`);
   }
   for (const eintrag of manifest.eintraege) {
-    assert.ok(eintrag.sha256, 'Register-Eintrag ohne Pruefsumme (R7)');
+    // Versiegelte Eintraege tragen eine Liste; heruntergeladene Einzeldateien einen String.
+    const summen = Array.isArray(eintrag.sha256) ? eintrag.sha256 : [eintrag.sha256];
+    assert.ok(summen.length > 0, 'Register-Eintrag braucht mindestens eine Pruefsumme (R7)');
+    for (const sha256 of summen) {
+      assert.match(sha256, /^[0-9a-f]{64}$/, 'jede Pruefsumme muss SHA-256 sein (R7)');
+    }
   }
 });
 

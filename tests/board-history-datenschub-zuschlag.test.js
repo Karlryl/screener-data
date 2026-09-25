@@ -191,16 +191,16 @@ check('BP-4: Einzelbewegung UEBER dem Deckel 23,00 -> SUSPECT trotz gueltigem Ei
 // Integritaet abbaut. Ohne WB-4 laeuft sie unter dem Zuschlag mit durch.
 const FTI_BEWEGUNG = [12.0];
 const FTI_FAELLE = [
-  ['coverageAxes 6/7 -> 4/7', { coverageAxes: '4/7' }],
-  ['annualOpInc-Form: gefuellte Quellreihe wird LEER', { pit: { revenueQ: [], revenueQEnds: ['2026-06-30'], grossProfitQ: [60], grossProfitQEnds: ['2026-06-30'] } }],
-  ['annualGP-Form: Quellreihe wird komplett null', { pit: { revenueQ: [null, null, null], revenueQEnds: ['2026-06-30'], grossProfitQ: [60], grossProfitQEnds: ['2026-06-30'] } }],
+  ['coverageAxes 6/7 -> 4/7', { coverageAxes: '4/7' }, 'coverageAxes 6/7 -> 4/7'],
+  ['annualOpInc-Form: gefuellte Quellreihe wird LEER', { pit: { revenueQ: [], revenueQEnds: ['2026-06-30'], grossProfitQ: [60], grossProfitQEnds: ['2026-06-30'] } }, 'revenueQ gefuellt -> leer/null'],
+  ['annualGP-Form: Quellreihe wird komplett null', { pit: { revenueQ: [null, null, null], revenueQEnds: ['2026-06-30'], grossProfitQ: [60], grossProfitQEnds: ['2026-06-30'] } }, 'revenueQ gefuellt -> leer/null'],
   // WB-4' (05.09.2026): Quell-Lampen-Verlust OHNE SEC-Beweis bleibt Verfall (Arm c); Diagnose-Lampen
   // sind seit WB-4' Beobachtung ohne Veto (Arm d) — deren Freigabe pinnt tests/wertgate-wb4strich.test.js.
-  ['Quell-Lampe opIncYahooAdjusted geht verloren (ohne SEC-Beweis, WB-4-Strich Arm c)', { lamps: ['peakMargin'] }],
-  ['beide Lampen weg (darunter die Quell-Lampe, ohne SEC-Beweis)', { lamps: [] }],
-  ['PIT-Block ganz weg (Snapshot verloren)', { pit: null }],
+  ['Quell-Lampe opIncYahooAdjusted geht verloren (ohne SEC-Beweis, WB-4-Strich Arm c)', { lamps: ['peakMargin'] }, 'Lampe opIncYahooAdjusted verloren'],
+  ['beide Lampen weg (darunter die Quell-Lampe, ohne SEC-Beweis)', { lamps: [] }, 'Lampe opIncYahooAdjusted verloren'],
+  ['PIT-Block ganz weg (Snapshot verloren)', { pit: null }, 'revenueQ gefuellt -> leer/null'],
 ];
-for (const [was, felder] of FTI_FAELLE) {
+for (const [was, felder, verfallenesFeld] of FTI_FAELLE) {
   check('BP-5: Integritaets-Vorrang, ' + was + ' -> SUSPECT trotz Eintrag und trotz |D| < 23,00', () => {
     const g = gate(lage({ bewegungen: FTI_BEWEGUNG, verfall: { ticker: 'T0', felder } }), EINTRAG);
     assert.ok(g.p99Delta < DECKEL, 'Vorbedingung: die Bewegung liegt UNTER dem Deckel (' + g.p99Delta + ')');
@@ -210,7 +210,8 @@ for (const [was, felder] of FTI_FAELLE) {
     assert.ok(g.reasons.some((r) => r.startsWith('integritaets-verfall:')), 'Grund: ' + g.reasons.join(','));
     assert.strictEqual(g.verfallsZeilen.length, 1, 'genau eine Zeile faellt');
     assert.strictEqual(g.verfallsZeilen[0].ticker, 'T0', 'die gefasste Zeile muss NAMENTLICH benannt sein');
-    assert.ok(g.verfallsZeilen[0].feld, 'ohne ausloesendes Feld ist der Befund nicht nachpruefbar');
+    assert.strictEqual(g.verfallsZeilen[0].feld, verfallenesFeld,
+      'der Befund muss genau das in dieser Fixture verfallene Feld nennen');
   });
 }
 

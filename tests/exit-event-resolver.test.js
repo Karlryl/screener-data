@@ -426,7 +426,8 @@ async function testSchema() {
       assert.ok(r.terminalValue === null || Number.isFinite(r.terminalValue));
       assert.ok(r.confidence >= 0 && r.confidence <= 1);
       if (r.terminalValue === null && r.valueBasis !== R.ValueBasis.INSOLVENCY_ZERO_BY_RULE) {
-        assert.ok(r.unresolvedReason, 'kein Wert ohne benannten Grund — das ist der ganze Punkt');
+        assert.ok(Object.values(R.Unresolved).includes(r.unresolvedReason),
+          'kein Wert ohne einen exportierten Unresolved-Grund: ' + r.unresolvedReason);
       }
     });
   }
