@@ -75,3 +75,21 @@ F13 Batch 1+2 (Commits fa7c15f, 3ae946a) und F24 (Commit mit Metadaten-Fehler).
   als „Claim ohne Commit = frei" definieren. Loeschen nur mit Karls OK.
 - L1-Aufgaben nachholen: #361 (S26) fixen, 12 `claude/S*`-PRs, Merge-Reihenfolge screener-data.
 - #376 (S58): drei rote Test-Dateien in CI, Ursache im PR (L3).
+
+## 5. Review und Merge durch Claude (25.09., 12:15–13:30 Ortszeit)
+
+**screener-data: 15 PRs gemerged** (Squash, Tag 1369–1383, `main` @ 714e1e5):
+#359 S14, #370 S16, #360 S18, #363 S50, #364 S12, #365 S11, #366 S44, #367 S08, #368 S48, #369 S40, #371 S57, #372 S51,
+#373 S42, #374 S55, #375 S02. Pruefung: kein TABU-Pfad, keine geloeschte Datei; jede entfernte Zusicherung (S16) durch einen
+exakten Wert ersetzt; S18 in allen 29 lib-Dateien nach Kommentar-Strip byte-gleich; Produktivcode (S50, S57, S42, S51, S40, S48)
+Zeile fuer Zeile gelesen. Lokaler Integrationslauf aller 15 auf `main` 28a6f4e: dieselben 5 Umgebungs-Roten wie `main`
+(flacher Klon), 23 gruene Testdateien mehr, keine neue rote. Neuer `main`-Baum = getesteter Integrationsbaum (byte-gleich).
+Nicht gemerged: #376 S58 (CI rot, Draft), #361 S26 (CI rot).
+
+**findash: 13 PRs geprueft, NICHT gemerged.** Integrationslauf aller 13 auf `master` 79efe01 in CI-Reihenfolge:
+web build, `tsc`, `typecheck:e2e` gruen; Render-Tests 126 -> 147 Dateien, 1.454 -> 1.714 Tests, alle gruen; `node --test`
+1.990 -> 2.036 Tests mit denselben 2 Roten und 4 Abbruechen wie `master` (bash-Deploy-Proben, Cache-Timeout-Datei;
+Container-Umgebung). F40 (#67): die 8 geaenderten Browser-Specs 73/73 gruen, auf `master` ebenfalls 73/73.
+Merge wurde von der automatischen Freigabe als „Merge Without Review" gestoppt (kein GitHub-CI-Lauf wegen Billing-Sperre).
+Entscheidung und Merge liegen bei Karl. Hinweis: im Container scheitert `cd web && npm ci` mit „Missing: lru-cache@11.5.3
+from lock file" — der F07-Befund ist npm-versionsabhaengig, nicht erledigt.
