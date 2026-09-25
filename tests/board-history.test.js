@@ -21,8 +21,13 @@ function check(name, fn) {
 }
 
 // ── Fixture-Helfer ───────────────────────────────────────────────────────────
+const fixtureDirs = [];
+process.once('exit', () => {
+  for (const dir of fixtureDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
 function mkBase() {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-'));
+  fixtureDirs.push(base);
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   return base;
@@ -323,7 +328,8 @@ check('(c2) frische Vintages (jünger als t0+2Q) bleiben von --compact unberühr
   const res = W.run({ baseDir: base, compact: true, date: today });
   assert.strictEqual(res.compacted.length, 0, 'nichts kompaktiert');
   const v = readVintage(base, recent, 'semiconductors');
-  assert.ok(v.cohort.profitable[0].pit, 'PIT bleibt bei frischem Vintage');
+  assert.deepStrictEqual(v.cohort.profitable[0].pit, { beta: 1.5 },
+    'PIT bleibt bei frischem Vintage inhaltlich unveraendert');
 });
 
 // ── (d) _excluded-Gerüst ─────────────────────────────────────────────────────

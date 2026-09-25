@@ -214,7 +214,9 @@ test('R9 und R15 sind keine blossen Vorlagen mehr, und ihr Artefakt existiert', 
     const regel = regelwerk.regeln.find((r) => r.id === id);
     assert.equal(regel.waechter.art, 'skript', `${id} ist noch Vorlage`);
     assert.match(String(regel.waechter.artefakt), /studie-zaehlprobe\.py/, `${id} ohne Artefakt-Verweis`);
-    assert.ok(regel.waechter.test, `${id} ohne Test`);
+    assert.equal(typeof regel.waechter.test, 'string', `${id} braucht einen Testpfad als String`);
+    assert.ok(regel.waechter.test.trim().length > 0, `${id} ohne Test`);
+    assert.ok(fs.existsSync(P(regel.waechter.test)), `${id}: referenzierter Test fehlt: ${regel.waechter.test}`);
   }
   assert.ok(fs.existsSync(P('scripts', 'studie-zaehlprobe.py')));
 });

@@ -43,7 +43,15 @@ function mitProtokoll(fn) {
   return { wert, text: zeilen.join('\n') };
 }
 
-const tmp = (praefix) => fs.mkdtempSync(path.join(os.tmpdir(), praefix));
+const fixtureDirs = [];
+process.once('exit', () => {
+  for (const dir of fixtureDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
+const tmp = (praefix) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), praefix));
+  fixtureDirs.push(dir);
+  return dir;
+};
 const summe = (schluessel) =>
   crypto.createHash('sha256').update([...schluessel].sort().join(',')).digest('hex').slice(0, 16);
 
@@ -130,13 +138,16 @@ check('Rotation: altes Grundbild landet als NEUE Datei im Archiv, nichts wird ge
   fs.writeFileSync(path.join(dir, '_grundbild.json'), JSON.stringify(alt));
   const neu = new Map([['A', { n: 'A AG', b: 'Q' }], ['C', { n: 'C AG', b: 'N' }]]);
   const { wert } = mitProtokoll(() => T.rotiereGrundbild(neu, '2026-08-03', dir));
-  assert.ok(wert, 'im neuen Monat MUSS rotiert werden');
+  assert.deepEqual(wert, { ab: '2026-08-03', vorher: alt.ab, symbole: neu.size,
+    archiv: path.join('archiv', '_grundbild-bis-2026-08-03.json') },
+  'die Rotation muss Datum, Vorgaenger, Symbolzahl und Archivpfad melden');
   const archivDatei = path.join(dir, 'archiv', fs.readdirSync(path.join(dir, 'archiv'))[0]);
   const archiviert = JSON.parse(fs.readFileSync(archivDatei, 'utf8'));
   assert.deepEqual(archiviert, alt, 'die Archiv-Kopie muss das ALTE Bild unveraendert enthalten');
   const jetzt = JSON.parse(fs.readFileSync(path.join(dir, '_grundbild.json'), 'utf8'));
   assert.equal(jetzt.ab, '2026-08-03', 'das neue Bild muss sagen, AB WANN es gilt');
   assert.deepEqual(Object.keys(jetzt.symbole).sort(), ['A', 'C']);
+  assert.deepEqual(jetzt.symbole, Object.fromEntries(neu), 'das neue Grundbild traegt die Fixture-Werte');
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

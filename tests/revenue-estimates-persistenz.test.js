@@ -140,7 +140,8 @@ check('die bestehende epsRevisions-Persistenz bleibt unberuehrt', () => {
   assert.ok(s.external.estimateRevisions && s.external.estimateRevisions['0y'],
     'das additive Feld darf das bestehende nicht verdraengen');
   assert.strictEqual(s.external.estimateRevisions['0y'].upLast30Days, 3);
-  assert.ok(s.external.revenueEstimates['0y'], 'und umgekehrt');
+  assert.deepStrictEqual(s.external.revenueEstimates['0y'],
+    { avg: 500, growth: 0.1, numberOfAnalysts: 4 }, 'die Umsatzprognose bleibt ebenfalls vollstaendig');
 });
 
 console.log(fail ? '\nFAILED: ' + fail : '\nalle gruen');

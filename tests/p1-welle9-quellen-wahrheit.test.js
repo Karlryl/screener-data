@@ -383,7 +383,9 @@ check('F-CGPT-028-Nachzug Gegenprobe: voller Ausfall (0 Transaktionen) laesst de
   assert.deepEqual(e.transactions, prev.transactions,
     'ohne frische Transaktionen bleibt der letzte gute Stand unangetastet');
   assert.equal(e.fetchedAt, prev.fetchedAt);
-  assert.ok(e.failedAt);
+  assert.match(e.failedAt, /^\d{4}-\d{2}-\d{2}T/, 'failedAt muss einen ISO-Zeitstempel tragen');
+  assert.ok(Date.parse(e.failedAt) >= Date.parse(prev.fetchedAt),
+    'der Ausfallzeitpunkt darf nicht vor dem letzten guten Abruf liegen');
 });
 
 const F4_SRC = fs.readFileSync(require.resolve('../scripts/pull-insider-form4.js'), 'utf8');

@@ -28,8 +28,13 @@ function check(name, fn) {
   catch (e) { fail++; console.log('  FAIL ' + name + ': ' + (e && e.message || e)); }
 }
 
+const fixtureDirs = [];
+process.once('exit', () => {
+  for (const dir of fixtureDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
 function mkBase() {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-p99-'));
+  fixtureDirs.push(base);
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   return base;
@@ -58,7 +63,8 @@ check('(1) erstes Vintage -> Sidecar traegt das Datum, Werte = Log-Quellfelder',
   const res = W.run({ baseDir: base, date: '2026-08-01' });
   assert.strictEqual(res.exitCode, 0, 'Vorbedingung: kein suspect am ersten Tag');
   const sc = readSidecar(base);
-  assert.ok(sc.byDate['2026-08-01'], 'Datum fehlt im Sidecar');
+  assert.deepStrictEqual(Object.keys(sc.byDate['2026-08-01']), ['semiconductors'],
+    'der erste Tag muss genau das geschriebene Board tragen');
   const entry = sc.byDate['2026-08-01'].semiconductors;
   const b = res.boards.find((x) => x.board === 'semiconductors');
   assert.strictEqual(entry.p99Delta, b.p99Delta, 'p99Delta muss identisch zum Lauf-Ergebnis sein');
@@ -72,6 +78,7 @@ check('(2) suspect-Folgetag -> Sidecar traegt den Tag TROTZDEM, suspect:true sic
   const base = mkBase();
   writeBoard(base, 'semiconductors', [row('AAA', 50), row('BBB', 60)]);
   W.run({ baseDir: base, date: '2026-08-01' });
+  const tag1 = readSidecar(base).byDate['2026-08-01'];
   // Tag 2: massiver Sprung -> p99Delta > wirksameSchwelle (Kalibrier-Boden 11.5) -> suspect.
   writeBoard(base, 'semiconductors', [row('AAA', 95), row('BBB', 60)]);
   const res2 = W.run({ baseDir: base, date: '2026-08-02' });
@@ -79,7 +86,7 @@ check('(2) suspect-Folgetag -> Sidecar traegt den Tag TROTZDEM, suspect:true sic
   const b2 = res2.boards.find((x) => x.board === 'semiconductors');
   assert.strictEqual(b2.suspect, true, 'Vorbedingung: suspect-Flag gesetzt');
   const sc = readSidecar(base);
-  assert.ok(sc.byDate['2026-08-02'], 'GATE-DEFEKT (Rot-Beleg): Sidecar-Eintrag fehlt am SUSPECT-Tag — '
+  assert.deepStrictEqual(Object.keys(sc.byDate).sort(), ['2026-08-01', '2026-08-02'], 'GATE-DEFEKT (Rot-Beleg): Sidecar-Eintrag fehlt am SUSPECT-Tag — '
     + 'die Messreihe darf an Suspect-Tagen NICHT luecken, sonst ist "gemessen" wieder nicht von '
     + '"nicht gemessen" zu unterscheiden (dieselbe Fehlerklasse wie GATE BLIND).');
   const entry = sc.byDate['2026-08-02'].semiconductors;
@@ -87,7 +94,8 @@ check('(2) suspect-Folgetag -> Sidecar traegt den Tag TROTZDEM, suspect:true sic
   assert.strictEqual(entry.p99Delta, b2.p99Delta);
   assert.strictEqual(entry.thr, b2.wirksameSchwelle);
   // ── Ausbau-Probe: Tag 1 bleibt erhalten (Merge, kein Ueberschreiben der Reihe) ──
-  assert.ok(sc.byDate['2026-08-01'], 'Tag 1 darf beim Schreiben von Tag 2 nicht verloren gehen');
+  assert.deepStrictEqual(sc.byDate['2026-08-01'], tag1,
+    'Tag 1 muss beim Schreiben von Tag 2 inhaltlich unveraendert bleiben');
 });
 
 // ── 3. Rerun desselben Datums ersetzt den Tag, dupliziert ihn nicht ────────

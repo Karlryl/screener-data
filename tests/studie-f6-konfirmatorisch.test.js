@@ -314,7 +314,8 @@ test('der Eintrag sagt selbst, dass der Lauf erst nach gruenem Review feuert',
     // Restrisiken: alle sechs Auflagen-Glieder plus die zwei aus F6-C11.
     for (const k of ['F6-C7g(c)', 'F6-C7g(d)', 'F6-C7g(e)', 'F6-C8j(f)', 'F6-C8j(g)',
       'F6-C8j(h)', 'F6-C11(a)', 'F6-C11(b)']) {
-      assert.ok(e.restrisiko[k], `Restrisiko ${k} fehlt`);
+      assert.strictEqual(typeof e.restrisiko[k], 'string', `Restrisiko ${k} braucht einen Text`);
+      assert.ok(e.restrisiko[k].trim().length >= 10, `Restrisiko ${k} braucht eine Begruendung`);
     }
     // R12a: KEIN Nutzerverzeichnis, KEIN absoluter Pfad — ohne Ausnahme.
     // Die erste Fassung dieses Waechters nahm ausgerechnet arbeitspfad aus und
