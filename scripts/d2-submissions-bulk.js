@@ -207,16 +207,29 @@ function downloadBulk(ua, dest) {
   // Schreibstrom weder 'finish' noch 'close' — er bliebe offen. In diesem
   // Einmal-Prozess raeumt der Prozess-Ende auf, in einer Wiederhol-Schleife nicht.
   // Deshalb hier explizit: ein abgebrochener Download schliesst seine Datei.
-  let ws = null;
-  const abbrechen = (fehler) => { if (ws) ws.destroy(); reject(fehler); };
   return new Promise((resolve, reject) => {
+    const tmp = dest + '.part';
+    let ws = null, beendet = false;
+    const abbrechen = (fehler) => {
+      if (beendet) return;
+      beendet = true;
+      const aufraeumen = () => {
+        try { fs.unlinkSync(tmp); } catch (_) { /* best effort; Originalfehler behalten */ }
+        reject(fehler);
+      };
+      // destroy() wartet weder auf open noch auf close. Erst nach close ist die
+      // Datei auch unter Windows sicher freigegeben und kann nicht neu entstehen.
+      if (ws && !ws.closed) { ws.once('close', aufraeumen); ws.destroy(); }
+      else aufraeumen();
+    };
     const req = https.get({
       host: BULK_HOST, path: BULK_PATH,
       headers: { 'User-Agent': ua, 'Accept-Encoding': 'identity' },
     }, (res) => {
-      if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
+      res.on('error', abbrechen);
+      if (beendet) { res.resume(); return; }
+      if (res.statusCode !== 200) { res.resume(); return abbrechen(new Error('HTTP ' + res.statusCode)); }
       const hash = crypto.createHash('sha256');
-      const tmp = dest + '.part';
       ws = fs.createWriteStream(tmp);
       let got = 0, lastLog = Date.now();
       const declared = res.headers['content-length'] ? Number(res.headers['content-length']) : null;
@@ -228,16 +241,16 @@ function downloadBulk(ua, dest) {
             + (declared ? ' / ' + (declared / 1e6).toFixed(0) + ' MB' : ''));
         }
       });
-      res.on('error', abbrechen);
-      ws.on('error', reject);
+      ws.on('error', abbrechen);
       res.pipe(ws);
       ws.on('finish', () => {
+        if (beendet) return;
         // Abbruch-Wache: unvollstaendige Uebertragung darf NIE als Store landen.
         if (declared != null && got !== declared) {
-          try { fs.unlinkSync(tmp); } catch (_) { /* best effort */ }
-          return reject(new Error('Abbruch: ' + got + ' von ' + declared + ' Bytes empfangen'));
+          return abbrechen(new Error('Abbruch: ' + got + ' von ' + declared + ' Bytes empfangen'));
         }
-        fs.renameSync(tmp, dest);
+        try { fs.renameSync(tmp, dest); } catch (e) { return abbrechen(e); }
+        beendet = true;
         resolve({
           bytes: got, sha256: hash.digest('hex'),
           contentLength: declared, lastModified: res.headers['last-modified'] || null,
@@ -427,6 +440,7 @@ function getDoc(ua, cik, accession, doc) {
   const p = '/Archives/edgar/data/' + Number(cik) + '/' + acc + '/' + rawDocName(doc);
   return new Promise((resolve) => {
     const req = https.get({ host: BULK_HOST, path: p, headers: { 'User-Agent': ua, 'Accept-Encoding': 'identity' } }, (res) => {
+      res.on('error', () => resolve({ status: 0, body: null }));
       if (res.statusCode !== 200) { res.resume(); return resolve({ status: res.statusCode, body: null }); }
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
@@ -492,12 +506,32 @@ function readJsonl(p) {
   return fs.readFileSync(p, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
 }
 
+const appendFehler = new WeakMap();
+
+function oeffneAppendStrom(pfad) {
+  const ws = fs.createWriteStream(pfad, { flags: 'a' });
+  ws.on('error', (e) => { appendFehler.set(ws, e); });
+  return ws;
+}
+
+function schliesseAppendStrom(ws) {
+  return new Promise((resolve, reject) => {
+    const fehler = appendFehler.get(ws);
+    if (fehler) return reject(fehler);
+    const fehlgeschlagen = (e) => { ws.removeListener('finish', fertig); reject(e); };
+    const fertig = () => { ws.removeListener('error', fehlgeschlagen); resolve(); };
+    ws.once('error', fehlgeschlagen);
+    ws.once('finish', fertig);
+    ws.end();
+  });
+}
+
 async function fetchRuleProvisions(ua) {
   const hits = readJsonl(HITS_PATH);
   const done = new Set(readJsonl(RULEPROV_PATH).map((r) => r.accessionNumber));
   const todo = hits.filter((h) => h.accessionNumber && !done.has(h.accessionNumber));
   console.log('[d2.2] ruleProvision: ' + hits.length + ' Treffer, ' + done.size + ' bereits geholt, ' + todo.length + ' offen.');
-  const ws = fs.createWriteStream(RULEPROV_PATH, { flags: 'a' });
+  const ws = oeffneAppendStrom(RULEPROV_PATH);
   let n = 0, nichtErreicht = 0;
   for (const h of todo) {
     const r = await getDoc(ua, h.cik, h.accessionNumber, h.primaryDocument);
@@ -510,7 +544,7 @@ async function fetchRuleProvisions(ua) {
     if (n % 250 === 0) console.log('[d2.2] ruleProvision ' + n + '/' + todo.length);
     await drossel();
   }
-  await new Promise((res) => ws.end(res));
+  await schliesseAppendStrom(ws);
   console.log('[d2.2] ruleProvision fertig: ' + n + ' persistiert'
     + (nichtErreicht ? ', ' + nichtErreicht + ' nicht erreicht (bleiben offen)' : '') + '.');
 }
@@ -557,7 +591,7 @@ async function cmdSample() {
   }
   const pick = offen.slice(0, limit);
   console.log('[d2.2] Zufallsstratum: ' + pick.length + ' von ' + offen.length + ' offenen (Seed ' + SAMPLE_SEED + ')');
-  const ws = fs.createWriteStream(RULEPROV_PATH, { flags: 'a' });
+  const ws = oeffneAppendStrom(RULEPROV_PATH);
   let n = 0, nichtErreicht = 0;
   for (const acc of pick) {
     const h = byAcc.get(acc);
@@ -568,7 +602,7 @@ async function cmdSample() {
     if (++n % 200 === 0) console.log('[d2.2] Stratum ' + n + '/' + pick.length);
     await drossel();
   }
-  await new Promise((res) => ws.end(res));
+  await schliesseAppendStrom(ws);
   console.log('[d2.2] Zufallsstratum fertig: ' + n
     + (nichtErreicht ? ' (' + nichtErreicht + ' nicht erreicht, bleiben offen)' : ''));
 }
@@ -966,6 +1000,7 @@ if (require.main === module) {
 module.exports = {
   extractForm25, classifyRuleProvision, rawDocName, istSelbstEinreichung, windowMass,
   scanZip, istPersistierbar, provisionKlasse, parseVerlustSatz,
+  downloadBulk, getDoc, oeffneAppendStrom, schliesseAppendStrom,
   writeProbeArtifact, writeEntryStamp, writeReportJson, writeReportMarkdown, writeScanStats,
   HTTP_TIMEOUT_MS, ABORT_THRESHOLD_PCT, WINDOW_FROM, WINDOW_TO,
 };
