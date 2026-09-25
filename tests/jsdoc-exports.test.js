@@ -7,6 +7,27 @@ const fs = require('node:fs');
 const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 
+// S18's original claim that no guard hashes lib sources was false. These exact
+// paths are registered byte artifacts; comments move their hashes too. Their
+// exports remain visible in the inventory, but documentation cannot require a
+// reseal. Registration/seal changes belong to Karl/Claude, not this guard.
+const VERSIEGELT = {
+  'lib/early-detection.js':
+    'FEM-SEC-US@1.2.0: protocol/early-detection/1.2.0/hash-manifest.json:11; '
+    + 'tests/early-detection-siegel-wachposten.test.js:50-53 calls '
+    + 'scripts/early-detection-audit.js:333-368 to verify every manifest member',
+  'lib/ledger-single-appender.js':
+    'H9 executable anchor: protocol/early-detection/2.0.0/'
+    + 'h9-single-appender-enforcement-anchor-addendum-3.json:24-27; '
+    + 'tests/studie-protokoll-freeze-wachen.test.js:94-120 follows the addendum '
+    + 'chain and checks the LF-normalized module hash',
+  'lib/studie-verfassung.js':
+    'H9 registered dependency: protocol/early-detection/2.0.0/'
+    + 'h9-single-appender-enforcement-anchor-addendum-3.json:35-40 pins its '
+    + 'LF-normalized hash; tests/studie-protokoll-freeze-wachen.test.js:116-131 '
+    + 'checks the parent module/probe, not this dependency hash directly',
+};
+
 function scanSource(source) {
   const chars = source.split('');
   const comments = [];
@@ -41,6 +62,7 @@ function scanSource(source) {
         if (source[i++] === ch) break;
       }
       blank(start, i);
+      chars[start] = '0'; // Keep an operand marker for statement-boundary checks.
       previous = 'literal';
       continue;
     }
@@ -56,6 +78,7 @@ function scanSource(source) {
       }
       while (/[a-z]/i.test(source[i] || '') && i < source.length) i++;
       blank(start, i);
+      chars[start] = '0'; // Keep an operand marker for statement-boundary checks.
       previous = 'literal';
       continue;
     }
@@ -78,6 +101,24 @@ function closing(mask, start, left, right) {
 
 function inspect(source) {
   const { mask, comments } = scanSource(source);
+  // Only module-scope bindings can back these CommonJS exports. A documented
+  // same-name inner helper must never replace the actual exported definition.
+  const moduleScope = new Uint8Array(mask.length);
+  let depth = 0;
+  for (let i = 0; i < mask.length; i++) {
+    moduleScope[i] = depth === 0 ? 1 : 0;
+    if ('{(['.includes(mask[i])) depth++;
+    else if ('})]'.includes(mask[i])) depth--;
+  }
+  function isDeclarationStart(index) {
+    if (!moduleScope[index]) return false;
+    const prefix = mask.slice(0, index);
+    if (/^\s*$/.test(prefix) || /[;}]$/.test(prefix.trimEnd())) return true;
+    // ASI allows a declaration on the next line, except while an expression
+    // is waiting for an operand (including a named function expression).
+    return /\n[ \t\r]*$/.test(prefix)
+      && !/(?:[=(:,[!&|?+*/%~<>-]|\b(?:new|return|throw|yield|await|void|typeof|delete|in|instanceof))\s*$/.test(prefix);
+  }
   const definitions = new Map();
   function add(name, start, open, end) {
     const lineStart = source.lastIndexOf('\n', start - 1) + 1;
@@ -92,10 +133,12 @@ function inspect(source) {
       hasParams, documented: Boolean(doc), valid, docStart: doc ? doc.start : null });
   }
   for (const m of mask.matchAll(/\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/g)) {
+    if (!isDeclarationStart(m.index)) continue;
     const open = m.index + m[0].lastIndexOf('(');
     add(m[1], m.index, open, closing(mask, open, '(', ')'));
   }
   for (const m of mask.matchAll(/\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s+)?/g)) {
+    if (!moduleScope[m.index]) continue;
     const restStart = m.index + m[0].length;
     const rest = mask.slice(restStart);
     const expression = /^(?:function(?:\s+[A-Za-z_$][\w$]*)?\s*)?\(/.exec(rest);
@@ -165,17 +208,63 @@ for (const assignment of ['module.exports.missing = missing', 'exports.missing =
   }
 }
 
+// Scope collisions must preserve the documentation status of the outer binding.
+const nestedDocumented = [
+  'function exported(x) { return x; }',
+  'function container() {',
+  '/** Inner helper. @param {number} x Input. */',
+  'function exported(x) { return x; }',
+  'return exported(1);',
+  '}',
+  'module.exports = { exported };',
+].join('\n');
+assert.equal(inspect(nestedDocumented).length, 1, 'the exported module binding is retained');
+assert.equal(inspect(nestedDocumented)[0].line, 1, 'a nested helper cannot replace the outer definition');
+assert.equal(inspect(nestedDocumented)[0].valid, false, 'inner JSDoc cannot document an outer export');
+const outerDocumented = '/** Outer function. @param {number} x Input. */\n'
+  + nestedDocumented.replace('/** Inner helper. @param {number} x Input. */', '');
+assert.equal(inspect(outerDocumented)[0].valid, true, 'an undocumented inner helper cannot invalidate a documented outer export');
+const namedExpression = [
+  '/** Outer function. @param {number} x Input. */',
+  'function exported(x) { return x; }',
+  'const another = function exported(x) { return x; };',
+  'module.exports = { exported, another };',
+].join('\n');
+assert.deepEqual(inspect(namedExpression).map(fn => [fn.publicName, fn.valid]),
+  [['exported', true], ['another', false]], 'a named function expression binds the const, not its inner name');
+assert.equal(inspect('const another =\nfunction inner(x) { return x; };\nmodule.exports = { inner, another };').length,
+  1, 'the inner name of a multiline function expression is not a module binding');
+assert.equal(inspect('const marker = 1\n/** Purpose. */\nfunction zero() {}\nmodule.exports = { zero };')[0].valid,
+  true, 'ASI before a module-scope declaration is supported');
+
+for (const operand of ['"literal"', '/a{2}/']) {
+  const afterLiteral = 'const marker = ' + operand
+    + '\n/** Purpose. */\nfunction zero() {}\nmodule.exports = { zero };';
+  assert.equal(inspect(afterLiteral)[0].valid, true, 'ASI after a literal preserves a following declaration');
+}
+
 
 const files = ['lib', 'lib/druckenmiller'].flatMap(dir => fs.readdirSync(path.join(ROOT, dir))
   .filter(name => name.endsWith('.js') && !name.endsWith('.test.js'))
   .map(name => dir + '/' + name)).sort();
+for (const file of Object.keys(VERSIEGELT)) {
+  assert.ok(files.includes(file), `Stale sealed-source exemption: ${file}`);
+}
 let total = 0;
+let sealed = 0;
 const failures = [];
 for (const file of files) {
   const functions = inspect(fs.readFileSync(path.join(ROOT, file), 'utf8'));
   total += functions.length;
-  for (const fn of functions) if (!fn.valid) failures.push(`${file}:${fn.line} ${fn.publicName}`);
+  if (Object.hasOwn(VERSIEGELT, file)) {
+    assert.ok(functions.length > 0, `Sealed source has no inventoried exports: ${file}`);
+    sealed += functions.length;
+    console.log(`VERSIEGELT ${file}: funktions-exports=${functions.length} ohne-pflichtdoku=${functions.filter(fn => !fn.valid).length}; ${VERSIEGELT[file]}`);
+    console.log('  exports: ' + functions.map(fn => `${fn.publicName}:${fn.line}`).join(', '));
+  } else {
+    for (const fn of functions) if (!fn.valid) failures.push(`${file}:${fn.line} ${fn.publicName}`);
+  }
 }
-console.log(`funktions-exports=${total} fehlend=${failures.length}`);
+console.log(`funktions-exports=${total} pruefpflichtig=${total - sealed} versiegelt=${sealed} fehlend=${failures.length}`);
 for (const failure of failures) console.error(failure);
-assert.deepEqual(failures, [], 'Every local function export needs adjacent JSDoc and parameter documentation');
+assert.deepEqual(failures, [], 'Every nonsealed local function export needs adjacent JSDoc and parameter documentation');
