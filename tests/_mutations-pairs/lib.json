@@ -1,0 +1,116 @@
+[
+  {
+    "module": "lib/read-json.js",
+    "fn": "readJsonExistingOrThrow",
+    "test": "lib/read-json.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/annual-currency-guard.js",
+    "fn": "detectAnnualCurrencyLeak",
+    "test": "lib/annual-currency-guard.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/artifact-path.js",
+    "fn": "baseName",
+    "test": "lib/artifact-path.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/artifact-path.js",
+    "fn": "toPosix",
+    "test": "lib/artifact-path.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/atomic-write.js",
+    "fn": "writeFileAtomic",
+    "test": "lib/atomic-write.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/atomic-write.js",
+    "fn": "writeJsonAtomic",
+    "test": "lib/atomic-write.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/forward-returns.js",
+    "fn": "classify",
+    "test": "lib/forward-returns.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/forward-returns.js",
+    "fn": "resolveWindow",
+    "test": "lib/forward-returns.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/metrics.js",
+    "fn": "rankIC",
+    "test": "lib/metrics.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/metrics.js",
+    "fn": "cohortSpread",
+    "test": "lib/metrics.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/metrics.js",
+    "fn": "hitRate",
+    "test": "lib/metrics.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/metrics.js",
+    "fn": "quintileMonotonicity",
+    "test": "lib/metrics.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/metrics.js",
+    "fn": "_median",
+    "test": "lib/metrics.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/newest-qtr-guard.js",
+    "fn": "detectNewestQtrSuspect",
+    "test": "lib/newest-qtr-guard.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/watchlist-fs.js",
+    "fn": "loadWatchlist",
+    "test": "lib/watchlist-fs.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/watchlist-fs.js",
+    "fn": "extractStocksArray",
+    "test": "lib/watchlist-fs.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/watchlist-fs.js",
+    "fn": "detectShape",
+    "test": "lib/watchlist-fs.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/spearman.js",
+    "fn": "spearman",
+    "test": "lib/metrics.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/spearman.js",
+    "fn": "averageRank",
+    "test": "lib/metrics.test.js",
+    "expect": "killed"
+  }
+]
