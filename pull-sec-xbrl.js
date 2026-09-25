@@ -111,7 +111,11 @@ function get(url, ifModifiedSince, _redirectDepth) {
         res.resume();  // drain the body so the socket can be reused
         const nextUrl = res.headers.location;
         if (!nextUrl) return reject(new Error('redirect without Location header'));
-        return get(nextUrl, ifModifiedSince, depth + 1).then(resolve).catch(reject);
+        let next;
+        try { next = new URL(nextUrl, url).href; } catch (e) {
+          return reject(new Error('invalid redirect Location ' + JSON.stringify(nextUrl) + ' from ' + url));
+        }
+        return get(next, ifModifiedSince, depth + 1).then(resolve).catch(reject);
       }
       if (res.statusCode === 404) return resolve({ notFound: true });
       if (res.statusCode !== 200) {
@@ -359,5 +363,6 @@ module.exports = {
   validateCompanyfactsBody,
   NOTFOUND_STREAK,
   NOTFOUND_PAUSE_DAYS,
+  _get: get,
   _secRateLimit: SEC_RATE_LIMIT,
 };
