@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+const { mdCell } = require('../lib/md-table.js');
 
 // Derselbe Client wie in pull-yahoo.js. yahoo-finance2 fuehrt fuer
 // quoteSummary Cookie und Crumb; der Probe-Code baut keine zweite Auth-Logik.
@@ -641,7 +642,7 @@ function reportAxisDefinitions() {
   }));
 }
 
-function mdEscape(text) { return String(text == null ? '' : text).replace(/\|/g, '\\|').replace(/\r?\n/g, ' '); }
+function mdEscape(text) { return mdCell(text); }
 
 function yahooScreenerUrl(id, start) {
   const qs = new URLSearchParams({
