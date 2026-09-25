@@ -55,6 +55,7 @@ function downloadTickers(dest) {
     const req = https.get(TICKERS_URL, {
       headers: { 'User-Agent': 'screener-data research ' + contact, 'Accept-Encoding': 'identity' },
     }, (res) => {
+      res.on('error', reject);
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode + ' für ' + TICKERS_URL)); }
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
@@ -76,6 +77,7 @@ function downloadTickers(dest) {
       });
     });
     req.on('error', reject);
+    req.setTimeout(60000, () => { req.destroy(); reject(new Error('Zeitueberschreitung bei ' + TICKERS_URL)); });
   });
 }
 
@@ -190,4 +192,8 @@ async function main() {
   console.log('[sec-pit-check] ALLES GRÜN — PIT-Fundament einsatzbereit für B1.');
 }
 
-main().catch((e) => { console.error('[sec-pit-check] ROT: ' + (e && e.message || e)); process.exit(1); });
+module.exports = { downloadTickers, universeTickers };
+
+if (require.main === module) {
+  main().catch((e) => { console.error('[sec-pit-check] ROT: ' + (e && e.message || e)); process.exit(1); });
+}

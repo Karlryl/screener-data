@@ -230,6 +230,7 @@ function hole(host, pfad) {
       host, path: pfad,
       headers: { 'User-Agent': kontakt, 'Accept-Encoding': 'gzip, deflate', Host: host },
     }, (res) => {
+      res.on('error', reject);
       if (res.statusCode !== 200) {
         res.resume();
         reject(new Error('[druckenmiller] 13F: ' + host + pfad + ' antwortete ' + res.statusCode));
@@ -394,7 +395,7 @@ async function main(argv, log) {
 }
 
 module.exports = { main, ladeNamenskarte, ladeSchlusskurse, offlineEinlesen, abdeckungMessen, csvFelder,
-  schreibeQuartal, PERIODE_FORM, MAX_ANTWORT_BYTES, CIK };
+  schreibeQuartal, hole, PERIODE_FORM, MAX_ANTWORT_BYTES, CIK };
 
 if (require.main === module) {
   main().then((rc) => process.exit(rc)).catch((e) => {

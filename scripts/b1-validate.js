@@ -137,6 +137,7 @@ function fetchSubmissions(cik, contact) {
   return new Promise((resolve) => {
     const url = 'https://data.sec.gov/submissions/CIK' + String(cik).padStart(10, '0') + '.json';
     const req = https.get(url, { headers: { 'User-Agent': 'screener-data research ' + contact, 'Accept-Encoding': 'identity' } }, (res) => {
+      res.on('error', () => resolve(null));
       if (res.statusCode !== 200) { res.resume(); return resolve(null); }
       const chunks = [];
       res.on('data', (c) => chunks.push(c));
@@ -518,7 +519,7 @@ module.exports = {
   firstPassage, matchVarsAt, buildPairs, clusterBootstrap, evSales, idxOnOrAfter,
   buildEventDatedCandidatePools, selectViewRecords, matchDistance, bcaInterval,
   evaluatePairOutcomes, assessBalance, shumwayEstimableGate, decideVerdict,
-  ensureSubmissions, sic2Of, loadPriceSeries,
+  ensureSubmissions, fetchSubmissions, sic2Of, loadPriceSeries,
   writeValidationReport,
   _const: { VAL_START, VAL_END, DISC_END, K_SIGMA, TIMEOUT_TD, CALIPER, BALANCE_GATE_PP, MIN_NEFF_CLUSTERS, BY_Q },
 };
