@@ -19,6 +19,14 @@ try {
     : YF;
 } catch (e) { console.error('yahoo-finance2 not installed'); process.exit(1); }
 
+function parseIntEnv(raw, fallback, { min = 1, name }) {
+  if (raw === undefined || raw === '') return fallback;
+  const value = Number(raw);
+  if (/^\s*\d+\s*$/.test(raw) && Number.isFinite(value) && value >= min) return value;
+  console.warn('::warning::' + name + ' ungueltig (' + raw + '), Default ' + fallback);
+  return fallback;
+}
+
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // audit fix BH-057: quoteSummary has no per-call timeout (undici's ~300s default
@@ -75,7 +83,7 @@ function carryEntryWithoutDate(prevEntry, today, graceDays) {
 // Nachzug Tag 622 (Review-Fund MITTEL): Frist per env verstellbar, Muster der
 // Nachbar-Konstanten (EARNINGS_CONCURRENCY etc.) — sie haengt an
 // FUNDAMENTALS_REFRESH_DAYS in pull-yahoo.js, das ebenfalls env-uebersteuerbar ist.
-function isFreshEntry(entry, today, maxCarryDays = parseInt(process.env.EARNINGS_CARRY_FRESH_DAYS || '30', 10)) {
+function isFreshEntry(entry, today, maxCarryDays = parseIntEnv(process.env.EARNINGS_CARRY_FRESH_DAYS, 30, { name: 'EARNINGS_CARRY_FRESH_DAYS' })) {
   if (!entry || !entry.pulledAt) return false;
   const age = (new Date(today).getTime() - new Date(entry.pulledAt).getTime()) / 86400000;
   return Number.isFinite(age) && age <= maxCarryDays;
@@ -96,9 +104,9 @@ async function main() {
   const result = {};
   let noDateCount = 0;
   // Tag-86: parallel earnings pulls
-  const CONCURRENCY = parseInt(process.env.EARNINGS_CONCURRENCY || '15', 10);
-  const ROLLOVER_GRACE_DAYS = parseInt(process.env.EARNINGS_ROLLOVER_GRACE_DAYS || '3', 10);
-  const QUOTE_TIMEOUT_MS = parseInt(process.env.EARNINGS_QUOTE_TIMEOUT_MS || '20000', 10);
+  const CONCURRENCY = parseIntEnv(process.env.EARNINGS_CONCURRENCY, 15, { name: 'EARNINGS_CONCURRENCY' });
+  const ROLLOVER_GRACE_DAYS = parseIntEnv(process.env.EARNINGS_ROLLOVER_GRACE_DAYS, 3, { min: 0, name: 'EARNINGS_ROLLOVER_GRACE_DAYS' });
+  const QUOTE_TIMEOUT_MS = parseIntEnv(process.env.EARNINGS_QUOTE_TIMEOUT_MS, 20000, { name: 'EARNINGS_QUOTE_TIMEOUT_MS' });
   async function processOne(stock) {
     const today = new Date().toISOString().slice(0, 10);
     try {
@@ -181,4 +189,4 @@ if (require.main === module) {
   main().catch(e => { console.error('pull-earnings-dates failed:', e.stack || e.message); process.exit(1); });
 }
 
-module.exports = { main, resolveEntry, withTimeout, loadPreviousCalendar, isFreshEntry, carryEntryWithoutDate };
+module.exports = { parseIntEnv, main, resolveEntry, withTimeout, loadPreviousCalendar, isFreshEntry, carryEntryWithoutDate };
