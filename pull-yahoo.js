@@ -1082,6 +1082,17 @@ const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterp
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
 function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor) {
   if (!snap || !snap.metrics) return;
+  // fiftyTwoWeekHigh (26.09.2026) is a per-share quote: it takes the PRICE's own factor from
+  // _resolveTradingFx, the call the price-only path uses for regularMarketPrice. Not via
+  // scaleTrading: for GBP reporters quoting in GBp that factor lacks the pence divisor
+  // (case-insensitive GBP == GBp skips the trading override). No usable factor -> null,
+  // never an unconverted quote.
+  const hoch = snap.metrics.fiftyTwoWeekHigh;
+  if (hoch) {
+    const fx = _resolveTradingFx(null, snap);
+    snap.metrics.fiftyTwoWeekHigh = (fx.ok && Number.isFinite(hoch.value))
+      ? Object.assign({}, hoch, { value: hoch.value * fx.factor }) : null;
+  }
   for (const k of HANDELS_METRIKEN) {
     if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
   }
@@ -2386,6 +2397,13 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       priceSales:       _metric(_y(sd, 'priceToSalesTrailing12Months'), SRC, CONF, asOf),
       forwardPE:        _metric(_y(sd, 'forwardPE'), SRC, CONF, asOf),
       pe:               _metric(_y(sd, 'trailingPE'), SRC, CONF, asOf),
+      // W6 filter tab (26.09.2026): summaryDetail was fetched but these were never kept.
+      // Yield/payout are unitless fractions -> stored in percent like grossMargin/ROE, no FX.
+      // Absent in Yahoo (non-payer, no data) -> null via _metric, never 0.
+      // fiftyTwoWeekHigh is a per-share quote -> the price's factor in _skaliereHandelsMetriken.
+      dividendYield:    _metric(_y(sd, 'dividendYield') != null ? _y(sd, 'dividendYield') * 100 : null, SRC, CONF, asOf),
+      payoutRatio:      _metric(_y(sd, 'payoutRatio') != null ? _y(sd, 'payoutRatio') * 100 : null, SRC, CONF, asOf),
+      fiftyTwoWeekHigh: _metric(_y(sd, 'fiftyTwoWeekHigh'), SRC, CONF, asOf),
       // Tag 219 (audit F2/F3 HIGH): Yahoo provides true EBITDA + Enterprise
       // Value pre-computed; ev-ebitda.js currently uses opInc*1.2 heuristic
       // and reconstructs EV from mcap+totalDebt-totalCash. Native fields are
