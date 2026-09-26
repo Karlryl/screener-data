@@ -5,13 +5,13 @@
 ## Was das Projekt ist
 Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branch `main`, GitHub-Pages-Deploy via Cron `17 2 * * 2-6`, Di–Sa 02:17 UTC). Verbindliche Engine-Leitplanken & Details: `README.md` und `docs/` im Repo (Source of Truth für Engine-Regeln). `CONTEXT.md` ist ein SUPERSEDED-markiertes historisches Resume-Briefing — keine Engine-Wahrheit mehr.
 
-## Masterplan (erster Lese-Stopp) & bindende Arbeitsregeln
-**Vor Arbeitsbeginn zuerst lesen:** der lebende Masterplan im Vault —
-`…\Jarvis\Knowledge\Trading\growth-screener\_MASTERPLAN-screener-findash.md`
-(Kopf-Block „Wo stehen wir gerade" + aktuelle Phase). Er ist Source of Truth für Reihenfolge, Status und Akzeptanz; hier **nicht** duplizieren.
-- **Update-Ritual (G2):** nach jedem erledigten Task im Masterplan Kästchen abhaken, „Wo stehen wir"-Block aktualisieren, WORKLOG-Eintrag mit den **4 Pflichtteilen** (Was+Commit / Warum so entschieden / Fehler & Schwierigkeiten / Lektion). Verallgemeinerbare Lektionen zusätzlich als 1 Zeile ins **Lektionen-Register (Masterplan Abschnitt 6.0)** — das Register ist Pflicht-Lektüre vor Arbeitsbeginn.
+## Regelblatt, Einstieg (erster Lese-Stopp) & bindende Arbeitsregeln
+**Bindend (Karl 26.09.2026):** `C:\Users\Anwender\OneDrive\Dokumente\GitHub\karl-plan\REGELBLATT-v4.md` — gilt für Claude, Codex und jede Automatik; ältere Fassungen sind Geschichte, bei Widerspruch gewinnt das Regelblatt. Vor Arbeitsbeginn zuerst lesen.
+**Vault-Einstieg (Source of Truth im Vault):** `C:\Users\Anwender\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\START.md`.
+Reihenfolge und Status: `C:\Users\Anwender\OneDrive\Dokumente\GitHub\karl-plan\WUNSCHLISTE.md` (neue Zeilen/Reihenfolge nur durch Karl). Der Vault-Masterplan (`…\growth-screener\_MASTERPLAN-screener-findash.md`) ist Archiv/Nachschlagewerk, kein Auftragsgeber.
+- **Arbeitsnachweis:** Tests, Freigabe und nötige Übergabe knapp dokumentieren. Das alte Update-Ritual (Masterplan-Häkchen, WORKLOG mit 4 Pflichtteilen, Lektionen-Register als Pflicht-Lektüre) ist archiviert (Karl 26.09.2026).
 - **Commit-Konvention (H2):** `Tag <n>: <Betreff>` — `n` = höchste `Tag`-Nummer aus `git log --oneline` + 1, ein Tag pro logischem Chunk.
-- **Push & Melde-Pflicht (H3):** Push auf `main` erlaubt bei grünen Gates; **Force-Push / History-Rewrite / Löschen nie ohne Karl**. Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
+- **Push/Merge auf `main`:** grüne Gates UND Prüfung durch jemand anderen als den Erbauer (Claude↔Codex; ist Claude leer: zweite blinde Codex-Prüfung + grüne Tests). Force-Push/History-Rewrite nur mit Karls Ja; Löschen nach den zwei Klassen (global). Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
 - **Schutzliste (nie löschen/überschreiben):** `picks-history/`, `methods-history/`, `earnings-calendar.json`, Branch `loop/formel-haertung`. `picks-history/` ist darüber hinaus **inhaltlich eingefroren** (Stichtag 2026-07-02, Karl 2026-08-16, dauerhaft) — auch keine Korrektur, kein Backfill, kein Aufräum-Commit und keine „Reparatur" von Prüfskript-Meldungen; Details und Begründung in [`picks-history/_FROZEN.md`](./picks-history/_FROZEN.md). Nachfolger: `board-history/`.
 
 ## Kern-Designprinzip: NUR Qualität, nie Bewertung
@@ -27,26 +27,16 @@ Get-ChildItem tests/*test.js,tests/scoring/*test.js,lib/*test.js | ForEach-Objec
 ```
 Score-Methoden-Änderungen flippen den Fixture-Hash → das ist gewollt und der Nachweis. Quelle der Wahrheit: `GATE_GLOB` in `.github/workflows/daily-pull.yml`. (node/gh sind auf PATH — siehe globale `~/.claude/CLAUDE.md`.)
 
-## Formel-Entwicklungs-Prozess (Gauntlet — Pflicht vor Promotion zu CORE)
-Einheit = eine Formel pro GICS-Sub-Industry. Jede Idee MUSS durch:
-1. **Recherche** (multi-agent, an Primärquellen/SEC-XBRL geerdet)
-2. **Council** (`ask-the-council`) → Empfehlung + stärkste Verbesserungen, Formel verschärfen
-3. **Court of Judgment** (`court-of-judgment`) → adversarialer Kill-Test, **immer maximale Härte (≥8, ~10 % Pass)**
-4. Bei DENIED: Council-Revision → **Retrial bis PASS** — oder Limitation bewusst & dokumentiert akzeptieren
-5. Nur **PASSED** wird promoted. Alles scharf argumentiert (Mechanik/Zahl/Kausalkette, kein Vibe).
+## Formel-Änderungen (Karl 26.09.2026, ersetzt Gauntlet/F-16/3-grüne-Läufe)
+Einheit = eine Formel pro GICS-Sub-Industry. Eine Formel darf sich ändern: sichtbar, mit Vorher/Nachher auf dem echten Board, von der zweiten KI (Claude↔Codex) blind geprüft, alt und neu höchstens 4 Wochen parallel, dann Umschalten. Alte Vorschläge werden nie geschönt. Rat/Gericht nur bei großer Auswirkung („groß" = ändert sichtbare Board-Zahlen, kostet Geld oder ist nicht umkehrbar; Regelblatt v4 Teil 2).
 
 Neue Methoden starten **DIAGNOSTIC** (fixture-hash-safe); Promotion zu CORE erst nach Walk-Forward-Beleg pro Sektor.
 
-**Vorgelagerter Forschungs-Prozess (6.1, seit 16.07.2026):** neue Board-/Achsen-KANDIDATEN entstehen im
-Ideen-Ledger `…\Jarvis\Knowledge\Trading\growth-screener\_IDEEN-LEDGER-2026-07-16.md`
-(Deep-Research mit verifizierten Quellen → Ledger-Eintrag → Council-Schärfung → Court; nur PASS wird
-Bau-Task im Masterplan, max. 1 Bau-Projekt gleichzeitig). Der Ledger PARKT nur — jede Promotion
-Richtung Scoring/Board läuft zusätzlich den vollen Gauntlet oben und ist Karl-Queue-pflichtig.
+Neue Board-/Achsen-Kandidaten: belegte Recherche → Formel-Weg (oben). Reihenfolge nur über `karl-plan\WUNSCHLISTE.md`. Das Ideen-Ledger `…\growth-screener\_IDEEN-LEDGER-2026-07-16.md` parkt nur (Nachschlagewerk).
 
-## Härtungs-Loop & Source of Truth
-Der laufende Formel-Härtungs-Loop liest **ZUERST** das Ledger:
-**`…\Jarvis\Knowledge\Trading\growth-screener\screener-formel-ledger.md`** (Fitness-Gate, eingefrorene Baseline, ✅/❌/⚠️-Befunde mit Verifizierbarkeits-Befehlen, P0/P1/P2-Backlog, WORKLOG). Mess-Artefakte in `screener-data\fitness\`.
-**Loop-Budget (aktualisiert 2026-08-23, ersetzt „kein Kostenlimit" vom 16.06.):** Qualität bleibt exhaustiv (adversariale Verifikation, mehrere Runden), aber output-sparsam — wenige gut gebriefte Agents statt Masse, Bulk an Codex delegieren wo erlaubt, Antworten auf Englisch. Grund: Karls Wochenlimit ist der Engpass. Keine Kosten-Rückfragen.
+## Formel-Arbeit & Budget
+Formel-Arbeit nur aus Wunschliste-Zeilen über den Formel-Weg. Übriges Limit → größter sinnvoller Hebel, Bulk bis ~60 Agenten erlaubt, wenn sinnvoll. Keine Rückfragen zum Token-Budget; jeder Euro braucht weiter Karls Ja.
+Nachschlagewerk (kein Auftragsgeber): Formel-Ledger `…\growth-screener\screener-formel-ledger.md` (Fitness-Baseline, Befunde); Mess-Artefakte in `screener-data\fitness\`. Der frühere Dauer-Härtungs-Loop ist archiviert.
 
 ## Wissensbasis / Recherche (getrennt vom Code)
 Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault**
@@ -55,18 +45,19 @@ Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault*
 ## Engineering-Regeln für Multi-Agent-Arbeit
 - **Nie shared Registry-Files parallel editieren:** `src/scoring/formulas/index.js`, `src/scoring/formulas/quality/index.js`, `src/scoring/score.js` → Write-Races. Stattdessen Coordinator-Pattern (ein Agent besitzt die Registry) **oder** in Wellen von 1–2 serialisieren. Kollisionsfrei parallel: neue `src/scoring/formulas/<sector>.js`, Per-Cycle-Audit-Reports.
 - **`git commit` ohne Pathspec staged ALLES** (auch Dateien laufender Agenten) → vor Commit `git status --short`, dann gezielt `git commit -- <pfade>`.
-- **`/audit`-Zyklen:** 5 general-purpose-Agenten parallel in **einer** Nachricht, dann je Output als `Tag NNNa-e` committen; Zyklus endet mit `audit-reports/YYYY-MM-DD-tagNNN-cycle.md` (+ Next-Cycle-Prioritäten → Loop bleibt selbst-tragend). `.claude/commands/audit.md` ist ein SUPERSEDED-markiertes altes Verfahren gegen entfernte Architektur — nicht wörtlich ausführen.
+- **`/audit`-Zyklen:** 5 general-purpose-Agenten parallel in **einer** Nachricht, dann je Output als `Tag NNNa-e` committen; Zyklus endet mit `audit-reports/YYYY-MM-DD-tagNNN-cycle.md`. Audit-Befunde sind Vorschläge; Auftrag werden sie erst, wenn ein Fehler an etwas nachgewiesen ist, das Karl sieht, oder eine konkrete Daten-/Sicherheitsgefahr belegt ist — oder Karl es beauftragt. `.claude/commands/audit.md` ist ein SUPERSEDED-markiertes altes Verfahren gegen entfernte Architektur — nicht wörtlich ausführen.
 
 ## Fallen
 - **`GitHub\screener-data-fix`** = eingefrorene Kopie/Ex-Worktree (18.05.2026) — **nicht anfassen**.
-- **`GitHub\docGPT`** = totes Fremd-Repo (zum Löschen markiert) — nie als Workspace nutzen.
+- **`GitHub\docGPT`** = totes Fremd-Repo (Kandidat für die monatliche Löschliste) — nie als Workspace nutzen.
 - **Zwei Tests sind auf dieser Maschine dauerhaft rot und in CI grün — kein Defekt, sondern Umgebung.** Gemessen 30.08.2026 gegen den gleichen Stand, der als PR-Check grün durchlief:
   - `tests/scoring/calibration-ref.test.js` — genau ein Block (*R2.9 Test B*) hat eine **Vorbedingung**, die lokal nicht gilt: er braucht die Kohorte `utilities|unprofitable` als FEHLEND im lokalen Kalibrier-Artefakt. Lokal ist sie da. 16 von 17 Blöcken grün.
-  - `tests/waehrung-ausliefer-waechter.test.js` — der LIVE-Block läuft über die **lokal ausgelieferten** Beine und findet dort Kreuznotiz-Verstöße (Mehrfachlistings desselben Emittenten). Das ist die bekannte Listing-Währungs-Falle, **gesperrte Klasse bis Ende Oktober: melden, nicht bauen**. Die synthetischen Blöcke derselben Datei sind grün.
+  - `tests/waehrung-ausliefer-waechter.test.js` — der LIVE-Block läuft über die **lokal ausgelieferten** Beine und findet dort Kreuznotiz-Verstöße (Mehrfachlistings desselben Emittenten). Das ist die bekannte Listing-Währungs-Falle. **Listing-Währungs-Klasse: keine Datums-Sperre**; Bau erlaubt, Bedingung: Vorher/Nachher auf der ausgelieferten Menge zeigt 0 veränderte korrekte Zeilen, zweite KI geprüft. Die synthetischen Blöcke derselben Datei sind grün.
   - **Regel:** Diese zwei lokalen Roten sind **kein** Grund, einen Chunk anzuhalten oder zu „reparieren". Jede *dritte* rote Datei ist es sehr wohl. Wer den lokalen Lauf sauber braucht: `git config core.autocrlf false` beseitigt eine dritte, ältere Klasse (Zeilenenden), nicht diese beiden.
 
 
-## Zwei-Motoren-Betrieb (Codex) — Anker (2026-07-16)
+## Zwei-Motoren-Betrieb (Codex) — Stand 26.09.2026 (Regelblatt v4 G17–G19)
 
-- **Delegations-Default:** Fix-Loops mit vielen Iterationen, Chart-/Render-Iterationen und Bulk-Mechanik gehen an Codex (Skill `codex-delegieren`) — Selbermachen ist dort die begründungspflichtige Ausnahme (1 Log-Zeile). NIE delegieren: Scoring/Gauntlet/Methodik/Architektur — das schlägt auch einen „codex:"-Zwang von Karl (in 1 Zeile erklären, selbst machen).
+- **Gleichberechtigt:** Codex plant mit (Fable + Codex), baut und prüft gleichberechtigt — auch Scoring/Methodik/Architektur; wer baut, wird vom anderen geprüft. Planung/Review auf höchstem Aufwand (astra). Codex' Rechte stehen ausschließlich in `C:\Users\Anwender\.codex\AGENTS.md`.
+- **Delegations-Default:** Fix-Loops mit vielen Iterationen, Chart-/Render-Iterationen und Bulk-Mechanik gehen an Codex (Skill `codex-delegieren`) — Selbermachen ist dort die begründungspflichtige Ausnahme (1 Log-Zeile).
 - **Vor jeder Schreibarbeit:** Delegations-Lock prüfen (`%USERPROFILE%\.codex\delegation-locks\<repo>.lock.json`). Aktiv/pending → nicht ins Repo schreiben; Krisenpfad steht im Skill. Commits `WIP (Codex, ungereviewt)` zuerst reviewen (`git reset --soft HEAD~1`, dann richtig committen).
