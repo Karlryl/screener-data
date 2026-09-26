@@ -1,0 +1,251 @@
+'use strict';
+/**
+ * Waechter zum inputHash (Rat 23.08. Weichen B1/B2, Gerichtsauflage 23.08. Revision 2).
+ *
+ * Festgenagelt wird eine SACHE, kein Textmuster - und seit Fassung 2 auf zwei Ebenen:
+ *
+ *   (a) VOLLSTAENDIGKEIT, abgeleitet statt behauptet. Ein Proxy zeichnet auf, welche
+ *       Snapshot-Felder das Scoring beim Laufen tatsaechlich anfasst; der Test verlangt, dass
+ *       JEDER beobachtete Pfad im Modul einer Schicht zugeordnet ist. Genau diese Pruefung
+ *       fehlte in Fassung 1 - deshalb konnte `meta.industry` das Routing bewegen, waehrend
+ *       alle Hashes byte-identisch blieben (Fall SOFI, Gericht 23.08.).
+ *   (b) TRENNSCHAERFE. Der Hash muss auf jede Register-Reihe reagieren, auf einen echten
+ *       Klassenwechsel reagieren - und auf einen blossen Kurstick NICHT.
+ *
+ * NIE UEBERSPRUNGEN und seit T151 SUBSTRAT-INVARIANT: die Beobachtung laeuft immer gegen das
+ * eingecheckte kanonische Probe-Universum. Lokale Snapshots duerfen die Zweig-Abdeckung nicht
+ * mehr veraendern; derselbe Commit muss mit und ohne `snapshots/` dieselbe Pfadmenge sehen.
+ *
+ * Usage:  node --test tests/input-hash.test.js
+ */
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { FIELD_REGISTRY } = require('../src/scoring/snapshot.js');
+const { scoreUniverse } = require('../src/scoring/score.js');
+const formeln = require('../src/scoring/formulas/index.js');
+const { beobachte, nurBlattpfade } = require('../lib/gelesene-felder.js');
+const {
+  inputHash, serienFelder, abgedecktePfade, KOHORTE_FELDER, VOLATIL_FELDER, SERIEN_EXTRA,
+} = require('../lib/input-hash.js');
+
+const PROBE_FIXTURE = path.join(__dirname, 'fixtures', 'input-hash-probe-universe.json');
+const sha = (x) => crypto.createHash('sha256').update(x).digest('hex').slice(0, 16);
+
+function serieFuer(format, faktor) {
+  if (format === 'value') return [{ value: 100 * faktor }, { value: 90 * faktor }, { value: 80 * faktor }];
+  if (format === 'scalar') return [10 * faktor, 9 * faktor, 8 * faktor];
+  if (format === 'multikey') return [{ cash: 5 * faktor, totalDebt: 3 * faktor, totalAssets: 20 * faktor }];
+  throw new Error(`unbekanntes Speicherformat "${format}" - Register erweitert, Probe nicht?`);
+}
+
+/** Vollbesetzter Probe-Snapshot. Register-Felder BEWUSST aus FIELD_REGISTRY, nicht aus
+ *  serienFelder() - sonst baut sich die Probe aus derselben Liste, die geprueft wird (L36). */
+function bauSnapshot(faktor = 1, extra = {}) {
+  const s = {
+    meta: {
+      ticker: 'PROBE' + faktor, name: 'Probe AG', sector: 'Technology', industry: 'Software - Infrastructure',
+      country: 'United States', region: 'US', exchangeName: 'NasdaqGS',
+      ipoYear: 2015, firstTradeDate: '2015-06-01T00:00:00.000Z',
+      reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', tradingCurrency: 'USD',
+      fetchedAt: '2026-08-23T00:00:00.000Z', fullTimeEmployees: 1234,
+    },
+    marketCap: { value: 5e9, source: 'probe', asOf: '2026-08-23T00:00:00.000Z' },
+    metrics: { beta: { value: 1.1 }, forwardPE: { value: 20 }, revenueTTM: { value: 400 } },
+    external: {},
+    annual: {}, timeseries: { revenueQEnds: ['2026-03-31', '2025-12-31', '2025-09-30'] },
+  };
+  for (const f of Object.keys(FIELD_REGISTRY)) {
+    const [container, format] = FIELD_REGISTRY[f];
+    s[container] = s[container] || {};
+    s[container][f] = serieFuer(format, faktor);
+  }
+  Object.assign(s.meta, extra);
+  return s;
+}
+
+/** Kanonisches Universum aus eingecheckten konstruierten Faellen. Nie ein Skip/Fallback. */
+function probeUniversum() {
+  const fixture = JSON.parse(fs.readFileSync(PROBE_FIXTURE, 'utf8'));
+  assert.equal(fixture.schema, 'input-hash-probe-universe/v1', 'unbekanntes Probe-Schema');
+  assert.equal(fixture.cases.length, 7,
+    'Das kanonische Universum soll nur die sieben begruendeten Zweig-Faelle enthalten.');
+  const universum = fixture.cases.map((fall) => bauSnapshot(fall.factor, fall.meta));
+  return { universum, substrat: `kanonisches Probe-Universum (${universum.length})` };
+}
+
+// --- (a) Vollstaendigkeit: abgeleitet, nicht behauptet ----------------------------------
+
+test('das kanonische Probe-Universum ist klein und enthaelt keine Rohdaten', () => {
+  const bytes = fs.readFileSync(PROBE_FIXTURE);
+  assert.ok(bytes.length < 200 * 1024, `Probe-Universum ist ${bytes.length} Bytes gross`);
+  const fixture = JSON.parse(bytes.toString('utf8'));
+  assert.deepEqual(Object.keys(fixture).sort(), ['cases', 'schema']);
+  for (const fall of fixture.cases) {
+    assert.deepEqual(Object.keys(fall).sort(), ['factor', 'id', 'meta'],
+      `${fall.id}: Ein Probe-Fall darf nur Faktor und Meta-Zweigwerte tragen`);
+  }
+});
+
+test('JEDES Feld, das das Scoring beim Laufen liest, ist einer Schicht zugeordnet', () => {
+  const { universum, substrat } = probeUniversum();
+  const gelesen = nurBlattpfade(beobachte(universum, (u) => scoreUniverse(u, formeln)));
+  const pfade = [...gelesen].sort();
+  console.log(`  (Beobachtungs-Substrat: ${substrat}; Pfade: ${pfade.length}; Pfad-Hash: ${sha(pfade.join('\n'))})`);
+  assert.ok(gelesen.size >= 20, `nur ${gelesen.size} beobachtete Pfade - die Beobachtung greift nicht`);
+  assert.ok(gelesen.has('meta.tradingFxRateApplied'),
+    'meta.tradingFxRateApplied wurde nicht beobachtet. Der kanonische FX-Paar-Fall muss den '
+    + 'fxSuspect()-Tie-Break betreten; sonst bleibt derselbe score-wirksame Eingang wieder blind.');
+  // Das Instrument selbst wird geprueft, nicht nur sein Ergebnis: eine Beobachtung, die einen
+  // ganzen Container verschweigt, waere leise blind und der Test daneben gruen. Erwartet wird
+  // hier eine Eigenschaft des SCORINGS (es liest aus jedem dieser Bloecke), nicht eine des
+  // Hash-Moduls - sonst pruefte sich die Abdeckung an sich selbst (L36).
+  for (const block of ['meta', 'annual', 'timeseries', 'marketCap']) {
+    const treffer = [...gelesen].filter((p) => p.startsWith(block + '.'));
+    assert.ok(treffer.length > 0,
+      `Die Beobachtung meldet KEIN Feld aus "${block}" - das Scoring liest dort nachweislich. `
+      + 'Damit ist das Messinstrument blind, nicht der Code sauber.');
+  }
+  const abgedeckt = abgedecktePfade().alle;
+  const fehlend = [...gelesen].filter((p) => !abgedeckt.has(p)).sort();
+  assert.deepEqual(fehlend, [],
+    `Das Scoring liest ${fehlend.length} Feld(er), die der inputHash NICHT kennt: ${fehlend.join(', ')}.\n`
+    + '       Jedes davon kann den Score bewegen, ohne dass der Hash es zeigt - genau der Defekt, '
+    + 'an dem der Fussabdruck-Vertrag am 23.08. gescheitert ist (Fall SOFI/meta.industry).\n'
+    + '       Heilung: das Feld in lib/input-hash.js einer Schicht zuordnen (serien / kohorte / volatil) '
+    + '- und die Zuordnung begruenden, nicht nur eintragen.');
+});
+
+test('die Abdeckung ist nicht durch Aufblaehen erschlichen', () => {
+  const a = abgedecktePfade();
+  assert.ok(SERIEN_EXTRA.length <= 5, `SERIEN_EXTRA ist auf ${SERIEN_EXTRA.length} gewachsen - Register statt Sonderliste pflegen`);
+  assert.ok(a.kohorte.length <= 25, `Kohorte-Liste auf ${a.kohorte.length} gewachsen - wird hier alles hineingekippt?`);
+  assert.ok(a.volatil.length <= 25, `Volatil-Liste auf ${a.volatil.length} gewachsen`);
+  // Keine Schicht darf ein Feld doppelt fuehren - sonst ist die Trennung nur behauptet.
+  const alle = [...a.serien, ...a.kohorte, ...a.volatil];
+  assert.equal(new Set(alle).size, alle.length, 'ein Pfad steht in mehr als einer Schicht');
+});
+
+// --- (b) Trennschaerfe -----------------------------------------------------------------
+
+test('der Pruefstein aus dem Gerichtsverfahren: eine reine industry-Aenderung bewegt den Hash', () => {
+  const a = inputHash(bauSnapshot());
+  const b = inputHash(bauSnapshot(1, { industry: 'Credit Services' }));
+  assert.notEqual(a.kohorteHash, b.kohorteHash,
+    'meta.industry bewegt den Kohorte-Hash nicht. Genau daran ist Fassung 1 gescheitert: '
+    + 'router.js entscheidet daran zwischen exclude/ und route/financials.');
+  assert.notEqual(a.stabil, b.stabil, 'industry-Aenderung erreicht `stabil` nicht');
+  assert.equal(a.serienHash, b.serienHash, 'industry hat den SERIEN-Hash bewegt - die Trennung leckt');
+});
+
+test('ein blosser Kurstick bewegt weder Kohorte noch stabil - nur ein echter Klassenwechsel', () => {
+  const basis = bauSnapshot();
+  const a = inputHash(basis);
+  const tick = bauSnapshot(); tick.marketCap.value = basis.marketCap.value * 1.02;
+  assert.equal(inputHash(tick).kohorteHash, a.kohorteHash,
+    'Ein 2-%-Kurstick bewegt den Kohorte-Hash. Dann bewegt er sich fuer ~87 % der Zeilen taeglich '
+    + '(gemessen Runde 1: 7.226 von 8.313) und die Aussage "Kohorte unveraendert" ist wertlos.');
+  const sprung = bauSnapshot(); sprung.marketCap.value = 1e6;
+  assert.notEqual(inputHash(sprung).kohorteHash, a.kohorteHash, 'ein echter Groessenklassen-Wechsel bleibt unbemerkt');
+});
+
+test('der Trading-FX-Kurs geht als Null-/Gesetzt-Klasse ein, nicht als Tageswert', () => {
+  const fehlend = bauSnapshot();
+  delete fehlend.meta.tradingFxRateApplied;
+  const kurs091 = bauSnapshot(); kurs091.meta.tradingFxRateApplied = 0.91;
+  const kurs093 = bauSnapshot(); kurs093.meta.tradingFxRateApplied = 0.93;
+  const hFehlend = inputHash(fehlend), h091 = inputHash(kurs091), h093 = inputHash(kurs093);
+
+  const assertFlip = (vorher, nachher, richtung) => {
+    assert.notEqual(vorher.kohorteHash, nachher.kohorteHash,
+      `${richtung}: Null-/Gesetzt-Wechsel erreicht kohorteHash nicht`);
+    assert.notEqual(vorher.stabil, nachher.stabil,
+      `${richtung}: Null-/Gesetzt-Wechsel erreicht stabil nicht`);
+  };
+  assertFlip(hFehlend, h091, 'null -> gesetzt');
+  assertFlip(h091, hFehlend, 'gesetzt -> null');
+  assert.equal(h091.kohorteHash, h093.kohorteHash,
+    '0.91 -> 0.93 bewegt kohorteHash, obwohl fxSuspect() nur Null/Gesetzt auswertet');
+  assert.equal(h091.stabil, h093.stabil,
+    '0.91 -> 0.93 bewegt stabil, obwohl der taegliche Rohkurs nicht wirksam ist');
+  assert.equal(hFehlend.serienHash, h091.serienHash,
+    'Die abgeleitete FX-Klasse ist in den Serien-Hash ausgelaufen');
+});
+
+test('volatile Felder bewegen `gesamt`, aber NICHT `stabil`', () => {
+  const a = inputHash(bauSnapshot());
+  const v = bauSnapshot(); v.metrics.beta = { value: 9.99 };
+  const b = inputHash(v);
+  assert.notEqual(b.volatilHash, a.volatilHash, 'ein volatiles Feld erreicht den volatil-Hash nicht');
+  assert.notEqual(b.gesamt, a.gesamt, '`gesamt` schliesst die volatile Schicht nicht ein');
+  assert.equal(b.stabil, a.stabil,
+    '`stabil` hat sich durch ein kurs-getriebenes Feld bewegt - dann traegt es die Aussage '
+    + '"fundamentaler Eingang unveraendert" nicht mehr.');
+});
+
+// --- Register-Ebene (unveraendert aus Fassung 1, weiterhin gueltig) ---------------------
+
+test('die abgeleitete Feldliste IST das Register - keine stille Teilmenge', () => {
+  assert.deepEqual(serienFelder(), Object.keys(FIELD_REGISTRY).sort(),
+    'serienFelder() weicht vom FIELD_REGISTRY ab. Jedes ausgelassene Feld wird ab sofort als '
+    + 'Lineal-Drift verbucht statt als Daten-Drift - die Zerlegung luegt dann leise.');
+});
+
+test('JEDES Register-Feld bewegt den Serien-Hash', () => {
+  const basis = inputHash(bauSnapshot()).serienHash;
+  const taub = [];
+  for (const f of Object.keys(FIELD_REGISTRY)) {
+    const s = bauSnapshot();
+    const [container, format] = FIELD_REGISTRY[f];
+    s[container][f] = serieFuer(format, 2);
+    if (inputHash(s).serienHash === basis) taub.push(f);
+  }
+  assert.deepEqual(taub, [], `Der inputHash ist blind fuer: ${taub.join(', ')}`);
+});
+
+test('ein fehlendes Feld bewegt den Hash genauso wie ein geaendertes', () => {
+  const basis = inputHash(bauSnapshot()).serienHash;
+  const taub = [];
+  for (const f of Object.keys(FIELD_REGISTRY)) {
+    const s = bauSnapshot();
+    delete s[FIELD_REGISTRY[f][0]][f];
+    if (inputHash(s).serienHash === basis) taub.push(f);
+  }
+  assert.deepEqual(taub, [], `Wegfall unbemerkt bei: ${taub.join(', ')}`);
+});
+
+test('nicht gelesene Beifelder bewegen den Hash NICHT', () => {
+  const basis = inputHash(bauSnapshot()).stabil;
+  const s = bauSnapshot();
+  s.meta.fetchedAt = '2099-12-31T00:00:00.000Z';
+  s.meta.fullTimeEmployees = 999999;
+  s.marketCap.asOf = '2099-12-31T00:00:00.000Z';
+  assert.equal(inputHash(s).stabil, basis,
+    'Ein Feld, das das Scoring gar nicht liest, bewegt `stabil`. Dann waere fast jede Zeile '
+    + 'jeden Tag "Daten-Drift" und die Zerlegung nutzlos.');
+});
+
+test('der Hash ist deterministisch und unabhaengig von der Schluessel-Reihenfolge', () => {
+  const a = bauSnapshot();
+  const b = bauSnapshot();
+  for (const c of ['annual', 'timeseries']) {
+    const umgedreht = {};
+    for (const k of Object.keys(b[c]).reverse()) umgedreht[k] = b[c][k];
+    b[c] = umgedreht;
+  }
+  assert.equal(inputHash(b).serienHash, inputHash(a).serienHash, 'Der Hash haengt an der Schluessel-Reihenfolge');
+  assert.equal(inputHash(a).gesamt, inputHash(bauSnapshot()).gesamt, 'nicht deterministisch');
+});
+
+test('secAnnual geht ein, ohne dass seine Schluessel von Hand gelistet werden', () => {
+  const ohne = inputHash(bauSnapshot()).serienHash;
+  const s = bauSnapshot();
+  s.secAnnual = { annualRev: [{ value: 1 }], annualOpInc: [{ value: 2 }] };
+  const mit = inputHash(s).serienHash;
+  assert.notEqual(mit, ohne, 'secAnnual geht nicht in den Hash ein');
+  const s2 = bauSnapshot();
+  s2.secAnnual = { annualRev: [{ value: 1 }], annualOpInc: [{ value: 2 }], annualFCF: [{ value: 3 }] };
+  assert.notEqual(inputHash(s2).serienHash, mit, 'ein ZUSAETZLICHER secAnnual-Schluessel bleibt unbemerkt');
+});

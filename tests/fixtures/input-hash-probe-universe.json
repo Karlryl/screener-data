@@ -1,0 +1,119 @@
+{
+  "schema": "input-hash-probe-universe/v1",
+  "cases": [
+    {
+      "id": "technology-base",
+      "factor": 1,
+      "meta": {
+        "ticker": "PROBE-TECH",
+        "name": "Canonical Technology One AG",
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "country": "United States",
+        "region": "US",
+        "exchangeName": "NasdaqGS",
+        "reportingCurrency": "USD",
+        "reportingCurrencyOriginal": "USD",
+        "tradingCurrency": "USD"
+      }
+    },
+    {
+      "id": "technology-growth",
+      "factor": 2,
+      "meta": {
+        "ticker": "PROBE-GROWTH",
+        "name": "Canonical Technology Two AG",
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "country": "United States",
+        "region": "US",
+        "exchangeName": "NYSE",
+        "reportingCurrency": "USD",
+        "reportingCurrencyOriginal": "USD",
+        "tradingCurrency": "USD"
+      }
+    },
+    {
+      "id": "consumer-negative",
+      "factor": -1,
+      "meta": {
+        "ticker": "PROBE-CONSUMER",
+        "name": "Canonical Consumer AG",
+        "sector": "Consumer Cyclical",
+        "industry": "Specialty Retail",
+        "country": "United States",
+        "region": "US",
+        "exchangeName": "NYSE",
+        "reportingCurrency": "USD",
+        "reportingCurrencyOriginal": "USD",
+        "tradingCurrency": "USD"
+      }
+    },
+    {
+      "id": "financial-routing",
+      "factor": 4,
+      "meta": {
+        "ticker": "PROBE-FIN",
+        "name": "Canonical Financial AG",
+        "sector": "Financial Services",
+        "industry": "Credit Services",
+        "country": "United States",
+        "region": "US",
+        "exchangeName": "NYSE",
+        "reportingCurrency": "USD",
+        "reportingCurrencyOriginal": "USD",
+        "tradingCurrency": "USD"
+      }
+    },
+    {
+      "id": "healthcare-europe",
+      "factor": 5,
+      "meta": {
+        "ticker": "PROBE-HEALTH.DE",
+        "name": "Canonical Healthcare AG",
+        "sector": "Healthcare",
+        "industry": "Biotechnology",
+        "country": "Germany",
+        "region": "EU",
+        "exchangeName": "XETRA",
+        "reportingCurrency": "EUR",
+        "reportingCurrencyOriginal": "EUR",
+        "tradingCurrency": "EUR"
+      }
+    },
+    {
+      "id": "fx-pair-current",
+      "factor": 6,
+      "meta": {
+        "ticker": "PROBE-FX-A.DE",
+        "name": "Canonical FX Pair AG",
+        "sector": "Industrials",
+        "industry": "Specialty Industrial Machinery",
+        "country": "Germany",
+        "region": "EU",
+        "exchangeName": "XETRA",
+        "reportingCurrency": "USD",
+        "reportingCurrencyOriginal": "USD",
+        "tradingCurrency": "EUR",
+        "tradingFxRateApplied": 0.92
+      }
+    },
+    {
+      "id": "fx-pair-missing-rate",
+      "factor": 7,
+      "meta": {
+        "ticker": "PROBE-FX-B.DE",
+        "name": "Canonical FX Pair AG",
+        "sector": "Industrials",
+        "industry": "Specialty Industrial Machinery",
+        "country": "Germany",
+        "region": "EU",
+        "exchangeName": "XETRA",
+        "reportingCurrency": "USD",
+        "reportingCurrencyOriginal": "USD",
+        "tradingCurrency": "EUR",
+        "tradingFxRateApplied": null
+      }
+    }
+  ]
+}
