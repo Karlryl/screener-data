@@ -78,6 +78,17 @@ pruefe('absence: row with another Yahoo currency or a vanished mismatch uses the
   assert.ok(/no longer visible/.test(fixed.meta._statementCcyHandTableStale));
 });
 
+pruefe('row on a USD / missing financialCurrency: numbers unchanged, stale stamped, no endless re-pull', () => {
+  const t = loadStatementCurrencyTable();
+  for (const extra of [{ ccyAmbiguous: true }, {}]) {
+    const s = _convertSnapshotToUSD(snap('EMBJ', 'USD', 'USD', 7577.5e6, 44128e6, extra));
+    assert.strictEqual(s.annual.annualRev[0].value, 7577.5e6);
+    assert.strictEqual(s.meta.statementCurrencySource, undefined);
+    assert.ok(s.meta._statementCcyHandTableStale, 'USD-branch row must be stamped stale');
+    assert.strictEqual(statementRowPending(s, t), false, 'USD-branch row would re-pull forever');
+  }
+});
+
 pruefe('real table: proven rows load, unstamped row snapshot forces one re-pull', () => {
   const t = loadStatementCurrencyTable();
   for (const k of ['PBR-A', 'EMBJ']) assert.ok(t[k], 'row missing: ' + k);

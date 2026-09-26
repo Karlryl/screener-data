@@ -57,6 +57,21 @@ function _applyAdsHandTable(snap, ticker, price) {
   return r;
 }
 
+/**
+ * statementFactor() on the real table, logging a corrected or STALE row (twin of _applyAdsHandTable).
+ * @param {object} snap Unconverted snapshot (meta stamped).
+ * @param {string} origCurrency Reporting currency the converter uses.
+ * @param {number} factor origCurrency -> USD factor.
+ * @returns {number} Factor for annual.* and timeseries.*.
+ */
+function _statementFactor(snap, origCurrency, factor) {
+  const r = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE);
+  const tk = snap && snap.meta && snap.meta.ticker;
+  if (r.status === 'corrected') _log('INFO', `  ${tk}: statement series kept in USD (statement-currency hand table), ${origCurrency} factor only on financialData`);
+  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, reporting factor used: ${r.reason}`);
+  return r.factor;
+}
+
 let YahooFinance;
 try {
   YahooFinance = require('yahoo-finance2').default;
@@ -1112,6 +1127,9 @@ function _convertSnapshotToUSD(snap) {
     // ticker actually trades in USD (tradingFactor = 1.0). Fail-closed if the
     // trading ccy differs but has no finite rate.
     if (!_applyTradingScale(snap, 1.0).ok) return snap;
+    // Statement-currency row on a USD/ambiguous reporting currency: factor stays 1, but the row is
+    // stamped stale (else statementRowPending re-pulls it on every run and "re-verify" never fires).
+    _statementFactor(snap, origCurrency, 1.0);
     snap.meta.reportingCurrencyOriginal = 'USD';
     snap.meta.fxRateApplied = 1.0;
     snap.meta.fxConverted = true;
@@ -1262,7 +1280,7 @@ function _convertSnapshotToUSD(snap) {
   // Yahoo's financialCurrency (right for revenueTTM/ebitda) says BRL. Row + visible mismatch ->
   // factor 1 for annual.*/timeseries.*; otherwise stmtFactor === factor (no change). Must read the
   // UNSCALED revenueTTM, so it runs before the metrics loop below.
-  const stmtFactor = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE).factor;
+  const stmtFactor = _statementFactor(snap, origCurrency, factor);
   const scaleStmt = (item) => scaleTradingBy(item, stmtFactor);
 
   // Tag 232c-8: route marketCap through the trading scaler. Equivalent to
