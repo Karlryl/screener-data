@@ -19,6 +19,7 @@
  */
 'use strict';
 const fs = require('fs');
+const { readJsonOr: loadJson } = require('../lib/read-json.js');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
@@ -42,9 +43,6 @@ const BUCKETS = ['usOver', 'foreignOver'];
 // false / 0 / null enthaelt, als Parse-Fehler. Praktisch irrelevant — ein Snapshot ist immer
 // ein Objekt, und ein solcher Inhalt waere ohnehin ein Befund. Hier notiert statt gefixt,
 // damit der naechste Leser nicht dieselbe Runde dreht.
-function loadJson(p, fallback) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
-}
 
 function invalidBaseline(reason) {
   const error = new Error(`FX-Baseline ungueltig (${reason}) — Baseline wird NICHT ueberschrieben`);

@@ -15,6 +15,7 @@
 'use strict';
 
 const fs = require('fs');
+const { readJsonOrNull: readJson } = require('../lib/read-json.js');
 const path = require('path');
 const crypto = require('crypto');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
@@ -272,7 +273,6 @@ function pct(n, total) { return total ? Number((100 * n / total).toFixed(1)) : 0
 function buildRunHash(payload) {
   return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 16);
 }
-function readJson(file) { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_) { return null; } }
 function errText(error) { return String(error && error.message ? error.message : error).replace(/\s+/g, ' ').slice(0, 240); }
 
 function parseArgs(argv) {
