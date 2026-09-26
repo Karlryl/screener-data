@@ -41,6 +41,8 @@ const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 // T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
 const { loadAdsHandTable, applyAdsHandTable } = require('./lib/ads-hand-table.js');
 const ADS_HAND_TABLE = loadAdsHandTable();
+const { loadStatementCurrencyTable, statementFactor, statementRowPending } = require('./lib/statement-currency-hand-table.js');
+const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
 /**
  * Applies the ADS hand table to one snapshot and logs the outcome (stale row = WARN).
  * @param {object} snap Snapshot, mutated in place when corrected.
@@ -1256,6 +1258,12 @@ function _convertSnapshotToUSD(snap) {
   }
   const scaleTrading = (item) => scaleTradingBy(item, tradingFactor);      // Stueck-Kurse
   const scaleAggregat = (item) => scaleTradingBy(item, tradingAggFactor);  // Groessen
+  // Statement-currency hand table (2026-09-26): Petrobras/Embraer statement series are USD although
+  // Yahoo's financialCurrency (right for revenueTTM/ebitda) says BRL. Row + visible mismatch ->
+  // factor 1 for annual.*/timeseries.*; otherwise stmtFactor === factor (no change). Must read the
+  // UNSCALED revenueTTM, so it runs before the metrics loop below.
+  const stmtFactor = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE).factor;
+  const scaleStmt = (item) => scaleTradingBy(item, stmtFactor);
 
   // Tag 232c-8: route marketCap through the trading scaler. Equivalent to
   // scale() when ticker is not ADR-class (tradingFactor === factor, no-op).
@@ -1310,7 +1318,7 @@ function _convertSnapshotToUSD(snap) {
       // math) and desynced it from the unscaled meta.sharesOutstanding. YoY-ratio
       // consumers cancel the factor and are unaffected either way. Skip scaling.
       if (key === 'annualShares') continue;
-      if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scale);
+      if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scaleStmt);
     }
   }
   if (snap.timeseries) {
@@ -1323,7 +1331,7 @@ function _convertSnapshotToUSD(snap) {
       // er macht die Absicht explizit und haelt, falls scale() je numerischer wird.
       // (Der frühere Kommentar behauptete "das würde sie zu NaN machen" — das stimmt nicht.)
       if (key.endsWith('Ends')) continue;
-      if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scale);
+      if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scaleStmt);
     }
   }
   snap.meta.reportingCurrencyOriginal = origCurrency;
@@ -3450,6 +3458,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const A = s.annual;
       const hasRev = A && Array.isArray(A.annualRev) && A.annualRev.length > 0;
       if (!hasRev) return false;
+      // Statement-currency hand table: a row converted before the row existed -> re-pull once.
+      if (statementRowPending(s, STATEMENT_CCY_TABLE)) return true;
       // (a) USD reporter: no FX to apply.
       if (m.reportingCurrency === 'USD') return false;
       // (b) explicit Tag 134+ converted marker.

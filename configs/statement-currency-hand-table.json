@@ -1,0 +1,16 @@
+{
+  "_doku": [
+    "Statement-currency hand table (2026-09-26). Read by lib/statement-currency-hand-table.js inside _convertSnapshotToUSD (pull-yahoo.js).",
+    "Row = a ticker whose Yahoo financialCurrency (right for financialData: revenueTTM, ebitda) is NOT the currency of its statement series (annual.*, timeseries.*).",
+    "Petrobras and Embraer file their statements in US dollars; Yahoo labels the company BRL, so the pull divided USD figures by the BRL rate again (~5x too small).",
+    "The statement series then get factor 1 (USD) instead of the BRL factor ONLY while the error is visible: Yahoo still says yahooFinancialCurrency",
+    "AND latest annual revenue / revenueTTM is nearer the reporting FX factor than 1 (USD statements next to a BRL TTM). Otherwise nothing changes and the snapshot carries meta._statementCcyHandTableStale.",
+    "Same-issuer legs carry the byte-identical raw statement series (checked on CI run 36227380588), so one filing proves every leg of the issuer."
+  ],
+  "PBR-A": { "yahooFinancialCurrency": "BRL", "statementCurrency": "USD", "issuer": "Petrobras", "source": "SEC 20-F/6-K: consolidated statements presented in US dollars (2024 sales revenue US$91,416M = Yahoo raw annual)", "verifiedAt": "2026-09-26" },
+  "PETR3.SA": { "yahooFinancialCurrency": "BRL", "statementCurrency": "USD", "issuer": "Petrobras", "source": "same issuer as PBR-A, identical raw statement series", "verifiedAt": "2026-09-26" },
+  "PETR4.SA": { "yahooFinancialCurrency": "BRL", "statementCurrency": "USD", "issuer": "Petrobras", "source": "same issuer as PBR-A, identical raw statement series", "verifiedAt": "2026-09-26" },
+  "XPBR.MC": { "yahooFinancialCurrency": "BRL", "statementCurrency": "USD", "issuer": "Petrobras", "source": "same issuer as PBR-A, identical raw statement series", "verifiedAt": "2026-09-26" },
+  "EMBJ": { "yahooFinancialCurrency": "BRL", "statementCurrency": "USD", "issuer": "Embraer", "source": "SEC 6-K Q1 2026: revenue US$1,446.7M = Yahoo raw quarter 2026-03-31", "verifiedAt": "2026-09-26" },
+  "EMBJ3.SA": { "yahooFinancialCurrency": "BRL", "statementCurrency": "USD", "issuer": "Embraer", "source": "same issuer as EMBJ, identical raw statement series", "verifiedAt": "2026-09-26" }
+}
