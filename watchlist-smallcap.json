@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 500,
+    "count": 496,
     "partial": false
   },
   "stocks": [
@@ -33,14 +33,6 @@
       "yahoo_symbol": "SHBI",
       "name": "Shore Bancshares, Inc. - Common Stock",
       "marketCapUsd": 773501184,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "ASGI",
-      "yahoo_symbol": "ASGI",
-      "name": "abrdn Global Infrastructure Income Fund Common Shares of Beneficial Interest",
-      "marketCapUsd": 766999488,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -637,14 +629,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "NRGV",
-      "yahoo_symbol": "NRGV",
-      "name": "Energy Vault Holdings, Inc. Common Stock",
-      "marketCapUsd": 630712640,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "RWT",
       "yahoo_symbol": "RWT",
       "name": "Redwood Trust, Inc. Common Stock",
@@ -833,14 +817,6 @@
       "yahoo_symbol": "KLC",
       "name": "KinderCare Learning Companies, Inc. Common Stock",
       "marketCapUsd": 599247168,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "NUAI",
-      "yahoo_symbol": "NUAI",
-      "name": "New Era Energy & Digital, Inc. - Common Stock",
-      "marketCapUsd": 598629376,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -3517,14 +3493,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "BUUU",
-      "yahoo_symbol": "BUUU",
-      "name": "BUUU Group Limited - Class A Ordinary Share",
-      "marketCapUsd": 338073760,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "VELO",
       "yahoo_symbol": "VELO",
       "name": "Velo3D, Inc. - Common stock",
@@ -4013,17 +3981,27 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-09-12T09:59:59.305Z",
+  "lastReconcile": "2026-09-26T10:43:13.476Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "ODD",
+      "ticker": "ASGI",
       "grund": "band-austritt-oben",
-      "mcap": 843156864
+      "mcap": 812445056
     },
     {
-      "ticker": "OBE",
+      "ticker": "NRGV",
       "grund": "band-austritt-oben",
-      "mcap": 865430656
+      "mcap": 800094144
+    },
+    {
+      "ticker": "NUAI",
+      "grund": "band-austritt-oben",
+      "mcap": 852827392
+    },
+    {
+      "ticker": "BUUU",
+      "grund": "band-austritt-oben",
+      "mcap": 833059520
     }
   ]
 }
