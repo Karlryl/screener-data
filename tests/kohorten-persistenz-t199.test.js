@@ -23,6 +23,7 @@
 'use strict';
 const assert = require('assert');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const W = require('../scripts/write-board-history.js');
 
@@ -46,7 +47,24 @@ function row(ticker, score) { return { ticker, score, runwayQuarters: null }; }
 const CALIB = { formulaVersion: 'calibration/v4', generatedAt: '2026-09-19T06:00:00.000Z' };
 
 // ── (a) Writer-Ebene ─────────────────────────────────────────────────────────
-check('buildBoardVintage: je Track die volle Eingabemenge, Zaehler zaehlt dieselbe Liste', () => {
+function withWriterPaths(fn) {
+  const tempRoot = fs.realpathSync(os.tmpdir());
+  const base = fs.mkdtempSync(path.join(tempRoot, 'kohorten-persistenz-'));
+  try {
+    fs.mkdirSync(path.join(base, 'snapshots'));
+    W._setPaths(base);
+    return fn();
+  } finally {
+    try { W._setPaths(null); }
+    finally {
+      assert.strictEqual(path.dirname(base), tempRoot, 'cleanup stays inside the owned temp root');
+      assert.ok(path.basename(base).startsWith('kohorten-persistenz-'));
+      fs.rmSync(base, { recursive: true, force: true });
+      assert.strictEqual(fs.existsSync(base), false, 'owned writer fixture was removed');
+    }
+  }
+}
+check('buildBoardVintage: je Track die volle Eingabemenge, Zaehler zaehlt dieselbe Liste', () => withWriterPaths(() => {
   // Bewusst 8 + 3 Zeilen: ein Top-N-Deckel (5 oder 10) wuerde hier BEISSEN. Mit 3 + 2
   // Zeilen waere derselbe Test gegen einen Deckel blind gewesen.
   const prof = ['AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF', 'GGG', 'HHH'];
@@ -62,16 +80,16 @@ check('buildBoardVintage: je Track die volle Eingabemenge, Zaehler zaehlt diesel
   assert.strictEqual(v.cohortCount.unprofitable, v.cohort.unprofitable.length);
   assert.strictEqual(v.cohortCount.profitable, 8);
   assert.strictEqual(v.cohortCount.unprofitable, 3);
-});
+}));
 
-check('buildBoardVintage: flache Liste (survival) landet vollstaendig im profitable-Track', () => {
+check('buildBoardVintage: flache Liste (survival) landet vollstaendig im profitable-Track', () => withWriterPaths(() => {
   const flach = ['AAA', 'BBB', 'CCC', 'DDD', 'EEE', 'FFF'];
   const v = W.buildBoardVintage('survival', flach.map(t => row(t, null)), '2026-09-19', CALIB, null);
   assert.deepStrictEqual(v.cohort.profitable.map(r => r.ticker), flach);
   assert.deepStrictEqual(v.cohort.unprofitable, []);
   assert.strictEqual(v.cohortCount.profitable, flach.length);  // nicht 0 — leere Kohorte
   assert.strictEqual(v.cohortCount.unprofitable, 0);           // waere sonst still gruen
-});
+}));
 
 // ── (b) Archiv-Ebene ─────────────────────────────────────────────────────────
 check('Archiv: in JEDEM Vintage deckt sich die Mitgliedsliste je Track mit cohortCount', () => {

@@ -27,7 +27,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { universumsHash, universumsHashVon, UNIVERSE_HASH_FILE } = require('../scripts/write-excluded-list.js');
-const { buildBoardVintage, readUniverseHash, resolvePaths } = require('../scripts/write-board-history.js');
+const W = require('../scripts/write-board-history.js');
+const { buildBoardVintage, readUniverseHash, resolvePaths } = W;
 
 let pass = 0, fail = 0;
 function check(name, fn) {
@@ -85,16 +86,25 @@ check('Schreiber und Leser zeigen auf denselben Traeger-Pfad', () => {
 });
 
 // ── Der Wert kommt im Vintage an ────────────────────────────────────────────
-check('das Vintage traegt genau den Hash des Laufs', () => {
+function withWriterPaths(fn) {
+  try {
+    fs.mkdirSync(path.join(TMP, 'snapshots'), { recursive: true });
+    W._setPaths(TMP);
+    return fn();
+  } finally {
+    W._setPaths(null);
+  }
+}
+check('das Vintage traegt genau den Hash des Laufs', () => withWriterPaths(() => {
   const v = buildBoardVintage('financials', leeresBoard, '2026-08-28', calibMeta, 'abc0123456789def');
   assert.equal(v.universeHash, 'abc0123456789def');
-});
+}));
 
-check('ohne Hash steht ehrlich null im Vintage, nicht ein erfundener Wert', () => {
+check('ohne Hash steht ehrlich null im Vintage, nicht ein erfundener Wert', () => withWriterPaths(() => {
   const v = buildBoardVintage('financials', leeresBoard, '2026-08-28', calibMeta);
   assert.equal(v.universeHash, null);
   assert.ok('universeHash' in v, 'das Feld muss existieren, sonst faellt es fuer Leser still weg');
-});
+}));
 
 // ── Fehlend ist nicht kaputt ────────────────────────────────────────────────
 // ::warning:: laeuft in dieser Datei ueber console.log (Haus-Konvention von
