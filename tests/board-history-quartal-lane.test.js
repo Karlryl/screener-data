@@ -91,6 +91,16 @@ check('F3: null revenue in an overlapping quarter (either side) is NOT explained
   assert.strictEqual(ex(ALT, { ...NEU, revenueQ: [110, 100, '95'] }), false);
   assert.strictEqual(ex({ ...ALT, revenueQ: [100, '95', 90] }, NEU), false);
 });
+check('F3: an overlapping quarter null on BOTH sides is a stable gap — skipped, does not block S', () => {
+  assert.strictEqual(ex({ ...ALT, revenueQ: [100, null, 90] }, { ...NEU, revenueQ: [110, 100, null] }), true);
+  assert.strictEqual(ex({ ...ALT, revenueQ: [100, NaN, 90] }, { ...NEU, revenueQ: [110, 100, Infinity] }), true);
+});
+check('F3: a both-sides gap is not an overlap — S still needs one finite overlapping quarter', () => {
+  assert.strictEqual(ex({ revenueQ: [null], revenueQEnds: ['2025-12-31'] }, { ...NEU, revenueQ: [110, 100, null] }), false);
+});
+check('F3: a both-sides gap in the newest two quarters still blocks', () => {
+  assert.strictEqual(ex({ ...ALT, revenueQ: [null, 95, 90] }, { ...NEU, revenueQ: [110, null, 95] }), false);
+});
 check('F3: a null in an older, non-overlapping quarter does not block', () => {
   assert.strictEqual(ex(ALT, { revenueQ: [110, 100, 95, null], revenueQEnds: [...NEU.revenueQEnds, '2025-06-30'] }), true);
 });

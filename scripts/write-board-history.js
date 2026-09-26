@@ -603,6 +603,9 @@ function neuesQuartalErklaert(prev, cur, runDate) {
   let ueberlappung = 0;
   for (const [t, v] of neu) {
     if (!altWert.has(t)) continue;
+    // Auf BEIDEN Seiten leer = stabile Datenlücke der Quelle (09-25: fast nur CN-A-Aktien, 2025-09-30):
+    // zählt nicht als Überlappung, blockiert S aber auch nicht. Nur EINE Seite leer bleibt ein Bruch.
+    if (!Number.isFinite(v) && !Number.isFinite(altWert.get(t))) continue;   // F3: Lücke beidseitig
     ueberlappung++;
     if (!Number.isFinite(v) || !Number.isFinite(altWert.get(t))) return false;   // F3: Überlappung
     if (!imBand(v / altWert.get(t))) return false;   // S
