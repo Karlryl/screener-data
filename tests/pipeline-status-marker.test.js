@@ -43,6 +43,17 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const { findeEnvSchluessel, mitEnv } = require('../lib/env-key.js');
+
+const originalPath = process.env.PATH;
+const originalPathEntries = Object.entries(process.env).filter(([key]) => key.toUpperCase() === 'PATH');
+const tempBase = fs.realpathSync(os.tmpdir());
+const ownedTemps = [];
+function makeTemp(prefix) {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(tempBase, prefix)));
+  ownedTemps.push(dir);
+  return dir;
+}
 
 const ROOT = path.join(__dirname, '..');
 const daily = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'), 'utf8')
@@ -105,11 +116,16 @@ function runBlock(section) {
 }
 
 /** Eine ausfuehrbare `bash` finden (Linux/CI: auf PATH; Windows: die von Git). */
+let cachedBash;
 function bashBinaer() {
-  const kandidaten = ['bash', 'C:/Program Files/Git/bin/bash.exe', 'C:/Program Files/Git/usr/bin/bash.exe',
-    'C:/Program Files (x86)/Git/bin/bash.exe'];
+  if (cachedBash) return cachedBash;
+  // Git's bin/bash wrapper prepends /usr/bin; the direct binary preserves child PATH.
+  const kandidaten = process.platform === 'win32'
+    ? ['C:/Program Files/Git/usr/bin/bash.exe', 'C:/Program Files (x86)/Git/usr/bin/bash.exe',
+      'bash', 'C:/Program Files/Git/bin/bash.exe', 'C:/Program Files (x86)/Git/bin/bash.exe']
+    : ['bash'];
   for (const k of kandidaten) {
-    try { execFileSync(k, ['-c', 'exit 0'], { stdio: 'ignore' }); return k; } catch (e) { /* naechster */ }
+    try { execFileSync(k, ['-c', 'exit 0'], { stdio: 'ignore' }); cachedBash = k; return cachedBash; } catch (e) { /* naechster */ }
   }
   return assert.fail('keine ausfuehrbare bash gefunden — dieser Waechter kann das Verhalten der '
     + 'Publikations-Schritte dann nicht messen. Ein stiller Skip waere hier der schlimmste '
@@ -127,20 +143,47 @@ function bashBinaer() {
 // bewusst drin: sollte jemand spaeter `shell: bash` setzen (dann gilt drueben `-eo pipefail`)
 // oder eine Pipe einbauen, ist der Harness eher zu streng als zu lasch. Falsch-rot faellt auf,
 // falsch-gruen nicht.
+let sleepShim, sleepInvocation = 0;
 function sh(block, { cwd, env }) {
-  try {
-    const out = execFileSync(bashBinaer(), ['-eo', 'pipefail', '-c', block],
-      { cwd, encoding: 'utf8', env: Object.assign({}, process.env, env || {}), stdio: ['ignore', 'pipe', 'pipe'] });
-    return { code: 0, out };
-  } catch (e) {
-    return { code: e.status === undefined ? -1 : e.status, out: (e.stdout || '') + (e.stderr || '') };
+  if (!sleepShim) {
+    sleepShim = makeTemp('psm-sleep-');
+    fs.writeFileSync(path.join(sleepShim, 'sleep'), '#!/bin/sh\necho "$1" >> "$SLEEP_SHIM_LOG"\nexit 0\n',
+      { mode: 0o755 });
   }
+  const sleepLog = path.join(sleepShim, 'sleep-' + (++sleepInvocation) + '.log');
+  const baseEnv = Object.assign({}, process.env, env || {});
+  const pathKey = findeEnvSchluessel(baseEnv, 'PATH');
+  let childEnv = mitEnv(baseEnv, 'PATH', sleepShim + path.delimiter + (baseEnv[pathKey] || ''));
+  childEnv = mitEnv(childEnv, 'SLEEP_SHIM_LOG', sleepLog.replace(/\\/g, '/'));
+  childEnv = mitEnv(childEnv, 'S60_SLEEP_SHIM_DIR', sleepShim.replace(/\\/g, '/'));
+  const ready = 'S60_SLEEP_SHIM_READY';
+  // Probe inside the same shell before the real workflow block can call sleep.
+  const probe = 's60_sleep="$(command -v sleep)"\n'
+    + 's60_expected="$(cd "$S60_SLEEP_SHIM_DIR" && pwd -P)/sleep"\n'
+    + 'if [ "$s60_sleep" != "$s60_expected" ]; then\n'
+    + '  printf "sleep shim not selected: %s\\n" "$s60_sleep" >&2\n'
+    + '  exit 91\nfi\n'
+    + 'printf "' + ready + '\\n"\n';
+  let result;
+  try {
+    const out = execFileSync(bashBinaer(), ['-eo', 'pipefail', '-c', probe + block],
+      { cwd, encoding: 'utf8', env: childEnv, stdio: ['ignore', 'pipe', 'pipe'] });
+    result = { code: 0, out };
+  } catch (e) {
+    result = { code: e.status === undefined ? -1 : e.status, out: (e.stdout || '') + (e.stderr || '') };
+  }
+  assert.ok(result.out.startsWith(ready + '\n'),
+    'command -v sleep must select the owned shim before executing the workflow: ' + result.out.trim());
+  result.out = result.out.slice(ready.length + 1);
+  result.sleeps = fs.existsSync(sleepLog) ? fs.readFileSync(sleepLog, 'utf8').trim().split(/\r?\n/).filter(Boolean) : [];
+  return result;
 }
 
 const git = (args, cwd) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args],
   { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
 // ── Der Job selbst: laeuft immer, blockiert nichts, ist nicht entschaerft ─────────────
+try {
 const laufstatus = job(daily, 'laufstatus');
 
 test('Job: `if: always()` — sonst meldet er nicht, wenn es etwas zu melden gibt', () => {
@@ -338,7 +381,7 @@ test('ein nicht erreichbarer Vorgaenger warnt, verhindert den Marker aber NICHT'
     .replace(/^url=".*"$/m, 'url="file:///gibtesnicht/kein-marker.json"');
   assert.ok(block.includes('file:///gibtesnicht'), 'die URL-Ersetzung hat nicht getroffen — dieser '
     + 'Test misst dann etwas anderes als den Ausfall-Zweig.');
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'psm-fetch-'));
+  const cwd = makeTemp('psm-fetch-');
   const r = sh(block, { cwd });
   assert.equal(r.code, 0, 'ein gescheiterter Vorgaenger-Abruf bricht den Schritt ab (exit ' + r.code
     + ') — dann geht bei genau dem Netzproblem gar kein Marker raus. Ein Banner ohne Datum ist '
@@ -367,7 +410,7 @@ const SHA = 'f'.repeat(40);
  *   VEROEFFENTLICHEN, und dieser Test soll auf JEDEM Zweig dasselbe messen.
  */
 function laufFahren({ needs, vorgaenger, mitGhPages, veroeffentlichen = 'true' }) {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'psm-e2e-'));
+  const tmp = makeTemp('psm-e2e-');
   const cwd = path.join(tmp, 'runner');
   const remote = path.join(tmp, 'ghpages.git').replace(/\\/g, '/');
   fs.mkdirSync(cwd, { recursive: true });
@@ -537,7 +580,7 @@ test('E2E ZWEIGLAUF: von einem Feature-Zweig geht NICHTS nach gh-pages raus', ()
 // Geprueft wird das VERHALTEN, nicht der Text: das Ersatz-gh-pages bekommt einen
 // pre-receive-Hook, der JEDEN Push ablehnt. Damit laeuft die Retry-Schleife wirklich leer.
 test('(2b) alle drei Push-Versuche erschoepft -> ROT (nicht still gruen)', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'psm-push-'));
+  const tmp = makeTemp('psm-push-');
   const cwd = path.join(tmp, 'runner'); fs.mkdirSync(cwd, { recursive: true });
   const remote = path.join(tmp, 'ghpages.git').replace(/\\/g, '/');
   git(['init', '--bare', '-b', 'gh-pages', remote]);
@@ -566,13 +609,14 @@ test('(2b) alle drei Push-Versuche erschoepft -> ROT (nicht still gruen)', () =>
     + '(exit 0). Das ist der Schadensfall in Reinform: gruener Job, kein Marker auf gh-pages, '
     + 'Banner schweigt — genau der Zustand vom 12.-15.08. Ausgabe: ' + r.out.trim().slice(-400));
   assert.match(r.out, /::error::/, 'der erschoepfte Retry meldet sich nicht in Karls Kanal (rotes X).');
+  assert.deepEqual(r.sleeps, ['5', '10', '15'], 'retry backoff must request exactly 5, 10 and 15 seconds');
 });
 
 test('E2E (3): ein vertragswidriger Marker wird gar nicht erst publiziert', () => {
   // Ein Job-Ergebnis, das es nicht gibt, ist harmlos (zaehlt als rot). Der scharfe Fall ist
   // ein unbrauchbarer head_sha: findash verwirft den Marker dann komplett. Der Schreib-
   // Schritt muss ihn hart ablehnen, statt ihn zu veroeffentlichen.
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'psm-bad-'));
+  const tmp = makeTemp('psm-bad-');
   const schreib = runBlock(schreibSchritt)
     .replace(/\$\{\{\s*needs\.prep\.outputs\.started_at\s*\}\}/g, '2026-08-16T02:17:00Z')
     .replace('node scripts/pipeline-status.js', 'node ' + JSON.stringify(SKRIPT));
@@ -588,6 +632,19 @@ test('E2E (3): ein vertragswidriger Marker wird gar nicht erst publiziert', () =
     'der vertragswidrige Marker liegt trotzdem auf der Platte — der Publish-Schritt wuerde ihn '
     + 'anschliessend deployen.');
 });
+
+} finally {
+  for (const dir of ownedTemps) {
+    assert.equal(fs.realpathSync(dir), dir, 'cleanup root must still be the owned directory');
+    assert.equal(path.dirname(dir), tempBase, 'cleanup must stay within the real temp root');
+    assert.ok(path.basename(dir).startsWith('psm-'), 'cleanup must target only this test fixture');
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 20 });
+    assert.equal(fs.existsSync(dir), false, 'owned pipeline-status fixture was removed');
+  }
+  assert.equal(process.env.PATH, originalPath, 'parent process PATH remains unchanged');
+  assert.deepEqual(Object.entries(process.env).filter(([key]) => key.toUpperCase() === 'PATH'),
+    originalPathEntries, 'parent PATH key casing and value remain unchanged');
+}
 
 console.log('\npipeline-status-marker.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
