@@ -147,6 +147,42 @@ const FUNDAMENTALS_REFRESH_BUDGET = (() => {
 let _fundamentalsRefreshUsed = 0;   // per-run counter, reset at the top of pullAll
 let _fundamentalsRefreshDeferred = 0; // tickers deferred to price-only this run (logged)
 
+// Refresh spread (2026-09-26, d1 scoring diagnosis): the 30-day sweep re-expires whole
+// cohorts together. On 2026-09-25, 4,295 snapshots last pulled on 08-26 refreshed in ONE run,
+// 1,137 of them with a new reported quarter, and the value gate flagged all 13 boards
+// SUSPECT. Each such cohort comes back every 30 days (sim: 4,433 on 10-27, 4,485 on 11-03).
+// The budget above never binds (3000 per shard vs ~310 at the peak), and its order was the
+// daily-reset asOf, not the fundamentals clock.
+// Rule: per run and shard, at most ceil(young snapshots / FUNDAMENTALS_REFRESH_SPREAD)
+// sole-cause time-based fulls, OLDEST fundamentals clock first (admitTimeRefreshes). The
+// rest goes price-only and is first in line next run, so nobody starves while the cap
+// (1/16 of the slice per run, ~1.3x the 30-day demand of ~1/21 per run at 5 runs a week)
+// stays above the steady-state demand. Simulated on the 09-26 CI snapshots, 120 days:
+// max 1,008 time-based fulls per run instead of 4,485; max fundamentals age 36 d while
+// the October waves drain (39 d if every 5th run fails), 32 d afterwards (before: 33 d).
+// ponytail: one divisor, raise it for smaller batches (staleness grows once the cap
+// drops below demand), set it to 1 to switch the spread off.
+const FUNDAMENTALS_REFRESH_SPREAD = (() => {
+  const v = parseInt(process.env.FUNDAMENTALS_REFRESH_SPREAD || '', 10);
+  return (Number.isFinite(v) && v >= 1) ? v : 16;
+})();
+// entries: [{ ticker, clockMs }] for every young snapshot of this run's slice; clockMs NaN =
+// clock unreadable, which fundamentalsStaleness also treats as due. Same boundary as there:
+// due iff now - clock > refreshMs. Ties break on the ticker, so the choice is deterministic.
+function admitTimeRefreshes(entries, now, divisor = FUNDAMENTALS_REFRESH_SPREAD, refreshMs = FUNDAMENTALS_REFRESH_MS) {
+  const cap = Math.ceil(entries.length / divisor);
+  const key = (e) => (Number.isFinite(e.clockMs) ? e.clockMs : -Infinity);
+  // Negated on purpose: `now - NaN > refreshMs` is false and would park unreadable clocks.
+  const due = entries.filter((e) => !(now - e.clockMs <= refreshMs))
+    .sort((a, b) => (key(a) - key(b)) || (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
+  return {
+    admitted: new Set(due.slice(0, cap).map((e) => e.ticker)),
+    due: due.length,
+    cap,
+    oldestDeferredClockMs: due.length > cap ? key(due[cap]) : null,
+  };
+}
+
 // Durchsatz-Diagnose (19.09.2026, Messung agent-reports/daylauf-2026-09-19/throughput.md):
 // der Lauf zieht ~274 Voll-Abrufe, davon 135 zeit-basiert, bei einem Budget von 3000 (4,5 %
 // genutzt, "none deferred") — waehrend 8.750 von 15.040 Snapshots auf der Platte eine
@@ -3259,6 +3295,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
   watchlist.stocks = sortByStaleness(watchlist.stocks, outputDir, _earningsCalendar, _today);
   _log('INFO', `Sorted ${watchlist.stocks.length} stocks by staleness (oldest first)`);
+  // Refresh spread (26.09.2026, see FUNDAMENTALS_REFRESH_SPREAD): decide ONCE, before any
+  // pull, which time-stale snapshots of this slice may take their full pull this run —
+  // oldest fundamentals clock first. Young gate = processOne's own _getExistingSnapshotAge
+  // (same 500 bytes, hoisted from below); clock order fundamentalsAsOf, then fetchedAt, as
+  // in fundamentalsStaleness; 4096-byte head as in fundamentalsAsOfAgeFromFile (live max
+  // offset 1,627 bytes). A ticker that crosses 30 d during the run waits one run.
+  // ponytail: a slot given to a ticker that rides free anyway (earnings/schema/currency)
+  // is lost for this run, ~8 per run in CI; the next-oldest goes next run.
+  const _refreshNow = Date.now();
+  const _refreshEntries = [];
+  for (const s of watchlist.stocks) {
+    const age = _getExistingSnapshotAge(s.ticker);
+    if (!(age != null && age < FUNDAMENTALS_MAX_AGE_MS)) continue; // not young: full pull anyway, never budgeted
+    const head = readFileHead(path.join(outputDir, safeSnapshotFilename(s.ticker)), 4096) || '';
+    const clock = head.match(/"fundamentalsAsOf"\s*:\s*"([^"]+)"/) || head.match(/"fetchedAt"\s*:\s*"([^"]+)"/);
+    _refreshEntries.push({ ticker: s.ticker, clockMs: clock ? new Date(clock[1]).getTime() : NaN });
+  }
+  const _refreshSpread = admitTimeRefreshes(_refreshEntries, _refreshNow);
   // Tag 154: exponential-backoff retry for rate-limit errors.
   // Yahoo 429s are transient — one retry after 10–30s usually succeeds.
   // Max 3 attempts: initial + 2 retries with 10s / 25s sleep.
@@ -3758,7 +3812,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // is also schema-, currency-, or earnings-stale it takes the full pull for
       // correctness (free ride) and must not consume the time budget.
       if (staleFundamentals && !staleSchema && !staleCurrency && !staleEarnings && !vollPullAngefordert) {
-        if (_fundamentalsRefreshUsed < FUNDAMENTALS_REFRESH_BUDGET) {
+        if (_refreshSpread.admitted.has(stock.ticker) && _fundamentalsRefreshUsed < FUNDAMENTALS_REFRESH_BUDGET) {
           _fundamentalsRefreshUsed++;
         } else {
           forceFundamentalsFull = false; // budget exhausted → fall back to price-only
@@ -4726,6 +4780,17 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; none deferred.`);
   }
   {
+    // Refresh spread: the deferral must never be silent. The oldest deferred clock is the
+    // staleness the spread costs; past REFRESH_DAYS + 10 (the simulated bound is 36 d, 39 d
+    // with every 5th run failing) the backlog is not draining and the run says so.
+    const d = _refreshSpread.oldestDeferredClockMs;
+    const deferredAgeDays = d == null ? null : (d === -Infinity ? Infinity : (_refreshNow - d) / 86400000);
+    _log('INFO', `Refresh spread: ${_refreshSpread.due} of ${_refreshEntries.length} young snapshots past ${FUNDAMENTALS_REFRESH_DAYS}d, ${_refreshSpread.admitted.size} admitted (cap ${_refreshSpread.cap} = ceil(${_refreshEntries.length}/${FUNDAMENTALS_REFRESH_SPREAD}), oldest clock first); oldest deferred clock ${deferredAgeDays == null ? '-' : deferredAgeDays.toFixed(1) + 'd'}.`);
+    if (deferredAgeDays != null && deferredAgeDays > FUNDAMENTALS_REFRESH_DAYS + 10) {
+      console.warn(`::warning::Refresh spread: oldest deferred fundamentals are ${deferredAgeDays.toFixed(1)} days old (> ${FUNDAMENTALS_REFRESH_DAYS + 10}) — backlog not draining, check FUNDAMENTALS_REFRESH_SPREAD`);
+    }
+  }
+  {
     // Durchsatz-Diagnose: die vier Zahlen, die entscheiden, ob der Auswahl-Schritt oder ein
     // Deckel bremst. Erwartung nach der Messung vom 19.09.: n_sel_young_and_stale muesste
     // weit ueber den gezogenen zeit-basierten Voll-Abrufen liegen, wenn das Tor nicht bremst.
@@ -5205,6 +5270,7 @@ if (require.main === module) {
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   fundamentalsStaleness, ftsFailureSummary,
+  admitTimeRefreshes, FUNDAMENTALS_REFRESH_SPREAD,   // Refresh spread (26.09.2026)
   fundamentalsAsOfAgeFromFile, selectorBucket,   // Durchsatz-Diagnose (19.09.2026)
   readFileHead,                                 // T325 (Handle-Leck)
   // Gezielter Voll-Pull: die Regel steht auf Modul-Ebene und wird exportiert, damit der
