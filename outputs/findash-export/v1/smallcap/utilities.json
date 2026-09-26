@@ -1,21 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-25T09:19:51.172Z",
+  "generated_at": "2026-09-26T09:05:36.398Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
-    "status": "ok",
-    "degraded": false,
+    "status": "degradiert",
+    "degraded": true,
     "blocked": false,
-    "coverage_pct": 75.3,
-    "generated_at": "2026-09-25T09:12:32.703Z"
+    "coverage_pct": 73.8,
+    "generated_at": "2026-09-26T08:58:05.506Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "YORW",
-      "score": 71.7,
+      "score": 71,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -42,8 +42,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 82.6,
-      "scoreShrunk": 71.7,
+      "scoreBase": 81.4,
+      "scoreShrunk": 71,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -72,7 +72,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 90,
+          "pct": 75,
           "weight": 0.6
         },
         {
@@ -82,7 +82,7 @@
         },
         {
           "key": "dilution",
-          "pct": 90,
+          "pct": 91.7,
           "weight": 0.5
         }
       ],
@@ -101,7 +101,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "ARTNA",
-      "score": 55.9,
+      "score": 55.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -128,8 +128,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 58.8,
-      "scoreShrunk": 55.9,
+      "scoreBase": 58.2,
+      "scoreShrunk": 55.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -158,7 +158,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 70,
+          "pct": 58.3,
           "weight": 0.6
         },
         {
@@ -168,7 +168,7 @@
         },
         {
           "key": "dilution",
-          "pct": 70,
+          "pct": 75,
           "weight": 0.5
         }
       ],
@@ -213,7 +213,7 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 52.2,
+      "scoreBase": 52.1,
       "scoreShrunk": 51.4,
       "factors": {
         "burn": 1,
@@ -243,7 +243,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 50,
+          "pct": 41.7,
           "weight": 0.6
         },
         {
@@ -253,7 +253,7 @@
         },
         {
           "key": "dilution",
-          "pct": 50,
+          "pct": 58.3,
           "weight": 0.5
         }
       ],
@@ -272,7 +272,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "HNRG",
-      "score": 46,
+      "score": 46.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -297,8 +297,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 44.1,
-      "scoreShrunk": 46,
+      "scoreBase": 44.5,
+      "scoreShrunk": 46.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -327,7 +327,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 30,
+          "pct": 25,
           "weight": 0.6
         },
         {
@@ -337,7 +337,7 @@
         },
         {
           "key": "dilution",
-          "pct": 30,
+          "pct": 41.7,
           "weight": 0.5
         }
       ],
@@ -358,7 +358,7 @@
       "rank": 1,
       "rankGrund": null,
       "ticker": "DGXX",
-      "score": 30.1,
+      "score": 26.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -389,10 +389,10 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.83,
-      "cohortN": 1,
+      "cohortN": 2,
       "cohortFallback": true,
-      "scoreBase": 10,
-      "scoreShrunk": 36.7,
+      "scoreBase": 9.7,
+      "scoreShrunk": 32.5,
       "factors": {
         "burn": 0.822,
         "growth": 1,
@@ -421,7 +421,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 10,
+          "pct": 8.3,
           "weight": 0.9
         },
         {
@@ -431,7 +431,7 @@
         },
         {
           "key": "dilution",
-          "pct": 10,
+          "pct": 8.3,
           "weight": 0.4
         }
       ],

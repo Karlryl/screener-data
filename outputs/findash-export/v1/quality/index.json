@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-25T09:19:51.144Z",
+  "generated_at": "2026-09-26T09:05:36.371Z",
   "coverage": {
-    "status": "ok",
-    "degraded": false,
+    "status": "degradiert",
+    "degraded": true,
     "blocked": false,
-    "coverage_pct": 75.3,
-    "generated_at": "2026-09-25T09:12:32.703Z"
+    "coverage_pct": 73.8,
+    "generated_at": "2026-09-26T08:58:05.506Z"
   },
-  "generatedFromSnapshots": 16009,
+  "generatedFromSnapshots": 16005,
   "boards": [
     "quality-consumer-discretionary",
     "quality-consumer-staples",
@@ -37,7 +37,7 @@
   },
   "counts": {
     "quality-consumer-discretionary": {
-      "profitable": 1071,
+      "profitable": 1072,
       "unprofitable": 0
     },
     "quality-consumer-staples": {
@@ -45,19 +45,19 @@
       "unprofitable": 0
     },
     "quality-energy": {
-      "profitable": 337,
+      "profitable": 336,
       "unprofitable": 0
     },
     "quality-health-care": {
-      "profitable": 741,
+      "profitable": 743,
       "unprofitable": 0
     },
     "quality-industrials": {
-      "profitable": 1968,
+      "profitable": 1967,
       "unprofitable": 0
     },
     "quality-it-services": {
-      "profitable": 124,
+      "profitable": 123,
       "unprofitable": 0
     },
     "quality-materials": {
@@ -69,7 +69,7 @@
       "unprofitable": 0
     },
     "quality-software-comm-services": {
-      "profitable": 483,
+      "profitable": 480,
       "unprofitable": 0
     },
     "quality-tech-hardware": {
@@ -77,24 +77,24 @@
       "unprofitable": 0
     },
     "quality-utilities": {
-      "profitable": 345,
+      "profitable": 346,
       "unprofitable": 0
     }
   },
   "excluded": {
-    "balance-sheet-bank": 718,
+    "balance-sheet-bank": 720,
     "data-suspect": 19,
-    "dup-issuer": 2649,
+    "dup-issuer": 2650,
     "insurer": 299,
     "lender-gp0": 32,
     "mortgage-reit": 15,
     "no-axes": 8,
-    "no-revenue": 132,
-    "no-sector": 86,
+    "no-revenue": 128,
+    "no-sector": 85,
     "non-operating-rev": 135,
-    "non-us": 1564,
+    "non-us": 1563,
     "qc-not-compounder": 1531,
-    "qc-sector-unsupported": 1234,
+    "qc-sector-unsupported": 1235,
     "telecom": 194
   }
 }
