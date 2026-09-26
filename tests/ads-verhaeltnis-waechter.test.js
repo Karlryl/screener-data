@@ -77,6 +77,8 @@ pruefe('presence: HSAI-like leg is corrected to within 3 % of the HK leg', () =>
 });
 
 pruefe('presence: every table row has a pair-leg fixture and lands within 3 % of it', () => {
+  // Both directions: a fixture whose row was deleted from the table (e.g. BSBR) is red too.
+  for (const ticker of Object.keys(PAIR)) assert.ok(TABLE[ticker], `required table row ${ticker} missing`);
   for (const ticker of Object.keys(TABLE)) {
     const p = PAIR[ticker];
     assert.ok(p, `table row ${ticker} has no pair-leg fixture (${TABLE[ticker].pairLeg}) in this guard`);
@@ -155,6 +157,10 @@ pruefe('loader rejects a malformed row (fail loud, never silently off)', () => {
   const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ads-ht-')), 't.json');
   fs.writeFileSync(tmp, JSON.stringify({ X: { ordinaryPerAds: 1, validFrom: '2026-01-01', pairLeg: 'X.HK', yahooOrdinaryShares: 1, source: 's', verifiedAt: 'v' } }));
   assert.throws(() => loadAdsHandTable(tmp), /ordinaryPerAds/);
+  for (const root of ['[]', 'true', '42', 'null']) {
+    fs.writeFileSync(tmp, root);
+    assert.throws(() => loadAdsHandTable(tmp), /root must be an object/, 'root ' + root + ' accepted');
+  }
 });
 
 pruefe('wiring: the helper pull-yahoo.js calls corrects with the real table', () => {
