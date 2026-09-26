@@ -1,0 +1,423 @@
+{
+  "_doku": [
+    "Bursa Malaysia: TradingView trading name (mnemonic, e.g. MAYBANK) -> numeric Bursa stock code that Yahoo uses (1155 -> 1155.KL).",
+    "Read by discovery/tv-scanner.js (bursaYahooSymbol): tv-malaysia emits CODE.KL instead of MNEMONIC.KL; refresh-universe.js rewrites existing MNEMONIC.KL rows in place.",
+    "Unmapped mnemonics stay as they are and are counted in a log line (never dropped). Add a row when a new Malaysian name appears unmapped.",
+    "Admission: Yahoo quote on CODE.KL returns the same company name as the watchlist row (legal suffixes Bhd/Berhad/Corp/Group/(M) ignored). name = Yahoo longName.",
+    "Built 2026-09-26 from the 103 .KL rows of Daily Yahoo Pull 36227380588 (W7 coverage diagnosis): 103 of 103 verified."
+  ],
+  "codes": {
+    "99SMART": {
+      "code": "5326",
+      "name": "99 Speed Mart Retail Holdings Berhad"
+    },
+    "ABMB": {
+      "code": "2488",
+      "name": "Alliance Bank Malaysia Berhad"
+    },
+    "AFFIN": {
+      "code": "5185",
+      "name": "AFFIN Bank Berhad"
+    },
+    "ALLIANZ": {
+      "code": "1163",
+      "name": "Allianz Malaysia Berhad"
+    },
+    "AMBANK": {
+      "code": "1015",
+      "name": "AMMB Holdings Berhad"
+    },
+    "AXIATA": {
+      "code": "6888",
+      "name": "Axiata Group Berhad"
+    },
+    "AXREIT": {
+      "code": "5106",
+      "name": "Axis Real Estate Investment Trust"
+    },
+    "BIMB": {
+      "code": "5258",
+      "name": "Bank Islam Malaysia Berhad"
+    },
+    "BKAWAN": {
+      "code": "1899",
+      "name": "Batu Kawan Berhad"
+    },
+    "BURSA": {
+      "code": "1818",
+      "name": "Bursa Malaysia Berhad"
+    },
+    "CARLSBG": {
+      "code": "2836",
+      "name": "Carlsberg Brewery Malaysia Berhad"
+    },
+    "CDB": {
+      "code": "6947",
+      "name": "Celcomdigi Berhad"
+    },
+    "CHINHIN": {
+      "code": "5273",
+      "name": "Chin Hin Group Berhad"
+    },
+    "CIMB": {
+      "code": "1023",
+      "name": "CIMB Group Holdings Berhad"
+    },
+    "DIALOG": {
+      "code": "7277",
+      "name": "Dialog Group Berhad"
+    },
+    "ECOSHOP": {
+      "code": "5337",
+      "name": "Eco-Shop Marketing Berhad"
+    },
+    "ECOWLD": {
+      "code": "8206",
+      "name": "Eco World Development Group Berhad"
+    },
+    "F&N": {
+      "code": "3689",
+      "name": "Fraser & Neave Holdings Bhd"
+    },
+    "FFB": {
+      "code": "5306",
+      "name": "Farm Fresh Berhad"
+    },
+    "FRONTKN": {
+      "code": "0128",
+      "name": "Frontken Corporation Berhad"
+    },
+    "GAMUDA": {
+      "code": "5398",
+      "name": "Gamuda Berhad"
+    },
+    "GASMSIA": {
+      "code": "5209",
+      "name": "Gas Malaysia Berhad"
+    },
+    "GCB": {
+      "code": "5102",
+      "name": "Guan Chong Berhad"
+    },
+    "GENM": {
+      "code": "4715",
+      "name": "Genting Malaysia Berhad"
+    },
+    "GENP": {
+      "code": "2291",
+      "name": "Genting Plantations Berhad"
+    },
+    "GENTING": {
+      "code": "3182",
+      "name": "Genting Berhad"
+    },
+    "GREATEC": {
+      "code": "0208",
+      "name": "Greatech Technology Berhad"
+    },
+    "HAPSENG": {
+      "code": "3034",
+      "name": "Hap Seng Consolidated Berhad"
+    },
+    "HARTA": {
+      "code": "5168",
+      "name": "Hartalega Holdings Berhad"
+    },
+    "HEIM": {
+      "code": "3255",
+      "name": "Heineken Malaysia Berhad"
+    },
+    "HLBANK": {
+      "code": "5819",
+      "name": "Hong Leong Bank Berhad"
+    },
+    "HLFG": {
+      "code": "1082",
+      "name": "Hong Leong Financial Group Berhad"
+    },
+    "HLIND": {
+      "code": "3301",
+      "name": "Hong Leong Industries Berhad"
+    },
+    "IDEAL": {
+      "code": "9687",
+      "name": "Ideal Capital Berhad"
+    },
+    "IGBB": {
+      "code": "5606",
+      "name": "IGB Berhad"
+    },
+    "IGBREIT": {
+      "code": "5227",
+      "name": "IGB Real Estate Investment Trust"
+    },
+    "IHH": {
+      "code": "5225",
+      "name": "IHH Healthcare Berhad"
+    },
+    "IJM": {
+      "code": "3336",
+      "name": "IJM Corporation Berhad"
+    },
+    "INARI": {
+      "code": "0166",
+      "name": "Inari Amertron Berhad"
+    },
+    "IOICORP": {
+      "code": "1961",
+      "name": "IOI Corporation Berhad"
+    },
+    "IOIPG": {
+      "code": "5249",
+      "name": "IOI Properties Group Berhad"
+    },
+    "ITMAX": {
+      "code": "5309",
+      "name": "ITMAX System Berhad"
+    },
+    "JPG": {
+      "code": "5323",
+      "name": "Johor Plantations Group Berhad"
+    },
+    "KERJAYA": {
+      "code": "7161",
+      "name": "Kerjaya Prospek Group Berhad"
+    },
+    "KGB": {
+      "code": "0151",
+      "name": "Kelington Group Berhad"
+    },
+    "KLCC": {
+      "code": "5235SS",
+      "name": "KLCC Property Holdings Berhad"
+    },
+    "KLK": {
+      "code": "2445",
+      "name": "Kuala Lumpur Kepong Berhad"
+    },
+    "KPJ": {
+      "code": "5878",
+      "name": "KPJ Healthcare Berhad"
+    },
+    "LPI": {
+      "code": "8621",
+      "name": "LPI Capital Bhd"
+    },
+    "MALAKOF": {
+      "code": "5264",
+      "name": "Malakoff Corporation Berhad"
+    },
+    "MAXIS": {
+      "code": "6012",
+      "name": "Maxis Berhad"
+    },
+    "MAYBANK": {
+      "code": "1155",
+      "name": "Malayan Banking Berhad"
+    },
+    "MBSB": {
+      "code": "1171",
+      "name": "MBSB Berhad"
+    },
+    "MCEMENT": {
+      "code": "3794",
+      "name": "Malayan Cement Berhad"
+    },
+    "MI": {
+      "code": "5286",
+      "name": "Mi Technovation Berhad"
+    },
+    "MISC": {
+      "code": "3816",
+      "name": "MISC Berhad"
+    },
+    "MPI": {
+      "code": "3867",
+      "name": "Malaysian Pacific Industries Berhad"
+    },
+    "MRDIY": {
+      "code": "5296",
+      "name": "Mr D.I.Y. Group (M) Berhad"
+    },
+    "MTTSL": {
+      "code": "5352",
+      "name": "MTT Shipping and Logistics Berhad"
+    },
+    "NATGATE": {
+      "code": "0270",
+      "name": "NationGate Holdings Berhad"
+    },
+    "NESTLE": {
+      "code": "4707",
+      "name": "Nestlé (Malaysia) Berhad"
+    },
+    "ORIENT": {
+      "code": "4006",
+      "name": "Oriental Holdings Berhad"
+    },
+    "OSK": {
+      "code": "5053",
+      "name": "OSK Holdings Berhad"
+    },
+    "PAVREIT": {
+      "code": "5212",
+      "name": "Pavilion Real Estate Investment Trust"
+    },
+    "PBBANK": {
+      "code": "1295",
+      "name": "Public Bank Berhad"
+    },
+    "PCHEM": {
+      "code": "5183",
+      "name": "PETRONAS Chemicals Group Berhad"
+    },
+    "PENTA": {
+      "code": "7160",
+      "name": "Pentamaster Corporation Berhad"
+    },
+    "PETDAG": {
+      "code": "5681",
+      "name": "PETRONAS Dagangan Berhad"
+    },
+    "PETGAS": {
+      "code": "6033",
+      "name": "PETRONAS Gas Berhad"
+    },
+    "PMBTECH": {
+      "code": "7172",
+      "name": "PMB Technology Berhad"
+    },
+    "PMETAL": {
+      "code": "8869",
+      "name": "Press Metal Aluminium Holdings Berhad"
+    },
+    "PPB": {
+      "code": "4065",
+      "name": "PPB Group Berhad"
+    },
+    "QL": {
+      "code": "7084",
+      "name": "QL Resources Berhad"
+    },
+    "RANHILL": {
+      "code": "5272",
+      "name": "Ranhill Utilities Berhad"
+    },
+    "RHBBANK": {
+      "code": "1066",
+      "name": "RHB Bank Berhad"
+    },
+    "SCGBHD": {
+      "code": "0225",
+      "name": "Southern Cable Group Berhad"
+    },
+    "SCIENTX": {
+      "code": "4731",
+      "name": "Scientex Berhad"
+    },
+    "SDG": {
+      "code": "5285",
+      "name": "SD Guthrie Berhad"
+    },
+    "SIME": {
+      "code": "4197",
+      "name": "Sime Darby Berhad"
+    },
+    "SIMEPROP": {
+      "code": "5288",
+      "name": "Sime Darby Property Berhad"
+    },
+    "SKYECHIP": {
+      "code": "5357",
+      "name": "SkyeChip Berhad"
+    },
+    "SLVEST": {
+      "code": "0215",
+      "name": "Solarvest Holdings Berhad"
+    },
+    "SOP": {
+      "code": "5126",
+      "name": "Sarawak Oil Palms Berhad"
+    },
+    "SPSETIA": {
+      "code": "8664",
+      "name": "S P Setia Berhad"
+    },
+    "STRATUS": {
+      "code": "5356",
+      "name": "Stratus Global Holdings Berhad"
+    },
+    "SUNCON": {
+      "code": "5263",
+      "name": "Sunway Construction Group Berhad"
+    },
+    "SUNMED": {
+      "code": "5555",
+      "name": "Sunway Healthcare Holdings Berhad"
+    },
+    "SUNREIT": {
+      "code": "5176",
+      "name": "Sunway Real Estate Investment Trust"
+    },
+    "SUNWAY": {
+      "code": "5211",
+      "name": "Sunway Berhad"
+    },
+    "TENAGA": {
+      "code": "5347",
+      "name": "Tenaga Nasional Berhad"
+    },
+    "TIMECOM": {
+      "code": "5031",
+      "name": "TIME dotCom Berhad"
+    },
+    "TM": {
+      "code": "4863",
+      "name": "Telekom Malaysia Berhad"
+    },
+    "TOPGLOV": {
+      "code": "7113",
+      "name": "Top Glove Corporation Bhd."
+    },
+    "UMSINT": {
+      "code": "5340",
+      "name": "UMS Integration Limited"
+    },
+    "UNISEM": {
+      "code": "5005",
+      "name": "Unisem (M) Berhad"
+    },
+    "UOADEV": {
+      "code": "5200",
+      "name": "UOA Development Bhd"
+    },
+    "UTDPLT": {
+      "code": "2089",
+      "name": "United Plantations Berhad"
+    },
+    "UWC": {
+      "code": "5292",
+      "name": "UWC Berhad"
+    },
+    "VITROX": {
+      "code": "0097",
+      "name": "ViTrox Corporation Berhad"
+    },
+    "WPRTS": {
+      "code": "5246",
+      "name": "Westports Holdings Berhad"
+    },
+    "YINSON": {
+      "code": "7293",
+      "name": "Yinson Holdings Berhad"
+    },
+    "YTL": {
+      "code": "4677",
+      "name": "YTL Corporation Berhad"
+    },
+    "YTLPOWR": {
+      "code": "6742",
+      "name": "YTL Power International Berhad"
+    }
+  }
+}

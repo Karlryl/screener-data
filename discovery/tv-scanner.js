@@ -74,6 +74,25 @@ const MARKETS = {
   'tv-czech':      { endpoint: 'czech',      suffix: '.PR', ccy: 'CZK', canon: 'tvcz', country: 'CZ', domicile: 'Czech Republic' }, // 5
 };
 
+// Bursa Malaysia (W7 2026-09-26): TradingView liefert den Handelsnamen (MAYBANK), Yahoo kennt nur
+// den numerischen Bursa-Code (1155.KL) -> 103 von 103 .KL-Zeilen ohne Snapshot. Die Tabelle
+// configs/bursa-name-to-code.json setzt MNEMONIC.KL auf CODE.KL; alles andere bleibt unveraendert.
+// Kaputte/fehlende Tabelle = lauter ::error:: und leere Tabelle (jede .KL-Zeile zaehlt dann als unmapped).
+const BURSA_CODES = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'configs', 'bursa-name-to-code.json'), 'utf8')).codes || {}; }
+  catch (e) { console.error('::error::configs/bursa-name-to-code.json nicht lesbar (' + e.message + ') — .KL-Ticker bleiben Handelsnamen'); return {}; }
+})();
+
+// MNEMONIC.KL -> CODE.KL (sonst unveraendert). unmapped = .KL-Handelsname ohne Tabellenzeile.
+function bursaYahooSymbol(ticker, codes = BURSA_CODES) {
+  const m = /^(.+)\.KL$/i.exec(String(ticker || ''));
+  const e = m && codes[m[1].toUpperCase()];
+  return e && e.code ? e.code + '.KL' : ticker;
+}
+function isUnmappedBursa(ticker, codes = BURSA_CODES) {
+  return /\.KL$/i.test(String(ticker || '')) && !/^[0-9]/.test(ticker) && bursaYahooSymbol(ticker, codes) === ticker;
+}
+
 function loadRates() {
   try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fx-rates.json'), 'utf8')).rates || { USD: 1 }; }
   catch (_) { return { USD: 1 }; }
@@ -149,6 +168,8 @@ function verarbeiteZeilen(key, cfg, rows, rates, totalCount, right) {
   // Tag 642 (Ausschluss-Protokoll, Tor 1): wer hier an der Groessenschwelle stirbt, verschwand
   // bisher spurlos — es gab weder eine Zeile je Ticker noch eine Zahl je Markt.
   const unterSchwelle = [];
+  let bursaMapped = 0;
+  const bursaUnmapped = [];
   for (const row of rows) {
     const d = row && row.d;
     if (!Array.isArray(d)) continue;
@@ -164,7 +185,9 @@ function verarbeiteZeilen(key, cfg, rows, rates, totalCount, right) {
     const code = d[I.code];
     if (!code || seen.has(code)) continue;                        // Intra-Markt-Dedup pro Code
     seen.add(code);
-    const yt = code + cfg.suffix;
+    const yt = bursaYahooSymbol(code + cfg.suffix);
+    if (yt !== code + cfg.suffix) bursaMapped++;
+    else if (isUnmappedBursa(yt)) bursaUnmapped.push(yt);
     out.set(yt, { ticker: yt, name: d[I.name] || code, exchange: d[I.exch] || cfg.endpoint, source: key, country: cfg.country || cfg.endpoint });
   }
   // Der ehrliche Teil dieses Protokolls: der SERVER hat schon nach `right` gefiltert (siehe
@@ -180,6 +203,11 @@ function verarbeiteZeilen(key, cfg, rows, rates, totalCount, right) {
     partialReason, totalCount: out.totalCount,
     unterSchwelle,
   };
+  if (cfg.suffix === '.KL') {
+    out.tor.bursa = { mapped: bursaMapped, unmapped: bursaUnmapped };
+    console.log(`[tv-scanner] ${key}: ${bursaMapped} Bursa-Handelsnamen auf Code gesetzt, ${bursaUnmapped.length} ohne Code (unveraendert behalten)` +
+      (bursaUnmapped.length ? ': ' + bursaUnmapped.join(' ') : ''));
+  }
   return out;
 }
 
@@ -250,4 +278,4 @@ async function discoverTvScanner(opts = {}) {
 const TV_FOREIGN_CANON = Object.fromEntries(Object.entries(MARKETS).map(([k, c]) => [k, c.canon]));
 
 module.exports = { discoverTvScanner, scanMarket, verarbeiteZeilen, serverFloor, runPooled,
-  MARKETS, TV_FOREIGN_CANON };
+  MARKETS, TV_FOREIGN_CANON, bursaYahooSymbol, isUnmappedBursa };
