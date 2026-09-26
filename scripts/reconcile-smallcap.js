@@ -40,7 +40,6 @@
  *        [--report <pfad.json>]
  */
 const fs = require('fs');
-const { readJsonOrNull: readJson } = require('../lib/read-json.js');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
@@ -80,6 +79,9 @@ function parseArgs(argv) {
   return a;
 }
 
+function readJson(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return null; }
+}
 
 function tickersOf(wl) {
   if (Array.isArray(wl)) return wl.map((e) => (typeof e === 'string' ? e : e && e.ticker)).filter(Boolean);
