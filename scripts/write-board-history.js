@@ -1251,7 +1251,8 @@ function quartalLaneShadow(vintage, priorVintage, gate, gateState, bruch, board,
       + ' (real: ' + (gate.suspect ? 'SUSPECT' : 'OK') + ')');
     return { board, p99All: gate.p99Delta, p99Unexplained: p99Rest, thr, explained: [...raus], n, wouldSuspect, realSuspect: gate.suspect };
   } catch (e) {
-    console.log('::warning::[quartal-lane SHADOW] failed: ' + board + ': ' + ((e && e.message) || e));
+    // Even the warning must not throw into run(): a throwing logger or an odd error value stays here.
+    try { console.log('::warning::[quartal-lane SHADOW] failed: ' + board + ': ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
     return null;
   }
 }
@@ -1265,7 +1266,7 @@ function quartalLaneShadowSummary(shadows) {
       + (shadows.length - ok.length) + ', see lines above); excluded rows ' + namen.length
       + (namen.length ? ': ' + namen.slice(0, 50).join(', ') + (namen.length > 50 ? ' … +' + (namen.length - 50) + ' more' : '') : ''));
   } catch (e) {
-    console.log('::warning::[quartal-lane SHADOW] failed: summary: ' + ((e && e.message) || e));
+    try { console.log('::warning::[quartal-lane SHADOW] failed: summary: ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
   }
 }
 

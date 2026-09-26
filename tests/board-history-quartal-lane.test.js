@@ -137,6 +137,18 @@ check('summary names every excluded row (first 50 + count) and never throws', ()
   const [, bad] = still(() => W.quartalLaneShadowSummary(null));
   assert.ok(bad[0].startsWith('::warning::[quartal-lane SHADOW] failed: summary: '), bad[0]);
 });
+check('failure isolation: even a throwing logger never throws into run()', () => {
+  const [now, prior] = paar(NEU);
+  const g = W.evaluateGate(now, prior, GATE, null, 'energy', {});
+  const orig = console.log;
+  console.log = () => { throw new Error('logger down'); };
+  let sh, sum;
+  try {
+    sh = W.quartalLaneShadow(now, prior, g, GATE, null, 'energy', {}, RUN, () => { throw Symbol('odd'); });
+    sum = W.quartalLaneShadowSummary(null);
+  } finally { console.log = orig; }
+  assert.strictEqual(sh, null); assert.strictEqual(sum, undefined);
+});
 check('run() wires the shadow as log-only: its return value never reaches anySuspect/results', () => {
   const src = require('fs').readFileSync(require.resolve('../scripts/write-board-history.js'), 'utf8');
   const calls = src.match(/[^ ]quartalLaneShadow\(vintage,/g) || [];
