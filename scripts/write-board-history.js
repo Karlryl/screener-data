@@ -564,28 +564,50 @@ function latestEndMs(ends) {
 // Die Spur URTEILT NICHT: quartalLaneShadow() loggt nur, das echte Urteil bleibt unverändert.
 const QUARTAL_LANE_MAX_ALTER_TAGE = 120;
 const QUARTAL_LANE_BAND = [0.5, 2.0];
+// J vergleicht nur mit dem UNMITTELBAREN Vorquartal: Kalenderquartale liegen 90–92 Tage auseinander,
+// 13/14-Wochen-Fiskalquartale 91/98 — [80, 100] deckt beides, eine Lücke (~180 d) nicht.
+const QUARTAL_LANE_VORGAENGER_TAGE = [80, 100];
+// Striktes YYYY-MM-DD mit Rundreise: Date.parse rollt 2026-06-31 still auf den 1. Juli.
+function strengesDatumMs(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return NaN;
+  const t = Date.parse(s + 'T00:00:00Z');
+  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === s ? t : NaN;
+}
 function neuesQuartalErklaert(prev, cur, runDate) {
+  // null = Zeile unbrauchbar (unmögliches Datum oder doppeltes Quartal). Ein null-Ende ist Füllung
+  // und wird übersprungen; Werte bleiben ungefiltert und werden dort geprüft, wo P/S/J sie nutzen.
   const paare = (pit) => {
     const e = pit && pit.revenueQEnds, v = pit && pit.revenueQ;
-    if (!Array.isArray(e) || !Array.isArray(v)) return [];
-    const out = [];
+    if (!Array.isArray(e) || !Array.isArray(v)) return null;
+    const out = [], gesehen = new Set();
     for (let i = 0; i < e.length; i++) {
-      const t = typeof e[i] === 'string' ? Date.parse(e[i] + 'T00:00:00Z') : NaN;
-      if (Number.isFinite(t) && Number.isFinite(v[i])) out.push([t, v[i]]);
+      if (e[i] == null) continue;
+      const t = strengesDatumMs(e[i]);
+      if (!Number.isFinite(t)) return null;   // F4
+      if (gesehen.has(t)) return null;   // F2: doppeltes Quartal
+      gesehen.add(t);
+      out.push([t, v[i]]);
     }
     return out.sort((a, b) => b[0] - a[0]);   // jüngstes Quartal zuerst, Reihenfolge nicht vorausgesetzt
   };
   const alt = paare(prev && prev.pit), neu = paare(cur && cur.pit);
-  const lauf = Date.parse(runDate + 'T00:00:00Z');
-  if (!alt.length || neu.length < 2 || !Number.isFinite(lauf)) return false;
+  const lauf = strengesDatumMs(runDate);
+  if (!alt || !neu || !alt.length || neu.length < 2 || !Number.isFinite(lauf)) return false;
   const imBand = (q) => Number.isFinite(q) && q >= QUARTAL_LANE_BAND[0] && q <= QUARTAL_LANE_BAND[1];
   const alterTage = (lauf - neu[0][0]) / MS_PER_DAY;
   if (!(neu[0][0] > alt[0][0] && alterTage >= 0 && alterTage <= QUARTAL_LANE_MAX_ALTER_TAGE)) return false;   // P
+  const abstandTage = (neu[0][0] - neu[1][0]) / MS_PER_DAY;
+  if (!(abstandTage >= QUARTAL_LANE_VORGAENGER_TAGE[0] && abstandTage <= QUARTAL_LANE_VORGAENGER_TAGE[1])) return false;   // F2: Vorquartal
+  if (!Number.isFinite(neu[0][1]) || !Number.isFinite(neu[1][1])) return false;   // F3: jüngste zwei
   const altWert = new Map(alt);
   let ueberlappung = 0;
   for (const [t, v] of neu) {
     if (!altWert.has(t)) continue;
+    // Auf BEIDEN Seiten leer = stabile Datenlücke der Quelle (09-25: fast nur CN-A-Aktien, 2025-09-30):
+    // zählt nicht als Überlappung, blockiert S aber auch nicht. Nur EINE Seite leer bleibt ein Bruch.
+    if (!Number.isFinite(v) && !Number.isFinite(altWert.get(t))) continue;   // F3: Lücke beidseitig
     ueberlappung++;
+    if (!Number.isFinite(v) || !Number.isFinite(altWert.get(t))) return false;   // F3: Überlappung
     if (!imBand(v / altWert.get(t))) return false;   // S
   }
   return ueberlappung > 0 && imBand(neu[0][1] / neu[1][1]);   // J
@@ -1238,7 +1260,8 @@ function quartalLaneShadow(vintage, priorVintage, gate, gateState, bruch, board,
     const ohne = (v) => ({ ...v, cohort: { ...v.cohort,
       profitable: ((v.cohort && v.cohort.profitable) || []).filter((r) => !raus.has(r.ticker)),
       unprofitable: ((v.cohort && v.cohort.unprofitable) || []).filter((r) => !raus.has(r.ticker)) } });
-    const p99Rest = evaluateGate(ohne(vintage), ohne(priorVintage), gateState, bruch, board, opts).p99Delta;
+    const rest = evaluateGate(ohne(vintage), ohne(priorVintage), gateState, bruch, board, opts);
+    const p99Rest = rest.p99Delta;
     // Alle übrigen Gründe (NaN-Bruch, Coverage, Integrität …) sieht die Spur nicht — sie bleiben stehen.
     const andereGruende = gate.reasons.filter((x) => x !== 'p99-delta-exceeds-threshold');
     // Alles erklärt = nichts mehr gemessen: das ist KEIN „OK" (fehlend ≠ sauber), sondern
@@ -1246,10 +1269,13 @@ function quartalLaneShadow(vintage, priorVintage, gate, gateState, bruch, board,
     const keineFlaeche = p99Rest == null && gate.p99Delta != null;
     const wouldSuspect = andereGruende.length > 0 || keineFlaeche || (p99Rest != null && p99Rest > thr);
     const f = (x) => (x == null ? '—' : x.toFixed(2));
-    console.log('[quartal-lane SHADOW] ' + board + ': p99 all=' + f(gate.p99Delta) + ' p99 unexplained=' + f(p99Rest)
-      + ' thr=' + f(thr) + ' explained=' + raus.size + '/' + n + ' → would be ' + (keineFlaeche ? 'SUSPECT (NO-SURFACE)' : wouldSuspect ? 'SUSPECT' : 'OK')
+    // „real-gate p99", nicht „p99 all": an Lampen-Ausschluss-Tagen misst das echte Tor weniger Zeilen
+    // (fanOutNenner) als die Spur Kandidaten prüft (n) — beide Zahlen stehen getrennt im Log.
+    console.log('[quartal-lane SHADOW] ' + board + ': real-gate p99=' + f(gate.p99Delta) + ' over ' + gate.fanOutNenner + ' measured rows; p99 unexplained=' + f(p99Rest)
+      + ' over ' + rest.fanOutNenner + '; thr=' + f(thr) + '; quarter-explained=' + raus.size + ' of ' + n + ' candidates → would be ' + (keineFlaeche ? 'SUSPECT (NO-SURFACE)' : wouldSuspect ? 'SUSPECT' : 'OK')
       + ' (real: ' + (gate.suspect ? 'SUSPECT' : 'OK') + ')');
-    return { board, p99All: gate.p99Delta, p99Unexplained: p99Rest, thr, explained: [...raus], n, wouldSuspect, realSuspect: gate.suspect };
+    return { board, p99RealGate: gate.p99Delta, measured: gate.fanOutNenner, p99Unexplained: p99Rest, measuredUnexplained: rest.fanOutNenner,
+      thr, explained: [...raus], n, wouldSuspect, realSuspect: gate.suspect };
   } catch (e) {
     // Even the warning must not throw into run(): a throwing logger or an odd error value stays here.
     try { console.log('::warning::[quartal-lane SHADOW] failed: ' + board + ': ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }

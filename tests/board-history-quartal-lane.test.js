@@ -58,6 +58,59 @@ check('missing pit / series is NOT explained (and does not throw)', () => {
   assert.strictEqual(W.neuesQuartalErklaert(row('A', 50, ALT), { ticker: 'A', score: 80 }, RUN), false);
 });
 
+// ── Codex critique 26.09. (F2/F3/F4): each case below PASSED before the fix ──────
+const ex = (alt, neu, run = RUN) => W.neuesQuartalErklaert(row('A', 50, alt), row('A', 80, neu), run);
+check('F2: missing quarter (newest two not adjacent) is NOT explained', () => {
+  // March is missing: J would compare June with December (181 d apart)
+  assert.strictEqual(ex(ALT, { revenueQ: [110, 95, 90], revenueQEnds: ['2026-06-30', '2025-12-31', '2025-09-30'] }), false);
+});
+check('F2: duplicate newest quarter (J compares June with itself) is NOT explained', () => {
+  assert.strictEqual(ex(ALT, { revenueQ: [110, 110, 100, 95], revenueQEnds: ['2026-06-30', '2026-06-30', '2026-03-31', '2025-12-31'] }), false);
+});
+check('F2: duplicate quarter in the previous series (ambiguous overlap) is NOT explained', () => {
+  assert.strictEqual(ex({ revenueQ: [300, 100, 95], revenueQEnds: ['2026-03-31', '2026-03-31', '2025-12-31'] }, NEU), false);
+});
+check('F2: predecessor gap band is [80, 100] days, inclusive', () => {
+  const mit = (vorEnde) => ex({ revenueQ: [100, 95], revenueQEnds: [vorEnde, '2025-12-20'] },
+    { revenueQ: [110, 100, 95], revenueQEnds: ['2026-06-30', vorEnde, '2025-12-20'] });
+  assert.strictEqual(mit('2026-04-11'), true, '80 d');
+  assert.strictEqual(mit('2026-03-22'), true, '100 d');
+  assert.strictEqual(mit('2026-04-12'), false, '79 d');
+  assert.strictEqual(mit('2026-03-21'), false, '101 d');
+});
+check('F3: null / non-finite revenue in the newest two quarters is NOT explained', () => {
+  assert.strictEqual(ex(ALT, { ...NEU, revenueQ: [110, null, 95] }), false);
+  assert.strictEqual(ex(ALT, { ...NEU, revenueQ: [Infinity, 100, 95] }), false);
+  assert.strictEqual(ex(ALT, { ...NEU, revenueQ: ['110', 100, 95] }), false);
+});
+check('F3: null revenue in an overlapping quarter (either side) is NOT explained', () => {
+  assert.strictEqual(ex(ALT, { ...NEU, revenueQ: [110, 100, null] }), false);
+  assert.strictEqual(ex({ ...ALT, revenueQ: [100, null, 90] }, NEU), false);
+  assert.strictEqual(ex({ ...ALT, revenueQ: [100, 95, NaN] }, { revenueQ: [110, 100, 95, 90], revenueQEnds: [...NEU.revenueQEnds, '2025-09-30'] }), false);
+  // numeric strings would coerce into an in-band ratio ('95' / 95 = 1)
+  assert.strictEqual(ex(ALT, { ...NEU, revenueQ: [110, 100, '95'] }), false);
+  assert.strictEqual(ex({ ...ALT, revenueQ: [100, '95', 90] }, NEU), false);
+});
+check('F3: an overlapping quarter null on BOTH sides is a stable gap — skipped, does not block S', () => {
+  assert.strictEqual(ex({ ...ALT, revenueQ: [100, null, 90] }, { ...NEU, revenueQ: [110, 100, null] }), true);
+  assert.strictEqual(ex({ ...ALT, revenueQ: [100, NaN, 90] }, { ...NEU, revenueQ: [110, 100, Infinity] }), true);
+});
+check('F3: a both-sides gap is not an overlap — S still needs one finite overlapping quarter', () => {
+  assert.strictEqual(ex({ revenueQ: [null], revenueQEnds: ['2025-12-31'] }, { ...NEU, revenueQ: [110, 100, null] }), false);
+});
+check('F3: a both-sides gap in the newest two quarters still blocks', () => {
+  assert.strictEqual(ex({ ...ALT, revenueQ: [null, 95, 90] }, { ...NEU, revenueQ: [110, null, 95] }), false);
+});
+check('F3: a null in an older, non-overlapping quarter does not block', () => {
+  assert.strictEqual(ex(ALT, { revenueQ: [110, 100, 95, null], revenueQEnds: [...NEU.revenueQEnds, '2025-06-30'] }), true);
+});
+check('F4: impossible calendar dates are NOT explained (no Date.parse rollover)', () => {
+  assert.strictEqual(ex(ALT, { ...NEU, revenueQEnds: ['2026-06-31', '2026-03-31', '2025-12-31'] }), false);
+  assert.strictEqual(ex({ ...ALT, revenueQEnds: ['2026-02-30', '2025-12-31', '2025-09-30'] }, NEU), false);
+  assert.strictEqual(ex(ALT, { ...NEU, revenueQEnds: ['2026-6-30', '2026-03-31', '2025-12-31'] }), false);
+  assert.strictEqual(ex(ALT, NEU, '2026-09-31'), false, 'run date rolls over to 10-01');
+});
+
 // ── Shadow vs. real verdict ──────────────────────────────────────────────────
 // 200 quiet rows (|D| 1) + 5 rows that jump 40 points because a NEW quarter arrived.
 // Real gate: p99 over all rows sees the jumps → SUSPECT. Shadow: jumps explained → OK.
@@ -88,7 +141,20 @@ check('real verdict is byte-identical with and without the shadow (explained jum
   assert.deepStrictEqual(sh.explained, ['J0', 'J1', 'J2', 'J3', 'J4']); assert.strictEqual(sh.n, 205);
   assert.ok(Math.abs(sh.p99Unexplained - 1) < 1e-9, 'p99 unexplained ' + sh.p99Unexplained);
   assert.strictEqual(sh.thr, ohne.wirksameSchwelle);
-  assert.ok(/^\[quartal-lane SHADOW\] energy: p99 all=40\.00 p99 unexplained=1\.00 thr=10\.00 explained=5\/205 → would be OK \(real: SUSPECT\)$/.test(out[0]), out[0]);
+  assert.strictEqual(sh.measured, 205); assert.strictEqual(sh.measuredUnexplained, 200);
+  assert.ok(/^\[quartal-lane SHADOW\] energy: real-gate p99=40\.00 over 205 measured rows; p99 unexplained=1\.00 over 200; thr=10\.00; quarter-explained=5 of 205 candidates → would be OK \(real: SUSPECT\)$/.test(out[0]), out[0]);
+});
+check('F6: on a lamp-exclusion day the measured population is logged apart from the quarter candidates', () => {
+  const [now, prior] = paar(NEU);
+  for (let i = 0; i < 10; i++) now.cohort.profitable[i].lamps = ['defbruch'];
+  const bruch = { boards: new Set(['energy']), erklaerendeLampe: 'defbruch', typ: 'definition', tag: '2026-09-25' };
+  const g = W.evaluateGate(now, prior, GATE, bruch, 'energy', {});
+  const [sh, out] = still(() => W.quartalLaneShadow(now, prior, g, GATE, bruch, 'energy', {}, RUN));
+  assert.strictEqual(g.fanOutNenner, 195);
+  assert.strictEqual(sh.measured, 195); assert.strictEqual(sh.n, 205); assert.strictEqual(sh.measuredUnexplained, 190);
+  assert.ok(out[0].includes('real-gate p99=40.00 over 195 measured rows; p99 unexplained=1.00 over 190;'), out[0]);
+  assert.ok(out[0].includes('quarter-explained=5 of 205 candidates'), out[0]);
+  assert.ok(!out[0].includes('p99 all'), out[0]);
 });
 check('unexplained jumps (J broken) stay in the shadow p99 → would be SUSPECT', () => {
   const [now, prior] = paar({ ...NEU, revenueQ: [300, 100, 95] });
@@ -111,7 +177,7 @@ check('every row explained → NO-SURFACE counts as would-be SUSPECT, never OK',
   const g = W.evaluateGate(now, prior, GATE, null, 'energy', {});
   const [sh, out] = still(() => W.quartalLaneShadow(now, prior, g, GATE, null, 'energy', {}, RUN));
   assert.strictEqual(sh.p99Unexplained, null); assert.strictEqual(sh.wouldSuspect, true);
-  assert.ok(out[0].includes('explained=50/50 → would be SUSPECT (NO-SURFACE)'), out[0]);
+  assert.ok(out[0].includes('quarter-explained=50 of 50 candidates → would be SUSPECT (NO-SURFACE)'), out[0]);
 });
 check('failure isolation: a throwing helper is caught, logged as ::warning::, verdict untouched', () => {
   const [now, prior] = paar(NEU);
