@@ -38,6 +38,22 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
+// T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
+const { loadAdsHandTable, applyAdsHandTable } = require('./lib/ads-hand-table.js');
+const ADS_HAND_TABLE = loadAdsHandTable();
+/**
+ * Applies the ADS hand table to one snapshot and logs the outcome (stale row = WARN).
+ * @param {object} snap Snapshot, mutated in place when corrected.
+ * @param {string} ticker Snapshot ticker (table key).
+ * @param {number} price ADS price in the marketCap's unit.
+ * @returns {{status: string, reason?: string}} Result of applyAdsHandTable.
+ */
+function _applyAdsHandTable(snap, ticker, price) {
+  const r = applyAdsHandTable(snap, ticker, price, ADS_HAND_TABLE);
+  if (r.status === 'corrected') _log('INFO', `  ${ticker}: marketCap / ${snap.marketCap.ordinaryPerAds} (ADS hand table) -> ${(snap.marketCap.value / 1e9).toFixed(2)}B`);
+  else if (r.status === 'stale') _log('WARN', `  ${ticker}: ADS hand table row STALE, Yahoo value kept: ${r.reason}`);
+  return r;
+}
 
 let YahooFinance;
 try {
@@ -3575,6 +3591,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
       existing.marketCap.source = 'yahoo_quote';
     }
+    // T322: ADS lines Yahoo prices with the ordinary share count (price is USD here). A stale
+    // verdict here may only mean stale inputs (old price/shares from disk) -> the full pull decides.
+    if (_applyAdsHandTable(existing, stock.ticker, existing.price && existing.price.regularMarketPrice).status === 'stale') {
+      throw new Error('price-only refused: ADS hand table row not confirmed on quote data — full pull re-checks');
+    }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
     // (survivor bias on the small-cap side). Re-check the floor here; if violated,
@@ -4467,6 +4488,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         return;
       }
 
+      // T322: ADS lines Yahoo prices with the ordinary share count. After FX conversion, before
+      // the mcap floor. Raw quote price = USD for every ADS line in the hand table.
+      _applyAdsHandTable(canonical, stock.ticker, _y(yahoo.price, 'regularMarketPrice'));
+
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
       // Tag 170 (reverted): $1B min — Mid-Cap coverage preserved per user decision.
       const MIN_MCAP = MIN_MCAP_USD;   // env-configurable (MIN_MCAP_USD), default $1B
@@ -5207,6 +5232,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   fundamentalsStaleness, ftsFailureSummary,
   fundamentalsAsOfAgeFromFile, selectorBucket,   // Durchsatz-Diagnose (19.09.2026)
   readFileHead,                                 // T325 (Handle-Leck)
+  _applyAdsHandTable,                           // T322: guard executes the wired helper
   // Gezielter Voll-Pull: die Regel steht auf Modul-Ebene und wird exportiert, damit der
   // Waechter (tests/voll-pull-ticker.test.js) sie AUSFUEHRT statt sie nachzubauen —
   // dieselbe Begruendung wie beim _nonNullCount-Hub in T142 (Fehlerklasse F1334).
