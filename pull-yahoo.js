@@ -472,6 +472,92 @@ function shouldRetryKosdaq(stock, errClass) {
     && /\.KS$/i.test((stock && stock.yahoo_symbol) || '');
 }
 
+// W7 night run 2026-09-26 (cause 3): the TMX listing file carries only the root
+// ("BIP", "TECK"), so discovery/tsx-ca.js builds "BIP.TO" where Yahoo lists the
+// security as "BIP-UN.TO" (units) or "TECK-B.TO" (share class). Run 36227380588:
+// 118 bare .TO/.V rows failed, 100 quote under one of these suffixes. Discovery
+// cannot know the suffix without a Yahoo call, so the fix sits here, next to the
+// KOSDAQ retry. Fixed order (used only as tie-break): UN, B, A, X, U.
+const CA_CLASS_SUFFIXES = ['UN', 'B', 'A', 'X', 'U'];
+const CA_BARE_RE = /^([A-Z0-9]+)\.(TO|V)$/;
+
+function shouldRetryCaClass(stock, errClass) {
+  return (errClass === 'not-found' || errClass === 'schema-fail') && !!stock && !stock._caRetried
+    && CA_BARE_RE.test(String(stock.yahoo_symbol || '').toUpperCase());
+}
+
+function caClassCandidates(symbol) {
+  const m = CA_BARE_RE.exec(String(symbol || '').toUpperCase());
+  return m ? CA_CLASS_SUFFIXES.map(s => `${m[1]}-${s}.${m[2]}`) : [];
+}
+
+// Class choice rule: of the variants Yahoo quotes, take the main line =
+// (1) a line Yahoo reports a marketCap for beats one without (some USD "-U"
+// lines carry marketCap 0, e.g. HOT-U.TO), then (2) highest 3-month average
+// traded value (averageDailyVolume3Month x regularMarketPrice); ties fall back
+// to CA_CLASS_SUFFIXES order. Returns null if the bare symbol itself quotes (a
+// working symbol is never swapped) or no variant quotes.
+// ponytail: traded value compares a USD "-U" line with a CAD line unconverted.
+// Measured 2026-09-26 on the 100 resolved rows: converting CAD->USD flips no
+// pick (closest: QETH 98k CAD vs 58k USD). Convert via fx if a pick ever sits
+// within the CAD/USD rate.
+// Same-company check: when the watchlist row carries a name, a variant only
+// counts if the first word of that name is a word of Yahoo's long/short name
+// (a reused TSX root must not point the old ticker at a new issuer).
+const _caNameWords = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+function _caSameIssuer(expectedName, q) {
+  const first = _caNameWords(expectedName)[0];
+  if (!first) return true; // ponytail: no watchlist name -> no check (tsx rows always carry one)
+  return _caNameWords(`${q.longName || ''} ${q.shortName || ''}`).includes(first);
+}
+function pickCaClassLine(baseSymbol, quotes, expectedName) {
+  const bySym = new Map((quotes || []).filter(q => q && q.symbol).map(q => [String(q.symbol).toUpperCase(), q]));
+  if (bySym.has(String(baseSymbol || '').toUpperCase())) return null;
+  let best = null, bestMcap = -1, bestVal = -1;
+  for (const sym of caClassCandidates(baseSymbol)) {
+    const q = bySym.get(sym);
+    if (!q || !(q.regularMarketPrice > 0) || !_caSameIssuer(expectedName, q)) continue;
+    const hasMcap = q.marketCap > 0 ? 1 : 0;
+    const val = (q.averageDailyVolume3Month > 0 ? q.averageDailyVolume3Month : 0) * q.regularMarketPrice;
+    if (hasMcap > bestMcap || (hasMcap === bestMcap && val > bestVal)) { best = sym; bestMcap = hasMcap; bestVal = val; }
+  }
+  return best;
+}
+
+// One batch quote (bare symbol + all variants) -> chosen line or null.
+// quoteFn(symbols) must resolve to Yahoo quote objects (missing symbols omitted).
+async function resolveCaClassSymbol(stock, errClass, quoteFn) {
+  if (!shouldRetryCaClass(stock, errClass)) return null;
+  const quotes = await quoteFn([stock.yahoo_symbol, ...caClassCandidates(stock.yahoo_symbol)]);
+  return pickCaClassLine(stock.yahoo_symbol, Array.isArray(quotes) ? quotes : [], stock.name);
+}
+
+// The catch-block step of processOne: returns the stock row to retry with (same
+// ticker/snapshot file, resolved yahoo_symbol), { probeFailed: true } when the
+// Yahoo probe itself threw, or null. Only a failing bare
+// symbol is probed; original and resolved symbol are both logged and the repair
+// is counted in symbolsNormalized (manifest _silentErrors).
+// ponytail: the resolved symbol is not written back to watchlist.json (same
+// trade-off as the KOSDAQ retry) — ~3 extra requests per affected ticker per run
+// (~100 tickers). Persist yahoo_symbol at discovery if that ever matters.
+async function caClassRetryStock(stock, errClass, quoteFn = (syms) => _gatedQuote(syms, stock.ticker + '/ca-class')) {
+  if (!shouldRetryCaClass(stock, errClass)) return null;
+  let pick = null;
+  try {
+    pick = await resolveCaClassSymbol(stock, errClass, quoteFn);
+  } catch (e) {
+    _log('WARN', `  ${stock.ticker}: TSX class/unit probe failed (${e.message}) — keeping ${stock.yahoo_symbol}`);
+    return { probeFailed: true };
+  }
+  if (!pick) {
+    _log('INFO', `  ${stock.ticker}: no TSX class/unit line quotes for ${stock.yahoo_symbol} (tried ${caClassCandidates(stock.yahoo_symbol).join(', ')})`);
+    return null;
+  }
+  _log('WARN', `  yahoo_symbol aufgeloest (TSX class/unit): "${stock.yahoo_symbol}" -> "${pick}" (${stock.ticker}, ${errClass})`);
+  _symbolsNormalized++;
+  return Object.assign({}, stock, { yahoo_symbol: pick, _caRetried: true });
+}
+
 // Tag 645 (belegter Datenfehler 19.08.2026): 47 mexikanische Ticker fragten Yahoo
 // mit einem Schraegstrich vor der Klassen-/Serien-Kennung an (z.B. "GFNORTE/O.MX"),
 // den Yahoo nicht kennt -> 404 bei jedem Pull. Live verifiziert: "GFNORTEO.MX" (ohne
@@ -2960,6 +3046,15 @@ async function acquireYfSlot() {
 // AbortController: `makePromise(signal)` must forward the signal to yahoo-finance2
 // via its moduleOptions.fetchOptions, so firing the timeout actually aborts the
 // underlying fetch and frees the queue slot immediately.
+// One gated, abortable yf.quote (single symbol or batch). Shared by the
+// price-only refresh and the failure-only TSX class/unit probe, so both stay
+// behind the BH-043 gate. The probe is not a normal per-ticker request: it only
+// runs after a bare .TO/.V symbol failed, so YF_REQUESTS_PER_TICKER stays 6.
+async function _gatedQuote(symbols, label) {
+  await acquireYfSlot(); // audit fix BH-043
+  return _withAbortTimeout((signal) => yf.quote(symbols, undefined, { fetchOptions: { signal } }), 8000, label);
+}
+
 function _withAbortTimeout(makePromise, ms, label) {
   const ac = new AbortController();
   let timer;
@@ -3479,8 +3574,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
       existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
-    await acquireYfSlot(); // audit fix BH-043
-    const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote-only'); // F-PY-102: abortable
+    const q = await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
     // P0-Haertung 2 (F-CGPT-003): frueher nur `if (!q)`. Eine wahrheitswerte, aber
     // leere Quote ({currency:'USD'}) aktualisierte nichts, schrieb den Snapshot
     // trotzdem neu (_pullMode/_quality) und meldete Status 'price-only' = Erfolg.
@@ -4667,6 +4761,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         return processOne(Object.assign({}, stock, { yahoo_symbol: kqSymbol, _kqRetried: true }));
       }
 
+      // TSX/TSXV class/unit line (see CA_CLASS_SUFFIXES / caClassRetryStock).
+      // A failed probe leaves the symbol undecided: own class, so it never
+      // advances the not-found/delisted streak below.
+      const caRetry = await caClassRetryStock(stock, errClass);
+      if (caRetry && caRetry.probeFailed) errClass = 'ca-probe-failed';
+      else if (caRetry) return processOne(caRetry);
+
       // Tag 148: mark snapshot as delisted when Yahoo definitively rejects the symbol
       // (not-found class only — transient errors like rate-limit/timeout/network must NOT set this flag).
       if (errClass === 'not-found') {
@@ -5275,6 +5376,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   _removeStaleFiles,
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,
+  shouldRetryCaClass, caClassCandidates, pickCaClassLine, resolveCaClassSymbol, caClassRetryStock,
   // Tag 645: MX-Schraegstrich-Normalisierung fuer TDD (belegter Datenfehler 19.08.).
   normalizeYahooSymbol,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
