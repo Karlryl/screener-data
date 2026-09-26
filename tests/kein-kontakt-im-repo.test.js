@@ -5,8 +5,7 @@
 // must never sit in a tracked file. tests/sec-user-agent-test.js guards the SEC pullers;
 // this guard covers EVERY tracked file (reports, audits, study scripts included).
 //
-// Needles: the maintainer's address prefix (built from parts, so this file never matches
-// itself) plus every address found in SEC_CONTACT, if set. Only paths are ever printed.
+// Detection by sha256 fingerprint only (see KNOWN below). Only paths are ever printed.
 
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
@@ -14,13 +13,19 @@ const path = require('node:path');
 const test = require('node:test');
 
 const REPO = path.join(__dirname, '..');
-const DEFAULT_NEEDLE = ['karl', 'viehrig@'].join('_');
+const { createHash } = require('node:crypto');
 
-function needles() {
+// Only a sha256 fingerprint of the maintainer's lower-cased address is stored here, so this
+// public file reveals nothing. Every e-mail-shaped string in every tracked file is hashed and
+// compared; addresses in SEC_CONTACT (if set) are added the same way.
+const sha = (s) => createHash('sha256').update(String(s).toLowerCase()).digest('hex');
+const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+const KNOWN = ['828e392b518bc15feb43bff0327cf5c2f529c618be89251aa2bc82d7188dc155'];
+
+function knownHashes() {
   const env = process.env.SEC_CONTACT || '';
-  const fromEnv = (env.match(/[^\s<>()"',;]+@[^\s<>()"',;]+/g) || [])
-    .filter((a) => !/@example\./i.test(a));
-  return [DEFAULT_NEEDLE, ...fromEnv];
+  const fromEnv = (env.match(EMAIL) || []).filter((a) => !/@example\./i.test(a)).map(sha);
+  return new Set([...KNOWN, ...fromEnv]);
 }
 
 // Hash-pinned files that still carry the address. Editing them breaks a verified hash or a
@@ -41,24 +46,29 @@ const FROZEN = new Map([
     + 'which is itself self-hashed'],
 ]);
 
-function filesContaining(list) {
-  const args = ['grep', '--null', '-l', '-i', '-F'];
-  for (const n of list) args.push('-e', n);
-  const r = spawnSync('git', args, { cwd: REPO, encoding: 'utf8' });
+function filesContaining(hashes) {
+  // -I skips binaries; -o -z prints "path\0match" pairs; only paths are ever reported.
+  const r = spawnSync('git', ['grep', '-I', '-o', '-z', '-E', '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}'],
+    { cwd: REPO, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
   if (r.status === 1) return []; // git grep: 1 = no match
   assert.equal(r.status, 0, `git grep failed (${r.status}): ${r.stderr}`);
-  return r.stdout.split('\0').filter(Boolean);
+  const hits = new Set();
+  for (const line of r.stdout.split('\n')) {
+    const i = line.indexOf('\0');
+    if (i > 0 && hashes.has(sha(line.slice(i + 1)))) hits.add(line.slice(0, i));
+  }
+  return [...hits];
 }
 
 test('no tracked file carries the contact address (outside the hash-pinned list)', () => {
-  const offenders = filesContaining(needles()).filter((f) => !FROZEN.has(f));
+  const offenders = filesContaining(knownHashes()).filter((f) => !FROZEN.has(f));
   assert.deepEqual(offenders, [],
     'Contact address in tracked file(s) — replace with <SEC_CONTACT>, read it from '
     + 'process.env.SEC_CONTACT at runtime: ' + offenders.join(', '));
 });
 
 test('every allow-listed frozen file still carries it (no stale allow-list entries)', () => {
-  const still = new Set(filesContaining([DEFAULT_NEEDLE]));
+  const still = new Set(filesContaining(new Set(KNOWN)));
   const stale = [...FROZEN.keys()].filter((f) => !still.has(f));
   assert.deepEqual(stale, [], 'Clean now — drop from FROZEN: ' + stale.join(', '));
 });
