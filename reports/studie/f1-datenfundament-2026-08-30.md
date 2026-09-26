@@ -55,7 +55,7 @@ Beide Linien tragen denselben Payload-Mengen-Hash **`cd371f211c62e3c8cf12a8948bc
 
 **Warum nicht `early-detection-sec-wayback.py acquire`:** Jenes Werkzeug wählt den Schnappschuss aus einer **frischen** CDX-Abfrage und prüft gegen den dort gemeldeten SHA-1. Das belegt, dass der Abruf zu sich selbst passt — nicht, dass er zum registrierten Jahrgang passt. A2 fragt nach dem Zweiten. Das F1-Werkzeug ruft deshalb die **registrierte** `sourceUrl` ab und vergleicht gegen den **registrierten** `payloadSha256`, fail-closed: bei Abweichung wird nichts abgelegt und der Payload als `VINTAGE_GEBROCHEN` gezählt. Die Speicher-Ablage selbst benutzt weiter `foundation.ingest_fsd_bytes`.
 
-**Netzabrufe:** 48, alle gratis, alle mit höflichem User-Agent `Karl Viehrig karl_viehrig@web.de research`, alle gegen registrierte URLs. **Keine Kosten.**
+**Netzabrufe:** 48, alle gratis, alle mit höflichem User-Agent `Karl Viehrig <SEC_CONTACT> research`, alle gegen registrierte URLs. **Keine Kosten.**
 
 ---
 
