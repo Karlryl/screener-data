@@ -107,7 +107,7 @@ const REQUIRED_SHARD_COUNTERS = ['n_ok', 'n_full', 'n_priceonly', 'n_failed'];
 // ganzen Shard quarantaenisieren. Vorhanden werden sie aber geprueft wie jeder andere Zaehler.
 const SELECTOR_COUNTERS = ['n_sel_young_enough', 'n_sel_young_and_stale',
   'n_sel_not_young_but_stale', 'n_sel_not_young_unknown'];
-const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_skipped_owned', 'n_ccy_missing_completely',
+const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_missing_mcap', 'n_skipped_owned', 'n_ccy_missing_completely',
   ...SELECTOR_COUNTERS];
 
 function isPlainObject(value) {
@@ -171,6 +171,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_full: sum('n_full'),
     n_priceonly: sum('n_priceonly'),
     n_skipped_mcap: sum('n_skipped_mcap'),
+    n_missing_mcap: sum('n_missing_mcap'),
     n_ccy_missing_completely: sum('n_ccy_missing_completely'),
     ...Object.fromEntries(SELECTOR_COUNTERS.map(k => [k, sum(k)])),
     // Tag 464: Ticker, die der Hauptlauf vor dem Abruf uebersprungen hat, weil die
@@ -325,6 +326,7 @@ function run() {
   // the complete previous version or the complete new one, never a half-written one.
   writeFileAtomic(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
   console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} valid=${merged.n_shards_valid} invalid=${merged.n_shards_invalid} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}, ccy-Skips ${merged.n_ccy_missing_completely}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
+  console.log(`Missing-market-cap observations: ${merged.n_missing_mcap} (not counted as successful pulls)`);
   // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr
   // n_failed sein. Am Lauf 30230485209 nachgerechnet: 12373-10672 = 1701 gegen 1678
   // Fehlschlaege -> 23 unerklaert. Vor dem Fix waren es 2284 gegen 1678, also 606 unerklaert.

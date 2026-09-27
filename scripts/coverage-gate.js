@@ -108,6 +108,7 @@ function manifestNumbersSane(m, fallbackTotal = null) {
     'n_priceonly',
     'n_addressable',
     'n_skipped_mcap',
+    'n_missing_mcap',
     'n_skipped_owned',
     'n_shard_collisions',
   ];
@@ -255,6 +256,12 @@ function buildMarker(res, m) {
   const markerCount = (field) => trustedManifest && isCount(trustedManifest[field])
     ? trustedManifest[field]
     : null;
+  const missingMcap = markerCount('n_missing_mcap');
+  // Attribution for an existing banner only; never change status or thresholds.
+  const reasons = res.reasons.slice();
+  if (res.status !== 'ok' && missingMcap > 0) {
+    reasons.push(`${missingMcap} Unternehmen: Marktkapitalisierung fehlt; im Coverage-Nenner enthalten, nicht als erfolgreicher Pull gezaehlt`);
+  }
   return {
     schema: 'coverage-status/v1',
     generated_at: new Date().toISOString(),
@@ -276,9 +283,10 @@ function buildMarker(res, m) {
     // Zahl sieht man im Marker nur ein geschrumpftes n_addressable und kann nicht pruefen,
     // ob der Abzug stimmt. Nur Anzeige — die Klassifizierung liest sie nicht.
     n_skipped_mcap: markerCount('n_skipped_mcap'),
+    n_missing_mcap: missingMcap,
     n_skipped_owned: markerCount('n_skipped_owned'),
     source: res.source,
-    reasons: res.reasons,
+    reasons,
     manifest_partial: !!(trustedManifest && trustedManifest.partial === true)
   };
 }
@@ -314,6 +322,7 @@ function validateMarker(mk) {
   for (const f of ['n_full', 'n_priceonly', 'n_shard_collisions', 'n_addressable', 'n_skipped_mcap', 'n_skipped_owned']) {
     if (mk[f] !== null && !isCount(mk[f])) errs.push(`${f} present but not a non-negative safe integer`);
   }
+  if (!optionalCountSane(mk.n_missing_mcap)) errs.push('n_missing_mcap present but not a non-negative safe integer');
   if (mk.honest_coverage_pct !== null &&
       (!Number.isFinite(mk.honest_coverage_pct) || mk.honest_coverage_pct < 0 || mk.honest_coverage_pct > 100)) {
     errs.push('honest_coverage_pct outside 0..100');

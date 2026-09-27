@@ -376,6 +376,9 @@ const EINMALERTRAG_BLIND = ['revGrowthLevel', 'revAcceleration', 'gpGrowth', 'ru
 function isDataSuspect(s, lampsActive, action) {
   // Fabrikations-Lampen (erfundenes Quartal / annual-currency-Leak) gelten fuer ALLE Tracks.
   if (lampsActive.some((l) => DATA_SUSPECT_LAMPS.includes(l))) return true;
+  // B5: explicit missing-size observations also exclude the Survival track.
+  if (s && s.marketCap && s.marketCap.missing === true &&
+      !Number.isFinite(s.marketCap.value)) return true;
   // audit/fix (Court Fall 6, F39): Grade LIVE neu rechnen statt dem persistierten _quality.grade zu
   // trauen (alle gespeicherten Grades stammen von VOR dem criticalMissing-Floor commit b04e24d3bf
   // 2026-06-25 -> der D-Arm matchte 0 Snapshots). gradeSnapshot arbeitet deterministisch auf bereits
