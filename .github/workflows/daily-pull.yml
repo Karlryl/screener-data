@@ -140,7 +140,8 @@ jobs:
   # ============================================================================
   prep:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Recent prep runs took 41-43 min; allow runtime headroom alongside the EDGAR cursor fix.
+    timeout-minutes: 60
     outputs:
       run_date: ${{ steps.freeze.outputs.run_date }}
       # Tag 971: Startzeitpunkt des Laufs fuer den Statusmarker (started_at im Vertrag

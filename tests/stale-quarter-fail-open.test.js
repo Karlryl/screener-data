@@ -192,10 +192,10 @@ function assertPriceOnly(f, m) {
       }
     }
   });
-  await check('rank step has its own two-minute limit without changing prep limit', () => {
+  await check('rank step keeps its two-minute limit within the sixty-minute prep budget', () => {
     const yaml = fs.readFileSync(path.join(root, '.github/workflows/daily-pull.yml'), 'utf8');
     assert.match(step(job(yaml, 'prep'), 'Read current board ranks'), /timeout-minutes: 2\b/);
-    assert.match(job(yaml, 'prep'), /^    timeout-minutes: 45$/m);
+    assert.match(job(yaml, 'prep'), /^    timeout-minutes: 60$/m);
   });
   for (const broken of ['missing', 'corrupt']) await check(broken + ' calendar only removes ordering hints', () => {
     const f = candidateFixture(), file = path.join(root, 'earnings-calendar.json');
