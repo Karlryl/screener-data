@@ -107,8 +107,9 @@ const REQUIRED_SHARD_COUNTERS = ['n_ok', 'n_full', 'n_priceonly', 'n_failed'];
 // ganzen Shard quarantaenisieren. Vorhanden werden sie aber geprueft wie jeder andere Zaehler.
 const SELECTOR_COUNTERS = ['n_sel_young_enough', 'n_sel_young_and_stale',
   'n_sel_not_young_but_stale', 'n_sel_not_young_unknown'];
+const { COUNTERS: QUARTER_RELOAD_COUNTERS, REASON: QUARTER_RELOAD_REASON } = require('../lib/stale-quarter-reload.js');
 const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_missing_mcap', 'n_skipped_owned', 'n_ccy_missing_completely',
-  ...SELECTOR_COUNTERS];
+  ...SELECTOR_COUNTERS, ...QUARTER_RELOAD_COUNTERS];
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -174,6 +175,9 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_missing_mcap: sum('n_missing_mcap'),
     n_ccy_missing_completely: sum('n_ccy_missing_completely'),
     ...Object.fromEntries(SELECTOR_COUNTERS.map(k => [k, sum(k)])),
+    ...Object.fromEntries(QUARTER_RELOAD_COUNTERS.map(k => [k, sum(k)])),
+    _staleQuarterReload: { reason: QUARTER_RELOAD_REASON,
+      shardConfigs: present.map(m => m._staleQuarterReload).filter(Boolean) },
     // Tag 464: Ticker, die der Hauptlauf vor dem Abruf uebersprungen hat, weil die
     // Small-Cap-Liste sie besitzt (Eigentumsgrenze, Karl-Entscheid A). Sie stehen weiter in
     // watchlist.json — also im Voll-Universum unten — wurden aber nie versucht und koennen
@@ -334,6 +338,7 @@ function run() {
   // F-NEU-01 (Tag 629): die ccy-Skips sind weder n_ok noch n_failed und erhoehen damit
   // "unerklaert" um genau ihre Anzahl. Deshalb stehen sie in der Zeile mit drin — sonst
   // liest sich der Anker beim ersten Auftreten wie ein neuer stiller Ausfall.
+  console.log(`${QUARTER_RELOAD_REASON}: selected=${merged.n_stale_quarter_selected}, pulled=${merged.n_stale_quarter_pulled}, newer=${merged.n_stale_quarter_newer}, still-old-yahoo=${merged.n_stale_quarter_still_old_yahoo}, skipped-cap=${merged.n_stale_quarter_skipped_cap}, fetch-failed=${merged.n_stale_quarter_fetch_failed}, reload-failed=${merged.n_stale_quarter_reload_failed}, no-quarter=${merged.n_stale_quarter_no_quarter}`);
   process.exit(0);
 }
 

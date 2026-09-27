@@ -100,6 +100,9 @@ const SCHEMA = 'screener-pipeline-status/v1';
 // welcher Job als Ursache genannt wird).
 const JOB_REIHENFOLGE = [
   'prep',
+  // Optional planning stays in reason; it must not hold back the data run's success date.
+  'quarter-candidates',
+  'quarter-selection',
   'pull',
   // 18.08.: der Kursabruf ist ein eigener Job geworden (vorher ein Schritt im merge-Job,
   // der taeglich in sein Timeout lief und dabei schwieg). Er steht hier zwischen pull und
@@ -123,6 +126,7 @@ const JOB_REIHENFOLGE = [
   // faellt er zusammen mit einem Datenschritt aus, soll im Banner der Datenschritt stehen.
   'druckenmiller-guard',
 ];
+const OPTIONAL_PLANNING_JOBS = new Set(['quarter-candidates', 'quarter-selection']);
 
 /**
  * Den `needs`-Kontext des Workflows (via `toJSON(needs)`) in die geordnete Ergebnisliste
@@ -162,7 +166,7 @@ function leseJobErgebnisse(needsJson) {
 /**
  * REIN (kein Disk-Zugriff), damit der Selftest jeden Zweig pinnen kann.
  *
- * FAIL-CLOSED: gruen ist der Lauf nur, wenn JEDER Job 'success' meldet. 'failure',
+ * FAIL-CLOSED except optional quarter planning: every other job must report success. 'failure',
  * 'cancelled', 'skipped' und ein leerer Wert zaehlen alle als roter Lauf. Ein
  * uebersprungener scoring-Job heisst, dass die Boards heute nicht deployt wurden —
  * fuer Karl ist das derselbe Schaden wie ein abgestuerzter, und genau der Ausgang,
@@ -170,7 +174,7 @@ function leseJobErgebnisse(needsJson) {
  */
 function baueMarker(e) {
   const jobs = e.jobErgebnisse;
-  const kaputt = jobs.find((j) => j.result !== 'success') || null;
+  const kaputt = jobs.find((j) => j.result !== 'success' && !OPTIONAL_PLANNING_JOBS.has(j.name)) || null;
   const status = kaputt ? 'failure' : 'success';
   const marker = {
     schema: SCHEMA,
@@ -183,7 +187,7 @@ function baueMarker(e) {
     failed_job: kaputt ? kaputt.name : null,
     // Nur zur Nachschau im Rohmarker; findash rendert `reason` bewusst NIE (XSS-Grenze
     // drueben — der Wert kommt aus einer fremden Datei).
-    reason: kaputt ? jobs.map((j) => `${j.name}=${j.result || '<leer>'}`).join(',') : null,
+    reason: jobs.some((j) => j.result !== 'success') ? jobs.map((j) => `${j.name}=${j.result || '<leer>'}`).join(',') : null,
     last_success_at: status === 'success'
       ? e.completedAt
       : (e.vorgaenger && typeof e.vorgaenger.last_success_at === 'string'
