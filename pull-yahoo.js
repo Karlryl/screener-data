@@ -3195,6 +3195,60 @@ function countSkippedMcap(results) {
   return results.filter(r => r && r.status === 'skipped-mcap').length;
 }
 
+// B5: missing size is an observation, not evidence that a company is too small.
+// Read the prior file regardless of age; never refresh its financial/price clocks.
+function preserveMissingMarketCap(outputDir, stock, observedAt, source) {
+  const file = path.join(outputDir, safeSnapshotFilename(stock.ticker));
+  const preserved = fs.existsSync(file);
+  const snapshot = preserved ? JSON.parse(fs.readFileSync(file, 'utf8')) : {
+    meta: {
+      ticker: stock.ticker, name: stock.name || stock.ticker,
+      sector: stock.sector || null, industry: stock.industry || null,
+      asOf: null, fetchedAt: null, fundamentalsAsOf: null,
+      fundamentalsIncomplete: true,
+    },
+    annual: {}, metrics: {}, timeseries: {},
+  };
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
+    throw new Error('Cannot preserve invalid snapshot for ' + stock.ticker);
+  }
+  snapshot.marketCap = { value: null, source, confidence: 0, asOf: observedAt, missing: true };
+  writeFileAtomic(file, JSON.stringify(snapshot));
+  return { ticker: stock.ticker, status: 'missing-market-cap', preserved, observedAt };
+}
+
+// A cold SmallCap worker may not have the baseline that the merge job restores.
+// Apply its explicit null observation to that baseline, rather than replacing
+// financials with the worker's incomplete row or silently retaining an old cap.
+function mergeSmallcapSnapshots(incomingDir, outputDir) {
+  fs.mkdirSync(outputDir, { recursive: true });
+  let missing = 0;
+  for (const name of fs.readdirSync(incomingDir).filter(n => n.endsWith('.json')).sort()) {
+    const raw = fs.readFileSync(path.join(incomingDir, name), 'utf8');
+    const incoming = JSON.parse(raw);
+    if (!name.startsWith('_') && incoming.marketCap && incoming.marketCap.missing === true) {
+      const ticker = incoming.meta && incoming.meta.ticker;
+      const at = incoming.marketCap.asOf;
+      if (!ticker || safeSnapshotFilename(ticker) !== name || incoming.marketCap.value !== null ||
+          !Number.isFinite(Date.parse(at))) throw new Error('Invalid missing-cap observation: ' + name);
+      const target = path.join(outputDir, name);
+      if (fs.existsSync(target)) {
+        preserveMissingMarketCap(outputDir, { ticker }, at, incoming.marketCap.source);
+      } else {
+        writeFileAtomic(target, raw);
+      }
+      const written = JSON.parse(fs.readFileSync(target, 'utf8'));
+      if (written.marketCap.value !== null || written.marketCap.missing !== true) {
+        throw new Error('Missing-cap merge retained a value: ' + ticker);
+      }
+      missing++;
+    } else {
+      writeFileAtomic(path.join(outputDir, name), raw);
+    }
+  }
+  return { missingMarketCaps: missing };
+}
+
 // F-NEU-01: Nicht-OTC-Snapshots ohne irgendeine belastbare Waehrungsangabe duerfen
 // den Altbestand weder schreiben noch loeschen. Der outputDir-Parameter ist bewusst
 // Teil dieses echten processOne-Seams: Wirkungstests pruefen damit am realen Dateipfad,
@@ -3621,6 +3675,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
     const q = await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
+    if (!Number.isFinite(q && q.marketCap)) {
+      return preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quote');
+    }
     // P0-Haertung 2 (F-CGPT-003): frueher nur `if (!q)`. Eine wahrheitswerte, aber
     // leere Quote ({currency:'USD'}) aktualisierte nichts, schrieb den Snapshot
     // trotzdem neu (_pullMode/_quality) und meldete Status 'price-only' = Erfolg.
@@ -3730,6 +3787,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
       // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
       existing.marketCap.source = 'yahoo_quote';
+      if (existing.marketCap.missing === true) {
+        delete existing.marketCap.missing;
+        existing.marketCap.confidence = 0.9;
+      }
+    }
+    if (!Number.isFinite(existing.marketCap && existing.marketCap.value)) {
+      return preserveMissingMarketCap(outputDir, stock, newAsOf, 'yahoo_quote');
     }
     // T322: ADS lines Yahoo prices with the ordinary share count (price is USD here). A stale
     // verdict here may only mean stale inputs (old price/shares from disk) -> the full pull decides.
@@ -3952,6 +4016,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker);
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
+      if (!Number.isFinite(canonical.marketCap && canonical.marketCap.value)) {
+        results.push(preserveMissingMarketCap(outputDir, stock, asOf, 'yahoo_quoteSummary'));
+        _log('WARN', `  ${stock.ticker} marketCap missing: snapshot/cache retained, size eligibility excluded`);
+        return;
+      }
       if (preserveSnapshotForMissingCurrency(canonical, stock, outputDir, results)) {
         _log('INFO', `  ⊘ ${stock.ticker} skipped: ccy-missing-completely (Altbestand bleibt)`);
         return;
@@ -4600,6 +4669,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Snapshot als Erfolg zu schreiben.
       _convertSnapshotToUSDGuarded(canonical, (e) =>
         _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message} — Snapshot wird als fx-unknown verworfen`));
+      if (!Number.isFinite(canonical.marketCap && canonical.marketCap.value)) {
+        results.push(preserveMissingMarketCap(outputDir, stock, asOf, 'yahoo_quoteSummary'));
+        return;
+      }
 
       // Annual-revenue currency-leak LAMP. Besides cross-currency leaks, T027 covers the
       // INFY class where reporting + trading both claim USD but annualRev remains INR-sized.
@@ -4637,15 +4710,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const MIN_MCAP = MIN_MCAP_USD;   // env-configurable (MIN_MCAP_USD), default $1B
       const MAX_MCAP = Infinity;       // Tag 101: kein Mega-Cap-Cut mehr
       const mcapVal = canonical.marketCap && canonical.marketCap.value;
-      // F-DQ-001 (Tag 179): null mcap previously short-circuited and passed through
-      // the floor — admitting stocks with missing market-cap data into the universe.
-      // Now: treat null/missing as below-floor and skip with a distinct reason.
-      const mcapMissing = (mcapVal == null);
-      const mcapOutOfRange = mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP);
-      if (mcapMissing || mcapOutOfRange) {
-        const reason = mcapMissing
-          ? `mcap=null (skip; no marketCap from Yahoo)`
-          : (mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $${(MIN_MCAP/1e9).toFixed(0)}B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $${MAX_MCAP === Infinity ? 'Infinity' : (MAX_MCAP/1e12).toFixed(0)+'T'} (Mega-Cap)`);
+      // B5: keep missing observations separate from measured size exclusions.
+      if (!Number.isFinite(mcapVal)) {
+        results.push(preserveMissingMarketCap(outputDir, stock, asOf, 'yahoo_quoteSummary'));
+        return;
+      }
+      const mcapOutOfRange = mcapVal < MIN_MCAP || mcapVal > MAX_MCAP;
+      if (mcapOutOfRange) {
+        const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $${(MIN_MCAP/1e9).toFixed(0)}B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $${MAX_MCAP === Infinity ? 'Infinity' : (MAX_MCAP/1e12).toFixed(0)+'T'} (Mega-Cap)`;
         _log('INFO', `  ⊘ ${stock.ticker} skipped: ${reason}`);
         // Remove existing snapshot if was previously included
         const filename = safeSnapshotFilename(stock.ticker);
@@ -5376,6 +5448,7 @@ if (require.main === module) {
 }
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
+  mergeSmallcapSnapshots,
   fundamentalsStaleness, ftsFailureSummary,
   fundamentalsAsOfAgeFromFile, selectorBucket,   // Durchsatz-Diagnose (19.09.2026)
   readFileHead,                                 // T325 (Handle-Leck)

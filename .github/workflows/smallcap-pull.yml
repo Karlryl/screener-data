@@ -239,12 +239,17 @@ jobs:
           restore-keys: |
             snapshots-smallcap-store-
 
-      - name: Download all shard snapshots (overlays fresh pulls onto the restored baseline)
+      - name: Download all shard snapshots (keep baseline for missing-cap observations)
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: snapshots-smallcap-shard-*
-          path: snapshots-smallcap
+          path: snapshots-smallcap-incoming
           merge-multiple: true
+
+      # B5: cold workers emit an explicit incomplete null-cap row. Apply its null
+      # to the restored financials instead of reviving a cap or erasing financials.
+      - name: Merge small-cap observations
+        run: node -e "console.log(require('./pull-yahoo.js').mergeSmallcapSnapshots('snapshots-smallcap-incoming', 'snapshots-smallcap'))"
 
       # DIAGNOSTIC, non-blocking: reines Log, kein zweiter Alarm-Kanal neben Karls einzigem
       # sanktionierten (coverage-status.json/Dashboard-Banner fuer den Hauptkorpus).

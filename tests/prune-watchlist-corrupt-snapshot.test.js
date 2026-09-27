@@ -42,7 +42,7 @@ function setupFixture() {
   fs.writeFileSync(watchlistPath, JSON.stringify({
     stocks: [
       { ticker: 'CORRUPT',     added_at: OLD_ISO },
-      { ticker: 'MISSING',     added_at: OLD_ISO },
+      { ticker: 'MISSING',     added_at: OLD_ISO, missingSnapshotSince: OLD_ISO },
       { ticker: 'FRESHNODATA', added_at: FRESH_ISO },
     ],
   }, null, 2));
@@ -85,16 +85,16 @@ check('CORRUPT is never logged with reason no-snapshot-after-30d', () => {
 });
 
 // Control: the legitimate no-snapshot-after-30d path must still work (no regression).
-check('MISSING (no snapshot file at all, stale added_at) is still pruned', () => {
+check('MISSING (no snapshot file for 40 continuous days) is still pruned', () => {
   assert.ok(!survivors.includes('MISSING'),
     'MISSING should still be pruned via no-snapshot-after-30d — regression in the legit path. ' +
     'Survivors: ' + JSON.stringify(survivors));
 });
 
 // Control: within the grace period, no-snapshot tickers stay regardless.
-check('FRESHNODATA (no snapshot, within grace period) is kept', () => {
+check('FRESHNODATA (first observed absence) is kept', () => {
   assert.ok(survivors.includes('FRESHNODATA'),
-    'FRESHNODATA should be kept (added_at within pruneNoDataDays). Survivors: ' + JSON.stringify(survivors));
+    'FRESHNODATA should be kept (continuous absence has only just started). Survivors: ' + JSON.stringify(survivors));
 });
 
 fs.rmSync(dir, { recursive: true, force: true });
