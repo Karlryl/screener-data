@@ -277,9 +277,35 @@ function assertPriceOnly(f, m) {
     assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
     assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
   });
-  await check('selected reload with missing/non-finite cap preserves #390 null observation, never a stale price-only cap', async () => {
+  for (const field of ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF']) {
+    for (const annualEmpty of [true, false]) await check(field + ' thinner annual reply (annualEmpty=' + annualEmpty + ') preserves history', async () => {
+      const s = snapshot('OLD'); s.annual[field] = [{ value: 10 }, { value: null }, { value: 20 }];
+      const f = fixture({ snapshots: [s], annualEmpty }), m = await f.run();
+      assert.equal(m.results[0].status, 'price-only'); assert.equal(m.n_stale_quarter_reload_failed, 1);
+      assert.equal(m.n_stale_quarter_fetch_failed, 1); assert.equal(m.n_stale_quarter_newer, 0);
+      assert.deepEqual(f.stored('OLD').annual, s.annual); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
+      assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
+      assert(f.logs.some(s => s.includes('annual history thinner than stored')));
+    });
+  }
+  for (const emptySummary of [false, true]) await check('pure reload recovers fresh quote cap when summary is ' + (emptySummary ? 'empty' : 'missing cap'), async () => {
     for (const summaryMarketCap of [null, NaN, Infinity, -Infinity]) {
-      const s = snapshot('OLD'), f = fixture({ snapshots: [s], summaryMarketCap, quarterFails: true });
+      const s = snapshot('OLD'); s.marketCap.missing = true;
+      const f = fixture({ snapshots: [s], summaryMarketCap, emptySummary, quoteMarketCap: 2e12 });
+      const m = await f.run(), stored = f.stored('OLD');
+      assert.equal(m.n_stale_quarter_selected, 1); assert.equal(m.n_stale_quarter_reload_failed, 1);
+      assert.equal(m.results[0].status, 'price-only'); assert.equal(m.n_missing_mcap, 0);
+      assert.equal(m.n_ok, 1); assert.equal(m.n_failed, 0);
+      assert.equal(stored.marketCap.value, 2e12); assert.equal(Boolean(stored.marketCap.missing), false);
+      assert.equal(stored.meta.asOf, new Date(NOW).toISOString());
+      assert.equal(stored.meta.fundamentalsAsOf, s.meta.fundamentalsAsOf);
+      assert.deepEqual(stored.annual, s.annual); assert.deepEqual(stored.timeseries, s.timeseries);
+      assert.deepEqual(f.calls, [['OLD', 'quoteSummary'], ['OLD', 'quote']]);
+    }
+  });
+  await check('selected reload with no finite cap from summary or quote preserves #390 null observation', async () => {
+    for (const summaryMarketCap of [null, NaN, Infinity, -Infinity]) {
+      const s = snapshot('OLD'), f = fixture({ snapshots: [s], summaryMarketCap, quoteMarketCap: summaryMarketCap, quarterFails: true });
       const cachePath = path.join(root, 'fundamentals-cache/OLD.json'), cache = f.files.get(cachePath).toString();
       const m = await f.run(), stored = f.stored('OLD');
       assert.equal(m.n_stale_quarter_selected, 1); assert.equal(m.n_stale_quarter_reload_failed, 0);
@@ -288,20 +314,20 @@ function assertPriceOnly(f, m) {
       assert.equal(stored.marketCap.value, null); assert.equal(stored.marketCap.missing, true);
       assert.deepEqual(stored.meta, s.meta); assert.deepEqual(stored.annual, s.annual); assert.deepEqual(stored.timeseries, s.timeseries);
       assert.equal(f.files.get(cachePath).toString(), cache);
-      assert.deepEqual(f.calls, [['OLD', 'quoteSummary']], 'missing-cap path must precede FTS and price fallback');
+      assert.deepEqual(f.calls, [['OLD', 'quoteSummary'], ['OLD', 'quote']], 'failed price fallback must retain the null path without FTS');
       const slim = JSON.parse(f.files.get(path.join(f.out, '_manifest.json')));
       const merged = mergeManifests([slim], 1, 1);
       assert.equal(merged.n_missing_mcap, 1); assert.equal(merged.n_stale_quarter_selected, 1);
     }
   });
-  await check('selected reload with empty summary records null and failure without price fallback', async () => {
+  await check('selected reload with empty summary and no quote cap records null and failure', async () => {
     const s = snapshot('OLD'); s.meta.notFoundStreak = 1;
-    const f = fixture({ snapshots: [s], emptySummary: true }), m = await f.run();
+    const f = fixture({ snapshots: [s], emptySummary: true, quoteMarketCap: null }), m = await f.run();
     assert.equal(m.n_stale_quarter_selected, 1); assert.equal(m.n_stale_quarter_reload_failed, 0);
     assert.equal(m.n_ok, 0); assert.equal(m.n_failed, 1);
     assert.equal(f.stored('OLD').marketCap.value, null); assert.equal(f.stored('OLD').marketCap.missing, true);
     assert.deepEqual(f.stored('OLD').meta, s.meta); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
-    assert.deepEqual(f.calls, [['OLD', 'quoteSummary']]);
+    assert.deepEqual(f.calls, [['OLD', 'quoteSummary'], ['OLD', 'quote']]);
   });
   console.log(`stale-quarter-fail-open.test.js: ${passed} passed, ${failed} failed`);
   process.exitCode = failed ? 1 : 0;
