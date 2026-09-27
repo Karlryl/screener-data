@@ -2635,7 +2635,7 @@ async function fetchFundamentalsTS(symbol, signal) {
   // Period: 5y back, jetzt
   const period1 = new Date(Date.now() - 5 * 365 * 86400 * 1000);
   const period2 = new Date();
-  const out = { annualFin: [], quarterlyFin: [], annualCash: [], annualBs: [], _failedSeries: 0 };
+  const out = { annualFin: [], quarterlyFin: [], annualCash: [], annualBs: [], _failedSeries: 0, _quarterlySucceeded: false };
   // F-PY-102: thread the abort signal into every FTS fetch so a wrapper timeout
   // cancels the in-flight request and frees the yahoo-finance2 queue slot.
   const mo = signal ? { fetchOptions: { signal } } : undefined;
@@ -2649,6 +2649,7 @@ async function fetchFundamentalsTS(symbol, signal) {
   try {
     await acquireYfSlot();
     out.quarterlyFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'quarterly', module: 'financials' }, mo);
+    out._quarterlySucceeded = true;
   } catch (e) { out._failedSeries++; _log('WARN', `  fundamentalsTimeSeries quarterly financials failed for ${symbol}: ${e.message}`); }
   try {
     await acquireYfSlot();
@@ -3377,6 +3378,28 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     console.warn(`::warning::earnings-calendar.json nicht geladen (${e.message}) — earnings-forced fulls deaktiviert fuer diesen Lauf`);
   }
   const _today = new Date();
+  const reload = require('./lib/stale-quarter-reload.js');
+  const reloadConfig = reload.validateConfig(JSON.parse(fs.readFileSync(path.join(__dirname, 'configs', 'stale-quarter-reload.json'), 'utf8')));
+  const rankPath = path.join(__dirname, 'outputs', 'stale-quarter-ranks.json');
+  const rankState = fs.existsSync(rankPath) ? JSON.parse(fs.readFileSync(rankPath, 'utf8')) : { ranks: {} };
+  if (!rankState.generated_at) _log('WARN', 'Stale-quarter ordering has no current board-rank artifact');
+  const selectionPath = path.join(__dirname, 'outputs', 'stale-quarter-selection.json');
+  const selection = fs.existsSync(selectionPath) ? JSON.parse(fs.readFileSync(selectionPath, 'utf8')) : null;
+  if (!selection && process.env.STALE_QUARTER_PLAN_REQUIRED === '1') throw new Error('Missing stale-quarter global selection');
+  const reloadPlan = reload.planReload(watchlist.stocks, { snapshotDir: outputDir,
+    cacheDir: path.join(__dirname, 'fundamentals-cache'), ranks: rankState.ranks, calendar: _earningsCalendar,
+    now: +_today, config: reloadConfig, shard: watchlist._pullShard, selection, io: fs });
+  const reloadSelected = new Map(reloadPlan.selected.map((row, i) => [row.ticker, { ...row, order: i }]));
+  const reloadStats = { eligible: reloadPlan.candidates.length, selected: reloadSelected.size, pulled: 0, newer: 0,
+    still_old_yahoo: 0, skipped_cap: reloadPlan.candidates.length - reloadSelected.size, fetch_failed: 0,
+    legacy_clock: reloadPlan.selected.filter(r => r.clock.source === 'legacy-full-proxy').length,
+    unknown_clock: reloadPlan.unknownClock };
+  const reloadCounters = () => Object.fromEntries(Object.entries(reloadStats).map(([k, v]) => ['n_stale_quarter_' + k, v]));
+  const reloadMeta = { reason: reload.REASON, ...reloadConfig, shardCap: reloadPlan.cap,
+    allocation: selection ? 'global-rank-order' : 'local-shard-quota',
+    rankGeneratedAt: rankState.generated_at || null, readErrors: reloadPlan.readErrors,
+    newerMeaning: 'newer reported quarter persisted', legacyClock: 'fundamentalsAsOf/fetchedAt proxy until first measured FTS success' };
+  _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, eligible=${reloadStats.eligible}, skipped-cap=${reloadStats.skipped_cap}, shard-cap=${reloadPlan.cap}, run-cap=${reloadConfig.maxPerRun}, legacy-clock=${reloadStats.legacy_clock}, unknown-clock=${reloadStats.unknown_clock}, read-errors=${reloadPlan.readErrors}`);
   const results = [];
   const failures = [];
   // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
@@ -3413,6 +3436,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Tag 164: sort by staleness — oldest snapshots pulled first so timeouts
   // always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
   watchlist.stocks = sortByStaleness(watchlist.stocks, outputDir, _earningsCalendar, _today);
+  // Keep selected board priorities ahead of the ordinary age queue, within this shard.
+  watchlist.stocks.sort((a, b) => (reloadSelected.get(a.ticker)?.order ?? Infinity) - (reloadSelected.get(b.ticker)?.order ?? Infinity));
   _log('INFO', `Sorted ${watchlist.stocks.length} stocks by staleness (oldest first)`);
   // Tag 154: exponential-backoff retry for rate-limit errors.
   // Yahoo 429s are transient — one retry after 10–30s usually succeeds.
@@ -3505,6 +3530,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_full: nFull,
         n_priceonly: nPriceOnly,
         ..._selectorCounters(),
+        ...reloadCounters(),
+        _staleQuarterReload: reloadMeta,
         n_skipped_mcap: skippedMcap,
         n_ccy_missing_completely: results.filter(r => r && r.status === 'ccy-missing-completely').length,
         // Tag 464: vor dem Abruf aus DIESER Scheibe entfernt (Small-Cap-Eigentumsgrenze).
@@ -3914,11 +3941,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Wichtig: KEIN youngEnough-Vorbehalt — genau der Fall, den die Eingabe heilt, ist
       // ein junger Snapshot (asOf wird taeglich neu gestempelt), der trotzdem falsch ist.
       const vollPullAngefordert = _vollPullTicker.has(stock.ticker);
-      let forceFundamentalsFull = staleFundamentals || staleEarnings || vollPullAngefordert;
+      const staleQuarterSelected = reloadSelected.has(stock.ticker);
+      let forceFundamentalsFull = staleFundamentals || staleEarnings || vollPullAngefordert || staleQuarterSelected;
       // Budget applies ONLY when time-staleness is the SOLE reason. If the ticker
       // is also schema-, currency-, or earnings-stale it takes the full pull for
       // correctness (free ride) and must not consume the time budget.
-      if (staleFundamentals && !staleSchema && !staleCurrency && !staleEarnings && !vollPullAngefordert) {
+      if (staleFundamentals && !staleSchema && !staleCurrency && !staleEarnings && !vollPullAngefordert && !staleQuarterSelected) {
         if (_fundamentalsRefreshUsed < FUNDAMENTALS_REFRESH_BUDGET) {
           _fundamentalsRefreshUsed++;
         } else {
@@ -3942,6 +3970,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ${stock.ticker} [currency-stale]: forcing full pull to normalize pre-Tag-219c FX envelope`);
       } else if (staleEarnings) {
         _log('INFO', `  ${stock.ticker} [earnings-stale]: forcing unbudgeted full pull (reported since last full pull)`);
+      } else if (staleQuarterSelected) {
+        _log('INFO', `  ${stock.ticker} [${reload.REASON}]: quarter=${reloadSelected.get(stock.ticker).end}; bypass fundamentals clock and FTS cache`);
       } else if (vollPullAngefordert) {
         _log('INFO', `  ${stock.ticker} [voll-pull-angefordert]: erzwungener Voll-Pull aus der Eingabe voll_pull_ticker (nur dieser Lauf)`);
       } else if (forceFundamentalsFull) {
@@ -3957,6 +3987,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         return;
       }
       let _allFtsSeriesEmpty = false;
+      let quarterlyFetchedAt = reloadPlan.observations.get(stock.ticker)?.clock.at || null;
+      let quarterlyClockSource = reloadPlan.observations.get(stock.ticker)?.clock.source || 'unknown';
 
       // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
       try {
@@ -4066,6 +4098,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // No cache to use anyway — re-fetch is happening regardless.
         cacheBypassReason = 'schema-stale (no cache)';
       }
+      if (staleQuarterSelected) cacheBypassReason = reload.REASON;
       if (cacheBypassReason) {
         if (typeof global.__ftsCacheStaleBypasses === 'undefined') global.__ftsCacheStaleBypasses = 0;
         global.__ftsCacheStaleBypasses++;
@@ -4122,6 +4155,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualNetCommonStockIssuance = cached.payload.ftsAnnualNetCommonStockIssuance || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
+        if (staleQuarterSelected) reloadStats.pulled++;
         // F-DP-003: timeout raised to 60s (4 sequential HTTP calls inside);
         //   one retry on timeout/ECONNRESET before propagating.
         let fts;
@@ -4145,8 +4179,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Bug 12: append the original error message so the final throw carries a
         // 'timeout'/'ECONNRESET' token → correct errClass ('timeout'/'network')
         // instead of 'other' in the catch classifier.
-        if (ftsFetchFailed || !fts) throw new Error('FTS fetch failed for ' + stock.ticker + (ftsLastErr ? ': ' + ftsLastErr.message : ''));
+        if (ftsFetchFailed || !fts) {
+          if (staleQuarterSelected) reloadStats.fetch_failed++;
+          throw new Error('FTS fetch failed for ' + stock.ticker + (ftsLastErr ? ': ' + ftsLastErr.message : ''));
+        }
         const ftsFailure = ftsFailureSummary(fts);
+        if (fts._quarterlySucceeded) { quarterlyFetchedAt = new Date().toISOString(); quarterlyClockSource = 'fts'; }
+        else if (staleQuarterSelected) reloadStats.fetch_failed++;
         _allFtsSeriesEmpty = ftsFailure.allEmpty;
         if (ftsFailure.failedSeries > 0) {
           _ftsPartialTickers++;
@@ -4187,6 +4226,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // 06.09.2026: fuehrende leere Quartale (Ende ohne Umsatz/GP/OpInc/NI) verwerfen — Buendel und
         // NI-Reihe im Gleichschritt, VOR dem Cache-Write, damit der Cache den getrimmten Stand traegt.
         _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly, ftsQuarterlyNI);
+        if (staleQuarterSelected && fts._quarterlySucceeded) {
+          const yahooEnd = reload.latestReportedQuarter({ timeseries: { ...ftsQuarterly, netIncomeQ: ftsQuarterlyNI } }, Date.now());
+          if (!yahooEnd || reload.quarterAgeDays(yahooEnd, Date.now()) > reloadConfig.maxQuarterAgeDays) reloadStats.still_old_yahoo++;
+        }
         // F-DP-005: detect partial FTS result — any module that returned empty array
         const ftsPartial = (
           (fts.annualFin || []).length === 0 ||
@@ -4199,6 +4242,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           // same ticker if a retry races, and a truncated cache fails downstream
           // _ftsExtractByYear silently → quarterly-NI series goes empty.
           _writeFTSCache(cachePath, FTS_CACHE_VERSION, ftsPartial, {
+            quarterlyFetchedAt, quarterlyClockSource,
             ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD,
             ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares,
             ftsAnnualSharesBasic, ftsAnnualRepurchase, ftsAnnualDividendsPaid, ftsAnnualNetCommonStockIssuance
@@ -4732,6 +4776,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // FTS-Serien baut canonical.meta neu auf, das Flag verschwindet also von selbst.
       canonical.meta = canonical.meta || {};
       canonical.meta.fundamentalsAsOf = canonical.meta.asOf || new Date().toISOString();
+      if (quarterlyFetchedAt) canonical.meta.fundamentalsTimeseriesFetchedAt = quarterlyFetchedAt;
+      canonical.meta.fundamentalsTimeseriesClockSource = quarterlyClockSource;
       if (_allFtsSeriesEmpty) canonical.meta.fundamentalsIncomplete = true;
       writeFileAtomic(outPath, JSON.stringify(canonical));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
@@ -4747,7 +4793,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         revenueQ: canonical.timeseries.revenueQ.length,
         opIncQ: canonical.timeseries.opIncQ.length
       };
-      results.push({ ticker: stock.ticker, status: 'ok', file: filename, revenue: revStr, growth: growthStr, completeness });
+      const quarterReload = staleQuarterSelected ? { reason: reload.REASON,
+        previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reload.latestReportedQuarter(canonical, Date.now()) } : null;
+      if (quarterReload && quarterReload.storedQuarter > quarterReload.previousQuarter) reloadStats.newer++;
+      results.push({ ticker: stock.ticker, status: 'ok', file: filename, revenue: revStr, growth: growthStr, completeness,
+        ...(quarterReload ? { quarterReload } : {}) });
       _log('INFO', `  ✓ ${stock.ticker}: revenue=${revStr}, growth=${growthStr}, sector=${canonical.meta.sector}`);
     } catch (e) {
       // Tag 134 — Phase 5.3: classify error type so pull-stats-check can alert on
@@ -4953,6 +5003,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     n_skipped_mcap: skippedMcapFinal,
     n_failed: failures.length,
     _silentErrors,
+    ...reloadCounters(),
+    _staleQuarterReload: reloadMeta,
     // FN-2: derselbe Zaehler maschinenlesbar. Das Protokoll ist die Sichtspur, das
     // Manifest der Vergleichspunkt — ein Vintage-gegen-Vintage-Diff braucht die Zahl als
     // Feld, nicht als Logzeile.
@@ -4977,7 +5029,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diesem Manifest bereits die gefilterte Liste. Nur der Merge, der n_total durch das volle
   // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, ..._selectorCounters(), n_skipped_mcap: manifest.n_skipped_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, pulled=${reloadStats.pulled}, newer=${reloadStats.newer}, still-old-yahoo=${reloadStats.still_old_yahoo}, skipped-cap=${reloadStats.skipped_cap}, fetch-failed=${reloadStats.fetch_failed}`);
   // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, _manifestSubsetTag
     ? '_manifest.subset-' + _manifestSubsetTag + '.json'
@@ -5137,6 +5190,7 @@ async function main() {
   // globale Zahl und der Merge wuerde sie 17-fach vom Nenner abziehen.
   if (args.shard) {
     const before = watchlist.stocks.length;
+    watchlist._pullShard = args.shard;
     watchlist.stocks = shardStocks(watchlist.stocks, args.shard);
     _log('INFO', `Shard ${args.shard.index}/${args.shard.count}: ${watchlist.stocks.length}/${before} Ticker in dieser Scheibe`);
   }

@@ -100,6 +100,9 @@ const SCHEMA = 'screener-pipeline-status/v1';
 // welcher Job als Ursache genannt wird).
 const JOB_REIHENFOLGE = [
   'prep',
+  // Candidate collection and the global cap allocation are prerequisites of pull.
+  'quarter-candidates',
+  'quarter-selection',
   'pull',
   // 18.08.: der Kursabruf ist ein eigener Job geworden (vorher ein Schritt im merge-Job,
   // der taeglich in sein Timeout lief und dabei schwieg). Er steht hier zwischen pull und

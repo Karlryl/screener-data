@@ -514,6 +514,9 @@ jobs:
       # (Voll-Universum-Denominator), fx-rates.json, earnings-calendar.json, insider-cache.
       # Shards laden AUSSCHLIESSLICH dieses Artefakt (nicht ihren eigenen Checkout-Stand),
       # damit Refresh/Prune/FX/Earnings konsistent ueber alle 17 sind.
+      - name: Read current board ranks for stale-quarter reload
+        run: node scripts/prepare-stale-quarter-ranks.js
+
       - name: Upload prep state (watchlist + fx + earnings + insider)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -522,6 +525,7 @@ jobs:
             watchlist.json
             fx-rates.json
             earnings-calendar.json
+            outputs/stale-quarter-ranks.json
             external-data/sec-form4-cache.json
             data-health/entdeckungs-ausschluss.json
           if-no-files-found: warn
@@ -612,8 +616,69 @@ jobs:
               ;;
           esac
 
+  # Candidate snapshots stay shard-local. Merge their small plans once so a quiet
+  # shard cannot spend the cap on unranked rows while another defers board rows.
+  quarter-candidates:
+    needs: prep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.prep.outputs.shard_matrix) }}
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+      SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: prep-state
+          path: .
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots
+          key: snapshots-shard-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: |
+            snapshots-shard-${{ matrix.shard }}-
+      - run: node scripts/plan-stale-quarter-reload.js --candidates ${{ matrix.shard }}/${{ env.SHARD_COUNT }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: quarter-candidates-${{ matrix.shard }}
+          path: outputs/stale-quarter-candidates/*.json
+          if-no-files-found: error
+
+  quarter-selection:
+    needs: [prep, quarter-candidates]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+      SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: quarter-candidates-*
+          path: outputs/stale-quarter-candidates
+          merge-multiple: true
+      - run: node scripts/plan-stale-quarter-reload.js --merge "$SHARD_COUNT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: quarter-selection
+          path: outputs/stale-quarter-selection.json
+          if-no-files-found: error
+
   # ============================================================================
-  # PULL (matrix, N shards in parallel) — the ONLY parallelised work.
+  # PULL (matrix, N shards in parallel).
   # node pull-yahoo.js --shard i/N reads the full watchlist.json and slices it
   # INTERNALLY (shardStocks: hash(ticker)%N===i) to the i-th disjoint slice.
   # fail-fast:false — one slow/red shard must NOT kill the others. Each shard:
@@ -622,7 +687,7 @@ jobs:
   # No once-only step lives here.
   # ============================================================================
   pull:
-    needs: prep
+    needs: [prep, quarter-selection]
     runs-on: ubuntu-latest
     timeout-minutes: 200
     strategy:
@@ -632,6 +697,7 @@ jobs:
     env:
       # Tag 215f: PULL_CONCURRENCY 20->8 (Yahoo Cloudflare Edge rate-limited at 20).
       PULL_CONCURRENCY: '8'
+      STALE_QUARTER_PLAN_REQUIRED: '1'
       RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
       SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
     steps:
@@ -654,6 +720,12 @@ jobs:
         with:
           name: prep-state
           path: .
+
+      - name: Download global stale-quarter selection
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: quarter-selection
+          path: outputs
 
       # Guard (RED-TEAM-0 T2-E / RED-TEAM-2 T1-b): assert this shard index is in
       # range for N. parseArgs falls back to a FULL-universe pull on an invalid
@@ -2650,7 +2722,7 @@ jobs:
           echo "ok: der heutige Stand ist auf main."
 
   laufstatus:
-    needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard]
+    needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -324,10 +324,10 @@ test('JOB_REIHENFOLGE ist GENAU diese Prioritaet (sie bestimmt failed_job)', () 
   // scoring, damit sein rotes X den Board-Deploy nicht anhaelt. Er steht ganz HINTEN bei
   // den nicht-blockierenden Diagnose-Waechtern; die Regel bleibt unberuehrt.
   assert.deepEqual(JOB_REIHENFOLGE,
-    ['prep', 'pull', 'prices', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter',
+    ['prep', 'quarter-candidates', 'quarter-selection', 'pull', 'prices', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter',
       'jahres-ausreisser-waechter', 'druckenmiller-guard'],
     'die Prioritaets-Reihenfolge hat sich geaendert. Sie entscheidet, welcher Job im Banner als '
-    + 'Ursache steht: die fuenf Kettenglieder zuerst, die vier nicht-blockierenden Diagnose-'
+    + 'Ursache steht: die Kettenglieder zuerst, die nicht-blockierenden Diagnose-'
     + 'Waechter dahinter. Steht ein Waechter vorn, meldet der Marker bei einem Doppelausfall den '
     + 'Diagnose-Job statt des Datenschritts — Karl sucht am falschen Job.');
 });
