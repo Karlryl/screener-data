@@ -4091,12 +4091,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         throw e;
       }
       if (!yahoo || !Object.values(yahoo).some(v => v && typeof v === 'object' && Object.keys(v).length)) {
+        if (reloadOnly) {
+          try { return await reloadFailed('quoteSummary without market cap'); }
+          catch (_) { /* No usable quote cap either: retain the missing-cap path. */ }
+        }
         preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quoteSummary', { keepStreak: true });
         throw new Error('full pull refused: empty quoteSummary cannot confirm a live company');
       }
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
       if (!Number.isFinite(canonical.marketCap && canonical.marketCap.value)) {
+        if (reloadOnly) {
+          try { return await reloadFailed('quoteSummary without market cap'); }
+          catch (_) { /* No usable quote cap either: retain the missing-cap path. */ }
+        }
         const missing = preserveMissingMarketCap(outputDir, stock, asOf, 'yahoo_quoteSummary');
         results.push(missing);
         _log('WARN', `  ${stock.ticker} marketCap missing: ${missing.preserved ? 'snapshot/cache retained' : 'no existing snapshot'}, size eligibility excluded`);
@@ -4918,6 +4926,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (quarterlyFetchedAt) canonical.meta.fundamentalsTimeseriesFetchedAt = quarterlyFetchedAt;
       canonical.meta.fundamentalsTimeseriesClockSource = quarterlyClockSource;
       if (_allFtsSeriesEmpty) canonical.meta.fundamentalsIncomplete = true;
+      if (reloadOnly && ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF'].some(k =>
+        _nonNullCount(canonical.annual && canonical.annual[k]) < _nonNullCount(_parsedSnapshot.annual && _parsedSnapshot.annual[k]))) {
+        reloadStats.fetch_failed++;
+        return await reloadFailed('annual history thinner than stored');
+      }
       writeFileAtomic(outPath, JSON.stringify(canonical));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
