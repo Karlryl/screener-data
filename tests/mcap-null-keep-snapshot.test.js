@@ -9,7 +9,7 @@ const cp = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 
 if (process.argv.includes('--break-once')) {
-  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak']) {
+  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune']) {
     const r = cp.spawnSync(process.execPath, [__filename], {
       cwd: ROOT, encoding: 'utf8', env: { ...process.env, B5_MUTATION: mutation },
     });
@@ -18,6 +18,10 @@ if (process.argv.includes('--break-once')) {
       'stale-cap': /old market cap must be absent/,
       'watchlist-age': /prune attempted an early exit: 1|first absence must not inherit watchlist age/,
       'survival-leak': /missing cap must be visibly excluded/,
+      'fast-null-final': /missing quote cap must fall through to full pull/,
+      'placeholder': /never-seen main ticker must not get a placeholder/,
+      'streak': /real full answer must reset not-found streak/,
+      'legacy-prune': /legacy entry without added_at must not be auto-pruned/,
     };
     assert.match(r.stderr, expected[mutation]);
     console.log('BREAK_ONCE ' + mutation + ' exit=1 detected=true ' + r.stderr.trim().split('\n')[0]);
@@ -31,8 +35,10 @@ const merged = path.join(ROOT, '_scratch', 'b5-virtual', 'merged');
 const wlPath = path.join(ROOT, '_scratch', 'b5-virtual', 'watchlist.json');
 const virtualRoot = path.dirname(out);
 const files = new Map(), fds = new Map(), writes = [], unlinks = [];
+const writeEvents = [];
 let nextFd = 900000, now = Date.parse('2026-09-27T00:00:00.000Z');
 let cap = null, quoteCalls = 0, fullCalls = 0, ftsCalls = 0;
+let quoteMode = 'normal', fullMode = 'normal', fullCap, quoteCurrency = 'USD';
 const ticker = process.env.B5_HISTORICAL === '1' ? '300475.SZ' : 'B5FIX';
 const filename = ticker + '.json';
 const snapPath = path.join(out, filename);
@@ -44,6 +50,17 @@ for (const k of ['readFileSync', 'existsSync', 'openSync', 'readSync', 'closeSyn
 const sourceRead = original.readFileSync;
 const compile = Module.prototype._compile;
 Module.prototype._compile = function (source, name) {
+  const regressions = {
+    'fast-null-final': ['pull-yahoo.js', "throw new Error('price-only refused: quote without finite marketCap - full pull decides');", "return preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quote');"],
+    'placeholder': ['pull-yahoo.js', "if (!preserved && process.env.MISSING_CAP_CARRIER !== '1')", "if (false && !preserved && process.env.MISSING_CAP_CARRIER !== '1')"],
+    'streak': ['pull-yahoo.js', 'if (snapshot.meta) delete snapshot.meta.notFoundStreak;', '// mutant: keep the stale not-found streak'],
+    'legacy-prune': ['scripts/prune-watchlist.js', 'if ((entry.added_at || entry.addedAt) && absenceDays > args.pruneNoDataDays)', 'if (absenceDays > args.pruneNoDataDays)'],
+  };
+  const regression = regressions[process.env.B5_MUTATION];
+  if (regression && name === path.join(ROOT, regression[0])) {
+    assert(source.includes(regression[1]), 'mutation anchor missing');
+    source = source.replace(regression[1], regression[2]);
+  }
   if (process.env.B5_MUTATION === 'stale-cap' && name === path.join(ROOT, 'pull-yahoo.js')) {
     const before = 'snapshot.marketCap = { value: null, source, confidence: 0, asOf: observedAt, missing: true };';
     assert(source.includes(before), 'mutation anchor missing');
@@ -60,7 +77,7 @@ Module.prototype._compile = function (source, name) {
     source = source.replace(guard, '');
   }
   if (process.env.B5_BASELINE === '1' && name === path.join(ROOT, 'pull-yahoo.js')) {
-    source = cp.execFileSync('git', ['show', 'HEAD:pull-yahoo.js'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 2000000 });
+    source = cp.execFileSync('git', ['show', 'origin/main:pull-yahoo.js'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 2000000 });
   }
   return compile.call(this, source, name);
 };
@@ -85,15 +102,26 @@ const silent = () => {};
 const print = console.log.bind(console);
 console.log = console.warn = console.error = silent;
 class FakeYahoo {
-  async quote() { quoteCalls++; return { symbol: ticker, currency: 'USD', regularMarketPrice: 120, ...(cap === undefined ? {} : { marketCap: cap }) }; }
-  async quoteSummary() { fullCalls++; return { price: { symbol: ticker, currency: 'USD', marketCap: cap, regularMarketPrice: 120 }, financialData: { financialCurrency: 'USD' }, summaryProfile: { sector: 'Technology', industry: 'Semiconductors', country: 'United States' } }; }
+  async quote() {
+    quoteCalls++;
+    if (quoteMode === 'undefined') return undefined;
+    if (quoteMode === 'empty') return {};
+    if (quoteMode === 'not-found') throw new Error('Quote not found for symbol');
+    return { symbol: ticker, currency: quoteCurrency, regularMarketPrice: 120, ...(cap === undefined ? {} : { marketCap: cap }) };
+  }
+  async quoteSummary() {
+    fullCalls++;
+    if (fullMode === 'not-found') throw new Error('Quote not found for symbol');
+    if (fullMode === 'empty') return {};
+    return { price: { symbol: ticker, currency: 'USD', marketCap: fullCap === undefined ? cap : fullCap, regularMarketPrice: 120 }, financialData: { financialCurrency: 'USD' }, summaryProfile: { sector: 'Technology', industry: 'Semiconductors', country: 'United States' } };
+  }
   async fundamentalsTimeSeries() { ftsCalls++; return []; }
 }
 const load = Module._load;
 Module._load = function (req, parent, ...rest) {
   if (req === 'yahoo-finance2') return { default: FakeYahoo };
   if (/[/\\]atomic-write\.js$/.test(req)) return { writeFileAtomic: (p, raw) => {
-    assert(isVirtual(p), 'unexpected atomic write ' + path.basename(p)); writes.push(norm(p)); files.set(norm(p), raw);
+    assert(isVirtual(p), 'unexpected atomic write ' + path.basename(p)); writes.push(norm(p)); writeEvents.push({ path: norm(p), raw }); files.set(norm(p), raw);
   } };
   return load.call(this, req, parent, ...rest);
 };
@@ -124,11 +152,97 @@ const cache = JSON.stringify({ _cacheVersion: 2, cachedAt: iso(40), payload: { r
 const read = p => JSON.parse(files.get(p));
 function reset(age = 1) {
   files.clear(); writes.length = unlinks.length = 0; quoteCalls = fullCalls = ftsCalls = 0;
+  writeEvents.length = 0; quoteMode = fullMode = 'normal'; fullCap = undefined; quoteCurrency = 'USD';
+  delete process.env.MISSING_CAP_CARRIER;
   const s = structuredClone(seed); s.meta.asOf = iso(age);
   files.set(snapPath, JSON.stringify(s)); files.set(cachePath, cache);
   files.set(wlPath, JSON.stringify({ stocks: [{ ...stock }], preservedSidecar: 'unchanged' }));
   return s;
 }
+const reviewCases = {
+  async fallback() {
+    for (const mode of ['undefined', 'empty', 'normal', 'overflow']) {
+      reset(); cap = undefined; quoteMode = mode === 'overflow' ? 'normal' : mode; fullCap = 5.5e9;
+      if (mode === 'overflow') { cap = Number.MAX_VALUE; quoteCurrency = 'GBP'; }
+      const result = await pullAll({ stocks: [stock] }, out, 0);
+      assert.equal(fullCalls, 1, 'missing quote cap must fall through to full pull: ' + mode);
+      assert.equal(result.results[0]?.status, 'ok'); assert.equal(read(snapPath).marketCap.value, 5.5e9);
+    }
+    reset(); cap = null;
+    const result = await pullAll({ stocks: [stock] }, out, 0);
+    assert.equal(fullCalls, 1); assert.equal(result.results[0]?.status, 'missing-market-cap');
+    assert.equal(read(snapPath).marketCap.value, null);
+  },
+  async placeholder() {
+    reset(); cap = null; files.delete(snapPath);
+    const result = await pullAll({ stocks: [stock] }, out, 0);
+    assert.equal(result.results[0]?.status, 'missing-market-cap');
+    assert.equal(result.results[0]?.preserved, false);
+    assert(!files.has(snapPath), 'never-seen main ticker must not get a placeholder');
+    assert.equal(files.get(cachePath), cache);
+    runPrune(); assert.equal(read(wlPath).stocks[0].missingSnapshotSince, iso(0));
+  },
+  async carrier() {
+    reset(); cap = null; files.delete(snapPath); process.env.MISSING_CAP_CARRIER = '1';
+    await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
+    const carrier = read(snapPath); assert.equal(carrier.marketCap.value, null); assert.equal(carrier.meta.asOf, null);
+    files.set(path.join(incoming, filename), files.get(snapPath));
+    mergeSmallcapSnapshots(incoming, merged);
+    assert(!files.has(path.join(merged, filename)), 'cold merged store must not receive a raw carrier');
+    files.set(path.join(merged, filename), JSON.stringify(seed));
+    mergeSmallcapSnapshots(incoming, merged);
+    assert.equal(read(path.join(merged, filename)).marketCap.value, null);
+    assert.deepEqual(read(path.join(merged, filename)).annual, seed.annual);
+  },
+  async streak() {
+    reset(); cap = null; const s = read(snapPath); s.meta.notFoundStreak = 1; files.set(snapPath, JSON.stringify(s));
+    await pullAll({ stocks: [stock] }, out, 0);
+    assert(!Object.hasOwn(read(snapPath).meta, 'notFoundStreak'), 'real full answer must reset not-found streak');
+    quoteMode = fullMode = 'not-found';
+    await pullAll({ stocks: [stock] }, out, 0);
+    assert.equal(read(snapPath).meta.notFoundStreak, 1); assert(!read(snapPath).meta.delisted);
+    runPrune(); assert.equal(read(wlPath).stocks.length, 1);
+    reset(); cap = null; const empty = read(snapPath); empty.meta.notFoundStreak = 1; files.set(snapPath, JSON.stringify(empty));
+    quoteMode = fullMode = 'empty'; await pullAll({ stocks: [stock] }, out, 0);
+    assert.equal(read(snapPath).meta.notFoundStreak, 1, 'empty responses cannot confirm the company is alive');
+  },
+  async legacy() {
+    reset(); files.delete(snapPath); const w = read(wlPath); delete w.stocks[0].added_at;
+    files.set(wlPath, JSON.stringify(w)); runPrune();
+    assert.equal(read(wlPath).stocks[0].missingSnapshotSince, iso(0));
+    now += 40 * day; runPrune(['--force']);
+    assert.equal(read(wlPath).stocks.length, 1, 'legacy entry without added_at must not be auto-pruned');
+    files.set(snapPath, JSON.stringify(seed)); runPrune(); assert(!read(wlPath).stocks[0].missingSnapshotSince);
+  },
+  async counts() {
+    reset(); cap = null; const result = await pullAll({ stocks: [stock] }, out, 0);
+    assert.equal(result.n_missing_mcap, 1, 'pull summary must count missing caps');
+    const manifests = writeEvents.filter(e => path.basename(e.path).startsWith('_manifest')).map(e => JSON.parse(e.raw));
+    assert(manifests.some(m => m.partial === true), 'real incremental manifest must be exercised');
+    assert(manifests.some(m => m.partial === false));
+    for (const m of manifests) assert.equal(m.n_missing_mcap, 1, 'every manifest must count missing caps');
+    const { mergeManifests } = require('../scripts/merge-shard-manifests');
+    const latest = manifests.find(m => m.partial === false);
+    const legacy = { ...latest }; delete legacy.n_missing_mcap;
+    assert.equal(mergeManifests([latest, legacy], 2, 2).n_missing_mcap, 1, 'daily merge must retain the missing-cap counter');
+    for (const bad of [-1, NaN, null, '1']) {
+      assert.equal(mergeManifests([{ ...latest, n_missing_mcap: bad }], 1, 1).n_shards_invalid, 1);
+    }
+  },
+  async reason() {
+    const s = structuredClone(seed); s.marketCap = { value: null, missing: true };
+    assert.equal(smallcapRoute(s).reason, 'smallcap-mcap-missing', 'missing is not a measured out-of-band value');
+    s.marketCap.value = 1e6; assert.equal(smallcapRoute(s).reason, 'smallcap-mcap-out-of-band');
+  },
+  async reserved() {
+    reset(); const old = structuredClone(seed); old.meta.ticker = 'CON';
+    files.set(path.join(merged, '_CON.json'), JSON.stringify(old));
+    files.set(path.join(incoming, '_CON.json'), JSON.stringify({ meta: { ticker: 'CON' }, marketCap: { value: null, missing: true, asOf: iso(0) }, annual: {} }));
+    mergeSmallcapSnapshots(incoming, merged);
+    const s = read(path.join(merged, '_CON.json'));
+    assert.deepEqual(s.annual, old.annual, 'reserved filename must retain financials'); assert.equal(s.marketCap.value, null);
+  },
+};
 function runPrune(extra = []) { prune(['node', 'prune', '--watchlist', wlPath, '--snapshots', out, ...extra]); }
 function visible(s) {
   const scored = scoreUniverse([s], formulas);
@@ -176,7 +290,8 @@ async function run() {
   print('PASS B5 old sparse snapshot remains present, excluded and unpruned on null');
   // Cold worker + warm merged store: do not overwrite the merged financials.
   cap = null; reset(); files.delete(snapPath);
-  await pullAll({ stocks: [stock] }, out, 0); s = read(snapPath);
+  process.env.MISSING_CAP_CARRIER = '1';
+  await pullAll({ stocks: [stock] }, out, 0); s = read(snapPath); delete process.env.MISSING_CAP_CARRIER;
   assert.equal(s.meta.fetchedAt, null); assert.equal(s.meta.fundamentalsAsOf, null); assert.deepEqual(s.annual, {});
   files.set(path.join(incoming, filename), files.get(snapPath));
   const originalMerged = structuredClone(seed); originalMerged.marketCap.value = 5e8;
@@ -186,9 +301,23 @@ async function run() {
   const m = read(path.join(merged, filename)); assert.equal(m.marketCap.value, null); assert.deepEqual(m.annual, originalMerged.annual); assert.deepEqual(m.meta, originalMerged.meta);
   assert.equal(smallcapRoute(m).action, 'exclude'); visible(m);
   assert.equal(files.get(path.join(merged, 'CONTROL.json')), files.get(path.join(incoming, 'CONTROL.json')));
-  const workflow = sourceRead(path.join(ROOT, '.github/workflows/smallcap-pull.yml'), 'utf8');
-  assert.match(workflow, /path: snapshots-smallcap-incoming/); assert.match(workflow, /mergeSmallcapSnapshots\('snapshots-smallcap-incoming', 'snapshots-smallcap'\)/);
-  assert(workflow.indexOf('name: Merge small-cap observations') < workflow.indexOf('name: Small-Cap Freshness'));
+  const workflow = sourceRead(path.join(ROOT, '.github/workflows/smallcap-pull.yml'), 'utf8').replace(/\r\n/g, '\n');
+  function jobSteps(name) {
+    const marker = '\n  ' + name + ':\n', start = workflow.indexOf(marker);
+    assert(start >= 0, 'workflow job must exist: ' + name);
+    const tail = workflow.slice(start + marker.length), end = tail.search(/^  [\w-]+:\s*$/m);
+    return (end < 0 ? tail : tail.slice(0, end)).split(/^      - /m).slice(1);
+  }
+  const steps = jobSteps('merge');
+  const download = steps.findIndex(step => /^        uses: actions\/download-artifact@/m.test(step));
+  const merge = steps.findIndex(step => /^        run: .*mergeSmallcapSnapshots\(/m.test(step));
+  const save = steps.findIndex(step => /^        uses: actions\/cache\/save@/m.test(step));
+  assert.match(steps[download], /^          path: snapshots-smallcap-incoming$/m); assert.match(steps[download], /^          merge-multiple: true$/m);
+  assert(download < merge && merge < save, 'merge must run after download and before cache save in merge job');
+  const carrierSteps = jobSteps('pull').filter(step => /^          MISSING_CAP_CARRIER:/m.test(step));
+  assert.equal(carrierSteps.length, 1); assert.match(carrierSteps[0], /^          MISSING_CAP_CARRIER: '1'$/m);
+  assert.match(carrierSteps[0], /^        run: node pull-yahoo\.js .*--output snapshots-smallcap/m);
+  assert.equal((workflow.match(/^\s*MISSING_CAP_CARRIER:/gm) || []).length, 1);
   print('PASS B5 cold-worker merge: null wins, financials survive, valid control byte-identical');
   // Explicit missing-size observations must not leak into the Survival board.
   // A measured cap still permits Survival, including with a leftover missing flag.
@@ -206,7 +335,8 @@ async function run() {
   // First absence is persisted even without removals and without --force.
   reset(); files.delete(snapPath); const raw = files.get(wlPath); const n = writes.length;
   runPrune(['--dry-run']); assert.equal(files.get(wlPath), raw); assert.equal(writes.length, n);
-  runPrune(); assert.equal(read(wlPath).stocks[0].missingSnapshotSince, iso(0), 'first absence must not inherit watchlist age');
+  runPrune(['--force']); assert.equal(read(wlPath).stocks.length, 1, 'first absence must not inherit watchlist age');
+  assert.equal(read(wlPath).stocks[0].missingSnapshotSince, iso(0));
   assert.equal(read(wlPath).lastAutoPrune, undefined); assert.equal(read(wlPath).preservedSidecar, 'unchanged');
   now += day; runPrune(); assert.equal(read(wlPath).stocks.length, 1);
   files.set(snapPath, JSON.stringify(seed)); runPrune(); assert(!Object.hasOwn(read(wlPath).stocks[0], 'missingSnapshotSince'));
@@ -222,6 +352,10 @@ async function run() {
   reset(40); cap = 1e6; r = await pullAll({ stocks: [stock] }, out, 0);
   assert.equal(r.results[0]?.status, 'skipped-mcap'); assert(!files.has(snapPath)); assert(!files.has(cachePath));
   print('PASS B5 measured below-floor control unchanged');
+  for (const [name, check] of Object.entries(reviewCases)) {
+    now = Date.parse('2026-09-27T00:00:00.000Z'); // Keep the fast-path fixtures young after the 31-day prune test.
+    await check(); print('PASS B5 review ' + name);
+  }
 }
 
 async function validControl() {
@@ -232,5 +366,6 @@ async function validControl() {
     print('VALID_CONTROL ' + JSON.stringify({ age, snapshot: read(snapPath), cache: files.get(cachePath) }));
   }
 }
-(process.argv.includes('--valid-only') ? validControl() : run()).then(() => print('B5_GUARD_PASS diskWrites=0 networkCalls=0'))
+const reviewArg = process.argv.find(arg => arg.startsWith('--review-case='));
+(reviewArg ? reviewCases[reviewArg.split('=')[1]]() : process.argv.includes('--valid-only') ? validControl() : run()).then(() => print('B5_GUARD_PASS diskWrites=0 networkCalls=0'))
   .catch(e => { process.stderr.write('B5_GUARD_FAILURE: ' + e.message + '\n' + e.stack + '\n'); process.exitCode = 1; });

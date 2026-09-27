@@ -35,7 +35,7 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // tickers with `_` so the filename is portable. The ticker inside the JSON is
 // unchanged — only the on-disk filename differs.
 // audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
-const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
+const { safeSnapshotFilename, isMetadataSnapshot } = require('./lib/snapshot-fs.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 // T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
@@ -3200,6 +3200,11 @@ function countSkippedMcap(results) {
 function preserveMissingMarketCap(outputDir, stock, observedAt, source) {
   const file = path.join(outputDir, safeSnapshotFilename(stock.ticker));
   const preserved = fs.existsSync(file);
+  // Only SmallCap workers may transport a null observation without a baseline.
+  // Main-store tickers never seen before remain absent; no fictitious snapshot.
+  if (!preserved && process.env.MISSING_CAP_CARRIER !== '1') {
+    return { ticker: stock.ticker, status: 'missing-market-cap', preserved, observedAt };
+  }
   const snapshot = preserved ? JSON.parse(fs.readFileSync(file, 'utf8')) : {
     meta: {
       ticker: stock.ticker, name: stock.name || stock.ticker,
@@ -3213,6 +3218,8 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source) {
     throw new Error('Cannot preserve invalid snapshot for ' + stock.ticker);
   }
   snapshot.marketCap = { value: null, source, confidence: 0, asOf: observedAt, missing: true };
+  // Reached only after a substantive full response: not-founds are consecutive.
+  if (snapshot.meta) delete snapshot.meta.notFoundStreak;
   writeFileAtomic(file, JSON.stringify(snapshot));
   return { ticker: stock.ticker, status: 'missing-market-cap', preserved, observedAt };
 }
@@ -3226,7 +3233,7 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
   for (const name of fs.readdirSync(incomingDir).filter(n => n.endsWith('.json')).sort()) {
     const raw = fs.readFileSync(path.join(incomingDir, name), 'utf8');
     const incoming = JSON.parse(raw);
-    if (!name.startsWith('_') && incoming.marketCap && incoming.marketCap.missing === true) {
+    if (!isMetadataSnapshot(name) && incoming.marketCap && incoming.marketCap.missing === true) {
       const ticker = incoming.meta && incoming.meta.ticker;
       const at = incoming.marketCap.asOf;
       if (!ticker || safeSnapshotFilename(ticker) !== name || incoming.marketCap.value !== null ||
@@ -3235,7 +3242,8 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
       if (fs.existsSync(target)) {
         preserveMissingMarketCap(outputDir, { ticker }, at, incoming.marketCap.source);
       } else {
-        writeFileAtomic(target, raw);
+        // A carrier only invalidates an existing baseline; it is not a company snapshot.
+        continue;
       }
       const written = JSON.parse(fs.readFileSync(target, 'utf8'));
       if (written.marketCap.value !== null || written.marketCap.missing !== true) {
@@ -3560,6 +3568,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_priceonly: nPriceOnly,
         ..._selectorCounters(),
         n_skipped_mcap: skippedMcap,
+        n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
         n_ccy_missing_completely: results.filter(r => r && r.status === 'ccy-missing-completely').length,
         // Tag 464: vor dem Abruf aus DIESER Scheibe entfernt (Small-Cap-Eigentumsgrenze).
         // n_total oben ist bereits ohne sie; der Merge braucht die Zahl, weil er n_total
@@ -3676,7 +3685,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
     const q = await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
     if (!Number.isFinite(q && q.marketCap)) {
-      return preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quote');
+      throw new Error('price-only refused: quote without finite marketCap - full pull decides');
     }
     // P0-Haertung 2 (F-CGPT-003): frueher nur `if (!q)`. Eine wahrheitswerte, aber
     // leere Quote ({currency:'USD'}) aktualisierte nichts, schrieb den Snapshot
@@ -3793,7 +3802,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       }
     }
     if (!Number.isFinite(existing.marketCap && existing.marketCap.value)) {
-      return preserveMissingMarketCap(outputDir, stock, newAsOf, 'yahoo_quote');
+      throw new Error('price-only refused: converted marketCap is non-finite - full pull decides');
     }
     // T322: ADS lines Yahoo prices with the ordinary share count (price is USD here). A stale
     // verdict here may only mean stale inputs (old price/shares from disk) -> the full pull decides.
@@ -4014,11 +4023,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
       const yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker);
+      if (!yahoo || !Object.values(yahoo).some(v => v && typeof v === 'object' && Object.keys(v).length)) {
+        throw new Error('full pull refused: empty quoteSummary cannot confirm a live company');
+      }
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
       if (!Number.isFinite(canonical.marketCap && canonical.marketCap.value)) {
-        results.push(preserveMissingMarketCap(outputDir, stock, asOf, 'yahoo_quoteSummary'));
-        _log('WARN', `  ${stock.ticker} marketCap missing: snapshot/cache retained, size eligibility excluded`);
+        const missing = preserveMissingMarketCap(outputDir, stock, asOf, 'yahoo_quoteSummary');
+        results.push(missing);
+        _log('WARN', `  ${stock.ticker} marketCap missing: ${missing.preserved ? 'snapshot/cache retained' : 'no existing snapshot'}, size eligibility excluded`);
         return;
       }
       if (preserveSnapshotForMissingCurrency(canonical, stock, outputDir, results)) {
@@ -5023,6 +5036,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     n_total: watchlist.stocks.length,
     n_ok: okResultsFinal.length,
     n_skipped_mcap: skippedMcapFinal,
+    n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
     n_failed: failures.length,
     _silentErrors,
     // FN-2: derselbe Zaehler maschinenlesbar. Das Protokoll ist die Sichtspur, das
@@ -5049,7 +5063,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diesem Manifest bereits die gefilterte Liste. Nur der Merge, der n_total durch das volle
   // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, ..._selectorCounters(), n_skipped_mcap: manifest.n_skipped_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, ..._selectorCounters(), n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  _log('INFO', `Missing-market-cap observations: ${manifest.n_missing_mcap} (not counted as successful pulls)`);
   // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, _manifestSubsetTag
     ? '_manifest.subset-' + _manifestSubsetTag + '.json'

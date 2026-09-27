@@ -251,7 +251,8 @@ function main(argv = process.argv) {
         absenceClockChanged = true;
       }
       const absenceDays = (now - missingSince) / 86400000;
-      if (absenceDays > args.pruneNoDataDays) {
+      // Preserve the legacy/manual-entry exemption; the clock alone is diagnostic.
+      if ((entry.added_at || entry.addedAt) && absenceDays > args.pruneNoDataDays) {
         const reason = 'no-snapshot-after-' + args.pruneNoDataDays + 'd';
         pruned.push({ ticker: entry.ticker, reason });
         console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
