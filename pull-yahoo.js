@@ -62,14 +62,14 @@ function _applyAdsHandTable(snap, ticker, price) {
  * @param {object} snap Unconverted snapshot (meta stamped).
  * @param {string} origCurrency Reporting currency the converter uses.
  * @param {number} factor origCurrency -> USD factor.
- * @returns {number} Factor for annual.* and timeseries.*.
+ * @returns {{factor: number, status: string, series?: string}} Statement factor and optional annual-only scope.
  */
 function _statementFactor(snap, origCurrency, factor) {
   const r = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE);
   const tk = snap && snap.meta && snap.meta.ticker;
-  if (r.status === 'corrected') _log('INFO', `  ${tk}: statement series kept in USD (statement-currency hand table), ${origCurrency} factor only on financialData`);
+  if (r.status === 'corrected') _log('INFO', `  ${tk}: ${r.series === 'annual' ? 'annual' : 'statement'} series kept in USD (statement-currency hand table), ${origCurrency} factor on financialData${r.series === 'annual' ? ' and quarterly series' : ''}`);
   else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, reporting factor used: ${r.reason}`);
-  return r.factor;
+  return r;
 }
 
 let YahooFinance;
@@ -1373,12 +1373,12 @@ function _convertSnapshotToUSD(snap) {
   }
   const scaleTrading = (item) => scaleTradingBy(item, tradingFactor);      // Stueck-Kurse
   const scaleAggregat = (item) => scaleTradingBy(item, tradingAggFactor);  // Groessen
-  // Statement-currency hand table (2026-09-26): Petrobras/Embraer statement series are USD although
-  // Yahoo's financialCurrency (right for revenueTTM/ebitda) says BRL. Row + visible mismatch ->
-  // factor 1 for annual.*/timeseries.*; otherwise stmtFactor === factor (no change). Must read the
-  // UNSCALED revenueTTM, so it runs before the metrics loop below.
-  const stmtFactor = _statementFactor(snap, origCurrency, factor);
-  const scaleStmt = (item) => scaleTradingBy(item, stmtFactor);
+  // Proven USD statement rows override the reporting factor while the mismatch remains visible.
+  // MODEC is annual-only: its quarterly series still use the JPY reporting factor. Read the
+  // UNSCALED revenueTTM before the metrics loop; omitted series preserves the original all-series scope.
+  const stmt = _statementFactor(snap, origCurrency, factor);
+  const scaleAnnual = (item) => scaleTradingBy(item, stmt.factor);
+  const scaleQuarter = (item) => scaleTradingBy(item, stmt.series === 'annual' ? factor : stmt.factor);
 
   // Tag 232c-8: route marketCap through the trading scaler. Equivalent to
   // scale() when ticker is not ADR-class (tradingFactor === factor, no-op).
@@ -1433,7 +1433,7 @@ function _convertSnapshotToUSD(snap) {
       // math) and desynced it from the unscaled meta.sharesOutstanding. YoY-ratio
       // consumers cancel the factor and are unaffected either way. Skip scaling.
       if (key === 'annualShares') continue;
-      if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scaleStmt);
+      if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scaleAnnual);
     }
   }
   if (snap.timeseries) {
@@ -1446,7 +1446,7 @@ function _convertSnapshotToUSD(snap) {
       // er macht die Absicht explizit und haelt, falls scale() je numerischer wird.
       // (Der frühere Kommentar behauptete "das würde sie zu NaN machen" — das stimmt nicht.)
       if (key.endsWith('Ends')) continue;
-      if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scaleStmt);
+      if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scaleQuarter);
     }
   }
   snap.meta.reportingCurrencyOriginal = origCurrency;
