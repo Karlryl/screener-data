@@ -219,9 +219,17 @@ test('ueber MIN_WINSOR_SAMPLE klemmt der Wachstumsterm den Ausreisser, r40 bleib
   const fs = require('node:fs'), path = require('node:path');
   const overview = JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8'));
   const p = overview.rows.find((r) => r.ticker === 'PHANTOM');
-  assert.ok(res.bounds, 'ab MIN_WINSOR_SAMPLE muss es Schranken geben');
+  assert.ok(Array.isArray(res.bounds), 'die Schranken kommen als [lo, hi]-Tupel');
+  assert.equal(res.bounds.length, 2, 'genau zwei Schranken');
+  const [lo, hi] = res.bounds;
+  assert.ok(Number.isFinite(lo) && Number.isFinite(hi),
+    'ab MIN_WINSOR_SAMPLE muessen beide Schranken endlich sein');
+  assert.ok(lo < hi, 'die Fixture verteilt Wachstum auf verschiedene Werte');
   assert.ok(p, 'die Zeile bleibt im Brett — nur ihr Wachstumsterm wird geklemmt');
   assert.equal(p.revGrowthYoYPct, 29049, 'der ROHE Wert reist unveraendert mit');
+  assert.equal(p.revGrowthPctUsed, 59, 'die Fixture 20..59 plus Phantom klemmt auf 59');
+  assert.equal(p.revGrowthPctUsed, Math.round(hi * 10) / 10,
+    'das Phantom muss exakt auf der oberen Schranke in Export-Praezision (eine Nachkommastelle) liegen');
   assert.ok(p.revGrowthPctUsed < 200, 'der verwendete Term muss geklemmt sein, ist ' + p.revGrowthPctUsed);
   assert.ok(Math.abs((p.revGrowthPctUsed + p.fcfMarginPct) - p.r40) <= 0.11, 'r40 muss aufgehen');
   f.aufraeumen();

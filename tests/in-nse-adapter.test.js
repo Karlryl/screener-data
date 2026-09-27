@@ -339,7 +339,7 @@ test('bei mehreren Meldungen desselben Jahres gewinnt die zuletzt verbreitete', 
   const l = listen('OFSS');
   const gewaehlt = M.waehleMeldungen(l.integrated, l.jahres);
   const fy2026 = gewaehlt.get('2026-03-31');
-  assert.ok(fy2026, 'GJ2026 muss ausgewaehlt sein');
+  assert.equal(fy2026.fyEnde, '2026-03-31', 'GJ2026 muss ausgewaehlt sein');
   // Fixture-Kontrolle: es gibt fuer GJ2026 wirklich zwei Konzern-Meldungen.
   const kandidaten = l.integrated.filter((r) => r.qe_Date === '31-MAR-2026'
     && r.consolidated === 'Consolidated' && r.type === 'Integrated Filing- Financials');
@@ -349,6 +349,9 @@ test('bei mehreren Meldungen desselben Jahres gewinnt die zuletzt verbreitete', 
   const revision = kandidaten.find((r) => r.type_Sub === 'Revision');
   const original = kandidaten.find((r) => r.type_Sub === 'Original');
   assert.equal(revision.broadcast_Date, null, 'Fixture-Kontrolle: Revision ohne broadcast_Date');
+  assert.equal(revision.creation_Date, '22-Apr-2026 22:31:55', 'Fixture-Kontrolle: spaeteste Verbreitung');
+  assert.equal(fy2026.zeit, Date.parse('2026-04-22T22:31:55Z'),
+    'die Auswahl muss den spaeteren Verbreitungszeitpunkt der Revision tragen');
   assert.ok(M.nseZeit(revision.creation_Date) > M.nseZeit(original.creation_Date));
   assert.equal(fy2026.url, revision.xbrl, 'die Revision muss die Original-Meldung schlagen');
 });
@@ -652,7 +655,7 @@ testAsync('ein zweiter Lauf ergaenzt den Bestand, statt ihn zu ersetzen (Wiedera
   fs.unlinkSync(tmp);
   assert.ok(j['FRUEHER.NS'], 'der Altbestand darf nicht verschwinden');
   assert.equal(j['FRUEHER.NS'].nfy, 2024);
-  assert.ok(j['OFSS.NS'], 'der neue Name muss dazukommen');
+  assert.equal(j['OFSS.NS'].nfy, 2025, 'der neue Name traegt das juengste im Fake-Abruf gelieferte GJ');
 });
 
 testAsync('der zweite Lauf nimmt sich die FEHLENDEN Namen zuerst vor', async () => {
@@ -699,7 +702,8 @@ testAsync('drei Symbol-Probleme in Folge beenden den Lauf NICHT (kein Fehlalarm)
   const j = JSON.parse(fs.readFileSync(tmp, 'utf8'));
   fs.unlinkSync(tmp);
   // Der gesunde Name DAHINTER muss trotzdem angekommen sein.
-  assert.ok(j['OFSS.NS'], 'OFSS.NS wurde nie versucht — die Notbremse hat falsch ausgeloest');
+  assert.equal(j['OFSS.NS'].nfy, 2025,
+    'OFSS.NS muss hinter den Ausfaellen mit dem juengsten gelieferten Fixture-GJ ankommen');
 });
 
 testAsync('unter den vorhandenen Namen kommt der aelteste Stand zuerst', async () => {

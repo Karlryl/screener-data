@@ -1,0 +1,56 @@
+[
+  {
+    "module": "scripts/write-board-history.js",
+    "fn": "run",
+    "test": "tests/board-history-p99-sidecar.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "scripts/write-board-history.js",
+    "fn": "run",
+    "test": "tests/board-history.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "scripts/build-krannual.js",
+    "fn": "main",
+    "test": "tests/p0-haertung3-builder-cache-cursor.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "scripts/build-cnannual.js",
+    "fn": "main",
+    "test": "tests/cn-jahresreihen.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "scripts/build-cnannual.js",
+    "fn": "pruefeSchema",
+    "test": "tests/cn-jahresreihen.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "lib/e1-compression.js",
+    "fn": "evaluateBoard",
+    "test": "tests/e1-compression.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "scripts/build-inannual.js",
+    "fn": "waehleMeldungen",
+    "test": "tests/in-nse-adapter.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "scripts/snapshot-ticker-map.js",
+    "fn": "rotiereGrundbild",
+    "test": "tests/bk-sk-001-mitschnitt-stille-pannen.test.js",
+    "expect": "killed"
+  },
+  {
+    "module": "scripts/exit-event-resolver.js",
+    "fn": "resolveExitEvent",
+    "test": "tests/exit-event-resolver.test.js",
+    "expect": "killed"
+  }
+]

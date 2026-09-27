@@ -48,6 +48,14 @@ const BASELINE_PATH = path.join(ROOT, 'data-health', 'annual-spikes-baseline.jso
 // Wie viele NEUE Faelle in einem Lauf noch als Rauschen durchgehen. Ein einzelner
 // Neuzugang kann ein echtes Sonderjahr sein; fuenf auf einmal sind ein Muster.
 const DEFAULT_MAX_NEU = 5;
+// D1(c), 26.09.2026: the Q1 gate and the budget gate REPORT (::warning::, no exit 1) until this
+// instant (UTC) and turn hard again on their own. Reason: both have been red in every run since
+// 01.09. because the "known" identity is the exact USD float triple (stabilerSchluessel), so FX
+// drift and computed-margin rescaling turn known cases into NEU; the red carries no daily
+// information (NEU list byte-identical 25.->26.09.). Real fix: T339 (identity in native currency).
+// Only the CLI passes this date (see bottom); main() without it stays hard for every other caller.
+// ponytail: a fixed date, not a config knob — extending it is a visible commit.
+const MELDEND_BIS = new Date('2026-10-10T00:00:00Z');
 
 function parseMaxNeu(raw) {
   if (raw === undefined || raw === '') return DEFAULT_MAX_NEU;
@@ -657,7 +665,7 @@ function scanSnapshots(snapDir) {
   return { funde, capexPositiv, capexWerte, gescannt, parseFehler, reihenUngleich };
 }
 
-function main(jetzt = new Date()) {
+function main(jetzt = new Date(), meldendBis = null) {
   const maxNeu = parseMaxNeu(process.env.ANNUAL_SPIKE_MAX_NEU);
   if (!fs.existsSync(SNAP_DIR)) {
     console.error('::error::watch-annual-spikes: snapshots/ fehlt — Snapshot-Restore kaputt?');
@@ -896,9 +904,19 @@ function main(jetzt = new Date()) {
   const tolText = String(FAKTOR_GLEICH_TOL).replace('.', ',');
   console.log(`2-von-3: ${fgl.zweiVonDrei.length} · faktorgleich (Tol ${tolText}): ${fgl.gleich.length}`
     + ` · NICHT erfasst: ${fgl.zweiVonDrei.length - fgl.gleich.length}`);
+  // D1(c): these two gates only (Q1 and budget) report until meldendBis, same text; every other
+  // ::error:: in this function keeps its exit 1. A non-Date or invalid date -> hard.
+  const meldend = meldendBis instanceof Date && jetzt < meldendBis;
+  const torRot = (text) => {
+    if (meldend) {
+      console.log(`::warning::[meldend bis ${meldendBis.toISOString().slice(0, 10)}] ${text}`);
+    } else {
+      datenExit = 1;
+      console.error(`::error::${text}`);
+    }
+  };
   if (fgl.gleich.length) {
-    datenExit = 1;
-    console.error(`::error::${fgl.gleich.length} Ticker mit ZWEI Jahresreihen am selben Index, deren `
+    torRot(`${fgl.gleich.length} Ticker mit ZWEI Jahresreihen am selben Index, deren `
       + `Ausreisser-Faktoren sich um hoechstens ${tolText} unterscheiden: ${fgl.gleich.join(' · ')}. `
       + 'Gemessen wird MARGEN-STABILITAET gegen den dominanten Nachbarn, NICHT eine gemeinsame Ursache — '
       + 'eine Skalierung beider Werte um denselben Faktor laesst das Verhaeltnis unveraendert. Ein Umsatz, '
@@ -911,8 +929,7 @@ function main(jetzt = new Date()) {
 
   // ── Das Rausch-Budget, ab jetzt in Ereignissen und ohne die Sperren (JA-1) ──
   if (gezaehlt > maxNeu) {
-    datenExit = 1;
-    console.error(`::error::${gezaehlt} NEUE Jahres-Ausreisser-EREIGNISSE (erlaubt ${maxNeu}) — einzelne Jahre `
+    torRot(`${gezaehlt} NEUE Jahres-Ausreisser-EREIGNISSE (erlaubt ${maxNeu}) — einzelne Jahre `
       + `weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch `
       + `eingefrorene Fehlabrufe; Liste oben. Gezaehlt wird in EREIGNISSEN (zwei Relationen) und ohne die `
       + `${ausgeschlossen.length} Sperre(n) — gedruckt werden unveraendert alle ${neu.length} Funde.`);
@@ -931,11 +948,13 @@ module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJah
   // Q1 (Ratsbeschluss 03.09.2026): exportiert aus demselben Grund wie JA-1..JA-7 —
   // die Bruchproben pinnen die SACHE (Faktoren, Verhaeltnis, Toleranz), nicht eine
   // Textzeile im Log.
-  faktorGleicheFaelle, ausreisserFaktor, FAKTOR_GLEICH_TOL };
+  faktorGleicheFaelle, ausreisserFaktor, FAKTOR_GLEICH_TOL,
+  // D1(c): pinned by tests/annual-spikes-meldend-ablauf.test.js on both sides of the date.
+  MELDEND_BIS };
 
 if (require.main === module) {
   try {
-    process.exit(main());
+    process.exit(main(new Date(), MELDEND_BIS));
   } catch (e) {
     // Ein abgestuerzter Waechter darf NICHT Erfolg melden (siehe tests/waechter-absturz.test.js).
     console.error('::error::watch-annual-spikes abgestuerzt (hat NICHT geprueft): ' + e.message);

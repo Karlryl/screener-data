@@ -31,10 +31,21 @@ const fs = require('fs');
 const path = require('path');
 const store = require(path.join(__dirname, '..', 'lib', 'price-history-store.js'));
 
+// Missing env values stay silent; explicitly blank values are invalid.
+function leseTageSchwelle(envName, defaultWert, env = process.env, log = console.log) {
+  const raw = env[envName];
+  if (raw === undefined) return defaultWert;
+  const wert = typeof raw === 'string' && raw.trim() !== '' ? Number(raw) : NaN;
+  if (Number.isFinite(wert) && wert >= 0) return wert;
+  const rawAnzeige = String(raw).replace(/\r/g, '\\r').replace(/\n/g, '\\n');
+  log(`::warning::PREIS-SCHWELLE: ${envName}="${rawAnzeige}" ist keine Zahl >= 0 — nutze Default ${defaultWert}`);
+  return defaultWert;
+}
+
 // Zaehlgrenzen, keine Alarmschwellen: sie entscheiden, in welchen Eimer ein Titel
 // faellt, nicht ob der Schritt rot wird.
-const NEU_TAGE = Number(process.env.PREIS_NEU_TAGE || 14);
-const ALT_TAGE = Number(process.env.PREIS_ALT_TAGE || 30);
+const NEU_TAGE = leseTageSchwelle('PREIS_NEU_TAGE', 14);
+const ALT_TAGE = leseTageSchwelle('PREIS_ALT_TAGE', 30);
 
 // DIE Alarmschwelle. Karl-Entscheid F-29c 10.08.2026, Herleitung in der Rat-Vorlage
 // (_RAT-VORLAGE-heartbeat-schwelle-2026-08-10.md, Abschnitt 3c). Bewusst eine feste
@@ -255,7 +266,7 @@ function main(opts = {}) {
   return 0;
 }
 
-module.exports = { messePreisAbdeckung, watchlistZeilen, istKern, main, KERN_ALARM_ANTEIL };
+module.exports = { messePreisAbdeckung, watchlistZeilen, istKern, main, KERN_ALARM_ANTEIL, leseTageSchwelle };
 
 // exitCode statt process.exit(): node stdout/stderr sind auf eine PIPE (CI) asynchron —
 // process.exit() kann die eben geschriebene ::error::-Zeile abschneiden, und dann faerbt

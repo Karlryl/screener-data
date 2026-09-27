@@ -19,6 +19,15 @@ const path = require('path');
 
 const B = require('../scripts/build-cnannual.js');
 const FIX = require('./fixtures/cn-eastmoney.json');
+const fixtureDirs = [];
+process.once('exit', () => {
+  for (const dir of fixtureDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
+function mkFixtureDir() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cnannual-'));
+  fixtureDirs.push(dir);
+  return dir;
+}
 
 // Der Laeufer sammelt erst und fuehrt dann SEQUENZIELL mit await aus. Ein `try { fn() }` ohne
 // await haette bei den async-Faellen jede Zusicherung als bestanden gezaehlt und die Ablehnung
@@ -247,7 +256,7 @@ function fakeQuelle(fixture) {
 }
 
 test('A+H: 3308.HK wird ueber die A-Seite gebaut — 18 Jahre statt 3, CAS/CNY, Herkunft benannt', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cnannual-'));
+  const dir = mkFixtureDir();
   const out = path.join(dir, 'cn-secannual.json');
   await B.main({ fetchJson: fakeQuelle(FIX), out, aTickers: ['688256.SS'], hkTickers: ['3308.HK'] });
   const store = JSON.parse(fs.readFileSync(out, 'utf8'));
@@ -468,7 +477,7 @@ test('die Bekannt-Liste stellt NUR "nicht baubar" gruen — ein Konventionsbruch
   // Ohne diese Probe waere CN_NICHT_BAUBAR ein Loch: ein Name auf der Liste koennte JEDEN
   // Fehler verschlucken. Erst die Sabotage-Gegenprobe hat die Luecke gezeigt.
   assert.ok(B.CN_NICHT_BAUBAR['6880.HK'], 'VORAUSSETZUNG: 6880.HK steht auf der Liste');
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cnannual-'));
+  const dir = mkFixtureDir();
 
   // (a) der BEKANNTE Fall (zwei widerspruechliche Jahreszeilen): Lauf bleibt gruen, aber der
   //     Name wird nicht geschrieben — kein geratener Wert.
@@ -636,7 +645,7 @@ test('Anker 9992.HK Pop Mart FY2025', () => {
 // I) AUSGABEFORMAT — dieselbe Form wie tw-/kr-/jp-secannual.json
 // =====================================================================================
 test('Ausgabeschema: Pflichtfelder vorhanden, Serien als {value}-Objekte, newest-first', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cnannual-'));
+  const dir = mkFixtureDir();
   const out = path.join(dir, 'cn-secannual.json');
   await B.main({ fetchJson: fakeQuelle(FIX), out, aTickers: ['688256.SS'], hkTickers: ['9992.HK'] });
   const store = JSON.parse(fs.readFileSync(out, 'utf8'));
@@ -664,13 +673,19 @@ test('Ausgabeschema: Pflichtfelder vorhanden, Serien als {value}-Objekte, newest
 });
 
 test('Altbestand bleibt erhalten: ein zweiter Lauf ueberschreibt keine fremden Namen', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cnannual-'));
+  const dir = mkFixtureDir();
   const out = path.join(dir, 'cn-secannual.json');
   fs.writeFileSync(out, JSON.stringify({ 'FREMD.SS': { source: 'alt', fys: [2024] } }));
   await B.main({ fetchJson: fakeQuelle(FIX), out, aTickers: ['688256.SS'], hkTickers: [] });
   const store = JSON.parse(fs.readFileSync(out, 'utf8'));
-  assert.ok(store['FREMD.SS'], 'der Altbestand wurde weggeschrieben');
-  assert.ok(store['688256.SS'], 'der neue Name fehlt');
+  assert.deepEqual(store['FREMD.SS'], { source: 'alt', fys: [2024] },
+    'der Altbestand muss unveraendert erhalten bleiben');
+  const fixtureFys = [...new Set(FIX.a['688256.SH'].inc
+    .filter((r) => r.REPORT_DATE.slice(5, 10) === '12-31')
+    .map((r) => Number(r.REPORT_DATE.slice(0, 4))))].sort((a, b) => b - a);
+  assert.deepEqual(store['688256.SS'].fys, fixtureFys, 'alle abgeschlossenen Fixture-Jahre kommen an');
+  assert.equal(store['688256.SS'].source,
+    'Eastmoney Datacenter F10 (inoffizieller Kanal, schema-gewacht)');
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

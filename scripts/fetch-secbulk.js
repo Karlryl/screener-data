@@ -175,6 +175,29 @@ function parseLimit(argv) {
   return limit;
 }
 
+/** Write one line, waiting for backpressure without hanging on a failed/closed stream. */
+async function schreibeZeile(strom, text) {
+  if (strom.errored) throw strom.errored;
+  if (!strom.write(text)) {
+    await new Promise((resolve, reject) => {
+      const beiDrain = () => { aufraeumen(); resolve(); };
+      const aufraeumen = require('node:stream').finished(strom, { readable: false }, (err) => {
+        strom.removeListener('drain', beiDrain);
+        aufraeumen();
+        reject(err || new Error('SEC-Bulk-Schreibstrom vor drain beendet'));
+      });
+      strom.once('drain', beiDrain);
+    });
+  }
+  if (strom.errored) throw strom.errored;
+}
+
+/** Publish only after all buffered writes have finished successfully. */
+async function beendeStrom(strom) {
+  strom.end();
+  await require('node:stream/promises').finished(strom);
+}
+
 async function run() {
   const argv = process.argv.slice(2);
   const limit = parseLimit(argv);
@@ -220,7 +243,9 @@ async function run() {
   console.log('Abrufe: ' + bloecke.length + ' Bloecke, ' + (bytes / 1e6).toFixed(0) + ' MB'
     + ' (statt ' + (gesamt / 1e9).toFixed(2) + ' GB Volldurchlauf)');
 
+  let stromFehler = null;
   const strom = fs.createWriteStream(OUT + '.tmp');
+  strom.on('error', (e) => { stromFehler = e; });
   let geschrieben = 0, kaputt = 0;
   for (let i = 0; i < bloecke.length; i++) {
     const b = bloecke[i];
@@ -236,17 +261,20 @@ async function run() {
           // taxonomie = HERKUNFT der Reihen (us-gaap|ifrs-full|null). Ohne sie waeren die beiden
           // Bilanzierungsstandards in der Langhistorie nicht auseinanderzuhalten — dieselbe Firma
           // kann sich unter zwei Standards um Prozente unterscheiden. null = nicht verfuegbar.
-          strom.write(JSON.stringify({ ticker: tk, cik: e.cik, name: cf.entityName || null, taxonomie: reihen.taxonomie, annual: reihen.annual }) + '\n');
+          await schreibeZeile(strom, JSON.stringify({ ticker: tk, cik: e.cik, name: cf.entityName || null, taxonomie: reihen.taxonomie, annual: reihen.annual }) + '\n');
           geschrieben += 1;
         }
-      } catch (err) { kaputt += 1; }
+      } catch (err) {
+        if (stromFehler || strom.errored || strom.destroyed) throw stromFehler || strom.errored || err;
+        kaputt += 1;
+      }
     }
     if (i % 25 === 0 || i === bloecke.length - 1) {
       console.log('  ' + (i + 1) + '/' + bloecke.length + ' Bloecke · ' + geschrieben + ' Zeilen');
     }
     await sleep(PAUSE_MS);
   }
-  await new Promise((res) => strom.end(res));
+  await beendeStrom(strom);
   veroeffentliche(OUT + '.tmp', OUT, geschrieben, kaputt);
   console.log('fertig: ' + geschrieben + ' Zeilen -> ' + OUT + ' (' + (fs.statSync(OUT).size / 1e6).toFixed(1) + ' MB)');
 }
@@ -270,6 +298,6 @@ function veroeffentliche(tmpPfad, outPfad, geschrieben, kaputt) {
   fs.renameSync(tmpPfad, outPfad);
 }
 
-module.exports = { baueBloecke, cikKarte, usTicker, veroeffentliche, parseLimit, BULK_URL };
+module.exports = { baueBloecke, cikKarte, usTicker, veroeffentliche, parseLimit, BULK_URL, schreibeZeile, beendeStrom };
 
 if (require.main === module) run().catch((e) => { console.error('::error::' + e.message); process.exit(1); });

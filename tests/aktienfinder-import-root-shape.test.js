@@ -50,17 +50,20 @@ function assertNoNetworkAttempt(run) {
 }
 
 test('offline guard is active and inherited by import subprocesses', () => {
-  assert.ok(globalThis[offlineGuard.STATE_KEY]);
+  assert.deepEqual(globalThis[offlineGuard.STATE_KEY], { attempts: [] },
+    'der installierte Guard muss ein leeres Versuchsprotokoll tragen');
+  assert.equal(globalThis[offlineGuard.STATE_KEY], offlineGuard.state, 'der Export muss denselben Guard-Zustand tragen');
   assert.match(String(process.env.NODE_OPTIONS), /offline-network-guard/);
   const child = spawnSync(process.execPath, ['-e', [
     "const key = Symbol.for('screener.offlineNetworkGuard');",
-    'process.stdout.write(String(Boolean(globalThis[key])));',
+    'process.stdout.write(JSON.stringify(globalThis[key]));',
   ].join(' ')], {
     encoding: 'utf8',
     env: { ...process.env },
   });
   assert.equal(child.status, 0, child.stderr);
-  assert.equal(child.stdout, 'true', 'import subprocess environment must preload the guard');
+  assert.deepEqual(JSON.parse(child.stdout), { attempts: [] },
+    'import subprocess environment must preload a guard with an empty attempt log');
 });
 
 test('array root is backed up and refused without explicit reset', () => {

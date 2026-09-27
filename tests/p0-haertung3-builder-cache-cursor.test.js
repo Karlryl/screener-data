@@ -94,7 +94,7 @@ async function krannualTests() {
       /unvollstaendig/);
     const danach = JSON.parse(fs.readFileSync(p, 'utf8'));
     assert.equal(danach['000660.KS'].annualOpInc.length, 10, 'die zehnjaehrige Serie muss stehen bleiben');
-    assert.ok(danach['ALT.KS'], 'ein Altname darf nicht aus dem Store fallen');
+    assert.deepEqual(danach['ALT.KS'], ALT_STORE['ALT.KS'], 'der Altname muss inhaltlich erhalten bleiben');
   });
 
   await atest('F-021 vollstaendiger Abruf aktualisiert den Ticker und laesst Altnamen stehen', async () => {
@@ -104,7 +104,7 @@ async function krannualTests() {
     await krannual.main({ getJSON: fakeDart(alleJahre), out: p });
     const danach = JSON.parse(fs.readFileSync(p, 'utf8'));
     assert.equal(danach['000660.KS'].annualOpInc.length, alleJahre.length, 'frische Serie geschrieben');
-    assert.ok(danach['ALT.KS'], 'Altname bleibt (Merge, kein Neu-Write)');
+    assert.deepEqual(danach['ALT.KS'], ALT_STORE['ALT.KS'], 'Altname bleibt unveraendert (Merge, kein Neu-Write)');
   });
 
   await atest('F-021 korrupter Store wirft VOR dem Schreiben — die Datei bleibt unangetastet', async () => {
@@ -153,7 +153,7 @@ async function krannualTests() {
     const danach = JSON.parse(fs.readFileSync(p, 'utf8'));
     assert.equal(danach['000660.KS'].annualOpInc.length, 10,
       'die zehnjaehrige Serie wurde durch einen Teilstand ersetzt — genau der Befund');
-    assert.ok(danach['ALT.KS'], 'ein Altname darf nicht aus dem Store fallen');
+    assert.deepEqual(danach['ALT.KS'], ALT_STORE['ALT.KS'], 'der Altname muss inhaltlich erhalten bleiben');
   });
 
   await atest('R609-2 dasselbe fuer 800 (Wartung) und 010 (ungueltiger Key)', async () => {
@@ -173,7 +173,7 @@ async function krannualTests() {
     await krannual.main({ getJSON: dartMitStatus({ 2019: '013' }), out: p });
     const danach = JSON.parse(fs.readFileSync(p, 'utf8'));
     assert.ok(danach['000660.KS'].annualOpInc.length >= 3, 'der Ticker wurde regulaer aktualisiert');
-    assert.ok(danach['ALT.KS'], 'Altname bleibt');
+    assert.deepEqual(danach['ALT.KS'], ALT_STORE['ALT.KS'], 'Altname bleibt unveraendert');
   });
 }
 
