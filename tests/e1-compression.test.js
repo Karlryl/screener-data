@@ -27,7 +27,15 @@ function check(name, fn) {
 }
 
 // ── Fixture-Helfer ───────────────────────────────────────────────────────────
-function mkBase() { return fs.mkdtempSync(path.join(os.tmpdir(), 'e1-')); }
+const fixtureDirs = [];
+process.once('exit', () => {
+  for (const dir of fixtureDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
+function mkBase() {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'e1-'));
+  fixtureDirs.push(base);
+  return base;
+}
 
 // Board-Zeile im board-history-Vintage-Format. evSales = Bewertungs-Floor-Metrik;
 // glvl/accel = axisBreakdown-Perzentile; psAsOf = echte Bewertungs-asOf (Freshness-Anker).
@@ -104,7 +112,11 @@ check('(2) Zeile mit revenueQEnds=null feuert regulaer, baut NIE datierte Histor
   rows.forEach((row) => assert.strictEqual(row.pit.revenueQEnds, null, 'Fixture: Arrays undatiert wie live'));
   const r = E.evaluateBoard(mkVintage('semiconductors', DATE, rows), { date: DATE, cfg: cfgTrigger });
   const cand = r.tracks.profitable.triggered.find((c) => c.ticker === 'CHEAP_HI');
-  assert.ok(cand, 'feuert trotz undatierter Quartals-Arrays (E1 nutzt sie nie)');
+  assert.strictEqual(cand.ticker, 'CHEAP_HI', 'feuert trotz undatierter Quartals-Arrays (E1 nutzt sie nie)');
+  assert.deepStrictEqual({ evSales: cand.evSales, evSalesThreshold: cand.evSalesThreshold,
+    revGrowthLevelPct: cand.revGrowthLevelPct, revAccelerationPct: cand.revAccelerationPct },
+  { evSales: 5, evSalesThreshold: 6, revGrowthLevelPct: 85, revAccelerationPct: 85 },
+  'Kandidat traegt die ausloesende Quartil-Schranke und die intakten Wachstumswerte');
   // Kein rekonstruiertes Historien-/Datierungs-Feld im Kandidaten:
   const blob = JSON.stringify(cand);
   assert.ok(!/revenueQEnds|revenueQ|annualRev|reconstructedHistory|quarterEnds/i.test(blob),

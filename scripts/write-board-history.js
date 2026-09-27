@@ -554,6 +554,65 @@ function latestEndMs(ends) {
   return latest;
 }
 
+// ── Quartals-Spur (SHADOW ONLY, Nachtlauf 26.09.2026) ────────────────────────
+// Eine Zeile gilt als „durch ein NEUES berichtetes Quartal erklärt", wenn alle drei Wächter halten:
+//   P  das jüngste Quartalsende ist später als vorher und liegt 0–120 Tage vor dem Laufdatum,
+//   S  jedes überlappende Quartal behält sein Umsatzverhältnis neu/alt in [0,5 ; 2,0],
+//   J  der neue Quartalsumsatz gegen das Vorquartal liegt in [0,5 ; 2,0].
+// Das Band ist dasselbe wie das Skalen-Tor aus #319 (tests/waehrung-ausliefer-waechter.test.js,
+// SKALEN_UNTEN/SKALEN_OBEN) — dort nur im Test definiert, darum hier eine eigene benannte Konstante.
+// Die Spur URTEILT NICHT: quartalLaneShadow() loggt nur, das echte Urteil bleibt unverändert.
+const QUARTAL_LANE_MAX_ALTER_TAGE = 120;
+const QUARTAL_LANE_BAND = [0.5, 2.0];
+// J vergleicht nur mit dem UNMITTELBAREN Vorquartal: Kalenderquartale liegen 90–92 Tage auseinander,
+// 13/14-Wochen-Fiskalquartale 91/98 — [80, 100] deckt beides, eine Lücke (~180 d) nicht.
+const QUARTAL_LANE_VORGAENGER_TAGE = [80, 100];
+// Striktes YYYY-MM-DD mit Rundreise: Date.parse rollt 2026-06-31 still auf den 1. Juli.
+function strengesDatumMs(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return NaN;
+  const t = Date.parse(s + 'T00:00:00Z');
+  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === s ? t : NaN;
+}
+function neuesQuartalErklaert(prev, cur, runDate) {
+  // null = Zeile unbrauchbar (unmögliches Datum oder doppeltes Quartal). Ein null-Ende ist Füllung
+  // und wird übersprungen; Werte bleiben ungefiltert und werden dort geprüft, wo P/S/J sie nutzen.
+  const paare = (pit) => {
+    const e = pit && pit.revenueQEnds, v = pit && pit.revenueQ;
+    if (!Array.isArray(e) || !Array.isArray(v)) return null;
+    const out = [], gesehen = new Set();
+    for (let i = 0; i < e.length; i++) {
+      if (e[i] == null) continue;
+      const t = strengesDatumMs(e[i]);
+      if (!Number.isFinite(t)) return null;   // F4
+      if (gesehen.has(t)) return null;   // F2: doppeltes Quartal
+      gesehen.add(t);
+      out.push([t, v[i]]);
+    }
+    return out.sort((a, b) => b[0] - a[0]);   // jüngstes Quartal zuerst, Reihenfolge nicht vorausgesetzt
+  };
+  const alt = paare(prev && prev.pit), neu = paare(cur && cur.pit);
+  const lauf = strengesDatumMs(runDate);
+  if (!alt || !neu || !alt.length || neu.length < 2 || !Number.isFinite(lauf)) return false;
+  const imBand = (q) => Number.isFinite(q) && q >= QUARTAL_LANE_BAND[0] && q <= QUARTAL_LANE_BAND[1];
+  const alterTage = (lauf - neu[0][0]) / MS_PER_DAY;
+  if (!(neu[0][0] > alt[0][0] && alterTage >= 0 && alterTage <= QUARTAL_LANE_MAX_ALTER_TAGE)) return false;   // P
+  const abstandTage = (neu[0][0] - neu[1][0]) / MS_PER_DAY;
+  if (!(abstandTage >= QUARTAL_LANE_VORGAENGER_TAGE[0] && abstandTage <= QUARTAL_LANE_VORGAENGER_TAGE[1])) return false;   // F2: Vorquartal
+  if (!Number.isFinite(neu[0][1]) || !Number.isFinite(neu[1][1])) return false;   // F3: jüngste zwei
+  const altWert = new Map(alt);
+  let ueberlappung = 0;
+  for (const [t, v] of neu) {
+    if (!altWert.has(t)) continue;
+    // Auf BEIDEN Seiten leer = stabile Datenlücke der Quelle (09-25: fast nur CN-A-Aktien, 2025-09-30):
+    // zählt nicht als Überlappung, blockiert S aber auch nicht. Nur EINE Seite leer bleibt ein Bruch.
+    if (!Number.isFinite(v) && !Number.isFinite(altWert.get(t))) continue;   // F3: Lücke beidseitig
+    ueberlappung++;
+    if (!Number.isFinite(v) || !Number.isFinite(altWert.get(t))) return false;   // F3: Überlappung
+    if (!imBand(v / altWert.get(t))) return false;   // S
+  }
+  return ueberlappung > 0 && imBand(neu[0][1] / neu[1][1]);   // J
+}
+
 // pitCoverage: Anteil present je Kontroll-Feld über die Kohorte (A9-Attenuations-Ausweis).
 function pitCoverageBlock(rows, date) {
   const fields = ['beta', 'evSales', 'priceGrossProfit', 'revenueQEnds', 'grossProfitQEnds'];
@@ -1177,6 +1236,66 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board, opts) {
   };
 }
 
+// Quartals-Spur SHADOW: dasselbe evaluateGate, nur ohne die durch ein neues Quartal erklärten
+// Zeilen (beide Seiten), gemessen gegen DIESELBE wirksameSchwelle wie das echte Urteil. Liefert
+// ein reines Protokoll-Objekt (oder null) und schreibt nichts: kein Einfluss auf gate, suspect,
+// Exit-Code oder Vintage. Jeder Fehler hier drin wird gefangen und nur als ::warning:: gemeldet.
+function quartalLaneShadow(vintage, priorVintage, gate, gateState, bruch, board, opts, runDate, erklaert = neuesQuartalErklaert) {
+  try {
+    const thr = gate.wirksameSchwelle;
+    if (!priorVintage || gate.abstandZuGross || thr == null) {
+      console.log('[quartal-lane SHADOW] ' + board + ': no value verdict today (no prior or gap too large)');
+      return null;
+    }
+    const zeilen = (v) => [].concat((v.cohort && v.cohort.profitable) || [], (v.cohort && v.cohort.unprofitable) || []);
+    const vorher = new Map(zeilen(priorVintage).map((r) => [r.ticker, r]));
+    const raus = new Set();
+    let n = 0;
+    for (const r of zeilen(vintage)) {
+      const p = vorher.get(r.ticker);
+      if (!(p && Number.isFinite(p.score) && Number.isFinite(r.score))) continue;
+      n++;
+      if (erklaert(p, r, runDate)) raus.add(r.ticker);
+    }
+    const ohne = (v) => ({ ...v, cohort: { ...v.cohort,
+      profitable: ((v.cohort && v.cohort.profitable) || []).filter((r) => !raus.has(r.ticker)),
+      unprofitable: ((v.cohort && v.cohort.unprofitable) || []).filter((r) => !raus.has(r.ticker)) } });
+    const rest = evaluateGate(ohne(vintage), ohne(priorVintage), gateState, bruch, board, opts);
+    const p99Rest = rest.p99Delta;
+    // Alle übrigen Gründe (NaN-Bruch, Coverage, Integrität …) sieht die Spur nicht — sie bleiben stehen.
+    const andereGruende = gate.reasons.filter((x) => x !== 'p99-delta-exceeds-threshold');
+    // Alles erklärt = nichts mehr gemessen: das ist KEIN „OK" (fehlend ≠ sauber), sondern
+    // NO-SURFACE und zählt konservativ als would-be SUSPECT.
+    const keineFlaeche = p99Rest == null && gate.p99Delta != null;
+    const wouldSuspect = andereGruende.length > 0 || keineFlaeche || (p99Rest != null && p99Rest > thr);
+    const f = (x) => (x == null ? '—' : x.toFixed(2));
+    // „real-gate p99", nicht „p99 all": an Lampen-Ausschluss-Tagen misst das echte Tor weniger Zeilen
+    // (fanOutNenner) als die Spur Kandidaten prüft (n) — beide Zahlen stehen getrennt im Log.
+    console.log('[quartal-lane SHADOW] ' + board + ': real-gate p99=' + f(gate.p99Delta) + ' over ' + gate.fanOutNenner + ' measured rows; p99 unexplained=' + f(p99Rest)
+      + ' over ' + rest.fanOutNenner + '; thr=' + f(thr) + '; quarter-explained=' + raus.size + ' of ' + n + ' candidates → would be ' + (keineFlaeche ? 'SUSPECT (NO-SURFACE)' : wouldSuspect ? 'SUSPECT' : 'OK')
+      + ' (real: ' + (gate.suspect ? 'SUSPECT' : 'OK') + ')');
+    return { board, p99RealGate: gate.p99Delta, measured: gate.fanOutNenner, p99Unexplained: p99Rest, measuredUnexplained: rest.fanOutNenner,
+      thr, explained: [...raus], n, wouldSuspect, realSuspect: gate.suspect };
+  } catch (e) {
+    // Even the warning must not throw into run(): a throwing logger or an odd error value stays here.
+    try { console.log('::warning::[quartal-lane SHADOW] failed: ' + board + ': ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
+    return null;
+  }
+}
+
+function quartalLaneShadowSummary(shadows) {
+  try {
+    const ok = shadows.filter(Boolean);
+    const namen = ok.flatMap((s) => s.explained.map((t) => s.board + ':' + t));
+    console.log('[quartal-lane SHADOW] summary: would-be SUSPECT ' + ok.filter((s) => s.wouldSuspect).length + '/' + ok.length
+      + ' boards (real SUSPECT ' + ok.filter((s) => s.realSuspect).length + '/' + ok.length + '; boards without shadow '
+      + (shadows.length - ok.length) + ', see lines above); excluded rows ' + namen.length
+      + (namen.length ? ': ' + namen.slice(0, 50).join(', ') + (namen.length > 50 ? ' … +' + (namen.length - 50) + ' more' : '') : ''));
+  } catch (e) {
+    try { console.log('::warning::[quartal-lane SHADOW] failed: summary: ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
+  }
+}
+
 // Aktualisiert den Gate-Kalibrierungs-Zustand je Board: sammelt messbare P99-Tagesdeltas
 // und friert die Schwelle ein, sobald das Fenster AUSSAGEKRÄFTIG ist.
 // Aussagekräftig = genug Samples DA (>= CALIBRATION_SAMPLES) UND mindestens eines > 0.
@@ -1602,6 +1721,7 @@ function run(opts) {
   }
 
   const results = [];
+  const quartalShadows = [];   // SHADOW ONLY, nur fürs Protokoll
   let anySuspect = false;
   // T155/W3: einmal je Lauf lesen, nicht je Board — 13 identische Lesevorgänge derselben
   // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
@@ -1625,6 +1745,9 @@ function run(opts) {
     const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash);
     const priorVintage = priorDate ? readJsonOrNull(path.join(P.HISTORY_DIR, priorDate, board + '.json')) : null;
     const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board, gateOpts);
+    // SHADOW ONLY: loggt, urteilt nicht (gate/anySuspect/Vintage bleiben unberührt). Vor
+    // updateGateCalibration, damit die Spur exakt denselben Kalibrier-Zustand sieht.
+    quartalShadows.push(quartalLaneShadow(vintage, priorVintage, gate, gateCalib.boards[board], bruch, board, gateOpts, date));
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
     // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
     // BH-111: ein bereits als suspect erkannter Tag darf die eingefrorene Schwelle
@@ -1672,6 +1795,7 @@ function run(opts) {
       breiteZeilen: gate.breiteZeilen, verfallsZeilen: gate.verfallsZeilen,
       beobachteteLampen: gate.beobachteteLampen, quellUpgrades: gate.quellUpgrades });
   }
+  quartalLaneShadowSummary(quartalShadows);
 
   // Seiten-Artefakte je Datum: calibration.json-Kopie + regime.json.
   if (!dryRun) {
@@ -1910,6 +2034,7 @@ module.exports = {
   integritaetsVerfall, lampenBeobachtung, secTickerLesen, kopplungProtokollZeilen,   // WB-4'
   _setPaths, resolvePaths,
   frozenThresholdOf,
+  neuesQuartalErklaert, quartalLaneShadow, quartalLaneShadowSummary,   // Quartals-Spur (SHADOW, 26.09.)
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
   tagesabstand,
   _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP, GATE_SERIE_ALARM_TAGE, QUELL_LAMPEN, KOPF_ACHSE,

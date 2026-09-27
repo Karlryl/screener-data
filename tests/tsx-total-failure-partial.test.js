@@ -39,7 +39,8 @@ function healthyEntries() {
 const quietLog = () => {};
 
 test('offline guard is installed before the TSX adapter is loaded', () => {
-  assert.ok(globalThis[OFFLINE_STATE]);
+  assert.deepEqual(globalThis[OFFLINE_STATE], { attempts: [] },
+    'der vor dem Adapter installierte Guard muss ein leeres Versuchsprotokoll tragen');
 });
 
 test('a transport rejection returns an empty Map marked partial', async () => {

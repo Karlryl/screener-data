@@ -38,6 +38,39 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
+// T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
+const { loadAdsHandTable, applyAdsHandTable } = require('./lib/ads-hand-table.js');
+const ADS_HAND_TABLE = loadAdsHandTable();
+const { loadStatementCurrencyTable, statementFactor, statementRowPending } = require('./lib/statement-currency-hand-table.js');
+const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
+/**
+ * Applies the ADS hand table to one snapshot and logs the outcome (stale row = WARN).
+ * @param {object} snap Snapshot, mutated in place when corrected.
+ * @param {string} ticker Snapshot ticker (table key).
+ * @param {number} price ADS price in the marketCap's unit.
+ * @returns {{status: string, reason?: string}} Result of applyAdsHandTable.
+ */
+function _applyAdsHandTable(snap, ticker, price) {
+  const r = applyAdsHandTable(snap, ticker, price, ADS_HAND_TABLE);
+  if (r.status === 'corrected') _log('INFO', `  ${ticker}: marketCap / ${snap.marketCap.ordinaryPerAds} (ADS hand table) -> ${(snap.marketCap.value / 1e9).toFixed(2)}B`);
+  else if (r.status === 'stale') _log('WARN', `  ${ticker}: ADS hand table row STALE, Yahoo value kept: ${r.reason}`);
+  return r;
+}
+
+/**
+ * statementFactor() on the real table, logging a corrected or STALE row (twin of _applyAdsHandTable).
+ * @param {object} snap Unconverted snapshot (meta stamped).
+ * @param {string} origCurrency Reporting currency the converter uses.
+ * @param {number} factor origCurrency -> USD factor.
+ * @returns {number} Factor for annual.* and timeseries.*.
+ */
+function _statementFactor(snap, origCurrency, factor) {
+  const r = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE);
+  const tk = snap && snap.meta && snap.meta.ticker;
+  if (r.status === 'corrected') _log('INFO', `  ${tk}: statement series kept in USD (statement-currency hand table), ${origCurrency} factor only on financialData`);
+  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, reporting factor used: ${r.reason}`);
+  return r.factor;
+}
 
 let YahooFinance;
 try {
@@ -454,6 +487,92 @@ function nextNotFoundState(existingMeta) {
 function shouldRetryKosdaq(stock, errClass) {
   return errClass === 'not-found' && !!(stock && stock.suffixUnsure) && !stock._kqRetried
     && /\.KS$/i.test((stock && stock.yahoo_symbol) || '');
+}
+
+// W7 night run 2026-09-26 (cause 3): the TMX listing file carries only the root
+// ("BIP", "TECK"), so discovery/tsx-ca.js builds "BIP.TO" where Yahoo lists the
+// security as "BIP-UN.TO" (units) or "TECK-B.TO" (share class). Run 36227380588:
+// 118 bare .TO/.V rows failed, 100 quote under one of these suffixes. Discovery
+// cannot know the suffix without a Yahoo call, so the fix sits here, next to the
+// KOSDAQ retry. Fixed order (used only as tie-break): UN, B, A, X, U.
+const CA_CLASS_SUFFIXES = ['UN', 'B', 'A', 'X', 'U'];
+const CA_BARE_RE = /^([A-Z0-9]+)\.(TO|V)$/;
+
+function shouldRetryCaClass(stock, errClass) {
+  return (errClass === 'not-found' || errClass === 'schema-fail') && !!stock && !stock._caRetried
+    && CA_BARE_RE.test(String(stock.yahoo_symbol || '').toUpperCase());
+}
+
+function caClassCandidates(symbol) {
+  const m = CA_BARE_RE.exec(String(symbol || '').toUpperCase());
+  return m ? CA_CLASS_SUFFIXES.map(s => `${m[1]}-${s}.${m[2]}`) : [];
+}
+
+// Class choice rule: of the variants Yahoo quotes, take the main line =
+// (1) a line Yahoo reports a marketCap for beats one without (some USD "-U"
+// lines carry marketCap 0, e.g. HOT-U.TO), then (2) highest 3-month average
+// traded value (averageDailyVolume3Month x regularMarketPrice); ties fall back
+// to CA_CLASS_SUFFIXES order. Returns null if the bare symbol itself quotes (a
+// working symbol is never swapped) or no variant quotes.
+// ponytail: traded value compares a USD "-U" line with a CAD line unconverted.
+// Measured 2026-09-26 on the 100 resolved rows: converting CAD->USD flips no
+// pick (closest: QETH 98k CAD vs 58k USD). Convert via fx if a pick ever sits
+// within the CAD/USD rate.
+// Same-company check: when the watchlist row carries a name, a variant only
+// counts if the first word of that name is a word of Yahoo's long/short name
+// (a reused TSX root must not point the old ticker at a new issuer).
+const _caNameWords = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
+function _caSameIssuer(expectedName, q) {
+  const first = _caNameWords(expectedName)[0];
+  if (!first) return true; // ponytail: no watchlist name -> no check (tsx rows always carry one)
+  return _caNameWords(`${q.longName || ''} ${q.shortName || ''}`).includes(first);
+}
+function pickCaClassLine(baseSymbol, quotes, expectedName) {
+  const bySym = new Map((quotes || []).filter(q => q && q.symbol).map(q => [String(q.symbol).toUpperCase(), q]));
+  if (bySym.has(String(baseSymbol || '').toUpperCase())) return null;
+  let best = null, bestMcap = -1, bestVal = -1;
+  for (const sym of caClassCandidates(baseSymbol)) {
+    const q = bySym.get(sym);
+    if (!q || !(q.regularMarketPrice > 0) || !_caSameIssuer(expectedName, q)) continue;
+    const hasMcap = q.marketCap > 0 ? 1 : 0;
+    const val = (q.averageDailyVolume3Month > 0 ? q.averageDailyVolume3Month : 0) * q.regularMarketPrice;
+    if (hasMcap > bestMcap || (hasMcap === bestMcap && val > bestVal)) { best = sym; bestMcap = hasMcap; bestVal = val; }
+  }
+  return best;
+}
+
+// One batch quote (bare symbol + all variants) -> chosen line or null.
+// quoteFn(symbols) must resolve to Yahoo quote objects (missing symbols omitted).
+async function resolveCaClassSymbol(stock, errClass, quoteFn) {
+  if (!shouldRetryCaClass(stock, errClass)) return null;
+  const quotes = await quoteFn([stock.yahoo_symbol, ...caClassCandidates(stock.yahoo_symbol)]);
+  return pickCaClassLine(stock.yahoo_symbol, Array.isArray(quotes) ? quotes : [], stock.name);
+}
+
+// The catch-block step of processOne: returns the stock row to retry with (same
+// ticker/snapshot file, resolved yahoo_symbol), { probeFailed: true } when the
+// Yahoo probe itself threw, or null. Only a failing bare
+// symbol is probed; original and resolved symbol are both logged and the repair
+// is counted in symbolsNormalized (manifest _silentErrors).
+// ponytail: the resolved symbol is not written back to watchlist.json (same
+// trade-off as the KOSDAQ retry) — ~3 extra requests per affected ticker per run
+// (~100 tickers). Persist yahoo_symbol at discovery if that ever matters.
+async function caClassRetryStock(stock, errClass, quoteFn = (syms) => _gatedQuote(syms, stock.ticker + '/ca-class')) {
+  if (!shouldRetryCaClass(stock, errClass)) return null;
+  let pick = null;
+  try {
+    pick = await resolveCaClassSymbol(stock, errClass, quoteFn);
+  } catch (e) {
+    _log('WARN', `  ${stock.ticker}: TSX class/unit probe failed (${e.message}) — keeping ${stock.yahoo_symbol}`);
+    return { probeFailed: true };
+  }
+  if (!pick) {
+    _log('INFO', `  ${stock.ticker}: no TSX class/unit line quotes for ${stock.yahoo_symbol} (tried ${caClassCandidates(stock.yahoo_symbol).join(', ')})`);
+    return null;
+  }
+  _log('WARN', `  yahoo_symbol aufgeloest (TSX class/unit): "${stock.yahoo_symbol}" -> "${pick}" (${stock.ticker}, ${errClass})`);
+  _symbolsNormalized++;
+  return Object.assign({}, stock, { yahoo_symbol: pick, _caRetried: true });
 }
 
 // Tag 645 (belegter Datenfehler 19.08.2026): 47 mexikanische Ticker fragten Yahoo
@@ -980,6 +1099,17 @@ const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterp
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
 function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor) {
   if (!snap || !snap.metrics) return;
+  // fiftyTwoWeekHigh (26.09.2026) is a per-share quote: it takes the PRICE's own factor from
+  // _resolveTradingFx, the call the price-only path uses for regularMarketPrice. Not via
+  // scaleTrading: for GBP reporters quoting in GBp that factor lacks the pence divisor
+  // (case-insensitive GBP == GBp skips the trading override). No usable factor -> null,
+  // never an unconverted quote.
+  const hoch = snap.metrics.fiftyTwoWeekHigh;
+  if (hoch) {
+    const fx = _resolveTradingFx(null, snap);
+    snap.metrics.fiftyTwoWeekHigh = (fx.ok && Number.isFinite(hoch.value))
+      ? Object.assign({}, hoch, { value: hoch.value * fx.factor }) : null;
+  }
   for (const k of HANDELS_METRIKEN) {
     if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
   }
@@ -1094,6 +1224,9 @@ function _convertSnapshotToUSD(snap) {
     // ticker actually trades in USD (tradingFactor = 1.0). Fail-closed if the
     // trading ccy differs but has no finite rate.
     if (!_applyTradingScale(snap, 1.0).ok) return snap;
+    // Statement-currency row on a USD/ambiguous reporting currency: factor stays 1, but the row is
+    // stamped stale (else statementRowPending re-pulls it on every run and "re-verify" never fires).
+    _statementFactor(snap, origCurrency, 1.0);
     snap.meta.reportingCurrencyOriginal = 'USD';
     snap.meta.fxRateApplied = 1.0;
     snap.meta.fxConverted = true;
@@ -1240,6 +1373,12 @@ function _convertSnapshotToUSD(snap) {
   }
   const scaleTrading = (item) => scaleTradingBy(item, tradingFactor);      // Stueck-Kurse
   const scaleAggregat = (item) => scaleTradingBy(item, tradingAggFactor);  // Groessen
+  // Statement-currency hand table (2026-09-26): Petrobras/Embraer statement series are USD although
+  // Yahoo's financialCurrency (right for revenueTTM/ebitda) says BRL. Row + visible mismatch ->
+  // factor 1 for annual.*/timeseries.*; otherwise stmtFactor === factor (no change). Must read the
+  // UNSCALED revenueTTM, so it runs before the metrics loop below.
+  const stmtFactor = _statementFactor(snap, origCurrency, factor);
+  const scaleStmt = (item) => scaleTradingBy(item, stmtFactor);
 
   // Tag 232c-8: route marketCap through the trading scaler. Equivalent to
   // scale() when ticker is not ADR-class (tradingFactor === factor, no-op).
@@ -1294,7 +1433,7 @@ function _convertSnapshotToUSD(snap) {
       // math) and desynced it from the unscaled meta.sharesOutstanding. YoY-ratio
       // consumers cancel the factor and are unaffected either way. Skip scaling.
       if (key === 'annualShares') continue;
-      if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scale);
+      if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scaleStmt);
     }
   }
   if (snap.timeseries) {
@@ -1307,7 +1446,7 @@ function _convertSnapshotToUSD(snap) {
       // er macht die Absicht explizit und haelt, falls scale() je numerischer wird.
       // (Der frühere Kommentar behauptete "das würde sie zu NaN machen" — das stimmt nicht.)
       if (key.endsWith('Ends')) continue;
-      if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scale);
+      if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scaleStmt);
     }
   }
   snap.meta.reportingCurrencyOriginal = origCurrency;
@@ -2284,6 +2423,13 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       priceSales:       _metric(_y(sd, 'priceToSalesTrailing12Months'), SRC, CONF, asOf),
       forwardPE:        _metric(_y(sd, 'forwardPE'), SRC, CONF, asOf),
       pe:               _metric(_y(sd, 'trailingPE'), SRC, CONF, asOf),
+      // W6 filter tab (26.09.2026): summaryDetail was fetched but these were never kept.
+      // Yield/payout are unitless fractions -> stored in percent like grossMargin/ROE, no FX.
+      // Absent in Yahoo (non-payer, no data) -> null via _metric, never 0.
+      // fiftyTwoWeekHigh is a per-share quote -> the price's factor in _skaliereHandelsMetriken.
+      dividendYield:    _metric(_y(sd, 'dividendYield') != null ? _y(sd, 'dividendYield') * 100 : null, SRC, CONF, asOf),
+      payoutRatio:      _metric(_y(sd, 'payoutRatio') != null ? _y(sd, 'payoutRatio') * 100 : null, SRC, CONF, asOf),
+      fiftyTwoWeekHigh: _metric(_y(sd, 'fiftyTwoWeekHigh'), SRC, CONF, asOf),
       // Tag 219 (audit F2/F3 HIGH): Yahoo provides true EBITDA + Enterprise
       // Value pre-computed; ev-ebitda.js currently uses opInc*1.2 heuristic
       // and reconstructs EV from mcap+totalDebt-totalCash. Native fields are
@@ -2944,6 +3090,15 @@ async function acquireYfSlot() {
 // AbortController: `makePromise(signal)` must forward the signal to yahoo-finance2
 // via its moduleOptions.fetchOptions, so firing the timeout actually aborts the
 // underlying fetch and frees the queue slot immediately.
+// One gated, abortable yf.quote (single symbol or batch). Shared by the
+// price-only refresh and the failure-only TSX class/unit probe, so both stay
+// behind the BH-043 gate. The probe is not a normal per-ticker request: it only
+// runs after a bare .TO/.V symbol failed, so YF_REQUESTS_PER_TICKER stays 6.
+async function _gatedQuote(symbols, label) {
+  await acquireYfSlot(); // audit fix BH-043
+  return _withAbortTimeout((signal) => yf.quote(symbols, undefined, { fetchOptions: { signal } }), 8000, label);
+}
+
 function _withAbortTimeout(makePromise, ms, label) {
   const ac = new AbortController();
   let timer;
@@ -3434,6 +3589,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const A = s.annual;
       const hasRev = A && Array.isArray(A.annualRev) && A.annualRev.length > 0;
       if (!hasRev) return false;
+      // Statement-currency hand table: a row converted before the row existed -> re-pull once.
+      if (statementRowPending(s, STATEMENT_CCY_TABLE)) return true;
       // (a) USD reporter: no FX to apply.
       if (m.reportingCurrency === 'USD') return false;
       // (b) explicit Tag 134+ converted marker.
@@ -3463,8 +3620,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
       existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
-    await acquireYfSlot(); // audit fix BH-043
-    const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote-only'); // F-PY-102: abortable
+    const q = await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
     // P0-Haertung 2 (F-CGPT-003): frueher nur `if (!q)`. Eine wahrheitswerte, aber
     // leere Quote ({currency:'USD'}) aktualisierte nichts, schrieb den Snapshot
     // trotzdem neu (_pullMode/_quality) und meldete Status 'price-only' = Erfolg.
@@ -3574,6 +3730,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
       // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
       existing.marketCap.source = 'yahoo_quote';
+    }
+    // T322: ADS lines Yahoo prices with the ordinary share count (price is USD here). A stale
+    // verdict here may only mean stale inputs (old price/shares from disk) -> the full pull decides.
+    if (_applyAdsHandTable(existing, stock.ticker, existing.price && existing.price.regularMarketPrice).status === 'stale') {
+      throw new Error('price-only refused: ADS hand table row not confirmed on quote data — full pull re-checks');
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
@@ -4467,6 +4628,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         return;
       }
 
+      // T322: ADS lines Yahoo prices with the ordinary share count. After FX conversion, before
+      // the mcap floor. Raw quote price = USD for every ADS line in the hand table.
+      _applyAdsHandTable(canonical, stock.ticker, _y(yahoo.price, 'regularMarketPrice'));
+
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
       // Tag 170 (reverted): $1B min — Mid-Cap coverage preserved per user decision.
       const MIN_MCAP = MIN_MCAP_USD;   // env-configurable (MIN_MCAP_USD), default $1B
@@ -4641,6 +4806,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ${stock.ticker}: suffixUnsure .KS not-found — retrying as ${kqSymbol}`);
         return processOne(Object.assign({}, stock, { yahoo_symbol: kqSymbol, _kqRetried: true }));
       }
+
+      // TSX/TSXV class/unit line (see CA_CLASS_SUFFIXES / caClassRetryStock).
+      // A failed probe leaves the symbol undecided: own class, so it never
+      // advances the not-found/delisted streak below.
+      const caRetry = await caClassRetryStock(stock, errClass);
+      if (caRetry && caRetry.probeFailed) errClass = 'ca-probe-failed';
+      else if (caRetry) return processOne(caRetry);
 
       // Tag 148: mark snapshot as delisted when Yahoo definitively rejects the symbol
       // (not-found class only — transient errors like rate-limit/timeout/network must NOT set this flag).
@@ -5207,6 +5379,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   fundamentalsStaleness, ftsFailureSummary,
   fundamentalsAsOfAgeFromFile, selectorBucket,   // Durchsatz-Diagnose (19.09.2026)
   readFileHead,                                 // T325 (Handle-Leck)
+  _applyAdsHandTable,                           // T322: guard executes the wired helper
   // Gezielter Voll-Pull: die Regel steht auf Modul-Ebene und wird exportiert, damit der
   // Waechter (tests/voll-pull-ticker.test.js) sie AUSFUEHRT statt sie nachzubauen —
   // dieselbe Begruendung wie beim _nonNullCount-Hub in T142 (Fehlerklasse F1334).
@@ -5249,6 +5422,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   _removeStaleFiles,
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,
+  shouldRetryCaClass, caClassCandidates, pickCaClassLine, resolveCaClassSymbol, caClassRetryStock,
   // Tag 645: MX-Schraegstrich-Normalisierung fuer TDD (belegter Datenfehler 19.08.).
   normalizeYahooSymbol,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).

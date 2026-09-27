@@ -74,7 +74,7 @@ const { fetchAsxUniverse }      = require('./discovery/asx-au.js');
 // Bau-Plan 2026-07-03: parametrisierter TradingView-Scanner. EIN Adapter fixt JP-Register
 // (edinet-jp lieferte nur Filings) + SZSE (szse-cn egress-blockiert) UND deckt ~10 fehlende Maerkte
 // (Euronext/Schweiz/SE-Asien/Osteuropa/Brasilien/Mexiko). Fail-silent pro Land.
-const { discoverTvScanner, TV_FOREIGN_CANON } = require('./discovery/tv-scanner.js');
+const { discoverTvScanner, TV_FOREIGN_CANON, bursaYahooSymbol, isUnmappedBursa } = require('./discovery/tv-scanner.js');
 // Marktkap-Vorpruefung (Karl-Sizing-Fix): filtert die Auslands-null-mcap-Zeilen VOR dem teuren Pull
 // billig auf >= $2B USD (Batch-Yahoo-quote). Nur die Ueberlebenden gehen in den Fundamental-Pull.
 // T562-M1: isUnpriceable trennt "Waehrung fehlt in fx-rates.json" von "kein bewertbares
@@ -907,11 +907,27 @@ function entferneWhenIssuedBestand(stocks) {
   return { stocks: kept, dropped: stocks.length - kept.length };
 }
 
+// W7 2026-09-26: Bursa-Bestandszeilen MNEMONIC.KL -> CODE.KL (ticker UND yahoo_symbol, wie der
+// Class-Share-Repair). Eine schon vorhandene CODE.KL-Zwillingszeile raeumt danach
+// kollabiereYahooDubletten ab (gleiches yahoo_symbol). Ohne Tabellenzeile: Zeile bleibt, wird gezaehlt.
+function repariereBursaBestand(stocks, codes) {
+  let repaired = 0;
+  const unmapped = [];
+  for (const s of stocks) {
+    if (!s || !s.ticker) continue;
+    const t = String(s.ticker);
+    const code = bursaYahooSymbol(t, codes);
+    if (code !== t) { s.ticker = code; s.yahoo_symbol = code; repaired++; }
+    else if (isUnmappedBursa(t, codes)) unmapped.push(t);
+  }
+  return { repaired, unmapped };
+}
+
 function sollUniverseSchreiben(delta) {
   // Review-Fix (PR #43): yahooDropped bewusst NICHT im Gate — vor diesem PR schrieb
   // ein reiner Yahoo-Dubletten-Lauf die Watchlist nicht ("Nothing to add..."), und
   // dieser PR aendert das Verhalten normaler Instrumente nicht (Invariante).
-  return ['newTickers', 'repaired', 'collapsed', 'adrDropped', 'deadDropped', 'whenIssuedDropped']
+  return ['newTickers', 'repaired', 'collapsed', 'adrDropped', 'deadDropped', 'whenIssuedDropped', 'bursaRepaired']
     .some((key) => Number(delta && delta[key]) > 0);
 }
 
@@ -1155,6 +1171,13 @@ async function main() {
   if (whenIssuedDropped) {
     console.log('  When-issued repair: ' + whenIssuedDropped + ' temporary row(s) removed from the existing watchlist.');
   }
+  // W7 2026-09-26: bestehende Bursa-Zeilen (MAYBANK.KL) auf den Yahoo-Code (1155.KL) umschreiben,
+  // BEVOR das existing-Set entsteht — sonst kaeme der neu entdeckte Code als zweite Zeile rein.
+  const bursaRepair = repariereBursaBestand(wlRaw.stocks);
+  const bursaRepaired = bursaRepair.repaired;
+  console.log('  Bursa repair: ' + bursaRepaired + ' .KL row(s) set to the numeric Yahoo code, ' +
+    bursaRepair.unmapped.length + ' .KL row(s) without a code kept as-is' +
+    (bursaRepair.unmapped.length ? ': ' + bursaRepair.unmapped.join(' ') : '') + '.');
   // audit F-A-2026-06-21: a single watchlist row with a null/undefined ticker
   // would throw TypeError on .toUpperCase() and abort the entire universe
   // refresh (one bad row -> frozen universe). Drop ticker-less rows from the
@@ -1974,7 +1997,7 @@ async function main() {
   // audit/fix (A2 2026-06-26): gate the write on an actual change. With the early-return
   // removed above, a run that discovered nothing new AND repaired nothing must still leave the
   // universe untouched (no needless rewrite / timestamp churn).
-  if (!sollUniverseSchreiben({ newTickers: newTickers.length, repaired, collapsed, adrDropped, deadDropped, whenIssuedDropped })) {
+  if (!sollUniverseSchreiben({ newTickers: newTickers.length, repaired, collapsed, adrDropped, deadDropped, whenIssuedDropped, bursaRepaired })) {
     console.log('Nothing to add, nothing to repair. Universe unchanged.');
     return;
   }
@@ -2017,6 +2040,7 @@ module.exports = {
   repariereAdrBestand,    // R1-SK-012: ADR-Drop nur gegen echte Watchlist-Zeilen, einzeln pruefbar
   kollabiereYahooDubletten, // R1-SK-010: ein yahoo_symbol = eine Zeile (sonst Board-Dublette)
   entferneWhenIssuedBestand, sollUniverseSchreiben,
+  repariereBursaBestand,  // W7: MNEMONIC.KL -> CODE.KL im Bestand
   _vorGateVerworfen,      // T567-W3: EIN gezaehlter Vor-Gate-Pfad fuer beide Ingest-Schleifen
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
   predefinedKanalEingebrochen, MIN_PREDEFINED_NONEMPTY_ANTEIL,  // T566-H2: Anteil statt "== 0"
