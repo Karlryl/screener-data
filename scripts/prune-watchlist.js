@@ -145,6 +145,11 @@ function deadReason(snap, maxAgeDays) {
   // F-DP-023: Explicit delisted flag — label accurately
   if (snap.meta && snap.meta.delisted === true) return 'delisted';
 
+  // B5: an explicit missing-cap observation must not turn an old sparse but
+  // present snapshot into "no financial data" merely by clearing its last cap.
+  if (snap.marketCap && snap.marketCap.missing === true &&
+      !Number.isFinite(snap.marketCap.value)) return null;
+
   // No active quote: has a snapshot but no market cap and no recent price
   const hasMcap   = snap.marketCap && snap.marketCap.value != null && snap.marketCap.value > 0;
   const hasRev    = snap.annual && snap.annual.annualRev && snap.annual.annualRev.length > 0;
@@ -210,6 +215,7 @@ function main(argv = process.argv) {
   const kept = [];
   const pruned = [];
   const now = Date.now();
+  let absenceClockChanged = false;
 
   for (const entry of stocksArr) {
     // Tag 222b: invalid-symbol filter — runs before snapshot lookup since
@@ -223,6 +229,11 @@ function main(argv = process.argv) {
     }
 
     const snap = loadSnapshot(args.snapshots, entry.ticker);
+    // A return (including a present but corrupt file) breaks continuous absence.
+    if (snap && Object.hasOwn(entry, 'missingSnapshotSince')) {
+      delete entry.missingSnapshotSince;
+      absenceClockChanged = true;
+    }
 
     // audit T2: snapshot exists on disk but failed to parse — never evict. A
     // corrupt file is not the same signal as "never pulled"; keep and move on.
@@ -231,17 +242,21 @@ function main(argv = process.argv) {
       continue;
     }
 
-    // F-DP-022: prune tickers with no snapshot that have been in the watchlist too long
+    // B5: measure actual continuous absence, never age since watchlist admission.
     if (!snap) {
-      const addedAt = entry.added_at || entry.addedAt || null;
-      if (addedAt) {
-        const ageDays = (now - new Date(addedAt).getTime()) / 86400000;
-        if (ageDays > args.pruneNoDataDays) {
-          const reason = 'no-snapshot-after-' + args.pruneNoDataDays + 'd';
-          pruned.push({ ticker: entry.ticker, reason });
-          console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
-          continue;
-        }
+      let missingSince = typeof entry.missingSnapshotSince === 'string' ? Date.parse(entry.missingSnapshotSince) : NaN;
+      if (!Number.isFinite(missingSince) || missingSince > now) {
+        entry.missingSnapshotSince = new Date(now).toISOString();
+        missingSince = now;
+        absenceClockChanged = true;
+      }
+      const absenceDays = (now - missingSince) / 86400000;
+      // Preserve the legacy/manual-entry exemption; the clock alone is diagnostic.
+      if ((entry.added_at || entry.addedAt) && absenceDays > args.pruneNoDataDays) {
+        const reason = 'no-snapshot-after-' + args.pruneNoDataDays + 'd';
+        pruned.push({ ticker: entry.ticker, reason });
+        console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
+        continue;
       }
       // Tag 222b: --prune-orphans hard-mode — drop every entry without a
       // snapshot regardless of added_at. Use cautiously (audit found 12 207
@@ -268,7 +283,7 @@ function main(argv = process.argv) {
   console.log('\nPruned: ' + pruned.length + ' tickers');
   console.log('Kept:   ' + kept.length + ' tickers');
 
-  if (pruned.length === 0) {
+  if (pruned.length === 0 && !absenceClockChanged) {
     console.log('Nothing to prune.');
     return;
   }
@@ -282,8 +297,10 @@ function main(argv = process.argv) {
   // sidecar fields (_meta, lastUniverseRefresh, etc.); bare arrays stay arrays.
   if (wrapped) {
     wl.stocks = kept;
-    wl.lastAutoPrune = new Date().toISOString();
-    wl.lastAutoPruneRemoved = pruned;
+    if (pruned.length) {
+      wl.lastAutoPrune = new Date().toISOString();
+      wl.lastAutoPruneRemoved = pruned;
+    }
   } else {
     wl = kept; // legacy array shape — drop the prune-metadata fields (no place to put them)
   }
@@ -292,7 +309,7 @@ function main(argv = process.argv) {
   // leaving kept=[] and atomically (durably) wiping the watchlist. Refuse to write when the
   // survivors fall below max(200, 50% of the prior count) unless --force is given.
   const floor = Math.max(200, Math.floor(before * 0.5));
-  if (!args.force && kept.length < floor) {
+  if (pruned.length && !args.force && kept.length < floor) {
     console.error('::error::over-prune guard: would keep only ' + kept.length + ' of ' + before +
       ' tickers (floor ' + floor + '). Refusing to write — check --snapshots path. Pass --force to override.');
     process.exit(1);

@@ -106,6 +106,41 @@ function assertRejectedToVisibleFallback(manifest, label) {
   assert.equal(result.status, 'degradiert', `${label}: healthy raw files may degrade, never certify ok`);
 }
 
+test('missing market caps reach the coverage marker and banner without changing thresholds', () => {
+  // 2026-09-26 counts, with 538 null observations reclassified from measured skips.
+  const manifest = { n_total: 21704, n_ok: 16013, n_failed: 1836,
+    n_skipped_mcap: 2870, n_skipped_owned: 455, n_shard_collisions: 0,
+    n_addressable: 18379, n_missing_mcap: 538, partial: false };
+  const result = classify(manifest, 0, 0);
+  const withoutCause = { ...manifest }; delete withoutCause.n_missing_mcap;
+  assert.deepEqual(result, classify(withoutCause, 0, 0), 'counter must not change classification');
+  const marker = buildMarker(result, manifest);
+  assert.equal(marker.n_missing_mcap, 538);
+  assert.equal(marker.honest_coverage_pct, 87.1);
+  assert.equal(marker.status, 'degradiert');
+  assert.match(marker.reasons.join(' '), /538.*Marktkapitalisierung.*fehlt/);
+  assert.deepEqual(validateMarker(marker), []);
+  assert(!result.reasons.some(reason => /Marktkapitalisierung/.test(reason)), 'marker must not mutate classification');
+  const legacy = buildMarker(classify(withoutCause, 0, 0), withoutCause);
+  assert.equal(legacy.n_missing_mcap, null);
+  assert.deepEqual(legacy.reasons, result.reasons);
+  for (const n_missing_mcap of [0, 1]) {
+    const healthy = healthyManifest({ n_missing_mcap });
+    const clean = buildMarker(classify(healthy, 0, 0), healthy);
+    assert.equal(clean.status, 'ok', 'missing-cap attribution must not create a new alarm threshold');
+    assert.equal(clean.n_missing_mcap, n_missing_mcap);
+    assert.deepEqual(clean.reasons, []);
+  }
+  for (const n_missing_mcap of [-1, '538', 1.5]) {
+    const bad = { ...manifest, n_missing_mcap };
+    assert.equal(manifestNumbersSane(bad), false);
+    const fallback = buildMarker(classify(bad, 21704, 16013), bad);
+    assert.equal(fallback.n_missing_mcap, null);
+    assert(!fallback.reasons.some(reason => /Marktkapitalisierung/.test(reason)));
+    assert(validateMarker({ ...marker, n_missing_mcap }).length > 0);
+  }
+});
+
 test('real current producer tuple remains authoritative despite overlapping attempt counts', () => {
   assert.ok(CURRENT_PRODUCTION.n_ok + CURRENT_PRODUCTION.n_failed > CURRENT_PRODUCTION.n_addressable,
     'tripwire: the real tuple must contradict the rejected Tag 1134 assumption');

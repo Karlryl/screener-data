@@ -33,10 +33,10 @@ test('smallcapRoute: Grenzwerte (Floor/Cap selbst) sind inklusive', () => {
   assert.equal(smallcapRoute(baseSnap({ marketCap: MAX_MCAP })).action, 'route');
 });
 
-test('smallcapRoute: fehlende marketCap -> exclude smallcap-mcap-out-of-band (nicht crashen)', () => {
+test('smallcapRoute: fehlende marketCap -> exclude smallcap-mcap-missing (nicht crashen)', () => {
   const s = baseSnap({ marketCap: 500_000_000 });
   s.marketCap = undefined;
-  assert.deepEqual(smallcapRoute(s), { action: 'exclude', reason: 'smallcap-mcap-out-of-band' });
+  assert.deepEqual(smallcapRoute(s), { action: 'exclude', reason: 'smallcap-mcap-missing' });
 });
 
 test('smallcapRoute: foreign-listed (im Band, aber nicht US) -> exclude smallcap-non-us', () => {

@@ -277,6 +277,32 @@ function assertPriceOnly(f, m) {
     assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
     assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
   });
+  await check('selected reload with missing/non-finite cap preserves #390 null observation, never a stale price-only cap', async () => {
+    for (const summaryMarketCap of [null, NaN, Infinity, -Infinity]) {
+      const s = snapshot('OLD'), f = fixture({ snapshots: [s], summaryMarketCap, quarterFails: true });
+      const cachePath = path.join(root, 'fundamentals-cache/OLD.json'), cache = f.files.get(cachePath).toString();
+      const m = await f.run(), stored = f.stored('OLD');
+      assert.equal(m.n_stale_quarter_selected, 1); assert.equal(m.n_stale_quarter_reload_failed, 0);
+      assert.equal(m.results[0].status, 'missing-market-cap'); assert.equal(m.n_missing_mcap, 1);
+      assert.equal(m.n_ok, 0); assert.equal(m.n_failed, 0); assert.equal(m.n_skipped_mcap, 0);
+      assert.equal(stored.marketCap.value, null); assert.equal(stored.marketCap.missing, true);
+      assert.deepEqual(stored.meta, s.meta); assert.deepEqual(stored.annual, s.annual); assert.deepEqual(stored.timeseries, s.timeseries);
+      assert.equal(f.files.get(cachePath).toString(), cache);
+      assert.deepEqual(f.calls, [['OLD', 'quoteSummary']], 'missing-cap path must precede FTS and price fallback');
+      const slim = JSON.parse(f.files.get(path.join(f.out, '_manifest.json')));
+      const merged = mergeManifests([slim], 1, 1);
+      assert.equal(merged.n_missing_mcap, 1); assert.equal(merged.n_stale_quarter_selected, 1);
+    }
+  });
+  await check('selected reload with empty summary records null and failure without price fallback', async () => {
+    const s = snapshot('OLD'); s.meta.notFoundStreak = 1;
+    const f = fixture({ snapshots: [s], emptySummary: true }), m = await f.run();
+    assert.equal(m.n_stale_quarter_selected, 1); assert.equal(m.n_stale_quarter_reload_failed, 0);
+    assert.equal(m.n_ok, 0); assert.equal(m.n_failed, 1);
+    assert.equal(f.stored('OLD').marketCap.value, null); assert.equal(f.stored('OLD').marketCap.missing, true);
+    assert.deepEqual(f.stored('OLD').meta, s.meta); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
+    assert.deepEqual(f.calls, [['OLD', 'quoteSummary']]);
+  });
   console.log(`stale-quarter-fail-open.test.js: ${passed} passed, ${failed} failed`);
   process.exitCode = failed ? 1 : 0;
 })().catch(e => { console.error(e.message); process.exitCode = 1; });

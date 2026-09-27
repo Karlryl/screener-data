@@ -29,7 +29,8 @@ function smallcapRoute(s) {
   if (!isUS(s)) return { action: 'exclude', reason: 'smallcap-non-us' };
   const mcRaw = s && s.marketCap;
   const mc = (mcRaw && Number.isFinite(mcRaw.value)) ? mcRaw.value : null;
-  if (!Number.isFinite(mc) || mc < MIN_MCAP || mc > MAX_MCAP) return { action: 'exclude', reason: 'smallcap-mcap-out-of-band' };
+  if (!Number.isFinite(mc)) return { action: 'exclude', reason: 'smallcap-mcap-missing' };
+  if (mc < MIN_MCAP || mc > MAX_MCAP) return { action: 'exclude', reason: 'smallcap-mcap-out-of-band' };
   return { action: 'route', formulaId: 'smallcap-' + r.formulaId };
 }
 

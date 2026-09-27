@@ -33,6 +33,7 @@ function snapshot(ticker, end = '2026-03-31', fetched = '2026-09-20T02:17:00Z') 
 function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxPerRun, shard = null, selection = null,
   newer = true, quarterFails = false, quarterEmpty = false, summaryFails = false, ftsFails = false,
   annualFails = false, quarterlyRows = null, summaryError = 'fixture summary failure', quoteMissing = false,
+  summaryMarketCap = 1e12, emptySummary = false,
   manual = [], calendar = {}, env = { STALE_QUARTER_RELOAD: 'local' }, now = NOW } = {}) {
   const base = path.join(root, '_scratch', 'b6-virtual'), out = path.join(base, 'snapshots');
   const files = new Map(), handles = new Map(), calls = [], logs = [], reads = []; let fd = 1000;
@@ -65,7 +66,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   const quote = { currency: 'USD', regularMarketPrice: 100, marketCap: 1e12 };
   class Yahoo {
     async quote(t) { calls.push([t, 'quote']); return quoteMissing ? undefined : quote; }
-    async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error(summaryError); return { price: quote, financialData: { financialCurrency: 'USD' },
+    async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error(summaryError); if (emptySummary) return {}; return { price: { ...quote, marketCap: summaryMarketCap }, financialData: { financialCurrency: 'USD' },
       quoteType: { quoteType: 'EQUITY' }, summaryProfile: { sector: 'Technology', industry: 'Software' } }; }
     async fundamentalsTimeSeries(t, q) {
       calls.push([t, q.type + '/' + q.module]);
