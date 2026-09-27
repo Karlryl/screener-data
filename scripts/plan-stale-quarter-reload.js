@@ -27,11 +27,13 @@ function run(argv) {
     const args = parseArgs(['node', 'pull-yahoo.js', '--shard', argv[1]]);
     if (args.argError || !args.shard) throw new Error('Invalid candidate shard');
     const stocks = shardStocks(read('watchlist.json').stocks, args.shard);
-    const ranks = read('outputs/stale-quarter-ranks.json').ranks;
+    let ranks = {};
+    try { ranks = read('outputs/stale-quarter-ranks.json').ranks || {}; }
+    catch (e) { console.warn('::warning::stale-quarter ranks unavailable: ' + e.message + '; using empty ranks'); }
     const p = R.planReload(stocks, { snapshotDir: path.join(root, 'snapshots'), cacheDir: path.join(root, 'fundamentals-cache'),
       ranks, calendar: read('earnings-calendar.json'), config, shard: args.shard });
-    if (p.readErrors) throw new Error('Unreadable stale-quarter candidate inputs: ' + p.readErrors);
-    result = { date, shard: args.shard, config, candidates: p.candidates };
+    if (p.readErrors) console.warn('::warning::Unreadable stale-quarter candidate inputs: ' + p.readErrors + '; continuing with readable snapshots');
+    result = { date, shard: args.shard, config, candidates: p.candidates, readErrors: p.readErrors, noQuarter: p.noQuarter };
     target = 'outputs/stale-quarter-candidates/shard-' + args.shard.index + '.json';
   } else if (argv[0] === '--merge') {
     const count = Number(argv[1]);

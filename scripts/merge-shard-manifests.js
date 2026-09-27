@@ -336,7 +336,7 @@ function run() {
   // F-NEU-01 (Tag 629): die ccy-Skips sind weder n_ok noch n_failed und erhoehen damit
   // "unerklaert" um genau ihre Anzahl. Deshalb stehen sie in der Zeile mit drin — sonst
   // liest sich der Anker beim ersten Auftreten wie ein neuer stiller Ausfall.
-  console.log(`${QUARTER_RELOAD_REASON}: selected=${merged.n_stale_quarter_selected}, pulled=${merged.n_stale_quarter_pulled}, newer=${merged.n_stale_quarter_newer}, still-old-yahoo=${merged.n_stale_quarter_still_old_yahoo}, skipped-cap=${merged.n_stale_quarter_skipped_cap}, fetch-failed=${merged.n_stale_quarter_fetch_failed}`);
+  console.log(`${QUARTER_RELOAD_REASON}: selected=${merged.n_stale_quarter_selected}, pulled=${merged.n_stale_quarter_pulled}, newer=${merged.n_stale_quarter_newer}, still-old-yahoo=${merged.n_stale_quarter_still_old_yahoo}, skipped-cap=${merged.n_stale_quarter_skipped_cap}, fetch-failed=${merged.n_stale_quarter_fetch_failed}, reload-failed=${merged.n_stale_quarter_reload_failed}, no-quarter=${merged.n_stale_quarter_no_quarter}`);
   process.exit(0);
 }
 

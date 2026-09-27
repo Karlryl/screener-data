@@ -171,6 +171,7 @@ jobs:
           PULL_CONCURRENCY: '8'
           MIN_MCAP_USD: '300000000'
           FUNDAMENTALS_MAX_AGE_DAYS: '7'
+          STALE_QUARTER_RELOAD: '0' # Enable only with an explicit smallcap plan.
         run: node pull-yahoo.js --shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }} --watchlist watchlist-smallcap.json --output snapshots-smallcap --rate-limit 2000
         continue-on-error: true
         timeout-minutes: 45

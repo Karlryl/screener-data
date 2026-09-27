@@ -515,6 +515,7 @@ jobs:
       # Shards laden AUSSCHLIESSLICH dieses Artefakt (nicht ihren eigenen Checkout-Stand),
       # damit Refresh/Prune/FX/Earnings konsistent ueber alle 17 sind.
       - name: Read current board ranks for stale-quarter reload
+        continue-on-error: true # Ordering hints must never block the daily pull.
         run: node scripts/prepare-stale-quarter-ranks.js
 
       - name: Upload prep state (watchlist + fx + earnings + insider)
@@ -688,6 +689,7 @@ jobs:
   # ============================================================================
   pull:
     needs: [prep, quarter-selection]
+    if: ${{ always() && needs.prep.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 200
     strategy:
@@ -697,7 +699,7 @@ jobs:
     env:
       # Tag 215f: PULL_CONCURRENCY 20->8 (Yahoo Cloudflare Edge rate-limited at 20).
       PULL_CONCURRENCY: '8'
-      STALE_QUARTER_PLAN_REQUIRED: '1'
+      STALE_QUARTER_RELOAD: 'planned' # Missing/invalid plan falls back to the ordinary pull.
       RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
       SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
     steps:
@@ -722,6 +724,7 @@ jobs:
           path: .
 
       - name: Download global stale-quarter selection
+        continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: quarter-selection

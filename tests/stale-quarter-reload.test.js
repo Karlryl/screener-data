@@ -31,7 +31,8 @@ function snapshot(ticker, end = '2026-03-31', fetched = '2026-09-20T02:17:00Z') 
     revenueQEnds: [end], grossProfitQEnds: [end], opIncQEnds: [end] } };
 }
 function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxPerRun, shard = null, selection = null,
-  newer = true, quarterFails = false, manual = [], calendar = {} } = {}) {
+  newer = true, quarterFails = false, quarterEmpty = false, summaryFails = false, ftsFails = false,
+  manual = [], calendar = {}, env = { STALE_QUARTER_RELOAD: 'local' }, now = NOW } = {}) {
   const base = path.join(root, '_scratch', 'b6-virtual'), out = path.join(base, 'snapshots');
   const files = new Map(), handles = new Map(), calls = [], logs = []; let fd = 1000;
   const key = p => path.resolve(String(p));
@@ -44,7 +45,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   for (const s of snapshots) {
     put(path.join(out, s.meta.ticker + '.json'), s);
     put(path.join(root, 'fundamentals-cache', s.meta.ticker + '.json'), { _cacheVersion: 2, _ftsPartial: false,
-      cachedAt: '2026-09-20T02:17:00Z', payload: { ftsAnnual: s.annual, ftsQuarterly: s.timeseries,
+      cachedAt: '2026-09-20T02:17:00Z', payload: { ftsAnnual: { annualOpInc: [], annualNetIncome: [], annualGP: [], annualFCF: [], ...s.annual }, ftsQuarterly: s.timeseries,
         ftsBalance: s.annual.annualBalance, ftsAnnualSGA: [1], ftsAnnualDepreciation: [1] } });
   }
   const io = new Proxy(fs, { get(target, prop) {
@@ -63,33 +64,35 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   const quote = { currency: 'USD', regularMarketPrice: 100, marketCap: 1e12 };
   class Yahoo {
     async quote(t) { calls.push([t, 'quote']); return quote; }
-    async quoteSummary(t) { calls.push([t, 'quoteSummary']); return { price: quote, financialData: { financialCurrency: 'USD' },
+    async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error('fixture summary failure'); return { price: quote, financialData: { financialCurrency: 'USD' },
       quoteType: { quoteType: 'EQUITY' }, summaryProfile: { sector: 'Technology', industry: 'Software' } }; }
     async fundamentalsTimeSeries(t, q) {
       calls.push([t, q.type + '/' + q.module]);
       if (q.type === 'quarterly' && quarterFails) throw new Error('fixture quarterly failure');
+      if (q.type === 'quarterly' && quarterEmpty) return [];
       if (q.type === 'quarterly') return rows(newer ? '2026-06-30' : '2026-03-31');
       return [{ date: '2025-12-31', totalRevenue: 400, grossProfit: 100, operatingIncome: 50, netIncome: 30,
         operatingCashFlow: 60, freeCashFlow: 40, totalAssets: 1000, currentAssets: 200, currentLiabilities: 100, totalDebt: 50 }];
     }
   }
   const mod = { exports: {} }, log = (...a) => logs.push(a.join(' '));
-  class FixedDate extends Date { constructor(...a) { super(...(a.length ? a : [NOW])); } static now() { return NOW; } }
+  class FixedDate extends Date { constructor(...a) { super(...(a.length ? a : [now])); } static now() { return now; } }
   const context = { module: mod, exports: mod.exports, __dirname: root, __filename: path.join(root, 'pull-yahoo.js'),
     Date: FixedDate, Buffer, AbortController, setTimeout, clearTimeout, setImmediate,
     console: { log, warn: log, error: log, dir() {} },
-    process: { env: { ...process.env, PULL_CONCURRENCY: '1' }, cwd: () => root, exit: c => { throw new Error('unexpected exit ' + c); } },
+    process: { env: { ...process.env, STALE_QUARTER_RELOAD: '', RUN_DATE_UTC: '', PULL_CONCURRENCY: '1', ...env }, cwd: () => root, exit: c => { throw new Error('unexpected exit ' + c); } },
     require: id => id === 'fs' ? io : id === 'yahoo-finance2' ? { default: Yahoo }
       : id === './lib/atomic-write.js' ? { writeFileAtomic: (p, s) => io.writeFileSync(p, s) } : requireRoot(id) };
   context.global = context;
-  vm.runInNewContext(source + '\nmodule.exports.__manual = x => { _vollPullTicker = new Set(x); };', context, { filename: path.join(root, 'pull-yahoo.js') });
+  vm.runInNewContext(source + '\nmodule.exports.__manual = x => { _vollPullTicker = new Set(x); };\nmodule.exports.__ftsFail = () => { fetchFundamentalsTS = async () => { throw new Error("fixture FTS failure"); }; };', context, { filename: path.join(root, 'pull-yahoo.js') });
   const Y = mod.exports; Y.__manual(manual);
+  if (ftsFails) Y.__ftsFail();
   const stocks = snapshots.map(s => ({ ticker: s.meta.ticker, yahoo_symbol: s.meta.ticker, name: s.meta.ticker }));
   return { Y, calls, files, logs, out, io, config: { ...DEFAULT, maxPerRun: cap },
     stored: ticker => JSON.parse(files.get(key(path.join(out, ticker + '.json')))),
     run: () => Y.pullAll({ stocks: Y.shardStocks(stocks, shard), _pullShard: shard, _meta: { version: 'b6-fixture' } }, out, 0) };
 }
-(async () => {
+if (require.main === module) (async () => {
   await check('selected old quarter bypasses both clocks and persists the newer quarter + FTS clock', async () => {
     const f = fixture(), m = await f.run();
     assert.equal(m.n_stale_quarter_selected, 1); assert.equal(m.n_stale_quarter_pulled, 1);
@@ -117,17 +120,24 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
     assert.equal((await f.run()).n_stale_quarter_selected, 0);
     const bad = fixture({ quarterFails: true }), b = await bad.run();
     assert.equal(b.n_stale_quarter_fetch_failed, 1); assert.equal(b.n_stale_quarter_newer, 0);
-    assert.equal(bad.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, '2026-09-20T02:17:00.000Z');
+    assert.equal(bad.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, snapshot('OLD').meta.fundamentalsTimeseriesFetchedAt);
+    assert.equal(b.n_stale_quarter_reload_failed, 1);
   });
-  await check('failed quarterly fetch preserves the legacy clock despite a new full-pull date', async () => {
+  await check('failed quarterly fetch preserves history and legacy clock without claiming a full pull', async () => {
     const s = snapshot('OLD'); delete s.meta.fundamentalsTimeseriesFetchedAt;
     s.meta.fundamentalsAsOf = s.meta.fetchedAt = '2026-09-20T02:17:00Z';
     const f = fixture({ snapshots: [s], quarterFails: true });
     f.files.delete(path.join(root, 'fundamentals-cache', 'OLD.json'));
     const m = await f.run();
     assert.equal(m.n_stale_quarter_legacy_clock, 1); assert.equal(m.n_stale_quarter_fetch_failed, 1);
-    assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, '2026-09-20T02:17:00.000Z');
-    assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesClockSource, 'legacy-full-proxy');
+    const stored = f.stored('OLD');
+    assert.equal(stored.meta.fundamentalsTimeseriesFetchedAt, undefined);
+    assert.equal(stored.meta.fundamentalsTimeseriesClockSource, undefined);
+    assert.equal(stored.meta.fundamentalsAsOf, s.meta.fundamentalsAsOf);
+    assert.equal(stored.meta.fetchedAt, s.meta.fetchedAt);
+    assert.deepEqual(stored.timeseries, s.timeseries);
+    assert.equal(R.fetchClock(stored, null, NOW).source, 'legacy-full-proxy');
+    assert.equal(R.fetchClock(stored, null, NOW).at, '2026-09-20T02:17:00.000Z');
   });
   await check('recent successful warm cache suppresses an old snapshot clock', async () => {
     const f = fixture(), cachePath = path.join(root, 'fundamentals-cache', 'OLD.json');
@@ -211,7 +221,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
     assert.throws(() => R.shardBudget(3000, { index: 17, count: 17 }), /shard/);
     assert.equal(R.latestReportedQuarter({ timeseries: { revenueQ: [null], revenueQEnds: ['2026-06-30'] } }, NOW), null);
   });
-  await check('current board prep keeps best rank, includes survival, rejects mixed dates', async () => {
+  await check('current board prep keeps best rank, includes survival, warns on mixed dates', async () => {
     const get = async file => {
       if (file === 'index.json') return { branches: ['energy'], generated_at: '2026-09-26T09:00:00Z' };
       if (file === 'quality/index.json') return { boards: ['quality-energy'], generated_at: '2026-09-26T09:00:00Z' };
@@ -226,14 +236,17 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
     assert.equal(ranks.A, 1); assert.equal(ranks.BEYOND_DISPLAY, 250); assert.equal(ranks.GATED, undefined);
     assert.equal(ranks.QC, 1); assert.equal(ranks.SC, 2);
     assert.equal((await prepareRanks(async f => /^(quality|smallcap)\//.test(f) ? null : get(f))).ranks.A, 1);
-    await assert.rejects(prepareRanks(async f => /^(quality|smallcap)\//.test(f) ? null : f === 'index.json' ? get(f) : { generated_at: '2026-09-25' }), /Mixed board dates/);
+    const warnings = [];
+    const mixed = await prepareRanks(async f => ({ ...await get(f), ...(f === 'survival.json' ? { generated_at: '2026-09-25' } : {}) }), s => warnings.push(s));
+    assert.deepEqual(mixed.ranks, ranks);
+    assert(warnings.some(s => s.startsWith('::warning::Mixed board dates')));
   });
-  await check('planning failure is named before skipped pulls and preserves last successful run', () => {
+  await check('planning failure remains visible even when the daily pull succeeds', () => {
     for (const failed of ['quarter-candidates', 'quarter-selection']) {
       const marker = baueMarker({ runId: '123', runAttempt: 1, headSha: 'a'.repeat(40),
         startedAt: '2026-09-29T02:17:00Z', completedAt: '2026-09-29T02:20:00Z',
         vorgaenger: { last_success_at: '2026-09-26T09:00:00Z' },
-        jobErgebnisse: JOB_REIHENFOLGE.map(name => ({ name, result: name === failed ? 'failure' : name === 'pull' ? 'skipped' : 'success' })) });
+        jobErgebnisse: JOB_REIHENFOLGE.map(name => ({ name, result: name === failed ? 'failure' : 'success' })) });
       assert.equal(marker.status, 'failure'); assert.equal(marker.failed_job, failed);
       assert.equal(marker.last_success_at, '2026-09-26T09:00:00Z');
     }
@@ -241,3 +254,4 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   console.log(`stale-quarter-reload.test.js: ${passed} passed, ${failed} failed`);
   process.exitCode = failed ? 1 : 0;
 })().catch(e => { console.error(e); process.exitCode = 1; });
+module.exports = { fixture, snapshot, NOW, DEFAULT };

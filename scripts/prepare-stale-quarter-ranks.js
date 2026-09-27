@@ -3,7 +3,14 @@
 const fs = require('fs');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
-async function prepareRanks(fetchJson) {
+async function prepareRanks(fetchJson, warn = console.warn) {
+  try { return await readRanks(fetchJson, warn); }
+  catch (e) {
+    warn('::warning::stale-quarter ranks unavailable: ' + e.message + '; using empty ranks');
+    return { generated_at: null, sources: [], ranks: {} };
+  }
+}
+async function readRanks(fetchJson, warn) {
   const index = await fetchJson('index.json');
   if (!Array.isArray(index.branches) || !index.generated_at) throw new Error('Invalid board index for stale-quarter ordering');
   const ranks = {}, sources = [{ family: 'hypergrowth', generated_at: index.generated_at }];
@@ -26,7 +33,8 @@ async function prepareRanks(fetchJson) {
     if (!/^[a-z-]+$/.test(board)) throw new Error('Invalid board name');
     // Full cohorts include ranks beyond the displayed top 100; gated rank:null rows do not count.
     const data = await fetchJson(file);
-    if (!data || String(data.generated_at).slice(0, 10) !== date.slice(0, 10)) throw new Error('Mixed board dates: ' + board);
+    if (!data) throw new Error('Missing board: ' + board);
+    if (String(data.generated_at).slice(0, 10) !== date.slice(0, 10)) warn('::warning::Mixed board dates: ' + board + '; retaining ordering hints');
     const tracks = Array.isArray(data) ? [data] : [data.profitable || [], data.unprofitable || [], data.rows || []];
     for (const rows of tracks) for (const row of rows) {
       if (typeof row.ticker === 'string' && Number.isSafeInteger(row.rank) && row.rank > 0) ranks[row.ticker] = Math.min(ranks[row.ticker] || Infinity, row.rank);
@@ -47,6 +55,6 @@ if (require.main === module) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     writeFileAtomic(file, JSON.stringify(result));
     console.log('Stale-quarter ranks: ' + Object.keys(result.ranks).length + ' tickers, boards ' + result.generated_at);
-  }).catch(e => { console.error('::error::stale-quarter ranks: ' + e.message); process.exitCode = 1; });
+  }).catch(e => { console.warn('::warning::stale-quarter ranks not written: ' + e.message + '; continuing without ranks'); });
 }
 module.exports = { prepareRanks };
