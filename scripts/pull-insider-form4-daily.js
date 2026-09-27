@@ -177,9 +177,16 @@ function assertCanonicalYmd(value, label) {
   return value;
 }
 function isWeekend(d) { const wd = d.getUTCDay(); return wd === 0 || wd === 6; }
+const warnedEdgarCalendarYears = new Set();
 function isEdgarHoliday(date) {
   // Only explicitly sourced years are known; all other years retain the old behavior.
-  return EDGAR_HOLIDAYS.years[date.slice(0, 4)]?.includes(date) === true;
+  const year = date.slice(0, 4);
+  if (!Object.hasOwn(EDGAR_HOLIDAYS.years, year) && !warnedEdgarCalendarYears.has(year)) {
+    console.warn('::warning::EDGAR holiday calendar missing year ' + year +
+      ' in configs/edgar-holidays.json; using existing weekday/HTTP handling. Update from the official SEC calendar.');
+    warnedEdgarCalendarYears.add(year);
+  }
+  return EDGAR_HOLIDAYS.years[year]?.includes(date) === true;
 }
 // audit/fix BH-020: string-compare is safe for zero-padded YYYYMMDD.
 function maxYmd(a, b) {
@@ -204,6 +211,12 @@ function maxYmd(a, b) {
 // Known EDGAR holidays are handled before HTTP in main(). For every other date,
 // including years absent from the calendar, retain the existing 404 age heuristic.
 const INDEX_KARENZ_TAGE = 3;
+function annotateStaleIndex403(date, error) {
+  if (error?.statusCode === 403 && Date.now() - parseYmd(date).getTime() > INDEX_KARENZ_TAGE * 86400000) {
+    console.error('::error::[' + date + '] EDGAR index HTTP 403 gap older than ' +
+      INDEX_KARENZ_TAGE + ' days; cursor cannot advance across this gap. Investigate SEC access/index availability.');
+  }
+}
 function indexNachreichbar(dateYmd, jetzt = Date.now(), karenzTage = INDEX_KARENZ_TAGE) {
   return (jetzt - parseYmd(dateYmd).getTime()) < karenzTage * 86400000;
 }
@@ -494,7 +507,7 @@ async function main() {
     if (isEdgarHoliday(date)) {
       // SEC can return 403 for a non-existent holiday index. This is a calendar
       // decision, never a blanket 403 exemption; earlier gaps still block progress.
-      if (cursorContiguous) lastIndexedDate = date;
+      if (cursorContiguous && date < ymd(new Date())) lastIndexedDate = date;
       console.log('[' + date + '] EDGAR holiday (calendar as of ' + EDGAR_HOLIDAYS.asOf +
         ') — no index request; cursor=' + (lastIndexedDate || 'null'));
       writeCache(byTicker, maxYmd(existing.lastIndexedDate, lastIndexedDate));
@@ -517,6 +530,7 @@ async function main() {
         await sleep(RATE_LIMIT_BACKOFF_MS);
         try { idxRes = await httpGet(url); }
         catch (e2) {
+          annotateStaleIndex403(date, e2);
           console.warn('[' + date + '] index fetch ERROR (post-backoff): ' + e2.message + ' — skipping date');
           grandErrors++;
           cursorContiguous = false; // audit/fix BH-020: stop advancing lastIndexedDate past a gap
@@ -524,6 +538,7 @@ async function main() {
           continue;
         }
       } else {
+        annotateStaleIndex403(date, e);
         console.warn('[' + date + '] index fetch ERROR: ' + e.message + ' — skipping date');
         grandErrors++;
         cursorContiguous = false; // audit/fix BH-020: stop advancing lastIndexedDate past a gap

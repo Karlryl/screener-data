@@ -15,6 +15,7 @@ const CALENDAR = path.join(ROOT, 'configs/edgar-holidays.json');
 function loadDaily({ now = '2026-09-26T07:00:00Z', cursor = '20260904',
   env = {}, responses = {}, hits = {}, source = fs.readFileSync(SCRIPT, 'utf8') } = {}) {
   const requests = [], writes = [], logs = [];
+  const attempts = new Map();
   const initial = { lastIndexedDate: cursor, byTicker: {} };
   const epoch = Date.parse(now);
   class Clock extends Date {
@@ -47,7 +48,10 @@ function loadDaily({ now = '2026-09-26T07:00:00Z', cursor = '20260904',
         assert.ok(match || /^https:\/\/www\.sec\.gov\/Archives\/edgar\/data\/1\//.test(url),
           'Unexpected HTTP request: ' + url);
         const date = match && match[1];
-        const status = date ? (responses[date] ?? 200) : 200;
+        const reply = date ? (responses[date] ?? 200) : 200;
+        const attempt = attempts.get(date) ?? 0;
+        attempts.set(date, attempt + 1);
+        const status = Array.isArray(reply) ? reply[Math.min(attempt, reply.length - 1)] : reply;
         const body = date
           ? Array.from({ length: hits[date] ?? 1 }, (_, i) =>
             `4 Fixture issuer 1 ${date} edgar/data/1/${date}-${i}.txt`).join('\n')
