@@ -9,7 +9,7 @@ const cp = require('node:child_process');
 const ROOT = path.resolve(__dirname, '..');
 
 if (process.argv.includes('--break-once')) {
-  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune']) {
+  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap']) {
     const r = cp.spawnSync(process.execPath, [__filename], {
       cwd: ROOT, encoding: 'utf8', env: { ...process.env, B5_MUTATION: mutation },
     });
@@ -22,6 +22,7 @@ if (process.argv.includes('--break-once')) {
       'placeholder': /never-seen main ticker must not get a placeholder/,
       'streak': /real full answer must reset not-found streak/,
       'legacy-prune': /legacy entry without added_at must not be auto-pruned/,
+      'empty-summary-stale-cap': /empty full answer must invalidate old market cap/,
     };
     assert.match(r.stderr, expected[mutation]);
     console.log('BREAK_ONCE ' + mutation + ' exit=1 detected=true ' + r.stderr.trim().split('\n')[0]);
@@ -53,7 +54,8 @@ Module.prototype._compile = function (source, name) {
   const regressions = {
     'fast-null-final': ['pull-yahoo.js', "throw new Error('price-only refused: quote without finite marketCap - full pull decides');", "return preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quote');"],
     'placeholder': ['pull-yahoo.js', "if (!preserved && process.env.MISSING_CAP_CARRIER !== '1')", "if (false && !preserved && process.env.MISSING_CAP_CARRIER !== '1')"],
-    'streak': ['pull-yahoo.js', 'if (snapshot.meta) delete snapshot.meta.notFoundStreak;', '// mutant: keep the stale not-found streak'],
+    'streak': ['pull-yahoo.js', 'if (snapshot.meta && !keepStreak) delete snapshot.meta.notFoundStreak;', '// mutant: keep the stale not-found streak'],
+    'empty-summary-stale-cap': ['pull-yahoo.js', "preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quoteSummary', { keepStreak: true });", '// mutant: leave the old market cap after an empty response'],
     'legacy-prune': ['scripts/prune-watchlist.js', 'if ((entry.added_at || entry.addedAt) && absenceDays > args.pruneNoDataDays)', 'if (absenceDays > args.pruneNoDataDays)'],
   };
   const regression = regressions[process.env.B5_MUTATION];
@@ -113,6 +115,8 @@ class FakeYahoo {
     fullCalls++;
     if (fullMode === 'not-found') throw new Error('Quote not found for symbol');
     if (fullMode === 'empty') return {};
+    if (fullMode === 'undefined') return undefined;
+    if (fullMode === 'empty-modules') return { price: {}, summaryDetail: {} };
     return { price: { symbol: ticker, currency: 'USD', marketCap: fullCap === undefined ? cap : fullCap, regularMarketPrice: 120 }, financialData: { financialCurrency: 'USD' }, summaryProfile: { sector: 'Technology', industry: 'Semiconductors', country: 'United States' } };
   }
   async fundamentalsTimeSeries() { ftsCalls++; return []; }
@@ -205,6 +209,47 @@ const reviewCases = {
     reset(); cap = null; const empty = read(snapPath); empty.meta.notFoundStreak = 1; files.set(snapPath, JSON.stringify(empty));
     quoteMode = fullMode = 'empty'; await pullAll({ stocks: [stock] }, out, 0);
     assert.equal(read(snapPath).meta.notFoundStreak, 1, 'empty responses cannot confirm the company is alive');
+    assert.equal(read(snapPath).marketCap.value, null, 'empty full answer must invalidate old market cap');
+  },
+  async emptySummary() {
+    for (const mode of ['empty', 'undefined', 'empty-modules']) {
+      for (const age of [1, 40]) {
+        reset(age); cap = undefined; fullMode = mode;
+        const before = read(snapPath); before.meta.notFoundStreak = 1;
+        files.set(snapPath, JSON.stringify(before));
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const result = await pullAll({ stocks: [stock] }, out, 0);
+          const after = read(snapPath);
+          assert.equal(after.marketCap.value, null, 'empty full answer must invalidate old market cap');
+          assert.equal(after.marketCap.missing, true);
+          assert.equal(after.marketCap.asOf, iso(0));
+          assert.deepEqual(after.meta, before.meta, 'empty answer must preserve streak and freshness clocks');
+          assert.deepEqual(after.annual, before.annual);
+          assert.deepEqual(after.timeseries, before.timeseries);
+          assert.equal(files.get(cachePath), cache);
+          assert.equal(result.n_failed, 1, 'empty full answer must still count as failure');
+          assert.equal(result.n_ok, 0);
+          assert.equal(result.results.length, 0, 'failure must not also become a successful result');
+          visible(after); runPrune(); assert.equal(read(wlPath).stocks.length, 1);
+        }
+        assert.equal(fullCalls, 3);
+        assert(age === 40 || quoteCalls > 0, 'young snapshot must exercise the fast-path fallback');
+        assert.equal(unlinks.length, 0);
+      }
+    }
+    reset(); cap = null; fullMode = 'empty'; files.delete(snapPath);
+    await pullAll({ stocks: [stock] }, out, 0);
+    assert(!files.has(snapPath), 'empty answer must not create a main-store placeholder');
+    process.env.MISSING_CAP_CARRIER = '1';
+    await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
+    files.set(path.join(incoming, filename), files.get(snapPath));
+    const baseline = structuredClone(seed); baseline.meta.notFoundStreak = 1;
+    files.set(path.join(merged, filename), JSON.stringify(baseline));
+    mergeSmallcapSnapshots(incoming, merged);
+    const afterMerge = read(path.join(merged, filename));
+    assert.equal(afterMerge.marketCap.value, null);
+    assert.deepEqual(afterMerge.meta, baseline.meta, 'empty carrier must not reset the merge baseline streak');
+    assert.deepEqual(afterMerge.annual, baseline.annual);
   },
   async legacy() {
     reset(); files.delete(snapPath); const w = read(wlPath); delete w.stocks[0].added_at;

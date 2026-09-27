@@ -3197,7 +3197,7 @@ function countSkippedMcap(results) {
 
 // B5: missing size is an observation, not evidence that a company is too small.
 // Read the prior file regardless of age; never refresh its financial/price clocks.
-function preserveMissingMarketCap(outputDir, stock, observedAt, source) {
+function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepStreak = false } = {}) {
   const file = path.join(outputDir, safeSnapshotFilename(stock.ticker));
   const preserved = fs.existsSync(file);
   // Only SmallCap workers may transport a null observation without a baseline.
@@ -3218,8 +3218,10 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source) {
     throw new Error('Cannot preserve invalid snapshot for ' + stock.ticker);
   }
   snapshot.marketCap = { value: null, source, confidence: 0, asOf: observedAt, missing: true };
-  // Reached only after a substantive full response: not-founds are consecutive.
-  if (snapshot.meta) delete snapshot.meta.notFoundStreak;
+  // Empty responses invalidate size but do not confirm existence. Carry that
+  // distinction through cold SmallCap workers to the restored merge baseline.
+  if (keepStreak) snapshot.marketCap.keepStreak = true;
+  if (snapshot.meta && !keepStreak) delete snapshot.meta.notFoundStreak;
   writeFileAtomic(file, JSON.stringify(snapshot));
   return { ticker: stock.ticker, status: 'missing-market-cap', preserved, observedAt };
 }
@@ -3240,7 +3242,8 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
           !Number.isFinite(Date.parse(at))) throw new Error('Invalid missing-cap observation: ' + name);
       const target = path.join(outputDir, name);
       if (fs.existsSync(target)) {
-        preserveMissingMarketCap(outputDir, { ticker }, at, incoming.marketCap.source);
+        preserveMissingMarketCap(outputDir, { ticker }, at, incoming.marketCap.source,
+          { keepStreak: incoming.marketCap.keepStreak === true });
       } else {
         // A carrier only invalidates an existing baseline; it is not a company snapshot.
         continue;
@@ -4024,6 +4027,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
       const yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker);
       if (!yahoo || !Object.values(yahoo).some(v => v && typeof v === 'object' && Object.keys(v).length)) {
+        preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quoteSummary', { keepStreak: true });
         throw new Error('full pull refused: empty quoteSummary cannot confirm a live company');
       }
       const asOf = new Date().toISOString();
