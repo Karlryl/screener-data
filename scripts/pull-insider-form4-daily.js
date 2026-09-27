@@ -61,6 +61,7 @@ const WATCHLIST_PATH = path.join(ROOT, 'watchlist.json');
 const EXTERNAL_DIR = path.join(ROOT, 'external-data');
 const TICKER_CIK_MAP_PATH = path.join(EXTERNAL_DIR, 'sec-ticker-cik-map.json');
 const FORM4_CACHE_PATH = path.join(EXTERNAL_DIR, 'sec-form4-cache.json');
+const EDGAR_HOLIDAYS = require('../configs/edgar-holidays.json');
 
 const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
 const SEC_RATE_LIMIT = require('../lib/sec-rate-limit.js');
@@ -176,6 +177,17 @@ function assertCanonicalYmd(value, label) {
   return value;
 }
 function isWeekend(d) { const wd = d.getUTCDay(); return wd === 0 || wd === 6; }
+const warnedEdgarCalendarYears = new Set();
+function isEdgarHoliday(date) {
+  // Only explicitly sourced years are known; all other years retain the old behavior.
+  const year = date.slice(0, 4);
+  if (!Object.hasOwn(EDGAR_HOLIDAYS.years, year) && !warnedEdgarCalendarYears.has(year)) {
+    console.warn('::warning::EDGAR holiday calendar missing year ' + year +
+      ' in configs/edgar-holidays.json; using existing weekday/HTTP handling. Update from the official SEC calendar.');
+    warnedEdgarCalendarYears.add(year);
+  }
+  return EDGAR_HOLIDAYS.years[year]?.includes(date) === true;
+}
 // audit/fix BH-020: string-compare is safe for zero-padded YYYYMMDD.
 function maxYmd(a, b) {
   if (!a) return b || null;
@@ -196,11 +208,15 @@ function maxYmd(a, b) {
 //                           bis an MAX_CATCHUP_DAYS, oder
 //   (b) noch nicht gepostet (SEC stellt ~22:00 ET ein) -> der Index KOMMT noch ->
 //                           Cursor muss stehen bleiben.
-// Unterschieden wird am Alter statt an einem Feiertagskalender: was nach INDEX_KARENZ_TAGEN
-// nicht da ist, kommt nicht mehr. Kalender waere genauer, muesste aber gepflegt werden und
-// faellt bei jeder ungeplanten Schliessung (Trauertag, Sturm) auf denselben Fehler zurueck.
-// ponytail: Alters-Heuristik statt Feiertagskalender; Karenz notfalls hochsetzen.
+// Known EDGAR holidays are handled before HTTP in main(). For every other date,
+// including years absent from the calendar, retain the existing 404 age heuristic.
 const INDEX_KARENZ_TAGE = 3;
+function annotateStaleIndex403(date, error) {
+  if (error?.statusCode === 403 && Date.now() - parseYmd(date).getTime() > INDEX_KARENZ_TAGE * 86400000) {
+    console.error('::error::[' + date + '] EDGAR index HTTP 403 gap older than ' +
+      INDEX_KARENZ_TAGE + ' days; cursor cannot advance across this gap. Investigate SEC access/index availability.');
+  }
+}
 function indexNachreichbar(dateYmd, jetzt = Date.now(), karenzTage = INDEX_KARENZ_TAGE) {
   return (jetzt - parseYmd(dateYmd).getTime()) < karenzTage * 86400000;
 }
@@ -225,6 +241,8 @@ function cursorDarfVor({ contiguous, notFound, date, jetzt, tagesFehler = 0, tag
 // at MAX_CATCHUP_DAYS with a loud warning for anything beyond the cap. With
 // no cursor (first run / fresh cache) we fall back to the old fixed-DAYS
 // behaviour.
+// Keep holidays in this progress plan: even a holiday-only run must advance the
+// cursor. main() completes known holidays without requesting their daily indexes.
 function targetDates(lastIndexedDate) {
   if (lastIndexedDate !== null && lastIndexedDate !== undefined) {
     assertCanonicalYmd(lastIndexedDate, 'lastIndexedDate');
@@ -486,6 +504,15 @@ async function main() {
       console.log('[sample] SAMPLE_LIMIT reached — stopping before date ' + date);
       break;
     }
+    if (isEdgarHoliday(date)) {
+      // SEC can return 403 for a non-existent holiday index. This is a calendar
+      // decision, never a blanket 403 exemption; earlier gaps still block progress.
+      if (cursorContiguous && date < ymd(new Date())) lastIndexedDate = date;
+      console.log('[' + date + '] EDGAR holiday (calendar as of ' + EDGAR_HOLIDAYS.asOf +
+        ') — no index request; cursor=' + (lastIndexedDate || 'null'));
+      writeCache(byTicker, maxYmd(existing.lastIndexedDate, lastIndexedDate));
+      continue;
+    }
     const d = parseYmd(date);
     const q = quarterOf(d.getUTCMonth() + 1);
     const url = DAILY_INDEX_URL(d.getUTCFullYear(), q, date);
@@ -503,6 +530,7 @@ async function main() {
         await sleep(RATE_LIMIT_BACKOFF_MS);
         try { idxRes = await httpGet(url); }
         catch (e2) {
+          annotateStaleIndex403(date, e2);
           console.warn('[' + date + '] index fetch ERROR (post-backoff): ' + e2.message + ' — skipping date');
           grandErrors++;
           cursorContiguous = false; // audit/fix BH-020: stop advancing lastIndexedDate past a gap
@@ -510,6 +538,7 @@ async function main() {
           continue;
         }
       } else {
+        annotateStaleIndex403(date, e);
         console.warn('[' + date + '] index fetch ERROR: ' + e.message + ' — skipping date');
         grandErrors++;
         cursorContiguous = false; // audit/fix BH-020: stop advancing lastIndexedDate past a gap
