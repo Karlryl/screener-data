@@ -516,6 +516,7 @@ jobs:
       # damit Refresh/Prune/FX/Earnings konsistent ueber alle 17 sind.
       - name: Read current board ranks for stale-quarter reload
         continue-on-error: true # Ordering hints must never block the daily pull.
+        timeout-minutes: 2
         run: node scripts/prepare-stale-quarter-ranks.js
 
       - name: Upload prep state (watchlist + fx + earnings + insider)
@@ -689,7 +690,7 @@ jobs:
   # ============================================================================
   pull:
     needs: [prep, quarter-selection]
-    if: ${{ always() && needs.prep.result == 'success' }}
+    if: ${{ !cancelled() && needs.prep.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 200
     strategy:
@@ -1871,7 +1872,8 @@ jobs:
   # runner and publishes hypergrowth + findash-export/v1 to gh-pages.
   # ============================================================================
   scoring:
-    needs: merge
+    needs: [prep, pull, prices, merge]
+    if: ${{ !cancelled() && needs.prep.result == 'success' && needs.pull.result == 'success' && needs.prices.result == 'success' && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -2647,6 +2649,7 @@ jobs:
   # ============================================================================
   druckenmiller-guard:
     needs: scoring
+    if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

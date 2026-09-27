@@ -30,8 +30,11 @@ function run(argv) {
     let ranks = {};
     try { ranks = read('outputs/stale-quarter-ranks.json').ranks || {}; }
     catch (e) { console.warn('::warning::stale-quarter ranks unavailable: ' + e.message + '; using empty ranks'); }
+    let calendar = {};
+    try { calendar = read('earnings-calendar.json') || {}; }
+    catch (e) { console.warn('::warning::stale-quarter calendar unavailable: ' + e.message + '; using empty calendar'); }
     const p = R.planReload(stocks, { snapshotDir: path.join(root, 'snapshots'), cacheDir: path.join(root, 'fundamentals-cache'),
-      ranks, calendar: read('earnings-calendar.json'), config, shard: args.shard });
+      ranks, calendar, config, shard: args.shard });
     if (p.readErrors) console.warn('::warning::Unreadable stale-quarter candidate inputs: ' + p.readErrors + '; continuing with readable snapshots');
     result = { date, shard: args.shard, config, candidates: p.candidates, readErrors: p.readErrors, noQuarter: p.noQuarter };
     target = 'outputs/stale-quarter-candidates/shard-' + args.shard.index + '.json';

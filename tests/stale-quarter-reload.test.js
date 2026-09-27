@@ -32,9 +32,10 @@ function snapshot(ticker, end = '2026-03-31', fetched = '2026-09-20T02:17:00Z') 
 }
 function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxPerRun, shard = null, selection = null,
   newer = true, quarterFails = false, quarterEmpty = false, summaryFails = false, ftsFails = false,
+  annualFails = false, quarterlyRows = null, summaryError = 'fixture summary failure', quoteMissing = false,
   manual = [], calendar = {}, env = { STALE_QUARTER_RELOAD: 'local' }, now = NOW } = {}) {
   const base = path.join(root, '_scratch', 'b6-virtual'), out = path.join(base, 'snapshots');
-  const files = new Map(), handles = new Map(), calls = [], logs = []; let fd = 1000;
+  const files = new Map(), handles = new Map(), calls = [], logs = [], reads = []; let fd = 1000;
   const key = p => path.resolve(String(p));
   const put = (p, value) => files.set(key(p), Buffer.from(JSON.stringify(value)));
   const configPath = path.join(root, 'configs/stale-quarter-reload.json');
@@ -50,7 +51,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   }
   const io = new Proxy(fs, { get(target, prop) {
     if (prop === 'existsSync') return p => files.has(key(p));
-    if (prop === 'readFileSync') return (p, enc) => { if (!files.has(key(p))) { const e = new Error('virtual file missing'); e.code = 'ENOENT'; throw e; } const b = files.get(key(p)); return enc ? b.toString() : Buffer.from(b); };
+    if (prop === 'readFileSync') return (p, enc) => { reads.push(key(p)); if (!files.has(key(p))) { const e = new Error('virtual file missing'); e.code = 'ENOENT'; throw e; } const b = files.get(key(p)); return enc ? b.toString() : Buffer.from(b); };
     if (prop === 'writeFileSync') return (p, data) => { files.set(key(p), Buffer.from(data)); };
     if (prop === 'mkdirSync') return () => {};
     if (prop === 'unlinkSync') return p => files.delete(key(p));
@@ -63,13 +64,15 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   } });
   const quote = { currency: 'USD', regularMarketPrice: 100, marketCap: 1e12 };
   class Yahoo {
-    async quote(t) { calls.push([t, 'quote']); return quote; }
-    async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error('fixture summary failure'); return { price: quote, financialData: { financialCurrency: 'USD' },
+    async quote(t) { calls.push([t, 'quote']); return quoteMissing ? undefined : quote; }
+    async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error(summaryError); return { price: quote, financialData: { financialCurrency: 'USD' },
       quoteType: { quoteType: 'EQUITY' }, summaryProfile: { sector: 'Technology', industry: 'Software' } }; }
     async fundamentalsTimeSeries(t, q) {
       calls.push([t, q.type + '/' + q.module]);
       if (q.type === 'quarterly' && quarterFails) throw new Error('fixture quarterly failure');
       if (q.type === 'quarterly' && quarterEmpty) return [];
+      if (q.type === 'annual' && (annualFails === true || annualFails === q.module)) throw new Error('fixture annual ' + q.module + ' failure');
+      if (q.type === 'quarterly' && quarterlyRows) return quarterlyRows;
       if (q.type === 'quarterly') return rows(newer ? '2026-06-30' : '2026-03-31');
       return [{ date: '2025-12-31', totalRevenue: 400, grossProfit: 100, operatingIncome: 50, netIncome: 30,
         operatingCashFlow: 60, freeCashFlow: 40, totalAssets: 1000, currentAssets: 200, currentLiabilities: 100, totalDebt: 50 }];
@@ -88,7 +91,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   const Y = mod.exports; Y.__manual(manual);
   if (ftsFails) Y.__ftsFail();
   const stocks = snapshots.map(s => ({ ticker: s.meta.ticker, yahoo_symbol: s.meta.ticker, name: s.meta.ticker }));
-  return { Y, calls, files, logs, out, io, config: { ...DEFAULT, maxPerRun: cap },
+  return { Y, calls, files, logs, reads, out, io, config: { ...DEFAULT, maxPerRun: cap },
     stored: ticker => JSON.parse(files.get(key(path.join(out, ticker + '.json')))),
     run: () => Y.pullAll({ stocks: Y.shardStocks(stocks, shard), _pullShard: shard, _meta: { version: 'b6-fixture' } }, out, 0) };
 }
@@ -241,14 +244,15 @@ if (require.main === module) (async () => {
     assert.deepEqual(mixed.ranks, ranks);
     assert(warnings.some(s => s.startsWith('::warning::Mixed board dates')));
   });
-  await check('planning failure remains visible even when the daily pull succeeds', () => {
+  await check('planning failure remains diagnostic when the daily data run succeeds', () => {
     for (const failed of ['quarter-candidates', 'quarter-selection']) {
       const marker = baueMarker({ runId: '123', runAttempt: 1, headSha: 'a'.repeat(40),
         startedAt: '2026-09-29T02:17:00Z', completedAt: '2026-09-29T02:20:00Z',
         vorgaenger: { last_success_at: '2026-09-26T09:00:00Z' },
         jobErgebnisse: JOB_REIHENFOLGE.map(name => ({ name, result: name === failed ? 'failure' : 'success' })) });
-      assert.equal(marker.status, 'failure'); assert.equal(marker.failed_job, failed);
-      assert.equal(marker.last_success_at, '2026-09-26T09:00:00Z');
+      assert.equal(marker.status, 'success'); assert.equal(marker.failed_job, null);
+      assert.equal(marker.last_success_at, marker.completed_at);
+      assert(marker.reason.includes(failed + '=failure'));
     }
   });
   console.log(`stale-quarter-reload.test.js: ${passed} passed, ${failed} failed`);

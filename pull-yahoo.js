@@ -3383,10 +3383,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   let reloadPlan = { cap: 0, candidates: [], selected: [], observations: new Map(), readErrors: 0, unknownClock: 0, noQuarter: 0 };
   try {
     reloadConfig = reload.validateConfig(JSON.parse(fs.readFileSync(path.join(__dirname, 'configs', 'stale-quarter-reload.json'), 'utf8')));
-    const rankPath = path.join(__dirname, 'outputs', 'stale-quarter-ranks.json');
-    try { rankState = JSON.parse(fs.readFileSync(rankPath, 'utf8')); }
-    catch (e) { console.warn('::warning::stale-quarter ordering unavailable: ' + e.message + '; using empty ranks'); }
     const mode = process.env.STALE_QUARTER_RELOAD;
+    if (mode !== '0') {
+      const rankPath = path.join(__dirname, 'outputs', 'stale-quarter-ranks.json');
+      try { rankState = JSON.parse(fs.readFileSync(rankPath, 'utf8')); }
+      catch (e) { console.warn('::warning::stale-quarter ordering unavailable: ' + e.message + '; using empty ranks'); }
+    }
     const selectionPath = path.join(__dirname, 'outputs', 'stale-quarter-selection.json');
     const selection = mode !== '0' && fs.existsSync(selectionPath) ? JSON.parse(fs.readFileSync(selectionPath, 'utf8')) : null;
     if (!selection && mode === 'planned') throw new Error('Missing stale-quarter global selection');
@@ -3954,10 +3956,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // ein junger Snapshot (asOf wird taeglich neu gestempelt), der trotzdem falsch ist.
       const vollPullAngefordert = _vollPullTicker.has(stock.ticker);
       const staleQuarterSelected = reloadSelected.has(stock.ticker);
-      const reloadFailed = async cause => {
+      // Optional reloads may fall back; an existing repair/refresh must keep its full-pull behavior.
+      const reloadOnly = staleQuarterSelected && youngEnough && _parsedSnapshot
+        && !staleSchema && !staleCurrency && !staleEarnings && !staleFundamentals && !vollPullAngefordert;
+      const reloadFailed = async (cause, originalError) => {
+        let r;
+        try { r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot); }
+        catch (e) { throw originalError || e; }
         reloadStats.reload_failed++;
         console.warn(`::warning::${stock.ticker} ${reload.REASON}: reload-failed (${cause}); retaining quarterly history and updating price only`);
-        const r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot);
         results.push({ ...r, quarterReload: { reason: reload.REASON, outcome: 'reload-failed',
           previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reloadSelected.get(stock.ticker).end } });
       };
@@ -4000,7 +4007,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
       let yahoo;
       try { yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker); }
-      catch (e) { if (staleQuarterSelected) return await reloadFailed(e.message); throw e; }
+      catch (e) {
+        // Preserve the existing symbol retries and delisting streak; a quote fallback can mask a dead symbol.
+        if (reloadOnly && !/404|not found|invalid symbol|no data found|no fundamentals data found/i.test(String(e.message))) {
+          return await reloadFailed(e.message, e);
+        }
+        throw e;
+      }
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
       if (preserveSnapshotForMissingCurrency(canonical, stock, outputDir, results)) {
@@ -4202,12 +4215,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // 'timeout'/'ECONNRESET' token → correct errClass ('timeout'/'network')
         // instead of 'other' in the catch classifier.
         if (ftsFetchFailed || !fts) {
-          if (staleQuarterSelected) { reloadStats.fetch_failed++; return await reloadFailed('FTS fetch failed'); }
+          if (staleQuarterSelected) reloadStats.fetch_failed++;
+          if (reloadOnly) return await reloadFailed('FTS fetch failed', ftsLastErr);
           throw new Error('FTS fetch failed for ' + stock.ticker + (ftsLastErr ? ': ' + ftsLastErr.message : ''));
         }
         const ftsFailure = ftsFailureSummary(fts);
+        if (staleQuarterSelected && ftsFailure.failedSeries > 0) reloadStats.fetch_failed++;
+        if (reloadOnly && (ftsFailure.failedSeries > 0 || !fts._quarterlySucceeded)) {
+          return await reloadFailed('FTS series failed: ' + ftsFailure.failedSeries);
+        }
         if (fts._quarterlySucceeded) { quarterlyFetchedAt = new Date().toISOString(); quarterlyClockSource = 'fts'; }
-        else if (staleQuarterSelected) { reloadStats.fetch_failed++; return await reloadFailed('Quarterly FTS fetch failed'); }
         _allFtsSeriesEmpty = ftsFailure.allEmpty;
         if (ftsFailure.failedSeries > 0) {
           _ftsPartialTickers++;
@@ -4250,8 +4267,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly, ftsQuarterlyNI);
         if (staleQuarterSelected && fts._quarterlySucceeded) {
           const yahooEnd = reload.latestReportedQuarter({ timeseries: { ...ftsQuarterly, netIncomeQ: ftsQuarterlyNI } }, Date.now());
-          if (!yahooEnd) { reloadStats.fetch_failed++; return await reloadFailed('No reported quarter in FTS response'); }
-          if (reload.quarterAgeDays(yahooEnd, Date.now()) > reloadConfig.maxQuarterAgeDays) reloadStats.still_old_yahoo++;
+          if (reloadOnly) {
+            // Compare the actual merge winner before writing either snapshot or cache.
+            const proposed = _mergeQuarterBundle(canonical.timeseries, { ...ftsQuarterly, netIncomeQ: ftsQuarterlyNI });
+            const proposedEnd = reload.latestReportedQuarter({ timeseries: proposed }, Date.now());
+            const thinner = ['revenueQ', 'grossProfitQ', 'opIncQ', 'netIncomeQ']
+              .some(k => _nonNullCount(proposed[k]) < _nonNullCount(_parsedSnapshot.timeseries[k]));
+            if (!proposedEnd || proposedEnd < reloadSelected.get(stock.ticker).end || thinner) {
+              reloadStats.fetch_failed++;
+              return await reloadFailed('Quarterly history empty, older or thinner than stored');
+            }
+          }
+          if (!yahooEnd || reload.quarterAgeDays(yahooEnd, Date.now()) > reloadConfig.maxQuarterAgeDays) reloadStats.still_old_yahoo++;
         }
         // F-DP-005: detect partial FTS result — any module that returned empty array
         const ftsPartial = (
