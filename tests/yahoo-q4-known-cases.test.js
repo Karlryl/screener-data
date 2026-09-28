@@ -218,7 +218,7 @@ test('process summary is emitted once, warnings do not fail a run, manifests ret
     assert.equal(run.status, 0, run.stderr);
     const lines = run.stderr.trim().split(/\r?\n/);
     assert.equal(lines.length, 1); assert.match(lines[0], /yahoo-q4-hand-table-summary/);
-    assert.equal(lines[0].startsWith('::warning::'), status !== 'corrected');
+    assert.equal(lines[0].startsWith('::warning::'), status === 'stale');
     assert.equal(JSON.parse(lines[0].slice(lines[0].indexOf('{')))[status], 2);
   }
   // Reuse the real pull's virtual-filesystem fixture; no writes/network reach live paths.
