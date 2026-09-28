@@ -168,6 +168,7 @@ function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null
 // REGEL (Karl): eine Zeile OHNE nachgewiesene Handelskurs-Umrechnung wird auf null
 // gesetzt statt ausgeliefert — eine fehlende Groesse ist harmlos, eine falsche nicht.
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
 // Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
@@ -186,7 +187,7 @@ const _snapCache = new Map();
 function snapAbleitungenFuer(ticker) {
   if (_snapCache.has(ticker)) return _snapCache.get(ticker);
   let snap = null;
-  try { snap = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')); }
+  try { snap = prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8'))); }
   catch (_) { snap = null; }
   const abl = {
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),

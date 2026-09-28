@@ -43,6 +43,8 @@ const { loadAdsHandTable, applyAdsHandTable } = require('./lib/ads-hand-table.js
 const ADS_HAND_TABLE = loadAdsHandTable();
 const { loadStatementCurrencyTable, statementFactor, statementRowPending } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
+// Validate before any pull or per-ticker FX catch can run.
+const yahooQ4 = require('./lib/yahoo-q4-known-cases.js');
 /**
  * Applies the ADS hand table to one snapshot and logs the outcome (stale row = WARN).
  * @param {object} snap Snapshot, mutated in place when corrected.
@@ -1199,6 +1201,9 @@ function _convertSnapshotToUSD(snap) {
   if (!snap || !snap.meta) return snap;
   // F-DP-008: idempotency guard — if already converted, return immediately to prevent double-scaling
   if (snap.meta.fxConverted === true) return snap;
+  // C2: exact known cases only, in native currency, before the existing single FX pass.
+  const q4Checked = yahooQ4.prepareSnapshot(snap);
+  if (q4Checked !== snap) snap.timeseries = q4Checked.timeseries;
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   if (origCurrency === 'USD') {
     // F-NY-004 (audit 2026-06-08): 'USD' here may be a GUESS — when Yahoo returns
@@ -1489,6 +1494,7 @@ function _convertSnapshotToUSDGuarded(snap, onError) {
     _convertSnapshotToUSD(snap);
     return true;
   } catch (e) {
+    if (e.code === yahooQ4.FAILURE_CODE) throw e;
     if (typeof onError === 'function') onError(e);
     if (snap && snap.meta) {
       snap.meta.fxConversionFailed = true;
@@ -3407,6 +3413,8 @@ function _existingSnapshotMissingTag211lFields(s) {
 }
 
 async function pullAll(watchlist, outputDir, rateLimitMs) {
+  const q4Start = { ...yahooQ4.runtimeCounters };
+  const q4Counts = () => Object.fromEntries(Object.entries(yahooQ4.runtimeCounters).map(([k, n]) => [k, n - q4Start[k]]));
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   // audit/fix F3-budget (2026-06-25): reset the per-run time-based fundamentals-stale
   // counters so the budget is fresh each pullAll invocation.
@@ -3633,6 +3641,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // durch das volle Universum ersetzt.
         n_skipped_owned: (watchlist._skippedOwned || 0),
         n_failed: failures.length,
+        yahooQ4HandTable: q4Counts(),
         _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized },
         partial: true
       };
@@ -4967,6 +4976,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       _log('INFO', `  ✓ ${stock.ticker}: revenue=${revStr}, growth=${growthStr}, sector=${canonical.meta.sector}`);
     } catch (e) {
       // Tag 134 — Phase 5.3: classify error type so pull-stats-check can alert on
+      if (e.code === yahooQ4.FAILURE_CODE) throw e;
       // patterns (e.g. >5% rate-limit suggests a Yahoo policy change vs >5% 404
       // suggests universe contains dead tickers).
       const msg = String(e.message || '');
@@ -5094,7 +5104,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const myIdx = idx++;
         if (myIdx >= stocks.length) break;
         const stock = stocks[myIdx];
-        await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
+        await processOneFn(stock).catch(e => {
+          if (e.code === yahooQ4.FAILURE_CODE) throw e;
+          _log('WARN', `Worker error ${stock.ticker}: ${e.message}`);
+        });
         // flush manifest every 100 tickers using the captured local index
         if (myIdx > 0 && myIdx % 100 === 0) writeManifestFn();
       }
@@ -5169,6 +5182,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     n_skipped_mcap: skippedMcapFinal,
     n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
     n_failed: failures.length,
+    yahooQ4HandTable: q4Counts(),
     _silentErrors,
     ...reloadCounters(),
     _staleQuarterReload: reloadMeta,
@@ -5197,6 +5211,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
   const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  slim.yahooQ4HandTable = manifest.yahooQ4HandTable;
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, pulled=${reloadStats.pulled}, newer=${reloadStats.newer}, still-old-yahoo=${reloadStats.still_old_yahoo}, skipped-cap=${reloadStats.skipped_cap}, fetch-failed=${reloadStats.fetch_failed}, reload-failed=${reloadStats.reload_failed}, no-quarter=${reloadStats.no_quarter}`);
   _log('INFO', `Missing-market-cap observations: ${manifest.n_missing_mcap} (not counted as successful pulls)`);
   // Tag 189: factored into writeFileAtomic helper.

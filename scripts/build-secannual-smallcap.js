@@ -26,6 +26,7 @@ const SNAP = process.env.SEC_SMALLCAP_SNAPSHOTS_DIR || path.join(ROOT, 'snapshot
 const CACHE = process.env.SEC_XBRL_CACHE_DIR || path.join(require('os').tmpdir(), 'sec-xbrl-cache');
 const OUT = path.join(ROOT, 'external-data', 'sec-secannual-smallcap.json');
 const { smallcapRoute } = require(path.join(ROOT, 'src/scoring/smallcap-route.js'));
+const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { extractSecSeries } = require(path.join(ROOT, 'merge-sec-xbrl.js'));
 const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'));
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
@@ -75,7 +76,7 @@ async function run() {
   if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE, { recursive: true });
   const uni = loadSmallcapUniverse();
   assertNonEmptyUniverse(uni);
-  const cands = uni.filter((s) => smallcapRoute(s).action === 'route').map((s) => s.meta.ticker);
+  const cands = uni.filter((s) => smallcapRoute(prepareSnapshot(s)).action === 'route').map((s) => s.meta.ticker);
   console.log('Small-Cap geroutet:', cands.length, 'von', uni.length, 'Snapshots');
   const tmap = await fetchSecTickers();
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, noSeries = 0, ohneReihe = 0, parseErr = 0;
