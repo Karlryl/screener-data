@@ -34,7 +34,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   annualResponses = null, summaryResponse = null, pullSource = source, providersByTicker = null,
   newer = true, quarterFails = false, quarterEmpty = false, summaryFails = false, ftsFails = false,
   annualFails = false, annualEmpty = false, quarterlyRows = null, summaryError = 'fixture summary failure', quoteMissing = false,
-  summaryMarketCap = 1e12, quoteMarketCap = 1e12, emptySummary = false,
+  summaryMarketCap = 1e12, quoteMarketCap = 1e12, quotePrice = 100, emptySummary = false,
   manual = [], calendar = {}, env = { STALE_QUARTER_RELOAD: 'local' }, now = NOW } = {}) {
   const base = path.join(root, '_scratch', 'b6-virtual'), out = path.join(base, 'snapshots');
   const files = new Map(), handles = new Map(), calls = [], logs = [], reads = []; let fd = 1000;
@@ -48,8 +48,12 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   for (const s of snapshots) {
     put(path.join(out, s.meta.ticker + '.json'), s);
     put(path.join(root, 'fundamentals-cache', s.meta.ticker + '.json'), { _cacheVersion: 2, _ftsPartial: false,
-      cachedAt: '2026-09-20T02:17:00Z', payload: { ftsAnnual: { annualOpInc: [], annualNetIncome: [], annualGP: [], annualFCF: [], ...s.annual }, ftsQuarterly: s.timeseries,
-        ftsBalance: s.annual.annualBalance, ftsAnnualSGA: [1], ftsAnnualDepreciation: [1],
+      cachedAt: '2026-09-20T02:17:00Z', payload: { ftsAnnual: { annualOpInc: [], annualNetIncome: [], annualGP: [], annualFCF: [],
+          ...Object.fromEntries(Object.entries(s.annual).filter(([k]) => /^annual(?:Rev|OpInc|NetIncome|GP|FCF|OCF|CostOfRevenue)(?:Ends)?$/.test(k))) },
+        ftsQuarterly: Object.fromEntries(Object.entries(s.timeseries).filter(([k]) => !k.startsWith('netIncomeQ'))),
+        ftsBalance: s.annual.annualBalance, ftsAnnualSGA: s.annual.annualSGA || [1], ftsAnnualDepreciation: s.annual.annualDepreciation || [1],
+        ftsPeriods: { income: s.meta.statementPeriods?.annualRev, cash: s.meta.statementPeriods?.annualFCF,
+          quarter: s.meta.statementPeriods?.revenueQ, balance: s.meta.statementPeriods?.annualBalance },
         ftsQuarterlyNI: (s.timeseries.netIncomeQ || []).map(v => v?.value ?? v) } });
   }
   const io = new Proxy(fs, { get(target, prop) {
@@ -65,7 +69,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
     if (prop === 'statSync') return p => ({ size: files.get(key(p)).length, mtimeMs: NOW - 86400000 });
     return target[prop];
   } });
-  const quote = { currency: 'USD', regularMarketPrice: 100, marketCap: quoteMarketCap };
+  const quote = { currency: 'USD', regularMarketPrice: quotePrice, marketCap: quoteMarketCap };
   class Yahoo {
     async quote(t) { calls.push([t, 'quote']); return quoteMissing ? undefined : quote; }
     async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error(summaryError); if (emptySummary) return {}; if (providersByTicker) return providersByTicker[t].summary; if (summaryResponse) return summaryResponse; return { price: { ...quote, marketCap: summaryMarketCap }, financialData: { financialCurrency: 'USD' },

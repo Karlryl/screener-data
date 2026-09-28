@@ -106,6 +106,7 @@ function manifestNumbersSane(m, fallbackTotal = null) {
     'n_failed',
     'n_full',
     'n_priceonly',
+    'n_retained',
     'n_addressable',
     'n_skipped_mcap',
     'n_missing_mcap',
@@ -156,8 +157,9 @@ function manifestNumbersSane(m, fallbackTotal = null) {
   const hasPriceOnly = hasValue(m.n_priceonly);
   if (hasFull && m.n_full > classifiedTotal) return false;
   if (hasPriceOnly && m.n_priceonly > classifiedTotal) return false;
+  if (hasValue(m.n_retained) && m.n_retained > classifiedTotal) return false;
   if (hasFull && hasPriceOnly) {
-    const mixTotal = m.n_full + m.n_priceonly;
+    const mixTotal = m.n_full + m.n_priceonly + (m.n_retained ?? 0);
     if (!Number.isSafeInteger(mixTotal) || mixTotal !== classifiedTotal) return false;
   }
   return true;
@@ -273,6 +275,7 @@ function buildMarker(res, m) {
     n_total: res.n_total,
     n_full: markerCount('n_full'),              // 0.9 instrumentation
     n_priceonly: markerCount('n_priceonly'),
+    n_retained: markerCount('n_retained'),
     n_shard_collisions: markerCount('n_shard_collisions'),
     coverage_pct: coveragePct,
     // Task 0.12: ehrlicher Nenner + ehrliche Coverage (null bei Legacy-Manifest ohne mcap-Zählung)
@@ -323,6 +326,7 @@ function validateMarker(mk) {
     if (mk[f] !== null && !isCount(mk[f])) errs.push(`${f} present but not a non-negative safe integer`);
   }
   if (!optionalCountSane(mk.n_missing_mcap)) errs.push('n_missing_mcap present but not a non-negative safe integer');
+  if (!optionalCountSane(mk.n_retained)) errs.push('n_retained present but not a non-negative safe integer');
   if (mk.honest_coverage_pct !== null &&
       (!Number.isFinite(mk.honest_coverage_pct) || mk.honest_coverage_pct < 0 || mk.honest_coverage_pct > 100)) {
     errs.push('honest_coverage_pct outside 0..100');
@@ -373,11 +377,13 @@ function validateMarker(mk) {
     errs.push('n_full exceeds collision-adjusted n_ok');
   if (classifiedTotalValid && optionalCountValid('n_priceonly') && mk.n_priceonly !== null && mk.n_priceonly > classifiedTotal)
     errs.push('n_priceonly exceeds collision-adjusted n_ok');
+  if (classifiedTotalValid && hasValue(mk.n_retained) && mk.n_retained > classifiedTotal)
+    errs.push('n_retained exceeds collision-adjusted n_ok');
   if (classifiedTotalValid && optionalCountValid('n_full') && optionalCountValid('n_priceonly') &&
       mk.n_full !== null && mk.n_priceonly !== null) {
-    const mixTotal = mk.n_full + mk.n_priceonly;
+    const mixTotal = mk.n_full + mk.n_priceonly + (mk.n_retained ?? 0);
     if (!Number.isSafeInteger(mixTotal) || mixTotal !== classifiedTotal)
-      errs.push('n_full+n_priceonly inconsistent with n_ok+n_shard_collisions');
+      errs.push('n_full+n_priceonly+n_retained inconsistent with n_ok+n_shard_collisions');
   }
 
   if (mk.manifest_addressable_warning === true) {
@@ -471,6 +477,7 @@ function selftest() {
     [{ n_ok: 6000, n_total: N, partial: true }, 'degradiert'],                     // above floor but partial
     [{ n_ok: 4200, n_total: N, partial: false }, 'degradiert'],                    // above floor, below 18% soft
     [{ n_ok: 6500, n_total: N, partial: false, n_failed: 100 }, 'ok'],             // clean full healthy pull
+    [{ n_ok: 6500, n_total: N, n_full: 50, n_priceonly: 6410, n_retained: 40, partial: false, n_failed: 100 }, 'ok'],
     [{ n_ok: 6000, n_total: N, partial: false, n_failed: 5000 }, 'degradiert'],    // huge failure-mass
     // Task 0.12: ehrliche 90%-Latte (nur bei Manifesten mit mcap-Zählung messbar)
     [{ n_ok: 6088, n_total: 23689, partial: false, n_failed: 4209, n_skipped_mcap: 13392 }, 'degradiert'], // Ist-Zustand vor Austrag: ehrlich 59.1% < 90 (+ fail-mass)
@@ -497,6 +504,9 @@ function selftest() {
     [{ n_ok: 9000, n_total: 12256, partial: false, n_failed: 200, n_skipped_mcap: 2256, n_skipped_owned: 583 }, 'ok'],
   ];
   let pass = 0;
+  const retainedSane = manifestNumbersSane({ n_total: N, n_ok: 6500, n_full: 50, n_priceonly: 6410, n_retained: 40 });
+  console.log(`${retainedSane ? 'PASS' : 'FAIL'}  manifestNumbersSane accepts retained rows in the pull mix`);
+  if (retainedSane) pass++;
   for (const [m, want] of cases) {
     const res = classify(m, N, 0);          // null case: 0 files -> file-count fallback also fails -> katastrophal
     const got = res.status;
@@ -557,7 +567,7 @@ function selftest() {
   console.log(`${nreSk001Ok ? 'PASS' : 'FAIL'}  NRE-SK-001: Datei-Fallback ohne Manifest ist bestenfalls 'degradiert', nie 'ok' (status=${resFallback.status})`);
   if (nreSk001Ok) pass++;
 
-  const total = cases.length * 2 + 2 + 3;   // +1 Doppelabzug, +1 Negativ-Kontrolle, +3 NA/NRE-SK-001
+  const total = cases.length * 2 + 2 + 3 + 1;   // +1 retained manifest, existing negative controls unchanged
   console.log(`${pass}/${total} passed`);
   process.exit(pass === total ? 0 : 1);
 }

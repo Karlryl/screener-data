@@ -40,17 +40,21 @@ async function accepted(sourceOverride = source) {
 }
 async function rejected(sourceOverride = source) {
   const s = await baseline(), thin = rows();
-  for (const k of Object.keys(thin)) thin[k] = thin[k].slice(-1);
-  const f = fixture({ snapshots: [s], annualResponses: thin, pullSource: sourceOverride });
+  thin.financials[2].totalRevenue = 777; delete thin.financials[2].operatingIncome;
+  const f = fixture({ snapshots: [s], annualResponses: thin, pullSource: sourceOverride, quotePrice: 123, quoteMarketCap: 2e12 });
   const sp = path.join(f.out, 'OLD.json'), cp = path.join(root, 'fundamentals-cache/OLD.json');
   const before = [f.files.get(sp).toString(), f.files.get(cp).toString()];
-  const m = await f.run(); assert.equal(m.results[0].status, 'reload-retained');
+  const m = await f.run(); assert.equal(m.results[0].status, 'price-only');
   assert.equal(f.files.get(cp).toString(), before[1], 'rejected answer poisoned cache');
-  assert.equal(f.files.get(sp).toString(), before[0], 'rejected answer changed snapshot');
+  const out = f.stored('OLD');
+  assert.deepEqual(out.annual, s.annual); assert.deepEqual(out.timeseries, s.timeseries);
+  assert.equal(out.meta.fundamentalsAsOf, s.meta.fundamentalsAsOf); assert.equal(out.meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
+  assert.equal(out.price.regularMarketPrice, 123); assert.equal(out.marketCap.value, 2e12); assert.equal(out.meta.asOf, new Date(NOW).toISOString());
+  assert.equal(m.results[0].fundamentalsRetainedReason, 'shared-period fundamentals missing');
   const slim = JSON.parse(f.files.get(path.join(f.out, '_manifest.json')));
   const merged = require('../scripts/merge-shard-manifests.js').mergeManifests([slim], 1, 1);
-  assert.equal(merged.n_retained, 1); assert.equal(merged.n_ok, 1);
-  assert.equal(merged.n_full, 0); assert.equal(merged.n_priceonly, 0);
+  assert.equal(merged.n_retained, 0); assert.equal(merged.n_ok, 1);
+  assert.equal(merged.n_full, 0); assert.equal(merged.n_priceonly, 1);
   return f;
 }
 async function bundle(sourceOverride = source, conflict = false) {
@@ -63,12 +67,12 @@ async function bundle(sourceOverride = source, conflict = false) {
       incomeStatementHistory: { incomeStatementHistory: history } } });
   const m = await f.run(); assert.equal(m.results[0].status, 'ok');
   const s = f.stored('OLD');
-  assert.equal(count(s.annual.annualOpInc), 3, 'operating income lost to revenue-only answer');
-  assert.equal(s.annual.annualOpInc[0], null, 'old operating income must not become current');
+  assert.equal(count(s.annual.annualOpInc), conflict ? 0 : 3, 'conflicting revenue bases must not mix');
+  assert.equal(s.annual.annualOpInc[0] ?? null, null, 'old operating income must not become current');
   assert.equal(s.annual.annualRev[0].value, 103, 'newest complete QS row retained');
-  assert.equal(s.annual.annualRev[1].value, 102, 'whole FTS row retained, no mixed revenue');
-  assert.equal(s.annual.annualOpInc[1].value, 12);
-  if (conflict) assert.equal(s.meta.annualIncomeConflicts[0].end, dates[1]);
+  assert.equal(s.annual.annualRev[1].value, conflict ? 109 : 102, 'main winner retained on revenue conflict');
+  if (!conflict) assert.equal(s.annual.annualOpInc[1].value, 12);
+  if (conflict) { assert.equal(s.meta.annualIncomeConflicts[0].end, dates[1]); assert.equal(s.meta.annualIncomeGapReason, 'conflicting-revenue-basis'); }
   return f;
 }
 let passed = 0;
@@ -81,9 +85,9 @@ async function main() {
     assert.deepEqual(require('../src/scoring/snapshot.js').periodEnds(s, 'netIncomeQ'), s.timeseries.netIncomeQ.map(() => null));
     assert(s.meta.statementPeriods.netIncomeQ.some(p => p?.end));
   });
-  await check('late rejected answer leaves cache AND snapshot byte-identical', rejected);
+  await check('late rejected reload preserves fundamentals and cache, refreshes price and cap', rejected);
   await check('OVH-like answer retains operating income', () => bundle());
-  await check('SMIN-like conflicting revenue retains complete statement rows + conflict', () => bundle(source, true));
+  await check('SMIN-like conflicting revenue retains main winner + visible missing income', () => bundle(source, true));
   await check('merged income cannot promote older balance/cash-flow values to newest year', async () => {
     const a = rows(); a['cash-flow'] = a['cash-flow'].slice(0, 2); a['balance-sheet'] = a['balance-sheet'].slice(0, 2);
     a.financials[3] = { date: dates[0] };
@@ -114,7 +118,8 @@ async function main() {
       { date: '2026-03-31', totalRevenue: revised ? 111 : 100, operatingIncome: 20, netIncome: 10 },
       { date: '2026-06-30', totalRevenue: 120, grossProfit: 48, operatingIncome: 24, netIncome: 12 },
     ];
-    const f = fixture({ snapshots: [s], annualResponses: rows(), quarterlyRows });
+    const f = fixture({ snapshots: [s], annualResponses: rows(), quarterlyRows, manual: revised ? ['OLD'] : [] });
+    f.files.delete(path.join(root, 'fundamentals-cache/OLD.json'));
     assert.equal((await f.run()).results[0].status, 'ok'); const out = f.stored('OLD');
     assert.equal(out.timeseries.grossProfitQ[1]?.value ?? null, revised ? null : 40);
     assert.equal(out.timeseries.revenueQ[1].value, revised ? 111 : 100);
@@ -135,14 +140,16 @@ async function main() {
       assert(next.calls.some(c => c[1] === 'annual/financials'));
     }
   });
-  await check('a snapshot older than seven days retains its four years after a thin fetch', async () => {
+  await check('ordinary pull of a snapshot older than seven days accepts a shorter answer', async () => {
     const s = await baseline(); s.meta.asOf = '2026-09-10T03:00:00Z';
     const a = rows(); for (const k of Object.keys(a)) a[k] = a[k].slice(-1);
     const f = fixture({ snapshots: [s], annualResponses: a });
     const cp = path.join(root, 'fundamentals-cache/OLD.json'), sp = path.join(f.out, 'OLD.json');
     f.files.delete(cp); const before = f.files.get(sp).toString();
-    assert.equal((await f.run()).results[0].status, 'reload-retained');
-    assert.equal(f.files.get(sp).toString(), before); assert(!f.files.has(cp));
+    assert.equal((await f.run()).results[0].status, 'ok');
+    assert.notEqual(f.files.get(sp).toString(), before); assert(f.files.has(cp));
+    assert.equal(f.stored('OLD').annual.annualRev.length, 1);
+    assert(!f.logs.some(l => l.includes('stale-quarter-reload: reload-failed')));
   });
   await check('diluted-average shares cannot fill outstanding-share holes', async () => {
     const a = rows(); for (const r of a.financials) r.dilutedAverageShares = 100;
@@ -156,7 +163,7 @@ async function main() {
     assert.deepEqual(next.stored('OLD').annual.annualShares, [200, null, 200, 200]);
   });
   for (const old of [false, true]) for (const period of ['annual', 'quarterly']) {
-    await check(`equal-count ${period} regression leaves snapshot and cache untouched, old=${old}`, async () => {
+    await check(`equal-count ${period} window respects ordinary/reload scope, old=${old}`, async () => {
       const s = await baseline(), a = rows(); if (old) s.meta.asOf = '2026-09-10T03:00:00Z';
       const options = { snapshots: [s], annualResponses: a };
       if (period === 'annual') for (const group of Object.values(a)) for (const r of group) r.date = String(Number(r.date.slice(0, 4)) - 1) + r.date.slice(4);
@@ -166,8 +173,10 @@ async function main() {
       ];
       const f = fixture(options), cp = path.join(root, 'fundamentals-cache/OLD.json'), sp = path.join(f.out, 'OLD.json');
       f.files.delete(cp); const before = f.files.get(sp).toString();
-      assert.equal((await f.run()).results[0].status, 'reload-retained');
-      assert.equal(f.files.get(sp).toString(), before); assert(!f.files.has(cp));
+      const rejects = !old;
+      assert.equal((await f.run()).results[0].status, rejects ? 'price-only' : 'ok');
+      assert.notEqual(f.files.get(sp).toString(), before); assert.equal(f.files.has(cp), !rejects);
+      if (rejects) { assert.deepEqual(f.stored('OLD').timeseries, s.timeseries); assert.deepEqual(f.stored('OLD').annual, s.annual); }
     });
   }
   await check('missing FCF/OCF in both answers remains null with a reason', async () => {
@@ -192,8 +201,8 @@ async function main() {
     a['cash-flow'][2].operatingCashFlow = 777; delete a['cash-flow'][2].freeCashFlow;
     const f = fixture({ snapshots: [s], annualResponses: a });
     const before = f.files.get(path.join(f.out, 'OLD.json')).toString();
-    assert.equal((await f.run()).results[0].status, 'reload-retained');
-    assert.equal(f.files.get(path.join(f.out, 'OLD.json')).toString(), before);
+    assert.equal((await f.run()).results[0].status, 'price-only');
+    assert.deepEqual(f.stored('OLD').annual, JSON.parse(before).annual);
   });
   await check('missing in both remains null with a reason; no old year resurrected as current', async () => {
     const s = await baseline(), a = rows();

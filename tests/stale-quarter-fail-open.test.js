@@ -132,17 +132,17 @@ function assertPriceOnly(f, m) {
       env: { RUN_DATE_UTC: '2026-09-29' } });
     assert.equal((await f.run()).n_stale_quarter_pulled, 1);
   });
-  for (const failure of ['quarterFails', 'summaryFails', 'ftsFails', 'quarterEmpty']) await check(failure + ': rejected FTS preserves bytes; summary fallback still refreshes price', async () => {
+  for (const failure of ['quarterFails', 'summaryFails', 'ftsFails', 'quarterEmpty']) await check(failure + ': fundamentals and cache survive, price still refreshes', async () => {
     const s = snapshot('OLD');
     for (const field of Object.keys(s.timeseries)) s.timeseries[field] = Array.from({ length: 8 }, () => s.timeseries[field][0]);
-    const f = fixture({ snapshots: [s], [failure]: true });
+    const f = fixture({ snapshots: [s], [failure]: true, quotePrice: 123, quoteMarketCap: 2e12 });
     const cachePath = path.join(root, 'fundamentals-cache/OLD.json'), oldCache = f.files.get(cachePath).toString();
     const old = JSON.stringify(s.timeseries), m = await f.run(), stored = f.stored('OLD');
     assert.equal(JSON.stringify(stored.timeseries), old, 'quarter history overwritten');
     assert.equal(stored.meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
     assert.equal(stored.meta.fundamentalsAsOf, s.meta.fundamentalsAsOf);
-    assert.equal(stored.meta.asOf, failure === 'summaryFails' ? new Date(NOW).toISOString() : s.meta.asOf);
-    if (failure !== 'summaryFails') assert.equal(f.files.get(path.join(f.out, 'OLD.json')).toString(), JSON.stringify(s));
+    assert.equal(stored.meta.asOf, new Date(NOW).toISOString());
+    assert.equal(stored.price.regularMarketPrice, 123); assert.equal(stored.marketCap.value, 2e12);
     assert.equal(m.n_ok, 1); assert.equal(m.n_failed, 0); assert.equal(m.n_stale_quarter_reload_failed, 1);
     assert.equal(m.results[0].quarterReload.outcome, 'reload-failed');
     assert.equal(f.files.get(cachePath).toString(), oldCache, 'failed reload overwrote the warm cache');
@@ -264,29 +264,40 @@ function assertPriceOnly(f, m) {
     const s = snapshot('OLD'); s.annual.annualRev = [300, 350, 400].map(value => ({ value }));
     s.annual.annualOpInc = [30, 40, 50].map(value => ({ value }));
     const f = fixture({ snapshots: [s], annualFails }), m = await f.run();
-    assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
+    assert.equal(m.results[0].status, 'price-only'); assert.equal(m.n_stale_quarter_reload_failed, 1);
     assert.equal(m.n_stale_quarter_fetch_failed, 1); assert.equal(m.n_stale_quarter_newer, 0);
     assert.deepEqual(f.stored('OLD').annual, s.annual); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
     assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
   });
-  for (const answer of ['older', 'thinner']) await check(answer + ' quarterly reply cannot regress stored history', async () => {
+  for (const answer of ['older', 'thinner']) await check(answer + ' quarterly reply respects periods instead of raw counts', async () => {
     const s = snapshot('OLD');
     for (const field of Object.keys(s.timeseries)) s.timeseries[field] = Array.from({ length: 8 }, () => s.timeseries[field][0]);
     const quarterlyRows = [{ date: answer === 'older' ? '2025-09-30' : '2026-06-30', totalRevenue: 100, grossProfit: 40, operatingIncome: 20, netIncome: 10 }];
     const f = fixture({ snapshots: [s], quarterlyRows }), m = await f.run();
-    assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
-    assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
-    assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
+    assert.equal(m.results[0].status, answer === 'older' ? 'price-only' : 'ok');
+    assert.equal(m.n_stale_quarter_reload_failed, answer === 'older' ? 1 : 0);
+    if (answer === 'older') {
+      assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
+      assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
+    } else assert.deepEqual(f.stored('OLD').timeseries.revenueQEnds, ['2026-06-30']);
+    assert.equal(f.stored('OLD').meta.asOf, new Date(NOW).toISOString());
   });
   for (const field of ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF']) {
-    for (const annualEmpty of [true, false]) await check(field + ' thinner annual reply (annualEmpty=' + annualEmpty + ') preserves history', async () => {
+    for (const annualEmpty of [true, false]) await check(field + ' missing values in shared annual periods (allEmpty=' + annualEmpty + ') preserves history', async () => {
       const s = snapshot('OLD'); s.annual[field] = [{ value: 10 }, { value: null }, { value: 20 }];
-      const f = fixture({ snapshots: [s], annualEmpty }), m = await f.run();
-      assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
+      const dates = ['2025-12-31', '2024-12-31', '2023-12-31']; s.annual[field + 'Ends'] = dates;
+      const raw = { annualRev: 'totalRevenue', annualOpInc: 'operatingIncome', annualNetIncome: 'netIncome', annualFCF: 'freeCashFlow' }[field];
+      const series = dates.map((date, i) => ({ date, totalRevenue: 100, operatingIncome: 20, netIncome: 10, freeCashFlow: 5, operatingCashFlow: 60,
+        [raw]: annualEmpty || i === 0 ? null : 20 })).reverse();
+      const annualResponses = { financials: series, 'cash-flow': series, 'balance-sheet': series };
+      const f = fixture({ snapshots: [s], annualResponses }), m = await f.run();
+      assert.equal(m.results[0].status, 'price-only'); assert.equal(m.n_stale_quarter_reload_failed, 1);
       assert.equal(m.n_stale_quarter_fetch_failed, 1); assert.equal(m.n_stale_quarter_newer, 0);
       assert.deepEqual(f.stored('OLD').annual, s.annual); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
       assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
-      assert(f.logs.some(s => s.includes('annual history thinner than stored')));
+      assert.equal(f.stored('OLD').meta.asOf, new Date(NOW).toISOString());
+      const reason = field === 'annualRev' ? 'reported annual or quarterly period regressed' : 'shared-period fundamentals missing';
+      assert(f.logs.some(s => s.includes(reason)));
     });
   }
   for (const emptySummary of [false, true]) await check('pure reload recovers fresh quote cap when summary is ' + (emptySummary ? 'empty' : 'missing cap'), async () => {

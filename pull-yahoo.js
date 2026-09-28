@@ -1714,6 +1714,12 @@ function mergeAnnualIncomeBundle(qsB, ftsB, opts) {
     : _incomeBundleDensity(ftsB, counter) > _incomeBundleDensity(qsB, counter) ? ftsB : qsB;
   const other = winner === qsB ? ftsB : qsB;
   const dates = winner.annualRevEnds || [], otherDates = other.annualRevEnds || [];
+  // Keep main's complete winner when the revenue bases disagree by over 0.5%.
+  if (dates.some((end, i) => {
+    const j = otherDates.indexOf(end), a = winner.annualRev?.[i]?.value ?? winner.annualRev?.[i];
+    const b = other.annualRev?.[j]?.value ?? other.annualRev?.[j];
+    return end && j >= 0 && Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) > Math.abs(a) * 0.005;
+  })) return winner;
   const fields = ['annualRev', 'annualOpInc', 'annualGP', 'annualNetIncome', 'annualCostOfRevenue'];
   const comparable = (w, o) => {
     const a = winner._periods?.[w], b = other._periods?.[o];
@@ -1728,8 +1734,7 @@ function mergeAnnualIncomeBundle(qsB, ftsB, opts) {
   result._periods = [];
   for (const end of allDates) {
     const w = dates.indexOf(end), o = otherDates.indexOf(end);
-    // Move an entire statement row: even conflicting revenue stays with its own
-    // operating income. Empty latest rows may take the other answer's whole row.
+    // Move complete rows only after all shared revenue bases passed the conflict check.
     const useOther = w < 0 || (o >= 0 && comparable(w, o) && other.annualOpInc?.[o] != null && winner.annualOpInc?.[w] == null);
     const from = useOther ? other : winner, index = useOther ? o : w;
     for (const k of fields) result[k].push(from[k]?.[index] ?? null);
@@ -4073,14 +4078,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Optional reloads may fall back; an existing repair/refresh must keep its full-pull behavior.
       const reloadOnly = staleQuarterSelected && youngEnough && _parsedSnapshot
         && !staleSchema && !staleCurrency && !staleEarnings && !staleFundamentals && !vollPullAngefordert;
-      const reloadFailed = async (cause, originalError, retain = false) => {
+      const reloadFailed = async (cause, originalError) => {
         let r;
-        try { r = retain ? { ticker: stock.ticker, status: 'reload-retained' }
-          : await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot); }
+        try { r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot); }
         catch (e) { throw originalError || e; }
         if (reloadOnly) reloadStats.reload_failed++;
-        console.warn(`::warning::${stock.ticker} ${reload.REASON}: reload-failed (${cause}); ${retain ? 'cache and snapshot unchanged' : 'retaining history and updating price only'}`);
-        results.push({ ...r, ...(staleQuarterSelected ? { quarterReload: { reason: reload.REASON, outcome: 'reload-failed',
+        console.warn(`::warning::${stock.ticker} ${reload.REASON}: reload-failed (${cause}); retaining fundamentals and cache, updating price only`);
+        results.push({ ...r, fundamentalsRetainedReason: cause, ...(staleQuarterSelected ? { quarterReload: { reason: reload.REASON, outcome: 'reload-failed', cause,
           previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reloadSelected.get(stock.ticker).end } } : {}) });
       };
       let forceFundamentalsFull = staleFundamentals || staleEarnings || vollPullAngefordert || staleQuarterSelected;
@@ -4357,13 +4361,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // instead of 'other' in the catch classifier.
         if (ftsFetchFailed || !fts) {
           if (staleQuarterSelected) reloadStats.fetch_failed++;
-          if (reloadOnly) return await reloadFailed('FTS fetch failed', ftsLastErr, true);
+          if (reloadOnly) return await reloadFailed('FTS fetch failed', ftsLastErr);
           throw new Error('FTS fetch failed for ' + stock.ticker + (ftsLastErr ? ': ' + ftsLastErr.message : ''));
         }
         const ftsFailure = ftsFailureSummary(fts);
         if (staleQuarterSelected && ftsFailure.failedSeries > 0) reloadStats.fetch_failed++;
-        if (_parsedSnapshot && (ftsFailure.failedSeries > 0 || !fts._quarterlySucceeded)) {
-          return await reloadFailed('FTS series failed: ' + ftsFailure.failedSeries, null, true);
+        if (reloadOnly && (ftsFailure.failedSeries > 0 || !fts._quarterlySucceeded)) {
+          return await reloadFailed('FTS series failed: ' + ftsFailure.failedSeries);
         }
         if (fts._quarterlySucceeded) { quarterlyFetchedAt = new Date().toISOString(); quarterlyClockSource = 'fts'; }
         _allFtsSeriesEmpty = ftsFailure.allEmpty;
@@ -4429,7 +4433,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             const proposedEnd = reload.latestReportedQuarter({ timeseries: proposed }, Date.now());
             if (!proposedEnd || proposedEnd < reloadSelected.get(stock.ticker).end) {
               reloadStats.fetch_failed++;
-              return await reloadFailed('Quarterly history empty, older or thinner than stored', null, true);
+              return await reloadFailed('Quarterly history empty or older than stored');
             }
           }
           if (!yahooEnd || reload.quarterAgeDays(yahooEnd, Date.now()) > reloadConfig.maxQuarterAgeDays) reloadStats.still_old_yahoo++;
@@ -4552,11 +4556,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const conflicts = (_qsIncome.annualRevEnds || []).flatMap((end, i) => {
           const j = (ftsAnnual.annualRevEnds || []).indexOf(end);
           const q = _qsIncome.annualRev[i]?.value, f = ftsAnnual.annualRev[j]?.value;
-          return end && j >= 0 && Number.isFinite(q) && Number.isFinite(f) && q !== f
+          const reference = _winner === _ftsIncome ? f : q;
+          return end && j >= 0 && Number.isFinite(q) && Number.isFinite(f) && Math.abs(q - f) > Math.abs(reference) * 0.005
             ? [{ end, quoteSummary: q, fts: f }] : [];
         });
         if (conflicts.length) {
           canonical.meta.annualIncomeConflicts = conflicts;
+          canonical.meta.annualIncomeGapReason = 'conflicting-revenue-basis';
           _log('WARN', `${stock.ticker}: Jahresabschluss-Konflikt; vollstaendiges ${_winner === _ftsIncome ? 'FTS' : 'quoteSummary'}-Buendel beibehalten (${conflicts.map(r => r.end).join(', ')})`);
         }
         _incomeWinnerIsQS = (_winner === _qsIncome);
@@ -4996,7 +5002,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Tag 133c: data-quality grade — A/B/C/D nach Anteil fehlender kritischer Felder.
       if (_parsedSnapshot) {
         require('./lib/reload-history.js').preserveReloadHistory(canonical, _parsedSnapshot);
-        if (canonical.meta.reloadHistoryGaps?.length) _log('WARN', `${stock.ticker}: Historische Werte ausserhalb vergleichbarer Perioden; ${canonical.meta.reloadHistoryGaps.length} Luecken mit Grund im Snapshot`);
+        const unsafeGaps = (canonical.meta.reloadHistoryGaps || []).filter(g => ['statement-basis-unverified', 'period-revised'].includes(g.reason));
+        if (unsafeGaps.length) _log('WARN', `${stock.ticker}: Historische Werte mit abweichender Aussagebasis; ${unsafeGaps.length} Luecken mit Grund im Snapshot`);
       }
       // Wird in jeden Snapshot geschrieben; score-aggregator nutzt es optional (DATAQUALITY_ENFORCE=1).
       try { canonical._quality = gradeSnapshot(canonical); }
@@ -5064,7 +5071,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (quarterlyFetchedAt) canonical.meta.fundamentalsTimeseriesFetchedAt = quarterlyFetchedAt;
       canonical.meta.fundamentalsTimeseriesClockSource = quarterlyClockSource;
       if (_allFtsSeriesEmpty) canonical.meta.fundamentalsIncomplete = true;
-      if (_parsedSnapshot) {
+      if (reloadOnly) {
         const annualEnd = a => (a?.annualRevEnds || []).filter((end, i) => end &&
           Number.isFinite(a.annualRev?.[i]?.value ?? a.annualRev?.[i]) && Date.parse(end) <= Date.now()).sort().pop() || null;
         const priorAnnualEnd = annualEnd(_parsedSnapshot.annual), nextAnnualEnd = annualEnd(canonical.annual);
@@ -5072,19 +5079,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const nextQuarterEnd = reload.latestReportedQuarter(canonical, Date.now());
         if ((priorAnnualEnd && (!nextAnnualEnd || nextAnnualEnd < priorAnnualEnd)) ||
             (priorQuarterEnd && (!nextQuarterEnd || nextQuarterEnd < priorQuarterEnd))) {
-          if (staleQuarterSelected) reloadStats.fetch_failed++;
-          return await reloadFailed('reported annual or quarterly period regressed', null, true);
+          reloadStats.fetch_failed++;
+          return await reloadFailed('reported annual or quarterly period regressed');
         }
       }
-      if (_parsedSnapshot && ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF'].some(k =>
-        _nonNullCount(canonical.annual && canonical.annual[k]) < _nonNullCount(_parsedSnapshot.annual && _parsedSnapshot.annual[k]))) {
-        if (staleQuarterSelected) reloadStats.fetch_failed++;
-        return await reloadFailed('annual history thinner than stored', null, true);
-      }
-      if (_parsedSnapshot && ['revenueQ', 'grossProfitQ', 'opIncQ', 'netIncomeQ'].some(k =>
-        _nonNullCount(canonical.timeseries[k]) < _nonNullCount(_parsedSnapshot.timeseries[k]))) {
-        if (staleQuarterSelected) reloadStats.fetch_failed++;
-        return await reloadFailed('Quarterly history empty, older or thinner than stored', null, true);
+      if (reloadOnly && require('./lib/reload-history.js').historyIsThinner(canonical, _parsedSnapshot)) {
+        reloadStats.fetch_failed++;
+        return await reloadFailed('shared-period fundamentals missing');
       }
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
