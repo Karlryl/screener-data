@@ -3192,6 +3192,19 @@ function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
   );
 }
 
+// One-run recovery priority for explicitly restored, still-missing snapshots.
+// Stable partition: every other ticker retains its relative order and pull rules.
+function prioritizeRestoredMissingSnapshots(stocks, outputDir, today) {
+  const date = today.toISOString().slice(0, 10);
+  const restored = [], ordinary = [];
+  for (const stock of stocks) {
+    const due = stock.restoreFullPullOn === date
+      && !fs.existsSync(path.join(outputDir, safeSnapshotFilename(stock.ticker)));
+    (due ? restored : ordinary).push(stock);
+  }
+  return restored.concat(ordinary);
+}
+
 // F1 (Codex-Fund, T2): n_skipped_mcap MUSS ausschliesslich echte mcap-Skips zaehlen —
 // exakt wie das Fail-Ratio-Gate bei ~Z.3026. Frueher gebildet als
 // results.length - (ok+price-only), was fx-unknown MITzaehlte und sie so aus dem
@@ -3525,6 +3538,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   watchlist.stocks = sortByStaleness(watchlist.stocks, outputDir, _earningsCalendar, _today);
   // Keep selected board priorities ahead of the ordinary age queue, within this shard.
   watchlist.stocks.sort((a, b) => (reloadSelected.get(a.ticker)?.order ?? Infinity) - (reloadSelected.get(b.ticker)?.order ?? Infinity));
+  watchlist.stocks = prioritizeRestoredMissingSnapshots(watchlist.stocks, outputDir, _today);
   _log('INFO', `Sorted ${watchlist.stocks.length} stocks by staleness (oldest first)`);
   // Tag 154: exponential-backoff retry for rate-limit errors.
   // Yahoo 429s are transient — one retry after 10–30s usually succeeds.
@@ -5599,6 +5613,7 @@ if (require.main === module) {
 }
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
+  prioritizeRestoredMissingSnapshots,
   mergeSmallcapSnapshots,
   fundamentalsStaleness, ftsFailureSummary,
   fundamentalsAsOfAgeFromFile, selectorBucket,   // Durchsatz-Diagnose (19.09.2026)
