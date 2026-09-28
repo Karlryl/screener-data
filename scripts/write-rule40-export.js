@@ -56,6 +56,7 @@ const path = require('node:path');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
@@ -450,7 +451,7 @@ function sammleKandidaten(opts = {}) {
   for (const datei of dateien) {
     gelesen++;
     const ticker = datei.slice(0, -5);
-    const snapshot = readJsonOrNull(path.join(snapshotsDir, datei));
+    const snapshot = prepareYahooQ4Snapshot(readJsonOrNull(path.join(snapshotsDir, datei)));
     // Ein UNLESBARER Snapshot ist etwas anderes als ein fehlender: er wird gezaehlt, damit
     // ein kaputter Pull nicht als "kleines Universum" durchgeht.
     if (!snapshot) { abgewiesen.snapshotUnlesbar++; continue; }

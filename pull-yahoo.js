@@ -1199,6 +1199,9 @@ function _convertSnapshotToUSD(snap) {
   if (!snap || !snap.meta) return snap;
   // F-DP-008: idempotency guard — if already converted, return immediately to prevent double-scaling
   if (snap.meta.fxConverted === true) return snap;
+  // C2: exact known cases only, in native currency, before the existing single FX pass.
+  const q4Checked = require('./lib/yahoo-q4-known-cases.js').prepareSnapshot(snap);
+  if (q4Checked !== snap) snap.timeseries = q4Checked.timeseries;
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   if (origCurrency === 'USD') {
     // F-NY-004 (audit 2026-06-08): 'USD' here may be a GUESS — when Yahoo returns

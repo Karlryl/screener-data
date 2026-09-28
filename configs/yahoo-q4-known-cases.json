@@ -1,0 +1,727 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-09-28",
+  "cases": [
+    {
+      "caseId": "aena-2025-q4-opIncQ",
+      "issuer": "Aena",
+      "issuerId": "aena",
+      "listingAliases": [
+        "1AENA.MI",
+        "AEN2.VI",
+        "AENA.MC",
+        "ANNSF"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "opIncQ",
+      "sourceMetric": "operatingIncome",
+      "metricDefinition": "Reported consolidated operating profit; same IFRS operating-profit line in both reports. No adjusted EBITDA substitution.",
+      "nativeCurrency": "EUR",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 1000,
+      "expectedBadValue": 1713004000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualOpInc",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 2988135000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 736818000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 2988135000,
+        "nineMonthNativeValue": 2251317000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 1000,
+        "derivation": "2988135 - 2251317 = 736818 EUR thousands"
+      },
+      "sources": [
+        {
+          "url": "https://www.aena.es/sites/Satellite?blobcol=urldata&blobkey=id&blobtable=MungoBlobs&blobwhere=1576873373470&ssbinary=true",
+          "title": "Aena 2025 consolidated annual accounts",
+          "date": "2026-02-25",
+          "dateType": "publication date",
+          "page": 12,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://www.aena.es/sites/Satellite?blobcol=urldata&blobkey=id&blobtable=MungoBlobs&blobwhere=1576872523942&ssbinary=true",
+          "title": "Aena consolidated interim management report 9M 2025",
+          "date": "2025-10-29",
+          "dateType": "publication date",
+          "page": 41,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://www.aena.es/es/accionistas-e-inversores/informacion-economico-financiera/publicaciones-financieras-y-operativas.html?anio=2025",
+          "title": "Aena financial publications: dates 2025-10-29 08:00 and 2026-02-25 07:30",
+          "date": null,
+          "dateType": "date index; see title",
+          "page": null,
+          "unit": "EUR thousands"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "indra-2025-q4-revenueQ",
+      "issuer": "Indra",
+      "issuerId": "indra",
+      "listingAliases": [
+        "1IDR.MI",
+        "IDR.MC",
+        "IDR.VI"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "revenueQ",
+      "sourceMetric": "totalRevenue",
+      "metricDefinition": "Consolidated reported revenue in actual euros; not local-currency or organic-growth adjusted revenue.",
+      "nativeCurrency": "EUR",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 100000,
+      "expectedBadValue": 3006858000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualRev",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 5456652000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 1845300000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 5456700000,
+        "nineMonthNativeValue": 3611300000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 100000,
+        "derivation": "Directly reported 4Q25 revenue 1845.3 EUR million. FY5456.7 and9M3611.3 independently confirm approximate scale; subtracting individually rounded YTD values yields1845.4, so the directly reported4Q figure controls."
+      },
+      "sources": [
+        {
+          "url": "https://www.indragroup.com/cms-content/2026/02/Rdos-FY25_eng.pdf",
+          "title": "Indra FY25 results",
+          "date": "2026-02-25",
+          "dateType": "publication date",
+          "page": 14,
+          "unit": "EUR millions"
+        },
+        {
+          "url": "https://www.indragroup.com/cms-content/importacion/rdos_9m25_eng.pdf",
+          "title": "Indra 9M25 results",
+          "date": "2025-10-30",
+          "dateType": "publication date",
+          "page": 12,
+          "unit": "EUR millions"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "repsol-2025-q4-opIncQ",
+      "issuer": "Repsol",
+      "issuerId": "repsol",
+      "listingAliases": [
+        "1REP.MI",
+        "REP.DE",
+        "REP.MC",
+        "REP.VI",
+        "REPYF"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "opIncQ",
+      "sourceMetric": "operatingIncome",
+      "metricDefinition": "Reported IFRS-EU operating income, including impairment/inventory effects; do not use CCS or adjusted segment operating income.",
+      "nativeCurrency": "EUR",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 1000000,
+      "expectedBadValue": 1691000000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualOpInc",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 2709000000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 739000000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 2709000000,
+        "nineMonthNativeValue": 1970000000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 1000000,
+        "derivation": "Audited IFRS-EU direct4Q operating income739m; FY2709m -9M1970m =739m."
+      },
+      "sources": [
+        {
+          "url": "https://www.repsol.com/content/dam/repsol-corporate/en_gb/accionistas-e-inversores/cnmv/2026/ii19022026-information-on-results-fourth-quarter-and-full-year-2025-as-well-as-shareholder-remuneration.pdf",
+          "title": "Repsol Q4 and FY 2025 results, audited IFRS-EU income statement",
+          "date": "2026-02-19",
+          "dateType": "publication date",
+          "page": 35,
+          "unit": "EUR millions"
+        },
+        {
+          "url": "https://www.repsol.com/content/dam/repsol-corporate/en_gb/accionistas-e-inversores/cnmv/2025/ori3102025-information-on-third-quarter-2025-results.pdf",
+          "title": "Repsol Q3 2025 results, IFRS-EU income statement",
+          "date": "2025-10-30",
+          "dateType": "publication date",
+          "page": 36,
+          "unit": "EUR millions"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "repsol-2025-q4-revenueQ",
+      "issuer": "Repsol",
+      "issuerId": "repsol",
+      "listingAliases": [
+        "1REP.MI",
+        "REP.DE",
+        "REP.MC",
+        "REP.VI",
+        "REPYF"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "revenueQ",
+      "sourceMetric": "totalRevenue",
+      "metricDefinition": "IFRS-EU sales plus services. Matches Yahoo annual54861m. Not business-segment adjusted reporting, and excludes inventory change.",
+      "nativeCurrency": "EUR",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 1000000,
+      "expectedBadValue": 26923000000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualRev",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 54861000000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 13724000000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 54861000000,
+        "nineMonthNativeValue": 41137000000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 1000000,
+        "derivation": "Direct4Q sales13594 + service/other income130 =13724 EUR million. FY54421+440=54861; 9M40827+310=41137; FY-9M=13724."
+      },
+      "sources": [
+        {
+          "url": "https://www.repsol.com/content/dam/repsol-corporate/en_gb/accionistas-e-inversores/cnmv/2026/ii19022026-information-on-results-fourth-quarter-and-full-year-2025-as-well-as-shareholder-remuneration.pdf",
+          "title": "Repsol Q4 and FY 2025 results, audited IFRS-EU income statement",
+          "date": "2026-02-19",
+          "dateType": "publication date",
+          "page": 35,
+          "unit": "EUR millions"
+        },
+        {
+          "url": "https://www.repsol.com/content/dam/repsol-corporate/en_gb/accionistas-e-inversores/cnmv/2025/ori3102025-information-on-third-quarter-2025-results.pdf",
+          "title": "Repsol Q3 2025 results, IFRS-EU income statement",
+          "date": "2025-10-30",
+          "dateType": "publication date",
+          "page": 36,
+          "unit": "EUR millions"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "chipmos-2025-q4-grossProfitQ",
+      "issuer": "ChipMOS TECHNOLOGIES INC.",
+      "issuerId": "chipmos",
+      "listingAliases": [
+        "8150.TW",
+        "IMOS"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "grossProfitQ",
+      "sourceMetric": "grossProfit",
+      "metricDefinition": "Reported consolidated grossProfit. Includes the reported scrap-disposal gains subtotal; vendor annual gross profit is not a replacement operand.",
+      "nativeCurrency": "TWD",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 1000,
+      "expectedBadValue": 1400430000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualGP",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 2538930000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 935488000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 2592416000,
+        "nineMonthNativeValue": 1656928000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 1000,
+        "derivation": "Reported consolidated annual amount minus reported consolidated nine-month amount; direct Q4 presentation corroborates at 0.1m precision."
+      },
+      "sources": [
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_income_4850693036.pdf",
+          "title": "FY2025",
+          "date": "2026-02-24",
+          "dateType": "report approval",
+          "page": 11,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_income_3828614009.pdf",
+          "title": "9M2025",
+          "date": "2025-11-11",
+          "dateType": "report approval",
+          "page": 7,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://chipmostechnologiesinc.gcs-web.com/static-files/bd424803-d522-455d-9774-c5f078bbf424",
+          "title": "FY2025",
+          "date": "2026-04-14",
+          "dateType": "20-F filing",
+          "page": null,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_lawsaid_2850608037.pdf",
+          "title": "Q42025",
+          "date": "2026-02-24",
+          "dateType": "results release",
+          "page": 13,
+          "unit": "TWD millions",
+          "quote": "(NT$ Millions)",
+          "mirrorUrl": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_planner_1850867603.pdf"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "chipmos-2025-q4-opIncQ",
+      "issuer": "ChipMOS TECHNOLOGIES INC.",
+      "issuerId": "chipmos",
+      "listingAliases": [
+        "8150.TW",
+        "IMOS"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "opIncQ",
+      "sourceMetric": "operatingIncome",
+      "metricDefinition": "Reported consolidated operatingIncome. ",
+      "nativeCurrency": "TWD",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 1000,
+      "expectedBadValue": 751593000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualOpInc",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 1142693000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 635560000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 1142693000,
+        "nineMonthNativeValue": 507133000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 1000,
+        "derivation": "Reported consolidated annual amount minus reported consolidated nine-month amount; direct Q4 presentation corroborates at 0.1m precision."
+      },
+      "sources": [
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_income_4850693036.pdf",
+          "title": "FY2025",
+          "date": "2026-02-24",
+          "dateType": "report approval",
+          "page": 11,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_income_3828614009.pdf",
+          "title": "9M2025",
+          "date": "2025-11-11",
+          "dateType": "report approval",
+          "page": 7,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://chipmostechnologiesinc.gcs-web.com/static-files/bd424803-d522-455d-9774-c5f078bbf424",
+          "title": "FY2025",
+          "date": "2026-04-14",
+          "dateType": "20-F filing",
+          "page": null,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_lawsaid_2850608037.pdf",
+          "title": "Q42025",
+          "date": "2026-02-24",
+          "dateType": "results release",
+          "page": 13,
+          "unit": "TWD millions",
+          "quote": "(NT$ Millions)",
+          "mirrorUrl": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_planner_1850867603.pdf"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "chipmos-2025-q4-revenueQ",
+      "issuer": "ChipMOS TECHNOLOGIES INC.",
+      "issuerId": "chipmos",
+      "listingAliases": [
+        "8150.TW",
+        "IMOS"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "revenueQ",
+      "sourceMetric": "totalRevenue",
+      "metricDefinition": "Reported consolidated totalRevenue. ",
+      "nativeCurrency": "TWD",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 1000,
+      "expectedBadValue": 12053400000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualRev",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 23932900000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 6521076000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 23932900000,
+        "nineMonthNativeValue": 17411824000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 1000,
+        "derivation": "Reported consolidated annual amount minus reported consolidated nine-month amount; direct Q4 presentation corroborates at 0.1m precision."
+      },
+      "sources": [
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_income_4850693036.pdf",
+          "title": "FY2025",
+          "date": "2026-02-24",
+          "dateType": "report approval",
+          "page": 11,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_income_3828614009.pdf",
+          "title": "9M2025",
+          "date": "2025-11-11",
+          "dateType": "report approval",
+          "page": 7,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://chipmostechnologiesinc.gcs-web.com/static-files/bd424803-d522-455d-9774-c5f078bbf424",
+          "title": "FY2025",
+          "date": "2026-04-14",
+          "dateType": "20-F filing",
+          "page": null,
+          "unit": "TWD thousands"
+        },
+        {
+          "url": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_lawsaid_2850608037.pdf",
+          "title": "Q42025",
+          "date": "2026-02-24",
+          "dateType": "results release",
+          "page": 13,
+          "unit": "TWD millions",
+          "quote": "(NT$ Millions)",
+          "mirrorUrl": "https://www.chipmos.com/upfiles/ADUpload/english/en_ir_planner_1850867603.pdf"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "gestamp-2025-q4-opIncQ",
+      "issuer": "Gestamp",
+      "issuerId": "gestamp",
+      "listingAliases": [
+        "GEST.MC"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "opIncQ",
+      "sourceMetric": "operatingIncome",
+      "metricDefinition": "Reported operating profit after depreciation/amortization/impairment, including Phoenix Plan impacts. FY EBIT546422k =reported EBITDA1307336k -D&A/impairments760914k; excludes adjustments used in headline EBITDA1323m.",
+      "nativeCurrency": "EUR",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 100000,
+      "expectedBadValue": 260897000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualOpInc",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 546422000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "missing",
+      "replacementNativeValue": null,
+      "reason": "known wrong, exact Q4 not established",
+      "operands": {
+        "fyNativeValue": 546422000,
+        "nineMonthNativeValue": 398800000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 100000,
+        "derivation": "FY546.422m -9M398.8m =147.622m midpoint; approximately147.6m because9M is rounded to0.1m."
+      },
+      "sources": [
+        {
+          "url": "https://www.gestamp.com/Gestamp11/media/GestampFiles/Shareholders%20Investors/Economic%20Financial%20information/Annual%20Information/2025/Consolidadas/Cuentas-anuales-Consolidadas-Gestamp-2025-con-informe-_ENG.pdf?ext=.pdf",
+          "title": "Gestamp 2025 consolidated financial statements",
+          "date": "2026-02-26",
+          "dateType": "publication date",
+          "page": 14,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://www.gestamp.com/Gestamp11/media/GestampFiles/Shareholders%20Investors/Economic%20Financial%20information/Quarterly%20Information/2025/2025_10_30-Q3-2025-Management-Report.pdf?ext=.pdf",
+          "title": "Gestamp 9M2025 Management Report",
+          "date": "2025-11-04",
+          "dateType": "publication date",
+          "page": 7,
+          "unit": "EUR millions"
+        },
+        {
+          "url": "https://www.gestamp.com/Investors-Shareholders/General-Information/Other-significant-facts",
+          "title": "Issuer regulatory announcement archive: 2026-02-26 annual results; 2025-11-04 9M management report",
+          "date": null,
+          "dateType": "date index; see title",
+          "page": null,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://www.cnmv.es/webservices/verdocumento/ver?t=%7B553dc17f-95b7-4e62-89f9-2b3a3531ffda%7D",
+          "title": "CNMV 9M 2025 management report; same rounded report as issuer",
+          "date": "2025-11-04",
+          "dateType": "publication date",
+          "page": 7,
+          "unit": "EUR millions",
+          "checkedOn": "2026-09-28",
+          "note": "Issuer English/Spanish quarterly reports give rounded 9M operands. CNMV indexed report found; direct retrieval timed out. No unrounded 9M operand established."
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "gestamp-2025-q4-revenueQ",
+      "issuer": "Gestamp",
+      "issuerId": "gestamp",
+      "listingAliases": [
+        "GEST.MC"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "revenueQ",
+      "sourceMetric": "totalRevenue",
+      "metricDefinition": "Reported consolidated revenue. Other operating income and changes in inventories excluded.",
+      "nativeCurrency": "EUR",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 100000,
+      "expectedBadValue": 5504684000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualRev",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 11348605000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "missing",
+      "replacementNativeValue": null,
+      "reason": "known wrong, exact Q4 not established",
+      "operands": {
+        "fyNativeValue": 11348605000,
+        "nineMonthNativeValue": 8486000000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 100000,
+        "derivation": "FY11348.605m -9M8486.0m =2862.605m midpoint, reported as approximately2862.6m because9M is rounded to0.1m."
+      },
+      "sources": [
+        {
+          "url": "https://www.gestamp.com/Gestamp11/media/GestampFiles/Shareholders%20Investors/Economic%20Financial%20information/Annual%20Information/2025/Consolidadas/Cuentas-anuales-Consolidadas-Gestamp-2025-con-informe-_ENG.pdf?ext=.pdf",
+          "title": "Gestamp 2025 consolidated financial statements",
+          "date": "2026-02-26",
+          "dateType": "publication date",
+          "page": 14,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://www.gestamp.com/Gestamp11/media/GestampFiles/Shareholders%20Investors/Economic%20Financial%20information/Quarterly%20Information/2025/2025_10_30-Q3-2025-Management-Report.pdf?ext=.pdf",
+          "title": "Gestamp 9M2025 Management Report",
+          "date": "2025-11-04",
+          "dateType": "publication date",
+          "page": 7,
+          "unit": "EUR millions"
+        },
+        {
+          "url": "https://www.gestamp.com/Investors-Shareholders/General-Information/Other-significant-facts",
+          "title": "Issuer regulatory announcement archive: 2026-02-26 annual results; 2025-11-04 9M management report",
+          "date": null,
+          "dateType": "date index; see title",
+          "page": null,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://www.cnmv.es/webservices/verdocumento/ver?t=%7B553dc17f-95b7-4e62-89f9-2b3a3531ffda%7D",
+          "title": "CNMV 9M 2025 management report; same rounded report as issuer",
+          "date": "2025-11-04",
+          "dateType": "publication date",
+          "page": 7,
+          "unit": "EUR millions",
+          "checkedOn": "2026-09-28",
+          "note": "Issuer English/Spanish quarterly reports give rounded 9M operands. CNMV indexed report found; direct retrieval timed out. No unrounded 9M operand established."
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    },
+    {
+      "caseId": "pharmamar-2025-q4-opIncQ",
+      "issuer": "PharmaMar",
+      "issuerId": "pharmamar",
+      "listingAliases": [
+        "PHM.MC",
+        "PHM.VI"
+      ],
+      "period": "2025-12-31",
+      "fiscalYearStart": "2025-01-01",
+      "fiscalYearEnd": "2025-12-31",
+      "quarterStart": "2025-10-01",
+      "quarterEnd": "2025-12-31",
+      "periodType": "3M",
+      "field": "opIncQ",
+      "sourceMetric": "operatingIncome",
+      "metricDefinition": "Reported group Resultado Explotacion, including recognized operating grants; not EBITDA or normalized operating profit.",
+      "nativeCurrency": "EUR",
+      "unit": "currency",
+      "multiplier": 1,
+      "sourcePrecisionNative": 1000,
+      "expectedBadValue": 39649000,
+      "inputFingerprint": {
+        "provider": "yahoo",
+        "annualField": "annualOpInc",
+        "annualPeriod": "2025-12-31",
+        "annualNativeValue": 60715000,
+        "legacyAnnualPeriodPolicy": "undated latest annual row only"
+      },
+      "action": "replace",
+      "replacementNativeValue": 43608000,
+      "reason": null,
+      "operands": {
+        "fyNativeValue": 60715000,
+        "nineMonthNativeValue": 17107000,
+        "nineMonthEnd": "2025-09-30",
+        "nineMonthPrecisionNative": 1000,
+        "derivation": "60715 -17107 =43608 EUR thousands."
+      },
+      "sources": [
+        {
+          "url": "https://pharmamar.com/wp-content/uploads/2026/02/DICIEMBRE_2025_Informe-Anual-1.pdf",
+          "title": "PharmaMar December 2025 financial report",
+          "date": "2026-02-27",
+          "dateType": "publication date",
+          "page": 10,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://pharmamar.com/wp-content/uploads/2025/10/SEPTIEMBRE-2025-Informe-Trimestral-s-v.pdf",
+          "title": "PharmaMar September 2025 financial report",
+          "date": "2025-10-30",
+          "dateType": "publication date",
+          "page": 8,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://pharmamar.com/es/el-grupo-pharmamar-presenta-resultados-financieros-del-ejercicio-2025/",
+          "title": "Issuer release 2026-02-27",
+          "date": null,
+          "dateType": "date index; see title",
+          "page": null,
+          "unit": "EUR thousands"
+        },
+        {
+          "url": "https://pharmamar.com/es/el-grupo-pharmamar-presenta-resultados-financieros-a-30-de-septiembre-de-2025/",
+          "title": "Issuer release 2025-10-30",
+          "date": null,
+          "dateType": "date index; see title",
+          "page": null,
+          "unit": "EUR thousands"
+        }
+      ],
+      "evidenceRevision": "phase1-cell-verification-2026-09-27",
+      "approvedScope": "C2 build brief 2026-09-28; independent release review pending"
+    }
+  ]
+}
