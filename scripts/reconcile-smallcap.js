@@ -44,6 +44,7 @@ const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { route, NON_OPERATING_VEHICLE_INDUSTRY } = require('../src/scoring/router.js');
+const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { MAX_MCAP, MIN_MCAP } = require('../src/scoring/smallcap-route.js');
 
 const REPO = path.join(__dirname, '..');
@@ -166,7 +167,7 @@ function classify(snapshot, opts) {
   // Entfernt wird deshalb nur, wenn die INDUSTRIE das Vehikel ausweist (Fonds, Shell,
   // Asset-Manager, BDC) — eine Eigenschaft der Gesellschaft, keine Eigenschaft einer
   // Umsatzreihe. Alles andere wird BERICHTET.
-  const r = route(snapshot);
+  const r = route(prepareSnapshot(snapshot));
   if (r.action === 'exclude' && r.reason === 'non-operating-rev') {
     const industrie = String((meta && meta.industry) || '').toLowerCase();
     if (NON_OPERATING_VEHICLE_INDUSTRY.test(industrie)) {
