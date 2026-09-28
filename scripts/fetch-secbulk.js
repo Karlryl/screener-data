@@ -39,6 +39,7 @@ const OUT_DEFAULT = path.join(ROOT, 'external-data', 'sec-annual-bulk.jsonl');
 const BULK_URL = 'https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip';
 const UA = require(path.join(ROOT, 'lib/sec-user-agent.js')).secUserAgent();
 const { route, isUS } = require(path.join(ROOT, 'src/scoring/router.js'));
+const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { extractSecSeries } = require(path.join(ROOT, 'merge-sec-xbrl.js'));
 const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'));
 
@@ -139,7 +140,7 @@ function usTicker() {
     let s;
     try { s = JSON.parse(fs.readFileSync(path.join(SNAP, f), 'utf8')); } catch (_) { continue; }
     if (!s || !s.meta || !s.meta.ticker) continue;
-    if (route(s).action !== 'route') continue;
+    if (route(prepareSnapshot(s)).action !== 'route') continue;
     if (!isUS(s)) continue;
     raus.push(s.meta.ticker);
   }

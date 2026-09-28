@@ -11,6 +11,7 @@
 const fs   = require('fs');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+const { prepareSnapshot, FAILURE_CODE } = require('../lib/yahoo-q4-known-cases.js');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 
@@ -142,9 +143,10 @@ function main() {
   for (const f of files) {
     const fp = path.join(args.snapshots, f);
     try {
-      const s = JSON.parse(fs.readFileSync(fp, 'utf8'));
+      const s = prepareSnapshot(JSON.parse(fs.readFileSync(fp, 'utf8')));
       if (s && typeof s === 'object') snapshots.push(s);
     } catch (e) {
+      if (e.code === FAILURE_CODE) throw e;
       loadErrors++;
     }
   }

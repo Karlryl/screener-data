@@ -47,6 +47,7 @@ const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { boardStatus } = require('../src/scoring/board-status.js');
 const priceStore = require('../lib/price-history-store.js');   // LT1: Quelle der PIT-Preisfelder
 
@@ -422,7 +423,7 @@ function quantile(values, p) {
 // ── §7 PIT-Extraktion aus einem Snapshot (A9-Join) ───────────────────────────
 function readSnapshot(ticker) {
   const fp = path.join(P.SNAP_DIR, safeSnapshotFilename(ticker));
-  return readJsonOrNull(fp);
+  return prepareSnapshot(readJsonOrNull(fp));
 }
 
 // 6.2-E2 (Earnings-Blowout): Report-Datum je Ticker aus earnings-calendar.json. Einmal je

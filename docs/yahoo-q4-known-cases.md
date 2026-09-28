@@ -10,15 +10,23 @@ Die Primärquellenprüfung vom 27.09. ist als unabhängige Testgrundlage erhalte
 
 ## Wirkungsbereich
 
-Die Tabelle bindet Notierung, Quartalsende, Kennzahl, native Währung, Einheit, falschen Lieferwert und den dazugehörigen Jahreswert. Das Jahresdatum muss passen; undatierte alte FTS-Jahresreihen dürfen ausschließlich über ihren neuesten Jahreswert passen. Andere Kennzahlen oder Jahre werden nicht bearbeitet.
+Die Tabelle bindet Notierung, Quartalsende, Kennzahl, native Währung, Einheit, falschen Lieferwert und den dazugehörigen Jahreswert. Bei datierten Jahresreihen muss das Jahresdatum passen; bei undatierten alten FTS-Reihen darf der exakt belegte Jahreswert an jeder Position stehen. Ein neu vorangestelltes Geschäftsjahr hebt die Korrektur eines weiterhin exakt falschen Q4 nicht auf. Andere Kennzahlen oder Jahre werden nicht bearbeitet. Überschneidungen mit der Währungs-Handtabelle werden beim Laden abgewiesen.
 
-Neue Abrufe erhalten die Korrektur vor der vorhandenen USD-Umrechnung. Wiederverwendete Snapshots werden beim Lesen für Haupt- und Smallcap-Scoring korrigiert; Quality übernimmt dasselbe Universum. Findash-Belegzähler und Rule40 lesen dieselbe Korrektur. Es gibt weder einen neuen Abrufzyklus noch eine Änderung der Währungslogik.
+Neue Abrufe erhalten die Korrektur vor der vorhandenen USD-Umrechnung. Wiederverwendete Snapshots werden beim Lesen für Haupt- und Smallcap-Scoring korrigiert; Quality übernimmt dasselbe Universum. Findash-Belegzähler, Rule40, neue Board-Historien, der Datenqualitätsbericht, die Quartalsfrische-Prüfung und die Smallcap-Routingbegründung lesen dieselbe Korrektur. Es gibt weder einen neuen Abrufzyklus noch eine Änderung der Währungslogik. Alte Historien werden nicht umgeschrieben.
+
+Die Tabelle wird bereits beim Start von `pull-yahoo.js` geladen und validiert. Ein Konfigurationsfehler beendet den Start vor dem Abruf. Laufzeitfehler der Korrektur tragen `YAHOO_Q4_HAND_TABLE_FAILED` und werden bis zum Prozessabbruch weitergereicht; sie werden niemals zu `fxConversionFailed` oder `fx-unknown` mit Snapshot-Löschung.
 
 Bei USD-Caches muss der gespeicherte Wert exakt dem falschen nativen Wert mal dem nachgewiesenen gespeicherten Kurs entsprechen. Nur der Ersatzwert wird einmal mit diesem Kurs umgerechnet. Alle anderen Zahlen bleiben unverändert. Die Quelldatei wird nicht geschrieben.
 
 Jede Änderung trägt unmittelbar neben dem Wert `yahooQ4Correction`: originale Lieferantenzeile, nativen Originalwert, Ersatzwert oder Grund, Währung, Quellen, Datentypen der Veröffentlichungsdaten, Rechenoperanden und Quellenstand. Ein veränderter Lieferwert/Jahresfingerabdruck wird als `stale` gezählt und protokolliert; der Wert bleibt stehen. Neue Rechenmuster außerhalb der Tabelle liefern ausschließlich Beobachtungen. Schon korrigierte Werte bleiben identisch.
 
+`currencyAtCorrection` und `fxFactorAtCorrection` beschreiben ausdrücklich den Eingang zum Zeitpunkt der Korrektur: beim frischen Abruf native Währung und Faktor 1, beim bereits umgerechneten Cache USD und dessen gespeicherten Kurs. Sie behaupten keine aktuelle Währung nach einer späteren Umrechnung; diese steht weiterhin in `meta`.
+
 Die Prozesszähler heißen `corrected`, `missing`, `stale`, `observed`, `alreadyCorrected`. Der echte Eingabelauf ergab 25 Ersatzwerte, zwei Lücken, null veraltete Tabellenfingerabdrücke und 23 reine Beobachtungen. Zähler zählen Aufrufe, nicht weltweit eindeutige Firmen.
+
+Nach Verarbeitung mindestens eines benannten Snapshots erscheint beim Prozessende genau eine Zusammenfassungszeile, bei `stale > 0` oder `observed > 0` als GitHub-Actions-`::warning::`, sonst als normales Protokoll. Ein bloßer Modulimport oder eine fehlende Datei erzeugt keinen Lauf. Beobachtungen ändern den Exitcode nicht. Das Manifestfeld heißt **`yahooQ4HandTable`**; Zwischenstand, vollständiges und schlankes Pull-Manifest enthalten die Zähler dieses Laufs, das zusammengeführte Manifest summiert die Teil-Läufe und prüft Typ sowie Zahlenbereich. Die Prozesszusammenfassung bleibt über alle Aufrufe kumulativ.
+
+Die vollständige Leserzuordnung steht in `tests/fixtures/yahoo-q4-reader-policy.json`: 61 Produktionsdateien mit Quartalsfeld oder passendem Scoring-Import haben eine Anbindung beziehungsweise einen begründeten Ausnahme-Eintrag. Der Wächter erfasst auch relative und über `path.join` zusammengesetzte Importe. Auch die Routing-Auswahl der drei SEC-Aufbereiter verwendet korrigierte Eingaben; ihre Jahresbelege bleiben unverändert. Reine Rechenfunktionen erhalten korrigierte Eingaben; rohe Anbieterdiagnostik, Notierungs-Fingerabdrücke und eingefrorene Forschungs-/Historienbelege bleiben ausdrücklich roh. Der Wächter findet neue, noch nicht eingeordnete Leser sowie entfernte Anbindungen.
 
 ## Zehn Fälle, 27 Zellen
 
@@ -60,7 +68,7 @@ Gestamps Umsatzbelege fallen von fünf auf vier. Das bestehende Wachstumsverfahr
 
 ## Prüfungen und Nachstellen
 
-`node tests/yahoo-q4-known-cases.test.js`: 88 Prüfblöcke mit gesetztem `SCREENER_SNAPSHOTS_DIR`, einschließlich 71 Belegzellen, Null/Einheit/Währung/Periode/Feld/Fingerabdruck, aller Notierungen, nativer Umrechnung, Caches, beiden Scoring-Ladern und beiden Exportern. Der absichtliche Bruch entfernt ausschließlich eine Tabellenzeile in einer Speicher-Fixture: Grün → Rot → Grün; Originaltabellen-Hash unverändert. Reale Dateien sind niemals Bruchziel.
+`node tests/yahoo-q4-known-cases.test.js`: Prüfblöcke mit gesetztem `SCREENER_SNAPSHOTS_DIR`, einschließlich 71 Belegzellen, Null/Einheit/Währung/Periode/Feld/Fingerabdruck, aller Notierungen, nativer Umrechnung, Caches, Scoring-/Export-/PIT-Lesern, Prozessabbruch, Manifesten und Zusammenfassung. Die absichtlichen Brüche entfernen eine Tabellenzeile, entfernen die Board-Historien-Anbindung und stellen die alte Jahresposition-0-Regel wieder her — ausschließlich in Speicherkopien: Grün → Rot → Grün. Originaldateien und ihre Hashes bleiben unverändert. Die Fremdfeld-Prüfung behält das korrigierbare Originalfeld und verlangt zugleich, dass das zusätzlich belegte Fremdfeld unverändert bleibt.
 
 `node scripts/yahoo-q4-known-cases-replay.js <snapshot-dir>`: genau 27 Änderungen, 44 Kontrollen; alle sonstigen Zeilen serialisieren identisch, alle Quelldatei-Hashes sind vorher/nachher gleich. Aggregierter SHA256: `38d131b24a40ea550ddad4f9df019a82aa2e8c7c0985d245e6c2e000467798e1`.
 
@@ -70,6 +78,8 @@ Der vorhandene GQS-Hashwächter erfasst auch den Snapshot-Leser. Dessen exakter 
 
 Unabhängige Astra-Prüfung abgeschlossen, keine offenen Befunde, Urteil 98 %. Die Quellenetikett-Korrektur wurde gegen die Primärquelle reproduziert und mit einem Test abgesichert.
 
-Vollständiger stabiler Lauf: `node scripts/test-gate.js --mode=all`, Git-Bin vorangestellt, `SCREENER_SNAPSHOTS_DIR` auf den vorgegebenen USD-Bestand gesetzt. 709 Dateien: 635 bestanden, 74 fehlgeschlagen (42 blockierend, 32 Berichtsspur); Exit 1. In sämtlichen 74 fehlgeschlagenen Testprozessen wurde ein gescheiterter Python-Start mit `EPERM` direkt protokolliert. Zusätzlich: `tests/studie-f6-lauf.test.js` meldet `ENOMEM`; `tests/studie-t173-formtyp.test.js` und `tests/studie-c0.test.js` finden den Ausweichbefehl `python3` nicht (`ENOENT`), C0 zusätzlich `py EPERM`. Die genaue Dateiliste steht in `docs/yahoo-q4-test-status.md`, die maschinelle Zuordnung in `_scratch/c2-final-gate-summary.json`. Der Diagnose-Preload protokollierte nur Befehlsname/Fehlercode und gab die unveränderten Prozessergebnisse zurück. Keine Assertion wurde gelockert. Die 88 C2-Prüfblöcke, die GQS-Prüfung und alle übrigen JavaScript-Prüfungen bestanden; die Sandbox-Fehler erfordern einen Wiederholungslauf außerhalb dieser Umgebung vor Claudes Freigabe.
+Der unabhängige Opus-Prüfer hat den Stand `0896df8011` außerhalb der Sandbox mit `node scripts/test-gate.js --mode=all` geprüft und **709/709 grün** gemeldet. Die genaue Nachzählung seines `gate.out` ergibt **577/577 erfolgreiche Testdateien**; die 709 PASS-Zeilen enthalten zusätzlich 132 Ausgaben interner Untertests. Das externe Ergebnis bleibt vollständig grün. Die 25 Ersatzwerte wurden dabei gegen die primären PDFs bestätigt. Die zweite Runde behebt die anschließend gemeldeten Leser-, Fehlerpfad-, Jahreswechsel- und Nachweisbefunde; sie ist kein Commit und keine Freigabe durch den Erbauer.
+
+Folgeaufträge, ausdrücklich nicht Teil dieser Korrektur: Gestamp `grossProfitQ` für 2025-12-31 erst nach primärem Beleg untersuchen; den sichtbaren Gestamp-Lückengrund in findash ergänzen. Der Bruttogewinn bleibt hier eine reine Beobachtung und wird nicht geändert.
 
 Problem → Lösung → Nutzen: 27 falsche Q4-Zahlen → eng begrenzte Handtabelle mit Wächter → belegte Werte beziehungsweise begründete Lücken wirken beim nächsten Scoring auch aus bestehenden Snapshots.
