@@ -119,7 +119,19 @@ class FakeYahoo {
     if (fullMode === 'empty-modules') return { price: {}, summaryDetail: {} };
     return { price: { symbol: ticker, currency: 'USD', marketCap: fullCap === undefined ? cap : fullCap, regularMarketPrice: 120 }, financialData: { financialCurrency: 'USD' }, summaryProfile: { sector: 'Technology', industry: 'Semiconductors', country: 'United States' } };
   }
-  async fundamentalsTimeSeries() { ftsCalls++; return []; }
+  async fundamentalsTimeSeries(_symbol, query) {
+    ftsCalls++;
+    // A cap-recovery control needs an accepted financial answer. An empty reply
+    // would exercise C10's history-loss rejection instead of the cap fallback.
+    if (query.type === 'quarterly') return seed.timeseries.revenueQ.map((v, i) => ({
+      date: new Date(Date.UTC(2026, 6 - i * 3, 0)).toISOString().slice(0, 10), totalRevenue: v.value,
+    })).reverse();
+    return seed.annual.annualRev.map((v, i) => ({ date: `${2025 - i}-12-31`,
+      totalRevenue: v, operatingIncome: seed.annual.annualOpInc[i], netIncome: seed.annual.annualNetIncome[i],
+      freeCashFlow: seed.annual.annualFCF[i], operatingCashFlow: seed.annual.annualOCF[i],
+      ...(seed.annual.annualBalance[i] || {}),
+    })).reverse();
+  }
 }
 const load = Module._load;
 Module._load = function (req, parent, ...rest) {

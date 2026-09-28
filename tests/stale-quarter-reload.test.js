@@ -31,6 +31,7 @@ function snapshot(ticker, end = '2026-03-31', fetched = '2026-09-20T02:17:00Z') 
     revenueQEnds: [end], grossProfitQEnds: [end], opIncQEnds: [end] } };
 }
 function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxPerRun, shard = null, selection = null,
+  annualResponses = null, summaryResponse = null, pullSource = source, providersByTicker = null,
   newer = true, quarterFails = false, quarterEmpty = false, summaryFails = false, ftsFails = false,
   annualFails = false, annualEmpty = false, quarterlyRows = null, summaryError = 'fixture summary failure', quoteMissing = false,
   summaryMarketCap = 1e12, quoteMarketCap = 1e12, emptySummary = false,
@@ -48,7 +49,8 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
     put(path.join(out, s.meta.ticker + '.json'), s);
     put(path.join(root, 'fundamentals-cache', s.meta.ticker + '.json'), { _cacheVersion: 2, _ftsPartial: false,
       cachedAt: '2026-09-20T02:17:00Z', payload: { ftsAnnual: { annualOpInc: [], annualNetIncome: [], annualGP: [], annualFCF: [], ...s.annual }, ftsQuarterly: s.timeseries,
-        ftsBalance: s.annual.annualBalance, ftsAnnualSGA: [1], ftsAnnualDepreciation: [1] } });
+        ftsBalance: s.annual.annualBalance, ftsAnnualSGA: [1], ftsAnnualDepreciation: [1],
+        ftsQuarterlyNI: (s.timeseries.netIncomeQ || []).map(v => v?.value ?? v) } });
   }
   const io = new Proxy(fs, { get(target, prop) {
     if (prop === 'existsSync') return p => files.has(key(p));
@@ -66,16 +68,18 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   const quote = { currency: 'USD', regularMarketPrice: 100, marketCap: quoteMarketCap };
   class Yahoo {
     async quote(t) { calls.push([t, 'quote']); return quoteMissing ? undefined : quote; }
-    async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error(summaryError); if (emptySummary) return {}; return { price: { ...quote, marketCap: summaryMarketCap }, financialData: { financialCurrency: 'USD' },
+    async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error(summaryError); if (emptySummary) return {}; if (providersByTicker) return providersByTicker[t].summary; if (summaryResponse) return summaryResponse; return { price: { ...quote, marketCap: summaryMarketCap }, financialData: { financialCurrency: 'USD' },
       quoteType: { quoteType: 'EQUITY' }, summaryProfile: { sector: 'Technology', industry: 'Software' } }; }
     async fundamentalsTimeSeries(t, q) {
       calls.push([t, q.type + '/' + q.module]);
+      if (providersByTicker) return providersByTicker[t][q.type === 'quarterly' ? 'quarters' : q.module];
       if (q.type === 'quarterly' && quarterFails) throw new Error('fixture quarterly failure');
       if (q.type === 'quarterly' && quarterEmpty) return [];
       if (q.type === 'annual' && (annualFails === true || annualFails === q.module)) throw new Error('fixture annual ' + q.module + ' failure');
       if (q.type === 'annual' && (annualEmpty === true || annualEmpty === q.module)) return [];
       if (q.type === 'quarterly' && quarterlyRows) return quarterlyRows;
       if (q.type === 'quarterly') return rows(newer ? '2026-06-30' : '2026-03-31');
+      if (annualResponses) return annualResponses[q.module];
       return [{ date: '2025-12-31', totalRevenue: 400, grossProfit: 100, operatingIncome: 50, netIncome: 30,
         operatingCashFlow: 60, freeCashFlow: 40, totalAssets: 1000, currentAssets: 200, currentLiabilities: 100, totalDebt: 50 }];
     }
@@ -89,7 +93,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
     require: id => id === 'fs' ? io : id === 'yahoo-finance2' ? { default: Yahoo }
       : id === './lib/atomic-write.js' ? { writeFileAtomic: (p, s) => io.writeFileSync(p, s) } : requireRoot(id) };
   context.global = context;
-  vm.runInNewContext(source + '\nmodule.exports.__manual = x => { _vollPullTicker = new Set(x); };\nmodule.exports.__ftsFail = () => { fetchFundamentalsTS = async () => { throw new Error("fixture FTS failure"); }; };', context, { filename: path.join(root, 'pull-yahoo.js') });
+  vm.runInNewContext(pullSource + '\nmodule.exports.__manual = x => { _vollPullTicker = new Set(x); };\nmodule.exports.__ftsFail = () => { fetchFundamentalsTS = async () => { throw new Error("fixture FTS failure"); }; };', context, { filename: path.join(root, 'pull-yahoo.js') });
   const Y = mod.exports; Y.__manual(manual);
   if (ftsFails) Y.__ftsFail();
   const stocks = snapshots.map(s => ({ ticker: s.meta.ticker, yahoo_symbol: s.meta.ticker, name: s.meta.ticker }));

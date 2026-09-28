@@ -132,7 +132,7 @@ function assertPriceOnly(f, m) {
       env: { RUN_DATE_UTC: '2026-09-29' } });
     assert.equal((await f.run()).n_stale_quarter_pulled, 1);
   });
-  for (const failure of ['quarterFails', 'summaryFails', 'ftsFails', 'quarterEmpty']) await check(failure + ': old quarters and clocks survive, price still refreshes', async () => {
+  for (const failure of ['quarterFails', 'summaryFails', 'ftsFails', 'quarterEmpty']) await check(failure + ': rejected FTS preserves bytes; summary fallback still refreshes price', async () => {
     const s = snapshot('OLD');
     for (const field of Object.keys(s.timeseries)) s.timeseries[field] = Array.from({ length: 8 }, () => s.timeseries[field][0]);
     const f = fixture({ snapshots: [s], [failure]: true });
@@ -141,7 +141,8 @@ function assertPriceOnly(f, m) {
     assert.equal(JSON.stringify(stored.timeseries), old, 'quarter history overwritten');
     assert.equal(stored.meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
     assert.equal(stored.meta.fundamentalsAsOf, s.meta.fundamentalsAsOf);
-    assert.equal(stored.meta.asOf, new Date(NOW).toISOString());
+    assert.equal(stored.meta.asOf, failure === 'summaryFails' ? new Date(NOW).toISOString() : s.meta.asOf);
+    if (failure !== 'summaryFails') assert.equal(f.files.get(path.join(f.out, 'OLD.json')).toString(), JSON.stringify(s));
     assert.equal(m.n_ok, 1); assert.equal(m.n_failed, 0); assert.equal(m.n_stale_quarter_reload_failed, 1);
     assert.equal(m.results[0].quarterReload.outcome, 'reload-failed');
     assert.equal(f.files.get(cachePath).toString(), oldCache, 'failed reload overwrote the warm cache');
@@ -263,7 +264,7 @@ function assertPriceOnly(f, m) {
     const s = snapshot('OLD'); s.annual.annualRev = [300, 350, 400].map(value => ({ value }));
     s.annual.annualOpInc = [30, 40, 50].map(value => ({ value }));
     const f = fixture({ snapshots: [s], annualFails }), m = await f.run();
-    assert.equal(m.results[0].status, 'price-only'); assert.equal(m.n_stale_quarter_reload_failed, 1);
+    assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
     assert.equal(m.n_stale_quarter_fetch_failed, 1); assert.equal(m.n_stale_quarter_newer, 0);
     assert.deepEqual(f.stored('OLD').annual, s.annual); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
     assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
@@ -273,7 +274,7 @@ function assertPriceOnly(f, m) {
     for (const field of Object.keys(s.timeseries)) s.timeseries[field] = Array.from({ length: 8 }, () => s.timeseries[field][0]);
     const quarterlyRows = [{ date: answer === 'older' ? '2025-09-30' : '2026-06-30', totalRevenue: 100, grossProfit: 40, operatingIncome: 20, netIncome: 10 }];
     const f = fixture({ snapshots: [s], quarterlyRows }), m = await f.run();
-    assert.equal(m.results[0].status, 'price-only'); assert.equal(m.n_stale_quarter_reload_failed, 1);
+    assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
     assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
     assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
   });
@@ -281,7 +282,7 @@ function assertPriceOnly(f, m) {
     for (const annualEmpty of [true, false]) await check(field + ' thinner annual reply (annualEmpty=' + annualEmpty + ') preserves history', async () => {
       const s = snapshot('OLD'); s.annual[field] = [{ value: 10 }, { value: null }, { value: 20 }];
       const f = fixture({ snapshots: [s], annualEmpty }), m = await f.run();
-      assert.equal(m.results[0].status, 'price-only'); assert.equal(m.n_stale_quarter_reload_failed, 1);
+      assert.equal(m.results[0].status, 'reload-retained'); assert.equal(m.n_stale_quarter_reload_failed, 1);
       assert.equal(m.n_stale_quarter_fetch_failed, 1); assert.equal(m.n_stale_quarter_newer, 0);
       assert.deepEqual(f.stored('OLD').annual, s.annual); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
       assert.equal(f.stored('OLD').meta.fundamentalsTimeseriesFetchedAt, s.meta.fundamentalsTimeseriesFetchedAt);
