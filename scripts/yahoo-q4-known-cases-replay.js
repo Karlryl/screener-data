@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
-// Read-only proof against the exact production scoring reader. Never writes snapshots.
+// Read-only proof of the Q4 authority, independent of later input overlays. Never writes snapshots.
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const assert = require('assert/strict');
-const { readScoringSnapshot } = require('../src/scoring/run-screener.js');
+const { applyKnownCases } = require('../lib/yahoo-q4-known-cases.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { norm } = require('../src/scoring/snapshot.js');
 const evidence = require('../tests/fixtures/yahoo-q4-known-cases.json');
@@ -23,7 +23,9 @@ function replay(dir) {
     for (const file of files) {
       const fp = path.join(dir, file), bytes = fs.readFileSync(fp);
       beforeHashes.set(file, hash(bytes));
-      const original = JSON.parse(bytes), scored = readScoringSnapshot(fp);
+      // This replay proves the Q4 authority only. Other hand tables have their own
+      // full reader replay; allowing their cells here would weaken the 27-cell guard.
+      const original = JSON.parse(bytes), scored = applyKnownCases(original).snapshot;
       if (!original?.meta?.ticker) continue;
       snapshots++;
       const ticker = original.meta.ticker;

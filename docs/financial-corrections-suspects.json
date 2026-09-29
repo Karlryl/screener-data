@@ -1,0 +1,1931 @@
+{
+  "snapshots": 16118,
+  "criteria": {
+    "currency": "reportingCurrencyOriginal USD, tradingCurrency not USD",
+    "ratios": "annual revenue / USD market cap >5 OR latest / previous quarterly revenue >3 or <1/3",
+    "authority": "Signal only; does not authorize repairs. Ratios also flag legitimate seasonal/low-cap issuers and zeros."
+  },
+  "suspects": [
+    {
+      "ticker": "1199.HK",
+      "name": "COSCO SHIPPING Ports Limited",
+      "annualRev": [
+        1669017000,
+        1502989000,
+        1454353000,
+        1441273000
+      ],
+      "quarterRev": [
+        358902000,
+        0,
+        328027000,
+        0
+      ],
+      "ends": [
+        "2023-09-30",
+        "2023-06-30",
+        "2023-03-31",
+        "2022-06-30"
+      ],
+      "mc": 3043909092.412805,
+      "annualRevenueToMcap": 0.5483136812988807,
+      "latestToPriorQuarter": null,
+      "shares": 4016710738,
+      "annualShares": [
+        3833237302,
+        3631223113,
+        3478999193,
+        3362046312,
+        null
+      ],
+      "tradingCurrency": "HKD",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "1860.HK",
+      "name": "Mobvista Inc.",
+      "annualRev": [
+        2046717000,
+        1507767000,
+        1054092000,
+        894405000
+      ],
+      "quarterRev": [
+        261579000,
+        0,
+        0,
+        0
+      ],
+      "ends": [
+        "2023-06-30",
+        "2023-03-31",
+        "2019-12-31",
+        "2019-09-30"
+      ],
+      "mc": 2664137748.969165,
+      "annualRevenueToMcap": 0.7682474379532126,
+      "latestToPriorQuarter": null,
+      "shares": 1663223330,
+      "annualShares": [
+        1541109049,
+        1530446167,
+        1593204949,
+        1617298596
+      ],
+      "tradingCurrency": "HKD",
+      "sector": "Communication Services"
+    },
+    {
+      "ticker": "1AAL.MI",
+      "name": "American Airlines Group Inc.",
+      "annualRev": [
+        54633000000,
+        54211000000,
+        52788000000,
+        48971000000
+      ],
+      "quarterRev": [
+        16735000000,
+        13912000000,
+        13999000000,
+        13691000000,
+        14392000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 8921909411.312128,
+      "annualRevenueToMcap": 6.123464998504757,
+      "latestToPriorQuarter": 1.2029183438757907,
+      "shares": 661969951,
+      "annualShares": [
+        659964000,
+        721300000,
+        719669000,
+        655122000
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "1CNC.MI",
+      "name": "Centene Corporation",
+      "annualRev": [
+        194777000000,
+        163071000000,
+        153999000000,
+        144547000000
+      ],
+      "quarterRev": [
+        53579000000,
+        49944000000,
+        49725000000,
+        49690000000,
+        48742000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 30548879581.64726,
+      "annualRevenueToMcap": 6.375913050409072,
+      "latestToPriorQuarter": 1.0727815152971327,
+      "shares": 493995000,
+      "annualShares": [
+        493116000,
+        523744000,
+        545704000,
+        582040000,
+        null
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Healthcare"
+    },
+    {
+      "ticker": "1COR.MI",
+      "name": "Cencora, Inc.",
+      "annualRev": [
+        321332819000,
+        293958599000,
+        262173411000,
+        238587006000
+      ],
+      "quarterRev": [
+        84754837000,
+        78355916000,
+        85932016000,
+        83728554000,
+        80663532000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 61299412685.36279,
+      "annualRevenueToMcap": 5.242021169914546,
+      "latestToPriorQuarter": 1.0816648100955133,
+      "shares": 190827165,
+      "annualShares": [
+        195214000,
+        200284000,
+        204591000,
+        211210000,
+        null
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Healthcare"
+    },
+    {
+      "ticker": "1DINO.MI",
+      "name": "HF Sinclair Corporation",
+      "annualRev": [
+        26869000000,
+        28580000000,
+        31964000000,
+        38205000000
+      ],
+      "quarterRev": [
+        7123000000,
+        6464000000,
+        7251000000,
+        6784000000,
+        6370000000
+      ],
+      "ends": [
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30",
+        "2025-03-31"
+      ],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": 1.1019492574257426,
+      "shares": 177783849,
+      "annualShares": [
+        186465000,
+        192073000,
+        190035000,
+        202566000,
+        null
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "1GLXY.MI",
+      "name": "Galaxy Digital Inc.",
+      "annualRev": [
+        83933938900,
+        1652495770,
+        833604820,
+        574604220
+      ],
+      "quarterRev": [
+        8576213000,
+        10041444000,
+        10367096000,
+        28401871000,
+        8661555000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 13707700029.380404,
+      "annualRevenueToMcap": 6.123123406559829,
+      "latestToPriorQuarter": 0.8540816440344635,
+      "shares": 194292392,
+      "annualShares": [
+        366475172,
+        356723762,
+        325978160,
+        104835527,
+        null
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Financial Services"
+    },
+    {
+      "ticker": "1GT.MI",
+      "name": "The Goodyear Tire & Rubber Company",
+      "annualRev": [
+        18280000000,
+        18878000000,
+        20066000000,
+        20805000000
+      ],
+      "quarterRev": [
+        4250000000,
+        3881000000,
+        4917000000,
+        4645000000,
+        4465000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 1455010851.2498944,
+      "annualRevenueToMcap": 12.563480185936054,
+      "latestToPriorQuarter": 1.0950785879927853,
+      "shares": 287898737,
+      "annualShares": [
+        288000000,
+        288000000,
+        285000000,
+        286000000
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Consumer Cyclical"
+    },
+    {
+      "ticker": "1JAM.MI",
+      "name": "JetBlue Airways Corporation",
+      "annualRev": [
+        9062000000,
+        9279000000,
+        9615000000,
+        9158000000
+      ],
+      "quarterRev": [
+        2697000000,
+        2240000000,
+        2244000000,
+        2322000000,
+        2356000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 1566104626.9792001,
+      "annualRevenueToMcap": 5.7863311581419365,
+      "latestToPriorQuarter": 1.2040178571428573,
+      "shares": 377312181,
+      "annualShares": [
+        362100000,
+        346000000,
+        332900000,
+        323600000,
+        null
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "2343.HK",
+      "name": "Pacific Basin Shipping Limited",
+      "annualRev": [
+        2081039000,
+        2581552000,
+        2296622000,
+        3281626000
+      ],
+      "quarterRev": [
+        0,
+        471000000,
+        471000000,
+        383400000
+      ],
+      "ends": [
+        "2022-06-30",
+        "2013-12-31",
+        "2013-09-30",
+        "2013-06-30"
+      ],
+      "mc": 2542180233.847132,
+      "annualRevenueToMcap": 0.8186040361311133,
+      "latestToPriorQuarter": 0,
+      "shares": 5153308803,
+      "annualShares": [
+        5214619000,
+        5379217000,
+        5413553000,
+        5468220000,
+        null
+      ],
+      "tradingCurrency": "HKD",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "2637.TW",
+      "name": "Wisdom Marine Lines Co., Limited (Cayman)",
+      "annualRev": [
+        16948954566.336,
+        20862634594.28,
+        16763054720.392,
+        25640752488.3168
+      ],
+      "quarterRev": [
+        5341866000,
+        4338022000,
+        5419996890.7858,
+        4527133548.9392,
+        3806139000,
+        null,
+        null
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30",
+        "2025-03-31",
+        "2024-12-31"
+      ],
+      "mc": 2225918280.7544627,
+      "annualRevenueToMcap": 7.614365142188079,
+      "latestToPriorQuarter": 1.2314059264798565,
+      "shares": 746409000,
+      "annualShares": [
+        746409199,
+        746409199,
+        746409199,
+        746409199,
+        null
+      ],
+      "tradingCurrency": "TWD",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "4335.HK",
+      "name": "Intel Corporation",
+      "annualRev": [
+        52853000000,
+        53101000000,
+        54228000000,
+        63054000000
+      ],
+      "quarterRev": [
+        16128000000,
+        13577000000,
+        13674000000,
+        13653000000,
+        12859000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": 1.1878912867349194,
+      "shares": 5286105262,
+      "annualShares": [
+        4530000000,
+        4280000000,
+        4212000000,
+        4123000000
+      ],
+      "tradingCurrency": "HKD",
+      "sector": "Technology"
+    },
+    {
+      "ticker": "A1G.DE",
+      "name": "American Airlines Group Inc.",
+      "annualRev": [
+        54633000000,
+        54211000000,
+        52788000000,
+        48971000000
+      ],
+      "quarterRev": [
+        16735000000,
+        13912000000,
+        13999000000,
+        13691000000,
+        14392000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 8902380442.633217,
+      "annualRevenueToMcap": 6.1368979175911536,
+      "latestToPriorQuarter": 1.2029183438757907,
+      "shares": 661969951,
+      "annualShares": [
+        659964000,
+        721300000,
+        719669000,
+        655122000
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "AAL.SW",
+      "name": "American Airlines Group Inc.",
+      "annualRev": [
+        54633000000,
+        54211000000,
+        52788000000,
+        48971000000
+      ],
+      "quarterRev": [
+        16735000000,
+        13912000000,
+        13999000000,
+        13691000000,
+        14392000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 7079297966.453658,
+      "annualRevenueToMcap": 7.717290649282862,
+      "latestToPriorQuarter": 1.2029183438757907,
+      "shares": 661969951,
+      "annualShares": [
+        659964000,
+        721300000,
+        719669000,
+        null
+      ],
+      "tradingCurrency": "CHF",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "AAL.VI",
+      "name": "American Airlines Group Inc.",
+      "annualRev": [
+        54633000000,
+        54211000000,
+        52788000000,
+        48971000000
+      ],
+      "quarterRev": [
+        16735000000,
+        13912000000,
+        13999000000,
+        13691000000,
+        14392000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 8960968510.58985,
+      "annualRevenueToMcap": 6.096774018950751,
+      "latestToPriorQuarter": 1.2029183438757907,
+      "shares": 661969951,
+      "annualShares": [
+        659964000,
+        721300000,
+        719669000,
+        655122000
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "ABC.VI",
+      "name": "Cencora, Inc.",
+      "annualRev": [
+        321332819000,
+        293958599000,
+        262173411000,
+        238587006000
+      ],
+      "quarterRev": [
+        84754837000,
+        78355916000,
+        85932016000,
+        83728554000,
+        80663532000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 57856602199.65768,
+      "annualRevenueToMcap": 5.553952475313202,
+      "latestToPriorQuarter": 1.0816648100955133,
+      "shares": 190827165,
+      "annualShares": [
+        195214000,
+        200284000,
+        204591000,
+        211210000,
+        null
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Healthcare"
+    },
+    {
+      "ticker": "ANTARCHILE.SN",
+      "name": "AntarChile S.A.",
+      "annualRev": [
+        29637952000,
+        28749546000,
+        28528000000,
+        28613109000
+      ],
+      "quarterRev": [
+        9245837000,
+        7851455000,
+        7701293000,
+        7347575000,
+        7180596000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 3491531698.784489,
+      "annualRevenueToMcap": 8.488524394699866,
+      "latestToPriorQuarter": 1.177595362897705,
+      "shares": 453805194,
+      "annualShares": [
+        454105081,
+        454818441,
+        456171369,
+        456376483
+      ],
+      "tradingCurrency": "CLP",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "BANPU.BK",
+      "name": "Banpu Public Company Limited",
+      "annualRev": [
+        27850393000,
+        25826965000,
+        28379622000,
+        24501208000
+      ],
+      "quarterRev": [
+        5092756000,
+        6736722000,
+        7450422000,
+        6557265000,
+        7105984000
+      ],
+      "ends": [
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30",
+        "2025-03-31"
+      ],
+      "mc": 1334574183.1364937,
+      "annualRevenueToMcap": 20.86837386180098,
+      "latestToPriorQuarter": 0.7559694462677843,
+      "shares": 3047731700,
+      "annualShares": [
+        3047732000,
+        3047732000,
+        3047732000,
+        3047732000
+      ],
+      "tradingCurrency": "THB",
+      "sector": "Utilities"
+    },
+    {
+      "ticker": "BBUC.TO",
+      "name": "Brookfield Business Corporation",
+      "annualRev": [
+        27457000000,
+        40620000000,
+        55068000000,
+        57385000000
+      ],
+      "quarterRev": [
+        6497000000,
+        6436000000,
+        7094000000,
+        6919000000,
+        6695000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 5180123040.68673,
+      "annualRevenueToMcap": 5.300453248762991,
+      "latestToPriorQuarter": 1.009477936606588,
+      "shares": 205442014,
+      "annualShares": [
+        87720678,
+        74281767,
+        74500000,
+        75300000,
+        null
+      ],
+      "tradingCurrency": "CAD",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "CAPT.OL",
+      "name": "Capital Tankers Corp.",
+      "annualRev": [
+        41219000
+      ],
+      "quarterRev": [
+        148638000,
+        34923000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31"
+      ],
+      "mc": 2408100955.5745015,
+      "annualRevenueToMcap": 0.01711680729355733,
+      "latestToPriorQuarter": 4.25616355983163,
+      "shares": 134177660,
+      "annualShares": [
+        null,
+        131050000
+      ],
+      "tradingCurrency": "NOK",
+      "sector": "Industrials"
+    },
+    {
+      "ticker": "CEF.TO",
+      "name": "Sprott Physical Gold and Silver Trust",
+      "annualRev": [
+        4363090000,
+        1020877000,
+        312950000,
+        8150000
+      ],
+      "quarterRev": [
+        -1561553000,
+        631541000,
+        1871958000,
+        1246495000,
+        328019000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 7274492098.625557,
+      "annualRevenueToMcap": 0.5997793304118596,
+      "latestToPriorQuarter": -2.4726074791660397,
+      "annualShares": [
+        194561566,
+        204700256,
+        214594708,
+        217714815
+      ],
+      "tradingCurrency": "CAD",
+      "sector": null
+    },
+    {
+      "ticker": "CGG.TO",
+      "name": "China Gold International Resources Corp. Ltd.",
+      "annualRev": [
+        1310125000,
+        756646000,
+        459434000,
+        1104949000
+      ],
+      "quarterRev": [
+        461013000,
+        453203000,
+        384734000,
+        345026000,
+        307269000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": 1.0172328956339654,
+      "shares": 396413753,
+      "annualShares": [
+        396413753,
+        396413753,
+        396413753,
+        396413753,
+        null
+      ],
+      "tradingCurrency": "CAD",
+      "sector": "Basic Materials"
+    },
+    {
+      "ticker": "DEC.L",
+      "name": "Diversified Energy Company",
+      "annualRev": [
+        1611455000,
+        794841000,
+        868264000,
+        1919349000
+      ],
+      "quarterRev": [
+        520874000,
+        27144000,
+        417626000,
+        62515000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-06-30",
+        "2025-03-31"
+      ],
+      "mc": 926306256.8202239,
+      "annualRevenueToMcap": 1.7396568231458558,
+      "latestToPriorQuarter": 19.189286766872975,
+      "shares": 70769563,
+      "annualShares": [
+        74478592,
+        48031916,
+        47514521,
+        42203974,
+        null
+      ],
+      "tradingCurrency": "GBp",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "EMAS.JK",
+      "name": "PT Merdeka Gold Resources Tbk",
+      "annualRev": [
+        131964,
+        1749657,
+        1394298,
+        null
+      ],
+      "quarterRev": [
+        28212306,
+        2644694,
+        18527,
+        29437,
+        84000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 6191027964.310381,
+      "annualRevenueToMcap": 0.00002131536164280587,
+      "latestToPriorQuarter": 10.667512385175751,
+      "shares": 14731366060,
+      "annualShares": [
+        14314810852,
+        16180232675,
+        16180232675,
+        16180232675
+      ],
+      "tradingCurrency": "IDR",
+      "sector": "Basic Materials"
+    },
+    {
+      "ticker": "ENOG.L",
+      "name": "Energean plc",
+      "annualRev": [
+        1779413000,
+        978495000,
+        737081000,
+        496985000
+      ],
+      "quarterRev": [
+        181127000,
+        550497000,
+        253283000,
+        339845000
+      ],
+      "ends": [
+        "2026-03-31",
+        "2025-06-30",
+        "2025-03-31",
+        "2024-12-31"
+      ],
+      "mc": 1771816837.28896,
+      "annualRevenueToMcap": 1.0042872166869476,
+      "latestToPriorQuarter": 0.32902449967938063,
+      "shares": 184691730,
+      "annualShares": [
+        185763939,
+        180488334,
+        184645750,
+        177863
+      ],
+      "tradingCurrency": "GBp",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "EXM.BR",
+      "name": "Exmar NV",
+      "annualRev": [
+        578300000,
+        243300000,
+        247000000,
+        384200000
+      ],
+      "quarterRev": [
+        22400000,
+        70600000,
+        39400000,
+        44800000
+      ],
+      "ends": [
+        "2018-03-31",
+        "2017-12-31",
+        "2017-09-30",
+        "2016-09-30"
+      ],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": 0.31728045325779036,
+      "shares": 79516197,
+      "annualShares": [
+        64868057,
+        57639809,
+        57415904,
+        57226737
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "G92.SI",
+      "name": "China Aviation Oil (Singapore) Corporation Ltd",
+      "annualRev": [
+        16439557000,
+        15518512000,
+        14429573000,
+        16464124000
+      ],
+      "quarterRev": [
+        0
+      ],
+      "ends": [
+        "2017-03-31"
+      ],
+      "mc": 887848241.328507,
+      "annualRevenueToMcap": 18.516179043618003,
+      "latestToPriorQuarter": null,
+      "shares": 860183628,
+      "annualShares": [
+        null,
+        860184000,
+        860184000,
+        860184000,
+        860184000
+      ],
+      "tradingCurrency": "SGD",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "GYT.VI",
+      "name": "The Goodyear Tire & Rubber Company",
+      "annualRev": [
+        18280000000,
+        18878000000,
+        20066000000,
+        20805000000
+      ],
+      "quarterRev": [
+        4250000000,
+        3881000000,
+        4917000000,
+        4645000000,
+        4465000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 1465464499.3286145,
+      "annualRevenueToMcap": 12.473860682653704,
+      "latestToPriorQuarter": 1.0950785879927853,
+      "shares": 287898737,
+      "annualShares": [
+        288000000,
+        288000000,
+        285000000,
+        286000000
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Consumer Cyclical"
+    },
+    {
+      "ticker": "HCLTECH.NS",
+      "name": "HCL Technologies Limited",
+      "annualRev": [
+        1301440000000,
+        1170550000000,
+        1099130000000,
+        1014560000000
+      ],
+      "quarterRev": [
+        345790000000,
+        339810000000,
+        338720000000,
+        null,
+        303490000000,
+        302460000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30",
+        "2025-03-31"
+      ],
+      "mc": 34709699145.04878,
+      "annualRevenueToMcap": 37.49499511826353,
+      "latestToPriorQuarter": 1.0175980695094318,
+      "shares": 2705766714,
+      "annualShares": [
+        2712305611,
+        2713204259,
+        2713865535,
+        2710699199,
+        null
+      ],
+      "tradingCurrency": "INR",
+      "sector": "Technology"
+    },
+    {
+      "ticker": "KD.VI",
+      "name": "Kyndryl Holdings, Inc.",
+      "annualRev": [
+        15092000000,
+        15057000000,
+        16052000000,
+        17026000000
+      ],
+      "quarterRev": [
+        3618000000,
+        3769000000,
+        3859000000,
+        3721000000,
+        3743000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 2440909034.482688,
+      "annualRevenueToMcap": 6.182942414811665,
+      "latestToPriorQuarter": 0.9599363226319979,
+      "shares": 217818263,
+      "annualShares": [
+        233800000,
+        239100000,
+        229200000,
+        226700000,
+        null
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Technology"
+    },
+    {
+      "ticker": "MSB.AX",
+      "name": "Mesoblast Limited",
+      "annualRev": [
+        120250000,
+        17198000,
+        5902000,
+        7501000
+      ],
+      "quarterRev": [
+        42918000,
+        5219210,
+        3293630,
+        2980050
+      ],
+      "ends": [
+        "2025-12-31",
+        "2023-12-31",
+        "2023-06-30",
+        "2023-03-31"
+      ],
+      "mc": 1915370692.9075558,
+      "annualRevenueToMcap": 0.06278158084243163,
+      "latestToPriorQuarter": 8.223083570118849,
+      "shares": 1298548778,
+      "annualShares": [
+        null,
+        1207793132,
+        986702919,
+        777719091,
+        682861425
+      ],
+      "tradingCurrency": "AUD",
+      "sector": "Healthcare"
+    },
+    {
+      "ticker": "OCI.AS",
+      "name": "OCI N.V.",
+      "annualRev": [
+        1086000000,
+        975100000,
+        946700000,
+        3713600000
+      ],
+      "quarterRev": [
+        1211300000,
+        1224300000,
+        1209000000,
+        1068900000
+      ],
+      "ends": [
+        "2024-06-30",
+        "2024-03-31",
+        "2023-12-31",
+        "2023-09-30"
+      ],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": 0.9893816874948951,
+      "shares": 210969550,
+      "annualShares": [
+        null,
+        211593710,
+        210639441,
+        211556266,
+        211032092
+      ],
+      "tradingCurrency": "EUR",
+      "sector": "Basic Materials"
+    },
+    {
+      "ticker": "PDN.AX",
+      "name": "Paladin Energy Ltd",
+      "annualRev": [
+        304300000,
+        177676000,
+        0,
+        0
+      ],
+      "quarterRev": [
+        0,
+        14300000,
+        0,
+        63000000
+      ],
+      "ends": [
+        "2024-06-30",
+        "2017-03-31",
+        "2016-12-31",
+        "2016-06-30"
+      ],
+      "mc": 2974781186.6252904,
+      "annualRevenueToMcap": 0.10229323802642774,
+      "latestToPriorQuarter": 0,
+      "shares": 449358421,
+      "annualShares": [
+        440991736,
+        352089348,
+        299187981,
+        297939149,
+        null
+      ],
+      "tradingCurrency": "AUD",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "PDN.TO",
+      "name": "Paladin Energy Ltd",
+      "annualRev": [
+        304300000,
+        177676000,
+        0,
+        0
+      ],
+      "quarterRev": [
+        0,
+        14300000,
+        0,
+        63000000
+      ],
+      "ends": [
+        "2024-06-30",
+        "2017-03-31",
+        "2016-12-31",
+        "2016-06-30"
+      ],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": 0,
+      "shares": 449358421,
+      "annualShares": [
+        440991736,
+        352089348,
+        299187981,
+        297939149,
+        null
+      ],
+      "tradingCurrency": "CAD",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "PTTEP.BK",
+      "name": "PTT Exploration and Production Public Company Limited",
+      "annualRev": [
+        281448611000,
+        312310066000,
+        300693599000,
+        331350329000
+      ],
+      "quarterRev": [
+        96138839000,
+        76087345000,
+        70372162000,
+        71179735000,
+        71165800000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-06-30",
+        "2025-03-31"
+      ],
+      "mc": 17325077257.690155,
+      "annualRevenueToMcap": 16.2451576298208,
+      "latestToPriorQuarter": 1.263532575620821,
+      "shares": 3969985400,
+      "annualShares": [
+        3970000000,
+        3970000000,
+        3970000000,
+        3970000000,
+        null
+      ],
+      "tradingCurrency": "THB",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "QBE.AX",
+      "name": "QBE Insurance Group Limited",
+      "annualRev": [
+        26093486400,
+        27855490100,
+        25507683300,
+        20811400200
+      ],
+      "quarterRev": [],
+      "ends": [],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": null,
+      "shares": 1494024468,
+      "annualShares": [
+        1522982419,
+        1501000000,
+        1490000000,
+        1482000000,
+        null
+      ],
+      "tradingCurrency": "AUD",
+      "sector": "Financial Services"
+    },
+    {
+      "ticker": "RRC.RO",
+      "name": "Rompetrol Rafinare S.A.",
+      "annualRev": [
+        8876520880,
+        7186208360,
+        8665022000,
+        6411639000
+      ],
+      "quarterRev": [
+        1689363000,
+        1292742000,
+        0
+      ],
+      "ends": [
+        "2007-09-30",
+        "2007-06-30",
+        "2006-09-30"
+      ],
+      "mc": 1324392375.9349759,
+      "annualRevenueToMcap": 6.702334626272277,
+      "latestToPriorQuarter": 1.3068059984126763,
+      "shares": 26559205726,
+      "annualShares": [
+        26559205726,
+        26559205726
+      ],
+      "tradingCurrency": "RON",
+      "sector": "Energy"
+    },
+    {
+      "ticker": "SFC.TO",
+      "name": "Sagicor Financial Company Ltd.",
+      "annualRev": [
+        0,
+        0,
+        1725042000,
+        4718188000
+      ],
+      "quarterRev": [
+        1142780000,
+        319832000,
+        464571000,
+        798590000,
+        563784000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "mc": 813620097.7608231,
+      "annualRevenueToMcap": 0,
+      "latestToPriorQuarter": 3.573063358263088,
+      "shares": 135866899,
+      "annualShares": [
+        139947000,
+        143611000,
+        144975000,
+        144848000,
+        null
+      ],
+      "tradingCurrency": "CAD",
+      "sector": "Financial Services"
+    },
+    {
+      "ticker": "STO.AX",
+      "name": "Santos Limited",
+      "annualRev": [
+        4951000000,
+        5404000000,
+        5889000000,
+        7790000000
+      ],
+      "quarterRev": [
+        1349000000,
+        1271000000,
+        1230000000,
+        1129000000
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30"
+      ],
+      "mc": null,
+      "annualRevenueToMcap": null,
+      "latestToPriorQuarter": 1.061369000786782,
+      "shares": 3247772961,
+      "annualShares": [
+        3258964143,
+        3255319149,
+        3277777778,
+        3350618460
+      ],
+      "tradingCurrency": "AUD",
+      "sector": "Energy"
+    }
+  ],
+  "bdc": [
+    {
+      "ticker": "ARCC",
+      "name": "Ares Capital Corporation",
+      "q": [
+        {
+          "value": 219000000
+        },
+        {
+          "value": 151000000
+        },
+        {
+          "value": 344000000
+        },
+        {
+          "value": 460000000
+        },
+        {
+          "value": 407000000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 3052000000
+        },
+        {
+          "value": 2990000000
+        },
+        {
+          "value": 2614000000
+        },
+        {
+          "value": 2096000000
+        }
+      ]
+    },
+    {
+      "ticker": "BBDC",
+      "name": "Barings BDC, Inc.",
+      "q": [
+        {
+          "value": 21762000
+        },
+        {
+          "value": 22706000
+        },
+        {
+          "value": 28503000
+        },
+        {
+          "value": 26784000
+        },
+        {
+          "value": 23661000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 279210000
+        },
+        {
+          "value": 286169000
+        },
+        {
+          "value": 289201000
+        },
+        {
+          "value": 219129000
+        }
+      ]
+    },
+    {
+      "ticker": "BXSL",
+      "name": "Blackstone Secured Lending Fund",
+      "q": [
+        {
+          "value": 26707000
+        },
+        {
+          "value": 40519000
+        },
+        {
+          "value": 126133000
+        },
+        {
+          "value": 148049000
+        },
+        {
+          "value": 170052000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 1419000000
+        },
+        {
+          "value": 1326901000
+        },
+        {
+          "value": 1143517000
+        },
+        {
+          "value": 850292000
+        }
+      ]
+    },
+    {
+      "ticker": "CSWC",
+      "name": "Capital Southwest Corporation",
+      "q": [
+        {
+          "value": 32691000
+        },
+        {
+          "value": 32639000
+        },
+        {
+          "value": 43887000
+        },
+        {
+          "value": 36379000
+        },
+        {
+          "value": 38436000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 232105000
+        },
+        {
+          "value": 204439000
+        },
+        {
+          "value": 178135000
+        },
+        {
+          "value": 119300000
+        }
+      ]
+    },
+    {
+      "ticker": "FSK",
+      "name": "FS KKR Capital Corp.",
+      "q": [
+        {
+          "value": -32000000
+        },
+        {
+          "value": -427000000
+        },
+        {
+          "value": -76000000
+        },
+        {
+          "value": 228000000
+        },
+        {
+          "value": -184000000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 1519000000
+        },
+        {
+          "value": 1721000000
+        },
+        {
+          "value": 1830000000
+        },
+        {
+          "value": 1635000000
+        }
+      ]
+    },
+    {
+      "ticker": "GBDC",
+      "name": "Golub Capital BDC, Inc.",
+      "q": [
+        {
+          "value": 65103000
+        },
+        {
+          "value": -39283000
+        },
+        {
+          "value": 73216000
+        },
+        {
+          "value": 104356000
+        },
+        {
+          "value": 95606000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 870777000
+        },
+        {
+          "value": 724677000
+        },
+        {
+          "value": 603090000
+        },
+        {
+          "value": 387802000
+        }
+      ]
+    },
+    {
+      "ticker": "HTGC",
+      "name": "Hercules Capital, Inc.",
+      "q": [
+        {
+          "value": 158252000
+        },
+        {
+          "value": 67782000
+        },
+        {
+          "value": 115987000
+        },
+        {
+          "value": 145121000
+        },
+        {
+          "value": 104703000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 532493000
+        },
+        {
+          "value": 493591000
+        },
+        {
+          "value": 460668000
+        },
+        {
+          "value": 321688000
+        }
+      ]
+    },
+    {
+      "ticker": "MAIN",
+      "name": "Main Street Capital Corporation",
+      "q": [
+        {
+          "value": 177983000
+        },
+        {
+          "value": 73437000
+        },
+        {
+          "value": 156172000
+        },
+        {
+          "value": 151233000
+        },
+        {
+          "value": 144923000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 566391000
+        },
+        {
+          "value": 541026000
+        },
+        {
+          "value": 500385000
+        },
+        {
+          "value": 376860000
+        }
+      ]
+    },
+    {
+      "ticker": "OBDC",
+      "name": "Blue Owl Capital Corporation",
+      "q": [
+        {
+          "value": 89075000
+        },
+        {
+          "value": -2098000
+        },
+        {
+          "value": 136215000
+        },
+        {
+          "value": 151611000
+        },
+        {
+          "value": 158831000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 1851304000
+        },
+        {
+          "value": 1596758000
+        },
+        {
+          "value": 1582094000
+        },
+        {
+          "value": 1202004000
+        }
+      ]
+    },
+    {
+      "ticker": "OCSL",
+      "name": "Oaktree Specialty Lending Corporation",
+      "q": [
+        {
+          "value": 34546000
+        },
+        {
+          "value": -15296000
+        },
+        {
+          "value": 8629000
+        },
+        {
+          "value": 25648000
+        },
+        {
+          "value": 36388000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 316801000
+        },
+        {
+          "value": 381665000
+        },
+        {
+          "value": 379286000
+        },
+        {
+          "value": 262520000
+        }
+      ]
+    },
+    {
+      "ticker": "PSEC",
+      "name": "Prospect Capital Corporation",
+      "q": [
+        {
+          "value": 5946000
+        },
+        {
+          "value": 66680000
+        },
+        {
+          "value": 28921000
+        },
+        {
+          "value": 91943000
+        },
+        {
+          "value": -179931000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 639454000
+        },
+        {
+          "value": 719436000
+        },
+        {
+          "value": 861662000
+        },
+        {
+          "value": 852213000
+        }
+      ]
+    },
+    {
+      "ticker": "TRIN",
+      "name": "Trinity Capital Inc.",
+      "q": [
+        {
+          "value": 60812000
+        },
+        {
+          "value": 51369000
+        },
+        {
+          "value": 58885000
+        },
+        {
+          "value": 45248000
+        },
+        {
+          "value": 58049000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 293652000
+        },
+        {
+          "value": 237691000
+        },
+        {
+          "value": 181855000
+        },
+        {
+          "value": 145500000
+        }
+      ]
+    },
+    {
+      "ticker": "TSLX",
+      "name": "Sixth Street Specialty Lending, Inc.",
+      "q": [
+        {
+          "value": 51447000
+        },
+        {
+          "value": -17408000
+        },
+        {
+          "value": 40847000
+        },
+        {
+          "value": 57258000
+        },
+        {
+          "value": 71228000
+        }
+      ],
+      "ends": [
+        "2026-06-30",
+        "2026-03-31",
+        "2025-12-31",
+        "2025-09-30",
+        "2025-06-30"
+      ],
+      "annual": [
+        {
+          "value": 449055000
+        },
+        {
+          "value": 482526000
+        },
+        {
+          "value": 438087000
+        },
+        {
+          "value": 309305000
+        }
+      ]
+    }
+  ],
+  "duplicateAnnualRevenueGroups": 2155
+}

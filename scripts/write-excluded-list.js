@@ -58,6 +58,7 @@ const {
   scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator,
 } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
+const { financialReasons } = require('../lib/financial-known-cases.js');
 
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -135,6 +136,7 @@ function zeile(e) {
     ticker: e.ticker,
     name: e.name ?? null,
     reason: grundVon(e),
+    ...(financialReasons(e.snapshot).length ? { financialDataReasons: financialReasons(e.snapshot) } : {}),
     sector: e.sector ?? null,
     industry: (meta && typeof meta.industry === 'string' && meta.industry) || null,
     marketCap: Number.isFinite(e.marketCap) ? e.marketCap : null,

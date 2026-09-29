@@ -1199,11 +1199,11 @@ function _applyTradingScale(snap, financialFactor) {
 
 function _convertSnapshotToUSD(snap) {
   if (!snap || !snap.meta) return snap;
-  // F-DP-008: idempotency guard — if already converted, return immediately to prevent double-scaling
-  if (snap.meta.fxConverted === true) return snap;
   // C2: exact known cases only, in native currency, before the existing single FX pass.
   const q4Checked = yahooQ4.prepareSnapshot(snap);
-  if (q4Checked !== snap) snap.timeseries = q4Checked.timeseries;
+  if (q4Checked !== snap) Object.assign(snap, q4Checked);
+  // Corrections also apply to cached USD input; the FX conversion itself stays idempotent.
+  if (snap.meta.fxConverted === true) return snap;
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   if (origCurrency === 'USD') {
     // F-NY-004 (audit 2026-06-08): 'USD' here may be a GUESS — when Yahoo returns

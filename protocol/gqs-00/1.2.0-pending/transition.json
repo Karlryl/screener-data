@@ -75,7 +75,7 @@
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
     "src/scoring/axes.js": "48022620d5dc488600b6d1dec1a5e048f26d9f6832daaaf7c8646884614d5288",
-    "src/scoring/score.js": "31fc5c08ff5fd19545f17a4db492521de24b24193cbdb98703039f642a72f627",
+    "src/scoring/score.js": "a01b5a903cf532d214f3afe6f1f97356c38fbe33b9addc934d92a3c60728d5ca",
     "src/scoring/smallcap-route.js": "46311394e2175e28e796efc5bb0453c4bed8f2802e6a21c4dfdb17fe204aa132",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "e68ecf6ebdf1da2f18c0eece6575035a964d449020275974dbad509d6a74dd03",
@@ -85,7 +85,7 @@
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
     "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso",
-    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS",
+    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair.",
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme)",
@@ -106,5 +106,14 @@
     "sourceSha256LF": "c18d93255c2bc2158218d8431f01d04562de851891458e697b33e320ad639b57",
     "evidence": "scripts/yahoo-q4-known-cases-replay.js: 16015 snapshots, exactly 27 corrected cells, 44 unchanged controls, all other input rows identical; source SHA256 unchanged.",
     "review": "Build registration only; independent release review by Claude remains required."
+  },
+  "f2KnownCaseInputRepair": {
+    "date": "2026-09-29",
+    "authority": "Explicit F2 writer brief: proven wrong board numbers repaired by hand table plus guard, otherwise missing with visible reason.",
+    "scope": "Only score.js source fingerprint updated for exact wrong-issuer input hold. Frozen GQS-00 source and trace evidence unchanged.",
+    "file": "src/scoring/score.js",
+    "sourceSha256LF": "a01b5a903cf532d214f3afe6f1f97356c38fbe33b9addc934d92a3c60728d5ca",
+    "evidence": "36 hand-table cells in 8 of 16118 snapshots; 1 exact mixed-issuer packet; all unrelated input bytes identical. See docs/financial-corrections.md.",
+    "review": "Build registration only; independent release review by Claude remains required. No merge, push or deployment by this job."
   }
 }

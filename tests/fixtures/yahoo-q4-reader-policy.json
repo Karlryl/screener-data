@@ -59,5 +59,8 @@
   "src/scoring/router.js": { "mode": "upstream", "reason": "Quarter-sensitive production callers use corrected readers; metadata-only and research exceptions are enumerated here." },
   "src/scoring/run-screener.js": { "mode": "hook", "hook": "return prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(file, 'utf8')));", "reason": "Both main and Smallcap disk loaders share the corrected reader; Quality inherits the universe." },
   "src/scoring/score.js": { "mode": "upstream", "reason": "Pure scoring receives corrected production universes; raw research callers are explicitly exempted." },
-  "src/scoring/snapshot.js": { "mode": "upstream", "reason": "Pure dynamic normalizer receives corrected production inputs and intentionally raw research fixtures." }
+  "src/scoring/snapshot.js": { "mode": "upstream", "reason": "Pure dynamic normalizer receives corrected production inputs and intentionally raw research fixtures." },
+  "lib/financial-known-cases.js": { "mode": "exempt", "reason": "Pure financial correction authority compares original provider evidence; invoked by the existing shared production adapter." },
+  "lib/zero-financials-guard.js": { "mode": "exempt", "reason": "Pure financial correction authority compares original provider evidence; invoked by the existing shared production adapter." },
+  "scripts/financial-corrections-replay.js": { "mode": "exempt", "reason": "Read-only counterfactual replay intentionally compares original and corrected inputs; no published or historical data writes." }
 }

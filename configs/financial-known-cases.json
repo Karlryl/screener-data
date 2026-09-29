@@ -1,0 +1,844 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-09-29",
+  "cases": [
+    {
+      "caseId": "htgc-2026-06-30-revenueQ",
+      "ticker": "HTGC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 158252000,
+      "replacementValue": 149114000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut Geschäftsbericht; Anbieter mischte Wertänderungen und Zinsaufwand hinein.",
+      "sources": [
+        {
+          "url": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000042/0001280784-26-000042.pdf",
+          "page": 82,
+          "quote": "Total investment income"
+        }
+      ]
+    },
+    {
+      "caseId": "htgc-2026-03-31-revenueQ",
+      "ticker": "HTGC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 67782000,
+      "replacementValue": 141536000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut Geschäftsbericht; Anbieter mischte Wertänderungen und Zinsaufwand hinein.",
+      "sources": [
+        {
+          "url": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000027/0001280784-26-000027.pdf",
+          "page": 79,
+          "quote": "Total investment income"
+        }
+      ]
+    },
+    {
+      "caseId": "htgc-2025-12-31-revenueQ",
+      "ticker": "HTGC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 115987000,
+      "replacementValue": 137430000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut Geschäftsbericht; Anbieter mischte Wertänderungen und Zinsaufwand hinein.",
+      "sources": [
+        {
+          "url": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000009/0001280784-26-000009.pdf",
+          "page": 62,
+          "quote": "Total investment income"
+        }
+      ]
+    },
+    {
+      "caseId": "htgc-2025-09-30-revenueQ",
+      "ticker": "HTGC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 145121000,
+      "replacementValue": 138093000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut Geschäftsbericht; Anbieter mischte Wertänderungen und Zinsaufwand hinein.",
+      "sources": [
+        {
+          "url": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-25-000041/0001280784-25-000041.pdf",
+          "page": 80,
+          "quote": "Total investment income"
+        }
+      ]
+    },
+    {
+      "caseId": "htgc-2025-06-30-revenueQ",
+      "ticker": "HTGC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 104703000,
+      "replacementValue": 137459000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut Geschäftsbericht; Anbieter mischte Wertänderungen und Zinsaufwand hinein.",
+      "sources": [
+        {
+          "url": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000042/0001280784-26-000042.pdf",
+          "page": 82,
+          "quote": "Total investment income"
+        }
+      ]
+    },
+    {
+      "caseId": "ysn.de-2026-06-30-grossProfitQ",
+      "ticker": "YSN.DE",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.secunet.com/fileadmin/user_upload/02_Downloads/IR/Finanzpublikationen/2026/Halbjahresbericht/Half-Year_Financial_Report_2026.pdf",
+          "page": 5,
+          "quote": "Gross profit"
+        }
+      ]
+    },
+    {
+      "caseId": "ysn.de-2025-09-30-grossProfitQ",
+      "ticker": "YSN.DE",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.secunet.com/fileadmin/user_upload/02_Downloads/IR/Finanzpublikationen/2025/Q3/251112_Q3_Bericht_d_final.pdf",
+          "page": 3,
+          "quote": "Bruttoergebnis"
+        }
+      ]
+    },
+    {
+      "caseId": "ysn.de-2025-06-30-grossProfitQ",
+      "ticker": "YSN.DE",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.secunet.com/fileadmin/user_upload/02_Downloads/IR/Finanzpublikationen/2026/Halbjahresbericht/Half-Year_Financial_Report_2026.pdf",
+          "page": 5,
+          "quote": "Gross profit"
+        }
+      ]
+    },
+    {
+      "caseId": "ysn.de-2025-03-31-grossProfitQ",
+      "ticker": "YSN.DE",
+      "field": "grossProfitQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.secunet.com/fileadmin/user_upload/02_Downloads/IR/Finanzpublikationen/2026/Halbjahresbericht/Half-Year_Financial_Report_2026.pdf",
+          "page": 5,
+          "quote": "Gross profit"
+        }
+      ]
+    },
+    {
+      "caseId": "5930.t-2025-12-31-grossProfitQ",
+      "ticker": "5930.T",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www2.jpx.co.jp/disc/59300/140120260127539575.pdf",
+          "page": 8,
+          "quote": "売上総利益"
+        },
+        {
+          "url": "https://www2.jpx.co.jp/disc/59300/140120251027578990.pdf",
+          "page": 8,
+          "quote": "売上総利益"
+        }
+      ]
+    },
+    {
+      "caseId": "5930.t-2025-06-30-grossProfitQ",
+      "ticker": "5930.T",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/5930/tdnet/2666275/00.pdf",
+          "page": 8,
+          "quote": "売上総利益"
+        }
+      ]
+    },
+    {
+      "caseId": "5930.t-2024-12-31-grossProfitQ",
+      "ticker": "5930.T",
+      "field": "grossProfitQ",
+      "period": "2024-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www2.jpx.co.jp/disc/59300/140120260127539575.pdf",
+          "page": 8,
+          "quote": "売上総利益"
+        },
+        {
+          "url": "https://www2.jpx.co.jp/disc/59300/140120251027578990.pdf",
+          "page": 8,
+          "quote": "売上総利益"
+        }
+      ]
+    },
+    {
+      "caseId": "5930.t-2024-06-30-grossProfitQ",
+      "ticker": "5930.T",
+      "field": "grossProfitQ",
+      "period": "2024-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/5930/tdnet/2666275/00.pdf",
+          "page": 8,
+          "quote": "売上総利益"
+        }
+      ]
+    },
+    {
+      "caseId": "002092.sz-2014-06-30-grossProfitQ",
+      "ticker": "002092.SZ",
+      "field": "grossProfitQ",
+      "period": "2014-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2014-10-28/1200339737.PDF",
+          "page": "19 and 17",
+          "quote": "合并本报告期利润表"
+        },
+        {
+          "url": "https://www.zthx.com/photos/oa/03161A3371E5316048257E36003ED396/5MBTXPLD.pdf",
+          "page": 19,
+          "quote": "营业成本"
+        }
+      ]
+    },
+    {
+      "caseId": "002092.sz-2014-03-31-grossProfitQ",
+      "ticker": "002092.SZ",
+      "field": "grossProfitQ",
+      "period": "2014-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.zthx.com/photos/oa/03161A3371E5316048257E36003ED396/5MBTXPLD.pdf",
+          "page": 19,
+          "quote": "营业成本"
+        }
+      ]
+    },
+    {
+      "caseId": "002092.sz-2013-12-31-grossProfitQ",
+      "ticker": "002092.SZ",
+      "field": "grossProfitQ",
+      "period": "2013-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2014-08-22/1200150237.PDF",
+          "page": 105,
+          "quote": "营业成本"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2014-10-28/1200339737.PDF",
+          "page": 19,
+          "quote": "合并年初到报告期末利润表"
+        }
+      ]
+    },
+    {
+      "caseId": "002092.sz-2013-09-30-grossProfitQ",
+      "ticker": "002092.SZ",
+      "field": "grossProfitQ",
+      "period": "2013-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2014-10-28/1200339737.PDF",
+          "page": 17,
+          "quote": "合并本报告期利润表"
+        }
+      ]
+    },
+    {
+      "caseId": "pdn.ax-2017-03-31-grossProfitQ",
+      "ticker": "PDN.AX",
+      "field": "grossProfitQ",
+      "period": "2017-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.asx.com.au/asxpdf/20170516/pdf/43j9k625v9h138.pdf",
+          "page": 26,
+          "quote": "Gross (loss)/profit"
+        },
+        {
+          "url": "https://www.paladinenergy.com/wp-content/uploads/2025/08/6810075.pdf",
+          "page": 25,
+          "quote": "Gross (loss)/profit"
+        }
+      ]
+    },
+    {
+      "caseId": "pdn.ax-2016-12-31-grossProfitQ",
+      "ticker": "PDN.AX",
+      "field": "grossProfitQ",
+      "period": "2016-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.paladinenergy.com/wp-content/uploads/2025/08/6810075.pdf",
+          "page": 25,
+          "quote": "Gross (loss)/profit"
+        },
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20161115/pdf/43cxl0mgcj7mr2.pdf",
+          "page": 24,
+          "quote": "Gross (loss)/profit"
+        }
+      ]
+    },
+    {
+      "caseId": "pdn.ax-2016-06-30-grossProfitQ",
+      "ticker": "PDN.AX",
+      "field": "grossProfitQ",
+      "period": "2016-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://www.paladinenergy.com/wp-content/uploads/2025/08/6787734.pdf",
+          "page": 44,
+          "quote": "Gross Loss in 2016 of US$12.0M"
+        }
+      ]
+    },
+    {
+      "caseId": "pdn.ax-2016-12-31-revenueQ",
+      "ticker": "PDN.AX",
+      "field": "revenueQ",
+      "period": "2016-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Umsatz fehlt: gespeicherte Null widerspricht dem Geschäftsbericht.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20170118/pdf/43fd0w1nx2x0kn.pdf",
+          "page": 2,
+          "quote": "gross sales revenue of US$40.1M"
+        }
+      ]
+    },
+    {
+      "caseId": "banpu-2026-03-31-revenueQ",
+      "ticker": "BANPU.BK",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 5092756000,
+      "replacementValue": 1340143000,
+      "reason": "Umsatz korrigiert: Konzernabschluss von Banpu statt Baht-Umsatz der Tochter Banpu Power.",
+      "sources": [
+        {
+          "url": "https://www.banpu.com/wp-content/uploads/2026/03/Banpu-PLC_Mar26Q1-EN.pdf",
+          "page": 8,
+          "quote": "Sales and service income",
+          "unit": "USD thousands",
+          "literalAmounts": "1,340,143 1,283,603"
+        }
+      ]
+    },
+    {
+      "caseId": "banpu-2025-12-31-revenueQ",
+      "ticker": "BANPU.BK",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 6736722000,
+      "replacementValue": 1398885000,
+      "reason": "Umsatz korrigiert: Konzernabschluss von Banpu statt Baht-Umsatz der Tochter Banpu Power.",
+      "sources": [
+        {
+          "url": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-Plc_Dec25-1.pdf",
+          "page": 14,
+          "quote": "Sales and service income",
+          "unit": "USD thousands",
+          "literalAmounts": "5,278,102 5,148,446"
+        },
+        {
+          "url": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Sep25-Q3-1.pdf",
+          "page": 10,
+          "quote": "Sales and service income",
+          "unit": "USD thousands",
+          "calculation": "(5278102 - 3879217) * 1000"
+        }
+      ]
+    },
+    {
+      "caseId": "banpu-2025-09-30-revenueQ",
+      "ticker": "BANPU.BK",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 7450422000,
+      "replacementValue": 1358440000,
+      "reason": "Umsatz korrigiert: Konzernabschluss von Banpu statt Baht-Umsatz der Tochter Banpu Power.",
+      "sources": [
+        {
+          "url": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Sep25-Q3-1.pdf",
+          "page": 8,
+          "quote": "Sales and service income",
+          "unit": "USD thousands",
+          "literalAmounts": "1,358,440 1,338,746"
+        }
+      ]
+    },
+    {
+      "caseId": "banpu-2025-06-30-revenueQ",
+      "ticker": "BANPU.BK",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 6557265000,
+      "replacementValue": 1237174000,
+      "reason": "Umsatz korrigiert: Konzernabschluss von Banpu statt Baht-Umsatz der Tochter Banpu Power.",
+      "sources": [
+        {
+          "url": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Jun25Q2_signed-1.pdf",
+          "page": 8,
+          "quote": "Sales and service income",
+          "unit": "USD thousands",
+          "literalAmounts": "1,237,174 1,307,684"
+        }
+      ]
+    },
+    {
+      "caseId": "banpu-2025-03-31-revenueQ",
+      "ticker": "BANPU.BK",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 7105984000,
+      "replacementValue": 1283603000,
+      "reason": "Umsatz korrigiert: Konzernabschluss von Banpu statt Baht-Umsatz der Tochter Banpu Power.",
+      "sources": [
+        {
+          "url": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Mar25Q1-Signed-1.pdf",
+          "page": 8,
+          "quote": "Sales and service income",
+          "unit": "USD thousands",
+          "literalAmounts": "1,283,603 1,133,540"
+        }
+      ]
+    },
+    {
+      "caseId": "arcc-2026-06-30-revenueQ",
+      "ticker": "ARCC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 219000000,
+      "replacementValue": 768000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026050307/arcc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287750.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-050307",
+          "filed": "2026-07-29",
+          "unit": "USD",
+          "value": 768000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "arcc-2026-03-31-revenueQ",
+      "ticker": "ARCC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 151000000,
+      "replacementValue": 763000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026027688/arcc-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287750.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-027688",
+          "filed": "2026-04-28",
+          "unit": "USD",
+          "value": 763000000,
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "arcc-2025-12-31-revenueQ",
+      "ticker": "ARCC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 344000000,
+      "replacementValue": 793000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287750/000128775026000006/arcc-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287750.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287750-26-000006",
+          "filed": "2026-02-04",
+          "unit": "USD",
+          "value": 3052000000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287750/000128775025000046/arcc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287750.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287750-25-000046",
+          "filed": "2025-10-28",
+          "unit": "USD",
+          "value": 2259000000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts"
+        }
+      ]
+    },
+    {
+      "caseId": "arcc-2025-09-30-revenueQ",
+      "ticker": "ARCC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 460000000,
+      "replacementValue": 782000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287750/000128775025000046/arcc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287750.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287750-25-000046",
+          "filed": "2025-10-28",
+          "unit": "USD",
+          "value": 782000000,
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "arcc-2025-06-30-revenueQ",
+      "ticker": "ARCC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 407000000,
+      "replacementValue": 745000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026050307/arcc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287750.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-050307",
+          "filed": "2026-07-29",
+          "unit": "USD",
+          "value": 745000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "fsk-2026-06-30-revenueQ",
+      "ticker": "FSK",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -32000000,
+      "replacementValue": 290000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026053783/fsk-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001422183.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-053783",
+          "filed": "2026-08-06",
+          "unit": "USD",
+          "value": 290000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "fsk-2026-03-31-revenueQ",
+      "ticker": "FSK",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -427000000,
+      "replacementValue": 304000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026033118/fsk-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001422183.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-033118",
+          "filed": "2026-05-11",
+          "unit": "USD",
+          "value": 304000000,
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "fsk-2025-12-31-revenueQ",
+      "ticker": "FSK",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -76000000,
+      "replacementValue": 348000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026011734/fsk-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001422183.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-011734",
+          "filed": "2026-02-25",
+          "unit": "USD",
+          "value": 348000000,
+          "start": "2025-10-01",
+          "end": "2025-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "fsk-2025-09-30-revenueQ",
+      "ticker": "FSK",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 228000000,
+      "replacementValue": 373000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026011734/fsk-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001422183.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-011734",
+          "filed": "2026-02-25",
+          "unit": "USD",
+          "value": 373000000,
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "fsk-2025-06-30-revenueQ",
+      "ticker": "FSK",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -184000000,
+      "replacementValue": 398000000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026053783/fsk-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001422183.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001628280-26-053783",
+          "filed": "2026-08-06",
+          "unit": "USD",
+          "value": 398000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    }
+  ],
+  "quarantines": [
+    {
+      "caseId": "banpu-mixed-issuer-packet-20260929",
+      "ticker": "BANPU.BK",
+      "reason": "Score fehlt: Anbieter vermischt Banpu mit Banpu Power; Jahreszahlen, Aktienzahl und Branchenzuordnung sind nicht verlässlich zugeordnet.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 27850393000
+        },
+        {
+          "path": [
+            "annual",
+            "annualGP",
+            0,
+            "value"
+          ],
+          "expected": 4540955000
+        },
+        {
+          "path": [
+            "meta",
+            "sharesOutstanding"
+          ],
+          "expected": 3047731700
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.banpupower.com/wp-content/uploads/2025/05/Banpu-Power_Dec25-EN-Signed.pdf",
+          "page": 9,
+          "quote": "Sales",
+          "unit": "THB thousands"
+        },
+        {
+          "url": "https://www.banpupower.com/wp-content/uploads/2026/05/BPP-Q1Mar69-EN-Signed.pdf",
+          "page": 5,
+          "quote": "3,047,731,700 ordinary shares of Baht 10 each"
+        }
+      ],
+      "annualPairPeriod": "2025-12-31"
+    }
+  ]
+}

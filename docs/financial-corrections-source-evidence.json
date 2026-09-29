@@ -1,0 +1,567 @@
+{
+  "retrievedAt": "2026-09-29T18:04:21.079Z",
+  "confidencePct": 99,
+  "banpu": {
+    "issuer": "Banpu Public Company Limited (pre-amalgamation consolidated group)",
+    "currency": "USD",
+    "statementUnits": "US Dollar thousands",
+    "label": "Sales and service income",
+    "quarters": [
+      {
+        "end": "2026-03-31",
+        "revenue": 1340143000,
+        "grossProfit": 310176000,
+        "source": "https://www.banpu.com/wp-content/uploads/2026/03/Banpu-PLC_Mar26Q1-EN.pdf",
+        "pdfPage": 8,
+        "printedPage": 7,
+        "quote": "Sales and service income",
+        "literalAmounts": "1,340,143 1,283,603",
+        "grossProfitLiteral": "310,176 283,912"
+      },
+      {
+        "end": "2025-12-31",
+        "revenue": 1398885000,
+        "grossProfit": 381385000,
+        "source": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-Plc_Dec25-1.pdf",
+        "pdfPage": 14,
+        "printedPage": 13,
+        "quote": "Sales and service income",
+        "literalAmounts": "5,278,102 5,148,446",
+        "calculation": "(5278102 - 3879217) * 1000",
+        "grossProfitCalculation": "(1198280 - 816895) * 1000",
+        "subtrahendSource": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Sep25-Q3-1.pdf",
+        "subtrahendPdfPage": 10,
+        "subtrahendPrintedPage": 9
+      },
+      {
+        "end": "2025-09-30",
+        "revenue": 1358440000,
+        "grossProfit": 279942000,
+        "source": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Sep25-Q3-1.pdf",
+        "pdfPage": 8,
+        "printedPage": 7,
+        "quote": "Sales and service income",
+        "literalAmounts": "1,358,440 1,338,746",
+        "grossProfitLiteral": "279,942 338,344"
+      },
+      {
+        "end": "2025-06-30",
+        "revenue": 1237174000,
+        "grossProfit": 253041000,
+        "source": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Jun25Q2_signed-1.pdf",
+        "pdfPage": 8,
+        "printedPage": 7,
+        "quote": "Sales and service income",
+        "literalAmounts": "1,237,174 1,307,684",
+        "grossProfitLiteral": "253,041 326,403"
+      },
+      {
+        "end": "2025-03-31",
+        "revenue": 1283603000,
+        "grossProfit": 283912000,
+        "source": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-PLC_Mar25Q1-Signed-1.pdf",
+        "pdfPage": 8,
+        "printedPage": 7,
+        "quote": "Sales and service income",
+        "literalAmounts": "1,283,603 1,133,540",
+        "grossProfitLiteral": "283,912 235,604"
+      }
+    ],
+    "annual": {
+      "2024": {
+        "revenue": 5148446000,
+        "grossProfit": 1248319000
+      },
+      "2025": {
+        "revenue": 5278102000,
+        "grossProfit": 1198280000
+      },
+      "source": "https://www.banpu.com/wp-content/uploads/2026/06/Banpu-Plc_Dec25-1.pdf",
+      "pdfPage": 14,
+      "printedPage": 13
+    },
+    "bppFingerprint": {
+      "issuer": "Banpu Power Public Company Limited",
+      "currency": "THB",
+      "statementUnits": "Baht thousands",
+      "source": "https://www.banpupower.com/wp-content/uploads/2026/05/BPP-Q1Mar69-EN-Signed.pdf",
+      "evidence": [
+        {
+          "field": "timeseries.revenueQ[0]",
+          "period": "2026-03-31",
+          "stored": 5092756000,
+          "sourceValue": 5092756000,
+          "pdfPage": 6,
+          "printedPage": 5,
+          "quote": "Sales"
+        },
+        {
+          "field": "timeseries.grossProfitQ[0]",
+          "period": "2026-03-31",
+          "stored": 915428000,
+          "sourceValue": 915428000,
+          "pdfPage": 6,
+          "printedPage": 5,
+          "quote": "Gross profit"
+        },
+        {
+          "field": "timeseries.netIncomeQ[0]",
+          "period": "2026-03-31",
+          "stored": 5877083000,
+          "sourceValue": 5877083000,
+          "pdfPage": 7,
+          "printedPage": 6,
+          "quote": "Owners of the Company"
+        },
+        {
+          "field": "timeseries.revenueQ[4]",
+          "period": "2025-03-31",
+          "stored": 7105984000,
+          "sourceValue": 7105984000,
+          "pdfPage": 6,
+          "printedPage": 5,
+          "quote": "Sales"
+        },
+        {
+          "field": "timeseries.grossProfitQ[4]",
+          "period": "2025-03-31",
+          "stored": 810761000,
+          "sourceValue": 810761000,
+          "pdfPage": 6,
+          "printedPage": 5,
+          "quote": "Gross profit"
+        },
+        {
+          "field": "meta.sharesOutstanding",
+          "stored": 3047731700,
+          "sourceValue": 3047731700,
+          "pdfPage": 5,
+          "printedPage": 4,
+          "quote": "3,047,731,700 ordinary shares of Baht 10 each"
+        },
+        {
+          "field": "annual.annualBalance[0].totalAssets",
+          "period": "2025-12-31",
+          "stored": 94480982000,
+          "sourceValue": 94480982000,
+          "pdfPage": 3,
+          "printedPage": 2,
+          "quote": "Total assets"
+        }
+      ],
+      "annualSource": "https://www.banpupower.com/wp-content/uploads/2025/05/Banpu-Power_Dec25-EN-Signed.pdf",
+      "annualPdfPage": 9,
+      "annualPrintedPage": 8,
+      "annualQuote": "Sales",
+      "annual2025Revenue": 27850393000,
+      "annual2024Revenue": 25826965000,
+      "annual2025GrossProfit": 4540955000,
+      "annual2024GrossProfit": 2015527000
+    },
+    "scope": "Proven contamination includes quarterly revenue, gross profit and owner net income, annual revenue/gross profit/balance values and share count. Quote-summary metrics are mixed; do not assume every metric belongs to BPP. Amalgamation completed 31 July 2026; current share count must be from the new issuer, not copied from pre-amalgamation parent."
+  },
+  "htgc": {
+    "issuer": "Hercules Capital, Inc.",
+    "currency": "USD",
+    "statementUnits": "USD thousands",
+    "label": "Total investment income",
+    "companyfacts": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001280784.json",
+    "revenueTag": "us-gaap:GrossInvestmentIncomeOperating",
+    "arithmeticTags": [
+      "us-gaap:GrossInvestmentIncomeOperating",
+      "us-gaap:InvestmentCompanyRealizedAndUnrealizedGainLossOnInvestmentAndForeignCurrency",
+      "us-gaap:InterestExpenseDebt",
+      "us-gaap:GainsLossesOnExtinguishmentOfDebt"
+    ],
+    "arithmetic": "grossInvestmentIncome + netRealizedAndUnrealizedGains - debtInterestExpense - debtExtinguishmentGainsLosses",
+    "causalLimit": "The arithmetic reproduces every stored quarterly revenue exactly. It does not prove which vendor or ingestion step selected the fields.",
+    "quarters": [
+      {
+        "start": "2026-04-01",
+        "end": "2026-06-30",
+        "storedRevenue": 158252000,
+        "revenue": 149114000,
+        "source": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000042/0001280784-26-000042.pdf",
+        "pdfPage": 82,
+        "quote": "Total investment income",
+        "literalAmount": "149,114",
+        "interestAndDebtLossPdfPage": 57,
+        "arithmeticComponents": {
+          "income": {
+            "value": 149114000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          },
+          "gains": {
+            "value": 37266000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          },
+          "interest": {
+            "value": 28130000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          },
+          "debt": {
+            "value": -2000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          }
+        },
+        "reconstructed": 158252000
+      },
+      {
+        "start": "2026-01-01",
+        "end": "2026-03-31",
+        "storedRevenue": 67782000,
+        "revenue": 141536000,
+        "source": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000027/0001280784-26-000027.pdf",
+        "pdfPage": 79,
+        "quote": "Total investment income",
+        "literalAmount": "141,536",
+        "interestAndDebtLossPdfPage": 57,
+        "arithmeticComponents": {
+          "income": {
+            "value": 141536000,
+            "accession": "0001280784-26-000027",
+            "filed": "2026-05-05"
+          },
+          "gains": {
+            "value": -45608000,
+            "accession": "0001280784-26-000027",
+            "filed": "2026-05-05"
+          },
+          "interest": {
+            "value": 28146000,
+            "accession": "0001280784-26-000027",
+            "filed": "2026-05-05"
+          },
+          "debt": {
+            "value": 0,
+            "accession": "0001280784-26-000027",
+            "filed": "2026-05-05"
+          }
+        },
+        "reconstructed": 67782000
+      },
+      {
+        "start": "2025-10-01",
+        "end": "2025-12-31",
+        "storedRevenue": 115987000,
+        "revenue": 137430000,
+        "source": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000009/0001280784-26-000009.pdf",
+        "pdfPage": 62,
+        "quote": "Total investment income",
+        "literalAmount": "137,430",
+        "interestAndDebtLossPdfPage": 130,
+        "arithmeticComponents": {
+          "income": {
+            "value": 137430000,
+            "calculation": {
+              "annual": {
+                "value": 532493000,
+                "accession": "0001280784-26-000009",
+                "filed": "2026-02-12"
+              },
+              "nineMonths": {
+                "value": 395063000,
+                "accession": "0001280784-25-000041",
+                "filed": "2025-10-30"
+              }
+            }
+          },
+          "gains": {
+            "value": 3852000,
+            "calculation": {
+              "annual": {
+                "value": -1983000,
+                "accession": "0001280784-26-000009",
+                "filed": "2026-02-12"
+              },
+              "nineMonths": {
+                "value": -5835000,
+                "accession": "0001280784-25-000041",
+                "filed": "2025-10-30"
+              }
+            }
+          },
+          "interest": {
+            "value": 25359000,
+            "calculation": {
+              "annual": {
+                "value": 92176000,
+                "accession": "0001280784-26-000009",
+                "filed": "2026-02-12"
+              },
+              "nineMonths": {
+                "value": 66817000,
+                "accession": "0001280784-25-000041",
+                "filed": "2025-10-30"
+              }
+            }
+          },
+          "debt": {
+            "value": -64000,
+            "calculation": {
+              "annual": {
+                "value": -184000,
+                "accession": "0001280784-26-000009",
+                "filed": "2026-02-12"
+              },
+              "nineMonths": {
+                "value": -120000,
+                "accession": "0001280784-25-000041",
+                "filed": "2025-10-30"
+              }
+            }
+          }
+        },
+        "reconstructed": 115987000
+      },
+      {
+        "start": "2025-07-01",
+        "end": "2025-09-30",
+        "storedRevenue": 145121000,
+        "revenue": 138093000,
+        "source": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-25-000041/0001280784-25-000041.pdf",
+        "pdfPage": 80,
+        "quote": "Total investment income",
+        "literalAmount": "138,093",
+        "interestAndDebtLossPdfPage": 55,
+        "arithmeticComponents": {
+          "income": {
+            "value": 138093000,
+            "accession": "0001280784-25-000041",
+            "filed": "2025-10-30"
+          },
+          "gains": {
+            "value": 31133000,
+            "accession": "0001280784-25-000041",
+            "filed": "2025-10-30"
+          },
+          "interest": {
+            "value": 24189000,
+            "accession": "0001280784-25-000041",
+            "filed": "2025-10-30"
+          },
+          "debt": {
+            "value": -84000,
+            "accession": "0001280784-25-000041",
+            "filed": "2025-10-30"
+          }
+        },
+        "reconstructed": 145121000
+      },
+      {
+        "start": "2025-04-01",
+        "end": "2025-06-30",
+        "storedRevenue": 104703000,
+        "revenue": 137459000,
+        "source": "https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000042/0001280784-26-000042.pdf",
+        "pdfPage": 82,
+        "quote": "Total investment income",
+        "literalAmount": "137,459",
+        "interestAndDebtLossPdfPage": 58,
+        "arithmeticComponents": {
+          "income": {
+            "value": 137459000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          },
+          "gains": {
+            "value": -9847000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          },
+          "interest": {
+            "value": 22930000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          },
+          "debt": {
+            "value": -21000,
+            "accession": "0001280784-26-000042",
+            "filed": "2026-07-30"
+          }
+        },
+        "reconstructed": 104703000
+      }
+    ]
+  },
+  "bdcScan": {
+    "censusTickers": 13,
+    "independentlySourceChecked": [
+      "HTGC",
+      "ARCC",
+      "FSK"
+    ],
+    "remainingTen": "Not independently source-checked in this bounded scan; no error verdict solely from ratios.",
+    "rows": [
+      {
+        "ticker": "ARCC",
+        "issuer": "Ares Capital Corp",
+        "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287750.json",
+        "tag": "us-gaap:GrossInvestmentIncomeOperating",
+        "quarters": [
+          {
+            "start": "2026-04-01",
+            "end": "2026-06-30",
+            "storedRevenue": 219000000,
+            "revenue": {
+              "value": 768000000,
+              "accession": "0001628280-26-050307",
+              "filed": "2026-07-29",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026050307/arcc-20260630.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          },
+          {
+            "start": "2026-01-01",
+            "end": "2026-03-31",
+            "storedRevenue": 151000000,
+            "revenue": {
+              "value": 763000000,
+              "accession": "0001628280-26-027688",
+              "filed": "2026-04-28",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026027688/arcc-20260331.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          },
+          {
+            "start": "2025-10-01",
+            "end": "2025-12-31",
+            "storedRevenue": 344000000,
+            "revenue": {
+              "value": 793000000,
+              "calculation": {
+                "annual": {
+                  "value": 3052000000,
+                  "accession": "0001287750-26-000006",
+                  "filed": "2026-02-04",
+                  "filingUrl": "https://www.sec.gov/Archives/edgar/data/1287750/000128775026000006/arcc-20251231.htm",
+                  "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+                },
+                "nineMonths": {
+                  "value": 2259000000,
+                  "accession": "0001287750-25-000046",
+                  "filed": "2025-10-28",
+                  "filingUrl": "https://www.sec.gov/Archives/edgar/data/1287750/000128775025000046/arcc-20250930.htm",
+                  "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+                }
+              }
+            }
+          },
+          {
+            "start": "2025-07-01",
+            "end": "2025-09-30",
+            "storedRevenue": 460000000,
+            "revenue": {
+              "value": 782000000,
+              "accession": "0001287750-25-000046",
+              "filed": "2025-10-28",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1287750/000128775025000046/arcc-20250930.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          },
+          {
+            "start": "2025-04-01",
+            "end": "2025-06-30",
+            "storedRevenue": 407000000,
+            "revenue": {
+              "value": 745000000,
+              "accession": "0001628280-26-050307",
+              "filed": "2026-07-29",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026050307/arcc-20260630.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          }
+        ]
+      },
+      {
+        "ticker": "FSK",
+        "issuer": "FS KKR Capital Corp.",
+        "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001422183.json",
+        "tag": "us-gaap:GrossInvestmentIncomeOperating",
+        "quarters": [
+          {
+            "start": "2026-04-01",
+            "end": "2026-06-30",
+            "storedRevenue": -32000000,
+            "revenue": {
+              "value": 290000000,
+              "accession": "0001628280-26-053783",
+              "filed": "2026-08-06",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026053783/fsk-20260630.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          },
+          {
+            "start": "2026-01-01",
+            "end": "2026-03-31",
+            "storedRevenue": -427000000,
+            "revenue": {
+              "value": 304000000,
+              "accession": "0001628280-26-033118",
+              "filed": "2026-05-11",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026033118/fsk-20260331.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          },
+          {
+            "start": "2025-10-01",
+            "end": "2025-12-31",
+            "storedRevenue": -76000000,
+            "revenue": {
+              "value": 348000000,
+              "accession": "0001628280-26-011734",
+              "filed": "2026-02-25",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026011734/fsk-20251231.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          },
+          {
+            "start": "2025-07-01",
+            "end": "2025-09-30",
+            "storedRevenue": 228000000,
+            "revenue": {
+              "value": 373000000,
+              "accession": "0001628280-26-011734",
+              "filed": "2026-02-25",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026011734/fsk-20251231.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          },
+          {
+            "start": "2025-04-01",
+            "end": "2025-06-30",
+            "storedRevenue": -184000000,
+            "revenue": {
+              "value": 398000000,
+              "accession": "0001628280-26-053783",
+              "filed": "2026-08-06",
+              "filingUrl": "https://www.sec.gov/Archives/edgar/data/1422183/000162828026053783/fsk-20260630.htm",
+              "sourceLocation": "XBRL us-gaap:GrossInvestmentIncomeOperating, USD, period start/end as specified (not a PDF page)"
+            }
+          }
+        ]
+      }
+    ],
+    "latestReleaseProof": {
+      "ARCC": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026050303/arccq2-2026exhibit991.htm",
+        "quote": "Total investment income",
+        "amount": 768000000,
+        "unit": "USD million",
+        "period": "2026-06-30"
+      },
+      "FSK": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1422183/000110465926091572/tm2622260d1_ex99-1.htm",
+        "quote": "Total investment income",
+        "amount": 290000000,
+        "unit": "USD million",
+        "period": "2026-06-30",
+        "storedValueIdentity": "Net increase (decrease) in net assets resulting from operations -34m minus Realized loss on extinguishment of debt -2m = -32m"
+      }
+    }
+  }
+}

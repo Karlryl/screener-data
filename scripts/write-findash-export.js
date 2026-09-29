@@ -169,6 +169,7 @@ function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null
 // gesetzt statt ausgeliefert — eine fehlende Groesse ist harmlos, eine falsche nicht.
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
+const { financialReasons } = require('../lib/financial-known-cases.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
 // Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
@@ -192,6 +193,7 @@ function snapAbleitungenFuer(ticker) {
   const abl = {
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),
     punkte: belegPunkte(snap && snap.timeseries),
+    financialReasons: financialReasons(snap),
   };
   _snapCache.set(ticker, abl);
   return abl;
@@ -297,6 +299,8 @@ function ergaenzeBelegpunkte(out) {
 
 // Ein Anwender fuer alle drei Zeilen-Mapper — drei Kopien derselben Regel laufen auseinander.
 function ergaenzeWaehrungsbeleg(out) {
+  const reasons = snapAbleitungenFuer(out.ticker).financialReasons;
+  if (reasons.length) out.lamps = [...new Set([...reasons, ...(out.lamps || [])])];
   const beleg = waehrungsbelegFuer(out.ticker);
   // Die Einheit des Feldes, nicht die Einheit des Werts: marketCap ist im v1-Vertrag
   // IMMER USD. Bisher stand das nur in der Doku und war fuer den Konsumenten nicht lesbar.
