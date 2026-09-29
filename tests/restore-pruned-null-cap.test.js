@@ -34,7 +34,13 @@ function assertRestoration(watchlist) {
       'duplicate restored issuer: ' + entry.ticker);
   }
   for (const ticker of [...evidence.excluded, ...Object.keys(evidence.duplicates)]) {
-    assert(!stocks.some(s => s.ticker === ticker), 'excluded/duplicate ticker re-added: ' + ticker);
+    // C9 excludes these names from its restoration, not from future discovery.
+    // Daily commit 0f049a8372 rediscovered twelve after the restoration cutoff.
+    for (const row of stocks.filter(s => s.ticker === ticker)) {
+      assert(row.restoreFullPullOn === undefined && typeof row.added_via === 'string' && row.added_via.length > 0
+        && Number.isFinite(Date.parse(row.added_at)) && Date.parse(row.added_at) > Date.parse(evidence.runAt),
+      'excluded/duplicate ticker re-added: ' + ticker);
+    }
   }
   for (const [ticker, listings] of Object.entries(evidence.duplicates)) {
     assert(listings.some(t => stocks.some(s => s.ticker === t)), 'existing issuer listing lost: ' + ticker);
@@ -74,6 +80,23 @@ async function run() {
   const wl = JSON.parse(fs.readFileSync(livePath, 'utf8'));
   assertRestoration(wl);
   assertRestoration(pruneCopy(wl));
+  const discoveryControl = clone(wl);
+  discoveryControl.stocks = discoveryControl.stocks.filter(s => s.ticker !== '1URI.MI');
+  const rediscovered = { ticker: '1URI.MI', added_at: '2026-09-29T08:43:34.483Z', added_via: 'tvit' };
+  discoveryControl.stocks.push(rediscovered);
+  assertRestoration(discoveryControl);
+  for (const invalid of [
+    { ...rediscovered, restoreFullPullOn: date },
+    { ...rediscovered, added_at: evidence.runAt },
+    { ...rediscovered, added_at: 'invalid' },
+    { ...rediscovered, added_via: '' },
+    { ticker: rediscovered.ticker },
+  ]) {
+    const bad = clone(discoveryControl);
+    bad.stocks[bad.stocks.length - 1] = invalid;
+    assert.throws(() => assertRestoration(bad), /excluded\/duplicate ticker re-added/);
+  }
+  console.log('PASS later ordinary discovery allowed; restored, early, undated and unproven exclusions rejected');
   console.log('PASS five restored / thirteen duplicate issuers / two exclusions / real prune');
 
   const ordinary = [snapshot('OLD'), snapshot('FRESH', '2026-06-30')];
@@ -94,15 +117,17 @@ async function run() {
   console.log('PASS real pullAll: five first, full summaries + four financial requests each, cap unchanged');
 
   const empty = fixture({ snapshots: [] });
-  assert.deepEqual(clone(empty.Y.prioritizeRestoredMissingSnapshots(stocks, empty.out, new Date('2026-09-30'))), stocks,
-    'recovery priority expires after the requested day');
+  assert.deepEqual(clone(empty.Y.prioritizeRestoredMissingSnapshots(stocks, empty.out, new Date('2026-09-28'))), stocks,
+    'recovery priority must not start before the requested day');
+  assert.deepEqual(clone(empty.Y.prioritizeRestoredMissingSnapshots(stocks, empty.out, new Date('2026-09-30'))),
+    [...recovered, ...stocks.filter(s => !restored.has(s.ticker))], 'missing snapshots retain next-day recovery priority');
   assert.deepEqual(clone(f.Y.prioritizeRestoredMissingSnapshots(stocks, f.out, new Date(NOW))), stocks,
     'existing snapshots must not receive recovery priority');
   const markedFresh = { ...stocks[1], restoreFullPullOn: date };
   const existing = fixture({ snapshots: [ordinary[1]] });
   const present = await existing.Y.pullAll({ stocks: [markedFresh] }, existing.out, 0);
   assert.equal(present.results[0].status, 'price-only', 'recovered snapshot resumes ordinary treatment');
-  console.log('PASS priority absent on other dates and for existing snapshots');
+  console.log('PASS priority persists next day, absent before start and for existing snapshots');
 
   if (process.argv.includes('--break-once')) {
     const hash = () => crypto.createHash('sha256').update(fs.readFileSync(livePath)).digest('hex');
