@@ -6,10 +6,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const Module = require('node:module');
 const cp = require('node:child_process');
+const crypto = require('node:crypto');
+const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
 
 if (process.argv.includes('--break-once')) {
-  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap']) {
+  const sourcePath = path.join(ROOT, 'pull-yahoo.js');
+  const hash = () => crypto.createHash('sha256').update(fs.readFileSync(sourcePath)).digest('hex');
+  const before = hash();
+  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap', 'metadata-skip']) {
     const r = cp.spawnSync(process.execPath, [__filename], {
       cwd: ROOT, encoding: 'utf8', env: { ...process.env, B5_MUTATION: mutation },
     });
@@ -23,8 +28,10 @@ if (process.argv.includes('--break-once')) {
       'streak': /real full answer must reset not-found streak/,
       'legacy-prune': /legacy entry without added_at must not be auto-pruned/,
       'empty-summary-stale-cap': /empty full answer must invalidate old market cap/,
+      'metadata-skip': /colliding shard reports must be ignored before parsing/,
     };
     assert.match(r.stderr, expected[mutation]);
+    assert.equal(hash(), before, 'live pull-yahoo.js hash changed during break-once');
     console.log('BREAK_ONCE ' + mutation + ' exit=1 detected=true ' + r.stderr.trim().split('\n')[0]);
   }
   process.exit(0);
@@ -51,6 +58,12 @@ for (const k of ['readFileSync', 'existsSync', 'openSync', 'readSync', 'closeSyn
 const sourceRead = original.readFileSync;
 const compile = Module.prototype._compile;
 Module.prototype._compile = function (source, name) {
+  if (process.env.B5_MUTATION === 'metadata-skip' && name === path.join(ROOT, 'pull-yahoo.js')) {
+    // Only mutate an in-memory source copy; this test never writes to disk.
+    const anchor = /^    if \(isMetadataSnapshot\(name\)\) continue;\r?\n/gm;
+    assert.equal((source.match(anchor) || []).length, 1, 'metadata mutation must match exactly one complete line');
+    source = source.replace(anchor, '');
+  }
   const regressions = {
     'fast-null-final': ['pull-yahoo.js', "throw new Error('price-only refused: quote without finite marketCap - full pull decides');", "return preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quote');"],
     'placeholder': ['pull-yahoo.js', "if (!preserved && process.env.MISSING_CAP_CARRIER !== '1')", "if (false && !preserved && process.env.MISSING_CAP_CARRIER !== '1')"],
@@ -349,6 +362,23 @@ async function run() {
   const m = read(path.join(merged, filename)); assert.equal(m.marketCap.value, null); assert.deepEqual(m.annual, originalMerged.annual); assert.deepEqual(m.meta, originalMerged.meta);
   assert.equal(smallcapRoute(m).action, 'exclude'); visible(m);
   assert.equal(files.get(path.join(merged, 'CONTROL.json')), files.get(path.join(incoming, 'CONTROL.json')));
+  const reserved = JSON.stringify({ meta: { ticker: 'CON' }, marketCap: { value: 5e8 } });
+  files.set(path.join(incoming, '_CON.json'), reserved);
+  const metadataNames = ['_manifest.json', '_manifest-full.json', '_manifest-shard-0.json', '_last_good_disk.json'];
+  const collision = sourceRead(path.join(ROOT, 'tests/fixtures/smallcap-merge-r2/colliding-manifest.txt'), 'utf8');
+  assert.throws(() => JSON.parse(collision), SyntaxError, 'R2 fixture must retain its real collision');
+  for (const name of metadataNames) files.set(path.join(incoming, name), collision);
+  assert.doesNotThrow(() => mergeSmallcapSnapshots(incoming, merged), 'colliding shard reports must be ignored before parsing');
+  assert.equal(files.get(path.join(merged, '_CON.json')), reserved, 'reserved company ticker must survive');
+  for (const name of metadataNames) assert(!files.has(path.join(merged, name)), 'metadata must not enter merged output: ' + name);
+  assert.deepEqual(read(path.join(merged, filename)).annual, originalMerged.annual);
+  assert.equal(read(path.join(merged, filename)).marketCap.value, null);
+  for (const name of metadataNames) files.delete(path.join(incoming, name));
+  assert.equal(mergeSmallcapSnapshots(incoming, merged).missingMarketCaps, 1, 'metadata absent must work too');
+  files.set(path.join(incoming, 'BROKEN.json'), '{"marketCap":');
+  assert.throws(() => mergeSmallcapSnapshots(incoming, merged), SyntaxError, 'malformed company JSON must still fail');
+  files.delete(path.join(incoming, 'BROKEN.json'));
+  print('PASS F1 R2 collision ignored; metadata absent, malformed company, reserved ticker and null-cap controls');
   const workflow = sourceRead(path.join(ROOT, '.github/workflows/smallcap-pull.yml'), 'utf8').replace(/\r\n/g, '\n');
   function jobSteps(name) {
     const marker = '\n  ' + name + ':\n', start = workflow.indexOf(marker);
@@ -362,6 +392,26 @@ async function run() {
   const save = steps.findIndex(step => /^        uses: actions\/cache\/save@/m.test(step));
   assert.match(steps[download], /^          path: snapshots-smallcap-incoming$/m); assert.match(steps[download], /^          merge-multiple: true$/m);
   assert(download < merge && merge < save, 'merge must run after download and before cache save in merge job');
+  assert.match(steps[merge], /^        id: merge_smallcap$/m);
+  const upload = steps.findIndex(step => /^          name: smallcap-store-merged$/m.test(step));
+  assert(upload > merge, 'consumable store upload must follow merge');
+  for (const index of [save, upload]) {
+    const condition = steps[index].match(/^        if: (.+)$/m)?.[1];
+    assert(condition, 'publication condition missing');
+    // Evaluate the actual workflow expression, including a later reconciliation failure.
+    for (const outcome of ['success', 'failure', 'skipped', 'cancelled']) {
+      for (const laterSuccess of [true, false]) {
+        const eligible = vm.runInNewContext(condition, {
+          always: () => true, success: () => laterSuccess, steps: { merge_smallcap: { outcome } },
+        });
+        assert.equal(eligible, outcome === 'success', 'publish only a successful merge, even after a later failure');
+      }
+    }
+    assert.match(condition, /always\(\)/, 'override the implicit success() check after reconciliation failure');
+  }
+  const isolate = jobSteps('pull').find(step => /^name: Isolate fresh shard output$/m.test(step));
+  assert.match(isolate, /^            case "\$base" in _manifest\*\|_last_good_disk\.json\) continue ;; esac$/m);
+  print('PASS F1 workflow: metadata excluded from shard input; cache and artifact publication gated in 16 states');
   const carrierSteps = jobSteps('pull').filter(step => /^          MISSING_CAP_CARRIER:/m.test(step));
   assert.equal(carrierSteps.length, 1); assert.match(carrierSteps[0], /^          MISSING_CAP_CARRIER: '1'$/m);
   assert.match(carrierSteps[0], /^        run: node pull-yahoo\.js .*--output snapshots-smallcap/m);

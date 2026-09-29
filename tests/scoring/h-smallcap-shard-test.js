@@ -119,11 +119,12 @@ test('NRL-SK-001: Artefakt-Upload zeigt auf einen DRITTEN, vom Cache-Restore UND
     ') — genau der NRL-SK-001-Defekt (Upload zeigt nicht auf ein frisches, isoliertes Verzeichnis).');
 });
 
-test('NRL-SK-001: "Isolate fresh shard output" vergleicht gegen die Baseline UND schliesst _manifest.json aus', () => {
+test('NRL-SK-001: fresh shard output compares baseline and excludes all metadata', () => {
   const isolateSection = stepSection(pull, 'name: Isolate fresh shard output', 'name: Upload shard snapshots');
   assert.match(isolateSection, /cmp -s "\$f" "snapshots-smallcap-baseline\/\$base"/,
     'Kein Inhaltsvergleich gegen den Baseline-Ordner gefunden — ohne ihn landet wieder der komplette Altbestand im Fresh-Ordner.');
-  assert.match(isolateSection, /_manifest\.json/, '_manifest.json-Ausschluss fehlt');
+  assert.match(isolateSection, /^            case "\$base" in _manifest\*\|_last_good_disk\.json\) continue ;; esac$/m,
+    'Metadata exclusion must cover _manifest.json, _manifest-full.json and _last_good_disk.json while retaining _CON.json');
 });
 
 test('Merge-Job: eigener Restore-Pfad bleibt unveraendert snapshots-smallcap (keine Kollision mit der neuen Baseline)', () => {
