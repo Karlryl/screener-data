@@ -1716,10 +1716,41 @@ function mergeAnnualIncomeBundle(qsB, ftsB, opts) {
   const revCounter = (opts && opts.revNonZero) ? _nonZeroCount : _nonNullCount;
   const qsRev = revCounter(qsB.annualRev);
   const ftsRev = revCounter(ftsB.annualRev);
-  if (ftsRev !== qsRev) return ftsRev > qsRev ? ftsB : qsB;
+  const winner = ftsRev !== qsRev ? (ftsRev > qsRev ? ftsB : qsB)
+    : _incomeBundleDensity(ftsB, counter) > _incomeBundleDensity(qsB, counter) ? ftsB : qsB;
+  const other = winner === qsB ? ftsB : qsB;
+  const dates = winner.annualRevEnds || [], otherDates = other.annualRevEnds || [];
+  // Keep main's complete winner when the revenue bases disagree by over 0.5%.
+  if (dates.some((end, i) => {
+    const j = otherDates.indexOf(end), a = winner.annualRev?.[i]?.value ?? winner.annualRev?.[i];
+    const b = other.annualRev?.[j]?.value ?? other.annualRev?.[j];
+    return end && j >= 0 && Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) > Math.abs(a) * 0.005;
+  })) return winner;
+  const fields = ['annualRev', 'annualOpInc', 'annualGP', 'annualNetIncome', 'annualCostOfRevenue'];
+  const comparable = (w, o) => {
+    const a = winner._periods?.[w], b = other._periods?.[o];
+    return a && b && ['duration', 'currency', 'unit', 'basis'].every(k => a[k] != null && a[k] === b[k]);
+  };
+  // Period joins require a dated statement. Legacy caches retain the old choice.
+  const missingOp = otherDates.some((end, i) => end && dates.includes(end) &&
+    comparable(dates.indexOf(end), i) && other.annualOpInc?.[i] != null && winner.annualOpInc?.[dates.indexOf(end)] == null);
+  if (!missingOp || !dates.length || dates.some(d => !d) || otherDates.some(d => !d)) return winner;
+  const allDates = [...new Set([...dates, ...otherDates.filter((end, i) => comparable(0, i))])].sort().reverse();
+  const result = Object.fromEntries(fields.map(k => [k, []]));
+  result._periods = [];
+  for (const end of allDates) {
+    const w = dates.indexOf(end), o = otherDates.indexOf(end);
+    // Move complete rows only after all shared revenue bases passed the conflict check.
+    const useOther = w < 0 || (o >= 0 && comparable(w, o) && other.annualOpInc?.[o] != null && winner.annualOpInc?.[w] == null);
+    const from = useOther ? other : winner, index = useOther ? o : w;
+    for (const k of fields) result[k].push(from[k]?.[index] ?? null);
+    result._periods.push(from._periods?.[index] || null);
+  }
+  for (const k of fields) result[k + 'Ends'] = allDates.slice();
+  result._periodMerged = true;
+  return result;
   // Umsatz-Gleichstand → Buendel-Dichte; FTS gewinnt nur strikt reicher (erhaelt das
   // bisherige "QS behaelt es bei Gleichstand"-Vorverhalten).
-  return _incomeBundleDensity(ftsB, counter) > _incomeBundleDensity(qsB, counter) ? ftsB : qsB;
 }
 
 // Tag 559: das QUARTALS-Buendel (revenueQ/opIncQ/grossProfitQ/netIncomeQ + die drei
@@ -1815,15 +1846,15 @@ function _alignEnds(ends, values) {
   return new Array(n).fill(null);
 }
 
-// A10-Nachzug Jahresseite (23.08.): Werte und ihre Perioden-Enden in EINEM Schritt
-// austauschen. Die Enden entstehen in mapYahooToCanonical aus den isHist-Zeilen;
-// gewinnt spaeter ein anderes Bundle (FTS), gehoeren sie nicht mehr zu diesen Werten.
-// Eine zufaellig gleiche Laenge wuerde _alignEnds austricksen und ein FALSCHES Jahr an
-// einen fremden Wert heften — ein stiller Datenfehler, schlimmer als gar kein Datum.
-// Deshalb sind Zuweisung und Nullung hier ZUSAMMENGEBUNDEN: wer die Werte tauscht,
-// kann die Enden nicht mehr vergessen. (Upgrade-Pfad, bewusst nicht hier: FTS kennt
-// seine eigenen Perioden — wer sie mitfuehren will, baut sie im FTS-Mapper, statt die
-// QS-Enden weiterzureichen.)
+// Carry the source's statement identity independently of converted numeric arrays.
+function _statementPeriods(rows, duration, currency, fetchedAt, dateKey = 'date') {
+  return (rows || []).map(r => ({ end: _isoDay(_y(r, dateKey)),
+    duration: r.periodType || duration, currency: r.currencyCode || currency,
+    unit: r.unit || 'currency', basis: r.statementBasis || 'yahoo-statement', fetchedAt }));
+}
+
+// Move values and their own dates together. QS may reuse its own existing dates;
+// an undated legacy FTS cache must never borrow dates from another answer.
 function _applyAnnualIncomeWinner(annual, winner, winnerIsQS) {
   if (!annual || !winner) return annual;
   // Die bisherigen Enden VOR dem Tausch sichern — sie gehoeren zu den QS-Werten.
@@ -1836,9 +1867,10 @@ function _applyAnnualIncomeWinner(annual, winner, winnerIsQS) {
   annual.annualNetIncome = winner.annualNetIncome;
   // Gewinnt QS, sind es dieselben Werte — die Enden bleiben gueltig, _alignEnds prueft
   // nur noch die Laenge. Gewinnt ein fremdes Bundle, sind sie ungueltig -> hart null.
-  annual.annualRevEnds = _alignEnds(winnerIsQS ? vorher.rev : null, annual.annualRev);
-  annual.annualGPEnds = _alignEnds(winnerIsQS ? vorher.gp : null, annual.annualGP);
-  annual.annualOpIncEnds = _alignEnds(winnerIsQS ? vorher.oi : null, annual.annualOpInc);
+  annual.annualRevEnds = _alignEnds(winner.annualRevEnds || (winnerIsQS ? vorher.rev : null), annual.annualRev);
+  annual.annualGPEnds = _alignEnds(winner.annualGPEnds || (winnerIsQS ? vorher.gp : null), annual.annualGP);
+  annual.annualOpIncEnds = _alignEnds(winner.annualOpIncEnds || (winnerIsQS ? vorher.oi : null), annual.annualOpInc);
+  annual.annualNetIncomeEnds = _alignEnds(winner.annualNetIncomeEnds, annual.annualNetIncome);
   return annual;
 }
 
@@ -2625,6 +2657,9 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       // liefert es null-Enden statt versetzter Daten — ein UNBEKANNTES Datum ist
       // harmlos, ein FALSCH zugeordnetes waere schlimmer als gar keines.
       annualRevEnds: _alignEnds(isHist.slice(0, annualRev.length).map((r) => _isoDay(_y(r, 'endDate'))), annualRev),
+      annualNetIncomeEnds: isHist.slice(0, annualNetIncome.length).map(r => _isoDay(_y(r, 'endDate'))),
+      annualFCFEnds: cfHist.slice(0, annualFCF.length).map(r => _isoDay(_y(r, 'endDate'))),
+      annualOCFEnds: cfHist.slice(0, annualOCF.length).map(r => _isoDay(_y(r, 'endDate'))),
       annualGPEnds: _alignEnds(isHist.slice(0, annualGP.length).map((r) => _isoDay(_y(r, 'endDate'))), annualGP),
       annualOpIncEnds: _alignEnds(isHist.slice(0, annualOpInc.length).map((r) => _isoDay(_y(r, 'endDate'))), annualOpInc)
     },
@@ -2858,6 +2893,12 @@ function mapFTSToAnnual(annualRows, cashRows) {
   // GEWINNER setzen kann. Gewinnt dieses Buendel, ist SEINE genullte Reihe die
   // gespeicherte — dann traegt die Zeile den Marker, sonst nicht.
   return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF, annualOCF,
+    annualRevEnds: sorted.slice(0, annualRev.length).map(r => _isoDay(r.date)),
+    annualGPEnds: sorted.slice(0, annualGP.length).map(r => _isoDay(r.date)),
+    annualOpIncEnds: sorted.slice(0, annualOpInc.length).map(r => _isoDay(r.date)),
+    annualNetIncomeEnds: sorted.slice(0, annualNetIncome.length).map(r => _isoDay(r.date)),
+    annualFCFEnds: cashSorted.map(r => _isoDay(r?.date)),
+    annualOCFEnds: cashSorted.map(r => _isoDay(r?.date)),
     annualCostOfRevenue,
     _gpZeroCodingYears: _gpZeroYearsFTS };
 }
@@ -3627,21 +3668,21 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // pass when actual on-disk snapshot count was much lower. Now: count
       // only entries whose status reflects a real snapshot write.
       const okResults = results.filter(r =>
-        r && (r.status === 'ok' || r.status === 'price-only'));
+        r && (r.status === 'ok' || r.status === 'price-only' || r.status === 'reload-retained'));
       const skippedMcap = countSkippedMcap(results);
       // TASK 0.9 (Pull-Diät): split full vs price-only so the diet's effect is
       // readable even on a TIMED-OUT run — the incremental manifest is flushed to
       // disk every ~100 tickers, so these survive a mid-flight SIGKILL. n_full is
       // the expensive full-pull count (the bottleneck the budget caps).
       const nFull = okResults.filter(r => r.status === 'ok').length;
-      const nPriceOnly = okResults.length - nFull;
+      const nPriceOnly = okResults.filter(r => r.status === 'price-only').length;
       const slim = {
         pulled_at: new Date().toISOString(),
         watchlist_version: watchlist._meta && watchlist._meta.version,
         n_total: watchlist.stocks.length,
         n_ok: okResults.length,
         n_full: nFull,
-        n_priceonly: nPriceOnly,
+        n_priceonly: nPriceOnly, n_retained: okResults.filter(r => r.status === 'reload-retained').length,
         ..._selectorCounters(),
         ...reloadCounters(),
         _staleQuarterReload: reloadMeta,
@@ -3985,13 +4026,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         else if (bucket === 'overdue') _selNotYoungButStale++;
         else if (bucket === 'unknown') _selNotYoungUnknown++;
       }
-      // audit F-A-2026-06-21: parse the young snapshot ONCE here and share the
+      // Parse any existing snapshot once, including old snapshots whose history and
+      // accepted revisions still need protection. Age gates below stay unchanged.
+      // audit F-A-2026-06-21: share the
       // object across both staleness probes AND _priceOnlyUpdate. Previously
       // each of the three did its own readFileSync+JSON.parse → 3× parse per
       // fast-path ticker (the ~80%-hit path). Failure mode prevented: redundant
       // triple parse of every young snapshot.
       let _parsedSnapshot = null;
-      if (youngEnough) {
+      {
         try {
           const _fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
           if (fs.existsSync(_fp)) _parsedSnapshot = JSON.parse(fs.readFileSync(_fp, 'utf8'));
@@ -4000,8 +4043,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           // (the staleness probes then re-fetch, self-healing) but COUNT+log it so disk
           // corruption becomes visible instead of silent.
           _parsedSnapshot = null;
-          _corruptYoungSnapshots++;
-          _log('WARN', `young snapshot parse failed for ${stock.ticker} (→ no-cache, re-fetch): ${e && e.message}`);
+          if (youngEnough) _corruptYoungSnapshots++;
+          _log('WARN', `snapshot parse failed for ${stock.ticker} (→ no-cache, re-fetch): ${e && e.message}`);
         }
       }
       const staleSchema = youngEnough
@@ -4074,10 +4117,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         let r;
         try { r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot); }
         catch (e) { throw originalError || e; }
-        reloadStats.reload_failed++;
-        console.warn(`::warning::${stock.ticker} ${reload.REASON}: reload-failed (${cause}); retaining quarterly history and updating price only`);
-        results.push({ ...r, quarterReload: { reason: reload.REASON, outcome: 'reload-failed',
-          previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reloadSelected.get(stock.ticker).end } });
+        if (reloadOnly) reloadStats.reload_failed++;
+        console.warn(`::warning::${stock.ticker} ${reload.REASON}: reload-failed (${cause}); retaining fundamentals and cache, updating price only`);
+        results.push({ ...r, status: reloadOnly && r.status === 'price-only' ? 'reload-retained' : r.status,
+          fundamentalsRetainedReason: cause, ...(staleQuarterSelected ? { quarterReload: { reason: reload.REASON, outcome: 'reload-failed', cause,
+          previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reloadSelected.get(stock.ticker).end } } : {}) });
       };
       let forceFundamentalsFull = staleFundamentals || staleEarnings || vollPullAngefordert || staleQuarterSelected;
       // Budget applies ONLY when time-staleness is the SOLE reason. If the ticker
@@ -4262,6 +4306,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // No cache to use anyway — re-fetch is happening regardless.
         cacheBypassReason = 'schema-stale (no cache)';
       }
+      // A thin accepted reply may leave the older cache untouched. Never replay
+      // that older answer over a snapshot which already accepted newer revisions.
+      if (cached && Date.parse(_parsedSnapshot?.meta?.fundamentalsTimeseriesFetchedAt) > Date.parse(cached.cachedAt)) {
+        cacheBypassReason = 'snapshot-newer-than-cache';
+      }
       if (staleQuarterSelected) cacheBypassReason = reload.REASON;
       if (cacheBypassReason) {
         if (typeof global.__ftsCacheStaleBypasses === 'undefined') global.__ftsCacheStaleBypasses = 0;
@@ -4276,7 +4325,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // keine Achse und keine Lampe liest die drei Reihen heute (Beleg: scripts/score-digest.js).
       let ftsAnnualRepurchase, ftsAnnualDividendsPaid, ftsAnnualNetCommonStockIssuance;
       let ftsQuarterlyNI;
+      let pendingFTSCache = null;
+      let ftsPeriods = {};
       if (useCache && cached.payload) {
+        ftsPeriods = cached.payload.ftsPeriods || {};
         ftsAnnual = cached.payload.ftsAnnual;
         // FTI-Beschluss 02.09.2026: der Guard laeuft in mapFTSToAnnual — ein Buendel aus
         // dem Cache kommt daran vorbei. Ohne diese Zeile haette ein vor dem Merge
@@ -4361,6 +4413,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
         if (ftsFailure.allEmpty) _ftsAllEmptyTickers++;
         ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
+        for (const [name, rows, duration] of [
+          ['income', fts.annualFin, '12M'], ['cash', fts.annualCash, '12M'],
+          ['balance', fts.annualBs, 'instant'], ['quarter', fts.quarterlyFin, '3M']]) {
+          ftsPeriods[name] = _statementPeriods((rows || []).slice().reverse(), duration,
+            canonical.meta.reportingCurrency, asOf);
+        }
         ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
         ftsBalance = mapFTSToBalance(fts.annualBs);
         ftsAnnualSBC = _ftsExtractByYear(fts.annualCash, ['stockBasedCompensation']);
@@ -4376,6 +4434,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualDepreciation = _ftsExtractByYear(fts.annualCash, ['depreciationAndAmortization', 'depreciationAmortizationDepletion', 'DepreciationAndAmortization']);
         ({ ftsAnnualShares, ftsAnnualSharesBasic } = _mapFTSAnnualShares(
           fts.annualFin, fts.annualBs));
+        const sharesFromIncome = _ftsExtractByYear(fts.annualFin,
+          ['dilutedAverageShares', 'basicAverageShares']).some(v => v != null);
+        const shareRows = (sharesFromIncome ? fts.annualFin : fts.annualBs).slice().reverse();
+        ftsPeriods.shares = (sharesFromIncome ? ftsPeriods.income : ftsPeriods.balance).map((p, i) => ({
+          ...p, unit: 'shares', basis: sharesFromIncome
+            ? _ftsValue(shareRows[i], 'dilutedAverageShares') != null ? 'diluted-average-shares'
+              : _ftsValue(shareRows[i], 'basicAverageShares') != null ? 'basic-average-shares' : 'shares-basis-unavailable'
+            : 'outstanding-shares',
+        }));
         // F-1 (Karl-Mandat 03.08.2026): Ausschuettungen an Aktionaere. KEIN zusaetzlicher
         // Netzabruf — fts.annualCash traegt das komplette Cash-Flow-Modul bereits (Z.~1515),
         // es wurden bisher nur SBC/Capex/D&A daraus gelesen.
@@ -4400,11 +4467,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             // Compare the actual merge winner before writing either snapshot or cache.
             const proposed = _mergeQuarterBundle(canonical.timeseries, { ...ftsQuarterly, netIncomeQ: ftsQuarterlyNI });
             const proposedEnd = reload.latestReportedQuarter({ timeseries: proposed }, Date.now());
-            const thinner = ['revenueQ', 'grossProfitQ', 'opIncQ', 'netIncomeQ']
-              .some(k => _nonNullCount(proposed[k]) < _nonNullCount(_parsedSnapshot.timeseries[k]));
-            if (!proposedEnd || proposedEnd < reloadSelected.get(stock.ticker).end || thinner) {
+            if (!proposedEnd || proposedEnd < reloadSelected.get(stock.ticker).end) {
               reloadStats.fetch_failed++;
-              return await reloadFailed('Quarterly history empty, older or thinner than stored');
+              return await reloadFailed('Quarterly history empty or older than stored');
             }
           }
           if (!yahooEnd || reload.quarterAgeDays(yahooEnd, Date.now()) > reloadConfig.maxQuarterAgeDays) reloadStats.still_old_yahoo++;
@@ -4416,17 +4481,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           (fts.annualCash || []).length === 0 ||
           (fts.annualBs || []).length === 0
         );
-        try {
-          // F-DP-052 (Tag 189): atomic FTS-cache write; worker pool can hit
-          // same ticker if a retry races, and a truncated cache fails downstream
-          // _ftsExtractByYear silently → quarterly-NI series goes empty.
-          _writeFTSCache(cachePath, FTS_CACHE_VERSION, ftsPartial, {
-            quarterlyFetchedAt, quarterlyClockSource,
+        // Stage only. A rejected answer must never poison the next full pull.
+        if (!ftsFailure.failedSeries && !ftsFailure.allEmpty) pendingFTSCache = JSON.parse(JSON.stringify({ partial: ftsPartial, payload: {
+            quarterlyFetchedAt, quarterlyClockSource, ftsPeriods,
             ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD,
             ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares,
             ftsAnnualSharesBasic, ftsAnnualRepurchase, ftsAnnualDividendsPaid, ftsAnnualNetCommonStockIssuance
-          });
-        } catch (e) { _log('WARN', 'FTS cache write failed for ' + (stock && stock.ticker) + ': ' + e.message); }
+          } }));
         if (ftsPartial) canonical._ftsPartial = true;
       }
       // audit F-A-2026-06-21: the FTS-vs-quoteSummary merge below was 7 copies of
@@ -4483,20 +4544,63 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // (FTS strictly longer than QS) so the side-series can be re-aligned/dropped.
       let _incomeWinnerIsQS = false;
       let _ftsAnchorDiverges = false;
+      let _incomePeriodMerged = false;
+      const qsPeriods = {
+        income: _statementPeriods(yahoo.incomeStatementHistory?.incomeStatementHistory, '12M', canonical.meta.reportingCurrency, asOf, 'endDate'),
+        cash: _statementPeriods(yahoo.cashflowStatementHistory?.cashflowStatements, '12M', canonical.meta.reportingCurrency, asOf, 'endDate'),
+        balance: _statementPeriods(yahoo.balanceSheetHistory?.balanceSheetStatements, 'instant', canonical.meta.reportingCurrency, asOf, 'endDate'),
+        quarter: _statementPeriods(yahoo.incomeStatementHistoryQuarterly?.incomeStatementHistory, '3M', canonical.meta.reportingCurrency, asOf, 'endDate'),
+      };
+      canonical.meta.statementPeriods = {};
+      const setPeriods = (field, block, periods) => {
+        const values = block[field] || [];
+        const knownEnds = block[field + 'Ends'] || (field === 'netIncomeQ' ? block.revenueQEnds : undefined);
+        const matched = Array.isArray(knownEnds)
+          ? knownEnds.map(end => (periods || []).find(p => end && p?.end === end) || null)
+          : (periods || []).slice(0, values.length);
+        if (field !== 'netIncomeQ') block[field + 'Ends'] = Array.from({ length: values.length }, (_, i) => matched[i]?.end || knownEnds?.[i] || null);
+        canonical.meta.statementPeriods[field] = values.length ?
+          Array.from({ length: values.length }, (_, i) => matched[i] || null) : (periods || []).slice();
+      };
       {
         const _qsIncome = {
+          _periods: qsPeriods.income,
+          annualRevEnds: canonical.annual.annualRevEnds,
+          annualGPEnds: canonical.annual.annualGPEnds,
+          annualOpIncEnds: canonical.annual.annualOpIncEnds,
+          annualNetIncomeEnds: canonical.annual.annualNetIncomeEnds,
+          annualCostOfRevenue: canonical.annual.annualCostOfRevenue,
           annualRev: canonical.annual.annualRev,
           annualOpInc: canonical.annual.annualOpInc,
           annualGP: canonical.annual.annualGP,
           annualNetIncome: canonical.annual.annualNetIncome,
         };
         const _ftsIncome = {
+          _periods: ftsPeriods.income,
+          annualRevEnds: ftsAnnual.annualRevEnds,
+          annualGPEnds: ftsAnnual.annualGPEnds,
+          annualOpIncEnds: ftsAnnual.annualOpIncEnds,
+          annualNetIncomeEnds: ftsAnnual.annualNetIncomeEnds,
+          annualCostOfRevenue: ftsAnnual.annualCostOfRevenue,
           annualRev: ftsAnnual.annualRev,
           annualOpInc: ftsAnnual.annualOpInc,
           annualGP: ftsAnnual.annualGP,
           annualNetIncome: ftsAnnual.annualNetIncome,
         };
         const _winner = mergeAnnualIncomeBundle(_qsIncome, _ftsIncome);
+        _incomePeriodMerged = _winner._periodMerged === true;
+        const conflicts = (_qsIncome.annualRevEnds || []).flatMap((end, i) => {
+          const j = (ftsAnnual.annualRevEnds || []).indexOf(end);
+          const q = _qsIncome.annualRev[i]?.value, f = ftsAnnual.annualRev[j]?.value;
+          const reference = _winner === _ftsIncome ? f : q;
+          return end && j >= 0 && Number.isFinite(q) && Number.isFinite(f) && Math.abs(q - f) > Math.abs(reference) * 0.005
+            ? [{ end, quoteSummary: q, fts: f }] : [];
+        });
+        if (conflicts.length) {
+          canonical.meta.annualIncomeConflicts = conflicts;
+          canonical.meta.annualIncomeGapReason = 'conflicting-revenue-basis';
+          _log('WARN', `${stock.ticker}: Jahresabschluss-Konflikt; vollstaendiges ${_winner === _ftsIncome ? 'FTS' : 'quoteSummary'}-Buendel beibehalten (${conflicts.map(r => r.end).join(', ')})`);
+        }
         _incomeWinnerIsQS = (_winner === _qsIncome);
         // Anchor-divergence signal: the FTS income series is strictly longer than
         // the QS income series it lost to. Per the documented anchor convention
@@ -4513,12 +4617,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Schritt — sonst kann der Tausch die Enden vergessen und ein falsches Jahr an
         // einen fremden Wert heften. Details in _applyAnnualIncomeWinner.
         _applyAnnualIncomeWinner(canonical.annual, _winner, _incomeWinnerIsQS);
+        const periods = _winner._periods;
+        for (const field of ['annualRev', 'annualGP', 'annualOpInc', 'annualNetIncome']) {
+          setPeriods(field, canonical.annual, periods);
+        }
         // Tag 203: when the FTS bundle wins and actually carries OpInc, that OpInc is
         // Yahoo data — record provenance. If QS wins (or FTS OpInc is empty)
         // leave opIncSource as mapYahooToCanonical set it; the post-merge sector-aware
         // fallback below re-derives a margin-based OpInc when the winner left it empty.
         // A1/K1.2 (Urteil T164, ENTSCHIED 15): 'native' -> 'yahoo-adjusted', siehe Mapper oben.
-        if (_winner === _ftsIncome &&
+        if (_winner !== _qsIncome &&
             (ftsAnnual.annualOpInc || []).some(v => v != null && (typeof v !== 'object' || v.value != null))) {
           if (canonical.meta) canonical.meta.opIncSource = 'yahoo-adjusted';
         }
@@ -4539,7 +4647,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // A' (05.09.2026): Bruttogewinn aus Umsatz − COGS des GEWINNER-Buendels, nur wo er fehlt
         // oder 0-kodiert ist. COGS reist mit dem Buendel (dieselben Zeilen wie annualRev), ein
         // Cache-Treffer ohne annualCostOfRevenue liefert [] und damit keine Ableitung (fail-closed).
-        const _cogsWinner = (_winner === _ftsIncome) ? ftsAnnual.annualCostOfRevenue : canonical.annual.annualCostOfRevenue;
+        const _cogsWinner = _winner.annualCostOfRevenue;
         canonical.annual.annualCostOfRevenue = Array.isArray(_cogsWinner) ? _cogsWinner : [];
         const _gpAbl = _deriveGrossProfitFromCogs(canonical.annual.annualRev, canonical.annual.annualGP, canonical.annual.annualCostOfRevenue);
         // Ein Laengen-Mismatch ist ab hier nur noch ueber einen Cache-Treffer ohne COGS oder eine
@@ -4598,6 +4706,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       {
         const _bal = chooseAnnualBalance(canonical.annual.annualBalance, ftsBalance);
         canonical.annual.annualBalance = _bal.rows;
+        setPeriods('annualBalance', canonical.annual, _bal.rows === ftsBalance ?
+          (_ftsAnchorDiverges ? [null, ...(ftsPeriods.balance || [])] : ftsPeriods.balance) : qsPeriods.balance);
         if (_bal.reason === 'schema-fts') {
           _balanceSchemaWins++;
           _log('INFO', `  ${stock.ticker}: Bilanzreihe nach Schema-Regel aus FTS (${_bal.ftsUsable} `
@@ -4688,6 +4798,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (_nonNullCount(ftsAnnualRepurchase) > 0)              canonical.annual.annualRepurchase = ftsAnnualRepurchase;
       if (_nonNullCount(ftsAnnualDividendsPaid) > 0)           canonical.annual.annualDividendsPaid = ftsAnnualDividendsPaid;
       if (_nonNullCount(ftsAnnualNetCommonStockIssuance) > 0)  canonical.annual.annualNetCommonStockIssuance = ftsAnnualNetCommonStockIssuance;
+      for (const field of ['annualSBC', 'annualCapex', 'annualDepreciation', 'annualRepurchase', 'annualDividendsPaid', 'annualNetCommonStockIssuance', 'annualSGA', 'annualShares', 'annualRnD']) {
+        const fromQS = field === 'annualRnD' && canonical.annual.annualRnD !== ftsAnnualRnD;
+        const source = field === 'annualShares' ? ftsPeriods.shares : fromQS ? qsPeriods.income :
+          ['annualSGA', 'annualShares', 'annualRnD'].includes(field) ? ftsPeriods.income : ftsPeriods.cash;
+        setPeriods(field, canonical.annual, !fromQS && _ftsAnchorDiverges && field !== 'annualShares' ? [null, ...(source || [])] : source);
+      }
       // Tag-90: quarterlyNI in timeseries
       // F-NY-001 (audit 2026-06-08): nulls were wrapped as {value:null}, so length-
       // based "computable" checks saw N entries that could be entirely empty. Keep
@@ -4721,6 +4837,28 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
         canonical.annual.annualFCF = _cashWinner.annualFCF;
         canonical.annual.annualOCF = _cashWinner.annualOCF;
+        if (_cashWinner === _ftsCash) {
+          canonical.annual.annualFCFEnds = _alignEnds(ftsAnnual.annualFCFEnds, _cashWinner.annualFCF);
+          canonical.annual.annualOCFEnds = _alignEnds(ftsAnnual.annualOCFEnds, _cashWinner.annualOCF);
+        }
+        for (const field of ['annualFCF', 'annualOCF']) setPeriods(field, canonical.annual,
+          _cashWinner === _ftsCash ? ftsPeriods.cash : qsPeriods.cash);
+      }
+      if (_incomePeriodMerged) {
+        // Positional consumers zip ALL annual series to income. A period-merged
+        // income window requires actual date alignment, not the old one-year guess.
+        const target = canonical.annual.annualRevEnds;
+        for (const field of ['annualBalance', 'annualSBC', 'annualCapex', 'annualRnD', 'annualSGA',
+          'annualDepreciation', 'annualShares', 'annualRepurchase', 'annualDividendsPaid',
+          'annualNetCommonStockIssuance', 'annualFCF', 'annualOCF']) {
+          const series = canonical.annual[field];
+          if (!Array.isArray(series) || !series.length) continue;
+          const dates = canonical.annual[field + 'Ends'] || [];
+          const periods = canonical.meta.statementPeriods[field] || [];
+          canonical.annual[field] = target.map(end => series[dates.indexOf(end)] ?? null);
+          canonical.annual[field + 'Ends'] = target.slice();
+          canonical.meta.statementPeriods[field] = target.map(end => periods[dates.indexOf(end)] || null);
+        }
       }
       // F-010 (audit 2026-06-08): opIncQ/grossProfitQ must come from the SAME source
       // as revenueQ. Previously FTS opIncQ/grossProfitQ overwrote unconditionally —
@@ -4767,6 +4905,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         canonical.timeseries.revenueQEnds = _qWinner.revenueQEnds;
         canonical.timeseries.grossProfitQEnds = _qWinner.grossProfitQEnds;
         canonical.timeseries.opIncQEnds = _qWinner.opIncQEnds;
+        for (const field of ['revenueQ', 'opIncQ', 'grossProfitQ', 'netIncomeQ']) {
+          setPeriods(field, canonical.timeseries, _qWinner._source === 'fts' ? ftsPeriods.quarter : qsPeriods.quarter);
+        }
       }
 
       // Tag 203: post-FTS sector-aware OpInc fallback. After both quoteSummary
@@ -4895,6 +5036,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         return;  // skip this stock
       }
       // Tag 133c: data-quality grade — A/B/C/D nach Anteil fehlender kritischer Felder.
+      const previousHistory = _parsedSnapshot && yahooQ4.applyKnownCases(_parsedSnapshot).snapshot;
+      if (previousHistory) {
+        require('./lib/reload-history.js').preserveReloadHistory(canonical, previousHistory);
+        const unsafeGaps = (canonical.meta.reloadHistoryGaps || []).filter(g => ['statement-basis-unverified', 'period-revised'].includes(g.reason));
+        if (unsafeGaps.length) _log('WARN', `${stock.ticker}: Historische Werte mit abweichender Aussagebasis; ${unsafeGaps.length} Luecken mit Grund im Snapshot`);
+      }
       // Wird in jeden Snapshot geschrieben; score-aggregator nutzt es optional (DATAQUALITY_ENFORCE=1).
       try { canonical._quality = gradeSnapshot(canonical); }
       catch (e) {
@@ -4961,12 +5108,27 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (quarterlyFetchedAt) canonical.meta.fundamentalsTimeseriesFetchedAt = quarterlyFetchedAt;
       canonical.meta.fundamentalsTimeseriesClockSource = quarterlyClockSource;
       if (_allFtsSeriesEmpty) canonical.meta.fundamentalsIncomplete = true;
-      if (reloadOnly && ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF'].some(k =>
-        _nonNullCount(canonical.annual && canonical.annual[k]) < _nonNullCount(_parsedSnapshot.annual && _parsedSnapshot.annual[k]))) {
+      if (reloadOnly) {
+        const annualEnd = a => (a?.annualRevEnds || []).filter((end, i) => end &&
+          Number.isFinite(a.annualRev?.[i]?.value ?? a.annualRev?.[i]) && Date.parse(end) <= Date.now()).sort().pop() || null;
+        const priorAnnualEnd = annualEnd(_parsedSnapshot.annual), nextAnnualEnd = annualEnd(canonical.annual);
+        const priorQuarterEnd = reload.latestReportedQuarter(_parsedSnapshot, Date.now());
+        const nextQuarterEnd = reload.latestReportedQuarter(canonical, Date.now());
+        if ((priorAnnualEnd && (!nextAnnualEnd || nextAnnualEnd < priorAnnualEnd)) ||
+            (priorQuarterEnd && (!nextQuarterEnd || nextQuarterEnd < priorQuarterEnd))) {
+          reloadStats.fetch_failed++;
+          return await reloadFailed('reported annual or quarterly period regressed');
+        }
+      }
+      if (reloadOnly && require('./lib/reload-history.js').historyIsThinner(canonical, previousHistory)) {
         reloadStats.fetch_failed++;
-        return await reloadFailed('annual history thinner than stored');
+        return await reloadFailed('shared-period fundamentals missing');
       }
       writeFileAtomic(outPath, JSON.stringify(canonical));
+      if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
+        try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
+        catch (e) { _log('WARN', 'FTS cache write failed for ' + stock.ticker + ': ' + e.message); }
+      }
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
       // P1-Fix Tag 13: data-completeness pro Stock loggen, damit downstream-Filter
@@ -5180,7 +5342,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // writeManifestIncremental() — final manifest must agree with the snapshot
   // count actually on disk.
   const okResultsFinal = results.filter(r =>
-    r && (r.status === 'ok' || r.status === 'price-only'));
+    r && (r.status === 'ok' || r.status === 'price-only' || r.status === 'reload-retained'));
   const skippedMcapFinal = countSkippedMcap(results);
   // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
   // clean run (the manifest carries it too, but the log survives regardless of write path).
@@ -5222,7 +5384,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diesem Manifest bereits die gefilterte Liste. Nur der Merge, der n_total durch das volle
   // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.filter(r => r.status === 'price-only').length, n_retained: okResultsFinal.filter(r => r.status === 'reload-retained').length, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
   slim.yahooQ4HandTable = manifest.yahooQ4HandTable;
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, pulled=${reloadStats.pulled}, newer=${reloadStats.newer}, still-old-yahoo=${reloadStats.still_old_yahoo}, skipped-cap=${reloadStats.skipped_cap}, fetch-failed=${reloadStats.fetch_failed}, reload-failed=${reloadStats.reload_failed}, no-quarter=${reloadStats.no_quarter}`);
   _log('INFO', `Missing-market-cap observations: ${manifest.n_missing_mcap} (not counted as successful pulls)`);

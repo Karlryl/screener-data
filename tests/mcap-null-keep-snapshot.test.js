@@ -132,7 +132,10 @@ class FakeYahoo {
     if (fullMode === 'empty-modules') return { price: {}, summaryDetail: {} };
     return { price: { symbol: ticker, currency: 'USD', marketCap: fullCap === undefined ? cap : fullCap, regularMarketPrice: 120 }, financialData: { financialCurrency: 'USD' }, summaryProfile: { sector: 'Technology', industry: 'Semiconductors', country: 'United States' } };
   }
-  async fundamentalsTimeSeries() { ftsCalls++; return []; }
+  async fundamentalsTimeSeries() {
+    ftsCalls++;
+    return []; // Existing snapshot + empty FTS must still allow ordinary cap recovery.
+  }
 }
 const load = Module._load;
 Module._load = function (req, parent, ...rest) {
