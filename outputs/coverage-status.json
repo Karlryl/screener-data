@@ -1,24 +1,26 @@
 {
   "schema": "coverage-status/v1",
-  "generated_at": "2026-09-26T08:58:05.506Z",
-  "run_id": "36227380588",
+  "generated_at": "2026-09-29T10:03:10.676Z",
+  "run_id": "36542711349",
   "status": "degradiert",
   "degraded": true,
   "blocked": false,
-  "n_ok": 16013,
-  "n_total": 21704,
-  "n_full": 102,
-  "n_priceonly": 15911,
+  "n_ok": 16050,
+  "n_total": 21803,
+  "n_full": 4697,
+  "n_priceonly": 11353,
   "n_shard_collisions": 0,
-  "coverage_pct": 73.8,
-  "n_addressable": 17841,
-  "honest_coverage_pct": 89.8,
+  "coverage_pct": 73.6,
+  "n_addressable": 18334,
+  "honest_coverage_pct": 87.5,
   "manifest_addressable_warning": false,
-  "n_skipped_mcap": 3408,
-  "n_skipped_owned": 455,
+  "n_skipped_mcap": 3015,
+  "n_missing_mcap": 613,
+  "n_skipped_owned": 454,
   "source": "manifest",
   "reasons": [
-    "honest-coverage 89.8% < 90% of addressable 17841 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)"
+    "honest-coverage 87.5% < 90% of addressable 18334 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)",
+    "613 Unternehmen: Marktkapitalisierung fehlt; im Coverage-Nenner enthalten, nicht als erfolgreicher Pull gezaehlt"
   ],
   "manifest_partial": false
 }
