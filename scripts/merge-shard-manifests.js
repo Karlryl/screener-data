@@ -110,6 +110,7 @@ const SELECTOR_COUNTERS = ['n_sel_young_enough', 'n_sel_young_and_stale',
 const { COUNTERS: QUARTER_RELOAD_COUNTERS, REASON: QUARTER_RELOAD_REASON } = require('../lib/stale-quarter-reload.js');
 const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_missing_mcap', 'n_skipped_owned', 'n_ccy_missing_completely',
   ...SELECTOR_COUNTERS, ...QUARTER_RELOAD_COUNTERS];
+const Q4_COUNTERS = ['observed', 'corrected', 'missing', 'stale', 'alreadyCorrected'];
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -135,6 +136,11 @@ function hasValidShardCounters(manifest) {
   ))) {
     return false;
   }
+  if (Object.hasOwn(manifest, 'yahooQ4HandTable')) {
+    const q4 = manifest.yahooQ4HandTable;
+    if (!isPlainObject(q4) || Q4_COUNTERS.some(field =>
+      Object.hasOwn(q4, field) && !isNonNegativeSafeInteger(q4[field]))) return false;
+  }
   const retained = manifest.n_retained ?? 0;
   if (!Number.isSafeInteger(retained) || retained < 0) return false;
   const classified = manifest.n_full + manifest.n_priceonly + retained;
@@ -150,8 +156,9 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
   const observed = shardManifests.filter(m => m !== null && m !== undefined);
   const present = observed.filter(hasValidShardCounters);
   const invalidShards = observed.length - present.length;
-  const sum = (field) => present.reduce((total, manifest) => {
-    const next = total + (manifest[field] ?? 0);
+  const sum = (field, container) => present.reduce((total, manifest) => {
+    const value = container ? manifest[container]?.[field] : manifest[field];
+    const next = total + (value ?? 0);
     if (!Number.isSafeInteger(next)) {
       throw new RangeError(`merged shard counter ${field} exceeds the safe integer range`);
     }
@@ -177,6 +184,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_skipped_mcap: sum('n_skipped_mcap'),
     n_missing_mcap: sum('n_missing_mcap'),
     n_ccy_missing_completely: sum('n_ccy_missing_completely'),
+    yahooQ4HandTable: Object.fromEntries(Q4_COUNTERS.map(key => [key, sum(key, 'yahooQ4HandTable')])),
     ...Object.fromEntries(SELECTOR_COUNTERS.map(k => [k, sum(k)])),
     ...Object.fromEntries(QUARTER_RELOAD_COUNTERS.map(k => [k, sum(k)])),
     _staleQuarterReload: { reason: QUARTER_RELOAD_REASON,

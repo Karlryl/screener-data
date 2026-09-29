@@ -10,6 +10,12 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../../lib/yahoo-q4-known-cases.js');
+
+// Read-only overlay also reaches cached/price-only snapshots in the next scoring run.
+function readScoringSnapshot(file) {
+  return prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(file, 'utf8')));
+}
 const { scoreUniverse, produceRankings, calibrationDrift, quantile, MIN_COHORT_N, tickerOf } = require('./score.js');
 const formulas = require('./formulas/index.js');
 // 3.1 QC-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry + Board-Status.
@@ -292,7 +298,7 @@ function loadUniverse(snapDir = SNAP_DIR, watchlistPath = WATCHLIST_PATH) {
     if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
     let s;
     try {
-      s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8'));
+      s = readScoringSnapshot(path.join(snapDir, f));
     } catch (_) { parseFail++; continue; } // defekter Snapshot
     if (s && s.meta && s.meta.ticker) u.push(s);
     else skippedNoMeta++;
@@ -412,7 +418,7 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
     if (!f.endsWith('.json')) continue;
     if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
     let s;
-    try { s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8')); }
+    try { s = readScoringSnapshot(path.join(snapDir, f)); }
     catch (_) { parseFail++; continue; }
     if (s && s.meta && s.meta.ticker) u.push(s);
     else skippedNoMeta++;
@@ -869,7 +875,7 @@ if (require.main === module) {
 // mergeSecIntoUniverse ist exportiert, damit Messskripte (scripts/score-digest.js) denselben
 // Produktionsweg nehmen statt die SECANNUAL_FILES-Liste nachzubauen — die Liste ist schon
 // einmal von 1 auf 5 Dateien gewachsen, eine Kopie waere still veraltet.
-module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO,
+module.exports = { loadUniverse, loadSmallcapUniverse, readScoringSnapshot, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO,
   assertParseFailAnteil, MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE,  // T565-H1
   MIN_PARSE_FAIL_FAELLE_SMALLCAP, COVERAGE_FLOOR_RATIO_ONDISK,          // T569-F1/F4
   baselineFuer, naechstesHochwasser,                                    // T565-M2

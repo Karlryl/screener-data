@@ -27,6 +27,7 @@ const CACHE = process.env.SEC_XBRL_CACHE_DIR || path.join(require('os').tmpdir()
 const OUT = path.join(ROOT, 'external-data', 'sec-secannual.json');
 const UA = require('../lib/sec-user-agent').secUserAgent();
 const { route, isUS } = require(path.join(ROOT, 'src/scoring/router.js'));
+const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { norm, presentValues } = require(path.join(ROOT, 'src/scoring/snapshot.js'));
 const { signFlips, oscExcess, revMaxDrawdown } = require(path.join(ROOT, 'src/scoring/score.js'));
 const { extractSecSeries } = require(path.join(ROOT, 'merge-sec-xbrl.js'));
@@ -242,7 +243,7 @@ async function run() {
   }
   const dds = [], routedUS = [];
   for (const s of uni) {
-    if (route(s).action !== 'route') continue;
+    if (route(prepareSnapshot(s)).action !== 'route') continue;
     const op = presentValues(norm(s, 'annualOpInc'));
     if (op.length >= 3) dds.push(revMaxDrawdown(norm(s, 'annualRev')));
     if (isUS(s) && op.length >= 3) routedUS.push({ s, op });
