@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-26T09:05:36.379Z",
+  "generated_at": "2026-09-29T10:10:37.288Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.8,
-    "generated_at": "2026-09-26T08:58:05.506Z"
+    "coverage_pct": 73.6,
+    "generated_at": "2026-09-29T10:03:10.676Z"
   },
   "profitable": [
     {
@@ -169,7 +169,7 @@
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": -1.525335146409612,
+      "revGrowthYoYPct": -1.5253351464096232,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -783,103 +783,6 @@
     {
       "rank": 1,
       "rankGrund": null,
-      "ticker": "LDI",
-      "score": 61.2,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "crashRisk",
-        "opIncSynthetisch",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 51.5
-      },
-      "name": "loanDepot, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "4/7",
-      "coverageWeight": 0.51,
-      "cohortN": 11,
-      "cohortFallback": true,
-      "scoreBase": 69.8,
-      "scoreShrunk": 61.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 61.1,
-          "weight": 1.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 75,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.7
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 57.4,
-          "weight": 0.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 1.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.7
-        },
-        {
-          "key": "dilution",
-          "pct": 71.9,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 22.394147867502777,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 12.1,
-        "pctl": 0.75
-      },
-      "ath": {
-        "distancePct": -97.7,
-        "athDate": "2021-02-12",
-        "monthsAgo": 67,
-        "lastDate": "2026-09-25"
-      },
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 2,
-      "rankGrund": null,
       "ticker": "BETR",
       "score": 60.9,
       "track": "unprofitable",
@@ -967,7 +870,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 3,
+      "rank": 2,
       "rankGrund": null,
       "ticker": "ALTI",
       "score": 55.7,
@@ -993,7 +896,7 @@
       "sector": "Financial Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -1058,7 +961,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 4,
+      "rank": 3,
       "rankGrund": null,
       "ticker": "PRAA",
       "score": 55.4,
@@ -1083,7 +986,7 @@
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
-      "ipoRecency": "veteran",
+      "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2002,
       "coverageAxes": "7/7",
@@ -1146,7 +1049,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 5,
+      "rank": 4,
       "rankGrund": null,
       "ticker": "TMS",
       "score": 54,
@@ -1234,7 +1137,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 6,
+      "rank": 5,
       "rankGrund": null,
       "ticker": "CNCK",
       "score": 44,
@@ -1321,7 +1224,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 7,
+      "rank": 6,
       "rankGrund": null,
       "ticker": "AXG",
       "score": 38.5,
@@ -1411,7 +1314,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 8,
+      "rank": 7,
       "rankGrund": null,
       "ticker": "GEMI",
       "score": 33,
@@ -1502,7 +1405,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 9,
+      "rank": 8,
       "rankGrund": null,
       "ticker": "MTC",
       "score": 12,
@@ -1527,7 +1430,7 @@
       "sector": "Financial Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -1595,7 +1498,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 10,
+      "rank": 9,
       "rankGrund": null,
       "ticker": "BTBT",
       "score": 6.9,

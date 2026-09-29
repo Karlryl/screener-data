@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-26T09:05:36.371Z",
+  "generated_at": "2026-09-29T10:10:37.174Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.8,
-    "generated_at": "2026-09-26T08:58:05.506Z"
+    "coverage_pct": 73.6,
+    "generated_at": "2026-09-29T10:03:10.676Z"
   },
-  "generatedFromSnapshots": 16005,
+  "generatedFromSnapshots": 15986,
   "boards": [
     "quality-consumer-discretionary",
     "quality-consumer-staples",
@@ -37,43 +37,43 @@
   },
   "counts": {
     "quality-consumer-discretionary": {
-      "profitable": 1072,
+      "profitable": 1068,
       "unprofitable": 0
     },
     "quality-consumer-staples": {
-      "profitable": 512,
+      "profitable": 509,
       "unprofitable": 0
     },
     "quality-energy": {
-      "profitable": 336,
+      "profitable": 335,
       "unprofitable": 0
     },
     "quality-health-care": {
-      "profitable": 743,
+      "profitable": 740,
       "unprofitable": 0
     },
     "quality-industrials": {
-      "profitable": 1967,
+      "profitable": 1949,
       "unprofitable": 0
     },
     "quality-it-services": {
-      "profitable": 123,
+      "profitable": 122,
       "unprofitable": 0
     },
     "quality-materials": {
-      "profitable": 924,
+      "profitable": 921,
       "unprofitable": 0
     },
     "quality-semiconductors": {
-      "profitable": 307,
+      "profitable": 310,
       "unprofitable": 0
     },
     "quality-software-comm-services": {
-      "profitable": 480,
+      "profitable": 476,
       "unprofitable": 0
     },
     "quality-tech-hardware": {
-      "profitable": 581,
+      "profitable": 582,
       "unprofitable": 0
     },
     "quality-utilities": {
@@ -83,18 +83,18 @@
   },
   "excluded": {
     "balance-sheet-bank": 720,
-    "data-suspect": 19,
-    "dup-issuer": 2650,
-    "insurer": 299,
-    "lender-gp0": 32,
-    "mortgage-reit": 15,
+    "data-suspect": 51,
+    "dup-issuer": 2639,
+    "insurer": 300,
+    "lender-gp0": 6,
+    "mortgage-reit": 14,
     "no-axes": 8,
-    "no-revenue": 128,
-    "no-sector": 85,
+    "no-revenue": 121,
+    "no-sector": 67,
     "non-operating-rev": 135,
-    "non-us": 1563,
-    "qc-not-compounder": 1531,
-    "qc-sector-unsupported": 1235,
-    "telecom": 194
+    "non-us": 1560,
+    "qc-not-compounder": 1528,
+    "qc-sector-unsupported": 1282,
+    "telecom": 197
   }
 }
