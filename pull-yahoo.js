@@ -4107,7 +4107,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         catch (e) { throw originalError || e; }
         if (reloadOnly) reloadStats.reload_failed++;
         console.warn(`::warning::${stock.ticker} ${reload.REASON}: reload-failed (${cause}); retaining fundamentals and cache, updating price only`);
-        results.push({ ...r, fundamentalsRetainedReason: cause, ...(staleQuarterSelected ? { quarterReload: { reason: reload.REASON, outcome: 'reload-failed', cause,
+        results.push({ ...r, status: reloadOnly && r.status === 'price-only' ? 'reload-retained' : r.status,
+          fundamentalsRetainedReason: cause, ...(staleQuarterSelected ? { quarterReload: { reason: reload.REASON, outcome: 'reload-failed', cause,
           previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reloadSelected.get(stock.ticker).end } } : {}) });
       };
       let forceFundamentalsFull = staleFundamentals || staleEarnings || vollPullAngefordert || staleQuarterSelected;
@@ -5023,7 +5024,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         return;  // skip this stock
       }
       // Tag 133c: data-quality grade — A/B/C/D nach Anteil fehlender kritischer Felder.
-      const previousHistory = _parsedSnapshot && yahooQ4.prepareSnapshot(_parsedSnapshot);
+      const previousHistory = _parsedSnapshot && yahooQ4.applyKnownCases(_parsedSnapshot).snapshot;
       if (previousHistory) {
         require('./lib/reload-history.js').preserveReloadHistory(canonical, previousHistory);
         const unsafeGaps = (canonical.meta.reloadHistoryGaps || []).filter(g => ['statement-basis-unverified', 'period-revised'].includes(g.reason));

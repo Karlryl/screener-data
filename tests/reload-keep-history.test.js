@@ -44,7 +44,7 @@ async function rejected(sourceOverride = source) {
   const f = fixture({ snapshots: [s], annualResponses: thin, pullSource: sourceOverride, quotePrice: 123, quoteMarketCap: 2e12 });
   const sp = path.join(f.out, 'OLD.json'), cp = path.join(root, 'fundamentals-cache/OLD.json');
   const before = [f.files.get(sp).toString(), f.files.get(cp).toString()];
-  const m = await f.run(); assert.equal(m.results[0].status, 'price-only');
+  const m = await f.run(); assert.equal(m.results[0].status, 'reload-retained');
   assert.equal(f.files.get(cp).toString(), before[1], 'rejected answer poisoned cache');
   const out = f.stored('OLD');
   assert.deepEqual(out.annual, s.annual); assert.deepEqual(out.timeseries, s.timeseries);
@@ -53,8 +53,8 @@ async function rejected(sourceOverride = source) {
   assert.equal(m.results[0].fundamentalsRetainedReason, 'shared-period fundamentals missing');
   const slim = JSON.parse(f.files.get(path.join(f.out, '_manifest.json')));
   const merged = require('../scripts/merge-shard-manifests.js').mergeManifests([slim], 1, 1);
-  assert.equal(merged.n_retained, 0); assert.equal(merged.n_ok, 1);
-  assert.equal(merged.n_full, 0); assert.equal(merged.n_priceonly, 1);
+  assert.equal(merged.n_retained, 1); assert.equal(merged.n_ok, 1);
+  assert.equal(merged.n_full, 0); assert.equal(merged.n_priceonly, 0);
   return f;
 }
 async function bundle(sourceOverride = source, conflict = false) {
@@ -174,7 +174,7 @@ async function main() {
       const f = fixture(options), cp = path.join(root, 'fundamentals-cache/OLD.json'), sp = path.join(f.out, 'OLD.json');
       f.files.delete(cp); const before = f.files.get(sp).toString();
       const rejects = !old;
-      assert.equal((await f.run()).results[0].status, rejects ? 'price-only' : 'ok');
+      assert.equal((await f.run()).results[0].status, rejects ? 'reload-retained' : 'ok');
       assert.notEqual(f.files.get(sp).toString(), before); assert.equal(f.files.has(cp), !rejects);
       if (rejects) { assert.deepEqual(f.stored('OLD').timeseries, s.timeseries); assert.deepEqual(f.stored('OLD').annual, s.annual); }
     });
@@ -201,7 +201,7 @@ async function main() {
     a['cash-flow'][2].operatingCashFlow = 777; delete a['cash-flow'][2].freeCashFlow;
     const f = fixture({ snapshots: [s], annualResponses: a });
     const before = f.files.get(path.join(f.out, 'OLD.json')).toString();
-    assert.equal((await f.run()).results[0].status, 'price-only');
+    assert.equal((await f.run()).results[0].status, 'reload-retained');
     assert.deepEqual(f.stored('OLD').annual, JSON.parse(before).annual);
   });
   await check('missing in both remains null with a reason; no old year resurrected as current', async () => {

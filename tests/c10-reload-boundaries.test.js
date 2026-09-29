@@ -39,10 +39,15 @@ cases['ordinary-failures'] = async () => {
 cases['window-slide'] = async () => {
   const s = await baseline();
   s.timeseries.revenueQ.push({ value: 1 }); s.timeseries.revenueQEnds.push('2025-03-31');
-  const f = fixture({ snapshots: [s], annualResponses: rows() });
+  const quarterlyRows = [
+    { date: '2025-12-31', totalRevenue: 90, grossProfit: 30, operatingIncome: 15, netIncome: 8 },
+    { date: '2026-03-31', totalRevenue: 100, grossProfit: 40, operatingIncome: 20, netIncome: 10 },
+    { date: '2026-06-30', totalRevenue: 110, grossProfit: 45, operatingIncome: 25, netIncome: 12 },
+  ];
+  const f = fixture({ snapshots: [s], annualResponses: rows(), quarterlyRows });
   const before = f.files.get(cp).toString(), m = await f.run();
   assert.equal(m.results[0].status, 'ok'); assert.equal(m.n_stale_quarter_reload_failed, 0);
-  assert.deepEqual(vals(f.stored('OLD').timeseries.revenueQ), [100, 90]);
+  assert.deepEqual(vals(f.stored('OLD').timeseries.revenueQ), [110, 100, 90]);
   assert.notEqual(f.files.get(cp).toString(), before, 'legitimate cache window slide must write');
 };
 cases['manual-shared-loss'] = async () => {
@@ -77,13 +82,49 @@ cases['shrink-with-new-values'] = async () => {
   assert.equal(f.stored('OLD').annual.annualFCF.length, 3);
   assert.equal(f.stored('OLD').annual.annualRev[0].value, 200);
 };
+for (const shape of ['newest-quarter-only', 'newest-year-only', 'middle-year-missing']) {
+  cases[shape] = async () => {
+    for (const manual of [false, true]) {
+      const s = await baseline(), a = rows();
+      const options = { snapshots: [s], annualResponses: a, manual: manual ? ['OLD'] : [], quotePrice: 123, quoteMarketCap: 2e12 };
+      if (shape === 'newest-quarter-only') {
+        const dates = ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'];
+        for (const field of ['revenueQ', 'grossProfitQ', 'opIncQ', 'netIncomeQ']) {
+          s.timeseries[field] = dates.map((_, i) => ({ value: 100 - i }));
+          if (field !== 'netIncomeQ') s.timeseries[field + 'Ends'] = dates.slice();
+        }
+        options.quarterlyRows = [{ date: '2026-06-30', totalRevenue: 120, grossProfit: 40, operatingIncome: 20, netIncome: 10 }];
+      } else for (const key of Object.keys(a)) {
+        if (shape === 'newest-year-only') a[key] = a[key].slice(-1);
+        else a[key].splice(1, 1);
+      }
+      const f = fixture(options);
+      if (manual) f.files.delete(cp); // Exercise the provider answer, not the ordinary warm-cache path.
+      const cache = f.files.get(cp)?.toString(), m = await f.run(), out = f.stored('OLD');
+      assert.equal(m.results[0].status, manual ? 'ok' : 'reload-retained');
+      assert.equal(m.n_stale_quarter_reload_failed, manual ? 0 : 1);
+      if (manual) {
+        assert.equal(shape === 'newest-quarter-only' ? out.timeseries.revenueQ.length : out.annual.annualRev.length,
+          shape === 'middle-year-missing' ? 3 : 1, 'Ordinary full pulls keep their existing behavior');
+        assert(f.files.has(cp));
+      } else {
+        assert.deepEqual(out.annual, s.annual); assert.deepEqual(out.timeseries, s.timeseries);
+        for (const key of ['fetchedAt', 'fundamentalsAsOf', 'fundamentalsTimeseriesFetchedAt']) assert.equal(out.meta[key], s.meta[key]);
+        assert.equal(out.meta.reloadHistoryArchive, s.meta.reloadHistoryArchive);
+        assert.equal(out.price.regularMarketPrice, 123); assert.equal(out.marketCap.value, 2e12);
+        assert.equal(f.files.get(cp).toString(), cache);
+      }
+      assert.equal(out.meta.asOf, new Date(NOW).toISOString());
+    }
+  };
+}
 cases['shared-loss-price-refresh'] = async () => {
   const s = await baseline(), a = rows();
   a.financials[2].totalRevenue = 777; delete a.financials[2].operatingIncome;
   a.financials.push({ ...a.financials.at(-1), date: '2026-06-30', totalRevenue: 200, operatingIncome: 30 });
   const f = fixture({ snapshots: [s], annualResponses: a, quotePrice: 123, quoteMarketCap: 2e12 });
   const cache = f.files.get(cp).toString(), m = await f.run(), out = f.stored('OLD');
-  assert.equal(m.results[0].status, 'price-only');
+  assert.equal(m.results[0].status, 'reload-retained');
   assert.equal(m.n_stale_quarter_reload_failed, 1);
   assert.equal(m.results[0].fundamentalsRetainedReason, 'shared-period fundamentals missing');
   assert.deepEqual(out.annual, s.annual); assert.deepEqual(out.timeseries, s.timeseries);
@@ -92,6 +133,14 @@ cases['shared-loss-price-refresh'] = async () => {
   assert.equal(out.meta.asOf, new Date(NOW).toISOString()); assert.equal(f.files.get(cp).toString(), cache);
   const full = JSON.parse(f.files.get(path.join(f.out, '_manifest-full.json')));
   assert.equal(full.results[0].quarterReload.cause, 'shared-period fundamentals missing');
+  const slim = JSON.parse(f.files.get(path.join(f.out, '_manifest.json')));
+  for (const manifest of [slim, require('../scripts/merge-shard-manifests.js').mergeManifests([slim], 1, 1)]) {
+    assert.equal(manifest.n_retained, 1); assert.equal(manifest.n_priceonly, 0);
+    assert.equal(manifest.n_full, 0); assert.equal(manifest.n_ok, 1);
+    assert.equal(coverage.manifestNumbersSane(manifest, 1), true);
+    const marker = coverage.buildMarker(coverage.classify(manifest, 1, 1), manifest);
+    assert.equal(marker.n_retained, 1); assert.deepEqual(coverage.validateMarker(marker), []);
+  }
 };
 cases['revenue-conflict'] = async () => {
   const f = fixture(), periods = ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'];
@@ -121,7 +170,7 @@ cases['annual-period-regression'] = async () => {
   const old = await baseline(), a = rows();
   for (const group of Object.values(a)) for (const r of group) r.date = String(Number(r.date.slice(0, 4)) - 1) + r.date.slice(4);
   const f = fixture({ snapshots: [old], annualResponses: a, quotePrice: 123 }), cache = f.files.get(cp).toString();
-  assert.equal((await f.run()).results[0].status, 'price-only');
+  assert.equal((await f.run()).results[0].status, 'reload-retained');
   assert.deepEqual(f.stored('OLD').annual.annualRevEnds, old.annual.annualRevEnds);
   assert.equal(f.stored('OLD').price?.regularMarketPrice, 123); assert.equal(f.files.get(cp).toString(), cache);
 };
@@ -140,7 +189,7 @@ cases['trimmed-quarter-cache-ni'] = async () => {
 cases['empty-annual-scope'] = async () => {
   for (const manual of [false, true]) {
     const old = await baseline(), f = fixture({ snapshots: [old], annualEmpty: true, manual: manual ? ['OLD'] : [] }); f.files.delete(cp);
-    assert.equal((await f.run()).results[0].status, manual ? 'ok' : 'price-only');
+    assert.equal((await f.run()).results[0].status, manual ? 'ok' : 'reload-retained');
     if (!manual) assert.deepEqual(f.stored('OLD').annual, old.annual);
     else assert.deepEqual(f.stored('OLD').annual.annualRev, []);
   }

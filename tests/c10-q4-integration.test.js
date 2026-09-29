@@ -32,6 +32,19 @@ async function baseline(ticker) {
 }
 (async () => {
   const corrected = await baseline('GEST.MC'); let passed = 0;
+  const repeat = fixture({ ...options, snapshots: [structuredClone(corrected)], manual: ['GEST.MC'] });
+  repeat.files.delete(path.join(root, 'fundamentals-cache/GEST.MC.json'));
+  const warnings = [], originalWarn = console.warn;
+  let repeated;
+  try {
+    console.warn = (...args) => warnings.push(args.join(' '));
+    repeated = await repeat.run();
+  } finally { console.warn = originalWarn; }
+  assert.equal(repeated.results[0].status, 'ok');
+  const slim = JSON.parse(repeat.files.get(path.join(repeat.out, '_manifest.json')));
+  assert.deepEqual(slim.yahooQ4HandTable, { observed: 2, corrected: 0, missing: 2, stale: 0, alreadyCorrected: 2 });
+  assert.equal(warnings.filter(line => line.startsWith('[yahoo-q4-hand-table]')).length, 4);
+  passed++; console.log('PASS prior history does not inflate run-wide Q4 counters or warnings');
   for (const priorAnnual of ['same', 'missing', 'revised']) for (const descriptors of [false, true]) for (const manual of [false, true]) {
     const old = structuredClone(corrected);
     Object.assign(old.meta, { asOf: '2026-09-26T03:00:00Z', fundamentalsAsOf: '2026-09-26T03:00:00Z',
