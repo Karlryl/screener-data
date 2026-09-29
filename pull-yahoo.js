@@ -3192,14 +3192,25 @@ function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
   );
 }
 
-// One-run recovery priority for explicitly restored, still-missing snapshots.
+// Retry explicitly restored, still-missing snapshots for 14 UTC calendar days.
 // Stable partition: every other ticker retains its relative order and pull rules.
 function prioritizeRestoredMissingSnapshots(stocks, outputDir, today) {
   const date = today.toISOString().slice(0, 10);
   const restored = [], ordinary = [];
   for (const stock of stocks) {
-    const due = stock.restoreFullPullOn === date
-      && !fs.existsSync(path.join(outputDir, safeSnapshotFilename(stock.ticker)));
+    let due = false;
+    if (stock.restoreFullPullOn && !fs.existsSync(path.join(outputDir, safeSnapshotFilename(stock.ticker)))) {
+      const start = Date.parse(stock.restoreFullPullOn);
+      const valid = /^\d{4}-\d{2}-\d{2}$/.test(stock.restoreFullPullOn)
+        && Number.isFinite(start) && new Date(start).toISOString().slice(0, 10) === stock.restoreFullPullOn;
+      const ageDays = valid ? (Date.parse(date) - start) / 86400000 : NaN;
+      due = valid && ageDays >= 0 && ageDays < 14;
+      if (!valid || ageDays >= 14) {
+        console.warn(`::warning::Wiederaufnahme ${stock.ticker}: Datensatz fehlt; ${valid
+          ? '14-Tage-Vorrang seit ' + stock.restoreFullPullOn + ' abgelaufen'
+          : 'ungueltiges Wiederaufnahmedatum'}. Firma bleibt in der normalen Abrufliste; Wiederaufnahme pruefen.`);
+      }
+    }
     (due ? restored : ordinary).push(stock);
   }
   return restored.concat(ordinary);
@@ -3253,9 +3264,10 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
   fs.mkdirSync(outputDir, { recursive: true });
   let missing = 0;
   for (const name of fs.readdirSync(incomingDir).filter(n => n.endsWith('.json')).sort()) {
+    if (isMetadataSnapshot(name)) continue;
     const raw = fs.readFileSync(path.join(incomingDir, name), 'utf8');
     const incoming = JSON.parse(raw);
-    if (!isMetadataSnapshot(name) && incoming.marketCap && incoming.marketCap.missing === true) {
+    if (incoming.marketCap && incoming.marketCap.missing === true) {
       const ticker = incoming.meta && incoming.meta.ticker;
       const at = incoming.marketCap.asOf;
       if (!ticker || safeSnapshotFilename(ticker) !== name || incoming.marketCap.value !== null ||

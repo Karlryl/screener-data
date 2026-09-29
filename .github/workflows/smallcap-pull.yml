@@ -189,7 +189,7 @@ jobs:
           for f in snapshots-smallcap/*.json; do
             [ -e "$f" ] || continue
             base="$(basename "$f")"
-            if [ "$base" = "_manifest.json" ]; then continue; fi
+            case "$base" in _manifest*|_last_good_disk.json) continue ;; esac
             if ! cmp -s "$f" "snapshots-smallcap-baseline/$base" 2>/dev/null; then
               cp "$f" "snapshots-smallcap-fresh/$base"
             fi
@@ -251,6 +251,7 @@ jobs:
       # B5: cold workers emit an explicit incomplete null-cap row. Apply its null
       # to the restored financials instead of reviving a cap or erasing financials.
       - name: Merge small-cap observations
+        id: merge_smallcap
         run: node -e "console.log(require('./pull-yahoo.js').mergeSmallcapSnapshots('snapshots-smallcap-incoming', 'snapshots-smallcap'))"
 
       # DIAGNOSTIC, non-blocking: reines Log, kein zweiter Alarm-Kanal neben Karls einzigem
@@ -370,7 +371,7 @@ jobs:
           retention-days: 30
 
       - name: Save merged small-cap store
-        if: always()
+        if: always() && steps.merge_smallcap.outcome == 'success'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: snapshots-smallcap
@@ -385,7 +386,7 @@ jobs:
       # continue-on-error: ein fehlender Store ist eine ::error::-Zeile (if-no-files-found: error),
       # kippt aber nicht den Pull — das Artefakt ist Messbeleg, kein Lieferweg.
       - name: Upload merged small-cap store (T135 measurement)
-        if: always()
+        if: always() && steps.merge_smallcap.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
