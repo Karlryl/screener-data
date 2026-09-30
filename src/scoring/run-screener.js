@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../../lib/yahoo-q4-known-cases.js');
+const { prepareSnapshot: prepareYahooQ4Snapshot, FAILURE_CODE: HAND_TABLE_FAILED } = require('../../lib/yahoo-q4-known-cases.js');
 
 // Read-only overlay also reaches cached/price-only snapshots in the next scoring run.
 function readScoringSnapshot(file) {
@@ -299,7 +299,7 @@ function loadUniverse(snapDir = SNAP_DIR, watchlistPath = WATCHLIST_PATH) {
     let s;
     try {
       s = readScoringSnapshot(path.join(snapDir, f));
-    } catch (_) { parseFail++; continue; } // defekter Snapshot
+    } catch (e) { if (e.code === HAND_TABLE_FAILED) throw e; parseFail++; continue; } // defekter Snapshot; Handtabellen-Fehler -> Lauf rot
     if (s && s.meta && s.meta.ticker) u.push(s);
     else skippedNoMeta++;
   }
@@ -419,7 +419,7 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
     if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
     let s;
     try { s = readScoringSnapshot(path.join(snapDir, f)); }
-    catch (_) { parseFail++; continue; }
+    catch (e) { if (e.code === HAND_TABLE_FAILED) throw e; parseFail++; continue; }
     if (s && s.meta && s.meta.ticker) u.push(s);
     else skippedNoMeta++;
   }

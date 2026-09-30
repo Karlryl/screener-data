@@ -374,6 +374,8 @@ const DATA_SUSPECT_LAMPS = ['newestQtrSuspect', 'annualCurrencyLeak'];
 const EINMALERTRAG_BLIND = ['revGrowthLevel', 'revAcceleration', 'gpGrowth', 'ruleOfX', 'capitalEfficiency'];
 
 function isDataSuspect(s, lampsActive, action) {
+  // A fingerprinted wrong-issuer packet is not a basis for a company score.
+  if (s?.meta?.financialDataIssue) return true;
   // Fabrikations-Lampen (erfundenes Quartal / annual-currency-Leak) gelten fuer ALLE Tracks.
   if (lampsActive.some((l) => DATA_SUSPECT_LAMPS.includes(l))) return true;
   // B5: explicit missing-size observations also exclude the Survival track.
@@ -922,7 +924,10 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
     // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
     if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive, r.action)) {
-      results.push({ ...base, action: 'exclude', formulaId: null, track: null, score: null, reason: 'data-suspect' });
+      // reason stays a stable code (bucket key in produceRankings); the German text rides separately.
+      const reasonText = s.meta?.financialDataIssue?.reason;
+      results.push({ ...base, action: 'exclude', formulaId: null, track: null, score: null,
+        reason: 'data-suspect', ...(reasonText ? { reasonText } : {}) });
       continue;
     }
     if (r.action !== 'route') {
