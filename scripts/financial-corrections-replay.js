@@ -17,7 +17,8 @@ const clone = x => structuredClone(x);
 
 function diffCells(before, after, events) {
   const restore = clone(after), changes = [];
-  for (const e of events.filter(e => ['corrected', 'missing'].includes(e.status))) {
+  // Stale cells are withheld as missing, so they are cell changes too and must be listed.
+  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status))) {
     const original = before[e.container][e.field][e.index];
     const changed = after[e.container][e.field][e.index];
     if (serial(original) === serial(changed)) continue;
@@ -200,7 +201,7 @@ function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
   for (const [file, before] of hashes) assert.equal(hash(fs.readFileSync(path.join(dir, file))), before, 'Disk changed: ' + file);
   return { snapshots: baseline.length, authorizedSnapshots: beforeU.length, watchlistRef, publicationRef: ref,
     unchangedSnapshots: unchanged,
-    changedCells: changes.length, quarantines, changes, allOtherRowsByteIdentical: true,
+    changedCells: changes.length, staleCells: changes.filter(c => c.status === 'stale').length, quarantines, changes, allOtherRowsByteIdentical: true,
     diskHashesUnchanged: hashes.length, aggregateSha256: hash(serial(hashes)),
     zeroRule: { candidateCells: zeroChanges.length, nonzeroChanges: nonzeroChangesByZeroRule,
       mode: modeForReplay(zeroBoardChanges.length), visibleScoreChanges: zeroBoardChanges.length, changes: zeroChanges },
@@ -215,7 +216,8 @@ if (require.main === module) {
   if (!dir) throw new Error('Supply read-only snapshot directory');
   const log = console.log, warn = console.warn; console.log = console.warn = () => {};
   let result;
-  try { result = replay(dir); } finally { console.log = log; console.warn = warn; }
+  // Optional publication ref: origin/gh-pages moves daily; pin it to reproduce a dated replay.
+  try { result = replay(dir, process.argv[3] ? { ref: process.argv[3] } : {}); } finally { console.log = log; console.warn = warn; }
   process.stdout.write(serial(result) + '\n');
 }
 module.exports = { replay, diffCells, compareVisible };

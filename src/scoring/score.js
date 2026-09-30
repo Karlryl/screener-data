@@ -924,8 +924,10 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
     // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
     if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive, r.action)) {
+      // reason stays a stable code (bucket key in produceRankings); the German text rides separately.
+      const reasonText = s.meta?.financialDataIssue?.reason;
       results.push({ ...base, action: 'exclude', formulaId: null, track: null, score: null,
-        reason: s.meta?.financialDataIssue?.reason || 'data-suspect' });
+        reason: 'data-suspect', ...(reasonText ? { reasonText } : {}) });
       continue;
     }
     if (r.action !== 'route') {

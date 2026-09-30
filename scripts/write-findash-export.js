@@ -299,8 +299,9 @@ function ergaenzeBelegpunkte(out) {
 
 // Ein Anwender fuer alle drei Zeilen-Mapper — drei Kopien derselben Regel laufen auseinander.
 function ergaenzeWaehrungsbeleg(out) {
+  // Additive, optional field (docs/findash-export-v1.md); lamps stay closed keys the consumer knows.
   const reasons = snapAbleitungenFuer(out.ticker).financialReasons;
-  if (reasons.length) out.lamps = [...new Set([...reasons, ...(out.lamps || [])])];
+  if (reasons.length) out.financialDataReasons = reasons;
   const beleg = waehrungsbelegFuer(out.ticker);
   // Die Einheit des Feldes, nicht die Einheit des Werts: marketCap ist im v1-Vertrag
   // IMMER USD. Bisher stand das nur in der Doku und war fuer den Konsumenten nicht lesbar.

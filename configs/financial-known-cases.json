@@ -1,6 +1,12 @@
 {
   "schemaVersion": 1,
   "revision": "2026-09-29",
+  "coverage": [
+    { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "FSK", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "BANPU.BK", "field": "revenueQ", "coversThrough": "2026-03-31" }
+  ],
   "cases": [
     {
       "caseId": "htgc-2026-06-30-revenueQ",

@@ -3,7 +3,7 @@
 // Break-once targets memory-only modules/tables. Never target a writing test or live artifact.
 const assert = require('assert/strict'), fs = require('fs'), path = require('path'), os = require('os'), crypto = require('crypto');
 const { Module, createRequire } = require('module');
-const { applyFinancialCases, financialReasons, validateTable, table } = require('../lib/financial-known-cases.js');
+const { applyFinancialCases, financialReasons, validateTable, table, MISSING_REASONS } = require('../lib/financial-known-cases.js');
 const { applyZeroGuard, modeForReplay, policy, validatePolicy } = require('../lib/zero-financials-guard.js');
 const { norm } = require('../src/scoring/snapshot.js');
 const fixture = require('./fixtures/financial-known-cases.json').snapshots;
@@ -48,27 +48,101 @@ for (const c of table.cases) test(c.caseId + ' real cached input, absence, idemp
   assert.equal(applyFinancialCases(other).snapshot, other);
   // Every authority entry is broken once independently, not just the first row.
   const broken = clone(table); broken.cases = broken.cases.filter(x => x.caseId !== c.caseId);
+  // Coverage would withhold the now-unlisted period; drop it so this break isolates the case row.
+  broken.coverage = broken.coverage.filter(v => v.ticker !== c.ticker);
   const guard = config => assert.equal(norm(applyFinancialCases(input, { table: config }).snapshot, c.field)[i],
     c.replacementValue === null ? null : c.replacementValue * factor);
   assert.throws(() => guard(broken), assert.AssertionError); guard(table); breaks++;
 });
 
-test('stale values, wrong units/currency/source, duplicate dates and non-target rows stay byte-identical', () => {
-  for (const change of [
-    s => { s.timeseries.revenueQ[0].value++; },
-    s => { s.timeseries.revenueQ[0].currency = 'EUR'; },
-    s => { s.timeseries.revenueQ[0].multiplier = 1000; },
-    s => { s.timeseries.revenueQ[0].periodType = '12M'; },
-    s => { s.timeseries.revenueQ[0].source = 'SEC'; },
-    s => { s.meta.reportingCurrencyOriginal = 'EUR'; },
-    s => { s.timeseries.revenueQEnds[1] = s.timeseries.revenueQEnds[0]; },
+test('stale values, wrong units/currency/source and duplicate dates become missing with a reason code', () => {
+  for (const [code, change] of [
+    ['vendor-value-changed', s => { s.timeseries.revenueQ[0].value++; }],
+    ['context-changed', s => { s.timeseries.revenueQ[0].currency = 'EUR'; }],
+    ['context-changed', s => { s.timeseries.revenueQ[0].multiplier = 1000; }],
+    ['context-changed', s => { s.timeseries.revenueQ[0].periodType = '12M'; }],
+    ['context-changed', s => { s.timeseries.revenueQ[0].source = 'SEC'; }],
+    ['context-changed', s => { s.meta.reportingCurrencyOriginal = 'EUR'; }],
+    ['context-changed', s => { s.timeseries.revenueQEnds[1] = s.timeseries.revenueQEnds[0]; }],
   ]) {
     const input = clone(fixture.HTGC); change(input);
-    const original = serial(input.timeseries.revenueQ[0]);
+    const original = serial(input);
     const r = applyFinancialCases(input);
-    assert.equal(serial(r.snapshot.timeseries.revenueQ[0]), original);
-    assert.ok(r.events.some(e => e.status === 'stale'));
+    const row = r.snapshot.timeseries.revenueQ[0];
+    assert.equal(value(row), null, 'Stale vendor value is withheld, never kept or zeroed');
+    assert.equal(row.financialMissing.reasonCode, code);
+    assert.equal(row.financialMissing.reason, MISSING_REASONS[code]);
+    assert.ok(financialReasons(r.snapshot).includes(MISSING_REASONS[code]));
+    assert.ok(r.events.some(e => e.status === 'stale' && e.reasonCode === code && e.index === 0));
+    assert.equal(serial(input), original, 'Input is not mutated');
+    const again = applyFinancialCases(r.snapshot);
+    assert.equal(serial(again.snapshot), serial(r.snapshot), 'Idempotent');
+    assert.ok(again.events.some(e => e.status === 'stale' && e.index === 0), 'Still counted on a later pass');
   }
+  // Absence: an unchanged HTGC packet has no stale event at all.
+  assert.ok(!applyFinancialCases(clone(fixture.HTGC)).events.some(e => e.status === 'stale'));
+});
+
+// HIGH-1: a vendor quarter newer than the last primary-source-verified period must not pass silently.
+const nextQuarter = (s, v = 60e6) => {
+  const ts = s.timeseries;
+  ts.revenueQ = [{ value: v }, ...ts.revenueQ].slice(0, ts.revenueQ.length);
+  ts.revenueQEnds = ['2026-09-30', ...ts.revenueQEnds].slice(0, ts.revenueQEnds.length);
+  return s;
+};
+test('coversThrough: newer vendor quarter is missing and stale; covered quarters corrected; unrelated ticker untouched', () => {
+  assert.deepEqual(table.coverage.map(v => v.ticker).sort(), ['ARCC', 'BANPU.BK', 'FSK', 'HTGC']);
+  for (const ticker of ['HTGC', 'ARCC', 'FSK']) {
+    const input = nextQuarter(clone(fixture[ticker])), original = serial(input);
+    const r = applyFinancialCases(input);
+    const row = r.snapshot.timeseries.revenueQ[0];
+    assert.equal(value(row), null);
+    assert.equal(row.financialMissing.reasonCode, 'period-after-coverage');
+    assert.equal(row.financialMissing.originalVendorRow.value, 60e6);
+    assert.ok(financialReasons(r.snapshot).includes(MISSING_REASONS['period-after-coverage']));
+    assert.equal(r.events.filter(e => e.status === 'stale').length, 1);
+    assert.equal(r.events.find(e => e.status === 'stale').period, '2026-09-30');
+    // Covered periods are still corrected.
+    for (const c of table.cases.filter(c => c.ticker === ticker)) {
+      const i = r.snapshot.timeseries.revenueQEnds.indexOf(c.period);
+      if (i >= 0) assert.equal(value(r.snapshot.timeseries.revenueQ[i]), c.replacementValue * input.meta.fxRateApplied);
+    }
+    assert.equal(serial(input), original);
+    assert.equal(serial(applyFinancialCases(r.snapshot).snapshot), serial(r.snapshot));
+    // Derived growth sees "missing": the quarterly leg drops, no fallback 0 enters the ratio.
+    const axes = require('../src/scoring/axes.js');
+    assert.equal(axes.revQuartalsYoY(r.snapshot), null);
+    const g = axes.revGrowthLevel(r.snapshot);
+    assert.ok(g === null || Math.abs(g / 100 - axes.revAnnualYoY(r.snapshot)) < 1e-12, 'Only the annual leg may carry growth');
+  }
+  // Unrelated ticker with the same new quarter: byte-identical, no event.
+  const other = nextQuarter(clone(fixture.HTGC)); other.meta.ticker = 'UNLISTED';
+  const u = applyFinancialCases(other);
+  assert.equal(u.snapshot, other); assert.equal(u.events.length, 0);
+  // Covered history without a new quarter: no stale event (presence and absence).
+  assert.ok(!applyFinancialCases(clone(fixture.ARCC)).events.some(e => e.status === 'stale'));
+  // coversThrough must equal the last verified period.
+  const bad = clone(table); bad.coverage[0].coversThrough = '2026-09-30';
+  assert.throws(() => validateTable(bad), /Invalid financial coverage/);
+  // Break-once in memory: without the coverage guard the new quarter passes as raw vendor data.
+  const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '  for (const v of (config.coverage || []).filter(v => v.ticker === ticker)) {',
+    '  for (const v of [].filter(v => v.ticker === ticker)) {'));
+  const guard = fn => assert.equal(value(fn(nextQuarter(clone(fixture.HTGC))).snapshot.timeseries.revenueQ[0]), null);
+  assert.throws(() => guard(broken.applyFinancialCases), assert.AssertionError); guard(applyFinancialCases); breaks++;
+});
+
+test('stale count raises a ::warning:: summary line; clean run has none', () => {
+  // The summary is emitted on process exit, so it is observed in a child process (no files written).
+  const summary = snap => {
+    const r = require('child_process').spawnSync(process.execPath, ['-e',
+      "require('./lib/yahoo-q4-known-cases.js').prepareSnapshot(JSON.parse(require('fs').readFileSync(0,'utf8')))"],
+      { cwd: path.join(__dirname, '..'), input: serial(snap), encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    return r.stderr.split(/\r?\n/).find(l => l.includes('[financial-hand-table-summary]'));
+  };
+  assert.ok(summary(nextQuarter(clone(fixture.HTGC))).startsWith('::warning::[financial-hand-table-summary]'));
+  assert.ok(summary(clone(fixture.HTGC)).startsWith('[financial-hand-table-summary]'));
 });
 
 test('BANPU hold is an exact three-anchor packet, not a ticker rule; raw mixed metrics are preserved', () => {
@@ -82,7 +156,8 @@ test('BANPU hold is an exact three-anchor packet, not a ticker rule; raw mixed m
   assert.equal(isDataSuspect(result, [], 'survival'), true);
   const scored = require('../src/scoring/score.js').scoreUniverse([result], require('../src/scoring/formulas/index.js'))[0];
   assert.equal(scored.score, null);
-  assert.equal(scored.reason, result.meta.financialDataIssue.reason, 'Existing excluded-list consumer shows this reason verbatim');
+  assert.equal(scored.reason, 'data-suspect', 'Stable code: it is the excluded bucket key');
+  assert.equal(scored.reasonText, result.meta.financialDataIssue.reason, 'Text rides in a separate field');
   for (const anchor of table.quarantines[0].fingerprint) {
     const other = clone(input); const parent = anchor.path.slice(0,-1).reduce((v,k) => v[k], other);
     parent[anchor.path.at(-1)]++;
@@ -152,7 +227,7 @@ test('more than 50 visible changes forces shadow; exactly 50 remains eligible', 
   assert.throws(()=>assert.equal(broken.modeForReplay(51),'shadow'),assert.AssertionError); breaks++;
 });
 
-test('real native/USD producer, readers, PIT and exported visible lamp use the same overlay', () => {
+test('real native/USD producer, readers, PIT and exported reasons field use the same overlay', () => {
   const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'financial-cases-test-'));
   const live=path.resolve(__dirname,'../snapshots');
   assert.notEqual(path.resolve(tmp),live); assert.ok(!path.resolve(tmp).startsWith(live+path.sep));
@@ -170,8 +245,11 @@ test('real native/USD producer, readers, PIT and exported visible lamp use the s
   assert.equal(sha(path.join(tmp,'BANPU.BK.json')),before);
   const exporter=require('../scripts/write-findash-export.js');
   for(const map of [exporter.mapBoardRow,exporter.mapOverviewRow,exporter.mapSurvivalRow]) {
-    const row=map({ticker:'YSN.DE',lamps:[],score:50,track:'profitable'},0);
-    assert.ok(row.lamps[0].startsWith('Bruttogewinn fehlt:'),'Existing lamps consumer renders reason');
+    const row=map({ticker:'YSN.DE',lamps:['peakMargin'],score:50,track:'profitable'},0);
+    assert.deepEqual(row.lamps,['peakMargin'],'lamps stay closed registry keys');
+    assert.ok(row.financialDataReasons[0].startsWith('Bruttogewinn fehlt:'),'Reason rides in the additive field');
+    const clean=map({ticker:'UNLISTED',lamps:[],score:50,track:'profitable'},0);
+    assert.ok(!Object.hasOwn(clean,'financialDataReasons'),'Field absent when there is no reason');
   }
   const adapter=require('../lib/yahoo-q4-known-cases.js');
   const broken=moduleCopy('lib/yahoo-q4-known-cases.js',s=>s,{
@@ -179,6 +257,36 @@ test('real native/USD producer, readers, PIT and exported visible lamp use the s
   });
   const guard=fn=>assert.equal(fn(clone(fixture.HTGC)).timeseries.revenueQ[0].value,149114000);
   assert.throws(()=>guard(broken.prepareSnapshot),assert.AssertionError);guard(adapter.prepareSnapshot);breaks++;
+});
+
+// LOW-6: the daily pull's own converter (processOne -> _convertSnapshotToUSDGuarded), then disk,
+// then the scoring job's reader. Temp dir only; never the live snapshot store.
+test('end to end: pull converter -> disk -> scoring reader for HTGC, BANPU, secunet and a new HTGC quarter', () => {
+  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'financial-cases-e2e-'));
+  const live=path.resolve(__dirname,'../snapshots');
+  assert.notEqual(path.resolve(tmp),live); assert.ok(!path.resolve(tmp).startsWith(live+path.sep));
+  const { _convertSnapshotToUSDGuarded }=require('../pull-yahoo.js');
+  const { readScoringSnapshot }=require('../src/scoring/run-screener.js');
+  const through=(name,snap)=>{
+    assert.equal(_convertSnapshotToUSDGuarded(snap),true);
+    const file=path.join(tmp,name+'.json'); fs.writeFileSync(file,serial(snap));
+    return readScoringSnapshot(file);
+  };
+  const htgc=clone(fixture.HTGC); htgc.meta.fxConverted=false; // native USD packet as pulled
+  assert.deepEqual(norm(through('HTGC',htgc),'revenueQ'),[149114000,141536000,137430000,138093000,137459000]);
+  const banpu=through('BANPU.BK',clone(fixture['BANPU.BK']));
+  assert.equal(norm(banpu,'revenueQ')[0],1340143000); assert.ok(banpu.meta.financialDataIssue);
+  const ysn=through('YSN.DE',clone(fixture['YSN.DE']));
+  assert.deepEqual(norm(ysn,'grossProfitQ'),[null,null,null,null],'False zeros arrive as missing, not 0');
+  assert.ok(ysn.timeseries.grossProfitQ.every(r=>r.financialCorrection?.replacementNativeValue===null));
+  const next=nextQuarter(clone(fixture.HTGC)); next.meta.fxConverted=false;
+  const n=through('HTGC-next',next);
+  assert.equal(norm(n,'revenueQ')[0],null);
+  assert.equal(n.timeseries.revenueQ[0].financialMissing.reasonCode,'period-after-coverage');
+  assert.equal(norm(n,'revenueQ')[1],149114000);
+  // Absence: an unrelated company goes through the same path unchanged.
+  const other=clone(fixture.HTGC); other.meta.ticker='UNLISTED'; other.meta.fxConverted=false;
+  assert.equal(norm(through('UNLISTED',other),'revenueQ')[0],158252000);
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);

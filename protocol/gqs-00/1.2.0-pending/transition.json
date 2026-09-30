@@ -75,7 +75,7 @@
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
     "src/scoring/axes.js": "48022620d5dc488600b6d1dec1a5e048f26d9f6832daaaf7c8646884614d5288",
-    "src/scoring/score.js": "a01b5a903cf532d214f3afe6f1f97356c38fbe33b9addc934d92a3c60728d5ca",
+    "src/scoring/score.js": "a5af5595213c0ebffda09b34864384451b399acbc79cb335d099cd0d30534c1f",
     "src/scoring/smallcap-route.js": "46311394e2175e28e796efc5bb0453c4bed8f2802e6a21c4dfdb17fe204aa132",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "e68ecf6ebdf1da2f18c0eece6575035a964d449020275974dbad509d6a74dd03",
@@ -112,8 +112,9 @@
     "authority": "Explicit F2 writer brief: proven wrong board numbers repaired by hand table plus guard, otherwise missing with visible reason.",
     "scope": "Only score.js source fingerprint updated for exact wrong-issuer input hold. Frozen GQS-00 source and trace evidence unchanged.",
     "file": "src/scoring/score.js",
-    "sourceSha256LF": "a01b5a903cf532d214f3afe6f1f97356c38fbe33b9addc934d92a3c60728d5ca",
+    "sourceSha256LF": "a5af5595213c0ebffda09b34864384451b399acbc79cb335d099cd0d30534c1f",
     "evidence": "36 hand-table cells in 8 of 16118 snapshots; 1 exact mixed-issuer packet; all unrelated input bytes identical. See docs/financial-corrections.md.",
-    "review": "Build registration only; independent release review by Claude remains required. No merge, push or deployment by this job."
+    "review": "Build registration only; independent release review by Claude remains required. No merge, push or deployment by this job.",
+    "revision2026-09-30": "Review finding LOW-5: the exclusion reason stays the stable code data-suspect (bucket key); the issuer text moves to the separate field reasonText. Hash updated; no formula, weight or threshold change."
   }
 }
