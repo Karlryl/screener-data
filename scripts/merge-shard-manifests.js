@@ -141,7 +141,9 @@ function hasValidShardCounters(manifest) {
     if (!isPlainObject(q4) || Q4_COUNTERS.some(field =>
       Object.hasOwn(q4, field) && !isNonNegativeSafeInteger(q4[field]))) return false;
   }
-  const classified = manifest.n_full + manifest.n_priceonly;
+  const retained = manifest.n_retained ?? 0;
+  if (!Number.isSafeInteger(retained) || retained < 0) return false;
+  const classified = manifest.n_full + manifest.n_priceonly + retained;
   return Number.isSafeInteger(classified) && classified === manifest.n_ok;
 }
 
@@ -178,6 +180,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_ok: sum('n_ok'),
     n_full: sum('n_full'),
     n_priceonly: sum('n_priceonly'),
+    n_retained: sum('n_retained'),
     n_skipped_mcap: sum('n_skipped_mcap'),
     n_missing_mcap: sum('n_missing_mcap'),
     n_ccy_missing_completely: sum('n_ccy_missing_completely'),

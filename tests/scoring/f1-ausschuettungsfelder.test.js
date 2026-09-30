@@ -140,8 +140,10 @@ test('pull-yahoo fuehrt jede Reihe in den _writeFTSCache-Aufruf und in canonical
   // [^)]* vor der `{` schliesst die Funktionsdefinition `_writeFTSCache(a, b, c, payload) {`
   // aus: deren Parameterliste enthaelt kein `{` vor dem schliessenden `)`, also matcht der
   // Regex erst am tatsaechlichen Aufruf mit dem inline Objektliteral als viertem Argument.
-  const aufrufMatch = /_writeFTSCache\([^)]*\{([^}]*)\}[^)]*\)/s.exec(quelle);
-  assert.ok(aufrufMatch, 'kein _writeFTSCache(...)-Aufruf mit Objekt-Argument in pull-yahoo.js gefunden');
+  const aufrufMatch = /pendingFTSCache = JSON\.parse\(JSON\.stringify\(\{ partial: ftsPartial, payload: \{([^}]*)\}/s.exec(quelle);
+  assert.ok(aufrufMatch, 'staged FTS cache payload missing');
+  assert.match(quelle, /_writeFTSCache\(cachePath, FTS_CACHE_VERSION, pendingFTSCache\.partial, pendingFTSCache\.payload\)/,
+    'accepted staged payload must reach the actual cache writer');
   const payloadArgument = aufrufMatch[1];
   for (const feld of FELDER) {
     const variable = 'ftsAnnual' + feld.slice('annual'.length);
