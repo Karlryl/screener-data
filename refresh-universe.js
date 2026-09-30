@@ -29,9 +29,11 @@ try {
   // payload via console.log BEFORE throwing. On the screener() endpoint that
   // produced ~50MB of log spam per run, masking real errors (Run #104-#105
   // diagnosis required downloading 130MB+ logs). validation.logErrors=false
-  // suppresses the noisy logger; our existing try/catch around yf.screener
-  // still converts the throw into an empty-quotes return so coverage is
-  // unaffected. Constructor-level option (setGlobalConfig is not exposed in
+  // suppresses the noisy logger; validation itself stays ON. fetchScreener's
+  // catch converts the throw into an empty-quotes return + [WARN], except for
+  // the one tolerated drift (all leaf errors under /criteriaMeta, see
+  // nurCriteriaMetaDrift), where it keeps the validated quotes from e.result.
+  // Constructor-level option (setGlobalConfig is not exposed in
   // yahoo-finance2 v3.14.x — only constructor options work).
   yf = (typeof YF === 'function')
     ? new YF({
@@ -150,6 +152,9 @@ const SCREENER_IDS = [
   // lieferten nach dem Upgrade wieder Quotes). Also kein Zufallsausfall, sondern eine
   // Feld-Form, die das Schema der Bibliothek in DIESEM Bucket nicht kennt. Bleibt in der
   // Liste: er kostet nur einen Aufruf, und ein Heilen faellt so von selbst auf.
+  // 30.09.2026: still expected empty. Its rows miss required quote fields, i.e.
+  // errors under /quotes, which the /criteriaMeta drift tolerance in fetchScreener does
+  // NOT cover; the bucket stays [] + [WARN] until the library schema accepts the rows.
   'growth_technology_stocks',      // Hypergrowth-Tech
   'aggressive_small_caps',         // potential mid-cap upgrades
   'small_cap_gainers',
@@ -306,7 +311,7 @@ function _isNonEquityQuote(q) {
 // die Yahoos quoteSummary nicht kennt; sie kosten taeglich Rate-Limit-Budget fuer nichts.
 // Deshalb schon in der Entdeckung raus, damit sie nie in die Watchlist kommen.
 function _vorGateVerworfen(q) {
-  if (!q || !q.symbol) return true;
+  if (!q || typeof q.symbol !== 'string' || !q.symbol) return true;  // non-string symbol would crash .toUpperCase() downstream
   const sym = String(q.symbol).toUpperCase();
   if (isWhenIssuedSecurity(q.longName || q.shortName || '')) return true;
   if (/[$]/.test(sym)) return true;        // preferred-stock variants
@@ -354,16 +359,50 @@ function dedupKey(ticker, exchange, source) {
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function fetchScreener(id, region) {
+// 30.09.2026: Yahoo added three enum values to criteriaMeta.includeFields of the predefined
+// screeners (full_day_change_percent, full_day_change, full_day_price); yahoo-finance2 3.15.4
+// then threw FailedYahooValidationError on ALL equity buckets x 25 regions (0 kept, run red).
+// criteriaMeta only echoes the screener definition; nothing here reads it. So the drift is
+// tolerated exactly there: true only if EVERY leaf error (subErrors walked to the bottom) sits
+// under /criteriaMeta. An empty list, the root oneOf without sub-errors, or any error under
+// /quotes (e.g. a row without quoteType, a non-string longName) stays a failed fetch.
+// Recognition (e.name) as in pull-yahoo.js salvageValidationReject; that helper itself does not
+// fit here (module whitelist + price check, top-level instancePath only).
+function nurCriteriaMetaDrift(errors) {
+  const pfade = [];
+  (function blaetter(liste) {
+    for (const err of liste || []) {
+      if (err && Array.isArray(err.subErrors) && err.subErrors.length) blaetter(err.subErrors);
+      else pfade.push(String((err && err.instancePath) || ''));
+    }
+  })(errors);
+  return pfade.length > 0 && pfade.every((p) => p === '/criteriaMeta' || p.startsWith('/criteriaMeta/'));
+}
+let _screenerDriftToleriert = 0;  // counted per call, printed once in the Predefined-Buckets summary
+
+async function fetchScreener(id, region, client) {
   region = region || 'US';
+  client = client || yf;  // test seam: stub client, default is the module-level yf
   // F-DP-011 / F-DP-010: 3 attempts total, i.e. up to 2 retries on 429 with linear
   // back-off (5s before attempt 1, 10s before attempt 2). The final attempt (2) is
   // not retried — on its failure we fall through and log.
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r = await yf.screener({ scrIds: id, count: 250, region: region });
-      return (r && r.quotes) || [];
+      // Library validation stays ON (per-row checks: quoteType required, string names/exchange/
+      // currency). The only tolerated drift is handled in the catch below.
+      const r = await client.screener({ scrIds: id, count: 250, region: region });
+      if (!r || !Array.isArray(r.quotes)) {
+        console.warn('  [WARN] fetchScreener [' + id + '/' + region + '] failed: unexpected response shape');
+        return [];
+      }
+      return r.quotes;
     } catch (e) {
+      // 30.09.2026: validated rows under a /criteriaMeta-only drift are kept (see nurCriteriaMetaDrift).
+      if (e && e.name === 'FailedYahooValidationError' && nurCriteriaMetaDrift(e.errors)
+          && e.result && Array.isArray(e.result.quotes)) {
+        _screenerDriftToleriert++;
+        return e.result.quotes;
+      }
       const is429 = (e && e.statusCode === 429) || (e && e.message && e.message.includes('429'));
       if (is429 && attempt < 2) {
         await _sleep((attempt + 1) * 5000);
@@ -1256,7 +1295,8 @@ async function main() {
     }
   }
   console.log('  Predefined-Buckets: ' + predefinedNonEmpty + '/' + predefinedAttempted +
-    ' nicht-leer, ' + predefinedTotalQuotes + ' Quotes gesamt.');
+    ' nicht-leer, ' + predefinedTotalQuotes + ' Quotes gesamt, ' +
+    _screenerDriftToleriert + ' Abrufe trotz criteriaMeta-Schema-Drift behalten.');
   if (predefinedKanalEingebrochen(predefinedNonEmpty, predefinedAttempted)) {
     // BH-100: total collapse of this channel — surface it, but don't abort.
     //
@@ -2062,7 +2102,11 @@ module.exports = {
   // echten Endpunkt fahren kann statt einen Nachbau. Ein Nachbau haette genau die Abweichung
   // nicht gefunden, um die es geht (der erste Probelauf hat das vorgefuehrt: er mass seinen
   // eigenen Crumb-Fehler). Kein Test im Gate ruft ihn — das Gate bleibt netzfrei.
-  fetchExchangePage, crumbVorwaermen
+  fetchExchangePage, crumbVorwaermen,
+  // 30.09.2026: unlike the two above, the offline gate DOES call these: tests run fetchScreener
+  // through a real yahoo-finance2 instance whose _fetch returns a fixture (no network), and
+  // test the /criteriaMeta drift decision directly.
+  fetchScreener, nurCriteriaMetaDrift
 };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
