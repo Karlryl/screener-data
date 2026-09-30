@@ -1,13 +1,14 @@
 # Finanzdatenkorrektur F2 — 29.09.2026
 
-> **Auf einen Blick:** Die Handtabelle korrigiert 20 Umsatzwerte und kennzeichnet 16 belegte falsche Nullen als fehlend. Banpu erhält wegen vermischter Gesellschaftsdaten keinen Score.
-> - 16118 Unternehmensstände geprüft; 16110 bleiben vollständig unverändert.
+> **Auf einen Blick:** Die Handtabelle korrigiert 20 Umsatzwerte und kennzeichnet 16 belegte falsche Nullen als fehlend; dieselben 12 Nullzellen tragen drei Zweitnotierungen derselben Firmen (YSNG.VI, PDN.TO, PALAF) und werden ebenso leer. Banpu erhält wegen vermischter Gesellschaftsdaten keinen Score.
+> - 16118 Unternehmensstände geprüft; 16107 bleiben vollständig unverändert (vor den Zweitnotierungen: 16110).
+> - Mit der Live-Kalibrierung des Produktionslaufs bewegen sich 434 Growth-Scores sichtbar (4 direkt, 430 indirekt um 0,1 oder 0,2), nicht nur 4 (Abschnitt „Growth mit Live-Kalibrierung“).
 > - Breite Nullwertregel: 9900 Kandidaten, 122 Scoreänderungen im gepaarten Hauptbestandstest; deshalb ausschließlich Schattenbetrieb.
 > - Noch keine Veröffentlichung. Der genaue historische Smallcap-Eingabestand fehlt; sämtliche 1.100 Quality-Ausgangsscores stimmen mit der Veröffentlichung überein.
 
 ## Ursache und begrenzte Reparatur
 
-BANPU.BK: Der aktuelle Yahoo-Abruf nennt Banpu PCL und USD, liefert aber die THB-Quartalsumsätze von Banpu Power. Der echte Mapper liefert 5.092.756.000; die ursprüngliche USD-Konvertierung übernimmt ihn mit Faktor 1. Der 2025-Jahresumsatz 27.850.393.000, Bruttogewinn 4.540.955.000 und die Aktienzahl 3.047.731.700 identifizieren zusätzlich das Tochter-Datenpaket. Andere Felder, etwa TTM-Umsatz, stammen aus der Mutter. Deshalb werden fünf Umsätze ersetzt und genau dieses gemischte Paket vom Scoring ausgeschlossen; der Grund erscheint sichtbar. Die am selben Jahresindex zusammengehörigen Fingerabdrücke gelten auch nach einem Jahreswechsel. Weicht später auch nur ein Anker ab (etwa die Aktienzahl um 0,1 %), wird die Sperre nicht still aufgehoben: sie bleibt bestehen, bis ein Mensch das Paket neu geprüft hat, und der Lauf zählt das als „stale“ (Code `quarantine-fingerprint-changed`, mit Fall-ID); die Tageszusammenfassung trägt dann `::warning::`. Eine Verhältnis-Heuristik ändert keine Daten.
+BANPU.BK: Der aktuelle Yahoo-Abruf nennt Banpu PCL und USD, liefert aber die THB-Quartalsumsätze von Banpu Power. Der echte Mapper liefert 5.092.756.000; die ursprüngliche USD-Konvertierung übernimmt ihn mit Faktor 1. Der 2025-Jahresumsatz 27.850.393.000, Bruttogewinn 4.540.955.000 und die Aktienzahl 3.047.731.700 identifizieren zusätzlich das Tochter-Datenpaket. Andere Felder, etwa TTM-Umsatz, stammen aus der Mutter. Deshalb werden fünf Umsätze ersetzt und genau dieses gemischte Paket vom Scoring ausgeschlossen; der Grund erscheint sichtbar. Die am selben Jahresindex zusammengehörigen Fingerabdrücke gelten auch nach einem Jahreswechsel. Weicht später auch nur ein Anker ab (etwa die Aktienzahl um 0,1 %), wird die Sperre nicht still aufgehoben: sie bleibt bestehen, bis ein Mensch das Paket neu geprüft hat, und der Lauf zählt das als „stale“ (Code `quarantine-fingerprint-changed`, mit Fall-ID); die Tageszusammenfassung trägt dann `::warning::`. Eine Verhältnis-Heuristik ändert keine Daten. In der Ausschlussliste zeigt die Banpu-Zeile weder Sektor, Branche, Marktkapitalisierung noch Wachstum, weil der Grund-Text genau diese Werte als unzuverlässig bezeichnet; Grund-Code und Text bleiben.
 
 HTGC: Alle fünf Yahoo-Umsätze sind rechnerisch „investment income + realized/unrealized gains − interest expense − gain/loss on debt extinguishment“. Q2 2026 beispielsweise: 149,114 + 37,266 − 28,130 − (−0,002) = 158,252 Mio. USD. Das ist nicht „Total investment income“. Die Reihe ist mit echten Unternehmens-/SEC-Daten nachgestellt; der interne Yahoo-Algorithmus ist nicht einsehbar. ARCC und FSK liefern ebenfalls andere Ergebnisgrößen als den belegten Investmentertrag; nur diese drei nachgeprüften BDCs werden korrigiert.
 
@@ -18,6 +19,8 @@ Die Nullfälle sind genau **15 Bruttogewinne plus ein Umsatz**, insgesamt 16 Zel
 Bei HTGC, ARCC, FSK und BANPU.BK ist die Umsatzreihe des Anbieters in ihrer Basis falsch, nicht nur in einzelnen Werten. Die Handtabelle trägt deshalb je Reihe ein `coversThrough` (letztes gegen die Primärquelle geprüfte Quartal: 30.06.2026, bei Banpu 31.03.2026). Jedes neuere Quartal wird leer gesetzt (Code `period-after-coverage`), ebenso eine nicht gelistete ältere oder undatierte Periode (`period-not-verified`). Ein Tabellenfall, dessen Anbieterwert sich seit der Prüfung geändert hat, wird ebenfalls leer (`vendor-value-changed`, bei geänderter Währung, Quelle, Einheit oder doppeltem Datum `context-changed`), statt den Anbieterwert stehen zu lassen. Jede solche Zelle zählt als „stale"; die Tageszusammenfassung trägt dann `::warning::`. Wachstum und Scores sehen „fehlt": das Quartalsbein fällt weg, es trägt das Jahreswachstum (kein Ersatzwert 0). Der Text erscheint im Export im zusätzlichen Feld `financialDataReasons`, nicht in `lamps`.
 
 Nachtrag Prüfrunde 2: Jede Reihe mit ersetzten Werten muss genau einen `coversThrough`-Eintrag haben, sonst lehnt die Prüfung die ganze Handtabelle ab (fehlender Eintrag, fehlender Schlüssel, Doppeleintrag, doppelte Fall-ID). Die Nullfälle (Ersatz „leer“) brauchen keinen. In jeder Reihe mit Handtabellen-Einträgen wird ein Wert ohne brauchbares Periodendatum (Datumsliste fehlt, ist kürzer als die Werte oder enthält kein Datum) leer gesetzt (`period-not-verified`, stale). Scheitert die Handtabelle selbst beim Einlesen im Scoring, bricht der Hauptlauf rot ab (der Smallcap-Durchgang meldet einen Fehler und setzt seine Fehlermarke), statt die Firma still als defekte Datei zu überspringen.
+
+Nachtrag Prüfrunde 3: Die tägliche Nachlade-Logik (`lib/reload-history.js`) füllt eine Zelle, die die Handtabelle leer gesetzt oder als falsche Null belegt hat, nie aus dem gespeicherten Vortagsstand auf. Ändert der Anbieter einen geprüften Wert, bleibt die Zelle auch auf der Platte und beim Scoring leer (`vendor-value-changed`) statt der alten Korrektur; die alte Korrekturmarke wird dabei entfernt, damit kein veralteter Text erscheint. In einer Reihe, die nur einzelne belegte falsche Nullen hat (keine falsche Basis), heißt ein Wert ohne Datum jetzt `period-undated` mit eigenem Text statt „falsche Basis“.
 
 ## Jede aktive Zelländerung
 
@@ -64,7 +67,7 @@ Beträge in Originalwährung; FX-umgerechnete Eingaben erhalten denselben gespei
 
 ## Jede sichtbare Scoreänderung im gepaarten Test
 
-Growth verwendet die gespeicherte Kalibrierung vom 29.09.2026. Quality und Smallcap werden einmal mit der Ausgangskalibrierung festgehalten (direkte Wirkung), zusätzlich mit regulär neu berechneter Kalibrierung (einschließlich Verschiebungen anderer Rangwerte). Die historische Unternehmensliste des wirklichen Scoring-Laufs (256d26910e637142ceddedf51cf39b394be9287f) liefert genau 15.986 zugelassene Stände. Die folgende Tabelle enthält alle 26 aktiven Änderungen dieses Vergleichs. Davon sind vier direkte Growth-Wirkungen; 22 Quality-Werte bewegen sich um 0,1 durch Banpus Ausscheiden aus dem Vergleichskollektiv. Diese 22 Unternehmen erhalten keine Datenkorrektur.
+Growth verwendet hier die gespeicherte Kalibrierung vom 29.09.2026; das untertreibt die Wirkung, weil der Produktionslauf live kalibriert (siehe nächster Abschnitt). Quality und Smallcap werden einmal mit der Ausgangskalibrierung festgehalten (direkte Wirkung), zusätzlich mit regulär neu berechneter Kalibrierung (einschließlich Verschiebungen anderer Rangwerte). Die historische Unternehmensliste des wirklichen Scoring-Laufs (256d26910e637142ceddedf51cf39b394be9287f) liefert genau 15.986 zugelassene Stände. Die folgende Tabelle enthält alle 26 aktiven Änderungen dieses Vergleichs. Davon sind vier direkte Growth-Wirkungen; 22 Quality-Werte bewegen sich um 0,1 durch Banpus Ausscheiden aus dem Vergleichskollektiv. Diese 22 Unternehmen erhalten keine Datenkorrektur.
 
 | Ticker | Familie / Board | Score alt | Score neu |
 | --- | --- | --- | --- |
@@ -96,6 +99,61 @@ Growth verwendet die gespeicherte Kalibrierung vom 29.09.2026. Quality und Small
 | SO | quality / quality-utilities | 60.6 | 60.5 |
 
 Die vier Unternehmen mit belegten falschen Nullen behalten ihre Growth-Scores: secunet 73,0; Bunka Shutter 41,7; Zhongtai 44,1; Paladin 60,9. Ihre betroffenen Felder fehlen nun mit Begründung. HTGC-Umsatzwachstum: 51,143711 % → 8,478892 %.
+
+## Growth mit Live-Kalibrierung (Nachtrag Prüfrunde 3, 30.09.2026)
+
+Der Produktionslauf (`src/scoring/run-screener.js`) rechnet Growth mit live neu berechneter Kalibrierung. Dann verschieben die korrigierten Firmen die Vergleichswerte ihrer Branchen mit. Gleicher Datenstand (16.118 Stände, Unternehmensliste 256d26910e), Scores auf eine Nachkommastelle wie auf dem Board:
+
+- 434 Growth-Scores ändern sich: 4 direkt (HTGC, ARCC, FSK, Banpu), 430 indirekt ohne eigene Datenänderung; davon 399 um ±0,1 und 31 um ±0,2.
+- Nach Sektor (einschließlich der direkten): Financial Services 215, Utilities 216, Technology 3. In den Top 100 eines Haupt-Boards stehen 78 der 434 Zeilen.
+- Die Zweitnotierungen YSNG.VI, PDN.TO und PALAF ändern keinen Score (ihre korrigierten Felder gehen wie bei der Hauptnotierung nicht in den Score ein).
+- FSK kommt neu auf das Financials-Board (37,5). Vorher schloss die Heuristik für Nicht-Betriebsvehikel in `src/scoring/router.js` (Zweig „negative Quartalsumsätze bei Asset Management“, etwa Zeile 199–201) FSK wegen der negativen Anbieter-Umsätze aus. Die korrigierten Umsätze sind positiv, die Heuristik greift nicht mehr. Das ist gewollt und gleich behandelt wie HTGC und ARCC.
+
+Alle Zeilen, die sich um mehr als 0,1 bewegen:
+
+| Ticker | Sektor | Score alt | Score neu |
+| --- | --- | --- | --- |
+| HTGC | Financial Services | 59,5 | 48,3 |
+| ARCC | Financial Services | 32,6 | 36,0 |
+| FSK | Financial Services | fehlt | 37,5 |
+| BANPU.BK | Utilities | 27,1 | fehlt |
+| BEN | Financial Services | 36,6 | 36,8 |
+| HDFCAMC.BO | Financial Services | 55,7 | 55,9 |
+| SPGI | Financial Services | 48,7 | 48,9 |
+| VIRT | Financial Services | 53,7 | 53,9 |
+| 000037.SZ | Utilities | 24,9 | 24,7 |
+| 000685.SZ | Utilities | 18,4 | 18,2 |
+| 001289.SZ | Utilities | 11,3 | 11,1 |
+| 2380.HK | Utilities | 22,7 | 22,5 |
+| 3633.HK | Utilities | 23,7 | 23,5 |
+| 600021.SS | Utilities | 14,0 | 13,8 |
+| 600131.SS | Utilities | 45,5 | 45,3 |
+| 600292.SS | Utilities | 25,2 | 25,0 |
+| 600886.SS | Utilities | 17,5 | 17,3 |
+| 600905.SS | Utilities | 12,5 | 12,3 |
+| 9501.T | Utilities | 26,4 | 26,2 |
+| 9502.T | Utilities | 29,6 | 29,4 |
+| 9509.T | Utilities | 26,6 | 26,4 |
+| 9513.T | Utilities | 14,9 | 14,7 |
+| 9532.T | Utilities | 36,0 | 35,8 |
+| APA.AX | Utilities | 28,2 | 28,0 |
+| ARN.MI | Utilities | 20,5 | 20,3 |
+| AVA | Utilities | 26,6 | 26,4 |
+| CKI.L | Utilities | 16,8 | 16,6 |
+| EGCO.BK | Utilities | 18,1 | 17,9 |
+| ENIC | Utilities | 39,0 | 38,8 |
+| MEZ.AX | Utilities | 10,9 | 10,7 |
+| PEG | Utilities | 29,1 | 28,9 |
+| PEP.WA | Utilities | 16,6 | 16,4 |
+| TAEE3.SA | Utilities | 27,9 | 27,7 |
+| U96.SI | Utilities | 17,4 | 17,2 |
+| VST | Utilities | 24,9 | 24,7 |
+
+Reproduzierbar mit dem Prüfer-Skript `board-diff-live.js` (live kalibriert, ohne gespeicherte Kalibrierung); die Zählung pro Zeile stammt aus demselben Aufbau mit `scoreUniverse` ohne `refCalibration`.
+
+## Zweitnotierungen (Nachtrag Prüfrunde 3)
+
+Die Handtabelle kennt je Fall eine Liste `listingAliases`. YSNG.VI (secunet, Wien) trägt im Archiv vom 29.09. dieselben vier falschen Bruttogewinn-Nullen wie YSN.DE, PDN.TO und PALAF dieselben vier Nullzellen wie PDN.AX, jeweils in gleicher Berichtswährung (EUR bzw. USD), gleichem Kursfaktor und gleichen Perioden; die Datenpakete sind in diesen Reihen bytegleich. Ohne Alias konnte die Doppelnotierungs-Bereinigung (größere Marktkapitalisierung gewinnt, YSN.DE und YSNG.VI liegen 0,8 % auseinander) die unkorrigierte Notierung auf das Board bringen. Ein Alias, der zugleich Hauptticker eines anderen Falls ist, lässt die Prüfung der Handtabelle scheitern. Der Nachlauf ergibt damit 48 statt 36 Zellen: die 36 Zellen der acht Hauptticker unverändert, dazu 12 Aliaszellen (YSNG.VI 4, PDN.TO 4, PALAF 4); die Board-Wirkung bleibt gleich.
 
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
@@ -278,7 +336,7 @@ BDC-Prüfumfang: ARCC, BBDC, BXSL, CSWC, FSK, GBDC, HTGC, MAIN, OBDC, OCSL, PSEC
 
 SHA-256 der sortierten Liste aller Quelldatei-Hashes: `81c96b4789073dac5e6085c9fb2bfe489cd1e57629228f66ffbcbe12db3e4397`. Vor und nach dem Lauf bleiben alle 16118 Dateihashes identisch. Jede bearbeitete Zeile wird für den Vergleich auf ihre exakt gespeicherte Originalzeile zurückgesetzt; einschließlich der ausdrücklich erlaubten Banpu-Metadaten ergibt sich derselbe JSON-Byte-String. Alle anderen Eingabezellen sind damit identisch. Scoregleichheit aller übrigen Unternehmen wird wegen Neukalibrierung ausdrücklich nicht behauptet.
 
-Reproduzierbar: `node scripts/financial-corrections-replay.js <read-only-snapshot-directory> [veröffentlichungs-ref]` (Nachlauf 30.09. mit Ref d164b75262 = Veröffentlichung vom 29.09.: dieselben 36 Zellen, 0 stale, identische Board-Wirkung). Die 16.118 Originale kommen aus dem r1-Archiv snapshots-20260929 im freigegebenen sd-ro-Arbeitsbaum. Es wird keine Historie geschrieben und kein loadUniverse-Aufruf verwendet, der eine Baseline-Datei anlegen könnte. Die vorhandene Q4-Reparatur bildet den Ausgangsstand beider Arme.
+Reproduzierbar: `node scripts/financial-corrections-replay.js <read-only-snapshot-directory> [veröffentlichungs-ref]` (Nachlauf 30.09. mit Ref d164b75262 = Veröffentlichung vom 29.09.: dieselben 36 Zellen der Hauptticker plus 12 Aliaszellen, 0 stale, identische Board-Wirkung). Die 16.118 Originale kommen aus dem r1-Archiv snapshots-20260929 im freigegebenen sd-ro-Arbeitsbaum. Es wird keine Historie geschrieben und kein loadUniverse-Aufruf verwendet, der eine Baseline-Datei anlegen könnte. Die vorhandene Q4-Reparatur bildet den Ausgangsstand beider Arme.
 
 Die Quality-Ausgangsscores stimmen vollständig mit allen 1.100 veröffentlichten Zeilen überein. Growth hat genau eine Abweichung: CHWY 42,4 veröffentlicht, 42,5 im Replay; CHWY wird durch F2 nicht verändert. Smallcap ist nur eine Diagnose mit dem Hauptbestand (517 Feed-Abweichungen), kein gültiger historischer Nachbau. Der wirkliche Smallcap-Lauf verwendete den Cache snapshots-smallcap-store-36236295562 vom 26.09. mit 769 Dateien und 490 zugelassenen Firmen. Das vorhandene Archiv des gescheiterten späteren 29.09.-Laufs enthält 418 neuere Stände und wäre eine falsche Grundlage. Das passende ältere Artefakt ist lokal und über die geprüfte GitHub-Artefaktliste nicht erreichbar. Zusätzlich braucht Smallcap seine eigene historische Unternehmensliste und die Produktions-Abdeckungsgrenze. Vollständige Smallcap-Board-Parität bleibt deshalb offen.
 
@@ -290,10 +348,10 @@ Primärquelle Banpu: [Quartalsabschluss](https://www.banpu.com/wp-content/upload
 
 ## Prüfung und Übergabe
 
-Unabhängiger Astra-ultra-Prüfer: 16.118 Stände, genau acht Änderungen/36 Zellen, Eingaben unverändert, Wiederholung idempotent, Schattenbetrieb ohne Mutation; alle 15 BDC-Umsätze gegen SEC bestätigt. Sein nachgestellter Banpu-Jahreswechsel-Fund ist repariert und mit einer absichtlich roten In-Memory-Gegenprobe abgesichert. Die neue Suite besteht mit 42 Prüfblöcken und 41 absichtlichen Fehlern; SHA-256 des echten Codes davor/danach unverändert. GQS besteht unabhängig mit 25 Referenzfällen/13 Branchen und keiner Score-/Rangabweichung. Der Prüfer meldet keine offenen Blocker (97 % Sicherheit). Veröffentlichung und Claude-Freigabe sind nicht Bestandteil dieses Auftrags.
+Unabhängiger Astra-ultra-Prüfer: 16.118 Stände, genau acht Änderungen/36 Zellen, Eingaben unverändert, Wiederholung idempotent, Schattenbetrieb ohne Mutation; alle 15 BDC-Umsätze gegen SEC bestätigt. Sein nachgestellter Banpu-Jahreswechsel-Fund ist repariert und mit einer absichtlich roten In-Memory-Gegenprobe abgesichert. Die neue Suite bestand damals mit 42 Prüfblöcken und 41 absichtlichen Fehlern (Stand Prüfrunde 3: 52 Prüfblöcke, 50 absichtliche Fehler); SHA-256 des echten Codes davor/danach unverändert. GQS besteht unabhängig mit 25 Referenzfällen/13 Branchen und keiner Score-/Rangabweichung. Der Prüfer meldet keine offenen Blocker (97 % Sicherheit). Veröffentlichung und Claude-Freigabe sind nicht Bestandteil dieses Auftrags.
 
-Gesamtprüfung `node scripts/test-gate.js --mode=all`: 580 echte Testdateien, 499 PASS, 74 FAIL, 7 ohne ausgeführte Prüfung. Alle 74 fehlgeschlagenen Dateien sind gegenüber HEAD unverändert; Python-Start wird mit EPERM verweigert, in einem Test scheitern zusätzlich Windows-Benutzerabfragen mit ENOMEM. Beide Umgebungsfehler wurden unabhängig nachgestellt. Die Gesamtprüfung ist rot; fehlende Archivdaten sind nicht als Ursache behauptet. Gezielte F2-, Q4-, FX- und GQS-Suiten laufen nach dem letzten Code-Stand erfolgreich. Der separate alte Q4-Bestandsreplay hat einen festen Vortags-Sollwert von 27 und schlägt am neuen Tagesbestand mit 19 neuen Treffern fehl: acht weitere Zellen sind bereits korrekt (27 = 19 neu + 8 bereits korrigiert), anhand aller urspr?nglichen Fallzeilen nachgepr?ft. Seine Vorgabe wurde nicht gelockert.
+Gesamtprüfung `node scripts/test-gate.js --mode=all`: 580 echte Testdateien, 499 PASS, 74 FAIL, 7 ohne ausgeführte Prüfung. Alle 74 fehlgeschlagenen Dateien sind gegenüber HEAD unverändert; Python-Start wird mit EPERM verweigert, in einem Test scheitern zusätzlich Windows-Benutzerabfragen mit ENOMEM. Beide Umgebungsfehler wurden unabhängig nachgestellt. Die Gesamtprüfung ist rot; fehlende Archivdaten sind nicht als Ursache behauptet. Gezielte F2-, Q4-, FX- und GQS-Suiten laufen nach dem letzten Code-Stand erfolgreich. Der separate alte Q4-Bestandsreplay hat einen festen Vortags-Sollwert von 27 und schlägt am neuen Tagesbestand mit 19 neuen Treffern fehl: acht weitere Zellen sind bereits korrekt (27 = 19 neu + 8 bereits korrigiert), anhand aller ursprünglichen Fallzeilen nachgeprüft. Seine Vorgabe wurde nicht gelockert.
 
 Befehle und Ausgaben liegen unter _scratch/f2: targeted-financial-final.log (42/41), targeted-q4-final.log, targeted-gqs-final.log, targeted-fx-final.log sowie full-test-gate-final.log. Reproduzierbare Belege sind die beiden echten Module mapFTSToQuarterly/_convertSnapshotToUSD, die Quellen-Handtabelle und financial-corrections-replay.js. Keine Datenhistorie, Formel, Achsengewichtung oder eingefrorene GQS-Referenz wurde verändert.
 
-Git-Abschluss: git add scheitert an index.lock (Permission denied). Alle ?nderungen bleiben auf fix/banpu-htgc-and-false-zeros-20260929 uncommittet; kein Push, kein PR, kein Merge. Sitzungs-ID und vorgesehene Trailer stehen in financial-corrections-validation.json.
+Git-Abschluss (Stand 30.09.): Der ursprüngliche Lauf konnte wegen index.lock nicht committen. Inzwischen liegen alle Änderungen als Commits „Tag 1389“, „Tag 1389b“ und „Tag 1389c“ auf fix/banpu-htgc-and-false-zeros-20260929 und sind gepusht (PR #398); kein Merge. Sitzungs-ID und vorgesehene Trailer stehen in financial-corrections-validation.json.

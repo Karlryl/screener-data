@@ -101,6 +101,7 @@
     {
       "caseId": "ysn.de-2026-06-30-grossProfitQ",
       "ticker": "YSN.DE",
+      "listingAliases": ["YSNG.VI"],
       "field": "grossProfitQ",
       "period": "2026-06-30",
       "periodType": "3M",
@@ -119,6 +120,7 @@
     {
       "caseId": "ysn.de-2025-09-30-grossProfitQ",
       "ticker": "YSN.DE",
+      "listingAliases": ["YSNG.VI"],
       "field": "grossProfitQ",
       "period": "2025-09-30",
       "periodType": "3M",
@@ -137,6 +139,7 @@
     {
       "caseId": "ysn.de-2025-06-30-grossProfitQ",
       "ticker": "YSN.DE",
+      "listingAliases": ["YSNG.VI"],
       "field": "grossProfitQ",
       "period": "2025-06-30",
       "periodType": "3M",
@@ -155,6 +158,7 @@
     {
       "caseId": "ysn.de-2025-03-31-grossProfitQ",
       "ticker": "YSN.DE",
+      "listingAliases": ["YSNG.VI"],
       "field": "grossProfitQ",
       "period": "2025-03-31",
       "periodType": "3M",
@@ -289,7 +293,10 @@
         {
           "url": "https://www.zthx.com/photos/oa/03161A3371E5316048257E36003ED396/5MBTXPLD.pdf",
           "page": 19,
-          "quote": "营业成本"
+          "quote": "营业成本",
+          "mirrorUrl": "http://static.cninfo.com.cn/finalpage/2014-04-26/63929117.PDF",
+          "mirrorPage": 18,
+          "mirrorNote": "Original URL no longer responds (review 30.09.2026); same Q1 2014 report on cninfo."
         }
       ]
     },
@@ -337,6 +344,7 @@
     {
       "caseId": "pdn.ax-2017-03-31-grossProfitQ",
       "ticker": "PDN.AX",
+      "listingAliases": ["PDN.TO", "PALAF"],
       "field": "grossProfitQ",
       "period": "2017-03-31",
       "periodType": "3M",
@@ -360,6 +368,7 @@
     {
       "caseId": "pdn.ax-2016-12-31-grossProfitQ",
       "ticker": "PDN.AX",
+      "listingAliases": ["PDN.TO", "PALAF"],
       "field": "grossProfitQ",
       "period": "2016-12-31",
       "periodType": "3M",
@@ -376,13 +385,14 @@
         {
           "url": "https://announcements.asx.com.au/asxpdf/20161115/pdf/43cxl0mgcj7mr2.pdf",
           "page": 24,
-          "quote": "Gross (loss)/profit"
+          "quote": "Gross profit"
         }
       ]
     },
     {
       "caseId": "pdn.ax-2016-06-30-grossProfitQ",
       "ticker": "PDN.AX",
+      "listingAliases": ["PDN.TO", "PALAF"],
       "field": "grossProfitQ",
       "period": "2016-06-30",
       "periodType": "3M",
@@ -401,6 +411,7 @@
     {
       "caseId": "pdn.ax-2016-12-31-revenueQ",
       "ticker": "PDN.AX",
+      "listingAliases": ["PDN.TO", "PALAF"],
       "field": "revenueQ",
       "period": "2016-12-31",
       "periodType": "3M",
@@ -596,7 +607,7 @@
           "filed": "2026-02-04",
           "unit": "USD",
           "value": 3052000000,
-          "start": "2025-10-01",
+          "start": "2025-01-01",
           "end": "2025-12-31",
           "derivation": "Annual minus first nine months; operand periods in SEC facts"
         },
@@ -610,8 +621,8 @@
           "filed": "2025-10-28",
           "unit": "USD",
           "value": 2259000000,
-          "start": "2025-10-01",
-          "end": "2025-12-31",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
           "derivation": "Annual minus first nine months; operand periods in SEC facts"
         }
       ]

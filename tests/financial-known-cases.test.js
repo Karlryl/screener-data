@@ -11,7 +11,7 @@ const clone = x => structuredClone(x), serial = JSON.stringify;
 const value = row => typeof row === 'number' ? row : row?.value;
 const sha = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const liveFiles = ['configs/financial-known-cases.json','configs/zero-financials-policy.json','lib/financial-known-cases.js',
-  'lib/zero-financials-guard.js','lib/yahoo-q4-known-cases.js','src/scoring/score.js'];
+  'lib/zero-financials-guard.js','lib/reload-history.js','lib/yahoo-q4-known-cases.js','src/scoring/score.js'];
 const hashes = liveFiles.map(f => [f, sha(path.join(__dirname, '..', f))]);
 let passed = 0, breaks = 0;
 function test(name, fn) { fn(); passed++; console.log('ok ' + name); }
@@ -148,7 +148,7 @@ test('coversThrough: newer vendor quarter is missing and stale; covered quarters
   assert.throws(() => validateTable(bad), /Invalid financial coverage/);
   // Break-once in memory: without the coverage guard the new quarter passes as raw vendor data.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
-    '  const fields = new Set([...config.coverage, ...config.cases].filter(x => x.ticker === ticker).map(x => x.field));',
+    '  const fields = new Set([...config.coverage, ...config.cases].filter(x => listed(x, ticker)).map(x => x.field));',
     '  const fields = new Set();'));
   const guard = fn => assert.equal(value(fn(nextQuarter(clone(fixture.HTGC))).snapshot.timeseries.revenueQ[0]), null);
   assert.throws(() => guard(broken.applyFinancialCases), assert.AssertionError); guard(applyFinancialCases); breaks++;
@@ -156,14 +156,14 @@ test('coversThrough: newer vendor quarter is missing and stale; covered quarters
 
 // L1: a value without a usable period end never passes raw in a series with hand-table authority.
 test('missing or short *Ends array and undated entries are withheld as period-not-verified', () => {
-  const check = (ticker, field, change, indexes) => {
+  const check = (ticker, field, change, indexes, code = 'period-not-verified') => {
     const input = clone(fixture[ticker]); change(input.timeseries);
     const original = serial(input), r = applyFinancialCases(input);
     for (const i of indexes) {
       const row = r.snapshot.timeseries[field][i];
       assert.equal(value(row), null, ticker + ' index ' + i);
-      assert.equal(row.financialMissing.reasonCode, 'period-not-verified');
-      assert.ok(r.events.some(e => e.status === 'stale' && e.reasonCode === 'period-not-verified' && e.index === i));
+      assert.equal(row.financialMissing.reasonCode, code);
+      assert.ok(r.events.some(e => e.status === 'stale' && e.reasonCode === code && e.index === i));
     }
     assert.equal(serial(input), original);
     assert.equal(serial(applyFinancialCases(r.snapshot).snapshot), serial(r.snapshot), 'Idempotent');
@@ -176,8 +176,11 @@ test('missing or short *Ends array and undated entries are withheld as period-no
   assert.equal(value(short.snapshot.timeseries.revenueQ[0]), 149114000, 'Dated verified rows still corrected');
   // Case-only false-zero series: the known-wrong 0 without dates must not pass raw.
   const g = fixture['YSN.DE'].timeseries.grossProfitQ.length;
-  check('YSN.DE', 'grossProfitQ', ts => { delete ts.grossProfitQEnds; }, [...Array(g).keys()].filter(i =>
-    value(fixture['YSN.DE'].timeseries.grossProfitQ[i]) != null));
+  // Single false-value series: own text, never the basis-wrong wording (R5).
+  const ysn = check('YSN.DE', 'grossProfitQ', ts => { delete ts.grossProfitQEnds; }, [...Array(g).keys()].filter(i =>
+    value(fixture['YSN.DE'].timeseries.grossProfitQ[i]) != null), 'period-undated');
+  assert.deepEqual(financialReasons(ysn.snapshot), [MISSING_REASONS['period-undated']]);
+  assert.ok(!financialReasons(ysn.snapshot).some(t => t.includes('falsche Basis')));
   // Absence: intact YSN.DE and an unrelated ticker without Ends are untouched.
   assert.ok(!applyFinancialCases(clone(fixture['YSN.DE'])).events.some(e => e.status === 'stale'));
   const other = clone(fixture.HTGC); other.meta.ticker = 'UNLISTED'; delete other.timeseries.revenueQEnds;
@@ -394,6 +397,142 @@ test('end to end: pull converter -> disk -> scoring reader for HTGC, BANPU, secu
   // Absence: an unrelated company goes through the same path unchanged.
   const other=clone(fixture.HTGC); other.meta.ticker='UNLISTED'; other.meta.fxConverted=false;
   assert.equal(norm(through('UNLISTED',other),'revenueQ')[0],158252000);
+});
+
+// R3b: the excluded-list row of a quarantined packet shows no value its own reason calls unreliable.
+test('excluded list: a quarantined packet has null sector, industry, market cap and growth; the reason stays', () => {
+  const { buildExcludedList } = require('../scripts/write-excluded-list.js');
+  const banpu = applyFinancialCases(clone(fixture['BANPU.BK'])).snapshot;
+  const other = clone(banpu); other.meta = { ...other.meta, ticker: 'UNLISTED', name: 'Unlisted Power Inc',
+    industry: 'Utilities - Independent Power Producers' };
+  delete other.meta.financialDataIssue;
+  const result = (s, ticker) => ({ ticker, name: 'Test', action: 'exclude', reason: 'data-suspect', sector: 'Utilities',
+    marketCap: 1334574183, revGrowthYoYPct: 4.4 });
+  const build = fn => fn([result(banpu, 'BANPU.BK'), result(other, 'UNLISTED')], [banpu, other]).rows;
+  const check = rows => {
+    const b = rows.find(r => r.ticker === 'BANPU.BK'), u = rows.find(r => r.ticker === 'UNLISTED');
+    for (const f of ['sector', 'industry', 'marketCap', 'revGrowthYoYPct']) assert.equal(b[f], null, 'BANPU ' + f);
+    assert.equal(b.reason, 'data-suspect');
+    assert.ok(b.financialDataReasons[0].startsWith('Score fehlt:'), 'Reason text kept');
+    // Absence: the same values stay visible on a row without a quarantine.
+    assert.deepEqual([u.sector, u.industry, u.marketCap, u.revGrowthYoYPct],
+      ['Utilities', 'Utilities - Independent Power Producers', 1334574183, 4.4]);
+  };
+  check(build(buildExcludedList));
+  // Break-once in memory: without the quarantine check the unreliable values reach the list.
+  const broken = moduleCopy('scripts/write-excluded-list.js', s => replaceLine(s,
+    '  const suspekt = !!(meta && meta.financialDataIssue);', '  const suspekt = false;'));
+  assert.throws(() => check(build(broken.buildExcludedList)), assert.AssertionError); breaks++;
+});
+
+// R2: other listings of the same issuer carry the identical false cells (checked in the 29.09. archive).
+test('listing aliases: YSNG.VI, PDN.TO and PALAF are corrected like their primary; unrelated ticker untouched', () => {
+  const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases).map(c => [c.ticker, c.listingAliases]));
+  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'] });
+  const leg = (primary, alias) => { const s = clone(fixture[primary]); s.meta.ticker = alias; return s; };
+  for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
+    const input = leg(primary, alias), original = serial(input), r = applyFinancialCases(input);
+    const primaryOut = applyFinancialCases(clone(fixture[primary])).snapshot;
+    assert.equal(serial(r.snapshot.timeseries), serial(primaryOut.timeseries), alias + ' corrected like ' + primary);
+    assert.ok(r.events.some(e => e.status === 'missing' && e.ticker === alias));
+    assert.equal(serial(input), original);
+  }
+  // Absence: an unrelated ticker with the identical packet stays raw.
+  const other = leg('YSN.DE', 'YSN2.XX'); assert.equal(applyFinancialCases(other).snapshot, other);
+  // Validation: an alias that is another case's primary ticker is rejected; so is a malformed alias list.
+  const clash = clone(table); clash.cases.find(c => c.ticker === 'YSN.DE').listingAliases = ['HTGC'];
+  assert.throws(() => validateTable(clash), /Invalid financial listing alias/);
+  const notArray = clone(table); notArray.cases.find(c => c.ticker === 'YSN.DE').listingAliases = 'YSNG.VI';
+  assert.throws(() => validateTable(notArray), /Invalid financial listing alias/);
+  const dupKey = clone(table); dupKey.cases.find(c => c.ticker === 'PDN.AX').listingAliases = ['YSNG.VI'];
+  const ysnPeriod = table.cases.find(c => c.ticker === 'YSN.DE').period;
+  dupKey.cases.find(c => c.ticker === 'PDN.AX').period = ysnPeriod; dupKey.cases.find(c => c.ticker === 'PDN.AX').field = 'grossProfitQ';
+  assert.throws(() => validateTable(dupKey), /duplicate/);
+  // Break-once in memory: primary-ticker-only matching leaves the alias leg with its false zeros.
+  const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    'const listed = (x, ticker) => listings(x).includes(ticker);', 'const listed = (x, ticker) => x.ticker === ticker;'));
+  const guard = fn => assert.equal(norm(fn(leg('YSN.DE', 'YSNG.VI')).snapshot, 'grossProfitQ')[0], null);
+  assert.throws(() => guard(broken.applyFinancialCases), assert.AssertionError); guard(applyFinancialCases); breaks++;
+});
+
+// R5: a corrected cell that later becomes withheld drops its old correction marker and reason.
+test('withheld cell drops an older financialCorrection; reasons prefer the missing text', () => {
+  const corrected = applyFinancialCases(clone(fixture.HTGC)).snapshot;
+  assert.ok(corrected.timeseries.revenueQ[0].financialCorrection);
+  const changed = clone(corrected); changed.timeseries.revenueQ[0].currency = 'EUR';
+  const r = applyFinancialCases(changed).snapshot, row = r.timeseries.revenueQ[0];
+  assert.equal(value(row), null); assert.equal(row.financialMissing.reasonCode, 'context-changed');
+  assert.ok(!Object.hasOwn(row, 'financialCorrection'), 'Old correction marker dropped');
+  assert.ok(row.financialMissing.originalVendorRow.financialCorrection, 'Audit trail keeps the prior row');
+  assert.equal(serial(applyFinancialCases(r).snapshot), serial(r), 'Idempotent');
+  // Absence: an untouched corrected row keeps its marker.
+  assert.ok(r.timeseries.revenueQ[1].financialCorrection);
+  // Reader order: a hand-made row with both markers shows the missing reason.
+  const both = { timeseries: { revenueQ: [{ value: null, financialCorrection: { reason: 'alt' }, financialMissing: { reason: 'neu' } }] } };
+  assert.deepEqual(financialReasons(both), ['neu']);
+  const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '      write(event.field, event.index, { ...rest, value: null,',
+    '      write(event.field, event.index, { ...rest, financialCorrection, value: null,'));
+  assert.throws(() => assert.ok(!Object.hasOwn(broken.applyFinancialCases(changed).snapshot.timeseries.revenueQ[0], 'financialCorrection')),
+    assert.AssertionError); breaks++;
+});
+
+// R1: the daily pull runs preserveReloadHistory between conversion and disk. A hand-table hole
+// (verified false value or withheld cell) is authoritative and must never be refilled from the prior disk.
+test('end to end with reload history: withheld cells stay withheld on disk and at the scoring reader', () => {
+  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'financial-cases-reload-'));
+  const live=path.resolve(__dirname,'../snapshots');
+  assert.notEqual(path.resolve(tmp),live); assert.ok(!path.resolve(tmp).startsWith(live+path.sep));
+  const { _convertSnapshotToUSDGuarded }=require('../pull-yahoo.js');
+  const { readScoringSnapshot }=require('../src/scoring/run-screener.js');
+  const yahooQ4=require('../lib/yahoo-q4-known-cases.js');
+  const Q=['revenueQ','opIncQ','grossProfitQ','netIncomeQ'];
+  // The full pull stamps comparable statement periods (setPeriods); without them nothing is retained.
+  const periods=(s,at)=>{ const ccy=s.meta.reportingCurrencyOriginal||s.meta.reportingCurrency; s.meta.statementPeriods={};
+    for(const f of Q){ const e=s.timeseries[f+'Ends']||s.timeseries.revenueQEnds||[];
+      s.meta.statementPeriods[f]=(s.timeseries[f]||[]).map((_,i)=>e[i]?{end:e[i],duration:'3M',currency:ccy,unit:'currency',basis:'yahoo-statement',fetchedAt:at}:null); }
+    return s; };
+  const native=(t,at)=>{ const s=periods(clone(fixture[t]),at); if(s.meta.reportingCurrencyOriginal==='USD') s.meta.fxConverted=false; return s; };
+  // pull-yahoo.js order: convert -> preserveReloadHistory(prior disk with Q4 overlay) -> disk -> scoring reader.
+  const pull=(preserve,name,priorDisk,next)=>{
+    assert.equal(_convertSnapshotToUSDGuarded(next),true);
+    preserve(next,yahooQ4.applyKnownCases(priorDisk).snapshot);
+    const file=path.join(tmp,name+'.json'); fs.writeFileSync(file,serial(next));
+    return { disk:JSON.parse(fs.readFileSync(file,'utf8')), scored:readScoringSnapshot(file), retained:next.meta.reloadHistoryRetained||[] };
+  };
+  const day1=preserve=>pull(preserve,'HTGC-d1',periods(clone(fixture.HTGC),'2026-09-29T09:00:00.000Z'),native('HTGC','2026-09-30T09:00:00.000Z'));
+  const day2=(preserve,priorDisk)=>{ const n=native('HTGC','2026-10-01T09:00:00.000Z'); n.timeseries.revenueQ[0].value++;
+    return pull(preserve,'HTGC-d2',priorDisk,n); };
+  const withheld=(r,field,i,code)=>{
+    assert.equal(value(r.disk.timeseries[field][i]),null,'disk '+field+'['+i+']');
+    assert.equal(norm(r.scored,field)[i],null,'reader '+field+'['+i+']');
+    if(code) assert.equal(r.disk.timeseries[field][i].financialMissing.reasonCode,code);
+    assert.ok(!r.retained.some(x=>x.field===field&&x.end===r.disk.timeseries[field+'Ends'][i]),'not retained');
+  };
+  const { preserveReloadHistory }=require('../lib/reload-history.js');
+  // Prior disk raw (main era): verified false zeros stay missing, never refilled with the stored 0.
+  const ysn=pull(preserveReloadHistory,'YSN.DE',periods(clone(fixture['YSN.DE']),'2026-09-29T09:00:00.000Z'),native('YSN.DE','2026-09-30T09:00:00.000Z'));
+  for(const i of [0,1,2,3]) withheld(ysn,'grossProfitQ',i);
+  // Prior disk raw, vendor restated the verified cell today: withheld, not the raw prior value.
+  const raw=day2(preserveReloadHistory,periods(clone(fixture.HTGC),'2026-09-29T09:00:00.000Z'));
+  withheld(raw,'revenueQ',0,'vendor-value-changed');
+  // Prior disk corrected (day 1 output), vendor restated on day 2: withheld, not the old correction.
+  const d1=day1(preserveReloadHistory);
+  assert.equal(norm(d1.disk,'revenueQ')[0],149114000);
+  const d2=day2(preserveReloadHistory,d1.disk);
+  withheld(d2,'revenueQ',0,'vendor-value-changed');
+  assert.ok(!d2.disk.timeseries.revenueQ[0].financialCorrection,'No stale correction marker');
+  assert.deepEqual(norm(d2.scored,'revenueQ').slice(1),[141536000,137430000,138093000,137459000]);
+  // Absence: an ordinary hole in an unrelated company is still refilled from the prior disk.
+  const prior=periods(clone(fixture.HTGC),'2026-09-29T09:00:00.000Z'); prior.meta.ticker='UNLISTED';
+  const hole=native('HTGC','2026-09-30T09:00:00.000Z'); hole.meta.ticker='UNLISTED'; hole.timeseries.revenueQ[1]={value:null};
+  const u=pull(preserveReloadHistory,'UNLISTED',prior,hole);
+  assert.equal(norm(u.disk,'revenueQ')[1],value(fixture.HTGC.timeseries.revenueQ[1]));
+  assert.ok(u.retained.some(x=>x.field==='revenueQ'));
+  // Break-once in memory: the old Q4-only gap test writes the old correction back on day 2.
+  const old=moduleCopy('lib/reload-history.js',s=>replaceLine(s,
+    '  || x?.financialCorrection?.replacementNativeValue === null || x?.financialMissing != null);','  );'));
+  assert.throws(()=>withheld(day2(old.preserveReloadHistory,day1(old.preserveReloadHistory).disk),'revenueQ',0),assert.AssertionError); breaks++;
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);

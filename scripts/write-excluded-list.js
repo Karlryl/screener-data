@@ -132,15 +132,18 @@ const grundVon = (e) => e.reason || e.action;
 // excludierten); industry lebt nur im Snapshot und kommt darum von dort.
 function zeile(e) {
   const meta = (e.snapshot && e.snapshot.meta) || null;
+  // A quarantined packet (meta.financialDataIssue) must not show the values its own reason
+  // text calls unreliable: sector, industry, market cap and growth stay empty, the reason stays.
+  const suspekt = !!(meta && meta.financialDataIssue);
   return {
     ticker: e.ticker,
     name: e.name ?? null,
     reason: grundVon(e),
     ...(financialReasons(e.snapshot).length ? { financialDataReasons: financialReasons(e.snapshot) } : {}),
-    sector: e.sector ?? null,
-    industry: (meta && typeof meta.industry === 'string' && meta.industry) || null,
-    marketCap: Number.isFinite(e.marketCap) ? e.marketCap : null,
-    revGrowthYoYPct: Number.isFinite(e.revGrowthYoYPct) ? e.revGrowthYoYPct : null,
+    sector: suspekt ? null : e.sector ?? null,
+    industry: !suspekt && meta && typeof meta.industry === 'string' && meta.industry || null,
+    marketCap: !suspekt && Number.isFinite(e.marketCap) ? e.marketCap : null,
+    revGrowthYoYPct: !suspekt && Number.isFinite(e.revGrowthYoYPct) ? e.revGrowthYoYPct : null,
   };
 }
 

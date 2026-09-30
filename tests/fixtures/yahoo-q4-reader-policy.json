@@ -4,7 +4,7 @@
   "lib/e1-compression.js": { "mode": "exempt", "reason": "Comment-only hit: the module explicitly does not read quarterly arrays." },
   "lib/e2-earnings-blowout.js": { "mode": "exempt", "reason": "Reads frozen historical PIT observations; never retrofit historical inputs." },
   "lib/newest-qtr-guard.js": { "mode": "exempt", "reason": "Raw vendor anomaly observation before FX; preserves evidence of vendor shape, changes no values." },
-  "lib/reload-history.js": { "mode": "upstream", "reason": "Pull supplies Q4-prepared prior and current snapshots for history retention and loss checks; raw cache comparisons only preserve provider evidence." },
+  "lib/reload-history.js": { "mode": "upstream", "reason": "Pull supplies a Q4-prepared prior and a hand-table-prepared current snapshot; Q4 gaps, financial false-value corrections and withheld cells in the current snapshot are authoritative and never refilled; raw cache comparisons only preserve provider evidence." },
   "lib/stale-quarter-reload.js": { "mode": "hook", "hook": "snapshot = prepareSnapshot(snapshot);", "reason": "Quarter presence must use corrected values and known gaps." },
   "lib/yahoo-q4-known-cases.js": { "mode": "exempt", "reason": "Correction authority itself must compare original provider fingerprints." },
   "methods/data-quality.js": { "mode": "upstream", "reason": "Pure grader gets corrected inputs from pull after FX, scoring loaders and the report reader." },
