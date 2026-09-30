@@ -306,7 +306,7 @@ function _isNonEquityQuote(q) {
 // die Yahoos quoteSummary nicht kennt; sie kosten taeglich Rate-Limit-Budget fuer nichts.
 // Deshalb schon in der Entdeckung raus, damit sie nie in die Watchlist kommen.
 function _vorGateVerworfen(q) {
-  if (!q || !q.symbol) return true;
+  if (!q || typeof q.symbol !== 'string' || !q.symbol) return true;  // non-string symbol would crash .toUpperCase() downstream
   const sym = String(q.symbol).toUpperCase();
   if (isWhenIssuedSecurity(q.longName || q.shortName || '')) return true;
   if (/[$]/.test(sym)) return true;        // preferred-stock variants
@@ -354,15 +354,24 @@ function dedupKey(ticker, exchange, source) {
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function fetchScreener(id, region) {
+async function fetchScreener(id, region, client) {
   region = region || 'US';
+  client = client || yf;  // test seam: stub client, default is the module-level yf
   // F-DP-011 / F-DP-010: 3 attempts total, i.e. up to 2 retries on 429 with linear
   // back-off (5s before attempt 1, 10s before attempt 2). The final attempt (2) is
   // not retried — on its failure we fall through and log.
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r = await yf.screener({ scrIds: id, count: 250, region: region });
-      return (r && r.quotes) || [];
+      // 30.09.2026: Yahoo drifted the predefined-screener response shape; yahoo-finance2
+      // 3.15.4's built-in schema check then threw on ALL 8 equity buckets x 25 regions
+      // (0 kept, run red). validateResult:false skips that library check; our own pre-gate
+      // filter (_vorGateVerworfen) checks symbol and type per row instead.
+      const r = await client.screener({ scrIds: id, count: 250, region: region }, undefined, { validateResult: false });
+      if (!r || !Array.isArray(r.quotes)) {
+        console.warn('  [WARN] fetchScreener [' + id + '/' + region + '] failed: unexpected response shape');
+        return [];
+      }
+      return r.quotes;
     } catch (e) {
       const is429 = (e && e.statusCode === 429) || (e && e.message && e.message.includes('429'));
       if (is429 && attempt < 2) {
@@ -2062,7 +2071,8 @@ module.exports = {
   // echten Endpunkt fahren kann statt einen Nachbau. Ein Nachbau haette genau die Abweichung
   // nicht gefunden, um die es geht (der erste Probelauf hat das vorgefuehrt: er mass seinen
   // eigenen Crumb-Fehler). Kein Test im Gate ruft ihn — das Gate bleibt netzfrei.
-  fetchExchangePage, crumbVorwaermen
+  fetchExchangePage, crumbVorwaermen,
+  fetchScreener           // 30.09.: validateResult:false + shape guard, testable with a stub client
 };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });

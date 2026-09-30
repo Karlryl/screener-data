@@ -1446,5 +1446,59 @@ test('DT-3: main() benutzt genau diese Funktion (kein zurueckgelassener Zweitpfa
     + 'Bugklasse, gegen die die Verdrahtungs-Waechter oben gebaut sind.');
 });
 
-console.log(`\nrefresh-universe.test.js: ${pass} ok, ${fail} fail`);
-process.exit(fail ? 1 : 0);
+// ── 30.09.2026: Yahoo drifted the predefined-screener shape; yahoo-finance2 3.15.4 threw
+// "Failed Yahoo Schema validation" on all 8 equity buckets x 25 regions -> 0 kept, run red.
+// fetchScreener now passes validateResult:false; our pre-gate filter checks each row. ─────
+async function testAsync(name, fn) {
+  try { await fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+}
+async function mitWarnungen(fn) {
+  const alt = console.warn, warns = [];
+  console.warn = (...a) => warns.push(a.join(' '));
+  try { return { r: await fn(), warns }; } finally { console.warn = alt; }
+}
+// Stub mirrors the measured library behaviour: throws unless validation is switched off.
+function schemaStub(antwort) {
+  return {
+    screener: async (_q, _qo, moduleOptions) => {
+      if (!moduleOptions || moduleOptions.validateResult !== false) {
+        throw new Error('Failed Yahoo Schema validation');
+      }
+      return antwort;
+    },
+  };
+}
+
+(async () => {
+  await testAsync('30.09.: fetchScreener schaltet die Bibliotheks-Schema-Pruefung ab und liefert die Quotes', async () => {
+    const quotes = [
+      { symbol: 'AAPL', quoteType: 'EQUITY', marketCap: 3e12, currency: 'USD', neuesYahooFeld: { x: 1 } },
+      { symbol: 'SAP.DE', quoteType: 'EQUITY', marketCap: 2e11, currency: 'EUR' },
+    ];
+    const { r, warns } = await mitWarnungen(() => ru.fetchScreener('most_actives', 'US', schemaStub({ quotes, unbekannt: true })));
+    assert.equal(r.length, 2, 'die Schema-Drift darf den Bucket nicht leeren');
+    assert.equal(r[0].symbol, 'AAPL');
+    assert.equal(warns.length, 0, 'ein erfolgreicher Abruf darf nicht warnen');
+  });
+
+  await testAsync('30.09. Gegenfall: quotes ist kein Array -> [] und [WARN] (kein Crash, nichts behalten)', async () => {
+    for (const antwort of [{ quotes: { 0: { symbol: 'AAPL' } } }, { quotes: 'kaputt' }, {}, null]) {
+      const { r, warns } = await mitWarnungen(() => ru.fetchScreener('day_gainers', 'DE', schemaStub(antwort)));
+      assert.deepEqual(r, [], 'unerwartete Form muss als gescheiterter Abruf gelten: ' + JSON.stringify(antwort));
+      assert.equal(warns.length, 1);
+      assert.match(warns[0], /\[WARN\] fetchScreener \[day_gainers\/DE\] failed: unexpected response shape/);
+    }
+  });
+
+  test('30.09.: kaputte Zeilen fliegen im echten Vor-Gate-Filter raus, eine normale EQUITY-Zeile bleibt', () => {
+    assert.equal(ru._vorGateVerworfen({ symbol: 'AAPL', quoteType: 'EQUITY' }), false, 'normale Aktie muss durchkommen');
+    for (const q of [null, undefined, 42, 'AAPL', {}, { quoteType: 'EQUITY' }, { symbol: 123, quoteType: 'EQUITY' },
+      { symbol: ['AAPL'], quoteType: 'EQUITY' }, { symbol: 'VFIAX', quoteType: 'MUTUALFUND' }]) {
+      assert.equal(ru._vorGateVerworfen(q), true, 'muss vor dem Gate verworfen werden: ' + JSON.stringify(q));
+    }
+  });
+
+  console.log(`\nrefresh-universe.test.js: ${pass} ok, ${fail} fail`);
+  process.exit(fail ? 1 : 0);
+})();
