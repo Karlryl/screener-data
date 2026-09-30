@@ -44,6 +44,7 @@
 'use strict';
 
 const fs = require('fs');
+const { readJsonOrNull: readJsonSafe } = require('../lib/read-json.js');
 const path = require('path');
 const https = require('https');
 const { execFileSync } = require('child_process');
@@ -70,10 +71,6 @@ const SAMPLE_LIMIT = process.env.SAMPLE_LIMIT
 
 // ─── Tiny utils ─────────────────────────────────────────────────────────
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-function readJsonSafe(p) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
-  catch (e) { return null; }
-}
 function isJsonObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

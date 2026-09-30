@@ -19,6 +19,7 @@
  */
 'use strict';
 const fs = require('fs');
+const { readJsonOr: loadJson } = require('../lib/read-json.js');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
@@ -30,9 +31,6 @@ const WINDOW = 14;
 const DROP_THRESHOLD = 0.40;
 const BASELINE_SHAPE_ERROR = 'ERR_EXCHANGE_COVERAGE_BASELINE_SHAPE';
 
-function loadJson(p, fallback) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
-}
 
 function baselineShapeError(detail) {
   const error = new Error(`Exchange-Coverage-Baseline ungueltig (${detail}) — Baseline wird NICHT ueberschrieben`);

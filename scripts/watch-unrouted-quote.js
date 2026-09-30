@@ -18,6 +18,7 @@
  */
 'use strict';
 const fs = require('fs');
+const { readJsonOr: loadJson } = require('../lib/read-json.js');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
@@ -28,9 +29,6 @@ const SNAP_DIR = path.join(ROOT, 'snapshots');
 const BASELINE_PATH = path.join(ROOT, 'data-health', 'unrouted-labels-baseline.json');
 const NO_SECTOR_THRESHOLD = 0.10;
 
-function loadJson(p, fallback) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
-}
 
 function baselineShapeError(detail) {
   const error = new Error(`Unrouted-Label-Baseline hat eine ungueltige Struktur (${detail}) — Baseline wird NICHT ueberschrieben`);
