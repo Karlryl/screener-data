@@ -34,6 +34,26 @@ test('all 36 authorized cells and one mixed-issuer packet have auditable sources
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
 });
+
+// M1: a basis-wrong series (any non-null replacement) needs exactly one coverage entry.
+test('coverage is mandatory for basis-wrong series, unique, and absent for single false values', () => {
+  const need = new Set(table.cases.filter(c => c.replacementValue !== null).map(c => c.ticker + '|' + c.field));
+  assert.deepEqual([...need].sort(), ['ARCC|revenueQ', 'BANPU.BK|revenueQ', 'FSK|revenueQ', 'HTGC|revenueQ']);
+  assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
+  const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
+  assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
+  const noKey = clone(table); delete noKey.coverage; assert.throws(() => validateTable(noKey), /Invalid financial hand table/);
+  const notArray = clone(table); notArray.coverage = {}; assert.throws(() => validateTable(notArray), /Invalid financial hand table/);
+  const dupCoverage = clone(table); dupCoverage.coverage.push(clone(dupCoverage.coverage[0]));
+  assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
+  const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
+  // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
+  assert.equal(validateTable(clone(table)).cases.length, 36);
+  // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
+  const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
+  assert.throws(() => assert.throws(() => broken.validateTable(noHtgc), /Missing/), assert.AssertionError); breaks++;
+});
 for (const c of table.cases) test(c.caseId + ' real cached input, absence, idempotency', () => {
   const input = clone(fixture[c.ticker]), original = serial(input);
   const i = input.timeseries[c.field + 'Ends'].indexOf(c.period);
@@ -48,8 +68,10 @@ for (const c of table.cases) test(c.caseId + ' real cached input, absence, idemp
   assert.equal(applyFinancialCases(other).snapshot, other);
   // Every authority entry is broken once independently, not just the first row.
   const broken = clone(table); broken.cases = broken.cases.filter(x => x.caseId !== c.caseId);
-  // Coverage would withhold the now-unlisted period; drop it so this break isolates the case row.
-  broken.coverage = broken.coverage.filter(v => v.ticker !== c.ticker);
+  // Coverage is mandatory (M1); keep it valid for the remaining cases. The dropped period then
+  // arrives raw (false zeros) or withheld (basis-wrong series), never as the verified replacement.
+  broken.coverage = broken.coverage.map(v => v.ticker !== c.ticker ? v : { ...v, coversThrough:
+    broken.cases.filter(x => x.ticker === v.ticker && x.field === v.field).map(x => x.period).sort().at(-1) });
   const guard = config => assert.equal(norm(applyFinancialCases(input, { table: config }).snapshot, c.field)[i],
     c.replacementValue === null ? null : c.replacementValue * factor);
   assert.throws(() => guard(broken), assert.AssertionError); guard(table); breaks++;
@@ -126,9 +148,45 @@ test('coversThrough: newer vendor quarter is missing and stale; covered quarters
   assert.throws(() => validateTable(bad), /Invalid financial coverage/);
   // Break-once in memory: without the coverage guard the new quarter passes as raw vendor data.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
-    '  for (const v of (config.coverage || []).filter(v => v.ticker === ticker)) {',
-    '  for (const v of [].filter(v => v.ticker === ticker)) {'));
+    '  const fields = new Set([...config.coverage, ...config.cases].filter(x => x.ticker === ticker).map(x => x.field));',
+    '  const fields = new Set();'));
   const guard = fn => assert.equal(value(fn(nextQuarter(clone(fixture.HTGC))).snapshot.timeseries.revenueQ[0]), null);
+  assert.throws(() => guard(broken.applyFinancialCases), assert.AssertionError); guard(applyFinancialCases); breaks++;
+});
+
+// L1: a value without a usable period end never passes raw in a series with hand-table authority.
+test('missing or short *Ends array and undated entries are withheld as period-not-verified', () => {
+  const check = (ticker, field, change, indexes) => {
+    const input = clone(fixture[ticker]); change(input.timeseries);
+    const original = serial(input), r = applyFinancialCases(input);
+    for (const i of indexes) {
+      const row = r.snapshot.timeseries[field][i];
+      assert.equal(value(row), null, ticker + ' index ' + i);
+      assert.equal(row.financialMissing.reasonCode, 'period-not-verified');
+      assert.ok(r.events.some(e => e.status === 'stale' && e.reasonCode === 'period-not-verified' && e.index === i));
+    }
+    assert.equal(serial(input), original);
+    assert.equal(serial(applyFinancialCases(r.snapshot).snapshot), serial(r.snapshot), 'Idempotent');
+    return r;
+  };
+  const n = fixture.HTGC.timeseries.revenueQ.length;
+  // Covered series: whole Ends array gone, and one value row beyond a shortened Ends array.
+  check('HTGC', 'revenueQ', ts => { delete ts.revenueQEnds; }, [...Array(n).keys()]);
+  const short = check('HTGC', 'revenueQ', ts => { ts.revenueQEnds = ts.revenueQEnds.slice(0, n - 1); }, [n - 1]);
+  assert.equal(value(short.snapshot.timeseries.revenueQ[0]), 149114000, 'Dated verified rows still corrected');
+  // Case-only false-zero series: the known-wrong 0 without dates must not pass raw.
+  const g = fixture['YSN.DE'].timeseries.grossProfitQ.length;
+  check('YSN.DE', 'grossProfitQ', ts => { delete ts.grossProfitQEnds; }, [...Array(g).keys()].filter(i =>
+    value(fixture['YSN.DE'].timeseries.grossProfitQ[i]) != null));
+  // Absence: intact YSN.DE and an unrelated ticker without Ends are untouched.
+  assert.ok(!applyFinancialCases(clone(fixture['YSN.DE'])).events.some(e => e.status === 'stale'));
+  const other = clone(fixture.HTGC); other.meta.ticker = 'UNLISTED'; delete other.timeseries.revenueQEnds;
+  assert.equal(applyFinancialCases(other).snapshot, other);
+  // Break-once in memory: the old guard skipped a series whose Ends array is missing.
+  const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '      const p = Array.isArray(ends) ? ends[i] : undefined;', '      if (!Array.isArray(ends)) return; const p = ends[i];'));
+  const guard = fn => { const s = clone(fixture.HTGC); delete s.timeseries.revenueQEnds;
+    assert.equal(value(fn(s).snapshot.timeseries.revenueQ[0]), null); };
   assert.throws(() => guard(broken.applyFinancialCases), assert.AssertionError); guard(applyFinancialCases); breaks++;
 });
 
@@ -143,12 +201,17 @@ test('stale count raises a ::warning:: summary line; clean run has none', () => 
   };
   assert.ok(summary(nextQuarter(clone(fixture.HTGC))).startsWith('::warning::[financial-hand-table-summary]'));
   assert.ok(summary(clone(fixture.HTGC)).startsWith('[financial-hand-table-summary]'));
+  // M2: a drifted quarantine fingerprint also raises the warning.
+  const drift = clone(fixture['BANPU.BK']); drift.meta.sharesOutstanding *= 1.001;
+  assert.ok(summary(drift).startsWith('::warning::[financial-hand-table-summary]'));
+  assert.ok(summary(clone(fixture['BANPU.BK'])).startsWith('[financial-hand-table-summary]'));
 });
 
 test('BANPU hold is an exact three-anchor packet, not a ticker rule; raw mixed metrics are preserved', () => {
   const input = clone(fixture['BANPU.BK']);
-  const result = applyFinancialCases(input).snapshot;
+  const exact = applyFinancialCases(input), result = exact.snapshot;
   assert.equal(result.meta.financialDataIssue.caseId, 'banpu-mixed-issuer-packet-20260929');
+  assert.ok(!exact.events.some(e => e.status === 'stale'), 'Exact packet: hold without warning');
   assert.equal(serial(result.metrics), serial(input.metrics));
   assert.equal(serial(result.annual), serial(input.annual));
   const { isDataSuspect } = require('../src/scoring/score.js');
@@ -158,19 +221,41 @@ test('BANPU hold is an exact three-anchor packet, not a ticker rule; raw mixed m
   assert.equal(scored.score, null);
   assert.equal(scored.reason, 'data-suspect', 'Stable code: it is the excluded bucket key');
   assert.equal(scored.reasonText, result.meta.financialDataIssue.reason, 'Text rides in a separate field');
+  // M2: a drifted anchor (e.g. shares +0.1 %) keeps the hold until a human re-verifies, and warns.
+  const drifted = r => {
+    assert.equal(r.snapshot.meta.financialDataIssue?.caseId, 'banpu-mixed-issuer-packet-20260929');
+    assert.equal(require('../src/scoring/score.js').isDataSuspect(r.snapshot, [], 'route'), true);
+    const stale = r.events.filter(e => e.status === 'stale');
+    assert.equal(stale.length, 1);
+    assert.equal(stale[0].reasonCode, 'quarantine-fingerprint-changed');
+    assert.equal(stale[0].caseId, 'banpu-mixed-issuer-packet-20260929');
+  };
   for (const anchor of table.quarantines[0].fingerprint) {
     const other = clone(input); const parent = anchor.path.slice(0,-1).reduce((v,k) => v[k], other);
-    parent[anchor.path.at(-1)]++;
-    assert.equal(applyFinancialCases(other).snapshot.meta.financialDataIssue, undefined);
+    parent[anchor.path.at(-1)] *= 1.001;
+    const r = applyFinancialCases(other); drifted(r);
+    assert.equal(serial(applyFinancialCases(r.snapshot).snapshot), serial(r.snapshot), 'Idempotent');
+    assert.ok(applyFinancialCases(r.snapshot).events.some(e => e.reasonCode === 'quarantine-fingerprint-changed'), 'Still warned later');
   }
+  // Absence: another ticker with the same drifted packet and no quarantine is untouched.
+  const unlisted = clone(input); unlisted.meta.ticker = 'UNLISTED'; unlisted.meta.sharesOutstanding *= 1.001;
+  const u = applyFinancialCases(unlisted); assert.equal(u.snapshot, unlisted); assert.equal(u.events.length, 0);
+  // Break-once in memory: the old silent release when the fingerprint no longer matches.
+  const lapse = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '    const matches = matchesQuarantine(snapshot, q);',
+    '    const matches = matchesQuarantine(snapshot, q); if (!matches) continue;'));
+  const sharesDrift = clone(input); sharesDrift.meta.sharesOutstanding *= 1.001;
+  assert.throws(() => drifted(lapse.applyFinancialCases(sharesDrift)), assert.AssertionError); breaks++;
   const rollover = clone(input);
   for (const field of ['annualRev','annualGP']) {
     rollover.annual[field].unshift({value:null});
     rollover.annual[field+'Ends'].unshift(null);
   }
+  // A year rollover is still the exact packet: hold without a fingerprint warning.
   const assertHold = fn => {
-    const held = fn(rollover).snapshot;
-    assert.equal(require('../src/scoring/score.js').scoreUniverse([held], require('../src/scoring/formulas/index.js'))[0].score, null);
+    const r = fn(rollover);
+    assert.equal(require('../src/scoring/score.js').scoreUniverse([r.snapshot], require('../src/scoring/formulas/index.js'))[0].score, null);
+    assert.ok(!r.events.some(e => e.status === 'stale'), 'Rollover matches the fingerprint');
   };
   assertHold(applyFinancialCases);
   const oldIndex = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
@@ -178,12 +263,12 @@ test('BANPU hold is an exact three-anchor packet, not a ticker rule; raw mixed m
     '    const matches = q.fingerprint.every(a => a.path.reduce((v, k) => v?.[k], snapshot) === a.expected);'));
   assert.throws(() => assertHold(oldIndex.applyFinancialCases), assert.AssertionError); breaks++;
   const mismatch = clone(rollover); mismatch.annual.annualGP.unshift({value:null});
-  assert.equal(applyFinancialCases(mismatch).snapshot.meta.financialDataIssue, undefined);
+  drifted(applyFinancialCases(mismatch));
   const dated = clone(rollover);
   dated.annual.annualRevEnds[1] = dated.annual.annualGPEnds[1] = '2025-12-31';
-  assert.ok(applyFinancialCases(dated).snapshot.meta.financialDataIssue);
+  assert.ok(!applyFinancialCases(dated).events.some(e => e.status === 'stale'));
   dated.annual.annualGPEnds[1] = '2024-12-31';
-  assert.equal(applyFinancialCases(dated).snapshot.meta.financialDataIssue, undefined);
+  drifted(applyFinancialCases(dated));
   const broken = moduleCopy('src/scoring/score.js', s => replaceLine(s,
     '  if (s?.meta?.financialDataIssue) return true;', '  // Deliberately removed in-memory wrong-issuer guard.'));
   assert.throws(() => assert.equal(broken.isDataSuspect(result, [], 'route'), true), assert.AssertionError); breaks++;
@@ -257,6 +342,28 @@ test('real native/USD producer, readers, PIT and exported reasons field use the 
   });
   const guard=fn=>assert.equal(fn(clone(fixture.HTGC)).timeseries.revenueQ[0].value,149114000);
   assert.throws(()=>guard(broken.prepareSnapshot),assert.AssertionError);guard(adapter.prepareSnapshot);breaks++;
+});
+
+// L2: a hand-table failure in the scoring loaders turns the run red instead of dropping the company.
+test('scoring loaders rethrow hand-table failures; an ordinary broken file is still only counted', () => {
+  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'financial-cases-loader-'));
+  const live=path.resolve(__dirname,'../snapshots');
+  assert.notEqual(path.resolve(tmp),live); assert.ok(!path.resolve(tmp).startsWith(live+path.sep));
+  fs.writeFileSync(path.join(tmp,'HTGC.json'),serial(fixture.HTGC));
+  const q4=require('../lib/yahoo-q4-known-cases.js');
+  const failing={...q4,prepareSnapshot:()=>{const e=new Error('hand table broken');e.code=q4.FAILURE_CODE;throw e;}};
+  const rs=moduleCopy('src/scoring/run-screener.js',s=>s,{'../../lib/yahoo-q4-known-cases.js':failing});
+  assert.throws(()=>rs.loadSmallcapUniverse(tmp,path.join(tmp,'none.json')),/hand table broken/);
+  assert.throws(()=>rs.loadUniverse(tmp,path.join(tmp,'none.json')),/hand table broken/);
+  // Absence: a plain unreadable file is still counted as a parse failure, not thrown.
+  const bad=fs.mkdtempSync(path.join(os.tmpdir(),'financial-cases-loader-bad-'));
+  fs.writeFileSync(path.join(bad,'BROKEN.json'),'{');
+  assert.equal(require('../src/scoring/run-screener.js').loadSmallcapUniverse(bad,path.join(bad,'none.json')),null);
+  // Break-once in memory: the old swallowing catch drops the company silently.
+  const old=moduleCopy('src/scoring/run-screener.js',s=>replaceLine(s,
+    '    catch (e) { if (e.code === HAND_TABLE_FAILED) throw e; parseFail++; continue; }',
+    '    catch (e) { parseFail++; continue; }'),{'../../lib/yahoo-q4-known-cases.js':failing});
+  assert.throws(()=>assert.throws(()=>old.loadSmallcapUniverse(tmp,path.join(tmp,'none.json')),/hand table broken/),assert.AssertionError); breaks++;
 });
 
 // LOW-6: the daily pull's own converter (processOne -> _convertSnapshotToUSDGuarded), then disk,

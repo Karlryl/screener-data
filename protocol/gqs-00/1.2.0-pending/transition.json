@@ -80,7 +80,7 @@
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "e68ecf6ebdf1da2f18c0eece6575035a964d449020275974dbad509d6a74dd03",
     "src/scoring/profit-tier.js": "a7af103912b2bfdec3dbe5bfa40268ec95d5fb8f12b87a0661af8f347f5c3eaf",
-    "src/scoring/run-screener.js": "c18d93255c2bc2158218d8431f01d04562de851891458e697b33e320ad639b57"
+    "src/scoring/run-screener.js": "5baa8445eaf96997066706b91849ae1aa19064c4c21d053a982525abd15be040"
   },
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
@@ -103,9 +103,10 @@
     "authority": "Explicit C2 build brief, Karl wish W2, Regelblatt v4 Part 2: verified wrong values repaired by hand table plus guard; Claude commits after independent review.",
     "scope": "Only run-screener.js source fingerprint added for the read-only cached-input overlay. Frozen GQS-00 source/trace evidence remains unchanged.",
     "file": "src/scoring/run-screener.js",
-    "sourceSha256LF": "c18d93255c2bc2158218d8431f01d04562de851891458e697b33e320ad639b57",
+    "sourceSha256LF": "5baa8445eaf96997066706b91849ae1aa19064c4c21d053a982525abd15be040",
     "evidence": "scripts/yahoo-q4-known-cases-replay.js: 16015 snapshots, exactly 27 corrected cells, 44 unchanged controls, all other input rows identical; source SHA256 unchanged.",
-    "review": "Build registration only; independent release review by Claude remains required."
+    "review": "Build registration only; independent release review by Claude remains required.",
+    "revision2026-09-30": "Review round 2 finding L2: a hand-table failure (YAHOO_Q4_HAND_TABLE_FAILED) in the main or small-cap snapshot loader is rethrown instead of counted as a parse failure, so the run goes red instead of silently dropping the company. Hash updated; no formula, weight or threshold change."
   },
   "f2KnownCaseInputRepair": {
     "date": "2026-09-29",
