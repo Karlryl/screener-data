@@ -1446,9 +1446,14 @@ test('DT-3: main() benutzt genau diese Funktion (kein zurueckgelassener Zweitpfa
     + 'Bugklasse, gegen die die Verdrahtungs-Waechter oben gebaut sind.');
 });
 
-// ── 30.09.2026: Yahoo drifted the predefined-screener shape; yahoo-finance2 3.15.4 threw
-// "Failed Yahoo Schema validation" on all 8 equity buckets x 25 regions -> 0 kept, run red.
-// fetchScreener now passes validateResult:false; our pre-gate filter checks each row. ─────
+// ── 30.09.2026: Yahoo added three enum values to criteriaMeta.includeFields; yahoo-finance2
+// 3.15.4 threw FailedYahooValidationError on all equity buckets x 25 regions -> 0 kept, run red.
+// fetchScreener keeps library validation ON and tolerates ONLY that drift (every leaf error under
+// /criteriaMeta). Tested against the REAL library: a yahoo-finance2 instance whose _fetch returns
+// the trimmed live payload (tests/fixtures/yahoo-screener-most_actives-drift-20260930.json). ──
+// If an async test never settles, the file must not end with exit 0 and no summary line:
+// exitCode stays 1 until the summary below is printed.
+process.exitCode = 1;
 async function testAsync(name, fn) {
   try { await fn(); pass++; console.log('  ok   ' + name); }
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
@@ -1458,37 +1463,76 @@ async function mitWarnungen(fn) {
   console.warn = (...a) => warns.push(a.join(' '));
   try { return { r: await fn(), warns }; } finally { console.warn = alt; }
 }
-// Stub mirrors the measured library behaviour: throws unless validation is switched off.
-function schemaStub(antwort) {
-  return {
-    screener: async (_q, _qo, moduleOptions) => {
-      if (!moduleOptions || moduleOptions.validateResult !== false) {
-        throw new Error('Failed Yahoo Schema validation');
-      }
-      return antwort;
-    },
-  };
+const DRIFT_FIXTURE = require('./fixtures/yahoo-screener-most_actives-drift-20260930.json');
+function echterClient(payload) {
+  const YF = require('yahoo-finance2').default;
+  const c = new YF({ suppressNotices: ['yahooSurvey'], validation: { logErrors: false, logOptionsErrors: false } });
+  c._fetch = async () => JSON.parse(JSON.stringify(payload));  // offline: only the transport is replaced
+  return c;
+}
+function driftVariante(aendern) {
+  const p = JSON.parse(JSON.stringify(DRIFT_FIXTURE));
+  aendern(p.finance.result[0]);
+  return p;
 }
 
 (async () => {
-  await testAsync('30.09.: fetchScreener schaltet die Bibliotheks-Schema-Pruefung ab und liefert die Quotes', async () => {
-    const quotes = [
-      { symbol: 'AAPL', quoteType: 'EQUITY', marketCap: 3e12, currency: 'USD', neuesYahooFeld: { x: 1 } },
-      { symbol: 'SAP.DE', quoteType: 'EQUITY', marketCap: 2e11, currency: 'EUR' },
-    ];
-    const { r, warns } = await mitWarnungen(() => ru.fetchScreener('most_actives', 'US', schemaStub({ quotes, unbekannt: true })));
-    assert.equal(r.length, 2, 'die Schema-Drift darf den Bucket nicht leeren');
-    assert.equal(r[0].symbol, 'AAPL');
-    assert.equal(warns.length, 0, 'ein erfolgreicher Abruf darf nicht warnen');
+  await testAsync('30.09. (a): reine criteriaMeta-Drift -> die validierten Quotes kommen durch, keine Warnung', async () => {
+    await assert.rejects(echterClient(DRIFT_FIXTURE).screener({ scrIds: 'most_actives', count: 250, region: 'US' }),
+      (e) => e.name === 'FailedYahooValidationError' && ru.nurCriteriaMetaDrift(e.errors),
+      'die Fixture muss die gemessene Drift tragen, sonst prueft der Test nichts');
+    const { r, warns } = await mitWarnungen(() => ru.fetchScreener('most_actives', 'US', echterClient(DRIFT_FIXTURE)));
+    assert.deepEqual(r.map((q) => q.symbol), ['INTC', 'NVDA', 'SPCX']);
+    assert.ok(r.every((q) => q.quoteType === 'EQUITY' && !ru._vorGateVerworfen(q)));
+    assert.equal(warns.length, 0, 'ein toleriert-driftender Abruf darf nicht warnen');
   });
 
-  await testAsync('30.09. Gegenfall: quotes ist kein Array -> [] und [WARN] (kein Crash, nichts behalten)', async () => {
-    for (const antwort of [{ quotes: { 0: { symbol: 'AAPL' } } }, { quotes: 'kaputt' }, {}, null]) {
-      const { r, warns } = await mitWarnungen(() => ru.fetchScreener('day_gainers', 'DE', schemaStub(antwort)));
-      assert.deepEqual(r, [], 'unerwartete Form muss als gescheiterter Abruf gelten: ' + JSON.stringify(antwort));
-      assert.equal(warns.length, 1);
-      assert.match(warns[0], /\[WARN\] fetchScreener \[day_gainers\/DE\] failed: unexpected response shape/);
+  await testAsync('30.09. (b): Zeilen-Verstoss neben der Drift (quoteType fehlt / longName ist Zahl) -> [] und [WARN]', async () => {
+    for (const [name, aendern] of [
+      ['ohne quoteType', (res) => { delete res.quotes[0].quoteType; }],
+      ['longName als Zahl', (res) => { res.quotes[1].longName = 12345; }],
+    ]) {
+      const { r, warns } = await mitWarnungen(() => ru.fetchScreener('most_actives', 'US', echterClient(driftVariante(aendern))));
+      assert.deepEqual(r, [], name + ': eine Zeilen-Verletzung muss den Abruf scheitern lassen');
+      assert.equal(warns.length, 1, name);
+      assert.match(warns[0], /\[WARN\] fetchScreener \[most_actives\/US\] failed: /, name);
     }
+  });
+
+  await testAsync('30.09. (c): quotes ist kein Array -> [] und [WARN] (echte Bibliothek, Drift-Ausnahme, validierter Pfad)', async () => {
+    const faelle = [
+      ['echte Bibliothek, quotes als Objekt', echterClient(driftVariante((res) => { res.quotes = { 0: res.quotes[0] }; })), /failed: /],
+      ['nur criteriaMeta-Fehler, aber e.result.quotes kein Array', { screener: async () => {
+        const e = new Error('Failed Yahoo Schema validation'); e.name = 'FailedYahooValidationError';
+        e.errors = [{ instancePath: '/criteriaMeta/includeFields/23' }]; e.result = { quotes: 'kaputt' }; throw e;
+      } }, /failed: Failed Yahoo Schema validation/],
+      ['validiert, aber quotes fehlt', { screener: async () => ({}) }, /failed: unexpected response shape/],
+      ['validiert, aber null', { screener: async () => null }, /failed: unexpected response shape/],
+    ];
+    for (const [name, client, muster] of faelle) {
+      const { r, warns } = await mitWarnungen(() => ru.fetchScreener('day_gainers', 'DE', client));
+      assert.deepEqual(r, [], name);
+      assert.equal(warns.length, 1, name);
+      assert.match(warns[0], /\[WARN\] fetchScreener \[day_gainers\/DE\] /, name);
+      assert.match(warns[0], muster, name);
+    }
+  });
+
+  test('30.09. (d): nurCriteriaMetaDrift — nur wenn JEDER Blatt-Fehler unter /criteriaMeta liegt', () => {
+    const cm = (i) => ({ instancePath: '/criteriaMeta/includeFields/' + i });
+    const wurzel = (subErrors) => ({ instancePath: '', message: 'should match some schema in oneOf', subErrors });
+    assert.equal(ru.nurCriteriaMetaDrift([cm(23), cm(38), cm(57)]), true);
+    assert.equal(ru.nurCriteriaMetaDrift([wurzel([cm(23), wurzel([cm(38)])])]), true, 'verschachtelt bis zum Blatt');
+    assert.equal(ru.nurCriteriaMetaDrift([{ instancePath: '/criteriaMeta' }]), true);
+    for (const [name, errs] of [
+      ['leere Liste', []], ['undefined', undefined], ['null', null],
+      ['gemischt', [cm(23), { instancePath: '/quotes/0' }]],
+      ['gemischt verschachtelt', [wurzel([cm(23), { instancePath: '/quotes/1/longName' }])]],
+      ['Wurzel ohne Unterfehler', [wurzel([])]],
+      ['Praefix-Falle', [{ instancePath: '/criteriaMetaX/a' }]],
+      ['anderes Feld', [{ instancePath: '/total' }]],
+      ['Eintrag null', [null]],
+    ]) assert.equal(ru.nurCriteriaMetaDrift(errs), false, name);
   });
 
   test('30.09.: kaputte Zeilen fliegen im echten Vor-Gate-Filter raus, eine normale EQUITY-Zeile bleibt', () => {
@@ -1497,6 +1541,16 @@ function schemaStub(antwort) {
       { symbol: ['AAPL'], quoteType: 'EQUITY' }, { symbol: 'VFIAX', quoteType: 'MUTUALFUND' }]) {
       assert.equal(ru._vorGateVerworfen(q), true, 'muss vor dem Gate verworfen werden: ' + JSON.stringify(q));
     }
+  });
+
+  test('30.09.: in beiden Ingest-Schleifen laeuft _vorGateVerworfen(q) VOR q.symbol.toUpperCase()', () => {
+    const bloecke = ingestSchleifen(SRC_RU);
+    assert.equal(bloecke.length, 2);
+    bloecke.forEach((b, i) => {
+      const filter = b.indexOf('_vorGateVerworfen(q)'), upper = b.indexOf('q.symbol.toUpperCase()');
+      assert.ok(filter >= 0 && upper >= 0, 'Schleife ' + (i + 1) + ': Filter oder toUpperCase nicht gefunden');
+      assert.ok(filter < upper, 'Schleife ' + (i + 1) + ': toUpperCase vor dem Filter -> Crash bei Nicht-String-Symbol');
+    });
   });
 
   console.log(`\nrefresh-universe.test.js: ${pass} ok, ${fail} fail`);
