@@ -240,7 +240,7 @@ test('AT-SK-REGION-001 Wachposten: getRegion hat keinen Produktionsaufrufer', ()
       if (e.name === 'node_modules' || e.name === '.git' || e.name === 'outputs' || e.name === '.claude') continue;
       const p = path.join(dir, e.name);
       if (e.isDirectory()) { if (e.name !== 'tests') durchsuche(p); continue; }
-      if (!e.name.endsWith('.js') || p.endsWith(path.join('lib', 'region-mapping.js'))) continue;
+      if (!e.name.endsWith('.js') || e.name.endsWith('.test.js') || p.endsWith(path.join('lib', 'region-mapping.js'))) continue;
       const txt = fs.readFileSync(p, 'utf8');
       // Aufruf, nicht Erwaehnung: ein Kommentar wie "getRegion bleibt unberuehrt" zaehlt nicht.
       if (/\bgetRegion\s*\(/.test(txt.replace(/^\s*(\/\/|\*).*$/gm, ''))) treffer.push(path.relative(REPO, p));
