@@ -103,11 +103,32 @@ function revQuartalsYoY(s) {
   const g = a / b - 1;
   return Number.isFinite(g) ? g : null;
 }
+// Tag 1391 (Diagnose 30.09.2026, 9992.HK / SKS.AX): Yahoo can carry a strictly newer fiscal
+// year in the bundle that lost the annual merge. pull-yahoo.js (_newerAnnualYear) records it
+// OUTSIDE the annual series as meta.annualRevNewerYear {end, revenue, priorEnd, priorRevenue,
+// priorStored}: both revenues in the native statement currency (only their ratio is used), and
+// priorStored = the stored annualRev[0] it was measured against (fingerprint, no period ends).
+// Only the ANNUAL growth leg reads it, i.e. only when no quarterly year-over-year pair can be
+// formed (owner rule: an automatic rule must not alter correct rows). It applies only while
+// the stored newest annual revenue is still exactly the value it was measured against.
+// Every other annual reader keeps the unchanged series. annualLegNewerYear is the ONE validity
+// check; the rule-40 export reads it for its base-year and period gates of the same number.
+function annualLegNewerYear(s) {
+  const n = s && s.meta && s.meta.annualRevNewerYear;
+  const r0 = norm(s, 'annualRev')[0];
+  return n && typeof n.end === 'string' && r0 > 0 && n.priorStored === r0
+    && n.revenue > 0 && n.priorRevenue > 0 && Number.isFinite(n.revenue / n.priorRevenue) ? n : null;
+}
+function revAnnualLegYoY(s) {
+  const n = annualLegNewerYear(s);
+  return n ? n.revenue / n.priorRevenue - 1 : revAnnualYoY(s);
+}
 function revYoYComponents(s) {
   const comps = [];
-  const jahr = revAnnualYoY(s);
-  if (jahr !== null) comps.push(jahr);
   const quartal = revQuartalsYoY(s);
+  // The annual component is the annual growth leg only where no quarterly pair exists.
+  const jahr = quartal === null ? revAnnualLegYoY(s) : revAnnualYoY(s);
+  if (jahr !== null) comps.push(jahr);
   if (quartal !== null) comps.push(quartal);
   return comps; // 0..2 Werte (Bruchteile, nicht %)
 }
@@ -125,7 +146,7 @@ function revYoYComponents(s) {
 // Quartals-Bein gibt.
 function revGrowthLevel(s, growthBounds) {
   const quartal = revQuartalsYoY(s);
-  let g = (quartal !== null) ? quartal : revAnnualYoY(s);
+  let g = (quartal !== null) ? quartal : revAnnualLegYoY(s);
   if (g === null) return null;
   if (growthBounds) g = Math.max(growthBounds[0], Math.min(growthBounds[1], g));
   return g * 100; // % wie zuvor (negativ rankt natuerlich unten)
@@ -550,6 +571,7 @@ function roicStability(s) {
 module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, revYoYComponents,
   revAnnualYoY, revQuartalsYoY, // F-4: die beiden Beine einzeln (Tests/Messung)
+  revAnnualLegYoY, annualLegNewerYear, // Tag 1391: Jahresbein mit vermerktem neuerem Geschaeftsjahr
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel, roicStability,
   // U-SC-003: die EINE Quellenwahl fuer OpInc/Assets/CurrLiab — auch die Anzeige-Lampe lowRoic
   // (lamps.js) liest sie, damit Lampe und Achse nie zwei verschiedene ROIC-Quellen benutzen.

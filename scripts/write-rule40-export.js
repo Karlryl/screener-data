@@ -229,6 +229,9 @@ function quartalsBeinTraegt(snapshot) {
  */
 function basisJahr(snapshot) {
   if (quartalsBeinTraegt(snapshot)) return null;
+  // Tag 1391: reads the Jahresbein a recorded newer fiscal year, this gate checks that pair.
+  const neuer = axesFns.annualLegNewerYear(snapshot);
+  if (neuer) return { basis: neuer.priorRevenue, aktuell: neuer.revenue };
   const ar = norm(snapshot, 'annualRev');
   const aktuell = ar[0], basis = ar[1];
   if (!istZahl(aktuell) || !istZahl(basis) || aktuell <= 0 || basis <= 0) return null;
@@ -295,6 +298,10 @@ function neuestesQuartalsEnde(snapshot) {
   // Wertes, nie am Wert selbst — ein Rueckfall auf 0 waere hier genau die Luege, die
   // dieser Anker verhindern soll.
   for (const [enden, feld] of [[ts.revenueQEnds, 'revenueQ'], [an.annualRevEnds, 'annualRev']]) {
+    // Tag 1391: no quarter with a value -> the Jahresbein carries; with a recorded newer fiscal
+    // year it speaks about that year, so that is the period shown and checked for freshness.
+    const neuer = feld === 'annualRev' && !quartalsBeinTraegt(snapshot) ? axesFns.annualLegNewerYear(snapshot) : null;
+    if (neuer && Number.isFinite(Date.parse(neuer.end))) return Date.parse(neuer.end);
     if (!Array.isArray(enden) || !enden.length) continue;
     const werte = norm(snapshot, feld);
     for (let i = 0; i < enden.length; i++) {
@@ -985,7 +992,7 @@ module.exports = {
   R40_MIN, TOP_N, TOP_N_LARGE, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MIN_BASE_YEAR_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
-  basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
+  basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
   neuestesQuartalsEnde, fcfMargeVertrauenswuerdig,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
   schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,
