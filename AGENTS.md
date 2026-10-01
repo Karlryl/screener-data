@@ -55,8 +55,8 @@ konkreten Auftrag; die Wahl im Ergebnis begründen.
 - Commit `Tag <n>: <Betreff>` (gezielt per Pathspec) auf einem eigenen Branch, vorher auf aktuellem
   `origin/main` aufsetzen (täglicher CI committet). Merge nach `main` erst nach bestandener
   Zweitprüfung und grünen Gates.
-- Karl auf Deutsch knapp melden: Was ist rausgekommen → warum so entschieden
-  → woran verifiziert. Das alte Masterplan-/WORKLOG-Ritual ist archiviert.
+- Karl auf Deutsch knapp melden (Regelblatt G13/G15): Zeile 1 das Ergebnis; Problem, Lösung
+  und Nutzen je ein Satz; jedes Urteil mit Prozent. Das alte Masterplan-/WORKLOG-Ritual ist archiviert.
 
 **Nie:** Schutzlisten-Dateien überschreiben oder löschen, kostenpflichtige API-Calls.
 
