@@ -369,6 +369,7 @@ async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 // Recognition (e.name) as in pull-yahoo.js salvageValidationReject; that helper itself does not
 // fit here (module whitelist + price check, top-level instancePath only).
 function nurCriteriaMetaDrift(errors) {
+  if (!Array.isArray(errors)) return false;  // review #397: a non-array is never salvaged and never throws
   const pfade = [];
   (function blaetter(liste) {
     for (const err of liste || []) {
