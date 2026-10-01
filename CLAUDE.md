@@ -11,7 +11,7 @@ Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branc
 Reihenfolge und Status: `C:\Users\Anwender\OneDrive\Dokumente\GitHub\karl-plan\WUNSCHLISTE.md` (neue Zeilen/Reihenfolge nur durch Karl). Der Vault-Masterplan (`…\growth-screener\_MASTERPLAN-screener-findash.md`) ist Archiv/Nachschlagewerk, kein Auftragsgeber.
 - **Arbeitsnachweis:** Tests, Freigabe und nötige Übergabe knapp dokumentieren. Das alte Update-Ritual (Masterplan-Häkchen, WORKLOG mit 4 Pflichtteilen, Lektionen-Register als Pflicht-Lektüre) ist archiviert (Karl 26.09.2026).
 - **Commit-Konvention (H2):** `Tag <n>: <Betreff>` — `n` = höchste `Tag`-Nummer aus `git log --oneline` + 1, ein Tag pro logischem Chunk.
-- **Push/Merge auf `main`:** grüne Gates UND Prüfung durch jemand anderen als den Erbauer (Claude↔Codex; ist Claude leer: zweite blinde Codex-Prüfung + grüne Tests). Force-Push/History-Rewrite nur mit Karls Ja; Löschen nach den zwei Klassen (global). Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
+- **Push/Merge auf `main`:** grüne Gates UND Prüfung durch jemand anderen als den Erbauer (Claude↔Codex; ist Claude leer: zweite blinde Codex-Prüfung + grüne Tests). Force-Push/History-Rewrite nur mit Karls Ja; Löschen nur über die monatliche Löschliste mit Karls „ja" (Regelblatt G25). Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
 - **Schutzliste (nie löschen/überschreiben):** `picks-history/`, `methods-history/`, `earnings-calendar.json`, Branch `loop/formel-haertung`. `picks-history/` ist darüber hinaus **inhaltlich eingefroren** (Stichtag 2026-07-02, Karl 2026-08-16, dauerhaft) — auch keine Korrektur, kein Backfill, kein Aufräum-Commit und keine „Reparatur" von Prüfskript-Meldungen; Details und Begründung in [`picks-history/_FROZEN.md`](./picks-history/_FROZEN.md). Nachfolger: `board-history/`.
 
 ## Kern-Designprinzip: NUR Qualität, nie Bewertung
@@ -39,7 +39,7 @@ Formel-Arbeit nur aus Wunschliste-Zeilen über den Formel-Weg. Übriges Limit �
 Nachschlagewerk (kein Auftragsgeber): Formel-Ledger `…\growth-screener\screener-formel-ledger.md` (Fitness-Baseline, Befunde); Mess-Artefakte in `screener-data\fitness\`. Der frühere Dauer-Härtungs-Loop ist archiviert.
 
 ## Wissensbasis / Recherche (getrennt vom Code)
-Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault**
+Sektor-Dossiers (evidence-graded, zitiert; neue und überarbeitete auf Deutsch nach Regelblatt G13, ältere liegen noch englisch vor) liegen im **Obsidian-Vault**
 `C:\Users\Anwender\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\` — **NICHT** im screener-data-Repo. Hub: `growth-screener-knowledge-base`, verlinkt mit `elliott-wellen-referenz`.
 
 ## Engineering-Regeln für Multi-Agent-Arbeit
