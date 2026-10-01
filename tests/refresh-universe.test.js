@@ -1535,6 +1535,22 @@ function driftVariante(aendern) {
     ]) assert.equal(ru.nurCriteriaMetaDrift(errs), false, name);
   });
 
+  test('01.10. (Review #397): nurCriteriaMetaDrift — kein Array wird nie gerettet und wirft nie', () => {
+    const cm = { instancePath: '/criteriaMeta/includeFields/1' };
+    // Anwesenheit: dieselben Fehler als Array werden weiter gerettet.
+    assert.equal(ru.nurCriteriaMetaDrift([cm]), true);
+    for (const [name, errs] of [
+      ['Set mit criteriaMeta-Fehler', new Set([cm])],
+      ['einzelnes Fehlerobjekt', { instancePath: '/criteriaMeta' }],
+      ['array-aehnliches Objekt', { length: 1, 0: cm }],
+      ['String', '/criteriaMeta'], ['Zahl', 7], ['true', true],
+    ]) {
+      let r;
+      assert.doesNotThrow(() => { r = ru.nurCriteriaMetaDrift(errs); }, name);
+      assert.equal(r, false, name);
+    }
+  });
+
   test('30.09.: kaputte Zeilen fliegen im echten Vor-Gate-Filter raus, eine normale EQUITY-Zeile bleibt', () => {
     assert.equal(ru._vorGateVerworfen({ symbol: 'AAPL', quoteType: 'EQUITY' }), false, 'normale Aktie muss durchkommen');
     for (const q of [null, undefined, 42, 'AAPL', {}, { quoteType: 'EQUITY' }, { symbol: 123, quoteType: 'EQUITY' },

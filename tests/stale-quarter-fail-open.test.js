@@ -163,10 +163,16 @@ function assertPriceOnly(f, m) {
   await check('snapshot without any reported quarter has a separate counter', async () => {
     const s = snapshot('OLD'); s.timeseries = {};
     const f = fixture({ snapshots: [s] }), m = await f.run();
-    assert.equal(m.n_stale_quarter_no_quarter, 1); assert.equal(m.n_stale_quarter_eligible, 0);
+    // Tag 1391: the counter stays. An annual-only row whose revenue year is undated (this
+    // fixture) is now a candidate on its annual basis (tests/annual-newer-year.test.js).
+    assert.equal(m.n_stale_quarter_no_quarter, 1); assert.equal(m.n_stale_quarter_eligible, 1);
     const slim = JSON.parse(f.files.get(path.join(f.out, '_manifest.json')));
     assert.equal(slim.n_stale_quarter_no_quarter, 1);
     assert.equal(mergeManifests([slim], 1, 1).n_stale_quarter_no_quarter, 1);
+    // Without any annual revenue there is nothing to refresh: counted, never eligible.
+    const bare = snapshot('OLD'); bare.timeseries = {}; bare.annual.annualRev = [];
+    const g = await fixture({ snapshots: [bare] }).run();
+    assert.equal(g.n_stale_quarter_no_quarter, 1); assert.equal(g.n_stale_quarter_eligible, 0);
   });
   for (const failed of ['quarter-candidates', 'quarter-selection']) {
     for (const target of ['pull', 'prices', 'merge', 'scoring', 'druckenmiller-guard']) {

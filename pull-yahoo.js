@@ -1707,6 +1707,67 @@ function chooseAnnualBalance(qsRows, ftsRows) {
   return { rows: qs, reason: 'count-qs', qsUsable, ftsUsable };
 }
 
+// Dated years both bundles carry, with a finite revenue on both sides; `conflict` is the
+// 0.5 % revenue-basis tolerance. ONE predicate for the merge guard below and for the
+// newer-year check (_newerAnnualYear), so the two can never drift apart.
+function _annualRevPairs(winner, other) {
+  const dates = winner.annualRevEnds || [], otherDates = other.annualRevEnds || [];
+  return dates.flatMap((end, i) => {
+    const j = end ? otherDates.indexOf(end) : -1, a = winner.annualRev?.[i]?.value ?? winner.annualRev?.[i];
+    const b = other.annualRev?.[j]?.value ?? other.annualRev?.[j];
+    return j >= 0 && Number.isFinite(a) && Number.isFinite(b)
+      ? [{ end, a, b, conflict: Math.abs(a - b) > Math.abs(a) * 0.005 }] : [];
+  });
+}
+
+// Tag 1391 (Diagnose 30.09.2026, 9992.HK / SKS.AX): a strictly newer fiscal year that only
+// the LOSING bundle carries used to vanish with it. FTS won on density and came back
+// unchanged, so the annual growth leg (annualRev[0]/annualRev[1]) kept a growth one fiscal
+// year old although Yahoo already delivered the newer year in quoteSummary.
+// The newer year is NOT put into the annual series (round 2, owner rule: an automatic rule
+// must not alter correct rows): pullAll records it as meta.annualRevNewerYear, and only the
+// annual growth leg reads it (src/scoring/axes.js revAnnualLegYoY), i.e. only when the
+// scoring cannot form a quarterly year-over-year pair. It is recorded only when ALL holds:
+//  - every year of the kept bundle is dated, its newest year stands at index 0 and is itself
+//    a full fiscal year (one FISCAL_YEAR_STEP_DAYS after the year before it) - the denominator;
+//  - that newest kept year is shared by both bundles with revenue > 0, and every shared year
+//    agrees within 0.5 % (same pairs, same tolerance as the conflict guard). A literal 0 is
+//    vendor padding, not an observation (T2): it neither counts as overlap nor as conflict.
+//    A sign flip is a real disagreement and blocks;
+//  - the new year is dated, has revenue > 0, has the same statement identity (duration,
+//    currency, unit, basis) as the kept newest year, and ends exactly one fiscal year after
+//    it. A stub/transition period or a skipped year would make the YoY a wrong number.
+//    NOTE: on today's Yahoo answers the statement-identity check cannot fire - both modules get
+//    the same _statementPeriods defaults (12M / reporting currency / currency / yahoo-statement:
+//    17,422 of 17,422 replayed descriptors, 01.10.2026). The real protection is the 350-380-day
+//    step, revenue > 0 and the 0.5 % overlap; the identity check only guards a future source
+//    that does carry its own descriptors.
+// Both revenues are kept in the native statement currency; only their ratio is ever used,
+// so no FX factor enters. Returns null when nothing qualifies. Pure, inputs untouched.
+// 52/53-week fiscal years end 364 or 371 days apart; a calendar year 365/366. Anything
+// outside this window is not "the next fiscal year".
+const FISCAL_YEAR_STEP_DAYS = { min: 350, max: 380 };
+function _newerAnnualYear(winner, other) {
+  const dates = winner.annualRevEnds || [], otherDates = other.annualRevEnds || [];
+  if (!dates.length || dates.length !== (winner.annualRev || []).length || dates.some(d => !d)) return null;
+  const oneYear = (from, to) => {
+    const days = from && to ? (Date.parse(to) - Date.parse(from)) / 86400000 : NaN;
+    return days >= FISCAL_YEAR_STEP_DAYS.min && days <= FISCAL_YEAR_STEP_DAYS.max;
+  };
+  const sorted = dates.slice().sort().reverse(), newest = sorted[0];
+  if (dates[0] !== newest || !oneYear(sorted[1], newest)) return null;
+  const shared = _annualRevPairs(winner, other).filter(p => p.a !== 0 && p.b !== 0);
+  const kept = shared.find(p => p.end === newest && p.a > 0);
+  if (!kept || shared.some(p => p.conflict)) return null;
+  const period = (b, end) => (b._periods || []).find(p => p && p.end === end);
+  const sameStatement = (a, b) => a && b && ['duration', 'currency', 'unit', 'basis'].every(k => a[k] != null && a[k] === b[k]);
+  const ref = period(winner, newest);
+  const o = otherDates.findIndex(end => oneYear(newest, end));
+  const rev = o >= 0 ? (other.annualRev?.[o]?.value ?? other.annualRev?.[o]) : null;
+  if (o < 0 || !(Number.isFinite(rev) && rev > 0) || !sameStatement(ref, period(other, otherDates[o]))) return null;
+  return { end: otherDates[o], revenue: rev, priorEnd: newest, priorRevenue: kept.a, currency: ref.currency };
+}
+
 function mergeAnnualIncomeBundle(qsB, ftsB, opts) {
   // Genau EINE Stelle traegt die Produktions-Zaehlung: der Default von
   // _incomeBundleDensity. `undefined` heisst hier "nimm sie" — eine zweite Kopie der
@@ -1721,11 +1782,7 @@ function mergeAnnualIncomeBundle(qsB, ftsB, opts) {
   const other = winner === qsB ? ftsB : qsB;
   const dates = winner.annualRevEnds || [], otherDates = other.annualRevEnds || [];
   // Keep main's complete winner when the revenue bases disagree by over 0.5%.
-  if (dates.some((end, i) => {
-    const j = otherDates.indexOf(end), a = winner.annualRev?.[i]?.value ?? winner.annualRev?.[i];
-    const b = other.annualRev?.[j]?.value ?? other.annualRev?.[j];
-    return end && j >= 0 && Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) > Math.abs(a) * 0.005;
-  })) return winner;
+  if (_annualRevPairs(winner, other).some(p => p.conflict)) return winner;
   const fields = ['annualRev', 'annualOpInc', 'annualGP', 'annualNetIncome', 'annualCostOfRevenue'];
   const comparable = (w, o) => {
     const a = winner._periods?.[w], b = other._periods?.[o];
@@ -3551,7 +3608,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const reloadMeta = { reason: reload.REASON, ...reloadConfig, shardCap: reloadPlan.cap,
     allocation,
     rankGeneratedAt: rankState?.generated_at || null, readErrors: reloadPlan.readErrors,
-    newerMeaning: 'newer reported quarter persisted', legacyClock: 'fundamentalsAsOf/fetchedAt proxy until first measured FTS success' };
+    newerMeaning: 'newer reported quarter (annual-only rows: fiscal year, incl. undated -> dated and young) persisted', legacyClock: 'fundamentalsAsOf/fetchedAt proxy until first measured FTS success' };
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, eligible=${reloadStats.eligible}, skipped-cap=${reloadStats.skipped_cap}, shard-cap=${reloadPlan.cap}, run-cap=${reloadConfig.maxPerRun}, legacy-clock=${reloadStats.legacy_clock}, unknown-clock=${reloadStats.unknown_clock}, read-errors=${reloadPlan.readErrors}`);
   const results = [];
   const failures = [];
@@ -4121,6 +4178,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         console.warn(`::warning::${stock.ticker} ${reload.REASON}: reload-failed (${cause}); retaining fundamentals and cache, updating price only`);
         results.push({ ...r, status: reloadOnly && r.status === 'price-only' ? 'reload-retained' : r.status,
           fundamentalsRetainedReason: cause, ...(staleQuarterSelected ? { quarterReload: { reason: reload.REASON, outcome: 'reload-failed', cause,
+          ...(reloadSelected.get(stock.ticker).basis === 'annual' ? { basis: 'annual' } : {}),
           previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reloadSelected.get(stock.ticker).end } } : {}) });
       };
       let forceFundamentalsFull = staleFundamentals || staleEarnings || vollPullAngefordert || staleQuarterSelected;
@@ -4152,7 +4210,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       } else if (staleEarnings) {
         _log('INFO', `  ${stock.ticker} [earnings-stale]: forcing unbudgeted full pull (reported since last full pull)`);
       } else if (staleQuarterSelected) {
-        _log('INFO', `  ${stock.ticker} [${reload.REASON}]: quarter=${reloadSelected.get(stock.ticker).end}; bypass fundamentals clock and FTS cache`);
+        _log('INFO', `  ${stock.ticker} [${reload.REASON}]: ${reloadSelected.get(stock.ticker).basis === 'annual' ? 'fiscal year' : 'quarter'}=${reloadSelected.get(stock.ticker).end}; bypass fundamentals clock and FTS cache`);
       } else if (vollPullAngefordert) {
         _log('INFO', `  ${stock.ticker} [voll-pull-angefordert]: erzwungener Voll-Pull aus der Eingabe voll_pull_ticker (nur dieser Lauf)`);
       } else if (forceFundamentalsFull) {
@@ -4461,7 +4519,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // 06.09.2026: fuehrende leere Quartale (Ende ohne Umsatz/GP/OpInc/NI) verwerfen — Buendel und
         // NI-Reihe im Gleichschritt, VOR dem Cache-Write, damit der Cache den getrimmten Stand traegt.
         _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly, ftsQuarterlyNI);
-        if (staleQuarterSelected && fts._quarterlySucceeded) {
+        // Tag 1391: an annual-only row (basis 'annual') has no quarter to compare; its period
+        // checks are the annual regression guard before the write and the counters after it.
+        if (staleQuarterSelected && reloadSelected.get(stock.ticker).basis !== 'annual' && fts._quarterlySucceeded) {
           const yahooEnd = reload.latestReportedQuarter({ timeseries: { ...ftsQuarterly, netIncomeQ: ftsQuarterlyNI } }, Date.now());
           if (reloadOnly) {
             // Compare the actual merge winner before writing either snapshot or cache.
@@ -4600,6 +4660,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           canonical.meta.annualIncomeConflicts = conflicts;
           canonical.meta.annualIncomeGapReason = 'conflicting-revenue-basis';
           _log('WARN', `${stock.ticker}: Jahresabschluss-Konflikt; vollstaendiges ${_winner === _ftsIncome ? 'FTS' : 'quoteSummary'}-Buendel beibehalten (${conflicts.map(r => r.end).join(', ')})`);
+        }
+        // Tag 1391: the annual series stay exactly the merge winner's. A strictly newer fiscal
+        // year of the other bundle is only recorded (native revenues, G2: source named); the
+        // annual growth leg alone reads it, and only without a quarterly year-over-year pair.
+        const _newerYear = (_winner === _qsIncome || _winner === _ftsIncome)
+          ? _newerAnnualYear(_winner, _winner === _qsIncome ? _ftsIncome : _qsIncome) : null;
+        if (_newerYear) {
+          canonical.meta.annualRevNewerYear = { ..._newerYear, source: _winner === _ftsIncome ? 'quoteSummary' : 'fts' };
+          _log('INFO', `  ${stock.ticker}: neueres Geschaeftsjahr ${_newerYear.end} aus ${canonical.meta.annualRevNewerYear.source} vermerkt (nur fuer das Jahresbein des Umsatzwachstums)`);
+        } else {
+          // A record that vanishes while its year is still missing from the series moves the
+          // annual growth leg back one fiscal year: say so.
+          const prev = _parsedSnapshot && _parsedSnapshot.meta && _parsedSnapshot.meta.annualRevNewerYear;
+          if (prev && !(canonical.annual.annualRevEnds || []).includes(prev.end)) {
+            _log('WARN', `  ${stock.ticker}: neueres Geschaeftsjahr ${prev.end} nicht mehr bestaetigt (Jahresbein faellt auf das gespeicherte Jahr zurueck)`);
+          }
         }
         _incomeWinnerIsQS = (_winner === _qsIncome);
         // Anchor-divergence signal: the FTS income series is strictly longer than
@@ -5124,6 +5200,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         reloadStats.fetch_failed++;
         return await reloadFailed('shared-period fundamentals missing');
       }
+      // Tag 1391: fingerprint the stored newest annual revenue the record was measured against
+      // (final value after FX, hand tables and reload history). The annual growth leg reads the
+      // record only while annualRev[0] still carries exactly this value - no period ends needed.
+      if (canonical.meta.annualRevNewerYear) {
+        const r0 = canonical.annual.annualRev?.[0];
+        canonical.meta.annualRevNewerYear.priorStored = (r0 != null && typeof r0 === 'object' ? r0.value : r0) ?? null;
+      }
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
@@ -5142,9 +5225,17 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         revenueQ: canonical.timeseries.revenueQ.length,
         opIncQ: canonical.timeseries.opIncQ.length
       };
-      const quarterReload = staleQuarterSelected ? { reason: reload.REASON,
-        previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: reload.latestReportedQuarter(canonical, Date.now()) } : null;
-      if (quarterReload && quarterReload.storedQuarter > quarterReload.previousQuarter) reloadStats.newer++;
+      // Tag 1391: for an annual-only row the compared period is the fiscal year (basis 'annual').
+      const annualBasis = staleQuarterSelected && reloadSelected.get(stock.ticker).basis === 'annual';
+      const quarterReload = staleQuarterSelected ? { reason: reload.REASON, ...(annualBasis ? { basis: 'annual' } : {}),
+        previousQuarter: reloadSelected.get(stock.ticker).end, storedQuarter: annualBasis
+          ? reload.latestReportedAnnual(canonical, Date.now()) : reload.latestReportedQuarter(canonical, Date.now()) } : null;
+      // An undated annual row counts as newer once it carries a dated, young fiscal year.
+      const annualOld = annualBasis && (!quarterReload.storedQuarter
+        || reload.quarterAgeDays(quarterReload.storedQuarter, Date.now()) > reload.MAX_ANNUAL_AGE_DAYS);
+      if (quarterReload && (quarterReload.storedQuarter > quarterReload.previousQuarter
+        || (annualBasis && !quarterReload.previousQuarter && !annualOld))) reloadStats.newer++;
+      if (annualOld) reloadStats.still_old_yahoo++;
       results.push({ ticker: stock.ticker, status: 'ok', file: filename, revenue: revStr, growth: growthStr, completeness,
         ...(quarterReload ? { quarterReload } : {}) });
       _log('INFO', `  ✓ ${stock.ticker}: revenue=${revStr}, growth=${growthStr}, sector=${canonical.meta.sector}`);
@@ -5879,7 +5970,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // ausfuehrt statt sie nachzubauen (Fehlerklasse F1334).
   chooseAnnualBalance, BALANCE_TAG211L_FIELDS,
   _balanceSchemaTally: () => _balanceSchemaWins,
-  mergeAnnualIncomeBundle, _incomeBundleDensity, _nullOutAllZeroGrossProfit,
+  mergeAnnualIncomeBundle, _newerAnnualYear, _incomeBundleDensity, _nullOutAllZeroGrossProfit,
   _deriveOpIncForFinancials, _boersenSuffix, _recordGpZeroCoding, _gpZeroCodingOfWinner,
   // A' (05.09.2026): die Ableitungsregel und ihr Zaehler, exportiert fuer tests/gp-derived-cogs.test.js.
   _deriveGrossProfitFromCogs, GP_DERIVED_SOURCE, mapFTSToAnnual,
