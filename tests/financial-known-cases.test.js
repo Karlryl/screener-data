@@ -107,33 +107,43 @@ for (const c of table.cases.filter(x => x.periodType === '12M')) test(c.caseId +
   assert.equal(serial(input), original);
   assert.equal(serial(applyFinancialCases(out).snapshot), serial(out), 'idempotent: an already withheld cell stays withheld');
   const other = clone(fixture[c.ticker]); other.meta.ticker = 'UNLISTED'; assert.equal(applyFinancialCases(other).snapshot, other);
-  // A changed vendor value is left as it is and warns (stale); it is never blanked on a guess.
+  // Fail closed: a changed vendor value withholds every present cell of the series (stale, reason visible, never 0).
   const moved = clone(fixture[c.ticker]); moved.annual[c.field][i].value += 1;
   const m = applyFinancialCases(moved);
-  assert.equal(serial(m.snapshot.annual[c.field][i]), serial(moved.annual[c.field][i]));
+  assert.ok(norm(m.snapshot, c.field).every(x => x === null));
+  m.snapshot.annual[c.field].forEach((row, j) => assert.equal(row.financialMissing.reasonCode, 'annual-value-changed', 'cell ' + j));
   assert.ok(m.events.some(e => e.caseId === c.caseId && e.status === 'stale' && e.reasonCode === 'annual-value-changed'));
-  // Break-once on test data: a table without this cell shows the false vendor value again.
+  assert.ok(financialReasons(m.snapshot).includes(MISSING_REASONS['annual-value-changed']));
+  const again = applyFinancialCases(m.snapshot);
+  assert.equal(serial(again.snapshot), serial(m.snapshot), 'fail-closed pass is idempotent');
+  assert.ok(again.events.some(e => e.status === 'stale' && e.reasonCode === 'annual-value-changed'), 'and keeps warning');
+  // Break-once on test data: a table without this cell shows the false vendor value again, or (an older year
+  // under a newer withheld one) loses the cell's own sourced reason.
   const broken = clone(table); broken.cases = broken.cases.filter(x => x.caseId !== c.caseId);
-  const guard = config => assert.equal(norm(applyFinancialCases(clone(fixture[c.ticker]), { table: config }).snapshot, c.field)[i], null);
+  const guard = config => {
+    const out = applyFinancialCases(clone(fixture[c.ticker]), { table: config }).snapshot;
+    assert.equal(norm(out, c.field)[i], null); assert.equal(out.annual[c.field][i].financialCorrection?.caseId, c.caseId);
+  };
   assert.throws(() => guard(broken), assert.AssertionError); guard(table); breaks++;
 });
+const driftLine = '    const drift = hits.find(({ c, i }) => !env || env.currency !== c.currency || valueOf(rows[i]) !== c.expectedBadValue * env.factor);';
 function listedIn(x, ticker) { return [x.ticker, ...(x.listingAliases || [])].includes(ticker); }
 
 test('annual cells: dated by fiscal-year end, undated by position plus value, withhold only; no annual case touches nothing', () => {
   const t = clone(table); t.quarantines = t.quarantines.filter(q => q.ticker !== 'KBDC');
   const template = table.cases.find(c => c.caseId === 'otf-2024-12-31-annualRev');
   t.cases.push({ ...clone(template), caseId: 'test-kbdc-2024-annualRev', ticker: 'KBDC', period: '2024-12-31', index: 0, expectedBadValue: 123757000 });
-  // Dated KBDC series: the fiscal-year end decides, not the (deliberately wrong) index 0.
-  assert.deepEqual(norm(applyFinancialCases(clone(fixture.KBDC), { table: t }).snapshot, 'annualRev'), [102145000, null, 82776000, 50400000]);
+  // Dated KBDC series: the fiscal-year end decides, not the (deliberately wrong) index 0; older years go too (no gaps).
+  assert.deepEqual(norm(applyFinancialCases(clone(fixture.KBDC), { table: t }).snapshot, 'annualRev'), [102145000, null, null, null]);
   const rolled = clone(fixture.KBDC); rolled.annual.annualRev.unshift({ value: 1 }); rolled.annual.annualRevEnds.unshift('2026-12-31');
-  assert.deepEqual(norm(applyFinancialCases(rolled, { table: t }).snapshot, 'annualRev'), [1, 102145000, null, 82776000, 50400000]);
+  assert.deepEqual(norm(applyFinancialCases(rolled, { table: t }).snapshot, 'annualRev'), [1, 102145000, null, null, null]);
   const gone = clone(fixture.KBDC); gone.annual.annualRevEnds[1] = '2024-06-30';
   assert.equal(serial(applyFinancialCases(gone, { table: t }).snapshot.annual), serial(gone.annual), 'year absent: nothing touched');
-  // Undated rollover (vendor puts FY2025 in front): position plus value no longer match -> untouched and stale.
+  // Undated rollover (vendor puts FY2025 in front): position plus value no longer match -> the whole series fails closed.
   const infq = clone(fixture.INFQ);
   for (const f of ['annualRev', 'annualGP']) { infq.annual[f].unshift({ value: f === 'annualRev' ? 31108000 : 11380000 }); infq.annual[f].pop(); }
   const ir = applyFinancialCases(infq);
-  assert.deepEqual(norm(ir.snapshot, 'annualRev'), [31108000, 28836000]);
+  assert.deepEqual(norm(ir.snapshot, 'annualRev'), [null, null]); assert.deepEqual(norm(ir.snapshot, 'annualGP'), [null, null]);
   assert.equal(ir.events.filter(e => e.container === 'annual' && e.status === 'stale' && e.reasonCode === 'annual-value-changed').length, 4);
   // Absence: without annual cases no annual block of any fixture changes.
   const noAnnual = clone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType === '3M');
@@ -150,14 +160,96 @@ test('annual cells: dated by fiscal-year end, undated by position plus value, wi
   const noValidation = moduleCopy(lib, s => replaceLine(s,
     '    if (annual.has(c.field) && (c.replacementValue !== null || !Number.isInteger(c.index) || c.index < 0)) {', '    if (false) {'));
   assert.throws(() => assert.throws(() => noValidation.validateTable(bad(c => { delete c.index; })), /Invalid annual cell/), assert.AssertionError); breaks++;
-  const noValueCheck = moduleCopy(lib, s => replaceLine(s,
-    '    if (!env || env.currency !== c.currency || old !== c.expectedBadValue * env.factor) {', '    if (!env) {'));
+  const noValueCheck = moduleCopy(lib, s => replaceLine(s, driftLine, '    const drift = hits.find(({ c, i }) => !env || env.currency !== c.currency);'));
   const changed = clone(fixture.INFQ); changed.annual.annualRev[0].value += 1;
-  const untouched = fn => assert.equal(norm(fn(clone(changed)).snapshot, 'annualRev')[0], 28836001);
-  assert.throws(() => untouched(noValueCheck.applyFinancialCases), assert.AssertionError); untouched(applyFinancialCases); breaks++;
-  const noMatch = moduleCopy(lib, s => replaceLine(s, '    if (i < 0 || old == null) continue;', '    continue;'));
+  const failsClosed = fn => assert.equal(fn(clone(changed)).snapshot.annual.annualRev[0].financialMissing?.reasonCode, 'annual-value-changed');
+  assert.throws(() => failsClosed(noValueCheck.applyFinancialCases), assert.AssertionError); failsClosed(applyFinancialCases); breaks++;
+  const noMatch = moduleCopy(lib, s => replaceLine(s, '    for (const { c, i } of hits) {', '    for (const { c, i } of []) {'));
   const withheld = fn => assert.equal(norm(fn(clone(fixture.INFQ)).snapshot, 'annualRev')[0], null);
   assert.throws(() => withheld(noMatch.applyFinancialCases), assert.AssertionError); withheld(applyFinancialCases); breaks++;
+});
+
+// Review round 2 (M1, N1, N2): an annual series fails closed on drift, never has a gap in front or in the middle,
+// and the currency, the FX factor, an unusable envelope and index -1 are each pinned by a test.
+test('annual series fail closed on drift, withhold older years (no gaps), check currency, FX factor and index', () => {
+  const lib = 'lib/financial-known-cases.js';
+  const blank = (s, f) => norm(s, f).every(x => x === null);
+  const closed = (r, f) => {
+    assert.ok(blank(r.snapshot, f), f + ' all withheld');
+    r.snapshot.annual[f].forEach(row => assert.equal(row.financialMissing?.reasonCode, 'annual-value-changed'));
+    assert.ok(r.events.some(e => e.field === f && e.status === 'stale' && e.reasonCode === 'annual-value-changed'));
+  };
+  // Presence: new year in front (series grows), restated value, envelope null, wrong currency -> the whole series is withheld.
+  const grown = clone(fixture.CARG); for (const f of ['annualRev', 'annualGP']) grown.annual[f].unshift({ value: 950000000 });
+  for (const f of ['annualRev', 'annualGP']) closed(applyFinancialCases(grown), f);
+  const restated = clone(fixture.CARG); restated.annual.annualGP[3].value = 664128530;
+  const rr = applyFinancialCases(restated); closed(rr, 'annualGP');
+  // Absence: the other series of the same company (annualRev still matches) keeps its verified cut.
+  assert.deepEqual(norm(rr.snapshot, 'annualRev'), [906980000, 798044000, 698421000, null]);
+  assert.equal(rr.snapshot.annual.annualRev[3].financialCorrection.caseId, 'carg-2022-12-31-annualRev');
+  const noEnv = clone(fixture.OTF); noEnv.meta.fxConversionFailed = true;
+  closed(applyFinancialCases(noEnv), 'annualRev');
+  const eur = clone(fixture.INFQ); eur.meta.reportingCurrencyOriginal = 'EUR';
+  for (const f of ['annualRev', 'annualGP']) closed(applyFinancialCases(eur), f);
+  // Absence: the unchanged matching case withholds only its own cell, no stale event, newer years byte for byte.
+  const ok = applyFinancialCases(clone(fixture.CARG));
+  assert.deepEqual(norm(ok.snapshot, 'annualRev'), [906980000, 798044000, 698421000, null]);
+  assert.equal(ok.events.filter(e => e.container === 'annual' && e.status === 'stale').length, 0);
+  for (const j of [0, 1, 2]) assert.equal(serial(ok.snapshot.annual.annualGP[j]), serial(fixture.CARG.annual.annualGP[j]));
+  // FX factor != 1: a converted packet matches expectedBadValue * fxRateApplied and is withheld by its case;
+  // an unscaled native value in the same packet is drift and fails closed.
+  const t = clone(table);
+  for (const c of t.cases.filter(c => c.ticker === 'INFQ' && c.periodType === '12M')) c.currency = 'EUR';
+  const fx = clone(fixture.INFQ); fx.meta.reportingCurrencyOriginal = 'EUR'; fx.meta.fxRateApplied = 1.25;
+  for (const f of ['annualRev', 'annualGP']) for (const row of fx.annual[f]) row.value *= 1.25;
+  const fxCut = fn => {
+    const r = fn(clone(fx), { table: t });
+    assert.ok(blank(r.snapshot, 'annualRev'));
+    assert.equal(r.snapshot.annual.annualRev[0].financialCorrection?.caseId, 'infq-2024-12-31-annualRev');
+    assert.equal(r.events.filter(e => e.status === 'stale' && e.container === 'annual').length, 0);
+  };
+  fxCut(applyFinancialCases);
+  const unscaled = clone(fx); unscaled.annual.annualRev[0].value = 28836000;
+  closed(applyFinancialCases(unscaled, { table: t }), 'annualRev');
+  // No gaps: a withheld middle year withholds every older present year (same reason, status missing, not stale);
+  // a withheld newest year withholds the whole series. Newer years stay byte for byte.
+  const gaps = (index, period, bad) => { const x = clone(table); x.cases = x.cases.filter(c => c.ticker !== 'CARG' || c.periodType !== '12M');
+    x.cases.push({ ...clone(table.cases.find(c => c.caseId === 'carg-2022-12-31-annualRev')), caseId: 'test-carg-annualRev-' + index, period, index, expectedBadValue: bad });
+    return x; };
+  const middle = gaps(1, '2024-12-31', 798044000), mr = applyFinancialCases(clone(fixture.CARG), { table: middle });
+  assert.deepEqual(norm(mr.snapshot, 'annualRev'), [906980000, null, null, null]);
+  assert.equal(serial(mr.snapshot.annual.annualRev[0]), serial(fixture.CARG.annual.annualRev[0]));
+  for (const j of [2, 3]) {
+    const row = mr.snapshot.annual.annualRev[j];
+    assert.equal(row.financialMissing.reasonCode, 'annual-older-than-withheld'); assert.equal(row.financialMissing.reason, middle.cases.at(-1).reason);
+  }
+  assert.ok(mr.events.filter(e => e.reasonCode === 'annual-older-than-withheld').every(e => e.status === 'missing'));
+  assert.equal(serial(applyFinancialCases(mr.snapshot, { table: middle }).snapshot), serial(mr.snapshot), 'idempotent');
+  assert.ok(blank(applyFinancialCases(clone(fixture.CARG), { table: gaps(0, '2025-12-31', 906980000) }).snapshot, 'annualRev'));
+  // A missing snapshot or annual block passes through untouched (callers probe with null).
+  assert.equal(applyFinancialCases(null).snapshot, null);
+  const noBlock = { meta: clone(fixture.INFQ.meta), annual: null }; assert.equal(applyFinancialCases(noBlock).snapshot, noBlock);
+  // Index -1 (and a fraction) are entry errors.
+  const badIndex = v => { const x = clone(table); x.cases.find(c => c.caseId === 'carg-2022-12-31-annualRev').index = v; return x; };
+  for (const v of [-1, 1.5]) assert.throws(() => validateTable(badIndex(v)), /Invalid annual cell/);
+  // Break-once in memory (whole-line anchors), one per new guard, each on test data only. Every mutant is built
+  // BEFORE assert.throws, so a missed anchor fails the test instead of passing as a caught break.
+  const mutant = (from, part, to) => {
+    const line = part === null ? to : from.replace(part, to);
+    assert.notEqual(line, from, 'mutation changes the line');
+    return moduleCopy(lib, s => replaceLine(s, from, line)).applyFinancialCases;
+  };
+  const red = (check, fn, error = assert.AssertionError) => { assert.throws(() => check(fn), error); check(applyFinancialCases); breaks++; };
+  red(fn => closed(fn(clone(grown)), 'annualRev'), mutant('    if (drift || heldOpen) {', null, '    if (false) {'));
+  red(fn => assert.deepEqual(norm(fn(clone(fixture.CARG), { table: middle }).snapshot, 'annualRev'), [906980000, null, null, null]),
+    mutant('    if (newest) rows.forEach((row, j) => {', 'if (newest)', 'if (false)'));
+  red(fn => closed(fn(clone(eur)), 'annualRev'), mutant(driftLine, 'env.currency !== c.currency || ', ''));
+  red(fxCut, mutant(driftLine, ' * env.factor', ''));
+  // Without the envelope check the null envelope crashes (TypeError) instead of failing closed.
+  red(fn => closed(fn(clone(noEnv)), 'annualRev'), mutant(driftLine, '!env || ', ''), TypeError);
+  const validationLine = '    if (annual.has(c.field) && (c.replacementValue !== null || !Number.isInteger(c.index) || c.index < 0)) {';
+  const noNegative = moduleCopy(lib, s => replaceLine(s, validationLine, validationLine.replace(' || c.index < 0', '')));
+  assert.throws(() => assert.throws(() => noNegative.validateTable(badIndex(-1)), /Invalid annual cell/), assert.AssertionError); breaks++;
 });
 
 test('stale values, wrong units/currency/source and duplicate dates become missing with a reason code', () => {
