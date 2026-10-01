@@ -415,7 +415,10 @@ function traceForCase(fixture, calibration, registry, registryHash) {
   });
   const ebScore = shrinkToNeutral(result._scoreBase, result.cohortN);
   const revQuarterly = axesFns.revQuartalsYoY(snapshot);
-  const revAnnual = axesFns.revAnnualYoY(snapshot);
+  // Tag 1391: the annual fallback of revGrowthLevel reads a valid meta.annualRevNewerYear record
+  // (axes.js revAnnualLegYoY); the trace names what the axis actually used. Golden fixtures carry
+  // no record, so the sealed 1.1.0 traces are rebuilt byte-identically.
+  const revAnnual = axesFns.revAnnualLegYoY(snapshot);
   return {
     caseId: fixture.caseId,
     ticker: fixture.ticker,

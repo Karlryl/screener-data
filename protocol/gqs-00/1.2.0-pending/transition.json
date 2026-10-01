@@ -120,12 +120,21 @@
   },
   "annualNewerYearGrowthLeg": {
     "date": "2026-10-01",
-    "authority": "Coordinator decision on PR #401 round 2, option (b) narrow adoption: owner rule \"no automatic rule may alter correct rows\"; Regelblatt v4 G2 (fill a gap from the same free source, same unit, currency and period; not a formula change).",
-    "scope": "Only the axes.js source fingerprint is updated. annualLegNewerYear/revAnnualLegYoY read a pull-time record of the vendor's strictly newer fiscal year (native revenues, only their ratio is used) while the stored annualRev[0] still equals the fingerprint; revGrowthLevel uses it only when revQuartalsYoY is null, revYoYComponents only without a quarterly component. No period ends are read (A10 substrate guard green). No formula, weight or threshold change. Frozen GQS-00 source and trace evidence unchanged.",
+    "authority": "Coordinator decision on PR #401 round 2, option (b) narrow adoption: owner rule \"no automatic rule may alter correct rows\"; Regelblatt v4 G2 (fill a gap from the same free source, same unit, currency and period). Two blind reviews of PR #401 (code and numbers lens, 2026-10-01) classify it as a data repair (no formula process) with an explicit definition amendment at the 1.2.0 seal.",
+    "scope": "Only the axes.js source fingerprint is updated. annualLegNewerYear/revAnnualLegYoY read a pull-time record of the vendor's strictly newer fiscal year (native revenues, only their ratio is used) while the stored annualRev[0] still equals the fingerprint priorStored; revGrowthLevel uses it only when revQuartalsYoY is null, revYoYComponents only without a quarterly component. No period ends are read (A10 substrate guard green). No weight or threshold change. The sealed 1.1.0 definition text of revGrowthLevel no longer describes record rows; it is amended at the 1.2.0 seal (definitionAmendmentAt120Seal). Frozen GQS-00 1.1.0 source, registry and trace evidence unchanged.",
+    "definitionAmendmentAt120Seal": {
+      "axis": "revGrowthLevel",
+      "formula": "100 * winsor(latest_quarter/prior_year_quarter - 1); if unavailable and annualLegNewerYear(s) is valid, 100 * winsor(meta.annualRevNewerYear.revenue / meta.annualRevNewerYear.priorRevenue - 1); otherwise 100 * winsor(annualRev[0]/annualRev[1] - 1)",
+      "newInputPointer": "$.meta.annualRevNewerYear",
+      "validity": "annualLegNewerYear(s): record present with a string end, stored annualRev[0] > 0 and exactly equal to priorStored, revenue > 0, priorRevenue > 0.",
+      "missing": "Quarterly leg drops as before. With a valid record the annual fallback is the record ratio (annualRev[1] is then not required); without it the annual fallback requires two adjacent finite years and a positive denominator; otherwise null.",
+      "inherits": "ruleOfX (\"same period selection as revGrowthLevel\") and the growth factor (revYoYComponents: the annual component is the record ratio only when no quarterly component exists) inherit the amendment.",
+      "traceBuilder": "scripts/gqs00-freeze.js periodSelection.annualYoYRaw uses axesFns.revAnnualLegYoY (record-aware); golden fixtures carry no record, the 1.1.0 traces rebuild byte-identically."
+    },
     "file": "src/scoring/axes.js",
     "sourceSha256LF": "d43eea326244576024cbceeb3464558ac3caa356a47600015009d996c5a2762a",
     "previousPendingSha256LF": "48022620d5dc488600b6d1dec1a5e048f26d9f6832daaaf7c8646884614d5288",
-    "evidence": "Golden fixtures carry no record: verify() 0 score / 0 rank mismatches. Full production scoring over 16,114 snapshots: new code without records byte-identical to old code; records on the 7 quarter-leg rows only byte-identical; with all 12 records only the 5 annual-leg rows change growth (9992.HK, SKS.AX, UEC, 6227.T, 002294.SZ). Evidence folder of the builder: VORHER-NACHHER.md.",
+    "evidence": "verify() recomputes the 25 golden traces (none carries a record) and reproduces the sealed traces; its score/rank mismatch zeros come from the committed production-equivalence proof of the 1.1.0 seal. Universe identity comes from the separate re-score over 16,114 live-store snapshots: new code without records byte-identical to old code; records on quarter-leg rows inert. Live store with the 12 records: growth changes on 4 rows (9992.HK, SKS.AX, UEC, 6227.T); 002294.SZ changes only after its quarterly series is replaced by a full pull (pre-existing quarter-merge behaviour picks quoteSummary 2018/2019 quarters). Builder evidence: VORHER-NACHHER.md of PR #401.",
     "review": "Build registration only; independent blind release review remains required. No merge by the builder."
   }
 }

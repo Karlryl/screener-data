@@ -1737,6 +1737,11 @@ function _annualRevPairs(winner, other) {
 //  - the new year is dated, has revenue > 0, has the same statement identity (duration,
 //    currency, unit, basis) as the kept newest year, and ends exactly one fiscal year after
 //    it. A stub/transition period or a skipped year would make the YoY a wrong number.
+//    NOTE: on today's Yahoo answers the statement-identity check cannot fire - both modules get
+//    the same _statementPeriods defaults (12M / reporting currency / currency / yahoo-statement:
+//    17,422 of 17,422 replayed descriptors, 01.10.2026). The real protection is the 350-380-day
+//    step, revenue > 0 and the 0.5 % overlap; the identity check only guards a future source
+//    that does carry its own descriptors.
 // Both revenues are kept in the native statement currency; only their ratio is ever used,
 // so no FX factor enters. Returns null when nothing qualifies. Pure, inputs untouched.
 // 52/53-week fiscal years end 364 or 371 days apart; a calendar year 365/366. Anything

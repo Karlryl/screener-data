@@ -139,6 +139,19 @@ async function check(name, fn) {
     const bareHole = stored({ marker: null }); bareHole.annual.annualRev[0] = null;
     assert.equal(axes.revGrowthLevel(hole), axes.revGrowthLevel(bareHole));
   });
+  await check('A annual leg: a record with a negative revenue is ignored', () => {
+    for (const k of ['revenue', 'priorRevenue']) {
+      const s = stored(); s.meta.annualRevNewerYear[k] = -s.meta.annualRevNewerYear[k];
+      assert.equal(axes.annualLegNewerYear(s), null, k);
+      assert.equal(pct(axes.revGrowthLevel(s)), 91.96, k);
+    }
+  });
+  await check('A annual leg: priorStored null with annualRev[0] null is ignored', () => {
+    const s = stored(); s.annual.annualRev[0] = null; s.meta.annualRevNewerYear.priorStored = null;
+    const bare = stored({ marker: null }); bare.annual.annualRev[0] = null;
+    assert.equal(axes.annualLegNewerYear(s), null);
+    assert.equal(axes.revGrowthLevel(s), axes.revGrowthLevel(bare));
+  });
   await check('A rule 40: base-year and period gates use the same pair and fiscal year as the annual leg', () => {
     const s = stored(), bare = stored({ marker: null });
     assert.deepEqual(r40.basisJahr(s), { basis: 261655008, aktuell: 347927740 });
@@ -180,6 +193,31 @@ async function check(name, fn) {
     assert.deepEqual(s.meta.annualRevNewerYear, { ...FY26, currency: 'USD', source: 'quoteSummary', priorStored: 261655008 });
     assert.equal(axes.revQuartalsYoY(s), null);
     assert.equal(pct(axes.revGrowthLevel(s)), 32.97);
+  });
+  await check('A pullAll (annual leg, AUD statements): fingerprint = stored converted annualRev[0], record armed, +32.97 %', async () => {
+    const aud = { ...summary, price: { ...summary.price, currency: 'AUD' }, financialData: { financialCurrency: 'AUD' } };
+    const s = await pull({ quarterEmpty: true, summaryResponse: aud });
+    assert.notEqual(s.meta.fxRateApplied, 1, 'precondition: FX-converted statements');
+    assert.equal(s.meta.annualRevNewerYear.priorStored, vals(s.annual.annualRev)[0], 'fingerprint is the stored, converted value');
+    assert.equal(s.meta.annualRevNewerYear.priorRevenue, 261655008, 'the ratio inputs stay native AUD');
+    assert(axes.annualLegNewerYear(s), 'non-USD record must be armed');
+    assert.equal(pct(axes.revGrowthLevel(s)), 32.97);
+  });
+  await check('A pullAll: no warning when the main series caught up', async () => {
+    const prev = snapshot('OLD', '2026-06-30');
+    prev.annual = { annualRev: cells([261655008]), annualRevEnds: ['2025-06-30'] };
+    prev.meta.annualRevNewerYear = { ...FY26, source: 'quoteSummary', priorStored: 261655008 };
+    const caughtUp = answers();
+    caughtUp.financials.push({ date: '2026-06-30', periodType: '12M', totalRevenue: 347927740, operatingIncome: 2e6,
+      grossProfit: 20e6, netIncome: 9e6, costOfRevenue: 300e6 });
+    const f = fixture({ snapshots: [prev], manual: ['OLD'], annualResponses: caughtUp, summaryResponse: summary, quarterEmpty: true });
+    f.files.delete(path.join(root, 'fundamentals-cache', 'OLD.json'));
+    assert.equal((await f.run()).results[0].status, 'ok');
+    const s = f.stored('OLD');
+    assert.equal(s.annual.annualRevEnds[0], '2026-06-30', 'FTS now carries FY26 itself');
+    assert.equal(s.meta.annualRevNewerYear, undefined);
+    assert(!f.logs.some(l => l.includes('nicht mehr bestaetigt')), 'no false fallback warning');
+    assert.equal(pct(axes.revGrowthLevel(s)), 32.97, 'growth unchanged, now from the series');
   });
   await check('A pullAll: a record that is no longer confirmed while its year is still missing is logged', async () => {
     const prev = snapshot('OLD', '2026-06-30');
@@ -249,6 +287,18 @@ async function check(name, fn) {
       config: f.config, io: f.io, ranks: { TOP: 1 } });
     assert.deepEqual(p.selected.map(r => r.ticker), ['TOP', 'QTR', 'UND', 'ANN']);
     assert.deepEqual(p.selected.map(r => r.basis), ['annual', 'quarter', 'annual', 'annual']);
+  });
+  await check('B ordering: calendar evidence goes before the quarter-before-annual tie-break', () => {
+    const snaps = [snapshot('QTR'), annualOnly('ANNR', ['2025-06-30'])];
+    const f = fixture({ snapshots: snaps });
+    const p = R.planReload(snaps.map(x => ({ ticker: x.meta.ticker })), { snapshotDir: f.out, now: NOW, config: f.config, io: f.io,
+      calendar: { ANNR: { date: '2026-09-25' } } });
+    assert.deepEqual(p.selected.map(r => [r.ticker, r.basis, r.reported]), [['ANNR', 'annual', true], ['QTR', 'quarter', false]]);
+  });
+  await check('B impossible date: 2025-02-30 is no reported fiscal year (the row counts as undated)', () => {
+    const s = annualOnly('BAD', ['2025-02-30'], [182e6]);
+    assert.equal(R.latestReportedAnnual(s, NOW), null);
+    const p = plan([s]); assert.equal(p.selected.length, 1); assert.equal(p.selected[0].end, null);
   });
   await check('B zeros: a padded 0 is no reported fiscal year (dated zero skipped, all-zero row stays out)', () => {
     const p = plan([annualOnly('ZERO', ['2025-12-31', '2024-06-30'], [0, 95e6])]);
