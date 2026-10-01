@@ -35,7 +35,7 @@ test('all 97 authorized cells and one mixed-issuer packet have auditable sources
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
 });
 
-// M1: a basis-wrong series (any non-null replacement) needs exactly one coverage entry.
+// M1: a basis-wrong series (any non-null replacement not flagged singleFalseValue) needs exactly one coverage entry.
 test('coverage is mandatory for basis-wrong series, unique, and absent for single false values', () => {
   const need = new Set(table.cases.filter(c => c.replacementValue !== null && !c.singleFalseValue).map(c => c.ticker + '|' + c.field));
   assert.deepEqual([...need].sort(), ['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
@@ -538,19 +538,25 @@ test('end to end with reload history: withheld cells stay withheld on disk and a
 });
 
 // BDC flag 1: KBDC's packet has no vendor financialCurrency (ccyAmbiguous) on a NYSE USD/USD listing.
-// The verified USD cases apply there; a genuinely ambiguous packet stays withheld.
-test('ccyAmbiguous: US-exchange USD/USD packet takes its USD cases; LSE, OTC, assumed or non-USD packets stay withheld', () => {
+// The verified USD cases apply there (covered series only); a genuinely ambiguous packet stays withheld.
+test('ccyAmbiguous: US-exchange USD listing takes its USD cases in a covered series; LSE, OTC, assumed, non-USD or uncovered stay withheld', () => {
   const axes = require('../src/scoring/axes.js');
   const kbdc = table.cases.filter(c => c.ticker === 'KBDC');
   assert.equal(kbdc.length, 5); assert.equal(fixture.KBDC.meta.ccyAmbiguous, true);
   assert.deepEqual([fixture.KBDC.meta.exchangeName, fixture.KBDC.meta.tradingCurrency, fixture.KBDC.meta.reportingCurrencyOriginal], ['NYSE', 'USD', 'USD']);
+  const cells = s => kbdc.map(c => value(s.timeseries.revenueQ[s.timeseries.revenueQEnds.indexOf(c.period)]));
   const corrected = fn => {
     const r = fn(clone(fixture.KBDC));
-    for (const c of kbdc) assert.equal(value(r.snapshot.timeseries.revenueQ[r.snapshot.timeseries.revenueQEnds.indexOf(c.period)]), c.replacementValue);
+    assert.deepEqual(cells(r.snapshot), kbdc.map(c => c.replacementValue));
     assert.ok(!r.events.some(e => e.status === 'stale'));
     assert.equal(axes.revGrowthLevel(r.snapshot).toFixed(1), '-2.8', 'SEC quarters: 55.703 vs 57.298 million');
   };
   corrected(applyFinancialCases);
+  // Presence at pull time: native packet (not yet converted, no reportingCurrencyOriginal) through the pull's converter.
+  const pulled = clone(fixture.KBDC); pulled.meta.fxConverted = false;
+  delete pulled.meta.reportingCurrencyOriginal; delete pulled.meta.fxRateApplied;
+  assert.equal(require('../pull-yahoo.js')._convertSnapshotToUSDGuarded(pulled), true);
+  assert.deepEqual(cells(pulled), kbdc.map(c => c.replacementValue));
   // Absence: each genuinely ambiguous variant withholds all five cells (context-changed), never the case value.
   const withheld = (change, fn = applyFinancialCases) => {
     const input = clone(fixture.KBDC); change(input.meta);
@@ -559,12 +565,22 @@ test('ccyAmbiguous: US-exchange USD/USD packet takes its USD cases; LSE, OTC, as
     assert.ok(rows.every(row => row.financialMissing.reasonCode === 'context-changed'));
     assert.equal(r.events.filter(e => e.status === 'stale').length, 5);
   };
+  const tradingEur = m => { m.tradingCurrency = 'EUR'; };
   for (const change of [m => { m.exchangeName = 'LSE'; }, m => { m.exchangeName = 'OTC Markets OTCPK'; },
-    m => { m.tradingCurrencyAssumed = true; }, m => { m._ccyMissingCompletely = true; },
-    m => { m.tradingCurrency = 'EUR'; m.reportingCurrencyOriginal = 'EUR'; }]) withheld(change);
-  // A non-USD case never applies on the resolved USD/USD packet.
+    m => { m.tradingCurrencyAssumed = true; }, m => { delete m.tradingCurrencyAssumed; }, m => { m._ccyMissingCompletely = true; },
+    tradingEur, m => { m.tradingCurrency = 'EUR'; m.reportingCurrencyOriginal = 'EUR'; }]) withheld(change);
+  // A non-USD case never applies on the resolved USD packet.
   const eur = clone(table); for (const c of eur.cases) if (c.ticker === 'KBDC') c.currency = 'EUR';
   assert.ok(applyFinancialCases(clone(fixture.KBDC), { table: eur }).snapshot.timeseries.revenueQ.every(row => value(row) === null));
+  // Absence: an ambiguous packet without coverage (OXLC-like single value) is withheld; with a vendor currency it applies.
+  const ambiguousOxlc = clone(fixture.OXLC); ambiguousOxlc.meta.ccyAmbiguous = true;
+  const uncovered = fn => {
+    const r = fn(ambiguousOxlc);
+    assert.equal(value(r.snapshot.timeseries.revenueQ[0]), null);
+    assert.equal(r.snapshot.timeseries.revenueQ[0].financialMissing.reasonCode, 'context-changed');
+  };
+  uncovered(applyFinancialCases);
+  assert.equal(value(applyFinancialCases(clone(fixture.OXLC)).snapshot.timeseries.revenueQ[0]), 94000000);
   // Unchanged rule for a packet with a vendor currency: same correction.
   const known = clone(fixture.KBDC); known.meta.ccyAmbiguous = false;
   assert.equal(value(applyFinancialCases(known).snapshot.timeseries.revenueQ[0]), 55703000);
@@ -577,17 +593,29 @@ test('ccyAmbiguous: US-exchange USD/USD packet takes its USD cases; LSE, OTC, as
   const loose = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  /^(NYSE|NYSE American|NYSEArca|NasdaqGS|NasdaqGM|NasdaqCM|Cboe US)$/.test(m.exchangeName || '');", '  true;'));
   assert.throws(() => withheld(m => { m.exchangeName = 'LSE'; }, loose.applyFinancialCases), assert.AssertionError); breaks++;
+  // Break-once in memory (absence): without the trading-currency check a EUR-traded packet would take USD cases.
+  const anyCcy = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    "const usdListing = m => m.tradingCurrency === 'USD' && m.tradingCurrencyAssumed === false && m._ccyMissingCompletely !== true &&",
+    'const usdListing = m => m.tradingCurrencyAssumed === false && m._ccyMissingCompletely !== true &&'));
+  assert.throws(() => withheld(tradingEur, anyCcy.applyFinancialCases), assert.AssertionError); breaks++;
+  // Break-once in memory (absence): without the coverage gate the uncovered ambiguous packet takes its case.
+  const ungated = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '    if (!env || ambiguousUncovered || env.currency !== c.currency || matches.length !== 1 || !unitOk) {',
+    '    if (!env || env.currency !== c.currency || matches.length !== 1 || !unitOk) {'));
+  assert.throws(() => uncovered(ungated.applyFinancialCases), assert.AssertionError); breaks++;
 });
 
 // BDC flag 4: OXLC is one false vendor zero in a series whose other checked quarters agree with the issuer.
-test('singleFalseValue: OXLC gets the issuer quarter without coverage; neighbours and new quarters stay vendor', () => {
+test('singleFalseValue: OXLC gets the issuer quarter without coverage; other vendor quarters untouched; flag is single and explicit', () => {
   const axes = require('../src/scoring/axes.js');
   const c = table.cases.find(x => x.ticker === 'OXLC');
   assert.deepEqual([c.singleFalseValue, c.expectedBadValue, c.replacementValue], [true, 0, 94000000]);
   assert.ok(/gerundet/.test(c.reason) && /issuer-rounded/.test(c.sources[0].unit), 'Rounding is recorded in the entry');
   assert.ok(!table.coverage.some(v => v.ticker === 'OXLC'));
   const input = clone(fixture.OXLC), r = applyFinancialCases(input);
-  assert.deepEqual(norm(r.snapshot, 'revenueQ'), [94000000, 124000000, 121161000, 0], 'Only the verified zero is replaced');
+  // Only the verified cell changes; the other vendor quarters pass as stored (the 2024-09-30 value is outside
+  // the checked window and is not endorsed here).
+  assert.deepEqual(norm(r.snapshot, 'revenueQ'), [94000000, ...norm(fixture.OXLC, 'revenueQ').slice(1)]);
   assert.ok(!r.events.some(e => e.status === 'stale'));
   assert.equal(axes.revGrowthLevel(r.snapshot).toFixed(1), '-22.4', '94.0 vs 121.161 million');
   // Without coverage a newer vendor quarter passes as vendor data (the series basis is not wrong).
@@ -600,11 +628,20 @@ test('singleFalseValue: OXLC gets the issuer quarter without coverage; neighbour
   assert.throws(() => validateTable(nullFlag), /Invalid or duplicate financial case/);
   const notTrue = clone(table); notTrue.cases.find(x => x.ticker === 'OXLC').singleFalseValue = 'yes';
   assert.throws(() => validateTable(notTrue), /Invalid or duplicate financial case/);
+  // Absence: "single" is enforced. A basis-wrong series cannot drop its coverage by flagging its cases.
+  const allFlagged = clone(table); for (const x of allFlagged.cases) if (x.ticker === 'HTGC') x.singleFalseValue = true;
+  allFlagged.coverage = allFlagged.coverage.filter(v => v.ticker !== 'HTGC');
+  assert.throws(() => validateTable(allFlagged), /Invalid single false value \(other replacements in series\): HTGC\|revenueQ/);
+  const oneFlagged = clone(table); oneFlagged.cases.find(x => x.ticker === 'BXSL').singleFalseValue = true;
+  assert.throws(() => validateTable(oneFlagged), /Invalid single false value \(other replacements in series\): BXSL\|revenueQ/);
   // Break-once in memory: without the opt-out the real table no longer validates (the module throws on load).
   assert.throws(() => moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
-    '    if (c.replacementValue !== null && !c.singleFalseValue) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);',
-    '    if (c.replacementValue !== null) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);')),
+    '      (c.singleFalseValue ? single : basisWrong).add(series);', '      basisWrong.add(series);')),
   /Missing financial coverage: OXLC\|revenueQ/); breaks++;
+  // Break-once in memory: without the single check the all-flagged HTGC table validates silently.
+  const unchecked = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    "  for (const key of single) if (replaced.get(key) !== 1) throw new Error('Invalid single false value (other replacements in series): ' + key);", ''));
+  assert.throws(() => assert.throws(() => unchecked.validateTable(allFlagged), /Invalid single false value/), assert.AssertionError); breaks++;
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);
