@@ -170,6 +170,7 @@ function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
+const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
 // Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
@@ -194,10 +195,40 @@ function snapAbleitungenFuer(ticker) {
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
+    wachstum: snap ? revGrowthLeg(snap) : null,
   };
   _snapCache.set(ticker, abl);
   return abl;
 }
+
+// ---- Basis und Zeitraum des Umsatzwachstums (01.10.2026, Lueckenregel-Vorlage Option c) ----
+// revGrowthYoYPct ist entweder das juengste Quartal gegen das Vorjahresquartal oder, als
+// Rueckfall, ein Geschaeftsjahr gegen das Vorjahr. Der Export sagte nicht, welches: 625
+// Brettzeilen zeigten einen Jahreswert unter einem Text, der "Quartal" verspricht.
+// lib/rev-growth-basis.js geht denselben Zweig wie revGrowthLevel (axes.js) und liefert die
+// Zahl, die es dabei bekommt. Das Etikett wird nur gesetzt, wenn diese Zahl EXAKT die
+// exportierte ist; sonst bleiben die drei Felder null (unbeschriftet, gezaehlt, gemeldet) statt
+// eine Behauptung ueber eine Zahl zu machen, die ein anderer Snapshot erzeugt hat.
+// Small-Cap-Zeilen sind aus snapshots-smallcap/ gerechnet (run-screener.js SMALLCAP_SNAP_DIR).
+const SMALLCAP_SNAP_DIR = process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots-smallcap');
+let _wachstumOhneEtikett = 0;
+function smallcapWachstumFuer(ticker) {
+  try { return revGrowthLeg(prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SMALLCAP_SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')))); }
+  catch (_) { return null; }
+}
+function ergaenzeWachstumsBasis(out) {
+  const wert = out.revGrowthYoYPct;
+  let leg = wert === null ? { basis: 'none', pct: null, periodEnd: null, priorPeriodEnd: null }
+    : snapAbleitungenFuer(out.ticker).wachstum;
+  if (wert !== null && (!leg || leg.pct !== wert)) leg = smallcapWachstumFuer(out.ticker);
+  const passt = leg && leg.pct === wert;
+  if (!passt) _wachstumOhneEtikett++;
+  out.revGrowthBasis = passt ? leg.basis : null;
+  out.revGrowthPeriodEnd = passt ? leg.periodEnd : null;
+  out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
+  return out;
+}
+function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
 
 // Beweis-Frage, bewusst eng: wurde die marketCap dieser Zeile von der HANDELS-Waehrung
 // nach USD gebracht? Vier Wege zaehlen als Beleg, alles andere ist unbelegt.
@@ -506,7 +537,7 @@ function mapBoardRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
   ergaenzeBelegpunkte(out);            // 29.08.: Belegpunkte neben der Coverage-Behauptung
-  return ergaenzeWaehrungsbeleg(out);  // Chunk 4a: Groesse nur mit Handelskurs-Nachweis
+  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.: Basis/Zeitraum des Wachstums
 }
 
 function mapOverviewRow(r, i) {
@@ -525,7 +556,7 @@ function mapOverviewRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
   ergaenzeBelegpunkte(out);            // 29.08.: s. mapBoardRow
-  return ergaenzeWaehrungsbeleg(out);  // Chunk 4a
+  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.
 }
 
 function mapSurvivalRow(r, i) {
@@ -540,7 +571,7 @@ function mapSurvivalRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
-  return ergaenzeWaehrungsbeleg(out);  // Chunk 4a
+  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.
 }
 
 // ---- build ---------------------------------------------------------------
@@ -969,6 +1000,10 @@ function build() {
   // die Annahme des Waechters — dann ist Abbruch (rotes X) richtiger als ein Board, dem
   // stumm die halbe Groessenspalte fehlt.
   const bilanz = waehrungsWaechterAbschluss();
+  if (_wachstumOhneEtikett > 0) {
+    console.warn('::warning::Wachstums-Etikett: ' + _wachstumOhneEtikett + ' Zeilen ohne revGrowthBasis — '
+      + 'ihr revGrowthYoYPct liess sich aus keinem Snapshot nachrechnen, die Felder bleiben null statt zu raten.');
+  }
   if (bilanz.abbruch) {
     throw new Error('Waehrungs-Waechter: ' + (bilanz.anteil * 100).toFixed(1) +
       ' % der Zeilen ohne Handelskurs-Nachweis (Grenze ' + (NULL_ANTEIL_STOPP * 100) +
@@ -1146,6 +1181,25 @@ function checkShareDilution(r, where, errs) {
   if (v.pctl < 0 || v.pctl > 1) errs.push(`${where}: shareDilution.pctl=${v.pctl} ausserhalb [0,1] (Kohorten-Rang, keine Prozentzahl)`);
   if (!hatLampe) errs.push(`${where}: shareDilution gesetzt auf Zeile OHNE Lampe '${SHARE_DILUTION_LAMPE}'`);
 }
+// 01.10.: Basis und Zeitraum von revGrowthYoYPct. Abwesenheit legitim (Altbestand); sind die
+// Felder da, dann alle drei, mit bekannter Basis, ISO-Tagen und in BEIDEN Richtungen passend
+// zur Zahl: 'none' genau dann, wenn revGrowthYoYPct null ist. null-Basis = unbeschriftet
+// (Zahl liess sich nicht nachrechnen); dann darf auch kein Zeitraum dastehen.
+const REV_GROWTH_FELDER = ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd'];
+function checkRevGrowthBasis(r, where, errs) {
+  const da = REV_GROWTH_FELDER.filter((k) => k in r).length;
+  if (da === 0) return;
+  if (da !== REV_GROWTH_FELDER.length) { errs.push(`${where}: revGrowthBasis/PeriodEnd/PriorPeriodEnd nur teilweise vorhanden`); return; }
+  const b = r.revGrowthBasis;
+  if (b !== null && !REV_GROWTH_BASES.includes(b)) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)}`);
+  for (const k of REV_GROWTH_FELDER.slice(1)) {
+    if (r[k] !== null && isoTag(r[k]) !== r[k]) errs.push(`${where}: ${k}=${JSON.stringify(r[k])} kein ISO-Tag|null`);
+    if (r[k] !== null && (b === null || b === 'none')) errs.push(`${where}: ${k} gesetzt bei revGrowthBasis=${JSON.stringify(b)}`);
+  }
+  const ohneZahl = (r.revGrowthYoYPct ?? null) === null;
+  if (b === 'none' && !ohneZahl) errs.push(`${where}: revGrowthBasis 'none' trotz revGrowthYoYPct=${r.revGrowthYoYPct}`);
+  if (b !== null && b !== 'none' && ohneZahl) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)} ohne revGrowthYoYPct`);
+}
 // Datei-Ebene: das Feld ist entweder auf ALLEN Zeilen da oder auf KEINER. Die Zeilen-Pruefung
 // oben laesst Abwesenheit durch (Altbestand trug das Feld nie) und kann deshalb einen halb
 // verdrahteten Erzeuger nicht sehen. Der Writer fuehrt die Felder in ROW_FIELDS und
@@ -1202,6 +1256,7 @@ function validateGeo(r, where, errs) {
   // eine Zeile hoeher voll geprueft wird; die Asymmetrie war unbegruendet.
   checkOptionalSpanneOrNull(r, 'qSpanTage', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
+  checkRevGrowthBasis(r, where, errs);                              // 01.10. additiv OPTIONAL
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
   checkEinmalertragBewertbarkeit(r, where, errs);                   // Urteil 16.08. additiv OPTIONAL
@@ -1497,6 +1552,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   checkFeldHomogen(alleZeilen, 'einmalertragPrognose', kind, errs);
   checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
   checkFeldHomogen(alleZeilen, 'shareDilution', kind, errs);
+  checkFeldHomogen(alleZeilen, 'revGrowthBasis', kind, errs);
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
   checkRankSequence(mk.profitable, `${kind}.profitable`, errs);
@@ -1922,4 +1978,6 @@ module.exports = {
   // 29.08. (Abhilfe A, Coverage-Akte): die Belegpunkt-Ableitung als Seam —
   // tests/belegpunkte.test.js FUEHRT sie aus, statt den Quelltext nach Mustern abzusuchen.
   belegPunkte,
+  // 01.10.: Basis/Zeitraum des Umsatzwachstums (tests/rev-growth-basis.test.js FUEHRT es aus).
+  ergaenzeWachstumsBasis, checkRevGrowthBasis, wachstumOhneEtikett,
 };
