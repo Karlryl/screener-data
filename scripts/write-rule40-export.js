@@ -60,13 +60,14 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
-const { beurteileWaehrungsbeleg } = require('./write-findash-export.js');
+const { beurteileWaehrungsbeleg, checkRevGrowthBasis } = require('./write-findash-export.js');
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
 const { newestQtrSuspect, annualCurrencyLeak } = require('../src/scoring/lamps.js');
 const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
+const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -314,6 +315,20 @@ function neuestesQuartalsEnde(snapshot) {
 }
 
 /**
+ * Das ANGEZEIGTE quartalsEnde: der Zeitraum des Beins, das die Wachstumszahl erzeugt hat.
+ *
+ * neuestesQuartalsEnde bleibt der Frische-Anker (Tore unveraendert, keine Zeile kommt oder geht).
+ * Als Etikett war es falsch, wo das Quartalsbein NICHT traegt, die Reihe aber Quartale mit Wert
+ * hat: dann nannte es ein Quartalsende fuer eine Jahreszahl (57 von 466 Zeilen am 30.09.2026).
+ * Jetzt: Quartalsbein -> unveraendert das Quartalsende; Jahresbein -> das Ende des Geschaeftsjahrs
+ * (revGrowthBasis sagt, dass es ein Jahr ist), undatiert -> null statt geraten.
+ */
+function periodeDesBeins(bein, quartalsEndeMs) {
+  if (!bein || bein.basis === 'quarter') return quartalsEndeMs === null ? null : new Date(quartalsEndeMs).toISOString();
+  return bein.periodEnd === null ? null : new Date(Date.parse(bein.periodEnd + 'T00:00:00Z')).toISOString();
+}
+
+/**
  * Datenvertrauens-Tore der FCF-Marge: G0-G2 von fcfMarginValid (engine.js:106-131),
  * BEWUSST OHNE G3.
  *
@@ -491,6 +506,10 @@ function sammleKandidaten(opts = {}) {
     // Fuer Brett-Namen ist das per Konstruktion dieselbe Zahl wie ihr revGrowthYoYPct.
     const wachstumRoh = axesFns.revGrowthLevel(snapshot);
     if (!istZahl(wachstumRoh)) { abgewiesen.keinWachstum++; continue; }
+    // 01.10.2026: welches Bein diese Zahl traegt und fuer welchen Zeitraum (lib/rev-growth-basis.js,
+    // derselbe Zweig wie revGrowthLevel). Nur wenn es exakt dieselbe Zahl liefert, gilt das Etikett.
+    const bein = revGrowthLeg(snapshot);
+    const wachstumBein = bein.pct === wachstumRoh ? bein : null;
 
     if (meta.fcfMarginTTMSuppressed) { abgewiesen.fcfUnterdrueckt++; continue; }
     const fcf = metricVal(snapshot, 'fcfMarginTTM');
@@ -549,7 +568,8 @@ function sammleKandidaten(opts = {}) {
       fcfMarginPct: fcf,
       ebitdaMarginPct: ebitdaMargePct(snapshot, wachstumRoh),
       industry: typeof meta.industry === 'string' ? meta.industry : null,
-      quartalsEnde: quartalsEndeMs === null ? null : new Date(quartalsEndeMs).toISOString(),
+      quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
+      wachstumBein,
     });
   }
 
@@ -677,6 +697,9 @@ function baueZeilen(kandidaten) {
       zeile.r40Group = k.gruppe;
       zeile.onBoard = k.onBoard;
       zeile.quartalsEnde = k.quartalsEnde;
+      zeile.revGrowthBasis = k.wachstumBein ? k.wachstumBein.basis : null;
+      zeile.revGrowthPeriodEnd = k.wachstumBein ? k.wachstumBein.periodEnd : null;
+      zeile.revGrowthPriorPeriodEnd = k.wachstumBein ? k.wachstumBein.priorPeriodEnd : null;
       return zeile;
     }),
   };
@@ -928,6 +951,14 @@ function check(opts = {}) {
     }
     if (r.r40Group !== 'software' && r.r40Group !== 'other') {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): r40Group "' + r.r40Group + '" ist kein erlaubter Wert.');
+    }
+    // 01.10.2026: dieselbe Basis-Regel wie der Haupt-Export, dazu das Etikett: traegt das
+    // Jahresbein die Zahl, nennt quartalsEnde dessen Geschaeftsjahresende (oder null), nie ein Quartal.
+    checkRevGrowthBasis(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler);
+    if ((r.revGrowthBasis === 'year' || r.revGrowthBasis === 'yearNewerRecord')
+        && r.quartalsEnde !== (r.revGrowthPeriodEnd === null ? null : r.revGrowthPeriodEnd + 'T00:00:00.000Z')) {
+      melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): quartalsEnde ' + r.quartalsEnde + ' nennt nicht den Zeitraum des Jahresbeins ('
+        + r.revGrowthPeriodEnd + ').');
     }
   });
 
