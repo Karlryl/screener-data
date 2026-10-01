@@ -28,19 +28,20 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 98 authorized cells and three held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 98);
-  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'OTF', 'KBDC']);
+test('all 152 authorized cells and six held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 152);
+  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'OTF', 'KBDC', 'HOS', 'TYG', 'OLPX']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
 });
 
-// M1: a basis-wrong series (any non-null replacement not flagged singleFalseValue) needs exactly one coverage entry.
-test('coverage is mandatory for basis-wrong series, unique, and absent for single false values', () => {
-  const need = new Set(table.cases.filter(c => c.replacementValue !== null && !c.singleFalseValue).map(c => c.ticker + '|' + c.field));
-  assert.deepEqual([...need].sort(), ['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
-    'OBDC', 'OTF', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'));
+// M1: a series with any non-null value (replaced or confirmed) needs exactly one coverage entry.
+test('coverage is mandatory for every series with a non-null value, unique, and absent for false-zero series', () => {
+  const need = new Set(table.cases.filter(c => c.replacementValue !== null).map(c => c.ticker + '|' + c.field));
+  assert.deepEqual([...need].sort(), [...['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
+    'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
+    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ'])].sort());
   assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
   assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
@@ -50,7 +51,7 @@ test('coverage is mandatory for basis-wrong series, unique, and absent for singl
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 98);
+  assert.equal(validateTable(clone(table)).cases.length, 152);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -65,7 +66,9 @@ for (const c of table.cases) test(c.caseId + ' real cached input, absence, idemp
   assert.equal(norm(result, c.field)[i], c.replacementValue === null ? null : c.replacementValue * factor);
   assert.equal(serial(input), original);
   assert.equal(serial(applyFinancialCases(result).snapshot), serial(result));
-  assert.ok(financialReasons(result).includes(c.reason));
+  // A confirmed cell (expectedBadValue === replacementValue) keeps the vendor row byte for byte: no marker, no visible reason.
+  if (c.expectedBadValue === c.replacementValue) assert.equal(serial(result.timeseries[c.field][i]), serial(input.timeseries[c.field][i]));
+  else assert.ok(financialReasons(result).includes(c.reason));
   const other = clone(input); other.meta.ticker = 'UNLISTED';
   assert.equal(applyFinancialCases(other).snapshot, other);
   // Every authority entry is broken once independently, not just the first row.
@@ -73,9 +76,15 @@ for (const c of table.cases) test(c.caseId + ' real cached input, absence, idemp
   // Coverage is mandatory (M1); keep it valid for the remaining cases. The dropped period then
   // arrives raw (false zeros) or withheld (basis-wrong series), never as the verified replacement.
   broken.coverage = broken.coverage.map(v => v.ticker !== c.ticker ? v : { ...v, coversThrough:
-    broken.cases.filter(x => x.ticker === v.ticker && x.field === v.field).map(x => x.period).sort().at(-1) });
-  const guard = config => assert.equal(norm(applyFinancialCases(input, { table: config }).snapshot, c.field)[i],
-    c.replacementValue === null ? null : c.replacementValue * factor);
+    broken.cases.filter(x => x.ticker === v.ticker && x.field === v.field).map(x => x.period).sort().at(-1) })
+    .filter(v => v.coversThrough); // a series whose only case was dropped has no authority left
+  // A dropped withheld case inside a covered series stays empty by the coverage rule, so the guard also pins the
+  // case's own marker (its source and reason), not just the value.
+  const guard = config => {
+    const out = applyFinancialCases(input, { table: config }).snapshot;
+    assert.equal(norm(out, c.field)[i], c.replacementValue === null ? null : c.replacementValue * factor);
+    if (c.expectedBadValue !== c.replacementValue) assert.equal(out.timeseries[c.field][i].financialCorrection?.caseId, c.caseId);
+  };
   assert.throws(() => guard(broken), assert.AssertionError); guard(table); breaks++;
 });
 
@@ -115,9 +124,10 @@ const nextQuarter = (s, v = 60e6) => {
   return s;
 };
 test('coversThrough: newer vendor quarter is missing and stale; covered quarters corrected; unrelated ticker untouched', () => {
-  assert.deepEqual(table.coverage.map(v => v.ticker).sort(), ['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC',
-    'KBDC', 'MAIN', 'MSDL', 'OBDC', 'OTF', 'PSEC', 'TRIN', 'TSLX']);
-  for (const ticker of table.coverage.map(v => v.ticker).filter(t => t !== 'BANPU.BK')) {
+  const revenueCovered = table.coverage.filter(v => v.field === 'revenueQ').map(v => v.ticker);
+  assert.deepEqual(revenueCovered.slice().sort(), ['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CARG', 'CSWC', 'DCO', 'FSK', 'GBDC', 'HTGC',
+    'INFQ', 'KBDC', 'MAIN', 'MSDL', 'OBDC', 'OTF', 'OXLC', 'PLUS', 'PSEC', 'SLCE3.SA', 'TRIN', 'TSLX']);
+  for (const ticker of revenueCovered.filter(t => t !== 'BANPU.BK')) {
     const input = nextQuarter(clone(fixture[ticker])), original = serial(input);
     const r = applyFinancialCases(input);
     const row = r.snapshot.timeseries.revenueQ[0];
@@ -127,10 +137,10 @@ test('coversThrough: newer vendor quarter is missing and stale; covered quarters
     assert.ok(financialReasons(r.snapshot).includes(MISSING_REASONS['period-after-coverage']));
     assert.equal(r.events.filter(e => e.status === 'stale').length, 1);
     assert.equal(r.events.find(e => e.status === 'stale').period, '2026-09-30');
-    // Covered periods are still corrected.
-    for (const c of table.cases.filter(c => c.ticker === ticker)) {
+    // Covered periods are still corrected (or withheld where the table withholds them).
+    for (const c of table.cases.filter(c => c.ticker === ticker && c.field === 'revenueQ')) {
       const i = r.snapshot.timeseries.revenueQEnds.indexOf(c.period);
-      if (i >= 0) assert.equal(value(r.snapshot.timeseries.revenueQ[i]), c.replacementValue * input.meta.fxRateApplied);
+      if (i >= 0) assert.equal(value(r.snapshot.timeseries.revenueQ[i]), c.replacementValue === null ? null : c.replacementValue * input.meta.fxRateApplied);
     }
     assert.equal(serial(input), original);
     assert.equal(serial(applyFinancialCases(r.snapshot).snapshot), serial(r.snapshot));
@@ -574,14 +584,21 @@ test('ccyAmbiguous: US-exchange USD listing takes its USD cases in a covered ser
   // A non-USD case never applies on the resolved USD packet.
   const eur = clone(table); for (const c of eur.cases) if (c.ticker === 'KBDC') c.currency = 'EUR';
   assert.ok(applyFinancialCases(clone(fixture.KBDC), { table: eur }).snapshot.timeseries.revenueQ.every(row => value(row) === null));
-  // Absence: an ambiguous packet without coverage (OXLC-like single value) is withheld; with a vendor currency it applies.
-  const ambiguousOxlc = clone(fixture.OXLC); ambiguousOxlc.meta.ccyAmbiguous = true;
+  // Absence: an ambiguous packet in a series without coverage (VCTR gross profit, one withheld false value on a
+  // US/USD listing) stays context-changed; with a vendor currency the case applies (withheld as a known false value).
+  const vi = fixture.VCTR.timeseries.grossProfitQEnds.indexOf('2025-12-31');
+  const ambiguousVctr = clone(fixture.VCTR); ambiguousVctr.meta.ccyAmbiguous = true;
   const uncovered = fn => {
-    const r = fn(ambiguousOxlc);
-    assert.equal(value(r.snapshot.timeseries.revenueQ[0]), null);
-    assert.equal(r.snapshot.timeseries.revenueQ[0].financialMissing.reasonCode, 'context-changed');
+    const row = fn(ambiguousVctr).snapshot.timeseries.grossProfitQ[vi];
+    assert.equal(value(row), null);
+    assert.equal(row.financialMissing?.reasonCode, 'context-changed');
   };
   uncovered(applyFinancialCases);
+  const plainVctr = applyFinancialCases(clone(fixture.VCTR)).snapshot.timeseries.grossProfitQ[vi];
+  assert.equal(value(plainVctr), null); assert.equal(plainVctr.financialCorrection.replacementNativeValue, null);
+  // Presence: OXLC is now a covered series, so even an ambiguous OXLC packet takes its verified USD values.
+  const ambiguousOxlc = clone(fixture.OXLC); ambiguousOxlc.meta.ccyAmbiguous = true;
+  assert.deepEqual(norm(applyFinancialCases(ambiguousOxlc).snapshot, 'revenueQ'), [94000000, 124000000, 121161000, null]);
   assert.equal(value(applyFinancialCases(clone(fixture.OXLC)).snapshot.timeseries.revenueQ[0]), 94000000);
   // Unchanged rule for a packet with a vendor currency: same correction.
   const known = clone(fixture.KBDC); known.meta.ccyAmbiguous = false;
@@ -614,11 +631,12 @@ test('ccyAmbiguous: US-exchange USD listing takes its USD cases in a covered ser
   gpPacket.timeseries.grossProfitQ = [{ value: 1e6 }, ...gpPacket.timeseries.grossProfitQ.slice(1)];
   gpPacket.timeseries.grossProfitQEnds = gpPacket.timeseries.revenueQEnds.slice();
   const gpTable = clone(table);
+  // A withheld false value needs no coverage, so the grossProfitQ series stays uncovered while revenueQ is covered.
   gpTable.cases.push({ ...clone(kbdc[0]), caseId: 'test-kbdc-gp', field: 'grossProfitQ', period: gpPacket.timeseries.revenueQEnds[0],
-    expectedBadValue: 1e6, replacementValue: 2e6, singleFalseValue: true });
+    expectedBadValue: 1e6, replacementValue: null });
   const gpWithheld = fn => {
     const row = fn(clone(gpPacket), { table: gpTable }).snapshot.timeseries.grossProfitQ[0];
-    assert.equal(value(row), null); assert.equal(row.financialMissing.reasonCode, 'context-changed');
+    assert.equal(value(row), null); assert.equal(row.financialMissing?.reasonCode, 'context-changed');
   };
   gpWithheld(applyFinancialCases);
   const fieldBlind = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
@@ -627,58 +645,124 @@ test('ccyAmbiguous: US-exchange USD listing takes its USD cases in a covered ser
   assert.throws(() => gpWithheld(fieldBlind.applyFinancialCases), assert.AssertionError); breaks++;
 });
 
-// BDC flag 4: OXLC is one false vendor zero in a series whose other checked quarters agree with the issuer.
-test('singleFalseValue: OXLC gets the issuer quarter without coverage; other vendor quarters untouched; flag is single and explicit', () => {
+// Confirmed cells (expectedBadValue === replacementValue) replace the removed singleFalseValue opt-out (deleted
+// together with its tests): OXLC now has coverage through its last verified quarter, so a new false vendor zero is
+// withheld instead of showing -100 % growth.
+test('confirmed cells: OXLC today unchanged; a next vendor quarter (also 0) is withheld; a moved confirmed cell is withheld', () => {
   const axes = require('../src/scoring/axes.js');
-  const c = table.cases.find(x => x.ticker === 'OXLC');
-  assert.deepEqual([c.singleFalseValue, c.expectedBadValue, c.replacementValue], [true, 0, 94000000]);
-  assert.ok(/gerundet/.test(c.reason) && /issuer-rounded/.test(c.sources[0].unit), 'Rounding is recorded in the entry');
-  assert.ok(!table.coverage.some(v => v.ticker === 'OXLC'));
-  const input = clone(fixture.OXLC), r = applyFinancialCases(input);
-  // The verified zero is replaced, the two issuer-confirmed quarters stay, the false zero of 2024-09-30 is withheld.
-  assert.deepEqual(norm(r.snapshot, 'revenueQ'), [94000000, 124000000, 121161000, null]);
-  assert.ok(!r.events.some(e => e.status === 'stale'));
-  assert.equal(axes.revGrowthLevel(r.snapshot).toFixed(1), '-22.4', '94.0 vs 121.161 million');
-  // Without coverage a newer vendor quarter passes as vendor data (the series basis is not wrong).
-  const next = nextQuarter(clone(fixture.OXLC), 95e6);
-  assert.equal(value(applyFinancialCases(next).snapshot.timeseries.revenueQ[0]), 95e6);
-  // Absence: the flag is required to skip coverage, and only allowed with a replacement value.
-  const noFlag = clone(table); delete noFlag.cases.find(x => x.ticker === 'OXLC').singleFalseValue;
-  assert.throws(() => validateTable(noFlag), /Missing financial coverage: OXLC\|revenueQ/);
-  const nullFlag = clone(table); Object.assign(nullFlag.cases.find(x => x.ticker === 'YSN.DE'), { singleFalseValue: true });
-  assert.throws(() => validateTable(nullFlag), /Invalid or duplicate financial case/);
-  const notTrue = clone(table); notTrue.cases.find(x => x.ticker === 'OXLC').singleFalseValue = 'yes';
-  assert.throws(() => validateTable(notTrue), /Invalid or duplicate financial case/);
-  // Absence: "single" is enforced. A basis-wrong series cannot drop its coverage by flagging its cases.
-  const allFlagged = clone(table); for (const x of allFlagged.cases) if (x.ticker === 'HTGC') x.singleFalseValue = true;
-  allFlagged.coverage = allFlagged.coverage.filter(v => v.ticker !== 'HTGC');
-  assert.throws(() => validateTable(allFlagged), /Invalid single false value \(other replacements in series\): HTGC\|revenueQ/);
-  const oneFlagged = clone(table); oneFlagged.cases.find(x => x.ticker === 'BXSL').singleFalseValue = true;
-  assert.throws(() => validateTable(oneFlagged), /Invalid single false value \(other replacements in series\): BXSL\|revenueQ/);
-  // Review round 2: exactly one, not "a few". OXLC plus a second flagged replacement must fail.
-  const twoFlagged = clone(table);
-  twoFlagged.cases.push({ ...clone(c), caseId: 'test-oxlc-2025-06-30', period: '2025-06-30', expectedBadValue: 124e6, replacementValue: 124.5e6 });
-  assert.throws(() => validateTable(twoFlagged), /Invalid single false value \(other replacements in series\): OXLC\|revenueQ/);
-  const loose = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
-    "  for (const key of single) if (replaced.get(key) !== 1) throw new Error('Invalid single false value (other replacements in series): ' + key);",
-    "  for (const key of single) if (replaced.get(key) > 2) throw new Error('Invalid single false value (other replacements in series): ' + key);"));
-  assert.throws(() => assert.throws(() => loose.validateTable(twoFlagged), /Invalid single false value/), assert.AssertionError); breaks++;
-  // Break-once in memory: without the opt-out the real table no longer validates (the module throws on load).
-  assert.throws(() => moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
-    '      (c.singleFalseValue ? single : basisWrong).add(series);', '      basisWrong.add(series);')),
-  /Missing financial coverage: OXLC\|revenueQ/); breaks++;
-  // Break-once in memory: without the single check the all-flagged HTGC table validates silently.
-  const unchecked = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
-    "  for (const key of single) if (replaced.get(key) !== 1) throw new Error('Invalid single false value (other replacements in series): ' + key);", ''));
-  assert.throws(() => assert.throws(() => unchecked.validateTable(allFlagged), /Invalid single false value/), assert.AssertionError); breaks++;
+  const oxlc = table.cases.filter(x => x.ticker === 'OXLC');
+  assert.deepEqual(oxlc.map(c => [c.period, c.expectedBadValue, c.replacementValue]), [['2026-03-31', 0, 94000000], ['2024-09-30', 0, null],
+    ['2025-06-30', 124000000, 124000000], ['2025-03-31', 121161000, 121161000]]);
+  assert.ok(!table.cases.some(c => Object.hasOwn(c, 'singleFalseValue')), 'The single-cell flag is gone');
+  const rounded = oxlc.find(c => c.period === '2026-03-31');
+  assert.ok(/gerundet/.test(rounded.reason) && /issuer-rounded/.test(rounded.sources[0].unit), 'Rounding is recorded in the entry');
+  // Entry guard: a vendor value copied under a "korrigiert" reason, or a "bestätigt" reason on a changed value, is rejected.
+  const copied = clone(table); copied.cases.find(c => c.caseId === 'carg-2025-12-31-revenueQ').replacementValue = 209093000;
+  const mislabelled = clone(table); mislabelled.cases.find(c => c.caseId === 'carg-2026-06-30-revenueQ').replacementValue = 250971001;
+  const entryGuard = lib => {
+    assert.throws(() => lib.validateTable(copied), /Invalid confirmed cell .*CARG\|revenueQ\|2025-12-31/);
+    assert.throws(() => lib.validateTable(mislabelled), /Invalid confirmed cell .*CARG\|revenueQ\|2026-06-30/);
+  };
+  entryGuard({ validateTable });
+  const unguarded = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    "    if ((c.expectedBadValue === c.replacementValue) !== /bestätigt:/.test(c.reason)) throw new Error('Invalid confirmed cell (value and reason disagree): ' + key);", ''));
+  assert.throws(() => entryGuard(unguarded), assert.AssertionError); breaks++;
+  assert.deepEqual(table.coverage.filter(v => v.ticker === 'OXLC'), [{ ticker: 'OXLC', field: 'revenueQ', coversThrough: '2026-03-31' }]);
+  const today = fn => {
+    const input = clone(fixture.OXLC), r = fn(input);
+    assert.deepEqual(norm(r.snapshot, 'revenueQ'), [94000000, 124000000, 121161000, null]);
+    assert.ok(!r.events.some(e => e.status === 'stale'));
+    // Confirmed rows stay byte-identical to the vendor rows: no marker, no visible reason.
+    for (const i of [1, 2]) assert.equal(serial(r.snapshot.timeseries.revenueQ[i]), serial(input.timeseries.revenueQ[i]));
+    assert.ok(!r.events.some(e => [1, 2].includes(e.index)), 'No event for a confirmed cell');
+    assert.equal(axes.revGrowthLevel(r.snapshot).toFixed(1), '-22.4', '94.0 vs 121.161 million');
+  };
+  today(applyFinancialCases);
+  // A next vendor quarter is not verified: withheld (period-after-coverage), whether it is a false 0 or a plausible value.
+  const withheldNext = (fn, v, config) => {
+    const r = fn(nextQuarter(clone(fixture.OXLC), v), config ? { table: config } : undefined), row = r.snapshot.timeseries.revenueQ[0];
+    assert.equal(value(row), null);
+    assert.equal(row.financialMissing?.reasonCode, 'period-after-coverage');
+    assert.ok(r.events.some(e => e.status === 'stale' && e.period === '2026-09-30'));
+    assert.notEqual(axes.revGrowthLevel(r.snapshot), -100, 'never the old -100 %');
+  };
+  withheldNext(applyFinancialCases, 0); withheldNext(applyFinancialCases, 95e6);
+  // Absence: a vendor change of a confirmed cell, or the known false zero on a shifted end date, is withheld.
+  const moved = clone(fixture.OXLC); moved.timeseries.revenueQ[1].value = 125e6;
+  const m = applyFinancialCases(moved).snapshot.timeseries.revenueQ[1];
+  assert.equal(value(m), null); assert.equal(m.financialMissing.reasonCode, 'vendor-value-changed');
+  const shifted = clone(fixture.OXLC); shifted.timeseries.revenueQEnds[0] = '2026-03-30';
+  const sh = applyFinancialCases(shifted).snapshot.timeseries.revenueQ[0];
+  assert.equal(value(sh), null); assert.equal(sh.financialMissing.reasonCode, 'period-not-verified');
+  // A confirmed cell gives the table authority over its series, so coverage is required.
+  const noCoverage = clone(table); noCoverage.coverage = noCoverage.coverage.filter(v => v.ticker !== 'OXLC');
+  assert.throws(() => validateTable(noCoverage), /Missing financial coverage: OXLC\|revenueQ/);
+  const confirmedOnly = clone(noCoverage);
+  confirmedOnly.cases = confirmedOnly.cases.filter(c => c.ticker !== 'OXLC' || c.expectedBadValue === c.replacementValue);
+  const needsCoverage = lib => assert.throws(() => lib.validateTable(confirmedOnly), /Missing financial coverage: OXLC\|revenueQ/);
+  needsCoverage({ validateTable });
+  const exempt = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '    if (c.replacementValue !== null) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);',
+    '    if (c.replacementValue !== null && c.expectedBadValue !== c.replacementValue) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);'));
+  assert.throws(() => needsCoverage(exempt), assert.AssertionError); breaks++;
+  // Break-once in memory (presence): if confirmed periods do not count as verified, today's true quarters are withheld.
+  const unconfirmed = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '    const verified = new Set(config.cases.filter(c => listed(c, ticker) && c.field === field).map(c => c.period));',
+    '    const verified = new Set(config.cases.filter(c => listed(c, ticker) && c.field === field && c.expectedBadValue !== c.replacementValue).map(c => c.period));'));
+  assert.throws(() => today(unconfirmed.applyFinancialCases), assert.AssertionError); breaks++;
+  // Break-once in memory (presence): without the unchanged-cell exit a confirmed row gains a correction marker.
+  const marked = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s, '    if (old === replacement) continue;', ''));
+  assert.throws(() => today(marked.applyFinancialCases), assert.AssertionError); breaks++;
+  // Break-once on test data (absence): the former shape (OXLC without coverage) lets the next vendor zero through.
+  const oldShape = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
+  assert.throws(() => withheldNext(oldShape.applyFinancialCases, 0, noCoverage), assert.AssertionError); breaks++;
+});
+
+// SEC double check 01.10. (CARG, PLUS, DCO, INFQ) and SLC Agricola: both series covered; every stored quarter is an
+// issuer value (replaced or confirmed). The board's growth pair stays formable with issuer values.
+test('covered company series: growth pair formable with issuer values; next quarter withheld per field; VCTR false value withheld', () => {
+  const axes = require('../src/scoring/axes.js');
+  const pairs = { CARG: [250971, 221998], PLUS: [649113, 642775], DCO: [224492, 200803], INFQ: [13538, 5277], 'SLCE3.SA': [2175612, 1862135] };
+  const growth = fn => {
+    for (const [ticker, [now, ago]] of Object.entries(pairs)) {
+      const r = fn(clone(fixture[ticker]));
+      assert.ok(!r.events.some(e => e.status === 'stale'), ticker + ' no stale');
+      assert.ok(Math.abs(axes.revQuartalsYoY(r.snapshot) - (now / ago - 1)) < 1e-12, ticker + ' quarterly leg from issuer values');
+      for (const field of ['revenueQ', 'grossProfitQ']) assert.ok(norm(r.snapshot, field).every(Number.isFinite), ticker + ' ' + field + ' complete');
+    }
+  };
+  growth(applyFinancialCases);
+  // A next vendor quarter of gross profit is withheld as well (coverage is per field), revenue untouched.
+  for (const ticker of Object.keys(pairs)) {
+    const s = clone(fixture[ticker]), ts = s.timeseries;
+    ts.grossProfitQ = [{ value: 1e6 }, ...ts.grossProfitQ].slice(0, ts.grossProfitQ.length);
+    ts.grossProfitQEnds = ['2026-09-30', ...ts.grossProfitQEnds].slice(0, ts.grossProfitQEnds.length);
+    const r = applyFinancialCases(s);
+    assert.equal(r.snapshot.timeseries.grossProfitQ[0].financialMissing?.reasonCode, 'period-after-coverage', ticker);
+    assert.equal(r.events.filter(e => e.status === 'stale').length, 1, ticker);
+  }
+  // VCTR (impossible Q4 2025 gross profit, no gross-profit line filed) and Celesc (2Q25 gross profit matches no filed line):
+  // the one false value is withheld, never estimated; the other quarters and revenue stay as stored.
+  for (const [ticker, period] of [['VCTR', '2025-12-31'], ['CLSC3.SA', '2025-06-30']]) {
+    const v = applyFinancialCases(clone(fixture[ticker])).snapshot, vi = fixture[ticker].timeseries.grossProfitQEnds.indexOf(period);
+    assert.deepEqual(norm(v, 'grossProfitQ'), norm(fixture[ticker], 'grossProfitQ').map((x, i) => i === vi ? null : x), ticker);
+    assert.equal(serial(v.timeseries.revenueQ), serial(fixture[ticker].timeseries.revenueQ));
+    assert.ok(!table.coverage.some(x => x.ticker === ticker), 'A withheld value alone needs no coverage');
+  }
+  // Break-once on test data: without the verified SLC year-ago quarter the partner is withheld and the pair is gone.
+  const broken = clone(table); broken.cases = broken.cases.filter(c => c.caseId !== 'slce3.sa-2025-06-30-revenueQ');
+  assert.throws(() => growth(s => applyFinancialCases(s, { table: broken })), assert.AssertionError); breaks++;
 });
 
 // Review round 2: OTF and KBDC carry a vendor ANNUAL revenue series that contradicts their SEC filings
 // (the hand table cannot correct annual cells). Both are held off the boards with a visible reason; their
 // verified quarterly cells stay corrected for the day the hold is lifted.
-test('OTF and KBDC: held for wrong vendor annual revenue; cases still apply; drift keeps the hold and warns', () => {
+// 01.10.: HOS (packet of a former company under a reused ticker), TYG (statements end 2017), OLPX (delisted, all
+// gross profits 0) are held the same way.
+test('holds OTF, KBDC, HOS, TYG, OLPX: off the boards with the reason; cases still apply; drift keeps the hold and warns', () => {
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
-  for (const ticker of ['OTF', 'KBDC']) {
+  for (const ticker of ['OTF', 'KBDC', 'HOS', 'TYG', 'OLPX']) {
     const q = table.quarantines.find(x => x.ticker === ticker);
     const held = (fn, input = clone(fixture[ticker])) => {
       const r = fn(input);
@@ -699,7 +783,8 @@ test('OTF and KBDC: held for wrong vendor annual revenue; cases still apply; dri
     // A drifted anchor never releases the hold; it warns until a human re-verifies.
     for (const anchor of q.fingerprint) {
       const other = clone(fixture[ticker]); const parent = anchor.path.slice(0, -1).reduce((x, k) => x[k], other);
-      parent[anchor.path.at(-1)] *= 1.001;
+      const key = anchor.path.at(-1);
+      parent[key] = parent[key] === 0 ? 1 : parent[key] * 1.001; // a zero anchor (OLPX gross profit) drifts to 1
       const r = held(applyFinancialCases, other);
       assert.ok(r.events.some(e => e.status === 'stale' && e.reasonCode === 'quarantine-fingerprint-changed' && e.caseId === q.caseId));
     }

@@ -6,6 +6,7 @@
 > - Breite Nullwertregel: 9900 Kandidaten, 122 Scoreänderungen im gepaarten Hauptbestandstest; deshalb ausschließlich Schattenbetrieb.
 > - Noch keine Veröffentlichung. Der genaue historische Smallcap-Eingabestand fehlt; sämtliche 1.100 Quality-Ausgangsscores stimmen mit der Veröffentlichung überein.
 > - Nachtrag 01.10.2026: 62 weitere geprüfte Umsatzzellen für 13 BDCs/Fonds; fünf bisher ausgeschlossene Fonds kommen auf das Financials-Board, OTF und KBDC sind wegen falscher Anbieter-Jahresumsätze gesperrt (Grund sichtbar); über die Live-Kalibrierung bewegen sich 320 weitere Growth-Scores (Abschnitt „BDC-Handtabelle“).
+> - Zweite Tabelle 01.10.2026: HOS, TYG und Olaplex sind gesperrt (Grund sichtbar); 23 Quartalszellen von CARG, PLUS, DCO, INFQ und SLC Agrícola ersetzt, 29 bestätigte Zellen, zwei falsche Einzelwerte (VCTR, Celesc) leer; bestätigte Zellen ersetzen das Kennzeichen `singleFalseValue`, OXLC hat jetzt `coversThrough` (Abschnitt „Zweite Tabelle vom 01.10.2026“).
 
 ## Ursache und begrenzte Reparatur
 
@@ -166,7 +167,7 @@ OTF und KBDC gesperrt (Prüfrunde 2): Bei beiden ist zusätzlich die Jahresumsat
 
 Währungsregel (für KBDC, wirksam sobald die Sperre fällt): Der Anbieter liefert für KBDC keine Berichtswährung (`ccyAmbiguous`); der Abruf setzt dann die Handelswährung USD ein. Bisher galt jede solche Zeile als „Kontext geändert“, alle fünf geprüften Zellen wären leer geblieben. Neu wird eine solche Zeile als USD behandelt, wenn der Anbieter die Firma in den USA führt (`country`), sie an einer US-Börse (NYSE, NYSE American, NYSE Arca, Nasdaq GS/GM/CM, Cboe US) in USD gehandelt wird und die Handelswährung ausdrücklich nicht geraten ist. Das beweist keine USD-Abschlüsse; deshalb greift ein Fall dort nur mit eigener geprüfter Währung USD und nur in einer Reihe mit `coversThrough`. Dann ist jedes gezeigte Quartal dieser Reihe ein Emittentenwert (andere Reihen wie der Jahresumsatz bleiben Anbieterdaten). Eine Firma außerhalb der USA, eine USD-Notierung an der LSE, OTC, eine geratene oder fehlende Angabe zur Handelswährung, jede andere Währung und jede Reihe ohne `coversThrough` bleiben leer (`context-changed`). Mit der bisherigen Tabelle ändert diese Regel auf allen 16.118 Ständen keine Zelle.
 
-OXLC (Oxford Lane Capital): Der jüngste Anbieterwert (Quartal bis 31.03.2026) ist 0, das Board zeigte −100 %. Die Quartalsmitteilung des Fonds nennt „approximately $94.0 million“, also auf 0,1 Mio. gerundet (rechnerisch aus N-CSR minus N-CSRS minus Vorquartal: 93,95 bis 93,98 Mio.); Wachstum −22,4 %, das wegen der Rundung in der letzten Stelle um 0,1 Punkte abweichen kann. Die Quartale bis 30.06.2025 und 31.03.2025 stimmen mit dem Fonds überein (124,0 und 121,2 Mio.) und bleiben stehen. Die gespeicherte Null zum 30.09.2024 ist ebenfalls falsch: die Mitteilung vom 01.11.2024 nennt „approximately $105.1 million“, der Halbjahresbericht (N-CSRS, sechs Monate bis 30.09.2024) 194,9 Mio. Sie wird leer gesetzt, nicht geschätzt. OXLC hat keine `coversThrough`-Grenze; der Fall 31.03.2026 trägt `singleFalseValue: true` (die einzige ersetzte Zelle einer sonst bestätigten Reihe; leer gesetzte Zellen zählen nicht). Ohne dieses Kennzeichen lehnt die Prüfung einen ersetzten Wert ohne `coversThrough` weiter ab; mit Ersatz „leer“ ist es unzulässig, und eine zweite ersetzte Zelle derselben Reihe lässt die Prüfung scheitern. Grenze dieser Lösung: Neue Anbieterquartale von OXLC kommen ungeprüft durch, ebenso eine Periodenverschiebung. Meldet der Anbieter dieselbe falsche Null mit einem um einen Tag verschobenen Enddatum (etwa 30.03.2026 statt 31.03.2026), passt der Fall nicht, und die Null geht ungeprüft durch; in einer Reihe mit `coversThrough` wäre sie `period-not-verified`. Der Jahresumsatz des Anbieters für OXLC (464,1 Mio.) entspricht dem N-CSR-Wert (464.064.404), eine spätere Umstellung auf `coversThrough` hätte also einen richtigen Rückfallwert; bestätigte, unveränderte Quartale kann die Tabelle heute nicht ausdrücken.
+OXLC (Oxford Lane Capital): Der jüngste Anbieterwert (Quartal bis 31.03.2026) ist 0, das Board zeigte −100 %. Die Quartalsmitteilung des Fonds nennt „approximately $94.0 million“, also auf 0,1 Mio. gerundet (rechnerisch aus N-CSR minus N-CSRS minus Vorquartal: 93,95 bis 93,98 Mio.); Wachstum −22,4 %, das wegen der Rundung in der letzten Stelle um 0,1 Punkte abweichen kann. Die Quartale bis 30.06.2025 und 31.03.2025 stimmen mit dem Fonds überein (124,0 und 121,2 Mio.) und bleiben stehen. Die gespeicherte Null zum 30.09.2024 ist ebenfalls falsch: die Mitteilung vom 01.11.2024 nennt „approximately $105.1 million“, der Halbjahresbericht (N-CSRS, sechs Monate bis 30.09.2024) 194,9 Mio. Sie wird leer gesetzt, nicht geschätzt. Stand zweite Tabelle (01.10.2026, Abschnitt „Zweite Tabelle vom 01.10.2026“): OXLC hat jetzt `coversThrough` 31.03.2026; die Quartale bis 30.06.2025 und 31.03.2025 stehen als bestätigte Zellen in der Tabelle (Anbieterwert gleich Ersatzwert, belegt durch die Mitteilungen des Fonds), das frühere Kennzeichen `singleFalseValue` ist samt Prüfregel und Tests entfernt. Ein neues Anbieterquartal wird damit leer gesetzt (`period-after-coverage`), auch eine erneute falsche Null; ebenso eine verschobene Periode (`period-not-verified`). Das Wachstum fällt dann auf den Jahresumsatz des Anbieters zurück (464,1 Mio., gleich dem N-CSR-Wert 464.064.404).
 
 Fünf Fonds kommen neu auf das Financials-Board: OBDC, GBDC, TSLX, MSDL und PSEC waren mit „non-operating-rev“ ausgeschlossen, weil die Regel für Nicht-Betriebsvehikel in `src/scoring/router.js` (Asset Management mit negativem Quartalsumsatz) die negativen Anbieterquartale sah. Mit den SEC-Werten sind alle Quartale positiv. Das ist gewollt und gleich behandelt wie FSK am 29.09.; ihre Kennzahl aus der Jahresreihe stimmt mit der SEC überein (Zahlen-Prüfbericht 01.10.). OTF wäre der sechste, ist aber gesperrt. In der Quality-Familie bleiben alle 13 ausgeschlossen; bei OBDC, OTF, GBDC, TSLX, MSDL und PSEC lautet der Grund jetzt „qc-sector-unsupported“ wie bei den übrigen BDCs. PSEC zeigte bisher ein richtiges Jahreswachstum (−11,1 %, weil das Vorjahresquartal beim Anbieter −179,9 Mio. war); jetzt ist das Quartalsbein bildbar und zeigt −6,7 % (April bis Juni 2026 gegen Vorjahr).
 
@@ -262,6 +263,91 @@ Nachlauf mit `scripts/financial-corrections-replay.js` auf denselben 16.118 Stä
 | PSEC | 2025-12-31 | revenueQ | USD | 28921000 | 176002000 |
 | PSEC | 2025-09-30 | revenueQ | USD | 91943000 | 157624000 |
 | PSEC | 2025-06-30 | revenueQ | USD | -179931000 | 166946000 |
+
+## Zweite Tabelle vom 01.10.2026: Sperren, bestätigte Zellen, Firmenreihen
+
+Anlass: Die SEC-Doppelprüfung von 34 Firmen (01.10.) und die Einordnung der Wert-Tor-Meldungen fanden falsche Zahlen auf oder hinter den Boards. Jeder neu eingetragene Wert ist vom Erbauer am 01.10. selbst an der Primärquelle nachgelesen (wörtliche Zeile, Einheit, Währung, Periodenende); jeder `expectedBadValue` ist gleich dem Anbieterwert im CI-Artefakt `snapshots` von Lauf 36690140002 (30.09.2026). Datenstand aller Zahlen dieses Abschnitts: dieser Lauf, Watchlist 8bbe9d9133, Live-Kalibrierung wie im Produktionslauf, Code origin/main d90e04b259 gegen diesen Stand.
+
+**Sperren (`quarantines`, Grund sichtbar, Fingerabdruck wie bei Banpu, OTF und KBDC):**
+
+| Ticker | Grund | Fingerabdruck | Board vorher (origin/main) |
+| --- | --- | --- | --- |
+| HOS | Der Ticker gehört seit 01.09.2026 zur umbenannten Helix Energy Solutions (SEC-Nr. 866829, 8-K vom 04.09.2026); der Anbieter liefert noch die Zahlen der früheren Hornbeck Offshore (SEC-Nr. 1131227) von 2018/2019: Jahresumsatz 212.404 / 191.412 / 224.299 / 476.070 Tsd. USD wörtlich wie im 10-K 2018 („Revenues $ 212,404 $ 191,412 $ 224,299 $ 476,070 $ 634,793“). | Jahresumsatz 2018 212.404.000 und Jahresüberschuss −119.123.000 (gleicher Jahresindex, Jahresende 31.12.2018) | Industrie, unprofitabel, Rang 54, Score 59,2, Wachstum 11,0 % |
+| TYG | Die Abschlusszahlen des Anbieters enden mit dem Geschäftsjahr bis 30.11.2017 (Gesamtanlageertrag laut N-CSR 2017 1.956.784 USD, Anbieter 1.956.780); das Wachstum −98,9 % ist kein aktueller Wert. Jüngster Abschluss (bis 30.11.2025): 24.889.525 USD. | Jahresumsatz 1.956.780 und Jahresergebnis −113.427.640 (Jahresende 30.11.2017) | Financials, profitabel, Rang 409, Score 28,0, Wachstum −98,9 % |
+| OLPX | Seit 07.07.2026 nach einer Übernahme nicht mehr börsennotiert (8-K vom 07.07.2026, Item 3.01; Formular 25-NSE am selben Tag, 15-12G am 17.07.); alle Quartals-Bruttogewinne stehen beim Anbieter auf 0 (10-Q Q1 2026: „Gross profit 71,660 67,356“ Tsd. USD). | Quartalsumsatz 31.03.2026 99.369.000 und Bruttogewinn desselben Quartals 0 | Zykl. Konsum, unprofitabel, Rang 47, Score 49,9 |
+
+Weicht ein Anker ab (etwa nach dem nächsten vollen Abruf von HOS, für den der Anbieter einen Umsatz 2025 von 0 meldet), bleibt die Sperre bestehen, und der Lauf warnt (`quarantine-fingerprint-changed`), bis ein Mensch neu prüft. Alle drei verlassen jedes Growth-Board; in der Ausschlussliste stehen sie mit `data-suspect`, sichtbarem Grund und ohne Sektor, Branche, Marktwert und Wachstum; das Rule-of-40-Board schließt sie über dieselbe Prüfung aus. In der Quality-Familie waren alle drei schon vorher ausgeschlossen (`qc-not-compounder` bzw. `qc-sector-unsupported`). Zweitnotierungen gibt es im Universum nicht (gesucht über identische Quartals- und Jahresumsätze und den Namen in allen 16.114 Ständen; einziger Treffer ist ein zufällig gleicher Jahresumsatz von INFQ und Almonty, kein Alias).
+
+**Bestätigte Zellen statt `singleFalseValue`:** Ein Fall mit `expectedBadValue` gleich `replacementValue` ist eine bestätigte Zelle: Der Anbieterwert stimmt mit der Primärquelle überein und bleibt Byte für Byte stehen (kein Korrekturvermerk, kein sichtbarer Grund); weicht der Anbieter später ab, wird die Zelle leer (`vendor-value-changed`). Wie jeder Fall mit einem Wert gibt sie der Tabelle die Hoheit über die ganze Reihe und verlangt deshalb `coversThrough`. Ihr Grund beginnt mit „… bestätigt:“; sind beide Werte gleich, der Grund aber „korrigiert“ (etwa ein versehentlich kopierter Anbieterwert), oder umgekehrt, lehnt die Prüfung die ganze Tabelle ab. Das frühere Kennzeichen `singleFalseValue` ist mit seiner Prüfregel und seinen Tests entfernt (weniger Code, gleicher Schutz): OXLC hat jetzt `coversThrough` 31.03.2026 und die bestätigten Zellen 30.06.2025 (124.000.000; Mitteilung vom 23.07.2025 „approximately $124.0 million“) und 31.03.2025 (121.161.000; Mitteilung vom 19.05.2025 „approximately $121.2 million“, gegengerechnet mit N-CSR 430.539.101 minus N-CSRS 194.878.203). Nachweis am echten OXLC-Paket: heute unverändert (94,0 / 124,0 / 121,161 Mio. / leer, Wachstum −22,4 %, 0 stale); die alte Tabelle mit nur dieser OXLC-Umstellung ergibt unter dem neuen Lader auf allen 16.114 Ständen 0 abweichende Ergebnisse. Ein nachgestelltes nächstes Anbieterquartal 30.06.2026 = 0 zeigte bisher −100,0 %, jetzt bleibt es leer (`period-after-coverage`, Warnung) und das Wachstum fällt auf den Jahresumsatz zurück (+7,8 %, gleich dem N-CSR-Wert).
+
+**Firmenreihen mit `coversThrough` 30.06.2026 (Umsatz und Bruttogewinn je Firma):** CARG, PLUS, DCO, INFQ (SEC) und SLC Agrícola (SLCE3.SA, BRL). Jedes gespeicherte Quartal ist ein Emittentenwert: ersetzt, wo der Anbieter abweicht, sonst bestätigte Zelle (von beiden Prüfern der Doppelprüfung oder dem Schiedsprüfer bestätigt und vom Erbauer nachgelesen). Ursachen: CARG hat 2025 nach dem Verkauf von CarOffer rückwirkend umgestellt (10-K 2025, Note 16), DCO hat das Jahr 2025 neu ausgewiesen (10-K/A vom 08.05.2026, Note 18), INFQ hat frühere Perioden berichtigt (10-Q Q2 2026, „Correction of Immaterial Errors“; die Quartale 31.03.2025 und 30.09.2025 sind Differenzen zweier dort ausgewiesener Werte), bei PLUS ist das vierte Geschäftsquartal (bis 31.03.2026) laut Ergebnismitteilung 576.174 statt Jahreswert minus erstmals berichteter neun Monate. SLC: Der Anbieter zählt in drei Quartalen die Neubewertung der Ernte („Var. do Valor Justo dos Ativos Biológicos“) zum Umsatz und führt für die Quartale 30.06.2026 und 30.06.2025 Umsatz- und Bruttogewinnwerte, die zu keiner Zeile passen; eingetragen sind „Receita Operacional Líquida“ und „Resultado Bruto“ der Ergebnismitteilungen (Anhang 3). Damit gilt die Marge der Firma selbst (2T26: 43,3 %).
+
+**Einzelne falsche Werte, leer gesetzt (keine Schätzung, keine `coversThrough`):** VCTR Bruttogewinn 31.12.2025 (Anbieter 43,9 Mio. USD; die Firma weist keinen Bruttogewinn aus, und der Wert liegt unter dem Betriebsergebnis des Quartals von 153,2 Mio. = 478.423 − 325.248 Tsd.). Celesc (CLSC3.SA) Bruttogewinn 30.06.2025 (Anbieter 152,1 Mio. BRL; ITR 2T25 Seite 23 „Lucro Bruto 513.396“). Für VCTR wäre ein abgeleiteter Wert keine eingereichte Zahl; deshalb leer.
+
+Jede aktive Zelländerung dieser Tabelle (25 Zellen: 23 ersetzt, 2 leer gesetzt; Beträge in Originalwährung, volle Einheiten; die übrigen 29 neuen Fälle sind bestätigte Zellen ohne Änderung):
+
+| Ticker | Periode | Feld | Währung | Alt | Neu |
+| --- | --- | --- | --- | --- | --- |
+| CARG | 2025-12-31 | revenueQ | USD | 209093000 | 241094000 |
+| CARG | 2025-09-30 | revenueQ | USD | 238696000 | 231653000 |
+| CARG | 2025-12-31 | grossProfitQ | USD | 223892000 | 222593000 |
+| CARG | 2025-09-30 | grossProfitQ | USD | 213532000 | 214707000 |
+| PLUS | 2026-03-31 | revenueQ | USD | 581634000 | 576174000 |
+| PLUS | 2026-03-31 | grossProfitQ | USD | 147087000 | 141627000 |
+| DCO | 2025-12-31 | revenueQ | USD | 215798000 | 217133000 |
+| DCO | 2025-09-30 | revenueQ | USD | 212558000 | 214422000 |
+| DCO | 2025-12-31 | grossProfitQ | USD | 59805000 | 59238000 |
+| DCO | 2025-09-30 | grossProfitQ | USD | 56475000 | 58950000 |
+| INFQ | 2026-03-31 | revenueQ | USD | 9461000 | 9907000 |
+| INFQ | 2025-09-30 | revenueQ | USD | 8202000 | 7311000 |
+| INFQ | 2025-03-31 | revenueQ | USD | 8303000 | 8195000 |
+| INFQ | 2026-03-31 | grossProfitQ | USD | 1991000 | 2535000 |
+| INFQ | 2025-09-30 | grossProfitQ | USD | 3863000 | 3700000 |
+| INFQ | 2025-03-31 | grossProfitQ | USD | 3377000 | 3543000 |
+| SLCE3.SA | 2026-06-30 | revenueQ | BRL | 4703662000 | 2175612000 |
+| SLCE3.SA | 2026-03-31 | revenueQ | BRL | 2665069000 | 2267501000 |
+| SLCE3.SA | 2025-12-31 | revenueQ | BRL | 2290647000 | 2272265000 |
+| SLCE3.SA | 2025-09-30 | revenueQ | BRL | 2379036000 | 2087705000 |
+| SLCE3.SA | 2025-06-30 | revenueQ | BRL | 4043394000 | 1862135000 |
+| SLCE3.SA | 2026-06-30 | grossProfitQ | BRL | 2879220000 | 941202000 |
+| SLCE3.SA | 2025-06-30 | grossProfitQ | BRL | 2444562000 | 656027000 |
+| VCTR | 2025-12-31 | grossProfitQ | USD | 43903000 | fehlt |
+| CLSC3.SA | 2025-06-30 | grossProfitQ | BRL | 152109000 | fehlt |
+
+Wachstum, Bruttomarge, Score und Rang (Growth-Board, origin/main → diese Tabelle). Das Wachstumspaar (jüngstes Quartal gegen Vorjahresquartal) bleibt bei allen Firmen bildbar und besteht jetzt aus Emittentenwerten:
+
+| Ticker | Board (Spur) | Wachstum | Bruttomarge jüngstes Quartal | Bruttomarge vier Quartale | Score | Rang |
+| --- | --- | --- | --- | --- | --- | --- |
+| CARG | Software/Komm. (profitabel) | 13,1 % → 13,1 % | 92,1 % → 92,1 % | 94,8 % → 92,3 % | 65,1 → 65,1 | 99 → 99 |
+| PLUS | Software/Komm. (unprofitabel) | 1,0 % → 1,0 % | 23,3 % → 23,3 % | 25,2 % → 25,1 % | 63,6 → 63,6 | 25 → 25 |
+| DCO | Industrie (unprofitabel) | 11,8 % → 11,8 % | 28,0 % → 28,0 % | 27,3 % → 27,4 % | 55,5 → 55,5 | 68 → 67 |
+| INFQ | Software/Komm. (unprofitabel) | 156,5 % → 156,5 % | 16,0 % → 16,0 % | 23,8 % → 25,2 % | 81,0 → 81,0 | 3 → 3 |
+| SLCE3.SA | Basiskonsum (profitabel) | 16,3 % → 16,8 % | 61,2 % → 43,3 % | 41,7 % → 35,0 % | 81,6 → 82,0 | 27 → 25 |
+| VCTR | Financials (profitabel) | 24,0 % → 24,0 % | 75,2 % → 75,2 % | 58,4 % → fehlt | 67,5 → 67,5 | 58 → 58 |
+| CLSC3.SA | Versorger (profitabel) | 2,6 % → 2,6 % | 7,7 % → 7,7 % | 9,2 % → 9,2 % | 53,6 → 53,6 | 161 → 161 |
+| OXLC | Financials (profitabel) | −22,4 % → −22,4 % | – | – | 29,7 → 29,6 | 404 → 404 |
+| HOS, TYG, OLPX | siehe Sperren | – | – | – | gesperrt | – |
+
+SLC Agrícola: Der Sprung von rund 50 auf 81,6 Punkte am 29.09. kommt nicht von den falschen Zellen: Mit den Werten der Firma bleibt der Score bei 82,0 (Wachstum +16,8 %, so auch die Firma: „crescimento de 16,8%“). Im Stand davor war 1T26 das jüngste Quartal (−6,0 % gegen 1T25 auf Anbieterbasis); am 29.09. kam 2T26 hinzu.
+
+Indirekte Wirkung über die Live-Kalibrierung (Growth): 512 Scores ohne eigene Datenänderung bewegen sich (358 um −0,1, 99 um +0,1, 32 um −0,2, 20 um +0,2, zwei um −0,3, einer um −0,4); nach Board: Financials 304 (profitabel, ohne TYG), Industrie 116 (fast alle unprofitabel, ohne HOS), zykl. Konsum 76 (fast alle unprofitabel, ohne OLPX), Basiskonsum 7, Health Care 3, Materials 2, Tech Hardware 2, Halbleiter 2. 182 dieser Zeilen stehen vor oder nach der Änderung in den Top 100. HOS (Industrie, Rang 54) und OLPX (zykl. Konsum, Rang 47) verlassen ihre Top 100; dafür rücken 600153.SS (Industrie, unprofitabel, Rang 101 → 98) und 601718.SS (zykl. Konsum, Rang 101 → 100) hinein. 134 weitere Zeilen ändern nur den Rang. Quality: eine Zeile (DAR −0,1), Rule of 40 und Smallcap nicht gesondert nachgerechnet.
+
+Nachlauf mit `scripts/financial-corrections-replay.js --live` (neue Option: Growth live kalibriert) auf den 16.118 Ständen von Lauf 36690140002: 135 Zellen (110 bisherige, 25 neue), 0 stale, sechs Sperren, alle Dateihashes vorher und nachher gleich, alle übrigen Zeilen bytegleich.
+
+Nächste Quartale: In jeder Reihe mit `coversThrough` bleibt ein neues Anbieterquartal leer, bis es geprüft und eingetragen ist (Warnung im Tageslauf). Zu prüfen, sobald die Firmen berichten: das Quartal bis 30.09.2026 für CARG, PLUS (10-Q laut Kalender am 09.11.2026), DCO, INFQ und SLC; für OXLC das Quartal bis 30.06.2026 (Fondsmitteilung liegt seit Juli 2026 vor, der Anbieter kann es jederzeit nachladen).
+
+Nicht in dieser Tabelle (Folgeaufträge, je eine Zeile):
+- Betriebsergebnis je Quartal (opIncQ): HIVE fünf Quartale, CARG zwei, PLUS eins, DCO zwei, INFQ drei. Die Handtabelle kennt nur Umsatz und Bruttogewinn; der vorhandene Mechanismus trägt es mit einer Erweiterung der Feldliste (`opIncQ`) samt `coversThrough` je Feld.
+- Jahresumsatz: HL drei Jahre (Neuausweis nach dem Verkauf von Casa Berardi), INFQ Jahr 2025, SLC (Anbieterbasis inklusive Neubewertung der Ernte, 2025: 9.759,2 statt 8.553,1 Mio. BRL). Die Handtabelle kann keine Jahreszellen korrigieren; heute bleibt nur eine Sperre wie bei OTF und KBDC oder eine Erweiterung um Jahreszellen.
+- Börsenwert: ABTC (nach der Zusammenlegung 1:15: 1,06 statt 0,63 Mrd. USD), Andersen (nur Klasse A gezählt: 1,0 statt rund 6 Mrd.), Energisa (8,2 statt 4,5 bis 4,9 Mrd.), Yunji (nach der Teilung 1:10: 8,6 statt rund 0,7 Mrd.). Tragbar über die vorhandene Aktienzahl-Handtabelle (ADS/Aktienzahl, PR #379).
+- JBS: Börsenwert springt zwischen zwei Aktienzahlen; eine Zeile in derselben Aktienzahl-Handtabelle (776.086.920 Klasse A plus 294.842.267 Klasse B laut 10-Q-Deckblatt).
+- Gespeicherte SEC-Dateien (`external-data/sec-*`): COP (Umsatz-Tag 2025), DCO (10-K/A wird absichtlich übersprungen), INFQ (Betriebsergebnis 2025), HL (Neuausweis 2025), HOS (Helix). Sie speisen Zyklus-Dämpfer und `roicStability`, nicht das Wachstum; braucht eine Korrektur in `merge-sec-xbrl.js` oder eine eigene Tabelle.
+- Dian Tou (002128.SZ), Quartal 31.12.2025: Umsatz −914,6 Mio. CNY und Bruttogewinn 562,0 Mio. CNY (laut Firma 3,13 Mrd.). Nicht eingetragen: Die gespeicherten Werte sind nach der Umrechnung keine exakten Vielfachen eines ganzzahligen CNY-Betrags (der Abgleich `expectedBadValue` verlangt exakte Gleichheit), und zwei leere Zellen würden das Quartalswachstum abschalten; braucht alle fünf Quartale aus den Berichten auf cninfo.
+- Wisdom Marine (2637.TW): Die ganze Reihe steht in Taiwan-Dollar unter dem Kennzeichen USD (Q4 2025 5,42 Mrd. statt 163,8 Mio. USD); kein Einzelzellenfehler, gehört zur Währungskorrektur wie bei YPF und Vale.
+- Bullish (BLSH), Bruttogewinn 30.06.2025: Die Firma weist keinen Bruttogewinn aus, alle Anbieterwerte sind Konstrukte (wie bei VCTR); Methodenfrage für Firmen ohne Bruttogewinn-Zeile.
+- Celesc Umsatzbasis: Anbieter 2T25 2.715,9 Mio. BRL, Firma („Receita Operacional Líquida“) 2.899,5 Mio.; ungeklärt, ob der Anbieter die Bauerlöse herausrechnet; nicht geprüft.
+- Offene Prüfnotiz aus PR #400 (Low 2): Ersatzwerte werden nicht maschinell gegen den `value` ihrer Quelle geprüft.
+- Nachtragen eines Quartals: Eine Zelle, die beim Abruf schon leer gesetzt wurde (etwa `period-after-coverage`), bleibt nach dem Eintragen ihres geprüften Werts leer und meldet `vendor-value-changed`, bis der nächste volle Abruf den Anbieterwert neu liefert (keine falsche Zahl, nur zu lange leer). Abhilfe im Lader: bei einer fremden Leer-Markierung mit dem gespeicherten ursprünglichen Anbieterwert vergleichen; eigener Auftrag.
 
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
