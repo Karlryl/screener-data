@@ -28,8 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 97 authorized cells and one mixed-issuer packet have auditable sources', () => {
-  assert.equal(table.cases.length, 97); assert.equal(table.quarantines.length, 1);
+test('all 98 authorized cells and three held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 98);
+  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'OTF', 'KBDC']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
@@ -49,7 +50,7 @@ test('coverage is mandatory for basis-wrong series, unique, and absent for singl
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 97);
+  assert.equal(validateTable(clone(table)).cases.length, 98);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -568,7 +569,8 @@ test('ccyAmbiguous: US-exchange USD listing takes its USD cases in a covered ser
   const tradingEur = m => { m.tradingCurrency = 'EUR'; };
   for (const change of [m => { m.exchangeName = 'LSE'; }, m => { m.exchangeName = 'OTC Markets OTCPK'; },
     m => { m.tradingCurrencyAssumed = true; }, m => { delete m.tradingCurrencyAssumed; }, m => { m._ccyMissingCompletely = true; },
-    tradingEur, m => { m.tradingCurrency = 'EUR'; m.reportingCurrencyOriginal = 'EUR'; }]) withheld(change);
+    tradingEur, m => { m.tradingCurrency = 'EUR'; m.reportingCurrencyOriginal = 'EUR'; }, m => { m.country = 'United Kingdom'; },
+    m => { delete m.country; }]) withheld(change);
   // A non-USD case never applies on the resolved USD packet.
   const eur = clone(table); for (const c of eur.cases) if (c.ticker === 'KBDC') c.currency = 'EUR';
   assert.ok(applyFinancialCases(clone(fixture.KBDC), { table: eur }).snapshot.timeseries.revenueQ.every(row => value(row) === null));
@@ -603,6 +605,26 @@ test('ccyAmbiguous: US-exchange USD listing takes its USD cases in a covered ser
     '    if (!env || ambiguousUncovered || env.currency !== c.currency || matches.length !== 1 || !unitOk) {',
     '    if (!env || env.currency !== c.currency || matches.length !== 1 || !unitOk) {'));
   assert.throws(() => uncovered(ungated.applyFinancialCases), assert.AssertionError); breaks++;
+  // Break-once in memory (absence): without the country check a USD listing of a foreign company would take USD cases.
+  const anyCountry = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s, "  m.country === 'United States' &&", '  true &&'));
+  assert.throws(() => withheld(m => { m.country = 'United Kingdom'; }, anyCountry.applyFinancialCases), assert.AssertionError); breaks++;
+  // Absence (review round 2): the coverage gate is per field. Covered revenueQ does not open an uncovered
+  // flagged grossProfitQ case on the same ambiguous packet.
+  const gpPacket = clone(fixture.KBDC);
+  gpPacket.timeseries.grossProfitQ = [{ value: 1e6 }, ...gpPacket.timeseries.grossProfitQ.slice(1)];
+  gpPacket.timeseries.grossProfitQEnds = gpPacket.timeseries.revenueQEnds.slice();
+  const gpTable = clone(table);
+  gpTable.cases.push({ ...clone(kbdc[0]), caseId: 'test-kbdc-gp', field: 'grossProfitQ', period: gpPacket.timeseries.revenueQEnds[0],
+    expectedBadValue: 1e6, replacementValue: 2e6, singleFalseValue: true });
+  const gpWithheld = fn => {
+    const row = fn(clone(gpPacket), { table: gpTable }).snapshot.timeseries.grossProfitQ[0];
+    assert.equal(value(row), null); assert.equal(row.financialMissing.reasonCode, 'context-changed');
+  };
+  gpWithheld(applyFinancialCases);
+  const fieldBlind = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    '    const ambiguousUncovered = snapshot.meta?.ccyAmbiguous && !config.coverage.some(v => listed(v, ticker) && v.field === c.field);',
+    '    const ambiguousUncovered = snapshot.meta?.ccyAmbiguous && !config.coverage.some(v => listed(v, ticker));'));
+  assert.throws(() => gpWithheld(fieldBlind.applyFinancialCases), assert.AssertionError); breaks++;
 });
 
 // BDC flag 4: OXLC is one false vendor zero in a series whose other checked quarters agree with the issuer.
@@ -613,9 +635,8 @@ test('singleFalseValue: OXLC gets the issuer quarter without coverage; other ven
   assert.ok(/gerundet/.test(c.reason) && /issuer-rounded/.test(c.sources[0].unit), 'Rounding is recorded in the entry');
   assert.ok(!table.coverage.some(v => v.ticker === 'OXLC'));
   const input = clone(fixture.OXLC), r = applyFinancialCases(input);
-  // Only the verified cell changes; the other vendor quarters pass as stored (the 2024-09-30 value is outside
-  // the checked window and is not endorsed here).
-  assert.deepEqual(norm(r.snapshot, 'revenueQ'), [94000000, ...norm(fixture.OXLC, 'revenueQ').slice(1)]);
+  // The verified zero is replaced, the two issuer-confirmed quarters stay, the false zero of 2024-09-30 is withheld.
+  assert.deepEqual(norm(r.snapshot, 'revenueQ'), [94000000, 124000000, 121161000, null]);
   assert.ok(!r.events.some(e => e.status === 'stale'));
   assert.equal(axes.revGrowthLevel(r.snapshot).toFixed(1), '-22.4', '94.0 vs 121.161 million');
   // Without coverage a newer vendor quarter passes as vendor data (the series basis is not wrong).
@@ -634,6 +655,14 @@ test('singleFalseValue: OXLC gets the issuer quarter without coverage; other ven
   assert.throws(() => validateTable(allFlagged), /Invalid single false value \(other replacements in series\): HTGC\|revenueQ/);
   const oneFlagged = clone(table); oneFlagged.cases.find(x => x.ticker === 'BXSL').singleFalseValue = true;
   assert.throws(() => validateTable(oneFlagged), /Invalid single false value \(other replacements in series\): BXSL\|revenueQ/);
+  // Review round 2: exactly one, not "a few". OXLC plus a second flagged replacement must fail.
+  const twoFlagged = clone(table);
+  twoFlagged.cases.push({ ...clone(c), caseId: 'test-oxlc-2025-06-30', period: '2025-06-30', expectedBadValue: 124e6, replacementValue: 124.5e6 });
+  assert.throws(() => validateTable(twoFlagged), /Invalid single false value \(other replacements in series\): OXLC\|revenueQ/);
+  const loose = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
+    "  for (const key of single) if (replaced.get(key) !== 1) throw new Error('Invalid single false value (other replacements in series): ' + key);",
+    "  for (const key of single) if (replaced.get(key) > 2) throw new Error('Invalid single false value (other replacements in series): ' + key);"));
+  assert.throws(() => assert.throws(() => loose.validateTable(twoFlagged), /Invalid single false value/), assert.AssertionError); breaks++;
   // Break-once in memory: without the opt-out the real table no longer validates (the module throws on load).
   assert.throws(() => moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     '      (c.singleFalseValue ? single : basisWrong).add(series);', '      basisWrong.add(series);')),
@@ -642,6 +671,52 @@ test('singleFalseValue: OXLC gets the issuer quarter without coverage; other ven
   const unchecked = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of single) if (replaced.get(key) !== 1) throw new Error('Invalid single false value (other replacements in series): ' + key);", ''));
   assert.throws(() => assert.throws(() => unchecked.validateTable(allFlagged), /Invalid single false value/), assert.AssertionError); breaks++;
+});
+
+// Review round 2: OTF and KBDC carry a vendor ANNUAL revenue series that contradicts their SEC filings
+// (the hand table cannot correct annual cells). Both are held off the boards with a visible reason; their
+// verified quarterly cells stay corrected for the day the hold is lifted.
+test('OTF and KBDC: held for wrong vendor annual revenue; cases still apply; drift keeps the hold and warns', () => {
+  const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
+  for (const ticker of ['OTF', 'KBDC']) {
+    const q = table.quarantines.find(x => x.ticker === ticker);
+    const held = (fn, input = clone(fixture[ticker])) => {
+      const r = fn(input);
+      assert.equal(r.snapshot.meta.financialDataIssue?.caseId, q.caseId, ticker + ' held');
+      assert.equal(score.isDataSuspect(r.snapshot, [], 'route'), true);
+      const scored = score.scoreUniverse([r.snapshot], formulas)[0];
+      assert.equal(scored.score, null); assert.equal(scored.reason, 'data-suspect'); assert.equal(scored.reasonText, q.reason);
+      assert.ok(financialReasons(r.snapshot).includes(q.reason));
+      return r;
+    };
+    const exact = held(applyFinancialCases);
+    assert.ok(!exact.events.some(e => e.status === 'stale'), ticker + ': exact packet holds without warning');
+    // Cases and hold together: every verified quarter is still the issuer value.
+    for (const c of table.cases.filter(x => x.ticker === ticker)) {
+      const i = exact.snapshot.timeseries.revenueQEnds.indexOf(c.period);
+      assert.equal(value(exact.snapshot.timeseries.revenueQ[i]), c.replacementValue);
+    }
+    // A drifted anchor never releases the hold; it warns until a human re-verifies.
+    for (const anchor of q.fingerprint) {
+      const other = clone(fixture[ticker]); const parent = anchor.path.slice(0, -1).reduce((x, k) => x[k], other);
+      parent[anchor.path.at(-1)] *= 1.001;
+      const r = held(applyFinancialCases, other);
+      assert.ok(r.events.some(e => e.status === 'stale' && e.reasonCode === 'quarantine-fingerprint-changed' && e.caseId === q.caseId));
+    }
+    // A new fiscal year in front of the vendor series is still the same packet: hold without warning.
+    const rollover = clone(fixture[ticker]);
+    for (const f of ['annualRev', 'annualNetIncome']) {
+      rollover.annual[f].unshift({ value: null });
+      if (Array.isArray(rollover.annual[f + 'Ends'])) rollover.annual[f + 'Ends'].unshift(null);
+    }
+    assert.ok(!held(applyFinancialCases, rollover).events.some(e => e.status === 'stale'));
+    // Absence: the same packet under another ticker is not held.
+    const unlisted = clone(fixture[ticker]); unlisted.meta.ticker = 'UNLISTED';
+    assert.equal(applyFinancialCases(unlisted).snapshot.meta.financialDataIssue, undefined);
+    // Break-once on test data: a table without this hold lets the row score again.
+    const noHold = clone(table); noHold.quarantines = noHold.quarantines.filter(x => x.ticker !== ticker);
+    assert.throws(() => held(s => applyFinancialCases(s, { table: noHold })), assert.AssertionError); breaks++;
+  }
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);
