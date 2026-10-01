@@ -5,6 +5,7 @@
 > - Mit der Live-Kalibrierung des Produktionslaufs bewegen sich 434 Growth-Scores sichtbar (4 direkt, 430 indirekt um 0,1 oder 0,2), nicht nur 4 (Abschnitt „Growth mit Live-Kalibrierung“).
 > - Breite Nullwertregel: 9900 Kandidaten, 122 Scoreänderungen im gepaarten Hauptbestandstest; deshalb ausschließlich Schattenbetrieb.
 > - Noch keine Veröffentlichung. Der genaue historische Smallcap-Eingabestand fehlt; sämtliche 1.100 Quality-Ausgangsscores stimmen mit der Veröffentlichung überein.
+> - Nachtrag 01.10.2026: 62 weitere geprüfte Umsatzzellen für 13 BDCs/Fonds; fünf bisher ausgeschlossene Fonds kommen auf das Financials-Board, OTF und KBDC sind wegen falscher Anbieter-Jahresumsätze gesperrt (Grund sichtbar); über die Live-Kalibrierung bewegen sich 320 weitere Growth-Scores (Abschnitt „BDC-Handtabelle“).
 
 ## Ursache und begrenzte Reparatur
 
@@ -154,6 +155,113 @@ Reproduzierbar mit dem Prüfer-Skript `board-diff-live.js` (live kalibriert, ohn
 ## Zweitnotierungen (Nachtrag Prüfrunde 3)
 
 Die Handtabelle kennt je Fall eine Liste `listingAliases`. YSNG.VI (secunet, Wien) trägt im Archiv vom 29.09. dieselben vier falschen Bruttogewinn-Nullen wie YSN.DE, PDN.TO und PALAF dieselben vier Nullzellen wie PDN.AX, jeweils in gleicher Berichtswährung (EUR bzw. USD), gleichem Kursfaktor und gleichen Perioden; die Datenpakete sind in diesen Reihen bytegleich. Ohne Alias konnte die Doppelnotierungs-Bereinigung (größere Marktkapitalisierung gewinnt, YSN.DE und YSNG.VI liegen 0,8 % auseinander) die unkorrigierte Notierung auf das Board bringen. Ein Alias, der zugleich Hauptticker eines anderen Falls ist, lässt die Prüfung der Handtabelle scheitern. Der Nachlauf ergibt damit 48 statt 36 Zellen: die 36 Zellen der acht Hauptticker unverändert, dazu 12 Aliaszellen (YSNG.VI 4, PDN.TO 4, PALAF 4); die Board-Wirkung bleibt gleich.
+
+## BDC-Handtabelle: 13 Fonds (Nachtrag 01.10.2026, Prüfrunde 2)
+
+Bei Business Development Companies und dem geschlossenen Fonds OXLC ist die Quartalsumsatzreihe des Anbieters falsch; das Board zeigte deshalb falsches Umsatzwachstum. Die Handtabelle enthält 62 weitere Zellen: zwölf Fonds mit je fünf Quartalen und zwei OXLC-Zellen. Jeder SEC-Wert ist gegen die wörtliche Zeile „Total investment income“ der zitierten Einreichung geprüft (KBDC, OBDC, OTF, TSLX und PSEC schreiben „Total Investment Income“); Quartale ohne eigenen Dreimonatswert sind Jahreswert minus neun Monate, beide Operanden mit eigener Periode in der Quelle. OXLC: Mitteilungen des Fonds, gegen die N-CSR- und N-CSRS-Summen gegengerechnet. Für die zwölf SEC-Fonds gilt `coversThrough` 30.06.2026; jedes neuere Anbieterquartal bleibt leer, bis es geprüft ist. Zweitnotierungen derselben Emittenten gibt es im Universum nicht (gesucht über Namen und identische Quartalswerte in allen 16.118 Ständen; die Anleihe-Ticker OXLCG, OXLCI, OXLCL und OXLCZ stehen nur in der Watchlist, ohne Datenstand), deshalb keine `listingAliases`.
+
+Abgleich mit dem gespeicherten Stand: Alle 62 `expectedBadValue` sind gleich dem Anbieterwert im CI-Artefakt `snapshots` von Lauf 36690140002 (30.09.2026, Eingang der Boards vom 30.09.). Ändert der Anbieter später einen Wert, greift die bestehende Regel `vendor-value-changed` (Zelle leer, Warnung); es wird nichts geschätzt.
+
+OTF und KBDC gesperrt (Prüfrunde 2): Bei beiden ist zusätzlich die Jahresumsatzreihe des Anbieters falsch, und die Handtabelle kann Jahreswerte nicht korrigieren. OTF: Jahresumsatz laut SEC 2025 1.145,4 Mio. USD, 2024 684,0 Mio.; der Anbieter führt 779,3 / 353,5 / 391,9 / 50,0 Mio. ohne Datum, das passt zu keinem Geschäftsjahr. Die Kennzahl der Board-Zeile (Umsatzwachstum aus der Jahresreihe) hätte +120,5 % statt +67,5 % gezeigt. KBDC: laut SEC 2025 235,8 Mio. USD, 2024 213,1 Mio.; beim Anbieter 102,1 und 123,8 Mio. (das Anbieterpaket führt die SEC-Werte selbst als Konflikt in `annualIncomeConflicts`). Die Beschleunigungsachse fällt bei fünf Quartalen auf die Jahresreihe zurück und trägt 61 % des KBDC-Scores (Gewicht 2,7 von 4,4). Beide Fonds stehen deshalb in `quarantines` mit sichtbarem Grund („Score fehlt: …“), Fingerabdruck auf Jahresumsatz und Jahresüberschuss desselben Jahres. Weicht ein Wert ab, bleibt die Sperre bestehen und der Lauf warnt (`quarantine-fingerprint-changed`), bis ein Mensch neu geprüft hat. Die geprüften Quartalszellen bleiben in der Tabelle und werden weiter korrigiert, für den Tag, an dem die Jahresreihe stimmt. Wie bei Banpu zeigt die Ausschlussliste für gesperrte Zeilen weder Sektor, Branche, Marktwert noch Wachstum. KBDC verlässt damit das Board (bisher 27,6 bei −51,2 %), OTF kommt nicht darauf.
+
+Währungsregel (für KBDC, wirksam sobald die Sperre fällt): Der Anbieter liefert für KBDC keine Berichtswährung (`ccyAmbiguous`); der Abruf setzt dann die Handelswährung USD ein. Bisher galt jede solche Zeile als „Kontext geändert“, alle fünf geprüften Zellen wären leer geblieben. Neu wird eine solche Zeile als USD behandelt, wenn der Anbieter die Firma in den USA führt (`country`), sie an einer US-Börse (NYSE, NYSE American, NYSE Arca, Nasdaq GS/GM/CM, Cboe US) in USD gehandelt wird und die Handelswährung ausdrücklich nicht geraten ist. Das beweist keine USD-Abschlüsse; deshalb greift ein Fall dort nur mit eigener geprüfter Währung USD und nur in einer Reihe mit `coversThrough`. Dann ist jedes gezeigte Quartal dieser Reihe ein Emittentenwert (andere Reihen wie der Jahresumsatz bleiben Anbieterdaten). Eine Firma außerhalb der USA, eine USD-Notierung an der LSE, OTC, eine geratene oder fehlende Angabe zur Handelswährung, jede andere Währung und jede Reihe ohne `coversThrough` bleiben leer (`context-changed`). Mit der bisherigen Tabelle ändert diese Regel auf allen 16.118 Ständen keine Zelle.
+
+OXLC (Oxford Lane Capital): Der jüngste Anbieterwert (Quartal bis 31.03.2026) ist 0, das Board zeigte −100 %. Die Quartalsmitteilung des Fonds nennt „approximately $94.0 million“, also auf 0,1 Mio. gerundet (rechnerisch aus N-CSR minus N-CSRS minus Vorquartal: 93,95 bis 93,98 Mio.); Wachstum −22,4 %, das wegen der Rundung in der letzten Stelle um 0,1 Punkte abweichen kann. Die Quartale bis 30.06.2025 und 31.03.2025 stimmen mit dem Fonds überein (124,0 und 121,2 Mio.) und bleiben stehen. Die gespeicherte Null zum 30.09.2024 ist ebenfalls falsch: die Mitteilung vom 01.11.2024 nennt „approximately $105.1 million“, der Halbjahresbericht (N-CSRS, sechs Monate bis 30.09.2024) 194,9 Mio. Sie wird leer gesetzt, nicht geschätzt. OXLC hat keine `coversThrough`-Grenze; der Fall 31.03.2026 trägt `singleFalseValue: true` (die einzige ersetzte Zelle einer sonst bestätigten Reihe; leer gesetzte Zellen zählen nicht). Ohne dieses Kennzeichen lehnt die Prüfung einen ersetzten Wert ohne `coversThrough` weiter ab; mit Ersatz „leer“ ist es unzulässig, und eine zweite ersetzte Zelle derselben Reihe lässt die Prüfung scheitern. Grenze dieser Lösung: Neue Anbieterquartale von OXLC kommen ungeprüft durch, ebenso eine Periodenverschiebung. Meldet der Anbieter dieselbe falsche Null mit einem um einen Tag verschobenen Enddatum (etwa 30.03.2026 statt 31.03.2026), passt der Fall nicht, und die Null geht ungeprüft durch; in einer Reihe mit `coversThrough` wäre sie `period-not-verified`. Der Jahresumsatz des Anbieters für OXLC (464,1 Mio.) entspricht dem N-CSR-Wert (464.064.404), eine spätere Umstellung auf `coversThrough` hätte also einen richtigen Rückfallwert; bestätigte, unveränderte Quartale kann die Tabelle heute nicht ausdrücken.
+
+Fünf Fonds kommen neu auf das Financials-Board: OBDC, GBDC, TSLX, MSDL und PSEC waren mit „non-operating-rev“ ausgeschlossen, weil die Regel für Nicht-Betriebsvehikel in `src/scoring/router.js` (Asset Management mit negativem Quartalsumsatz) die negativen Anbieterquartale sah. Mit den SEC-Werten sind alle Quartale positiv. Das ist gewollt und gleich behandelt wie FSK am 29.09.; ihre Kennzahl aus der Jahresreihe stimmt mit der SEC überein (Zahlen-Prüfbericht 01.10.). OTF wäre der sechste, ist aber gesperrt. In der Quality-Familie bleiben alle 13 ausgeschlossen; bei OBDC, OTF, GBDC, TSLX, MSDL und PSEC lautet der Grund jetzt „qc-sector-unsupported“ wie bei den übrigen BDCs. PSEC zeigte bisher ein richtiges Jahreswachstum (−11,1 %, weil das Vorjahresquartal beim Anbieter −179,9 Mio. war); jetzt ist das Quartalsbein bildbar und zeigt −6,7 % (April bis Juni 2026 gegen Vorjahr).
+
+Wachstum / Score / Rang im vollen Financials-Board, Spur profitabel (veröffentlicht 427 Zeilen, nach #398 428, mit dieser Tabelle 432). Gleicher Datenstand (Lauf 36690140002, Watchlist 8bbe9d9133, 16.097 zugelassene Stände), Live-Kalibrierung wie im Produktionslauf:
+
+| Ticker | veröffentlicht 30.09. | main mit #398 | mit BDC-Tabelle |
+| --- | --- | --- | --- |
+| BXSL | −84,3 % / 34,2 / 374 | −84,3 % / 34,1 / 378 | −7,1 % / 35,6 / 367 |
+| MAIN | 22,8 % / 49,7 / 222 | 22,8 % / 49,6 / 221 | 3,9 % / 42,6 / 308 |
+| TRIN | 4,8 % / 40,1 / 322 | 4,8 % / 39,9 / 324 | 25,5 % / 48,6 / 238 |
+| CSWC | −14,9 % / 41,6 / 310 | −14,9 % / 41,5 / 310 | 9,1 % / 46,5 / 261 |
+| BBDC | −8,0 % / 44,4 / 290 | −8,0 % / 44,3 / 290 | −12,4 % / 43,7 / 298 |
+| OXLC | −100,0 % / 29,3 / 402 | −100,0 % / 29,2 / 403 | −22,4 % / 29,7 / 404 |
+| OBDC | ausgeschlossen (non-operating-rev), −43,9 % | ausgeschlossen (non-operating-rev), −43,9 % | −17,4 % / 50,3 / 211 |
+| GBDC | ausgeschlossen (non-operating-rev), −31,9 % | ausgeschlossen (non-operating-rev), −31,9 % | −14,0 % / 42,8 / 304 |
+| TSLX | ausgeschlossen (non-operating-rev), −27,8 % | ausgeschlossen (non-operating-rev), −27,8 % | −14,9 % / 32,9 / 384 |
+| MSDL | ausgeschlossen (non-operating-rev), −71,8 % | ausgeschlossen (non-operating-rev), −71,8 % | −10,8 % / 32,2 / 390 |
+| PSEC | ausgeschlossen (non-operating-rev), −11,1 % | ausgeschlossen (non-operating-rev), −11,1 % | −6,7 % / 49,2 / 228 |
+| KBDC | −51,2 % / 27,7 / 406 | −51,2 % / 27,6 / 407 | gesperrt (data-suspect), Grund sichtbar |
+| OTF | ausgeschlossen (non-operating-rev), −21,4 % | ausgeschlossen (non-operating-rev), −21,4 % | gesperrt (data-suspect), Grund sichtbar |
+
+Keine der 13 Zeilen steht vorher oder nachher in den Top 100.
+
+Indirekte Wirkung über die Live-Kalibrierung (Growth): 320 Scores ohne eigene Datenänderung bewegen sich, 270 um ±0,1, 46 um ±0,2, zwei um ±0,3, einer um +0,4 und einer um −1,2. Nach Board: Financials 280, Health Care 12, Industrials 6, Materials 5, Real Estate 5, Consumer Discretionary 4, Tech Hardware 4, Semiconductors 2, IT Services 1, Energy 1. 79 dieser Zeilen stehen vor oder nach der Änderung in den Top 100 eines Boards; keine Zeile wechselt in die Top 100 hinein oder heraus (HKB.SI rückt im Financials-Board von Rang 99 auf 100). Ursache: Die falschen Extremwerte der BDCs (bis −100 %) fallen aus den universumsweit gelernten Grenzen; die untere Wachstumsgrenze (p1) steigt von −49,2 % auf −48,5 %, dazu verschieben sich die Quartalsgrenzen und die Kohortenbasen. Der größte Ausschlag, 300723.SZ (Health Care, 12,8 → 11,6), hat −48,6 % Wachstum und liegt genau zwischen alter und neuer Grenze; er wird jetzt auf die Grenze gekappt und steht dort mit 21 anderen Werten gleichauf (nachgestellt im Zahlen-Prüfbericht vom 01.10.). Quality: keine Änderung. Smallcap: keiner der 13 steht in der Smallcap-Watchlist.
+
+Nächstes Anbieterquartal: Sobald der Anbieter das Quartal bis 30.09.2026 führt, setzt die Tabelle es in jeder Reihe mit `coversThrough` leer (`period-after-coverage`, zählt als stale, `::warning::`), und das Wachstum fällt auf das Jahresbein des Anbieters zurück. Nachgestellt auf den Ständen vom 30.09. (Fenster um ein Quartal verschoben), heute → danach: HTGC 8,5 → 7,9 %, ARCC 3,1 → 2,1 %, FSK −27,1 → −11,7 %, BXSL −7,1 → 6,9 %, MAIN 3,9 → 4,7 %, TRIN 25,5 → 23,5 %, CSWC 9,1 → 13,5 %, BBDC −12,4 → −2,4 %, OBDC −17,4 → 15,9 %, GBDC −14,0 → 20,2 %, TSLX −14,9 → −6,9 %, MSDL −10,8 → −4,5 %, PSEC −6,7 → −11,1 %. Für diese Fonds stimmt die Jahresreihe des Anbieters mit der SEC überein (geprüft für die neuen Fonds außer KBDC und OTF sowie für FSK im Zahlen-Prüfbericht vom 01.10., für ARCC über die Quelle des Falls 31.12.2025; HTGC ist nicht gegen einen SEC-Jahreswert geprüft). Es ist dann ein richtiger Jahreswert, nur eine andere Größe als das Quartalswachstum. KBDC (−17,5 %) und OTF (+120,5 %) hätten falsche Werte gezeigt; beide sind gesperrt.
+
+Folgeauftrag, datiert 27.10.2026, zuständig: der tägliche Lauf. Ab der ersten Einreichung (ARCC 27.10.2026) sind die Quartalszellen bis 30.09.2026 für alle 15 Reihen mit `coversThrough` gegen die SEC zu prüfen und einzutragen, bevor der Anbieter das Quartal führt. Weitere Termine laut `earnings-calendar.json`: HTGC 29.10., FSK, OBDC und OTF 04.11., MAIN, BBDC, MSDL und PSEC 05.11., GBDC 17.11.; für BXSL, KBDC, TSLX, CSWC und TRIN steht dort kein neuer Termin. Solange eine dieser Zellen fehlt und der Lauf `period-after-coverage` meldet, ist das eine Rotstelle im Tagesstatus.
+
+Nachlauf mit `scripts/financial-corrections-replay.js` auf denselben 16.118 Ständen (gespeicherte Kalibrierung 30.09., Watchlist 8bbe9d9133, Veröffentlichung 485d17ca38): 110 Zellen (die 48 bisherigen und 62 neue), 0 stale, drei Sperren (Banpu, OTF, KBDC); alle Dateihashes vorher und nachher gleich. Ausgangsabgleich zur Veröffentlichung: Growth 2 Abweichungen um 0,1 (CHWY, NEXA), Quality 0, Rule of 40 0; Smallcap ist wie unten beschrieben nicht nachbaubar. Die Prüfsuite `tests/financial-known-cases.test.js` hat jetzt 117 Prüfblöcke und 123 absichtliche Fehler; neu sind die Wächter für die Währungsregel (Anwesenheit nach Umrechnung und zum Abrufzeitpunkt, zwölf Abwesenheitsfälle einschließlich Abdeckung je Feld), für `singleFalseValue` (nur mit Ersatzwert, genau einmal je Reihe) und für die Sperren von OTF und KBDC (Anwesenheit, Fingerabdruck-Drift, Jahreswechsel, Abwesenheit unter anderem Ticker).
+
+| Ticker | Periode | Feld | Währung | Alt | Neu |
+| --- | --- | --- | --- | --- | --- |
+| BXSL | 2026-06-30 | revenueQ | USD | 26707000 | 320469000 |
+| BXSL | 2026-03-31 | revenueQ | USD | 40519000 | 325471000 |
+| BXSL | 2025-12-31 | revenueQ | USD | 126133000 | 357829000 |
+| BXSL | 2025-09-30 | revenueQ | USD | 148049000 | 358557000 |
+| BXSL | 2025-06-30 | revenueQ | USD | 170052000 | 344803000 |
+| MAIN | 2026-06-30 | revenueQ | USD | 177983000 | 149572000 |
+| MAIN | 2026-03-31 | revenueQ | USD | 73437000 | 140106000 |
+| MAIN | 2025-12-31 | revenueQ | USD | 156172000 | 145541000 |
+| MAIN | 2025-09-30 | revenueQ | USD | 151233000 | 139831000 |
+| MAIN | 2025-06-30 | revenueQ | USD | 144923000 | 143973000 |
+| TRIN | 2026-06-30 | revenueQ | USD | 60812000 | 87170000 |
+| TRIN | 2026-03-31 | revenueQ | USD | 51369000 | 90129000 |
+| TRIN | 2025-12-31 | revenueQ | USD | 58885000 | 83235000 |
+| TRIN | 2025-09-30 | revenueQ | USD | 45248000 | 75550000 |
+| TRIN | 2025-06-30 | revenueQ | USD | 58049000 | 69483000 |
+| CSWC | 2026-06-30 | revenueQ | USD | 32691000 | 61048000 |
+| CSWC | 2026-03-31 | revenueQ | USD | 32639000 | 57766000 |
+| CSWC | 2025-12-31 | revenueQ | USD | 43887000 | 61447000 |
+| CSWC | 2025-09-30 | revenueQ | USD | 36379000 | 56945000 |
+| CSWC | 2025-06-30 | revenueQ | USD | 38436000 | 55947000 |
+| BBDC | 2026-06-30 | revenueQ | USD | 21762000 | 65202000 |
+| BBDC | 2026-03-31 | revenueQ | USD | 22706000 | 60566000 |
+| BBDC | 2025-12-31 | revenueQ | USD | 28503000 | 67969000 |
+| BBDC | 2025-09-30 | revenueQ | USD | 26784000 | 72404000 |
+| BBDC | 2025-06-30 | revenueQ | USD | 23661000 | 74398000 |
+| OXLC | 2026-03-31 | revenueQ | USD | 0 | 94000000 |
+| OXLC | 2024-09-30 | revenueQ | USD | 0 | fehlt |
+| KBDC | 2026-06-30 | revenueQ | USD | 12933000 | 55703000 |
+| KBDC | 2026-03-31 | revenueQ | USD | 19789000 | 57325000 |
+| KBDC | 2025-12-31 | revenueQ | USD | 25028000 | 61903000 |
+| KBDC | 2025-09-30 | revenueQ | USD | 27139000 | 61373000 |
+| KBDC | 2025-06-30 | revenueQ | USD | 26503000 | 57298000 |
+| OBDC | 2026-06-30 | revenueQ | USD | 89075000 | 401342000 |
+| OBDC | 2026-03-31 | revenueQ | USD | -2098000 | 396774000 |
+| OBDC | 2025-12-31 | revenueQ | USD | 136215000 | 447750000 |
+| OBDC | 2025-09-30 | revenueQ | USD | 151611000 | 453065000 |
+| OBDC | 2025-06-30 | revenueQ | USD | 158831000 | 485843000 |
+| OTF | 2026-06-30 | revenueQ | USD | 169321000 | 338032000 |
+| OTF | 2026-03-31 | revenueQ | USD | -204389000 | 325940000 |
+| OTF | 2025-12-31 | revenueQ | USD | 223752000 | 320575000 |
+| OTF | 2025-06-30 | revenueQ | USD | 215435000 | 319467000 |
+| OTF | 2025-03-31 | revenueQ | USD | 90923000 | 182817000 |
+| GBDC | 2026-06-30 | revenueQ | USD | 65103000 | 187730000 |
+| GBDC | 2026-03-31 | revenueQ | USD | -39283000 | 188134000 |
+| GBDC | 2025-12-31 | revenueQ | USD | 73216000 | 207007000 |
+| GBDC | 2025-09-30 | revenueQ | USD | 104356000 | 217841000 |
+| GBDC | 2025-06-30 | revenueQ | USD | 95606000 | 218344000 |
+| TSLX | 2026-06-30 | revenueQ | USD | 51447000 | 97844000 |
+| TSLX | 2026-03-31 | revenueQ | USD | -17408000 | 93397000 |
+| TSLX | 2025-12-31 | revenueQ | USD | 40847000 | 108247000 |
+| TSLX | 2025-09-30 | revenueQ | USD | 57258000 | 109444000 |
+| TSLX | 2025-06-30 | revenueQ | USD | 71228000 | 115015000 |
+| MSDL | 2026-06-30 | revenueQ | USD | 10824000 | 88774000 |
+| MSDL | 2026-03-31 | revenueQ | USD | -1851000 | 89064000 |
+| MSDL | 2025-12-31 | revenueQ | USD | 32692000 | 96597000 |
+| MSDL | 2025-09-30 | revenueQ | USD | 30781000 | 99722000 |
+| MSDL | 2025-06-30 | revenueQ | USD | 38337000 | 99508000 |
+| PSEC | 2026-06-30 | revenueQ | USD | 5946000 | 155761000 |
+| PSEC | 2026-03-31 | revenueQ | USD | 66680000 | 150067000 |
+| PSEC | 2025-12-31 | revenueQ | USD | 28921000 | 176002000 |
+| PSEC | 2025-09-30 | revenueQ | USD | 91943000 | 157624000 |
+| PSEC | 2025-06-30 | revenueQ | USD | -179931000 | 166946000 |
 
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
@@ -330,7 +438,7 @@ Alle 122 gemessenen Scoreänderungen stehen in der folgenden Tabelle und in fina
 | SFC.TO | CAD | 0.000 | 3.573 | ungeklärt; unverändert |
 | STO.AX | AUD | fehlt | 1.061 | ungeklärt; unverändert |
 
-BDC-Prüfumfang: ARCC, BBDC, BXSL, CSWC, FSK, GBDC, HTGC, MAIN, OBDC, OCSL, PSEC, TRIN, TSLX. Belegt: HTGC, ARCC, FSK. Die zehn übrigen sind in diesem Durchgang nicht durch Primärquellen entschieden; ihre ursprünglichen fünf Quartale bleiben erhalten. 2155 Gruppen identischer Jahresumsätze wurden erfasst (häufig Zweitnotierungen); kein weiterer Fremdgesellschaftsfehler allein aus diesem Vergleich bewiesen.
+BDC-Prüfumfang: ARCC, BBDC, BXSL, CSWC, FSK, GBDC, HTGC, MAIN, OBDC, OCSL, PSEC, TRIN, TSLX. Belegt: HTGC, ARCC, FSK. Die zehn übrigen sind in diesem Durchgang nicht durch Primärquellen entschieden; ihre ursprünglichen fünf Quartale bleiben erhalten. (Nachtrag 01.10.: neun davon sind jetzt belegt und korrigiert, dazu KBDC, OTF, MSDL und OXLC (OTF und KBDC wegen falscher Anbieter-Jahresumsätze gesperrt); OCSL bleibt ungeprüft. Abschnitt „BDC-Handtabelle“.) 2155 Gruppen identischer Jahresumsätze wurden erfasst (häufig Zweitnotierungen); kein weiterer Fremdgesellschaftsfehler allein aus diesem Vergleich bewiesen.
 
 ## Belege, Unverändertheit und Grenzen
 

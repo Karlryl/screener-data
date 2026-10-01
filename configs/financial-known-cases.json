@@ -1,11 +1,23 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-09-29",
+  "revision": "2026-10-01",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "FSK", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "BANPU.BK", "field": "revenueQ", "coversThrough": "2026-03-31" }
+    { "ticker": "BANPU.BK", "field": "revenueQ", "coversThrough": "2026-03-31" },
+    { "ticker": "BXSL", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "MAIN", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "TRIN", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CSWC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "BBDC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "KBDC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "OBDC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "OTF", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "GBDC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "TSLX", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "MSDL", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "PSEC", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -808,6 +820,1943 @@
           "end": "2025-06-30"
         }
       ]
+    },
+    {
+      "caseId": "bxsl-2026-06-30-revenueQ",
+      "ticker": "BXSL",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 26707000,
+      "replacementValue": 320469000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1736035/000173603526000016/bxsl-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001736035.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001736035-26-000016",
+          "filed": "2026-08-06",
+          "unit": "USD",
+          "value": 320469000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "320,469 344,803 645,940 702,567 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "bxsl-2026-03-31-revenueQ",
+      "ticker": "BXSL",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 40519000,
+      "replacementValue": 325471000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1736035/000173603526000010/bxsl-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001736035.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001736035-26-000010",
+          "filed": "2026-05-07",
+          "unit": "USD",
+          "value": 325471000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "325,471 357,764 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "bxsl-2025-12-31-revenueQ",
+      "ticker": "BXSL",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 126133000,
+      "replacementValue": 357829000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1736035/000173603526000004/bxsl-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001736035.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001736035-26-000004",
+          "filed": "2026-02-25",
+          "unit": "USD",
+          "value": 1418954000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "1,418,954 1,326,901 1,143,517 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "1418954000 - 1061125000 = 357829000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1736035/000173603525000021/bxsl-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001736035.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001736035-25-000021",
+          "filed": "2025-11-10",
+          "unit": "USD",
+          "value": 1061125000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "358,557 343,218 1,061,125 974,242 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "1418954000 - 1061125000 = 357829000"
+        }
+      ]
+    },
+    {
+      "caseId": "bxsl-2025-09-30-revenueQ",
+      "ticker": "BXSL",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 148049000,
+      "replacementValue": 358557000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1736035/000173603525000021/bxsl-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001736035.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001736035-25-000021",
+          "filed": "2025-11-10",
+          "unit": "USD",
+          "value": 358557000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "358,557 343,218 1,061,125 974,242 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "bxsl-2025-06-30-revenueQ",
+      "ticker": "BXSL",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 170052000,
+      "replacementValue": 344803000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1736035/000173603526000016/bxsl-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001736035.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001736035-26-000016",
+          "filed": "2026-08-06",
+          "unit": "USD",
+          "value": 344803000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "320,469 344,803 645,940 702,567 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "main-2026-06-30-revenueQ",
+      "ticker": "MAIN",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 177983000,
+      "replacementValue": 149572000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1396440/000139644026000094/main-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001396440.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001396440-26-000094",
+          "filed": "2026-08-07",
+          "unit": "USD",
+          "value": 149572000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "149,572 143,973 289,678 281,019 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "main-2026-03-31-revenueQ",
+      "ticker": "MAIN",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 73437000,
+      "replacementValue": 140106000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1396440/000139644026000073/main-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001396440.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001396440-26-000073",
+          "filed": "2026-05-08",
+          "unit": "USD",
+          "value": 140106000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "140,106 137,046 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "main-2025-12-31-revenueQ",
+      "ticker": "MAIN",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 156172000,
+      "replacementValue": 145541000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1396440/000139644026000016/main-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001396440.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001396440-26-000016",
+          "filed": "2026-02-27",
+          "unit": "USD",
+          "value": 566391000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "566,391 541,026 500,385 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "566391000 - 420850000 = 145541000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1396440/000139644025000184/main-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001396440.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001396440-25-000184",
+          "filed": "2025-11-07",
+          "unit": "USD",
+          "value": 420850000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "139,831 136,824 420,850 400,586 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "566391000 - 420850000 = 145541000"
+        }
+      ]
+    },
+    {
+      "caseId": "main-2025-09-30-revenueQ",
+      "ticker": "MAIN",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 151233000,
+      "replacementValue": 139831000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1396440/000139644025000184/main-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001396440.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001396440-25-000184",
+          "filed": "2025-11-07",
+          "unit": "USD",
+          "value": 139831000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "139,831 136,824 420,850 400,586 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "main-2025-06-30-revenueQ",
+      "ticker": "MAIN",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 144923000,
+      "replacementValue": 143973000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1396440/000139644026000094/main-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001396440.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001396440-26-000094",
+          "filed": "2026-08-07",
+          "unit": "USD",
+          "value": 143973000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "149,572 143,973 289,678 281,019 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "trin-2026-06-30-revenueQ",
+      "ticker": "TRIN",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 60812000,
+      "replacementValue": 87170000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1786108/000119312526333907/trin-20260630.htm",
+          "page": "HTML/XBRL: trin:InvestmentIncome",
+          "quote": "Total investment income",
+          "tag": "trin:InvestmentIncome",
+          "accession": "0001193125-26-333907",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 87170000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "87,170 69,483 177,298 134,868 (USD thousands)",
+          "periodCheck": "same contextRef as us-gaap:InterestAndDividendIncomeOperating 79602000 (period from SEC companyfacts)"
+        }
+      ]
+    },
+    {
+      "caseId": "trin-2026-03-31-revenueQ",
+      "ticker": "TRIN",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 51369000,
+      "replacementValue": 90129000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1786108/000119312526207620/trin-20260331.htm",
+          "page": "HTML/XBRL: trin:InvestmentIncome",
+          "quote": "Total investment income",
+          "tag": "trin:InvestmentIncome",
+          "accession": "0001193125-26-207620",
+          "filed": "2026-05-06",
+          "unit": "USD",
+          "value": 90129000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "90,129 65,385 (USD thousands)",
+          "periodCheck": "same contextRef as us-gaap:InterestAndDividendIncomeOperating 83319000 (period from SEC companyfacts)"
+        }
+      ]
+    },
+    {
+      "caseId": "trin-2025-12-31-revenueQ",
+      "ticker": "TRIN",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 58885000,
+      "replacementValue": 83235000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1786108/000119312526068600/trin-20251231.htm",
+          "page": "HTML/XBRL: trin:InvestmentIncome",
+          "quote": "Total investment income",
+          "tag": "trin:InvestmentIncome",
+          "accession": "0001193125-26-068600",
+          "filed": "2026-02-25",
+          "unit": "USD",
+          "value": 293652000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "293,652 237,691 181,855 (USD thousands)",
+          "periodCheck": "same contextRef as us-gaap:InterestAndDividendIncomeOperating 279515000 (period from SEC companyfacts)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "293652000 - 210417000 = 83235000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1786108/000119312525265807/trin-20250930.htm",
+          "page": "HTML/XBRL: trin:InvestmentIncome",
+          "quote": "Total investment income",
+          "tag": "trin:InvestmentIncome",
+          "accession": "0001193125-25-265807",
+          "filed": "2025-11-05",
+          "unit": "USD",
+          "value": 210417000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "75,550 61,766 210,417 166,859 (USD thousands)",
+          "periodCheck": "same contextRef as us-gaap:InterestAndDividendIncomeOperating 201961000 (period from SEC companyfacts)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "293652000 - 210417000 = 83235000"
+        }
+      ]
+    },
+    {
+      "caseId": "trin-2025-09-30-revenueQ",
+      "ticker": "TRIN",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 45248000,
+      "replacementValue": 75550000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1786108/000119312525265807/trin-20250930.htm",
+          "page": "HTML/XBRL: trin:InvestmentIncome",
+          "quote": "Total investment income",
+          "tag": "trin:InvestmentIncome",
+          "accession": "0001193125-25-265807",
+          "filed": "2025-11-05",
+          "unit": "USD",
+          "value": 75550000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "75,550 61,766 210,417 166,859 (USD thousands)",
+          "periodCheck": "same contextRef as us-gaap:InterestAndDividendIncomeOperating 72575000 (period from SEC companyfacts)"
+        }
+      ]
+    },
+    {
+      "caseId": "trin-2025-06-30-revenueQ",
+      "ticker": "TRIN",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 58049000,
+      "replacementValue": 69483000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1786108/000119312526333907/trin-20260630.htm",
+          "page": "HTML/XBRL: trin:InvestmentIncome",
+          "quote": "Total investment income",
+          "tag": "trin:InvestmentIncome",
+          "accession": "0001193125-26-333907",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 69483000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "87,170 69,483 177,298 134,868 (USD thousands)",
+          "periodCheck": "same contextRef as us-gaap:InterestAndDividendIncomeOperating 66713000 (period from SEC companyfacts)"
+        }
+      ]
+    },
+    {
+      "caseId": "cswc-2026-06-30-revenueQ",
+      "ticker": "CSWC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 32691000,
+      "replacementValue": 61048000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/17313/000001731326000095/cswc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000017313.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0000017313-26-000095",
+          "filed": "2026-08-03",
+          "unit": "USD",
+          "value": 61048000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "61,048 55,947 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "cswc-2026-03-31-revenueQ",
+      "ticker": "CSWC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 32639000,
+      "replacementValue": 57766000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/17313/000001731326000035/cswc-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000017313.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0000017313-26-000035",
+          "filed": "2026-05-19",
+          "unit": "USD",
+          "value": 232105000,
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "literalAmounts": "232,105 204,439 178,135 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "232105000 - 174339000 = 57766000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/17313/000001731326000011/cswc-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000017313.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0000017313-26-000011",
+          "filed": "2026-02-02",
+          "unit": "USD",
+          "value": 174339000,
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "literalAmounts": "61,447 51,973 174,339 152,033 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "232105000 - 174339000 = 57766000"
+        }
+      ]
+    },
+    {
+      "caseId": "cswc-2025-12-31-revenueQ",
+      "ticker": "CSWC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 43887000,
+      "replacementValue": 61447000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/17313/000001731326000011/cswc-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000017313.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0000017313-26-000011",
+          "filed": "2026-02-02",
+          "unit": "USD",
+          "value": 61447000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "literalAmounts": "61,447 51,973 174,339 152,033 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "cswc-2025-09-30-revenueQ",
+      "ticker": "CSWC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 36379000,
+      "replacementValue": 56945000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/17313/000001731325000146/cswc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000017313.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0000017313-25-000146",
+          "filed": "2025-11-03",
+          "unit": "USD",
+          "value": 56945000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "56,945 48,706 112,892 100,060 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "cswc-2025-06-30-revenueQ",
+      "ticker": "CSWC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 38436000,
+      "replacementValue": 55947000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/17313/000001731326000095/cswc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000017313.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0000017313-26-000095",
+          "filed": "2026-08-03",
+          "unit": "USD",
+          "value": 55947000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "61,048 55,947 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "bbdc-2026-06-30-revenueQ",
+      "ticker": "BBDC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 21762000,
+      "replacementValue": 65202000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1379785/000137978526000030/bbdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001379785.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001379785-26-000030",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 65202000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "65,202 74,398 125,768 138,837 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "bbdc-2026-03-31-revenueQ",
+      "ticker": "BBDC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 22706000,
+      "replacementValue": 60566000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1379785/000137978526000022/bbdc-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001379785.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001379785-26-000022",
+          "filed": "2026-05-07",
+          "unit": "USD",
+          "value": 60566000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "60,566 64,438 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "bbdc-2025-12-31-revenueQ",
+      "ticker": "BBDC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 28503000,
+      "replacementValue": 67969000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1379785/000137978526000009/bbdc-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001379785.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001379785-26-000009",
+          "filed": "2026-02-19",
+          "unit": "USD",
+          "value": 279210000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "279,210 286,169 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "279210000 - 211241000 = 67969000",
+          "taggedThreeMonthFact": "67969000 (0001379785-26-000009)"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1379785/000137978525000050/bbdc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001379785.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001379785-25-000050",
+          "filed": "2025-11-06",
+          "unit": "USD",
+          "value": 211241000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "72,404 70,851 211,241 215,544 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "279210000 - 211241000 = 67969000",
+          "taggedThreeMonthFact": "67969000 (0001379785-26-000009)"
+        }
+      ]
+    },
+    {
+      "caseId": "bbdc-2025-09-30-revenueQ",
+      "ticker": "BBDC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 26784000,
+      "replacementValue": 72404000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1379785/000137978525000050/bbdc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001379785.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001379785-25-000050",
+          "filed": "2025-11-06",
+          "unit": "USD",
+          "value": 72404000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "72,404 70,851 211,241 215,544 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "bbdc-2025-06-30-revenueQ",
+      "ticker": "BBDC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 23661000,
+      "replacementValue": 74398000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1379785/000137978526000030/bbdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001379785.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001379785-26-000030",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 74398000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "65,202 74,398 125,768 138,837 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "oxlc-2026-03-31-revenueQ",
+      "ticker": "OXLC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 0,
+      "replacementValue": 94000000,
+      "singleFalseValue": true,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut Quartalsmitteilung des Fonds statt der gespeicherten Null (Wert vom Fonds auf 0,1 Mio. gerundet).",
+      "sources": [
+        {
+          "url": "https://ir.oxfordlanecapital.com/news-releases/news-release-details/oxford-lane-capital-corp-announces-april-net-asset-value-and",
+          "page": "press release of May 19, 2026 (HTML)",
+          "quote": "quarter ended March 31, 2026 amounted to approximately $94.0 million",
+          "unit": "USD millions (issuer-rounded)",
+          "value": 94000000,
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1495222/000121390026060338/ea0287282-01_ncsr.htm",
+          "page": "N-CSR, Statement of Operations, Year Ended March 31, 2026",
+          "quote": "Total investment income",
+          "accession": "0001213900-26-060338",
+          "filed": "2026-05-22",
+          "unit": "USD",
+          "value": 464064404,
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "crossCheck": "Annual 464,064,404 minus N-CSRS half-year 252,333,085 = 211,731,319 for Oct 2025-Mar 2026; releases give 117.8 + 94.0 = 211.8 million"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1495222/000121390025106331/ea0261739-01_ncsrs.htm",
+          "page": "N-CSRS, Statement of Operations, Six Months Ended September 30, 2025",
+          "quote": "Total investment income",
+          "accession": "0001213900-25-106331",
+          "filed": "2025-11-05",
+          "unit": "USD",
+          "value": 252333085,
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "crossCheck": "Releases give 124.0 + 128.3 = 252.3 million for Apr-Sep 2025"
+        }
+      ]
+    },
+    {
+      "caseId": "oxlc-2024-09-30-revenueQ",
+      "ticker": "OXLC",
+      "field": "revenueQ",
+      "period": "2024-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "reason": "Umsatz fehlt: gespeicherte Null widerspricht den Angaben des Fonds (Quartal bis 30.09.2024 rund 105,1 Mio. USD).",
+      "sources": [
+        {
+          "url": "https://www.globenewswire.com/news-release/2024/11/01/2973307/0/en/oxford-lane-capital-corp-announces-net-asset-value-and-selected-financial-results-for-the-second-fiscal-quarter-and-declaration-of-distributions-on-common-stock-for-the-months-endi.html",
+          "page": "press release of November 1, 2024 (HTML)",
+          "quote": "quarter ended September 30, 2024 amounted to approximately $105.1 million",
+          "unit": "USD millions (issuer-rounded)",
+          "start": "2024-07-01",
+          "end": "2024-09-30"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1495222/000121390024093518/ea0218152-01_ncsrs.htm",
+          "page": "N-CSRS, Statement of Operations, Six Months Ended September 30, 2024",
+          "quote": "Total investment income",
+          "accession": "0001213900-24-093518",
+          "unit": "USD",
+          "value": 194878203,
+          "start": "2024-04-01",
+          "end": "2024-09-30",
+          "crossCheck": "Six-month total is far from the stored quarter value 0; the release gives the quarter as about 105.1 million"
+        }
+      ]
+    },
+    {
+      "caseId": "kbdc-2026-06-30-revenueQ",
+      "ticker": "KBDC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 12933000,
+      "replacementValue": 55703000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747172/000119312526342385/kbdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:InvestmentIncomeNonoperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747172.json",
+          "tag": "us-gaap:InvestmentIncomeNonoperating",
+          "accession": "0001193125-26-342385",
+          "filed": "2026-08-10",
+          "unit": "USD",
+          "value": 55703000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "55,703 57,298 113,028 112,543 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "kbdc-2026-03-31-revenueQ",
+      "ticker": "KBDC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 19789000,
+      "replacementValue": 57325000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747172/000119312526216773/kbdc-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:InvestmentIncomeNonoperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747172.json",
+          "tag": "us-gaap:InvestmentIncomeNonoperating",
+          "accession": "0001193125-26-216773",
+          "filed": "2026-05-11",
+          "unit": "USD",
+          "value": 57325000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "57,325 55,245 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "kbdc-2025-12-31-revenueQ",
+      "ticker": "KBDC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 25028000,
+      "replacementValue": 61903000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747172/000121390026022392/ea0274005-10k_kayne.htm",
+          "page": "HTML/XBRL: us-gaap:InvestmentIncomeNonoperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747172.json",
+          "tag": "us-gaap:InvestmentIncomeNonoperating",
+          "accession": "0001213900-26-022392",
+          "filed": "2026-03-02",
+          "unit": "USD",
+          "value": 235819000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "235,819 213,106 161,004 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "235819000 - 173916000 = 61903000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747172/000121390025108212/ea0261574-10q_kayne.htm",
+          "page": "HTML/XBRL: us-gaap:InvestmentIncomeNonoperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747172.json",
+          "tag": "us-gaap:InvestmentIncomeNonoperating",
+          "accession": "0001213900-25-108212",
+          "filed": "2025-11-10",
+          "unit": "USD",
+          "value": 173916000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "61,373 57,819 173,916 156,766 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "235819000 - 173916000 = 61903000"
+        }
+      ]
+    },
+    {
+      "caseId": "kbdc-2025-09-30-revenueQ",
+      "ticker": "KBDC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 27139000,
+      "replacementValue": 61373000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747172/000121390025108212/ea0261574-10q_kayne.htm",
+          "page": "HTML/XBRL: us-gaap:InvestmentIncomeNonoperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747172.json",
+          "tag": "us-gaap:InvestmentIncomeNonoperating",
+          "accession": "0001213900-25-108212",
+          "filed": "2025-11-10",
+          "unit": "USD",
+          "value": 61373000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "61,373 57,819 173,916 156,766 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "kbdc-2025-06-30-revenueQ",
+      "ticker": "KBDC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 26503000,
+      "replacementValue": 57298000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747172/000119312526342385/kbdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:InvestmentIncomeNonoperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747172.json",
+          "tag": "us-gaap:InvestmentIncomeNonoperating",
+          "accession": "0001193125-26-342385",
+          "filed": "2026-08-10",
+          "unit": "USD",
+          "value": 57298000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "55,703 57,298 113,028 112,543 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "obdc-2026-06-30-revenueQ",
+      "ticker": "OBDC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 89075000,
+      "replacementValue": 401342000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1655888/000165588826000056/obdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001655888.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001655888-26-000056",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 401342000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "401,342 485,843 798,116 950,489 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "obdc-2026-03-31-revenueQ",
+      "ticker": "OBDC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -2098000,
+      "replacementValue": 396774000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1655888/000165588826000033/obdc-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001655888.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001655888-26-000033",
+          "filed": "2026-05-06",
+          "unit": "USD",
+          "value": 396774000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "396,774 464,646 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "obdc-2025-12-31-revenueQ",
+      "ticker": "OBDC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 136215000,
+      "replacementValue": 447750000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1655888/000165588826000010/obdc-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001655888.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001655888-26-000010",
+          "filed": "2026-02-18",
+          "unit": "USD",
+          "value": 1851304000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "1,851,304 1,596,758 1,582,094 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "1851304000 - 1403554000 = 447750000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1655888/000165588825000024/obdc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001655888.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001655888-25-000024",
+          "filed": "2025-11-05",
+          "unit": "USD",
+          "value": 1403554000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "453,065 406,029 1,403,554 1,202,366 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "1851304000 - 1403554000 = 447750000"
+        }
+      ]
+    },
+    {
+      "caseId": "obdc-2025-09-30-revenueQ",
+      "ticker": "OBDC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 151611000,
+      "replacementValue": 453065000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1655888/000165588825000024/obdc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001655888.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001655888-25-000024",
+          "filed": "2025-11-05",
+          "unit": "USD",
+          "value": 453065000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "453,065 406,029 1,403,554 1,202,366 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "obdc-2025-06-30-revenueQ",
+      "ticker": "OBDC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 158831000,
+      "replacementValue": 485843000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1655888/000165588826000056/obdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001655888.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001655888-26-000056",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 485843000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "401,342 485,843 798,116 950,489 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2026-06-30-revenueQ",
+      "ticker": "OTF",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 169321000,
+      "replacementValue": 338032000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000028/ortf-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001747777-26-000028",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 338032000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "338,032 319,467 663,972 502,284 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2026-03-31-revenueQ",
+      "ticker": "OTF",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -204389000,
+      "replacementValue": 325940000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000019/ortf-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001747777-26-000019",
+          "filed": "2026-05-06",
+          "unit": "USD",
+          "value": 325940000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "325,940 182,817 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2025-12-31-revenueQ",
+      "ticker": "OTF",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 223752000,
+      "replacementValue": 320575000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000012/ortf-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001747777-26-000012",
+          "filed": "2026-02-18",
+          "unit": "USD",
+          "value": 1145449000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "1,145,449 684,034 683,814 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "1145449000 - 824874000 = 320575000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777725000048/ortf-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001747777-25-000048",
+          "filed": "2025-11-05",
+          "unit": "USD",
+          "value": 824874000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "322,590 170,908 824,874 517,339 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "1145449000 - 824874000 = 320575000"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2025-06-30-revenueQ",
+      "ticker": "OTF",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 215435000,
+      "replacementValue": 319467000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000028/ortf-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001747777-26-000028",
+          "filed": "2026-08-05",
+          "unit": "USD",
+          "value": 319467000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "338,032 319,467 663,972 502,284 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2025-03-31-revenueQ",
+      "ticker": "OTF",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 90923000,
+      "replacementValue": 182817000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000019/ortf-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001747777-26-000019",
+          "filed": "2026-05-06",
+          "unit": "USD",
+          "value": 182817000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "literalAmounts": "325,940 182,817 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "gbdc-2026-06-30-revenueQ",
+      "ticker": "GBDC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 65103000,
+      "replacementValue": 187730000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1476765/000147676526000048/gbdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001476765.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001476765-26-000048",
+          "filed": "2026-08-03",
+          "unit": "USD",
+          "value": 187730000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "187,730 218,344 582,871 652,936 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "gbdc-2026-03-31-revenueQ",
+      "ticker": "GBDC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -39283000,
+      "replacementValue": 188134000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1476765/000147676526000033/gbdc-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001476765.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001476765-26-000033",
+          "filed": "2026-05-04",
+          "unit": "USD",
+          "value": 188134000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "188,134 213,892 395,141 434,592 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "gbdc-2025-12-31-revenueQ",
+      "ticker": "GBDC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 73216000,
+      "replacementValue": 207007000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1476765/000147676526000012/gbdc-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001476765.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001476765-26-000012",
+          "filed": "2026-02-04",
+          "unit": "USD",
+          "value": 207007000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "literalAmounts": "207,007 220,700 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "gbdc-2025-09-30-revenueQ",
+      "ticker": "GBDC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 104356000,
+      "replacementValue": 217841000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1476765/000147676525000096/gbdc-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001476765.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001476765-25-000096",
+          "filed": "2025-11-18",
+          "unit": "USD",
+          "value": 870777000,
+          "start": "2024-10-01",
+          "end": "2025-09-30",
+          "literalAmounts": "870,777 724,677 603,090 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "870777000 - 652936000 = 217841000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1476765/000147676526000048/gbdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001476765.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001476765-26-000048",
+          "filed": "2026-08-03",
+          "unit": "USD",
+          "value": 652936000,
+          "start": "2024-10-01",
+          "end": "2025-06-30",
+          "literalAmounts": "187,730 218,344 582,871 652,936 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "870777000 - 652936000 = 217841000"
+        }
+      ]
+    },
+    {
+      "caseId": "gbdc-2025-06-30-revenueQ",
+      "ticker": "GBDC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 95606000,
+      "replacementValue": 218344000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1476765/000147676526000048/gbdc-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001476765.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001476765-26-000048",
+          "filed": "2026-08-03",
+          "unit": "USD",
+          "value": 218344000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "187,730 218,344 582,871 652,936 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "tslx-2026-06-30-revenueQ",
+      "ticker": "TSLX",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 51447000,
+      "replacementValue": 97844000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1508655/000119312526332725/tslx-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001508655.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-332725",
+          "filed": "2026-08-04",
+          "unit": "USD",
+          "value": 97844000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "97,844 115,015 191,241 231,364 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "tslx-2026-03-31-revenueQ",
+      "ticker": "TSLX",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -17408000,
+      "replacementValue": 93397000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1508655/000119312526206313/tslx-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001508655.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-206313",
+          "filed": "2026-05-05",
+          "unit": "USD",
+          "value": 93397000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "93,397 116,349 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "tslx-2025-12-31-revenueQ",
+      "ticker": "TSLX",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 40847000,
+      "replacementValue": 108247000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1508655/000119312526048664/tslx-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001508655.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-048664",
+          "filed": "2026-02-12",
+          "unit": "USD",
+          "value": 449055000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "449,055 482,526 438,087 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "449055000 - 340808000 = 108247000",
+          "taggedThreeMonthFact": "108247000 (0001193125-26-048664)"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1508655/000119312525264618/tslx-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001508655.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-25-264618",
+          "filed": "2025-11-04",
+          "unit": "USD",
+          "value": 340808000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "109,444 119,223 340,808 358,822 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "449055000 - 340808000 = 108247000",
+          "taggedThreeMonthFact": "108247000 (0001193125-26-048664)"
+        }
+      ]
+    },
+    {
+      "caseId": "tslx-2025-09-30-revenueQ",
+      "ticker": "TSLX",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 57258000,
+      "replacementValue": 109444000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1508655/000119312525264618/tslx-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001508655.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-25-264618",
+          "filed": "2025-11-04",
+          "unit": "USD",
+          "value": 109444000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "109,444 119,223 340,808 358,822 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "tslx-2025-06-30-revenueQ",
+      "ticker": "TSLX",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 71228000,
+      "replacementValue": 115015000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1508655/000119312526332725/tslx-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001508655.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-332725",
+          "filed": "2026-08-04",
+          "unit": "USD",
+          "value": 115015000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "97,844 115,015 191,241 231,364 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "msdl-2026-06-30-revenueQ",
+      "ticker": "MSDL",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 10824000,
+      "replacementValue": 88774000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1782524/000119312526337915/msdl-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001782524.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-337915",
+          "filed": "2026-08-06",
+          "unit": "USD",
+          "value": 88774000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "literalAmounts": "88,774 99,508 177,838 200,966 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "msdl-2026-03-31-revenueQ",
+      "ticker": "MSDL",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -1851000,
+      "replacementValue": 89064000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1782524/000119312526211906/msdl-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001782524.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-211906",
+          "filed": "2026-05-07",
+          "unit": "USD",
+          "value": 89064000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "89,064 101,458 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "msdl-2025-12-31-revenueQ",
+      "ticker": "MSDL",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 32692000,
+      "replacementValue": 96597000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1782524/000119312526076632/msdl-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001782524.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-076632",
+          "filed": "2026-02-26",
+          "unit": "USD",
+          "value": 397287000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "397,287 416,075 367,738 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "397287000 - 300690000 = 96597000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1782524/000119312525269438/msdl-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001782524.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-25-269438",
+          "filed": "2025-11-06",
+          "unit": "USD",
+          "value": 300690000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "literalAmounts": "99,722 109,752 300,690 313,041 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "397287000 - 300690000 = 96597000"
+        }
+      ]
+    },
+    {
+      "caseId": "msdl-2025-09-30-revenueQ",
+      "ticker": "MSDL",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 30781000,
+      "replacementValue": 99722000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1782524/000119312525269438/msdl-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001782524.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-25-269438",
+          "filed": "2025-11-06",
+          "unit": "USD",
+          "value": 99722000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "99,722 109,752 300,690 313,041 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "msdl-2025-06-30-revenueQ",
+      "ticker": "MSDL",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 38337000,
+      "replacementValue": 99508000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1782524/000119312526337915/msdl-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total investment income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001782524.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001193125-26-337915",
+          "filed": "2026-08-06",
+          "unit": "USD",
+          "value": 99508000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "literalAmounts": "88,774 99,508 177,838 200,966 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "psec-2026-06-30-revenueQ",
+      "ticker": "PSEC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 5946000,
+      "replacementValue": 155761000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287032/000128703226000269/psec-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287032.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287032-26-000269",
+          "filed": "2026-08-20",
+          "unit": "USD",
+          "value": 639454000,
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "literalAmounts": "639,454 719,436 861,662 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "639454000 - 483693000 = 155761000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287032/000128703226000164/psec-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287032.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287032-26-000164",
+          "filed": "2026-05-07",
+          "unit": "USD",
+          "value": 483693000,
+          "start": "2025-07-01",
+          "end": "2026-03-31",
+          "literalAmounts": "150,067 170,716 483,693 552,490 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "639454000 - 483693000 = 155761000"
+        }
+      ]
+    },
+    {
+      "caseId": "psec-2026-03-31-revenueQ",
+      "ticker": "PSEC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 66680000,
+      "replacementValue": 150067000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287032/000128703226000164/psec-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287032.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287032-26-000164",
+          "filed": "2026-05-07",
+          "unit": "USD",
+          "value": 150067000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "literalAmounts": "150,067 170,716 483,693 552,490 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "psec-2025-12-31-revenueQ",
+      "ticker": "PSEC",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 28921000,
+      "replacementValue": 176002000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287032/000128703226000045/psec-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287032.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287032-26-000045",
+          "filed": "2026-02-09",
+          "unit": "USD",
+          "value": 176002000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "literalAmounts": "176,002 185,466 333,626 381,774 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "psec-2025-09-30-revenueQ",
+      "ticker": "PSEC",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 91943000,
+      "replacementValue": 157624000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287032/000128703225000339/psec-20250930.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287032.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287032-25-000339",
+          "filed": "2025-11-06",
+          "unit": "USD",
+          "value": 157624000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "literalAmounts": "157,624 196,308 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "psec-2025-06-30-revenueQ",
+      "ticker": "PSEC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -179931000,
+      "replacementValue": 166946000,
+      "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut SEC-Abschluss statt der abweichenden Anbieterreihe.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287032/000128703226000269/psec-20260630.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287032.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287032-26-000269",
+          "filed": "2026-08-20",
+          "unit": "USD",
+          "value": 719436000,
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "literalAmounts": "639,454 719,436 861,662 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "719436000 - 552490000 = 166946000"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287032/000128703226000164/psec-20260331.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001287032.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001287032-26-000164",
+          "filed": "2026-05-07",
+          "unit": "USD",
+          "value": 552490000,
+          "start": "2024-07-01",
+          "end": "2025-03-31",
+          "literalAmounts": "150,067 170,716 483,693 552,490 (USD thousands)",
+          "derivation": "Annual minus first nine months; operand periods in SEC facts",
+          "calculation": "719436000 - 552490000 = 166946000"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -853,6 +2802,87 @@
           "url": "https://www.banpupower.com/wp-content/uploads/2026/05/BPP-Q1Mar69-EN-Signed.pdf",
           "page": 5,
           "quote": "3,047,731,700 ordinary shares of Baht 10 each"
+        }
+      ],
+      "annualPairPeriod": "2025-12-31"
+    },
+    {
+      "caseId": "otf-vendor-annual-revenue-20261001",
+      "ticker": "OTF",
+      "reason": "Score fehlt: Jahresumsatz des Anbieters passt zu keinem Geschäftsjahr laut SEC (2025: 1.145,4 Mio. USD, Anbieter 779,3 Mio. ohne Datum); Jahreswachstum und Kennzahl wären falsch.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 779342000
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": 720371000
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000012/ortf-20251231.htm",
+          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "accession": "0001747777-26-000012",
+          "unit": "USD",
+          "value": 1145449000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "1,145,449 684,034 (USD thousands)"
+        }
+      ]
+    },
+    {
+      "caseId": "kbdc-vendor-annual-revenue-20261001",
+      "ticker": "KBDC",
+      "reason": "Score fehlt: Jahresumsatz des Anbieters weicht vom SEC-Abschluss ab (2025: 235,8 Mio. USD, Anbieter 102,1 Mio.); er trägt den Großteil des Scores.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 102145000
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": 93706000
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747172/000121390026022392/ea0274005-10k_kayne.htm",
+          "page": "HTML/XBRL: us-gaap:InvestmentIncomeNonoperating",
+          "quote": "Total Investment Income",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747172.json",
+          "tag": "us-gaap:InvestmentIncomeNonoperating",
+          "accession": "0001213900-26-022392",
+          "unit": "USD",
+          "value": 235819000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "literalAmounts": "235,819 213,106 161,004 (USD thousands)"
         }
       ],
       "annualPairPeriod": "2025-12-31"
