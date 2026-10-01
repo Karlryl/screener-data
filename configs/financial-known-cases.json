@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-01b",
+  "revision": "2026-10-01c",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -4115,6 +4115,250 @@
           "end": "2025-06-30"
         }
       ]
+    },
+    {
+      "caseId": "infq-2024-12-31-annualRev",
+      "ticker": "INFQ",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 28836000,
+      "replacementValue": null,
+      "reason": "Jahreszahlen fehlen: Die Anbieterreihe endet mit 2024 (Erstmeldung, laut SEC berichtigt) und 2023; das Geschäftsjahr 2025 fehlt, Jahreswachstum und Bruttogewinn-Wachstum wären ein Jahr alt.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "Q2 2026 10-Q, note Correction of Immaterial Errors, statements of operations for the period ended December 31, 2024 and 2025",
+          "quote": "Total revenue $ 28,836 $ ( 742 ) $ 28,094"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000119312526021087/d22517d424b3.htm",
+          "page": "Prospectus 424B3 of 2026-01-23, ColdQuanta, Inc. Consolidated Statements of Operations, years 2024 and 2023 (page F-47 region)",
+          "quote": "Total revenue 28,836 10,950"
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2023-12-31-annualRev",
+      "ticker": "INFQ",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 10950000,
+      "replacementValue": null,
+      "reason": "Jahreszahlen fehlen: Die Anbieterreihe endet mit 2024 (Erstmeldung, laut SEC berichtigt) und 2023; das Geschäftsjahr 2025 fehlt, Jahreswachstum und Bruttogewinn-Wachstum wären ein Jahr alt.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "Q2 2026 10-Q, note Correction of Immaterial Errors, statements of operations for the period ended December 31, 2024 and 2025",
+          "quote": "Total revenue $ 32,464 $ ( 1,356 ) $ 31,108"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000119312526021087/d22517d424b3.htm",
+          "page": "Prospectus 424B3 of 2026-01-23, ColdQuanta, Inc. Consolidated Statements of Operations, years 2024 and 2023 (page F-47 region)",
+          "quote": "Total revenue 28,836 10,950"
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2024-12-31-annualGP",
+      "ticker": "INFQ",
+      "field": "annualGP",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 9064000,
+      "replacementValue": null,
+      "reason": "Jahreszahlen fehlen: Die Anbieterreihe endet mit 2024 (Erstmeldung, laut SEC berichtigt) und 2023; das Geschäftsjahr 2025 fehlt, Jahreswachstum und Bruttogewinn-Wachstum wären ein Jahr alt.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "Q2 2026 10-Q, note Correction of Immaterial Errors, statements of operations for the period ended December 31, 2024 and 2025",
+          "quote": "Gross profit $ 9,064 $ ( 1,978 ) $ 7,086"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000119312526021087/d22517d424b3.htm",
+          "page": "Prospectus 424B3 of 2026-01-23, ColdQuanta, Inc. Consolidated Statements of Operations, years 2024 and 2023 (page F-47 region)",
+          "quote": "Gross profit 9,064 4,436"
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2023-12-31-annualGP",
+      "ticker": "INFQ",
+      "field": "annualGP",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 4436000,
+      "replacementValue": null,
+      "reason": "Jahreszahlen fehlen: Die Anbieterreihe endet mit 2024 (Erstmeldung, laut SEC berichtigt) und 2023; das Geschäftsjahr 2025 fehlt, Jahreswachstum und Bruttogewinn-Wachstum wären ein Jahr alt.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "Q2 2026 10-Q, note Correction of Immaterial Errors, statements of operations for the period ended December 31, 2024 and 2025",
+          "quote": "Gross profit $ 11,813 $ ( 433 ) $ 11,380"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000119312526021087/d22517d424b3.htm",
+          "page": "Prospectus 424B3 of 2026-01-23, ColdQuanta, Inc. Consolidated Statements of Operations, years 2024 and 2023 (page F-47 region)",
+          "quote": "Gross profit 9,064 4,436"
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2022-12-31-annualRev",
+      "ticker": "CARG",
+      "field": "annualRev",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "expectedBadValue": 1655035000,
+      "replacementValue": null,
+      "reason": "Jahreswert 2022 fehlt: Er enthält das inzwischen aufgegebene CarOffer-Geschäft, die Jahre 2023 bis 2025 sind ohne CarOffer ausgewiesen; Marge und Wachstum wären verzerrt.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025 (filed 2026-02-19), Consolidated Income Statements, years 2025, 2024, 2023",
+          "quote": "We have presented the financial results of CarOffer as discontinued operations"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000095017023005473/carg-20221231.htm",
+          "page": "10-K FY2022 (filed 2023-03-01), Results of Operations, year 2022 including CarOffer (Wholesale, Product)",
+          "quote": "Total revenue 1,655,035 951,373"
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2022-12-31-annualGP",
+      "ticker": "CARG",
+      "field": "annualGP",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "expectedBadValue": 657553000,
+      "replacementValue": null,
+      "reason": "Jahreswert 2022 fehlt: Er enthält das inzwischen aufgegebene CarOffer-Geschäft, die Jahre 2023 bis 2025 sind ohne CarOffer ausgewiesen; Marge und Wachstum wären verzerrt.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025 (filed 2026-02-19), Consolidated Income Statements, years 2025, 2024, 2023",
+          "quote": "We have presented the financial results of CarOffer as discontinued operations"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000095017023005473/carg-20221231.htm",
+          "page": "10-K FY2022 (filed 2023-03-01), Results of Operations, year 2022 including CarOffer (Wholesale, Product)",
+          "quote": "Total revenue 1,655,035 951,373"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2025-12-31-annualRev",
+      "ticker": "OTF",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 779342000,
+      "replacementValue": null,
+      "reason": "Jahresumsatz fehlt: Der Anbieterwert passt zu keinem Geschäftsjahr laut SEC (2025: 1.145,4 Mio. USD, Anbieter 779,3 Mio. ohne Datum).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000012/ortf-20251231.htm",
+          "page": "10-K, Consolidated Statements of Operations, year 2025",
+          "quote": "Total Investment Income $ 1,145,449 $ 684,034",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "unit": "USD",
+          "value": 1145449000,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2024-12-31-annualRev",
+      "ticker": "OTF",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 353460000,
+      "replacementValue": null,
+      "reason": "Jahresumsatz fehlt: Der Anbieterwert passt zu keinem Geschäftsjahr laut SEC (2025: 1.145,4 Mio. USD, Anbieter 779,3 Mio. ohne Datum).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000012/ortf-20251231.htm",
+          "page": "10-K, Consolidated Statements of Operations, year 2024",
+          "quote": "Total Investment Income $ 1,145,449 $ 684,034",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "unit": "USD",
+          "value": 684034000,
+          "start": "2024-01-01",
+          "end": "2024-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2023-12-31-annualRev",
+      "ticker": "OTF",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "expectedBadValue": 391908000,
+      "replacementValue": null,
+      "reason": "Jahresumsatz fehlt: Der Anbieterwert passt zu keinem Geschäftsjahr laut SEC (2025: 1.145,4 Mio. USD, Anbieter 779,3 Mio. ohne Datum).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777725000008/ortfc-20241231.htm",
+          "page": "10-K, Consolidated Statements of Operations, year 2023",
+          "quote": "Total Investment Income 684,034 683,814 494,845",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "unit": "USD",
+          "value": 683814000,
+          "start": "2023-01-01",
+          "end": "2023-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "otf-2022-12-31-annualRev",
+      "ticker": "OTF",
+      "field": "annualRev",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "expectedBadValue": 49975000,
+      "replacementValue": null,
+      "reason": "Jahresumsatz fehlt: Der Anbieterwert passt zu keinem Geschäftsjahr laut SEC (2025: 1.145,4 Mio. USD, Anbieter 779,3 Mio. ohne Datum).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777725000008/ortfc-20241231.htm",
+          "page": "10-K, Consolidated Statements of Operations, year 2022",
+          "quote": "Total Investment Income 684,034 683,814 494,845",
+          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
+          "tag": "us-gaap:GrossInvestmentIncomeOperating",
+          "unit": "USD",
+          "value": 494845000,
+          "start": "2022-01-01",
+          "end": "2022-12-31"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -4163,46 +4407,6 @@
         }
       ],
       "annualPairPeriod": "2025-12-31"
-    },
-    {
-      "caseId": "otf-vendor-annual-revenue-20261001",
-      "ticker": "OTF",
-      "reason": "Score fehlt: Jahresumsatz des Anbieters passt zu keinem Geschäftsjahr laut SEC (2025: 1.145,4 Mio. USD, Anbieter 779,3 Mio. ohne Datum); Jahreswachstum und Kennzahl wären falsch.",
-      "fingerprint": [
-        {
-          "path": [
-            "annual",
-            "annualRev",
-            0,
-            "value"
-          ],
-          "expected": 779342000
-        },
-        {
-          "path": [
-            "annual",
-            "annualNetIncome",
-            0,
-            "value"
-          ],
-          "expected": 720371000
-        }
-      ],
-      "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1747777/000174777726000012/ortf-20251231.htm",
-          "page": "HTML/XBRL: us-gaap:GrossInvestmentIncomeOperating",
-          "quote": "Total Investment Income",
-          "companyfactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001747777.json",
-          "tag": "us-gaap:GrossInvestmentIncomeOperating",
-          "accession": "0001747777-26-000012",
-          "unit": "USD",
-          "value": 1145449000,
-          "start": "2025-01-01",
-          "end": "2025-12-31",
-          "literalAmounts": "1,145,449 684,034 (USD thousands)"
-        }
-      ]
     },
     {
       "caseId": "kbdc-vendor-annual-revenue-20261001",
