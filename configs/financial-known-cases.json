@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-01",
+  "revision": "2026-10-01b",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -17,7 +17,18 @@
     { "ticker": "GBDC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "TSLX", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "MSDL", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "PSEC", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "PSEC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CARG", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CARG", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "PLUS", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "PLUS", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "DCO", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "DCO", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "INFQ", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "INFQ", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "SLCE3.SA", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "SLCE3.SA", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "OXLC", "field": "revenueQ", "coversThrough": "2026-03-31" }
   ],
   "cases": [
     {
@@ -1597,7 +1608,6 @@
       "currency": "USD",
       "expectedBadValue": 0,
       "replacementValue": 94000000,
-      "singleFalseValue": true,
       "reason": "Umsatz korrigiert: Gesamte Anlageerträge laut Quartalsmitteilung des Fonds statt der gespeicherten Null (Wert vom Fonds auf 0,1 Mio. gerundet).",
       "sources": [
         {
@@ -2757,6 +2767,1354 @@
           "calculation": "719436000 - 552490000 = 166946000"
         }
       ]
+    },
+    {
+      "caseId": "carg-2026-06-30-revenueQ",
+      "ticker": "CARG",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 250971000,
+      "replacementValue": 250971000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Revenue $ 250,971 $ 221,998 $ 494,526 $ 434,233",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 250971000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2026-03-31-revenueQ",
+      "ticker": "CARG",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 243555000,
+      "replacementValue": 243555000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526211983/carg-20260331.htm",
+          "page": "10-Q Q1 2026, condensed consolidated statements of operations",
+          "accession": "0001193125-26-211983",
+          "filed": "2026-05-07",
+          "unit": "USD thousands",
+          "quote": "Revenue $ 243,555 $ 212,235",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 243555000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-12-31-revenueQ",
+      "ticker": "CARG",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 209093000,
+      "replacementValue": 241094000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Revenue $ 241,094 $ 231,653 $ 221,998 $ 212,235",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 241094000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-09-30-revenueQ",
+      "ticker": "CARG",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 238696000,
+      "replacementValue": 231653000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Revenue $ 241,094 $ 231,653 $ 221,998 $ 212,235",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 231653000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-06-30-revenueQ",
+      "ticker": "CARG",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 221998000,
+      "replacementValue": 221998000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Revenue $ 250,971 $ 221,998 $ 494,526 $ 434,233",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 221998000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2026-06-30-grossProfitQ",
+      "ticker": "CARG",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 231098000,
+      "replacementValue": 231098000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Gross profit 231,098 206,321 455,719 404,213",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 231098000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2026-03-31-grossProfitQ",
+      "ticker": "CARG",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 224621000,
+      "replacementValue": 224621000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526211983/carg-20260331.htm",
+          "page": "10-Q Q1 2026, condensed consolidated statements of operations",
+          "accession": "0001193125-26-211983",
+          "filed": "2026-05-07",
+          "unit": "USD thousands",
+          "quote": "Gross profit 224,621 197,892",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 224621000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-12-31-grossProfitQ",
+      "ticker": "CARG",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 223892000,
+      "replacementValue": 222593000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Gross profit 222,593 214,707 206,321 197,892",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 222593000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-09-30-grossProfitQ",
+      "ticker": "CARG",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 213532000,
+      "replacementValue": 214707000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Gross profit 222,593 214,707 206,321 197,892",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 214707000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-06-30-grossProfitQ",
+      "ticker": "CARG",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 206321000,
+      "replacementValue": 206321000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Gross profit 231,098 206,321 455,719 404,213",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 206321000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-06-30-revenueQ",
+      "ticker": "PLUS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 649113000,
+      "replacementValue": 649113000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027, consolidated statements of operations (2025 as revised, Note 2)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Total 649,113 642,775",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 649113000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-03-31-revenueQ",
+      "ticker": "PLUS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 581634000,
+      "replacementValue": 576174000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126023148/ef20075008_ex99-1.htm",
+          "page": "Exhibit 99.1 to 8-K of 2026-05-28 (Q4 FY2026 earnings release), consolidated statements of operations",
+          "accession": "0001140361-26-023148",
+          "filed": "2026-05-28",
+          "unit": "USD thousands",
+          "quote": "Total 576,174 477,923 2,442,549 2,000,168",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "crossCheck": "10-K FY2026 (acc 0001140361-26-023171) net sales 2,442,549 minus revised Q1 642,775, Q2 608,826 and Q3 614,774 = 576,174; gross profit 616,081 - 153,676 - 162,124 - 158,654 = 141,627",
+          "value": 576174000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-12-31-revenueQ",
+      "ticker": "PLUS",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 614774000,
+      "replacementValue": 614774000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126003725/ef20060829_10q.htm",
+          "page": "10-Q Q3 FY2026, consolidated statements of operations",
+          "accession": "0001140361-26-003725",
+          "filed": "2026-02-04",
+          "unit": "USD thousands",
+          "quote": "Total 614,774 493,221 1,860,915 1,522,245",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 614774000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-09-30-revenueQ",
+      "ticker": "PLUS",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 608826000,
+      "replacementValue": 608826000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036125040814/ef20056859_10q.htm",
+          "page": "10-Q Q2 FY2026, consolidated statements of operations",
+          "accession": "0001140361-25-040814",
+          "filed": "2025-11-06",
+          "unit": "USD thousands",
+          "quote": "Total 608,826 493,372 1,246,141 1,029,024",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 608826000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-06-30-revenueQ",
+      "ticker": "PLUS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 642775000,
+      "replacementValue": 642775000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027, consolidated statements of operations (2025 as revised, Note 2)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Total 649,113 642,775",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 642775000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-06-30-grossProfitQ",
+      "ticker": "PLUS",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 151329000,
+      "replacementValue": 151329000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027, consolidated statements of operations (2025 as revised, Note 2)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Gross profit 151,329 153,676",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 151329000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-03-31-grossProfitQ",
+      "ticker": "PLUS",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 147087000,
+      "replacementValue": 141627000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126023148/ef20075008_ex99-1.htm",
+          "page": "Exhibit 99.1 to 8-K of 2026-05-28 (Q4 FY2026 earnings release), consolidated statements of operations",
+          "accession": "0001140361-26-023148",
+          "filed": "2026-05-28",
+          "unit": "USD thousands",
+          "quote": "Gross profit 141,627 126,871 616,081 512,120",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "crossCheck": "10-K FY2026 (acc 0001140361-26-023171) net sales 2,442,549 minus revised Q1 642,775, Q2 608,826 and Q3 614,774 = 576,174; gross profit 616,081 - 153,676 - 162,124 - 158,654 = 141,627",
+          "value": 141627000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-12-31-grossProfitQ",
+      "ticker": "PLUS",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 158654000,
+      "replacementValue": 158654000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126003725/ef20060829_10q.htm",
+          "page": "10-Q Q3 FY2026, consolidated statements of operations",
+          "accession": "0001140361-26-003725",
+          "filed": "2026-02-04",
+          "unit": "USD thousands",
+          "quote": "Gross profit 158,654 125,078 468,994 379,254",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 158654000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-09-30-grossProfitQ",
+      "ticker": "PLUS",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 162124000,
+      "replacementValue": 162124000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036125040814/ef20056859_10q.htm",
+          "page": "10-Q Q2 FY2026, consolidated statements of operations",
+          "accession": "0001140361-25-040814",
+          "filed": "2025-11-06",
+          "unit": "USD thousands",
+          "quote": "Gross profit 162,124 127,302 310,340 254,176",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 162124000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-06-30-grossProfitQ",
+      "ticker": "PLUS",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 153676000,
+      "replacementValue": 153676000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027, consolidated statements of operations (2025 as revised, Note 2)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Gross profit 151,329 153,676",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 153676000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-06-30-revenueQ",
+      "ticker": "DCO",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 224492000,
+      "replacementValue": 224492000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of income (2025 as restated)",
+          "accession": "0001628280-26-053776",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Net Revenues $ 224,492 $ 200,803 $ 433,514 $ 393,284",
+          "start": "2026-04-05",
+          "end": "2026-07-04",
+          "value": 224492000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-03-31-revenueQ",
+      "ticker": "DCO",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 209022000,
+      "replacementValue": 209022000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026033836/dco-20260404.htm",
+          "page": "10-Q Q1 2026, condensed consolidated statements of income",
+          "accession": "0001628280-26-033836",
+          "filed": "2026-05-12",
+          "unit": "USD thousands",
+          "quote": "Net Revenues $ 209,022 $ 192,481",
+          "start": "2026-01-01",
+          "end": "2026-04-04",
+          "value": 209022000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-12-31-revenueQ",
+      "ticker": "DCO",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 215798000,
+      "replacementValue": 217133000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, Note 18 restatement of quarterly results (As Previously Reported / Adjustments / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Net Revenues $ 215,798 $ 1,335 $ 217,133",
+          "start": "2025-09-28",
+          "end": "2025-12-31",
+          "value": 217133000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-09-30-revenueQ",
+      "ticker": "DCO",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 212558000,
+      "replacementValue": 214422000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, Note 18 restatement of quarterly results (As Previously Reported / Adjustments / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Net Revenues $ 212,558 $ 1,864 $ 214,422",
+          "start": "2025-06-29",
+          "end": "2025-09-27",
+          "value": 214422000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-06-30-revenueQ",
+      "ticker": "DCO",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 200803000,
+      "replacementValue": 200803000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of income (2025 as restated)",
+          "accession": "0001628280-26-053776",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Net Revenues $ 224,492 $ 200,803 $ 433,514 $ 393,284",
+          "start": "2025-03-30",
+          "end": "2025-06-28",
+          "value": 200803000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-06-30-grossProfitQ",
+      "ticker": "DCO",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 62900000,
+      "replacementValue": 62900000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of income (2025 as restated)",
+          "accession": "0001628280-26-053776",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Gross Profit 62,900 52,976 119,133 103,427",
+          "start": "2026-04-05",
+          "end": "2026-07-04",
+          "value": 62900000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-03-31-grossProfitQ",
+      "ticker": "DCO",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 56233000,
+      "replacementValue": 56233000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026033836/dco-20260404.htm",
+          "page": "10-Q Q1 2026, condensed consolidated statements of income",
+          "accession": "0001628280-26-033836",
+          "filed": "2026-05-12",
+          "unit": "USD thousands",
+          "quote": "Gross Profit 56,233 50,451",
+          "start": "2026-01-01",
+          "end": "2026-04-04",
+          "value": 56233000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-12-31-grossProfitQ",
+      "ticker": "DCO",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 59805000,
+      "replacementValue": 59238000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, Note 18 restatement of quarterly results (As Previously Reported / Adjustments / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Gross Profit 59,805 ( 567 ) 59,238",
+          "start": "2025-09-28",
+          "end": "2025-12-31",
+          "value": 59238000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-09-30-grossProfitQ",
+      "ticker": "DCO",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 56475000,
+      "replacementValue": 58950000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, Note 18 restatement of quarterly results (As Previously Reported / Adjustments / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Gross Profit 56,475 2,475 58,950",
+          "start": "2025-06-29",
+          "end": "2025-09-27",
+          "value": 58950000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-06-30-grossProfitQ",
+      "ticker": "DCO",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 52976000,
+      "replacementValue": 52976000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026, condensed consolidated statements of income (2025 as restated)",
+          "accession": "0001628280-26-053776",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Gross Profit 62,900 52,976 119,133 103,427",
+          "start": "2025-03-30",
+          "end": "2025-06-28",
+          "value": 52976000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-06-30-revenueQ",
+      "ticker": "INFQ",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 13538000,
+      "replacementValue": 13538000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Total revenue 13,538 5,277 23,445 13,472",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 13538000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-03-31-revenueQ",
+      "ticker": "INFQ",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 9461000,
+      "replacementValue": 9907000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, note Correction of Immaterial Errors, Three Months Ended March 31, 2026, As Reported / Adjustments / As Adjusted",
+          "quote": "Total revenue $ 9,461 $ 446 $ 9,907",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 9907000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-09-30-revenueQ",
+      "ticker": "INFQ",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 8202000,
+      "replacementValue": 7311000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, note Correction of Immaterial Errors, Nine Months Ended September 30, 2025, As Reported / Adjustments / As Adjusted",
+          "quote": "Total revenue $ 21,674 $ ( 891 ) $ 20,783",
+          "value": 20783000,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Total revenue 13,538 5,277 23,445 13,472",
+          "value": 13472000,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "calculation": "nine months 2025 as adjusted 20,783 minus six months 2025 as adjusted 13,472 = 7,311 (no discrete quarter is filed)"
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-06-30-revenueQ",
+      "ticker": "INFQ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 5277000,
+      "replacementValue": 5277000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Total revenue 13,538 5,277 23,445 13,472",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 5277000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-03-31-revenueQ",
+      "ticker": "INFQ",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 8303000,
+      "replacementValue": 8195000,
+      "reason": "Umsatz korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Total revenue 13,538 5,277 23,445 13,472",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "calculation": "six months 2025 as adjusted 13,472 minus three months to 2025-06-30 as adjusted 5,277 = 8,195 (both in this statement)",
+          "value": 8195000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-06-30-grossProfitQ",
+      "ticker": "INFQ",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 2167000,
+      "replacementValue": 2167000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Gross profit 2,167 678 4,702 4,221",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 2167000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-03-31-grossProfitQ",
+      "ticker": "INFQ",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1991000,
+      "replacementValue": 2535000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, note Correction of Immaterial Errors, Three Months Ended March 31, 2026, As Reported / Adjustments / As Adjusted",
+          "quote": "Gross profit $ 1,991 $ 544 $ 2,535",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 2535000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-09-30-grossProfitQ",
+      "ticker": "INFQ",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 3863000,
+      "replacementValue": 3700000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, note Correction of Immaterial Errors, Nine Months Ended September 30, 2025, As Reported / Adjustments / As Adjusted",
+          "quote": "Gross profit $ 8,084 $ ( 163 ) $ 7,921",
+          "value": 7921000,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Gross profit 2,167 678 4,702 4,221",
+          "value": 4221000,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "calculation": "nine months 2025 as adjusted 7,921 minus six months 2025 as adjusted 4,221 = 3,700 (no discrete quarter is filed)"
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-06-30-grossProfitQ",
+      "ticker": "INFQ",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 678000,
+      "replacementValue": 678000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Gross profit 2,167 678 4,702 4,221",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 678000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-03-31-grossProfitQ",
+      "ticker": "INFQ",
+      "field": "grossProfitQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 3377000,
+      "replacementValue": 3543000,
+      "reason": "Bruttogewinn korrigiert: Wert laut neuestem Abschluss der Firma statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "page": "10-Q Q2 2026, condensed consolidated statements of operations (2025 as adjusted)",
+          "quote": "Gross profit 2,167 678 4,702 4,221",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "calculation": "six months 2025 as adjusted 4,221 minus three months to 2025-06-30 as adjusted 678 = 3,543 (both in this statement)",
+          "value": 3543000
+        }
+      ]
+    },
+    {
+      "caseId": "vctr-2025-12-31-grossProfitQ",
+      "ticker": "VCTR",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 43903000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Die Firma weist keinen Bruttogewinn aus; der Anbieterwert für das Quartal bis 31.12.2025 liegt unter dem Betriebsergebnis und ist unmöglich.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1570827/000119312526077057/vctr-20251231.htm",
+          "page": "10-K FY2025, consolidated statements of operations (no gross profit or cost of revenue line)",
+          "accession": "0001193125-26-077057",
+          "filed": "2026-02-26",
+          "unit": "USD thousands",
+          "quote": "Income from operations 478,423 427,514 328,458",
+          "value": 478423000,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1570827/000119312525271198/vctr-20250930.htm",
+          "page": "10-Q Q3 2025, consolidated statements of operations",
+          "accession": "0001193125-25-271198",
+          "filed": "2025-11-07",
+          "unit": "USD thousands",
+          "quote": "Income from operations 138,126 120,363 325,248 315,769",
+          "value": 325248000,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "calculation": "Q4 2025 income from operations 478,423 - 325,248 = 153,175 thousand, above the stored gross profit 43,903 thousand"
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-06-30-revenueQ",
+      "ticker": "SLCE3.SA",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 4703662000,
+      "replacementValue": 2175612000,
+      "reason": "Umsatz korrigiert: Nettoumsatz laut Quartalsbericht der Firma; der Anbieter zählte die Neubewertung der Ernte (biologische Vermögenswerte) mit oder führte einen Wert, der zu keiner Berichtszeile passt.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/da017e37-1ea8-7eef-ac2c-243762280f70?origin=2",
+          "page": "28 (Divulgação dos Resultados 2T26, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-08-12",
+          "quote": "Receita Operacional Líquida 4.193.177 4.443.113 6,0% 1.862.135 2.175.612 16,8%",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 2175612000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-03-31-revenueQ",
+      "ticker": "SLCE3.SA",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2665069000,
+      "replacementValue": 2267501000,
+      "reason": "Umsatz korrigiert: Nettoumsatz laut Quartalsbericht der Firma; der Anbieter zählte die Neubewertung der Ernte (biologische Vermögenswerte) mit oder führte einen Wert, der zu keiner Berichtszeile passt.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/91969cf4-ad47-b624-7e43-b640671344f2?origin=2",
+          "page": "33 (Divulgação dos Resultados 1T26, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-05-13",
+          "quote": "Receita Operacional Líquida 2.331.042 2.267.501 -2,7%",
+          "unit": "BRL thousands",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "vendorBasis": "vendor value = Receita Operacional Líquida plus \"Var. do Valor Justo dos Ativos Biológicos e VRLPA\" of the same release (397.568)",
+          "value": 2267501000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-12-31-revenueQ",
+      "ticker": "SLCE3.SA",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2290647000,
+      "replacementValue": 2272265000,
+      "reason": "Umsatz korrigiert: Nettoumsatz laut Quartalsbericht der Firma; der Anbieter zählte die Neubewertung der Ernte (biologische Vermögenswerte) mit oder führte einen Wert, der zu keiner Berichtszeile passt.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/c13acb3b-6644-f27f-5fba-b5063f2d64af?origin=2",
+          "page": "36 (Divulgação dos Resultados 4T25, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-03-06",
+          "quote": "Receita Operacional Líquida 6.915.764 8.553.147 23,7% 1.975.375 2.272.265 15,0%",
+          "unit": "BRL thousands",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "vendorBasis": "vendor value = Receita Operacional Líquida plus \"Var. do Valor Justo dos Ativos Biológicos e VRLPA\" of the same release (18.382)",
+          "value": 2272265000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-09-30-revenueQ",
+      "ticker": "SLCE3.SA",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2379036000,
+      "replacementValue": 2087705000,
+      "reason": "Umsatz korrigiert: Nettoumsatz laut Quartalsbericht der Firma; der Anbieter zählte die Neubewertung der Ernte (biologische Vermögenswerte) mit oder führte einen Wert, der zu keiner Berichtszeile passt.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/fc14e852-2f0b-e860-fa39-3a70f71bb49a?origin=2",
+          "page": "32 (Divulgação dos Resultados 3T25, Anexo 3 Demonstração de Resultado)",
+          "published": "2025-10-30",
+          "quote": "Receita Operacional Líquida 4.940.389 6.280.882 27,1% 1.631.878 2.087.705 27,9%",
+          "unit": "BRL thousands",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "vendorBasis": "vendor value = Receita Operacional Líquida plus \"Var. do Valor Justo dos Ativos Biológicos e VRLPA\" of the same release (291.331)",
+          "value": 2087705000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-06-30-revenueQ",
+      "ticker": "SLCE3.SA",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 4043394000,
+      "replacementValue": 1862135000,
+      "reason": "Umsatz korrigiert: Nettoumsatz laut Quartalsbericht der Firma; der Anbieter zählte die Neubewertung der Ernte (biologische Vermögenswerte) mit oder führte einen Wert, der zu keiner Berichtszeile passt.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/da017e37-1ea8-7eef-ac2c-243762280f70?origin=2",
+          "page": "28 (Divulgação dos Resultados 2T26, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-08-12",
+          "quote": "Receita Operacional Líquida 4.193.177 4.443.113 6,0% 1.862.135 2.175.612 16,8%",
+          "unit": "BRL thousands",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "crossCheck": "same 2T25 figure in Divulgação dos Resultados 2T25, page 32",
+          "value": 1862135000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-06-30-grossProfitQ",
+      "ticker": "SLCE3.SA",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2879220000,
+      "replacementValue": 941202000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma statt eines Anbieterwerts, der zu keiner Berichtszeile passt.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/da017e37-1ea8-7eef-ac2c-243762280f70?origin=2",
+          "page": "28 (Divulgação dos Resultados 2T26, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-08-12",
+          "quote": "Resultado Bruto 1.732.082 1.884.366 8,8% 656.027 941.202 43,5%",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 941202000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-03-31-grossProfitQ",
+      "ticker": "SLCE3.SA",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 943164000,
+      "replacementValue": 943164000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/91969cf4-ad47-b624-7e43-b640671344f2?origin=2",
+          "page": "33 (Divulgação dos Resultados 1T26, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-05-13",
+          "quote": "Resultado Bruto 1.076.055 943.164 -12,3%",
+          "unit": "BRL thousands",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 943164000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-12-31-grossProfitQ",
+      "ticker": "SLCE3.SA",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 574275000,
+      "replacementValue": 574275000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/c13acb3b-6644-f27f-5fba-b5063f2d64af?origin=2",
+          "page": "36 (Divulgação dos Resultados 4T25, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-03-06",
+          "quote": "Resultado Bruto 2.307.726 2.928.929 26,9% 551.361 574.275 4,2%",
+          "unit": "BRL thousands",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 574275000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-09-30-grossProfitQ",
+      "ticker": "SLCE3.SA",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 622572000,
+      "replacementValue": 622572000,
+      "reason": "Bruttogewinn bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/fc14e852-2f0b-e860-fa39-3a70f71bb49a?origin=2",
+          "page": "32 (Divulgação dos Resultados 3T25, Anexo 3 Demonstração de Resultado)",
+          "published": "2025-10-30",
+          "quote": "Resultado Bruto 1.756.365 2.354.654 34,1% 279.087 622.572 123,1%",
+          "unit": "BRL thousands",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 622572000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-06-30-grossProfitQ",
+      "ticker": "SLCE3.SA",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2444562000,
+      "replacementValue": 656027000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma statt eines Anbieterwerts, der zu keiner Berichtszeile passt.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/a975c39b-3eca-4ad8-9330-2c0a0b8d1060/da017e37-1ea8-7eef-ac2c-243762280f70?origin=2",
+          "page": "28 (Divulgação dos Resultados 2T26, Anexo 3 Demonstração de Resultado)",
+          "published": "2026-08-12",
+          "quote": "Resultado Bruto 1.732.082 1.884.366 8,8% 656.027 941.202 43,5%",
+          "unit": "BRL thousands",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "crossCheck": "same 2T25 figure in Divulgação dos Resultados 2T25, page 32",
+          "value": 656027000
+        }
+      ]
+    },
+    {
+      "caseId": "oxlc-2025-06-30-revenueQ",
+      "ticker": "OXLC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 124000000,
+      "replacementValue": 124000000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.globenewswire.com/news-release/2025/07/23/3120149/0/en/Oxford-Lane-Capital-Corp-Announces-Net-Asset-Value-and-Selected-Financial-Results-for-the-First-Fiscal-Quarter-Declaration-of-Distributions-on-Common-Stock-for-the-Months-Ending-Oc.html",
+          "page": "press release of July 23, 2025 (HTML)",
+          "quote": "Total investment income for the quarter ended June 30, 2025 amounted to approximately $124.0 million",
+          "unit": "USD millions (issuer-rounded)",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 124000000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1495222/000121390025106331/ea0261739-01_ncsrs.htm",
+          "page": "N-CSRS, Statement of Operations, Six Months Ended September 30, 2025",
+          "quote": "Total investment income",
+          "accession": "0001213900-25-106331",
+          "filed": "2025-11-05",
+          "unit": "USD",
+          "value": 252333085,
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "crossCheck": "Releases give 124.0 + 128.3 = 252.3 million for Apr-Sep 2025"
+        }
+      ]
+    },
+    {
+      "caseId": "oxlc-2025-03-31-revenueQ",
+      "ticker": "OXLC",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 121161000,
+      "replacementValue": 121161000,
+      "reason": "Umsatz bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.globenewswire.com/news-release/2025/05/19/3083952/0/en/Oxford-Lane-Capital-Corp-Announces-Net-Asset-Value-and-Selected-Financial-Results-for-the-Fourth-Fiscal-Quarter-and-Provides-April-Net-Asset-Value-Update.html",
+          "page": "press release of May 19, 2025 (HTML)",
+          "quote": "Total investment income for the quarter ended March 31, 2025 amounted to approximately $121.2 million",
+          "unit": "USD millions (issuer-rounded)",
+          "value": 121200000,
+          "start": "2025-01-01",
+          "end": "2025-03-31"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1495222/000121390025045605/ea0238885-01_ncsr.htm",
+          "page": "N-CSR, Statement of Operations, Year Ended March 31, 2025",
+          "quote": "Total investment income 430,539,101",
+          "accession": "0001213900-25-045605",
+          "unit": "USD",
+          "value": 430539101,
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "crossCheck": "Year 430,539,101 minus N-CSRS six months to 2024-09-30 194,878,203 minus the stored 121,161,000 leaves 114,499,898 for Oct-Dec 2024; the release gives 121.2 - 6.7 = 114.5 million"
+        }
+      ]
+    },
+    {
+      "caseId": "clsc3.sa-2025-06-30-grossProfitQ",
+      "ticker": "CLSC3.SA",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 152109000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Anbieterwert für das Quartal bis 30.06.2025 passt zu keiner Zeile des Quartalsberichts (Bruttoergebnis laut Firma 513,4 Mio. BRL).",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/137b4414-3d0c-493e-8b59-0d02bc3e4072/6d29a457-57a1-fd53-059b-51f23a61f298?origin=2",
+          "page": "23 (ITR 2T25, Demonstrações de Resultados, Consolidado, 01.04.2025 a 30.06.2025)",
+          "quote": "Lucro Bruto 513.396 1.134.328 537.042 1.062.095",
+          "unit": "BRL thousands",
+          "value": 513396000,
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -2886,6 +4244,140 @@
         }
       ],
       "annualPairPeriod": "2025-12-31"
+    },
+    {
+      "caseId": "hos-other-issuer-packet-20261001",
+      "ticker": "HOS",
+      "reason": "Score fehlt: Der Ticker HOS gehört seit 01.09.2026 zur umbenannten Helix Energy Solutions (SEC-Nr. 866829); der Anbieter liefert noch Zahlen der früheren Hornbeck Offshore von 2018/2019.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 212404000
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": -119123000
+        }
+      ],
+      "annualPairPeriod": "2018-12-31",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/866829/000119312526383687/d117247d8k.htm",
+          "page": "8-K of 2026-09-04, introductory note and cover page",
+          "quote": "Helix was renamed",
+          "tradingSymbol": "HOS (New York Stock Exchange)",
+          "accession": "0001193125-26-383687"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1131227/000113122719000015/hos10k12312018.htm",
+          "page": "10-K FY2018 of the former Hornbeck Offshore Services (CIK 1131227), selected financial data",
+          "quote": "Revenues $ 212,404 $ 191,412 $ 224,299 $ 476,070 $ 634,793",
+          "unit": "USD thousands",
+          "accession": "0001131227-19-000015",
+          "crossCheck": "Stored annual revenue 212,404,000 / 191,412,000 / 224,299,000 / 476,070,000 and net income -119,123,000 (companyfacts CIK 1131227, FY2018) belong to that former company"
+        }
+      ]
+    },
+    {
+      "caseId": "tyg-stale-2017-packet-20261001",
+      "ticker": "TYG",
+      "reason": "Score fehlt: Die Abschlusszahlen des Anbieters enden mit dem Geschäftsjahr bis 30.11.2017; das daraus berechnete Wachstum (−98,9 %) ist kein aktueller Wert.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 1956780
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": -113427640
+        }
+      ],
+      "annualPairPeriod": "2017-11-30",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1268533/000120677418000174/tyg3364733-ncsr.htm",
+          "page": "N-CSR FY2017, Statements of Operations, Year Ended November 30, 2017 (first column: Tortoise Energy Infrastructure)",
+          "quote": "Total Investment Income 1,956,784 4,420,833",
+          "unit": "USD",
+          "value": 1956784,
+          "start": "2016-12-01",
+          "end": "2017-11-30",
+          "accession": "0001206774-18-000174"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1268533/000121390026013154/ea0272590-01_ncsr.htm",
+          "page": "N-CSR FY2025, Consolidated Statement of Operations, year ended November 30, 2025",
+          "quote": "Total Investment Income 24,889,525",
+          "unit": "USD",
+          "value": 24889525,
+          "start": "2024-12-01",
+          "end": "2025-11-30",
+          "accession": "0001213900-26-013154"
+        }
+      ]
+    },
+    {
+      "caseId": "olpx-delisted-zero-gross-profit-20261001",
+      "ticker": "OLPX",
+      "reason": "Score fehlt: Olaplex ist seit 07.07.2026 nach einer Übernahme nicht mehr börsennotiert; der Anbieter führt alle Quartals-Bruttogewinne als 0 (laut SEC Q1 2026: 71,7 Mio. USD).",
+      "fingerprint": [
+        {
+          "path": [
+            "timeseries",
+            "revenueQ",
+            0,
+            "value"
+          ],
+          "expected": 99369000
+        },
+        {
+          "path": [
+            "timeseries",
+            "grossProfitQ",
+            0,
+            "value"
+          ],
+          "expected": 0
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1868726/000119312526296993/d128672d8k.htm",
+          "page": "8-K of 2026-07-07, Item 3.01",
+          "quote": "shares of Common Stock ceased to trade on the Nasdaq Global Select Market prior to market open on July 7, 2026",
+          "accession": "0001193125-26-296993"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1868726/000186872626000036/olpx-20260331.htm",
+          "page": "10-Q Q1 2026, condensed consolidated statements of operations",
+          "quote": "Gross profit 71,660 67,356",
+          "unit": "USD thousands",
+          "value": 71660000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "accession": "0001868726-26-000036"
+        }
+      ]
     }
   ]
 }

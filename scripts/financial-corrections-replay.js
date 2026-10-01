@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path'), crypto = require('crypto'), as
 const cp = require('child_process');
 const { Module, createRequire } = require('module');
 const { applyKnownCases } = require('../lib/yahoo-q4-known-cases.js');
-const { applyFinancialCases } = require('../lib/financial-known-cases.js');
+const { applyFinancialCases, table } = require('../lib/financial-known-cases.js');
 const { applyZeroGuard, modeForReplay } = require('../lib/zero-financials-guard.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { filterToAuthorizedUniverse, mergeSecIntoUniverse } = require('../src/scoring/run-screener.js');
@@ -129,8 +129,9 @@ function rule40Diff(before, after) {
   });
 }
 
+// live: Growth recalibrates on the replayed universe as the production run does (no stored calibration).
 function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
-  watchlistRef = '256d26910e637142ceddedf51cf39b394be9287f' } = {}) {
+  watchlistRef = '256d26910e637142ceddedf51cf39b394be9287f', live = false } = {}) {
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).sort();
   const hashes = [], snapshotNames = [], baseline = [], known = [], shadow = [], changes = [], zeroChanges = [], quarantines = [];
   let unchanged = 0, nonzeroChangesByZeroRule = 0;
@@ -165,11 +166,11 @@ function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
   const requested = [];
   let rule40;
   for (const [family, formulas, opts] of families) {
-    const fixed = family === 'growth' ? { refCalibration: require(`../board-history/${date}/calibration.json`) } : {};
+    const fixed = family === 'growth' && !live ? { refCalibration: require(`../board-history/${date}/calibration.json`) } : {};
     const b = scoreUniverse(beforeU, formulas, { ...opts, ...fixed });
     // Quality/Smallcap lack a stored dated calibration: freeze their baseline for direct effects,
-    // then separately include ordinary live-calibration spillovers. Growth uses published calibration.
-    const refCalibration = family === 'growth' ? fixed.refCalibration : b.calibration;
+    // then separately include ordinary live-calibration spillovers. Growth uses published calibration unless live.
+    const refCalibration = fixed.refCalibration || b.calibration;
     const k = scoreUniverse(knownU, formulas, { ...opts, ...fixed });
     const z = scoreUniverse(shadowU, formulas, { ...opts, ...fixed });
     if (family === 'growth') {
@@ -193,13 +194,13 @@ function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
       const a = bm.get(p.ticker);
       if (a?.score !== p.score) publicationDiscrepancies.push({ ...p, replayScore: a?.score ?? null });
     }
-    for (const ticker of ['BANPU.BK','HTGC','ARCC','FSK','YSN.DE','5930.T','002092.SZ','PDN.AX']) {
+    for (const ticker of new Set([...table.cases, ...table.quarantines].map(x => x.ticker))) {
       requested.push({ family, ticker, before: bm.get(ticker) ?? null, after: km.get(ticker) ?? null,
         afterReason: k.find(r => r.ticker === ticker)?.reason ?? null });
     }
   }
   for (const [file, before] of hashes) assert.equal(hash(fs.readFileSync(path.join(dir, file))), before, 'Disk changed: ' + file);
-  return { snapshots: baseline.length, authorizedSnapshots: beforeU.length, watchlistRef, publicationRef: ref,
+  return { snapshots: baseline.length, authorizedSnapshots: beforeU.length, watchlistRef, publicationRef: ref, growthCalibration: live ? 'live' : date,
     unchangedSnapshots: unchanged,
     changedCells: changes.length, staleCells: changes.filter(c => c.status === 'stale').length, quarantines, changes, allOtherRowsByteIdentical: true,
     diskHashesUnchanged: hashes.length, aggregateSha256: hash(serial(hashes)),
@@ -216,8 +217,9 @@ if (require.main === module) {
   if (!dir) throw new Error('Supply read-only snapshot directory');
   const log = console.log, warn = console.warn; console.log = console.warn = () => {};
   let result;
-  // Optional publication ref: origin/gh-pages moves daily; pin it to reproduce a dated replay.
-  try { result = replay(dir, process.argv[3] ? { ref: process.argv[3] } : {}); } finally { console.log = log; console.warn = warn; }
+  // Optional publication ref: origin/gh-pages moves daily; pin it to reproduce a dated replay. --live: live Growth calibration.
+  const [ref] = process.argv.slice(3).filter(a => a !== '--live'), live = process.argv.includes('--live');
+  try { result = replay(dir, { ...(ref ? { ref } : {}), live }); } finally { console.log = log; console.warn = warn; }
   process.stdout.write(serial(result) + '\n');
 }
 module.exports = { replay, diffCells, compareVisible };
