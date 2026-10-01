@@ -1,12 +1,12 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-30T09:47:30.030Z",
+  "generated_at": "2026-10-01T10:16:37.307Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.4,
-    "generated_at": "2026-09-30T09:40:00.154Z"
+    "coverage_pct": 73.2,
+    "generated_at": "2026-10-01T10:08:45.969Z"
   },
   "generatedFromSnapshots": 490,
   "boards": [
@@ -56,7 +56,7 @@
     },
     "smallcap-health-care": {
       "profitable": 22,
-      "unprofitable": 50
+      "unprofitable": 48
     },
     "smallcap-industrials": {
       "profitable": 32,
@@ -67,7 +67,7 @@
       "unprofitable": 0
     },
     "smallcap-materials": {
-      "profitable": 12,
+      "profitable": 13,
       "unprofitable": 0
     },
     "smallcap-real-estate": {
@@ -96,9 +96,10 @@
     "no-revenue": 34,
     "no-sector": 2,
     "smallcap-mcap-missing": 2,
+    "smallcap-mcap-out-of-band": 1,
     "smallcap-thin-coverage": 35,
     "telecom": 5,
     "unrouted": 10
   },
-  "coverageFloor": 0.54
+  "coverageFloor": 0.537
 }
