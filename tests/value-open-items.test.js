@@ -45,7 +45,7 @@ const NO_TABLES = V.buildTables({});
 function step(prior, date, today, history, opts = {}) {
   const index = new Map();
   for (const [d, rows] of history) V.indexVintage(index, rowsOf(rows), d);
-  return V.updateOpenItems({ date, today: rowsOf(today), index, prior: prior || V.emptyState(),
+  return V.updateOpenItems({ date, today: opts.todayRows || rowsOf(today), index, prior: prior || V.emptyState(),
     acceptances: opts.acceptances || [], tables: opts.tables || NO_TABLES });
 }
 const openItems = (s) => s.items.filter((it) => it.status === 'open');
@@ -191,30 +191,33 @@ check('B4 catch-up: a stored day after updatedFor that the step never saw is com
 
 // ── 4) closing ──────────────────────────────────────────────────────────────
 const fkc = (cases, quarantines = []) => ({ cases, coverage: [], quarantines });
-const kase = (ticker, field, period, extra) => ({ caseId: ticker.toLowerCase() + '-' + period + '-' + field, ticker, field, period, ...(extra || {}) });
+// replacementValue null = a withhold-only case (the real table requires null or a number).
+const kase = (ticker, field, period, extra) => ({ caseId: ticker.toLowerCase() + '-' + period + '-' + field, ticker, field, period, replacementValue: null, ...(extra || {}) });
 
 check('C1 a financial-known-cases row for the exact key closes; a row for another period does not', () => {
   const h = [['2026-09-01', { A: pit({ gp: [[Q, 100]] }) }]];
   const today = { A: pit({ gp: [[Q, 469]] }) };
-  const other = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'grossProfitQ', '2025-06-30')]) }) });
+  const in469 = { replacementValue: 469 };
+  const other = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'grossProfitQ', '2025-06-30', in469)]) }) });
   assert.strictEqual(other.state.items[0].status, 'open', 'other period does not close');
   assert.deepStrictEqual(other.state.items[0].labels, ['korrigiert-von-uns'], 'but the label describes the table row');
-  const wrongField = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'revenueQ', Q)]) }) });
+  const wrongField = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'revenueQ', Q, in469)]) }) });
   assert.strictEqual(wrongField.state.items[0].status, 'open', 'other field does not close');
-  const exact = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'grossProfitQ', Q)]) }) });
+  const exact = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'grossProfitQ', Q, in469)]) }) });
   assert.strictEqual(exact.state.items[0].status, 'closed');
   assert.strictEqual(exact.state.items[0].closedBy, 'hand-table:a-2026-06-30-grossProfitQ');
   assert.strictEqual(exact.state.items[0].closedAt, '2026-09-02');
-  const alias = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A.PRIMARY', 'grossProfitQ', Q, { listingAliases: ['A'] })]) }) });
+  const alias = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A.PRIMARY', 'grossProfitQ', Q, { listingAliases: ['A'], ...in469 })]) }) });
   assert.strictEqual(alias.state.items[0].status, 'closed', 'a listing alias closes too');
 });
 
 check('C2 every cell must be covered: a multi-quarter item with one covered quarter stays open', () => {
   const h = [['2026-09-01', { A: pit({ rev: [[Q, 100], ['2026-03-31', 100]] }) }]];
   const today = { A: pit({ rev: [[Q, 500], ['2026-03-31', 500]] }) };
-  const one = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'revenueQ', Q)]) }) });
+  const in500 = { replacementValue: 500 };
+  const one = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'revenueQ', Q, in500)]) }) });
   assert.strictEqual(one.state.items[0].status, 'open');
-  const both = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'revenueQ', Q), kase('A', 'revenueQ', '2026-03-31')]) }) });
+  const both = step(null, '2026-09-02', today, h, { tables: V.buildTables({ fkc: fkc([kase('A', 'revenueQ', Q, in500), kase('A', 'revenueQ', '2026-03-31', in500)]) }) });
   assert.strictEqual(both.state.items[0].status, 'closed');
   assert.strictEqual(both.state.items[0].closedBy, 'hand-table:a-2026-06-30-revenueQ + hand-table:a-2026-03-31-revenueQ');
 });
@@ -229,17 +232,27 @@ check('C3 a quarantine closes every item of the ticker, and only that ticker', (
   assert.strictEqual(r.state.items.find((it) => it.company === 'B').status, 'open', 'other ticker untouched');
 });
 
-check('C4 marketCap closes by an ADS row or a share-count row for the ticker (key by ticker only, both shapes)', () => {
+check('C4 marketCap closes by an ADS or share-count row for the ticker only while today\'s snapshot carries it (both shapes)', () => {
   const h = [['2026-09-01', { HS: pit({ mcap: 20e9 }), JB: pit({ mcap: 14e9 }), NO: pit({ mcap: 1e9 }) }]];
   const tables = V.buildTables({
     ads: { _doku: ['x'], HS: { ordinaryPerAds: 8 } },
     shares: { _doku: ['x'], JB: { shares: 1, wrongShares: [3] } },   // PR #406 shape
   });
-  const r = step(null, '2026-09-02', { HS: pit({ mcap: 2.4e9 }), JB: pit({ mcap: 44e9 }), NO: pit({ mcap: 9e9 }) }, h, { tables });
+  const today = (applied) => {
+    const rows = rowsOf({ HS: pit({ mcap: 2.4e9 }), JB: pit({ mcap: 44e9 }), NO: pit({ mcap: 9e9 }) });
+    if (applied !== undefined) for (const t of ['HS', 'JB', 'NO']) rows.get(t).mcapHandTableApplied = applied;
+    return rows;
+  };
+  const r = step(null, '2026-09-02', null, h, { tables, todayRows: today(true) });
   const by = Object.fromEntries(r.state.items.map((it) => [it.company, it]));
   assert.strictEqual(by.HS.closedBy, 'hand-table:ads:HS');
   assert.strictEqual(by.JB.closedBy, 'hand-table:shares:JB');
   assert.strictEqual(by.NO.status, 'open', 'no row, stays open');
+  // Counterpart: the same rows while the correction is not in today's value (stale row) or unknown (stored day).
+  for (const applied of [false, undefined]) {
+    const s = step(null, '2026-09-02', null, h, { tables, todayRows: today(applied) });
+    assert.ok(s.state.items.every((it) => it.status === 'open' && it.closedBy === null), 'membership alone never closes (' + applied + ')');
+  }
   // A revenue item of a ticker with an ADS row is not closed by it.
   const r2 = step(null, '2026-09-02', { HS: pit({ rev: [[Q, 900]] }) }, [['2026-09-01', { HS: pit({ rev: [[Q, 100]] }) }]], { tables });
   assert.strictEqual(r2.state.items[0].status, 'open');
@@ -333,6 +346,110 @@ check('C9 an acceptance covers only cells the item had on its acceptedAt day; ac
   const noDate = V.readAcceptances({ acceptances: [{ itemId: id, value: 400, reason: 'x' }, { itemId: id, value: 400, acceptedAt: '3.10.2026', reason: 'x' }] });
   assert.strictEqual(noDate.entries.length, 0, 'missing or malformed acceptedAt is ignored');
   assert.strictEqual(noDate.warnings.length, 2);
+});
+
+// Round 4 (Codex review of PR #407): closing needs the correction in today's value; acceptances act
+// from their acceptedAt on; a new same-day jump after a same-day close opens; replay --dry-run writes nothing.
+const AS_OF = '2026-10-02T09:35:06.929Z';
+const snapOf = (ticker, px, mcap, extra) => ({ meta: { ticker, impliedSharesOutstanding: mcap / px, asOf: AS_OF },
+  marketCap: { value: mcap, source: 'yahoo_quote', asOf: AS_OF, ...((extra && extra.mc) || {}) },
+  price: { regularMarketPrice: px, currency: 'USD' }, metrics: {} });
+const REAL = S.loadTables(REPO);   // the committed ADS and share-count rows (HSAI, BSBR / ABTC, ANDG, JBS)
+
+check('C10 mcapHandTableApplied runs the real table functions: corrected or confirmed counts, stale or uncorrected does not', () => {
+  const JBS = 1070929187, JBS_WRONG = 3289363700, px = 13.07;
+  assert.strictEqual(V.mcapHandTableApplied(snapOf('JBS', px, px * JBS), 'JBS', REAL), true, 'vendor uses the issuer count: confirmed');
+  assert.strictEqual(V.mcapHandTableApplied(snapOf('JBS', px, 70e9), 'JBS', REAL), false, 'Codex case 14 -> 70 bn: stale, vendor value kept');
+  assert.strictEqual(V.mcapHandTableApplied(snapOf('JBS', px, px * JBS_WRONG), 'JBS', REAL), false, 'snapshot still carries the wrong count');
+  assert.strictEqual(V.mcapHandTableApplied(snapOf('JBS', px, px * JBS, { mc: { source: 'hand-table:shares' } }), 'JBS', REAL), true, 'corrected snapshot');
+  assert.strictEqual(V.mcapHandTableApplied(snapOf('HSAI', 16.25, 2.55e9, { mc: { source: 'hand-table:ads' } }), 'HSAI', REAL), true, 'ADS corrected');
+  assert.strictEqual(V.mcapHandTableApplied(snapOf('HSAI', 16.25, 2.55e9), 'HSAI', REAL), false, 'ADS row with the error no longer visible: stale');
+  assert.strictEqual(V.mcapHandTableApplied(null, 'JBS', REAL), false, 'no snapshot');
+  assert.strictEqual(V.mcapHandTableApplied(snapOf('NOROW', 1, 1e9), 'NOROW', REAL), false, 'no row');
+  const s = snapOf('JBS', px, 70e9); const before = JSON.stringify(s);
+  V.mcapHandTableApplied(s, 'JBS', REAL);
+  assert.strictEqual(JSON.stringify(s), before, 'the snapshot itself is not touched');
+});
+
+check('C11 the daily run closes a marketCap item by its row only when today\'s snapshot is corrected or confirmed (Codex JBS case)', () => {
+  const run = (snapMcap, histMcap) => {
+    const base = mkBase();
+    storeDay(base, '2026-10-01', { JBS: pit({ mcap: histMcap }) });
+    writeJson(path.join(base, 'outputs', 'hypergrowth', 'full', 'consumer-staples.json'), { profitable: [{ ticker: 'JBS', score: 50 }], unprofitable: [] });
+    writeJson(path.join(base, 'snapshots', 'JBS.json'), snapOf('JBS', 13.07, snapMcap));
+    fs.mkdirSync(path.join(base, 'configs'), { recursive: true });
+    fs.copyFileSync(path.join(REPO, 'configs', 'share-count-hand-table.json'), path.join(base, 'configs', 'share-count-hand-table.json'));
+    return S.runDaily({ base, date: '2026-10-02', dryRun: true }).state.items;
+  };
+  const stale = run(70e9, 14e9);
+  assert.strictEqual(stale.length, 1);
+  assert.strictEqual(stale[0].status, 'open', '14 -> 70 bn with a stale row stays open');
+  assert.strictEqual(stale[0].closedBy, null);
+  const confirmed = run(13.07 * 1070929187, 44.9e9);
+  assert.strictEqual(confirmed.length, 1);
+  assert.strictEqual(confirmed[0].status, 'closed', 'wrong-count day -> issuer count today: closed by the row');
+  assert.strictEqual(confirmed[0].closedBy, 'hand-table:shares:JBS');
+});
+
+check('C12 a financial case closes only when today\'s value is its replacement (FX included) or, withhold-only, empty', () => {
+  const h = [['2026-09-01', { A: pit({ gp: [[Q, 100]] }) }]];
+  const t = (extra) => V.buildTables({ fkc: fkc([kase('A', 'grossProfitQ', Q, extra)]) });
+  const st = (today, extra) => step(null, '2026-09-02', today, h, { tables: t(extra) }).state.items[0];
+  assert.strictEqual(st({ A: pit({ gp: [[Q, 469]] }) }, { replacementValue: 469 }).status, 'closed', 'replacement shown');
+  assert.strictEqual(st({ A: pit({ gp: [[Q, 2444]] }) }, { replacementValue: 469 }).status, 'open', 'vendor value still shown (stored day before the row)');
+  const fxPit = pit({ gp: [[Q, 656027000 * 0.19184652]] }); fxPit.fxRateApplied = 0.19184652;
+  assert.strictEqual(st({ A: fxPit }, { replacementValue: 656027000 }).status, 'closed', 'replacement x fxRateApplied (stored USD)');
+  const fxOther = pit({ gp: [[Q, 656027000 * 0.2]] }); fxOther.fxRateApplied = 0.19184652;
+  assert.strictEqual(st({ A: fxOther }, { replacementValue: 656027000 }).status, 'open', 'other value under conversion');
+  assert.strictEqual(st({ A: pit({ gp: [[Q, 0]] }) }, { replacementValue: null }).status, 'open', 'withhold-only case but the vendor 0 is still shown');
+  // A replacing case that went stale is withheld (empty): the item opened on the old wrong value stays open.
+  const r1 = step(null, '2026-09-02', { A: pit({ gp: [[Q, 2444]] }) }, h);
+  const stale = step(r1.state, '2026-09-03', { A: pit({ gp: [[Q, null]] }) }, h, { tables: t({ replacementValue: 469 }) });
+  assert.strictEqual(stale.state.items[0].status, 'open', 'stale case: cell withheld, item stays open');
+  const held = step(r1.state, '2026-09-03', { A: pit({ gp: [[Q, null]] }) }, h, { tables: t({ replacementValue: null }) });
+  assert.strictEqual(held.state.items[0].status, 'closed', 'withhold-only case in effect: closed');
+});
+
+check('C13 an acceptance acts only from its acceptedAt on: a caught-up earlier day keeps the item open, its own day closes it (Codex case)', () => {
+  const base = mkBase();
+  storeDay(base, '2026-10-01', { A: pit({ rev: [[Q, 100]] }) });
+  storeDay(base, '2026-10-02', { A: pit({ rev: [[Q, 400]] }) });
+  storeDay(base, '2026-10-03', { A: pit({ rev: [[Q, 100]] }) });
+  const prior = step(null, '2026-10-02', { A: pit({ rev: [[Q, 400]] }) }, [['2026-10-01', { A: pit({ rev: [[Q, 100]] }) }]]).state;
+  const id = prior.items[0].id;
+  writeJson(path.join(base, 'data-health', 'value-open-items.json'), prior);
+  writeJson(path.join(base, 'data-health', 'value-acceptances.json'), { schema: 'value-acceptances/v1',
+    acceptances: [{ itemId: id, value: 400, acceptedAt: '2026-10-06', reason: '400 is the issuer value' }] });
+  const r = S.runDaily({ base, date: '2026-10-06', today: rowsOf({ A: pit({ rev: [[Q, 400]] }) }), dryRun: true });
+  assert.deepStrictEqual(r.catchUp, ['2026-10-03']);
+  assert.strictEqual(r.state.items.length, 1, 'no new item against 400 on the caught-up day');
+  assert.strictEqual(r.state.items[0].status, 'closed');
+  assert.strictEqual(r.state.items[0].closedAt, '2026-10-06', 'closed on the acceptance day, not on 10-03');
+  assert.strictEqual(r.state.items[0].cells[0].closedValue, 400);
+  // Opposite direction (L10): the future-dated entry is not lost; on 10-05 it is still pending, the item open.
+  const early = S.runDaily({ base, date: '2026-10-05', today: rowsOf({ A: pit({ rev: [[Q, 400]] }) }), dryRun: true });
+  assert.strictEqual(early.state.items.length, 1);
+  assert.strictEqual(early.state.items[0].status, 'open', 'acceptance of 10-06 does not act on 10-05');
+  assert.ok(!early.warnings.some((w) => /unknown itemId/.test(w)), 'a pending entry gives no unknown-item warning');
+});
+
+check('C14 after a same-day open and close, an unchanged rerun adds nothing and a new jump opens a new item (Codex case)', () => {
+  const D = '2026-10-02';
+  const h = [['2026-10-01', { A: pit({ rev: [[Q, 100]] }) }]];
+  const r1 = step(null, D, { A: pit({ rev: [[Q, 400]] }) }, h);
+  const acc = V.readAcceptances({ acceptances: [{ itemId: r1.state.items[0].id, value: 400, acceptedAt: D, reason: '400 is right' }] }).entries;
+  const r2 = step(r1.state, D, { A: pit({ rev: [[Q, 400]] }) }, h, { acceptances: acc });
+  assert.strictEqual(r2.state.items[0].status, 'closed');
+  const same = step(r2.state, D, { A: pit({ rev: [[Q, 400]] }) }, h, { acceptances: acc });
+  assert.strictEqual(same.state.items.length, 1, 'unchanged repetition: no second item');
+  const jump = step(r2.state, D, { A: pit({ rev: [[Q, 1600]] }) }, h, { acceptances: acc });
+  assert.strictEqual(jump.state.items.length, 2, '1600 against the closedValue 400 opens');
+  const n = jump.state.items[1];
+  assert.strictEqual(n.id, 'A|revenueQ|' + D + '#2', 'new id');
+  assert.strictEqual(n.status, 'open');
+  assert.strictEqual(n.acceptedValue, 400);
+  assert.strictEqual(n.newValue, 1600);
+  V.assertAppendOnly(r2.state, jump.state);
 });
 
 // ── 5) labels ───────────────────────────────────────────────────────────────
@@ -429,6 +546,35 @@ check('G4 daily run and replay call the append-only guard: a violating result th
   assert.ok(!fs.existsSync(out), 'replay: nothing written');
   S.runReplay({ base, from: '2026-09-01', out });
   assert.ok(fs.existsSync(out), 'replay: written without the violation');
+});
+
+check('G5 --dry-run writes no file on the daily path and on the replay path (also with an empty range)', () => {
+  const crypto = require('crypto');
+  for (const args of [['--replay', '--from', '2026-09-01'], ['--replay', '--from', '2099-01-01'], ['--replay', '--from', '2026-09-01', '--out', 'x.json']]) {
+    const base = mkBase();
+    storeDay(base, '2026-09-01', { A: pit({ rev: [[Q, 100]] }) });
+    storeDay(base, '2026-09-02', { A: pit({ rev: [[Q, 900]] }) });
+    const state = path.join(base, 'data-health', 'value-open-items.json');
+    writeJson(state, step(null, '2026-09-02', { A: pit({ rev: [[Q, 900]] }) }, [['2026-09-01', { A: pit({ rev: [[Q, 100]] }) }]]).state);
+    const sha = () => crypto.createHash('sha256').update(fs.readFileSync(state)).digest('hex');
+    const files = () => [fs.readdirSync(base).sort().join(','), fs.readdirSync(path.join(base, 'data-health')).sort().join(',')].join(' | ');
+    const before = [sha(), files()];
+    const p = spawnSync(process.execPath, [path.join(REPO, 'scripts', 'value-open-items.js'), '--dry-run', '--base', base, ...args], { encoding: 'utf8', cwd: base });
+    assert.strictEqual(p.status, 0, args.join(' ') + ': ' + p.stdout + p.stderr);
+    assert.ok(/dry run, nothing written/.test(p.stdout), args.join(' ') + ': says so');
+    assert.deepStrictEqual([sha(), files()], before, args.join(' ') + ': state byte-identical, no new file');
+    // Counterpart: without --dry-run the replay writes.
+    if (args.length === 3) {
+      const w = spawnSync(process.execPath, [path.join(REPO, 'scripts', 'value-open-items.js'), '--base', base, ...args], { encoding: 'utf8', cwd: base });
+      assert.strictEqual(w.status, 0);
+      assert.notStrictEqual(sha(), before[0], args.join(' ') + ': written without --dry-run');
+    }
+  }
+  // Daily path: dryRun leaves the state untouched too.
+  const base = mkBase();
+  storeDay(base, '2026-09-01', { A: pit({ rev: [[Q, 100]] }) });
+  S.runDaily({ base, date: '2026-09-02', today: rowsOf({ A: pit({ rev: [[Q, 900]] }) }), dryRun: true });
+  assert.ok(!fs.existsSync(path.join(base, 'data-health')), 'daily dry run: nothing written');
 });
 
 // ── 7) real stored history (skips visibly without it, L12) ─────────────────

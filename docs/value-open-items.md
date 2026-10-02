@@ -73,12 +73,20 @@ replayed first, so a missed run loses no transition.
 
 An item closes only when EVERY cell is covered, by one of:
 
-1. **A hand-table row** (the preferred way when the value is wrong):
+1. **A hand-table row whose correction is in today's value** (the preferred way when the value is
+   wrong; a row alone never closes):
    - a `configs/financial-known-cases.json` case for the company (ticker or listing alias), the
-     item's field and the cell's period end (`revenueQ`/`grossProfitQ`);
-   - a quarantine in the same file for the company: covers every item of the company;
+     item's field and the cell's period end (`revenueQ`/`grossProfitQ`), when today's value is the
+     case's `replacementValue` (in stored units, after `fxRateApplied`) or, for a withhold-only case
+     (`replacementValue: null`), when today's cell is empty. A case gone stale (vendor value changed,
+     cell withheld) and a stored day from before the row do not close;
+   - a quarantine in the same file for the company: covers every item of the company (its hold
+     applies whatever the values are);
    - for a `marketCap` item: a row for the ticker in `configs/ads-hand-table.json` or
-     `configs/share-count-hand-table.json`.
+     `configs/share-count-hand-table.json`, when today's snapshot is corrected by the row or the
+     row confirms the vendor value (the step runs the table functions of `lib/ads-hand-table.js` on
+     a copy). A stale row keeps the vendor value and does not close; a replay or a caught-up stored
+     day has no snapshot, so there such an item stays open until the next daily run.
    `closedBy` then reads `hand-table:<caseId>`, `hand-table:quarantine:<caseId>`,
    `hand-table:ads:<ticker>` or `hand-table:shares:<ticker>`.
 2. **An acceptance entry** (when the new value is right, or the move is explained): append to
@@ -96,6 +104,8 @@ An item closes only when EVERY cell is covered, by one of:
      multi-quarter items, one entry per cell).
    - An entry covers only cells whose `firstSeen` is on or before its `acceptedAt`. A quarter that
      joins the item later was never reviewed and needs its own entry.
+   - An entry acts only on days on or after its `acceptedAt`: when the step catches up missed stored
+     days, an earlier day does not see a later review; the entry acts when its day is processed.
    - If today's value is within factor 3 of `value`, the item closes (`closedBy: acceptance:<n>`,
      n = 1-based position in the file). Otherwise it closes AND a new item opens with
      `acceptedValue = value`, so a vendor that flips back is caught again.
@@ -118,6 +128,7 @@ Never closed by time, by a label, or by the value returning (that only adds `zur
 
 ## Exit codes and run time
 
+- `--dry-run` (daily and `--replay`) computes and prints but writes no file.
 - Exit 0: written. Exit 1: unreadable input (state file, acceptances, a hand table, a stored or
   today's board file) or an append-only violation; nothing is written, the step is red but the
   run continues.
