@@ -60,8 +60,10 @@ function loadTables(base) {
   return V.buildTables(raw);
 }
 
+// Hash of the parsed content, so line endings (CRLF checkout on Windows, LF in CI) do not count.
 function sha256File(file) {
-  return fs.existsSync(file) ? crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') : null;
+  const j = readJsonIfExists(file);
+  return j == null ? null : crypto.createHash('sha256').update(JSON.stringify(j)).digest('hex');
 }
 
 /** Fingerprint of the non-history inputs of a replay (hand tables + acceptances). */
@@ -130,17 +132,32 @@ function runDaily(opts) {
   if (!DAY.test(date)) throw new Error('invalid --date ' + date);
   const { prior, acc, tables } = readInputs(base);
   const historyDir = path.join(base, 'board-history');
+  const days = eligibleDays(historyDir, W.excludedDates()).filter((d) => d < date);
+  // Catch-up: stored days after the list's updatedFor that the step never saw (the seed's last day
+  // before the first live run, or a day on which this continue-on-error step failed) are replayed
+  // first, so a jump on such a day is compared instead of silently becoming the base.
+  const catchUp = prior.updatedFor ? days.filter((d) => d > prior.updatedFor) : [];
   const index = new Map();
   // ponytail: re-reads every stored day (about 1.5 s for 28 days of 25 MB); keep a last-seen index
   // inside the state file once this step nears its 60 s budget.
-  indexHistory(index, historyDir, eligibleDays(historyDir, W.excludedDates()).filter((d) => d < date));
+  indexHistory(index, historyDir, days.filter((d) => !catchUp.includes(d)));
+  let state = prior;
+  const warnings = [...acc.warnings];
+  for (const d of catchUp) {
+    const files = storedDay(historyDir, d);
+    const r = V.updateOpenItems({ date: d, today: V.dayRows(files.map((x) => x.v)), index, prior: state, acceptances: acc.entries, tables });
+    V.assertAppendOnly(state, r.state);
+    state = r.state;
+    warnings.push(...r.warnings.filter((w) => !warnings.includes(w)));
+    V.indexVintage(index, V.dayRows(files.filter((x) => !x.structural).map((x) => x.v)), d);
+  }
   const today = opts.today || todayFromFull(date, base);
-  const res = V.updateOpenItems({ date, today, index, prior, acceptances: acc.entries, tables });
+  const res = V.updateOpenItems({ date, today, index, prior: state, acceptances: acc.entries, tables });
   delete res.state.seed; delete res.state.seedInputs;
   V.assertAppendOnly(prior, res.state);
   if (!opts.dryRun) writeJsonAtomic(path.join(base, STATE_REL), res.state);
-  res.warnings.unshift(...acc.warnings);
-  return { ...res, ms: Date.now() - t0 };
+  res.warnings = [...warnings, ...res.warnings.filter((w) => !warnings.includes(w))];
+  return { ...res, catchUp, ms: Date.now() - t0 };
 }
 
 /**
@@ -213,6 +230,7 @@ if (require.main === module) {
       const s = r.summary;
       console.log('::warning::VALUE OPEN-ITEMS ' + s.date + ': ' + s.open + ' open (' + s.new + ' new, ' + s.closed + ' closed today'
         + (s.reopened ? ', ' + s.reopened + ' reopened after an acceptance' : '') + ') - ' + STATE_REL + ', worked by the AI daily run (docs/value-open-items.md)');
+      if (r.catchUp.length) console.log('  caught up stored day(s) the list had not seen: ' + r.catchUp.join(', '));
       console.log('value-open-items: done in ' + r.ms + ' ms');
     }
     process.exit(0);
