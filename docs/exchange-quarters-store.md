@@ -50,9 +50,15 @@ each Taiwan source lists the keys it read (`read: ["6446.TW 114Q3", ...]`).
   answers carry about twice the rows of 03-31 and 09-30). Taiwan: never-fetched keys (board rows first, then rows with quarter gaps), then the newest season of each company every 7 days;
   cap 600 calls; pause 1.5 s per host.
 - **Failure.** China: any odd answer aborts the market without writing. Taiwan: 406 (not filed)
-  waits 3 days, no revenue line or a rejected company id (`公司代號格式錯誤`, preferred shares such
-  as 1312A; only for a company without stored seasons) waits 30 days, other failures are skipped and counted; 10 in a row
-  or more than 20 % abort without writing. Exit code 1 on any abort.
+  waits 3 days, no revenue line or a rejected company id (`公司代號格式錯誤`) waits 30 days, other
+  failures are skipped and counted; 10 in a row or at least 5 and more than 20 % abort without
+  writing. Exit code 1 on any abort.
+- **Rejected ids.** `公司代號格式錯誤` counts as `bad-id` only for an id with a letter and no stored
+  seasons: the preferred shares 1312A and 2002A, the only two such ids in the watchlist. For an
+  all-digit id, or a company with stored seasons, it is a failure, because MOPS serves every listed
+  numeric id; a systemic answer of that kind therefore aborts like any other systemic failure. A
+  share threshold on the bad-id count would not work: on a quiet day the two preferred ids are 2 of
+  2 calls, while a systemic answer in the fill phase hits up to 600 numeric ids.
 
 ## Derivation helpers (`lib/exchange-quarter-store.js`)
 

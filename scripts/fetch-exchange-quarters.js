@@ -25,9 +25,14 @@
  *   Taiwan  A season is first asked 25 days after its quarter end. MOPS code 406 (no data, season not
  *           filed yet) is recorded and retried after 3 days;
  *           no revenue line (banks, insurers, holdings) is recorded and retried after 30 days; code 500
- *           公司代號格式錯誤 for a company without stored seasons (preferred shares such as 1312A, 2002A)
- *           is recorded as 'bad-id' and retried after 30 days (for a company with stored seasons it is a
- *           failure: MOPS knew that id before); any other failure skips the company and is counted.
+ *           公司代號格式錯誤 for a company without stored seasons whose id contains a letter (preferred
+ *           shares: 1312A, 2002A are the only two in the watchlist) is recorded as 'bad-id' and retried
+ *           after 30 days. The same answer for an all-digit id, or for a company with stored seasons,
+ *           is a failure: MOPS serves every listed numeric id, so that answer there means a systemic
+ *           change, and it falls under the abort rule below. A share threshold on the bad-id count
+ *           cannot do this: on a quiet day the two preferred ids are 2 of 2 calls (100 %), while a
+ *           systemic answer in the fill phase hits up to 600 numeric ids. The letter rule depends on
+ *           neither the call count nor the day. Any other failure skips the company and is counted.
  *           10 failures in a row, or at least 5 failures that are more than 20 % of the calls -> abort, tw.json is not written, exit 1.
  *   Before every write the new store is checked against the old one (assertAppendOnly): an old
  *   observation that would be lost or changed throws and nothing is written. Writes are atomic.
@@ -289,7 +294,7 @@ async function runTaiwan(ctx) {
     try {
       const j = await ctx.fetchJson(MOPS_URL, { body, pauseMs: PAUSE_MS, headers: { 'User-Agent': USER_AGENT, 'Content-Type': 'application/json' } });
       if (j && j.code === 406) { c.noData[s.key] = { at, code: 406 }; st.noData += 1; inARow = 0; continue; }
-      if (j && j.code === 500 && j.message === MOPS_BAD_ID && !Object.keys(c.seasons).length) {
+      if (j && j.code === 500 && j.message === MOPS_BAD_ID && /[A-Za-z]/.test(c.companyId) && !Object.keys(c.seasons).length) {
         c.noData[s.key] = { at, code: 'bad-id' }; st.badId += 1; inARow = 0; continue;
       }
       const r = j && j.result;

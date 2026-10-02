@@ -273,6 +273,7 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     assert.equal(s.companies['1312A.TW'].noData['115Q2'].code, 'bad-id', 'MOPS rejects the preferred-share id: not a failure');
     assert.equal(r.results[0].failed, 4);
     assert.equal(r.results[0].badId, 4);
+    assert.equal(s.sources['tw-20261002T070000Z'].badId, 4, 'the bad-id count is recorded in the source entry');
     assert.equal(s.unit, 1000);
     assert.match(s.about, /build-cnannual\.js lines 19-21/);
     assert.ok(!JSON.stringify(s).includes('mopsov'), 'urlList is never stored or followed');
@@ -351,6 +352,45 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     const r3 = await main({ dir, markets: ['tw'], tickers: prefs, fetchJson: m3, priority: new Map(), now: NOW('2026-11-06T13:47:00Z'), log: quiet });
     assert.equal(r3.exitCode, 0);
     assert.ok(m3.log.length > 0, 'asked again after 30 days');
+  });
+
+  // Review of 9277efb: a systemic 公司代號格式錯誤 during the fill phase (numeric ids never stored yet)
+  // passed with exit 0 and parked every company for 30 days.
+  await test('TW bad-id (a): the two real preferred-share ids among normal answers -> no abort, both recorded as bad-id', async () => {
+    const dir = tmpDir();
+    const m = mops({ before: (b) => (b.companyId === '2002A' ? BAD_ID : undefined) });
+    const r = await main({ dir, markets: ['tw'], tickers: TICKERS.concat(['2002A.TW']), fetchJson: m, priority: PRIORITY, now: NOW('2026-10-02T07:00:00Z'), log: quiet });
+    assert.equal(r.exitCode, 0, JSON.stringify(r));
+    assert.equal(r.results[0].badId, 8);
+    const s = read(dir, 'tw');
+    assert.equal(s.companies['1312A.TW'].noData['115Q2'].code, 'bad-id');
+    assert.equal(s.companies['2002A.TW'].noData['114Q3'].code, 'bad-id');
+  });
+
+  await test('TW bad-id (b): every id answers 公司代號格式錯誤 in the fill phase -> abort, tw.json byte-identical, exit 1', async () => {
+    const dir = tmpDir();
+    await main({ dir, markets: ['tw'], tickers: TICKERS, fetchJson: mops(), priority: PRIORITY, now: NOW('2026-10-02T07:00:00Z'), log: quiet });
+    const h = sha(path.join(dir, 'tw.json'));
+    const fresh = Array.from({ length: 12 }, (_, i) => (1101 + i) + '.TW');   // never stored: the fill phase
+    const m = mops({ before: () => BAD_ID });
+    const lines = [];
+    const r = await main({ dir, markets: ['tw'], tickers: TICKERS.concat(fresh), fetchJson: m, priority: PRIORITY, now: NOW('2026-10-12T07:00:00Z'), log: (x) => lines.push(x) });
+    assert.equal(r.exitCode, 1, JSON.stringify(r));
+    assert.ok(r.results[0].aborted, JSON.stringify(r));
+    assert.ok(lines.some((l) => l.startsWith('::error::exchange-quarters TW aborted')), lines.join('\n'));
+    assert.equal(sha(path.join(dir, 'tw.json')), h);
+  });
+
+  await test('TW bad-id (c): a quiet day whose only two calls are the two preferred-share ids -> no abort', async () => {
+    const dir = tmpDir();
+    const prefs = ['1312A.TW', '2002A.TW'];
+    await main({ dir, markets: ['tw'], tickers: prefs, fetchJson: mops({ before: () => BAD_ID }), priority: new Map(), now: NOW('2026-10-06T13:47:00Z'), log: quiet });
+    const m = mops({ before: () => BAD_ID });
+    const r = await main({ dir, markets: ['tw'], tickers: prefs, fetchJson: m, priority: new Map(), now: NOW('2026-10-26T13:47:00Z'), log: quiet });
+    assert.deepEqual(m.log.map((x) => x.b.companyId + ' ' + x.b.year + 'Q' + x.b.season), ['1312A 115Q3', '2002A 115Q3'], '115Q3 becomes due 25 days after 30.09.');
+    assert.equal(r.exitCode, 0, JSON.stringify(r));
+    assert.equal(r.results[0].badId, 2);
+    assert.equal(r.results[0].failed, 0);
   });
 
   await test('TW: 公司代號格式錯誤 for a company that already has stored seasons is a failure (systemic, not a bad id)', async () => {
