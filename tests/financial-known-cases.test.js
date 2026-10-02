@@ -1050,6 +1050,8 @@ test('replacement values trace to their sources: the whole real table passes, a 
     // rounded source needs an explicit roundingStep (no tolerance read from trailing zeros).
     typo('slce3.sa-2026-06-30-opIncQ', c => { c.replacementValue = 0; }),
     typo('arcc-2025-12-31-revenueQ', c => { c.replacementValue = 0; }),
+    // Without periods on the sources only the zero guard stops a source minus itself.
+    typo('slce3.sa-2026-06-30-opIncQ', c => { c.replacementValue = 0; c.sources.forEach(s => { delete s.start; delete s.end; }); }),
     typo('slce3.sa-2025-12-31-opIncQ', c => { c.replacementValue = -209162000; }),
     typo('oxlc-2025-03-31-revenueQ', c => { c.replacementValue = c.expectedBadValue = 121150000; delete c.sources[0].roundingStep; })];
   // Absence: within the issuer's rounding (121.15 vs "121.2 million") and an exempt legacy case (no source value) pass.
