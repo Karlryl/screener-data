@@ -2310,6 +2310,9 @@ jobs:
       # L17: gezieltes `git add board-history/` — NIE -A (_ghp/-Scratch liegt im Tree).
       - name: Write board-history vintage (2.3)
         id: vintage
+        env:
+          # Emergency revert: set the repository Actions variable to legacy; no code edit.
+          BOARD_HISTORY_VALUE_GATE: ${{ vars.BOARD_HISTORY_VALUE_GATE || 'quarter' }}
         run: |
           # audit BH-156: `date -u +%F` unmittelbar vor dem Aufruf gestempelt — deckt
           # sich mit write-board-history.js' eigenem isoDay(Date.now()) (kein --date

@@ -562,7 +562,7 @@ function latestEndMs(ends) {
 //   J  der neue Quartalsumsatz gegen das Vorquartal liegt in [0,5 ; 2,0].
 // Das Band ist dasselbe wie das Skalen-Tor aus #319 (tests/waehrung-ausliefer-waechter.test.js,
 // SKALEN_UNTEN/SKALEN_OBEN) — dort nur im Test definiert, darum hier eine eigene benannte Konstante.
-// Die Spur URTEILT NICHT: quartalLaneShadow() loggt nur, das echte Urteil bleibt unverändert.
+// P/S/J propose exclusions; the integrity guard below can veto each one.
 const QUARTAL_LANE_MAX_ALTER_TAGE = 120;
 const QUARTAL_LANE_BAND = [0.5, 2.0];
 // J vergleicht nur mit dem UNMITTELBAREN Vorquartal: Kalenderquartale liegen 90–92 Tage auseinander,
@@ -1237,26 +1237,39 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board, opts) {
   };
 }
 
-// Quartals-Spur SHADOW: dasselbe evaluateGate, nur ohne die durch ein neues Quartal erklärten
-// Zeilen (beide Seiten), gemessen gegen DIESELBE wirksameSchwelle wie das echte Urteil. Liefert
-// ein reines Protokoll-Objekt (oder null) und schreibt nichts: kein Einfluss auf gate, suspect,
-// Exit-Code oder Vintage. Jeder Fehler hier drin wird gefangen und nur als ::warning:: gemeldet.
+// Same evaluator, excluding explained quarters on both sides, at the ORIGINAL threshold.
+// The input gate and vintages stay untouched. selectValueGate chooses the binding result;
+// null means evaluation failed, never permission to publish an unexplained clean verdict.
 function quartalLaneShadow(vintage, priorVintage, gate, gateState, bruch, board, opts, runDate, erklaert = neuesQuartalErklaert) {
   try {
     const thr = gate.wirksameSchwelle;
     if (!priorVintage || gate.abstandZuGross || thr == null) {
-      console.log('[quartal-lane SHADOW] ' + board + ': no value verdict today (no prior or gap too large)');
-      return null;
+      console.log('[quartal-lane] ' + board + ': no value verdict today (no prior or gap too large)');
+      return { board, gate, status: 'not-applicable', explained: [], kept: [], n: 0,
+        realSuspect: gate.suspect, wouldSuspect: gate.suspect };
     }
     const zeilen = (v) => [].concat((v.cohort && v.cohort.profitable) || [], (v.cohort && v.cohort.unprofitable) || []);
     const vorher = new Map(zeilen(priorVintage).map((r) => [r.ticker, r]));
     const raus = new Set();
+    const kept = [];
     let n = 0;
     for (const r of zeilen(vintage)) {
       const p = vorher.get(r.ticker);
       if (!(p && Number.isFinite(p.score) && Number.isFinite(r.score))) continue;
       n++;
-      if (erklaert(p, r, runDate)) raus.add(r.ticker);
+      // No source-upgrade/null-slot exemptions here: an explained revenue quarter does
+      // not prove why another scoring input vanished (D1: 688765.SS + 14 financials).
+      try {
+        if (!erklaert(p, r, runDate)) continue;
+        const beforeAxes = axenZaehler(p.coverageAxes), afterAxes = axenZaehler(r.coverageAxes);
+        const feld = beforeAxes != null && afterAxes == null ? 'coverageAxes missing'
+          : beforeAxes != null && afterAxes < beforeAxes ? 'coverageAxes ' + p.coverageAxes + ' -> ' + r.coverageAxes
+          : integritaetsVerfall(p, r);
+        if (feld) { kept.push({ ticker: r.ticker, feld }); continue; }
+        raus.add(r.ticker);
+      } catch (e) {
+        kept.push({ ticker: r.ticker, feld: 'quarter-lane-error' });
+      }
     }
     const ohne = (v) => ({ ...v, cohort: { ...v.cohort,
       profitable: ((v.cohort && v.cohort.profitable) || []).filter((r) => !raus.has(r.ticker)),
@@ -1264,36 +1277,73 @@ function quartalLaneShadow(vintage, priorVintage, gate, gateState, bruch, board,
     const rest = evaluateGate(ohne(vintage), ohne(priorVintage), gateState, bruch, board, opts);
     const p99Rest = rest.p99Delta;
     // Alle übrigen Gründe (NaN-Bruch, Coverage, Integrität …) sieht die Spur nicht — sie bleiben stehen.
-    const andereGruende = gate.reasons.filter((x) => x !== 'p99-delta-exceeds-threshold');
+    const reasons = gate.reasons.filter((x) => x !== 'p99-delta-exceeds-threshold');
     // Alles erklärt = nichts mehr gemessen: das ist KEIN „OK" (fehlend ≠ sauber), sondern
     // NO-SURFACE und zählt konservativ als would-be SUSPECT.
     const keineFlaeche = p99Rest == null && gate.p99Delta != null;
-    const wouldSuspect = andereGruende.length > 0 || keineFlaeche || (p99Rest != null && p99Rest > thr);
+    if (keineFlaeche) reasons.push('quarter-lane-no-surface');
+    if (keineFlaeche ? gate.p99Delta > thr : p99Rest != null && p99Rest > thr) reasons.push('p99-delta-exceeds-threshold');
+    // No measured remainder: retain EVERY proposed exclusion and the full population.
+    if (keineFlaeche) {
+      for (const ticker of raus) kept.push({ ticker, feld: 'NO-SURFACE' });
+      raus.clear();
+    }
+    const measuredGate = keineFlaeche ? gate : rest;
+    const laneGate = { ...gate, p99Delta: measuredGate.p99Delta,
+      fanOut: measuredGate.fanOut, fanOutZaehler: measuredGate.fanOutZaehler,
+      fanOutNenner: measuredGate.fanOutNenner, breiteZeilen: measuredGate.breiteZeilen,
+      suspect: reasons.length > 0, reasons };
+    const wouldSuspect = laneGate.suspect;
     const f = (x) => (x == null ? '—' : x.toFixed(2));
     // „real-gate p99", nicht „p99 all": an Lampen-Ausschluss-Tagen misst das echte Tor weniger Zeilen
     // (fanOutNenner) als die Spur Kandidaten prüft (n) — beide Zahlen stehen getrennt im Log.
-    console.log('[quartal-lane SHADOW] ' + board + ': real-gate p99=' + f(gate.p99Delta) + ' over ' + gate.fanOutNenner + ' measured rows; p99 unexplained=' + f(p99Rest)
+    console.log('[quartal-lane] ' + board + ': real-gate p99=' + f(gate.p99Delta) + ' over ' + gate.fanOutNenner + ' measured rows; p99 unexplained=' + f(p99Rest)
       + ' over ' + rest.fanOutNenner + '; thr=' + f(thr) + '; quarter-explained=' + raus.size + ' of ' + n + ' candidates → would be ' + (keineFlaeche ? 'SUSPECT (NO-SURFACE)' : wouldSuspect ? 'SUSPECT' : 'OK')
       + ' (real: ' + (gate.suspect ? 'SUSPECT' : 'OK') + ')');
+    if (kept.length) console.log('[quartal-lane] ' + board + ': retained ' + kept.length + ': '
+      + kept.map((r) => r.ticker + ' [' + r.feld + ']').join(', '));
     return { board, p99RealGate: gate.p99Delta, measured: gate.fanOutNenner, p99Unexplained: p99Rest, measuredUnexplained: rest.fanOutNenner,
-      thr, explained: [...raus], n, wouldSuspect, realSuspect: gate.suspect };
+      thr, explained: [...raus], kept, n, wouldSuspect, realSuspect: gate.suspect,
+      gate: laneGate, status: keineFlaeche ? 'no-surface' : 'evaluated' };
   } catch (e) {
     // Even the warning must not throw into run(): a throwing logger or an odd error value stays here.
-    try { console.log('::warning::[quartal-lane SHADOW] failed: ' + board + ': ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
+    try { console.log('::warning::[quartal-lane] failed: ' + board + ': ' + String((e && e.message) || e)); } catch (_) { /* fail closed in selectValueGate */ }
     return null;
   }
+}
+
+// Revert without a code change: repository Actions variable BOARD_HISTORY_VALUE_GATE=legacy
+// (daily-pull passes it through). Unset/quarter binds the lane; invalid values fail loudly.
+// Before/after review window: 2026-09-27 to 2026-10-25 at most. Retire the comparison after
+// independent acceptance of the real replay + integrity/run tests; never raise thresholds.
+function selectValueGate(oldGate, lane, mode, board) {
+  if (mode !== 'quarter' && mode !== 'legacy') throw new Error('invalid BOARD_HISTORY_VALUE_GATE: ' + mode);
+  const candidate = lane ? lane.gate : { ...oldGate, suspect: true,
+    reasons: [...oldGate.reasons, 'quarter-lane-error'] };
+  const gate = mode === 'legacy' ? oldGate : candidate;
+  const verdict = (g) => ({ suspect: g.suspect, reasons: g.reasons, p99Delta: g.p99Delta, measured: g.fanOutNenner });
+  const quarterLane = { binding: mode, status: lane ? lane.status : 'error', old: verdict(oldGate),
+    quarter: verdict(candidate), explained: lane ? lane.explained : [], kept: lane ? lane.kept : [] };
+  try {
+    console.log('[value-gate] ' + board + ': binding=' + mode + ' ' + (gate.suspect ? 'SUSPECT' : 'OK')
+      + '; old' + (mode === 'quarter' ? ' SHADOW' : ' BINDING') + '=' + (oldGate.suspect ? 'SUSPECT' : 'OK')
+      + ' p99=' + oldGate.p99Delta + '; quarter' + (mode === 'legacy' ? ' SHADOW' : ' BINDING')
+      + '=' + (candidate.suspect ? 'SUSPECT' : 'OK') + ' p99=' + candidate.p99Delta
+      + '; threshold=' + oldGate.wirksameSchwelle);
+  } catch (_) { /* diagnostics cannot escape the fail-closed result */ }
+  return { ...gate, quarterLane };
 }
 
 function quartalLaneShadowSummary(shadows) {
   try {
     const ok = shadows.filter(Boolean);
     const namen = ok.flatMap((s) => s.explained.map((t) => s.board + ':' + t));
-    console.log('[quartal-lane SHADOW] summary: would-be SUSPECT ' + ok.filter((s) => s.wouldSuspect).length + '/' + ok.length
+    console.log('[quartal-lane] summary: would-be SUSPECT ' + ok.filter((s) => s.wouldSuspect).length + '/' + ok.length
       + ' boards (real SUSPECT ' + ok.filter((s) => s.realSuspect).length + '/' + ok.length + '; boards without shadow '
       + (shadows.length - ok.length) + ', see lines above); excluded rows ' + namen.length
       + (namen.length ? ': ' + namen.slice(0, 50).join(', ') + (namen.length > 50 ? ' … +' + (namen.length - 50) + ' more' : '') : ''));
   } catch (e) {
-    try { console.log('::warning::[quartal-lane SHADOW] failed: summary: ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
+    try { console.log('::warning::[quartal-lane] failed: summary: ' + String((e && e.message) || e)); } catch (_) { /* diagnostics only */ }
   }
 }
 
@@ -1722,7 +1772,9 @@ function run(opts) {
   }
 
   const results = [];
-  const quartalShadows = [];   // SHADOW ONLY, nur fürs Protokoll
+  const quartalShadows = [];   // comparison only; gate below is the authoritative result
+  const valueGateMode = process.env.BOARD_HISTORY_VALUE_GATE || 'quarter';
+  if (!['quarter', 'legacy'].includes(valueGateMode)) throw new Error('invalid BOARD_HISTORY_VALUE_GATE: ' + valueGateMode);
   let anySuspect = false;
   // T155/W3: einmal je Lauf lesen, nicht je Board — 13 identische Lesevorgänge derselben
   // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
@@ -1745,10 +1797,11 @@ function run(opts) {
     if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
     const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash);
     const priorVintage = priorDate ? readJsonOrNull(path.join(P.HISTORY_DIR, priorDate, board + '.json')) : null;
-    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board, gateOpts);
-    // SHADOW ONLY: loggt, urteilt nicht (gate/anySuspect/Vintage bleiben unberührt). Vor
-    // updateGateCalibration, damit die Spur exakt denselben Kalibrier-Zustand sieht.
-    quartalShadows.push(quartalLaneShadow(vintage, priorVintage, gate, gateCalib.boards[board], bruch, board, gateOpts, date));
+    const oldGate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board, gateOpts);
+    // Compare BEFORE calibration updates: identical inputs and unchanged thresholds.
+    const lane = quartalLaneShadow(vintage, priorVintage, oldGate, gateCalib.boards[board], bruch, board, gateOpts, date);
+    quartalShadows.push(lane);
+    const gate = selectValueGate(oldGate, lane, valueGateMode, board);
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
     // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
     // BH-111: ein bereits als suspect erkannter Tag darf die eingefrorene Schwelle
@@ -1783,6 +1836,7 @@ function run(opts) {
       reasons: gate.reasons,
       priorDate: priorDate,
       calibrationSamples: gs.dailyP99Samples.length,
+      quarterLane: gate.quarterLane,
     };
     if (gate.suspect) anySuspect = true;
     if (!dryRun) {
@@ -1794,7 +1848,7 @@ function run(opts) {
       datenSchub: gate.datenSchub, basisSchwelle: gate.basisSchwelle,
       fanOut: gate.fanOut, fanOutZaehler: gate.fanOutZaehler, fanOutNenner: gate.fanOutNenner,
       breiteZeilen: gate.breiteZeilen, verfallsZeilen: gate.verfallsZeilen,
-      beobachteteLampen: gate.beobachteteLampen, quellUpgrades: gate.quellUpgrades });
+      beobachteteLampen: gate.beobachteteLampen, quellUpgrades: gate.quellUpgrades, quarterLane: gate.quarterLane });
   }
   quartalLaneShadowSummary(quartalShadows);
 
@@ -2035,7 +2089,7 @@ module.exports = {
   integritaetsVerfall, lampenBeobachtung, secTickerLesen, kopplungProtokollZeilen,   // WB-4'
   _setPaths, resolvePaths,
   frozenThresholdOf,
-  neuesQuartalErklaert, quartalLaneShadow, quartalLaneShadowSummary,   // Quartals-Spur (SHADOW, 26.09.)
+  neuesQuartalErklaert, quartalLaneShadow, quartalLaneShadowSummary, selectValueGate,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
   tagesabstand,
   _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP, GATE_SERIE_ALARM_TAGE, QUELL_LAMPEN, KOPF_ACHSE,
