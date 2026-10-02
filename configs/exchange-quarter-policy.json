@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "mode": "off",
+  "tolerance": 0.001,
+  "fillPeriods": ["2025-09-30"],
+  "restatementBaselineBefore": "2026-08-01",
+  "maxStoreAgeDays": 8,
+  "maxStoreAgeDaysInSeason": 2,
+  "reason": "Tag 1403 (G2b): the exchange cross-check (pair guard and fill of 2025-09-30, lib/exchange-quarter-check.js) is built but OFF for every reader. mode off = no-op, byte-identical; shadow = computed and reported only (scripts/exchange-check-report.js); active = applied at read time. Switching to active is a separate one-line change after the shadow measurement and a blind review by the other AI."
+}
