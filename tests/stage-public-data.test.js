@@ -116,6 +116,22 @@ check('(c) Zeilen sind auf rank/ticker/score projiziert - axisBreakdown/lamps/pi
   assert.strictEqual(b.cohort.profitable.length, 2);
 });
 
+// Tag 1401: a stored row may carry valueFlags (write-board-history.js); the public channel keeps
+// rank/ticker/score only (findash reads channel A, not this one). Presence in the source, absence
+// in the target.
+check('(c2) Tag 1401: valueFlags of a stored row stay out of the public projection', () => {
+  const src = mkQuelle(['2026-08-02', '2026-08-03']);
+  const f = path.join(src, 'board-history', '2026-08-03', 'energy.json');
+  const v = readJson(f);
+  v.cohort.profitable[0].valueFlags = [{ field: 'marketCap', periodEnd: null, acceptedValue: 5e9, newValue: 2e10, factor: 4, firstSeen: '2026-08-03', labels: [] }];
+  writeJson(f, v);
+  const ziel = path.join(src, '_public');
+  S.run({ ziel, boardHistory: path.join(src, 'board-history'), vintages: 2 });
+  assert.ok('valueFlags' in readJson(f).cohort.profitable[0], 'fixture carries the key in the source');
+  const b = readJson(path.join(ziel, 'board-history', '2026-08-03', 'energy.json'));
+  assert.deepStrictEqual(b.cohort.profitable[0], { rank: 1, ticker: 'XOM', score: 91.2 });
+});
+
 check('(d) Sidecars ohne cohort (calibration/regime) werden NICHT publiziert', () => {
   const src = mkQuelle(['2026-08-02', '2026-08-03']);
   const ziel = path.join(src, '_public');

@@ -171,6 +171,7 @@ const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
+const { readValueFlags, valueFlagProblems } = require('../lib/value-open-items.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
 // Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
@@ -328,11 +329,28 @@ function ergaenzeBelegpunkte(out) {
   return out;
 }
 
+// ---- valueFlags (Tag 1401, value-gate PR3) ------------------------------------------
+// A row whose ticker has an OPEN item in data-health/value-open-items.json (written earlier in
+// the same run by the step "Value open-items (factor 3, sticky)") carries valueFlags, one entry per
+// open cell. It only MARKS the row: no value is blanked or changed (owner decision 01.10.2026), a
+// row without an open item carries no key. Loaded once by build(); a missing or unreadable file
+// means no flags and a ::warning:: line, never a failed export (lib/value-open-items.js).
+// Mappers called directly (tests, other scripts) see no flags until ladeValueFlags() ran.
+const VALUE_OPEN_ITEMS_FILE = path.join(ROOT, 'data-health', 'value-open-items.json');
+let _valueFlags = new Map();
+// day: the run day (UTC, as the open-items step stamps updatedFor); a list for another day warns.
+function ladeValueFlags(file = VALUE_OPEN_ITEMS_FILE, warn = console.warn, day = null) {
+  _valueFlags = readValueFlags(file, warn, day);
+  return _valueFlags.size;
+}
+
 // Ein Anwender fuer alle drei Zeilen-Mapper — drei Kopien derselben Regel laufen auseinander.
 function ergaenzeWaehrungsbeleg(out) {
   // Additive, optional field (docs/findash-export-v1.md); lamps stay closed keys the consumer knows.
   const reasons = snapAbleitungenFuer(out.ticker).financialReasons;
   if (reasons.length) out.financialDataReasons = reasons;
+  const flags = _valueFlags.get(out.ticker);
+  if (flags) out.valueFlags = flags.map((f) => ({ ...f, labels: f.labels.slice() }));
   const beleg = waehrungsbelegFuer(out.ticker);
   // Die Einheit des Feldes, nicht die Einheit des Werts: marketCap ist im v1-Vertrag
   // IMMER USD. Bisher stand das nur in der Doku und war fuer den Konsumenten nicht lesbar.
@@ -977,9 +995,15 @@ function loadCoverage(file = COVERAGE) {
     generated_at: m.generated_at };
 }
 
-function build() {
+// seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI
+// passes none. tests/value-flags.test.js points sourceIndexFile at a missing file, so build() stops
+// right after loading the list and before anything is written.
+function build(seam = {}) {
+  const day = (seam.now || new Date()).toISOString().slice(0, 10);
+  const nFlagged = ladeValueFlags(seam.valueOpenItemsFile || VALUE_OPEN_ITEMS_FILE, console.warn, day); // Tag 1401: before the first mapper runs
+  console.log('valueFlags: ' + nFlagged + ' ticker(s) with an open value item are marked (data-health/value-open-items.json)');
   const coverage = loadCoverage();
-  const sourceIndex = readJSON(path.join(HG_DIR, 'index.json'));
+  const sourceIndex = readJSON(seam.sourceIndexFile || path.join(HG_DIR, 'index.json'));
   const cohortCounts = sourceIndex.counts;
   fs.mkdirSync(OUT_DIR, { recursive: true }); // writeJsonAtomic does NOT create the dir
   const opts = { assertFinite: true };         // fail loud on a NaN/Inf, never silent-null (A-lib-08)
@@ -1200,6 +1224,18 @@ function checkRevGrowthBasis(r, where, errs) {
   if (b === 'none' && !ohneZahl) errs.push(`${where}: revGrowthBasis 'none' trotz revGrowthYoYPct=${r.revGrowthYoYPct}`);
   if (b !== null && b !== 'none' && ohneZahl) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)} ohne revGrowthYoYPct`);
 }
+// Tag 1401: valueFlags. Absence is the normal state (no open value item). When present: a
+// non-empty list, each entry one open cell of data-health/value-open-items.json with the shape
+// lib/value-open-items.js valueFlagsByTicker() writes. Quarterly fields carry their period end,
+// marketCap none; factor is null exactly when the new value is 0.
+// The per-flag rule lives in lib/value-open-items.js valueFlagProblems() (the reader drops a
+// flag that breaks it, so a schema-valid list with one bad cell cannot turn this gate red).
+function checkValueFlags(r, where, errs) {
+  if (!('valueFlags' in r)) return;
+  const vf = r.valueFlags;
+  if (!Array.isArray(vf) || !vf.length) { errs.push(`${where}: valueFlags not a non-empty array`); return; }
+  vf.forEach((f, i) => { for (const p of valueFlagProblems(f)) errs.push(`${where}: valueFlags[${i}].${p}`); });
+}
 // Datei-Ebene: das Feld ist entweder auf ALLEN Zeilen da oder auf KEINER. Die Zeilen-Pruefung
 // oben laesst Abwesenheit durch (Altbestand trug das Feld nie) und kann deshalb einen halb
 // verdrahteten Erzeuger nicht sehen. Der Writer fuehrt die Felder in ROW_FIELDS und
@@ -1261,6 +1297,7 @@ function validateGeo(r, where, errs) {
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
   checkEinmalertragBewertbarkeit(r, where, errs);                   // Urteil 16.08. additiv OPTIONAL
   checkShareDilution(r, where, errs);                              // 03.08. Betrag zur Verwaesserungs-Lampe
+  checkValueFlags(r, where, errs);                                 // Tag 1401 additiv OPTIONAL
   checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
   checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
   checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
@@ -1980,4 +2017,6 @@ module.exports = {
   belegPunkte,
   // 01.10.: Basis/Zeitraum des Umsatzwachstums (tests/rev-growth-basis.test.js FUEHRT es aus).
   ergaenzeWachstumsBasis, checkRevGrowthBasis, wachstumOhneEtikett,
+  // Tag 1401: valueFlags loader seam (tests/value-flags.test.js runs the mappers with a fixture list).
+  ladeValueFlags, checkValueFlags,
 };

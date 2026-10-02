@@ -99,9 +99,13 @@ An item closes only when EVERY cell is covered, by one of:
   "sources": [ { "url": "https://www.sec.gov/...", "quote": "776,086,920 Class A common shares" } ] }
 ```
 
-   - `itemId`, `value` (> 0, stored units), `acceptedAt` (YYYY-MM-DD, the day of the review) and
-     `reason` are required; `periodEnd` is optional (absent = every cell of the item; give it for
-     multi-quarter items, one entry per cell).
+   - `itemId`, `value` (> 0, stored units), `acceptedAt` and `reason` are required. `acceptedAt` is
+     the `updatedFor` date of the list that was reviewed (YYYY-MM-DD, a real calendar day), NOT the
+     calendar day of the review: a run that catches up a missed day, or an entry that lands before
+     that day's run, would otherwise let the entry cover a quarter that joined after the review. A
+     date that is not a real day (2026-02-30, 2026-13-45) makes the entry malformed.
+   - `periodEnd` is optional (absent = every cell of the item; give it for multi-quarter items,
+     one entry per cell).
    - An entry covers only cells whose `firstSeen` is on or before its `acceptedAt`. A quarter that
      joins the item later was never reviewed and needs its own entry.
    - An entry acts only on days on or after its `acceptedAt`: when the step catches up missed stored
@@ -113,7 +117,8 @@ An item closes only when EVERY cell is covered, by one of:
      `closedValue = value`; when the company returns, its value is compared with `value`.
    - A value of 0 cannot be accepted. A real zero (for example revenue that really stopped) is
      closed with a `configs/financial-known-cases.json` row for that quarter.
-   - An unknown `itemId` or a malformed entry gives a `::warning::` and is ignored, never a crash.
+   - An unknown `itemId` or a malformed entry (including an `acceptedAt` that is not a real
+     calendar day) gives a `::warning::` and is ignored, never a crash.
 
 Never closed by time, by a label, or by the value returning (that only adds `zurueckgekehrt`).
 
@@ -155,6 +160,20 @@ included the backfilled day 2026-10-02.)
 `tests/value-open-items.test.js` re-runs the replay on the stored history and compares it with the
 committed seed while the file is still the seed and the fingerprint matches; otherwise it skips
 visibly.
+
+## Marking in the export and the board history (Tag 1401)
+
+Every row of the findash export (`scripts/write-findash-export.js`, all row mappers, and the
+`rule40/` board of `scripts/write-rule40-export.js`) and every stored vintage row
+(`scripts/write-board-history.js`) whose ticker has an OPEN item gets an additive
+`valueFlags` list, one entry per open cell: `{ field, periodEnd, acceptedValue, newValue, factor,
+firstSeen, labels }` (labels of the item). Rows without an open item carry no key; closed items give
+no flag. Nothing is blanked or changed: score, rank, growth and every other key stay as they are.
+Both writers read this file as written earlier in the same run; a missing or unreadable file gives
+no flags and a `::warning::` line; one malformed cell is dropped with a `::warning::`; a list whose
+`updatedFor` is not the run day is used and warned as stale. Contract: `docs/findash-export-v1.md` §3.
+Short sentence the app shows next to a marked value (TT.MM.JJJJ = earliest `firstSeen` of the row):
+"Dieser Wert hat sich seit TT.MM.JJJJ um mehr als das Dreifache verändert und wird noch geprüft."
 
 ## Owner-facing wording (for the findash marking in PR3)
 

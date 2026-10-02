@@ -58,6 +58,7 @@ const { exchangeRecord } = require('../lib/exchange-quarter-check.js');
 const { boardStatus } = require('../src/scoring/board-status.js');
 const priceStore = require('../lib/price-history-store.js');   // LT1: Quelle der PIT-Preisfelder
 const { istStrukturell } = require('../lib/board-history-flag.js');   // Tag 1396: one rule, one place
+const { readValueFlags } = require('../lib/value-open-items.js');   // Tag 1401: valueFlags on stored rows
 
 // ── benannte Konstanten (keine Magic Numbers; Herkunft dokumentiert) ─────────
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -125,6 +126,9 @@ function resolvePaths(base) {
     // location simply stays. The daily run check reads `suspect` per board from this file;
     // value jumps per company and field are in data-health/value-open-items.json (Tag 1398).
     P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
+    // Tag 1401: the open-items list written earlier in the same run; its open cells are copied
+    // onto the stored row as valueFlags (point-in-time record of which row was flagged).
+    VALUE_OPEN_ITEMS_FILE: path.join(base, 'data-health', 'value-open-items.json'),
     // 6.2-E2 (Earnings-Blowout): Quelle des Report-Datums, das buildPit PIT-einfriert.
     EARNINGS_CAL_FILE: path.join(base, 'earnings-calendar.json'),
     base,
@@ -819,7 +823,10 @@ function attachPitPriceFields(rows, date) {
 }
 
 // ── Vintage-Aufbau für EIN Board ─────────────────────────────────────────────
-function buildBoardVintage(board, boardData, date, calibMeta, universeHash = null) {
+// valueFlags (Tag 1401): optional Map ticker -> flags (lib/value-open-items.js valueFlagsByTicker).
+// run() passes the list of the same run; scripts/value-open-items.js passes none (it builds
+// today's values, which must not depend on the list it is about to write).
+function buildBoardVintage(board, boardData, date, calibMeta, universeHash = null, valueFlags = null) {
   const pitGaps = new Set();
   const buildTrack = (arr, track) => (Array.isArray(arr) ? arr : []).map((row, i) => ({
     rank: i + 1,                    // Board-Rang (Zeilenreihenfolge = sortierte Kohorte)
@@ -854,6 +861,13 @@ function buildBoardVintage(board, boardData, date, calibMeta, universeHash = nul
   // LT1 (Rat 10): erst NACH dem Bau aller Zeilen — Residualisierung und Dezile brauchen
   // die volle Kohorte, nicht die einzelne Zeile.
   const pitFieldCoverage = attachPitPriceFields(allRows, date);
+  // Tag 1401: marks only, LAST key of a flagged row; rows without an open item get no key.
+  if (valueFlags) {
+    for (const r of allRows) {
+      const f = valueFlags.get(r.ticker);
+      if (f) r.valueFlags = f.map((x) => ({ ...x, labels: x.labels.slice() }));
+    }
+  }
   return {
     date,
     board,
@@ -1775,6 +1789,9 @@ function run(opts) {
   // T155/W3: einmal je Lauf lesen, nicht je Board — 13 identische Lesevorgänge derselben
   // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
   const universeHash = readUniverseHash(P.UNIVERSE_HASH_FILE);
+  // Tag 1401: once per run; missing/unreadable -> no flags + ::warning::, never a failed vintage.
+  // A list for another day (open-items step failed) is used but warned as stale.
+  const valueFlags = readValueFlags(P.VALUE_OPEN_ITEMS_FILE, console.warn, date);
   // WB-4': einmal je Lauf — SEC-Ticker als Upgrade-Beweis (c) und der Quartals-Kopf des
   // AKTUELLEN Snapshots fuer den Null-Slot (a); beides nur am Datenschub-Uebergang gelesen.
   // Round 3 (Codex P1): built lazily for the first board whose OWN comparison is a daten-schub
@@ -1812,7 +1829,7 @@ function run(opts) {
     // with a board missing from the vintage, contradicting the header's own exit contract
     // ("1 = harter Fehler (Inputs fehlen)") and the fail-loud line the FULL_DIR-guards set.
     if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
-    const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash);
+    const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash, valueFlags);
     // Tag 1396: per-board prior (skips structural days). The registered bruch is bound to the
     // EXACT prior of THIS board (round 3, Codex P1: bound to the global prior, the day after a
     // structural day lost the integrity check while the damage persisted).
