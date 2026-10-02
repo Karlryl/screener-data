@@ -69,6 +69,10 @@ test('mode off: the identical object for every fixture snapshot; the store is ne
     assert.equal(serial(s), before);
   }
   assert.equal(X.applyExchangeCheck(null, { mode: 'off' }).snapshot, null);
+  // JSON data: an accessor is never executed (tests/p0-haertung2-fx-ehrlichkeit.test.js A-001 throws from one mid-conversion).
+  const trapSnap = { meta: { ticker: '000002.SZ' } };
+  Object.defineProperty(trapSnap, 'annual', { enumerable: true, get() { throw new Error('accessor executed'); } });
+  for (const mode of ['off', 'shadow']) assert.equal(X.applyExchangeCheck(trapSnap, { mode, context: CTX }).snapshot, trapSnap);
 });
 
 // ── Real-data acceptance: the 16 wrong board rows and the 5 wrong risers ────

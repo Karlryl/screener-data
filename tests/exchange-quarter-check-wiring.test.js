@@ -67,7 +67,7 @@ test('prepareSnapshot calls the step: in an active copy the known wrong rows are
   assert.ok(financialReasons(w).includes(X.REASONS.level), 'guard reason reaches financialDataReasons');
   // Break-once: without the call line the copy is inert.
   const broken = moduleCopy('lib/yahoo-q4-known-cases.js', s => replaceLine(s,
-    "    const exchange = applyExchangeCheck(zero.snapshot, options.atPull ? { mode: 'off' } : {});",
+    "    const exchange = applyExchangeCheck(zero.snapshot);",
     "    const exchange = { snapshot: zero.snapshot, mode: 'off' };"), { './exchange-quarter-check.js': activeStep });
   assert.throws(() => assert.ok(marked(quiet(() => broken.prepareSnapshot(clone(F.snapshots['000599.SZ'])))), 'step not called'), assert.AssertionError);
   breaks++;
