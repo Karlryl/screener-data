@@ -10,7 +10,7 @@
   "lib/stale-quarter-reload.js": { "mode": "hook", "hook": "snapshot = prepareSnapshot(snapshot);", "reason": "Quarter presence must use corrected values and known gaps." },
   "lib/yahoo-q4-known-cases.js": { "mode": "exempt", "reason": "Correction authority itself must compare original provider fingerprints." },
   "methods/data-quality.js": { "mode": "upstream", "reason": "Pure grader gets corrected inputs from pull after FX, scoring loaders and the report reader." },
-  "pull-yahoo.js": { "mode": "hook", "hook": "const q4Checked = yahooQ4.prepareSnapshot(snap);", "reason": "Corrects canonical native input before FX; mapping/cache merge and vendor diagnostics intentionally read raw evidence." },
+  "pull-yahoo.js": { "mode": "hook", "hook": "const q4Checked = yahooQ4.prepareSnapshot(snap, { atPull: true });", "reason": "Corrects canonical native input before FX; mapping/cache merge and vendor diagnostics intentionally read raw evidence." },
   "scripts/ab-computed-margin.js": { "mode": "exempt", "reason": "Controlled annual operating-income-removal experiment, not production board input." },
   "scripts/build-secannual.js": { "mode": "hook", "hook": "route(prepareSnapshot(s))", "reason": "SEC candidate routing uses corrected quarterly inputs; raw annual evidence remains unchanged." },
   "scripts/build-secannual-smallcap.js": { "mode": "hook", "hook": "smallcapRoute(prepareSnapshot(s))", "reason": "SEC Smallcap candidate routing uses corrected quarterly inputs; raw annual evidence remains unchanged." },
