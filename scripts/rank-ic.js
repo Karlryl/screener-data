@@ -49,8 +49,12 @@
  *      Datum global aus; MIT board = nur dieses Board an diesem Datum. Exkludiertes
  *      fällt nachweislich aus JEDER Rechnung (Ausweis im Report). Ein vorhandenes
  *      'excluded', das KEIN Array ist, ist ein harter Fehler (kein stiller No-Op).
+ *  Gate flags (Tag 1396): every stored board file with gate.suspect === true is skipped as a
+ *      per-board exclusion (reason "gate-suspect: <reasons>"), listed like a hand entry.
+ *      --include-flagged keeps them (sensitivity run). Only the flagged day drops out; the
+ *      following day was compared against it and carries the same values.
  *
- * Usage: node scripts/rank-ic.js [--history-dir board-history] [--out outputs/rank-ic-report.json]
+ * Usage: node scripts/rank-ic.js [--history-dir board-history] [--out outputs/rank-ic-report.json] [--include-flagged]
  * Exit 0 = Report geschrieben (auch „keine auswertbaren Fenster" ist ein gültiger Report).
  * Exit 1 = KEIN Report: leerer/fehlender Preis-Index (loadPriceIndexOrThrow, Tag 321) —
  *          bewusst fail-loud. Ein IC ohne Preise waere kein Negativergebnis, sondern
@@ -63,6 +67,7 @@ const store = require('../lib/price-history-store.js');
 const { classify } = require('../lib/forward-returns.js');
 const { buildPriceIndex, _usableClose } = require('./walk-forward-perf.js');
 const { loadFamiliesOrThrow } = require('./rank-ic-families.js');
+const { istGeflaggt } = require('../lib/board-history-flag.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -374,6 +379,31 @@ function loadExcluded(historyDir) {
   }
   return out;
 }
+// Tag 1396: every vintage is committed with its verdict in each board file. A board file with
+// gate.suspect === true (p99-only or structural, lib/board-history-flag.js) is skipped by
+// default as a per-board entry, exactly like a hand-written board entry in _excluded.json, so it
+// shows up in boardVintagesExcluded and familyHealth.exclusions. A globally excluded date stays
+// global (nothing added). Opt out with --include-flagged / opts.includeFlagged (sensitivity run).
+// Only the flagged day itself drops out: the next day is compared against it and carries the
+// same values (no value-level protection here).
+function addGateFlags(excluded, historyDir) {
+  for (const date of listVintageDates(historyDir)) {
+    if (isDateExcluded(excluded, date)) continue;
+    for (const board of boardsOf(historyDir, date)) {
+      const v = loadVintage(historyDir, date, board);
+      if (!istGeflaggt(v)) continue;
+      const reasons = Array.isArray(v.gate.reasons) ? v.gate.reasons.join(',') : '';
+      let e = excluded.get(date);
+      if (!e) { e = { reason: 'gate-suspect', boards: new Map() }; excluded.set(date, e); }
+      if (!e.boards.has(board)) e.boards.set(board, 'gate-suspect: ' + reasons);
+    }
+  }
+  return excluded;
+}
+function loadExclusions(historyDir, opts) {
+  const excluded = loadExcluded(historyDir);
+  return opts && opts.includeFlagged ? excluded : addGateFlags(excluded, historyDir);
+}
 // Datum global aus (fällt aus der Vintage-Reihe aller Boards).
 function isDateExcluded(excluded, date) {
   const e = excluded.get(date);
@@ -662,7 +692,7 @@ function deliveryIC(vintage0, vintageLater) {
 
 // ── Hauptauswertung ──────────────────────────────────────────────────────────
 function evaluateObserved(historyDir, priceIndex, opts = {}) {
-  const excluded = loadExcluded(historyDir);
+  const excluded = loadExclusions(historyDir, opts);
   const allDates = listVintageDates(historyDir)
     .filter((date) => !opts.firstEligibleVintage || date >= opts.firstEligibleVintage);
   const dates = allDates.filter((d) => !isDateExcluded(excluded, d));
@@ -834,7 +864,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
   // bevor irgendein Vintage, Ausschluss oder Preis gelesen wird.
   const familyReports = families.map(initialFamilyReport);
 
-  const excluded = loadExcluded(historyDir);
+  const excluded = loadExclusions(historyDir, opts);
   const allDates = listVintageDates(historyDir);
   const boardsByDate = new Map(allDates.map((date) => [date, new Set(boardsOf(historyDir, date))]));
   const observed = evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { boardsByDate }));
@@ -946,7 +976,7 @@ function main(options = {}) {
   const outFile = options.outFile || path.resolve(REPO_ROOT, getArg('--out', path.join('outputs', 'rank-ic-report.json')));
   const families = loadFamiliesOrThrow(path.join(REPO_ROOT, 'protocol', 'rank-ic-families'));
   const priceIndex = options.priceIndex || loadPriceIndexOrThrow(path.join(REPO_ROOT, 'prices'));
-  const report = evaluate(historyDir, priceIndex, { families });
+  const report = evaluate(historyDir, priceIndex, { families, includeFlagged: args.includes('--include-flagged') });
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   // T204: atomar - das Fitness-Messartefakt wird gegen frueher gehalten.
   writeFileAtomic(outFile, JSON.stringify(report, null, 2));
@@ -959,5 +989,5 @@ function main(options = {}) {
   return report;
 }
 
-module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, applyFamilyBY, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, isDateExcluded, isBoardExcluded, loadPriceIndexOrThrow, newestPriceDate, invNormalCdf, stddev, loadVintage, main };
+module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, applyFamilyBY, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, addGateFlags, isDateExcluded, isBoardExcluded, loadPriceIndexOrThrow, newestPriceDate, invNormalCdf, stddev, loadVintage, main };
 if (require.main === module) main();
