@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02c",
+  "revision": "2026-10-02d",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -5234,6 +5234,326 @@
           "accession": "0001193125-26-374615",
           "filed": "2026-08-28",
           "quote": "as a discontinued operation for all periods presented"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2026-06-30-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 15509637777.88,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Anbieterwert (Halbjahr 2026 minus erstes Quartal) mischt zwei Basen. Das Halbjahr ist nach dem Kauf eines Schwesterunternehmens (gleiche Konzernmutter) neu ausgewiesen, das erste Quartal nicht; einen Quartalswert der Firma gibt es nicht.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures, 营业收入 current period)",
+          "quote": "23,922,904,002.14",
+          "unit": "CNY",
+          "value": 23922904002.14,
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102918.PDF",
+          "page": "2 (2026年第一季度报告 (Q1 2026 report), key figures, 营业收入, no restatement of prior periods)",
+          "quote": "8,413,266,224.26",
+          "unit": "CNY",
+          "value": 8413266224.26,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "derivation": "vendor 15,509,637,777.88 = half year 2026 (restated basis) minus Q1 2026 (old basis)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures: prior period restated, reason business combination under common control)",
+          "quote": "同一控制下企业合并",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-06-30-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 6926120179.88,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Vorjahreswert steht auf der alten Basis; der Halbjahresbericht 2026 weist das Vorjahr nach dem Kauf eines Schwesterunternehmens neu aus (Halbjahr 2025: 19.942,3 statt 14.463,6 Mio. CNY). Ein Wachstum aus diesem Paar wäre falsch.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures, 营业收入 prior period 调整后 (restated))",
+          "quote": "19,942,313,524.35",
+          "unit": "CNY",
+          "value": 19942313524.35,
+          "start": "2025-01-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures, 营业收入 prior period 调整前 (as first reported))",
+          "quote": "14,463,566,927.57",
+          "unit": "CNY",
+          "value": 14463566927.57,
+          "start": "2025-01-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures: prior period restated, reason business combination under common control)",
+          "quote": "同一控制下企业合并",
+          "unit": "CNY"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "10 (2025年年度报告 (annual report 2025), 分季度主要财务指标 (quarterly key figures), 营业收入)",
+          "quote": "6,926,120,179.88",
+          "unit": "CNY",
+          "value": 6926120179.88,
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-09-30-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 16566018093.99,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Anbieter verteilt den Umsatz falsch auf das dritte und vierte Quartal 2025 (Firma 7.939,3 und 7.712,1 Mio. CNY, Anbieter 16.566,0 und −914,6).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "2 (2025年第三季度报告 (Q3 2025 report), key figures, 营业收入 本报告期 (third quarter))",
+          "quote": "7,939,331,625.29",
+          "unit": "CNY",
+          "value": 7939331625.29,
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "10 (2025年年度报告 (annual report 2025), 分季度主要财务指标 (quarterly key figures), 营业收入)",
+          "quote": "7,939,331,625.29",
+          "unit": "CNY",
+          "value": 7939331625.29,
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-12-31-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": -914626694.25,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Anbieter verteilt den Umsatz falsch auf das dritte und vierte Quartal 2025 (Firma 7.939,3 und 7.712,1 Mio. CNY, Anbieter 16.566,0 und −914,6).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "10 (2025年年度报告 (annual report 2025), 分季度主要财务指标 (quarterly key figures), 营业收入)",
+          "quote": "7,712,059,774.45",
+          "unit": "CNY",
+          "value": 7712059774.45,
+          "start": "2025-10-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 其中：营业收入)",
+          "quote": "30,114,958,327.31",
+          "unit": "CNY",
+          "value": 30114958327.31,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业收入)",
+          "quote": "22,402,898,552.86",
+          "unit": "CNY",
+          "value": 22402898552.86,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "derivation": "Q4 = year minus nine months = 7,712,059,774.45"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-09-30-grossProfitQ",
+      "ticker": "002128.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 5401617860.04,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Der Anbieter verteilt den Bruttogewinn falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.836,3 und 3.127,3 Mio. CNY, Anbieter 5.401,6 und 562,0).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业收入)",
+          "quote": "22,402,898,552.86",
+          "unit": "CNY",
+          "value": 22402898552.86,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业成本)",
+          "quote": "14,437,628,158.15",
+          "unit": "CNY",
+          "value": 14437628158.15,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-08-28/1224596636.PDF",
+          "page": "163 (2025年半年度报告 (half-year report 2025), consolidated income statement, 其中：营业收入)",
+          "quote": "14,463,566,927.57",
+          "unit": "CNY",
+          "value": 14463566927.57,
+          "start": "2025-01-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-08-28/1224596636.PDF",
+          "page": "163 (2025年半年度报告 (half-year report 2025), consolidated income statement, 其中：营业成本)",
+          "quote": "9,334,599,964.70",
+          "unit": "CNY",
+          "value": 9334599964.7,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "derivation": "Q3 gross profit = (9M revenue - 9M cost of sales) - (H1 revenue - H1 cost of sales) = 2,836,303,431.84; vendor gross profit = revenue - 营业成本 (vendor FY2025 annualGP 11,092,588,266.31 = 30,114,958,327.31 - 19,022,370,061.00)"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-12-31-grossProfitQ",
+      "ticker": "002128.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 562003443.4,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Der Anbieter verteilt den Bruttogewinn falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.836,3 und 3.127,3 Mio. CNY, Anbieter 5.401,6 und 562,0).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 其中：营业收入)",
+          "quote": "30,114,958,327.31",
+          "unit": "CNY",
+          "value": 30114958327.31,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 其中：营业成本)",
+          "quote": "19,022,370,061.00",
+          "unit": "CNY",
+          "value": 19022370061,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业收入)",
+          "quote": "22,402,898,552.86",
+          "unit": "CNY",
+          "value": 22402898552.86,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业成本)",
+          "quote": "14,437,628,158.15",
+          "unit": "CNY",
+          "value": 14437628158.15,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "derivation": "Q4 gross profit = (FY revenue - FY cost of sales) - (9M revenue - 9M cost of sales) = 3,127,317,871.60"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-09-30-opIncQ",
+      "ticker": "002128.SZ",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 3850177471.91,
+      "replacementValue": null,
+      "reason": "Betriebsergebnis fehlt: Der Anbieter verteilt das Betriebsergebnis falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.113,9 und 2.015,5 Mio. CNY, Anbieter 3.850,2 und 279,2).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "10 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 三、营业利润)",
+          "quote": "6,124,827,885.47",
+          "unit": "CNY",
+          "value": 6124827885.47,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-08-28/1224596636.PDF",
+          "page": "163 (2025年半年度报告 (half-year report 2025), consolidated income statement, 三、营业利润)",
+          "quote": "4,010,970,385.84",
+          "unit": "CNY",
+          "value": 4010970385.84,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "derivation": "Q3 operating profit (营业利润) = 9M minus H1 = 2,113,857,499.63; vendor annualOpInc FY2025 = 8,140,325,993.09 (营业利润)"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-12-31-opIncQ",
+      "ticker": "002128.SZ",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 279178135.34,
+      "replacementValue": null,
+      "reason": "Betriebsergebnis fehlt: Der Anbieter verteilt das Betriebsergebnis falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.113,9 und 2.015,5 Mio. CNY, Anbieter 3.850,2 und 279,2).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 三、营业利润)",
+          "quote": "8,140,325,993.09",
+          "unit": "CNY",
+          "value": 8140325993.09,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "10 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 三、营业利润)",
+          "quote": "6,124,827,885.47",
+          "unit": "CNY",
+          "value": 6124827885.47,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "derivation": "Q4 operating profit = FY minus 9M = 2,015,498,107.62"
         }
       ]
     }

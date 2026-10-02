@@ -28,8 +28,8 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 195 authorized cells (182 quarterly, 13 annual) and ten held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 195);
+test('all 203 authorized cells (190 quarterly, 13 annual) and ten held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 203);
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 13);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW']);
   assert.throws(() => validateTable({}), /Invalid/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 195);
+  assert.equal(validateTable(clone(table)).cases.length, 203);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -1033,7 +1033,8 @@ test('replacement values trace to their sources: the whole real table passes, a 
   // The 162 cases of revision 2026-10-01c: 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one
   // issuer-rounded confirmation (OXLC 2025-03-31, "$121.2 million") pass; none fails.
   assert.deepEqual(count(table.cases.filter(c => !e4Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 29 });
-  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 26, difference: 4 });
+  // E4 operating income: 26 single-source, 4 derived; the two Dian Tou opIncQ cells are withheld (null).
+  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 26, difference: 4, null: 2 });
   assert.equal(count(table.cases).none, undefined);
   assert.equal(validateTable(clone(table)).cases.length, table.cases.length);
   // Presence: a typo in a single-source, a derived and an issuer-rounded case each rejects the whole table.
@@ -1061,9 +1062,10 @@ test('opIncQ: six companies x five covered quarters, none unverified; readers on
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
   const cal = require('../board-history/2026-10-01/calibration.json');
   const bounds = cal.winsorBounds.opMargin;
-  const op = table.cases.filter(c => c.field === 'opIncQ');
+  const op = table.cases.filter(c => c.field === 'opIncQ' && OPINC.includes(c.ticker));
   assert.deepEqual(OPINC.map(t => op.filter(c => c.ticker === t).length), [5, 5, 5, 5, 5, 5]);
   assert.equal(op.length, 30);
+  assert.equal(table.cases.filter(c => c.field === 'opIncQ').length, 32, 'plus the two withheld Dian Tou cells');
   assert.deepEqual(table.coverage.filter(v => v.field === 'opIncQ').map(v => v.ticker + '|' + v.coversThrough).sort(),
     OPINC.map(t => t + '|2026-06-30').sort());
   const noOp = clone(table); noOp.cases = noOp.cases.filter(c => c.field !== 'opIncQ'); noOp.coverage = noOp.coverage.filter(v => v.field !== 'opIncQ');
@@ -1160,6 +1162,43 @@ test('2637.TW hold: exact annual floats, no fingerprint warning on the fixed day
   // Break-once on test data: the plan's rounded values (16,948,954,566) never match exactly and warn from the first run.
   const rounded = clone(table); rounded.quarantines.find(x => x.ticker === '2637.TW').fingerprint[0].expected = 16948954566;
   assert.throws(() => held(s => applyFinancialCases(s, { table: rounded })), assert.AssertionError); breaks++;
+});
+
+// E4 Part D (02.10.): Dian Tou (002128.SZ). The vendor quarter 2026-06-30 is half year 2026 (restated after a purchase
+// under common control) minus Q1 2026 (old basis), the year-ago quarter is on the old basis, and Q3/Q4 2025 are
+// misallocated (sum preserved). Null cases only, no coverage, no hold: growth falls back to the annual leg.
+test('002128.SZ: mixed-basis and misallocated quarters withheld, growth from the annual leg (+0.86 %), row stays on the board', () => {
+  const axes = require('../src/scoring/axes.js'), { revGrowthLeg } = require('../lib/rev-growth-basis.js');
+  const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
+  const noDt = clone(table); noDt.cases = noDt.cases.filter(c => c.ticker !== '002128.SZ');
+  const r = applyFinancialCases(clone(fixture['002128.SZ'])), dt = r.snapshot;
+  const old = applyFinancialCases(clone(fixture['002128.SZ']), { table: noDt }).snapshot;
+  assert.deepEqual(norm(dt, 'revenueQ').map(x => x === null), [true, false, true, true, true]);
+  assert.deepEqual(norm(dt, 'grossProfitQ').map(x => x === null), [false, false, true, true, false]);
+  assert.deepEqual(norm(dt, 'opIncQ').map(x => x === null), [false, false, true, true, false]);
+  assert.ok(!r.events.some(e => e.status === 'stale'));
+  assert.ok(!table.coverage.some(v => v.ticker === '002128.SZ'), 'withheld false values need no coverage');
+  // Absence: Q1 2026, the annual block and every other cell stay byte for byte.
+  assert.equal(serial(dt.annual), serial(fixture['002128.SZ'].annual));
+  assert.equal(serial(dt.timeseries.revenueQ[1]), serial(fixture['002128.SZ'].timeseries.revenueQ[1]));
+  // Growth: +123.93 % (mixed quarters) -> +0.86 % from the annual leg, labelled "year".
+  assert.equal((axes.revGrowthLevel(old)).toFixed(2), '123.93');
+  assert.equal(axes.revQuartalsYoY(dt), null);
+  assert.equal(revGrowthLeg(dt).basis, 'year');
+  assert.equal(axes.revGrowthLevel(dt).toFixed(2), (axes.revAnnualYoY(dt) * 100).toFixed(2));
+  assert.equal(axes.revGrowthLevel(dt).toFixed(2), '0.86');
+  // Not held: the row is still scored (a hold would remove it instead of showing it with empty fields).
+  assert.equal(dt.meta.financialDataIssue, undefined);
+  assert.notEqual(score.scoreUniverse([dt], formulas)[0].reason, 'data-suspect');
+  assert.ok(financialReasons(dt).some(t => t.startsWith('Quartalsumsatz fehlt:')));
+  // The quarterly leg needs every quarter between the pair (axes.js revQuartalsYoY), so each of the two withheld
+  // groups alone already drops it: without the misallocated Q3/Q4 cells the mixed pair stays empty, and without the
+  // pair the withheld Q3/Q4 break the chain. Break-once on test data: without any Dian Tou case the +123.9 % is back.
+  const only = ids => { const x = clone(noDt); x.cases.push(...table.cases.filter(c => ids.includes(c.caseId))); return x; };
+  const guard = cfg => assert.equal(axes.revQuartalsYoY(applyFinancialCases(clone(fixture['002128.SZ']), cfg && { table: cfg }).snapshot), null);
+  guard(only(['002128.sz-2026-06-30-revenueQ', '002128.sz-2025-06-30-revenueQ']));
+  guard(only(['002128.sz-2025-09-30-revenueQ', '002128.sz-2025-12-31-revenueQ']));
+  assert.throws(() => guard(noDt), assert.AssertionError); guard(); breaks++;
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);

@@ -1,5 +1,5 @@
 {
-  "source": "CI snapshots 2026-09-29 (first eight) and 2026-09-30 run 36690140002 (13 BDC/closed-end funds; CARG, PLUS, DCO, INFQ, VCTR, SLCE3.SA, CLSC3.SA, HOS, TYG, OLPX), retained public vendor evidence; HLX from run 36839128456 (2026-10-01); 2670.HK, ENGI3.SA, Z98.DE from run 36839128456 (2026-10-01); HIVE (opIncQ cases) from run 36839128456 (2026-10-01); HL (annual gross profit cases) from run 36839128456 (2026-10-01); 2637.TW (hold, statements in TWD under a USD label) from run 36839128456 (2026-10-01)",
+  "source": "CI snapshots 2026-09-29 (first eight) and 2026-09-30 run 36690140002 (13 BDC/closed-end funds; CARG, PLUS, DCO, INFQ, VCTR, SLCE3.SA, CLSC3.SA, HOS, TYG, OLPX), retained public vendor evidence; HLX from run 36839128456 (2026-10-01); 2670.HK, ENGI3.SA, Z98.DE from run 36839128456 (2026-10-01); HIVE (opIncQ cases) from run 36839128456 (2026-10-01); HL (annual gross profit cases) from run 36839128456 (2026-10-01); 2637.TW (hold, statements in TWD under a USD label) from run 36839128456 (2026-10-01); 002128.SZ (withheld misallocated and mixed-basis quarters) from run 36839128456 (2026-10-01)",
   "snapshots": {
     "BANPU.BK": {
       "identifier": {
@@ -26272,6 +26272,624 @@
       },
       "_pullMode": "price-only",
       "_pullModeAt": "2026-10-01T09:32:18.140Z"
+    },
+    "002128.SZ": {
+      "identifier": {
+        "primary": "ISIN",
+        "value": "TICKER:002128.SZ"
+      },
+      "meta": {
+        "ticker": "002128.SZ",
+        "name": "Inner Mongolia Dian Tou Energy Corporation Limited",
+        "nameSource": "longName",
+        "sector": "Energy",
+        "industry": "Thermal Coal",
+        "region": "CN",
+        "exchangeName": "Shenzhen",
+        "reportingCurrency": "USD",
+        "tradingCurrency": "CNY",
+        "tradingCurrencyAssumed": false,
+        "_ccyMissingCompletely": false,
+        "fetchedAt": "2026-09-25T08:30:57.301Z",
+        "asOf": "2026-10-01T09:32:37.818Z",
+        "filingDate": null,
+        "firstTradeDate": "2007-04-18T01:30:00.000Z",
+        "ipoYear": 2007,
+        "opIncSource": "yahoo-adjusted",
+        "gpZeroCodingNulled": false,
+        "gpZeroCodingYears": 0,
+        "fcfMarginTTMSuppressed": false,
+        "ccyAmbiguous": false,
+        "sharesOutstanding": 3126477068,
+        "floatShares": 1000972898,
+        "impliedSharesOutstanding": 3126477068,
+        "institutionsPercentHeld": 0.07819,
+        "institutionsCount": 170,
+        "insidersPercentHeld": 0.69459,
+        "mostRecentQuarter": "2026-06-30T00:00:00.000Z",
+        "country": "China",
+        "fullTimeEmployees": 8653,
+        "fxRateSourceReporting": "fx-rates.json @ 2026-09-25T07:58:06.678Z",
+        "mischVerhaeltnisFaktor": 1,
+        "reportingCurrencyOriginal": "CNY",
+        "fxRateApplied": 0.14917135,
+        "fxConverted": true,
+        "fundamentalsAsOf": "2026-09-25T08:30:57.301Z",
+        "fxRateSourceTrading": "fx-rates.json @ 2026-10-01T09:11:12.516Z",
+        "tradingCurrencyOriginal": "CNY",
+        "tradingFxRateApplied": 0.1492827,
+        "priceCurrency": "USD"
+      },
+      "marketCap": {
+        "value": 13021737482.462822,
+        "source": "yahoo_quote",
+        "confidence": 0.9,
+        "asOf": "2026-10-01T09:32:37.818Z"
+      },
+      "metrics": {
+        "revenueTTM": {
+          "value": 5086078986.205082,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "revenueGrowthYoY": {
+          "value": 25,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "grossMargin": {
+          "value": 43.355998,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "operatingMargin": {
+          "value": 35.833999999999996,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "fcfMarginTTM": {
+          "value": 17.935061754661174,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "sbcRatio": null,
+        "insidersOwnership": {
+          "value": 0.69459,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "cashRunway": null,
+        "priceSales": {
+          "value": 2.551025,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "forwardPE": {
+          "value": 10.537878,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "pe": {
+          "value": 9.242525,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "ebitda": {
+          "value": 2226131838.6168323,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "ebitdaMargins": {
+          "value": 43.769002,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "enterpriseValue": {
+          "value": 15268157555.092276,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "enterpriseToEbitda": {
+          "value": 6.859,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "enterpriseToRevenue": {
+          "value": 3.002,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "beta": {
+          "value": 0.52,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.8,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "debtToEquity": {
+          "value": 32.95,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "currentRatio": {
+          "value": 1.246,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "quickRatio": {
+          "value": 0.973,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "returnOnEquity": {
+          "value": 17.918,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "returnOnAssets": {
+          "value": 10.213,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "targetMeanPrice": {
+          "value": 4.952488820000001,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "targetMedianPrice": {
+          "value": 4.952488820000001,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "numberOfAnalystOpinions": {
+          "value": 1,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        },
+        "recommendationMean": null,
+        "recommendationKey": {
+          "value": "none",
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-25T08:30:57.301Z"
+        }
+      },
+      "external": {
+        "estimateRevisions": {
+          "0q": {
+            "upLast7Days": 0,
+            "downLast7Days": 0,
+            "upLast30Days": 0,
+            "downLast30Days": 0,
+            "upLast60Days": null,
+            "downLast60Days": null,
+            "upLast90Days": null,
+            "downLast90Days": null
+          },
+          "+1q": {
+            "upLast7Days": 0,
+            "downLast7Days": 0,
+            "upLast30Days": 0,
+            "downLast30Days": 0,
+            "upLast60Days": null,
+            "downLast60Days": null,
+            "upLast90Days": null,
+            "downLast90Days": null
+          },
+          "0y": {
+            "upLast7Days": 0,
+            "downLast7Days": 0,
+            "upLast30Days": 0,
+            "downLast30Days": 0,
+            "upLast60Days": null,
+            "downLast60Days": null,
+            "upLast90Days": null,
+            "downLast90Days": null
+          },
+          "+1y": {
+            "upLast7Days": 0,
+            "downLast7Days": 0,
+            "upLast30Days": 0,
+            "downLast30Days": 0,
+            "upLast60Days": null,
+            "downLast60Days": null,
+            "upLast90Days": null,
+            "downLast90Days": null
+          }
+        },
+        "revenueEstimates": {
+          "0q": {
+            "avg": 9538000000,
+            "growth": 0.2014,
+            "numberOfAnalysts": 1
+          },
+          "+1q": {
+            "avg": 9265000000,
+            "growth": 0.2014,
+            "numberOfAnalysts": 1
+          },
+          "0y": {
+            "avg": 48281000000,
+            "growth": 0.6032,
+            "numberOfAnalysts": 1
+          },
+          "+1y": {
+            "avg": 44439500000,
+            "growth": -0.0796,
+            "numberOfAnalysts": 2
+          }
+        },
+        "earningsHistory": [
+          {
+            "quarter": "2025-09-30T00:00:00.000Z",
+            "period": "-4q",
+            "epsActual": 0.6,
+            "epsEstimate": 0.8,
+            "epsDifference": -0.2,
+            "surprisePercent": -0.25
+          },
+          {
+            "quarter": "2025-12-31T00:00:00.000Z",
+            "period": "-3q",
+            "epsActual": 0.58,
+            "epsEstimate": 0.69,
+            "epsDifference": -0.11,
+            "surprisePercent": -0.1594
+          },
+          {
+            "quarter": "2026-03-31T00:00:00.000Z",
+            "period": "-2q",
+            "epsActual": 0.89,
+            "epsEstimate": 1.02,
+            "epsDifference": -0.13,
+            "surprisePercent": -0.1275
+          },
+          {
+            "quarter": "2026-06-30T00:00:00.000Z",
+            "period": "-1q",
+            "epsActual": 0.9,
+            "epsEstimate": 0.63,
+            "epsDifference": 0.27,
+            "surprisePercent": 0.4286
+          }
+        ]
+      },
+      "timeseries": {
+        "revenueQ": [
+          {
+            "value": 2313593605.33736
+          },
+          {
+            "value": 1255018280.582267
+          },
+          {
+            "value": -136436098.72730973
+          },
+          {
+            "value": 2471175283.2049155
+          },
+          {
+            "value": 1033178697.4949425
+          }
+        ],
+        "opIncQ": [
+          {
+            "value": 804326125.3444897
+          },
+          {
+            "value": 478225128.37545466
+          },
+          {
+            "value": 41645379.33915051
+          },
+          {
+            "value": 574336171.2244018
+          },
+          {
+            "value": 292122821.1488922
+          }
+        ],
+        "grossProfitQ": [
+          {
+            "value": 982089982.8662844
+          },
+          {
+            "value": 583846026.9057279
+          },
+          {
+            "value": 83834812.35662659
+          },
+          {
+            "value": 805766628.3662779
+          },
+          {
+            "value": 365603118.124167
+          }
+        ],
+        "netIncomeQ": [
+          {
+            "value": 491008619.8786456
+          },
+          {
+            "value": 298508023.0912363
+          },
+          {
+            "value": 9941518.5211335
+          },
+          {
+            "value": 382754923.0654433
+          },
+          {
+            "value": 183111081.90192056
+          },
+          null,
+          null
+        ],
+        "revenueQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "grossProfitQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "opIncQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ]
+      },
+      "annual": {
+        "annualRev": [
+          {
+            "value": 4492288988.878575
+          },
+          {
+            "value": 4454115028.991546
+          },
+          {
+            "value": 4004583915.2049837
+          },
+          {
+            "value": 3996733114.728453
+          }
+        ],
+        "annualOpInc": [
+          {
+            "value": 1214303417.8293262
+          },
+          {
+            "value": 1053927035.2902497
+          },
+          {
+            "value": 881998464.8544414
+          },
+          {
+            "value": 846672478.2327691
+          }
+        ],
+        "annualNetIncome": [
+          {
+            "value": 808372851.698619
+          },
+          {
+            "value": 796815668.5262486
+          },
+          {
+            "value": 680169456.1979964
+          },
+          {
+            "value": 594616997.0615115
+          }
+        ],
+        "annualGP": [
+          {
+            "value": 1654696366.6796222
+          },
+          {
+            "value": 1516762398.6534057
+          },
+          {
+            "value": 1273682095.4952145
+          },
+          {
+            "value": 1254313950.803067
+          }
+        ],
+        "annualFCF": [
+          {
+            "value": 217558524.42014387
+          },
+          {
+            "value": 561641064.0861965
+          },
+          {
+            "value": -138120649.86515844
+          },
+          {
+            "value": 264996615.55044273
+          }
+        ],
+        "annualOCF": [
+          {
+            "value": 1373492203.979427
+          },
+          {
+            "value": 1185982919.3744197
+          },
+          {
+            "value": 1024999848.766878
+          },
+          {
+            "value": 1268572281.1075656
+          }
+        ],
+        "annualBalance": [
+          {
+            "totalCash": 365396308.9365723,
+            "totalDebt": 947177260.7212156,
+            "totalAssets": 8424670611.571497,
+            "accountsReceivable": 287119466.6945653,
+            "netPPE": 5812638227.4348955,
+            "currentAssets": 1327497305.2871523,
+            "currentLiabilities": 1075212095.815456,
+            "totalLiabilities": 1916618356.0554066,
+            "totalEquity": 5698318177.457652
+          },
+          {
+            "totalCash": 444532592.9687818,
+            "totalDebt": 1026865824.2784984,
+            "totalAssets": 7702356336.128078,
+            "accountsReceivable": 300163912.6741282,
+            "netPPE": 5256869489.59288,
+            "currentAssets": 1369129892.2387857,
+            "currentLiabilities": 824510012.372233,
+            "totalLiabilities": 1948510696.063044,
+            "totalEquity": 5161826932.450266
+          },
+          {
+            "totalCash": 252600820.817007,
+            "totalDebt": 1155386217.6512458,
+            "totalAssets": 7234985770.837421,
+            "accountsReceivable": 281690045.89180315,
+            "netPPE": 5172105357.435376,
+            "currentAssets": 1065525465.7341555,
+            "currentLiabilities": 867625560.0144078,
+            "totalLiabilities": 2117777958.1608813,
+            "totalEquity": 4607529745.256815
+          },
+          {
+            "totalCash": 277313419.5833881,
+            "totalDebt": 1309421133.1471891,
+            "totalAssets": 6283113023.258377,
+            "accountsReceivable": 227943587.78331146,
+            "netPPE": 4353964918.733369,
+            "currentAssets": 1107870670.0627084,
+            "currentLiabilities": 822128389.8451748,
+            "totalLiabilities": 2208543901.617351,
+            "totalEquity": 3504160818.0116706
+          }
+        ],
+        "annualCostOfRevenue": [
+          {
+            "value": 2837592622.1989527
+          },
+          {
+            "value": 2937352630.33814
+          },
+          {
+            "value": 2730901819.7097697
+          },
+          {
+            "value": 2742419163.9253855
+          }
+        ],
+        "annualRnD": [
+          6125071.363205576,
+          11652462.20731873,
+          4726782.088162662,
+          9036173.893164271
+        ],
+        "annualRevEnds": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualGPEnds": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualOpIncEnds": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualSBC": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualCapex": [
+          -1155933679.5592833,
+          -624341855.288223,
+          -1163120498.6320364,
+          -1003575665.557123
+        ],
+        "annualSGA": [
+          45441754.31944912,
+          39179593.15946025,
+          37658497.87688305,
+          31798560.635530505
+        ],
+        "annualDepreciation": [
+          470765438.1447475,
+          431743995.01851225,
+          340938482.9649352,
+          327286399.99170643
+        ],
+        "annualShares": [
+          2239293058,
+          2244375340,
+          2160972549,
+          1925668622
+        ],
+        "annualDividendsPaid": [
+          -290918304.7265597,
+          -275744439.7097258,
+          -278708461.8560976,
+          -193812786.23580784
+        ]
+      },
+      "insiderActivity": null,
+      "_quality": {
+        "grade": "A+",
+        "nanRatio": null,
+        "missingFields": null,
+        "criticalMissing": false,
+        "computedAt": "2026-09-25T08:31:10.747Z",
+        "staleSincePriceOnly": "2026-10-01T09:32:37.818Z"
+      },
+      "price": {
+        "regularMarketPrice": 4.16498733,
+        "currencyUnit": "USD",
+        "currency": "CNY"
+      },
+      "_pullMode": "price-only",
+      "_pullModeAt": "2026-10-01T09:32:37.818Z"
     }
   }
 }
