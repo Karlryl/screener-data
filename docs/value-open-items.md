@@ -91,11 +91,18 @@ An item closes only when EVERY cell is covered, by one of:
   "sources": [ { "url": "https://www.sec.gov/...", "quote": "776,086,920 Class A common shares" } ] }
 ```
 
-   - `itemId`, `value` (> 0, stored units) and `reason` are required; `periodEnd` is optional
-     (absent = every cell of the item; give it for multi-quarter items, one entry per cell).
+   - `itemId`, `value` (> 0, stored units), `acceptedAt` (YYYY-MM-DD, the day of the review) and
+     `reason` are required; `periodEnd` is optional (absent = every cell of the item; give it for
+     multi-quarter items, one entry per cell).
+   - An entry covers only cells whose `firstSeen` is on or before its `acceptedAt`. A quarter that
+     joins the item later was never reviewed and needs its own entry.
    - If today's value is within factor 3 of `value`, the item closes (`closedBy: acceptance:<n>`,
      n = 1-based position in the file). Otherwise it closes AND a new item opens with
      `acceptedValue = value`, so a vendor that flips back is caught again.
+   - If the company is not on a board on the day the entry is applied, the item closes with
+     `closedValue = value`; when the company returns, its value is compared with `value`.
+   - A value of 0 cannot be accepted. A real zero (for example revenue that really stopped) is
+     closed with a `configs/financial-known-cases.json` row for that quarter.
    - An unknown `itemId` or a malformed entry gives a `::warning::` and is ignored, never a crash.
 
 Never closed by time, by a label, or by the value returning (that only adds `zurueckgekehrt`).

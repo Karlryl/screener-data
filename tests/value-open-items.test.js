@@ -250,7 +250,7 @@ check('C5 an acceptance closes; one more than factor 3 away from today closes AN
   const h = [['2026-09-01', { A: pit({ mcap: 1e9 }) }]];
   const r1 = step(null, '2026-09-02', { A: pit({ mcap: 5e9 }) }, h);
   const id = r1.state.items[0].id;
-  const acc = (value, extra) => V.readAcceptances({ acceptances: [{ itemId: id, value, reason: 'issuer filing', ...(extra || {}) }] }).entries;
+  const acc = (value, extra) => V.readAcceptances({ acceptances: [{ itemId: id, value, acceptedAt: '2026-09-03', reason: 'issuer filing', ...(extra || {}) }] }).entries;
   const ok = step(r1.state, '2026-09-03', { A: pit({ mcap: 5.1e9 }) }, h, { acceptances: acc(5e9) });
   assert.strictEqual(ok.state.items.length, 1, 'no new item');
   assert.strictEqual(ok.state.items[0].status, 'closed');
@@ -269,7 +269,7 @@ check('C5 an acceptance closes; one more than factor 3 away from today closes AN
 check('C6 acceptance without reason or for an unknown item: warning, ignored, no crash', () => {
   const h = [['2026-09-01', { A: pit({ mcap: 1e9 }) }]];
   const r1 = step(null, '2026-09-02', { A: pit({ mcap: 5e9 }) }, h);
-  const parsed = V.readAcceptances({ acceptances: [{ itemId: r1.state.items[0].id, value: 5e9, reason: '' }, { itemId: 'NOPE|marketCap|2026-01-01', value: 1, reason: 'x' }] });
+  const parsed = V.readAcceptances({ acceptances: [{ itemId: r1.state.items[0].id, value: 5e9, acceptedAt: '2026-09-03', reason: '' }, { itemId: 'NOPE|marketCap|2026-01-01', value: 1, acceptedAt: '2026-09-03', reason: 'x' }] });
   assert.strictEqual(parsed.entries.length, 1);
   assert.ok(parsed.warnings.some((w) => /entry 1 ignored/.test(w)));
   const r2 = step(r1.state, '2026-09-03', { A: pit({ mcap: 5e9 }) }, h, { acceptances: parsed.entries });
@@ -292,6 +292,47 @@ check('C7 a close accepts the value it saw: a quarantined series stuck at 0 does
   const h3 = [...h2, ['2026-08-18', { O: pit({ gp: [[Q, 10]] }) }]];
   const r4 = step(r1.state, '2026-08-19', { O: pit({ gp: [[Q, 40]] }) }, h3, { tables: NO_TABLES });
   assert.strictEqual(r4.state.items.length, 2, '10 -> 40 is a new jump');
+});
+
+check('C8 an acceptance applied while the company is off the board keeps the accepted value: the old wrong value opens again on return', () => {
+  const h = [['2026-09-01', { A: pit({ rev: [[Q, 100]] }) }], ['2026-09-02', { A: pit({ rev: [[Q, 400]] }) }]];
+  const r1 = step(null, '2026-09-02', { A: pit({ rev: [[Q, 400]] }) }, h.slice(0, 1));
+  const acc = V.readAcceptances({ acceptances: [{ itemId: r1.state.items[0].id, value: 100, acceptedAt: '2026-09-03', reason: 'old value is right' }] }).entries;
+  const absent = step(r1.state, '2026-09-03', { B: pit({ rev: [[Q, 1]] }) }, h, { acceptances: acc });
+  assert.strictEqual(absent.state.items[0].status, 'closed');
+  assert.strictEqual(absent.state.items[0].cells[0].closedValue, 100, 'closedValue = accepted value when today has none');
+  assert.strictEqual(absent.state.items.length, 1, 'nothing to compare today, no reopen yet');
+  const back = step(absent.state, '2026-09-04', { A: pit({ rev: [[Q, 400]] }) }, h, { acceptances: acc });
+  assert.strictEqual(back.state.items.length, 2, 'return with the rejected 400 opens a new item');
+  assert.strictEqual(back.state.items[1].acceptedValue, 100);
+  assert.strictEqual(back.state.items[1].status, 'open');
+  // Counterpart: returning with the accepted value opens nothing.
+  const fine = step(absent.state, '2026-09-04', { A: pit({ rev: [[Q, 105]] }) }, h, { acceptances: acc });
+  assert.strictEqual(fine.state.items.length, 1);
+  // A hand-table close on an absent day still records no value (the table row governs the key).
+  const t = V.buildTables({ fkc: fkc([kase('A', 'revenueQ', Q)]) });
+  const ht = step(r1.state, '2026-09-03', { B: pit({ rev: [[Q, 1]] }) }, h, { tables: t });
+  assert.strictEqual(ht.state.items[0].cells[0].closedValue, null);
+});
+
+check('C9 an acceptance covers only cells the item had on its acceptedAt day; acceptedAt is required', () => {
+  const Q2 = '2026-03-31';
+  const h = [['2026-09-01', { A: pit({ rev: [[Q, 100], [Q2, 100]] }) }]];
+  const r1 = step(null, '2026-09-02', { A: pit({ rev: [[Q, 400], [Q2, 100]] }) }, h);
+  const id = r1.state.items[0].id;
+  const h2 = [...h, ['2026-09-02', { A: pit({ rev: [[Q, 400], [Q2, 100]] }) }]];
+  const acc = V.readAcceptances({ acceptances: [{ itemId: id, value: 400, acceptedAt: '2026-09-02', reason: 'restated, 400 is right' }] }).entries;
+  // Q2 joins on 09-03 (after acceptedAt) in the same run that applies the acceptance.
+  const r2 = step(r1.state, '2026-09-03', { A: pit({ rev: [[Q, 400], [Q2, 350]] }) }, h2, { acceptances: acc });
+  assert.strictEqual(r2.state.items[0].cells.length, 2, 'Q2 joined');
+  assert.strictEqual(r2.state.items[0].status, 'open', 'Q2 was never reviewed: stays open');
+  // Counterpart: an acceptance dated on or after the join covers both cells.
+  const acc2 = V.readAcceptances({ acceptances: [{ itemId: id, value: 400, acceptedAt: '2026-09-03', reason: 'both reviewed' }] }).entries;
+  const r3 = step(r1.state, '2026-09-03', { A: pit({ rev: [[Q, 400], [Q2, 350]] }) }, h2, { acceptances: acc2 });
+  assert.strictEqual(r3.state.items[0].status, 'closed');
+  const noDate = V.readAcceptances({ acceptances: [{ itemId: id, value: 400, reason: 'x' }, { itemId: id, value: 400, acceptedAt: '3.10.2026', reason: 'x' }] });
+  assert.strictEqual(noDate.entries.length, 0, 'missing or malformed acceptedAt is ignored');
+  assert.strictEqual(noDate.warnings.length, 2);
 });
 
 // ── 5) labels ───────────────────────────────────────────────────────────────
@@ -359,6 +400,35 @@ check('G3 the CLI exits 1 without FULL_DIR (unreadable input) and 0 with readabl
   const seeded = JSON.parse(fs.readFileSync(path.join(base, 'data-health', 'value-open-items.json'), 'utf8'));
   assert.strictEqual(seeded.seed, 'replay');
   assert.strictEqual(seeded.seedInputs.command, 'node scripts/value-open-items.js --replay --from 2026-09-01 --to 2026-09-01');
+});
+
+check('G4 daily run and replay call the append-only guard: a violating result throws and nothing is written', () => {
+  // Daily: a prior list with a duplicate id can only come out duplicated -> the guard must reject it.
+  const base = mkBase();
+  storeDay(base, '2026-09-01', { A: pit({ rev: [[Q, 100]] }) });
+  const r = step(null, '2026-09-01', { A: pit({ rev: [[Q, 900]] }) }, [['2026-08-31', { A: pit({ rev: [[Q, 100]] }) }]]);
+  const dup = { ...r.state, items: [r.state.items[0], r.state.items[0]] };
+  const state = path.join(base, 'data-health', 'value-open-items.json');
+  writeJson(state, dup);
+  const before = fs.readFileSync(state, 'utf8');
+  assert.throws(() => S.runDaily({ base, date: '2026-09-02', today: rowsOf({ A: pit({ rev: [[Q, 900]] }) }) }), /append-only violation: duplicate item/);
+  assert.strictEqual(fs.readFileSync(state, 'utf8'), before, 'daily: nothing written');
+  // Counterpart: the same base with a clean list writes.
+  writeJson(state, r.state);
+  S.runDaily({ base, date: '2026-09-02', today: rowsOf({ A: pit({ rev: [[Q, 900]] }) }) });
+  assert.strictEqual(JSON.parse(fs.readFileSync(state, 'utf8')).updatedFor, '2026-09-02', 'daily: clean list written');
+  // Replay: a step result that drops an item must be rejected before --out is written.
+  storeDay(base, '2026-09-02', { A: pit({ rev: [[Q, 900]] }) });
+  storeDay(base, '2026-09-03', { A: pit({ rev: [[Q, 900]] }) });
+  const out = path.join(base, 'replay-out.json');
+  const orig = V.updateOpenItems;
+  V.updateOpenItems = (a) => { const res = orig(a); if (a.date === '2026-09-03') res.state.items = []; return res; };
+  try {
+    assert.throws(() => S.runReplay({ base, from: '2026-09-01', out }), /append-only violation: item removed/);
+  } finally { V.updateOpenItems = orig; }
+  assert.ok(!fs.existsSync(out), 'replay: nothing written');
+  S.runReplay({ base, from: '2026-09-01', out });
+  assert.ok(fs.existsSync(out), 'replay: written without the violation');
 });
 
 // ── 7) real stored history (skips visibly without it, L12) ─────────────────
