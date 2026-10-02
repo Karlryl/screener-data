@@ -69,6 +69,11 @@ only counted; without a baseline row nothing is withheld on this ground. (Review
 02.10.2026 the broader rule held 8 on-time cells, at least 4 of them correct; 003816.SZ and 601038.SS with a vendor
 value of 0 are real wrong values and go on the false-hold list for G2c and the hand table.)
 
+Store age is measured per company: the newest run that read one of the company's own keys again (China: a
+listed period the company has and is not absent for; Taiwan: an entry in the run's `read` list) must be within
+the limit of the snapshot's fetch time. A newer run that did not read the company (partial Taiwan pass) does not
+make its data fresh; such a row is `unchecked(store-old)`. A store whose newest run is too old is old for every row.
+
 ## Reason texts (German, `financialDataReasons`)
 
 - level pair: "Quartalsvergleich ausgeblendet: Das Vorjahresquartal des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Gezeigt wird der Jahreswert."

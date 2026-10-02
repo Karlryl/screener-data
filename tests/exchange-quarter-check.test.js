@@ -410,6 +410,27 @@ test('store missing, unreadable or old: unchecked plus one warning, never a fail
   const season = base(); season.meta.fetchedAt = '2026-10-15T09:00:00.000Z'; assert.equal(res(season).why, 'store-old'); // 2 days in season
   assert.equal(X.loadBaseline(dir).date, null);
 });
+// Codex review of 176e0ad6dd: a partial Taiwan pass wrote a new run entry and made companies it did not read look fresh.
+const partialTaiwan = read => { const st = clone(F.store);
+  st.tw.sources['tw-20261020T070000Z'] = { fetchedAt: '2026-10-20T07:00:00.000Z', read };
+  const s = snap('6446.TW'); s.meta.fetchedAt = '2026-10-20T09:00:00.000Z'; return { s, ctx: ctxOf(st) }; };
+test('store age per company: a later run that did not read the company leaves its data old; one that read it makes it fresh', () => {
+  const alone = snap('6446.TW'); alone.meta.fetchedAt = '2026-10-20T09:00:00.000Z';
+  assert.equal(res(alone).why, 'store-old', '18 days after the only run');
+  const other = partialTaiwan(['2548.TW 115Q2']);
+  assert.equal(res(other.s, other.ctx).why, 'store-old', 'the run of 20.10. read only 2548.TW');
+  const own = partialTaiwan(['6446.TW 115Q2']);
+  assert.notEqual(res(own.s, own.ctx).why, 'store-old', 'the run of 20.10. read 6446.TW again');
+  // China: a run that lists the period but has the company absent for every listed period does not count for it.
+  const st = clone(F.store);
+  st.cn.sources['cn-20261009T070000Z'] = { fetchedAt: '2026-10-09T07:00:00.000Z', periods: ['2026-06-30'], absent: { '2026-06-30': ['000002.SZ'] } };
+  const cn = base(); cn.meta.fetchedAt = '2026-10-11T09:00:00.000Z';
+  assert.equal(res(cn, ctxOf(st)).why, 'store-old', 'absent in the newer run: still 9 days old');
+  st.cn.sources['cn-20261009T070000Z'].absent = {};
+  assert.notEqual(res(clone(cn), ctxOf(clone(st))).why, 'store-old', 'read by the newer run: fresh');
+  // A company without a store entry is reported as such, not as old.
+  assert.equal(res(snap('1101.TW')).why, 'no-store-entry');
+});
 
 // ── Mode switch leaves no residue ────────────────────────────────────────────
 test('mode switch: active -> off restores every cell; active twice = active once; shadow never changes', () => {
@@ -481,6 +502,9 @@ test('break-once: each guard line, when removed, turns its check red; the live m
     lib => { const { s, ctx } = november(true), k = s.timeseries.revenueQEnds.indexOf('2025-09-30');
       s.timeseries.revenueQ[k] = { value: res(november(true).s, ctx).fill.nativeValue * s.meta.fxRateApplied * 1.05 };
       assert.ok(!r(lib, s, ctx).withhold.some(w => w.fillPeriod)); });
+  // store age is measured per company, not on the newest run of the market
+  red("  return !finite(own) || (at - own) / 864e5 > limit;", "  return false;",
+    lib => { const o = partialTaiwan(['2548.TW 115Q2']); assert.equal(r(lib, o.s, o.ctx).why, 'store-old'); });
   // one fetch vintage per derived quarter
   red("          S.lastConfirmedAt(store, ticker, p) !== S.lastConfirmedAt(store, ticker, p.slice(0, 5) + prev)) single[p] = null;",
     "          false) single[p] = null;",
@@ -504,7 +528,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
       y.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * y.meta.fxRateApplied * 1.05 };
       y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
       assert.equal(r(lib, y).growth, null); });
-  assert.equal(breaks, 17);
+  assert.equal(breaks, 18);
 });
 
 test('live files unchanged by this test run', () => {
