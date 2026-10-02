@@ -1058,6 +1058,12 @@ test('replacement values trace to their sources: the whole real table passes, a 
     typo('slce3.sa-2026-06-30-opIncQ', c => { c.replacementValue = 0; c.sources.forEach(s => { delete s.start; delete s.end; }); }),
     typo('slce3.sa-2025-12-31-opIncQ', c => { c.replacementValue = -209162000; }),
     typo('oxlc-2025-03-31-revenueQ', c => { c.replacementValue = c.expectedBadValue = 121150000; delete c.sources[0].roundingStep; })];
+  // Round 2 (review 7ed68f1, finding 4): a traced value must be for the case's own quarter. Swapping the periods of
+  // two cases (values and sources kept) throws: a single source and a same-start difference (year minus nine months)
+  // for Kanematsu, a single source and a same-end difference (six months minus Q2) for Cemig. The 52/53-week
+  // quarters of DCO (source ends up to 4 days off the calendar quarter) pass with the whole real table above.
+  const swap = (a, b) => { const x = clone(table), [p, q] = [a, b].map(id => x.cases.find(c => c.caseId === id)); [p.period, q.period] = [q.period, p.period]; return x; };
+  bad.push(swap('8020.t-2026-06-30-revenueQ', '8020.t-2026-03-31-revenueQ'), swap('cig-c-2026-06-30-grossProfitQ', 'cig-c-2026-03-31-grossProfitQ'));
   // Absence: within the issuer's rounding (121.15 vs "121.2 million") and an exempt legacy case (no source value) pass.
   const ok = [typo('oxlc-2025-03-31-revenueQ', c => { c.replacementValue = c.expectedBadValue = 121150000; }),
     typo('htgc-2026-06-30-revenueQ', c => { c.replacementValue += 1; })];
@@ -1247,6 +1253,22 @@ test('402340.KS: held off the boards (no revenue series on one basis today), gro
   assert.equal(sk.meta.financialDataIssue.caseId, q.caseId);
   assert.equal(score.scoreUniverse([sk], formulas)[0].reason, 'data-suspect');
   assert.ok(!r.events.some(e => e.status === 'stale'), 'exact packet: no warning');
+  // Production passes (review 7ed68f1, finding 1): the pull applies the table to the native KRW packet before its FX
+  // pass and stores the withheld cells; every later read applies it again. While the quarter is the same, no pass warns.
+  const quiet = (res, label) => {
+    assert.equal(res.snapshot.meta.financialDataIssue?.caseId, q.caseId, label + ': hold kept');
+    assert.ok(!res.events.some(e => e.status === 'stale'), label + ': no warning');
+  };
+  quiet(applyFinancialCases(clone(sk)), 'second pass');
+  const pulled = clone(raw), gpNative = new Map(table.cases.filter(c => c.ticker === '402340.KS').map(c => [c.period, c.expectedBadValue]));
+  for (const f of ['revenueQ', 'grossProfitQ', 'opIncQ']) pulled.timeseries[f] = pulled.timeseries[f].map((row, i) =>
+    ({ ...row, value: f === 'grossProfitQ' ? gpNative.get(pulled.timeseries[f + 'Ends'][i]) : value(row) / fx }));
+  Object.assign(pulled.meta, { reportingCurrency: 'KRW', fxConverted: false });
+  delete pulled.meta.reportingCurrencyOriginal; delete pulled.meta.fxRateApplied;
+  quiet(applyFinancialCases(clone(pulled)), 'pull time (native KRW)');
+  assert.equal(require('../pull-yahoo.js')._convertSnapshotToUSDGuarded(pulled), true);
+  assert.deepEqual(norm(pulled, 'grossProfitQ'), [null, null, null, null, null]);
+  quiet(applyFinancialCases(pulled), 'read after pull');
   // Gross profit: all five quarters withheld with the reason; revenue and operating income stay the vendor rows.
   assert.deepEqual(norm(sk, 'grossProfitQ'), [null, null, null, null, null]);
   assert.ok(financialReasons(sk).some(t => t.startsWith('Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus')));
@@ -1284,6 +1306,14 @@ test('8020.T: four revenue quarters from the tanshin (two stored zeros replaced)
   const n = applyFinancialCases(next);
   assert.equal(n.snapshot.timeseries.revenueQ[0].financialMissing?.reasonCode, 'period-after-coverage');
   assert.deepEqual(jpy(n.snapshot).slice(1), [272167, 280001, 274169, 262379]);
+  // Drift (review 7ed68f1, finding 2): a moved vendor cell, or a stored zero the vendor fills, is withheld as
+  // vendor-value-changed, never shown as the vendor value and never replaced with the now stale issuer value.
+  for (const i of [0, 1]) {
+    const moved = clone(raw); moved.timeseries.revenueQ[i] = { value: value(moved.timeseries.revenueQ[i]) + 1e6 * fx };
+    const d = applyFinancialCases(moved).snapshot.timeseries.revenueQ;
+    assert.equal(d[i].financialMissing?.reasonCode, 'vendor-value-changed', 'index ' + i);
+    assert.deepEqual(jpy({ ...moved, timeseries: { ...moved.timeseries, revenueQ: d } }).filter((_, j) => j !== i), [272167, 280001, 274169, 262379].filter((_, j) => j !== i));
+  }
   // Break-once on test data: without the Kanematsu cases the stored zero is back in the newest quarter.
   const guard = cfg => assert.equal(jpy(applyFinancialCases(clone(raw), cfg && { table: cfg }).snapshot)[0], 272167);
   assert.throws(() => guard(noKan), assert.AssertionError); guard(); breaks++;
@@ -1306,6 +1336,12 @@ test('CIG-C: gross profit on the restated basis of the 2Q26 ITR, Q3/Q4 2025 with
   for (const f of ['revenueQ', 'opIncQ']) assert.equal(serial(r.snapshot.timeseries[f]), serial(raw.timeseries[f]), f);
   assert.equal(serial(r.snapshot.annual), serial(raw.annual));
   for (const t of ['CMIG3.SA', 'CIG']) { const o = clone(raw); o.meta.ticker = t; assert.equal(applyFinancialCases(o).snapshot, o, t); }
+  // Drift (review 7ed68f1, finding 2): a moved vendor cell is withheld as vendor-value-changed, never replaced with
+  // the now stale issuer value; the other covered quarters stay the issuer figures.
+  const moved = clone(raw); moved.timeseries.grossProfitQ[0] = { value: value(moved.timeseries.grossProfitQ[0]) + 1e3 * fx };
+  const d = applyFinancialCases(moved).snapshot;
+  assert.equal(d.timeseries.grossProfitQ[0].financialMissing?.reasonCode, 'vendor-value-changed');
+  assert.deepEqual(brl(d), [null, 1768103, null, null, 2199760]);
   // Break-once on test data: without the Cemig cases the vendor value is back in the newest quarter.
   const guard = cfg => assert.equal(brl(applyFinancialCases(clone(raw), cfg && { table: cfg }).snapshot)[0], 1952136);
   assert.throws(() => guard(noCig), assert.AssertionError); guard(); breaks++;

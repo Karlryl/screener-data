@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02h",
+  "revision": "2026-10-02i",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -6174,25 +6174,15 @@
     {
       "caseId": "402340.ks-equity-method-revenue-20261002",
       "ticker": "402340.KS",
-      "reason": "Score fehlt: Der Anbieter zählt bei SK Square die Gewinne aus Beteiligungen zum Umsatz (zweites Quartal 2026: 19.609,8 statt 328,5 Mrd. KRW laut Halbjahresbericht). Die Quartale bis September 2025 hat die Firma nach dem Verkauf von Dreamus noch nicht auf der neuen Basis veröffentlicht; ein Wachstum aus gemischten Basen wäre falsch.",
+      "reason": "Score fehlt: Der Anbieter zählt bei SK Square die Gewinne aus Beteiligungen zum Umsatz (zweites Quartal 2026: 19.609,8 statt 328,5 Mrd. KRW laut Halbjahresbericht). Das dritte und vierte Quartal 2025 hat die Firma nach dem Verkauf von Dreamus noch nicht auf der neuen Basis veröffentlicht; ein Wachstum aus gemischten Basen wäre falsch.",
       "fingerprint": [
         {
           "path": [
             "timeseries",
-            "revenueQ",
-            0,
-            "value"
+            "revenueQEnds",
+            0
           ],
-          "expected": 14432004174.49876
-        },
-        {
-          "path": [
-            "timeseries",
-            "grossProfitQ",
-            0,
-            "value"
-          ],
-          "expected": 14367801254.66038
+          "expected": "2026-06-30"
         }
       ],
       "sources": [
