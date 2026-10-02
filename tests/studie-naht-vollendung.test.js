@@ -17,6 +17,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const { execFileSync, spawnSync } = require('node:child_process');
+const { resolveCommit } = require('./helpers/history-anchor');
 
 const WURZEL = path.join(__dirname, '..');
 // Der Stand VOR dieser Vollendung. Von ihm kommen die un-vollendeten Fassungen.
@@ -33,7 +34,7 @@ const WURZEL = path.join(__dirname, '..');
 // lib/ledger-single-appender.js noch KEIN LEDGER_RELS und
 // lib/studie-verfassung.js noch KEIN vorgaengerDatei. Der Stand ist damit
 // unveraenderlich derselbe, gegen den die Proben geschrieben wurden.
-const VOR_DER_VOLLENDUNG = 'f949cbc5f9cd8e01fb781a5f3cb951036c69b35f';
+const VOR_DER_VOLLENDUNG = resolveCommit('f949cbc5f9cd8e01fb781a5f3cb951036c69b35f');
 
 function tempdir(prefix) {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));

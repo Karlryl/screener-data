@@ -25,6 +25,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { test } = require('node:test');
+const { resolveCommit } = require('./helpers/history-anchor');
 
 const WURZEL = path.join(__dirname, '..');
 const K = require(path.join(WURZEL, 'scripts', 'studie-f6-konfirmatorisch-v4.js'));
@@ -168,9 +169,9 @@ test('F6-C24a: die vorher/nachher-SHA sind BYTE-EXAKT gegen git nachgemessen', (
   const zeigen = (commit, rel) => execFileSync('git',
     ['show', `${commit}:${rel}`], { cwd: WURZEL, maxBuffer: 64 * 1024 * 1024 });
   for (const f of K.C24A_DRIFT) {
-    assert.strictEqual(sha256(zeigen('3961ed8ace', f.pfad)), f.vorher,
+    assert.strictEqual(sha256(zeigen(resolveCommit('3961ed8ace'), f.pfad)), f.vorher,
       `${f.pfad}: vorher stimmt nicht mit dem Stand auf main ueberein`);
-    assert.strictEqual(sha256(zeigen('3d0073abe9', f.pfad)), f.nachher,
+    assert.strictEqual(sha256(zeigen(resolveCommit('3d0073abe9'), f.pfad)), f.nachher,
       `${f.pfad}: nachher stimmt nicht mit dem Draft-Commit ueberein`);
   }
 });

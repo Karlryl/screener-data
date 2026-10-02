@@ -22,6 +22,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const { resolveCommit } = require('./helpers/history-anchor');
 
 const REPO = path.join(__dirname, '..');
 const RECORD = path.join(REPO, 'protocol', 'early-detection', '2.0.0', 'supersede-record.json');
@@ -87,7 +88,8 @@ test('Stilllegungs-Record: Beweisliste ist per Mengen-Digest gegen stilles Strei
 
 test('Stilllegungs-Record: jedes erhaltene Beweisartefakt hat noch seinen Inhalts-Hash', () => {
   const record = JSON.parse(fs.readFileSync(RECORD, 'utf8'));
-  const alt = record.altApparatus.commit;
+  // The record stays byte-frozen; a history rewrite gives the commit a new id (helper).
+  const alt = resolveCommit(record.altApparatus.commit);
   const ungeprueft = [];
   let hart = 0;
 
