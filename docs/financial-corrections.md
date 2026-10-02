@@ -344,7 +344,7 @@ Nicht in dieser Tabelle (Folgeaufträge, je eine Zeile):
 - JBS: Börsenwert springt zwischen zwei Aktienzahlen; eine Zeile in derselben Aktienzahl-Handtabelle (776.086.920 Klasse A plus 294.842.267 Klasse B laut 10-Q-Deckblatt). (Nachtrag 02.10.: erledigt.)
 - Gespeicherte SEC-Dateien (`external-data/sec-*`): COP (Umsatz-Tag 2025), DCO (10-K/A wird absichtlich übersprungen), INFQ (Betriebsergebnis 2025), HL (Neuausweis 2025), HOS (Helix). Sie speisen Zyklus-Dämpfer und `roicStability`, nicht das Wachstum; braucht eine Korrektur in `merge-sec-xbrl.js` oder eine eigene Tabelle.
 - Dian Tou (002128.SZ), Quartal 31.12.2025: Umsatz −914,6 Mio. CNY und Bruttogewinn 562,0 Mio. CNY (laut Firma 3,13 Mrd.). Nicht eingetragen: Die gespeicherten Werte sind nach der Umrechnung keine exakten Vielfachen eines ganzzahligen CNY-Betrags (der Abgleich `expectedBadValue` verlangt exakte Gleichheit), und zwei leere Zellen würden das Quartalswachstum abschalten; braucht alle fünf Quartale aus den Berichten auf cninfo.
-- Wisdom Marine (2637.TW): Die ganze Reihe steht in Taiwan-Dollar unter dem Kennzeichen USD (Q4 2025 5,42 Mrd. statt 163,8 Mio. USD); kein Einzelzellenfehler, gehört zur Währungskorrektur wie bei YPF und Vale.
+- Wisdom Marine (2637.TW): Die ganze Reihe steht in Taiwan-Dollar unter dem Kennzeichen USD (Q4 2025 5,42 Mrd. statt 163,8 Mio. USD); kein Einzelzellenfehler, gehört zur Währungskorrektur wie bei YPF und Vale. (Nachtrag 02.10.: bis dahin gesperrt; Abschnitt „Wisdom Marine gesperrt“.)
 - Bullish (BLSH), Bruttogewinn 30.06.2025: Die Firma weist keinen Bruttogewinn aus, alle Anbieterwerte sind Konstrukte (wie bei VCTR); Methodenfrage für Firmen ohne Bruttogewinn-Zeile.
 - Celesc Umsatzbasis: Anbieter 2T25 2.715,9 Mio. BRL, Firma („Receita Operacional Líquida“) 2.899,5 Mio.; ungeklärt, ob der Anbieter die Bauerlöse herausrechnet; nicht geprüft.
 - Offene Prüfnotiz aus PR #400 (Low 2): Ersatzwerte werden nicht maschinell gegen den `value` ihrer Quelle geprüft. (Nachtrag 02.10.: erledigt, die Prüfung lehnt einen Ersatzwert ab, der zu keinem Quellwert passt.)
@@ -471,6 +471,14 @@ Wirkung am festen Tag (wie oben), jede Achse vorher → nachher:
 - Indirekt (zusammen mit dem Betriebsergebnis oben): Growth 82 Scores um höchstens 0,3, Quality 192 um höchstens 0,1, Ränge um höchstens 2 Plätze; keine Board-Ein- oder Austritte.
 
 Offen: Das Margenniveau liegt neu ausgewiesen bei 46,2 % (509,8/1.103,9) statt 43,7 % beim Anbieter; die leere Zelle kostet HL in Quality mehr als der Fehler. Jahresersatzwerte schließt die Tabelle bewusst aus (#403); ob HL dafür eine Ausnahme bekommt, ist eine Methodenfrage. Ebenfalls offen: Betriebsergebnis 2023 bis 2025 auf altem Stand (514,8 / 106,3 / −44,7 Mio. statt 396,4 / 123,8 / 12,0 Mio. laut 8-K, „Income from operations / 396,409 / 123,762 / 12,009“); die Tabelle trägt `annualOpInc` nicht.
+
+## Wisdom Marine gesperrt (02.10.2026)
+
+Problem: Wisdom Marine (2637.TW) berichtet in US-Dollar (Konzernabschluss 2025, Seite 17: „statements are presented in US Dollar, which is the Company's functional currency“; Umsatz 2025 Seite 10: „$541,957,260“). Der Anbieter führt alle Abschlusszahlen in Taiwan-Dollar unter dem Kennzeichen USD: Umsatz 2025 16.948.954.566 (31,27 × 541.957.260), 2024 20.862.634.594 (32,88 × 634.431.170). Verhältnisse stimmen, Beträge und das Wachstum (+40,3 %, Taiwan-Dollar-Wachstum) nicht. Die Währungstabelle (`lib/statement-currency-hand-table.js`) trägt nur den umgekehrten Fall (Abschluss in USD, Anbieter in Fremdwährung mit USD-Notierung).
+
+Lösung: Sperre wie HLX (`quarantines`), Fingerabdruck auf die exakt gespeicherten Jahreswerte, unabhängig von der Position: Jahresumsatz 16.948.954.566,336 und Jahresergebnis 3.948.354.422,1056 (gerundete Werte würden vom ersten Lauf an warnen). Ein neues Quartal oder ein neues Jahr vorn ändert den Fingerabdruck nicht; ändert der Anbieter die Werte, bleibt die Sperre und der Lauf warnt (`quarantine-fingerprint-changed`), bis ein Mensch neu prüft. Am festen Tag: keine Warnung.
+
+Wirkung am festen Tag: verlässt die volle Industrials-Liste (profitabel, 43,5, Position 1.274, nicht im gezeigten Board) und die volle Quality-Liste (35,4, Position 1.584); steht mit `data-suspect`, Grund und ohne Börsenwert und Wachstum in der Ausschlussliste. Aufgehoben wird die Sperre, wenn die Währungstabelle auch Fremdwährungsbeträge unter USD-Kennzeichen umrechnen kann (Folgeauftrag, zusammen mit HCLTECH.NS).
 
 ## Breite Nullregel: ausschließlich Schattenrechnung
 

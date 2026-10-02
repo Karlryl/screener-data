@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02b",
+  "revision": "2026-10-02c",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -5585,6 +5585,49 @@
         }
       ],
       "vendorEvidence": "Snapshot of run 36839128456: marketCap 37,401,989,416 USD at 11.37 USD, impliedSharesOutstanding 3,289,961,848 (the same wrong count the share-count hand table fingerprints for JBS). Estimate: 11.3685 USD x 1,070,929,187 = 12.18 bn USD."
+    },
+    {
+      "caseId": "wisdom-marine-twd-under-usd-20261002",
+      "ticker": "2637.TW",
+      "reason": "Score fehlt: Wisdom Marine berichtet in US-Dollar; der Anbieter führt alle Abschlusszahlen in Taiwan-Dollar unter dem Kennzeichen USD (Umsatz 2025: 16.949 Mio. statt 542,0 Mio. USD). Gesperrt, bis die Zahlen in der Berichtswährung vorliegen.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 16948954566.336
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": 3948354422.1056
+        }
+      ],
+      "annualPairPeriod": "2025-12-31",
+      "sources": [
+        {
+          "url": "https://wisdomlines.com.tw/storage/uploads/financial_report/financial_reports_2025q4_en.pdf",
+          "page": "10 (consolidated statements of comprehensive income, years ended 31 December 2025 and 2024, \"All Amounts Expressed in US Dollars\")",
+          "quote": "$541,957,260",
+          "unit": "USD",
+          "value": 541957260,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://wisdomlines.com.tw/storage/uploads/financial_report/financial_reports_2025q4_en.pdf",
+          "page": "17 (note on the basis of preparation)",
+          "quote": "statements are presented in US Dollar, which is the Company's functional currency"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36839128456 (2026-10-01): meta.reportingCurrency USD, fxRateApplied 1; annualRev newest 16,948,954,566.336 = 31.27 x the issuer USD revenue 541,957,260; the year before 20,862,634,594.28 = 32.88 x 634,431,170 (TWD per USD); revenueQ 2025-12-31 5,419,996,890.7858."
     }
   ]
 }

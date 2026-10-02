@@ -28,10 +28,10 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 195 authorized cells (182 quarterly, 13 annual) and nine held packets have auditable sources', () => {
+test('all 195 authorized cells (182 quarterly, 13 annual) and ten held packets have auditable sources', () => {
   assert.equal(table.cases.length, 195);
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 13);
-  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE']);
+  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
@@ -969,9 +969,10 @@ test('annual readers: INFQ badge, gross-profit growth and annual fallback empty;
 // gross profits 0) are held the same way. 02.10.: HLX (retired ticker, price and market cap frozen since 01.09.).
 // 02.10. review round 2: 2670.HK (pre-split price), ENGI3.SA (one class price x all classes), Z98.DE (JBS wrong count on
 // a non-USD leg): wrong market caps the share-count table cannot carry; held until a price- or class-aware fix exists.
-test('holds KBDC, HOS, TYG, OLPX, HLX, 2670.HK, ENGI3.SA, Z98.DE: off the boards with the reason; cases still apply; drift keeps the hold and warns', () => {
+// E4 (02.10.): 2637.TW (Wisdom Marine reports in USD; the vendor packet is in TWD under a USD label).
+test('holds KBDC, HOS, TYG, OLPX, HLX, 2670.HK, ENGI3.SA, Z98.DE, 2637.TW: off the boards with the reason; cases still apply; drift keeps the hold and warns', () => {
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
-  for (const ticker of ['KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE']) {
+  for (const ticker of ['KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW']) {
     const q = table.quarantines.find(x => x.ticker === ticker);
     const held = (fn, input = clone(fixture[ticker])) => {
       const r = fn(input);
@@ -1139,6 +1140,26 @@ test('HL: annual gross profit withheld (badge and gross-profit growth empty with
   // Break-once on test data: without the three cases the badge shows +213.9 % again.
   const guard = cfg => assert.equal(overviewMetric(applyFinancialCases(clone(fixture.HL), cfg && { table: cfg }).snapshot, {}).value, null);
   assert.throws(() => guard(noHl), assert.AssertionError); guard(); breaks++;
+});
+
+// E4 Part C (02.10.): the Wisdom Marine hold is fingerprinted on the EXACT stored annual floats and is position-free:
+// on the fixed day it holds without a warning, also when a new quarter arrives; a rounded fingerprint would warn.
+test('2637.TW hold: exact annual floats, no fingerprint warning on the fixed day or with a new quarter; rounded anchors would warn', () => {
+  const q = table.quarantines.find(x => x.ticker === '2637.TW');
+  assert.deepEqual(q.fingerprint.map(a => [a.path.join('.'), a.expected]),
+    [['annual.annualRev.0.value', 16948954566.336], ['annual.annualNetIncome.0.value', 3948354422.1056]]);
+  const warned = (r) => r.events.some(e => e.reasonCode === 'quarantine-fingerprint-changed');
+  const held = fn => {
+    const r = fn(clone(fixture['2637.TW']));
+    assert.equal(r.snapshot.meta.financialDataIssue?.caseId, q.caseId); assert.ok(!warned(r));
+    const next = clone(fixture['2637.TW']), ts = next.timeseries;
+    for (const f of ['revenueQ', 'grossProfitQ', 'opIncQ']) { ts[f] = [{ value: 1 }, ...ts[f]]; ts[f + 'Ends'] = ['2026-09-30', ...ts[f + 'Ends']]; }
+    assert.ok(!warned(fn(next)), 'a new quarter is still the same packet');
+  };
+  held(applyFinancialCases);
+  // Break-once on test data: the plan's rounded values (16,948,954,566) never match exactly and warn from the first run.
+  const rounded = clone(table); rounded.quarantines.find(x => x.ticker === '2637.TW').fingerprint[0].expected = 16948954566;
+  assert.throws(() => held(s => applyFinancialCases(s, { table: rounded })), assert.AssertionError); breaks++;
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);
