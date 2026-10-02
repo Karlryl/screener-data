@@ -1,0 +1,212 @@
+// tests/value-flags.test.js — standalone runner (node tests/value-flags.test.js, exit 0/1).
+//
+// Tag 1401 (value-gate rebuild PR3): a row whose ticker has an OPEN item in
+// data-health/value-open-items.json carries an additive `valueFlags` list in the findash export
+// (scripts/write-findash-export.js, the one applier ergaenzeWaehrungsbeleg) and in the stored
+// vintage row (scripts/write-board-history.js buildBoardVintage). The flag only MARKS: no value,
+// score, rank or growth changes, rows without an open item carry no key at all, closed items give
+// no flag, and a missing or unreadable list means no flags plus a ::warning:: line (never a throw).
+// Every case asserts presence AND absence. Hermetic: temp dirs only (L4).
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const V = require('../lib/value-open-items.js');
+const X = require('../scripts/write-findash-export.js');
+const W = require('../scripts/write-board-history.js');
+
+let fail = 0;
+function check(name, fn) {
+  try { fn(); console.log('  ok   ' + name); }
+  catch (e) { fail++; console.log('  FAIL ' + name + ': ' + (e && e.message || e)); }
+}
+const tmpDirs = [];
+process.once('exit', () => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
+function mkTmp(p) { const d = fs.mkdtempSync(path.join(os.tmpdir(), p)); tmpDirs.push(d); return d; }
+function writeJson(p, o) { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(o)); }
+
+// A list state in the shape scripts/value-open-items.js writes (docs/value-open-items.md).
+function item(o) {
+  return {
+    id: o.company + '|' + o.field + '|' + o.firstSeen, company: o.company, board: 'energy', field: o.field,
+    periodEnd: o.cells[0].periodEnd, acceptedValue: o.cells[0].acceptedValue, newValue: o.cells[0].newValue,
+    factor: o.cells[0].factor, firstSeen: o.firstSeen, lastSeen: '2026-10-01',
+    cells: o.cells.map((c) => ({ acceptedFrom: '2026-09-24', lastSeen: '2026-10-01', ...c })),
+    labels: o.labels || [], status: o.status || 'open', closedBy: o.status === 'closed' ? 'acceptance:1' : null,
+    closedAt: o.status === 'closed' ? '2026-10-01' : null,
+  };
+}
+const STATE = {
+  schema: V.SCHEMA, factor: 3, updatedFor: '2026-10-01',
+  items: [
+    item({ company: 'AAA', field: 'revenueQ', firstSeen: '2026-09-29', labels: ['korrigiert-von-uns'], cells: [
+      { periodEnd: '2026-06-30', acceptedValue: 100, newValue: 400, factor: 4, firstSeen: '2026-09-29' },
+      { periodEnd: '2026-03-31', acceptedValue: 90, newValue: 0, factor: null, firstSeen: '2026-09-30' },
+    ] }),
+    item({ company: 'AAA', field: 'marketCap', firstSeen: '2026-09-30', cells: [
+      { periodEnd: null, acceptedValue: 5e9, newValue: 1e9, factor: 5, firstSeen: '2026-09-30', acceptedShares: null, newShares: 2 },
+    ] }),
+    item({ company: 'CLOSED', field: 'grossProfitQ', firstSeen: '2026-09-20', status: 'closed', cells: [
+      { periodEnd: '2026-06-30', acceptedValue: 10, newValue: 50, factor: 5, firstSeen: '2026-09-20', closedValue: 50 },
+    ] }),
+  ],
+};
+const AAA_FLAGS = [
+  { field: 'revenueQ', periodEnd: '2026-06-30', acceptedValue: 100, newValue: 400, factor: 4, firstSeen: '2026-09-29', labels: ['korrigiert-von-uns'] },
+  { field: 'revenueQ', periodEnd: '2026-03-31', acceptedValue: 90, newValue: 0, factor: null, firstSeen: '2026-09-30', labels: ['korrigiert-von-uns'] },
+  { field: 'marketCap', periodEnd: null, acceptedValue: 5e9, newValue: 1e9, factor: 5, firstSeen: '2026-09-30', labels: [] },
+];
+const FLAG_KEYS = ['field', 'periodEnd', 'acceptedValue', 'newValue', 'factor', 'firstSeen', 'labels'];
+
+// ── 1) the helper (lib/value-open-items.js) ─────────────────────────────────
+check('F1 valueFlagsByTicker: one entry per cell of every OPEN item, exact keys; closed item and unknown ticker give nothing', () => {
+  const m = V.valueFlagsByTicker(STATE);
+  assert.deepStrictEqual([...m.keys()], ['AAA'], 'only the ticker with an open item');
+  assert.deepStrictEqual(m.get('AAA'), AAA_FLAGS);
+  for (const f of m.get('AAA')) assert.deepStrictEqual(Object.keys(f), FLAG_KEYS, 'key list and order');
+  assert.strictEqual(m.has('CLOSED'), false, 'a closed item gives no flag');
+  m.get('AAA')[0].labels.push('x');
+  assert.deepStrictEqual(STATE.items[0].labels, ['korrigiert-von-uns'], 'flags are copies, the state is not touched');
+});
+
+check('F2 readValueFlags: missing, unreadable, wrong schema -> empty map + ::warning:: line, never a throw', () => {
+  const dir = mkTmp('vf-');
+  const ok = path.join(dir, 'ok.json'); writeJson(ok, STATE);
+  const bad = path.join(dir, 'bad.json'); fs.writeFileSync(bad, '{ not json');
+  const wrong = path.join(dir, 'wrong.json'); writeJson(wrong, { schema: 'other', items: [] });
+  const warns = [];
+  const w = (s) => warns.push(s);
+  assert.deepStrictEqual([...V.readValueFlags(ok, w).keys()], ['AAA']);
+  assert.strictEqual(warns.length, 0, 'a good list warns nothing');
+  for (const f of [path.join(dir, 'absent.json'), bad, wrong]) {
+    const n = warns.length;
+    const m = V.readValueFlags(f, w);
+    assert.strictEqual(m.size, 0, 'no flags from ' + path.basename(f));
+    assert.strictEqual(warns.length, n + 1, 'one warning for ' + path.basename(f));
+    assert.ok(warns[n].startsWith('::warning::'), 'warning line: ' + warns[n]);
+  }
+});
+
+check('F3 readAcceptances: acceptedAt must be a real calendar day (round trip), not only the YYYY-MM-DD shape', () => {
+  const entry = (acceptedAt) => ({ itemId: 'A|revenueQ|2026-09-29', value: 100, acceptedAt, reason: 'r' });
+  const r = V.readAcceptances({ acceptances: [entry('2026-13-45'), entry('2026-02-30'), entry('2026-02-28'), entry('2028-02-29'), entry('2026-9-01')] });
+  assert.deepStrictEqual(r.entries.map((e) => e.acceptedAt), ['2026-02-28', '2028-02-29'], 'only real days are kept');
+  assert.strictEqual(r.warnings.length, 3, 'one warning per rejected entry');
+});
+
+// ── 2) the export (scripts/write-findash-export.js) ─────────────────────────
+const boardRow = (ticker) => ({
+  ticker, name: 'Fixture ' + ticker, score: 88.2, track: 'profitable', lamps: [],
+  overview: { kind: 'gp', value: 0.4, companion: 50 }, country: 'United States', region: 'North America',
+  sector: 'Technology', marketCap: 5e9, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
+  profitTier: 'langfristig-profitabel', ipoYear: 1999, cohortN: 90, cohortFallback: false, coverageAxes: '7/7',
+});
+const ovRow = (ticker) => ({ ...boardRow(ticker), formulaId: 'energy', overviewKind: 'gp', overviewValue: 0.4, overviewCompanion: 50, overview: undefined });
+const svRow = (ticker) => ({ ticker, name: 'Fixture ' + ticker, runwayQuarters: 9999, lamps: [], country: 'Germany', region: 'Europe',
+  sector: 'Consumer Cyclical', marketCap: null, phase: null, mcapBand: 'small', ipoRecency: null, cohortN: null, cohortFallback: null });
+const without = (r) => { const c = { ...r }; delete c.valueFlags; return c; };
+
+check('E1 export rows: flagged ticker carries valueFlags (all three mappers), others have no key; everything else identical', () => {
+  const dir = mkTmp('vfx-');
+  const file = path.join(dir, 'value-open-items.json'); writeJson(file, STATE);
+  const cases = [[X.mapBoardRow, boardRow], [X.mapOverviewRow, ovRow], [X.mapSurvivalRow, svRow]];
+  X.ladeValueFlags(path.join(dir, 'absent.json'), () => {});
+  const plain = cases.map(([fn, mk]) => [fn(mk('AAA'), 0), fn(mk('BBB'), 1), fn(mk('CLOSED'), 2)]);
+  assert.strictEqual(X.ladeValueFlags(file, () => {}), 1, 'one flagged ticker loaded');
+  const flagged = cases.map(([fn, mk]) => [fn(mk('AAA'), 0), fn(mk('BBB'), 1), fn(mk('CLOSED'), 2)]);
+  for (let i = 0; i < cases.length; i++) {
+    const [a, b, c] = flagged[i];
+    assert.deepStrictEqual(a.valueFlags, AAA_FLAGS, 'flagged row carries the open cells');
+    assert.strictEqual(Object.keys(a).filter((k) => k === 'valueFlags').length, 1);
+    assert.strictEqual('valueFlags' in b, false, 'row without an item: no key (absence, not an empty array)');
+    assert.strictEqual('valueFlags' in c, false, 'closed item: no key');
+    assert.deepStrictEqual(without(a), plain[i][0], 'only valueFlags differs');
+    assert.strictEqual(JSON.stringify(without(a)), JSON.stringify(plain[i][0]), 'byte-identical without the key');
+    assert.deepStrictEqual(b, plain[i][1]); assert.deepStrictEqual(c, plain[i][2]);
+    for (const k of ['valueFlags']) assert.strictEqual(k in plain[i][0], false, 'no list loaded -> no key');
+  }
+  X.ladeValueFlags(path.join(dir, 'absent.json'), () => {});
+  assert.strictEqual('valueFlags' in X.mapBoardRow(boardRow('AAA'), 0), false, 'reloading a missing list clears the flags');
+});
+
+check('E2 export --check: valid valueFlags pass, absence passes, malformed lists trip (both directions)', () => {
+  const dir = mkTmp('vfc-');
+  const file = path.join(dir, 'value-open-items.json'); writeJson(file, STATE);
+  X.ladeValueFlags(file, () => {});
+  const a = X.mapBoardRow(boardRow('AAA'), 0);
+  X.ladeValueFlags(path.join(dir, 'absent.json'), () => {});
+  const errsOf = (r) => { const e = []; X.validateBoardRow(r, 'r', e); return e; };
+  assert.deepStrictEqual(errsOf(a), [], 'flagged row validates');
+  assert.deepStrictEqual(errsOf(without(a)), [], 'row without the key validates');
+  const f0 = a.valueFlags[0];
+  const bad = [
+    [[], 'empty array'], ['x', 'not an array'], [[{ ...f0, field: 'score' }], 'unknown field'],
+    [[{ ...f0, periodEnd: '2026-6-30' }], 'periodEnd not an ISO day'], [[{ ...f0, periodEnd: null }], 'quarterly cell without periodEnd'],
+    [[{ ...a.valueFlags[2], periodEnd: '2026-06-30' }], 'marketCap cell with periodEnd'], [[{ ...f0, acceptedValue: 0 }], 'acceptedValue 0'],
+    [[{ ...f0, newValue: -1 }], 'newValue negative'], [[{ ...f0, factor: 2 }], 'factor below 3'], [[{ ...f0, factor: null }], 'factor null with newValue > 0'],
+    [[{ ...f0, firstSeen: 'gestern' }], 'firstSeen not a day'], [[{ ...f0, labels: ['frei erfunden'] }], 'unknown label'],
+    [[{ ...f0, labels: undefined }], 'labels missing'],
+  ];
+  for (const [vf, label] of bad) assert.ok(errsOf({ ...a, valueFlags: vf }).length > 0, 'TAMPER SLIPPED: ' + label);
+  const ov = X.mapOverviewRow(ovRow('BBB'), 0);
+  const e = []; X.validateOverviewRow({ ...ov, valueFlags: 'x' }, 'o', e);
+  assert.ok(e.length > 0, 'overview rows are checked too');
+  const s = []; X.validateSurvivalRow({ ...X.mapSurvivalRow(svRow('BBB'), 0), valueFlags: [] }, 's', s);
+  assert.ok(s.length > 0, 'survival rows are checked too');
+});
+
+// ── 3) the stored vintage row (scripts/write-board-history.js) ───────────────
+function bhBase() {
+  const base = mkTmp('vfb-');
+  fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  const row = (ticker, score) => ({ ticker, score, track: 'profitable', coverageAxes: '7/7', lamps: [] });
+  writeJson(path.join(base, 'outputs', 'hypergrowth', 'full', 'energy.json'),
+    { profitable: [row('AAA', 90), row('BBB', 80), row('CLOSED', 70)], unprofitable: [] });
+  return base;
+}
+const readV = (base) => JSON.parse(fs.readFileSync(path.join(base, 'board-history', '2026-07-13', 'energy.json'), 'utf8'));
+const rowsOf = (v) => v.cohort.profitable;
+
+check('B1 buildBoardVintage: flags map -> valueFlags as LAST key of the flagged row only; no map -> no key anywhere', () => {
+  const data = { profitable: [{ ticker: 'AAA', score: 90 }, { ticker: 'BBB', score: 80 }], unprofitable: [{ ticker: 'CLOSED', score: 20 }] };
+  const plain = W.buildBoardVintage('energy', data, '2026-07-13', {}, null);
+  const flagged = W.buildBoardVintage('energy', data, '2026-07-13', {}, null, V.valueFlagsByTicker(STATE));
+  const [a, b] = flagged.cohort.profitable; const c = flagged.cohort.unprofitable[0];
+  assert.deepStrictEqual(a.valueFlags, AAA_FLAGS);
+  const keys = Object.keys(a);
+  assert.strictEqual(keys[keys.length - 1], 'valueFlags', 'last key');
+  assert.strictEqual('valueFlags' in b, false); assert.strictEqual('valueFlags' in c, false);
+  for (const r of [...plain.cohort.profitable, ...plain.cohort.unprofitable]) assert.strictEqual('valueFlags' in r, false, 'no map -> no key');
+  assert.strictEqual(JSON.stringify(without(a)), JSON.stringify(plain.cohort.profitable[0]), 'row byte-identical without the key');
+  const strip = (v) => JSON.stringify({ ...v, cohort: { profitable: v.cohort.profitable.map(without), unprofitable: v.cohort.unprofitable.map(without) } });
+  assert.strictEqual(strip(flagged), JSON.stringify(plain), 'vintage byte-identical except valueFlags');
+});
+
+check('B2 run(): reads data-health/value-open-items.json of the same base; flags only the open-item row', () => {
+  const base = bhBase();
+  writeJson(path.join(base, 'data-health', 'value-open-items.json'), STATE);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const [a, b, c] = rowsOf(readV(base));
+  assert.deepStrictEqual(a.valueFlags, AAA_FLAGS);
+  assert.strictEqual('valueFlags' in b, false); assert.strictEqual('valueFlags' in c, false, 'closed item: no flag');
+});
+
+check('B3 run(): missing or unreadable list -> vintage written without any valueFlags, ::warning:: logged, no throw', () => {
+  for (const content of [null, '{ broken']) {
+    const base = bhBase();
+    if (content !== null) { fs.mkdirSync(path.join(base, 'data-health'), { recursive: true }); fs.writeFileSync(path.join(base, 'data-health', 'value-open-items.json'), content); }
+    const logs = [];
+    const orig = console.warn; console.warn = (s) => logs.push(String(s));
+    let res;
+    try { res = W.run({ baseDir: base, date: '2026-07-13' }); } finally { console.warn = orig; }
+    assert.strictEqual(res.exitCode, 0, 'run still succeeds');
+    assert.ok(rowsOf(readV(base)).every((r) => !('valueFlags' in r)), 'no row flagged');
+    assert.ok(logs.some((l) => l.startsWith('::warning::') && l.includes('value-open-items')), 'warning line logged: ' + logs.join(' | '));
+  }
+});
+
+W._setPaths();
+console.log(fail ? `\n${fail} FAIL` : '\nall ok');
+process.exit(fail ? 1 : 0);
