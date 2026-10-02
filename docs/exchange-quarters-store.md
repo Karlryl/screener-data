@@ -57,7 +57,7 @@ each Taiwan source lists the keys it read (`read: ["6446.TW 114Q3", ...]`).
 
 `chinaSingleQuarters` (YTD -> single quarter with the 一季报 -> 中报 -> 三季报 -> 年报 chain check;
 anything else = unchecked), `taiwanSeasonValues` (column titles checked per season: season 1 is
-`[YTD, quarter, prior YTD, prior quarter]`, seasons 2-3 `[quarter, prior quarter, YTD, prior YTD]`,
+`[YTD, quarter, prior YTD, prior quarter]` or only `[YTD, prior YTD]`, seasons 2-3 `[quarter, prior quarter, YTD, prior YTD]`,
 season 4 `[FY, prior FY]`; YTD must start on 01-01), `taiwanSingleQuarters` (Q4 = FY - 9M, TWD),
 `lastConfirmedAt`.
 Not wired into `prepareSnapshot`.
