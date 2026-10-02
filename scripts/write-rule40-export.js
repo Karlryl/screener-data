@@ -78,7 +78,8 @@ const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
 const DEFAULT_SNAPSHOTS_DIR = process.env.FINDASH_SNAPSHOTS_DIR || path.join(REPO_ROOT, 'snapshots');
 // Tag 1401: the open-items list of the same run (written before the main export). Read only by
 // the CLI (main): build() without opts.valueOpenItemsFile marks off-board names with nothing.
-const DEFAULT_VALUE_OPEN_ITEMS_FILE = path.join(REPO_ROOT, 'data-health', 'value-open-items.json');
+// RULE40_VALUE_OPEN_ITEMS_FILE: test seam, like RULE40_V1_DIR (tests/value-flags.test.js R3 runs main()).
+const DEFAULT_VALUE_OPEN_ITEMS_FILE = process.env.RULE40_VALUE_OPEN_ITEMS_FILE || path.join(REPO_ROOT, 'data-health', 'value-open-items.json');
 
 const SCHEMA = 'findash-export/v1';        // Schema-Pin des Konsumenten (screener-contract.js:53)
 const BOARD_ID = 'rule40';

@@ -323,6 +323,30 @@ check('R2 rule40 --check: a malformed valueFlags on a written row trips the gate
   assert.ok(!res.ok && res.errors.some((e) => e.includes('valueFlags')), 'TAMPER SLIPPED: ' + JSON.stringify(res.errors));
 });
 
+check('R3 rule40 CLI main(): reads the open-items list (off-board flags reach the written board)', () => {
+  const f = r40Fixture(false);
+  const list = path.join(f.dir, 'value-open-items.json'); writeJson(list, STATE_R40);
+  const env = { ...process.env };
+  Object.assign(process.env, { RULE40_V1_DIR: f.v1Dir, RULE40_SNAPSHOTS_DIR: f.snapshotsDir, RULE40_OUT_DIR: f.outDir });
+  const log = console.log, warn = console.warn; console.log = () => {}; console.warn = () => {};
+  let rc;
+  try {
+    // the default path is taken at load time: load a fresh copy with the seam set
+    process.env.RULE40_VALUE_OPEN_ITEMS_FILE = list;
+    delete require.cache[require.resolve('../scripts/write-rule40-export.js')];
+    rc = require('../scripts/write-rule40-export.js').main([]);
+  } finally {
+    console.log = log; console.warn = warn;
+    for (const k of ['RULE40_V1_DIR', 'RULE40_SNAPSHOTS_DIR', 'RULE40_OUT_DIR', 'RULE40_VALUE_OPEN_ITEMS_FILE']) {
+      if (k in env) process.env[k] = env[k]; else delete process.env[k];
+    }
+  }
+  assert.strictEqual(rc, 0);
+  const by = new Map(r40Rows(f).map((r) => [r.ticker, r]));
+  assert.deepStrictEqual(by.get('OFF').valueFlags, [OFF_FLAG], 'CLI passes the list to build()');
+  assert.strictEqual('valueFlags' in by.get('BBB'), false);
+});
+
 W._setPaths();
 console.log(fail ? `\n${fail} FAIL` : '\nall ok');
 process.exit(fail ? 1 : 0);
