@@ -15,11 +15,12 @@
 // Every case asserts presence AND absence. Fixtures are hermetic temp dirs (L4).
 //
 // Mutants (round 3, each run once against these tests and tests/scoring/bh-b09-dailyyml.test.js;
-// full-line anchor, restored by git checkout; expected killer in brackets):
+// full-line anchor, restored by git checkout; measured killers in brackets, all 7 killed on
+// 44162b9c4a):
 //   R3-M1 writer: boardBruch bound to the global prior again
 //         (`prior.date === priorDate ? bruch : null`)                       [Q1-Q6]
-//   R3-M2 writer: boardBruch looked up for the global prior (`bruchFuer(priorDate)`) [Q1, Q2, Q3]
-//   R3-M3 writer: gateOptsFuer always `{}` (daten-schub data not loaded)        [Q5]
+//   R3-M2 writer: boardBruch looked up for the global prior (`bruchFuer(priorDate)`) [P2, Q1-Q7]
+//   R3-M3 writer: gateOptsFuer always `{}` (daten-schub data not loaded)        [Q1-Q3, Q5, Q6]
 //   R3-M4 writer: run header only from the global bruch (`kopfBruch = bruch`)    [Q6]
 //   R3-M5 workflow: verdict ignores the commit outcome (`elif true; then`)       [bh-b09 skipped/failure/empty]
 //   R3-M6 workflow: commit step loses `id: commit_vintage`                        [bh-b09 id test]
