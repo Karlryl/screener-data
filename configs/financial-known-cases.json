@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02g",
+  "revision": "2026-10-02h",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -34,7 +34,8 @@
     { "ticker": "DCO", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" },
-    { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -5621,6 +5622,160 @@
           "start": "2025-04-01",
           "end": "2025-06-30",
           "derivation": "Q2 FY2026 (Jul-Sep 2025) = half year minus first quarter = 262,379 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2026-06-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1804157000,
+      "replacementValue": 1952136000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.03;Resultado Bruto;1952136.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1952136000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 20 (demonstrações dos resultados, três meses findos em 30 de junho de 2026 e 2025, consolidado: Abr a Jun/2026, Abr a Jun/2025 reapresentado)",
+          "quote": "LUCRO BRUTO 1.952.136 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2026-03-31-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1591911000,
+      "replacementValue": 1768103000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-01-01;2026-06-30;3.03;Resultado Bruto;3720239.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 3720239000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.03;Resultado Bruto;1952136.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1952136000,
+          "derivation": "Q1 2026 on the restated basis of the 2Q26 ITR = six months 2026 minus Q2 2026 = 1,768,103 thousand BRL (the 1Q26 ITR filed 1,712,453 before the reclassification of note 2.4)"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-12-31-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1737632000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Cemig hat die Kosten im Bericht zum zweiten Quartal 2026 neu gegliedert; für das vierte Quartal 2025 gibt es noch keinen Wert auf dieser Basis, und der Anbieterwert passt auch zum alten Stand nicht (Firma 1.645,9 Mio. BRL).",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip",
+          "page": "dfp_cia_aberta_DRE_con_2025.csv (DFP 2025, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-12-31",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-12-31;3.03;Resultado Bruto;7237316.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 7237316000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-09-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-09-30;3.03;Resultado Bruto;5591424.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": 5591424000,
+          "derivation": "old basis: Q4 2025 = year 7,237,316 minus nine months 5,591,424 = 1,645,892 thousand BRL; vendor 1,737,632; restated Q4 2025 not yet filed"
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-09-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1508569000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Cemig hat die Kosten im Bericht zum zweiten Quartal 2026 neu gegliedert; für das dritte Quartal 2025 gibt es noch keinen Wert auf dieser Basis, und der Anbieterwert passt auch zum alten Stand nicht (Firma 1.600,6 Mio. BRL).",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-09-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-07-01;2025-09-30;3.03;Resultado Bruto;1600625.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 1600625000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-06-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2080901000,
+      "replacementValue": 2199760000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;PENÚLTIMO;2025-04-01;2025-06-30;3.03;Resultado Bruto;2199760.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 2199760000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
         }
       ]
     }

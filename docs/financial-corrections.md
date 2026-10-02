@@ -526,6 +526,26 @@ Wirkung am festen Tag: Score und Rang unverändert (Industrials profitabel 41,4,
 
 Offen: Der Bruttogewinn steht beim Anbieter in allen vier Quartalen auf 0, obwohl die Firma ihn ausweist („売上総利益“, zum Beispiel April bis Juni 2026 46.926 Mio. JPY); nicht Teil dieses Auftrags. Nächstes Quartal (Juli bis September 2026, Halbjahresbericht Anfang November, Termin nicht geprüft) bleibt leer, bis es eingetragen ist.
 
+### Cemig (CIG-C): Bruttogewinn auf der neu ausgewiesenen Basis
+
+Problem: Der Bruttogewinn des Anbieters ist sein Umsatz minus die Kosten laut Abschluss; sein Umsatz lässt aber eine Zeile der Firma weg (Anpassung des zu entschädigenden Finanzvermögens, im ersten Quartal 2026 120,6 Mio. BRL). Dadurch liegt jeder gespeicherte Bruttogewinn 5 bis 8 % neben dem der Firma (erstes Quartal 2026: 1.591,9 statt 1.712,5 Mio. BRL laut Quartalsbericht, „LUCRO BRUTO 1.712.453 1.840.666“).
+
+Basis: Im Bericht zum zweiten Quartal 2026 hat Cemig Kosten neu gegliedert (Nota 2.4 „Reapresentação de saldos comparativos“: die Geldwertanpassung von Rückstellungen steht jetzt im Finanzergebnis) und das Vorjahresquartal neu ausgewiesen („LUCRO BRUTO 2.150.133 49.627 2.199.760“, Spalten bisher, Anpassung, neu). Auf dieser Basis gibt es heute das zweite Quartal 2026, das erste Quartal 2026 (Halbjahr minus zweites Quartal; der Bericht zum ersten Quartal zeigte vor der Umgliederung 1.712.453) und das zweite Quartal 2025. Das dritte und vierte Quartal 2025 gibt es nur auf der alten Basis; der Anbieterwert passt auch dazu nicht. Diese beiden Zellen sind leer gesetzt, statt zwei Basen zu mischen. Die Spezifikation nannte für das erste Quartal 2026 den Wert 1.712.453; eingetragen ist 1.768.103, weil nur dieser zur Basis der übrigen Quartale passt.
+
+| Quartal | Anbieter (Tsd. BRL) | Neu (Tsd. BRL) | Quelle (CVM ITR/DFP, Konto 3.03 „Resultado Bruto“) |
+| --- | --- | --- | --- |
+| Apr bis Jun 2026 | 1.804.157 | 1.952.136 | ITR 30.06.2026, Abr a Jun/2026 |
+| Jan bis Mrz 2026 | 1.591.911 | 1.768.103 | ITR 30.06.2026: Halbjahr 3.720.239 minus Abr a Jun 1.952.136 |
+| Okt bis Dez 2025 | 1.737.632 | leer | alte Basis: DFP 2025 7.237.316 minus ITR neun Monate 5.591.424 = 1.645.892 |
+| Jul bis Sep 2025 | 1.508.569 | leer | alte Basis: ITR 30.09.2025, Jul a Set/2025 1.600.625 |
+| Apr bis Jun 2025 | 2.080.901 | 2.199.760 | ITR 30.06.2026, Vorjahresspalte (neu ausgewiesen) |
+
+`coversThrough` 30.06.2026 für den Bruttogewinn von CIG-C; 0 Zellen `period-not-verified`. Der Umsatz bleibt beim Anbieter (1,2 % unter dem der Firma, nicht Teil dieses Auftrags); die Quartalsmarge mischt deshalb leicht zwei Basen. Diese Marge liest heute nur die Lampe für ein auffälliges jüngstes Quartal (Schwelle 55 % Bruttomarge), sie bleibt aus.
+
+Wirkung am festen Tag: Score, Rang und Achsen unverändert (Versorger profitabel 46,8, Rang 204; Quality Versorger 48,5, Rang 195). Den Quartals-Bruttogewinn liest bei fünf gespeicherten Quartalen kein Score-Bein (die Kennzahl der Zeile braucht acht Quartale und nimmt sonst den Jahreswert). Indirekt: keine Bewegung.
+
+Zweitnotierungen: CMIG3.SA und CIG sind keine Aliasse. CMIG3.SA trägt ein anderes Anbieterpaket (Bruttogewinn 30.06.2026 1.804.259 und 30.06.2025 2.081.436 statt 1.804.157 und 2.080.901), CIG ein älteres Paket ohne das Quartal bis 30.06.2026 und mit tausendfach zu großen Werten (31.03.2026 Bruttogewinn 10.333.161 Mio. BRL). Beide stehen als Doppelnotierung (`dup-issuer`) auf keinem Board, vorher wie nachher.
+
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
 Alle 122 gemessenen Scoreänderungen stehen in der folgenden Tabelle und in financial-corrections-board-changes.csv. Alle 9900 Zellen stehen in financial-corrections-shadow-cells.csv. 26 sichtbare Auswirkungen bleiben auch bei festgehaltener Vergleichskalibrierung; die übrigen entstehen bei der regulären Neukalibrierung. Keine dieser breiten Änderungen ist aktiviert.

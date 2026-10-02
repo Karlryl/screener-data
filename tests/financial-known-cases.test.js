@@ -28,8 +28,8 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 207 authorized cells (194 quarterly, 13 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 207);
+test('all 212 authorized cells (199 quarterly, 13 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 212);
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 13);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
@@ -43,7 +43,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.deepEqual([...need].sort(), [...['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
-    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ'].sort());
+    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ', 'CIG-C|grossProfitQ'].sort());
   assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
   assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 207);
+  assert.equal(validateTable(clone(table)).cases.length, 212);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -1287,6 +1287,28 @@ test('8020.T: four revenue quarters from the tanshin (two stored zeros replaced)
   // Break-once on test data: without the Kanematsu cases the stored zero is back in the newest quarter.
   const guard = cfg => assert.equal(jpy(applyFinancialCases(clone(raw), cfg && { table: cfg }).snapshot)[0], 272167);
   assert.throws(() => guard(noKan), assert.AssertionError); guard(); breaks++;
+});
+
+// E5 Part 3 (02.10.): Cemig (CIG-C). The vendor gross profit is its revenue (without the indemnifiable-asset update
+// line) minus the filed cost, 5 to 8 % off. The 2Q26 ITR reclassified costs (note 2.4) and restated Q2 2025; Q1 2026 on
+// that basis is the six months minus Q2. Q3 and Q4 2025 exist only on the old basis: withheld, never mixed.
+test('CIG-C: gross profit on the restated basis of the 2Q26 ITR, Q3/Q4 2025 withheld; other listings untouched', () => {
+  const raw = fixture['CIG-C'], fx = raw.meta.fxRateApplied;
+  const noCig = clone(table); noCig.cases = noCig.cases.filter(c => c.ticker !== 'CIG-C'); noCig.coverage = noCig.coverage.filter(v => v.ticker !== 'CIG-C');
+  const brl = s => norm(s, 'grossProfitQ').map(x => x === null ? null : Math.round(x / fx / 1e3));
+  assert.deepEqual(brl(applyFinancialCases(clone(raw), { table: noCig }).snapshot), [1804157, 1591911, 1737632, 1508569, 2080901]);
+  const r = applyFinancialCases(clone(raw));
+  assert.deepEqual(brl(r.snapshot), [1952136, 1768103, null, null, 2199760]);
+  assert.ok(!r.events.some(e => e.status === 'stale' || e.reasonCode === 'period-not-verified'));
+  assert.ok(financialReasons(r.snapshot).some(t => t.startsWith('Bruttogewinn fehlt: Cemig hat die Kosten')));
+  // Absence: revenue, operating income and the annual block stay byte for byte; another listing of the issuer
+  // (CMIG3.SA and CIG carry different vendor packets) is not touched by these cases.
+  for (const f of ['revenueQ', 'opIncQ']) assert.equal(serial(r.snapshot.timeseries[f]), serial(raw.timeseries[f]), f);
+  assert.equal(serial(r.snapshot.annual), serial(raw.annual));
+  for (const t of ['CMIG3.SA', 'CIG']) { const o = clone(raw); o.meta.ticker = t; assert.equal(applyFinancialCases(o).snapshot, o, t); }
+  // Break-once on test data: without the Cemig cases the vendor value is back in the newest quarter.
+  const guard = cfg => assert.equal(brl(applyFinancialCases(clone(raw), cfg && { table: cfg }).snapshot)[0], 1952136);
+  assert.throws(() => guard(noCig), assert.AssertionError); guard(); breaks++;
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);
