@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02e",
+  "revision": "2026-10-02f",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -5409,6 +5409,101 @@
           "derivation": "Q4 operating profit = FY minus 9M = 2,015,498,107.62"
         }
       ]
+    },
+    {
+      "caseId": "402340.ks-2026-06-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 19522537000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2026-03-31-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 8544829000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260514001477",
+          "page": "분기보고서 (2026.03), III. 재무에 관한 사항, 2-2. 연결 손익계산서",
+          "quote": "매출액 300,349 300,349 345,945 345,945 영업비용 334,680 334,680 376,641 376,641",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-12-31-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 3379799000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260317000830",
+          "page": "사업보고서 (2025.12), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (제 5 기 / 제 4 기 / 제 3 기)",
+          "quote": "매출액 1,411,521 1,649,858 2,008,116 영업비용 1,544,535 1,836,013 2,291,727",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-09-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 2947500000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20251113000629",
+          "page": "분기보고서 (2025.09), III. 재무에 관한 사항, 2-2. 연결 손익계산서",
+          "quote": "매출액 407,889 1,217,291 457,502 1,424,346 영업비용 422,432 1,327,759 496,173 1,576,469",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-06-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 1742310000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -5801,6 +5896,66 @@
         }
       ],
       "vendorEvidence": "Snapshot of run 36839128456 (2026-10-01): meta.reportingCurrency USD, fxRateApplied 1; annualRev newest 16,948,954,566.336 = 31.27 x the issuer USD revenue 541,957,260; the year before 20,862,634,594.28 = 32.88 x 634,431,170 (TWD per USD); revenueQ 2025-12-31 5,419,996,890.7858."
+    },
+    {
+      "caseId": "402340.ks-equity-method-revenue-20261002",
+      "ticker": "402340.KS",
+      "reason": "Score fehlt: Der Anbieter zählt bei SK Square die Gewinne aus Beteiligungen zum Umsatz (zweites Quartal 2026: 19.609,8 statt 328,5 Mrd. KRW laut Halbjahresbericht). Die Quartale bis September 2025 hat die Firma nach dem Verkauf von Dreamus noch nicht auf der neuen Basis veröffentlicht; ein Wachstum aus gemischten Basen wäre falsch.",
+      "fingerprint": [
+        {
+          "path": [
+            "timeseries",
+            "revenueQ",
+            0,
+            "value"
+          ],
+          "expected": 14432004174.49876
+        },
+        {
+          "path": [
+            "timeseries",
+            "grossProfitQ",
+            0,
+            "value"
+          ],
+          "expected": 14367801254.66038
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions",
+          "value": 328549000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "지분법이익 19,281,225 27,612,290 1,481,739 3,196,768",
+          "unit": "KRW millions"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 3. 연결재무제표 주석, 4. 부문정보 (연결), 각주 (*)",
+          "quote": "(주)드림어스컴퍼니 지분 매각으로 인하여 관련손익을 중단영업으로 분류함에 따라 비교표시된 전기 부문정보를 재작성하였습니다"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260317000830",
+          "page": "사업보고서 (2025.12), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (제 5 기 / 제 4 기 / 제 3 기)",
+          "quote": "중단영업이익(손실) (14,581) (18,481) 988,230",
+          "unit": "KRW millions"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20251113000629",
+          "page": "분기보고서 (2025.09), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (no discontinued-operations line: Dreamus still consolidated, old basis)",
+          "quote": "매출액 407,889 1,217,291 457,502 1,424,346 영업비용 422,432 1,327,759 496,173 1,576,469",
+          "unit": "KRW millions"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36984285974 (2026-10-02): KRW, fx 0.00073595974; revenueQ native (million KRW) 2026-06-30 19609774 = 328,549 + 19,281,225 (매출액 + 지분법이익), 2025-06-30 1837434 = 355,695 + 1,481,739; annualRev newest 10,455,553 vs 매출액 2025 1,411,521. One basis needs Q3 2025 and Q4 2025 restated for the Dreamus sale (decided 29.10.2025, DART 20251029800644); first expected with the 3Q 2026 report."
     }
   ]
 }
