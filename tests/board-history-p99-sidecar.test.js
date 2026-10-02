@@ -5,10 +5,9 @@
 // Board die p99Δ/thr/beta-cov-Zeile ("utilities: 331 Zeilen, p99Δ=53.70, thr=11.50 ...")
 // nur ins fluechtige Lauf-Protokoll — nach dem naechsten Runner-Teardown ist sie weg.
 // Diese Aenderung schreibt dieselben Tageswerte je Board ZUSAETZLICH in eine committete
-// Sidecar-Datei (data-health/p99-delta-history.json), AUCH an SUSPECT-Tagen: die
-// Sidecar-Commits laufen an Suspect-Tagen ohnehin ("chore: nur Sidecars"-Pfad in
-// .github/workflows/daily-pull.yml, git add board-history/ + newcomer-log/ + ticker-map/
-// unabhaengig vom rc) — diese Datei faehrt in genau diesem Pfad mit.
+// Sidecar-Datei (data-health/p99-delta-history.json), AUCH an SUSPECT-Tagen: seit Tag 1396
+// committet .github/workflows/daily-pull.yml jedes Vintage unabhaengig vom rc, und diese
+// Datei faehrt im selben Commit mit.
 //
 // HART: kein Gate-Verhalten, keine rc-Semantik, kein Commit-Pfad-Wechsel — nur
 // zusaetzlich messen+schreiben. Deshalb pruefen die Tests unten explizit, dass exitCode/
@@ -139,6 +138,15 @@ check('(5) Sidecar-Schreiben veraendert Gate-Ergebnis/rc nicht (Regression)', ()
   assert.strictEqual(r2.boards[0].structural, false);
   const sc = readSidecar(base);
   assert.strictEqual(sc.byDate['2026-08-02'].semiconductors.suspect, true);
+});
+
+check('_doc: a new sidecar no longer names the removed "nur Sidecars" path; an existing _doc stays untouched', () => {
+  const neu = W.updateP99DeltaHistory(null, '2026-08-02', []);
+  assert.ok(typeof neu._doc === 'string' && neu._doc.length > 0);
+  assert.doesNotMatch(neu._doc, /nur Sidecars/);
+  assert.match(neu._doc, /jedes Vintage/);
+  const alt = 'Wird AUCH an SUSPECT-Tagen geschrieben ("chore: nur Sidecars"-Pfad).';
+  assert.strictEqual(W.updateP99DeltaHistory({ _doc: alt, byDate: {} }, '2026-08-02', [])._doc, alt);
 });
 
 console.log(fail ? '\nFAILED: ' + fail : '\nalle gruen');

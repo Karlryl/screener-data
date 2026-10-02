@@ -1371,10 +1371,10 @@ function updateGateCalibration(gateCalib, board, p99Delta, date) {
 // F-9 Stufe 1 (Rat-gedeckt, REINE MESSUNG — kein Gate-/rc-Einfluss): traegt die
 // Tageswerte aus dem Lauf-Protokoll (p99Δ/thr/beta-cov, s. CLI-Ausgabe unten) zusaetzlich
 // in die committete Sidecar-Datei ein. AUCH an SUSPECT-Tagen (results traegt jeden Board-
-// Eintrag unabhaengig von suspect) — die Sidecar-Commits laufen an Suspect-Tagen ohnehin
-// (git add board-history/ + newcomer-log/ + ticker-map/ unabhaengig vom rc, .github/
-// workflows/daily-pull.yml "Commit board-history vintage to main"); data-health/ faehrt
-// dort im selben unbedingten Zweig mit.
+// Eintrag unabhaengig von suspect) — seit Tag 1396 committet .github/workflows/daily-pull.yml
+// "Commit board-history vintage to main" jedes Vintage samt Sidecars unabhaengig vom rc;
+// data-health/p99-delta-history.json faehrt im selben Commit mit.
+// _doc wird nur fuer eine NEUE Datei gesetzt; eine bestehende behaelt ihren Text byte-gleich.
 // thr = wirksameSchwelle (exakt die Zahl hinter "thr=" im Lauf-Protokoll, NICHT die roh
 // eingefrorene threshold — die ist mit Tagesabstand/Bruch-Allowance bereits multipliziert).
 // betaCov = pitCoverage.beta (Anteil 0..1, Log zeigt denselben Wert ×100 gerundet als %).
@@ -1386,8 +1386,8 @@ function updateP99DeltaHistory(existing, date, results) {
     out._doc = 'Taegliche p99Δ/thr/beta-cov-Messreihe je Board (F-9 Stufe 1, Rat-gedeckt, REINE '
       + 'MESSUNG — kein Gate-Verhalten, keine rc-Semantik). thr = wirksameSchwelle des Laufs '
       + '(dieselbe Zahl wie "thr=" im Lauf-Protokoll), betaCov = pitCoverage.beta (Anteil 0..1), '
-      + 'suspect = gate.suspect. Wird AUCH an SUSPECT-Tagen geschrieben — die Sidecar-Commits '
-      + 'laufen an Suspect-Tagen ohnehin ("chore: nur Sidecars"-Pfad).';
+      + 'suspect = gate.suspect. Wird AUCH an SUSPECT-Tagen geschrieben; seit Tag 1396 wird '
+      + 'jedes Vintage samt dieser Datei committet, geflaggt oder nicht.';
   }
   if (!out.byDate || typeof out.byDate !== 'object') out.byDate = {};
   const day = {};

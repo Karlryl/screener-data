@@ -52,7 +52,9 @@
  *  Gate flags (Tag 1396): every stored board file with gate.suspect === true is skipped as a
  *      per-board exclusion (reason "gate-suspect: <reasons>"), listed like a hand entry.
  *      --include-flagged keeps them (sensitivity run). Only the flagged day drops out; the
- *      following day was compared against it and carries the same values.
+ *      following day was compared against it and carries the same values. A present gate
+ *      block without a boolean suspect is warned (::warning::), counted (report.gateUnreadable)
+ *      and skipped as "gate-unreadable"; a file without any gate block (pre-gate) stays in.
  *
  * Usage: node scripts/rank-ic.js [--history-dir board-history] [--out outputs/rank-ic-report.json] [--include-flagged]
  * Exit 0 = Report geschrieben (auch „keine auswertbaren Fenster" ist ein gültiger Report).
@@ -386,23 +388,48 @@ function loadExcluded(historyDir) {
 // global (nothing added). Opt out with --include-flagged / opts.includeFlagged (sensitivity run).
 // Only the flagged day itself drops out: the next day is compared against it and carries the
 // same values (no value-level protection here).
-function addGateFlags(excluded, historyDir) {
-  for (const date of listVintageDates(historyDir)) {
+// A gate block that is present but has no boolean `suspect` (null, not an object, suspect as
+// string) is unreadable: one ::warning:: per file, counted, and excluded by default with reason
+// "gate-unreadable" (fail closed: we cannot tell whether the writer flagged it). A file WITHOUT
+// any gate block is a pre-gate file and stays in silently.
+// `gates` = [{ date, board, gate }] for every board file that carries a gate key (scanVintages).
+// Returns the number of unreadable gate blocks.
+function addGateFlags(excluded, gates, opts) {
+  let unreadable = 0;
+  for (const { date, board, gate } of gates) {
     if (isDateExcluded(excluded, date)) continue;
-    for (const board of boardsOf(historyDir, date)) {
-      const v = loadVintage(historyDir, date, board);
-      if (!istGeflaggt(v)) continue;
-      const reasons = Array.isArray(v.gate.reasons) ? v.gate.reasons.join(',') : '';
-      let e = excluded.get(date);
-      if (!e) { e = { reason: 'gate-suspect', boards: new Map() }; excluded.set(date, e); }
-      if (!e.boards.has(board)) e.boards.set(board, 'gate-suspect: ' + reasons);
-    }
+    const lesbar = !!gate && typeof gate === 'object' && typeof gate.suspect === 'boolean';
+    if (!lesbar) {
+      unreadable++;
+      console.log('::warning::rank-ic: board-history/' + date + '/' + board + '.json has no readable boolean gate.suspect ('
+        + JSON.stringify(gate) + ')' + (opts && opts.includeFlagged ? ' - kept (--include-flagged)' : ' - excluded as gate-unreadable'));
+    } else if (!istGeflaggt({ gate })) continue;
+    if (opts && opts.includeFlagged) continue;
+    const reason = lesbar
+      ? 'gate-suspect: ' + (Array.isArray(gate.reasons) ? gate.reasons.join(',') : '')
+      : 'gate-unreadable';
+    let e = excluded.get(date);
+    if (!e) { e = { reason: 'gate-suspect', boards: new Map() }; excluded.set(date, e); }
+    if (!e.boards.has(board)) e.boards.set(board, reason);
   }
-  return excluded;
+  return unreadable;
 }
-function loadExclusions(historyDir, opts) {
-  const excluded = loadExcluded(historyDir);
-  return opts && opts.includeFlagged ? excluded : addGateFlags(excluded, historyDir);
+// One pass over the board files of `dates`: boards per date (file with a cohort) and every gate
+// key, so each board file is read once per run.
+function scanVintages(historyDir, dates) {
+  const boardsByDate = new Map();
+  const gates = [];
+  for (const date of dates) {
+    const set = new Set();
+    for (const board of boardFileNames(historyDir, date)) {
+      const v = loadVintage(historyDir, date, board);
+      if (!(v && v.cohort)) continue;
+      set.add(board);
+      if ('gate' in v) gates.push({ date, board, gate: v.gate });
+    }
+    boardsByDate.set(date, set);
+  }
+  return { boardsByDate, gates };
 }
 // Datum global aus (fällt aus der Vintage-Reihe aller Boards).
 function isDateExcluded(excluded, date) {
@@ -466,12 +493,15 @@ function boardsOf(historyDir, date) {
   // BH-110: NUR das readdirSync (Ordner fehlt = Tag existiert nicht, harmlos) fängt hier ab.
   // Ein Parse-Fehler aus loadVintage() darf NICHT hier verschluckt werden — sonst würde der
   // fail-loud-Fix oben durch ein äußeres try/catch wieder zu einem stillen [] degradiert.
+  return boardFileNames(historyDir, date)
+    .filter((b) => { const v = loadVintage(historyDir, date, b); return !!(v && v.cohort); });
+}
+function boardFileNames(historyDir, date) {
   let files;
   try { files = fs.readdirSync(path.join(historyDir, date)); } catch (_) { return []; }
   return files
     .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
-    .map((f) => f.replace(/\.json$/, ''))
-    .filter((b) => { const v = loadVintage(historyDir, date, b); return !!(v && v.cohort); });
+    .map((f) => f.replace(/\.json$/, ''));
 }
 // §1: disjunkte Entscheidungspunkte — erstes Vintage, dann jeweils das erste
 // Vintage >= letzter Punkt + horizonDays.
@@ -691,8 +721,9 @@ function deliveryIC(vintage0, vintageLater) {
 }
 
 // ── Hauptauswertung ──────────────────────────────────────────────────────────
+// opts.excluded and opts.boardsByDate come from evaluate() (one scan per run).
 function evaluateObserved(historyDir, priceIndex, opts = {}) {
-  const excluded = loadExclusions(historyDir, opts);
+  const excluded = opts.excluded;
   const allDates = listVintageDates(historyDir)
     .filter((date) => !opts.firstEligibleVintage || date >= opts.firstEligibleVintage);
   const dates = allDates.filter((d) => !isDateExcluded(excluded, d));
@@ -864,10 +895,11 @@ function evaluate(historyDir, priceIndex, opts = {}) {
   // bevor irgendein Vintage, Ausschluss oder Preis gelesen wird.
   const familyReports = families.map(initialFamilyReport);
 
-  const excluded = loadExclusions(historyDir, opts);
+  const excluded = loadExcluded(historyDir);
   const allDates = listVintageDates(historyDir);
-  const boardsByDate = new Map(allDates.map((date) => [date, new Set(boardsOf(historyDir, date))]));
-  const observed = evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { boardsByDate }));
+  const { boardsByDate, gates } = scanVintages(historyDir, allDates);
+  const gateUnreadable = addGateFlags(excluded, gates, opts);
+  const observed = evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { boardsByDate, excluded }));
   stripInternalFamilyFields(observed.boards);
 
   const familyHealth = { missingBoards: [], exclusions: [], renameWarnings: [], warnings: [] };
@@ -876,7 +908,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
     const output = familyReports[familyIndex];
     const eligibleAllDates = allDates.filter((date) => date >= family.firstEligibleVintage);
     const familyObserved = eligibleAllDates.length
-      ? evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { firstEligibleVintage: family.firstEligibleVintage, boardsByDate }))
+      ? evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { firstEligibleVintage: family.firstEligibleVintage, boardsByDate, excluded }))
       : null;
 
     if (eligibleAllDates.length === 0) {
@@ -942,6 +974,8 @@ function evaluate(historyDir, priceIndex, opts = {}) {
     familyNote: null,
     unregisteredBoards,
     familyHealth,
+    // Tag 1396 round 2: board files whose gate block has no readable boolean suspect.
+    gateUnreadable,
   });
   delete report.note;
 

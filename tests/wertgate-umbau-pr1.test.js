@@ -105,6 +105,8 @@ check('L1 istStrukturell: old file without `structural` is derived from reasons;
   assert.strictEqual(F.istStrukturell({ suspect: false, reasons: [] }), false);
   assert.strictEqual(F.istStrukturell(null), false);
   assert.strictEqual(F.istStrukturell({ suspect: true, structural: true, reasons: [P99] }), true, 'stored boolean wins');
+  // fail closed: a reason added to evaluateGate() later is structural until the rule says otherwise
+  assert.strictEqual(F.istStrukturell({ suspect: true, reasons: ['some-new-reason'] }), true, 'unknown reason = structural');
   assert.strictEqual(F.istGeflaggt({ gate: { suspect: true } }), true);
   assert.strictEqual(F.istGeflaggt({ gate: { suspect: false } }), false);
   assert.strictEqual(F.istGeflaggt({}), false);
@@ -175,6 +177,24 @@ check('P2 after a structural day the board skips it (gapDays 2) while a sibling 
   assert.strictEqual(res.exitCode, 0);
 });
 
+check('P3 a stored day flagged with an unknown reason (no `structural` key) is skipped as base', () => {
+  const base = mkBase();
+  writeBoard(base, 'semiconductors', [row('AAA', 50), row('BBB', 60)]);
+  W.run({ baseDir: base, date: '2026-08-03' });
+  W.run({ baseDir: base, date: '2026-08-04' });
+  const fp = path.join(base, 'board-history', '2026-08-04', 'semiconductors.json');
+  const v = JSON.parse(fs.readFileSync(fp, 'utf8'));
+  delete v.gate.structural;
+  v.gate.suspect = true;
+  v.gate.reasons = ['some-new-reason'];
+  fs.writeFileSync(fp, JSON.stringify(v));
+  const res = W.run({ baseDir: base, date: '2026-08-05' });
+  const n = readVintage(base, '2026-08-05', 'semiconductors');
+  assert.strictEqual(n.gate.priorDate, '2026-08-03', 'unknown-reason day must not be the comparison base');
+  assert.strictEqual(n.gate.gapDays, 2);
+  assert.strictEqual(res.exitCode, 0);
+});
+
 // ── GATE SERIE: maximum gap, named board ────────────────────────────────────
 check('S1 GATE SERIE uses the maximum finite gapDays and names that board', () => {
   const res = { date: '2026-09-05', priorDate: '2026-09-04', boards: [
@@ -240,6 +260,58 @@ check('R2 rank-ic: a flag on a globally excluded date adds nothing (global exclu
   const rep = ric.evaluate(hist, priceIndex, { B: 50, families: [FAMILY] });
   assert.deepStrictEqual(rep.vintagesExcluded, [dates[1]]);
   assert.deepStrictEqual(rep.boardVintagesExcluded, []);
+});
+
+check('R3 rank-ic CLI: --include-flagged reaches evaluate (main() with and without the flag)', () => {
+  const { hist, dates, priceIndex } = ricFixture();
+  const outFile = path.join(path.dirname(hist), 'rank-ic-report.json');
+  const ohne = ric.main({ args: [], historyDir: hist, outFile, priceIndex });
+  assert.deepStrictEqual(ohne.boardVintagesExcluded, [{ date: dates[1], board: 'b1', reason: 'gate-suspect: ' + P99 }]);
+  const mit = ric.main({ args: ['--include-flagged'], historyDir: hist, outFile, priceIndex });
+  assert.deepStrictEqual(mit.boardVintagesExcluded, []);
+});
+
+function mitLogs(fn) {
+  const zeilen = [];
+  const orig = console.log;
+  console.log = (...a) => { zeilen.push(a.join(' ')); };
+  try { return { res: fn(), zeilen }; } finally { console.log = orig; }
+}
+check('R4 rank-ic: a present but unreadable gate is excluded as gate-unreadable and warned; no gate block = pre-gate file, kept silently', () => {
+  const { hist, dates, priceIndex } = ricFixture();
+  const D = dates[1], E = dates[2];
+  const setGate = (d, board, mutate) => {
+    const fp = path.join(hist, d, board + '.json');
+    const v = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    mutate(v);
+    fs.writeFileSync(fp, JSON.stringify(v));
+  };
+  setGate(D, 'b2', (v) => { v.gate = null; });
+  setGate(E, 'b1', (v) => { v.gate = { suspect: 'true', reasons: [] }; });
+  setGate(E, 'b2', (v) => { delete v.gate; });
+  const { res: rep, zeilen } = mitLogs(() => ric.evaluate(hist, priceIndex, { B: 50, families: [FAMILY] }));
+  assert.deepStrictEqual(rep.boardVintagesExcluded, [
+    { date: D, board: 'b1', reason: 'gate-suspect: ' + P99 },
+    { date: D, board: 'b2', reason: 'gate-unreadable' },
+    { date: E, board: 'b1', reason: 'gate-unreadable' }]);
+  assert.strictEqual(rep.gateUnreadable, 2);
+  const warn = zeilen.filter((z) => /^::warning::/.test(z));
+  assert.strictEqual(warn.length, 2, warn.join(' | '));
+  assert.ok(warn.some((z) => z.includes(D) && z.includes('b2')), warn.join(' | '));
+  assert.ok(warn.some((z) => z.includes(E) && z.includes('b1')), warn.join(' | '));
+  assert.ok(!warn.some((z) => z.includes(E) && z.includes('b2')), 'a file without gate block is no warning');
+  assert.deepStrictEqual(rep.boards.b2.datesExcluded, [D], 'pre-gate file on E stays in');
+  const mit = mitLogs(() => ric.evaluate(hist, priceIndex, { B: 50, families: [FAMILY], includeFlagged: true }));
+  assert.deepStrictEqual(mit.res.boardVintagesExcluded, [], 'includeFlagged keeps unreadable gates too');
+  assert.strictEqual(mit.res.gateUnreadable, 2, 'still counted');
+  assert.strictEqual(mit.zeilen.filter((z) => /^::warning::/.test(z)).length, 2, 'still warned');
+});
+
+check('R5 rank-ic: clean history reports gateUnreadable 0 and prints no warning', () => {
+  const { hist, priceIndex } = ricFixture();
+  const { res: rep, zeilen } = mitLogs(() => ric.evaluate(hist, priceIndex, { B: 50, families: [FAMILY] }));
+  assert.strictEqual(rep.gateUnreadable, 0);
+  assert.ok(!zeilen.some((z) => /^::warning::/.test(z)), zeilen.join(' | '));
 });
 
 if (fail) { console.log('\nFAIL: wertgate-umbau-pr1 (' + fail + ')'); process.exit(1); }

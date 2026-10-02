@@ -321,10 +321,11 @@ test('Tag 1396: "Value gate verdict" is the last step of job scoring, !cancelled
   assert.match(last.run, /VINTAGE_RC="\$\{\{\s*steps\.vintage\.outputs\.rc\s*\}\}"/);
   assert.equal(workflowSteps.filter((s) => s.name.startsWith('Value gate verdict')).length, 1, 'exactly once');
 });
-function verdictLauf(rc) {
+function verdictLauf(rc, veroeffentlichen = 'true') {
   const step = workflowStep('scoring', 'Value gate verdict (structural checks stay loud)');
   const script = step.run.replace('${{ steps.vintage.outputs.rc }}', rc).replace('${{ steps.vintage.outputs.date }}', '2026-10-02');
-  const r = require('node:child_process').spawnSync('bash', ['-c', script], { encoding: 'utf8' });
+  const env = Object.assign({}, process.env, { VEROEFFENTLICHEN: veroeffentlichen });
+  const r = require('node:child_process').spawnSync('bash', ['-c', script], { encoding: 'utf8', env });
   assert.ok(!r.error, 'bash not runnable: ' + (r.error && r.error.message));
   return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
 }
@@ -332,6 +333,13 @@ test('Tag 1396: verdict step executed: rc=2 -> ::error:: + exit 2', () => {
   const r = verdictLauf('2');
   assert.equal(r.code, 2, r.out);
   assert.match(r.out, /::error::board-history vintage 2026-10-02 committed WITH structural flag/);
+});
+test('Tag 1396: verdict step executed on a non-publishing run: rc=2 -> exit 2, does not claim a commit', () => {
+  const r = verdictLauf('2', 'false');
+  assert.equal(r.code, 2, r.out);
+  assert.match(r.out, /::error::board-history vintage 2026-10-02 /);
+  assert.doesNotMatch(r.out, /committed WITH/, 'nothing was committed on this run');
+  assert.match(r.out, /NOT committed/);
 });
 test('Tag 1396: verdict step executed: rc=0 -> exit 0, no ::error::', () => {
   const r = verdictLauf('0');

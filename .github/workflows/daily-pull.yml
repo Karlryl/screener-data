@@ -2372,7 +2372,8 @@ jobs:
           # auch wenn genau dieses Vintage ausgeschlossen wurde.
           VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
           # ZWEIG-WACHE. Sie sitzt BEWUSST hier unten und nicht ganz oben im Schritt: sie
-          # liest damit denselben $VINTAGE_RC wie der Wert-Gate-Alarm am Schrittende.
+          # liest damit denselben $VINTAGE_RC wie der Wert-Gate-Alarm (seit Tag 1396 im
+          # letzten Schritt "Value gate verdict", nicht mehr am Ende dieses Schritts).
           # BEFUND zweier unabhaengiger Reviews (19.08.): stand die Wache davor, verschluckte
           # sie den EINZIGEN Alarm dieses Schritts. Das Wert-Gate ist keine Publikations-Frage —
           # es sagt, ob die heute gerechneten Zahlen strittig sind, und genau das will ein
@@ -2585,7 +2586,13 @@ jobs:
           VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
           VINTAGE_DATE="${{ steps.vintage.outputs.date }}"
           if [ "$VINTAGE_RC" = "2" ]; then
-            echo "::error::board-history vintage $VINTAGE_DATE committed WITH structural flag (Wert-Gate) — see the GATE FLAG line in step 'Write board-history vintage (2.3)' for the boards; please check."
+            # Same switch as the commit step: only a publishing run committed the vintage.
+            if [ "$VEROEFFENTLICHEN" = "true" ]; then
+              WO="committed WITH structural flag"
+            else
+              WO="structurally flagged, NOT committed (this run does not publish)"
+            fi
+            echo "::error::board-history vintage $VINTAGE_DATE $WO (Wert-Gate) — see the GATE FLAG line in step 'Write board-history vintage (2.3)' for the boards; please check."
             exit 2
           fi
           echo "Value gate: no structural flag reported for '$VINTAGE_DATE' (writer rc='$VINTAGE_RC'; a writer hard fail is red in its own step)."
