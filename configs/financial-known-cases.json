@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02d",
+  "revision": "2026-10-02e",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -29,7 +29,6 @@
     { "ticker": "SLCE3.SA", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
     { "ticker": "OXLC", "field": "revenueQ", "coversThrough": "2026-03-31" },
-    { "ticker": "HIVE", "listingAliases": ["HIVE.TO"], "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "CARG", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "PLUS", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "DCO", "field": "opIncQ", "coversThrough": "2026-06-30" },
@@ -4084,6 +4083,7 @@
           "quote": "Total investment income for the quarter ended March 31, 2025 amounted to approximately $121.2 million",
           "unit": "USD millions (issuer-rounded)",
           "value": 121200000,
+          "roundingStep": 100000,
           "start": "2025-01-01",
           "end": "2025-03-31"
         },
@@ -4363,153 +4363,6 @@
           "value": 494845000,
           "start": "2022-01-01",
           "end": "2022-12-31"
-        }
-      ]
-    },
-    {
-      "caseId": "hive-2026-06-30-opIncQ",
-      "ticker": "HIVE",
-      "listingAliases": [
-        "HIVE.TO"
-      ],
-      "field": "opIncQ",
-      "period": "2026-06-30",
-      "periodType": "3M",
-      "currency": "USD",
-      "expectedBadValue": -131052000,
-      "replacementValue": -141332000,
-      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
-      "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326004434/form10q.htm",
-          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), condensed consolidated statements of operations",
-          "accession": "0001062993-26-004434",
-          "filed": "2026-08-14",
-          "unit": "USD thousands",
-          "quote": "(Loss) income from operations (141,332) 35,665",
-          "start": "2026-04-01",
-          "end": "2026-06-30",
-          "value": -141332000
-        }
-      ]
-    },
-    {
-      "caseId": "hive-2026-03-31-opIncQ",
-      "ticker": "HIVE",
-      "listingAliases": [
-        "HIVE.TO"
-      ],
-      "field": "opIncQ",
-      "period": "2026-03-31",
-      "periodType": "3M",
-      "currency": "USD",
-      "expectedBadValue": -51804000,
-      "replacementValue": -74637000,
-      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
-      "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326002973/form10k.htm",
-          "page": "10-K FY2026 (year ended 2026-03-31), consolidated statements of operations",
-          "accession": "0001062993-26-002973",
-          "filed": "2026-06-02",
-          "unit": "USD thousands",
-          "quote": "(Loss) income from operations (144,581) 1,612 32,685",
-          "start": "2025-04-01",
-          "end": "2026-03-31",
-          "value": -144581000
-        },
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326000943/exhibit99-1.htm",
-          "page": "6-K exhibit 99.1, Q3 FY2026 interim statements of operations (three and nine months ended 2025-12-31)",
-          "accession": "0001062993-26-000943",
-          "filed": "2026-02-17",
-          "unit": "USD thousands",
-          "quote": "(Loss) income (90,831) 68,283 (69,944) 51,401",
-          "start": "2025-04-01",
-          "end": "2025-12-31",
-          "value": -69944000,
-          "derivation": "fourth fiscal quarter = year ended 2026-03-31 minus nine months ended 2025-12-31 (no discrete Q4 line is filed); the line \"(Loss) income\" carries the same position and XBRL concept as \"(Loss) income from operations\""
-        }
-      ]
-    },
-    {
-      "caseId": "hive-2025-12-31-opIncQ",
-      "ticker": "HIVE",
-      "listingAliases": [
-        "HIVE.TO"
-      ],
-      "field": "opIncQ",
-      "period": "2025-12-31",
-      "periodType": "3M",
-      "currency": "USD",
-      "expectedBadValue": -39173000,
-      "replacementValue": -90831000,
-      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
-      "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326000943/exhibit99-1.htm",
-          "page": "6-K exhibit 99.1, Q3 FY2026 interim statements of operations (three and nine months ended 2025-12-31)",
-          "accession": "0001062993-26-000943",
-          "filed": "2026-02-17",
-          "unit": "USD thousands",
-          "quote": "(Loss) income (90,831) 68,283 (69,944) 51,401",
-          "start": "2025-10-01",
-          "end": "2025-12-31",
-          "value": -90831000
-        }
-      ]
-    },
-    {
-      "caseId": "hive-2025-09-30-opIncQ",
-      "ticker": "HIVE",
-      "listingAliases": [
-        "HIVE.TO"
-      ],
-      "field": "opIncQ",
-      "period": "2025-09-30",
-      "periodType": "3M",
-      "currency": "USD",
-      "expectedBadValue": -9160000,
-      "replacementValue": -14778000,
-      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
-      "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299325016895/exhibit99-1.htm",
-          "page": "6-K exhibit 99.1, Q2 FY2026 interim statements of operations (three months ended 2025-09-30)",
-          "accession": "0001062993-25-016895",
-          "filed": "2025-11-17",
-          "unit": "USD thousands",
-          "quote": "(Loss) income from operations (14,778) 398 20,887 (16,882)",
-          "start": "2025-07-01",
-          "end": "2025-09-30",
-          "value": -14778000
-        }
-      ]
-    },
-    {
-      "caseId": "hive-2025-06-30-opIncQ",
-      "ticker": "HIVE",
-      "listingAliases": [
-        "HIVE.TO"
-      ],
-      "field": "opIncQ",
-      "period": "2025-06-30",
-      "periodType": "3M",
-      "currency": "USD",
-      "expectedBadValue": 6836000,
-      "replacementValue": 35665000,
-      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
-      "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326004434/form10q.htm",
-          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), condensed consolidated statements of operations",
-          "accession": "0001062993-26-004434",
-          "filed": "2026-08-14",
-          "unit": "USD thousands",
-          "quote": "(Loss) income from operations (141,332) 35,665",
-          "start": "2025-04-01",
-          "end": "2025-06-30",
-          "value": 35665000
         }
       ]
     },

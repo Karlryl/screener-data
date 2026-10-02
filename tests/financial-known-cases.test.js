@@ -28,8 +28,8 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 203 authorized cells (190 quarterly, 13 annual) and ten held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 203);
+test('all 198 authorized cells (185 quarterly, 13 annual) and ten held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 198);
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 13);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW']);
   assert.throws(() => validateTable({}), /Invalid/);
@@ -43,7 +43,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.deepEqual([...need].sort(), [...['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
-    ...['CARG', 'DCO', 'HIVE', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ')].sort());
+    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ')].sort());
   assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
   assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 203);
+  assert.equal(validateTable(clone(table)).cases.length, 198);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -612,15 +612,15 @@ test('excluded list: a quarantined packet has null sector, industry, market cap 
 // R2: other listings of the same issuer carry the identical false cells (checked in the 29.09. archive).
 test('listing aliases: YSNG.VI, PDN.TO and PALAF are corrected like their primary; unrelated ticker untouched', () => {
   const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases).map(c => [c.ticker, c.listingAliases]));
-  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], HIVE: ['HIVE.TO'], HL: ['HL.SW'] });
+  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], HL: ['HL.SW'] });
   const leg = (primary, alias) => { const s = clone(fixture[primary]); s.meta.ticker = alias; return s; };
   for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
     const input = leg(primary, alias), original = serial(input), r = applyFinancialCases(input);
     const primaryOut = applyFinancialCases(clone(fixture[primary])).snapshot;
     assert.equal(serial(r.snapshot.timeseries), serial(primaryOut.timeseries), alias + ' corrected like ' + primary);
     assert.equal(serial(r.snapshot.annual), serial(primaryOut.annual), alias + ' annual like ' + primary);
-    // False zeros are withheld (missing); HIVE's operating income is replaced (corrected).
-    assert.ok(r.events.some(e => e.status === (primary === 'HIVE' ? 'corrected' : 'missing') && e.ticker === alias));
+    // False zeros and HL's recast annual gross profit are withheld (missing).
+    assert.ok(r.events.some(e => e.status === 'missing' && e.ticker === alias));
     assert.equal(serial(input), original);
   }
   // Absence: an unrelated ticker with the identical packet stays raw.
@@ -1014,18 +1014,21 @@ test('holds KBDC, HOS, TYG, OLPX, HLX, 2670.HK, ENGI3.SA, Z98.DE, 2637.TW: off t
   }
 });
 
-// E4 (02.10.): a replacement must trace to its own sources: equal to one numeric source value, the difference of
-// two (year minus nine months), or within the rounding of an issuer-rounded source. Cases without any numeric
+// E4 (02.10.): a replacement must trace to its own sources: equal to one numeric source value, the non-zero difference
+// of two (longer period minus the shorter one it contains, e.g. year minus nine months), or within the explicit
+// roundingStep of an issuer-rounded source. Cases without any numeric
 // source value are exempt (legacy). validateTable runs at module load (a throw would stop every snapshot reader),
 // so the rule is counted here against the real table: first every case that existed before E4, then all.
 const e4Case = c => c.field === 'opIncQ' || ['HL', '002128.SZ'].includes(c.ticker);
 const traceKind = c => {
-  const vals = c.sources.map(s => s.value).filter(Number.isFinite), r = c.replacementValue;
+  const src = c.sources.filter(s => Number.isFinite(s.value)), r = c.replacementValue;
   if (r === null) return 'null';
-  if (!vals.length) return 'exempt';
-  if (vals.includes(r)) return 'single';
-  if (vals.some(a => vals.some(b => a - b === r))) return 'difference';
-  return c.sources.some(s => /rounded/.test(s.unit || '') && Math.abs(r - s.value) <= 50000) ? 'rounded' : 'none';
+  if (!src.length) return 'exempt';
+  if (src.some(s => s.value === r)) return 'single';
+  // Longer period minus the shorter period it contains (same start or same end); never a source minus itself.
+  if (r !== 0 && src.some(a => src.some(b => a.start <= b.start && a.end >= b.end && a.start + a.end !== b.start + b.end &&
+    a.value - b.value === r))) return 'difference';
+  return src.some(s => s.roundingStep && Math.abs(r - s.value) <= s.roundingStep / 2) ? 'rounded' : 'none';
 };
 const TRACE_LINE = "    if (!traceable(c)) throw new Error('Replacement matches no source value: ' + key);";
 test('replacement values trace to their sources: the whole real table passes, a typo throws at validation', () => {
@@ -1033,15 +1036,22 @@ test('replacement values trace to their sources: the whole real table passes, a 
   // The 162 cases of revision 2026-10-01c: 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one
   // issuer-rounded confirmation (OXLC 2025-03-31, "$121.2 million") pass; none fails.
   assert.deepEqual(count(table.cases.filter(c => !e4Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 29 });
-  // E4 operating income: 26 single-source, 4 derived; the two Dian Tou opIncQ cells are withheld (null).
-  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 26, difference: 4, null: 2 });
+  // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
+  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
   assert.equal(validateTable(clone(table)).cases.length, table.cases.length);
   // Presence: a typo in a single-source, a derived and an issuer-rounded case each rejects the whole table.
   const typo = (id, mutate) => { const x = clone(table); mutate(x.cases.find(c => c.caseId === id)); return x; };
-  const bad = [typo('hive-2026-06-30-opIncQ', c => { c.replacementValue -= 1000; }),
-    typo('hive-2026-03-31-opIncQ', c => { c.replacementValue -= 1000; }),
-    typo('oxlc-2025-03-31-revenueQ', c => { c.replacementValue = c.expectedBadValue = 121100000; })];
+  const bad = [typo('slce3.sa-2026-06-30-opIncQ', c => { c.replacementValue -= 1000; }),
+    typo('slce3.sa-2025-12-31-opIncQ', c => { c.replacementValue -= 1000; }),
+    typo('oxlc-2025-03-31-revenueQ', c => { c.replacementValue = c.expectedBadValue = 121100000; }),
+    // Round 2 (review of b7c8abf): 0 is no difference of two sources (a source minus itself), a derived quarter
+    // is the longer period minus the shorter one (nine months minus year is the sign-flipped value), and a
+    // rounded source needs an explicit roundingStep (no tolerance read from trailing zeros).
+    typo('slce3.sa-2026-06-30-opIncQ', c => { c.replacementValue = 0; }),
+    typo('arcc-2025-12-31-revenueQ', c => { c.replacementValue = 0; }),
+    typo('slce3.sa-2025-12-31-opIncQ', c => { c.replacementValue = -209162000; }),
+    typo('oxlc-2025-03-31-revenueQ', c => { c.replacementValue = c.expectedBadValue = 121150000; delete c.sources[0].roundingStep; })];
   // Absence: within the issuer's rounding (121.15 vs "121.2 million") and an exempt legacy case (no source value) pass.
   const ok = [typo('oxlc-2025-03-31-revenueQ', c => { c.replacementValue = c.expectedBadValue = 121150000; }),
     typo('htgc-2026-06-30-revenueQ', c => { c.replacementValue += 1; })];
@@ -1054,25 +1064,28 @@ test('replacement values trace to their sources: the whole real table passes, a 
 
 // E4 Part A (02.10.): quarterly operating income (opIncQ) in the hand table, same semantics as revenue and gross
 // profit: exact vendor value per period, coverage through the last verified quarter, withheld on drift.
-const OPINC = ['HIVE', 'SLCE3.SA', 'INFQ', 'CARG', 'PLUS', 'DCO'];
+// Round 2 (review of b7c8abf): HIVE is not in the table. Its "(Loss) income from operations" is the line after
+// investment and derivative fair-value changes, other income and finance expense, directly before tax expense; its
+// XBRL tags it pre-tax and has no OperatingIncomeLoss fact. No issuer operating line, no entry: vendor stays.
+const OPINC = ['SLCE3.SA', 'INFQ', 'CARG', 'PLUS', 'DCO'];
 const ALLOWED_LINE = "const allowed = new Set(['revenueQ', 'grossProfitQ', 'opIncQ']);";
-test('opIncQ: six companies x five covered quarters, none unverified; readers on the fixed day; drift withheld', () => {
+test('opIncQ: five companies x five covered quarters, none unverified; readers on the fixed day; drift withheld', () => {
   const axes = require('../src/scoring/axes.js'), { profitTierOf } = require('../src/scoring/profit-tier.js');
   const { newestQtrSuspect } = require('../src/scoring/lamps.js');
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
   const cal = require('../board-history/2026-10-01/calibration.json');
   const bounds = cal.winsorBounds.opMargin;
   const op = table.cases.filter(c => c.field === 'opIncQ' && OPINC.includes(c.ticker));
-  assert.deepEqual(OPINC.map(t => op.filter(c => c.ticker === t).length), [5, 5, 5, 5, 5, 5]);
-  assert.equal(op.length, 30);
-  assert.equal(table.cases.filter(c => c.field === 'opIncQ').length, 32, 'plus the two withheld Dian Tou cells');
+  assert.deepEqual(OPINC.map(t => op.filter(c => c.ticker === t).length), [5, 5, 5, 5, 5]);
+  assert.equal(op.length, 25);
+  assert.equal(table.cases.filter(c => c.field === 'opIncQ').length, 27, 'plus the two withheld Dian Tou cells');
   assert.deepEqual(table.coverage.filter(v => v.field === 'opIncQ').map(v => v.ticker + '|' + v.coversThrough).sort(),
     OPINC.map(t => t + '|2026-06-30').sort());
   const noOp = clone(table); noOp.cases = noOp.cases.filter(c => c.field !== 'opIncQ'); noOp.coverage = noOp.coverage.filter(v => v.field !== 'opIncQ');
   const readers = s => ({ trajectory: axes.marginTrajectory(s, bounds), tier: profitTierOf(s), lamp: newestQtrSuspect(s) });
   // Raw marginTrajectory (newest minus oldest present margin) before -> after; the other three companies are
   // corrected only in middle cells, so all three readers stay unchanged until November.
-  const moved = { HIVE: [-1.806246, -2.568238], 'SLCE3.SA': [0, 0.067951], INFQ: [-1.357418, -1.377674] };
+  const moved = { 'SLCE3.SA': [0, 0.067951], INFQ: [-1.357418, -1.377674] };
   for (const t of OPINC) {
     const r = applyFinancialCases(clone(fixture[t])), fx = fixture[t].meta.fxRateApplied;
     assert.ok(!r.events.some(e => e.field === 'opIncQ' && e.status === 'stale'), t + ' no opIncQ withheld');
@@ -1090,25 +1103,31 @@ test('opIncQ: six companies x five covered quarters, none unverified; readers on
     assert.equal(serial(row()), serial(row(noOp)), t + ' scored row byte-identical');
   }
   // A new vendor quarter is withheld until it is verified (empty trajectory, never the vendor value or 0).
-  const next = clone(fixture.HIVE), ts = next.timeseries;
+  const next = clone(fixture.INFQ), ts = next.timeseries;
   ts.opIncQ = [{ value: -1e6 }, ...ts.opIncQ].slice(0, 5); ts.opIncQEnds = ['2026-09-30', ...ts.opIncQEnds].slice(0, 5);
   const nq = applyFinancialCases(next);
   assert.equal(nq.snapshot.timeseries.opIncQ[0].financialMissing?.reasonCode, 'period-after-coverage');
   assert.equal(nq.events.filter(e => e.status === 'stale').length, 1);
   assert.equal(axes.marginTrajectory(nq.snapshot, bounds), null);
   // A changed vendor value and a changed currency are withheld (vendor-value-changed, context-changed).
-  const restated = clone(fixture.HIVE); restated.timeseries.opIncQ[2].value += 1;
+  const restated = clone(fixture.INFQ); restated.timeseries.opIncQ[2].value += 1;
   assert.equal(applyFinancialCases(restated).snapshot.timeseries.opIncQ[2].financialMissing?.reasonCode, 'vendor-value-changed');
   const eur = clone(fixture['SLCE3.SA']); eur.meta.reportingCurrencyOriginal = 'EUR';
   assert.ok(applyFinancialCases(eur).snapshot.timeseries.opIncQ.every(row => row.financialMissing?.reasonCode === 'context-changed'));
   // Absence: the identical packet under another ticker stays byte for byte.
-  const other = clone(fixture.HIVE); other.meta.ticker = 'UNLISTED';
+  const other = clone(fixture.INFQ); other.meta.ticker = 'UNLISTED';
   assert.equal(applyFinancialCases(other).snapshot, other);
+  // Absence: HIVE and HIVE.TO keep the vendor packet byte for byte (no case, no coverage, no event).
+  for (const t of ['HIVE', 'HIVE.TO']) {
+    const hive = clone(fixture.HIVE); hive.meta.ticker = t;
+    const hr = applyFinancialCases(hive);
+    assert.equal(hr.snapshot, hive); assert.equal(hr.events.length, 0, t + ' untouched');
+  }
   // Break-once in memory (whole-line anchor): without opIncQ in the field list the table is rejected at load.
   const guard = lib => assert.equal(lib.validateTable(clone(table)).cases.length, table.cases.length);
   guard({ validateTable });
   assert.throws(() => guard(moduleCopy('lib/financial-known-cases.js', s => replaceLine(s, ALLOWED_LINE,
-    "const allowed = new Set(['revenueQ', 'grossProfitQ']);"))), /Invalid or duplicate financial case: HIVE\|opIncQ/); breaks++;
+    "const allowed = new Set(['revenueQ', 'grossProfitQ']);"))), /Invalid or duplicate financial case: CARG\|opIncQ/); breaks++;
 });
 
 // E4 Part B (02.10.): Hecla recast 2023-2025 after the Casa Berardi sale (8-K of 2026-08-28). Only the annual gross
