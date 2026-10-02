@@ -16,6 +16,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { resolveCommit } = require('./helpers/history-anchor');
 
 const WERKZEUG = path.join(__dirname, '..', 'scripts', 'studie-f6-eintrag28.js');
 const WURZEL = path.join(__dirname, '..');
@@ -59,7 +60,7 @@ function werkbank() {
   // damit auch die Selbstentschaerfung: sobald der ueberschreibende Akt die
   // neuen SHA bindet, ist die erste Bedingung fuer jede Datei falsch und die
   // Werkbank misst wieder den lebenden Baum.
-  const STAND_DES_AKTES = 'aeefb68125';
+  const STAND_DES_AKTES = resolveCommit('aeefb68125');
   const wiederhergestellt = [];
   // Die Abweichungen, zu denen dieser Bauabschnitt berechtigt ist, einzeln
   // benannt und mit Grund. Sie schrumpft von selbst: sobald der
@@ -226,7 +227,7 @@ test('der Trockenlauf laesst das echte Register byte-gleich', () => {
   assert.strictEqual(
     crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex'), vorher);
   assert.match(ausgabe, /TROCKENLAUF - es wurde NICHTS geschrieben/);
-  assert.match(ausgabe, /"previousHash": "5ad8a38a9f0c/);
+  assert.match(ausgabe, /"previousHash": "5ad8a38a9f0cb6fcebb82878e944d691cdc76df66725cc6e63fb8ac8e75f16c3"/);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 

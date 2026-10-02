@@ -15,6 +15,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
+const { resolveCommit } = require('./helpers/history-anchor');
 
 const WURZEL = path.join(__dirname, '..');
 const LEDGER = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0',
@@ -33,7 +34,7 @@ test('--force gibt es nicht (F6-B8)', () => {
 // Der Stand, unter dem der Lauf gefeuert hat. Die Anker des Vermerks gelten
 // gegen IHN, nicht gegen den lebenden Baum - die F6-K13-Reparatur hat den
 // Laeufer danach veraendert. Damit werden die Anker pruefbar statt gezaehlt.
-const STAND_DES_LAUFS = 'aeefb68125';
+const STAND_DES_LAUFS = resolveCommit('aeefb68125');
 const LAEUFER_SHA_DES_LAUFS =
   'd04a0eaeeb05a17631122cb2f87ac587946d9e345705e348d265ba4dcd9fb688';
 
