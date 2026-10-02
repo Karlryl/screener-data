@@ -1,0 +1,74 @@
+name: Exchange Check Shadow
+
+# Tag 1403 (G2b) — SHADOW report of the exchange cross-check (lib/exchange-quarter-check.js): which China and
+# Taiwan board rows the step WOULD withhold or fill. Manual only and separate from daily-pull.yml on purpose: a
+# step inside the scoring job could push that job past its 15-minute timeout; a separate dispatch cannot touch
+# the daily run. Reads the snapshots artifact of one finished daily run, scores it again on this runner (the
+# committed mode stays off), writes exchange-check-shadow.json as a run artifact. No commit, no push, no deploy.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run id of a finished "Daily Yahoo Pull" run whose snapshots artifact is read'
+        required: true
+
+concurrency:
+  group: exchange-check-shadow-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Download snapshots of the daily run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: snapshots
+          path: snapshots
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Download merge handoff of the daily run (coverage, regime, ATH)
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: merge-handoff
+          path: .
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+
+      # Same order as the scoring job of daily-pull.yml, so board membership and ranks match that run.
+      - name: Score the snapshots (committed mode, readers unchanged)
+        run: |
+          node scripts/opinc-source-migrate.js --json reports/opinc-source-diff.json
+          node src/scoring/run-screener.js
+          node scripts/write-findash-export.js
+          node scripts/write-rule40-export.js || true
+
+      - name: Shadow report
+        run: node scripts/exchange-check-report.js --out "$RUNNER_TEMP/exchange-check-shadow/exchange-check-shadow.json"
+
+      - name: Upload shadow report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: exchange-check-shadow
+          path: ${{ runner.temp }}/exchange-check-shadow/exchange-check-shadow.json
+          retention-days: 30
+          if-no-files-found: error

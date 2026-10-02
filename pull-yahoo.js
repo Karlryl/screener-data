@@ -1211,7 +1211,8 @@ function _applyTradingScale(snap, financialFactor) {
 function _convertSnapshotToUSD(snap) {
   if (!snap || !snap.meta) return snap;
   // C2: exact known cases only, in native currency, before the existing single FX pass.
-  const q4Checked = yahooQ4.prepareSnapshot(snap);
+  // Tag 1403: { atPull: true } keeps the read-time exchange cross-check out of every persisted snapshot.
+  const q4Checked = yahooQ4.prepareSnapshot(snap, { atPull: true });
   if (q4Checked !== snap) Object.assign(snap, q4Checked);
   // Corrections also apply to cached USD input; the FX conversion itself stays idempotent.
   if (snap.meta.fxConverted === true) return snap;

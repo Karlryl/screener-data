@@ -54,6 +54,7 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
+const { exchangeRecord } = require('../lib/exchange-quarter-check.js');
 const { boardStatus } = require('../src/scoring/board-status.js');
 const priceStore = require('../lib/price-history-store.js');   // LT1: Quelle der PIT-Preisfelder
 const { istStrukturell } = require('../lib/board-history-flag.js');   // Tag 1396: one rule, one place
@@ -556,6 +557,9 @@ function buildPit(snap, pitGaps, ticker) {
     // jump 'kapitalmassnahme' when this count moved by the same factor. Appended LAST (additive,
     // earlier keys keep their order); not > 0 -> null, never a stored 0.
     sharesOutstanding: sharesOutstandingOf(meta),
+    // Tag 1403 (G5): only in active mode of the exchange cross-check, additive: which revenue cells came from the
+    // exchange or were withheld, with the original vendor values (board-history is backward-check data).
+    ...(exchangeRecord(snap) ? { revenueQExchange: exchangeRecord(snap) } : {}),
   };
 }
 
