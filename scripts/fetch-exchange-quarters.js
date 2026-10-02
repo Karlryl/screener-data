@@ -21,7 +21,7 @@
  * Failure behaviour (per market, the other market is independent):
  *   China   any non-200, success:false other than 9201, invalid JSON, count/uniqueness mismatch
  *           (holeBericht), unknown REPORT_TYPE, a currency other than CNY, a row for another period
- *           or the call cap -> the market aborts, cn.json is not written, exit code 1.
+ *           or the call cap (220) -> the market aborts, cn.json is not written, exit code 1.
  *   Taiwan  A season is first asked 25 days after its quarter end. MOPS code 406 (no data, season not
  *           filed yet) is recorded and retried after 3 days;
  *           no revenue line (banks, insurers, holdings) is recorded and retried after 30 days; any
@@ -46,7 +46,13 @@ const S = require(path.join(ROOT, 'lib/exchange-quarter-store.js'));
 
 const USER_AGENT = 'screener-data exchange-quarters fetch';
 const PAUSE_MS = 1500;
-const CN_CAP = 150;
+// Measured 02.10.2026 (count of RPT_F10_FINANCE_GINCOME per REPORT_DATE): 7,216-7,420 rows at 03-31 and
+// 09-30, but 13,469-14,563 rows at 06-30 and 12-31 (the answers also carry .NQ and .BJ codes; that
+// half-year/annual-only NEEQ reporters cause the doubling is a guess, not verified). At 500 rows per page the 8-period window is about 160 GINCOME pages
+// plus 8 SINCOME pages, about 185 at the peak of the Q3 season. The planned cap of 150 assumed 14
+// pages per period. A server-side type filter (SECURITY_TYPE_CODE) would cut the NEEQ pages but also
+// drops listings with another type code (689009.SH is 058001008), so the cap is raised instead.
+const CN_CAP = 220;
 const TW_CAP = 600;
 const DAY_MS = 24 * 3600 * 1000;
 const CN_WEEKLY_MS = 6 * DAY_MS;          // outside the report seasons: at most one China pass per 6 days
@@ -89,7 +95,7 @@ function loadStore(file, market) {
 }
 function emptyStore(market) {
   return market === 'CN'
-    ? { schemaVersion: 1, market: 'CN', currency: 'CNY', unit: 1, about: ABOUT.CN, sources: {}, companies: {} }
+    ? { schemaVersion: 1, market: 'CN', currency: 'CNY', unit: 1, tables: { GINCOME: '通用', SINCOME: '证券' }, about: ABOUT.CN, sources: {}, companies: {} }
     : { schemaVersion: 1, market: 'TW', currency: 'TWD', unit: S.TW_UNIT, about: ABOUT.TW, sources: {}, companies: {} };
 }
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -163,6 +169,7 @@ async function runChina(ctx) {
     for (const t of CN_TABLES) {
       const rows = await holeBericht(t.report, t.columns, "(REPORT_DATE='" + period + "')", 'HSF10', 'SECUCODE', holen);
       requests.push({ report: t.report, period, rows: rows.length });
+      ctx.log('CN ' + t.table + ' ' + period + ': ' + rows.length + ' rows, ' + calls + ' calls so far');
       const seen = new Map();
       for (const z of rows) {
         if (tag(z.REPORT_DATE) !== period) throw new Error(t.report + ': row for ' + z.REPORT_DATE + ' in the answer for ' + period);
@@ -175,7 +182,7 @@ async function runChina(ctx) {
         }
         if (!S.CN_REPORT_TYPES.has(z.REPORT_TYPE)) throw new Error(t.report + ': unknown REPORT_TYPE ' + JSON.stringify(z.REPORT_TYPE) + ' (' + z.SECUCODE + ' ' + period + ')');
         if (z.CURRENCY !== 'CNY') throw new Error(t.report + ': currency ' + JSON.stringify(z.CURRENCY) + ' (' + z.SECUCODE + ' ' + period + '), the store is CNY only');
-        const obs = { table: t.table, orgType: z.ORG_TYPE, reportType: z.REPORT_TYPE };
+        const obs = { table: t.table, reportType: z.REPORT_TYPE };   // ORG_TYPE = tables[table] in the header
         if (t.table === 'GINCOME') obs.total = z.TOTAL_OPERATE_INCOME;
         obs.operate = z.OPERATE_INCOME;
         obs.noticeDate = tag(z.NOTICE_DATE);
@@ -193,17 +200,28 @@ async function runChina(ctx) {
     }
   }
   const next = prev ? clone(prev) : emptyStore('CN');
-  next.sources[src] = { fetchedAt, endpoint: EASTMONEY_ENDPOINT, periods, calls, requests };
   const counts = { new: 0, confirmed: 0, changed: 0 };
+  const readNow = new Set();
   for (const [tk, period, obs, updateDate] of fresh) {
     const c = next.companies[tk] || (next.companies[tk] = { secucode: secucodeFuerYahoo(tk), ytd: {} });
     const list = c.ytd[period] || (c.ytd[period] = []);
     counts[S.mergeObservation(list, obs, { src, fetchedAt, updateDate })] += 1;
+    readNow.add(tk + ' ' + period);
   }
+  // Stored companies this run did not read again for a covered period (missing from the answer,
+  // ambiguous, other table): listed so that lastConfirmedAt() does not count this run for them.
+  const absent = {};
+  for (const [tk, c] of Object.entries(next.companies)) {
+    for (const period of periods) {
+      if (c.ytd[period] && !readNow.has(tk + ' ' + period)) (absent[period] || (absent[period] = [])).push(tk);
+    }
+  }
+  next.sources[src] = { fetchedAt, endpoint: EASTMONEY_ENDPOINT, periods, calls, requests, absent };
   S.assertAppendOnly(prev, next);
   const text = S.serialiseStore(next);
   if (!ctx.dryRun) writeFileAtomic(file, text);
-  const summary = { market: 'CN', src, calls, periods: periods.length, rows: fresh.length, ...counts, ambiguous, otherOrgTypes,
+  const absentCount = Object.values(absent).reduce((n, a) => n + a.length, 0);
+  const summary = { market: 'CN', src, calls, periods: periods.length, rows: fresh.length, ...counts, ambiguous, absent: absentCount, otherOrgTypes,
     companies: Object.keys(next.companies).length, bytes: Buffer.byteLength(text), written: !ctx.dryRun };
   ctx.log('CN: ' + JSON.stringify(summary));
   return summary;
@@ -211,6 +229,10 @@ async function runChina(ctx) {
 
 // ── Taiwan ────────────────────────────────────────────────────────────────────
 function taiwanQueue(store, tickers, seasons, priority, nowMs) {
+  const lastRead = new Map();   // 'ticker key' -> newest fetchedAt (from the run log)
+  for (const s of Object.values((store && store.sources) || {})) {
+    for (const k of s.read || []) if (!lastRead.has(k) || lastRead.get(k) < s.fetchedAt) lastRead.set(k, s.fetchedAt);
+  }
   const tw = tickers.filter((t) => /\.TWO?$/.test(t));
   const tier = (t) => { const p = priority.get(t); if (!p) return 3; if (p.rank <= 100) return 0; return p.gap ? 1 : 2; };
   const rank = (t) => (priority.get(t) ? priority.get(t).rank : 1e9);
@@ -232,8 +254,8 @@ function taiwanQueue(store, tickers, seasons, priority, nowMs) {
     }
     const newest = seasons.find((s) => c.seasons[s.key]);
     if (newest) {
-      const list = c.seasons[newest.key];
-      if (nowMs - Date.parse(list[list.length - 1].lastConfirmed.fetchedAt) >= TW_REFRESH_MS) refresh.push({ tk, s: newest });
+      const at = lastRead.get(tk + ' ' + newest.key);
+      if (!at || nowMs - Date.parse(at) >= TW_REFRESH_MS) refresh.push({ tk, s: newest });
     }
   }
   return [...first, ...refresh];
@@ -251,6 +273,7 @@ async function runTaiwan(ctx) {
   const src = 'tw-' + stamp(fetchedAt);
   const st = { calls: 0, ok: 0, noData: 0, noLine: 0, failed: 0, new: 0, confirmed: 0, changed: 0 };
   const failures = [];
+  const read = [];
   let inARow = 0;
   for (const { tk, s } of queue) {
     const c = next.companies[tk] || (next.companies[tk] = { companyId: tk.replace(/\.TWO?$/, ''), seasons: {}, noData: {} });
@@ -277,6 +300,7 @@ async function runTaiwan(ctx) {
             const obs = { reportType: r.reportType, line: row[0], columns };
             const list = c.seasons[s.key] || (c.seasons[s.key] = []);
             st[S.mergeObservation(list, obs, { src, fetchedAt: at, updateDate: null })] += 1;
+            read.push(tk + ' ' + s.key);
             delete c.noData[s.key];
             st.ok += 1; inARow = 0;
             continue;
@@ -295,7 +319,7 @@ async function runTaiwan(ctx) {
     throw new Error('MOPS: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
   }
   next.sources[src] = { fetchedAt, endpoint: 'POST ' + MOPS_URL, seasons: seasons.map((x) => x.key), calls: st.calls,
-    ok: st.ok, noData: st.noData, noLine: st.noLine, failed: st.failed };
+    ok: st.ok, noData: st.noData, noLine: st.noLine, failed: st.failed, read };
   S.assertAppendOnly(prev, next);
   const text = S.serialiseStore(next);
   if (!ctx.dryRun) writeFileAtomic(file, text);

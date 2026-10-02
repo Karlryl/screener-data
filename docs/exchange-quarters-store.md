@@ -18,23 +18,27 @@ not stored (their tables are not verified). The legacy host `mopsov.twse.com.tw`
 ## Shape
 
 ```
-{ "schemaVersion": 1, "market": "CN", "currency": "CNY", "unit": 1, "about": "...",
-  "sources":   { "cn-20261002T070000Z": { "fetchedAt", "endpoint", "periods", "calls", "requests": [...] } },
+{ "schemaVersion": 1, "market": "CN", "currency": "CNY", "unit": 1,
+  "tables": { "GINCOME": "通用", "SINCOME": "证券" }, "about": "...",
+  "sources":   { "cn-20261002T070107Z": { "fetchedAt", "endpoint", "periods", "calls", "requests": [...],
+                                          "absent": { "<period>": ["<ticker not read again>"] } } },
   "companies": { "600064.SS": { "secucode": "600064.SH",
-      "ytd": { "2025-09-30": [ { "table": "GINCOME", "orgType": "通用", "reportType": "三季报",
+      "ytd": { "2025-09-30": [ { "table": "GINCOME", "reportType": "三季报",
                  "total": 2399700641.02, "operate": 2399700641.02, "noticeDate": "2025-10-31",
-                 "confirmedBy":  [ { "src", "fetchedAt", "updateDate": "2025-10-31" } ],
-                 "lastConfirmed": { "src", "fetchedAt", "updateDate" } } ] } } } }
+                 "confirmedBy": [ { "src", "fetchedAt", "updateDate": "2025-10-31" } ] } ] } } } }
 ```
 
 Taiwan: `companies["6446.TW"] = { companyId, seasons: { "114Q3": [ { reportType, line,
-columns: [["114年第3季", 3893772], ...], confirmedBy, lastConfirmed } ] }, noData: { "115Q3": { at, code } } }`.
+columns: [["114年第3季", 3893772], ...], confirmedBy } ] }, noData: { "115Q3": { at, code } } }`;
+each Taiwan source lists the keys it read (`read: ["6446.TW 114Q3", ...]`).
 
 ## Rules
 
 - **Append-only.** Same numbers again: no new observation; a confirmation is appended only when
-  Eastmoney's `UPDATE_DATE` changes (one confirmation per fetch would add about 2.4 MB per China
-  run), `lastConfirmed` records the newest fetch that returned these numbers. Different numbers:
+  Eastmoney's `UPDATE_DATE` changes. Every other re-reading is recorded once per run in the source
+  entry (China: `periods` minus `absent`; Taiwan: `read`), and `lastConfirmedAt()` returns the
+  newest run that read a key again. One confirmation per observation and fetch would rewrite every
+  company line on every run (about 2.2 MB more per China run). Different numbers:
   a new observation is appended (restatement signal). Nothing is removed; `assertAppendOnly`
   checks the new file against the old one before every atomic write. `noData` is bookkeeping for
   the Taiwan queue and not part of the guarantee.
@@ -42,8 +46,8 @@ columns: [["114年第3季", 3893772], ...], confirmedBy, lastConfirmed } ] }, no
   (02.10.2026: 2024-12-31 .. 2026-09-30). Taiwan: the 5 quarter ends before today as MOPS seasons;
   a season is first asked 25 days after its quarter end.
 - **Cadence and caps.** China: daily in the report seasons 15.03.-05.05., 15.07.-05.09.,
-  15.10.-20.11., at most every 6 days otherwise; cap 150 calls. Taiwan: never-fetched keys (board
-  rows first, then rows with quarter gaps), then the newest season of each company every 7 days;
+  15.10.-20.11., at most every 6 days otherwise; cap 220 calls (06-30 and 12-31
+  answers carry about twice the rows of 03-31 and 09-30). Taiwan: never-fetched keys (board rows first, then rows with quarter gaps), then the newest season of each company every 7 days;
   cap 600 calls; pause 1.5 s per host.
 - **Failure.** China: any odd answer aborts the market without writing. Taiwan: 406 (not filed)
   waits 3 days, no revenue line waits 30 days, other failures are skipped and counted; 10 in a row
@@ -54,5 +58,6 @@ columns: [["114年第3季", 3893772], ...], confirmedBy, lastConfirmed } ] }, no
 `chinaSingleQuarters` (YTD -> single quarter with the 一季报 -> 中报 -> 三季报 -> 年报 chain check;
 anything else = unchecked), `taiwanSeasonValues` (column titles checked per season: season 1 is
 `[YTD, quarter, prior YTD, prior quarter]`, seasons 2-3 `[quarter, prior quarter, YTD, prior YTD]`,
-season 4 `[FY, prior FY]`; YTD must start on 01-01), `taiwanSingleQuarters` (Q4 = FY - 9M, TWD).
+season 4 `[FY, prior FY]`; YTD must start on 01-01), `taiwanSingleQuarters` (Q4 = FY - 9M, TWD),
+`lastConfirmedAt`.
 Not wired into `prepareSnapshot`.

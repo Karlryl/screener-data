@@ -151,7 +151,8 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     const o2 = s2.companies['000958.SZ'].ytd['2025-09-30'];
     assert.equal(o2.length, 1);
     assert.equal(o2[0].confirmedBy.length, 1, 'same UPDATE_DATE: no extra confirmation');
-    assert.equal(o2[0].lastConfirmed.fetchedAt, '2026-10-16T07:00:00.000Z');
+    assert.equal(S.lastConfirmedAt(s2, '000958.SZ', '2025-09-30'), '2026-10-16T07:00:00.000Z', 'the run log records the re-reading');
+    assert.equal(Object.keys(s2.sources['cn-20261016T070000Z'].absent).length, 0);
     assert.equal(r2.results[0].confirmed, 6, '000958 x3, 600064 x2, 000686 x1');
     S.assertAppendOnly(before, s2);
     const rows = cnRows();
@@ -174,7 +175,10 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     rows.RPT_F10_FINANCE_GINCOME['2025-09-30'] = rows.RPT_F10_FINANCE_GINCOME['2025-09-30'].filter((z) => z.SECUCODE !== '000958.SZ');
     const r = await main({ dir, markets: ['cn'], tickers: TICKERS, fetchJson: eastmoney(rows), now: NOW('2026-10-16T07:00:00Z'), log: quiet });
     assert.equal(r.exitCode, 0);
-    assert.equal(read(dir, 'cn').companies['000958.SZ'].ytd['2025-09-30'][0].total, 3650029509.49);
+    const s = read(dir, 'cn');
+    assert.equal(s.companies['000958.SZ'].ytd['2025-09-30'][0].total, 3650029509.49);
+    assert.deepEqual(s.sources['cn-20261016T070000Z'].absent, { '2025-09-30': ['000958.SZ'] });
+    assert.equal(S.lastConfirmedAt(s, '000958.SZ', '2025-09-30'), '2026-10-02T07:00:00.000Z', 'not confirmed by the run that missed it');
   });
 
   const downCases = {
@@ -284,7 +288,7 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     assert.deepEqual(refreshed, ['2548', '6023', '6446'], 'the newest season of every stored company is re-read after 7 days');
     const s = read(dir, 'tw');
     assert.equal(s.companies['2548.TW'].seasons['115Q2'].length, 1);
-    assert.equal(s.companies['2548.TW'].seasons['115Q2'][0].lastConfirmed.fetchedAt.slice(0, 10), '2026-10-11');
+    assert.equal(S.lastConfirmedAt(s, '2548.TW', '115Q2').slice(0, 10), '2026-10-11');
   });
 
   await test('TW: more than 20 % failed calls abort without writing; tw.json byte-identical', async () => {
@@ -312,11 +316,11 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
 
   await test('TW queue: never-fetched keys first, then the newest season of each company after 7 days', () => {
     const seasons = S.taiwanSeasonWindow('2026-10-20');
-    const store = { companies: { '2548.TW': { seasons: { '115Q2': [{ lastConfirmed: { fetchedAt: '2026-10-10T00:00:00Z' } }],
-      '115Q1': [{}], '114Q4': [{}], '114Q3': [{}] }, noData: {} } } };
+    const store = { sources: { r1: { fetchedAt: '2026-10-10T00:00:00Z', read: ['2548.TW 115Q2'] } },
+      companies: { '2548.TW': { seasons: { '115Q2': [{}], '115Q1': [{}], '114Q4': [{}], '114Q3': [{}] }, noData: {} } } };
     const q = taiwanQueue(store, ['2548.TW', '6446.TW'], seasons, new Map(), Date.parse('2026-10-20T00:00:00Z'));
     assert.deepEqual(q.map((x) => x.tk + ' ' + x.s.key), ['6446.TW 115Q2', '6446.TW 115Q1', '6446.TW 114Q4', '6446.TW 114Q3', '2548.TW 115Q2']);
-    store.companies['2548.TW'].seasons['115Q2'][0].lastConfirmed.fetchedAt = '2026-10-22T00:00:00Z';
+    store.sources.r2 = { fetchedAt: '2026-10-22T00:00:00Z', read: ['2548.TW 115Q2'] };
     const q2 = taiwanQueue(store, ['2548.TW'], S.taiwanSeasonWindow('2026-10-26'), new Map(), Date.parse('2026-10-26T00:00:00Z'));
     assert.deepEqual(q2.map((x) => x.s.key), ['115Q3'], '25 days after 30.09. the new season is asked; the 115Q2 refresh is not due yet');
   });
