@@ -171,7 +171,7 @@ const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
-const { readValueFlags, LABEL_ORDER: VALUE_FLAG_LABELS } = require('../lib/value-open-items.js');
+const { readValueFlags, valueFlagProblems } = require('../lib/value-open-items.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
 // Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
@@ -338,8 +338,9 @@ function ergaenzeBelegpunkte(out) {
 // Mappers called directly (tests, other scripts) see no flags until ladeValueFlags() ran.
 const VALUE_OPEN_ITEMS_FILE = path.join(ROOT, 'data-health', 'value-open-items.json');
 let _valueFlags = new Map();
-function ladeValueFlags(file = VALUE_OPEN_ITEMS_FILE, warn = console.warn) {
-  _valueFlags = readValueFlags(file, warn);
+// day: the run day (UTC, as the open-items step stamps updatedFor); a list for another day warns.
+function ladeValueFlags(file = VALUE_OPEN_ITEMS_FILE, warn = console.warn, day = null) {
+  _valueFlags = readValueFlags(file, warn, day);
   return _valueFlags.size;
 }
 
@@ -995,7 +996,7 @@ function loadCoverage(file = COVERAGE) {
 }
 
 function build() {
-  const nFlagged = ladeValueFlags(); // Tag 1401: before the first mapper runs
+  const nFlagged = ladeValueFlags(VALUE_OPEN_ITEMS_FILE, console.warn, new Date().toISOString().slice(0, 10)); // Tag 1401: before the first mapper runs
   console.log('valueFlags: ' + nFlagged + ' ticker(s) with an open value item are marked (data-health/value-open-items.json)');
   const coverage = loadCoverage();
   const sourceIndex = readJSON(path.join(HG_DIR, 'index.json'));
@@ -1223,24 +1224,13 @@ function checkRevGrowthBasis(r, where, errs) {
 // non-empty list, each entry one open cell of data-health/value-open-items.json with the shape
 // lib/value-open-items.js valueFlagsByTicker() writes. Quarterly fields carry their period end,
 // marketCap none; factor is null exactly when the new value is 0.
-const VALUE_FLAG_FIELDS = ['revenueQ', 'grossProfitQ', 'marketCap'];
+// The per-flag rule lives in lib/value-open-items.js valueFlagProblems() (the reader drops a
+// flag that breaks it, so a schema-valid list with one bad cell cannot turn this gate red).
 function checkValueFlags(r, where, errs) {
   if (!('valueFlags' in r)) return;
   const vf = r.valueFlags;
   if (!Array.isArray(vf) || !vf.length) { errs.push(`${where}: valueFlags not a non-empty array`); return; }
-  vf.forEach((f, i) => {
-    const w = `${where}: valueFlags[${i}]`;
-    if (!f || typeof f !== 'object') { errs.push(`${w} not an object`); return; }
-    if (!VALUE_FLAG_FIELDS.includes(f.field)) errs.push(`${w}.field=${JSON.stringify(f.field)}`);
-    const quartal = f.field !== 'marketCap';
-    const tagOk = (d) => typeof d === 'string' && isoTag(d) === d;
-    if (quartal ? !tagOk(f.periodEnd) : f.periodEnd !== null) errs.push(`${w}.periodEnd=${JSON.stringify(f.periodEnd)}`);
-    if (!Number.isFinite(f.acceptedValue) || f.acceptedValue <= 0) errs.push(`${w}.acceptedValue not finite > 0`);
-    if (!Number.isFinite(f.newValue) || f.newValue < 0) errs.push(`${w}.newValue not finite >= 0`);
-    if (f.newValue === 0 ? f.factor !== null : !(Number.isFinite(f.factor) && f.factor >= 3)) errs.push(`${w}.factor=${JSON.stringify(f.factor)}`);
-    if (!tagOk(f.firstSeen)) errs.push(`${w}.firstSeen=${JSON.stringify(f.firstSeen)}`);
-    if (!Array.isArray(f.labels) || !f.labels.every((l) => VALUE_FLAG_LABELS.includes(l))) errs.push(`${w}.labels=${JSON.stringify(f.labels)}`);
-  });
+  vf.forEach((f, i) => { for (const p of valueFlagProblems(f)) errs.push(`${where}: valueFlags[${i}].${p}`); });
 }
 // Datei-Ebene: das Feld ist entweder auf ALLEN Zeilen da oder auf KEINER. Die Zeilen-Pruefung
 // oben laesst Abwesenheit durch (Altbestand trug das Feld nie) und kann deshalb einen halb

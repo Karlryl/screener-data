@@ -1785,7 +1785,8 @@ function run(opts) {
   // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
   const universeHash = readUniverseHash(P.UNIVERSE_HASH_FILE);
   // Tag 1401: once per run; missing/unreadable -> no flags + ::warning::, never a failed vintage.
-  const valueFlags = readValueFlags(P.VALUE_OPEN_ITEMS_FILE);
+  // A list for another day (open-items step failed) is used but warned as stale.
+  const valueFlags = readValueFlags(P.VALUE_OPEN_ITEMS_FILE, console.warn, date);
   // WB-4': einmal je Lauf — SEC-Ticker als Upgrade-Beweis (c) und der Quartals-Kopf des
   // AKTUELLEN Snapshots fuer den Null-Slot (a); beides nur am Datenschub-Uebergang gelesen.
   const gateOpts = bruch && bruch.typ === 'daten-schub' ? {

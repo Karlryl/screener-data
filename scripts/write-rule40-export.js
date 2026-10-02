@@ -60,7 +60,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
-const { beurteileWaehrungsbeleg, checkRevGrowthBasis } = require('./write-findash-export.js');
+const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags } = require('./write-findash-export.js');
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -68,6 +68,7 @@ const { newestQtrSuspect, annualCurrencyLeak } = require('../src/scoring/lamps.j
 const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
+const { readValueFlags } = require('../lib/value-open-items.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -75,6 +76,9 @@ const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
 // Schreiber MUESSEN dieselbe Snapshot-Menge sehen: laufen sie auseinander, rechnet dieses
 // Brett gegen eine andere Population als der Export, und das faellt niemandem auf.
 const DEFAULT_SNAPSHOTS_DIR = process.env.FINDASH_SNAPSHOTS_DIR || path.join(REPO_ROOT, 'snapshots');
+// Tag 1401: the open-items list of the same run (written before the main export). Read only by
+// the CLI (main): build() without opts.valueOpenItemsFile marks off-board names with nothing.
+const DEFAULT_VALUE_OPEN_ITEMS_FILE = path.join(REPO_ROOT, 'data-health', 'value-open-items.json');
 
 const SCHEMA = 'findash-export/v1';        // Schema-Pin des Konsumenten (screener-contract.js:53)
 const BOARD_ID = 'rule40';
@@ -599,7 +603,7 @@ function sammleKandidaten(opts = {}) {
  * Aus den Kandidaten das Brett bauen: Wachstumsterm klemmen (p1/p99 des eigenen Universums),
  * r40 rechnen, ab R40_MIN aufnehmen, je Gruppe TOP_N, Vereinigung, nach r40 durchnummerieren.
  */
-function baueZeilen(kandidaten) {
+function baueZeilen(kandidaten, valueFlags = new Map()) {
   const bounds = kandidaten.length >= MIN_WINSOR_SAMPLE
     ? winsorTailBounds(kandidaten.map((k) => k.wachstumRoh))
     : null;
@@ -700,6 +704,11 @@ function baueZeilen(kandidaten) {
       zeile.revGrowthBasis = k.wachstumBein ? k.wachstumBein.basis : null;
       zeile.revGrowthPeriodEnd = k.wachstumBein ? k.wachstumBein.periodEnd : null;
       zeile.revGrowthPriorPeriodEnd = k.wachstumBein ? k.wachstumBein.priorPeriodEnd : null;
+      // Tag 1401: marks only, never changes a value. On-board names carry the flags of their
+      // full-board row (the main export wrote them from the same list); off-board names get them
+      // from the list. No open item: no key (absence, not an empty array).
+      const flags = k.onBoard ? row.valueFlags : valueFlags.get(k.ticker);
+      if (Array.isArray(flags) && flags.length) zeile.valueFlags = flags.map((f) => ({ ...f, labels: f.labels.slice() }));
       return zeile;
     }),
   };
@@ -842,7 +851,9 @@ function build(opts = {}) {
     throw new Error('[rule40] kein einziger rechenbarer Kandidat aus ' + gelesen + ' Zeilen ('
       + JSON.stringify(abgewiesen) + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
   }
-  const { rows, bounds, ueber40, grossExportiert, kleinExportiert, grossVorKappung, kleinVorKappung } = baueZeilen(kandidaten);
+  const valueFlags = opts.valueOpenItemsFile
+    ? readValueFlags(opts.valueOpenItemsFile, console.warn, index.generated_at.slice(0, 10)) : new Map();
+  const { rows, bounds, ueber40, grossExportiert, kleinExportiert, grossVorKappung, kleinVorKappung } = baueZeilen(kandidaten, valueFlags);
   // Die Leer-Pruefung sitzt HINTER der Auswahl, nicht davor: Kandidaten zu haben und trotzdem
   // keine Zeile ueber der Schwelle ist derselbe unbelegte Zustand wie gar keine Kandidaten —
   // er wuerde sonst als leeres, gueltiges Brett mit Exit 0 veroeffentlicht (Befund F6).
@@ -955,6 +966,7 @@ function check(opts = {}) {
     // 01.10.2026: dieselbe Basis-Regel wie der Haupt-Export, dazu das Etikett: traegt das
     // Jahresbein die Zahl, nennt quartalsEnde dessen Geschaeftsjahresende (oder null), nie ein Quartal.
     checkRevGrowthBasis(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler);
+    checkValueFlags(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler);   // Tag 1401 additive OPTIONAL
     if ((r.revGrowthBasis === 'year' || r.revGrowthBasis === 'yearNewerRecord')
         && r.quartalsEnde !== (r.revGrowthPeriodEnd === null ? null : r.revGrowthPeriodEnd + 'T00:00:00.000Z')) {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): quartalsEnde ' + r.quartalsEnde + ' nennt nicht den Zeitraum des Jahresbeins ('
@@ -972,7 +984,7 @@ function main(argv) {
   const v1Dir = process.env.RULE40_V1_DIR || DEFAULT_V1_DIR;
   const snapshotsDir = process.env.RULE40_SNAPSHOTS_DIR || DEFAULT_SNAPSHOTS_DIR;
   const outDir = process.env.RULE40_OUT_DIR || path.join(v1Dir, BOARD_ID);
-  const opts = { v1Dir, snapshotsDir, outDir };
+  const opts = { v1Dir, snapshotsDir, outDir, valueOpenItemsFile: DEFAULT_VALUE_OPEN_ITEMS_FILE };
 
   if (argv.includes('--check')) {
     const res = check(opts);
