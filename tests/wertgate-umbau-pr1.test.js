@@ -6,10 +6,24 @@
 // with a broken fan-out cap) from p99-only flags:
 //   - writer exit 2 only for a structural board; a p99-only flag is written, flagged, exit 0;
 //   - the per-board prior walk skips structural days as comparison base, p99-only days are a base;
-//   - the registered massstab-bruch binds only where the board's prior IS the global prior;
+//   - the registered massstab-bruch binds to each board's OWN prior (round 3, Codex P1): after a
+//     structural day on a registered transition the board is judged against the last clean day
+//     with the transition and its integrity check, and stays structural while the damage persists;
+//   - the verdict step claims storage only when the commit step succeeded (bh-b09, Codex P2);
 //   - GATE FLAG line replaces the old coupling line; GATE SERIE names the board with the max gap;
 //   - rank-ic skips flagged boards by default, keeps them with includeFlagged.
 // Every case asserts presence AND absence. Fixtures are hermetic temp dirs (L4).
+//
+// Mutants (round 3, each run once against these tests and tests/scoring/bh-b09-dailyyml.test.js;
+// full-line anchor, restored by git checkout; expected killer in brackets):
+//   R3-M1 writer: boardBruch bound to the global prior again
+//         (`prior.date === priorDate ? bruch : null`)                       [Q1-Q6]
+//   R3-M2 writer: boardBruch looked up for the global prior (`bruchFuer(priorDate)`) [Q1, Q2, Q3]
+//   R3-M3 writer: gateOptsFuer always `{}` (daten-schub data not loaded)        [Q5]
+//   R3-M4 writer: run header only from the global bruch (`kopfBruch = bruch`)    [Q6]
+//   R3-M5 workflow: verdict ignores the commit outcome (`elif true; then`)       [bh-b09 skipped/failure/empty]
+//   R3-M6 workflow: commit step loses `id: commit_vintage`                        [bh-b09 id test]
+//   R3-M7 workflow: verdict ignores the publish switch (`if false; then`)         [bh-b09 non-publishing]
 'use strict';
 const assert = require('assert');
 const fs = require('fs');
@@ -150,7 +164,7 @@ check('P1 after a p99-flagged day the next day compares against that day (priorD
   assert.strictEqual(res.exitCode, 0);
 });
 
-check('P2 after a structural day the board skips it (gapDays 2) while a sibling compares against it; bruch binds only on the global prior', () => {
+check('P2 after a structural day the board skips it (gapDays 2) while a sibling compares against it; bruch binds to each board own prior', () => {
   const base = mkBase();
   writeBoard(base, 'semiconductors', [row('AAA', 50), row('BBB', 60)]);
   writeBoard(base, 'energy', [row('CCC', 50), row('DDD', 60)]);
@@ -193,6 +207,121 @@ check('P3 a stored day flagged with an unknown reason (no `structural` key) is s
   assert.strictEqual(n.gate.priorDate, '2026-08-03', 'unknown-reason day must not be the comparison base');
   assert.strictEqual(n.gate.gapDays, 2);
   assert.strictEqual(res.exitCode, 0);
+});
+
+// ── round 3 (Codex P1): structural day on a registered daten-schub transition ──
+// d0 clean base, entry bound to d0 naming energy + semiconductors; d1 AAA loses the source lamp
+// opIncYahooAdjusted (integrity decay, structural); d2/d3 the loss persists; d4 the lamp is back;
+// d5 a normal day. BBB is in the SEC annual series and loses its source lamp on d2: a proven
+// upgrade, released only when the daten-schub data (secTicker) reaches the board's comparison.
+// semiconductors stays clean throughout (mixed case). Before the fix the registered transition
+// was bound to the GLOBAL prior: from d2 on energy compared against d0 WITHOUT the transition,
+// the integrity check did not run, d2 was exit 0 / suspect false and became the next base.
+const Q_DAYS = ['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07', '2026-08-08'];
+function rowL(ticker, score, lamps) { return { ...row(ticker, score), lamps }; }
+function qScenario() {
+  const base = mkBase();
+  writeJson(path.join(base, 'external-data', 'sec-secannual.json'), { tickers: { BBB: {} } });
+  const runs = [];
+  Q_DAYS.forEach((d, i) => {
+    const aaaLamp = i === 0 || i >= 4;   // lost on d1..d3, back on d4
+    const bbbLamp = i < 2;               // BBB: SEC upgrade from d2 on
+    writeBoard(base, 'energy', [rowL('AAA', 50, aaaLamp ? ['opIncYahooAdjusted'] : []),
+      rowL('BBB', 60, bbbLamp ? ['opIncYahooAdjusted'] : []), rowL('CCC', 70, [])]);
+    writeBoard(base, 'semiconductors', [row('SSS', 40), row('TTT', 55)]);
+    const { res, zeilen } = mitLogs(() => W.run({ baseDir: base, date: d }));
+    if (i === 0) {
+      const ef = path.join(base, 'board-history', '_excluded.json');
+      const ex = JSON.parse(fs.readFileSync(ef, 'utf8'));
+      ex._massstab_brueche = [{ tag: 'Tag Q', typ: 'daten-schub', letztes_altes_vintage: d, boards: ['energy', 'semiconductors'] }];
+      fs.writeFileSync(ef, JSON.stringify(ex));
+    }
+    runs.push({ res, zeilen, energy: readVintage(base, d, 'energy').gate, semis: readVintage(base, d, 'semiconductors').gate,
+      rEnergy: res.boards.find((b) => b.board === 'energy') });
+  });
+  return runs;
+}
+check('Q1 persistent integrity loss after a structural day stays structural every day (exit 2, priorDate = last clean day)', () => {
+  const runs = qScenario();
+  for (const i of [1, 2, 3]) {
+    const r = runs[i];
+    assert.strictEqual(r.res.exitCode, 2, Q_DAYS[i] + ' exit');
+    assert.strictEqual(r.energy.suspect, true, Q_DAYS[i] + ' suspect');
+    assert.strictEqual(r.energy.structural, true, Q_DAYS[i] + ' structural');
+    assert.deepStrictEqual(r.energy.reasons, ['integritaets-verfall:1'], Q_DAYS[i] + ' reasons');
+    assert.strictEqual(r.energy.priorDate, Q_DAYS[0], Q_DAYS[i] + ' compared against the last non-structural day');
+    assert.strictEqual(r.rEnergy.datenSchub, true, Q_DAYS[i] + ' the registered transition applies to this comparison');
+    assert.deepStrictEqual(r.rEnergy.verfallsZeilen.map((z) => z.ticker), ['AAA'], Q_DAYS[i] + ' AAA named');
+  }
+  assert.strictEqual(runs[2].res.priorDate, Q_DAYS[1], 'global prior is the structural day');
+  assert.notStrictEqual(runs[2].energy.priorDate, runs[2].res.priorDate);
+});
+check('Q2 gap day count: the comparison against the last clean day counts its real distance (2, 3, 4), allowance once', () => {
+  const runs = qScenario();
+  assert.deepStrictEqual(runs.map((r) => r.energy.gapDays), [1, 1, 2, 3, 4, 1]);
+  const g = runs[4].energy;   // recovery day: transition applied, allowance not scaled by the gap
+  assert.ok(g.bruchGrenze && g.bruchGrenze.typ === 'daten-schub', 'recovery day gets the registered transition');
+  assert.strictEqual(g.wirksameSchwelle, g.bruchGrenze.normaleSchwelle * 4 + g.bruchGrenze.allowance);
+});
+check('Q3 recovery: lamp back -> clean (exit 0), then the next day compares against the recovery day without transition', () => {
+  const runs = qScenario();
+  const rec = runs[4];
+  assert.strictEqual(rec.res.exitCode, 0);
+  assert.strictEqual(rec.energy.suspect, false);
+  assert.strictEqual(rec.energy.structural, false);
+  assert.deepStrictEqual(rec.energy.reasons, []);
+  assert.strictEqual(rec.energy.priorDate, Q_DAYS[0]);
+  const next = runs[5];
+  assert.strictEqual(next.energy.priorDate, Q_DAYS[4]);
+  assert.strictEqual(next.energy.bruchGrenze, null, 'transition consumed');
+  assert.strictEqual(next.rEnergy.datenSchub, false);
+  assert.strictEqual(next.res.exitCode, 0);
+});
+check('Q4 mixed: the clean sibling compares against the stored structural day without the transition and never turns red', () => {
+  const runs = qScenario();
+  assert.ok(runs[1].semis.bruchGrenze && runs[1].semis.bruchGrenze.typ === 'daten-schub', 'd1: sibling on the transition');
+  for (const i of [2, 3, 4, 5]) {
+    assert.strictEqual(runs[i].semis.priorDate, Q_DAYS[i - 1], Q_DAYS[i] + ' sibling prior');
+    assert.strictEqual(runs[i].semis.gapDays, 1);
+    assert.strictEqual(runs[i].semis.bruchGrenze, null, Q_DAYS[i] + ' sibling: transition done');
+  }
+  for (const r of runs) { assert.strictEqual(r.semis.suspect, false); assert.strictEqual(r.semis.structural, false); }
+  const flag = W.kopplungProtokollZeilen(runs[2].res).find((s) => /GATE FLAG/.test(s)) || '';
+  assert.ok(/strukturell: energy$/.test(flag) && !/semiconductors/.test(flag), flag);
+});
+check('Q5 the daten-schub data reaches a board whose own prior is the transition: SEC upgrade released, AAA alone is decay', () => {
+  const runs = qScenario();
+  const r = runs[2];
+  assert.deepStrictEqual(r.rEnergy.quellUpgrades.map((z) => z.ticker), ['BBB'], 'BBB upgrade proven by the SEC series');
+  assert.ok(!r.rEnergy.verfallsZeilen.some((z) => z.ticker === 'BBB'), 'BBB must not count as decay');
+});
+check('Q6 the run header names the transition applied through a board prior (alarm channel), the global prior has none', () => {
+  const runs = qScenario();
+  const r = runs[2];
+  assert.ok(r.res.bruch && r.res.bruch.tag === 'Tag Q', JSON.stringify(r.res.bruch));
+  const z = W.bruchProtokollZeilen(r.res);
+  assert.ok(z.some((s) => /^::warning::GATE: Massstab-Bruch aktiv fuer 2026-08-05 \(Tag Q\)/.test(s)), z.join(' | '));
+  assert.ok(z.some((s) => /GATE DATENSCHUB-ZUSCHLAG VERWEIGERT fuer 2026-08-05 \/ energy: .*Integritaets-Vorrang: AAA \(Lampe opIncYahooAdjusted verloren\)/.test(s)), z.join(' | '));
+  assert.ok(!z.some((s) => /DATENSCHUB.*semiconductors/.test(s)), 'sibling without transition gets no daten-schub line');
+  assert.strictEqual(W.bruchProtokollZeilen(runs[5].res).length, 0, 'no header once no board is on a transition');
+});
+check('Q7 fail closed: no registered entry for the board\'s actual prior -> no allowance, the p99 check still runs', () => {
+  const base = mkBase();
+  writeBoard(base, 'semiconductors', [row('AAA', 50), row('BBB', 60)]);
+  W.run({ baseDir: base, date: '2026-08-03' });
+  writeBoard(base, 'semiconductors', [row('AAA', null), row('BBB', 60)]);   // structural
+  W.run({ baseDir: base, date: '2026-08-04' });
+  const exclFile = path.join(base, 'board-history', '_excluded.json');
+  const excl = JSON.parse(fs.readFileSync(exclFile, 'utf8'));
+  excl._massstab_brueche = [{ tag: 'Tag T', typ: 'daten-schub', letztes_altes_vintage: '2026-08-04', boards: ['semiconductors'] }];
+  fs.writeFileSync(exclFile, JSON.stringify(excl));
+  writeBoard(base, 'semiconductors', [row('AAA', 50), row('BBB', 95)]);    // +35 > 11.5 x 2
+  const { res } = mitLogs(() => W.run({ baseDir: base, date: '2026-08-05' }));
+  const v = readVintage(base, '2026-08-05', 'semiconductors');
+  assert.strictEqual(v.gate.priorDate, '2026-08-03');
+  assert.strictEqual(v.gate.bruchGrenze, null, 'entry bound to the skipped structural day grants nothing');
+  assert.deepStrictEqual(v.gate.reasons, [P99], 'p99 judged at the normal threshold');
+  assert.strictEqual(res.exitCode, 0, 'p99-only stays a value warning');
 });
 
 // ── GATE SERIE: maximum gap, named board ────────────────────────────────────
