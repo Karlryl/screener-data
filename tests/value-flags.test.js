@@ -347,6 +347,105 @@ check('R3 rule40 CLI main(): reads the open-items list (off-board flags reach th
   assert.strictEqual('valueFlags' in by.get('BBB'), false);
 });
 
+// ── 5) total read path (review 6a64562 N1 MEDIUM) ─────────────────────────────
+// Owner rule: the list can NEVER fail or change the export, the rule40 board or the vintage.
+// Every shape surprise gives no flag for the affected cell / item (or for the whole list when it
+// cannot be read), one ::warning:: line, and never a throw. Each variant runs through the reader,
+// the export mapper, the rule40 build seam and the vintage writer.
+const cellA = STATE.items[0].cells[0];
+const noPeriodEnd = { ...cellA }; delete noPeriodEnd.periodEnd;
+const plus = (fn) => { const s = JSON.parse(JSON.stringify(STATE_R40)); fn(s); return JSON.stringify(s); };
+const BBB_ITEM = () => item({ company: 'BBB', field: 'revenueQ', firstSeen: '2026-09-29', cells: [cellA] });
+const VARIANTS = [
+  // [name, file content, expected flags (true = AAA and OFF keep their valid flags), warnings]
+  ['null cell', plus((s) => s.items[0].cells.push(null)), true, 1],
+  ['string cell', plus((s) => s.items[0].cells.push('x')), true, 1],
+  ['cell without periodEnd', plus((s) => s.items[0].cells.push(noPeriodEnd)), true, 1],
+  ['null item', plus((s) => s.items.push(null)), true, 1],
+  ['cells not an array', plus((s) => { const b = BBB_ITEM(); b.cells = 'x'; s.items.push(b); }), true, 1],
+  ['item without company', plus((s) => { const b = BBB_ITEM(); delete b.company; s.items.push(b); }), true, 1],
+  ['UTF-8 BOM', '﻿' + JSON.stringify(STATE_R40), true, 0],
+  ['empty file', '', false, 1],
+];
+for (const [name, content, keeps, nWarn] of VARIANTS) {
+  check('T1 ' + name + ': reader, export mapper, rule40 and vintage do not throw and attach only valid flags', () => {
+    const dir = mkTmp('vft-');
+    const file = path.join(dir, 'value-open-items.json'); fs.writeFileSync(file, content);
+    // reader
+    const warns = [];
+    let m;
+    assert.doesNotThrow(() => { m = V.readValueFlags(file, (s) => warns.push(s)); }, 'reader throws');
+    assert.deepStrictEqual([...m.keys()].sort(), keeps ? ['AAA', 'OFF'] : [], 'flagged tickers');
+    if (keeps) { assert.deepStrictEqual(m.get('AAA'), AAA_FLAGS); assert.deepStrictEqual(m.get('OFF'), [OFF_FLAG]); }
+    for (const fl of m.values()) for (const f of fl) assert.deepStrictEqual(V.valueFlagProblems(f), [], 'only valid flags');
+    assert.strictEqual(warns.length, nWarn, 'warnings: ' + warns.join(' | '));
+    assert.ok(warns.every((w) => w.startsWith('::warning::')), warns.join(' | '));
+    // export mapper
+    assert.doesNotThrow(() => X.ladeValueFlags(file, () => {}), 'export load throws');
+    const a = X.mapBoardRow(boardRow('AAA'), 0);
+    if (keeps) assert.deepStrictEqual(a.valueFlags, AAA_FLAGS); else assert.strictEqual('valueFlags' in a, false);
+    assert.strictEqual('valueFlags' in X.mapBoardRow(boardRow('BBB'), 1), false, 'BBB never flagged');
+    const e = []; X.validateBoardRow(a, 'r', e); assert.deepStrictEqual(e, [], 'export row passes --check');
+    X.ladeValueFlags(path.join(dir, 'absent.json'), () => {});
+    // rule40 seam (off-board flags come from the list)
+    const f = r40Fixture(false);
+    const warn = console.warn; console.warn = () => {};
+    try { R40.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir, valueOpenItemsFile: file }); } finally { console.warn = warn; }
+    const by = new Map(r40Rows(f).map((r) => [r.ticker, r]));
+    if (keeps) assert.deepStrictEqual(by.get('OFF').valueFlags, [OFF_FLAG]); else assert.strictEqual('valueFlags' in by.get('OFF'), false);
+    assert.strictEqual('valueFlags' in by.get('BBB'), false);
+    assert.ok(R40.check({ v1Dir: f.v1Dir, outDir: f.outDir }).ok, 'rule40 --check stays green');
+    // vintage writer
+    const base = bhBase();
+    fs.mkdirSync(path.join(base, 'data-health'), { recursive: true });
+    fs.writeFileSync(path.join(base, 'data-health', 'value-open-items.json'), content);
+    let res;
+    console.warn = () => {};
+    try { res = W.run({ baseDir: base, date: '2026-07-13' }); } finally { console.warn = warn; }
+    assert.strictEqual(res.exitCode, 0, 'vintage exit code unchanged');
+    const [va, vb] = rowsOf(readV(base));
+    if (keeps) assert.deepStrictEqual(va.valueFlags, AAA_FLAGS); else assert.strictEqual('valueFlags' in va, false);
+    assert.strictEqual('valueFlags' in vb, false);
+  });
+}
+
+// ── 6) stale-warning wiring in the callers (review 6a64562 N2 LOW) ────────────
+const staleWarns = (logs) => logs.filter((l) => l.startsWith('::warning::value flags') && l.includes('not for the run day'));
+
+check('W1 vintage run(): passes the run date to the reader (a list for another day warns, the same day does not)', () => {
+  for (const [updatedFor, n] of [['2026-07-13', 0], ['2026-07-12', 1]]) {
+    const base = bhBase();
+    writeJson(path.join(base, 'data-health', 'value-open-items.json'), { ...STATE, updatedFor });
+    const logs = [];
+    const orig = console.warn; console.warn = (s) => logs.push(String(s));
+    try { W.run({ baseDir: base, date: '2026-07-13' }); } finally { console.warn = orig; }
+    const st = staleWarns(logs);
+    assert.strictEqual(st.length, n, 'list for ' + updatedFor + ': ' + logs.join(' | '));
+    if (n) assert.ok(st[0].includes('2026-07-13'), st[0]);
+    assert.deepStrictEqual(rowsOf(readV(base))[0].valueFlags, AAA_FLAGS, 'flags still mark');
+  }
+});
+
+check('W2 export build(): loads the list before the mappers and passes the run day (stale warning)', () => {
+  const dir = mkTmp('vfw-');
+  const file = path.join(dir, 'value-open-items.json');
+  const missingIndex = path.join(dir, 'no-index.json');   // stops build() right after the load, before any write
+  for (const [updatedFor, n] of [['2026-10-02', 0], ['2026-10-01', 1]]) {
+    writeJson(file, { ...STATE, updatedFor });
+    X.ladeValueFlags(path.join(dir, 'absent.json'), () => {});
+    const logs = [];
+    const w = console.warn, l = console.log; console.warn = (s) => logs.push(String(s)); console.log = () => {};
+    try {
+      assert.throws(() => X.build({ valueOpenItemsFile: file, now: new Date('2026-10-02T12:00:00Z'), sourceIndexFile: missingIndex }), /ENOENT|no-index/);
+    } finally { console.warn = w; console.log = l; }
+    const st = staleWarns(logs);
+    assert.strictEqual(st.length, n, 'list for ' + updatedFor + ': ' + logs.join(' | '));
+    if (n) assert.ok(st[0].includes('2026-10-02'), st[0]);
+    assert.deepStrictEqual(X.mapBoardRow(boardRow('AAA'), 0).valueFlags, AAA_FLAGS, 'build() loaded the list');
+  }
+  X.ladeValueFlags(path.join(dir, 'absent.json'), () => {});
+});
+
 W._setPaths();
 console.log(fail ? `\n${fail} FAIL` : '\nall ok');
 process.exit(fail ? 1 : 0);
