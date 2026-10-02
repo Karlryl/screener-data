@@ -28,10 +28,10 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 162 authorized cells (152 quarterly, 10 annual) and six held packets have auditable sources', () => {
+test('all 162 authorized cells (152 quarterly, 10 annual) and nine held packets have auditable sources', () => {
   assert.equal(table.cases.length, 162);
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 10);
-  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX']);
+  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
@@ -958,9 +958,11 @@ test('annual readers: INFQ badge, gross-profit growth and annual fallback empty;
 // OTF was held the same way until 01.10.; its four false annual cells are now withheld instead (test above).
 // 01.10.: HOS (packet of a former company under a reused ticker), TYG (statements end 2017), OLPX (delisted, all
 // gross profits 0) are held the same way. 02.10.: HLX (retired ticker, price and market cap frozen since 01.09.).
-test('holds KBDC, HOS, TYG, OLPX, HLX: off the boards with the reason; cases still apply; drift keeps the hold and warns', () => {
+// 02.10. review round 2: 2670.HK (pre-split price), ENGI3.SA (one class price x all classes), Z98.DE (JBS wrong count on
+// a non-USD leg): wrong market caps the share-count table cannot carry; held until a price- or class-aware fix exists.
+test('holds KBDC, HOS, TYG, OLPX, HLX, 2670.HK, ENGI3.SA, Z98.DE: off the boards with the reason; cases still apply; drift keeps the hold and warns', () => {
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
-  for (const ticker of ['KBDC', 'HOS', 'TYG', 'OLPX', 'HLX']) {
+  for (const ticker of ['KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE']) {
     const q = table.quarantines.find(x => x.ticker === ticker);
     const held = (fn, input = clone(fixture[ticker])) => {
       const r = fn(input);

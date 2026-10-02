@@ -62,7 +62,11 @@ function _applyAdsHandTable(snap, ticker, price) {
   if (r.status !== 'no-row') return r;
   const s = applyShareCountTable(snap, ticker, price, SHARE_COUNT_TABLE);
   if (s.status === 'corrected') _log('INFO', `  ${ticker}: marketCap from issuer share count (share-count hand table) -> ${(snap.marketCap.value / 1e9).toFixed(2)}B`);
-  else if (s.status === 'stale') _log('WARN', `  ${ticker}: share-count hand table row STALE, Yahoo value kept: ${s.reason}`);
+  else if (s.status === 'stale') {
+    _log('WARN', `  ${ticker}: share-count hand table row STALE, Yahoo value kept: ${s.reason}`);
+    console.warn(`::warning::${ticker}: share-count hand table row STALE, Yahoo market cap kept - re-verify configs/share-count-hand-table.json (${s.reason})`);
+  }
+  if (s.reviewOverdue) console.warn(`::warning::${ticker}: share-count hand table row past reviewBy - re-verify the issuer count in configs/share-count-hand-table.json (row still applied)`);
   return s;
 }
 
@@ -3991,7 +3995,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // T322: ADS lines Yahoo prices with the ordinary share count (price is USD here). A stale
     // verdict here may only mean stale inputs (old price/shares from disk) -> the full pull decides.
     if (_applyAdsHandTable(existing, stock.ticker, existing.price && existing.price.regularMarketPrice).status === 'stale') {
-      throw new Error('price-only refused: ADS hand table row not confirmed on quote data — full pull re-checks');
+      throw new Error('price-only refused: ADS hand table or share-count hand table row not confirmed on quote data — full pull re-checks');
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe

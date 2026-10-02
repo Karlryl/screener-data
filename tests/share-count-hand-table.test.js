@@ -81,6 +81,7 @@ pruefe('presence: every recorded wrong state is corrected to price x issuer coun
     assert.ok(Math.abs(s.marketCap.value / (w.px * w.issuer) - 1) < 1e-9, `${t} ${s.marketCap.value} vs ${w.px * w.issuer}`);
     assert.strictEqual(s.marketCap.source, SHARES_PROVENANCE);
     assert.strictEqual(s.marketCap.yahooValue, w.mcap);
+    assert.strictEqual(s.marketCap.vendorImpliedShares, Math.round(w.mcap / w.px), `${t}: vendorImpliedShares not stored`);
     for (const f of DERIVED_FIELDS) assert.strictEqual(s.metrics[f], null, f + ' not blanked to null');
     assert.deepStrictEqual(s.metrics.forwardPE, m(18.5), 'a field not derived from marketCap was touched');
     assert.ok(!('_shareCountHandTableStale' in s.meta));
@@ -132,6 +133,56 @@ pruefe('stale row: a Yahoo-sourced value loses the stamps of an earlier correcti
   assert.ok(!('yahooValue' in s.marketCap) && !('vendorImpliedShares' in s.marketCap), JSON.stringify(s.marketCap));
 });
 
+// Review round 2: a stamp from an earlier stale run must go once the row confirms or corrects again.
+pruefe('a stale stamp from an earlier run is removed on the confirmed and on the corrected path', () => {
+  const c = leg({ ticker: 'JBS', px: 11.29, vendorShares: 1070910861, mcap: 12090583040 });
+  c.meta._shareCountHandTableStale = 'earlier run';
+  assert.strictEqual(applyShareCountTable(c, 'JBS', 11.29, TABLE).status, 'confirmed');
+  assert.ok(!('_shareCountHandTableStale' in c.meta), 'confirmed row kept the stale stamp');
+  const k = leg({ ticker: 'ABTC', ...WRONG.ABTC });
+  k.meta._shareCountHandTableStale = 'earlier run';
+  assert.strictEqual(applyShareCountTable(k, 'ABTC', 8.48, TABLE).status, 'corrected');
+  assert.ok(!('_shareCountHandTableStale' in k.meta), 'corrected row kept the stale stamp');
+});
+
+// Review round 2: a row cannot see issuance on its own (ABTC would be over-corrected if its true count reached
+// the vendor's wrong one). Each row carries reviewBy (next periodic filing); a data day past it keeps the row
+// applied (fail-safe against the known wrong value) but reports reviewOverdue, which the pull turns into ::warning::.
+pruefe('reviewBy: every row has one; a data day past it reports reviewOverdue, the value is still applied', () => {
+  for (const [t, r] of Object.entries(TABLE)) assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(r.reviewBy || ''), `${t}: reviewBy missing`);
+  const late = (t, w, day) => { const s = leg({ ticker: t, ...w }); s.marketCap.asOf = day; return [s, applyShareCountTable(s, t, w.px, TABLE)]; };
+  const rb = TABLE.ABTC.reviewBy;
+  const [s1, r1] = late('ABTC', WRONG.ABTC, rb + 'T09:00:00.000Z');
+  assert.strictEqual(r1.status, 'corrected'); assert.ok(!r1.reviewOverdue, 'reviewBy day itself is not overdue');
+  const [s2, r2] = late('ABTC', WRONG.ABTC, '2099-01-01T09:00:00.000Z');
+  assert.strictEqual(r2.status, 'corrected'); assert.strictEqual(r2.reviewOverdue, true);
+  assert.strictEqual(s2.marketCap.value, s1.marketCap.value, 'overdue row must still correct');
+  const [, r3] = late('JBS', { px: 11.29, vendorShares: 1070910861, mcap: 12090583040 }, '2099-01-01T09:00:00.000Z');
+  assert.strictEqual(r3.status, 'confirmed'); assert.strictEqual(r3.reviewOverdue, true);
+  const [, r4] = late('ABTC', WRONG.ABTC, undefined);
+  assert.strictEqual(r4.reviewOverdue, true, 'a marketCap without asOf must not count as reviewed');
+});
+
+pruefe('wiring: a stale or overdue share-count row raises a ::warning:: in the pull log, a fresh row does not', () => {
+  const py = require('../pull-yahoo.js');
+  const seen = [], orig = { warn: console.warn, log: console.log };
+  const grab = (fn) => { seen.length = 0; console.warn = (...a) => seen.push(a.join(' ')); console.log = (...a) => seen.push(a.join(' '));
+    try { return fn(); } finally { console.warn = orig.warn; console.log = orig.log; } };
+  const warns = () => seen.filter((l) => l.startsWith('::warning::'));
+  grab(() => py._applyAdsHandTable(leg({ ticker: 'ABTC', px: 8.48, vendorShares: 130000000 }), 'ABTC', 8.48));
+  assert.ok(warns().some((l) => /ABTC/.test(l) && /share-count hand table/.test(l) && /STALE/.test(l)), JSON.stringify(seen));
+  const late = leg({ ticker: 'ABTC', ...WRONG.ABTC }); late.marketCap.asOf = '2099-01-01T09:00:00.000Z';
+  grab(() => py._applyAdsHandTable(late, 'ABTC', 8.48));
+  assert.ok(warns().some((l) => /ABTC/.test(l) && /reviewBy/.test(l)), JSON.stringify(seen));
+  grab(() => py._applyAdsHandTable(leg({ ticker: 'ABTC', ...WRONG.ABTC }), 'ABTC', 8.48));
+  assert.deepStrictEqual(warns(), [], 'a fresh corrected row must not warn');
+});
+
+pruefe('price-only refusal names both hand tables (the same throw fires for share-count rows)', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
+  assert.ok(src.includes("throw new Error('price-only refused: ADS hand table or share-count hand table row not confirmed on quote data"), 'refusal wording');
+});
+
 pruefe('the two tables are disjoint (a ticker in both would leave its share row unused)', () => {
   const ads = loadAdsHandTable();
   for (const t of Object.keys(TABLE)) assert.ok(!ads[t], `${t} is in both hand tables`);
@@ -139,9 +190,12 @@ pruefe('the two tables are disjoint (a ticker in both would leave its share row 
 
 pruefe('loader rejects malformed rows (fail loud, never silently off)', () => {
   const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'share-ht-')), 't.json');
-  const good = { shares: 100, sharesAsOf: '2026-07-30', wrongShares: [200], source: { url: 'https://x.test/a', quote: 'q' }, verifiedAt: 'v' };
+  const good = { shares: 100, sharesAsOf: '2026-07-30', reviewBy: '2026-11-16', wrongShares: [200], source: { url: 'https://x.test/a', quote: 'q' }, verifiedAt: 'v' };
+  fs.writeFileSync(tmp, JSON.stringify({ X: good }));
+  assert.ok(loadShareCountTable(tmp).X, 'a well-formed row must load');
   const cases = [[{ shares: 100.5 }, /shares/], [{ wrongShares: [] }, /wrongShares/], [{ wrongShares: [105] }, /too close/],
-    [{ sharesAsOf: '30.07.2026' }, /sharesAsOf/], [{ source: { url: 'https://x.test/a', quote: '' } }, /source/], [{ verifiedAt: '' }, /verifiedAt/]];
+    [{ sharesAsOf: '30.07.2026' }, /sharesAsOf/], [{ source: { url: 'https://x.test/a', quote: '' } }, /source/], [{ verifiedAt: '' }, /verifiedAt/],
+    [{ reviewBy: undefined }, /reviewBy/], [{ reviewBy: '16.11.2026' }, /reviewBy/]];
   for (const [patch, re] of cases) {
     fs.writeFileSync(tmp, JSON.stringify({ X: Object.assign({}, good, patch) }));
     assert.throws(() => loadShareCountTable(tmp), re, JSON.stringify(patch));
