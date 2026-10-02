@@ -57,6 +57,7 @@ const lies = (datei) => fs.readFileSync(path.join(WF_DIR, datei), 'utf8');
  */
 const REGISTRY = [
   { datei: 'daily-pull.yml',         mindestPublizierer: 6, envSchluessel: ['SEC_CONTACT', 'VEROEFFENTLICHEN', 'NUR_RECHNEN'] },
+  { datei: 'exchange-quarters.yml',  mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'] },
   { datei: 'monthly-plan-check.yml', mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'], vorDerWache: ['scripts/cadence-marker.js'] },
   { datei: 'monthly-sec-xbrl.yml',   mindestPublizierer: 1, envSchluessel: ['SEC_CONTACT', 'VEROEFFENTLICHEN'] },
   { datei: 'smallcap-pull.yml',      mindestPublizierer: 1, envSchluessel: ['SHARD_COUNT', 'VEROEFFENTLICHEN'] },
