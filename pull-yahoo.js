@@ -39,14 +39,17 @@ const { safeSnapshotFilename, isMetadataSnapshot } = require('./lib/snapshot-fs.
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 // T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
-const { loadAdsHandTable, applyAdsHandTable } = require('./lib/ads-hand-table.js');
+const { loadAdsHandTable, applyAdsHandTable, loadShareCountTable, applyShareCountTable } = require('./lib/ads-hand-table.js');
 const ADS_HAND_TABLE = loadAdsHandTable();
+// Tag 1397: issuer share counts for lines Yahoo prices with a wrong count (same two write sites).
+const SHARE_COUNT_TABLE = loadShareCountTable();
 const { loadStatementCurrencyTable, statementFactor, statementRowPending } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
 const yahooQ4 = require('./lib/yahoo-q4-known-cases.js');
 /**
- * Applies the ADS hand table to one snapshot and logs the outcome (stale row = WARN).
+ * Applies the ADS hand table, else the share-count hand table, to one snapshot and logs the
+ * outcome (stale row = WARN; the price-only caller refuses on 'stale' from either table).
  * @param {object} snap Snapshot, mutated in place when corrected.
  * @param {string} ticker Snapshot ticker (table key).
  * @param {number} price ADS price in the marketCap's unit.
@@ -56,7 +59,11 @@ function _applyAdsHandTable(snap, ticker, price) {
   const r = applyAdsHandTable(snap, ticker, price, ADS_HAND_TABLE);
   if (r.status === 'corrected') _log('INFO', `  ${ticker}: marketCap / ${snap.marketCap.ordinaryPerAds} (ADS hand table) -> ${(snap.marketCap.value / 1e9).toFixed(2)}B`);
   else if (r.status === 'stale') _log('WARN', `  ${ticker}: ADS hand table row STALE, Yahoo value kept: ${r.reason}`);
-  return r;
+  if (r.status !== 'no-row') return r;
+  const s = applyShareCountTable(snap, ticker, price, SHARE_COUNT_TABLE);
+  if (s.status === 'corrected') _log('INFO', `  ${ticker}: marketCap from issuer share count (share-count hand table) -> ${(snap.marketCap.value / 1e9).toFixed(2)}B`);
+  else if (s.status === 'stale') _log('WARN', `  ${ticker}: share-count hand table row STALE, Yahoo value kept: ${s.reason}`);
+  return s;
 }
 
 /**

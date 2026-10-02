@@ -4582,6 +4582,42 @@
           "accession": "0001868726-26-000036"
         }
       ]
+    },
+    {
+      "caseId": "hlx-retired-ticker-20261002",
+      "ticker": "HLX",
+      "reason": "Score fehlt: Der Ticker HLX ist seit dem Zusammenschluss mit Hornbeck Offshore (8-K vom 04.09.2026) nicht mehr notiert; die Firma wird als HOS gehandelt. Kurs und Börsenwert unter HLX stehen seit 01.09.2026 still.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 1291474000
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": 30827000
+        }
+      ],
+      "annualPairPeriod": "2025-12-31",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/866829/000119312526383687/d117247d8k.htm",
+          "page": "8-K of 2026-09-04 (same SEC registrant 866829 as Helix), introductory note and cover page",
+          "quote": "Helix was renamed",
+          "tradingSymbol": "HOS (New York Stock Exchange)",
+          "accession": "0001193125-26-383687"
+        }
+      ],
+      "vendorEvidence": "Yahoo chart meta for HLX: regularMarketPrice 10.6, regularMarketTime 2026-09-01T20:00:02Z (read 2026-10-02); stored daily closes for HLX stay at 10.60 with asOf 2026-09-01 through the 2026-10-01 price file"
     }
   ]
 }

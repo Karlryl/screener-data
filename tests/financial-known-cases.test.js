@@ -28,10 +28,10 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 162 authorized cells (152 quarterly, 10 annual) and five held packets have auditable sources', () => {
+test('all 162 authorized cells (152 quarterly, 10 annual) and six held packets have auditable sources', () => {
   assert.equal(table.cases.length, 162);
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 10);
-  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX']);
+  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
@@ -957,10 +957,10 @@ test('annual readers: INFQ badge, gross-profit growth and annual fallback empty;
 // ("0 Jahre, letzter Verlust 2025" from the SEC bulk operating income, which is the negated net expenses).
 // OTF was held the same way until 01.10.; its four false annual cells are now withheld instead (test above).
 // 01.10.: HOS (packet of a former company under a reused ticker), TYG (statements end 2017), OLPX (delisted, all
-// gross profits 0) are held the same way.
-test('holds KBDC, HOS, TYG, OLPX: off the boards with the reason; cases still apply; drift keeps the hold and warns', () => {
+// gross profits 0) are held the same way. 02.10.: HLX (retired ticker, price and market cap frozen since 01.09.).
+test('holds KBDC, HOS, TYG, OLPX, HLX: off the boards with the reason; cases still apply; drift keeps the hold and warns', () => {
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
-  for (const ticker of ['KBDC', 'HOS', 'TYG', 'OLPX']) {
+  for (const ticker of ['KBDC', 'HOS', 'TYG', 'OLPX', 'HLX']) {
     const q = table.quarantines.find(x => x.ticker === ticker);
     const held = (fn, input = clone(fixture[ticker])) => {
       const r = fn(input);
