@@ -31,7 +31,11 @@
  *   GATE_MAX_ABSTAND_TAGE zurück, urteilt die Wert-Achse NICHT (gate.abstandZuGross +
  *   ::warning::) — sonst sperrt sich die Messreihe selbst fest, je länger sie steht.
  *   Schwellen-Bruch / NaN-Einbruch / Coverage-Absturz / Kohorten-Kollaps → Vintage MIT
- *   suspect:true geschrieben (nie still) + exit 2 (0.7-Kanal). KEINE Löschung je.
+ *   suspect:true geschrieben (nie still). KEINE Löschung je.
+ *   Tag 1396: every vintage is committed with its verdict in each board file.
+ *   gate.structural (lib/board-history-flag.js) separates structural breaks (exit 2, run
+ *   red) from p99-only flags (exit 0, ::warning::GATE FLAG). Comparison base per board:
+ *   the newest stored vintage whose board file is NOT structural (p99-only days count).
  *   Neukalibrierung 2026-08-03: die bis dahin eingefrorenen Schwellen stammten
  *   ausnahmslos aus Vintages, die auf board-history/_excluded.json stehen — Details und
  *   Messgrundlage im Kopf von board-history/_gate-calibration.json.
@@ -41,7 +45,8 @@
  *
  * Usage:
  *   node scripts/write-board-history.js [--date YYYY-MM-DD] [--dry-run] [--compact]
- * Exit: 0 = ok · 1 = harter Fehler (Inputs fehlen) · 2 = suspect-Vintage geschrieben.
+ * Exit: 0 = ok (p99-only flags allowed) · 1 = harter Fehler (Inputs fehlen) ·
+ *       2 = vintage written, at least one board structurally flagged.
  */
 const fs = require('fs');
 const path = require('path');
@@ -50,6 +55,7 @@ const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { boardStatus } = require('../src/scoring/board-status.js');
 const priceStore = require('../lib/price-history-store.js');   // LT1: Quelle der PIT-Preisfelder
+const { istStrukturell } = require('../lib/board-history-flag.js');   // Tag 1396: one rule, one place
 
 // ── benannte Konstanten (keine Magic Numbers; Herkunft dokumentiert) ─────────
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -112,9 +118,10 @@ function resolvePaths(base) {
     get GATE_CALIB_FILE() { return path.join(this.HISTORY_DIR, '_gate-calibration.json'); },
     // F-9 Stufe 1 (Rat-gedeckt, REINE MESSUNG): committete Sidecar-Reihe der p99Δ/thr/
     // beta-cov-Werte, die sonst nur im fluechtigen Lauf-Protokoll stehen. Eigener
-    // Top-Level-Ordner (nicht unter board-history/), damit die Suspect-Ausschluss-
-    // Pathspec ":(exclude)board-history/$VINTAGE_DATE" im Commit-Schritt sie NICHT
-    // beruehrt — die Sidecar-Reihe muss gerade an Suspect-Tagen mitfahren.
+    // Top-Level-Ordner (nicht unter board-history/). Until Tag 1396 this kept it out of the
+    // commit step's suspect exclude pathspec; since then every vintage is committed and the
+    // location simply stays. Until the open-items list (PR2) is live, the daily run check
+    // reads `suspect` per board from this file.
     P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
     // 6.2-E2 (Earnings-Blowout): Quelle des Report-Datums, das buildPit PIT-einfriert.
     EARNINGS_CAL_FILE: path.join(base, 'earnings-calendar.json'),
@@ -1232,6 +1239,7 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board, opts) {
     // weil „angewandte Schwelle" ohne „normale Schwelle" nicht nachprüfbar ist.
     datenSchub: istDatenSchub, basisSchwelle,
     fanOut, fanOutZaehler: breiteZeilen.length, fanOutNenner: deltas.length,
+    fanOutHaelt,   // Tag 1396: input of istStrukturell (p99 on a daten-schub transition with broken cap)
     breiteZeilen, verfallsZeilen, beobachteteLampen, quellUpgrades,
     suspect: reasons.length > 0, reasons,
   };
@@ -1443,6 +1451,31 @@ function priorVintageDate(date) {
   return dates.length ? dates[dates.length - 1] : null;
 }
 
+// Tag 1396: per-board comparison base. Since every vintage is committed, a structurally
+// flagged board file (cohort-empty, NaN break, coverage collapse, ...) must not become the
+// next day's base, or the day after a break would be judged against the broken state.
+// Walk the stored dirs < date, newest first, skipping global exclusions (as above):
+//   - board file missing/unreadable -> stop, no prior (unchanged behaviour); date = that dir,
+//   - board file structural (lib/board-history-flag.js) -> skip to the next older dir,
+//   - otherwise (clean or p99-only) -> this is the board's prior.
+// p99-only days ARE a valid base: re-measuring a broad reload every day against an older
+// base is the self-locking cascade described at GATE_MAX_ABSTAND_TAGE and the daten-schub arm.
+// Returns { date, vintage }; date is null when there is no dir or every dir was structural.
+function priorBoardVintage(board, date) {
+  if (!fs.existsSync(P.HISTORY_DIR)) return { date: null, vintage: null };
+  const ausgeschlossen = excludedDates();
+  const dates = fs.readdirSync(P.HISTORY_DIR)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < date && !ausgeschlossen.has(d))
+    .sort().reverse();
+  for (const d of dates) {
+    const v = readJsonOrNull(path.join(P.HISTORY_DIR, d, board + '.json'));
+    if (!v) return { date: d, vintage: null };
+    if (istStrukturell(v.gate)) continue;
+    return { date: d, vintage: v };
+  }
+  return { date: null, vintage: null };
+}
+
 // Live belegt am 2026-07-29: an diesem Tag standen ALLE Vorgaenger (14.-18.07. wegen
 // Tag 437, 26.-28.07. wegen Tag 489) auf der Ausschlussliste. priorDate war null, das
 // Wert-Gate hat also NICHTS verglichen — und im geschriebenen Vintage steht dann
@@ -1539,8 +1572,8 @@ function massstabBruchFuer(priorDate) {
         + (w.tag || w.typ || '(ohne tag)') + ' ist an den Vorgaenger '
         + w.letztes_altes_vintage + ' gebunden, verglichen wird aber gegen ' + priorDate
         + '. Die registrierte Ausnahme greift deshalb NICHT (fail-closed) — der Uebergang '
-        + 'wird gegen die normale Schwelle gemessen und faellt voraussichtlich als SUSPECT '
-        + 'aus dem Tagesverzeichnis. letztes_altes_vintage im Register auf ' + priorDate
+        + 'wird gegen die normale Schwelle gemessen und voraussichtlich mit SUSPECT-Kennzeichen '
+        + 'gespeichert. letztes_altes_vintage im Register auf ' + priorDate
         + ' nachziehen oder den Fall neu bewerten.');
     }
     return null;
@@ -1723,7 +1756,7 @@ function run(opts) {
 
   const results = [];
   const quartalShadows = [];   // SHADOW ONLY, nur fürs Protokoll
-  let anySuspect = false;
+  let anyStructural = false;   // Tag 1396: exit 2 only for a structural board
   // T155/W3: einmal je Lauf lesen, nicht je Board — 13 identische Lesevorgänge derselben
   // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
   const universeHash = readUniverseHash(P.UNIVERSE_HASH_FILE);
@@ -1744,11 +1777,18 @@ function run(opts) {
     // ("1 = harter Fehler (Inputs fehlen)") and the fail-loud line the FULL_DIR-guards set.
     if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
     const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash);
-    const priorVintage = priorDate ? readJsonOrNull(path.join(P.HISTORY_DIR, priorDate, board + '.json')) : null;
-    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board, gateOpts);
-    // SHADOW ONLY: loggt, urteilt nicht (gate/anySuspect/Vintage bleiben unberührt). Vor
+    // Tag 1396: per-board prior (skips structural days). The registered bruch is bound to the
+    // EXACT global prior (massstabBruchFuer); a board whose prior differs from it gets no bruch
+    // (fail-closed, same reasoning as "eine unerwartete Vergleichsbasis faellt auf die strengere
+    // normale Schwelle zurueck" at massstabBruchFuer).
+    const prior = priorBoardVintage(board, date);
+    const priorVintage = prior.vintage;
+    const boardBruch = prior.date === priorDate ? bruch : null;
+    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], boardBruch, board, gateOpts);
+    const structural = istStrukturell(gate);
+    // SHADOW ONLY: loggt, urteilt nicht (gate/exit code/Vintage bleiben unberührt). Vor
     // updateGateCalibration, damit die Spur exakt denselben Kalibrier-Zustand sieht.
-    quartalShadows.push(quartalLaneShadow(vintage, priorVintage, gate, gateCalib.boards[board], bruch, board, gateOpts, date));
+    quartalShadows.push(quartalLaneShadow(vintage, priorVintage, gate, gateCalib.boards[board], boardBruch, board, gateOpts, date));
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
     // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
     // BH-111: ein bereits als suspect erkannter Tag darf die eingefrorene Schwelle
@@ -1780,16 +1820,17 @@ function run(opts) {
       abstandZuGross: gate.abstandZuGross,
       bruchGrenze: gate.bruchGrenze || null,   // an einem Bruch-Tag: die tatsächlich angelegte Grenze + ihre Herleitung
       suspect: gate.suspect,
+      structural,                        // Tag 1396: derived class (lib/board-history-flag.js), additive
       reasons: gate.reasons,
-      priorDate: priorDate,
+      priorDate: prior.date,             // Tag 1396: the date this board was actually compared against
       calibrationSamples: gs.dailyP99Samples.length,
     };
-    if (gate.suspect) anySuspect = true;
+    if (structural) anyStructural = true;
     if (!dryRun) {
       fs.mkdirSync(dateDir, { recursive: true });
       writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, board + '.json')), vintage);
     }
-    results.push({ board, suspect: gate.suspect, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, wirksameSchwelle: gate.wirksameSchwelle, gapDays: gate.gapDays, abstandZuGross: gate.abstandZuGross, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage,
+    results.push({ board, suspect: gate.suspect, structural, priorDate: prior.date, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, wirksameSchwelle: gate.wirksameSchwelle, gapDays: gate.gapDays, abstandZuGross: gate.abstandZuGross, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage,
       // Kanal B (WB-5): nur am Datenschub-Übergang gefüllt, an jedem anderen Tag inert.
       datenSchub: gate.datenSchub, basisSchwelle: gate.basisSchwelle,
       fanOut: gate.fanOut, fanOutZaehler: gate.fanOutZaehler, fanOutNenner: gate.fanOutNenner,
@@ -1829,7 +1870,7 @@ function run(opts) {
   // Nur dann ist "heute wurde nichts verglichen" eine meldepflichtige Tatsache.
   const blind = priorDate === null ? uebersprungeneVorgaenger(date) : [];
 
-  return { mode: 'write', date, dryRun, priorDate, ohneVergleichsbasis: blind.length ? blind : null, bruch: bruch ? { tag: bruch.tag, boards: Array.from(bruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anySuspect ? 2 : 0 };
+  return { mode: 'write', date, dryRun, priorDate, ohneVergleichsbasis: blind.length ? blind : null, bruch: bruch ? { tag: bruch.tag, boards: Array.from(bruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anyStructural ? 2 : 0 };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
@@ -1891,25 +1932,32 @@ function bruchProtokollZeilen(res) {
   return zeilen;
 }
 
-// WB-4' Betreiber-Auflage (ratifiziert 05.09.2026): die Kopplung „ein SUSPECT-Board nimmt das
-// ganze Tagesverzeichnis mit" (daily-pull.yml :(exclude)) wird SICHTBAR gemacht, nicht
-// geaendert. Laeuft UNABHAENGIG vom Register (auch ohne Bruch-Eintrag): Boards ohne eigenen
-// SUSPECT, die trotzdem kein Vintage bekommen, werden namentlich genannt; und ein Vorgaenger,
-// der laenger als GATE_SERIE_ALARM_TAGE zurueckliegt, ist ein Alarm im selben Kanal.
+// WB-4' Betreiber-Auflage (ratifiziert 05.09.2026), rewritten Tag 1396: the day directory is
+// no longer excluded from the commit, so there is no sibling coupling left to report. Instead
+// one flag line names every flagged board, split into value warnings (p99 only) and structural
+// breaks (the boards behind exit 2). Runs independent of the register. A comparison base
+// further back than GATE_SERIE_ALARM_TAGE stays an alarm in the same channel; it uses the
+// MAXIMUM per-board gap and names that board (per-board priors differ after a structural day).
+// (Function name kept: callers and tests import it.)
 function kopplungProtokollZeilen(res) {
   if (!res || !Array.isArray(res.boards)) return [];
   const zeilen = [];
-  const eigene = res.boards.filter((x) => x.suspect).map((x) => x.board);
-  if (eigene.length) {
-    const mitgesperrt = res.boards.filter((x) => !x.suspect).map((x) => x.board);
-    zeilen.push('::warning::GATE KOPPLUNG fuer ' + res.date + ': gesperrt durch eigenen SUSPECT: '
-      + eigene.join(', ') + '; mitgesperrt durch Geschwister-Kopplung (Tagesverzeichnis-Ausschluss): '
-      + (mitgesperrt.length ? mitgesperrt.length + ' Board(s) — ' + mitgesperrt.join(', ') : 'keines'));
+  const geflaggt = res.boards.filter((x) => x.suspect);
+  if (geflaggt.length) {
+    const liste = (bs) => (bs.length ? bs.map((x) => x.board).join(', ') : 'keines');
+    zeilen.push('::warning::GATE FLAG fuer ' + res.date + ': gespeichert mit Kennzeichen: '
+      + liste(geflaggt.filter((x) => !x.structural)) + ' (Wert-Warnung); strukturell: '
+      + liste(geflaggt.filter((x) => x.structural)));
   }
-  const gap = res.boards.map((x) => x.gapDays).find((g) => Number.isFinite(g));
-  if (Number.isFinite(gap) && gap > GATE_SERIE_ALARM_TAGE) {
-    zeilen.push('::warning::GATE SERIE: ' + gap + ' Tage ohne gelandetes Vintage (Vorgaenger '
-      + res.priorDate + ', Schwelle ' + GATE_SERIE_ALARM_TAGE + ' Tage, WB-14) — jede weitere SUSPECT-Nacht verlaengert die Luecke.');
+  let weitester = null;
+  for (const x of res.boards) {
+    if (Number.isFinite(x.gapDays) && (!weitester || x.gapDays > weitester.gapDays)) weitester = x;
+  }
+  if (weitester && weitester.gapDays > GATE_SERIE_ALARM_TAGE) {
+    zeilen.push('::warning::GATE SERIE: ' + weitester.gapDays + ' Tage ohne gelandetes Vintage (Vorgaenger '
+      + (weitester.priorDate !== undefined ? weitester.priorDate : res.priorDate) + ', Schwelle ' + GATE_SERIE_ALARM_TAGE
+      + ' Tage, WB-14, Board ' + weitester.board + ') — Vergleichsbasis liegt so weit zurueck (ausgefallene Laeufe '
+      + 'oder strukturell geflaggte Tage dazwischen); reine Wert-Warnungen verlaengern die Luecke nicht.');
   }
   return zeilen;
 }
@@ -2016,7 +2064,7 @@ if (require.main === module) {
           grenzeText +
           ', beta-cov=' + (b.pitCoverage.beta * 100).toFixed(0) + '%' + flag + bruchText);
       }
-      if (res.exitCode === 2) console.log('EXIT 2: mindestens ein suspect-Vintage geschrieben (0.7-Kanal).');
+      if (res.exitCode === 2) console.log('EXIT 2: Vintage geschrieben, mindestens ein Board strukturell geflaggt (0.7-Kanal).');
     }
     process.exit(res.exitCode);
   } catch (e) {
@@ -2031,7 +2079,7 @@ module.exports = {
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
   pitPriceFeatures, pitDecileByIndex, attachPitPriceFields,   // LT1 (Rat 10)
-  priorVintageDate, excludedDates, massstabBruchFuer, bruchProtokollZeilen,
+  priorVintageDate, priorBoardVintage, excludedDates, massstabBruchFuer, bruchProtokollZeilen,
   integritaetsVerfall, lampenBeobachtung, secTickerLesen, kopplungProtokollZeilen,   // WB-4'
   _setPaths, resolvePaths,
   frozenThresholdOf,
