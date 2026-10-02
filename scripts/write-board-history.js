@@ -546,7 +546,17 @@ function buildPit(snap, pitGaps, ticker) {
     // Report selbst — dieselbe Trennung wie priceSales/priceSalesAsOf.
     earningsDate: (earningsEntryFor(ticker) || {}).date || null,
     earningsDateAsOf: (earningsEntryFor(ticker) || {}).pulledAt || null,
+    // Tag 1398 (value-gate PR2): the vendor share count behind marketCap, same expression as
+    // lib/ads-hand-table.js. The open-items list (scripts/value-open-items.js) labels a marketCap
+    // jump 'kapitalmassnahme' when this count moved by the same factor. Appended LAST (additive,
+    // earlier keys keep their order); not > 0 -> null, never a stored 0.
+    sharesOutstanding: sharesOutstandingOf(meta),
   };
+}
+
+function sharesOutstandingOf(meta) {
+  const s = meta.impliedSharesOutstanding || meta.sharesOutstanding;
+  return Number.isFinite(s) && s > 0 ? s : null;
 }
 
 // BH-109: juengstes Ende einer Enden-Serie als ms-Timestamp (oder null). Serien

@@ -121,11 +121,15 @@ check('BH-108: pit traegt reportingCurrencyOriginal/fxRateApplied additiv', () =
   // um 1 nach vorn, bleiben aber selbst ein zusammenhaengendes additives Paar.
   // 6.2-E2: earningsDate/earningsDateAsOf haengen seitdem additiv NACH marketCap -- alles
   // davor ruecht um 2 nach vorn, die Reihenfolge untereinander bleibt.
-  assert.equal(keys[keys.length - 5], 'priceSales', 'priceSales bleibt fuenftletztes Feld');
-  assert.equal(keys[keys.length - 4], 'priceSalesAsOf', 'priceSalesAsOf bleibt direkt danach');
-  assert.equal(keys[keys.length - 3], 'marketCap', 'marketCap danach (R4-SCR-02)');
-  assert.equal(keys[keys.length - 2], 'earningsDate', 'earningsDate danach (6.2-E2)');
-  assert.equal(keys[keys.length - 1], 'earningsDateAsOf', 'earningsDateAsOf ist das neue letzte Feld (6.2-E2)');
+  // Tag 1398: sharesOutstanding haengt additiv NACH earningsDateAsOf (Wert-Tor PR2) -- alles
+  // davor rueckt um 1 nach vorn, die Reihenfolge untereinander bleibt.
+  assert.equal(keys[keys.length - 6], 'priceSales', 'priceSales bleibt sechstletztes Feld');
+  assert.equal(keys[keys.length - 5], 'priceSalesAsOf', 'priceSalesAsOf bleibt direkt danach');
+  assert.equal(keys[keys.length - 4], 'marketCap', 'marketCap danach (R4-SCR-02)');
+  assert.equal(keys[keys.length - 3], 'earningsDate', 'earningsDate danach (6.2-E2)');
+  assert.equal(keys[keys.length - 2], 'earningsDateAsOf', 'earningsDateAsOf danach (6.2-E2)');
+  assert.equal(keys[keys.length - 1], 'sharesOutstanding', 'sharesOutstanding ist das neue letzte Feld (Tag 1398)');
+  assert.equal(mks.pit.sharesOutstanding, null, 'keine Aktienzahl im Snapshot -> null');
 });
 check('BH-108: fehlende FX-Provenienz -> beide Felder null (kein Crash)', () => {
   const base = mkBase();
