@@ -120,8 +120,8 @@ function resolvePaths(base) {
     // beta-cov-Werte, die sonst nur im fluechtigen Lauf-Protokoll stehen. Eigener
     // Top-Level-Ordner (nicht unter board-history/). Until Tag 1396 this kept it out of the
     // commit step's suspect exclude pathspec; since then every vintage is committed and the
-    // location simply stays. Until the open-items list (PR2) is live, the daily run check
-    // reads `suspect` per board from this file.
+    // location simply stays. The daily run check reads `suspect` per board from this file;
+    // value jumps per company and field are in data-health/value-open-items.json (Tag 1398).
     P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
     // 6.2-E2 (Earnings-Blowout): Quelle des Report-Datums, das buildPit PIT-einfriert.
     EARNINGS_CAL_FILE: path.join(base, 'earnings-calendar.json'),
