@@ -62,7 +62,7 @@ function eastmoney(rows, hooks = {}) {
   fn.log = log;
   return fn;
 }
-const TICKERS = ['000958.SZ', '600064.SS', '000001.SZ', '000686.SZ', '200002.SZ', '6446.TW', '2548.TW', '6023.TWO', '0050.TW'];
+const TICKERS = ['000958.SZ', '600064.SS', '000001.SZ', '000686.SZ', '200002.SZ', '6446.TW', '2548.TW', '6023.TWO', '1312A.TW', '2330.TW'];
 const NOW = (iso) => () => new Date(iso);
 const quiet = () => {};
 
@@ -84,19 +84,25 @@ const ROWS = {
   '2548|115|2': ['營業收入合計', '1,501,063', '100.00', '2,016,550', '100.00', '5,707,481', '100.00', '2,028,004', '100.00'],
   '6023|115|2': ['收益合計', '1,275,065', '100.00', '906,377', '100.00', '2,478,953', '100.00', '1,799,750', '100.00'],
 };
+function okAnswer(b, row, over = {}) {
+  return { code: 200, message: '查詢成功', result: { reportType: '合併', year: b.year, season: b.season,
+    titles: TITLES[b.season](Number(b.year)).map((m) => ({ main: m, sub: [] })),
+    reportList: [row, ['營業成本合計', '1', '0', '1', '0', '1', '0', '1', '0'].slice(0, row.length)],
+    urlList: [{ url: 'https://mopsov.twse.com.tw/never-called' }], ...over } };
+}
+// MOPS answer for a preferred share, measured live 02.10.2026 for 1312A and 2002A (115Q2).
+const BAD_ID = { code: 500, message: '公司代號格式錯誤', result: null };
 function mops(hooks = {}) {
   const log = [];
   const fn = async (url, opts) => {
     const b = JSON.parse(opts.body);
     log.push({ url, opts, b });
     if (hooks.before) { const r = hooks.before(b, log.length); if (r !== undefined) return r; }
-    if (b.companyId === '0050') return { code: 500, message: '公司代號格式錯誤', result: null };
+    if (b.companyId === '1312A') return BAD_ID;
+    if (b.companyId === '2330') throw new Error('timeout nach 45000ms');   // a transient failure
     const row = ROWS[b.companyId + '|' + b.year + '|' + b.season];
     if (!row) return { code: 406, message: '查無相符資料', result: null };
-    return { code: 200, message: '查詢成功', result: { reportType: '合併', year: b.year, season: b.season,
-      titles: TITLES[b.season](Number(b.year)).map((m) => ({ main: m, sub: [] })),
-      reportList: [row, ['營業成本合計', '1', '0', '1', '0', '1', '0', '1', '0'].slice(0, row.length)],
-      urlList: [{ url: 'https://mopsov.twse.com.tw/never-called' }] } };
+    return okAnswer(b, row);
   };
   fn.log = log;
   return fn;
@@ -263,8 +269,10 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     assert.equal(S.taiwanSingleQuarters(Object.fromEntries(Object.entries(s.companies['6446.TW'].seasons).map(([k, v]) => [k, v[v.length - 1]])))['2025-12-31'], 4881238000);
     assert.equal(s.companies['6023.TWO'].seasons['115Q2'][0].line, '收益合計');
     assert.equal(s.companies['6023.TWO'].noData['114Q3'].code, 406);
-    assert.equal(s.companies['0050.TW'].noData['115Q2'].code, 'failed');
+    assert.equal(s.companies['2330.TW'].noData['115Q2'].code, 'failed');
+    assert.equal(s.companies['1312A.TW'].noData['115Q2'].code, 'bad-id', 'MOPS rejects the preferred-share id: not a failure');
     assert.equal(r.results[0].failed, 4);
+    assert.equal(r.results[0].badId, 4);
     assert.equal(s.unit, 1000);
     assert.match(s.about, /build-cnannual\.js lines 19-21/);
     assert.ok(!JSON.stringify(s).includes('mopsov'), 'urlList is never stored or followed');
@@ -281,10 +289,10 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     assert.equal(m2.log[0].b.companyId + ' ' + m2.log[0].b.year + 'Q' + m2.log[0].b.season, '6023 114Q4');
     const m3 = mops();
     await main({ dir, markets: ['tw'], tickers: TICKERS, fetchJson: m3, priority: PRIORITY, now: NOW('2026-10-04T07:00:00Z'), log: quiet });
-    assert.ok(m3.log.every((x) => x.b.companyId === '0050'), 'only the failed key comes back the next day: ' + JSON.stringify(m3.log.map((x) => x.b)));
+    assert.deepEqual(m3.log.map((x) => x.b.companyId), ['2330', '2330', '2330', '2330'], 'only the failed keys come back the next day, not the rejected id');
     const m4 = mops();
     await main({ dir, markets: ['tw'], tickers: TICKERS, fetchJson: m4, priority: PRIORITY, now: NOW('2026-10-11T07:00:00Z'), log: quiet });
-    const refreshed = m4.log.filter((x) => x.b.companyId !== '0050' && x.b.year === '115' && x.b.season === '2').map((x) => x.b.companyId).sort();
+    const refreshed = m4.log.filter((x) => x.b.companyId !== '2330' && x.b.year === '115' && x.b.season === '2').map((x) => x.b.companyId).sort();
     assert.deepEqual(refreshed, ['2548', '6023', '6446'], 'the newest season of every stored company is re-read after 7 days');
     const s = read(dir, 'tw');
     assert.equal(s.companies['2548.TW'].seasons['115Q2'].length, 1);
@@ -323,6 +331,81 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     store.sources.r2 = { fetchedAt: '2026-10-22T00:00:00Z', read: ['2548.TW 115Q2'] };
     const q2 = taiwanQueue(store, ['2548.TW'], S.taiwanSeasonWindow('2026-10-26'), new Map(), Date.parse('2026-10-26T00:00:00Z'));
     assert.deepEqual(q2.map((x) => x.s.key), ['115Q3'], '25 days after 30.09. the new season is asked; the 115Q2 refresh is not due yet');
+  });
+
+  await test('TW: a quiet day with only rejected preferred-share ids due does not abort; they wait 30 days', async () => {
+    // Review of 9ff07e9: 1312A.TW and 2002A.TW were retried daily as failures and made up 8 of 8 calls
+    // on the quiet days of each refresh cycle -> false "more than 20 %" abort.
+    const dir = tmpDir();
+    const prefs = ['1312A.TW', '2002A.TW'];
+    const m = mops({ before: () => BAD_ID });
+    const r = await main({ dir, markets: ['tw'], tickers: prefs, fetchJson: m, priority: new Map(), now: NOW('2026-10-06T13:47:00Z'), log: quiet });
+    assert.equal(r.exitCode, 0, JSON.stringify(r));
+    assert.equal(m.log.length, 8);
+    assert.equal(r.results[0].failed, 0);
+    assert.equal(r.results[0].badId, 8);
+    const m2 = mops({ before: () => BAD_ID });
+    await main({ dir, markets: ['tw'], tickers: prefs, fetchJson: m2, priority: new Map(), now: NOW('2026-10-07T13:47:00Z'), log: quiet });
+    assert.equal(m2.log.length, 0, 'not asked again the next day');
+    const m3 = mops({ before: () => BAD_ID });
+    const r3 = await main({ dir, markets: ['tw'], tickers: prefs, fetchJson: m3, priority: new Map(), now: NOW('2026-11-06T13:47:00Z'), log: quiet });
+    assert.equal(r3.exitCode, 0);
+    assert.ok(m3.log.length > 0, 'asked again after 30 days');
+  });
+
+  await test('TW: 公司代號格式錯誤 for a company that already has stored seasons is a failure (systemic, not a bad id)', async () => {
+    const dir = tmpDir();
+    await main({ dir, markets: ['tw'], tickers: TICKERS, fetchJson: mops(), priority: PRIORITY, now: NOW('2026-10-02T07:00:00Z'), log: quiet });
+    const m = mops({ before: () => BAD_ID });
+    const r = await main({ dir, markets: ['tw'], tickers: ['2548.TW'], fetchJson: m, priority: PRIORITY, now: NOW('2026-10-12T07:00:00Z'), log: quiet });
+    assert.equal(m.log.length, 1, 'the 7-day refresh of 2548 115Q2');
+    assert.equal(r.results[0].badId, 0);
+    assert.equal(r.results[0].failed, 1);
+    assert.equal(read(dir, 'tw').companies['2548.TW'].noData['115Q2'].code, 'failed');
+  });
+
+  await test('TW: an answer for another year or season, or with two revenue lines, is a failure and stores nothing', async () => {
+    const dir = tmpDir();
+    const m = mops({ before: (b) => {
+      if (b.companyId === '6446' && b.year === '115' && b.season === '2') return okAnswer(b, ROWS['6446|115|2'], { year: '114' });
+      if (b.companyId === '6446' && b.year === '115' && b.season === '1') return okAnswer(b, ROWS['6446|115|1'], { season: '2' });
+      if (b.companyId === '2548' && b.year === '115' && b.season === '2') return okAnswer(b, ROWS['2548|115|2'], { reportList: [ROWS['2548|115|2'], ROWS['2548|115|2']] });
+      return undefined;
+    } });
+    const r = await main({ dir, markets: ['tw'], tickers: ['2548.TW', '6446.TW'], fetchJson: m, priority: PRIORITY, now: NOW('2026-10-02T07:00:00Z'), log: quiet });
+    assert.equal(r.exitCode, 0, JSON.stringify(r));
+    assert.equal(r.results[0].failed, 3);
+    const s = read(dir, 'tw');
+    assert.equal(s.companies['6446.TW'].seasons['115Q2'], undefined, 'wrong year');
+    assert.equal(s.companies['6446.TW'].seasons['115Q1'], undefined, 'wrong season');
+    assert.equal(s.companies['2548.TW'].seasons['115Q2'], undefined, 'two revenue lines');
+    assert.deepEqual(['6446.TW 115Q2', '6446.TW 115Q1', '2548.TW 115Q2'].map((k) => { const [tk, key] = k.split(' '); return s.companies[tk].noData[key].code; }), ['failed', 'failed', 'failed']);
+    assert.equal(s.companies['6446.TW'].seasons['114Q3'].length, 1, 'the good answers are stored');
+  });
+
+  await test('the append-only guard runs before every write: a merge bug that rewrites an old observation aborts, file unchanged', async () => {
+    const orig = S.mergeObservation;
+    // Simulated bug: overwrite the stored observation instead of appending (what the guard exists for).
+    const rewriting = (list, fresh, conf) => (list.length ? (list[0] = { ...fresh, confirmedBy: list[0].confirmedBy }, 'confirmed') : orig(list, fresh, conf));
+    try {
+      const dir = tmpDir();
+      await main({ dir, markets: ['cn'], tickers: TICKERS, fetchJson: eastmoney(cnRows()), now: NOW('2026-10-02T07:00:00Z'), log: quiet });
+      await main({ dir, markets: ['tw'], tickers: TICKERS, fetchJson: mops(), priority: PRIORITY, now: NOW('2026-10-02T07:00:00Z'), log: quiet });
+      const h = { cn: sha(path.join(dir, 'cn.json')), tw: sha(path.join(dir, 'tw.json')) };
+      const rows = cnRows();
+      rows.RPT_F10_FINANCE_GINCOME['2025-09-30'][1].TOTAL_OPERATE_INCOME = 2399700000;
+      const changedTw = mops({ before: (b) => (b.companyId === '2548' && b.year === '115' && b.season === '2'
+        ? okAnswer(b, ['營業收入合計', '1,501,064', '100.00', '2,016,550', '100.00', '5,707,481', '100.00', '2,028,004', '100.00']) : undefined) });
+      S.mergeObservation = rewriting;
+      const r = await main({ dir, tickers: TICKERS, fetchJson: async (u, o) => (o && o.body ? changedTw(u, o) : eastmoney(rows)(u, o)),
+        priority: PRIORITY, now: NOW('2026-10-12T07:00:00Z'), log: quiet });
+      assert.equal(r.exitCode, 1);
+      assert.match(r.results[0].aborted, /append-only violated/);
+      assert.match(r.results[1].aborted, /append-only violated/);
+      assert.deepEqual({ cn: sha(path.join(dir, 'cn.json')), tw: sha(path.join(dir, 'tw.json')) }, h);
+    } finally {
+      S.mergeObservation = orig;
+    }
   });
 
   // the live store was never touched by this file

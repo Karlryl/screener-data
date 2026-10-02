@@ -50,7 +50,8 @@ each Taiwan source lists the keys it read (`read: ["6446.TW 114Q3", ...]`).
   answers carry about twice the rows of 03-31 and 09-30). Taiwan: never-fetched keys (board rows first, then rows with quarter gaps), then the newest season of each company every 7 days;
   cap 600 calls; pause 1.5 s per host.
 - **Failure.** China: any odd answer aborts the market without writing. Taiwan: 406 (not filed)
-  waits 3 days, no revenue line waits 30 days, other failures are skipped and counted; 10 in a row
+  waits 3 days, no revenue line or a rejected company id (`公司代號格式錯誤`, preferred shares such
+  as 1312A; only for a company without stored seasons) waits 30 days, other failures are skipped and counted; 10 in a row
   or more than 20 % abort without writing. Exit code 1 on any abort.
 
 ## Derivation helpers (`lib/exchange-quarter-store.js`)
