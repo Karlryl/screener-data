@@ -20,6 +20,10 @@ on:
   schedule:
     - cron: '47 13 * * *'   # daily 13:47 UTC, after the delayed daily pull (see above)
   workflow_dispatch: {}
+  # TEMPORARY (S4 runner probe): removed again before the final PR head.
+  push:
+    branches: [feat/exchange-quarters-store-20261002]
+    paths: ['.github/workflows/exchange-quarters.yml']
 
 # Only the scheduled run joins main-push (serialised with daily-pull, monthly-sec-xbrl, the guards);
 # a manual run gets its own group so it can never cancel a pending scheduled run of another workflow.
