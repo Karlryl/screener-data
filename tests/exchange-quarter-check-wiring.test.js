@@ -125,6 +125,20 @@ test('board history: pit.revenueQExchange only with markers (active), with the o
   }
 });
 
+test('store older than the limit: the rows stay unchecked and the process prints exactly one ::warning:: line (spec M3)', () => {
+  const lines = [], e = console.error, w = console.warn;
+  console.error = (...a) => lines.push(a.join(' ')); console.warn = () => {};
+  const out = [];
+  try {
+    for (const t of ['000002.SZ', '000599.SZ']) {
+      const s = clone(F.snapshots[t]); s.meta.fetchedAt = '2026-10-11T09:00:00.000Z'; // 9 days after the store
+      out.push([serial(s), serial(q4Active.prepareSnapshot(s))]);
+    }
+  } finally { console.error = e; console.warn = w; }
+  for (const [a, b] of out) assert.equal(b, a, 'unchecked: nothing applied');
+  assert.equal(lines.filter(l => l.startsWith('::warning::[exchange-check]') && l.includes('store-old')).length, 1, lines.join('\n'));
+});
+
 test('live files unchanged by this test run', () => assert.deepEqual(LIVE.map(sha), liveBefore));
 
 console.log(`exchange-quarter-check-wiring: ${pass} passed, ${fail} failed, ${breaks} break-once red`);

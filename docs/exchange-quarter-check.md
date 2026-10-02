@@ -18,10 +18,10 @@ No reader sees any change; the measurement runs in mode `shadow` through `script
   would make `historyIsThinner` reject the next reload (critique 2; reproduced in
   `tests/exchange-quarter-check-wiring.test.js`).
 - Every mode first removes the step's own markers (`financialMissing.reasonCode` `exchange-pair-mismatch` /
-  `exchange-annual-mismatch`, `exchangeFill`, `meta.exchangeCheck`) and restores the original vendor cells, so
+  `exchange-annual-mismatch` / `exchange-quarter-mismatch`, `exchangeFill`, `meta.exchangeCheck`) and restores the original vendor cells, so
   a mode change leaves no residue.
 - Store missing, unreadable or older than 8 days before the snapshot (2 days between 15.10. and 20.11.): every
-  row of that market is `unchecked`, one `::warning::` per process, never a reader failure.
+  row of that market is `unchecked`, one `::warning::` per process (`store-old` included), never a reader failure.
 - Hand tables keep authority: a ticker with any case in `configs/financial-known-cases.json` or
   `configs/yahoo-q4-known-cases.json`, or any foreign marker on a revenue cell, is `unchecked(hand-table)`.
 - No file under `src/scoring/` changes. Feeding Eastmoney values into scoring is the route `scripts/build-cnannual.js`
@@ -42,24 +42,32 @@ No reader sees any change; the measurement runs in mode `shadow` through `script
 - When the level pair is withheld, the annual pair the growth figure falls back to (`revGrowthLeg`) is compared
   with the exchange full years (2025-12-31, 2024-12-31; undated vendor years by value). If it does not agree or
   cannot be checked, the growth figure is withheld entirely: every annual revenue cell older than the newest and
-  a recorded newer fiscal year (`meta.annualRevNewerYear`, kept in place as null) are withheld.
+  a recorded newer fiscal year (`meta.annualRevNewerYear`, kept in place as null) are withheld. This also
+  removes the older years from the margin, SBC and gross-margin readers of `annualRev`, so a row can lose its
+  rank (11 securities firms in the active sandbox of 02.10.); **open decision before G2c**: null only the
+  growth inputs, or accept the row exit (the same check runs when a fill-period cell is withheld).
 - H-share and other twin listings are not guarded; the shadow report counts board rows that look like twins.
 
 ## Fill of 2025-09-30
 
 All must hold: China general or Taiwan general; the vendor cell exists, is empty and is not the newest; no
 restatement signal in the store (a key with more than one observation); the vendor's 2025 quarters equal the
-newest board-history vintage before 2026-08-01 (statement currency; no row there = no fill); the store has a
+newest board-history vintage before 2026-08-01 (statement currency; no row there = no fill; a vendor 2025
+quarter that vintage does not carry = `baseline-quarter-missing`, no fill); the store has a
 single quarter for every vendor period end and every present vendor quarter agrees; exchange Q3 > 0; once the
 store holds the next-year quarter (Q3-2026), the Q3-2025 observation must carry a confirmation whose
 `UPDATE_DATE` is on or after the Q3-2026 notice date (Taiwan: Q3-2025 then comes from the Q3-2026 filing's
 comparative). The cell then carries `exchangeFill` (native value, line, derivation `9M-H1` or `printed-quarter`,
 operands with notice dates, source, original vendor row, reason). When the vendor later delivers the quarter, an
-agreeing value stays untouched; a disagreeing one is a mixed pair and counted (`vendor-delivered-disagrees`).
+agreeing value stays untouched; a disagreeing one is withheld wherever it sits (`exchange-quarter-mismatch`,
+general stratum, never the newest cell; in November it is the year-ago partner of the newest quarter and carries
+the pair code), and counted (`vendor-delivered-disagrees`, a `::warning::` on the summary line).
 
 ## Reason texts (German, `financialDataReasons`)
 
 - level pair: "Quartalsvergleich ausgeblendet: Das Vorjahresquartal des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Gezeigt wird der Jahreswert."
+- level pair, no annual figure: "Quartalsvergleich ausgeblendet: Das Vorjahresquartal des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Ein Jahreswert liegt nicht vor, deshalb wird kein Umsatzwachstum gezeigt."
+- delivered fill-period quarter off the exchange: "Quartalsumsatz ausgeblendet: Der nachgelieferte Wert des Datenanbieters weicht von der Börsenmeldung ab. Das Quartal wird nicht verwendet."
 - other pair: "Vorjahresquartal ausgeblendet: Der Wert des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Er zählt nicht zur Beschleunigung des Umsatzwachstums."
 - growth withheld: "Umsatzwachstum ausgeblendet: Vorjahresquartal und Jahreswerte des Datenanbieters weichen von der Börsenmeldung ab oder sind nicht prüfbar (vermutlich berichtigte Vorjahreszahlen)."
 - fill: "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 31.10.2025)."
@@ -71,4 +79,7 @@ Board history (active mode only): `pit.revenueQExchange: { filled, withheld }` w
 `node scripts/exchange-check-report.js --out <file> [--snapshots] [--outputs] [--store] [--board-history]
 [--active-outputs <sandbox outputs with mode active>] [--must-withhold <tickers>]`, or the manual workflow
 `.github/workflows/exchange-check-shadow.yml` (input: the run id of a finished daily run; artifact
-`exchange-check-shadow`). It writes only `--out`.
+`exchange-check-shadow`). It writes only `--out`. Lists are read from the export (`findash-export/v1`):
+`boardRows` = every China/Taiwan row on a visible list (branch top lists, overview, quality, survival, Rule of 40),
+`census` = every China/Taiwan row whose category is `would-*`, on a list or not, with every list it is on and its
+full-list rank. The go criterion of G2c (0 false holds) is checked row by row against `census`.

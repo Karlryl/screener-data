@@ -287,6 +287,65 @@ test('drift: the vendor later delivers Q3-2025 with a different value -> withhel
   assert.equal(revGrowthLeg(run(s, 'active', ctx).snapshot).basis !== 'quarter', true);
 });
 
+test('F5 October: a delivered Q3-2025 off the exchange value outside the level pair is withheld with its own reason', () => {
+  const s = base(), k = s.timeseries.revenueQEnds.indexOf('2025-09-30');
+  s.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * s.meta.fxRateApplied * 1.05 };
+  assert.equal(revGrowthLeg(s).basis, 'quarter', 'the wrong quarter reopens the quarterly leg');
+  const r = res(s);
+  assert.equal(r.fillPeriodVendorDisagrees, true);
+  assert.ok(r.category.startsWith('would-withhold'), r.category);
+  const w = r.withhold.find(x => x.period === '2025-09-30');
+  assert.ok(w && !w.level && w.fillPeriod, 'fill-period cell withheld');
+  assert.ok(r.withhold.every(x => x.index > 0), 'newest never withheld');
+  const a = run(clone(s), 'active').snapshot, cell = a.timeseries.revenueQ[k];
+  assert.equal(cell.value, null);
+  assert.equal(cell.financialMissing.reasonCode, 'exchange-quarter-mismatch');
+  assert.equal(cell.financialMissing.reason, X.REASONS.lateQuarter);
+  assert.deepEqual(cell.financialMissing.originalVendorRow, s.timeseries.revenueQ[k]);
+  assert.notEqual(revGrowthLeg(a).basis, 'quarter', 'the gap rule blocks the quarterly leg again');
+  assert.equal(X.exchangeRecord(a).withheld.find(x => x.period === '2025-09-30').reasonCode, 'exchange-quarter-mismatch');
+  assert.equal(serial(X.stripOwn(a)), serial(s), 'strip restores');
+  // A broker's level gap is definition, never a fill-period mismatch.
+  const br = clone(F.store); for (const list of Object.values(br.cn.companies['000002.SZ'].ytd)) for (const o of list) o.table = 'SINCOME';
+  assert.ok(!res(clone(s), ctxOf(br)).withhold.some(x => x.fillPeriod));
+});
+test('fill absence: the two YTD operands of Q3-2025 last read by different fetches derive no quarter (one vintage)', () => {
+  const st = clone(F.store);
+  st.cn.sources['cn-20261003T000000Z'] = { fetchedAt: '2026-10-03T00:00:00.000Z', periods: ['2025-09-30'], absent: {} };
+  assert.equal(blocked(base(), ctxOf(st)), 'store-period-missing');
+});
+test('fill absence: a disagreeing neighbour outside every pair blocks it even when the July vintage carries the same value', () => {
+  const s = scaleCell(base(), '2025-12-31', 1.2), b = clone(F.baseline), pit = b.rows['000002.SZ'];
+  pit.revenueQ[pit.revenueQEnds.indexOf('2025-12-31')] *= 1.2;
+  assert.equal(blocked(s, ctxOf(F.store, b)), 'neighbour-disagrees');
+});
+test('fill absence: a vendor 2025 quarter the July vintage did not carry is not proven unchanged', () => {
+  const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] = null; // 2025-06-30
+  assert.equal(blocked(base(), ctxOf(F.store, b)), 'baseline-quarter-missing');
+  const gone = clone(F.baseline), pit = gone.rows['000002.SZ'];
+  for (const f of ['revenueQ', 'revenueQEnds']) pit[f] = pit[f].slice(0, 3); // window ends before 2025-06-30
+  assert.equal(blocked(base(), ctxOf(F.store, gone)), 'baseline-quarter-missing');
+});
+function taiwanNovember(prior) {
+  const st = clone(F.store), seasons = st.tw.companies['6446.TW'].seasons, q3 = seasons['114Q3'].at(-1);
+  seasons['115Q3'] = [{ ...q3, columns: [['115年第3季', 4500000], ['114年第3季', prior],
+    ['115年01月01日至115年09月30日', 15000000], ['114年01月01日至114年09月30日', 10753539]] }];
+  return ctxOf(st);
+}
+test('November replay Taiwan: Q3-2025 then comes from the Q3-2026 filing comparative; without it no fill', () => {
+  assert.equal(blocked(snap('6446.TW'), taiwanNovember(null)), 'november-not-confirmed');
+  const r = res(snap('6446.TW'), taiwanNovember(3900000));
+  assert.equal(r.category, 'would-fill'); assert.equal(r.fill.nativeValue, 3900000 * 1000);
+});
+test('reason text: level pair withheld and no annual figure -> the text says no growth is shown', () => {
+  const s = snap('000599.SZ'); s.annual.annualRev = s.annual.annualRev.map(() => null);
+  const r = res(s);
+  assert.equal(r.growth.status, 'none'); assert.equal(r.category, 'would-withhold');
+  const cell = run(clone(s), 'active').snapshot.timeseries.revenueQ.find(x => x?.financialMissing);
+  assert.equal(cell.financialMissing.reason, X.REASONS.levelNoAnnual);
+  assert.doesNotMatch(X.REASONS.levelNoAnnual, /Gezeigt wird der Jahreswert/);
+});
+
 // ── Guard absence, fiscal years, store state ─────────────────────────────────
 test('guard absence: agreeing rows serialise identically; a disagreeing cell outside every pair is untouched', () => {
   for (const t of ['000006.SZ', '002945.SZ']) assert.equal(serial(run(snap(t), 'active').snapshot), serial(snap(t)), t);
@@ -360,13 +419,35 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   red("    const base = baselineCheck(s, ends, native, env, ctx, P.slice(0, 4));", "    const base = null;",
     lib => { const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] *= 1.0001; assert.notEqual(r(lib, base(), ctxOf(F.store, b)).category, 'would-fill'); });
   // annual fallback check
-  red("      if (!['agree', 'none'].includes(res.growth.status)) res.category = 'would-withhold-growth';", "",
+  red("      if (!['agree', 'none', 'quarter'].includes(res.growth.status)) res.category = 'would-withhold-growth';", "",
     lib => assert.equal(r(lib, snap('600150.SS')).category, 'would-withhold-growth'));
   // strip restores
   red("      else if (OWN_CODES.has(row.financialMissing?.reasonCode)) w.put(container, field, i, row.financialMissing.originalVendorRow);", "",
     lib => { const s = snap('000599.SZ'), a = lib.applyExchangeCheck(clone(s), { mode: 'active', context: CTX }).snapshot;
       assert.equal(serial(lib.applyExchangeCheck(a, { mode: 'off' }).snapshot), serial(s)); });
-  assert.equal(breaks, 8);
+  // F5: a disagreeing delivered fill-period cell is withheld in any position
+  red("        res.withhold.push({ index: k, period: P, level: false, fillPeriod: true, vendorNative: native[k], exchangeNative: ex[k] });", "",
+    lib => { const s = base(), k = s.timeseries.revenueQEnds.indexOf('2025-09-30');
+      s.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * s.meta.fxRateApplied * 1.05 };
+      assert.ok(r(lib, s).withhold.some(w => w.period === '2025-09-30')); });
+  // one fetch vintage per derived quarter
+  red("          S.lastConfirmedAt(store, ticker, p) !== S.lastConfirmedAt(store, ticker, p.slice(0, 5) + prev)) single[p] = null;",
+    "          false) single[p] = null;",
+    lib => { const st = clone(F.store);
+      st.cn.sources['cn-20261003T000000Z'] = { fetchedAt: '2026-10-03T00:00:00.000Z', periods: ['2025-09-30'], absent: {} };
+      assert.notEqual(r(lib, base(), ctxOf(st)).category, 'would-fill'); });
+  // neighbour outside every pair
+  red("    if (native.some((v, i) => v !== null && !agree(v, ex[i]))) return block('neighbour-disagrees');", "",
+    lib => { const s = scaleCell(base(), '2025-12-31', 1.2), b = clone(F.baseline), pit = b.rows['000002.SZ'];
+      pit.revenueQ[pit.revenueQEnds.indexOf('2025-12-31')] *= 1.2;
+      assert.notEqual(r(lib, s, ctxOf(F.store, b)).category, 'would-fill'); });
+  // Taiwan November rule
+  red("      if (!v || !finite(v.priorQuarter)) return block('november-not-confirmed');", "",
+    lib => assert.notEqual(r(lib, snap('6446.TW'), taiwanNovember(null)).category, 'would-fill'));
+  // baseline: absent in the vintage is unproven
+  red("    if (!finite(b)) { missing++; continue; } // absent or null in the vintage: unproven, not unchanged", "    if (!finite(b)) continue;",
+    lib => { const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] = null; assert.notEqual(r(lib, base(), ctxOf(F.store, b)).category, 'would-fill'); });
+  assert.equal(breaks, 13);
 });
 
 test('live files unchanged by this test run', () => {

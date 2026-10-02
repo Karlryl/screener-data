@@ -6,18 +6,19 @@
  *   node scripts/exchange-check-report.js --out <file.json> [--snapshots DIR] [--outputs DIR]
  *        [--store DIR] [--board-history DIR] [--active-outputs DIR] [--must-withhold T1,T2,...]
  *
- * READS ONLY: snapshots (default snapshots/), the scoring outputs of the same run (default outputs/:
- * hypergrowth/<branch>.json top lists, hypergrowth/full/<branch>.json, hypergrowth/overview.json,
- * findash-export/v1/rule40/overview.json), the committed exchange store and board-history (baseline of
- * the fill). WRITES only --out. Changes no snapshot, score, export or vintage: the step runs here in mode
+ * READS ONLY: snapshots (default snapshots/), the exported lists of the same run (default outputs/:
+ * every ranked list under findash-export/v1 — branch top lists, overview, quality, survival, rule40 and
+ * the full/<branch> cohort lists; excluded.json is not a list), the committed exchange store and
+ * board-history (baseline of the fill). WRITES only --out. Changes no snapshot, score, export or vintage: the step runs here in mode
  * shadow (lib/exchange-quarter-check.js), the readers stay on the committed mode (off).
  *
  * Per board row of the China and Taiwan cohorts one of agree | would-withhold | would-withhold-growth |
  * would-fill | unchecked(<why>), with vendor and exchange values, pairs, stratum, boards and ranks, and for
  * every would-* row the reader effects of the active step on that row (growth leg and value, acceleration,
  * lamps). --active-outputs: outputs of a sandbox run with mode active on the same snapshots; adds score and
- * rank after. Census: every would-withhold board row is listed (go criterion of G2c: 0 false holds after
- * each listed row is checked against the filing).
+ * rank after. Census (`census`): every China/Taiwan row whose category is would-*, on a board or not, with
+ * every list it is on and its full-list rank (go criterion of G2c: 0 false holds after each listed row is
+ * checked against the filing). `boardRows`: every China/Taiwan row on a visible list (all but full/).
  */
 const fs = require('fs');
 const path = require('path');
@@ -36,24 +37,31 @@ const arg = (name, def) => {
 const readJson = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return null; } };
 const round = x => Number.isFinite(x) ? Math.round(x * 1e4) / 1e4 : x;
 
-/** Board rows and full-cohort ranks from one scoring output directory. */
+/** Every exported ranked list of one scoring output directory (findash-export/v1, what findash shows):
+ * `rows` ticker -> visible list entries (every list but full/), `full` ticker -> full-list entry.
+ * rank is the exported rank (null for a shown row without one), position the place in the list. */
 function boardsOf(dir) {
-  const rows = new Map(), full = new Map();
-  const add = (t, e) => { if (!rows.has(t)) rows.set(t, []); rows.get(t).push(e); };
-  const idx = readJson(path.join(dir, 'hypergrowth', 'index.json'));
-  for (const b of idx?.branches || []) {
-    const top = readJson(path.join(dir, 'hypergrowth', b + '.json')) || {};
-    const all = readJson(path.join(dir, 'hypergrowth', 'full', b + '.json')) || {};
-    for (const track of ['profitable', 'unprofitable']) {
-      (top[track] || []).forEach((r, i) => add(r.ticker, { board: b, track, rank: i + 1 }));
-      (all[track] || []).forEach((r, i) => full.set(r.ticker, { board: b, track, rank: i + 1, score: r.score, growth: r.revGrowthYoYPct ?? null }));
+  const rows = new Map(), full = new Map(), v1 = path.join(dir, 'findash-export', 'v1');
+  let files = [];
+  try {
+    files = fs.readdirSync(v1, { recursive: true }).map(f => String(f).split(path.sep).join('/'))
+      .filter(f => f.endsWith('.json') && f !== 'excluded.json').sort();
+  } catch (_) { /* no export: no lists, the caller warns */ }
+  let lists = 0;
+  for (const f of files) {
+    const j = readJson(path.join(v1, f)), board = f.slice(0, -5);
+    for (const [key, list] of Object.entries(j && typeof j === 'object' && !Array.isArray(j) ? j : {})) {
+      if (!Array.isArray(list) || !list.some(r => r?.ticker)) continue;
+      lists++;
+      list.forEach((r, i) => {
+        if (!r?.ticker) return;
+        const e = { board, track: key === 'rows' ? null : key, rank: r.rank ?? null, position: i + 1 };
+        if (board.startsWith('full/')) full.set(r.ticker, { ...e, score: r.score ?? null, growth: r.revGrowthYoYPct ?? null });
+        else { if (!rows.has(r.ticker)) rows.set(r.ticker, []); rows.get(r.ticker).push(e); }
+      });
     }
   }
-  (readJson(path.join(dir, 'hypergrowth', 'overview.json')) || []).forEach((r, i) => add(r.ticker, { board: 'overview', rank: i + 1 }));
-  for (const r of readJson(path.join(dir, 'findash-export', 'v1', 'rule40', 'overview.json'))?.rows || []) {
-    if (r.rank != null) add(r.ticker, { board: 'rule40', rank: r.rank });
-  }
-  return { rows, full };
+  return { rows, full, lists };
 }
 
 const lampsOf = s => { try { return evaluateLamps(s).active.sort(); } catch (e) { return ['error:' + e.message]; } };
@@ -103,7 +111,8 @@ function main() {
     committedMode: X.policy.mode, tolerance: X.policy.tolerance, fillPeriods: X.policy.fillPeriods,
     inputs: { snapshots: snapDir, outputs, activeOutputs, storeFetchedAt: Object.fromEntries(['cn', 'tw'].map(k =>
       [k, stores[k] ? Object.values(stores[k].sources).map(s => s.fetchedAt).sort().at(-1) : null])), baselineDate: baseline.date },
-    warnings: [...stores.warnings, ...baseline.warnings], counts: {}, boardRows: [], mustWithhold: null, gapBlockedBoardRows: null, twins: null };
+    warnings: [...stores.warnings, ...baseline.warnings], counts: {}, boardRows: [], census: [], mustWithhold: null, gapBlockedBoardRows: null, twins: null };
+  if (!B.lists) report.warnings.push('no exported lists under ' + path.join(outputs, 'findash-export', 'v1') + ': no board rows');
   const cnt = (bucket, key) => { report.counts[bucket] = report.counts[bucket] || {}; report.counts[bucket][key] = (report.counts[bucket][key] || 0) + 1; };
   const checked = [], hk = [], results = new Map();
   let gapAll = 0, gapCnTw = 0, gapFill = 0;
@@ -123,17 +132,19 @@ function main() {
       const key = r.category + (r.why ? '(' + r.why + ')' : '');
       cnt('all', key); cnt('all:' + r.market, key); cnt('all:' + (r.stratum || 'none'), key);
       if (r.category !== 'unchecked') checked.push({ t, s, r });
+      const would = r.category.startsWith('would-');
+      if (!onBoard && !would) continue;
+      const row = { ticker: t, market: r.market, onBoard, boards: B.rows.get(t) || [], fullRank: B.full.get(t) || null, ...compactResult(r) };
+      if (would) {
+        row.effects = effects(s, X.applyResult(s, r));
+        if (A) row.effects.scoreRank = { before: B.full.get(t) || null, after: A.full.get(t) || null, boardsAfter: A.rows.get(t) || [] };
+        report.census.push(row);
+      }
       if (onBoard) {
         cnt('board', key); cnt('board:' + r.market, key); cnt('board:' + (r.stratum || 'none'), key);
         if (r.fill?.blocked) cnt('board:fillBlocked', r.fill.blocked + (r.fill.otherwiseFillable ? '(otherwise fillable)' : ''));
         if (r.growth) cnt('board:levelWithheldAnnual', r.growth.basisAfter + '/' + r.growth.status);
         if (gapBlocked(s)) { gapAll++; gapCnTw++; if (r.category === 'would-fill') gapFill++; }
-        const row = { ticker: t, market: r.market, boards: B.rows.get(t), fullRank: B.full.get(t) || null, ...compactResult(r) };
-        if (r.category.startsWith('would-')) {
-          const after = X.applyResult(s, r);
-          row.effects = effects(s, after);
-          if (A) row.effects.scoreRank = { before: B.full.get(t) || null, after: A.full.get(t) || null, boardsAfter: A.rows.get(t) || [] };
-        }
         report.boardRows.push(row);
       }
     }
@@ -167,9 +178,12 @@ function main() {
     report.mustWithholdPass = report.mustWithhold.filter(x => x.pass).length + '/' + must.length;
   }
   report.counts.boardRowsChinaTaiwan = report.boardRows.length;
+  report.counts.census = report.census.length;
+  const old = report.counts.all?.['unchecked(store-old)'];
+  if (old) report.warnings.push(`exchange store older than the limit (store-old): ${old} China/Taiwan rows unchecked`);
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   fs.writeFileSync(out, JSON.stringify(report, null, 1) + '\n');
-  console.log(`[exchange-check-shadow] ${JSON.stringify({ board: report.counts.board, gapBlocked: report.gapBlockedBoardRows,
+  console.log(`[exchange-check-shadow] ${JSON.stringify({ board: report.counts.board, census: report.census.length, gapBlocked: report.gapBlockedBoardRows,
     mustWithhold: report.mustWithholdPass || null, twins: report.twins.length, warnings: report.warnings.length })}`);
 }
 
