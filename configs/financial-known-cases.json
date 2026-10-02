@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02e",
+  "revision": "2026-10-02i",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -33,7 +33,9 @@
     { "ticker": "PLUS", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "DCO", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
-    { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" }
+    { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -5409,6 +5411,373 @@
           "derivation": "Q4 operating profit = FY minus 9M = 2,015,498,107.62"
         }
       ]
+    },
+    {
+      "caseId": "402340.ks-2026-06-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 19522537000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2026-03-31-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 8544829000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260514001477",
+          "page": "분기보고서 (2026.03), III. 재무에 관한 사항, 2-2. 연결 손익계산서",
+          "quote": "매출액 300,349 300,349 345,945 345,945 영업비용 334,680 334,680 376,641 376,641",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-12-31-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 3379799000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260317000830",
+          "page": "사업보고서 (2025.12), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (제 5 기 / 제 4 기 / 제 3 기)",
+          "quote": "매출액 1,411,521 1,649,858 2,008,116 영업비용 1,544,535 1,836,013 2,291,727",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-09-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 2947500000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20251113000629",
+          "page": "분기보고서 (2025.09), III. 재무에 관한 사항, 2-2. 연결 손익계산서",
+          "quote": "매출액 407,889 1,217,291 457,502 1,424,346 영업비용 422,432 1,327,759 496,173 1,576,469",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-06-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 1742310000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2026-06-30-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": 272167000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz laut Quartalsbericht der Firma statt der gespeicherten Null.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2862017/00.pdf",
+          "page": "8 (2027年３月期 第１四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第１四半期連結累計期間 自2026年４月１日 至2026年６月30日)",
+          "quote": "収益 251,116 272,167",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 272167000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2026-03-31-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 279965000000,
+      "replacementValue": 280001000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (längerer Zeitraum minus kürzerer); der Anbieterwert weicht um 36 Mio. JPY ab.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2800395/00.pdf",
+          "page": "9 (2026年３月期 決算短信〔ＩＦＲＳ〕, 連結損益計算書, 当連結会計年度 自2025年４月１日 至2026年３月31日)",
+          "quote": "収益 1,050,936 1,067,665",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 1067665000000,
+          "start": "2025-04-01",
+          "end": "2026-03-31"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2750562/00.pdf",
+          "page": "8 (2026年３月期 第３四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第３四半期連結累計期間 自2025年４月１日 至2025年12月31日)",
+          "quote": "収益 781,744 787,664",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 787664000000,
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "derivation": "Q4 FY2026 (Jan-Mar 2026) = year to 2026-03-31 minus nine months to 2025-12-31 = 280,001 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2025-12-31-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 274205000000,
+      "replacementValue": 274169000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (längerer Zeitraum minus kürzerer); der Anbieterwert weicht um 36 Mio. JPY ab.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2750562/00.pdf",
+          "page": "8 (2026年３月期 第３四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第３四半期連結累計期間 自2025年４月１日 至2025年12月31日)",
+          "quote": "収益 781,744 787,664",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 787664000000,
+          "start": "2025-04-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2704294/00.pdf",
+          "page": "8 (2026年３月期 第２四半期（中間期）決算短信〔ＩＦＲＳ〕, 要約中間連結損益計算書, 当中間連結会計期間 自2025年４月１日 至2025年９月30日)",
+          "quote": "収益 518,573 513,495",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 513495000000,
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "derivation": "Q3 FY2026 (Oct-Dec 2025) = nine months minus half year = 274,169 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2025-09-30-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": 262379000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (Halbjahr minus erstes Quartal) statt der gespeicherten Null.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2704294/00.pdf",
+          "page": "8 (2026年３月期 第２四半期（中間期）決算短信〔ＩＦＲＳ〕, 要約中間連結損益計算書, 当中間連結会計期間 自2025年４月１日 至2025年９月30日)",
+          "quote": "収益 518,573 513,495",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 513495000000,
+          "start": "2025-04-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2663669/00.pdf",
+          "page": "8 (2026年３月期 第１四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第１四半期連結累計期間 自2025年４月１日 至2025年６月30日)",
+          "quote": "収益 251,011 251,116",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 251116000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "derivation": "Q2 FY2026 (Jul-Sep 2025) = half year minus first quarter = 262,379 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2026-06-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1804157000,
+      "replacementValue": 1952136000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.03;Resultado Bruto;1952136.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1952136000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 20 (demonstrações dos resultados, três meses findos em 30 de junho de 2026 e 2025, consolidado: Abr a Jun/2026, Abr a Jun/2025 reapresentado)",
+          "quote": "LUCRO BRUTO 1.952.136 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2026-03-31-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1591911000,
+      "replacementValue": 1768103000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-01-01;2026-06-30;3.03;Resultado Bruto;3720239.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 3720239000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.03;Resultado Bruto;1952136.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1952136000,
+          "derivation": "Q1 2026 on the restated basis of the 2Q26 ITR = six months 2026 minus Q2 2026 = 1,768,103 thousand BRL (the 1Q26 ITR filed 1,712,453 before the reclassification of note 2.4)"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-12-31-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1737632000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Cemig hat die Kosten im Bericht zum zweiten Quartal 2026 neu gegliedert; für das vierte Quartal 2025 gibt es noch keinen Wert auf dieser Basis, und der Anbieterwert passt auch zum alten Stand nicht (Firma 1.645,9 Mio. BRL).",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip",
+          "page": "dfp_cia_aberta_DRE_con_2025.csv (DFP 2025, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-12-31",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-12-31;3.03;Resultado Bruto;7237316.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 7237316000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-09-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-09-30;3.03;Resultado Bruto;5591424.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": 5591424000,
+          "derivation": "old basis: Q4 2025 = year 7,237,316 minus nine months 5,591,424 = 1,645,892 thousand BRL; vendor 1,737,632; restated Q4 2025 not yet filed"
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-09-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1508569000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Cemig hat die Kosten im Bericht zum zweiten Quartal 2026 neu gegliedert; für das dritte Quartal 2025 gibt es noch keinen Wert auf dieser Basis, und der Anbieterwert passt auch zum alten Stand nicht (Firma 1.600,6 Mio. BRL).",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-09-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-07-01;2025-09-30;3.03;Resultado Bruto;1600625.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 1600625000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-06-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2080901000,
+      "replacementValue": 2199760000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;PENÚLTIMO;2025-04-01;2025-06-30;3.03;Resultado Bruto;2199760.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 2199760000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -5801,6 +6170,56 @@
         }
       ],
       "vendorEvidence": "Snapshot of run 36839128456 (2026-10-01): meta.reportingCurrency USD, fxRateApplied 1; annualRev newest 16,948,954,566.336 = 31.27 x the issuer USD revenue 541,957,260; the year before 20,862,634,594.28 = 32.88 x 634,431,170 (TWD per USD); revenueQ 2025-12-31 5,419,996,890.7858."
+    },
+    {
+      "caseId": "402340.ks-equity-method-revenue-20261002",
+      "ticker": "402340.KS",
+      "reason": "Score fehlt: Der Anbieter zählt bei SK Square die Gewinne aus Beteiligungen zum Umsatz (zweites Quartal 2026: 19.609,8 statt 328,5 Mrd. KRW laut Halbjahresbericht). Das dritte und vierte Quartal 2025 hat die Firma nach dem Verkauf von Dreamus noch nicht auf der neuen Basis veröffentlicht; ein Wachstum aus gemischten Basen wäre falsch.",
+      "fingerprint": [
+        {
+          "path": [
+            "timeseries",
+            "revenueQEnds",
+            0
+          ],
+          "expected": "2026-06-30"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions",
+          "value": 328549000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "지분법이익 19,281,225 27,612,290 1,481,739 3,196,768",
+          "unit": "KRW millions"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 3. 연결재무제표 주석, 4. 부문정보 (연결), 각주 (*)",
+          "quote": "(주)드림어스컴퍼니 지분 매각으로 인하여 관련손익을 중단영업으로 분류함에 따라 비교표시된 전기 부문정보를 재작성하였습니다"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260317000830",
+          "page": "사업보고서 (2025.12), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (제 5 기 / 제 4 기 / 제 3 기)",
+          "quote": "중단영업이익(손실) (14,581) (18,481) 988,230",
+          "unit": "KRW millions"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20251113000629",
+          "page": "분기보고서 (2025.09), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (no discontinued-operations line: Dreamus still consolidated, old basis)",
+          "quote": "매출액 407,889 1,217,291 457,502 1,424,346 영업비용 422,432 1,327,759 496,173 1,576,469",
+          "unit": "KRW millions"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36984285974 (2026-10-02): KRW, fx 0.00073595974; revenueQ native (million KRW) 2026-06-30 19609774 = 328,549 + 19,281,225 (매출액 + 지분법이익), 2025-06-30 1837434 = 355,695 + 1,481,739; annualRev newest 10,455,553 vs 매출액 2025 1,411,521. One basis needs Q3 2025 and Q4 2025 restated for the Dreamus sale (decided 29.10.2025, DART 20251029800644); first expected with the 3Q 2026 report."
     }
   ]
 }

@@ -495,6 +495,73 @@ Wirkung am festen Tag: Das Quartalsbein des Wachstums braucht jedes Quartal zwis
 
 Offen: Bruttogewinn und Betriebsergebnis des zweiten Quartals 2026 stehen ebenfalls auf zwei Basen (Halbjahr neu minus Q1 alt); heute liest sie kein Leser des Quartalspaars, weil das Umsatzpaar leer ist (Folgeauftrag). Eintragen der Quartale auf einer Basis, sobald die Firma sie veröffentlicht (Q3-Bericht 2026 mit neu ausgewiesenem Vorjahr; Termin nicht geprüft, Vorjahr 23.10.).
 
+## Offene Posten aus der Triage: SK Square, Kanematsu, Cemig, MODEC (02.10.2026)
+
+Datenstand aller Zahlen dieses Abschnitts: Artefakt `snapshots` des Tageslaufs 36984285974 (02.10.2026, 16.102 Stände), Watchlist 57c56346d1, Growth live kalibriert wie im Produktionslauf, Code origin/main f1049b2b58 gegen diesen Stand. Jeder `expectedBadValue` ist gleich dem Anbieterwert dieses Artefakts (in Originalwährung, Abgleich `expectedBadValue × Kurs` exakt gleich dem gespeicherten Wert); jeder neue Wert ist am 02.10. an der Primärquelle nachgelesen (DART, TDnet, CVM, Berichte der Firmen).
+
+### SK Square (402340.KS): gesperrt, Bruttogewinn leer
+
+Problem: Der Anbieter zählt bei SK Square in jedem gespeicherten Quartal die Gewinne aus Beteiligungen zum Umsatz. Halbjahresbericht 2026 (DART, Konzern-Gewinn- und Verlustrechnung, Millionen KRW): „매출액 328,549 628,898 355,695 701,640“ und „지분법이익 19,281,225 27,612,290 1,481,739 3,196,768“; der Anbieterwert für das zweite Quartal 2026 ist 19.609.774 = 328.549 + 19.281.225, der für das zweite Quartal 2025 1.837.434 = 355.695 + 1.481.739. Gezeigt wurden +967,2 % Wachstum (Halbleiter, profitabel, Rang 151; Quality Halbleiter Rang 83). Auf einer Basis (beide Werte aus dem Halbjahresbericht 2026) sind es −7,6 % (328.549 / 355.695).
+
+Warum keine Korrektur, sondern eine Sperre: Nach dem Verkauf von Dreamus (Beschluss 29.10.2025) weist die Firma deren Ergebnis als aufgegebenen Geschäftsbereich aus und hat die Vorjahreswerte neu ausgewiesen (Halbjahresbericht 2026, Anhang 4: „(주)드림어스컴퍼니 지분 매각으로 인하여 관련손익을 중단영업으로 분류함에 따라 비교표시된 전기 부문정보를 재작성하였습니다“). Auf der neuen Basis gibt es heute das zweite Quartal 2026, das erste Quartal 2026 (300.349), das zweite Quartal 2025 (355.695) und das Jahr 2025 (1.411.521), aber nicht das dritte und vierte Quartal 2025: Der Bericht zum dritten Quartal 2025 (407.889) steht noch auf der alten Basis mit Dreamus, und neun Monate 2025 auf der neuen Basis erscheinen erst im Bericht zum dritten Quartal 2026. Eine Reihe aus beiden Basen wäre gemischt. Auch der Jahresumsatz des Anbieters enthält die Beteiligungsgewinne (2025: 10.455.553 statt 1.411.521 Mio. KRW), ein Rückfall auf das Jahresbein wäre ebenso falsch. Deshalb steht SK Square in `quarantines` (Fingerabdruck: das Periodenende des jüngsten gespeicherten Umsatzquartals, 30.06.2026; keine Beträge, weil der Abruf die Tabelle auf die KRW-Werte vor der Umrechnung anwendet und der Bruttogewinn dieses Quartals selbst leer gesetzt wird, sodass ein Betrag beim Abruf und bei jedem erneuten Lesen abwiche) und verlässt die Boards mit sichtbarem Grund. Kommt das nächste Quartal, warnt der Lauf (`quarantine-fingerprint-changed`), die Sperre bleibt, und die Reihe kann auf einer Basis eingetragen werden.
+
+Bruttogewinn: Die Firma gliedert nach Kostenarten und weist keinen Bruttogewinn aus (auf „매출액“ folgt „영업비용“). Alle fünf gespeicherten Quartale sind leer gesetzt (Fälle ohne Ersatzwert, keine `coversThrough`); der Anbieterwert lag ein Vielfaches über dem Umsatz (zweites Quartal 2026: 19.522.537 Mio. KRW). Solange die Sperre gilt, liest kein Board diese Zellen.
+
+Wirkung am festen Tag: SK Square verlässt das volle Halbleiter-Board (Growth profitabel, 48,1, Rang 151, Wachstum +967,2 %) und die Quality-Liste Halbleiter (59,9, Rang 83, in den Top 100); dort rückt 3443.TW von Platz 101 auf 100. Indirekt über die Live-Kalibrierung: Growth 197 Scores, Quality 285 Scores (höchstens 0,3), Smallcap keine. Ausreißer Growth: 002739.SZ (Software/Komm., profitabel) 59,9 Rang 146 → 29,9 Rang 451. Ursache ist der Zyklus-Dämpfer: Seine Schwelle ist das 75. Perzentil der Umsatz-Rückgänge aller gerouteten Firmen (`src/scoring/score.js` Zeilen 1025 bis 1027), und der Faktor halbiert den Score, sobald eine Firma mit schwankendem Betriebsergebnis die Schwelle erreicht (Zeilen 691 und 696, `CYCLE_DAMPER_KD` 0,5). Ohne SK Square sinkt die Schwelle minimal, und 002739.SZ liegt danach darauf. Das ist keine Änderung an den Zahlen von 002739.SZ, sondern eine Kante der Live-Kalibrierung, die jede Änderung des Universums auslösen kann. Übrige Growth-Scores höchstens 0,2; 416 Growth-Zeilen ändern nur den Rang (um höchstens 3 Plätze), 36 Quality-Zeilen um höchstens 4 Plätze.
+
+### Kanematsu (8020.T): vier Umsatzquartale aus den Quartalsberichten
+
+Problem: Der Anbieter führt seit 05.09. für das Quartal April bis Juni 2026 den Umsatz 0, ebenso für Juli bis September 2025; seine beiden übrigen Quartale weichen um je 36 Mio. JPY von den Werten der Firma ab (Summe gleich). Die Firma berichtet nach IFRS, Geschäftsjahr bis März, Beträge in Millionen JPY auf ganze Millionen abgeschnitten („百万円未満切捨て“).
+
+Lösung: alle vier gespeicherten Quartale aus den 決算短信 der Firma (TDnet über eir-parts), `coversThrough` 30.06.2026; kein Quartal bleibt ungeprüft (0 Zellen `period-not-verified`). Zwei Quartale sind Differenzen zweier Werte desselben Geschäftsjahres; durch das Abschneiden kann ein abgeleitetes Quartal um höchstens 1 Mio. JPY vom genauen Wert abweichen.
+
+| Quartal | Anbieter (Mio. JPY) | Firma (Mio. JPY) | Quelle (wörtlich, Seite 8 bzw. 9, Zeile „収益“) |
+| --- | --- | --- | --- |
+| Apr bis Jun 2026 | 0 | 272.167 | 1. Quartal 2027/3: „収益 251,116 272,167“ |
+| Jan bis Mrz 2026 | 279.965 | 280.001 | Jahr 2026/3 „収益 1,050,936 1,067,665“ minus neun Monate „収益 781,744 787,664“ |
+| Okt bis Dez 2025 | 274.205 | 274.169 | neun Monate 787.664 minus Halbjahr „収益 518,573 513,495“ |
+| Jul bis Sep 2025 | 0 | 262.379 | Halbjahr 513.495 minus 1. Quartal 2026/3 „収益 251,011 251,116“ |
+
+Wirkung am festen Tag: Score und Rang unverändert (Industrials profitabel 41,4, Rang 1.369; Quality Industrials 45,6, Rang 1.186), Wachstum +1,59 % unverändert. Die gespeicherte Reihe hat kein Vorjahresquartal (April bis Juni 2025 fehlt beim Anbieter), deshalb liest kein Wachstumsbein die korrigierten Quartale; sie stehen jetzt richtig im Datenstand und in den Gründen der Exportzeile. Indirekt: keine Bewegung (alle anderen Zeilen gleich).
+
+Offen: Der Bruttogewinn steht beim Anbieter in allen vier Quartalen auf 0, obwohl die Firma ihn ausweist („売上総利益“, zum Beispiel April bis Juni 2026 46.926 Mio. JPY); nicht Teil dieses Auftrags. Nächstes Quartal (Juli bis September 2026, Halbjahresbericht Anfang November, Termin nicht geprüft) bleibt leer, bis es eingetragen ist.
+
+### Cemig (CIG-C): Bruttogewinn auf der neu ausgewiesenen Basis
+
+Problem: Der Bruttogewinn des Anbieters ist sein Umsatz minus die Kosten laut Abschluss; sein Umsatz lässt aber eine Zeile der Firma weg (Anpassung des zu entschädigenden Finanzvermögens, im ersten Quartal 2026 120,6 Mio. BRL). Dadurch liegt jeder gespeicherte Bruttogewinn 5 bis 8 % neben dem der Firma (erstes Quartal 2026: 1.591,9 statt 1.712,5 Mio. BRL laut Quartalsbericht, „LUCRO BRUTO 1.712.453 1.840.666“).
+
+Basis: Im Bericht zum zweiten Quartal 2026 hat Cemig Kosten neu gegliedert (Nota 2.4 „Reapresentação de saldos comparativos“: die Geldwertanpassung von Rückstellungen steht jetzt im Finanzergebnis) und das Vorjahresquartal neu ausgewiesen („LUCRO BRUTO 2.150.133 49.627 2.199.760“, Spalten bisher, Anpassung, neu). Auf dieser Basis gibt es heute das zweite Quartal 2026, das erste Quartal 2026 (Halbjahr minus zweites Quartal; der Bericht zum ersten Quartal zeigte vor der Umgliederung 1.712.453) und das zweite Quartal 2025. Das dritte und vierte Quartal 2025 gibt es nur auf der alten Basis; der Anbieterwert passt auch dazu nicht. Diese beiden Zellen sind leer gesetzt, statt zwei Basen zu mischen. Die Spezifikation nannte für das erste Quartal 2026 den Wert 1.712.453; eingetragen ist 1.768.103, weil nur dieser zur Basis der übrigen Quartale passt.
+
+| Quartal | Anbieter (Tsd. BRL) | Neu (Tsd. BRL) | Quelle (CVM ITR/DFP, Konto 3.03 „Resultado Bruto“) |
+| --- | --- | --- | --- |
+| Apr bis Jun 2026 | 1.804.157 | 1.952.136 | ITR 30.06.2026, Abr a Jun/2026 |
+| Jan bis Mrz 2026 | 1.591.911 | 1.768.103 | ITR 30.06.2026: Halbjahr 3.720.239 minus Abr a Jun 1.952.136 |
+| Okt bis Dez 2025 | 1.737.632 | leer | alte Basis: DFP 2025 7.237.316 minus ITR neun Monate 5.591.424 = 1.645.892 |
+| Jul bis Sep 2025 | 1.508.569 | leer | alte Basis: ITR 30.09.2025, Jul a Set/2025 1.600.625 |
+| Apr bis Jun 2025 | 2.080.901 | 2.199.760 | ITR 30.06.2026, Vorjahresspalte (neu ausgewiesen) |
+
+`coversThrough` 30.06.2026 für den Bruttogewinn von CIG-C; 0 Zellen `period-not-verified`. Der Umsatz bleibt beim Anbieter (1,2 % unter dem der Firma, nicht Teil dieses Auftrags); die Quartalsmarge mischt deshalb leicht zwei Basen. Diese Marge liest heute nur die Lampe für ein auffälliges jüngstes Quartal (Schwelle 55 % Bruttomarge), sie bleibt aus.
+
+Wirkung am festen Tag: Score, Rang und Achsen unverändert (Versorger profitabel 46,8, Rang 204; Quality Versorger 48,5, Rang 195). Den Quartals-Bruttogewinn liest bei fünf gespeicherten Quartalen kein Score-Bein (die Kennzahl der Zeile braucht acht Quartale und nimmt sonst den Jahreswert). Indirekt: keine Bewegung.
+
+Zweitnotierungen: CMIG3.SA und CIG sind keine Aliasse. CMIG3.SA trägt ein anderes Anbieterpaket (Bruttogewinn 30.06.2026 1.804.259 und 30.06.2025 2.081.436 statt 1.804.157 und 2.080.901), CIG ein älteres Paket ohne das Quartal bis 30.06.2026 und mit tausendfach zu großen Werten (31.03.2026 Bruttogewinn 10.333.161 Mio. BRL). Beide stehen als Doppelnotierung (`dup-issuer`) auf keinem Board, vorher wie nachher.
+
+### MODEC (6269.T): nicht eingetragen
+
+MODEC berichtet in US-Dollar; die Quartale des Anbieters sind Yen-Umrechnungen zu wechselnden Stichtagskursen („June 30, 2026 at US$1.00 = 162.39 Japanese yen“) und liegen nach der Umrechnung +4,4 %, +1,6 %, +12,8 % und −1,7 % neben den Dollarwerten der Firma (Halbjahr 2026 „Revenue 2,074,296 2,447,050“, erstes Quartal „Revenue 873,038 1,077,078“, Tsd. USD). „Nativ“ ist im Stand Yen (`meta.reportingCurrencyOriginal` JPY, `fxRateApplied` 0,006352635; 225.152 Mio. JPY × Kurs = gespeicherte 1.430.308.475,52). Die Währungstabelle setzt bei MODEC nur die Jahresreihe auf US-Dollar (`series: annual`).
+
+Nicht eingetragen, weil ein bestehender Wächter genau diese Zellen festhält: `tests/statement-currency-waechter.test.js` (Block „MODEC corrects annual USD statements and retains quarterly JPY conversion“) prüft mit den echten Anbieterwerten 225.152 und 172.224 Mio. JPY, dass der Umrechner die Quartale mit dem Yen-Kurs führt und dass eine zweite Umrechnung nichts mehr ändert. Der Umrechner (`pull-yahoo.js`) wendet die Handtabelle vor der Umrechnung an; ein Dollar-Ersatzwert kann dort noch nicht stehen und käme erst beim nächsten Einlesen, eine leere Zelle widerspräche dem Wächter ebenso. Jede Lösung ändert also das, was dieser Wächter festhält; das ist eine Methodenentscheidung zu #398 und nicht Teil dieser Änderung. Score und Rang sind davon heute nicht berührt (Wachstum +9,43 % aus der Dollar-Jahresreihe; die gespeicherte Reihe hat kein Vorjahresquartal).
+
+### HL: Jahres-Bruttogewinn bleibt leer (keine Jahres-Ersatzwerte)
+
+Geprüft wurde, ob die neu ausgewiesenen Bruttogewinne 2023 bis 2025 eingetragen werden können. Die neu ausgewiesene Ergebnisrechnung im 8-K vom 28.08.2026 (Exhibit 99.1) hat keine Zeile Bruttogewinn („Sales $ 1,103,902 $ 720,246 $ 542,549“, danach „COSTS AND EXPENSES“ bis „Income from operations 396,409 123,762 12,009“); der Bruttogewinn steht nur in der Segmentnote, dort aber als Summe der Firma („Gross profit $ 322,646 $ 132,950 $ 53,665 $ 509,261 $ 544 $ 509,805“, Spalte gesamt). Das wären Werte der Firma auf einer Basis.
+
+Eingetragen ist trotzdem nichts, und die Erweiterung für Jahres-Ersatzwerte ist nicht gebaut: Der Score liest den Jahres-Bruttogewinn nur zusammen mit dem Jahresumsatz (Margenniveau und Margenpfad, `src/scoring/axes.js` Zeilen 255 und 492). Umsatz, Bruttogewinn und Betriebsergebnis des Anbieters sind die Werte des ursprünglichen 10-K 2025 mit Casa Berardi (SEC-Daten der Firma, Einreichung 0001193125-26-055059: Umsatz 1.423.019, Bruttogewinn 622.203 und 198.210, Betriebsergebnis 514.795 Tsd. USD); die Anbieterreihe ist also in sich auf einer Basis, nur nicht auf der neuen. Der neu ausgewiesene Bruttogewinn allein ergäbe eine Marge von 35,8 % (509,8 / 1.423,0), die zu keiner Basis passt (alt 43,7 %, neu 46,2 %). Eine Basis entstünde erst, wenn auch Jahresumsatz und Jahres-Betriebsergebnis ersetzt würden; dann stünden aber die aktienbasierte Vergütung (Verwässerung = Vergütung je Umsatz, Zeile 466) und die Kapitalflüsse weiter auf dem Konzernstand mit Casa Berardi. Das ist mehr als die kleinste Erweiterung und eine Methodenfrage (alte Basis, die in sich stimmt, gegen neue Basis für alle Jahresfelder). HL bleibt wie seit #409: Jahres-Bruttogewinn leer mit Grund, Growth Materials 73,5 Rang 93, Quality Materials 53,9 Rang 370 (fester Tag 02.10., unverändert).
+
+### Prüfregel: Ersatzwert gehört zum eigenen Quartal (Runde 2, 02.10.2026)
+
+Die Prüfung beim Laden der Tabelle verlangt jetzt zusätzlich, dass der Quellwert, auf den ein Ersatzwert zurückgeht, für das Quartal des Falls gilt: Das Ende des Quellzeitraums (bei einer Differenz das Ende des abgeleiteten Zeitraums, also bei gleichem Beginn das Ende des längeren Zeitraums, bei gleichem Ende der Tag vor Beginn des kürzeren) liegt höchstens sieben Tage neben der Periode des Falls. Die sieben Tage braucht DCO, dessen Quartale nach 52/53 Wochen bis zu vier Tage neben dem Kalenderquartal enden. Vertauscht jemand die Perioden zweier Fälle derselben Firma und lässt Werte und Quellen stehen, lehnt die Prüfung die ganze Tabelle ab. Alle 212 Fälle bestehen; die Regel ändert keinen Wert.
+
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
 Alle 122 gemessenen Scoreänderungen stehen in der folgenden Tabelle und in financial-corrections-board-changes.csv. Alle 9900 Zellen stehen in financial-corrections-shadow-cells.csv. 26 sichtbare Auswirkungen bleiben auch bei festgehaltener Vergleichskalibrierung; die übrigen entstehen bei der regulären Neukalibrierung. Keine dieser breiten Änderungen ist aktiviert.
