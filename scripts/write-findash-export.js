@@ -995,11 +995,15 @@ function loadCoverage(file = COVERAGE) {
     generated_at: m.generated_at };
 }
 
-function build() {
-  const nFlagged = ladeValueFlags(VALUE_OPEN_ITEMS_FILE, console.warn, new Date().toISOString().slice(0, 10)); // Tag 1401: before the first mapper runs
+// seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI
+// passes none. tests/value-flags.test.js points sourceIndexFile at a missing file, so build() stops
+// right after loading the list and before anything is written.
+function build(seam = {}) {
+  const day = (seam.now || new Date()).toISOString().slice(0, 10);
+  const nFlagged = ladeValueFlags(seam.valueOpenItemsFile || VALUE_OPEN_ITEMS_FILE, console.warn, day); // Tag 1401: before the first mapper runs
   console.log('valueFlags: ' + nFlagged + ' ticker(s) with an open value item are marked (data-health/value-open-items.json)');
   const coverage = loadCoverage();
-  const sourceIndex = readJSON(path.join(HG_DIR, 'index.json'));
+  const sourceIndex = readJSON(seam.sourceIndexFile || path.join(HG_DIR, 'index.json'));
   const cohortCounts = sourceIndex.counts;
   fs.mkdirSync(OUT_DIR, { recursive: true }); // writeJsonAtomic does NOT create the dir
   const opts = { assertFinite: true };         // fail loud on a NaN/Inf, never silent-null (A-lib-08)
