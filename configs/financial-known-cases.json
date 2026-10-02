@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-01c",
+  "revision": "2026-10-02i",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -28,7 +28,14 @@
     { "ticker": "INFQ", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
-    { "ticker": "OXLC", "field": "revenueQ", "coversThrough": "2026-03-31" }
+    { "ticker": "OXLC", "field": "revenueQ", "coversThrough": "2026-03-31" },
+    { "ticker": "CARG", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "PLUS", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "DCO", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -4078,6 +4085,7 @@
           "quote": "Total investment income for the quarter ended March 31, 2025 amounted to approximately $121.2 million",
           "unit": "USD millions (issuer-rounded)",
           "value": 121200000,
+          "roundingStep": 100000,
           "start": "2025-01-01",
           "end": "2025-03-31"
         },
@@ -4359,6 +4367,1417 @@
           "end": "2022-12-31"
         }
       ]
+    },
+    {
+      "caseId": "carg-2026-06-30-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 62982000,
+      "replacementValue": 62982000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated income statements",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 62,982 60,549 103,061 111,203",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 62982000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2026-03-31-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 40079000,
+      "replacementValue": 40079000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526211983/carg-20260331.htm",
+          "page": "10-Q Q1 2026, condensed consolidated income statements",
+          "accession": "0001193125-26-211983",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 40,079 50,654",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 40079000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-12-31-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 119172000,
+      "replacementValue": 69127000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Abschluss der Firma (nach dem Verkauf von CarOffer neu ausgewiesen) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 69,127 64,115 60,549 50,654",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 69127000,
+          "operatingLine": "consolidated income statements of the same 10-K: \"Income from continuing operations 244,445 157,147 120,329\" is total revenue minus total operating expenses, above \"Other income, net\" and \"Provision for income taxes\" (operating line, before tax)"
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-09-30-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 54674000,
+      "replacementValue": 64115000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Abschluss der Firma (nach dem Verkauf von CarOffer neu ausgewiesen) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 69,127 64,115 60,549 50,654",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 64115000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-06-30-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 60549000,
+      "replacementValue": 60549000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated income statements",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 62,982 60,549 103,061 111,203",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 60549000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-06-30-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 38832000,
+      "replacementValue": 38832000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), statements of operations (2025 column as revised)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Operating income 38,832 42,940",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 38832000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-03-31-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 37644000,
+      "replacementValue": 30904000,
+      "reason": "Betriebsergebnis korrigiert: viertes Geschäftsquartal laut Ergebnismitteilung der Firma; der Anbieter zog vom Jahreswert die erstmals berichteten neun Monate ab.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126023148/ef20075008_ex99-1.htm",
+          "page": "8-K exhibit 99.1 of 2026-05-28, earnings release Q4 FY2026 (quarter ended 2026-03-31)",
+          "accession": "0001140361-26-023148",
+          "filed": "2026-05-28",
+          "unit": "USD thousands",
+          "quote": "Operating income 30,904 18,766 166,145 99,686",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 30904000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-12-31-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 43466000,
+      "replacementValue": 43466000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126003725/ef20060829_10q.htm",
+          "page": "10-Q Q3 FY2026 (quarter ended 2025-12-31), statements of operations",
+          "accession": "0001140361-26-003725",
+          "unit": "USD thousands",
+          "quote": "Operating income 43,466 16,470 128,501 74,925",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 43466000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-09-30-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 48835000,
+      "replacementValue": 48835000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036125040814/ef20056859_10q.htm",
+          "page": "10-Q Q2 FY2026 (quarter ended 2025-09-30), statements of operations",
+          "accession": "0001140361-25-040814",
+          "unit": "USD thousands",
+          "quote": "Operating income 48,835 26,996 85,035 58,455",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 48835000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-06-30-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 42940000,
+      "replacementValue": 42940000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), statements of operations (2025 column as revised)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Operating income 38,832 42,940",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 42940000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-06-30-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 28331000,
+      "replacementValue": 28331000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026 (quarter ended 2026-07-04; vendor date 2026-06-30), statements of operations",
+          "accession": "0001628280-26-053776",
+          "unit": "USD thousands",
+          "quote": "Operating Income 28,331 17,725 44,051 22,700",
+          "start": "2026-04-05",
+          "end": "2026-07-04",
+          "value": 28331000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-03-31-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 15720000,
+      "replacementValue": 15720000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026033836/dco-20260404.htm",
+          "page": "10-Q Q1 2026 (quarter ended 2026-04-04; vendor date 2026-03-31), statements of operations",
+          "accession": "0001628280-26-033836",
+          "unit": "USD thousands",
+          "quote": "Operating Income 15,720 4,975",
+          "start": "2026-01-01",
+          "end": "2026-04-04",
+          "value": 15720000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-12-31-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 13998000,
+      "replacementValue": 16882000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut berichtigtem Jahresabschluss der Firma (10-K/A) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, restatement of quarterly results (As Previously Reported / Adjustment / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Operating Income 13,998 2,884 16,882",
+          "start": "2025-09-28",
+          "end": "2025-12-31",
+          "value": 16882000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-09-30-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -80050000,
+      "replacementValue": -75317000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut berichtigtem Jahresabschluss der Firma (10-K/A) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, restatement of quarterly results (As Previously Reported / Adjustment / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Operating Loss (80,050) 4,733 (75,317)",
+          "start": "2025-06-29",
+          "end": "2025-09-27",
+          "value": -75317000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-06-30-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 17725000,
+      "replacementValue": 17725000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026 (quarter ended 2026-07-04; vendor date 2026-06-30), statements of operations",
+          "accession": "0001628280-26-053776",
+          "unit": "USD thousands",
+          "quote": "Operating Income 28,331 17,725 44,051 22,700",
+          "start": "2025-03-30",
+          "end": "2025-06-28",
+          "value": 17725000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-06-30-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -29858000,
+      "replacementValue": -29858000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": -29858000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-03-31-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -33575000,
+      "replacementValue": -33031000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Bericht der Firma (berichtigte Vorperioden) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (33,575) 544 (33,031)",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": -33031000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-09-30-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -6536000,
+      "replacementValue": -6699000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Bericht der Firma (berichtigte Vorperioden) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (23,732) (163) (23,895)",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": -23895000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "value": -17196000,
+          "derivation": "third quarter 2025 = nine months 2025 as adjusted minus six months 2025 (no discrete Q3 2025 figure is filed)"
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-06-30-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -10412000,
+      "replacementValue": -10412000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": -10412000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-03-31-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -6950000,
+      "replacementValue": -6784000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Bericht der Firma (berichtigte Vorperioden) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "value": -17196000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": -10412000,
+          "derivation": "first quarter 2025 = six months 2025 minus second quarter 2025, both as adjusted in the newest filing"
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-06-30-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2619662000,
+      "replacementValue": 677429000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;677429.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 677429000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-03-31-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 624874000,
+      "replacementValue": 624406000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-01-01;2026-03-31;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;624406.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 624406000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-12-31-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 222439000,
+      "replacementValue": 209162000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip",
+          "page": "dfp_cia_aberta_DRE_con_2025.csv (DFP 2025, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-12-31;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;1812542.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 1812542000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-09-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;1603380.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": 1603380000,
+          "derivation": "fourth quarter 2025 = year 2025 (DFP) minus nine months 2025 (ITR 3T25)"
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-09-30-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 284041000,
+      "replacementValue": 284046000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-07-01;2025-09-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;284046.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 284046000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-06-30-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2242857000,
+      "replacementValue": 453286000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;PENÚLTIMO;2025-04-01;2025-06-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;453286.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 453286000
+        }
+      ]
+    },
+    {
+      "caseId": "hl-2025-12-31-annualGP",
+      "ticker": "HL",
+      "listingAliases": [
+        "HL.SW"
+      ],
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 622203000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn-Jahreswerte fehlen: Hecla hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026); der Anbieter führt noch den alten Stand (2025: 622,2 statt 509,8 Mio. USD). Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "Exhibit 99.1 (recast FY2025 statements), segment note, gross profit by segment, year 2025 (Total column)",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "unit": "USD thousands",
+          "quote": "Gross profit 322,646 132,950 53,665 509,261 544 509,805",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 509805000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "8-K of 2026-08-28, exhibit 99.1: FY2025 statements recast for Casa Berardi as discontinued operation, segment note",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "quote": "as a discontinued operation for all periods presented"
+        }
+      ]
+    },
+    {
+      "caseId": "hl-2024-12-31-annualGP",
+      "ticker": "HL",
+      "listingAliases": [
+        "HL.SW"
+      ],
+      "field": "annualGP",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 198210000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn-Jahreswerte fehlen: Hecla hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026); der Anbieter führt noch den alten Stand (2025: 622,2 statt 509,8 Mio. USD). Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "Exhibit 99.1 (recast FY2025 statements), segment note, gross profit by segment, year 2024 (Total column)",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "unit": "USD thousands",
+          "quote": "Gross profit/(loss) (a) 153,447 56,462 (26,754) 183,155 29 183,184",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 183184000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "8-K of 2026-08-28, exhibit 99.1: FY2025 statements recast for Casa Berardi as discontinued operation, segment note",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "quote": "as a discontinued operation for all periods presented"
+        }
+      ]
+    },
+    {
+      "caseId": "hl-2023-12-31-annualGP",
+      "ticker": "HL",
+      "listingAliases": [
+        "HL.SW"
+      ],
+      "field": "annualGP",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "expectedBadValue": 112949000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn-Jahreswerte fehlen: Hecla hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026); der Anbieter führt noch den alten Stand (2025: 622,2 statt 509,8 Mio. USD). Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "Exhibit 99.1 (recast FY2025 statements), segment note, gross profit by segment, year 2023 (Total column)",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "unit": "USD thousands",
+          "quote": "Gross profit (loss) (a) 124,609 6,552 (29,793) 101,368 (97) 101,271",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 101271000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "8-K of 2026-08-28, exhibit 99.1: FY2025 statements recast for Casa Berardi as discontinued operation, segment note",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "quote": "as a discontinued operation for all periods presented"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2026-06-30-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 15509637777.88,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Anbieterwert (Halbjahr 2026 minus erstes Quartal) mischt zwei Basen. Das Halbjahr ist nach dem Kauf eines Schwesterunternehmens (gleiche Konzernmutter) neu ausgewiesen, das erste Quartal nicht; einen Quartalswert der Firma gibt es nicht.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures, 营业收入 current period)",
+          "quote": "23,922,904,002.14",
+          "unit": "CNY",
+          "value": 23922904002.14,
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102918.PDF",
+          "page": "2 (2026年第一季度报告 (Q1 2026 report), key figures, 营业收入, no restatement of prior periods)",
+          "quote": "8,413,266,224.26",
+          "unit": "CNY",
+          "value": 8413266224.26,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "derivation": "vendor 15,509,637,777.88 = half year 2026 (restated basis) minus Q1 2026 (old basis)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures: prior period restated, reason business combination under common control)",
+          "quote": "同一控制下企业合并",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-06-30-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 6926120179.88,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Vorjahreswert steht auf der alten Basis; der Halbjahresbericht 2026 weist das Vorjahr nach dem Kauf eines Schwesterunternehmens neu aus (Halbjahr 2025: 19.942,3 statt 14.463,6 Mio. CNY). Ein Wachstum aus diesem Paar wäre falsch.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures, 营业收入 prior period 调整后 (restated))",
+          "quote": "19,942,313,524.35",
+          "unit": "CNY",
+          "value": 19942313524.35,
+          "start": "2025-01-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures, 营业收入 prior period 调整前 (as first reported))",
+          "quote": "14,463,566,927.57",
+          "unit": "CNY",
+          "value": 14463566927.57,
+          "start": "2025-01-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225504324.PDF",
+          "page": "10 (2026年半年度报告 (half-year report 2026), key figures: prior period restated, reason business combination under common control)",
+          "quote": "同一控制下企业合并",
+          "unit": "CNY"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "10 (2025年年度报告 (annual report 2025), 分季度主要财务指标 (quarterly key figures), 营业收入)",
+          "quote": "6,926,120,179.88",
+          "unit": "CNY",
+          "value": 6926120179.88,
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-09-30-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 16566018093.99,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Anbieter verteilt den Umsatz falsch auf das dritte und vierte Quartal 2025 (Firma 7.939,3 und 7.712,1 Mio. CNY, Anbieter 16.566,0 und −914,6).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "2 (2025年第三季度报告 (Q3 2025 report), key figures, 营业收入 本报告期 (third quarter))",
+          "quote": "7,939,331,625.29",
+          "unit": "CNY",
+          "value": 7939331625.29,
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "10 (2025年年度报告 (annual report 2025), 分季度主要财务指标 (quarterly key figures), 营业收入)",
+          "quote": "7,939,331,625.29",
+          "unit": "CNY",
+          "value": 7939331625.29,
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-12-31-revenueQ",
+      "ticker": "002128.SZ",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": -914626694.25,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz fehlt: Der Anbieter verteilt den Umsatz falsch auf das dritte und vierte Quartal 2025 (Firma 7.939,3 und 7.712,1 Mio. CNY, Anbieter 16.566,0 und −914,6).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "10 (2025年年度报告 (annual report 2025), 分季度主要财务指标 (quarterly key figures), 营业收入)",
+          "quote": "7,712,059,774.45",
+          "unit": "CNY",
+          "value": 7712059774.45,
+          "start": "2025-10-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 其中：营业收入)",
+          "quote": "30,114,958,327.31",
+          "unit": "CNY",
+          "value": 30114958327.31,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业收入)",
+          "quote": "22,402,898,552.86",
+          "unit": "CNY",
+          "value": 22402898552.86,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "derivation": "Q4 = year minus nine months = 7,712,059,774.45"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-09-30-grossProfitQ",
+      "ticker": "002128.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 5401617860.04,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Der Anbieter verteilt den Bruttogewinn falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.836,3 und 3.127,3 Mio. CNY, Anbieter 5.401,6 und 562,0).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业收入)",
+          "quote": "22,402,898,552.86",
+          "unit": "CNY",
+          "value": 22402898552.86,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业成本)",
+          "quote": "14,437,628,158.15",
+          "unit": "CNY",
+          "value": 14437628158.15,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-08-28/1224596636.PDF",
+          "page": "163 (2025年半年度报告 (half-year report 2025), consolidated income statement, 其中：营业收入)",
+          "quote": "14,463,566,927.57",
+          "unit": "CNY",
+          "value": 14463566927.57,
+          "start": "2025-01-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-08-28/1224596636.PDF",
+          "page": "163 (2025年半年度报告 (half-year report 2025), consolidated income statement, 其中：营业成本)",
+          "quote": "9,334,599,964.70",
+          "unit": "CNY",
+          "value": 9334599964.7,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "derivation": "Q3 gross profit = (9M revenue - 9M cost of sales) - (H1 revenue - H1 cost of sales) = 2,836,303,431.84; vendor gross profit = revenue - 营业成本 (vendor FY2025 annualGP 11,092,588,266.31 = 30,114,958,327.31 - 19,022,370,061.00)"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-12-31-grossProfitQ",
+      "ticker": "002128.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 562003443.4,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Der Anbieter verteilt den Bruttogewinn falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.836,3 und 3.127,3 Mio. CNY, Anbieter 5.401,6 und 562,0).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 其中：营业收入)",
+          "quote": "30,114,958,327.31",
+          "unit": "CNY",
+          "value": 30114958327.31,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 其中：营业成本)",
+          "quote": "19,022,370,061.00",
+          "unit": "CNY",
+          "value": 19022370061,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业收入)",
+          "quote": "22,402,898,552.86",
+          "unit": "CNY",
+          "value": 22402898552.86,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "9 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 其中：营业成本)",
+          "quote": "14,437,628,158.15",
+          "unit": "CNY",
+          "value": 14437628158.15,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "derivation": "Q4 gross profit = (FY revenue - FY cost of sales) - (9M revenue - 9M cost of sales) = 3,127,317,871.60"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-09-30-opIncQ",
+      "ticker": "002128.SZ",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 3850177471.91,
+      "replacementValue": null,
+      "reason": "Betriebsergebnis fehlt: Der Anbieter verteilt das Betriebsergebnis falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.113,9 und 2.015,5 Mio. CNY, Anbieter 3.850,2 und 279,2).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "10 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 三、营业利润)",
+          "quote": "6,124,827,885.47",
+          "unit": "CNY",
+          "value": 6124827885.47,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-08-28/1224596636.PDF",
+          "page": "163 (2025年半年度报告 (half-year report 2025), consolidated income statement, 三、营业利润)",
+          "quote": "4,010,970,385.84",
+          "unit": "CNY",
+          "value": 4010970385.84,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "derivation": "Q3 operating profit (营业利润) = 9M minus H1 = 2,113,857,499.63; vendor annualOpInc FY2025 = 8,140,325,993.09 (营业利润)"
+        }
+      ]
+    },
+    {
+      "caseId": "002128.sz-2025-12-31-opIncQ",
+      "ticker": "002128.SZ",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 279178135.34,
+      "replacementValue": null,
+      "reason": "Betriebsergebnis fehlt: Der Anbieter verteilt das Betriebsergebnis falsch auf das dritte und vierte Quartal 2025 (aus den Abschlüssen der Firma 2.113,9 und 2.015,5 Mio. CNY, Anbieter 3.850,2 und 279,2).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-15/1225102909.PDF",
+          "page": "167 (2025年年度报告 (annual report 2025), consolidated income statement, 三、营业利润)",
+          "quote": "8,140,325,993.09",
+          "unit": "CNY",
+          "value": 8140325993.09,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-24/1224728755.PDF",
+          "page": "10 (2025年第三季度报告 (Q3 2025 report), consolidated income statement year to date, 三、营业利润)",
+          "quote": "6,124,827,885.47",
+          "unit": "CNY",
+          "value": 6124827885.47,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "derivation": "Q4 operating profit = FY minus 9M = 2,015,498,107.62"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2026-06-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 19522537000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2026-03-31-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 8544829000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260514001477",
+          "page": "분기보고서 (2026.03), III. 재무에 관한 사항, 2-2. 연결 손익계산서",
+          "quote": "매출액 300,349 300,349 345,945 345,945 영업비용 334,680 334,680 376,641 376,641",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-12-31-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 3379799000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260317000830",
+          "page": "사업보고서 (2025.12), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (제 5 기 / 제 4 기 / 제 3 기)",
+          "quote": "매출액 1,411,521 1,649,858 2,008,116 영업비용 1,544,535 1,836,013 2,291,727",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-09-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 2947500000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20251113000629",
+          "page": "분기보고서 (2025.09), III. 재무에 관한 사항, 2-2. 연결 손익계산서",
+          "quote": "매출액 407,889 1,217,291 457,502 1,424,346 영업비용 422,432 1,327,759 496,173 1,576,469",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "402340.ks-2025-06-30-grossProfitQ",
+      "ticker": "402340.KS",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "KRW",
+      "expectedBadValue": 1742310000000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: SK Square weist keinen Bruttogewinn aus (auf den Umsatz folgen direkt die Betriebsaufwendungen); der Anbieterwert enthält die Gewinne aus Beteiligungen und liegt ein Vielfaches über dem Umsatz.",
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2026-06-30-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": 272167000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz laut Quartalsbericht der Firma statt der gespeicherten Null.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2862017/00.pdf",
+          "page": "8 (2027年３月期 第１四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第１四半期連結累計期間 自2026年４月１日 至2026年６月30日)",
+          "quote": "収益 251,116 272,167",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 272167000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2026-03-31-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 279965000000,
+      "replacementValue": 280001000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (längerer Zeitraum minus kürzerer); der Anbieterwert weicht um 36 Mio. JPY ab.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2800395/00.pdf",
+          "page": "9 (2026年３月期 決算短信〔ＩＦＲＳ〕, 連結損益計算書, 当連結会計年度 自2025年４月１日 至2026年３月31日)",
+          "quote": "収益 1,050,936 1,067,665",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 1067665000000,
+          "start": "2025-04-01",
+          "end": "2026-03-31"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2750562/00.pdf",
+          "page": "8 (2026年３月期 第３四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第３四半期連結累計期間 自2025年４月１日 至2025年12月31日)",
+          "quote": "収益 781,744 787,664",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 787664000000,
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "derivation": "Q4 FY2026 (Jan-Mar 2026) = year to 2026-03-31 minus nine months to 2025-12-31 = 280,001 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2025-12-31-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 274205000000,
+      "replacementValue": 274169000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (längerer Zeitraum minus kürzerer); der Anbieterwert weicht um 36 Mio. JPY ab.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2750562/00.pdf",
+          "page": "8 (2026年３月期 第３四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第３四半期連結累計期間 自2025年４月１日 至2025年12月31日)",
+          "quote": "収益 781,744 787,664",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 787664000000,
+          "start": "2025-04-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2704294/00.pdf",
+          "page": "8 (2026年３月期 第２四半期（中間期）決算短信〔ＩＦＲＳ〕, 要約中間連結損益計算書, 当中間連結会計期間 自2025年４月１日 至2025年９月30日)",
+          "quote": "収益 518,573 513,495",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 513495000000,
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "derivation": "Q3 FY2026 (Oct-Dec 2025) = nine months minus half year = 274,169 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2025-09-30-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": 262379000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (Halbjahr minus erstes Quartal) statt der gespeicherten Null.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2704294/00.pdf",
+          "page": "8 (2026年３月期 第２四半期（中間期）決算短信〔ＩＦＲＳ〕, 要約中間連結損益計算書, 当中間連結会計期間 自2025年４月１日 至2025年９月30日)",
+          "quote": "収益 518,573 513,495",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 513495000000,
+          "start": "2025-04-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2663669/00.pdf",
+          "page": "8 (2026年３月期 第１四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第１四半期連結累計期間 自2025年４月１日 至2025年６月30日)",
+          "quote": "収益 251,011 251,116",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 251116000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "derivation": "Q2 FY2026 (Jul-Sep 2025) = half year minus first quarter = 262,379 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2026-06-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1804157000,
+      "replacementValue": 1952136000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.03;Resultado Bruto;1952136.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1952136000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 20 (demonstrações dos resultados, três meses findos em 30 de junho de 2026 e 2025, consolidado: Abr a Jun/2026, Abr a Jun/2025 reapresentado)",
+          "quote": "LUCRO BRUTO 1.952.136 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2026-03-31-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1591911000,
+      "replacementValue": 1768103000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-01-01;2026-06-30;3.03;Resultado Bruto;3720239.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 3720239000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.03;Resultado Bruto;1952136.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1952136000,
+          "derivation": "Q1 2026 on the restated basis of the 2Q26 ITR = six months 2026 minus Q2 2026 = 1,768,103 thousand BRL (the 1Q26 ITR filed 1,712,453 before the reclassification of note 2.4)"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-12-31-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1737632000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Cemig hat die Kosten im Bericht zum zweiten Quartal 2026 neu gegliedert; für das vierte Quartal 2025 gibt es noch keinen Wert auf dieser Basis, und der Anbieterwert passt auch zum alten Stand nicht (Firma 1.645,9 Mio. BRL).",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip",
+          "page": "dfp_cia_aberta_DRE_con_2025.csv (DFP 2025, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-12-31",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-12-31;3.03;Resultado Bruto;7237316.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 7237316000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-09-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-09-30;3.03;Resultado Bruto;5591424.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": 5591424000,
+          "derivation": "old basis: Q4 2025 = year 7,237,316 minus nine months 5,591,424 = 1,645,892 thousand BRL; vendor 1,737,632; restated Q4 2025 not yet filed"
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-09-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1508569000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn fehlt: Cemig hat die Kosten im Bericht zum zweiten Quartal 2026 neu gegliedert; für das dritte Quartal 2025 gibt es noch keinen Wert auf dieser Basis, und der Anbieterwert passt auch zum alten Stand nicht (Firma 1.600,6 Mio. BRL).",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2025-09-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-07-01;2025-09-30;3.03;Resultado Bruto;1600625.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 1600625000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
+    },
+    {
+      "caseId": "cig-c-2025-06-30-grossProfitQ",
+      "ticker": "CIG-C",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2080901000,
+      "replacementValue": 2199760000,
+      "reason": "Bruttogewinn korrigiert: Bruttoergebnis laut Quartalsbericht der Firma auf der Basis des Berichts zum zweiten Quartal 2026; der Anbieter rechnet mit einem zu niedrigen Umsatz.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.03, DT_REFER 2026-06-30",
+          "quote": "CIA ENERGETICA DE MINAS GERAIS - CEMIG;002453;DF Consolidado - Demonstração do Resultado;REAL;MIL;PENÚLTIMO;2025-04-01;2025-06-30;3.03;Resultado Bruto;2199760.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 2199760000
+        },
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-06-30-qKk6PbzQ.pdf",
+          "unit": "BRL thousands",
+          "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
+          "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -4582,6 +6001,225 @@
           "accession": "0001868726-26-000036"
         }
       ]
+    },
+    {
+      "caseId": "hlx-retired-ticker-20261002",
+      "ticker": "HLX",
+      "reason": "Score fehlt: Der Ticker HLX ist seit dem Zusammenschluss mit Hornbeck Offshore (8-K vom 04.09.2026) nicht mehr notiert; die Firma wird als HOS gehandelt. Kurs und Börsenwert unter HLX stehen seit 01.09.2026 still.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 1291474000
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": 30827000
+        }
+      ],
+      "annualPairPeriod": "2025-12-31",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/866829/000119312526383687/d117247d8k.htm",
+          "page": "8-K of 2026-09-04 (same SEC registrant 866829 as Helix), introductory note and cover page",
+          "quote": "Helix was renamed",
+          "tradingSymbol": "HOS (New York Stock Exchange)",
+          "accession": "0001193125-26-383687"
+        }
+      ],
+      "vendorEvidence": "Yahoo chart meta for HLX: regularMarketPrice 10.6, regularMarketTime 2026-09-01T20:00:02Z (read 2026-10-02); stored daily closes for HLX stay at 10.60 with asOf 2026-09-01 through the 2026-10-01 price file"
+    },
+    {
+      "caseId": "yunji-pre-split-price-20261002",
+      "ticker": "2670.HK",
+      "reason": "Score fehlt: Der Anbieter zeigt für Yunji seit der Aktienteilung 1:10 (wirksam 23.09.2026) noch den Kurs vor der Teilung (97 HKD statt zuletzt 6,01 HKD) und damit einen Börsenwert von 8,57 statt rund 0,53 Mrd. USD. Mit dem richtigen Wert läge Yunji unter der Untergrenze von 800 Mio. USD.",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "sharesOutstanding"
+          ],
+          "expected": 62192438
+        },
+        {
+          "path": [
+            "meta",
+            "impliedSharesOutstanding"
+          ],
+          "expected": 69345982
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092300950.pdf",
+          "page": "HKEX Next Day Disclosure Return (FF305) of 2026-09-23, page 1, H shares, stock code 02670",
+          "quote": "into 10 Subdivided Shares",
+          "closingBalance": "693,459,820 issued H shares (excluding treasury shares) as at 23 September 2026"
+        }
+      ],
+      "vendorEvidence": "Yahoo chart meta for 2670.HK: regularMarketPrice 97 HKD, regularMarketTime 2026-09-22T08:08:11Z (read 2026-10-02); split-adjusted daily closes 9.50 HKD (2026-09-22) to 6.01 HKD (2026-09-30). Snapshot of run 36839128456: price 12.36 USD (= 97 HKD), marketCap 8,572,798,296 USD = 12.36 USD x 693,459,820. Estimate: 6.01 HKD x 693,459,820 x 0.12745 USD/HKD (snapshot rate) = 0.53 bn USD."
+    },
+    {
+      "caseId": "energisa-mixed-class-market-cap-20261002",
+      "ticker": "ENGI3.SA",
+      "reason": "Score fehlt: Der Anbieter rechnet den Börsenwert von Energisa mit 3,78 Mrd. Aktien zum Kurs der Stammaktie und zeigt 9,14 Mrd. USD. Energisa hat laut eigener Aktionärsstruktur vom 31.08.2026 975.954.372 Stamm- und 1.542.412.758 Vorzugsaktien; mit beiden Kursen sind das rund 5,4 Mrd. USD. Der Abruf kennt den Kurs der Vorzugsaktie nicht, deshalb bleibt Energisa gesperrt, bis er ihn kennt.",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "sharesOutstanding"
+          ],
+          "expected": 974895605
+        },
+        {
+          "path": [
+            "meta",
+            "impliedSharesOutstanding"
+          ],
+          "expected": 3777747805
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://ri.energisa.com.br/en/corporate-governance/shareholding-and-corporate-structure/",
+          "page": "Energisa investor relations, Shareholding and Corporate Structure, table \"OWNERSHIP STRUCTURE ON 08/31/2026\"",
+          "quote": "OWNERSHIP STRUCTURE ON 08/31/2026",
+          "tableRow": "Total capital stock | 975,954,372 | 100.00 | 1,542,412,758 | 100.00 | 2,518,367,130 | 100.00"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36839128456: marketCap 9,139,771,136 USD at 2.419 USD (ENGI3, 12.56 BRL), impliedSharesOutstanding 3,777,747,805. Yahoo closes 2026-09-30: ENGI3.SA 12.49 BRL, ENGI4.SA 10.15 BRL. Estimate: (975,954,372 x 12.49 + 1,542,412,758 x 10.15) BRL x 0.19263 USD/BRL (snapshot rate) = 5.36 bn USD."
+    },
+    {
+      "caseId": "jbs-frankfurt-wrong-share-count-20261002",
+      "ticker": "Z98.DE",
+      "reason": "Score fehlt: Der Anbieter rechnet den Börsenwert der Frankfurter JBS-Notierung mit 3,29 Mrd. Aktien und zeigt 37,4 Mrd. USD. Laut JBS sind es 1.070.929.187 Aktien (Klasse A und B), also rund 12,2 Mrd. USD. JBS selbst steht mit richtigem Börsenwert auf dem Board.",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "sharesOutstanding"
+          ],
+          "expected": 777003211
+        },
+        {
+          "path": [
+            "meta",
+            "impliedSharesOutstanding"
+          ],
+          "expected": 3289961848
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1791942/000179194226000004/jbsay-20260630.htm",
+          "page": "10-Q for the period ended 2026-06-30, cover page",
+          "quote": "As of June 30, 2026, there were 776,086,920 Class A common shares, par value of €0.01 per share, and 294,842,267 Class B common shares, par value of €0.10 per share, outstanding.",
+          "accession": "0001791942-26-000004"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36839128456: marketCap 37,401,989,416 USD at 11.37 USD, impliedSharesOutstanding 3,289,961,848 (the same wrong count the share-count hand table fingerprints for JBS). Estimate: 11.3685 USD x 1,070,929,187 = 12.18 bn USD."
+    },
+    {
+      "caseId": "wisdom-marine-twd-under-usd-20261002",
+      "ticker": "2637.TW",
+      "reason": "Score fehlt: Wisdom Marine berichtet in US-Dollar; der Anbieter führt alle Abschlusszahlen in Taiwan-Dollar unter dem Kennzeichen USD (Umsatz 2025: 16.949 Mio. statt 542,0 Mio. USD). Gesperrt, bis die Zahlen in der Berichtswährung vorliegen.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 16948954566.336
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": 3948354422.1056
+        }
+      ],
+      "annualPairPeriod": "2025-12-31",
+      "sources": [
+        {
+          "url": "https://wisdomlines.com.tw/storage/uploads/financial_report/financial_reports_2025q4_en.pdf",
+          "page": "10 (consolidated statements of comprehensive income, years ended 31 December 2025 and 2024, \"All Amounts Expressed in US Dollars\")",
+          "quote": "$541,957,260",
+          "unit": "USD",
+          "value": 541957260,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://wisdomlines.com.tw/storage/uploads/financial_report/financial_reports_2025q4_en.pdf",
+          "page": "17 (note on the basis of preparation)",
+          "quote": "statements are presented in US Dollar, which is the Company's functional currency"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36839128456 (2026-10-01): meta.reportingCurrency USD, fxRateApplied 1; annualRev newest 16,948,954,566.336 = 31.27 x the issuer USD revenue 541,957,260; the year before 20,862,634,594.28 = 32.88 x 634,431,170 (TWD per USD); revenueQ 2025-12-31 5,419,996,890.7858."
+    },
+    {
+      "caseId": "402340.ks-equity-method-revenue-20261002",
+      "ticker": "402340.KS",
+      "reason": "Score fehlt: Der Anbieter zählt bei SK Square die Gewinne aus Beteiligungen zum Umsatz (zweites Quartal 2026: 19.609,8 statt 328,5 Mrd. KRW laut Halbjahresbericht). Das dritte und vierte Quartal 2025 hat die Firma nach dem Verkauf von Dreamus noch nicht auf der neuen Basis veröffentlicht; ein Wachstum aus gemischten Basen wäre falsch.",
+      "fingerprint": [
+        {
+          "path": [
+            "timeseries",
+            "revenueQEnds",
+            0
+          ],
+          "expected": "2026-06-30"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
+          "unit": "KRW millions",
+          "value": 328549000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
+          "quote": "지분법이익 19,281,225 27,612,290 1,481,739 3,196,768",
+          "unit": "KRW millions"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260814003471",
+          "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 3. 연결재무제표 주석, 4. 부문정보 (연결), 각주 (*)",
+          "quote": "(주)드림어스컴퍼니 지분 매각으로 인하여 관련손익을 중단영업으로 분류함에 따라 비교표시된 전기 부문정보를 재작성하였습니다"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260317000830",
+          "page": "사업보고서 (2025.12), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (제 5 기 / 제 4 기 / 제 3 기)",
+          "quote": "중단영업이익(손실) (14,581) (18,481) 988,230",
+          "unit": "KRW millions"
+        },
+        {
+          "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20251113000629",
+          "page": "분기보고서 (2025.09), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (no discontinued-operations line: Dreamus still consolidated, old basis)",
+          "quote": "매출액 407,889 1,217,291 457,502 1,424,346 영업비용 422,432 1,327,759 496,173 1,576,469",
+          "unit": "KRW millions"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36984285974 (2026-10-02): KRW, fx 0.00073595974; revenueQ native (million KRW) 2026-06-30 19609774 = 328,549 + 19,281,225 (매출액 + 지분법이익), 2025-06-30 1837434 = 355,695 + 1,481,739; annualRev newest 10,455,553 vs 매출액 2025 1,411,521. One basis needs Q3 2025 and Q4 2025 restated for the Dreamus sale (decided 29.10.2025, DART 20251029800644); first expected with the 3Q 2026 report."
     }
   ]
 }

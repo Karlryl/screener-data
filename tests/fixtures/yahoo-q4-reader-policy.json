@@ -66,5 +66,6 @@
   "src/scoring/snapshot.js": { "mode": "upstream", "reason": "Pure dynamic normalizer receives corrected production inputs and intentionally raw research fixtures." },
   "lib/financial-known-cases.js": { "mode": "exempt", "reason": "Pure financial correction authority compares original provider evidence; invoked by the existing shared production adapter." },
   "lib/zero-financials-guard.js": { "mode": "exempt", "reason": "Pure financial correction authority compares original provider evidence; invoked by the existing shared production adapter." },
-  "scripts/financial-corrections-replay.js": { "mode": "exempt", "reason": "Read-only counterfactual replay intentionally compares original and corrected inputs; no published or historical data writes." }
+  "scripts/financial-corrections-replay.js": { "mode": "exempt", "reason": "Read-only counterfactual replay intentionally compares original and corrected inputs; no published or historical data writes." },
+  "scripts/fetch-exchange-quarters.js": { "mode": "exempt", "reason": "Reads frozen board-history PIT quarter gaps only to order the Taiwan fetch queue of the exchange-quarters store; writes no quarterly value into any snapshot, score or export." }
 }
