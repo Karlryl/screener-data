@@ -27,26 +27,29 @@
  * direkt testbar - siehe tests/vintage-commit-text.test.js.
  *
  * Usage:  node scripts/vintage-commit-text.js <rc> <vintage-date> --subject|--done
- *         rc: der Rueckgabewert von write-board-history.js (2 = suspect)
+ *         rc: der Rueckgabewert von write-board-history.js (2 = strukturell geflaggt)
+ *
+ * Tag 1396: the vintage is committed on every rc (the day directory is no longer excluded).
+ * rc=2 now means "committed WITH a structural flag", and the texts say exactly that.
  */
 
-// rc=2 heisst: mindestens ein Board wurde als suspect geflaggt, das Tagesverzeichnis
-// ist vom Commit ausgenommen. Jeder andere rc heisst: das Vintage ist dabei.
+// rc=2 heisst seit Tag 1396: mindestens ein Board ist strukturell geflaggt; das Vintage ist
+// trotzdem im Commit (mit Kennzeichen in der Board-Datei). Jeder andere rc: ohne Strukturflag.
 // Bewusst gegen den STRING '2' verglichen, weil der Wert aus einem Workflow-Output
-// kommt (immer String) - und Number('') waere 0, also faelschlich "committet".
-function vintageBlockiert(rc) {
+// kommt (immer String) - und Number('') waere 0, also faelschlich "ohne Flag".
+function strukturGeflaggt(rc) {
   return String(rc).trim() === '2';
 }
 
 function subject(rc, datum) {
-  return vintageBlockiert(rc)
-    ? `chore: nur Sidecars — vintage ${datum} SUSPECT, NICHT committet`
+  return strukturGeflaggt(rc)
+    ? `chore: board-history vintage ${datum} (strukturell geflaggt)`
     : `chore: board-history vintage ${datum}`;
 }
 
 function done(rc, datum) {
-  return vintageBlockiert(rc)
-    ? `✓ Sidecars committet — vintage ${datum} blieb wegen SUSPECT ausgeschlossen`
+  return strukturGeflaggt(rc)
+    ? `✓ board-history vintage ${datum} committet, mit strukturellem Kennzeichen`
     : `✓ board-history vintage ${datum} committet`;
 }
 
@@ -56,7 +59,7 @@ function isCanonicalIsoDate(datum) {
   return !Number.isNaN(instant.getTime()) && instant.toISOString().slice(0, 10) === datum;
 }
 
-module.exports = { vintageBlockiert, subject, done, isCanonicalIsoDate };
+module.exports = { strukturGeflaggt, subject, done, isCanonicalIsoDate };
 
 if (require.main === module) {
   const [rc, datum, was] = process.argv.slice(2);
