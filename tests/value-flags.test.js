@@ -12,19 +12,30 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+
+const tmpDirs = [];
+process.once('exit', () => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
+function mkTmp(p) { const d = fs.mkdtempSync(path.join(os.tmpdir(), p)); tmpDirs.push(d); return d; }
+function writeJson(p, o) { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(o)); }
+
+// Export snapshots with a currency proof (traded in USD), so the fixture's marketCap SURVIVES the
+// mapper: a mutant that blanks a flagged value is then visible (review 53c8f49, LOW test gap).
+// Set before the require: write-findash-export.js reads FINDASH_SNAPSHOTS_DIR at load time.
+const SNAP = mkTmp('vfs-');
+for (const t of ['AAA', 'BBB', 'CLOSED']) writeJson(path.join(SNAP, t + '.json'), { meta: { tradingCurrency: 'USD', tradingCurrencyAssumed: false } });
+process.env.FINDASH_SNAPSHOTS_DIR = SNAP;
+
 const V = require('../lib/value-open-items.js');
 const X = require('../scripts/write-findash-export.js');
 const W = require('../scripts/write-board-history.js');
+const R40 = require('../scripts/write-rule40-export.js');
+const { snapshot: r40Snapshot, boardZeile, baueExport } = require('./rule40-fixture.js');
 
 let fail = 0;
 function check(name, fn) {
   try { fn(); console.log('  ok   ' + name); }
   catch (e) { fail++; console.log('  FAIL ' + name + ': ' + (e && e.message || e)); }
 }
-const tmpDirs = [];
-process.once('exit', () => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
-function mkTmp(p) { const d = fs.mkdtempSync(path.join(os.tmpdir(), p)); tmpDirs.push(d); return d; }
-function writeJson(p, o) { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(o)); }
 
 // A list state in the shape scripts/value-open-items.js writes (docs/value-open-items.md).
 function item(o) {
@@ -93,6 +104,36 @@ check('F3 readAcceptances: acceptedAt must be a real calendar day (round trip), 
   const r = V.readAcceptances({ acceptances: [entry('2026-13-45'), entry('2026-02-30'), entry('2026-02-28'), entry('2028-02-29'), entry('2026-9-01')] });
   assert.deepStrictEqual(r.entries.map((e) => e.acceptedAt), ['2026-02-28', '2028-02-29'], 'only real days are kept');
   assert.strictEqual(r.warnings.length, 3, 'one warning per rejected entry');
+  assert.ok(r.warnings.every((w) => w.includes('real calendar day')), 'warning names the rule: ' + r.warnings[0]);
+});
+
+check('F4 readValueFlags: a malformed CELL in a schema-valid list is dropped with a ::warning::, the other cells stay', () => {
+  const dir = mkTmp('vfm-');
+  const st = JSON.parse(JSON.stringify(STATE));
+  st.items[0].cells[0].firstSeen = '01.10.2026';
+  const file = path.join(dir, 'l.json'); writeJson(file, st);
+  V.validateState(JSON.parse(fs.readFileSync(file, 'utf8')));   // the list itself is schema-valid
+  const warns = [];
+  const m = V.readValueFlags(file, (s) => warns.push(s));
+  assert.deepStrictEqual(m.get('AAA'), AAA_FLAGS.slice(1), 'only the bad cell is dropped');
+  assert.strictEqual(warns.length, 1, 'one warning: ' + warns.join(' | '));
+  assert.ok(warns[0].startsWith('::warning::') && warns[0].includes('AAA'), warns[0]);
+  for (const f of m.get('AAA')) assert.deepStrictEqual(V.valueFlagProblems(f), [], 'kept flags pass the contract rule');
+  // every cell bad -> the ticker carries no key at all (absence, never an empty list)
+  st.items[0].cells[1].firstSeen = 'x'; st.items[1].cells[0].factor = 2;
+  writeJson(file, st);
+  assert.strictEqual(V.readValueFlags(file, () => {}).has('AAA'), false);
+});
+
+check('F5 readValueFlags: a list not written for the run day warns (stale list), flags still mark', () => {
+  const dir = mkTmp('vfd-');
+  const file = path.join(dir, 'l.json'); writeJson(file, STATE);
+  const warns = [];
+  assert.strictEqual(V.readValueFlags(file, (s) => warns.push(s), '2026-10-01').size, 1);
+  assert.strictEqual(warns.length, 0, 'same day: no warning');
+  assert.strictEqual(V.readValueFlags(file, (s) => warns.push(s), '2026-10-02').size, 1, 'stale list still marks');
+  assert.strictEqual(warns.length, 1);
+  assert.ok(warns[0].startsWith('::warning::') && warns[0].includes('2026-10-01') && warns[0].includes('2026-10-02'), warns[0]);
 });
 
 // ── 2) the export (scripts/write-findash-export.js) ─────────────────────────
@@ -101,6 +142,7 @@ const boardRow = (ticker) => ({
   overview: { kind: 'gp', value: 0.4, companion: 50 }, country: 'United States', region: 'North America',
   sector: 'Technology', marketCap: 5e9, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
   profitTier: 'langfristig-profitabel', ipoYear: 1999, cohortN: 90, cohortFallback: false, coverageAxes: '7/7',
+  revGrowthYoYPct: 25,
 });
 const ovRow = (ticker) => ({ ...boardRow(ticker), formulaId: 'energy', overviewKind: 'gp', overviewValue: 0.4, overviewCompanion: 50, overview: undefined });
 const svRow = (ticker) => ({ ticker, name: 'Fixture ' + ticker, runwayQuarters: 9999, lamps: [], country: 'Germany', region: 'Europe',
@@ -125,6 +167,10 @@ check('E1 export rows: flagged ticker carries valueFlags (all three mappers), ot
     assert.strictEqual(JSON.stringify(without(a)), JSON.stringify(plain[i][0]), 'byte-identical without the key');
     assert.deepStrictEqual(b, plain[i][1]); assert.deepStrictEqual(c, plain[i][2]);
     for (const k of ['valueFlags']) assert.strictEqual(k in plain[i][0], false, 'no list loaded -> no key');
+    if (i < 2) {   // board + overview mapper: the flagged values survive, so blanking them would show
+      assert.strictEqual(a.marketCap, 5e9, 'flagged marketCap kept, not blanked');
+      assert.strictEqual(a.revGrowthYoYPct, 25, 'flagged growth kept, not blanked');
+    }
   }
   X.ladeValueFlags(path.join(dir, 'absent.json'), () => {});
   assert.strictEqual('valueFlags' in X.mapBoardRow(boardRow('AAA'), 0), false, 'reloading a missing list clears the flags');
@@ -205,6 +251,76 @@ check('B3 run(): missing or unreadable list -> vintage written without any value
     assert.ok(rowsOf(readV(base)).every((r) => !('valueFlags' in r)), 'no row flagged');
     assert.ok(logs.some((l) => l.startsWith('::warning::') && l.includes('value-open-items')), 'warning line logged: ' + logs.join(' | '));
   }
+});
+
+check('B4 run(): the flagged row keeps its pit values (marketCap, revenueQ); the vintage equals an unflagged run except valueFlags', () => {
+  const runOnce = (withList) => {
+    const base = bhBase();
+    writeJson(path.join(base, 'snapshots', 'AAA.json'), { meta: {}, marketCap: { value: 7e9 },
+      timeseries: { revenueQ: [{ value: 400 }, { value: 100 }], revenueQEnds: ['2026-06-30', '2026-03-31'] } });
+    if (withList) writeJson(path.join(base, 'data-health', 'value-open-items.json'), STATE);
+    const orig = console.warn; console.warn = () => {};
+    try { W.run({ baseDir: base, date: '2026-07-13' }); } finally { console.warn = orig; }
+    return readV(base);
+  };
+  const plain = runOnce(false);
+  const flagged = runOnce(true);
+  const a = rowsOf(flagged)[0];
+  assert.deepStrictEqual(a.valueFlags, AAA_FLAGS);
+  assert.strictEqual(a.pit.marketCap, 7e9, 'flagged pit.marketCap kept, not blanked');
+  assert.strictEqual(a.pit.revenueQ[0], 400, 'flagged pit.revenueQ kept, not blanked');
+  const strip = (v) => JSON.stringify({ ...v, cohort: { ...v.cohort, profitable: v.cohort.profitable.map(without), unprofitable: v.cohort.unprofitable.map(without) } });
+  assert.strictEqual(strip(flagged), strip(plain), 'vintage identical except valueFlags');
+});
+
+// ── 4) the rule40 board (scripts/write-rule40-export.js, review 53c8f49 MEDIUM) ───────────
+// On-board names inherit the flags of their full-board row (written by the main export from the
+// same list); names without a board row get them from the list file; absence otherwise.
+function r40Fixture(withFlagsOnRow) {
+  const f = baueExport([
+    { row: boardZeile({ ticker: 'AAA', revGrowthYoYPct: 60, ...(withFlagsOnRow ? { valueFlags: AAA_FLAGS } : {}) }) },
+    { row: boardZeile({ ticker: 'BBB', revGrowthYoYPct: 40, name: 'Beta AG' }) },
+  ]);
+  tmpDirs.push(f.dir);
+  for (const t of ['OFF', 'CLOSED']) {   // no board row: off-board names of the routed universe
+    const s = r40Snapshot({ ticker: t }); s.meta.name = t + ' Corp';
+    writeJson(path.join(f.snapshotsDir, t + '.json'), s);
+  }
+  return f;
+}
+const OFF_FLAG = { field: 'grossProfitQ', periodEnd: '2026-06-30', acceptedValue: 10, newValue: 60, factor: 6, firstSeen: '2026-09-28', labels: ['nicht-auf-board'] };
+const STATE_R40 = { ...STATE, items: [...STATE.items, item({ company: 'OFF', field: 'grossProfitQ', firstSeen: '2026-09-28', labels: ['nicht-auf-board'], cells: [
+  { periodEnd: '2026-06-30', acceptedValue: 10, newValue: 60, factor: 6, firstSeen: '2026-09-28' }] })] };
+const r40Rows = (f) => JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8')).rows;
+
+check('R1 rule40 rows: on-board flags from the board row, off-board flags from the list; no key otherwise; nothing else changes', () => {
+  const f = r40Fixture(true);
+  const list = path.join(f.dir, 'value-open-items.json'); writeJson(list, STATE_R40);
+  R40.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir, valueOpenItemsFile: list });
+  const rows = r40Rows(f);
+  const by = new Map(rows.map((r) => [r.ticker, r]));
+  assert.deepStrictEqual([...by.keys()].sort(), ['AAA', 'BBB', 'CLOSED', 'OFF'], 'fixture: all four on the board');
+  assert.deepStrictEqual(by.get('AAA').valueFlags, AAA_FLAGS, 'on-board row carries its flags');
+  assert.deepStrictEqual(by.get('OFF').valueFlags, [OFF_FLAG], 'off-board row carries the list flags');
+  assert.strictEqual('valueFlags' in by.get('BBB'), false, 'no item: no key');
+  assert.strictEqual('valueFlags' in by.get('CLOSED'), false, 'closed item: no key');
+  const res = R40.check({ v1Dir: f.v1Dir, outDir: f.outDir });
+  assert.ok(res.ok, 'check accepts valid valueFlags: ' + (res.errors || []).join(' | '));
+  // same inputs without any flag source: identical board except valueFlags
+  const g = r40Fixture(false);
+  R40.build({ v1Dir: g.v1Dir, snapshotsDir: g.snapshotsDir, outDir: g.outDir });
+  assert.deepStrictEqual(rows.map(without), r40Rows(g), 'only valueFlags differs');
+});
+
+check('R2 rule40 --check: a malformed valueFlags on a written row trips the gate', () => {
+  const f = r40Fixture(true);
+  R40.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+  const p = path.join(f.outDir, 'overview.json');
+  const ov = JSON.parse(fs.readFileSync(p, 'utf8'));
+  ov.rows.find((r) => r.ticker === 'AAA').valueFlags = [];
+  fs.writeFileSync(p, JSON.stringify(ov));
+  const res = R40.check({ v1Dir: f.v1Dir, outDir: f.outDir });
+  assert.ok(!res.ok && res.errors.some((e) => e.includes('valueFlags')), 'TAMPER SLIPPED: ' + JSON.stringify(res.errors));
 });
 
 W._setPaths();
