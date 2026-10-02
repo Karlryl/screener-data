@@ -1,5 +1,5 @@
 {
-  "source": "CI snapshots 2026-09-29 (first eight) and 2026-09-30 run 36690140002 (13 BDC/closed-end funds; CARG, PLUS, DCO, INFQ, VCTR, SLCE3.SA, CLSC3.SA, HOS, TYG, OLPX), retained public vendor evidence; HLX from run 36839128456 (2026-10-01); 2670.HK, ENGI3.SA, Z98.DE from run 36839128456 (2026-10-01); HIVE (no case: the issuer files no operating line; vendor packet must stay untouched) from run 36839128456 (2026-10-01); HL (annual gross profit cases) from run 36839128456 (2026-10-01); 2637.TW (hold, statements in TWD under a USD label) from run 36839128456 (2026-10-01); 002128.SZ (withheld misallocated and mixed-basis quarters) from run 36839128456 (2026-10-01); 402340.KS (hold: vendor revenue includes equity-method gains; gross-profit null cases) from run 36984285974 (2026-10-02)",
+  "source": "CI snapshots 2026-09-29 (first eight) and 2026-09-30 run 36690140002 (13 BDC/closed-end funds; CARG, PLUS, DCO, INFQ, VCTR, SLCE3.SA, CLSC3.SA, HOS, TYG, OLPX), retained public vendor evidence; HLX from run 36839128456 (2026-10-01); 2670.HK, ENGI3.SA, Z98.DE from run 36839128456 (2026-10-01); HIVE (no case: the issuer files no operating line; vendor packet must stay untouched) from run 36839128456 (2026-10-01); HL (annual gross profit cases) from run 36839128456 (2026-10-01); 2637.TW (hold, statements in TWD under a USD label) from run 36839128456 (2026-10-01); 002128.SZ (withheld misallocated and mixed-basis quarters) from run 36839128456 (2026-10-01); 402340.KS (hold: vendor revenue includes equity-method gains; gross-profit null cases) from run 36984285974 (2026-10-02); 8020.T (revenue quarters from the tanshin, two stored zeros) from run 36984285974 (2026-10-02)",
   "snapshots": {
     "BANPU.BK": {
       "identifier": {
@@ -27512,6 +27512,546 @@
       },
       "_pullMode": "price-only",
       "_pullModeAt": "2026-10-02T09:08:18.373Z"
+    },
+    "8020.T": {
+      "identifier": {
+        "primary": "ISIN",
+        "value": "TICKER:8020.T"
+      },
+      "meta": {
+        "ticker": "8020.T",
+        "name": "Kanematsu Corporation",
+        "nameSource": "longName",
+        "sector": "Industrials",
+        "industry": "Conglomerates",
+        "region": "JP",
+        "exchangeName": "Tokyo",
+        "reportingCurrency": "USD",
+        "tradingCurrency": "JPY",
+        "tradingCurrencyAssumed": false,
+        "_ccyMissingCompletely": false,
+        "fetchedAt": "2026-09-04T07:46:08.959Z",
+        "asOf": "2026-10-02T09:08:26.152Z",
+        "filingDate": null,
+        "firstTradeDate": "2001-01-04T00:00:00.000Z",
+        "ipoYear": 2001,
+        "opIncSource": "yahoo-adjusted",
+        "gpZeroCodingNulled": false,
+        "gpZeroCodingYears": 0,
+        "fcfMarginTTMSuppressed": false,
+        "ccyAmbiguous": false,
+        "sharesOutstanding": 166410767,
+        "floatShares": 166156061,
+        "impliedSharesOutstanding": 166410767,
+        "institutionsPercentHeld": 0.4347,
+        "institutionsCount": 130,
+        "insidersPercentHeld": 0.02157,
+        "mostRecentQuarter": "2026-06-30T00:00:00.000Z",
+        "country": "Japan",
+        "fullTimeEmployees": 8604,
+        "fxRateSourceReporting": "fx-rates.json @ 2026-09-04T07:25:18.150Z",
+        "mischVerhaeltnisFaktor": 1,
+        "reportingCurrencyOriginal": "JPY",
+        "fxRateApplied": 0.006397216,
+        "fxConverted": true,
+        "fundamentalsAsOf": "2026-09-04T07:46:08.959Z",
+        "fxRateSourceTrading": "fx-rates.json @ 2026-10-02T08:45:46.333Z",
+        "tradingCurrencyOriginal": "JPY",
+        "tradingFxRateApplied": 0.0063445335,
+        "priceCurrency": "USD"
+      },
+      "marketCap": {
+        "value": 2362349582.4782133,
+        "source": "yahoo_quote",
+        "confidence": 0.9,
+        "asOf": "2026-10-02T09:08:26.152Z"
+      },
+      "metrics": {
+        "revenueTTM": {
+          "value": 6964751501.453426,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "revenueGrowthYoY": {
+          "value": 8.4,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "grossMargin": {
+          "value": 16.216,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "operatingMargin": {
+          "value": 6.4229994999999995,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "fcfMarginTTM": {
+          "value": 2.785884818998816,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "sbcRatio": null,
+        "insidersOwnership": {
+          "value": 0.02157,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "cashRunway": null,
+        "priceSales": {
+          "value": 0.34765843,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "forwardPE": {
+          "value": 6.4433427,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "pe": {
+          "value": 11.681475,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "ebitda": {
+          "value": 465455045.904171,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "ebitdaMargins": {
+          "value": 6.683,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "enterpriseValue": {
+          "value": 3459861716.683194,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "enterpriseToEbitda": {
+          "value": 7.433,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "enterpriseToRevenue": {
+          "value": 0.497,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.9,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "beta": {
+          "value": 0.432,
+          "source": "yahoo_quoteSummary",
+          "confidence": 0.8,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "debtToEquity": {
+          "value": 83.248,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "currentRatio": {
+          "value": 1.443,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "quickRatio": {
+          "value": 0.77,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "returnOnEquity": {
+          "value": 18.011999,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "returnOnAssets": {
+          "value": 5.116,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "targetMeanPrice": {
+          "value": 17.1125528,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "targetMedianPrice": {
+          "value": 17.1125528,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "numberOfAnalystOpinions": {
+          "value": 2,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "recommendationMean": {
+          "value": 1.5,
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        },
+        "recommendationKey": {
+          "value": "strong_buy",
+          "source": "yahoo.financialData",
+          "confidence": 0.7,
+          "asOf": "2026-09-04T07:46:08.959Z"
+        }
+      },
+      "external": {
+        "estimateRevisions": {
+          "0y": {
+            "upLast7Days": 1,
+            "downLast7Days": 0,
+            "upLast30Days": 1,
+            "downLast30Days": 0,
+            "upLast60Days": null,
+            "downLast60Days": null,
+            "upLast90Days": null,
+            "downLast90Days": null
+          },
+          "+1y": {
+            "upLast7Days": 2,
+            "downLast7Days": 0,
+            "upLast30Days": 2,
+            "downLast30Days": 0,
+            "upLast60Days": null,
+            "downLast60Days": null,
+            "upLast90Days": null,
+            "downLast90Days": null
+          }
+        },
+        "revenueEstimates": {
+          "0y": {
+            "avg": 1114000000000,
+            "growth": 1.7855,
+            "numberOfAnalysts": 1
+          },
+          "+1y": {
+            "avg": 1163000000000,
+            "growth": 0.044,
+            "numberOfAnalysts": 1
+          }
+        },
+        "earningsHistory": [
+          {
+            "quarter": "2025-12-31T00:00:00.000Z",
+            "period": "-3q",
+            "epsActual": 48.66,
+            "epsEstimate": null,
+            "epsDifference": null,
+            "surprisePercent": null
+          },
+          {
+            "quarter": "2026-06-30T00:00:00.000Z",
+            "period": "-1q",
+            "epsActual": 70.33,
+            "epsEstimate": null,
+            "epsDifference": null,
+            "surprisePercent": null
+          }
+        ]
+      },
+      "timeseries": {
+        "revenueQ": [
+          {
+            "value": 0
+          },
+          {
+            "value": 1790996577.44
+          },
+          {
+            "value": 1754148613.28
+          },
+          {
+            "value": 0
+          }
+        ],
+        "opIncQ": [],
+        "grossProfitQ": [
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          },
+          {
+            "value": 0
+          }
+        ],
+        "netIncomeQ": [
+          {
+            "value": 74847427.2
+          },
+          {
+            "value": 53244028.768
+          },
+          {
+            "value": 51580752.607999995
+          },
+          {
+            "value": 58553718.048
+          }
+        ],
+        "revenueQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30"
+        ],
+        "grossProfitQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30"
+        ],
+        "opIncQEnds": []
+      },
+      "annual": {
+        "annualRev": [
+          {
+            "value": 6830083620.639999
+          },
+          {
+            "value": 6723064594.176
+          },
+          {
+            "value": 6307610195.488
+          },
+          {
+            "value": 5830473840.128
+          }
+        ],
+        "annualOpInc": [
+          {
+            "value": 311307722.208
+          },
+          {
+            "value": 269009330.016
+          },
+          {
+            "value": 280645865.92
+          },
+          {
+            "value": 248826113.53599998
+          }
+        ],
+        "annualNetIncome": [
+          {
+            "value": 208056655.968
+          },
+          {
+            "value": 175725126.304
+          },
+          {
+            "value": 148530561.088
+          },
+          {
+            "value": 118828287.2
+          }
+        ],
+        "annualGP": [
+          {
+            "value": 1080579343.424
+          },
+          {
+            "value": 991613260.512
+          },
+          {
+            "value": 911967921.312
+          },
+          {
+            "value": 837357191.104
+          }
+        ],
+        "annualFCF": [
+          {
+            "value": 333288556.384
+          },
+          {
+            "value": 309625254.4
+          },
+          {
+            "value": 197194183.2
+          },
+          {
+            "value": -37314960.927999996
+          }
+        ],
+        "annualOCF": [
+          {
+            "value": 368882666.208
+          },
+          {
+            "value": 373143212.064
+          },
+          {
+            "value": 227625739.71199998
+          },
+          {
+            "value": -1893575.936
+          }
+        ],
+        "annualBalance": [
+          {
+            "totalCash": 373712564.288,
+            "totalDebt": 990583308.736,
+            "totalAssets": 4689216902.944,
+            "accountsReceivable": 1651786760.064,
+            "netPPE": 381766659.232,
+            "currentAssets": 3460215751.104,
+            "currentLiabilities": 2458520478.176,
+            "totalLiabilities": 3259605454.56,
+            "totalEquity": 1333122239.4559999
+          },
+          {
+            "totalCash": 363227527.264,
+            "totalDebt": 1144461942.3999999,
+            "totalAssets": 4409837685.792,
+            "accountsReceivable": 1625705310.432,
+            "netPPE": 355634031.872,
+            "currentAssets": 3335297314.272,
+            "currentLiabilities": 2356651210.592,
+            "totalLiabilities": 3206348631.36,
+            "totalEquity": 1112744545.472
+          },
+          {
+            "totalCash": 341809648.096,
+            "totalDebt": 1372490706.72,
+            "totalAssets": 4640201433.952,
+            "accountsReceivable": 1836762260.704,
+            "netPPE": 301884623.04,
+            "currentAssets": 3476970059.808,
+            "currentLiabilities": 2652765544.7999997,
+            "totalLiabilities": 3514297815.1679997,
+            "totalEquity": 1019191658.688
+          },
+          {
+            "totalCash": 508335577.792,
+            "totalDebt": 1457880745.888,
+            "totalAssets": 4334676795.007999,
+            "accountsReceivable": 1573011442.24,
+            "netPPE": 301871828.608,
+            "currentAssets": 3300669184.064,
+            "currentLiabilities": 2792186470.304,
+            "totalLiabilities": 3417168884.64,
+            "totalEquity": 822202186.4
+          }
+        ],
+        "annualRnD": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualRevEnds": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualGPEnds": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualOpIncEnds": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualSBC": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "annualCapex": [
+          -35594109.824,
+          -63517957.664,
+          -30431556.512,
+          -35421384.992
+        ],
+        "annualSGA": [
+          787497289.6,
+          736562655.808,
+          679237203.232,
+          616083886.88
+        ],
+        "annualDepreciation": [
+          105023095.072,
+          101293518.144,
+          94301361.056,
+          88140842.048
+        ],
+        "annualShares": [
+          166987000,
+          167665000,
+          167664000,
+          167425301
+        ],
+        "annualRepurchase": [
+          -6397.215999999999,
+          -8002917.216,
+          -44780.512,
+          null
+        ],
+        "annualDividendsPaid": [
+          -58432170.944,
+          -52041352.16,
+          -44032037.728,
+          -38671170.72
+        ],
+        "annualNetCommonStockIssuance": [
+          -6397.215999999999,
+          -8002917.216,
+          -44780.512,
+          null
+        ]
+      },
+      "insiderActivity": null,
+      "_quality": {
+        "grade": "A+",
+        "nanRatio": null,
+        "missingFields": null,
+        "criticalMissing": false,
+        "computedAt": "2026-09-04T07:46:22.584Z",
+        "staleSincePriceOnly": "2026-10-02T09:08:26.152Z"
+      },
+      "price": {
+        "regularMarketPrice": 14.19589370625,
+        "currencyUnit": "USD",
+        "currency": "JPY"
+      },
+      "_pullMode": "price-only",
+      "_pullModeAt": "2026-10-02T09:08:26.152Z"
     }
   }
 }

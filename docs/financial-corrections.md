@@ -509,6 +509,23 @@ Bruttogewinn: Die Firma gliedert nach Kostenarten und weist keinen Bruttogewinn 
 
 Wirkung am festen Tag: SK Square verlässt das volle Halbleiter-Board (Growth profitabel, 48,1, Rang 151, Wachstum +967,2 %) und die Quality-Liste Halbleiter (59,9, Rang 83, in den Top 100); dort rückt 3443.TW von Platz 101 auf 100. Indirekt über die Live-Kalibrierung: Growth 198 Scores, Quality 285 Scores (höchstens 0,3), Smallcap keine. Ausreißer Growth: 002739.SZ (Software/Komm., profitabel) 59,9 Rang 146 → 29,9 Rang 451. Ursache ist der Zyklus-Dämpfer: Seine Schwelle ist das 75. Perzentil der Umsatz-Rückgänge aller gerouteten Firmen (`src/scoring/score.js` Zeilen 1025 bis 1027), und der Faktor halbiert den Score, sobald eine Firma mit schwankendem Betriebsergebnis die Schwelle erreicht (Zeilen 691 und 696, `CYCLE_DAMPER_KD` 0,5). Ohne SK Square sinkt die Schwelle minimal, und 002739.SZ liegt danach darauf. Das ist keine Änderung an den Zahlen von 002739.SZ, sondern eine Kante der Live-Kalibrierung, die jede Änderung des Universums auslösen kann. Übrige Growth-Scores höchstens 0,2; 421 Growth- und 36 Quality-Zeilen ändern nur den Rang, außer 002739.SZ um höchstens 4 Plätze.
 
+### Kanematsu (8020.T): vier Umsatzquartale aus den Quartalsberichten
+
+Problem: Der Anbieter führt seit 05.09. für das Quartal April bis Juni 2026 den Umsatz 0, ebenso für Juli bis September 2025; seine beiden übrigen Quartale weichen um je 36 Mio. JPY von den Werten der Firma ab (Summe gleich). Die Firma berichtet nach IFRS, Geschäftsjahr bis März, Beträge in Millionen JPY auf ganze Millionen abgeschnitten („百万円未満切捨て“).
+
+Lösung: alle vier gespeicherten Quartale aus den 決算短信 der Firma (TDnet über eir-parts), `coversThrough` 30.06.2026; kein Quartal bleibt ungeprüft (0 Zellen `period-not-verified`). Zwei Quartale sind Differenzen zweier Werte desselben Geschäftsjahres; durch das Abschneiden kann ein abgeleitetes Quartal um höchstens 1 Mio. JPY vom genauen Wert abweichen.
+
+| Quartal | Anbieter (Mio. JPY) | Firma (Mio. JPY) | Quelle (wörtlich, Seite 8 bzw. 9, Zeile „収益“) |
+| --- | --- | --- | --- |
+| Apr bis Jun 2026 | 0 | 272.167 | 1. Quartal 2027/3: „収益 251,116 272,167“ |
+| Jan bis Mrz 2026 | 279.965 | 280.001 | Jahr 2026/3 „収益 1,050,936 1,067,665“ minus neun Monate „収益 781,744 787,664“ |
+| Okt bis Dez 2025 | 274.205 | 274.169 | neun Monate 787.664 minus Halbjahr „収益 518,573 513,495“ |
+| Jul bis Sep 2025 | 0 | 262.379 | Halbjahr 513.495 minus 1. Quartal 2026/3 „収益 251,011 251,116“ |
+
+Wirkung am festen Tag: Score und Rang unverändert (Industrials profitabel 41,4, Rang 1.369; Quality Industrials 45,6, Rang 1.186), Wachstum +1,59 % unverändert. Die gespeicherte Reihe hat kein Vorjahresquartal (April bis Juni 2025 fehlt beim Anbieter), deshalb liest kein Wachstumsbein die korrigierten Quartale; sie stehen jetzt richtig im Datenstand und in den Gründen der Exportzeile. Indirekt: keine Bewegung (alle anderen Zeilen gleich).
+
+Offen: Der Bruttogewinn steht beim Anbieter in allen vier Quartalen auf 0, obwohl die Firma ihn ausweist („売上総利益“, zum Beispiel April bis Juni 2026 46.926 Mio. JPY); nicht Teil dieses Auftrags. Nächstes Quartal (Juli bis September 2026, Halbjahresbericht Anfang November, Termin nicht geprüft) bleibt leer, bis es eingetragen ist.
+
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
 Alle 122 gemessenen Scoreänderungen stehen in der folgenden Tabelle und in financial-corrections-board-changes.csv. Alle 9900 Zellen stehen in financial-corrections-shadow-cells.csv. 26 sichtbare Auswirkungen bleiben auch bei festgehaltener Vergleichskalibrierung; die übrigen entstehen bei der regulären Neukalibrierung. Keine dieser breiten Änderungen ist aktiviert.

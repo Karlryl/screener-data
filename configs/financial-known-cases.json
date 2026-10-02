@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02f",
+  "revision": "2026-10-02g",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -33,7 +33,8 @@
     { "ticker": "PLUS", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "DCO", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
-    { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" }
+    { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -5502,6 +5503,124 @@
           "page": "반기보고서 (2026.06), III. 재무에 관한 사항, 2-2. 연결 손익계산서 (3개월 / 누적, 당반기 / 전반기)",
           "quote": "매출액 328,549 628,898 355,695 701,640 영업비용 360,319 694,999 420,105 796,746",
           "unit": "KRW millions"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2026-06-30-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": 272167000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz laut Quartalsbericht der Firma statt der gespeicherten Null.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2862017/00.pdf",
+          "page": "8 (2027年３月期 第１四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第１四半期連結累計期間 自2026年４月１日 至2026年６月30日)",
+          "quote": "収益 251,116 272,167",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 272167000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2026-03-31-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 279965000000,
+      "replacementValue": 280001000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (längerer Zeitraum minus kürzerer); der Anbieterwert weicht um 36 Mio. JPY ab.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2800395/00.pdf",
+          "page": "9 (2026年３月期 決算短信〔ＩＦＲＳ〕, 連結損益計算書, 当連結会計年度 自2025年４月１日 至2026年３月31日)",
+          "quote": "収益 1,050,936 1,067,665",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 1067665000000,
+          "start": "2025-04-01",
+          "end": "2026-03-31"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2750562/00.pdf",
+          "page": "8 (2026年３月期 第３四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第３四半期連結累計期間 自2025年４月１日 至2025年12月31日)",
+          "quote": "収益 781,744 787,664",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 787664000000,
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "derivation": "Q4 FY2026 (Jan-Mar 2026) = year to 2026-03-31 minus nine months to 2025-12-31 = 280,001 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2025-12-31-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 274205000000,
+      "replacementValue": 274169000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (längerer Zeitraum minus kürzerer); der Anbieterwert weicht um 36 Mio. JPY ab.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2750562/00.pdf",
+          "page": "8 (2026年３月期 第３四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第３四半期連結累計期間 自2025年４月１日 至2025年12月31日)",
+          "quote": "収益 781,744 787,664",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 787664000000,
+          "start": "2025-04-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2704294/00.pdf",
+          "page": "8 (2026年３月期 第２四半期（中間期）決算短信〔ＩＦＲＳ〕, 要約中間連結損益計算書, 当中間連結会計期間 自2025年４月１日 至2025年９月30日)",
+          "quote": "収益 518,573 513,495",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 513495000000,
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "derivation": "Q3 FY2026 (Oct-Dec 2025) = nine months minus half year = 274,169 million JPY"
+        }
+      ]
+    },
+    {
+      "caseId": "8020.t-2025-09-30-revenueQ",
+      "ticker": "8020.T",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 0,
+      "replacementValue": 262379000000,
+      "reason": "Umsatz korrigiert: Quartalsumsatz aus den Berichten der Firma (Halbjahr minus erstes Quartal) statt der gespeicherten Null.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2704294/00.pdf",
+          "page": "8 (2026年３月期 第２四半期（中間期）決算短信〔ＩＦＲＳ〕, 要約中間連結損益計算書, 当中間連結会計期間 自2025年４月１日 至2025年９月30日)",
+          "quote": "収益 518,573 513,495",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 513495000000,
+          "start": "2025-04-01",
+          "end": "2025-09-30"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/8020/tdnet/2663669/00.pdf",
+          "page": "8 (2026年３月期 第１四半期決算短信〔ＩＦＲＳ〕, 要約四半期連結損益計算書, 当第１四半期連結累計期間 自2025年４月１日 至2025年６月30日)",
+          "quote": "収益 251,011 251,116",
+          "unit": "JPY millions (百万円未満切捨て, truncated to whole millions)",
+          "value": 251116000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "derivation": "Q2 FY2026 (Jul-Sep 2025) = half year minus first quarter = 262,379 million JPY"
         }
       ]
     }

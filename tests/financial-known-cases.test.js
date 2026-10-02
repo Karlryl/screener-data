@@ -28,8 +28,8 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 203 authorized cells (190 quarterly, 13 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 203);
+test('all 207 authorized cells (194 quarterly, 13 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 207);
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 13);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
@@ -43,7 +43,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.deepEqual([...need].sort(), [...['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
-    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ')].sort());
+    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ'].sort());
   assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
   assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 203);
+  assert.equal(validateTable(clone(table)).cases.length, 207);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -296,7 +296,7 @@ const nextQuarter = (s, v = 60e6) => {
 };
 test('coversThrough: newer vendor quarter is missing and stale; covered quarters corrected; unrelated ticker untouched', () => {
   const revenueCovered = table.coverage.filter(v => v.field === 'revenueQ').map(v => v.ticker);
-  assert.deepEqual(revenueCovered.slice().sort(), ['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CARG', 'CSWC', 'DCO', 'FSK', 'GBDC', 'HTGC',
+  assert.deepEqual(revenueCovered.slice().sort(), ['8020.T', 'ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CARG', 'CSWC', 'DCO', 'FSK', 'GBDC', 'HTGC',
     'INFQ', 'KBDC', 'MAIN', 'MSDL', 'OBDC', 'OTF', 'OXLC', 'PLUS', 'PSEC', 'SLCE3.SA', 'TRIN', 'TSLX']);
   for (const ticker of revenueCovered.filter(t => t !== 'BANPU.BK')) {
     const input = nextQuarter(clone(fixture[ticker])), original = serial(input);
@@ -1261,6 +1261,32 @@ test('402340.KS: held off the boards (no revenue series on one basis today), gro
   // Break-once on test data: without the hold the row scores again with +967.2 %.
   const guard = cfg => assert.equal(score.scoreUniverse([applyFinancialCases(clone(raw), cfg && { table: cfg }).snapshot], formulas)[0].reason, 'data-suspect');
   assert.throws(() => guard(noHold), assert.AssertionError); guard(); breaks++;
+});
+
+// E5 Part 2 (02.10.): Kanematsu (8020.T). The vendor stores 0 for Apr-Jun 2026 and Jul-Sep 2025; its two other
+// quarters are 36 million JPY off the tanshin differences. Every stored quarter is now the issuer figure (single quarter
+// or longer period minus the shorter one it contains, tanshin amounts truncated to whole millions), coverage 2026-06-30.
+test('8020.T: four revenue quarters from the tanshin (two stored zeros replaced), none unverified; next quarter withheld', () => {
+  const raw = fixture['8020.T'], fx = raw.meta.fxRateApplied;
+  const noKan = clone(table); noKan.cases = noKan.cases.filter(c => c.ticker !== '8020.T'); noKan.coverage = noKan.coverage.filter(v => v.ticker !== '8020.T');
+  const jpy = s => norm(s, 'revenueQ').map(x => x === null ? null : Math.round(x / fx / 1e6));
+  assert.deepEqual(raw.timeseries.revenueQEnds, ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30']);
+  assert.deepEqual(jpy(applyFinancialCases(clone(raw), { table: noKan }).snapshot), [0, 279965, 274205, 0]);
+  const r = applyFinancialCases(clone(raw));
+  assert.deepEqual(jpy(r.snapshot), [272167, 280001, 274169, 262379]);
+  assert.ok(!r.events.some(e => e.status === 'stale' || e.reasonCode === 'period-not-verified'));
+  // Absence: gross profit (vendor zeros, not part of this repair), operating income and the annual block stay byte for byte.
+  for (const f of ['grossProfitQ', 'opIncQ']) assert.equal(serial(r.snapshot.timeseries[f]), serial(raw.timeseries[f]), f);
+  assert.equal(serial(r.snapshot.annual), serial(raw.annual));
+  // The next vendor quarter is withheld until it is verified (never the vendor value, never 0).
+  const next = clone(raw), ts = next.timeseries;
+  ts.revenueQ = [{ value: 0 }, ...ts.revenueQ]; ts.revenueQEnds = ['2026-09-30', ...ts.revenueQEnds];
+  const n = applyFinancialCases(next);
+  assert.equal(n.snapshot.timeseries.revenueQ[0].financialMissing?.reasonCode, 'period-after-coverage');
+  assert.deepEqual(jpy(n.snapshot).slice(1), [272167, 280001, 274169, 262379]);
+  // Break-once on test data: without the Kanematsu cases the stored zero is back in the newest quarter.
+  const guard = cfg => assert.equal(jpy(applyFinancialCases(clone(raw), cfg && { table: cfg }).snapshot)[0], 272167);
+  assert.throws(() => guard(noKan), assert.AssertionError); guard(); breaks++;
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);
