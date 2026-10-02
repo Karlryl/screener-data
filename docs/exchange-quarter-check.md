@@ -1,0 +1,74 @@
+# Exchange cross-check: pair guard and fill of 2025-09-30 (Tag 1403, G2b)
+
+`lib/exchange-quarter-check.js` compares the vendor's quarterly revenue with the exchange store
+(`docs/exchange-quarters-store.md`, Tag 1399). **Committed mode: `off`** (`configs/exchange-quarter-policy.json`).
+No reader sees any change; the measurement runs in mode `shadow` through `scripts/exchange-check-report.js`.
+
+## Modes and placement
+
+| Mode | Who | Effect |
+|---|---|---|
+| `off` | every reader (default) | strips the step's own markers (none exist) and returns the identical object |
+| `shadow` | `scripts/exchange-check-report.js` only | computes the result, returns the snapshot unchanged |
+| `active` | nobody yet (G2c = the one-line switch in the policy) | applies guard and fill at read time |
+
+- Read time only: `prepareSnapshot` (`lib/yahoo-q4-known-cases.js`) appends the step after the zero guard, so
+  scoring, board history, the findash and Rule-of-40 exports and the stale-quarter reload all go through it.
+  The pull calls `prepareSnapshot(snap, { atPull: true })` and never runs it: a persisted fill or guard null
+  would make `historyIsThinner` reject the next reload (critique 2; reproduced in
+  `tests/exchange-quarter-check-wiring.test.js`).
+- Every mode first removes the step's own markers (`financialMissing.reasonCode` `exchange-pair-mismatch` /
+  `exchange-annual-mismatch`, `exchangeFill`, `meta.exchangeCheck`) and restores the original vendor cells, so
+  a mode change leaves no residue.
+- Store missing, unreadable or older than 8 days before the snapshot (2 days between 15.10. and 20.11.): every
+  row of that market is `unchecked`, one `::warning::` per process, never a reader failure.
+- Hand tables keep authority: a ticker with any case in `configs/financial-known-cases.json` or
+  `configs/yahoo-q4-known-cases.json`, or any foreign marker on a revenue cell, is `unchecked(hand-table)`.
+- No file under `src/scoring/` changes. Feeding Eastmoney values into scoring is the route `scripts/build-cnannual.js`
+  lines 8-18 describe as a seal question for `run-screener.js`; this step does not touch the sealed loader, it
+  is a data-layer repair in the unsealed overlay like #398-#403, and it stays off until a reviewed switch.
+
+## Guard
+
+- Comparison in statement currency (stored value / `meta.fxRateApplied`), tolerance
+  max(0.1 % of the exchange value, half the printed unit: 0.005 CNY, 500 TWD), one revenue line per company
+  (China general: the line that matches the newest vendor quarter, `TOTAL_OPERATE_INCOME` on a tie).
+- Pairs are the ones scoring forms: `jahresVergleichIdx(s, 'revenueQ', i)` with `quelle: 'datum'`. If either
+  quarter of a pair misses the exchange figure, the OLDER quarter is withheld. The newest quarter is never
+  withheld (j > i >= 0), so `latestReportedQuarter` does not move.
+- Securities firms (Eastmoney `SINCOME`, MOPS `收益合計`) are their own stratum: a pair is mixed only when the
+  vendor/exchange ratio of its two quarters differs by more than the tolerance. Banks and insurers (Yahoo industry
+  `Banks*`, `Insurance*`, `Financial Conglomerates`) stay unchecked.
+- When the level pair is withheld, the annual pair the growth figure falls back to (`revGrowthLeg`) is compared
+  with the exchange full years (2025-12-31, 2024-12-31; undated vendor years by value). If it does not agree or
+  cannot be checked, the growth figure is withheld entirely: every annual revenue cell older than the newest and
+  a recorded newer fiscal year (`meta.annualRevNewerYear`, kept in place as null) are withheld.
+- H-share and other twin listings are not guarded; the shadow report counts board rows that look like twins.
+
+## Fill of 2025-09-30
+
+All must hold: China general or Taiwan general; the vendor cell exists, is empty and is not the newest; no
+restatement signal in the store (a key with more than one observation); the vendor's 2025 quarters equal the
+newest board-history vintage before 2026-08-01 (statement currency; no row there = no fill); the store has a
+single quarter for every vendor period end and every present vendor quarter agrees; exchange Q3 > 0; once the
+store holds the next-year quarter (Q3-2026), the Q3-2025 observation must carry a confirmation whose
+`UPDATE_DATE` is on or after the Q3-2026 notice date (Taiwan: Q3-2025 then comes from the Q3-2026 filing's
+comparative). The cell then carries `exchangeFill` (native value, line, derivation `9M-H1` or `printed-quarter`,
+operands with notice dates, source, original vendor row, reason). When the vendor later delivers the quarter, an
+agreeing value stays untouched; a disagreeing one is a mixed pair and counted (`vendor-delivered-disagrees`).
+
+## Reason texts (German, `financialDataReasons`)
+
+- level pair: "Quartalsvergleich ausgeblendet: Das Vorjahresquartal des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Gezeigt wird der Jahreswert."
+- other pair: "Vorjahresquartal ausgeblendet: Der Wert des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Er zählt nicht zur Beschleunigung des Umsatzwachstums."
+- growth withheld: "Umsatzwachstum ausgeblendet: Vorjahresquartal und Jahreswerte des Datenanbieters weichen von der Börsenmeldung ab oder sind nicht prüfbar (vermutlich berichtigte Vorjahreszahlen)."
+- fill: "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 31.10.2025)."
+
+Board history (active mode only): `pit.revenueQExchange: { filled, withheld }` with the original vendor values.
+
+## Shadow report
+
+`node scripts/exchange-check-report.js --out <file> [--snapshots] [--outputs] [--store] [--board-history]
+[--active-outputs <sandbox outputs with mode active>] [--must-withhold <tickers>]`, or the manual workflow
+`.github/workflows/exchange-check-shadow.yml` (input: the run id of a finished daily run; artifact
+`exchange-check-shadow`). It writes only `--out`.

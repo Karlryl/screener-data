@@ -1,8 +1,9 @@
 # Exchange-quarters store (Tag 1399)
 
 Append-only record of revenue as printed by exchange-fed sources, kept for the pair guard and the
-gap fill of the next step (G2b). **Nothing reads it yet**: scoring, exports, board history and the
-pull are unchanged, no board number can move through it.
+gap fill of `lib/exchange-quarter-check.js` (Tag 1403, `docs/exchange-quarter-check.md`). That step is
+**off** for every reader (`configs/exchange-quarter-policy.json`); only the shadow report reads the store,
+no board number can move through it.
 
 | File | Source | Content |
 |---|---|---|
@@ -67,4 +68,4 @@ anything else = unchecked), `taiwanSeasonValues` (column titles checked per seas
 `[YTD, quarter, prior YTD, prior quarter]` or only `[YTD, prior YTD]`, seasons 2-3 `[quarter, prior quarter, YTD, prior YTD]`,
 season 4 `[FY, prior FY]`; YTD must start on 01-01), `taiwanSingleQuarters` (Q4 = FY - 9M, TWD),
 `lastConfirmedAt`.
-Not wired into `prepareSnapshot`.
+Used by `lib/exchange-quarter-check.js`, which `prepareSnapshot` calls at read time (mode off).
