@@ -563,11 +563,12 @@ check('G5 --dry-run writes no file on the daily path and on the replay path (als
     assert.strictEqual(p.status, 0, args.join(' ') + ': ' + p.stdout + p.stderr);
     assert.ok(/dry run, nothing written/.test(p.stdout), args.join(' ') + ': says so');
     assert.deepStrictEqual([sha(), files()], before, args.join(' ') + ': state byte-identical, no new file');
-    // Counterpart: without --dry-run the replay writes.
+    // Counterpart: without --dry-run the replay writes (to a file that does not exist yet).
     if (args.length === 3) {
-      const w = spawnSync(process.execPath, [path.join(REPO, 'scripts', 'value-open-items.js'), '--base', base, ...args], { encoding: 'utf8', cwd: base });
-      assert.strictEqual(w.status, 0);
-      assert.notStrictEqual(sha(), before[0], args.join(' ') + ': written without --dry-run');
+      const fresh = path.join(base, 'fresh-out.json');
+      const w = spawnSync(process.execPath, [path.join(REPO, 'scripts', 'value-open-items.js'), '--base', base, ...args, '--out', fresh], { encoding: 'utf8', cwd: base });
+      assert.strictEqual(w.status, 0, w.stdout + w.stderr);
+      assert.ok(fs.existsSync(fresh), args.join(' ') + ': written without --dry-run');
     }
   }
   // Daily path: dryRun leaves the state untouched too.
@@ -575,6 +576,50 @@ check('G5 --dry-run writes no file on the daily path and on the replay path (als
   storeDay(base, '2026-09-01', { A: pit({ rev: [[Q, 100]] }) });
   S.runDaily({ base, date: '2026-09-02', today: rowsOf({ A: pit({ rev: [[Q, 900]] }) }), dryRun: true });
   assert.ok(!fs.existsSync(path.join(base, 'data-health')), 'daily dry run: nothing written');
+});
+
+check('G6 a replay never replaces an existing list: a live list never, a seed only with --replace-seed', () => {
+  const crypto = require('crypto');
+  const base = mkBase();
+  storeDay(base, '2026-09-01', { A: pit({ rev: [[Q, 100]] }) });
+  storeDay(base, '2026-09-02', { A: pit({ rev: [[Q, 900]] }), B: pit({ rev: [[Q, 100]] }) });
+  storeDay(base, '2026-09-03', { A: pit({ rev: [[Q, 900]] }), B: pit({ rev: [[Q, 900]] }) });
+  const state = path.join(base, 'data-health', 'value-open-items.json');
+  const sha = () => crypto.createHash('sha256').update(fs.readFileSync(state)).digest('hex');
+  const cli = (args) => spawnSync(process.execPath, [path.join(REPO, 'scripts', 'value-open-items.js'), '--base', base, ...args], { encoding: 'utf8', cwd: base });
+  // No file yet: the first seed is written.
+  assert.strictEqual(cli(['--replay', '--from', '2026-09-01']).status, 0);
+  const seed = JSON.parse(fs.readFileSync(state, 'utf8'));
+  assert.strictEqual(seed.seed, 'replay'); assert.strictEqual(seed.items.length, 2);
+  // Existing seed, shorter range (the reviewer's case): refused without the switch, the file is unchanged.
+  const s0 = sha();
+  const short = cli(['--replay', '--from', '2026-09-03']);
+  assert.strictEqual(short.status, 1, short.stdout);
+  assert.ok(/refuses to overwrite the existing seed/.test(short.stdout), short.stdout);
+  assert.strictEqual(sha(), s0, 'seed untouched');
+  // The same through the API (no CLI default involved).
+  assert.throws(() => S.runReplay({ base, from: '2026-09-03', out: state }), /refuses to overwrite the existing seed/);
+  assert.strictEqual(sha(), s0);
+  // With the switch the seed is replaced (deliberate regeneration after a rule change).
+  assert.strictEqual(cli(['--replay', '--from', '2026-09-01', '--replace-seed']).status, 0);
+  assert.strictEqual(JSON.parse(fs.readFileSync(state, 'utf8')).items.length, 2);
+  // Live list (the daily run removed the seed marker): never replaced, with or without the switch.
+  S.runDaily({ base, date: '2026-09-04', today: rowsOf({ A: pit({ rev: [[Q, 900]] }), B: pit({ rev: [[Q, 900]] }) }) });
+  assert.strictEqual(JSON.parse(fs.readFileSync(state, 'utf8')).seed, undefined);
+  const s1 = sha();
+  for (const extra of [[], ['--replace-seed']]) {
+    const p = cli(['--replay', '--from', '2026-09-01', ...extra]);
+    assert.strictEqual(p.status, 1, p.stdout);
+    assert.ok(/refuses to replace the live list/.test(p.stdout), p.stdout);
+    assert.strictEqual(sha(), s1, 'live list untouched');
+  }
+  // An unreadable existing file is treated like a live list.
+  const junk = path.join(base, 'junk.json'); fs.writeFileSync(junk, '{"items":[');
+  assert.throws(() => S.runReplay({ base, from: '2026-09-01', out: junk, replaceSeed: true }), /refuses to replace the live list/);
+  // Writing to a new file stays possible at any time.
+  const side = path.join(base, 'side.json');
+  assert.strictEqual(cli(['--replay', '--from', '2026-09-01', '--out', side]).status, 0);
+  assert.ok(fs.existsSync(side)); assert.strictEqual(sha(), s1);
 });
 
 // ── 7) real stored history (skips visibly without it, L12) ─────────────────

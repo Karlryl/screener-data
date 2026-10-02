@@ -129,6 +129,9 @@ Never closed by time, by a label, or by the value returning (that only adds `zur
 ## Exit codes and run time
 
 - `--dry-run` (daily and `--replay`) computes and prints but writes no file.
+- `--replay` starts from an empty list and therefore never replaces a list that exists: an existing seed only
+  with `--replace-seed` (a deliberate regeneration after a rule change), a live list (the daily run has moved
+  on and removed the seed marker) never; `--out <new file>` writes a side copy at any time. Exit 1 otherwise.
 - Exit 0: written. Exit 1: unreadable input (state file, acceptances, a hand table, a stored or
   today's board file) or an append-only violation; nothing is written, the step is red but the
   run continues.
@@ -142,8 +145,11 @@ The committed list was seeded once by replaying the step over all stored, not gl
 vintages from 2026-08-05 with the hand tables of the seed commit:
 
 ```
-node scripts/value-open-items.js --replay --from 2026-08-05 --to 2026-10-01
+node scripts/value-open-items.js --replay --from 2026-08-05 --to 2026-10-02
 ```
+
+(Regenerated once on 02.10.2026 with `--replace-seed` after the closing rules were corrected; the range then
+included the backfilled day 2026-10-02.)
 
 `seedInputs` records the command and a fingerprint of the hand tables and the acceptances file.
 `tests/value-open-items.test.js` re-runs the replay on the stored history and compares it with the

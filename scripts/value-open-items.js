@@ -15,9 +15,11 @@
  *
  * Usage:
  *   node scripts/value-open-items.js [--date YYYY-MM-DD] [--base DIR] [--dry-run]
- *   node scripts/value-open-items.js --replay [--from 2026-08-05] [--to YYYY-MM-DD] [--base DIR] [--out FILE] [--dry-run]
+ *   node scripts/value-open-items.js --replay [--from 2026-08-05] [--to YYYY-MM-DD] [--base DIR] [--out FILE] [--dry-run] [--replace-seed]
  *     Seed: replays the step over the stored, not globally excluded vintages from..to (today's values
  *     = that stored day), starting from an empty list; writes the result marked "seed": "replay".
+ *     A replay never replaces a list that exists: an existing seed only with --replace-seed, a live list
+ *     (the daily run has moved on) never; write to a new file with --out instead.
  *   --dry-run computes and prints, and writes no file on either path.
  * --base / --out are resolved to absolute paths against the current directory.
  * Exit: 0 written · 1 unreadable input or append-only violation (nothing written).
@@ -212,7 +214,18 @@ function runReplay(opts) {
   }
   state.seed = 'replay';
   state.seedInputs = { from, to, command: 'node scripts/value-open-items.js --replay --from ' + from + ' --to ' + to, files: inputFingerprint(base) };
-  if (opts.out && !opts.dryRun) writeState(opts.out, state);
+  if (opts.out && !opts.dryRun) {
+    // A replay starts from an empty list, so writing it over an existing list would drop every item and
+    // comparison value that list holds (a short range leaves 8 of 60 items). Checked before the write.
+    if (fs.existsSync(opts.out)) {
+      let old = null;
+      try { old = JSON.parse(fs.readFileSync(opts.out, 'utf8')); } catch (e) { /* unreadable: treated as a live list */ }
+      const n = old && Array.isArray(old.items) ? old.items.length : '?';
+      if (!old || old.seed !== 'replay') throw new Error('replay refuses to replace the live list ' + opts.out + ' (' + n + ' items): the daily run has moved on; write to a new file with --out');
+      if (!opts.replaceSeed) throw new Error('replay refuses to overwrite the existing seed ' + opts.out + ' (' + n + ' items); pass --replace-seed to replace it, or --out <new file>');
+    }
+    writeState(opts.out, state);
+  }
   return { state, perDay, warnings, notes, ms: Date.now() - t0 };
 }
 
@@ -223,6 +236,7 @@ function parseArgs(argv) {
     const val = () => (a.includes('=') ? a.slice(a.indexOf('=') + 1) : argv[++i]);
     if (a === '--replay') o.replay = true;
     else if (a === '--dry-run') o.dryRun = true;
+    else if (a === '--replace-seed') o.replaceSeed = true;
     else if (a.startsWith('--date')) o.date = val();
     else if (a.startsWith('--from')) o.from = val();
     else if (a.startsWith('--to')) o.to = val();
