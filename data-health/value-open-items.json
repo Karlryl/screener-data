@@ -1,0 +1,2409 @@
+{
+  "_doc": "Sticky open-items list (Tag 1398). Written only by scripts/value-open-items.js in the daily run (step \"Value open-items (factor 3, sticky)\"). An item opens when a stored revenueQ/grossProfitQ (same quarter) or marketCap moves by more than factor 3 (or to 0) against its last accepted value, and stays open until a hand-table row or an entry in data-health/value-acceptances.json closes it. Labels only describe. Never edit by hand; the AI daily run works the list (docs/value-open-items.md).",
+  "schema": "value-open-items/v1",
+  "factor": 3,
+  "updatedFor": "2026-10-01",
+  "items": [
+    {
+      "id": "LCLN|marketCap|2026-08-09",
+      "company": "LCLN",
+      "board": "financials",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 813165632,
+      "newValue": 2453389056,
+      "factor": 3.0171,
+      "firstSeen": "2026-08-09",
+      "lastSeen": "2026-09-30",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 813165632,
+          "acceptedFrom": "2026-08-07",
+          "newValue": 2453389056,
+          "factor": 3.0171,
+          "firstSeen": "2026-08-09",
+          "lastSeen": "2026-09-30",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [
+        "zurueckgekehrt"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "TENNIND.BO|marketCap|2026-08-16",
+      "company": "TENNIND.BO",
+      "board": "consumer-discretionary",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 2383520363.3003726,
+      "newValue": 22789706785.895874,
+      "factor": 9.5614,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-08-16",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 2383520363.3003726,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 22789706785.895874,
+          "factor": 9.5614,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-08-16",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [
+        "nicht-auf-board"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "5904.TWO|marketCap|2026-08-16",
+      "company": "5904.TWO",
+      "board": "consumer-discretionary",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 23775260630.33483,
+      "newValue": 2301397989.432443,
+      "factor": 10.3308,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 23775260630.33483,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 2301397989.432443,
+          "factor": 10.3308,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "MBLY|marketCap|2026-08-16",
+      "company": "MBLY",
+      "board": "consumer-discretionary",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 2203622912,
+      "newValue": 6627212288,
+      "factor": 3.0074,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 2203622912,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 6627212288,
+          "factor": 3.0074,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-29",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [
+        "zurueckgekehrt"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "OLPX|grossProfitQ|2026-08-16",
+      "company": "OLPX",
+      "board": "consumer-discretionary",
+      "field": "grossProfitQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 71660000,
+      "newValue": 0,
+      "factor": null,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-08-16",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 71660000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-08-16",
+          "closedValue": 0
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 71457000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-08-16",
+          "closedValue": 0
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 79198000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-08-16",
+          "closedValue": 0
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 75635000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-08-16",
+          "closedValue": 0
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:quarantine:olpx-delisted-zero-gross-profit-20261001",
+      "closedAt": "2026-08-16"
+    },
+    {
+      "id": "JHG|grossProfitQ|2026-08-16",
+      "company": "JHG",
+      "board": "financials",
+      "field": "grossProfitQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 470500000,
+      "newValue": 0,
+      "factor": null,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-09-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 470500000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 817100000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 478200000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 437300000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        }
+      ],
+      "labels": [
+        "nicht-auf-board"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "BLD|grossProfitQ|2026-08-16",
+      "company": "BLD",
+      "board": "industrials",
+      "field": "grossProfitQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 400253000,
+      "newValue": 0,
+      "factor": null,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-09-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 400253000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 404562000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 418920000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 394043000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-01"
+        }
+      ],
+      "labels": [
+        "nicht-auf-board"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "ACHR|grossProfitQ|2026-08-16",
+      "company": "ACHR",
+      "board": "industrials",
+      "field": "grossProfitQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 300000,
+      "newValue": 0,
+      "factor": null,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-09-10",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 300000,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-10"
+        }
+      ],
+      "labels": [
+        "zurueckgekehrt"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "PSM.DE|grossProfitQ|2026-08-16",
+      "company": "PSM.DE",
+      "board": "software-comm-services",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 232396803.00000003,
+      "newValue": 702201651.6,
+      "factor": 3.0216,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-09-24",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 232396803.00000003,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 702201651.6,
+          "factor": 3.0216,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-09-24"
+        }
+      ],
+      "labels": [
+        "zurueckgekehrt"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "ENGI3.SA|marketCap|2026-08-16",
+      "company": "ENGI3.SA",
+      "board": "utilities",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 2206467743.986176,
+      "newValue": 9139771136.085197,
+      "factor": 4.1423,
+      "firstSeen": "2026-08-16",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 2206467743.986176,
+          "acceptedFrom": "2026-08-09",
+          "newValue": 9139771136.085197,
+          "factor": 4.1423,
+          "firstSeen": "2026-08-16",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "TENNIND.NS|marketCap|2026-08-18",
+      "company": "TENNIND.NS",
+      "board": "consumer-discretionary",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 22764331587.43392,
+      "newValue": 2079465887.5465238,
+      "factor": 10.9472,
+      "firstSeen": "2026-08-18",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 22764331587.43392,
+          "acceptedFrom": "2026-08-16",
+          "newValue": 2079465887.5465238,
+          "factor": 10.9472,
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "JBS|marketCap|2026-08-18",
+      "company": "JBS",
+      "board": "consumer-staples",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 44899815424,
+      "newValue": 12090583040,
+      "factor": 3.7136,
+      "firstSeen": "2026-08-18",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 44899815424,
+          "acceptedFrom": "2026-08-16",
+          "newValue": 12090583040,
+          "factor": 3.7136,
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "FOIL|marketCap|2026-08-18",
+      "company": "FOIL",
+      "board": "industrials",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 1866404096,
+      "newValue": 8553707008,
+      "factor": 4.583,
+      "firstSeen": "2026-08-18",
+      "lastSeen": "2026-08-25",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 1866404096,
+          "acceptedFrom": "2026-08-16",
+          "newValue": 8553707008,
+          "factor": 4.583,
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-08-25",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [
+        "zurueckgekehrt"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "VTMX|revenueQ|2026-08-25",
+      "company": "VTMX",
+      "board": "real-estate",
+      "field": "revenueQ",
+      "periodEnd": "2026-06-30",
+      "acceptedValue": 1366125770,
+      "newValue": 78487715,
+      "factor": 17.4056,
+      "firstSeen": "2026-08-25",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 1366125770,
+          "acceptedFrom": "2026-08-19",
+          "newValue": 78487715,
+          "factor": 17.4056,
+          "firstSeen": "2026-08-25",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 1330464240,
+          "acceptedFrom": "2026-08-19",
+          "newValue": 76749154,
+          "factor": 17.3352,
+          "firstSeen": "2026-08-25",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 1319152960,
+          "acceptedFrom": "2026-08-19",
+          "newValue": 76445076,
+          "factor": 17.2562,
+          "firstSeen": "2026-08-25",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "PRIO3.SA|revenueQ|2026-08-28",
+      "company": "PRIO3.SA",
+      "board": "energy",
+      "field": "revenueQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 141094445.1182741,
+      "newValue": 819132237.2023,
+      "factor": 5.8056,
+      "firstSeen": "2026-08-28",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 244655274.7425,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 1259780198.197535,
+          "factor": 5.1492,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 141094445.1182741,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 819132237.2023,
+          "factor": 5.8056,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 131851800.22666058,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 686369669.0633999,
+          "factor": 5.2056,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 119624409.65911984,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 641044500.523,
+          "factor": 5.3588,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "PRIO3.SA|grossProfitQ|2026-08-28",
+      "company": "PRIO3.SA",
+      "board": "energy",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 10322920.688889837,
+      "newValue": 70656692.7241,
+      "factor": 6.8446,
+      "firstSeen": "2026-08-28",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 104943152.54865,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 540373820.4964463,
+          "factor": 5.1492,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 10322920.688889837,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 70656692.7241,
+          "factor": 6.8446,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 30811054.601864807,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 160390478.6603,
+          "factor": 5.2056,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 18497372.648848932,
+          "acceptedFrom": "2026-08-25",
+          "newValue": 99123908.2764,
+          "factor": 5.3588,
+          "firstSeen": "2026-08-28",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "DEC|revenueQ|2026-09-05",
+      "company": "DEC",
+      "board": "energy",
+      "field": "revenueQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 575527000,
+      "newValue": 27144000,
+      "factor": 21.2027,
+      "firstSeen": "2026-09-05",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 575527000,
+          "acceptedFrom": "2026-09-01",
+          "newValue": 27144000,
+          "factor": 21.2027,
+          "firstSeen": "2026-09-05",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "8020.T|revenueQ|2026-09-05",
+      "company": "8020.T",
+      "board": "industrials",
+      "field": "revenueQ",
+      "periodEnd": "2026-06-30",
+      "acceptedValue": 1728351625.9450002,
+      "newValue": 0,
+      "factor": null,
+      "firstSeen": "2026-09-05",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 1728351625.9450002,
+          "acceptedFrom": "2026-09-01",
+          "newValue": 0,
+          "factor": null,
+          "firstSeen": "2026-09-05",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "GLEN.L|marketCap|2026-09-05",
+      "company": "GLEN.L",
+      "board": "materials",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 950341350.2342923,
+      "newValue": 84443203780.74112,
+      "factor": 88.8557,
+      "firstSeen": "2026-09-05",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 950341350.2342923,
+          "acceptedFrom": "2026-09-01",
+          "newValue": 84443203780.74112,
+          "factor": 88.8557,
+          "firstSeen": "2026-09-05",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "6669.TW|marketCap|2026-09-05",
+      "company": "6669.TW",
+      "board": "tech-hardware",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 137264434324.91615,
+      "newValue": 36694080501.44608,
+      "factor": 3.7408,
+      "firstSeen": "2026-09-05",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 137264434324.91615,
+          "acceptedFrom": "2026-09-01",
+          "newValue": 36694080501.44608,
+          "factor": 3.7408,
+          "firstSeen": "2026-09-05",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "VISN|revenueQ|2026-09-05",
+      "company": "VISN",
+      "board": "tech-hardware",
+      "field": "revenueQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 1388100000,
+      "newValue": 324100000,
+      "factor": 4.2829,
+      "firstSeen": "2026-09-05",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 1388100000,
+          "acceptedFrom": "2026-09-01",
+          "newValue": 324100000,
+          "factor": 4.2829,
+          "firstSeen": "2026-09-05",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "VISN|grossProfitQ|2026-09-05",
+      "company": "VISN",
+      "board": "tech-hardware",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 591700000,
+      "newValue": 148200000,
+      "factor": 3.9926,
+      "firstSeen": "2026-09-05",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 591700000,
+          "acceptedFrom": "2026-09-01",
+          "newValue": 148200000,
+          "factor": 3.9926,
+          "firstSeen": "2026-09-05",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "PBR-A|revenueQ|2026-09-08",
+      "company": "PBR-A",
+      "board": "energy",
+      "field": "revenueQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 27435221615.33833,
+      "newValue": 4598722012.559999,
+      "factor": 5.9658,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 24327525993.94,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 4574411055.253465,
+          "factor": 5.3182,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 27435221615.33833,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 4598722012.559999,
+          "factor": 5.9658,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 24587543692.271,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 4573203858.389999,
+          "factor": 5.3764,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 22680504098.953922,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 4097903887.5899997,
+          "factor": 5.5347,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 6546477917.49,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 33607000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "PBR-A|grossProfitQ|2026-09-08",
+      "company": "PBR-A",
+      "board": "energy",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 12645119562.709492,
+      "newValue": 2111968148.9399998,
+      "factor": 5.9874,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 11722985659.58,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 2204324238.112777,
+          "factor": 5.3182,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 12645119562.709492,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 2111968148.9399998,
+          "factor": 5.9874,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 11747603083.70762,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 2185016300.19,
+          "factor": 5.3764,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 10794182014.485271,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 1950288240.84,
+          "factor": 5.5347,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        },
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 3797140299.5099998,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 19493000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "6269.T|revenueQ|2026-09-08",
+      "company": "6269.T",
+      "board": "energy",
+      "field": "revenueQ",
+      "periodEnd": "2026-06-30",
+      "acceptedValue": 225152000000,
+      "newValue": 1430308475.52,
+      "factor": 157.415,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 225152000000,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 1430308475.52,
+          "factor": 157.415,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 172224000000,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 1094076210.24,
+          "factor": 157.415,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 218333000000,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 1386989857.455,
+          "factor": 157.415,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 197686707200,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 1255831495.193472,
+          "factor": 157.415,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "IOVA|grossProfitQ|2026-09-08",
+      "company": "IOVA",
+      "board": "health-care",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 3288000,
+      "newValue": 11071000,
+      "factor": 3.3671,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 3288000,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 11071000,
+          "factor": 3.3671,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "2637.TW|revenueQ|2026-09-08",
+      "company": "2637.TW",
+      "board": "industrials",
+      "field": "revenueQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 163812349,
+      "newValue": 5419996890.7858,
+      "factor": 33.0866,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 163812349,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 5419996890.7858,
+          "factor": 33.0866,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 148488056,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 4527133548.9392,
+          "factor": 30.4882,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 122959993,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 3806139000,
+          "factor": 30.9543,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-03-31",
+          "acceptedValue": 106696862,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 3509580000,
+          "factor": 32.893,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "2637.TW|grossProfitQ|2026-09-08",
+      "company": "2637.TW",
+      "board": "industrials",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-03-31",
+      "acceptedValue": 7213895,
+      "newValue": 237287000,
+      "factor": 32.893,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 61779171,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 1989983340.2676,
+          "factor": 32.2112,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 44740906,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 1364069690.3092,
+          "factor": 30.4882,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 21799029,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 686920000,
+          "factor": 31.5115,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-03-31",
+          "acceptedValue": 7213895,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 237287000,
+          "factor": 32.893,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-09-24"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "IMOS|revenueQ|2026-09-08",
+      "company": "IMOS",
+      "board": "semiconductors",
+      "field": "revenueQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 6312020.92024,
+      "newValue": 182106229.669,
+      "factor": 28.8507,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 6312020.92024,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 182106229.669,
+          "factor": 28.8507,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "CIG-C|revenueQ|2026-09-08",
+      "company": "CIG-C",
+      "board": "utilities",
+      "field": "revenueQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 2034127618966.69,
+      "newValue": 2014553277.1787698,
+      "factor": 1009.7165,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 2034127618966.69,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 2014553277.1787698,
+          "factor": 1009.7165,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "CIG-C|grossProfitQ|2026-09-08",
+      "company": "CIG-C",
+      "board": "utilities",
+      "field": "grossProfitQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 2032406600804.19,
+      "newValue": 310096414.67877,
+      "factor": 6554.1119,
+      "firstSeen": "2026-09-08",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 2032406600804.19,
+          "acceptedFrom": "2026-09-05",
+          "newValue": 310096414.67877,
+          "factor": 6554.1119,
+          "firstSeen": "2026-09-08",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "BANPU.BK|revenueQ|2026-09-11",
+      "company": "BANPU.BK",
+      "board": "utilities",
+      "field": "revenueQ",
+      "periodEnd": "2025-03-31",
+      "acceptedValue": 7105984000,
+      "newValue": 1283603000,
+      "factor": 5.536,
+      "firstSeen": "2026-09-11",
+      "lastSeen": "2026-09-11",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 5092756000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 1340143000,
+          "factor": 3.8002,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 1340143000
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 6736722000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 1398885000,
+          "factor": 4.8158,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 1398885000
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 7450422000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 1358440000,
+          "factor": 5.4845,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 1358440000
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 6557265000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 1237174000,
+          "factor": 5.3002,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 1237174000
+        },
+        {
+          "periodEnd": "2025-03-31",
+          "acceptedValue": 7105984000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 1283603000,
+          "factor": 5.536,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 1283603000
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:quarantine:banpu-mixed-issuer-packet-20260929",
+      "closedAt": "2026-09-11"
+    },
+    {
+      "id": "BANPU.BK|grossProfitQ|2026-09-11",
+      "company": "BANPU.BK",
+      "board": "utilities",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 1641068000,
+      "newValue": 381385000,
+      "factor": 4.3029,
+      "firstSeen": "2026-09-11",
+      "lastSeen": "2026-09-11",
+      "cells": [
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 1641068000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 381385000,
+          "factor": 4.3029,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 381385000
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 1129138000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 279942000,
+          "factor": 4.0335,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 279942000
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 959988000,
+          "acceptedFrom": "2026-09-10",
+          "newValue": 253041000,
+          "factor": 3.7938,
+          "firstSeen": "2026-09-11",
+          "lastSeen": "2026-09-11",
+          "closedValue": 253041000
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:quarantine:banpu-mixed-issuer-packet-20260929",
+      "closedAt": "2026-09-11"
+    },
+    {
+      "id": "1196.HK|marketCap|2026-09-12",
+      "company": "1196.HK",
+      "board": "industrials",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 1986465236.0254872,
+      "newValue": 7981609863.922975,
+      "factor": 4.018,
+      "firstSeen": "2026-09-12",
+      "lastSeen": "2026-09-24",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 1986465236.0254872,
+          "acceptedFrom": "2026-09-11",
+          "newValue": 7981609863.922975,
+          "factor": 4.018,
+          "firstSeen": "2026-09-12",
+          "lastSeen": "2026-09-24",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [
+        "zurueckgekehrt"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "402340.KS|revenueQ|2026-09-15",
+      "company": "402340.KS",
+      "board": "semiconductors",
+      "field": "revenueQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 287313079.54096,
+      "newValue": 1352277448.90716,
+      "factor": 4.7066,
+      "firstSeen": "2026-09-15",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 287313079.54096,
+          "acceptedFrom": "2026-09-12",
+          "newValue": 1352277448.90716,
+          "factor": 4.7066,
+          "firstSeen": "2026-09-15",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "402340.KS|grossProfitQ|2026-09-15",
+      "company": "402340.KS",
+      "board": "semiconductors",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 203165001.97224,
+      "newValue": 1282270014.5994,
+      "factor": 6.3115,
+      "firstSeen": "2026-09-15",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 203165001.97224,
+          "acceptedFrom": "2026-09-12",
+          "newValue": 1282270014.5994,
+          "factor": 6.3115,
+          "firstSeen": "2026-09-15",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "9903.HK|marketCap|2026-09-17",
+      "company": "9903.HK",
+      "board": "semiconductors",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 3805906465.671168,
+      "newValue": 12084617516.395561,
+      "factor": 3.1752,
+      "firstSeen": "2026-09-17",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 3805906465.671168,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 12084617516.395561,
+          "factor": 3.1752,
+          "firstSeen": "2026-09-17",
+          "lastSeen": "2026-09-29",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [
+        "zurueckgekehrt"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "ESENTIA/II.MX|revenueQ|2026-09-19",
+      "company": "ESENTIA/II.MX",
+      "board": "energy",
+      "field": "revenueQ",
+      "periodEnd": "2026-06-30",
+      "acceptedValue": 2074832060,
+      "newValue": 37584000,
+      "factor": 55.2052,
+      "firstSeen": "2026-09-19",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 2074832060,
+          "acceptedFrom": "2026-09-18",
+          "newValue": 37584000,
+          "factor": 55.2052,
+          "firstSeen": "2026-09-19",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 1907318930,
+          "acceptedFrom": "2026-09-18",
+          "newValue": 92869000,
+          "factor": 20.5377,
+          "firstSeen": "2026-09-19",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 1632327450,
+          "acceptedFrom": "2026-09-18",
+          "newValue": 94913000,
+          "factor": 17.1981,
+          "firstSeen": "2026-09-19",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "KRSA|marketCap|2026-09-19",
+      "company": "KRSA",
+      "board": "health-care",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 10910780416,
+      "newValue": 1457325568,
+      "factor": 7.4869,
+      "firstSeen": "2026-09-19",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 10910780416,
+          "acceptedFrom": "2026-09-18",
+          "newValue": 1457325568,
+          "factor": 7.4869,
+          "firstSeen": "2026-09-19",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "ANDG|marketCap|2026-09-22",
+      "company": "ANDG",
+      "board": "consumer-discretionary",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 6425191936,
+      "newValue": 1008598336,
+      "factor": 6.3704,
+      "firstSeen": "2026-09-22",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 6425191936,
+          "acceptedFrom": "2026-09-20",
+          "newValue": 1008598336,
+          "factor": 6.3704,
+          "firstSeen": "2026-09-22",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "2670.HK|marketCap|2026-09-23",
+      "company": "2670.HK",
+      "board": "industrials",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 857706052.5386496,
+      "newValue": 8572798295.669391,
+      "factor": 9.995,
+      "firstSeen": "2026-09-23",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 857706052.5386496,
+          "acceptedFrom": "2026-09-22",
+          "newValue": 8572798295.669391,
+          "factor": 9.995,
+          "firstSeen": "2026-09-23",
+          "lastSeen": "2026-10-01",
+          "acceptedShares": null,
+          "newShares": null
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "HSAI|marketCap|2026-09-29",
+      "company": "HSAI",
+      "board": "consumer-discretionary",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 20503914496,
+      "newValue": 2449847040,
+      "factor": 8.3695,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 20503914496,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 2449847040,
+          "factor": 8.3695,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "acceptedShares": null,
+          "newShares": null,
+          "closedValue": 2449847040
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:ads:HSAI",
+      "closedAt": "2026-09-29"
+    },
+    {
+      "id": "SLCE3.SA|grossProfitQ|2026-09-29",
+      "company": "SLCE3.SA",
+      "board": "consumer-staples",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 126028166.1214,
+      "newValue": 468980712.62424,
+      "factor": 3.7212,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 126028166.1214,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 468980712.62424,
+          "factor": 3.7212,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 468980712.62424
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:slce3.sa-2025-06-30-grossProfitQ",
+      "closedAt": "2026-09-29"
+    },
+    {
+      "id": "002128.SZ|grossProfitQ|2026-09-29",
+      "company": "002128.SZ",
+      "board": "energy",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 465381614.0058926,
+      "newValue": 83834812.35662659,
+      "factor": 5.5512,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 465381614.0058926,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 83834812.35662659,
+          "factor": 5.5512,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "YPF|revenueQ|2026-09-29",
+      "company": "YPF",
+      "board": "energy",
+      "field": "revenueQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 3277308.20601,
+      "newValue": 4943000000,
+      "factor": 1508.25,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 3277308.20601,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 4943000000,
+          "factor": 1508.25,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 3012763.19808,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 4544000000,
+          "factor": 1508.25,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 3078402.18501,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 4643000000,
+          "factor": 1508.25,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 3077076.14487,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 4641000000,
+          "factor": 1508.25,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "YPF|grossProfitQ|2026-09-29",
+      "company": "YPF",
+      "board": "energy",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 777722.54211,
+      "newValue": 1193000000,
+      "factor": 1533.9661,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 1163600.22285,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1755000000,
+          "factor": 1508.25,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 869882.33184,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1312000000,
+          "factor": 1508.25,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 877838.57268,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1324000000,
+          "factor": 1508.25,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 777722.54211,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1193000000,
+          "factor": 1533.9661,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "EMBJ|revenueQ|2026-09-29",
+      "company": "EMBJ",
+      "board": "industrials",
+      "field": "revenueQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 357134461.871,
+      "newValue": 1819200000,
+      "factor": 5.0939,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 284023102.627,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1446700000,
+          "factor": 5.0936,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 520614131.158,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 2651800000,
+          "factor": 5.0936,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 357134461.871,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1819200000,
+          "factor": 5.0939,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-03-31",
+          "acceptedValue": 216546265.42999998,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1103000000,
+          "factor": 5.0936,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "EMBJ|grossProfitQ|2026-09-29",
+      "company": "EMBJ",
+      "board": "industrials",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 69263392.968,
+      "newValue": 352900000,
+      "factor": 5.095,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 51083715.562,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 260200000,
+          "factor": 5.0936,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 86814830.982,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 442200000,
+          "factor": 5.0936,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 69263392.968,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 352900000,
+          "factor": 5.095,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-03-31",
+          "acceptedValue": 37125021.570999995,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 189100000,
+          "factor": 5.0936,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "VALE3.SA|revenueQ|2026-09-29",
+      "company": "VALE3.SA",
+      "board": "materials",
+      "field": "revenueQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 1803412758.06,
+      "newValue": 9258000000,
+      "factor": 5.1336,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 1803412758.06,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 9258000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 2154433474.2,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 11060000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 2029764629.3999999,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 10420000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 1714975796.28,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 8804000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns",
+        "nicht-auf-board"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "VALE3.SA|grossProfitQ|2026-09-29",
+      "company": "VALE3.SA",
+      "board": "materials",
+      "field": "grossProfitQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 600942790.9499999,
+      "newValue": 3085000000,
+      "factor": 5.1336,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 600942790.9499999,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 3085000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 833917694.67,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 4281000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 737883725.16,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 3788000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 529647795.33,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 2719000000,
+          "factor": 5.1336,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns",
+        "nicht-auf-board"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "BLSH|grossProfitQ|2026-09-29",
+      "company": "BLSH",
+      "board": "software-comm-services",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 47664000,
+      "newValue": 7374000,
+      "factor": 6.4638,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 47664000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 7374000,
+          "factor": 6.4638,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "CLSC3.SA|grossProfitQ|2026-09-29",
+      "company": "CLSC3.SA",
+      "board": "utilities",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 98627581.4472,
+      "newValue": 29181582.31068,
+      "factor": 3.3798,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 98627581.4472,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 29181582.31068,
+          "factor": 3.3798,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 29181582.31068
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:clsc3.sa-2025-06-30-grossProfitQ",
+      "closedAt": "2026-09-29"
+    },
+    {
+      "id": "BANPU.BK|revenueQ|2026-09-29",
+      "company": "BANPU.BK",
+      "board": "utilities",
+      "field": "revenueQ",
+      "periodEnd": "2025-03-31",
+      "acceptedValue": 1283603000,
+      "newValue": 7105984000,
+      "factor": 5.536,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 1340143000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 5092756000,
+          "factor": 3.8002,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 5092756000
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 1398885000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 6736722000,
+          "factor": 4.8158,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 6736722000
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 1358440000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 7450422000,
+          "factor": 5.4845,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 7450422000
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 1237174000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 6557265000,
+          "factor": 5.3002,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 6557265000
+        },
+        {
+          "periodEnd": "2025-03-31",
+          "acceptedValue": 1283603000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 7105984000,
+          "factor": 5.536,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 7105984000
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:quarantine:banpu-mixed-issuer-packet-20260929",
+      "closedAt": "2026-09-29"
+    },
+    {
+      "id": "BANPU.BK|grossProfitQ|2026-09-29",
+      "company": "BANPU.BK",
+      "board": "utilities",
+      "field": "grossProfitQ",
+      "periodEnd": "2025-12-31",
+      "acceptedValue": 381385000,
+      "newValue": 1641068000,
+      "factor": 4.3029,
+      "firstSeen": "2026-09-29",
+      "lastSeen": "2026-09-29",
+      "cells": [
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 381385000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1641068000,
+          "factor": 4.3029,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 1641068000
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 279942000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 1129138000,
+          "factor": 4.0335,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 1129138000
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 253041000,
+          "acceptedFrom": "2026-09-24",
+          "newValue": 959988000,
+          "factor": 3.7938,
+          "firstSeen": "2026-09-29",
+          "lastSeen": "2026-09-29",
+          "closedValue": 959988000
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:quarantine:banpu-mixed-issuer-packet-20260929",
+      "closedAt": "2026-09-29"
+    },
+    {
+      "id": "XVALO.MC|revenueQ|2026-09-30",
+      "company": "XVALO.MC",
+      "board": "materials",
+      "field": "revenueQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 1798717748.52,
+      "newValue": 9258000000,
+      "factor": 5.147,
+      "firstSeen": "2026-09-30",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 1798717748.52,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 9258000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 2148824616.4,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 11060000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 2024480334.8,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 10420000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 1710511023.76,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 8804000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "XVALO.MC|grossProfitQ|2026-09-30",
+      "company": "XVALO.MC",
+      "board": "materials",
+      "field": "grossProfitQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 599378294.9,
+      "newValue": 3085000000,
+      "factor": 5.147,
+      "firstSeen": "2026-09-30",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 599378294.9,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 3085000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-12-31",
+          "acceptedValue": 831746671.14,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 4281000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-09-30",
+          "acceptedValue": 735962716.72,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 3788000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        },
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 528268908.85999995,
+          "acceptedFrom": "2026-09-15",
+          "newValue": 2719000000,
+          "factor": 5.147,
+          "firstSeen": "2026-09-30",
+          "lastSeen": "2026-10-01"
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "BBDC|revenueQ|2026-10-01",
+      "company": "BBDC",
+      "board": "financials",
+      "field": "revenueQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 23661000,
+      "newValue": 74398000,
+      "factor": 3.1443,
+      "firstSeen": "2026-10-01",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 23661000,
+          "acceptedFrom": "2026-09-30",
+          "newValue": 74398000,
+          "factor": 3.1443,
+          "firstSeen": "2026-10-01",
+          "lastSeen": "2026-10-01",
+          "closedValue": 74398000
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:bbdc-2025-06-30-revenueQ",
+      "closedAt": "2026-10-01"
+    },
+    {
+      "id": "ARCC|revenueQ|2026-10-01",
+      "company": "ARCC",
+      "board": "financials",
+      "field": "revenueQ",
+      "periodEnd": "2026-03-31",
+      "acceptedValue": 151000000,
+      "newValue": 763000000,
+      "factor": 5.053,
+      "firstSeen": "2026-10-01",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 219000000,
+          "acceptedFrom": "2026-09-30",
+          "newValue": 768000000,
+          "factor": 3.5068,
+          "firstSeen": "2026-10-01",
+          "lastSeen": "2026-10-01",
+          "closedValue": 768000000
+        },
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 151000000,
+          "acceptedFrom": "2026-09-30",
+          "newValue": 763000000,
+          "factor": 5.053,
+          "firstSeen": "2026-10-01",
+          "lastSeen": "2026-10-01",
+          "closedValue": 763000000
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:arcc-2026-06-30-revenueQ + hand-table:arcc-2026-03-31-revenueQ",
+      "closedAt": "2026-10-01"
+    },
+    {
+      "id": "BXSL|revenueQ|2026-10-01",
+      "company": "BXSL",
+      "board": "financials",
+      "field": "revenueQ",
+      "periodEnd": "2026-06-30",
+      "acceptedValue": 26707000,
+      "newValue": 320469000,
+      "factor": 11.9994,
+      "firstSeen": "2026-10-01",
+      "lastSeen": "2026-10-01",
+      "cells": [
+        {
+          "periodEnd": "2026-06-30",
+          "acceptedValue": 26707000,
+          "acceptedFrom": "2026-09-30",
+          "newValue": 320469000,
+          "factor": 11.9994,
+          "firstSeen": "2026-10-01",
+          "lastSeen": "2026-10-01",
+          "closedValue": 320469000
+        },
+        {
+          "periodEnd": "2026-03-31",
+          "acceptedValue": 40519000,
+          "acceptedFrom": "2026-09-30",
+          "newValue": 325471000,
+          "factor": 8.0326,
+          "firstSeen": "2026-10-01",
+          "lastSeen": "2026-10-01",
+          "closedValue": 325471000
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:bxsl-2026-06-30-revenueQ + hand-table:bxsl-2026-03-31-revenueQ",
+      "closedAt": "2026-10-01"
+    }
+  ],
+  "seed": "replay",
+  "seedInputs": {
+    "from": "2026-08-05",
+    "to": "2026-10-01",
+    "command": "node scripts/value-open-items.js --replay --from 2026-08-05 --to 2026-10-01",
+    "files": {
+      "configs/financial-known-cases.json": "efaac97057987acd8b2c72c4723abdb50ae0c6a5e0a923dc3df682be3c4707fb",
+      "configs/ads-hand-table.json": "0b2d145c8aaef7cae55dfc0756d3b55a4721ffd6e999e8efeb3f4cdf09811b20",
+      "configs/share-count-hand-table.json": null,
+      "configs/statement-currency-hand-table.json": "e25197536edf5fb17db2458826d72f85c5ec64e750ad8c8365ab523c29c54b48",
+      "configs/yahoo-q4-known-cases.json": "18993380630ef84c50fd05e64b60284d2e861352bf7d972c1034f7b6ee3d7d97",
+      "data-health/value-acceptances.json": "a56abfc80ec062d7df2b16c18f737469eda21058bac0f905dc1d831cc516ad33"
+    }
+  }
+}
