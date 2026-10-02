@@ -285,35 +285,58 @@ test('BH-136: jede uses:-Zeile fuer actions/* ist SHA-gepinnt (kein Tag mehr)', 
   }
 });
 
-// ── BH-156: SUSPECT-Vintage (rc=2) wird vom Commit ausgenommen, nicht mehr
-//    bedingungslos committet+gepusht
+// ── BH-156 -> Tag 1396: every vintage is committed with its verdict; a structural flag
+//    (rc=2) turns the job red in the LAST step "Value gate verdict", after commit,
+//    rank-ic and publish ran. Rewritten from the old pin (day directory excluded on rc=2).
 test('BH-156: Write-Step stempelt das tatsaechliche Vintage-Datum als Output (fuer den Exclude-Pfad unten)', () => {
   const s = section('name: Write board-history vintage', 'name: Commit board-history vintage');
   assert.match(s, /echo "date=\$\(date -u \+%F\)" >> "\$GITHUB_OUTPUT"/);
 });
-test('BH-156: Commit-Step schliesst das Tagesverzeichnis bei rc=2 per Pathspec vom `git add` aus', () => {
-  const s = section('name: Commit board-history vintage to main', null);
-  // Tag 512 hat rc in eine Shell-Variable gehoben, damit Betreffzeile und Ausschluss
-  // dieselbe Quelle nutzen. Der alte Anker verlangte rc-Ausdruck und `= "2"` in EINER
-  // Zeile und ging daran kaputt. Geprueft wird jetzt die Sache statt der Schreibweise:
-  // der verglichene Wert MUSS aus steps.vintage.outputs.rc stammen (direkt oder ueber
-  // genau eine Shell-Variable), und GENAU dieser rc=2-Zweig macht den Ausschluss,
-  // waehrend der else-Zweig weiterhin voll addet.
-  const rcVar = s.match(/(\w+)="\$\{\{\s*steps\.vintage\.outputs\.rc\s*\}\}"/);
-  const rcExpr = rcVar ? '$' + rcVar[1] : '${{ steps.vintage.outputs.rc }}';
-  const branch = s.match(/if \[ "([^"]+)" = "2" \]; then([\s\S]*?)\n[ \t]*else\r?\n([\s\S]*?)\n[ \t]*fi\b/);
-  assert.ok(branch, 'keine rc=2-Verzweigung um den `git add` gefunden');
-  assert.equal(branch[1], rcExpr,
-    'rc=2-Vergleich haengt nicht am rc des Write-Steps, sondern an: ' + branch[1]);
-  assert.match(branch[2], /git add board-history\/ ":\(exclude\)board-history\/\$VINTAGE_DATE"/);
-  assert.match(branch[3], /git add board-history\/\s*$/, 'else-Zweig addet das Vintage nicht mehr voll');
+test('Tag 1396: no `:(exclude)board-history/` pathspec anywhere in daily-pull.yml (code lines)', () => {
+  const codeLines = yml.split('\n').filter((l) => !/^\s*#/.test(l));
+  assert.ok(!codeLines.some((l) => l.includes(':(exclude)board-history/')),
+    'the day directory is excluded from the commit again — one flagged board would lose the whole day');
 });
-test('BH-156: unconditional "git add board-history/" vor der rc-Verzweigung ist weg', () => {
-  const s = section('name: Commit board-history vintage to main', null);
-  const beforeIf = s.slice(0, s.indexOf('git add board-history/'));
-  // Vorher: git add board-history/ lief IMMER als allererste Aktion nach den
-  // git-config-Zeilen, unabhaengig von rc. Jetzt muss die rc-Verzweigung davor stehen.
-  assert.match(beforeIf, /steps\.vintage\.outputs\.rc/, 'git add laeuft noch VOR der rc-Pruefung (altes bedingungsloses Verhalten)');
+test('Tag 1396: commit step adds board-history/ unconditionally on the publishing path, no rc branch around it, no exit 2', () => {
+  const step = workflowStep('scoring', 'Commit board-history vintage to main');
+  const lines = step.run.split('\n');
+  // Publishing path = everything after the Zweig-Wache block (its `fi` at column 0 of the run block).
+  const gStart = lines.findIndex((l) => l.includes('"$VEROEFFENTLICHEN" != "true"'));
+  assert.ok(gStart >= 0, 'Zweig-Wache not found');
+  const gEnd = lines.findIndex((l, i) => i > gStart && l === 'fi');
+  assert.ok(gEnd > gStart, 'end of the Zweig-Wache block not found');
+  const pub = lines.slice(gEnd + 1).filter((l) => !/^\s*#/.test(l));
+  const add = pub.findIndex((l) => /^git add board-history\/\s*$/.test(l));
+  assert.ok(add >= 0, 'no unconditional top-level `git add board-history/` on the publishing path');
+  assert.ok(!pub.slice(0, add).some((l) => /^\s*if\b.*VINTAGE_RC|^\s*if\b.*steps\.vintage\.outputs\.rc/.test(l)),
+    'an rc branch sits before the git add');
+  assert.ok(!pub.some((l) => /VINTAGE_RC" = "2"/.test(l)), 'the publishing path still branches on rc=2');
+  assert.ok(!pub.some((l) => /^\s*exit 2\b/.test(l)), 'the publishing path still ends with exit 2');
+});
+test('Tag 1396: "Value gate verdict" is the last step of job scoring, !cancelled(), rc from steps.vintage.outputs.rc', () => {
+  const scoring = workflowSteps.filter((s) => s.job === 'scoring');
+  const last = scoring[scoring.length - 1];
+  assert.equal(last.name, 'Value gate verdict (structural checks stay loud)');
+  assert.match(last.if || '', /^\$\{\{\s*!cancelled\(\)\s*\}\}$/);
+  assert.match(last.run, /VINTAGE_RC="\$\{\{\s*steps\.vintage\.outputs\.rc\s*\}\}"/);
+  assert.equal(workflowSteps.filter((s) => s.name.startsWith('Value gate verdict')).length, 1, 'exactly once');
+});
+function verdictLauf(rc) {
+  const step = workflowStep('scoring', 'Value gate verdict (structural checks stay loud)');
+  const script = step.run.replace('${{ steps.vintage.outputs.rc }}', rc).replace('${{ steps.vintage.outputs.date }}', '2026-10-02');
+  const r = require('node:child_process').spawnSync('bash', ['-c', script], { encoding: 'utf8' });
+  assert.ok(!r.error, 'bash not runnable: ' + (r.error && r.error.message));
+  return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
+}
+test('Tag 1396: verdict step executed: rc=2 -> ::error:: + exit 2', () => {
+  const r = verdictLauf('2');
+  assert.equal(r.code, 2, r.out);
+  assert.match(r.out, /::error::board-history vintage 2026-10-02 committed WITH structural flag/);
+});
+test('Tag 1396: verdict step executed: rc=0 -> exit 0, no ::error::', () => {
+  const r = verdictLauf('0');
+  assert.equal(r.code, 0, r.out);
+  assert.doesNotMatch(r.out, /::error::/);
 });
 
 // ── AE-CI-001 (Hard Review 2026-07-31): beide gh-pages-Deploys unterscheiden jetzt

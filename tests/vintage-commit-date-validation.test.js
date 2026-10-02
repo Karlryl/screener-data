@@ -47,12 +47,16 @@ test('continues to reject non-canonical shapes and non-string values', () => {
   }
 });
 
-test('leaves subject and done text behavior unchanged for a valid date', () => {
+test('subject and done text for a valid date (rc=2 since Tag 1396: committed with structural flag)', () => {
   const date = '2026-07-30';
   assert.equal(subject('0', date), 'chore: board-history vintage ' + date);
-  assert.match(subject('2', date), /SUSPECT, NICHT committet/);
+  assert.equal(subject('2', date), 'chore: board-history vintage ' + date + ' (strukturell geflaggt)');
   assert.match(done('0', date), /vintage 2026-07-30 committet/);
-  assert.match(done('2', date), /blieb wegen SUSPECT ausgeschlossen/);
+  assert.match(done('2', date), /vintage 2026-07-30 committet, mit strukturellem Kennzeichen/);
+  // Tag 1396: rc=2 no longer means "not committed".
+  for (const text of [subject('2', date), done('2', date)]) {
+    assert.doesNotMatch(text, /NICHT committet|nur Sidecars|ausgeschlossen/);
+  }
 });
 
 test('rejects month zero and month thirteen', () => {

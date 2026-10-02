@@ -1,7 +1,8 @@
 // tests/board-history.test.js — Standalone-Runner (framework-los: assert + process.exit).
 // Deckt scripts/write-board-history.js (Masterplan 2.3 Vintage-Writer) ab:
 //   (a) Vintage-Schreibpfad + §7-PIT-Felder + pitCoverage (A9)
-//   (b) Wert-Gate: künstlich wertfalsches Folge-Vintage → suspect:true + exit 2
+//   (b) Wert-Gate: künstlich wertfalsches Folge-Vintage → suspect:true, structural:false, exit 0
+//       (Tag 1396: p99 only warns; NaN/structural breaks keep exit 2)
 //   (c) Backdate-Fixture: --compact greift, Archiv-Kopie existiert, Kern bleibt, PIT gestrippt (A12)
 //   (d) _excluded-Gerüst wird angelegt (Writer schreibt nie Einträge)
 //   (e) picks-history unberührt (Verzeichnis-Diff vor/nach) + assertNoPicksHistory-Guard
@@ -246,8 +247,8 @@ check('(a3) bh-null-ends: leeres/all-null revenueQEnds/grossProfitQEnds zaehlt a
   assert.deepStrictEqual(xyz.pit.revenueQ, [120, 110, 100], 'revenueQ-Werte unberuehrt');
 });
 
-// ── (b) Wert-Gate: wertfalsches Folge-Vintage → suspect + exit 2 ──────────────
-check('(b) wertfalsches Folge-Vintage → suspect:true + exit 2', () => {
+// ── (b) Wert-Gate: wertfalsches Folge-Vintage → suspect, p99 only → exit 0 (Tag 1396) ──
+check('(b) wertfalsches Folge-Vintage → suspect:true, structural:false, exit 0, Datei geschrieben', () => {
   const base = mkBase();
   writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
   writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
@@ -264,9 +265,10 @@ check('(b) wertfalsches Folge-Vintage → suspect:true + exit 2', () => {
   // Tag 2: Score springt um +40 (>> Schwelle 1.0) = wertfalsch.
   writeBoard(base, 'semiconductors', [row('ABC', 130)]);
   const r2 = W.run({ baseDir: base, date: '2026-07-14' });
-  assert.strictEqual(r2.exitCode, 2, 'exit 2 bei suspect');
+  assert.strictEqual(r2.exitCode, 0, 'Tag 1396: a p99-only flag is exit 0 (warning), not 2');
   const v2 = readVintage(base, '2026-07-14', 'semiconductors');
   assert.strictEqual(v2.gate.suspect, true, 'suspect-Flag gesetzt');
+  assert.strictEqual(v2.gate.structural, false, 'p99 only = value warning, not structural');
   assert.strictEqual(v2.gate.calibrating, false, 'nicht mehr in Kalibrierphase (Schwelle frozen)');
   assert.ok(v2.gate.reasons.includes('p99-delta-exceeds-threshold'), 'Grund: Schwellen-Bruch');
   // NIE still: das suspect-Vintage wird trotzdem GESCHRIEBEN (keine Löschung).
@@ -285,6 +287,7 @@ check('(b2) NaN-Einbruch → suspect auch in Kalibrierphase', () => {
   assert.strictEqual(r2.exitCode, 2, 'exit 2 bei NaN-Einbruch');
   const v2 = readVintage(base, '2026-07-14', 'semiconductors');
   assert.ok(v2.gate.reasons.includes('nan-break'), 'nan-break auch trotz calibrating');
+  assert.strictEqual(v2.gate.structural, true, 'NaN break is structural');
 });
 
 // ── (c) Backdate → --compact greift, Archiv-Kopie, Kern bleibt, PIT gestrippt ─
@@ -530,7 +533,7 @@ check('(f2) EINE Bewegung im Null-Fenster friert nichts ein — erst eine bewegt
 // VORHER ROT: Tag 2 (Delta 2) hätte mit der übertünchten Boden-Schwelle 1.0 bereits
 // suspect + exit 2 ausgelöst (2 > 1.0) — ein Fehlalarm auf einem nie kalibrierten Board.
 // Jetzt: Tag 2 kalibriert (loggt, straft nicht), Tag 3 straft am gemessenen Maß.
-check('(f3) geheiltes 0-Schwellen-Board: echter Wertfehler → suspect + exit 2', () => {
+check('(f3) geheiltes 0-Schwellen-Board: echter Wertfehler → suspect (p99 only: exit 0, structural false)', () => {
   const base = mkBase();
   writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
   writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
@@ -563,9 +566,10 @@ check('(f3) geheiltes 0-Schwellen-Board: echter Wertfehler → suspect + exit 2'
   // gefangen wird er unverändert, und das ist die Zusicherung dieses Tests.
   writeBoard(base, 'energy', [row('ABC', 132)]);
   const r3 = W.run({ baseDir: base, date: '2026-07-15' });
-  assert.strictEqual(r3.exitCode, 2, 'exit 2: Board ist jetzt scharf und bissig');
+  assert.strictEqual(r3.exitCode, 0, 'Tag 1396: Board ist scharf und bissig, aber p99 only warnt (exit 0)');
   const v3 = readVintage(base, '2026-07-15', 'energy');
   assert.strictEqual(v3.gate.suspect, true, 'suspect-Flag gesetzt');
+  assert.strictEqual(v3.gate.structural, false, 'p99 only = value warning');
   assert.strictEqual(v3.gate.calibrating, true, 'noch keine board-eigene Schwelle — geprüft wird trotzdem');
   assert.strictEqual(v3.gate.threshold, null, 'board-eigene Schwelle gibt es (noch) keine');
   assert.strictEqual(v3.gate.wirksameSchwelle, W._const.MIN_GATE_THRESHOLD, 'gestraft wird am gemessenen Boden × 1 Tag');
@@ -586,6 +590,7 @@ check('(f4) degeneriertes Board: NaN-Einbruch schlägt trotz Kalibrier-Modus an'
   const r2 = W.run({ baseDir: base, date: '2026-07-14' });
   assert.strictEqual(r2.exitCode, 2, 'exit 2 trotz Kalibrier-Modus');
   assert.ok(readVintage(base, '2026-07-14', 'energy').gate.reasons.includes('nan-break'));
+  assert.strictEqual(readVintage(base, '2026-07-14', 'energy').gate.structural, true, 'NaN break is structural');
 });
 
 // X2 (Tag 348): eine unlesbare/korrupte Board-Datei in FULL_DIR darf den Lauf NIE mit

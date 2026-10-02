@@ -82,9 +82,11 @@ check('(2) suspect-Folgetag -> Sidecar traegt den Tag TROTZDEM, suspect:true sic
   // Tag 2: massiver Sprung -> p99Delta > wirksameSchwelle (Kalibrier-Boden 11.5) -> suspect.
   writeBoard(base, 'semiconductors', [row('AAA', 95), row('BBB', 60)]);
   const res2 = W.run({ baseDir: base, date: '2026-08-02' });
-  assert.strictEqual(res2.exitCode, 2, 'Vorbedingung: der Tag muss wirklich suspect sein');
+  assert.strictEqual(res2.exitCode, 0, 'Tag 1396: p99 only -> exit 0 (warning)');
   const b2 = res2.boards.find((x) => x.board === 'semiconductors');
   assert.strictEqual(b2.suspect, true, 'Vorbedingung: suspect-Flag gesetzt');
+  assert.strictEqual(b2.structural, false, 'p99 only = value warning');
+  assert.ok(fs.existsSync(path.join(base, 'board-history', '2026-08-02', 'semiconductors.json')), 'flagged vintage written');
   const sc = readSidecar(base);
   assert.deepStrictEqual(Object.keys(sc.byDate).sort(), ['2026-08-01', '2026-08-02'], 'GATE-DEFEKT (Rot-Beleg): Sidecar-Eintrag fehlt am SUSPECT-Tag — '
     + 'die Messreihe darf an Suspect-Tagen NICHT luecken, sonst ist "gemessen" wieder nicht von '
@@ -132,7 +134,9 @@ check('(5) Sidecar-Schreiben veraendert Gate-Ergebnis/rc nicht (Regression)', ()
     { _doc: 'test', boards: { semiconductors: { dailyP99Samples: Array(20).fill(2), sampleDates: Array(20).fill(0).map((_, i) => 'd' + i), threshold: 4, frozen: true } } });
   writeBoard(base, 'semiconductors', [row('AAA', 90), row('BBB', 60)]);
   const r2 = W.run({ baseDir: base, date: '2026-08-02' });
-  assert.strictEqual(r2.exitCode, 2, 'exit 2 bei suspect bleibt unveraendert');
+  assert.strictEqual(r2.exitCode, 0, 'Tag 1396: p99 only -> exit 0 (was 2)');
+  assert.strictEqual(r2.boards[0].suspect, true, 'suspect unveraendert');
+  assert.strictEqual(r2.boards[0].structural, false);
   const sc = readSidecar(base);
   assert.strictEqual(sc.byDate['2026-08-02'].semiconductors.suspect, true);
 });

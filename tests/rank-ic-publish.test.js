@@ -6,7 +6,7 @@
 // erzeugt den Report jetzt im scoring-Job NACH dem Vintage-Commit und VOR dem F-17a-Publish, der ihn
 // als outputs/rank-ic/rank-ic-report.json in den Datenkanal traegt. Gepinnt wird die SACHE: der
 // Schritt und seine Lage (R1), seine zwei Ausgaenge am ausgefuehrten Shell-Block (R2: < 2 Vintages =
-// ::error:: + Exit 1; R3: SUSPECT-Tag = ::warning:: + Exit 0 ohne Report), und die Kopie im
+// ::error:: + Exit 1; R3 since Tag 1396: rc=2 is no longer skipped), und die Kopie im
 // Publish-Schleifenkoerper zwischen board-history-Kopie und git add (R4). rank-ic.js selbst bleibt
 // unveraendert (tests/rank-ic.test.js).
 // Sabotage-Nachweis (Anker 06.09. N21): Guard `-lt 2` auf `-lt 0` -> R2 rot; Kopie-Zeile entfernt -> R4 rot;
@@ -67,12 +67,15 @@ check('R2: < 2 Vintages -> ::error:: + Exit 1, kein Report (Shell-Block ausgefue
     assert.ok(!fs.existsSync(path.join(dir, '_public', 'rank-ic-report.json')), 'Report trotz Fehler geschrieben');
   });
 });
-check('R3: SUSPECT-Tag (rc != 0) -> ::warning:: + Exit 0, kein Report, rank-ic wird NICHT aufgerufen', () => {
-  mitTempDir(['2026-09-01', '2026-09-05'], (dir) => {
+// Tag 1396: the rc guard is gone (the flagged vintage is committed; rank-ic.js skips flagged
+// boards itself). A structural day (rc=2) runs into the same checks as any other day.
+check('R3: rc=2 is no longer skipped: with one vintage dir it reaches the count guard (exit 1, "nur 1 Vintage"), no "rank-ic uebersprungen"', () => {
+  mitTempDir(['2026-09-01'], (dir) => {
     const r = bashLauf(runBlock(STEP), dir, { VINTAGE_RC_STUB: '2' });
-    assert.strictEqual(r.code, 0, 'Exit ' + r.code + '\n' + r.out);
-    assert.ok(/::warning::rank-ic uebersprungen: Vintage-rc=2/.test(r.out), r.out);
-    assert.ok(!fs.existsSync(path.join(dir, '_public')), '_public angelegt, obwohl uebersprungen');
+    assert.strictEqual(r.code, 1, 'Exit ' + r.code + '\n' + r.out);
+    assert.ok(/::error::rank-ic: nur 1 Vintage-Verzeichnis/.test(r.out), r.out);
+    assert.ok(!/rank-ic uebersprungen/.test(r.out), 'the old rc guard is back: ' + r.out);
+    assert.ok(!/steps\.vintage\.outputs\.rc/.test(runBlock(STEP)), 'the step reads the writer rc again');
   });
 });
 check('R4: der F-17a-Schleifenkoerper kopiert den Report NACH der board-history-Kopie und VOR git add -A, und meldet sein Fehlen sichtbar', () => {
