@@ -305,6 +305,13 @@ test('F5 October: a delivered Q3-2025 off the exchange value outside the level p
   assert.notEqual(revGrowthLeg(a).basis, 'quarter', 'the gap rule blocks the quarterly leg again');
   assert.equal(X.exchangeRecord(a).withheld.find(x => x.period === '2025-09-30').reasonCode, 'exchange-quarter-mismatch');
   assert.equal(serial(X.stripOwn(a)), serial(s), 'strip restores');
+  assert.ok(r.growth && r.growth.basisAfter !== 'quarter', 'it took the quarterly leg away: the annual leg is checked (G4)');
+  // Growth already on the annual leg before (level partner empty): withheld, but no annual check and no growth withhold.
+  const y = clone(s); y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
+  assert.equal(revGrowthLeg(y).basis, 'year');
+  const ry = res(y);
+  assert.equal(ry.category, 'would-withhold'); assert.equal(ry.growth, null);
+  assert.equal(revGrowthLeg(run(clone(y), 'active').snapshot).pct, revGrowthLeg(y).pct, 'growth figure unchanged');
   // A broker's level gap is definition, never a fill-period mismatch.
   const br = clone(F.store); for (const list of Object.values(br.cn.companies['000002.SZ'].ytd)) for (const o of list) o.table = 'SINCOME';
   assert.ok(!res(clone(s), ctxOf(br)).withhold.some(x => x.fillPeriod));
@@ -419,7 +426,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   red("    const base = baselineCheck(s, ends, native, env, ctx, P.slice(0, 4));", "    const base = null;",
     lib => { const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] *= 1.0001; assert.notEqual(r(lib, base(), ctxOf(F.store, b)).category, 'would-fill'); });
   // annual fallback check
-  red("      if (!['agree', 'none', 'quarter'].includes(res.growth.status)) res.category = 'would-withhold-growth';", "",
+  red("        if (!['agree', 'none', 'quarter'].includes(res.growth.status)) res.category = 'would-withhold-growth';", "",
     lib => assert.equal(r(lib, snap('600150.SS')).category, 'would-withhold-growth'));
   // strip restores
   red("      else if (OWN_CODES.has(row.financialMissing?.reasonCode)) w.put(container, field, i, row.financialMissing.originalVendorRow);", "",
@@ -447,7 +454,13 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   // baseline: absent in the vintage is unproven
   red("    if (!finite(b)) { missing++; continue; } // absent or null in the vintage: unproven, not unchanged", "    if (!finite(b)) continue;",
     lib => { const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] = null; assert.notEqual(r(lib, base(), ctxOf(F.store, b)).category, 'would-fill'); });
-  assert.equal(breaks, 13);
+  // F5 annual check only when the quarterly leg is lost
+  red("      if (level || (revGrowthLeg(s).basis === 'quarter' && revGrowthLeg(guarded).basis !== 'quarter')) {", "      if (true) {",
+    lib => { const y = base(), k = y.timeseries.revenueQEnds.indexOf('2025-09-30');
+      y.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * y.meta.fxRateApplied * 1.05 };
+      y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
+      assert.equal(r(lib, y).growth, null); });
+  assert.equal(breaks, 14);
 });
 
 test('live files unchanged by this test run', () => {

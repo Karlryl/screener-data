@@ -45,7 +45,8 @@ No reader sees any change; the measurement runs in mode `shadow` through `script
   a recorded newer fiscal year (`meta.annualRevNewerYear`, kept in place as null) are withheld. This also
   removes the older years from the margin, SBC and gross-margin readers of `annualRev`, so a row can lose its
   rank (11 securities firms in the active sandbox of 02.10.); **open decision before G2c**: null only the
-  growth inputs, or accept the row exit (the same check runs when a fill-period cell is withheld).
+  growth inputs, or accept the row exit (the same check runs when a withheld fill-period cell takes the
+  quarterly leg away).
 - H-share and other twin listings are not guarded; the shadow report counts board rows that look like twins.
 
 ## Fill of 2025-09-30
