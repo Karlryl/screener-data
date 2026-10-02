@@ -8,6 +8,7 @@ const Module = require('node:module');
 const cp = require('node:child_process');
 const crypto = require('node:crypto');
 const vm = require('node:vm');
+const { resolveCommit } = require('./helpers/history-anchor');
 const ROOT = path.resolve(__dirname, '..');
 
 if (process.argv.includes('--break-once')) {
@@ -165,7 +166,7 @@ let seed = {
 };
 if (process.env.B5_HISTORICAL === '1') {
   const pit = JSON.parse(sourceRead(path.join(ROOT, 'board-history/2026-09-24/semiconductors.json'), 'utf8')).cohort.profitable.find(r => r.ticker === ticker).pit;
-  stock = JSON.parse(cp.execFileSync('git', ['show', '6f11048063:watchlist.json'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 15000000 })).stocks.find(r => r.ticker === ticker);
+  stock = JSON.parse(cp.execFileSync('git', ['show', `${resolveCommit('6f11048063')}:watchlist.json`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 15000000 })).stocks.find(r => r.ticker === ticker);
   seed = { meta: { ticker, name: stock.name, sector: 'Technology', industry: 'Semiconductors', country: 'China', asOf: pit.fetchedAt, fetchedAt: pit.fetchedAt, fundamentalsAsOf: pit.fetchedAt, reportingCurrency: 'USD', reportingCurrencyOriginal: pit.reportingCurrencyOriginal, fxRateApplied: pit.fxRateApplied }, marketCap: { value: pit.marketCap, asOf: pit.fetchedAt }, annual: {}, metrics: {}, timeseries: { revenueQ: pit.revenueQ.map(value => ({ value })), revenueQEnds: pit.revenueQEnds, grossProfitQ: pit.grossProfitQ.map(value => ({ value })), grossProfitQEnds: pit.grossProfitQEnds } };
 }
 const cache = JSON.stringify({ _cacheVersion: 2, cachedAt: iso(40), payload: { retained: 'financial-cache-sentinel' } });

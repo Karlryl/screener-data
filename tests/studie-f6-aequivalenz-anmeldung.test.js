@@ -17,6 +17,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { spawnSync } = require('node:child_process');
+const { resolveCommit } = require('./helpers/history-anchor');
 
 const REPO = path.join(__dirname, '..');
 const WERKZEUG = path.join(REPO, 'scripts', 'studie-f6-aequivalenz-anmeldung.js');
@@ -60,7 +61,7 @@ function welt(prefix) {
   // Bytes wieder her, die der Akt wirklich gebunden hat. Ohne das braeche
   // jede Probe schon am SHA-Riegel ab, und die sechs Waechter dahinter
   // (Kette, runId, Sollwerte, Trockenlauf) waeren still abgeschaltet.
-  const STAND_DES_AKTES = '10e08e3746494ca7f064dc773fbdcf92e931ceea';
+  const STAND_DES_AKTES = resolveCommit('10e08e3746494ca7f064dc773fbdcf92e931ceea');
   for (const rel of ['scripts/studie-f6-zaehlwerk.py', 'scripts/studie-f6-lauf.py']) {
     if (!GEBUNDEN.includes(rel)) continue;
     const alt = spawnSync('git', ['show', `${STAND_DES_AKTES}:${rel}`],
@@ -114,7 +115,7 @@ test('Trockenlauf ist der STANDARD und schreibt nichts', () => {
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /TROCKENLAUF - es wurde NICHTS geschrieben/);
   assert.equal(fs.readFileSync(w.register, 'utf8'), vorher);
-  assert.match(r.stdout, /previousHash": "e9e0eeb3/);
+  assert.match(r.stdout, /previousHash": "e9e0eeb3edcf5ac2af64bdd054ba6f2c28be9e82e30ec5eaff9e8c718e64ed8d"/);
   assert.match(r.stdout, /Eintraege nach dem Anhaengen: 25/);
 });
 

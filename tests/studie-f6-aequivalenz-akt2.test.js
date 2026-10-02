@@ -96,7 +96,9 @@ test('ein verbogener Quell-Hash bricht ab, statt die Sollwerte zu kopieren', () 
   // Akt zu uebernehmen, der nicht der ist, fuer den man ihn haelt.
   const echt = K.QUELLE.eventHash;
   try {
-    K.QUELLE.eventHash = `0${echt.slice(1)}`;
+    // Toggle the first nibble: a fixed '0' is no change when the real hash starts with 0.
+    K.QUELLE.eventHash = `${echt[0] === '0' ? '1' : '0'}${echt.slice(1)}`;
+    assert.notStrictEqual(K.QUELLE.eventHash, echt, 'the negative probe must change the hash');
     assert.throws(() => K.quellAkt(), /Ein anderer Hash ist ein anderer Akt/);
   } finally {
     K.QUELLE.eventHash = echt;

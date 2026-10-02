@@ -12,6 +12,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { resolveCommit } = require('./helpers/history-anchor');
 
 const WERKZEUG = path.join(__dirname, '..', 'scripts', 'studie-f6-konfirmatorisch.js');
 const WURZEL = path.join(__dirname, '..');
@@ -19,7 +20,7 @@ const LEDGER = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0',
   'outcome-access-ledger.json');
 const BERICHT_REL = 'reports/studie/f6-aequivalenz-entdeckung-2026-09-01.json';
 // Der Stand, den Eintrag 27 gebunden hat (origin/main vor PR G).
-const STAND_DES_AKTES = '10e08e3746494ca7f064dc773fbdcf92e931ceea';
+const STAND_DES_AKTES = resolveCommit('10e08e3746494ca7f064dc773fbdcf92e931ceea');
 
 const K = require(WERKZEUG);
 
@@ -268,7 +269,7 @@ test('der Trockenlauf laesst das Register byte-gleich', { skip: !berichtDa() }, 
   const nachher = crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex');
   assert.strictEqual(vorher, nachher);
   assert.match(ausgabe, /TROCKENLAUF - es wurde NICHTS geschrieben/);
-  assert.match(ausgabe, /"previousHash": "f9fbaac79675/);
+  assert.match(ausgabe, /"previousHash": "f9fbaac79675c08cf9137b9c51d022c9b32003940de01435b4f260d2b928c2a9"/);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 

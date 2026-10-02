@@ -222,7 +222,7 @@ function hole(host, pfad) {
   const kontakt = process.env.SEC_CONTACT;
   if (!kontakt) {
     return Promise.reject(new Error('[druckenmiller] 13F --fetch braucht SEC_CONTACT (z. B. '
-      + '"Karl Viehrig karl@example.com"). Die SEC verlangt einen Kontakt im User-Agent; ohne ihn '
+      + '"Max Mustermann max@example.com"). Die SEC verlangt einen Kontakt im User-Agent; ohne ihn '
       + 'wird gesperrt, und ein anonymer Abruf ist keine Option.'));
   }
   return new Promise((resolve, reject) => {

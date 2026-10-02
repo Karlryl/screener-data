@@ -74,7 +74,7 @@ test('Trockenlauf ist der STANDARD und schreibt nichts', () => {
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /TROCKENLAUF - es wurde NICHTS geschrieben/);
   assert.equal(fs.readFileSync(o.register, 'utf8'), vorher);
-  assert.match(r.stdout, /previousHash": "84708464/);
+  assert.match(r.stdout, /previousHash": "847084648a7fa5d7d8535c7eec3285de44ac94c02cce1e94f204528f34358d41"/);
   assert.match(r.stdout, /Eintraege nach dem Anhaengen: 26/);
 });
 

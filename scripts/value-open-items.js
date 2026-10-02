@@ -14,10 +14,11 @@
  * (board-history/_excluded.json), skipping structurally flagged board files (lib/board-history-flag.js).
  *
  * Usage:
- *   node scripts/value-open-items.js [--date YYYY-MM-DD] [--base DIR]
- *   node scripts/value-open-items.js --replay [--from 2026-08-05] [--to YYYY-MM-DD] [--base DIR] [--out FILE]
+ *   node scripts/value-open-items.js [--date YYYY-MM-DD] [--base DIR] [--dry-run]
+ *   node scripts/value-open-items.js --replay [--from 2026-08-05] [--to YYYY-MM-DD] [--base DIR] [--out FILE] [--dry-run]
  *     Seed: replays the step over the stored, not globally excluded vintages from..to (today's values
  *     = that stored day), starting from an empty list; writes the result marked "seed": "replay".
+ *   --dry-run computes and prints, and writes no file on either path.
  * --base / --out are resolved to absolute paths against the current directory.
  * Exit: 0 written · 1 unreadable input or append-only violation (nothing written).
  */
@@ -28,6 +29,8 @@ const W = require('./write-board-history.js');
 const { istStrukturell } = require('../lib/board-history-flag.js');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { validateTable } = require('../lib/financial-known-cases.js');
+const { loadAdsHandTable, loadShareCountTable } = require('../lib/ads-hand-table.js');
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const V = require('../lib/value-open-items.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -56,6 +59,11 @@ function loadTables(base) {
   for (const [k, rel] of Object.entries(TABLE_FILES)) raw[k] = readJsonIfExists(path.join(base, rel));
   if (raw.fkc) {
     try { validateTable(raw.fkc); } catch (e) { throw new Error('unreadable input ' + TABLE_FILES.fkc + ': ' + e.message); }
+  }
+  // The marketCap rows are run through the real table functions (V.mcapHandTableApplied): validate like pull-yahoo.
+  for (const [k, load] of [['ads', loadAdsHandTable], ['shares', loadShareCountTable]]) {
+    if (!raw[k]) continue;
+    try { raw[k] = load(path.join(base, TABLE_FILES[k])); } catch (e) { throw new Error('unreadable input ' + TABLE_FILES[k] + ': ' + e.message); }
   }
   return V.buildTables(raw);
 }
@@ -97,8 +105,11 @@ function indexHistory(index, historyDir, days) {
   }
 }
 
-/** Today's rows from FULL_DIR via the writer's own buildBoardVintage(). */
-function todayFromFull(date, base) {
+/**
+ * Today's rows from FULL_DIR via the writer's own buildBoardVintage(); a ticker with a marketCap
+ * hand-table row also gets mcapHandTableApplied from today's snapshot (stored days have none).
+ */
+function todayFromFull(date, base, tables) {
   const P = W.resolvePaths(base);
   if (!fs.existsSync(P.FULL_DIR)) throw new Error('unreadable input: missing ' + P.FULL_DIR);
   const boards = fs.readdirSync(P.FULL_DIR).filter((f) => f.endsWith('.json')).sort();
@@ -108,7 +119,11 @@ function todayFromFull(date, base) {
     if (!data) throw new Error('unreadable input: ' + path.join(P.FULL_DIR, f));
     return W.buildBoardVintage(f.replace(/\.json$/, ''), data, date, { formulaVersion: null, generatedAt: null }, null);
   });
-  return V.dayRows(files);
+  const rows = V.dayRows(files);
+  for (const [t, row] of rows) {
+    if (tables.mcapRows.has(t)) row.mcapHandTableApplied = V.mcapHandTableApplied(readJsonIfExists(path.join(P.SNAP_DIR, safeSnapshotFilename(t))), t, tables);
+  }
+  return rows;
 }
 
 function writeState(file, state) {
@@ -156,7 +171,7 @@ function runDaily(opts) {
     warnings.push(...r.warnings.filter((w) => !warnings.includes(w)));
     V.indexVintage(index, V.dayRows(files.filter((x) => !x.structural).map((x) => x.v)), d);
   }
-  const today = opts.today || todayFromFull(date, base);
+  const today = opts.today || todayFromFull(date, base, tables);
   const res = V.updateOpenItems({ date, today, index, prior: state, acceptances: acc.entries, tables });
   delete res.state.seed; delete res.state.seedInputs;
   V.assertAppendOnly(prior, res.state);
@@ -197,7 +212,7 @@ function runReplay(opts) {
   }
   state.seed = 'replay';
   state.seedInputs = { from, to, command: 'node scripts/value-open-items.js --replay --from ' + from + ' --to ' + to, files: inputFingerprint(base) };
-  if (opts.out) writeState(opts.out, state);
+  if (opts.out && !opts.dryRun) writeState(opts.out, state);
   return { state, perDay, warnings, notes, ms: Date.now() - t0 };
 }
 
@@ -227,7 +242,7 @@ if (require.main === module) {
       for (const d of r.perDay) console.log(d.date + ': open ' + d.open + ', new ' + d.new + ', closed ' + d.closed + (d.opened.length ? '  [' + d.opened.join(', ') + ']' : ''));
       for (const w of r.warnings) console.log('::warning::' + w);
       for (const n of r.notes) console.log('  ' + n);
-      console.log('replay ' + r.state.seedInputs.from + '..' + r.state.seedInputs.to + ' done in ' + r.ms + ' ms: ' + r.state.items.length + ' items, ' + r.state.items.filter((it) => it.status === 'open').length + ' open');
+      console.log('replay ' + r.state.seedInputs.from + '..' + r.state.seedInputs.to + ' done in ' + r.ms + ' ms: ' + r.state.items.length + ' items, ' + r.state.items.filter((it) => it.status === 'open').length + ' open' + (o.dryRun ? ' (dry run, nothing written)' : ''));
     } else {
       const r = runDaily(o);
       for (const w of r.warnings) console.log('::warning::' + w);
