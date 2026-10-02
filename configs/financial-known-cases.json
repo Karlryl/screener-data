@@ -4582,6 +4582,132 @@
           "accession": "0001868726-26-000036"
         }
       ]
+    },
+    {
+      "caseId": "hlx-retired-ticker-20261002",
+      "ticker": "HLX",
+      "reason": "Score fehlt: Der Ticker HLX ist seit dem Zusammenschluss mit Hornbeck Offshore (8-K vom 04.09.2026) nicht mehr notiert; die Firma wird als HOS gehandelt. Kurs und Börsenwert unter HLX stehen seit 01.09.2026 still.",
+      "fingerprint": [
+        {
+          "path": [
+            "annual",
+            "annualRev",
+            0,
+            "value"
+          ],
+          "expected": 1291474000
+        },
+        {
+          "path": [
+            "annual",
+            "annualNetIncome",
+            0,
+            "value"
+          ],
+          "expected": 30827000
+        }
+      ],
+      "annualPairPeriod": "2025-12-31",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/866829/000119312526383687/d117247d8k.htm",
+          "page": "8-K of 2026-09-04 (same SEC registrant 866829 as Helix), introductory note and cover page",
+          "quote": "Helix was renamed",
+          "tradingSymbol": "HOS (New York Stock Exchange)",
+          "accession": "0001193125-26-383687"
+        }
+      ],
+      "vendorEvidence": "Yahoo chart meta for HLX: regularMarketPrice 10.6, regularMarketTime 2026-09-01T20:00:02Z (read 2026-10-02); stored daily closes for HLX stay at 10.60 with asOf 2026-09-01 through the 2026-10-01 price file"
+    },
+    {
+      "caseId": "yunji-pre-split-price-20261002",
+      "ticker": "2670.HK",
+      "reason": "Score fehlt: Der Anbieter zeigt für Yunji seit der Aktienteilung 1:10 (wirksam 23.09.2026) noch den Kurs vor der Teilung (97 HKD statt zuletzt 6,01 HKD) und damit einen Börsenwert von 8,57 statt rund 0,53 Mrd. USD. Mit dem richtigen Wert läge Yunji unter der Untergrenze von 800 Mio. USD.",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "sharesOutstanding"
+          ],
+          "expected": 62192438
+        },
+        {
+          "path": [
+            "meta",
+            "impliedSharesOutstanding"
+          ],
+          "expected": 69345982
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0923/2026092300950.pdf",
+          "page": "HKEX Next Day Disclosure Return (FF305) of 2026-09-23, page 1, H shares, stock code 02670",
+          "quote": "into 10 Subdivided Shares",
+          "closingBalance": "693,459,820 issued H shares (excluding treasury shares) as at 23 September 2026"
+        }
+      ],
+      "vendorEvidence": "Yahoo chart meta for 2670.HK: regularMarketPrice 97 HKD, regularMarketTime 2026-09-22T08:08:11Z (read 2026-10-02); split-adjusted daily closes 9.50 HKD (2026-09-22) to 6.01 HKD (2026-09-30). Snapshot of run 36839128456: price 12.36 USD (= 97 HKD), marketCap 8,572,798,296 USD = 12.36 USD x 693,459,820. Estimate: 6.01 HKD x 693,459,820 x 0.12745 USD/HKD (snapshot rate) = 0.53 bn USD."
+    },
+    {
+      "caseId": "energisa-mixed-class-market-cap-20261002",
+      "ticker": "ENGI3.SA",
+      "reason": "Score fehlt: Der Anbieter rechnet den Börsenwert von Energisa mit 3,78 Mrd. Aktien zum Kurs der Stammaktie und zeigt 9,14 Mrd. USD. Energisa hat laut eigener Aktionärsstruktur vom 31.08.2026 975.954.372 Stamm- und 1.542.412.758 Vorzugsaktien; mit beiden Kursen sind das rund 5,4 Mrd. USD. Der Abruf kennt den Kurs der Vorzugsaktie nicht, deshalb bleibt Energisa gesperrt, bis er ihn kennt.",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "sharesOutstanding"
+          ],
+          "expected": 974895605
+        },
+        {
+          "path": [
+            "meta",
+            "impliedSharesOutstanding"
+          ],
+          "expected": 3777747805
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://ri.energisa.com.br/en/corporate-governance/shareholding-and-corporate-structure/",
+          "page": "Energisa investor relations, Shareholding and Corporate Structure, table \"OWNERSHIP STRUCTURE ON 08/31/2026\"",
+          "quote": "OWNERSHIP STRUCTURE ON 08/31/2026",
+          "tableRow": "Total capital stock | 975,954,372 | 100.00 | 1,542,412,758 | 100.00 | 2,518,367,130 | 100.00"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36839128456: marketCap 9,139,771,136 USD at 2.419 USD (ENGI3, 12.56 BRL), impliedSharesOutstanding 3,777,747,805. Yahoo closes 2026-09-30: ENGI3.SA 12.49 BRL, ENGI4.SA 10.15 BRL. Estimate: (975,954,372 x 12.49 + 1,542,412,758 x 10.15) BRL x 0.19263 USD/BRL (snapshot rate) = 5.36 bn USD."
+    },
+    {
+      "caseId": "jbs-frankfurt-wrong-share-count-20261002",
+      "ticker": "Z98.DE",
+      "reason": "Score fehlt: Der Anbieter rechnet den Börsenwert der Frankfurter JBS-Notierung mit 3,29 Mrd. Aktien und zeigt 37,4 Mrd. USD. Laut JBS sind es 1.070.929.187 Aktien (Klasse A und B), also rund 12,2 Mrd. USD. JBS selbst steht mit richtigem Börsenwert auf dem Board.",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "sharesOutstanding"
+          ],
+          "expected": 777003211
+        },
+        {
+          "path": [
+            "meta",
+            "impliedSharesOutstanding"
+          ],
+          "expected": 3289961848
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1791942/000179194226000004/jbsay-20260630.htm",
+          "page": "10-Q for the period ended 2026-06-30, cover page",
+          "quote": "As of June 30, 2026, there were 776,086,920 Class A common shares, par value of €0.01 per share, and 294,842,267 Class B common shares, par value of €0.10 per share, outstanding.",
+          "accession": "0001791942-26-000004"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 36839128456: marketCap 37,401,989,416 USD at 11.37 USD, impliedSharesOutstanding 3,289,961,848 (the same wrong count the share-count hand table fingerprints for JBS). Estimate: 11.3685 USD x 1,070,929,187 = 12.18 bn USD."
     }
   ]
 }
