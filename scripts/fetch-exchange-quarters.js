@@ -113,7 +113,7 @@ function boardPriority(boardRoot) {
   if (!days.length) return out;
   const dir = path.join(boardRoot, days[days.length - 1]);
   for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith('.json') || f.startsWith('_') || f === 'calibration.json') continue;
+    if (!f.endsWith('.json')) continue;   // calibration.json has no cohort and adds nothing
     const b = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
     for (const rows of Object.values(b.cohort || {})) {
       for (const r of rows || []) {
