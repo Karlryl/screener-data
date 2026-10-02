@@ -546,6 +546,12 @@ Wirkung am festen Tag: Score, Rang und Achsen unverändert (Versorger profitabel
 
 Zweitnotierungen: CMIG3.SA und CIG sind keine Aliasse. CMIG3.SA trägt ein anderes Anbieterpaket (Bruttogewinn 30.06.2026 1.804.259 und 30.06.2025 2.081.436 statt 1.804.157 und 2.080.901), CIG ein älteres Paket ohne das Quartal bis 30.06.2026 und mit tausendfach zu großen Werten (31.03.2026 Bruttogewinn 10.333.161 Mio. BRL). Beide stehen als Doppelnotierung (`dup-issuer`) auf keinem Board, vorher wie nachher.
 
+### MODEC (6269.T): nicht eingetragen
+
+MODEC berichtet in US-Dollar; die Quartale des Anbieters sind Yen-Umrechnungen zu wechselnden Stichtagskursen („June 30, 2026 at US$1.00 = 162.39 Japanese yen“) und liegen nach der Umrechnung +4,4 %, +1,6 %, +12,8 % und −1,7 % neben den Dollarwerten der Firma (Halbjahr 2026 „Revenue 2,074,296 2,447,050“, erstes Quartal „Revenue 873,038 1,077,078“, Tsd. USD). „Nativ“ ist im Stand Yen (`meta.reportingCurrencyOriginal` JPY, `fxRateApplied` 0,006352635; 225.152 Mio. JPY × Kurs = gespeicherte 1.430.308.475,52). Die Währungstabelle setzt bei MODEC nur die Jahresreihe auf US-Dollar (`series: annual`).
+
+Nicht eingetragen, weil ein bestehender Wächter genau diese Zellen festhält: `tests/statement-currency-waechter.test.js` (Block „MODEC corrects annual USD statements and retains quarterly JPY conversion“) prüft mit den echten Anbieterwerten 225.152 und 172.224 Mio. JPY, dass der Umrechner die Quartale mit dem Yen-Kurs führt und dass eine zweite Umrechnung nichts mehr ändert. Der Umrechner (`pull-yahoo.js`) wendet die Handtabelle vor der Umrechnung an; ein Dollar-Ersatzwert kann dort noch nicht stehen und käme erst beim nächsten Einlesen, eine leere Zelle widerspräche dem Wächter ebenso. Jede Lösung ändert also das, was dieser Wächter festhält; das ist eine Methodenentscheidung zu #398 und nicht Teil dieser Änderung. Score und Rang sind davon heute nicht berührt (Wachstum +9,43 % aus der Dollar-Jahresreihe; die gespeicherte Reihe hat kein Vorjahresquartal).
+
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
 Alle 122 gemessenen Scoreänderungen stehen in der folgenden Tabelle und in financial-corrections-board-changes.csv. Alle 9900 Zellen stehen in financial-corrections-shadow-cells.csv. 26 sichtbare Auswirkungen bleiben auch bei festgehaltener Vergleichskalibrierung; die übrigen entstehen bei der regulären Neukalibrierung. Keine dieser breiten Änderungen ist aktiviert.
