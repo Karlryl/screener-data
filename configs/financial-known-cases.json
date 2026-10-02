@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-02a",
+  "revision": "2026-10-02b",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -5129,6 +5129,111 @@
           "start": "2025-04-01",
           "end": "2025-06-30",
           "value": 453286000
+        }
+      ]
+    },
+    {
+      "caseId": "hl-2025-12-31-annualGP",
+      "ticker": "HL",
+      "listingAliases": [
+        "HL.SW"
+      ],
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 622203000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn-Jahreswerte fehlen: Hecla hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026); der Anbieter führt noch den alten Stand (2025: 622,2 statt 509,8 Mio. USD). Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "Exhibit 99.1 (recast FY2025 statements), segment note, gross profit by segment, year 2025 (Total column)",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "unit": "USD thousands",
+          "quote": "Gross profit 322,646 132,950 53,665 509,261 544 509,805",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 509805000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "8-K of 2026-08-28, exhibit 99.1: FY2025 statements recast for Casa Berardi as discontinued operation, segment note",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "quote": "as a discontinued operation for all periods presented"
+        }
+      ]
+    },
+    {
+      "caseId": "hl-2024-12-31-annualGP",
+      "ticker": "HL",
+      "listingAliases": [
+        "HL.SW"
+      ],
+      "field": "annualGP",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 198210000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn-Jahreswerte fehlen: Hecla hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026); der Anbieter führt noch den alten Stand (2025: 622,2 statt 509,8 Mio. USD). Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "Exhibit 99.1 (recast FY2025 statements), segment note, gross profit by segment, year 2024 (Total column)",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "unit": "USD thousands",
+          "quote": "Gross profit/(loss) (a) 153,447 56,462 (26,754) 183,155 29 183,184",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 183184000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "8-K of 2026-08-28, exhibit 99.1: FY2025 statements recast for Casa Berardi as discontinued operation, segment note",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "quote": "as a discontinued operation for all periods presented"
+        }
+      ]
+    },
+    {
+      "caseId": "hl-2023-12-31-annualGP",
+      "ticker": "HL",
+      "listingAliases": [
+        "HL.SW"
+      ],
+      "field": "annualGP",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "expectedBadValue": 112949000,
+      "replacementValue": null,
+      "reason": "Bruttogewinn-Jahreswerte fehlen: Hecla hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026); der Anbieter führt noch den alten Stand (2025: 622,2 statt 509,8 Mio. USD). Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "Exhibit 99.1 (recast FY2025 statements), segment note, gross profit by segment, year 2023 (Total column)",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "unit": "USD thousands",
+          "quote": "Gross profit (loss) (a) 124,609 6,552 (29,793) 101,368 (97) 101,271",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 101271000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/719413/000119312526374615/hl-ex99_1.htm",
+          "page": "8-K of 2026-08-28, exhibit 99.1: FY2025 statements recast for Casa Berardi as discontinued operation, segment note",
+          "accession": "0001193125-26-374615",
+          "filed": "2026-08-28",
+          "quote": "as a discontinued operation for all periods presented"
         }
       ]
     }

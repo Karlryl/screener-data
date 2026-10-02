@@ -28,9 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 192 authorized cells (182 quarterly, 10 annual) and nine held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 192);
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 10);
+test('all 195 authorized cells (182 quarterly, 13 annual) and nine held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 195);
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 13);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 192);
+  assert.equal(validateTable(clone(table)).cases.length, 195);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -102,9 +102,15 @@ for (const c of table.cases.filter(x => x.periodType === '12M')) test(c.caseId +
   assert.equal(serial(row.financialCorrection.originalVendorRow), serial(input.annual[c.field][i]));
   assert.ok(financialReasons(out).includes(c.reason));
   assert.ok(r.events.some(e => e.caseId === c.caseId && e.status === 'missing' && e.container === 'annual' && e.index === i));
-  // Absence: every annual cell without its own case keeps the vendor row byte for byte.
+  // Absence: every annual cell without its own case keeps the vendor row byte for byte, except a present cell older
+  // than the newest withheld year, which the no-gap rule withholds too (HL 2022).
   const own = new Set(table.cases.filter(x => listedIn(x, c.ticker) && x.field === c.field).map(x => annualIndex(input, x)));
-  input.annual[c.field].forEach((x, j) => { if (!own.has(j)) assert.equal(serial(out.annual[c.field][j]), serial(x)); });
+  const newestOwn = Math.min(...own);
+  input.annual[c.field].forEach((x, j) => {
+    if (own.has(j)) return;
+    if (j > newestOwn && value(x) != null) assert.equal(out.annual[c.field][j].financialMissing?.reasonCode, 'annual-older-than-withheld', 'cell ' + j);
+    else assert.equal(serial(out.annual[c.field][j]), serial(x));
+  });
   assert.equal(serial(input), original);
   assert.equal(serial(applyFinancialCases(out).snapshot), serial(out), 'idempotent: an already withheld cell stays withheld');
   const other = clone(fixture[c.ticker]); other.meta.ticker = 'UNLISTED'; assert.equal(applyFinancialCases(other).snapshot, other);
@@ -606,7 +612,7 @@ test('excluded list: a quarantined packet has null sector, industry, market cap 
 // R2: other listings of the same issuer carry the identical false cells (checked in the 29.09. archive).
 test('listing aliases: YSNG.VI, PDN.TO and PALAF are corrected like their primary; unrelated ticker untouched', () => {
   const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases).map(c => [c.ticker, c.listingAliases]));
-  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], HIVE: ['HIVE.TO'] });
+  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], HIVE: ['HIVE.TO'], HL: ['HL.SW'] });
   const leg = (primary, alias) => { const s = clone(fixture[primary]); s.meta.ticker = alias; return s; };
   for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
     const input = leg(primary, alias), original = serial(input), r = applyFinancialCases(input);
@@ -1100,6 +1106,39 @@ test('opIncQ: six companies x five covered quarters, none unverified; readers on
   guard({ validateTable });
   assert.throws(() => guard(moduleCopy('lib/financial-known-cases.js', s => replaceLine(s, ALLOWED_LINE,
     "const allowed = new Set(['revenueQ', 'grossProfitQ']);"))), /Invalid or duplicate financial case: HIVE\|opIncQ/); breaks++;
+});
+
+// E4 Part B (02.10.): Hecla recast 2023-2025 after the Casa Berardi sale (8-K of 2026-08-28). Only the annual gross
+// profit is withheld (the shown +213.9 % badge is +178.3 % recast); annual revenue stays (growth error 0.24 pp), so the
+// revenue-based axes and the asset-growth penalty keep their values.
+test('HL: annual gross profit withheld (badge and gross-profit growth empty with reason), revenue axes unchanged, HL.SW alike', () => {
+  const axes = require('../src/scoring/axes.js'), { overviewMetric } = require('../src/scoring/overview.js');
+  const noHl = clone(table); noHl.cases = noHl.cases.filter(c => c.ticker !== 'HL');
+  const r = applyFinancialCases(clone(fixture.HL)), hl = r.snapshot, old = applyFinancialCases(clone(fixture.HL), { table: noHl }).snapshot;
+  assert.deepEqual(norm(old, 'annualGP'), [622203000, 198210000, 112949000, 116156000]);
+  assert.deepEqual(norm(hl, 'annualGP'), [null, null, null, null]);
+  assert.deepEqual([0, 1, 2].map(i => hl.annual.annualGP[i].financialCorrection.caseId), ['hl-2025-12-31-annualGP', 'hl-2024-12-31-annualGP', 'hl-2023-12-31-annualGP']);
+  assert.equal(hl.annual.annualGP[3].financialMissing.reasonCode, 'annual-older-than-withheld', 'FY2022 by the no-gap rule');
+  assert.ok(!r.events.some(e => e.status === 'stale'));
+  // Absence: revenue, operating income and every quarter stay byte for byte.
+  for (const f of ['annualRev', 'annualOpInc', 'annualNetIncome']) assert.equal(serial(hl.annual[f]), serial(fixture.HL.annual[f]), f);
+  assert.equal(serial(hl.timeseries), serial(fixture.HL.timeseries));
+  // Readers: badge and gross-profit growth empty with the reason; acceleration, dilution and capital efficiency unchanged.
+  assert.equal(overviewMetric(old, {}).value.toFixed(3), '2.139');
+  assert.equal(overviewMetric(hl, {}).value, null);
+  assert.notEqual(axes.gpGrowth(old), null); assert.equal(axes.gpGrowth(hl), null);
+  for (const f of ['revGrowthLevel', 'revAcceleration', 'dilution', 'capitalEfficiency', 'marginTrajectory']) assert.equal(axes[f](hl), axes[f](old), f);
+  assert.ok(financialReasons(hl).some(t => t.startsWith('Bruttogewinn-Jahreswerte fehlen:')));
+  // Drift: a new year in front (or a restated value) withholds the whole series and warns; never the old values.
+  const grown = clone(fixture.HL); grown.annual.annualGP.unshift({ value: 700e6 });
+  const g = applyFinancialCases(grown);
+  assert.ok(norm(g.snapshot, 'annualGP').every(x => x === null));
+  assert.ok(g.events.some(e => e.status === 'stale' && e.reasonCode === 'annual-value-changed'));
+  // Absence: the same packet under another ticker is untouched; HL.SW (identical annual packet) is withheld alike.
+  const other = clone(fixture.HL); other.meta.ticker = 'UNLISTED'; assert.equal(applyFinancialCases(other).snapshot, other);
+  // Break-once on test data: without the three cases the badge shows +213.9 % again.
+  const guard = cfg => assert.equal(overviewMetric(applyFinancialCases(clone(fixture.HL), cfg && { table: cfg }).snapshot, {}).value, null);
+  assert.throws(() => guard(noHl), assert.AssertionError); guard(); breaks++;
 });
 
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);

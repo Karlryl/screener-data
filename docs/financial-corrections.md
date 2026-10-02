@@ -339,7 +339,7 @@ Nächste Quartale: In jeder Reihe mit `coversThrough` bleibt ein neues Anbieterq
 
 Nicht in dieser Tabelle (Folgeaufträge, je eine Zeile):
 - Betriebsergebnis je Quartal (opIncQ): HIVE fünf Quartale, CARG zwei, PLUS eins, DCO zwei, INFQ drei. Die Handtabelle kennt nur Umsatz und Bruttogewinn; der vorhandene Mechanismus trägt es mit einer Erweiterung der Feldliste (`opIncQ`) samt `coversThrough` je Feld. (Nachtrag 02.10.: erledigt, dazu SLC Agrícola; Abschnitt „Betriebsergebnis je Quartal in der Handtabelle“.)
-- Jahresumsatz: HL drei Jahre (Neuausweis nach dem Verkauf von Casa Berardi), INFQ Jahr 2025, SLC (Anbieterbasis inklusive Neubewertung der Ernte, 2025: 9.759,2 statt 8.553,1 Mio. BRL). Die Handtabelle kann keine Jahreszellen korrigieren; heute bleibt nur eine Sperre wie bei OTF und KBDC oder eine Erweiterung um Jahreszellen. (Nachtrag: INFQ ist mit leeren Jahreszellen erledigt, Abschnitt „Jahreszellen vom 01.10.2026“; HL und SLC bleiben offen.)
+- Jahresumsatz: HL drei Jahre (Neuausweis nach dem Verkauf von Casa Berardi), INFQ Jahr 2025, SLC (Anbieterbasis inklusive Neubewertung der Ernte, 2025: 9.759,2 statt 8.553,1 Mio. BRL). Die Handtabelle kann keine Jahreszellen korrigieren; heute bleibt nur eine Sperre wie bei OTF und KBDC oder eine Erweiterung um Jahreszellen. (Nachtrag: INFQ ist mit leeren Jahreszellen erledigt, Abschnitt „Jahreszellen vom 01.10.2026“; HL und SLC bleiben offen. Nachtrag 02.10.: bei HL ist der Jahres-Bruttogewinn leer, der Umsatz bleibt; Abschnitt „HL: Jahres-Bruttogewinn leer“.)
 - Börsenwert: ABTC (nach der Zusammenlegung 1:15: 1,06 statt 0,63 Mrd. USD), Andersen (nur Klasse A gezählt: 1,0 statt rund 6 Mrd.), Energisa (8,2 statt 4,5 bis 4,9 Mrd.), Yunji (nach der Teilung 1:10: 8,6 statt rund 0,7 Mrd.). Tragbar über die vorhandene Aktienzahl-Handtabelle (ADS/Aktienzahl, PR #379). (Nachtrag 02.10.: ABTC und Andersen erledigt, Energisa und Yunji offen; Abschnitt „Börsenwert-Handtabelle vom 02.10.2026“.)
 - JBS: Börsenwert springt zwischen zwei Aktienzahlen; eine Zeile in derselben Aktienzahl-Handtabelle (776.086.920 Klasse A plus 294.842.267 Klasse B laut 10-Q-Deckblatt). (Nachtrag 02.10.: erledigt.)
 - Gespeicherte SEC-Dateien (`external-data/sec-*`): COP (Umsatz-Tag 2025), DCO (10-K/A wird absichtlich übersprungen), INFQ (Betriebsergebnis 2025), HL (Neuausweis 2025), HOS (Helix). Sie speisen Zyklus-Dämpfer und `roicStability`, nicht das Wachstum; braucht eine Korrektur in `merge-sec-xbrl.js` oder eine eigene Tabelle.
@@ -451,6 +451,26 @@ Eintragen der nächsten Quartale (bis 30.09.2026), Betriebsergebnis zusammen mit
 - DCO: 10-Q Q3 2026, Termin nicht geprüft.
 - INFQ: 10-Q Q3 2026, Termin nicht geprüft.
 - SLC Agrícola: ITR 3T26, gesetzliche Frist 14.11.2026 (45 Tage nach Quartalsende).
+
+## HL: Jahres-Bruttogewinn leer (02.10.2026)
+
+Problem: Hecla (HL, auch HL.SW) hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026, Exhibit 99.1: „as a discontinued operation for all periods presented“). Der Anbieter führt den alten Stand. Sichtbar falsch ist vor allem der Bruttogewinn: Kennzahl der Zeile +213,9 % (neu ausgewiesen +178,3 %), Achse Bruttogewinn-Wachstum im 98. Perzentil.
+
+Lösung: drei Jahreszellen `annualGP` (Position 0 bis 2, undatierte Reihe, Alias HL.SW) leer mit Grund; 2022 folgt nach der Regel ohne Lücken (`annual-older-than-withheld`). Der Jahresumsatz bleibt: Der Fehler im Wachstum ist 0,24 Punkte (alt 1.423,0/929,9 = +53,0 %, neu 1.103,9/720,2 = +53,3 %), und leere Umsatzjahre würden drei Achsen löschen und den Abschlag für Vermögenswachstum in der Kapitaleffizienz stillschweigend entfernen.
+
+| Jahr (Position) | Anbieter | Neu ausgewiesen (Exhibit 99.1, Segmentnote, Spalte gesamt) |
+| --- | --- | --- |
+| 2025 (0) | 622.203.000 | 509.805.000: „Gross profit 322,646 132,950 53,665 509,261 544 509,805“ |
+| 2024 (1) | 198.210.000 | 183.184.000: „Gross profit/(loss) (a) 153,447 56,462 (26,754) 183,155 29 183,184“ |
+| 2023 (2) | 112.949.000 | 101.271.000: „Gross profit (loss) (a) 124,609 6,552 (29,793) 101,368 (97) 101,271“ |
+| 2022 (3) | 116.156.000 | nicht neu ausgewiesen; leer nach der Regel ohne Lücken |
+
+Wirkung am festen Tag (wie oben), jede Achse vorher → nachher:
+- Growth, Materials profitabel: 79,3 Rang 39 → 73,5 Rang 93. Bruttogewinn-Wachstum Perzentil 98,1 → leer (Gewicht 0,8); unverändert: Wachstumsniveau 89,3 (0,5), Beschleunigung 85,9 (1,9), Rule of X 90,8 (0,6), Margen-Trajektorie 90,3 (0,4), Kapitaleffizienz 64,3 (2,0), Verwässerung 34,4 (0,8). Wachstum +52,45 % (Quartalsbein) unverändert. Kennzahl +213,9 % → leer mit Grund.
+- Quality, Materials profitabel: 70,2 Rang 111 → 53,8 Rang 366. Bruttogewinn-Wachstum 98,4 → leer (Gewicht 1,5) und Margenniveau 77,7 → leer (Gewicht 2,2; `marginLevel` liest den Jahres-Bruttogewinn); unverändert: Kapitaleffizienz 59,9 (2,6), Verwässerung 31,1 (1,2), Wachstumsniveau 89,4 (0,8).
+- Indirekt (zusammen mit dem Betriebsergebnis oben): Growth 82 Scores um höchstens 0,3, Quality 192 um höchstens 0,1, Ränge um höchstens 2 Plätze; keine Board-Ein- oder Austritte.
+
+Offen: Das Margenniveau liegt neu ausgewiesen bei 46,2 % (509,8/1.103,9) statt 43,7 % beim Anbieter; die leere Zelle kostet HL in Quality mehr als der Fehler. Jahresersatzwerte schließt die Tabelle bewusst aus (#403); ob HL dafür eine Ausnahme bekommt, ist eine Methodenfrage. Ebenfalls offen: Betriebsergebnis 2023 bis 2025 auf altem Stand (514,8 / 106,3 / −44,7 Mio. statt 396,4 / 123,8 / 12,0 Mio. laut 8-K, „Income from operations / 396,409 / 123,762 / 12,009“); die Tabelle trägt `annualOpInc` nicht.
 
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
