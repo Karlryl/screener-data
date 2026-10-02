@@ -338,16 +338,16 @@ Nachlauf mit `scripts/financial-corrections-replay.js --live` (neue Option: Grow
 Nächste Quartale: In jeder Reihe mit `coversThrough` bleibt ein neues Anbieterquartal leer, bis es geprüft und eingetragen ist (Warnung im Tageslauf). Zu prüfen, sobald die Firmen berichten: das Quartal bis 30.09.2026 für CARG, PLUS (10-Q laut Kalender am 09.11.2026), DCO, INFQ und SLC; für OXLC das Quartal bis 30.06.2026 (Fondsmitteilung liegt seit Juli 2026 vor, der Anbieter kann es jederzeit nachladen).
 
 Nicht in dieser Tabelle (Folgeaufträge, je eine Zeile):
-- Betriebsergebnis je Quartal (opIncQ): HIVE fünf Quartale, CARG zwei, PLUS eins, DCO zwei, INFQ drei. Die Handtabelle kennt nur Umsatz und Bruttogewinn; der vorhandene Mechanismus trägt es mit einer Erweiterung der Feldliste (`opIncQ`) samt `coversThrough` je Feld.
-- Jahresumsatz: HL drei Jahre (Neuausweis nach dem Verkauf von Casa Berardi), INFQ Jahr 2025, SLC (Anbieterbasis inklusive Neubewertung der Ernte, 2025: 9.759,2 statt 8.553,1 Mio. BRL). Die Handtabelle kann keine Jahreszellen korrigieren; heute bleibt nur eine Sperre wie bei OTF und KBDC oder eine Erweiterung um Jahreszellen. (Nachtrag: INFQ ist mit leeren Jahreszellen erledigt, Abschnitt „Jahreszellen vom 01.10.2026“; HL und SLC bleiben offen.)
+- Betriebsergebnis je Quartal (opIncQ): HIVE fünf Quartale, CARG zwei, PLUS eins, DCO zwei, INFQ drei. Die Handtabelle kennt nur Umsatz und Bruttogewinn; der vorhandene Mechanismus trägt es mit einer Erweiterung der Feldliste (`opIncQ`) samt `coversThrough` je Feld. (Nachtrag 02.10.: erledigt für CARG, PLUS, DCO und INFQ, dazu SLC Agrícola; HIVE nicht eingetragen, weil die Firma kein Betriebsergebnis ausweist; Abschnitt „Betriebsergebnis je Quartal in der Handtabelle“.)
+- Jahresumsatz: HL drei Jahre (Neuausweis nach dem Verkauf von Casa Berardi), INFQ Jahr 2025, SLC (Anbieterbasis inklusive Neubewertung der Ernte, 2025: 9.759,2 statt 8.553,1 Mio. BRL). Die Handtabelle kann keine Jahreszellen korrigieren; heute bleibt nur eine Sperre wie bei OTF und KBDC oder eine Erweiterung um Jahreszellen. (Nachtrag: INFQ ist mit leeren Jahreszellen erledigt, Abschnitt „Jahreszellen vom 01.10.2026“; HL und SLC bleiben offen. Nachtrag 02.10.: bei HL ist der Jahres-Bruttogewinn leer, der Umsatz bleibt; Abschnitt „HL: Jahres-Bruttogewinn leer“.)
 - Börsenwert: ABTC (nach der Zusammenlegung 1:15: 1,06 statt 0,63 Mrd. USD), Andersen (nur Klasse A gezählt: 1,0 statt rund 6 Mrd.), Energisa (8,2 statt 4,5 bis 4,9 Mrd.), Yunji (nach der Teilung 1:10: 8,6 statt rund 0,7 Mrd.). Tragbar über die vorhandene Aktienzahl-Handtabelle (ADS/Aktienzahl, PR #379). (Nachtrag 02.10.: ABTC und Andersen erledigt, Energisa und Yunji offen; Abschnitt „Börsenwert-Handtabelle vom 02.10.2026“.)
 - JBS: Börsenwert springt zwischen zwei Aktienzahlen; eine Zeile in derselben Aktienzahl-Handtabelle (776.086.920 Klasse A plus 294.842.267 Klasse B laut 10-Q-Deckblatt). (Nachtrag 02.10.: erledigt.)
-- Gespeicherte SEC-Dateien (`external-data/sec-*`): COP (Umsatz-Tag 2025), DCO (10-K/A wird absichtlich übersprungen), INFQ (Betriebsergebnis 2025), HL (Neuausweis 2025), HOS (Helix). Sie speisen Zyklus-Dämpfer und `roicStability`, nicht das Wachstum; braucht eine Korrektur in `merge-sec-xbrl.js` oder eine eigene Tabelle.
-- Dian Tou (002128.SZ), Quartal 31.12.2025: Umsatz −914,6 Mio. CNY und Bruttogewinn 562,0 Mio. CNY (laut Firma 3,13 Mrd.). Nicht eingetragen: Die gespeicherten Werte sind nach der Umrechnung keine exakten Vielfachen eines ganzzahligen CNY-Betrags (der Abgleich `expectedBadValue` verlangt exakte Gleichheit), und zwei leere Zellen würden das Quartalswachstum abschalten; braucht alle fünf Quartale aus den Berichten auf cninfo.
-- Wisdom Marine (2637.TW): Die ganze Reihe steht in Taiwan-Dollar unter dem Kennzeichen USD (Q4 2025 5,42 Mrd. statt 163,8 Mio. USD); kein Einzelzellenfehler, gehört zur Währungskorrektur wie bei YPF und Vale.
+- Gespeicherte SEC-Dateien (`external-data/sec-*`): COP (Umsatz-Tag 2025), DCO (10-K/A wird absichtlich übersprungen), INFQ (Betriebsergebnis 2025), HL (Neuausweis 2025), HOS (Helix). (Berichtigt 02.10.: Diese fünf Firmen stehen nicht in `sec-secannual.json` oder `sec-secannual-smallcap.json`, ihre gespeicherten SEC-Werte speisen also keine Score-Achse, weder Zyklus-Dämpfer noch `roicStability` (Gewicht 0). Gelesen wird für das Board nur `sec-annual-bulk.jsonl`, und zwar allein von der Kachel „Ununterbrochen profitabel“ (`src/scoring/profit-streak.js`, nach dem Scoring angehängt); bei COP, DCO und INFQ ändert sich dort nichts, bei HL zeigt sie „2 Jahre“ auf altem Stand. Eine Korrektur in `merge-sec-xbrl.js` wäre eine Methodenfrage.)
+- Dian Tou (002128.SZ), Quartal 31.12.2025: Umsatz −914,6 Mio. CNY und Bruttogewinn 562,0 Mio. CNY (laut Firma 3,13 Mrd.). Nicht eingetragen: Die gespeicherten Werte sind nach der Umrechnung keine exakten Vielfachen eines ganzzahligen CNY-Betrags (der Abgleich `expectedBadValue` verlangt exakte Gleichheit), und zwei leere Zellen würden das Quartalswachstum abschalten; braucht alle fünf Quartale aus den Berichten auf cninfo. (Nachtrag 02.10.: die Werte sind auf zwei Nachkommastellen exakt; acht Zellen leer, Abschnitt „Dian Tou: Quartale mit zwei Basen …“.)
+- Wisdom Marine (2637.TW): Die ganze Reihe steht in Taiwan-Dollar unter dem Kennzeichen USD (Q4 2025 5,42 Mrd. statt 163,8 Mio. USD); kein Einzelzellenfehler, gehört zur Währungskorrektur wie bei YPF und Vale. (Nachtrag 02.10.: bis dahin gesperrt; Abschnitt „Wisdom Marine gesperrt“.)
 - Bullish (BLSH), Bruttogewinn 30.06.2025: Die Firma weist keinen Bruttogewinn aus, alle Anbieterwerte sind Konstrukte (wie bei VCTR); Methodenfrage für Firmen ohne Bruttogewinn-Zeile.
 - Celesc Umsatzbasis: Anbieter 2T25 2.715,9 Mio. BRL, Firma („Receita Operacional Líquida“) 2.899,5 Mio.; ungeklärt, ob der Anbieter die Bauerlöse herausrechnet; nicht geprüft.
-- Offene Prüfnotiz aus PR #400 (Low 2): Ersatzwerte werden nicht maschinell gegen den `value` ihrer Quelle geprüft.
+- Offene Prüfnotiz aus PR #400 (Low 2): Ersatzwerte werden nicht maschinell gegen den `value` ihrer Quelle geprüft. (Nachtrag 02.10.: erledigt, die Prüfung lehnt einen Ersatzwert ab, der zu keinem Quellwert passt.)
 - Nachtragen eines Quartals: Eine Zelle, die beim Abruf schon leer gesetzt wurde (etwa `period-after-coverage`), bleibt nach dem Eintragen ihres geprüften Werts leer und meldet `vendor-value-changed`, bis der nächste volle Abruf den Anbieterwert neu liefert (keine falsche Zahl, nur zu lange leer). Abhilfe im Lader: bei einer fremden Leer-Markierung mit dem gespeicherten ursprünglichen Anbieterwert vergleichen; eigener Auftrag.
 
 ## Jahreszellen vom 01.10.2026 (INFQ, CARG, OTF)
@@ -406,6 +406,94 @@ Indirekte Wirkung am festen Tag, alles zusammen gegen origin/main (Live-Kalibrie
 Nicht in dieser Tabelle:
 - PSEC: Anbieter 1,110 Mrd. (533,8 Mio. Aktien) gegen 524.832.496 Aktien laut 10-K („As of August 19, 2026, there were 524,832,496 shares of the Registrant's common stock outstanding“), also 1,7 % zu hoch. Unter der Wesentlichkeit: kein Band- oder Klassenwechsel, weit über der Untergrenze, kleiner als eine normale Tagesbewegung des Kurses.
 - Realord (1196.HK): erledigt; 5.769.239.520 Aktien = 1.442.309.880 × 4 nach der Teilung, Börsenwert 2,19 Mrd. stimmt.
+
+## Betriebsergebnis je Quartal in der Handtabelle (02.10.2026)
+
+Problem: Die SEC-Doppelprüfung vom 01.10. fand falsche Quartals-Betriebsergebnisse (`opIncQ`) bei CARG, PLUS, DCO und INFQ; bei SLC Agrícola passt keiner der fünf Anbieterwerte zum Abschluss. Bei HIVE wich der Anbieter von der Zeile „(Loss) income from operations“ ab; diese Zeile ist aber kein Betriebsergebnis (unten). Die Handtabelle kannte nur Umsatz und Bruttogewinn.
+
+Mechanismus (`lib/financial-known-cases.js`): `opIncQ` ist ein drittes Quartalsfeld mit genau derselben Wirkung wie Umsatz und Bruttogewinn: Fall je Ticker (samt Zweitnotierung), Feld und Periode mit dem exakten Anbieterwert; weicht der Anbieter ab, wird die Zelle leer (`vendor-value-changed`, nie ersetzt, nie 0); `coversThrough` je Feld, ein neues Anbieterquartal bleibt leer, bis es geprüft und eingetragen ist. Neu für alle Fälle: Ein Ersatzwert muss zu seinen Quellen passen, nämlich gleich einem `value` einer Quelle sein, gleich der Differenz zweier Quellwerte (der längere Zeitraum minus der kürzere, den er enthält, etwa Jahr minus neun Monate; nie 0 und nie eine Quelle minus sich selbst) oder bei einer vom Emittenten gerundeten Quelle innerhalb ihrer ausdrücklich eingetragenen Rundung (`roundingStep`) liegen; sonst lehnt die Prüfung die ganze Tabelle ab. Fälle ohne Quellwert (HTGC, Banpu, aus der ersten Tabelle) sind ausgenommen. Am Stand 2026-10-01c bestehen alle 162 Fälle: 106 über einen Quellwert, 16 abgeleitete Quartale über die Differenz, OXLC 31.03.2025 über die Rundung („approximately $121.2 million“ gegen 121.161.000, `roundingStep` 100.000), 10 ohne Quellwert, 29 leer gesetzt. Damit ist die offene Prüfnotiz aus PR #400 (Low 2) erledigt.
+
+Eingetragen sind 25 Zellen (fünf Firmen mal fünf Quartale, je `coversThrough` 30.06.2026): 13 ersetzt, 12 bestätigt. Jeder Wert ist am 02.10. vom Erbauer selbst im Bericht nachgelesen (SEC-Filings, CVM-Daten). Jeder `expectedBadValue` ist gleich dem Anbieterwert im Artefakt `snapshots` von Lauf 36839128456 (01.10.2026); kein gespeichertes Quartal der fünf Reihen bleibt ungeprüft (0 Zellen `period-not-verified`).
+
+| Ticker | Periode | Anbieter | Firma | Quelle (wörtlich) |
+| --- | --- | --- | --- | --- |
+| CARG | 31.12.2025 | 119.172.000 | 69.127.000 | 10-K 2025, Note 16: „Income from continuing operations 69,127 64,115 60,549 50,654“ |
+| CARG | 30.09.2025 | 54.674.000 | 64.115.000 | wie oben |
+| PLUS | 31.03.2026 | 37.644.000 | 30.904.000 | Ergebnismitteilung (8-K vom 28.05.2026): „Operating income 30,904 18,766 166,145 99,686“ |
+| DCO | 31.12.2025 | 13.998.000 | 16.882.000 | 10-K/A 2025: „Operating Income 13,998 2,884 16,882“ |
+| DCO | 30.09.2025 | −80.050.000 | −75.317.000 | 10-K/A 2025: „Operating Loss (80,050) 4,733 (75,317)“ |
+| INFQ | 31.03.2026 | −33.575.000 | −33.031.000 | 10-Q Q2 2026, Berichtigung: „Loss from operations $ (33,575) $ 544 $ (33,031)“ |
+| INFQ | 30.09.2025 | −6.536.000 | −6.699.000 | neun Monate 2025 berichtigt (23.895) minus sechs Monate (17.196), beide im 10-Q Q2 2026 |
+| INFQ | 31.03.2025 | −6.950.000 | −6.784.000 | sechs Monate 2025 (17.196) minus zweites Quartal (10.412), 10-Q Q2 2026 |
+| SLCE3.SA | 30.06.2026 | 2.619.662.000 BRL | 677.429.000 BRL | CVM ITR 2026, Konto 3.05 „Resultado Antes do Resultado Financeiro e dos Tributos“ |
+| SLCE3.SA | 31.03.2026 | 624.874.000 | 624.406.000 | CVM ITR 2026, 3.05 |
+| SLCE3.SA | 31.12.2025 | 222.439.000 | 209.162.000 | CVM DFP 2025 3.05 (1.812.542) minus ITR 3T25 neun Monate (1.603.380) |
+| SLCE3.SA | 30.09.2025 | 284.041.000 | 284.046.000 | CVM ITR 2025, 3.05 |
+| SLCE3.SA | 30.06.2025 | 2.242.857.000 | 453.286.000 | CVM ITR 2026, Vorjahresspalte, 3.05 |
+
+Bestätigt (Anbieter gleich Firma, Zeile bleibt Byte für Byte): CARG 30.06.2026, 31.03.2026, 30.06.2025; PLUS 30.06.2026, 31.12.2025, 30.09.2025, 30.06.2025; DCO 30.06.2026, 31.03.2026, 30.06.2025; INFQ 30.06.2026, 30.06.2025. CARG: „Income from continuing operations“ ist die Betriebsergebniszeile (Konzern-GuV des 10-K: Umsatz minus betriebliche Aufwendungen, vor „Other income, net“ und vor Steuern; „Income from continuing operations 244,445 157,147 120,329“), nicht das Ergebnis nach Steuern.
+
+HIVE (auch HIVE.TO), nicht eingetragen (Prüfrunde 2, 02.10.): Die Zeile „(Loss) income from operations“ steht in allen vier Berichten (10-Q Q1 FY2027, 10-K FY2026, 6-K Q2 und Q3 FY2026) nach den Bewertungsgewinnen aus Beteiligungen und Derivaten, der Rückstellung für Regulierungsverbindlichkeiten, dem Ergebnis aus Anlagenverkäufen, „Other income“ und „Finance expense“, direkt vor „Tax expense“; sie ist das Ergebnis vor Steuern. In den XBRL-Daten der Firma (companyfacts, CIK 1720424) trägt sie das Kennzeichen `IncomeLossFromContinuingOperationsBeforeInterestExpenseInterestIncomeIncomeTaxesExtraordinaryItemsNoncontrollingInterestsNet`; ein Kennzeichen `OperatingIncomeLoss` gibt es nicht, „Finance expense“ ist als `InterestExpenseNonoperating` markiert. Ein Betriebsergebnis weist HIVE also nicht aus, und ein selbst gebildeter Zwischenwert wäre geraten. Der Anbieterwert bleibt deshalb unverändert wie auf main (er ist selbst eine Summe aus Bruttoergebnis, Verwaltungskosten, aktienbasierter Vergütung, Rückstellung und Ergebnis aus Kryptowährungen, aber nicht als falsch belegt). Mit dem eingetragenen Vorsteuerergebnis wäre die Marge im Quartal bis 30.06.2025 wegen Bewertungsgewinnen von 24,6 Mio. USD auf +78 % gesprungen.
+
+SLC Agrícola, Basis: Das Betriebsergebnis (CVM 3.05) steht wie der Bruttogewinn aus #402 (3.03, 941.202) auf der Umsatzbasis 3.01 (2T26: 2.765.644, mit Neubewertung der Ernte); der Umsatz der Handtabelle ist die „Receita Operacional Líquida“ der Ergebnismitteilung (2.175.612, ohne sie). Die Margenreihe mischt damit zwei Basen; auf einer Basis wäre die Margenbewegung kleiner (Rohwert +0,044 statt +0,068). Das ist keine wahre Margenbewegung, sondern eine geerbte Basisfrage aus #402 (Folgeauftrag).
+
+Wirkung am festen Tag (Lauf 36839128456, 16.108 Stände, Watchlist d90e04b259, Growth live kalibriert; origin/main 347aaffb4e gegen diesen Stand): SLC Basiskonsum profitabel 81,8 Rang 25 → 82,7 Rang 22 (roh 0 → +0,068, Perzentil 53,7 → 89,8, Gewicht 0,3); INFQ 68,2 Rang 14 unverändert (roh −1,357 → −1,378); CARG, PLUS, DCO unverändert (korrigiert sind nur mittlere Quartale; Trajektorie, Gewinnstufe und Lampe lesen sie heute nicht). HIVE Financials unprofitabel 63,9 Rang 6 unverändert. Gewinnstufe und Lampen aller fünf unverändert. Indirekt: 14 Scores um höchstens 0,1, 15 Zeilen nur im Rang um höchstens 2 Plätze; Quality und Smallcap unverändert; keine Board-Ein- oder Austritte. Die alte Tabelle unter dem neuen Lader verändert 0 der 16.108 Stände (mit dem neu eingetragenen `roundingStep` bei OXLC; ohne ihn lehnt der neue Lader die alte Tabelle ab).
+
+Grenzen: Solange ein neues Quartal leer ist, ist die Margen-Trajektorie leer (`axes.js` verlangt das jüngste Quartal) und die Gewinnstufe rechnet bei Verlustfirmen mit dem Vorquartal. Die Lückenprüfung des Board-Verlaufs (`scripts/write-board-history.js`, opSlot) erkennt eine leer gesetzte Zelle der Handtabelle nicht als leeren Kopf; sie wirkt nur an angemeldeten Datensprung-Tagen (Folgeauftrag, die Datei ist in offenen PRs in Arbeit).
+
+Eintragen der nächsten Quartale (bis 30.09.2026), Betriebsergebnis zusammen mit Umsatz und Bruttogewinn, sobald die Firma berichtet:
+- CARG: 10-Q Q3 2026, Termin nicht geprüft (Vorjahr Anfang November).
+- PLUS: 10-Q Q2 FY2027, laut Anbieterkalender 09.11.2026 (nicht geprüft).
+- DCO: 10-Q Q3 2026, Termin nicht geprüft.
+- INFQ: 10-Q Q3 2026, Termin nicht geprüft.
+- SLC Agrícola: ITR 3T26, gesetzliche Frist 14.11.2026 (45 Tage nach Quartalsende).
+
+## HL: Jahres-Bruttogewinn leer (02.10.2026)
+
+Problem: Hecla (HL, auch HL.SW) hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026, Exhibit 99.1: „as a discontinued operation for all periods presented“). Der Anbieter führt den alten Stand. Sichtbar falsch ist vor allem der Bruttogewinn: Kennzahl der Zeile +213,9 % (neu ausgewiesen +178,3 %), Achse Bruttogewinn-Wachstum im 98. Perzentil.
+
+Lösung: drei Jahreszellen `annualGP` (Position 0 bis 2, undatierte Reihe, Alias HL.SW) leer mit Grund; 2022 folgt nach der Regel ohne Lücken (`annual-older-than-withheld`). Der Jahresumsatz bleibt: Der Fehler im Wachstum ist 0,24 Punkte (alt 1.423,0/929,9 = +53,0 %, neu 1.103,9/720,2 = +53,3 %), und leere Umsatzjahre würden drei Achsen löschen und den Abschlag für Vermögenswachstum in der Kapitaleffizienz stillschweigend entfernen.
+
+| Jahr (Position) | Anbieter | Neu ausgewiesen (Exhibit 99.1, Segmentnote, Spalte gesamt) |
+| --- | --- | --- |
+| 2025 (0) | 622.203.000 | 509.805.000: „Gross profit 322,646 132,950 53,665 509,261 544 509,805“ |
+| 2024 (1) | 198.210.000 | 183.184.000: „Gross profit/(loss) (a) 153,447 56,462 (26,754) 183,155 29 183,184“ |
+| 2023 (2) | 112.949.000 | 101.271.000: „Gross profit (loss) (a) 124,609 6,552 (29,793) 101,368 (97) 101,271“ |
+| 2022 (3) | 116.156.000 | nicht neu ausgewiesen; leer nach der Regel ohne Lücken |
+
+Wirkung am festen Tag (wie oben), jede Achse vorher → nachher:
+- Growth, Materials profitabel: 79,3 Rang 39 → 73,5 Rang 93. Bruttogewinn-Wachstum Perzentil 98,1 → leer (Gewicht 0,8); unverändert: Wachstumsniveau 89,3 (0,5), Beschleunigung 85,9 (1,9), Rule of X 90,8 (0,6), Margen-Trajektorie 90,3 (0,4), Kapitaleffizienz 64,3 (2,0), Verwässerung 34,4 (0,8). Wachstum +52,45 % (Quartalsbein) unverändert. Kennzahl +213,9 % → leer mit Grund.
+- Quality, Materials profitabel: 70,2 Rang 111 → 53,8 Rang 366. Bruttogewinn-Wachstum 98,4 → leer (Gewicht 1,5) und Margenniveau 77,7 → leer (Gewicht 2,2; `marginLevel` liest den Jahres-Bruttogewinn); unverändert: Kapitaleffizienz 59,9 (2,6), Verwässerung 31,1 (1,2), Wachstumsniveau 89,4 (0,8).
+- Indirekt (zusammen mit dem Betriebsergebnis oben): Growth 82 Scores um höchstens 0,3, Quality 192 um höchstens 0,1, Ränge um höchstens 2 Plätze; keine Board-Ein- oder Austritte.
+
+Offen: Das Margenniveau liegt neu ausgewiesen bei 46,2 % (509,8/1.103,9) statt 43,7 % beim Anbieter; die leere Zelle kostet HL in Quality mehr als der Fehler. Jahresersatzwerte schließt die Tabelle bewusst aus (#403); ob HL dafür eine Ausnahme bekommt, ist eine Methodenfrage. Ebenfalls offen: Betriebsergebnis 2023 bis 2025 auf altem Stand (514,8 / 106,3 / −44,7 Mio. statt 396,4 / 123,8 / 12,0 Mio. laut 8-K, „Income from operations / 396,409 / 123,762 / 12,009“); die Tabelle trägt `annualOpInc` nicht.
+
+## Wisdom Marine gesperrt (02.10.2026)
+
+Problem: Wisdom Marine (2637.TW) berichtet in US-Dollar (Konzernabschluss 2025, Seite 17: „statements are presented in US Dollar, which is the Company's functional currency“; Umsatz 2025 Seite 10: „$541,957,260“). Der Anbieter führt alle Abschlusszahlen in Taiwan-Dollar unter dem Kennzeichen USD: Umsatz 2025 16.948.954.566 (31,27 × 541.957.260), 2024 20.862.634.594 (32,88 × 634.431.170). Verhältnisse stimmen, Beträge und das Wachstum (+40,3 %, Taiwan-Dollar-Wachstum) nicht. Die Währungstabelle (`lib/statement-currency-hand-table.js`) trägt nur den umgekehrten Fall (Abschluss in USD, Anbieter in Fremdwährung mit USD-Notierung).
+
+Lösung: Sperre wie HLX (`quarantines`), Fingerabdruck auf die exakt gespeicherten Jahreswerte, unabhängig von der Position: Jahresumsatz 16.948.954.566,336 und Jahresergebnis 3.948.354.422,1056 (gerundete Werte würden vom ersten Lauf an warnen). Ein neues Quartal oder ein neues Jahr vorn ändert den Fingerabdruck nicht; ändert der Anbieter die Werte, bleibt die Sperre und der Lauf warnt (`quarantine-fingerprint-changed`), bis ein Mensch neu prüft. Am festen Tag: keine Warnung.
+
+Wirkung am festen Tag: verlässt die volle Industrials-Liste (profitabel, 43,5, Position 1.274, nicht im gezeigten Board) und die volle Quality-Liste (35,4, Position 1.584); steht mit `data-suspect`, Grund und ohne Börsenwert und Wachstum in der Ausschlussliste. Aufgehoben wird die Sperre, wenn die Währungstabelle auch Fremdwährungsbeträge unter USD-Kennzeichen umrechnen kann (Folgeauftrag, zusammen mit HCLTECH.NS).
+
+## Dian Tou: Quartale mit zwei Basen und falsch verteilte Quartale leer (02.10.2026)
+
+Problem: Inner Mongolia Dian Tou Energy (002128.SZ, CNY, Umrechnung 0,14917135) zeigte Wachstum +123,93 % (Energie, profitabel, Rang 89). Der Halbjahresbericht 2026 (cninfo, Seite 10) weist das Vorjahr nach einem Kauf unter gleicher Konzernmutter neu aus („同一控制下企业合并“): Umsatz Halbjahr 2025 neu 19.942.313.524,35 statt bisher 14.463.566.927,57 CNY. Das erste Quartal 2026 ist nicht neu ausgewiesen (Quartalsbericht Q1 2026, Seite 2: 8.413.266.224,26). Der Anbieterwert für das zweite Quartal 2026 (15.509.637.777,88) ist das Halbjahr 2026 (23.922.904.002,14) minus dieses erste Quartal, also zwei Basen; der Vorjahreswert (6.926.120.179,88) steht auf der alten Basis. Außerdem verteilt der Anbieter Umsatz, Bruttogewinn und Betriebsergebnis falsch auf das dritte und vierte Quartal 2025 (Summe gleich):
+
+| Feld | Quartal | Anbieter (CNY) | Firma (CNY) | Quelle |
+| --- | --- | --- | --- | --- |
+| Umsatz | Q3 2025 | 16.566.018.093,99 | 7.939.331.625,29 | Q3-Bericht 2025 S. 2; Jahresbericht 2025 S. 10 (Quartalstabelle) |
+| Umsatz | Q4 2025 | −914.626.694,25 | 7.712.059.774,45 | Jahresbericht 2025 S. 10 |
+| Bruttogewinn | Q3 2025 | 5.401.617.860,04 | 2.836.303.431,84 | neun Monate (Q3-Bericht S. 9) minus Halbjahr (Halbjahresbericht 2025 S. 163), je Umsatz minus 营业成本 |
+| Bruttogewinn | Q4 2025 | 562.003.443,40 | 3.127.317.871,60 | Jahr (Jahresbericht S. 167) minus neun Monate |
+| Betriebsergebnis | Q3 2025 | 3.850.177.471,91 | 2.113.857.499,63 | 营业利润 neun Monate (S. 10) minus Halbjahr (S. 163) |
+| Betriebsergebnis | Q4 2025 | 279.178.135,34 | 2.015.498.107,62 | Jahr (S. 167) minus neun Monate |
+
+Lösung: acht leer gesetzte Zellen ohne `coversThrough` und ohne Sperre (eine Sperre würde die Zeile vom Board nehmen, statt sie mit leeren Feldern zu zeigen): Umsatz 30.06.2026 und 30.06.2025 (zwei Basen), Umsatz, Bruttogewinn und Betriebsergebnis 30.09.2025 und 31.12.2025 (falsch verteilt). Kein Ersatzwert: Für das zweite Quartal 2026 und das Vorjahresquartal gibt es noch keine Quartalszahlen der Firma auf einer Basis. Die Anbieterwerte sind nach der Umrechnung exakt (CNY mit zwei Nachkommastellen, Abgleich `expectedBadValue × Kurs` gleich dem gespeicherten Wert); die frühere Notiz, es gebe keine exakten Werte, galt nur für ganze CNY. Damit schließt auch der offene Wert-Tor-Posten „002128.SZ Bruttogewinn 31.12.2025“.
+
+Wirkung am festen Tag: Das Quartalsbein des Wachstums braucht jedes Quartal zwischen dem jüngsten und dem Vorjahresquartal (`src/scoring/axes.js:100`) und fällt weg; das Wachstum kommt aus dem Jahresbein (+0,86 %, beide Jahre auf alter Basis, Etikett „year“). Growth, Energie profitabel: 60,5 Rang 89 → 42,9 Rang 215 (verlässt die Top 100, PTBA.JK rückt auf Platz 100); Wachstumsniveau Perzentil 98,1 → 27,7 (Gewicht 0,8), Rule of X 98,4 → 34,6 (1,5), Margen-Trajektorie 61,4 → leer (0,4); unverändert Beschleunigung 24,8 (3,0), Bruttogewinn-Wachstum 68,7 (1,8), Kapitaleffizienz 54,0 (2,4). Quality, Energie: 64,1 Rang 58 → 57,4 Rang 101 (ODL.OL rückt auf Platz 100); nur das Wachstumsniveau ändert sich (98,1 → 27,7). Kennzahl der Zeile (Bruttogewinn-Wachstum aus Jahreswerten, +9,1 %) unverändert.
+
+Offen: Bruttogewinn und Betriebsergebnis des zweiten Quartals 2026 stehen ebenfalls auf zwei Basen (Halbjahr neu minus Q1 alt); heute liest sie kein Leser des Quartalspaars, weil das Umsatzpaar leer ist (Folgeauftrag). Eintragen der Quartale auf einer Basis, sobald die Firma sie veröffentlicht (Q3-Bericht 2026 mit neu ausgewiesenem Vorjahr; Termin nicht geprüft, Vorjahr 23.10.).
 
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
