@@ -1,6 +1,6 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-01T10:16:37.285Z",
+  "generated_at": "2026-10-02T09:51:48.295Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
@@ -8,7 +8,7 @@
     "degraded": true,
     "blocked": false,
     "coverage_pct": 73.2,
-    "generated_at": "2026-10-01T10:08:45.969Z"
+    "generated_at": "2026-10-02T09:44:09.691Z"
   },
   "profitable": [
     {
@@ -94,7 +94,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 2,
@@ -169,7 +172,7 @@
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": -1.525335146409612,
+      "revGrowthYoYPct": -1.5253351464096232,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -178,7 +181,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 3,
@@ -262,7 +268,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 4,
@@ -347,7 +356,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 5,
@@ -357,7 +369,8 @@
       "track": "profitable",
       "lamps": [
         "lowRoic",
-        "opIncYahooAdjusted"
+        "opIncYahooAdjusted",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -427,12 +440,18 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
+      "shareDilution": {
+        "ratePct": 2.5,
+        "pctl": 0.786
+      },
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 6,
@@ -518,7 +537,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-03-31",
+      "revGrowthPriorPeriodEnd": "2025-03-31"
     },
     {
       "rank": 7,
@@ -603,7 +625,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2025-12-31",
+      "revGrowthPriorPeriodEnd": "2024-12-31"
     },
     {
       "rank": 8,
@@ -687,7 +712,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-07-31",
+      "revGrowthPriorPeriodEnd": "2025-07-31"
     },
     {
       "rank": 9,
@@ -697,8 +725,7 @@
       "track": "profitable",
       "lamps": [
         "arDivergence",
-        "opIncSynthetisch",
-        "shareCountDilution"
+        "opIncSynthetisch"
       ],
       "overview": {
         "kind": "gp",
@@ -768,15 +795,15 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 3.7,
-        "pctl": 0.786
-      },
+      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     }
   ],
   "unprofitable": [
@@ -784,7 +811,7 @@
       "rank": 1,
       "rankGrund": null,
       "ticker": "BETR",
-      "score": 61.1,
+      "score": 60.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -815,7 +842,7 @@
       "cohortN": 10,
       "cohortFallback": true,
       "scoreBase": 66.6,
-      "scoreShrunk": 61.1,
+      "scoreShrunk": 60.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -867,98 +894,13 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": null,
+      "revGrowthPriorPeriodEnd": null
     },
     {
       "rank": 2,
-      "rankGrund": null,
-      "ticker": "PRAA",
-      "score": 56,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.118,
-        "companion": 67
-      },
-      "name": "PRA Group, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2002,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 10,
-      "cohortFallback": true,
-      "scoreBase": 57.2,
-      "scoreShrunk": 56,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 75,
-          "weight": 1.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 34,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 42.3,
-          "weight": 1.7
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 75,
-          "weight": 0.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 79.2,
-          "weight": 1.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 76.7,
-          "weight": 1.7
-        },
-        {
-          "key": "dilution",
-          "pct": 53.1,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 29.140726574807218,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 3,
       "rankGrund": null,
       "ticker": "ALTI",
       "score": 55.6,
@@ -1046,13 +988,106 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
+    },
+    {
+      "rank": 3,
+      "rankGrund": null,
+      "ticker": "PRAA",
+      "score": 55,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.118,
+        "companion": 67
+      },
+      "name": "PRA Group, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2002,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 10,
+      "cohortFallback": true,
+      "scoreBase": 56,
+      "scoreShrunk": 55,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 75,
+          "weight": 1.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 34,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 42.3,
+          "weight": 1.7
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 75,
+          "weight": 0.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 79.2,
+          "weight": 1.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 70,
+          "weight": 1.7
+        },
+        {
+          "key": "dilution",
+          "pct": 53.1,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 29.140726574807218,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 4,
       "rankGrund": null,
       "ticker": "TMS",
-      "score": 54.1,
+      "score": 54,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1082,7 +1117,7 @@
       "cohortN": 10,
       "cohortFallback": true,
       "scoreBase": 54.6,
-      "scoreShrunk": 54.1,
+      "scoreShrunk": 54,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1134,7 +1169,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 5,
@@ -1221,13 +1259,16 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 6,
       "rankGrund": null,
       "ticker": "AXG",
-      "score": 38.3,
+      "score": 38.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1259,7 +1300,7 @@
       "cohortN": 10,
       "cohortFallback": true,
       "scoreBase": 82.3,
-      "scoreShrunk": 73.9,
+      "scoreShrunk": 73.8,
       "factors": {
         "burn": 0.518,
         "growth": 1,
@@ -1311,13 +1352,16 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": null,
+      "revGrowthPriorPeriodEnd": null
     },
     {
       "rank": 7,
       "rankGrund": null,
       "ticker": "GEMI",
-      "score": 33.6,
+      "score": 33.5,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1350,7 +1394,7 @@
       "cohortN": 10,
       "cohortFallback": true,
       "scoreBase": 49.3,
-      "scoreShrunk": 50.4,
+      "scoreShrunk": 50.3,
       "factors": {
         "burn": 0.666,
         "growth": 1,
@@ -1402,7 +1446,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 8,
@@ -1440,7 +1487,7 @@
       "cohortN": 10,
       "cohortFallback": true,
       "scoreBase": 13.6,
-      "scoreShrunk": 26.7,
+      "scoreShrunk": 26.6,
       "factors": {
         "burn": 0.455,
         "growth": 1,
@@ -1495,7 +1542,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2025-12-31",
+      "revGrowthPriorPeriodEnd": "2024-12-31"
     },
     {
       "rank": 9,
@@ -1590,7 +1640,10 @@
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     }
   ]
 }
