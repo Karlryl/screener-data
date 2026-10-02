@@ -14,8 +14,8 @@ name: Exchange Quarters
 # this run, so a run cancelled while pending in the shared main-push group loses nothing: the next
 # run picks up the same queue. Every write is atomic and checked append-only before it happens.
 #
-# Branch runs (workflow_dispatch on a feature branch) use --dry-run: both sources are asked, all
-# checks run, nothing is written or committed. That is the runner reachability check of spec S4.
+# Branch runs (workflow_dispatch on a feature branch) use --dry-run: the full China pass and at most
+# 40 Taiwan calls, all checks run, nothing is written or committed (runner reachability check, S4).
 on:
   schedule:
     - cron: '47 13 * * *'   # daily 13:47 UTC, after the delayed daily pull (see above)
@@ -50,7 +50,7 @@ jobs:
           if [ "$VEROEFFENTLICHEN" = "true" ]; then
             node scripts/fetch-exchange-quarters.js
           else
-            node scripts/fetch-exchange-quarters.js --dry-run
+            node scripts/fetch-exchange-quarters.js --dry-run --force-cn --tw-cap=40
           fi
 
       # Runs after a red fetch too: each market is written atomically and only when it passed all
