@@ -338,7 +338,7 @@ Nachlauf mit `scripts/financial-corrections-replay.js --live` (neue Option: Grow
 Nächste Quartale: In jeder Reihe mit `coversThrough` bleibt ein neues Anbieterquartal leer, bis es geprüft und eingetragen ist (Warnung im Tageslauf). Zu prüfen, sobald die Firmen berichten: das Quartal bis 30.09.2026 für CARG, PLUS (10-Q laut Kalender am 09.11.2026), DCO, INFQ und SLC; für OXLC das Quartal bis 30.06.2026 (Fondsmitteilung liegt seit Juli 2026 vor, der Anbieter kann es jederzeit nachladen).
 
 Nicht in dieser Tabelle (Folgeaufträge, je eine Zeile):
-- Betriebsergebnis je Quartal (opIncQ): HIVE fünf Quartale, CARG zwei, PLUS eins, DCO zwei, INFQ drei. Die Handtabelle kennt nur Umsatz und Bruttogewinn; der vorhandene Mechanismus trägt es mit einer Erweiterung der Feldliste (`opIncQ`) samt `coversThrough` je Feld.
+- Betriebsergebnis je Quartal (opIncQ): HIVE fünf Quartale, CARG zwei, PLUS eins, DCO zwei, INFQ drei. Die Handtabelle kennt nur Umsatz und Bruttogewinn; der vorhandene Mechanismus trägt es mit einer Erweiterung der Feldliste (`opIncQ`) samt `coversThrough` je Feld. (Nachtrag 02.10.: erledigt, dazu SLC Agrícola; Abschnitt „Betriebsergebnis je Quartal in der Handtabelle“.)
 - Jahresumsatz: HL drei Jahre (Neuausweis nach dem Verkauf von Casa Berardi), INFQ Jahr 2025, SLC (Anbieterbasis inklusive Neubewertung der Ernte, 2025: 9.759,2 statt 8.553,1 Mio. BRL). Die Handtabelle kann keine Jahreszellen korrigieren; heute bleibt nur eine Sperre wie bei OTF und KBDC oder eine Erweiterung um Jahreszellen. (Nachtrag: INFQ ist mit leeren Jahreszellen erledigt, Abschnitt „Jahreszellen vom 01.10.2026“; HL und SLC bleiben offen.)
 - Börsenwert: ABTC (nach der Zusammenlegung 1:15: 1,06 statt 0,63 Mrd. USD), Andersen (nur Klasse A gezählt: 1,0 statt rund 6 Mrd.), Energisa (8,2 statt 4,5 bis 4,9 Mrd.), Yunji (nach der Teilung 1:10: 8,6 statt rund 0,7 Mrd.). Tragbar über die vorhandene Aktienzahl-Handtabelle (ADS/Aktienzahl, PR #379). (Nachtrag 02.10.: ABTC und Andersen erledigt, Energisa und Yunji offen; Abschnitt „Börsenwert-Handtabelle vom 02.10.2026“.)
 - JBS: Börsenwert springt zwischen zwei Aktienzahlen; eine Zeile in derselben Aktienzahl-Handtabelle (776.086.920 Klasse A plus 294.842.267 Klasse B laut 10-Q-Deckblatt). (Nachtrag 02.10.: erledigt.)
@@ -347,7 +347,7 @@ Nicht in dieser Tabelle (Folgeaufträge, je eine Zeile):
 - Wisdom Marine (2637.TW): Die ganze Reihe steht in Taiwan-Dollar unter dem Kennzeichen USD (Q4 2025 5,42 Mrd. statt 163,8 Mio. USD); kein Einzelzellenfehler, gehört zur Währungskorrektur wie bei YPF und Vale.
 - Bullish (BLSH), Bruttogewinn 30.06.2025: Die Firma weist keinen Bruttogewinn aus, alle Anbieterwerte sind Konstrukte (wie bei VCTR); Methodenfrage für Firmen ohne Bruttogewinn-Zeile.
 - Celesc Umsatzbasis: Anbieter 2T25 2.715,9 Mio. BRL, Firma („Receita Operacional Líquida“) 2.899,5 Mio.; ungeklärt, ob der Anbieter die Bauerlöse herausrechnet; nicht geprüft.
-- Offene Prüfnotiz aus PR #400 (Low 2): Ersatzwerte werden nicht maschinell gegen den `value` ihrer Quelle geprüft.
+- Offene Prüfnotiz aus PR #400 (Low 2): Ersatzwerte werden nicht maschinell gegen den `value` ihrer Quelle geprüft. (Nachtrag 02.10.: erledigt, die Prüfung lehnt einen Ersatzwert ab, der zu keinem Quellwert passt.)
 - Nachtragen eines Quartals: Eine Zelle, die beim Abruf schon leer gesetzt wurde (etwa `period-after-coverage`), bleibt nach dem Eintragen ihres geprüften Werts leer und meldet `vendor-value-changed`, bis der nächste volle Abruf den Anbieterwert neu liefert (keine falsche Zahl, nur zu lange leer). Abhilfe im Lader: bei einer fremden Leer-Markierung mit dem gespeicherten ursprünglichen Anbieterwert vergleichen; eigener Auftrag.
 
 ## Jahreszellen vom 01.10.2026 (INFQ, CARG, OTF)
@@ -406,6 +406,51 @@ Indirekte Wirkung am festen Tag, alles zusammen gegen origin/main (Live-Kalibrie
 Nicht in dieser Tabelle:
 - PSEC: Anbieter 1,110 Mrd. (533,8 Mio. Aktien) gegen 524.832.496 Aktien laut 10-K („As of August 19, 2026, there were 524,832,496 shares of the Registrant's common stock outstanding“), also 1,7 % zu hoch. Unter der Wesentlichkeit: kein Band- oder Klassenwechsel, weit über der Untergrenze, kleiner als eine normale Tagesbewegung des Kurses.
 - Realord (1196.HK): erledigt; 5.769.239.520 Aktien = 1.442.309.880 × 4 nach der Teilung, Börsenwert 2,19 Mrd. stimmt.
+
+## Betriebsergebnis je Quartal in der Handtabelle (02.10.2026)
+
+Problem: Die SEC-Doppelprüfung vom 01.10. fand falsche Quartals-Betriebsergebnisse (`opIncQ`) bei HIVE, CARG, PLUS, DCO und INFQ; bei SLC Agrícola passt keiner der fünf Anbieterwerte zum Abschluss. Die Handtabelle kannte nur Umsatz und Bruttogewinn.
+
+Mechanismus (`lib/financial-known-cases.js`): `opIncQ` ist ein drittes Quartalsfeld mit genau derselben Wirkung wie Umsatz und Bruttogewinn: Fall je Ticker (samt Zweitnotierung), Feld und Periode mit dem exakten Anbieterwert; weicht der Anbieter ab, wird die Zelle leer (`vendor-value-changed`, nie ersetzt, nie 0); `coversThrough` je Feld, ein neues Anbieterquartal bleibt leer, bis es geprüft und eingetragen ist. Neu für alle Fälle: Ein Ersatzwert muss zu seinen Quellen passen, nämlich gleich einem `value` einer Quelle sein, gleich der Differenz zweier Quellwerte (Jahr minus neun Monate) oder bei einer vom Emittenten gerundeten Quelle innerhalb ihrer Rundung liegen; sonst lehnt die Prüfung die ganze Tabelle ab. Fälle ohne Quellwert (HTGC, Banpu, aus der ersten Tabelle) sind ausgenommen. Am Stand 2026-10-01c bestehen alle 162 Fälle: 106 über einen Quellwert, 16 abgeleitete Quartale über die Differenz, OXLC 31.03.2025 über die Rundung („approximately $121.2 million“ gegen 121.161.000), 10 ohne Quellwert, 29 leer gesetzt. Damit ist die offene Prüfnotiz aus PR #400 (Low 2) erledigt.
+
+Eingetragen sind 30 Zellen (sechs Firmen mal fünf Quartale, je `coversThrough` 30.06.2026): 18 ersetzt, 12 bestätigt. Jeder Wert ist am 02.10. vom Erbauer selbst im Bericht nachgelesen (SEC-Filings, CVM-Daten). Jeder `expectedBadValue` ist gleich dem Anbieterwert im Artefakt `snapshots` von Lauf 36839128456 (01.10.2026); kein gespeichertes Quartal der sechs Reihen bleibt ungeprüft (0 Zellen `period-not-verified`).
+
+| Ticker | Periode | Anbieter | Firma | Quelle (wörtlich) |
+| --- | --- | --- | --- | --- |
+| HIVE (auch HIVE.TO) | 30.06.2026 | −131.052.000 | −141.332.000 | 10-Q Q1 FY2027: „(Loss) income from operations (141,332) 35,665“ |
+| HIVE | 31.03.2026 | −51.804.000 | −74.637.000 | 10-K FY2026 „(Loss) income from operations (144,581) 1,612 32,685“ minus neun Monate laut 6-K „(Loss) income (90,831) 68,283 (69,944) 51,401“ |
+| HIVE | 31.12.2025 | −39.173.000 | −90.831.000 | 6-K Q3 FY2026: „(Loss) income (90,831) 68,283 (69,944) 51,401“ |
+| HIVE | 30.09.2025 | −9.160.000 | −14.778.000 | 6-K Q2 FY2026: „(Loss) income from operations (14,778) 398 20,887 (16,882)“ |
+| HIVE | 30.06.2025 | 6.836.000 | 35.665.000 | 10-Q Q1 FY2027 (Vorjahresspalte), wie oben |
+| CARG | 31.12.2025 | 119.172.000 | 69.127.000 | 10-K 2025, Note 16: „Income from continuing operations 69,127 64,115 60,549 50,654“ |
+| CARG | 30.09.2025 | 54.674.000 | 64.115.000 | wie oben |
+| PLUS | 31.03.2026 | 37.644.000 | 30.904.000 | Ergebnismitteilung (8-K vom 28.05.2026): „Operating income 30,904 18,766 166,145 99,686“ |
+| DCO | 31.12.2025 | 13.998.000 | 16.882.000 | 10-K/A 2025: „Operating Income 13,998 2,884 16,882“ |
+| DCO | 30.09.2025 | −80.050.000 | −75.317.000 | 10-K/A 2025: „Operating Loss (80,050) 4,733 (75,317)“ |
+| INFQ | 31.03.2026 | −33.575.000 | −33.031.000 | 10-Q Q2 2026, Berichtigung: „Loss from operations $ (33,575) $ 544 $ (33,031)“ |
+| INFQ | 30.09.2025 | −6.536.000 | −6.699.000 | neun Monate 2025 berichtigt (23.895) minus sechs Monate (17.196), beide im 10-Q Q2 2026 |
+| INFQ | 31.03.2025 | −6.950.000 | −6.784.000 | sechs Monate 2025 (17.196) minus zweites Quartal (10.412), 10-Q Q2 2026 |
+| SLCE3.SA | 30.06.2026 | 2.619.662.000 BRL | 677.429.000 BRL | CVM ITR 2026, Konto 3.05 „Resultado Antes do Resultado Financeiro e dos Tributos“ |
+| SLCE3.SA | 31.03.2026 | 624.874.000 | 624.406.000 | CVM ITR 2026, 3.05 |
+| SLCE3.SA | 31.12.2025 | 222.439.000 | 209.162.000 | CVM DFP 2025 3.05 (1.812.542) minus ITR 3T25 neun Monate (1.603.380) |
+| SLCE3.SA | 30.09.2025 | 284.041.000 | 284.046.000 | CVM ITR 2025, 3.05 |
+| SLCE3.SA | 30.06.2025 | 2.242.857.000 | 453.286.000 | CVM ITR 2026, Vorjahresspalte, 3.05 |
+
+Bestätigt (Anbieter gleich Firma, Zeile bleibt Byte für Byte): CARG 30.06.2026, 31.03.2026, 30.06.2025; PLUS 30.06.2026, 31.12.2025, 30.09.2025, 30.06.2025; DCO 30.06.2026, 31.03.2026, 30.06.2025; INFQ 30.06.2026, 30.06.2025. CARG: „Income from continuing operations“ ist die Betriebsergebniszeile (Konzern-GuV des 10-K: Umsatz minus betriebliche Aufwendungen, vor „Other income, net“ und vor Steuern; „Income from continuing operations 244,445 157,147 120,329“), nicht das Ergebnis nach Steuern.
+
+SLC Agrícola, Basis: Das Betriebsergebnis (CVM 3.05) steht wie der Bruttogewinn aus #402 (3.03, 941.202) auf der Umsatzbasis 3.01 (2T26: 2.765.644, mit Neubewertung der Ernte); der Umsatz der Handtabelle ist die „Receita Operacional Líquida“ der Ergebnismitteilung (2.175.612, ohne sie). Die Margenreihe mischt damit zwei Basen; auf einer Basis wäre die Margenbewegung kleiner (Rohwert +0,044 statt +0,068). Das ist keine wahre Margenbewegung, sondern eine geerbte Basisfrage aus #402 (Folgeauftrag).
+
+Wirkung am festen Tag (Lauf 36839128456, 16.108 Stände, Watchlist d90e04b259, Growth live kalibriert; origin/main 347aaffb4e gegen diesen Stand): HIVE Financials unprofitabel 63,9 Rang 6 → 62,9 Rang 7 (Margen-Trajektorie roh −1,806 → −2,568, Perzentil 23,2 → 16,1, Gewicht 1,3); SLC Basiskonsum profitabel 81,8 Rang 25 → 82,7 Rang 22 (roh 0 → +0,068, Perzentil 53,7 → 89,8, Gewicht 0,3); INFQ 68,2 Rang 14 unverändert (roh −1,357 → −1,378); CARG, PLUS, DCO unverändert (korrigiert sind nur mittlere Quartale; Trajektorie, Gewinnstufe und Lampe lesen sie heute nicht). Gewinnstufe und Lampen aller sechs unverändert. Indirekt: 16 Scores um höchstens 0,3 (RIOT +0,3), 16 Zeilen nur im Rang um höchstens 2 Plätze; Quality und Smallcap unverändert; keine Board-Ein- oder Austritte. Die alte Tabelle unter dem neuen Lader verändert 0 der 16.108 Stände.
+
+Grenzen: Solange ein neues Quartal leer ist, ist die Margen-Trajektorie leer (`axes.js` verlangt das jüngste Quartal) und die Gewinnstufe rechnet bei Verlustfirmen mit dem Vorquartal. Für HIVE ist das neu (sein Umsatz hat keine `coversThrough`). Die Lückenprüfung des Board-Verlaufs (`scripts/write-board-history.js`, opSlot) erkennt eine leer gesetzte Zelle der Handtabelle nicht als leeren Kopf; sie wirkt nur an angemeldeten Datensprung-Tagen (Folgeauftrag, die Datei ist in offenen PRs in Arbeit).
+
+Eintragen der nächsten Quartale (bis 30.09.2026), Betriebsergebnis zusammen mit Umsatz und Bruttogewinn, sobald die Firma berichtet:
+- HIVE: 10-Q Q2 FY2027, laut Anbieterkalender 12.11.2026 (nicht geprüft).
+- CARG: 10-Q Q3 2026, Termin nicht geprüft (Vorjahr Anfang November).
+- PLUS: 10-Q Q2 FY2027, laut Anbieterkalender 09.11.2026 (nicht geprüft).
+- DCO: 10-Q Q3 2026, Termin nicht geprüft.
+- INFQ: 10-Q Q3 2026, Termin nicht geprüft.
+- SLC Agrícola: ITR 3T26, gesetzliche Frist 14.11.2026 (45 Tage nach Quartalsende).
 
 ## Breite Nullregel: ausschließlich Schattenrechnung
 

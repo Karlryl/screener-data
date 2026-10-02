@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-01c",
+  "revision": "2026-10-02a",
   "coverage": [
     { "ticker": "HTGC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "ARCC", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -28,7 +28,13 @@
     { "ticker": "INFQ", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
-    { "ticker": "OXLC", "field": "revenueQ", "coversThrough": "2026-03-31" }
+    { "ticker": "OXLC", "field": "revenueQ", "coversThrough": "2026-03-31" },
+    { "ticker": "HIVE", "listingAliases": ["HIVE.TO"], "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CARG", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "PLUS", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "DCO", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -4357,6 +4363,772 @@
           "value": 494845000,
           "start": "2022-01-01",
           "end": "2022-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "hive-2026-06-30-opIncQ",
+      "ticker": "HIVE",
+      "listingAliases": [
+        "HIVE.TO"
+      ],
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -131052000,
+      "replacementValue": -141332000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326004434/form10q.htm",
+          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), condensed consolidated statements of operations",
+          "accession": "0001062993-26-004434",
+          "filed": "2026-08-14",
+          "unit": "USD thousands",
+          "quote": "(Loss) income from operations (141,332) 35,665",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": -141332000
+        }
+      ]
+    },
+    {
+      "caseId": "hive-2026-03-31-opIncQ",
+      "ticker": "HIVE",
+      "listingAliases": [
+        "HIVE.TO"
+      ],
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -51804000,
+      "replacementValue": -74637000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326002973/form10k.htm",
+          "page": "10-K FY2026 (year ended 2026-03-31), consolidated statements of operations",
+          "accession": "0001062993-26-002973",
+          "filed": "2026-06-02",
+          "unit": "USD thousands",
+          "quote": "(Loss) income from operations (144,581) 1,612 32,685",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "value": -144581000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326000943/exhibit99-1.htm",
+          "page": "6-K exhibit 99.1, Q3 FY2026 interim statements of operations (three and nine months ended 2025-12-31)",
+          "accession": "0001062993-26-000943",
+          "filed": "2026-02-17",
+          "unit": "USD thousands",
+          "quote": "(Loss) income (90,831) 68,283 (69,944) 51,401",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "value": -69944000,
+          "derivation": "fourth fiscal quarter = year ended 2026-03-31 minus nine months ended 2025-12-31 (no discrete Q4 line is filed); the line \"(Loss) income\" carries the same position and XBRL concept as \"(Loss) income from operations\""
+        }
+      ]
+    },
+    {
+      "caseId": "hive-2025-12-31-opIncQ",
+      "ticker": "HIVE",
+      "listingAliases": [
+        "HIVE.TO"
+      ],
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -39173000,
+      "replacementValue": -90831000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326000943/exhibit99-1.htm",
+          "page": "6-K exhibit 99.1, Q3 FY2026 interim statements of operations (three and nine months ended 2025-12-31)",
+          "accession": "0001062993-26-000943",
+          "filed": "2026-02-17",
+          "unit": "USD thousands",
+          "quote": "(Loss) income (90,831) 68,283 (69,944) 51,401",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": -90831000
+        }
+      ]
+    },
+    {
+      "caseId": "hive-2025-09-30-opIncQ",
+      "ticker": "HIVE",
+      "listingAliases": [
+        "HIVE.TO"
+      ],
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -9160000,
+      "replacementValue": -14778000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299325016895/exhibit99-1.htm",
+          "page": "6-K exhibit 99.1, Q2 FY2026 interim statements of operations (three months ended 2025-09-30)",
+          "accession": "0001062993-25-016895",
+          "filed": "2025-11-17",
+          "unit": "USD thousands",
+          "quote": "(Loss) income from operations (14,778) 398 20,887 (16,882)",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": -14778000
+        }
+      ]
+    },
+    {
+      "caseId": "hive-2025-06-30-opIncQ",
+      "ticker": "HIVE",
+      "listingAliases": [
+        "HIVE.TO"
+      ],
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 6836000,
+      "replacementValue": 35665000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut Bericht der Firma; der Anbieterwert lässt Posten des Betriebsergebnisses weg und passt zu keiner Berichtszeile.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1720424/000106299326004434/form10q.htm",
+          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), condensed consolidated statements of operations",
+          "accession": "0001062993-26-004434",
+          "filed": "2026-08-14",
+          "unit": "USD thousands",
+          "quote": "(Loss) income from operations (141,332) 35,665",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 35665000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2026-06-30-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 62982000,
+      "replacementValue": 62982000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated income statements",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 62,982 60,549 103,061 111,203",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 62982000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2026-03-31-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 40079000,
+      "replacementValue": 40079000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526211983/carg-20260331.htm",
+          "page": "10-Q Q1 2026, condensed consolidated income statements",
+          "accession": "0001193125-26-211983",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 40,079 50,654",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 40079000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-12-31-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 119172000,
+      "replacementValue": 69127000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Abschluss der Firma (nach dem Verkauf von CarOffer neu ausgewiesen) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 69,127 64,115 60,549 50,654",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 69127000,
+          "operatingLine": "consolidated income statements of the same 10-K: \"Income from continuing operations 244,445 157,147 120,329\" is total revenue minus total operating expenses, above \"Other income, net\" and \"Provision for income taxes\" (operating line, before tax)"
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-09-30-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 54674000,
+      "replacementValue": 64115000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Abschluss der Firma (nach dem Verkauf von CarOffer neu ausgewiesen) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526059435/carg-20251231.htm",
+          "page": "10-K FY2025, Note 16 quarterly results (unaudited)",
+          "accession": "0001193125-26-059435",
+          "filed": "2026-02-19",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 69,127 64,115 60,549 50,654",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 64115000
+        }
+      ]
+    },
+    {
+      "caseId": "carg-2025-06-30-opIncQ",
+      "ticker": "CARG",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 60549000,
+      "replacementValue": 60549000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1494259/000119312526338067/carg-20260630.htm",
+          "page": "10-Q Q2 2026, condensed consolidated income statements",
+          "accession": "0001193125-26-338067",
+          "filed": "2026-08-06",
+          "unit": "USD thousands",
+          "quote": "Income from continuing operations 62,982 60,549 103,061 111,203",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 60549000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-06-30-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 38832000,
+      "replacementValue": 38832000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), statements of operations (2025 column as revised)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Operating income 38,832 42,940",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 38832000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2026-03-31-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 37644000,
+      "replacementValue": 30904000,
+      "reason": "Betriebsergebnis korrigiert: viertes Geschäftsquartal laut Ergebnismitteilung der Firma; der Anbieter zog vom Jahreswert die erstmals berichteten neun Monate ab.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126023148/ef20075008_ex99-1.htm",
+          "page": "8-K exhibit 99.1 of 2026-05-28, earnings release Q4 FY2026 (quarter ended 2026-03-31)",
+          "accession": "0001140361-26-023148",
+          "filed": "2026-05-28",
+          "unit": "USD thousands",
+          "quote": "Operating income 30,904 18,766 166,145 99,686",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 30904000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-12-31-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 43466000,
+      "replacementValue": 43466000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126003725/ef20060829_10q.htm",
+          "page": "10-Q Q3 FY2026 (quarter ended 2025-12-31), statements of operations",
+          "accession": "0001140361-26-003725",
+          "unit": "USD thousands",
+          "quote": "Operating income 43,466 16,470 128,501 74,925",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 43466000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-09-30-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 48835000,
+      "replacementValue": 48835000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036125040814/ef20056859_10q.htm",
+          "page": "10-Q Q2 FY2026 (quarter ended 2025-09-30), statements of operations",
+          "accession": "0001140361-25-040814",
+          "unit": "USD thousands",
+          "quote": "Operating income 48,835 26,996 85,035 58,455",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 48835000
+        }
+      ]
+    },
+    {
+      "caseId": "plus-2025-06-30-opIncQ",
+      "ticker": "PLUS",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 42940000,
+      "replacementValue": 42940000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1022408/000114036126031274/ef20075178_10q.htm",
+          "page": "10-Q Q1 FY2027 (quarter ended 2026-06-30), statements of operations (2025 column as revised)",
+          "accession": "0001140361-26-031274",
+          "filed": "2026-08-04",
+          "unit": "USD thousands",
+          "quote": "Operating income 38,832 42,940",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 42940000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-06-30-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 28331000,
+      "replacementValue": 28331000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026 (quarter ended 2026-07-04; vendor date 2026-06-30), statements of operations",
+          "accession": "0001628280-26-053776",
+          "unit": "USD thousands",
+          "quote": "Operating Income 28,331 17,725 44,051 22,700",
+          "start": "2026-04-05",
+          "end": "2026-07-04",
+          "value": 28331000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2026-03-31-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 15720000,
+      "replacementValue": 15720000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026033836/dco-20260404.htm",
+          "page": "10-Q Q1 2026 (quarter ended 2026-04-04; vendor date 2026-03-31), statements of operations",
+          "accession": "0001628280-26-033836",
+          "unit": "USD thousands",
+          "quote": "Operating Income 15,720 4,975",
+          "start": "2026-01-01",
+          "end": "2026-04-04",
+          "value": 15720000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-12-31-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 13998000,
+      "replacementValue": 16882000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut berichtigtem Jahresabschluss der Firma (10-K/A) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, restatement of quarterly results (As Previously Reported / Adjustment / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Operating Income 13,998 2,884 16,882",
+          "start": "2025-09-28",
+          "end": "2025-12-31",
+          "value": 16882000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-09-30-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -80050000,
+      "replacementValue": -75317000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut berichtigtem Jahresabschluss der Firma (10-K/A) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026032536/dco-20251231.htm",
+          "page": "10-K/A FY2025, restatement of quarterly results (As Previously Reported / Adjustment / As Restated)",
+          "accession": "0001628280-26-032536",
+          "filed": "2026-05-08",
+          "unit": "USD thousands",
+          "quote": "Operating Loss (80,050) 4,733 (75,317)",
+          "start": "2025-06-29",
+          "end": "2025-09-27",
+          "value": -75317000
+        }
+      ]
+    },
+    {
+      "caseId": "dco-2025-06-30-opIncQ",
+      "ticker": "DCO",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 17725000,
+      "replacementValue": 17725000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/30305/000162828026053776/dco-20260704.htm",
+          "page": "10-Q Q2 2026 (quarter ended 2026-07-04; vendor date 2026-06-30), statements of operations",
+          "accession": "0001628280-26-053776",
+          "unit": "USD thousands",
+          "quote": "Operating Income 28,331 17,725 44,051 22,700",
+          "start": "2025-03-30",
+          "end": "2025-06-28",
+          "value": 17725000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-06-30-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -29858000,
+      "replacementValue": -29858000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": -29858000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2026-03-31-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -33575000,
+      "replacementValue": -33031000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Bericht der Firma (berichtigte Vorperioden) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (33,575) 544 (33,031)",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": -33031000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-09-30-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -6536000,
+      "replacementValue": -6699000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Bericht der Firma (berichtigte Vorperioden) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (23,732) (163) (23,895)",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": -23895000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "value": -17196000,
+          "derivation": "third quarter 2025 = nine months 2025 as adjusted minus six months 2025 (no discrete Q3 2025 figure is filed)"
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-06-30-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -10412000,
+      "replacementValue": -10412000,
+      "reason": "Betriebsergebnis bestätigt: Anbieterwert stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": -10412000
+        }
+      ]
+    },
+    {
+      "caseId": "infq-2025-03-31-opIncQ",
+      "ticker": "INFQ",
+      "field": "opIncQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -6950000,
+      "replacementValue": -6784000,
+      "reason": "Betriebsergebnis korrigiert: Wert laut neuestem Bericht der Firma (berichtigte Vorperioden) statt des veralteten Anbieterwerts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "value": -17196000
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2007825/000162828026057508/infq-20260630.htm",
+          "page": "10-Q Q2 2026, statements of operations and note Correction of Immaterial Errors",
+          "accession": "0001628280-26-057508",
+          "filed": "2026-08-18",
+          "unit": "USD thousands",
+          "quote": "Loss from operations (29,858) (10,412) (62,889) (17,196)",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": -10412000,
+          "derivation": "first quarter 2025 = six months 2025 minus second quarter 2025, both as adjusted in the newest filing"
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-06-30-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2619662000,
+      "replacementValue": 677429000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-04-01;2026-06-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;677429.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 677429000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2026-03-31-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 624874000,
+      "replacementValue": 624406000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2026-01-01;2026-03-31;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;624406.0000000000",
+          "unit": "BRL thousands",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 624406000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-12-31-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 222439000,
+      "replacementValue": 209162000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/DFP/DADOS/dfp_cia_aberta_2025.zip",
+          "page": "dfp_cia_aberta_DRE_con_2025.csv (DFP 2025, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-12-31;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;1812542.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 1812542000
+        },
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-01-01;2025-09-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;1603380.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": 1603380000,
+          "derivation": "fourth quarter 2025 = year 2025 (DFP) minus nine months 2025 (ITR 3T25)"
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-09-30-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 284041000,
+      "replacementValue": 284046000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2025.zip",
+          "page": "itr_cia_aberta_DRE_con_2025.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;ÚLTIMO;2025-07-01;2025-09-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;284046.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 284046000
+        }
+      ]
+    },
+    {
+      "caseId": "slce3.sa-2025-06-30-opIncQ",
+      "ticker": "SLCE3.SA",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 2242857000,
+      "replacementValue": 453286000,
+      "reason": "Betriebsergebnis korrigiert: Ergebnis vor Finanzergebnis und Steuern laut Quartalsabschluss der Firma (CVM). Es steht wie der Bruttogewinn auf der Basis mit Neubewertung der Ernte, der Umsatz dieser Reihe ohne sie.",
+      "sources": [
+        {
+          "url": "https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta_2026.zip",
+          "page": "itr_cia_aberta_DRE_con_2026.csv (ITR, DF Consolidado - Demonstração do Resultado), conta 3.05",
+          "quote": "SLC AGRICOLA S.A.;020745;DF Consolidado - Demonstração do Resultado;REAL;MIL;PENÚLTIMO;2025-04-01;2025-06-30;3.05;Resultado Antes do Resultado Financeiro e dos Tributos;453286.0000000000",
+          "unit": "BRL thousands",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 453286000
         }
       ]
     }
