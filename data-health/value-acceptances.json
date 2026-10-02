@@ -1,0 +1,5 @@
+{
+  "_doc": "Acceptances for data-health/value-open-items.json (Tag 1398). Written ONLY by the AI daily run through its normal PR flow, never by the workflow, never by the owner's chat. Append-only: entries are never edited or removed. One entry closes the cells of one open item: { itemId, periodEnd (optional; absent = every cell of the item), value (the value accepted as right, stored units, > 0), acceptedAt (YYYY-MM-DD, required; covers only cells first seen on or before it), by, reason (required), sources: [{ url, quote }] (optional) }. If today's value is within factor 3 of value, the item closes; otherwise it closes and a new item opens with acceptedValue = value. An unknown itemId gives a warning, never a crash. Guide: docs/value-open-items.md.",
+  "schema": "value-acceptances/v1",
+  "acceptances": []
+}

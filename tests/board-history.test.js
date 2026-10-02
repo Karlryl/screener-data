@@ -119,6 +119,20 @@ check('(a) schreibt Vintage mit §7-PIT-Feldern + pitCoverage + boardStatus', ()
   assert.ok(fs.existsSync(path.join(base, 'board-history', '2026-07-13', 'regime.json')), 'regime.json');
 });
 
+// ── (a2s) Tag 1398: pit.sharesOutstanding = meta.impliedSharesOutstanding || meta.sharesOutstanding ──
+// Same expression as lib/ads-hand-table.js (vendor share count behind marketCap); feeds the
+// kapitalmassnahme label of the open-items list. Last pit key; absent or not > 0 -> null.
+check('(a2s) Tag 1398: buildPit traegt sharesOutstanding (implied vor sharesOutstanding), fehlend -> null', () => {
+  const pit = (meta) => W.buildPit({ meta, metrics: {}, timeseries: {} }, new Set(), 'X');
+  assert.strictEqual(pit({ impliedSharesOutstanding: 800, sharesOutstanding: 500 }).sharesOutstanding, 800, 'implied wins');
+  assert.strictEqual(pit({ sharesOutstanding: 500 }).sharesOutstanding, 500, 'fallback sharesOutstanding');
+  assert.strictEqual(pit({}).sharesOutstanding, null, 'absent -> null');
+  assert.strictEqual(pit({ sharesOutstanding: 0 }).sharesOutstanding, null, '0 -> null, never a stored 0');
+  assert.strictEqual(pit({ sharesOutstanding: 'x' }).sharesOutstanding, null, 'non-number -> null');
+  const keys = Object.keys(pit({ sharesOutstanding: 500 }));
+  assert.strictEqual(keys[keys.length - 1], 'sharesOutstanding', 'last key');
+});
+
 // ── (a2) E1 Option B: pit trägt priceSales + priceSalesAsOf ADDITIV ───────────
 // Court 2026-07-17 (PASS_MIT_AUFLAGEN, Auflage 4): buildPit schreibt echtes P/S MIT
 // asOf mit — rein additiv, evSales (und alle Bestandsfelder) bleiben byte-identisch.
@@ -141,12 +155,17 @@ check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSa
   // bleiben aber selbst weiterhin ein zusammenhaengendes additives Paar, evSales unveraendert an Index 1.
   // 6.2-E2: earningsDate/earningsDateAsOf haengen seitdem additiv NACH marketCap — alles davor
   // ruecht wieder um 2 nach vorn, bleibt aber in derselben Reihenfolge.
+  // Tag 1398: sharesOutstanding haengt additiv NACH earningsDateAsOf (Wert-Tor PR2, Label
+  // kapitalmassnahme) -- alles davor rueckt um 1 nach vorn, Reihenfolge untereinander bleibt.
   const keys = Object.keys(abc.pit);
-  assert.strictEqual(keys[keys.length - 5], 'priceSales', 'priceSales angehängt');
-  assert.strictEqual(keys[keys.length - 4], 'priceSalesAsOf', 'priceSalesAsOf danach');
-  assert.strictEqual(keys[keys.length - 3], 'marketCap', 'marketCap danach (R4-SCR-02)');
-  assert.strictEqual(keys[keys.length - 2], 'earningsDate', 'earningsDate danach (6.2-E2)');
-  assert.strictEqual(keys[keys.length - 1], 'earningsDateAsOf', 'earningsDateAsOf zuletzt (6.2-E2)');
+  assert.strictEqual(keys[keys.length - 6], 'priceSales', 'priceSales angehängt');
+  assert.strictEqual(keys[keys.length - 5], 'priceSalesAsOf', 'priceSalesAsOf danach');
+  assert.strictEqual(keys[keys.length - 4], 'marketCap', 'marketCap danach (R4-SCR-02)');
+  assert.strictEqual(keys[keys.length - 3], 'earningsDate', 'earningsDate danach (6.2-E2)');
+  assert.strictEqual(keys[keys.length - 2], 'earningsDateAsOf', 'earningsDateAsOf danach (6.2-E2)');
+  assert.strictEqual(keys[keys.length - 1], 'sharesOutstanding', 'sharesOutstanding zuletzt (Tag 1398)');
+  assert.strictEqual(keys.filter((k) => k === 'sharesOutstanding').length, 1, 'sharesOutstanding genau einmal');
+  assert.strictEqual(abc.pit.sharesOutstanding, null, 'keine Aktienzahl im Snapshot -> null, nie 0');
   assert.strictEqual(keys.indexOf('evSales'), 1, 'evSales behält seine Position (byte-additiv)');
 
   // Fehlendes priceSales → beide Felder null (kein Crash, LOSS-/GM0-robust):

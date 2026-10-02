@@ -122,8 +122,8 @@ function resolvePaths(base) {
     // beta-cov-Werte, die sonst nur im fluechtigen Lauf-Protokoll stehen. Eigener
     // Top-Level-Ordner (nicht unter board-history/). Until Tag 1396 this kept it out of the
     // commit step's suspect exclude pathspec; since then every vintage is committed and the
-    // location simply stays. Until the open-items list (PR2) is live, the daily run check
-    // reads `suspect` per board from this file.
+    // location simply stays. The daily run check reads `suspect` per board from this file;
+    // value jumps per company and field are in data-health/value-open-items.json (Tag 1398).
     P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
     // 6.2-E2 (Earnings-Blowout): Quelle des Report-Datums, das buildPit PIT-einfriert.
     EARNINGS_CAL_FILE: path.join(base, 'earnings-calendar.json'),
@@ -548,10 +548,20 @@ function buildPit(snap, pitGaps, ticker) {
     // Report selbst — dieselbe Trennung wie priceSales/priceSalesAsOf.
     earningsDate: (earningsEntryFor(ticker) || {}).date || null,
     earningsDateAsOf: (earningsEntryFor(ticker) || {}).pulledAt || null,
+    // Tag 1398 (value-gate PR2): the vendor share count behind marketCap, same expression as
+    // lib/ads-hand-table.js. The open-items list (scripts/value-open-items.js) labels a marketCap
+    // jump 'kapitalmassnahme' when this count moved by the same factor. Appended LAST (additive,
+    // earlier keys keep their order); not > 0 -> null, never a stored 0.
+    sharesOutstanding: sharesOutstandingOf(meta),
     // Tag 1403 (G5): only in active mode of the exchange cross-check, additive: which revenue cells came from the
     // exchange or were withheld, with the original vendor values (board-history is backward-check data).
     ...(exchangeRecord(snap) ? { revenueQExchange: exchangeRecord(snap) } : {}),
   };
+}
+
+function sharesOutstandingOf(meta) {
+  const s = meta.impliedSharesOutstanding || meta.sharesOutstanding;
+  return Number.isFinite(s) && s > 0 ? s : null;
 }
 
 // BH-109: juengstes Ende einer Enden-Serie als ms-Timestamp (oder null). Serien

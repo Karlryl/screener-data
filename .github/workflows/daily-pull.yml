@@ -2109,6 +2109,20 @@ jobs:
           # den alten Namespace und der Reset waere nach einem Lauf wieder aufgehoben.
           key: last-good-disk-scoring-f12-${{ github.run_id }}
 
+      # Tag 1398 (value-gate PR2): sticky open-items list. Compares every stored point-in-time
+      # value of today's boards (revenueQ / grossProfitQ per quarter, marketCap; built with the
+      # writer's own buildBoardVintage over outputs/hypergrowth/full) with its last accepted value;
+      # a move by more than factor 3 (or to 0) opens an item in data-health/value-open-items.json
+      # that stays open until a hand-table row or an entry in data-health/value-acceptances.json
+      # closes it (docs/value-open-items.md). It changes no board number, no threshold and no exit
+      # code: continue-on-error, so it can never block storage, deploy or the vintage. Exit 1 only
+      # on unreadable inputs (then nothing is written and the step is red but continued). Sits
+      # BEFORE "Build findash-export v1" so a later export step can read the list in the same run.
+      # The commit step below commits the file with the vintage.
+      - name: Value open-items (factor 3, sticky)
+        continue-on-error: true
+        run: node scripts/value-open-items.js
+
       - name: Build findash-export v1
         run: |
           node scripts/write-findash-export.js
@@ -2407,9 +2421,13 @@ jobs:
           # F-9 Stufe 1: die p99Δ/thr/beta-cov-Sidecar-Reihe (REINE MESSUNG, kein Gate-
           # Verhalten) faehrt genau wie newcomer-log/ticker-map UNBEDINGT mit. Gezieltes
           # add auf die Datei (nie -A), NIE das ganze data-health/ (das traegt bereits
-          # anderswo committete Baseline-Dateien). Until the open-items list (PR2) is live,
-          # the daily run check reads `suspect` per board from this file.
+          # anderswo committete Baseline-Dateien). The daily run check reads `suspect` per board
+          # from this file; value jumps per company are in data-health/value-open-items.json.
           if [ -f data-health/p99-delta-history.json ]; then git add data-health/p99-delta-history.json; fi
+          # Tag 1398: the open-items list from step "Value open-items (factor 3, sticky)" rides in the
+          # same commit (same targeted add, same existence check). value-acceptances.json is never
+          # written by the workflow (the AI daily run lands it through its own PR).
+          if [ -f data-health/value-open-items.json ]; then git add data-health/value-open-items.json; fi
           # Druckenmiller-Ledger (Chunk 0): der merge-Job schreibt und committet ihn per
           # `git add -A` schon selbst — dieser Pfad ist der ZWEITE Weg fuer den Fall, dass
           # der scoring-Job die Reihe aus dem Artefakt bezieht (ab Chunk 1) und dabei Zeilen
