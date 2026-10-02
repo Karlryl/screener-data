@@ -111,6 +111,11 @@ function todayFromFull(date, base) {
   return V.dayRows(files);
 }
 
+function writeState(file, state) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  writeJsonAtomic(file, state);
+}
+
 function readInputs(base) {
   const prior = readJsonIfExists(path.join(base, STATE_REL));
   if (prior) {
@@ -155,7 +160,7 @@ function runDaily(opts) {
   const res = V.updateOpenItems({ date, today, index, prior: state, acceptances: acc.entries, tables });
   delete res.state.seed; delete res.state.seedInputs;
   V.assertAppendOnly(prior, res.state);
-  if (!opts.dryRun) writeJsonAtomic(path.join(base, STATE_REL), res.state);
+  if (!opts.dryRun) writeState(path.join(base, STATE_REL), res.state);
   res.warnings = [...warnings, ...res.warnings.filter((w) => !warnings.includes(w))];
   return { ...res, catchUp, ms: Date.now() - t0 };
 }
@@ -192,7 +197,7 @@ function runReplay(opts) {
   }
   state.seed = 'replay';
   state.seedInputs = { from, to, command: 'node scripts/value-open-items.js --replay --from ' + from + ' --to ' + to, files: inputFingerprint(base) };
-  if (opts.out) writeJsonAtomic(opts.out, state);
+  if (opts.out) writeState(opts.out, state);
   return { state, perDay, warnings, notes, ms: Date.now() - t0 };
 }
 
