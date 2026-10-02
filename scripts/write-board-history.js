@@ -35,7 +35,8 @@
  *   Tag 1396: every vintage is committed with its verdict in each board file.
  *   gate.structural (lib/board-history-flag.js) separates structural breaks (exit 2, run
  *   red) from p99-only flags (exit 0, ::warning::GATE FLAG). Comparison base per board:
- *   the newest stored vintage whose board file is NOT structural (p99-only days count).
+ *   the newest stored vintage whose board file is NOT structural (p99-only days count);
+ *   a registered massstab-bruch / daten-schub entry binds to that board prior.
  *   Neukalibrierung 2026-08-03: die bis dahin eingefrorenen Schwellen stammten
  *   ausnahmslos aus Vintages, die auf board-history/_excluded.json stehen — Details und
  *   Messgrundlage im Kopf von board-history/_gate-calibration.json.
@@ -1789,10 +1790,31 @@ function run(opts) {
   const valueFlags = readValueFlags(P.VALUE_OPEN_ITEMS_FILE, console.warn, date);
   // WB-4': einmal je Lauf — SEC-Ticker als Upgrade-Beweis (c) und der Quartals-Kopf des
   // AKTUELLEN Snapshots fuer den Null-Slot (a); beides nur am Datenschub-Uebergang gelesen.
-  const gateOpts = bruch && bruch.typ === 'daten-schub' ? {
-    secTicker: secTickerLesen(P.EXTERNAL_DIR),
-    quartale: (ticker) => { const s = readSnapshot(ticker); const ts = (s && s.timeseries) || {}; return { opIncQ: ts.opIncQ, opIncQEnds: ts.opIncQEnds }; },
-  } : {};
+  // Round 3 (Codex P1): built lazily for the first board whose OWN comparison is a daten-schub
+  // transition — after a structural day that board may be on the transition while the global
+  // prior is not.
+  let datenSchubOpts = null;
+  const gateOptsFuer = (b) => {
+    if (!(b && b.typ === 'daten-schub')) return {};
+    if (!datenSchubOpts) datenSchubOpts = {
+      secTicker: secTickerLesen(P.EXTERNAL_DIR),
+      quartale: (ticker) => { const s = readSnapshot(ticker); const ts = (s && s.timeseries) || {}; return { opIncQ: ts.opIncQ, opIncQEnds: ts.opIncQEnds }; },
+    };
+    return datenSchubOpts;
+  };
+  // Round 3 (Codex P1): the registered transition is looked up for the date each board is
+  // ACTUALLY compared against (same exact-prior binding as massstabBruchFuer), once per date.
+  // On a day without a structural prior every board's prior IS the global prior, so this is
+  // the global `bruch` itself. After a structural day the board compares against the last
+  // non-structural day; if that day is the registered letztes_altes_vintage, the transition
+  // and its integrity check (WB-4) apply again, as when the structural day was never committed.
+  // No entry for that date -> null: no allowance, and every other check runs unchanged.
+  const bruchJeDatum = new Map([[priorDate, bruch]]);
+  const bruchFuer = (d) => {
+    if (!bruchJeDatum.has(d)) bruchJeDatum.set(d, massstabBruchFuer(d));
+    return bruchJeDatum.get(d);
+  };
+  let boardBruchAngewandt = null;   // for the run header (bruchProtokollZeilen) when the global prior has none
   for (const board of boards) {
     const boardPath = path.join(P.FULL_DIR, board + '.json');
     const boardData = readJsonOrNull(boardPath);
@@ -1805,12 +1827,13 @@ function run(opts) {
     if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
     const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash, valueFlags);
     // Tag 1396: per-board prior (skips structural days). The registered bruch is bound to the
-    // EXACT global prior (massstabBruchFuer); a board whose prior differs from it gets no bruch
-    // (fail-closed, same reasoning as "eine unerwartete Vergleichsbasis faellt auf die strengere
-    // normale Schwelle zurueck" at massstabBruchFuer).
+    // EXACT prior of THIS board (round 3, Codex P1: bound to the global prior, the day after a
+    // structural day lost the integrity check while the damage persisted).
     const prior = priorBoardVintage(board, date);
     const priorVintage = prior.vintage;
-    const boardBruch = prior.date === priorDate ? bruch : null;
+    const boardBruch = bruchFuer(prior.date);
+    if (boardBruch && !boardBruchAngewandt) boardBruchAngewandt = boardBruch;
+    const gateOpts = gateOptsFuer(boardBruch);
     const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], boardBruch, board, gateOpts);
     const structural = istStrukturell(gate);
     // SHADOW ONLY: loggt, urteilt nicht (gate/exit code/Vintage bleiben unberührt). Vor
@@ -1897,7 +1920,10 @@ function run(opts) {
   // Nur dann ist "heute wurde nichts verglichen" eine meldepflichtige Tatsache.
   const blind = priorDate === null ? uebersprungeneVorgaenger(date) : [];
 
-  return { mode: 'write', date, dryRun, priorDate, ohneVergleichsbasis: blind.length ? blind : null, bruch: bruch ? { tag: bruch.tag, boards: Array.from(bruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anyStructural ? 2 : 0 };
+  // res.bruch drives the run header; a transition applied only through a board's own prior
+  // (round 3) must reach it too, or the alarm channel would hide the active allowance.
+  const kopfBruch = bruch || boardBruchAngewandt;
+  return { mode: 'write', date, dryRun, priorDate, ohneVergleichsbasis: blind.length ? blind : null, bruch: kopfBruch ? { tag: kopfBruch.tag, boards: Array.from(kopfBruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anyStructural ? 2 : 0 };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────

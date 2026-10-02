@@ -321,25 +321,52 @@ test('Tag 1396: "Value gate verdict" is the last step of job scoring, !cancelled
   assert.match(last.run, /VINTAGE_RC="\$\{\{\s*steps\.vintage\.outputs\.rc\s*\}\}"/);
   assert.equal(workflowSteps.filter((s) => s.name.startsWith('Value gate verdict')).length, 1, 'exactly once');
 });
-function verdictLauf(rc, veroeffentlichen = 'true') {
+// Round 3 (Codex P2): the verdict claims storage only when the commit step really succeeded.
+// The step's shell block is executed with the commit step's outcome substituted, for the four
+// states GitHub Actions can hand it: success, skipped (an earlier step failed), failure (commit
+// or push failed) and a non-publishing run (whose commit step itself exits 2 on rc=2).
+const COMMIT_OUTCOME_EXPR = '${{ steps.commit_vintage.outcome }}';
+function verdictLauf(rc, veroeffentlichen = 'true', commitOutcome = 'success') {
   const step = workflowStep('scoring', 'Value gate verdict (structural checks stay loud)');
-  const script = step.run.replace('${{ steps.vintage.outputs.rc }}', rc).replace('${{ steps.vintage.outputs.date }}', '2026-10-02');
+  assert.ok(step.run.includes(COMMIT_OUTCOME_EXPR), 'verdict step does not read the commit step outcome');
+  const script = step.run.replace('${{ steps.vintage.outputs.rc }}', rc).replace('${{ steps.vintage.outputs.date }}', '2026-10-02')
+    .replace(COMMIT_OUTCOME_EXPR, commitOutcome);
   const env = Object.assign({}, process.env, { VEROEFFENTLICHEN: veroeffentlichen });
   const r = require('node:child_process').spawnSync('bash', ['-c', script], { encoding: 'utf8', env });
   assert.ok(!r.error, 'bash not runnable: ' + (r.error && r.error.message));
   return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
 }
-test('Tag 1396: verdict step executed: rc=2 -> ::error:: + exit 2', () => {
-  const r = verdictLauf('2');
+test('Round 3: the commit step carries id commit_vintage (the id the verdict step reads)', () => {
+  assert.equal(workflowStep('scoring', 'Commit board-history vintage to main').id, 'commit_vintage');
+  assert.equal(workflowSteps.filter((s) => s.job === 'scoring' && s.id === 'commit_vintage').length, 1);
+});
+test('Tag 1396: verdict step executed: rc=2, commit step succeeded -> "committed WITH structural flag" + exit 2', () => {
+  const r = verdictLauf('2', 'true', 'success');
   assert.equal(r.code, 2, r.out);
   assert.match(r.out, /::error::board-history vintage 2026-10-02 committed WITH structural flag/);
+  assert.doesNotMatch(r.out, /NOT stored|NOT committed/);
+});
+for (const outcome of ['skipped', 'failure']) {
+  test('Round 3: verdict step executed: rc=2, commit step ' + outcome + ' -> says NOT stored, never "committed", exit 2', () => {
+    const r = verdictLauf('2', 'true', outcome);
+    assert.equal(r.code, 2, r.out);
+    assert.match(r.out, /::error::board-history vintage 2026-10-02 structurally flagged and NOT stored on main/);
+    assert.match(r.out, new RegExp("outcome '" + outcome + "'"));
+    assert.doesNotMatch(r.out, /committed WITH/, 'a lost day must not be reported as stored');
+  });
+}
+test('Round 3: verdict step executed: rc=2, empty outcome (step id renamed/unknown) -> NOT stored (fail closed), exit 2', () => {
+  const r = verdictLauf('2', 'true', '');
+  assert.equal(r.code, 2, r.out);
+  assert.match(r.out, /NOT stored on main/);
+  assert.doesNotMatch(r.out, /committed WITH/);
 });
 test('Tag 1396: verdict step executed on a non-publishing run: rc=2 -> exit 2, does not claim a commit', () => {
-  const r = verdictLauf('2', 'false');
+  const r = verdictLauf('2', 'false', 'failure');
   assert.equal(r.code, 2, r.out);
   assert.match(r.out, /::error::board-history vintage 2026-10-02 /);
   assert.doesNotMatch(r.out, /committed WITH/, 'nothing was committed on this run');
-  assert.match(r.out, /NOT committed/);
+  assert.match(r.out, /NOT committed \(this run does not publish\)/);
 });
 test('Tag 1396: verdict step executed: rc=0 -> exit 0, no ::error::', () => {
   const r = verdictLauf('0');

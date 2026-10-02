@@ -2369,6 +2369,8 @@ jobs:
         run: node scripts/snapshot-ticker-map.js
 
       - name: Commit board-history vintage to main
+        # id read by "Value gate verdict": only outcome success means the vintage reached main.
+        id: commit_vintage
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
@@ -2603,12 +2605,18 @@ jobs:
         run: |
           VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
           VINTAGE_DATE="${{ steps.vintage.outputs.date }}"
+          # Round 3 (Codex P2): storage is claimed only when the commit step really succeeded.
+          # outcome (not conclusion): success / failure (commit or push failed) / skipped
+          # (an earlier step failed, so the step never ran). Anything but success = NOT stored.
+          COMMIT_OUTCOME="${{ steps.commit_vintage.outcome }}"
           if [ "$VINTAGE_RC" = "2" ]; then
-            # Same switch as the commit step: only a publishing run committed the vintage.
-            if [ "$VEROEFFENTLICHEN" = "true" ]; then
+            # Same switch as the commit step: only a publishing run commits the vintage.
+            if [ "$VEROEFFENTLICHEN" != "true" ]; then
+              WO="structurally flagged, NOT committed (this run does not publish)"
+            elif [ "$COMMIT_OUTCOME" = "success" ]; then
               WO="committed WITH structural flag"
             else
-              WO="structurally flagged, NOT committed (this run does not publish)"
+              WO="structurally flagged and NOT stored on main: the commit step did not succeed (outcome '$COMMIT_OUTCOME'; skipped after an earlier failure, or commit/push failed), the day is missing"
             fi
             echo "::error::board-history vintage $VINTAGE_DATE $WO (Wert-Gate) — see the GATE FLAG line in step 'Write board-history vintage (2.3)' for the boards; please check."
             exit 2
