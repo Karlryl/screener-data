@@ -5,10 +5,9 @@
 // Board die p99Δ/thr/beta-cov-Zeile ("utilities: 331 Zeilen, p99Δ=53.70, thr=11.50 ...")
 // nur ins fluechtige Lauf-Protokoll — nach dem naechsten Runner-Teardown ist sie weg.
 // Diese Aenderung schreibt dieselben Tageswerte je Board ZUSAETZLICH in eine committete
-// Sidecar-Datei (data-health/p99-delta-history.json), AUCH an SUSPECT-Tagen: die
-// Sidecar-Commits laufen an Suspect-Tagen ohnehin ("chore: nur Sidecars"-Pfad in
-// .github/workflows/daily-pull.yml, git add board-history/ + newcomer-log/ + ticker-map/
-// unabhaengig vom rc) — diese Datei faehrt in genau diesem Pfad mit.
+// Sidecar-Datei (data-health/p99-delta-history.json), AUCH an SUSPECT-Tagen: seit Tag 1396
+// committet .github/workflows/daily-pull.yml jedes Vintage unabhaengig vom rc, und diese
+// Datei faehrt im selben Commit mit.
 //
 // HART: kein Gate-Verhalten, keine rc-Semantik, kein Commit-Pfad-Wechsel — nur
 // zusaetzlich messen+schreiben. Deshalb pruefen die Tests unten explizit, dass exitCode/
@@ -82,9 +81,11 @@ check('(2) suspect-Folgetag -> Sidecar traegt den Tag TROTZDEM, suspect:true sic
   // Tag 2: massiver Sprung -> p99Delta > wirksameSchwelle (Kalibrier-Boden 11.5) -> suspect.
   writeBoard(base, 'semiconductors', [row('AAA', 95), row('BBB', 60)]);
   const res2 = W.run({ baseDir: base, date: '2026-08-02' });
-  assert.strictEqual(res2.exitCode, 2, 'Vorbedingung: der Tag muss wirklich suspect sein');
+  assert.strictEqual(res2.exitCode, 0, 'Tag 1396: p99 only -> exit 0 (warning)');
   const b2 = res2.boards.find((x) => x.board === 'semiconductors');
   assert.strictEqual(b2.suspect, true, 'Vorbedingung: suspect-Flag gesetzt');
+  assert.strictEqual(b2.structural, false, 'p99 only = value warning');
+  assert.ok(fs.existsSync(path.join(base, 'board-history', '2026-08-02', 'semiconductors.json')), 'flagged vintage written');
   const sc = readSidecar(base);
   assert.deepStrictEqual(Object.keys(sc.byDate).sort(), ['2026-08-01', '2026-08-02'], 'GATE-DEFEKT (Rot-Beleg): Sidecar-Eintrag fehlt am SUSPECT-Tag — '
     + 'die Messreihe darf an Suspect-Tagen NICHT luecken, sonst ist "gemessen" wieder nicht von '
@@ -132,9 +133,20 @@ check('(5) Sidecar-Schreiben veraendert Gate-Ergebnis/rc nicht (Regression)', ()
     { _doc: 'test', boards: { semiconductors: { dailyP99Samples: Array(20).fill(2), sampleDates: Array(20).fill(0).map((_, i) => 'd' + i), threshold: 4, frozen: true } } });
   writeBoard(base, 'semiconductors', [row('AAA', 90), row('BBB', 60)]);
   const r2 = W.run({ baseDir: base, date: '2026-08-02' });
-  assert.strictEqual(r2.exitCode, 2, 'exit 2 bei suspect bleibt unveraendert');
+  assert.strictEqual(r2.exitCode, 0, 'Tag 1396: p99 only -> exit 0 (was 2)');
+  assert.strictEqual(r2.boards[0].suspect, true, 'suspect unveraendert');
+  assert.strictEqual(r2.boards[0].structural, false);
   const sc = readSidecar(base);
   assert.strictEqual(sc.byDate['2026-08-02'].semiconductors.suspect, true);
+});
+
+check('_doc: a new sidecar no longer names the removed "nur Sidecars" path; an existing _doc stays untouched', () => {
+  const neu = W.updateP99DeltaHistory(null, '2026-08-02', []);
+  assert.ok(typeof neu._doc === 'string' && neu._doc.length > 0);
+  assert.doesNotMatch(neu._doc, /nur Sidecars/);
+  assert.match(neu._doc, /jedes Vintage/);
+  const alt = 'Wird AUCH an SUSPECT-Tagen geschrieben ("chore: nur Sidecars"-Pfad).';
+  assert.strictEqual(W.updateP99DeltaHistory({ _doc: alt, byDate: {} }, '2026-08-02', [])._doc, alt);
 });
 
 console.log(fail ? '\nFAILED: ' + fail : '\nalle gruen');

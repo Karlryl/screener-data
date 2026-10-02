@@ -15,8 +15,8 @@
 //   (c) Lampen-Verlust zaehlt nur fuer Quell-Lampen; freigegeben, wenn der Ticker in den SEC-
 //       Jahresreihen steht (Beweis des Upgrades). Die Freigabe ueberstimmt NIE (a)/(b).
 //   (d) jeder andere Lampen-Uebergang: Beobachtung ohne Veto, gezaehlt und namentlich (Kanal B).
-// Dazu die Betreiber-Auflage: Kopplungs-Zeile (eigener SUSPECT vs. Geschwister-Kopplung) und
-// Serien-Alarm nach GATE_SERIE_ALARM_TAGE Tagen ohne Vintage — unabhaengig vom Register.
+// Dazu die Betreiber-Auflage: Flag-Zeile (Tag 1396: Wert-Warnung vs. strukturell; vorher
+// Kopplungs-Zeile) und Serien-Alarm nach GATE_SERIE_ALARM_TAGE Tagen — unabhaengig vom Register.
 'use strict';
 const assert = require('assert');
 const W = require('../scripts/write-board-history.js');
@@ -150,12 +150,17 @@ check('FTI-Klasse: Reihe geleert, zwei Jahres-Achsen weg, beide Lampen weg -> Ve
 });
 
 // ── Betreiber-Auflage: Kopplung sichtbar, Serien-Alarm ──────────────────────
-check('K1: Kopplungs-Zeile nennt eigene SUSPECT-Boards und mitgesperrte Geschwister; Serien-Alarm ab > GATE_SERIE_ALARM_TAGE', () => {
+// Tag 1396: the day directory is no longer excluded, so there is no coupling to report. The
+// line names every flagged board, split into value warnings and structural breaks.
+check('K1: GATE FLAG line names flagged boards (value warning vs. structural), no "gesperrt"; Serien-Alarm ab > GATE_SERIE_ALARM_TAGE', () => {
   const res = { date: '2026-09-05', priorDate: '2026-09-01', bruch: null, boards: [
-    { board: 'energy', suspect: true, gapDays: 5 }, { board: 'utilities', suspect: false, gapDays: 5 }, { board: 'materials', suspect: false, gapDays: 5 }] };
+    { board: 'energy', suspect: true, structural: false, gapDays: 5 }, { board: 'utilities', suspect: true, structural: true, gapDays: 5 },
+    { board: 'materials', suspect: false, structural: false, gapDays: 5 }] };
   const z = W.kopplungProtokollZeilen(res);
   assert.strictEqual(z.length, 2, z.join(' | '));
-  assert.ok(/GATE KOPPLUNG fuer 2026-09-05: gesperrt durch eigenen SUSPECT: energy; mitgesperrt durch Geschwister-Kopplung .*: 2 Board\(s\) — utilities, materials/.test(z[0]), z[0]);
+  assert.ok(/^::warning::GATE FLAG fuer 2026-09-05: gespeichert mit Kennzeichen: energy \(Wert-Warnung\); strukturell: utilities$/.test(z[0]), z[0]);
+  assert.ok(!/gesperrt/.test(z.join(' | ')), 'no "gesperrt"/"mitgesperrt" any more: ' + z.join(' | '));
+  assert.ok(!/materials/.test(z[0]), 'an unflagged board is not named: ' + z[0]);
   assert.ok(/GATE SERIE: 5 Tage ohne gelandetes Vintage \(Vorgaenger 2026-09-01, Schwelle 3 Tage/.test(z[1]), z[1]);
 });
 check('K2: ohne SUSPECT und innerhalb der Schwelle keine Zeilen; Serien-Alarm auch ohne SUSPECT', () => {

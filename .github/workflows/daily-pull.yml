@@ -2301,9 +2301,10 @@ jobs:
           exit 1
 
       # ── 2.3 Vintage-Messreihe (scharf seit Tag 303; Writer Tag 298, 2.8-Spec) ──
-      # NACH dem gh-pages-Deploy: ein suspect-Vintage (exit 2) macht den Job am Ende
-      # fail-loud ROT (0.7-Kanal), darf aber weder Board-Deploy noch Vintage-Commit
-      # verhindern. ANGENOMMEN: scoring laeuft strikt NACH dem merge-Push (needs:)
+      # NACH dem gh-pages-Deploy. Tag 1396: every vintage is committed with its verdict in
+      # each board file; a structural flag (exit 2) turns the job red in the LAST step
+      # "Value gate verdict", after commit, rank-ic and publish ran; a p99-only flag is
+      # exit 0 plus a ::warning::GATE FLAG line. ANGENOMMEN: scoring laeuft strikt NACH dem merge-Push (needs:)
       # -> zweiter, serialisierter main-Pusher ohne Shard-Race; exakt dieselbe
       # Haertung (retry-rebase, tree-verified) wie der merge-Commit (F-CI-001 v2).
       # Falls falsch: zeigt sich als Push-Retry-Fail = roter Job, nie stiller Verlust.
@@ -2354,16 +2355,18 @@ jobs:
         run: node scripts/snapshot-ticker-map.js
 
       - name: Commit board-history vintage to main
+        # id read by "Value gate verdict": only outcome success means the vintage reached main.
+        id: commit_vintage
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
-          # audit BH-156: SUSPECT (rc=2) darf laut Masterplan-Akzeptanz "geflaggt/nicht
-          # committet" bleiben. Frueher committete+pushte dieser Step BEDINGUNGSLOS und
-          # wurde erst DANACH rot (exit 2) — der suspect Tages-Delta war also schon in
-          # main und floss (rank-ic.js schliesst suspect nicht automatisch aus, nur ueber
-          # eine manuelle _excluded.json-Eintragung) in die Gate-Kalibrierung ein. Bei
-          # rc=2 wird das Tagesverzeichnis jetzt vom Commit ausgenommen (Dateien bleiben
-          # lokal auf dem Runner, verschwinden mit dessen Teardown).
+          # Tag 1396 (replaces audit BH-156): every vintage is committed, flagged or not.
+          # The verdict lives in each board file (gate.suspect, gate.structural, reasons);
+          # flagged days never feed the gate calibration (write-board-history.js), rank-ic
+          # skips flagged boards itself, and the writer compares the next day against the
+          # newest NON-structural vintage per board. Excluding the day directory lost the
+          # whole day for all boards whenever one board was flagged. A structural flag
+          # (rc=2) still turns the job red, in the last step "Value gate verdict".
           VINTAGE_DATE="${{ steps.vintage.outputs.date }}"
           # Tag 512: rc EINMAL in eine Shell-Variable, damit Betreffzeile und
           # Erfolgsmeldung unten dieselbe Quelle benutzen wie die Ausschluss-Entscheidung
@@ -2371,15 +2374,16 @@ jobs:
           # auch wenn genau dieses Vintage ausgeschlossen wurde.
           VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
           # ZWEIG-WACHE. Sie sitzt BEWUSST hier unten und nicht ganz oben im Schritt: sie
-          # liest damit denselben $VINTAGE_RC wie der Wert-Gate-Alarm am Schrittende.
+          # liest damit denselben $VINTAGE_RC wie der Wert-Gate-Alarm (seit Tag 1396 im
+          # letzten Schritt "Value gate verdict", nicht mehr am Ende dieses Schritts).
           # BEFUND zweier unabhaengiger Reviews (19.08.): stand die Wache davor, verschluckte
           # sie den EINZIGEN Alarm dieses Schritts. Das Wert-Gate ist keine Publikations-Frage —
           # es sagt, ob die heute gerechneten Zahlen strittig sind, und genau das will ein
           # Trockenlauf wissen. Ein Zweiglauf zum Pruefen einer Schwellen-Aenderung waere sonst
           # gruen geblieben, obwohl das Gate angeschlagen hat: derselbe stille gruene Haken,
           # gegen den dieses File an einem Dutzend Stellen gebaut ist.
-          # Dasselbe $VINTAGE_RC, dasselbe exit 2 wie unten; nur der Grund im Text ist ein
-          # anderer. Waechter: tests/zweig-wache.test.js (ZW-6).
+          # Dasselbe rc, dasselbe exit 2 wie im letzten Schritt "Value gate verdict" (Tag 1396;
+          # rc=2 heisst seitdem: strukturell geflaggt). Waechter: tests/zweig-wache.test.js (ZW-6).
           if [ "$VEROEFFENTLICHEN" != "true" ]; then
             echo "::warning::NICHT VEROEFFENTLICHT — kein board-history-Vintage-Commit nach main. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
             if [ "$VINTAGE_RC" = "2" ]; then
@@ -2388,17 +2392,10 @@ jobs:
             fi
             exit 0
           fi
-          if [ "$VINTAGE_RC" = "2" ]; then
-            echo "::warning::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — wird NICHT committet."
-            git add board-history/ ":(exclude)board-history/$VINTAGE_DATE"
-          else
-            git add board-history/
-          fi
+          git add board-history/
           # S0.2: das Newcomer-Log faehrt bewusst im SELBEN Commit mit — es nutzt damit
           # dieselbe gehaertete Push-Mechanik (Retry, Rebase, Tree-Verifikation) statt
-          # einer zweiten, ungetesteten. Und es faellt NICHT unter die SUSPECT-Ausnahme
-          # oben: die betrifft die Messreihe, deren Werte dann strittig sind. Wer WANN in
-          # der Uebersicht stand, ist davon unberuehrt — diese Beobachtung bleibt richtig,
+          # einer zweiten, ungetesteten. Wer WANN in der Uebersicht stand, bleibt richtig,
           # auch wenn das Wert-Gate am selben Tag anschlaegt.
           # Explizite Existenzpruefung statt `|| true`: ein unterdruecktes git-add
           # verschluckt auch echte Fehler. Fehlt das Verzeichnis, hat das Skript bewusst
@@ -2408,11 +2405,10 @@ jobs:
           # Gleiche Existenzpruefung statt `|| true`, gleicher Grund.
           if [ -d external-data/ticker-map ]; then git add external-data/ticker-map/; fi
           # F-9 Stufe 1: die p99Δ/thr/beta-cov-Sidecar-Reihe (REINE MESSUNG, kein Gate-
-          # Verhalten) faehrt genau wie newcomer-log/ticker-map UNBEDINGT mit — auch bei
-          # rc=2, wo oben nur board-history/$VINTAGE_DATE ausgenommen wird. Die Sidecar-
-          # Datei steht bewusst NICHT unter board-history/, damit die :(exclude)-Pathspec
-          # sie nie erfasst; gezieltes add auf die Datei (nie -A), NIE das ganze
-          # data-health/ (das traegt bereits anderswo committete Baseline-Dateien).
+          # Verhalten) faehrt genau wie newcomer-log/ticker-map UNBEDINGT mit. Gezieltes
+          # add auf die Datei (nie -A), NIE das ganze data-health/ (das traegt bereits
+          # anderswo committete Baseline-Dateien). Until the open-items list (PR2) is live,
+          # the daily run check reads `suspect` per board from this file.
           if [ -f data-health/p99-delta-history.json ]; then git add data-health/p99-delta-history.json; fi
           # Druckenmiller-Ledger (Chunk 0): der merge-Job schreibt und committet ihn per
           # `git add -A` schon selbst — dieser Pfad ist der ZWEITE Weg fuer den Fall, dass
@@ -2424,8 +2420,8 @@ jobs:
           if git diff --staged --quiet; then
             echo "No vintage changes to commit."
           else
-            # Tag 512: Betreffzeile sagt, was WIRKLICH drin ist. Bei rc=2 nur die
-            # Sidecars — das Vintage ist per :(exclude) oben ausgenommen. Und das Datum
+            # Tag 512: Betreffzeile sagt, was WIRKLICH drin ist (Tag 1396: bei rc=2 das
+            # Vintage mit strukturellem Kennzeichen). Und das Datum
             # kommt aus $VINTAGE_DATE statt aus $(date -u +%F): bei einem Backfill oder
             # einem Lauf ueber Mitternacht nannte die alte Zeile einen anderen Tag als
             # den geschriebenen.
@@ -2457,13 +2453,6 @@ jobs:
             # selben Protokoll.
             node scripts/vintage-commit-text.js "$VINTAGE_RC" "$VINTAGE_DATE" --done; echo
           fi
-          # Tag 512: dieselbe Shell-Variable wie die Ausschluss-Entscheidung und die
-          # Textbildung oben. Vorher stand hier ein zweites Mal der Roh-Ausdruck — zwei
-          # Quellen fuer dieselbe Frage koennen auseinanderlaufen.
-          if [ "$VINTAGE_RC" = "2" ]; then
-            echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — NICHT committet, bitte pruefen."
-            exit 2
-          fi
 
       # F-17a (Karl-Entscheid 04.08.2026, Option c): die Bewegungs-Anzeige (NEU/Rangpfeile)
       # in den OEFFENTLICHEN Datenkanal. findash las board-history/ bisher per git-Pull aus
@@ -2476,9 +2465,10 @@ jobs:
       # HEUTE, ohne dass es jemandem auffiele. Die Schritt-Reihenfolge oben bleibt damit
       # unangetastet (ein SUSPECT-Vintage darf den Board-Deploy weiterhin nicht blocken).
       #
-      # if: success() erledigt zugleich den SUSPECT-Fall: bei rc=2 endet der Commit-Schritt
-      # darueber mit exit 2, dieser Schritt wird uebersprungen — das suspekte Vintage geht
-      # also weder nach main noch in den Kanal. Genau das Verhalten, das der git-Pull hatte.
+      # Tag 1396: the commit step no longer ends with exit 2, so this step and Rank-IC run on
+      # flagged days too (the flagged vintage is on main anyway). The red signal for a
+      # structural flag comes from the last step "Value gate verdict". Exception, intended:
+      # a cohort-empty board trips stage-public-data.js's collapse check, so publish is red too.
       #
       # Kein eigener Klon: _ghp ist der gh-pages-Klon aus "Deploy Scoring Output to GitHub
       # Pages" — derselbe Job, dasselbe Arbeitsverzeichnis, und der Schritt lief bereits.
@@ -2488,13 +2478,11 @@ jobs:
       # laeuft er nach dem Vintage-Commit auf dem committeten board-history (+ prices/history aus
       # dem Checkout) und legt den Report nach _public; der F-17a-Publish unten traegt ihn in den
       # Datenkanal (outputs/rank-ic/rank-ic-report.json auf gh-pages). rank-ic.js selbst unveraendert.
-      # Laut statt still: < 2 Vintages = ::error:: + exit 1 (kein IC ohne zwei Staende). Ein SUSPECT-
-      # Tag (rc != 0) wird uebersprungen, weil das nicht committete Tagesverzeichnis auf dem Runner
-      # liegt und rank-ic suspect nicht selbst ausschliesst (Kommentar oben) — als ::warning::, der
-      # Vortags-Report bleibt im Kanal stehen (generatedAt im Report datiert ihn). Im Veroeffentlichungs-
-      # Pfad endet der Commit-Schritt bei SUSPECT selbst mit exit 2, `if: success()` ueberspringt diesen
-      # Schritt dann ganz (Log: skipped, keine Warnung); der rc-Guard greift im Nur-rechnen-Pfad, wo der
-      # Commit-Schritt mit rc=2 auf exit 0 endet und das SUSPECT-Verzeichnis trotzdem auf der Platte liegt.
+      # Laut statt still: < 2 Vintages = ::error:: + exit 1 (kein IC ohne zwei Staende).
+      # Tag 1396: the former rc guard is gone. rank-ic.js skips every board file with
+      # gate.suspect === true itself (listed under boardVintagesExcluded, reason "gate-suspect: ...");
+      # `--include-flagged` keeps them for a sensitivity run. Only the flagged day drops out:
+      # the next day was compared against it and carries the same values.
       - name: Rank-IC-Report erzeugen (2.8, Datenkanal)
         if: success()
         # Review 06.09. (silent-failure HIGH): der F-17a-Publish darunter traegt `if: success()` und
@@ -2504,11 +2492,6 @@ jobs:
         # laut (::error::, roter Schritt), blockt aber nichts hinter sich.
         continue-on-error: true
         run: |
-          VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
-          if [ "$VINTAGE_RC" != "0" ]; then
-            echo "::warning::rank-ic uebersprungen: Vintage-rc=$VINTAGE_RC (SUSPECT/rot) — der heutige Stand ist nicht committet und wuerde den IC verfaelschen; der Vortags-Report bleibt im Datenkanal."
-            exit 0
-          fi
           n=$(ls -d board-history/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] 2>/dev/null | wc -l)
           if [ "$n" -lt 2 ]; then
             echo "::error::rank-ic: nur $n Vintage-Verzeichnis(se) in board-history — ohne zwei Staende gibt es keinen Rang-IC. Kein Report geschrieben."
@@ -2566,7 +2549,7 @@ jobs:
             rm -rf outputs/board-history
             mkdir -p outputs
             cp -r ../_public/board-history outputs/board-history
-            # 06.09.2026: Rank-IC-Report mitnehmen (Erzeuger-Schritt oben); fehlt er (SUSPECT-Tag), bleibt
+            # 06.09.2026: Rank-IC-Report mitnehmen (Erzeuger-Schritt oben); fehlt er (Erzeuger rot), bleibt
             # der bisherige Stand im Kanal — sichtbar gemeldet, nicht still.
             if [ -f ../_public/rank-ic-report.json ]; then mkdir -p outputs/rank-ic && cp ../_public/rank-ic-report.json outputs/rank-ic/rank-ic-report.json; else echo "rank-ic-report.json nicht erzeugt (s. Erzeuger-Schritt) — Kanal behaelt den Vortags-Report"; fi
             git add -A
@@ -2592,6 +2575,35 @@ jobs:
           done
           echo "::error::board-history publish failed after 3 attempts — findash sieht die Bewegungs-Anzeige nicht."
           exit 1
+
+      # Tag 1396: the ONE place where a structural gate flag turns the run red. It sits last,
+      # so commit, rank-ic and publish have already run with the flagged (committed) day.
+      # !cancelled(): it must also speak when an earlier step failed. rc comes from the writer
+      # step; 2 = at least one board structurally flagged (cohort-empty, overlap collapse, NaN
+      # break, coverage collapse, integrity decay, or p99 on a daten-schub transition with a
+      # broken fan-out cap). A p99-only flag is rc 0 (::warning::GATE FLAG in the writer log).
+      - name: Value gate verdict (structural checks stay loud)
+        if: ${{ !cancelled() }}
+        run: |
+          VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
+          VINTAGE_DATE="${{ steps.vintage.outputs.date }}"
+          # Round 3 (Codex P2): storage is claimed only when the commit step really succeeded.
+          # outcome (not conclusion): success / failure (commit or push failed) / skipped
+          # (an earlier step failed, so the step never ran). Anything but success = NOT stored.
+          COMMIT_OUTCOME="${{ steps.commit_vintage.outcome }}"
+          if [ "$VINTAGE_RC" = "2" ]; then
+            # Same switch as the commit step: only a publishing run commits the vintage.
+            if [ "$VEROEFFENTLICHEN" != "true" ]; then
+              WO="structurally flagged, NOT committed (this run does not publish)"
+            elif [ "$COMMIT_OUTCOME" = "success" ]; then
+              WO="committed WITH structural flag"
+            else
+              WO="structurally flagged and NOT stored on main: the commit step did not succeed (outcome '$COMMIT_OUTCOME'; skipped after an earlier failure, or commit/push failed), the day is missing"
+            fi
+            echo "::error::board-history vintage $VINTAGE_DATE $WO (Wert-Gate) — see the GATE FLAG line in step 'Write board-history vintage (2.3)' for the boards; please check."
+            exit 2
+          fi
+          echo "Value gate: no structural flag reported for '$VINTAGE_DATE' (writer rc='$VINTAGE_RC'; a writer hard fail is red in its own step)."
 
   # ============================================================================
   # LAUFSTATUS (Tag 971) — der Marker, der einen ROTEN Lauf sichtbar macht.

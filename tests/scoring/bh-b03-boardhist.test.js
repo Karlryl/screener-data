@@ -169,6 +169,7 @@ check('BH-111: leeres Board (0 Zeilen) -> suspect cohort-empty', () => {
   assert.equal(res.exitCode, 2, 'leeres Board loest suspect aus');
   const v = readVintage(base, '2026-07-13', 'semiconductors');
   assert.ok(v.gate.reasons.includes('cohort-empty'));
+  assert.equal(v.gate.structural, true, 'cohort-empty is structural (Tag 1396)');
 });
 check('BH-111: Kohorten-Verlust >50% gegen Vortag -> suspect cohort-overlap-collapse', () => {
   const base = mkBase();
@@ -184,6 +185,7 @@ check('BH-111: Kohorten-Verlust >50% gegen Vortag -> suspect cohort-overlap-coll
   assert.equal(r2.exitCode, 2, '75% Kohorten-Verlust loest suspect aus');
   const v2 = readVintage(base, '2026-07-14', 'semiconductors');
   assert.ok(v2.gate.reasons.includes('cohort-overlap-collapse'));
+  assert.equal(v2.gate.structural, true, 'overlap collapse is structural (Tag 1396)');
 });
 check('BH-111: normale Tages-Churn (Overlap >=50%) bleibt gesund', () => {
   const base = mkBase();
@@ -217,6 +219,7 @@ check('BH-111: suspect-Tag (Kohorten-Kollaps) speist die Kalibrierschwelle NICHT
   assert.equal(r3.exitCode, 2);
   const v3 = readVintage(base, '2026-07-15', 'semiconductors');
   assert.ok(v3.gate.reasons.includes('cohort-overlap-collapse'));
+  assert.equal(v3.gate.structural, true);
   assert.ok(v3.gate.p99Delta > 100, 'p99Delta ist rechnerisch riesig (kontaminiert)');
 
   const gc = JSON.parse(fs.readFileSync(path.join(base, 'board-history', '_gate-calibration.json'), 'utf8'));

@@ -2,7 +2,7 @@
 /** tests/vintage-commit-text.test.js — Standalone-Runner (node tests/vintage-commit-text.test.js, Exit 0/1).
  *
  * Nagelt fest, dass Commit-Betreff und Erfolgsmeldung des Vintage-Commits SAGEN, WAS
- * WIRKLICH DRIN IST. Der Fehler (Lauf 30516194703, 2026-07-30): bei rc=2 nahm der
+ * WIRKLICH DRIN IST. Tag 1396: rc=2 heisst seitdem "committet MIT strukturellem Kennzeichen". Der Fehler (Lauf 30516194703, 2026-07-30): bei rc=2 nahm der
  * Schritt das Tagesverzeichnis korrekt per :(exclude) aus, schrieb aber trotzdem
  * "chore: board-history vintage 2026-07-30" und "✓ board-history vintage committed to
  * main". In `git log` sah der blockierte Tag aus wie ein gelandeter.
@@ -27,54 +27,59 @@ function test(name, fn) {
 const D = '2026-07-30';
 
 // ── Die Entscheidung selbst ───────────────────────────────────────────────────
-test('rc "2" heisst blockiert', () => {
-  assert.equal(t.vintageBlockiert('2'), true);
+// Tag 1396: rc=2 heisst "committet MIT strukturellem Kennzeichen" (das Tagesverzeichnis
+// wird nicht mehr ausgenommen). Die Texte muessen genau das sagen.
+test('rc "2" heisst strukturell geflaggt', () => {
+  assert.equal(t.strukturGeflaggt('2'), true);
+  assert.equal(t.vintageBlockiert, undefined, 'the old "blocked" export is gone');
 });
 
-test('rc "0" heisst nicht blockiert', () => {
-  assert.equal(t.vintageBlockiert('0'), false);
+test('rc "0" heisst nicht strukturell geflaggt', () => {
+  assert.equal(t.strukturGeflaggt('0'), false);
 });
 
-test('rc mit Leerzeichen wird getrimmt ("2 " ist blockiert)', () => {
+test('rc mit Leerzeichen wird getrimmt ("2 " ist geflaggt)', () => {
   // Workflow-Outputs koennen Whitespace tragen; ein ungetrimmter Vergleich haette
-  // den Ausschluss-Fall als "committet" beschriftet.
-  assert.equal(t.vintageBlockiert('2 '), true);
+  // den Flag-Fall als "ohne Flag" beschriftet.
+  assert.equal(t.strukturGeflaggt('2 '), true);
 });
 
-test('leeres rc gilt NICHT als blockiert - spiegelt [ "$VINTAGE_RC" = "2" ]', () => {
-  // Bewusst: die Funktion muss dieselbe Entscheidung treffen wie die Shell-Bedingung,
-  // die das Verzeichnis ausnimmt. Waere hier Number('') === 0 -> falsch verglichen,
-  // liefen Text und Ausschluss auseinander.
-  assert.equal(t.vintageBlockiert(''), false);
-  assert.equal(t.vintageBlockiert('1'), false);
+test('leeres rc gilt NICHT als geflaggt - spiegelt [ "$VINTAGE_RC" = "2" ]', () => {
+  // Bewusst: die Funktion muss dieselbe Entscheidung treffen wie die Shell-Bedingung
+  // im Schritt "Value gate verdict". Waere hier Number('') === 0 -> falsch verglichen,
+  // liefen Text und Urteil auseinander.
+  assert.equal(t.strukturGeflaggt(''), false);
+  assert.equal(t.strukturGeflaggt('1'), false);
 });
 
-// ── Der Betreff darf bei rc=2 KEINEN gelandeten Vintage behaupten ─────────────
-test('rc=2: Betreff nennt SUSPECT und NICHT committet', () => {
+// ── rc=2: der Betreff sagt "committet, mit Kennzeichen" ─────────────────────────
+test('rc=2: Betreff nennt das Vintage UND das strukturelle Kennzeichen', () => {
   const s = t.subject('2', D);
-  assert.match(s, /SUSPECT/, 'muss SUSPECT nennen');
-  assert.match(s, /NICHT committet/, 'muss sagen, dass es nicht committet wurde');
-  assert.match(s, /Sidecars/, 'muss sagen, was stattdessen drin ist');
+  assert.equal(s, `chore: board-history vintage ${D} (strukturell geflaggt)`);
 });
 
-test('rc=2: Betreff sieht NICHT aus wie ein gelandetes Vintage', () => {
-  // Die eigentliche Zusicherung: der alte Betreff lautete genau so.
-  assert.notEqual(t.subject('2', D), `chore: board-history vintage ${D}`);
+test('rc=2: Betreff behauptet keinen Ausschluss mehr (alte Texte weg)', () => {
+  const s = t.subject('2', D);
+  assert.doesNotMatch(s, /NICHT committet/);
+  assert.doesNotMatch(s, /nur Sidecars/);
+  assert.doesNotMatch(s, /ausgeschlossen/);
 });
 
 test('rc=0: Betreff nennt das Vintage als Inhalt', () => {
   assert.equal(t.subject('0', D), `chore: board-history vintage ${D}`);
+  assert.doesNotMatch(t.subject('0', D), /geflaggt/);
 });
 
-// ── Die Erfolgsmeldung darf der Warnung nicht widersprechen ───────────────────
-test('rc=2: Erfolgsmeldung sagt, dass das Vintage ausgeschlossen blieb', () => {
+// ── Die Erfolgsmeldung ────────────────────────────────────────────────────────
+test('rc=2: Erfolgsmeldung sagt committet mit strukturellem Kennzeichen', () => {
   const d = t.done('2', D);
-  assert.match(d, /ausgeschlossen/, 'muss den Ausschluss benennen');
-  assert.doesNotMatch(d, /vintage 2026-07-30 committet/, 'darf das Vintage nicht als committet melden');
+  assert.match(d, /vintage 2026-07-30 committet, mit strukturellem Kennzeichen/);
+  assert.doesNotMatch(d, /ausgeschlossen|NICHT committet|nur Sidecars|Sidecars committet/);
 });
 
 test('rc=0: Erfolgsmeldung nennt das Vintage als committet', () => {
   assert.match(t.done('0', D), /vintage 2026-07-30 committet/);
+  assert.doesNotMatch(t.done('0', D), /Kennzeichen/);
 });
 
 // ── Das Datum kommt aus dem Argument, nicht von heute ─────────────────────────
