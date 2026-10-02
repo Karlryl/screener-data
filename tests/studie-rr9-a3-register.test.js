@@ -180,7 +180,7 @@ test('RR9-A3 (b): manipulierter previousHash und verschobenes Kettenende brechen
 
   const sauber = laufe(['--register', register, '--jahrgang', jahrgang]);
   assert.equal(sauber.status, 0, `Die unversehrte Kopie ist rot: ${sauber.fehler}`);
-  assert.match(sauber.aus, /"previousHash": "9f32e5928acf36d1/, 'Der Eintrag haengt nicht an Eintrag 21');
+  assert.match(sauber.aus, /"previousHash": "9f32e5928acf36d147b4179357a59665d5e05163c90199d2387232f795aa6ad2"/, 'Der Eintrag haengt nicht an Eintrag 21');
 
   const kaputt = lies(register);
   kaputt.events[10].previousHash = 'f'.repeat(64);
