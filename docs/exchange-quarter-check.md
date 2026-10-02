@@ -62,7 +62,12 @@ comparative). The cell then carries `exchangeFill` (native value, line, derivati
 operands with notice dates, source, original vendor row, reason). When the vendor later delivers the quarter, an
 agreeing value stays untouched; a disagreeing one is withheld wherever it sits (`exchange-quarter-mismatch`,
 general stratum, never the newest cell; in November it is the year-ago partner of the newest quarter and carries
-the pair code), and counted (`vendor-delivered-disagrees`, a `::warning::` on the summary line).
+the pair code), and counted (`vendor-delivered-disagrees`, a `::warning::` on the summary line). "Later" is
+proven against the baseline vintage: the company has a row there and the quarter is absent or null in it. A
+fill-period cell the baseline already carried was delivered on time: outside a pair it stays untouched (G1) and is
+only counted; without a baseline row nothing is withheld on this ground. (Review of deddc959d3: on the data of
+02.10.2026 the broader rule held 8 on-time cells, at least 4 of them correct; 003816.SZ and 601038.SS with a vendor
+value of 0 are real wrong values and go on the false-hold list for G2c and the hand table.)
 
 ## Reason texts (German, `financialDataReasons`)
 

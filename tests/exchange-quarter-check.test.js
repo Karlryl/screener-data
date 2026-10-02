@@ -284,7 +284,10 @@ test('drift: the vendor later delivers Q3-2025 with a different value -> withhel
   const r = res(s, ctx);
   assert.equal(r.fillPeriodVendorDisagrees, true);
   assert.ok(r.withhold.some(w => w.period === '2025-09-30' && w.level));
-  assert.equal(revGrowthLeg(run(s, 'active', ctx).snapshot).basis !== 'quarter', true);
+  assert.ok(!r.withhold.some(w => w.fillPeriod), 'the November level partner is one entry and keeps the pair code');
+  const a = run(s, 'active', ctx).snapshot;
+  assert.equal(a.timeseries.revenueQ[a.timeseries.revenueQEnds.indexOf('2025-09-30')].financialMissing.reasonCode, 'exchange-pair-mismatch');
+  assert.equal(revGrowthLeg(a).basis !== 'quarter', true);
 });
 
 test('F5 October: a delivered Q3-2025 off the exchange value outside the level pair is withheld with its own reason', () => {
@@ -315,6 +318,33 @@ test('F5 October: a delivered Q3-2025 off the exchange value outside the level p
   // A broker's level gap is definition, never a fill-period mismatch.
   const br = clone(F.store); for (const list of Object.values(br.cn.companies['000002.SZ'].ytd)) for (const o of list) o.table = 'SINCOME';
   assert.ok(!res(clone(s), ctxOf(br)).withhold.some(x => x.fillPeriod));
+});
+// Review of deddc959d3: 4 of 8 holds on the data of 02.10. were on-time cells with correct values.
+const offQ3 = () => { const s = base(), k = s.timeseries.revenueQEnds.indexOf('2025-09-30');
+  s.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * s.meta.fxRateApplied * 1.05 }; return { s, k }; };
+test('F5 on time: a Q3-2025 cell the July vintage already carried is not withheld when it misses the store, only counted', () => {
+  const { s, k } = offQ3(), b = clone(F.baseline), pit = b.rows['000002.SZ'];
+  pit.revenueQ[pit.revenueQEnds.indexOf('2025-09-30')] = v(s.timeseries.revenueQ[k]);
+  const r = res(clone(s), ctxOf(F.store, b));
+  assert.equal(r.fillPeriodVendorDisagrees, true, 'still counted (warning)');
+  assert.ok(!r.withhold.some(w => w.period === '2025-09-30'), 'on-time cell stays (G1)');
+  assert.equal(serial(run(clone(s), 'active', ctxOf(F.store, b)).snapshot.timeseries.revenueQ[k]), serial(s.timeseries.revenueQ[k]));
+  // No baseline row for the company: late delivery is unproven, nothing is withheld on that ground.
+  const none = clone(F.baseline); delete none.rows['000002.SZ'];
+  const rn = res(clone(s), ctxOf(F.store, none));
+  assert.equal(rn.fillPeriodVendorDisagrees, true);
+  assert.ok(!rn.withhold.some(w => w.period === '2025-09-30'));
+  // Opposite case (L10): the vintage has the company but not the quarter -> proven late delivery, withheld.
+  assert.ok(res(clone(s)).withhold.some(w => w.period === '2025-09-30' && w.fillPeriod));
+});
+test('F5 newest: Q3-2025 as the newest cell is never withheld, even when delivered late and off the store', () => {
+  const { s } = offQ3();
+  for (const f of ['revenueQ', 'revenueQEnds']) s.timeseries[f] = s.timeseries[f].slice(3);
+  assert.equal(s.timeseries.revenueQEnds[0], '2025-09-30');
+  const r = res(clone(s));
+  assert.ok(!r.withhold.some(w => w.index === 0 || w.period === '2025-09-30'));
+  const a = run(clone(s), 'active').snapshot;
+  assert.equal(serial(a.timeseries.revenueQ[0]), serial(s.timeseries.revenueQ[0]));
 });
 test('fill absence: the two YTD operands of Q3-2025 last read by different fetches derive no quarter (one vintage)', () => {
   const st = clone(F.store);
@@ -437,6 +467,20 @@ test('break-once: each guard line, when removed, turns its check red; the live m
     lib => { const s = base(), k = s.timeseries.revenueQEnds.indexOf('2025-09-30');
       s.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * s.meta.fxRateApplied * 1.05 };
       assert.ok(r(lib, s).withhold.some(w => w.period === '2025-09-30')); });
+  // F5 holds only a proven late delivery (an on-time cell in the vintage stays)
+  red("      if (deliveredAfterBaseline(s, P, env, ctx) && !res.withhold.some(w => w.index === k)) {", "      if (!res.withhold.some(w => w.index === k)) {",
+    lib => { const { s, k } = offQ3(), b = clone(F.baseline), pit = b.rows['000002.SZ'];
+      pit.revenueQ[pit.revenueQEnds.indexOf('2025-09-30')] = v(s.timeseries.revenueQ[k]);
+      assert.ok(!r(lib, s, ctxOf(F.store, b)).withhold.some(w => w.period === '2025-09-30')); });
+  // F5 never withholds the newest cell
+  red("    if (k > 0 && native[k] !== null && ex[k] !== null && !agree(native[k], ex[k])) {", "    if (k >= 0 && native[k] !== null && ex[k] !== null && !agree(native[k], ex[k])) {",
+    lib => { const { s } = offQ3(); for (const f of ['revenueQ', 'revenueQEnds']) s.timeseries[f] = s.timeseries[f].slice(3);
+      assert.ok(!r(lib, s).withhold.some(w => w.index === 0)); });
+  // F5 duplicate guard: the November level partner keeps the pair code
+  red("      if (deliveredAfterBaseline(s, P, env, ctx) && !res.withhold.some(w => w.index === k)) {", "      if (deliveredAfterBaseline(s, P, env, ctx)) {",
+    lib => { const { s, ctx } = november(true), k = s.timeseries.revenueQEnds.indexOf('2025-09-30');
+      s.timeseries.revenueQ[k] = { value: res(november(true).s, ctx).fill.nativeValue * s.meta.fxRateApplied * 1.05 };
+      assert.ok(!r(lib, s, ctx).withhold.some(w => w.fillPeriod)); });
   // one fetch vintage per derived quarter
   red("          S.lastConfirmedAt(store, ticker, p) !== S.lastConfirmedAt(store, ticker, p.slice(0, 5) + prev)) single[p] = null;",
     "          false) single[p] = null;",
@@ -460,7 +504,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
       y.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * y.meta.fxRateApplied * 1.05 };
       y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
       assert.equal(r(lib, y).growth, null); });
-  assert.equal(breaks, 14);
+  assert.equal(breaks, 17);
 });
 
 test('live files unchanged by this test run', () => {
