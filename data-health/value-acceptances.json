@@ -1,5 +1,1044 @@
 {
   "_doc": "Acceptances for data-health/value-open-items.json (Tag 1398). Written ONLY by the AI daily run through its normal PR flow, never by the workflow, never by the owner's chat. Append-only: entries are never edited or removed. One entry closes the cells of one open item: { itemId, periodEnd (optional; absent = every cell of the item), value (the value accepted as right, stored units, > 0), acceptedAt (required: the updatedFor date of the list that was reviewed, YYYY-MM-DD and a real calendar day, NOT the calendar day of the review; covers only cells first seen on or before it), by, reason (required), sources: [{ url, quote }] (optional) }. If today's value is within factor 3 of value, the item closes; otherwise it closes and a new item opens with acceptedValue = value. An unknown itemId gives a warning, never a crash. Guide: docs/value-open-items.md.",
   "schema": "value-acceptances/v1",
-  "acceptances": []
+  "acceptances": [
+    {
+      "itemId": "LCLN|marketCap|2026-08-09",
+      "value": 2429191936,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (70 %): The accepted 813M USD counted only the 34.8M Class A shares; the new value counts all common classes (A, B, C = 102.2M) because B and C shares are paired with LILP units redeemable 1:1 into Class A, so the owner rule of summing all classes gives the new value (Class A only remains the narrow reading).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001925283/000162828026054954/lcln-20260630.htm",
+          "quote": "102,191,562 total shares of common stock outstanding consisting of 34,846,972 shares of Class A common stock, 28,478,208 shares of Class B common stock and 38,866,382 shares of Class C common stock"
+        }
+      ]
+    },
+    {
+      "itemId": "5904.TWO|marketCap|2026-08-16",
+      "value": 2301397989.432443,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): POYA split its shares 1 for 10 (par 10 to 1 TWD, new shares from 2026-08-10); the accepted 23.8B USD (754B TWD) is the new share count times the old pre-split price of about 708 TWD, so the accepted value was wrong by a factor of 10 and the current 2.30B USD is right (0.3% from the filing-based value).",
+      "sources": [
+        {
+          "url": "https://tw.stock.yahoo.com/news/%E5%AF%B6%E9%9B%85%E3%80%8C1%E6%8B%8610%E3%80%8D%E6%9C%80%E6%96%B0%E6%99%82%E7%A8%8B%E6%9B%9D%E5%85%89%EF%BC%818%E6%9C%8810%E6%97%A5%E6%8F%9B%E7%99%BC%E6%96%B0%E8%82%A1-7%E6%9C%88%E5%85%88%E9%99%A4%E6%81%AF255%E5%85%83-081359247.html",
+          "quote": "流通在外股數將由1億644萬3826股增加至10億6443萬8260股"
+        }
+      ]
+    },
+    {
+      "itemId": "MBLY|marketCap|2026-08-16",
+      "value": 6282886144,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The accepted 2.20B USD counted only the 252.4M Class A shares (252,419,583 x 8.73 USD); the new value counts Class A plus the 597.8M Class B shares held by Intel, which have the same economics, so all-classes market cap is right (the 09-29 value is 3.0% above the filing-based figure, the 10-01 value 0.5%).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1910139/000110465926086264/mbly-20260627x10q.htm",
+          "quote": "There were 252,419,583 shares of Class A common stock, $0.01 par value, outstanding at July 15, 2026."
+        }
+      ]
+    },
+    {
+      "itemId": "TENNIND.NS|marketCap|2026-08-18",
+      "value": 2079465887.5465238,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (88 %): The accepted 22.76bn USD (2026-08-16 only) was a one-day tenfold vendor glitch (about 10.0 x shares x price); the next day already showed 2.35bn and the stored 2.08bn matches 403.6M shares x INR 495.40 x 0.010425 = 2.084bn USD.",
+      "sources": [
+        {
+          "url": "https://www.screener.in/company/TENNIND/consolidated/",
+          "quote": "Market Capitalization: ₹19,995 Crores"
+        }
+      ]
+    },
+    {
+      "itemId": "JBS|marketCap|2026-08-18",
+      "value": 12090583040,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): The vendor quote flips between about 13bn and about 40-46bn USD (about 3.7x) from day to day; the correct level is shares 1,070,929,187 x price, and the stored 12.09bn equals that at the 2026-09-30 close of 11.29 USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1791942/000179194226000004/jbsay-20260630.htm",
+          "quote": "As of June 30, 2026, there were 776,086,920 Class A common shares, par value of €0.01 per share, and 294,842,267 Class B common shares, par value of €0.10 per share, outstanding."
+        }
+      ]
+    },
+    {
+      "itemId": "VTMX|revenueQ|2026-08-25",
+      "periodEnd": "2026-06-30",
+      "value": 78487715,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (97 %): The old accepted values (1,366 M, 1,330 M, 1,319 M) are the true USD figures multiplied by about 17.3 to 17.4 (MXN scale, wrongly labelled USD); the new stored values equal Vesta's reported USD revenue for all three quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1969373/000196937326000016/a2q26_efvestaingles.htm",
+          "quote": "Rental income 12 $ 155,238,379 $ 134,312,614 $ 78,487,715 $ 67,274,134 (6-K Ex-99.2, six and three months to 30 June 2026 and 2025, in US dollars); \"First quarter 2026 total revenues reached US$ 76.7 million\"; \"Fourth quarter 2025 total revenues reached US$ 76.4 million\""
+        }
+      ]
+    },
+    {
+      "itemId": "VTMX|revenueQ|2026-08-25",
+      "periodEnd": "2026-03-31",
+      "value": 76749154,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (97 %): The old accepted values (1,366 M, 1,330 M, 1,319 M) are the true USD figures multiplied by about 17.3 to 17.4 (MXN scale, wrongly labelled USD); the new stored values equal Vesta's reported USD revenue for all three quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1969373/000196937326000016/a2q26_efvestaingles.htm",
+          "quote": "Rental income 12 $ 155,238,379 $ 134,312,614 $ 78,487,715 $ 67,274,134 (6-K Ex-99.2, six and three months to 30 June 2026 and 2025, in US dollars); \"First quarter 2026 total revenues reached US$ 76.7 million\"; \"Fourth quarter 2025 total revenues reached US$ 76.4 million\""
+        }
+      ]
+    },
+    {
+      "itemId": "VTMX|revenueQ|2026-08-25",
+      "periodEnd": "2025-12-31",
+      "value": 76445076,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (97 %): The old accepted values (1,366 M, 1,330 M, 1,319 M) are the true USD figures multiplied by about 17.3 to 17.4 (MXN scale, wrongly labelled USD); the new stored values equal Vesta's reported USD revenue for all three quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1969373/000196937326000016/a2q26_efvestaingles.htm",
+          "quote": "Rental income 12 $ 155,238,379 $ 134,312,614 $ 78,487,715 $ 67,274,134 (6-K Ex-99.2, six and three months to 30 June 2026 and 2025, in US dollars); \"First quarter 2026 total revenues reached US$ 76.7 million\"; \"Fourth quarter 2025 total revenues reached US$ 76.4 million\""
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|revenueQ|2026-08-28",
+      "periodEnd": "2026-03-31",
+      "value": 1259780198.197535,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Prio's statutory statements are presented in BRL (functional currency USD); the stored new values equal the filed BRL net revenue converted at 0.1926, while the old accepted values were USD-scale numbers (about BRL divided by 5.3 to 5.8) multiplied again by a BRL to USD rate, a double conversion that made them about 5 to 6 times too small.",
+      "sources": [
+        {
+          "url": "https://ri.prio3.com.br/informacoes-financeiras/central-de-resultados/ (ITR 30 June 2026 file https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2; DFP 2025 file .../13699bc2-2b25-1835-0e23-5cfadbd1364f?origin=2)",
+          "quote": "\"Receita líquida 7.016.243 3.327.790\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, \"Em milhares de reais - R$\"); DFP 2025: \"Receita líquida 15.583.960 14.360.653\""
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|revenueQ|2026-08-28",
+      "periodEnd": "2025-12-31",
+      "value": 819132237.2023,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Prio's statutory statements are presented in BRL (functional currency USD); the stored new values equal the filed BRL net revenue converted at 0.1926, while the old accepted values were USD-scale numbers (about BRL divided by 5.3 to 5.8) multiplied again by a BRL to USD rate, a double conversion that made them about 5 to 6 times too small.",
+      "sources": [
+        {
+          "url": "https://ri.prio3.com.br/informacoes-financeiras/central-de-resultados/ (ITR 30 June 2026 file https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2; DFP 2025 file .../13699bc2-2b25-1835-0e23-5cfadbd1364f?origin=2)",
+          "quote": "\"Receita líquida 7.016.243 3.327.790\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, \"Em milhares de reais - R$\"); DFP 2025: \"Receita líquida 15.583.960 14.360.653\""
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|revenueQ|2026-08-28",
+      "periodEnd": "2025-09-30",
+      "value": 686369669.0633999,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Prio's statutory statements are presented in BRL (functional currency USD); the stored new values equal the filed BRL net revenue converted at 0.1926, while the old accepted values were USD-scale numbers (about BRL divided by 5.3 to 5.8) multiplied again by a BRL to USD rate, a double conversion that made them about 5 to 6 times too small.",
+      "sources": [
+        {
+          "url": "https://ri.prio3.com.br/informacoes-financeiras/central-de-resultados/ (ITR 30 June 2026 file https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2; DFP 2025 file .../13699bc2-2b25-1835-0e23-5cfadbd1364f?origin=2)",
+          "quote": "\"Receita líquida 7.016.243 3.327.790\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, \"Em milhares de reais - R$\"); DFP 2025: \"Receita líquida 15.583.960 14.360.653\""
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|revenueQ|2026-08-28",
+      "periodEnd": "2025-06-30",
+      "value": 641044500.523,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Prio's statutory statements are presented in BRL (functional currency USD); the stored new values equal the filed BRL net revenue converted at 0.1926, while the old accepted values were USD-scale numbers (about BRL divided by 5.3 to 5.8) multiplied again by a BRL to USD rate, a double conversion that made them about 5 to 6 times too small.",
+      "sources": [
+        {
+          "url": "https://ri.prio3.com.br/informacoes-financeiras/central-de-resultados/ (ITR 30 June 2026 file https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2; DFP 2025 file .../13699bc2-2b25-1835-0e23-5cfadbd1364f?origin=2)",
+          "quote": "\"Receita líquida 7.016.243 3.327.790\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, \"Em milhares de reais - R$\"); DFP 2025: \"Receita líquida 15.583.960 14.360.653\""
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|grossProfitQ|2026-08-28",
+      "periodEnd": "2026-03-31",
+      "value": 540373820.4964463,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Same double-conversion error as the revenue item: the old values were USD-scale numbers treated as BRL and multiplied again by 0.197, while the new values equal the filed BRL gross profit (Resultado bruto) converted at 0.1926.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2",
+          "quote": "\"Resultado bruto ... 3.127.852 514.572\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, in R$ thousands); DFP 2025: \"3.114.907\" for the year (the pdftotext of the statement table shows the label column out of order)"
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|grossProfitQ|2026-08-28",
+      "periodEnd": "2025-12-31",
+      "value": 70656692.7241,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Same double-conversion error as the revenue item: the old values were USD-scale numbers treated as BRL and multiplied again by 0.197, while the new values equal the filed BRL gross profit (Resultado bruto) converted at 0.1926.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2",
+          "quote": "\"Resultado bruto ... 3.127.852 514.572\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, in R$ thousands); DFP 2025: \"3.114.907\" for the year (the pdftotext of the statement table shows the label column out of order)"
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|grossProfitQ|2026-08-28",
+      "periodEnd": "2025-09-30",
+      "value": 160390478.6603,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Same double-conversion error as the revenue item: the old values were USD-scale numbers treated as BRL and multiplied again by 0.197, while the new values equal the filed BRL gross profit (Resultado bruto) converted at 0.1926.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2",
+          "quote": "\"Resultado bruto ... 3.127.852 514.572\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, in R$ thousands); DFP 2025: \"3.114.907\" for the year (the pdftotext of the statement table shows the label column out of order)"
+        }
+      ]
+    },
+    {
+      "itemId": "PRIO3.SA|grossProfitQ|2026-08-28",
+      "periodEnd": "2025-06-30",
+      "value": 99123908.2764,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (92 %): Same double-conversion error as the revenue item: the old values were USD-scale numbers treated as BRL and multiplied again by 0.197, while the new values equal the filed BRL gross profit (Resultado bruto) converted at 0.1926.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/cecb3d3e-6bd6-4edd-b9b3-3cacde780cac/4afd3caf-a364-1480-820b-b67e17e37c03?origin=2",
+          "quote": "\"Resultado bruto ... 3.127.852 514.572\" (three months to 30/06/2026 and 30/06/2025, ITR 2Q26, in R$ thousands); DFP 2025: \"3.114.907\" for the year (the pdftotext of the statement table shows the label column out of order)"
+        }
+      ]
+    },
+    {
+      "itemId": "DEC|revenueQ|2026-09-05",
+      "periodEnd": "2026-03-31",
+      "value": 27144000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (80 %): The new stored 27,144,000 USD equals Diversified Energy's reported Q1 2026 total revenue, which includes a USD 548.4 M derivative loss; the old accepted 575,527,000 USD is the same quarter's revenue excluding derivative gains and losses (556,207 + 11,764 + 7,556 thousand), so the vendor switched basis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1922446/000192244626000039/dec-20260331.htm",
+          "quote": "Total revenue $ 27,144 $ 62,515 (10-Q for 31 March 2026, income statement, in thousands of USD, with the line \"Gain (loss) on derivatives ( 548,383 ) ( 284,284 )\"); Q2 10-Q: \"Total revenue $ 811,908 $ 586,697 $ 839,052 $ 649,212\""
+        }
+      ]
+    },
+    {
+      "itemId": "GLEN.L|marketCap|2026-09-05",
+      "value": 84443203780.74112,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): Until the 2026-09-05 pull the vendor market cap was exactly 1/100 of the true value (pence versus pound scale error: 0.950bn x 100 = 95.0bn, matching the 95.3bn of 09-05); the new series is right.",
+      "sources": [
+        {
+          "url": "https://www.investegate.co.uk/announcement/rns/glencore--glen/total-voting-rights/9803839",
+          "quote": "\"11,730,379,492\" total voting rights; \"12,995,864,600 ordinary shares\" of which \"1,265,485,108\" in treasury (RNS 2 Oct 2026, as of 30 Sep 2026)"
+        }
+      ]
+    },
+    {
+      "itemId": "6669.TW|marketCap|2026-09-05",
+      "value": 36694080501.44608,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The 2026-09-02 ex-rights stock dividend (1 share became about 2.98) left the old vendor value about 3x too high (pre-split price on the post-split share count); the new value reflects price times the new share count. Evidence is news and aggregator pages, no TWSE or MOPS page was read.",
+      "sources": [
+        {
+          "url": "https://www.managertoday.com.tw/articles/view/72918",
+          "quote": "每仟股配發1982.79460股 (ex-rights 2026-09-02, stock dividend NT$20 per share); shares outstanding \"557.36M\" (stockanalysis); last cum-rights close NT$7,200 (BigGo)"
+        }
+      ]
+    },
+    {
+      "itemId": "VISN|revenueQ|2026-09-05",
+      "periodEnd": "2025-06-30",
+      "value": 324100000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): Prior periods were recast for discontinued operations (CCS sold to Amphenol, a further divestiture closed July 2026), so the old quarter included businesses that are no longer in the company; the newest filing governs.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001517228/000119312526336708/visn-20260630.htm",
+          "quote": "10-Q 2026-06-30 income statement: \"Net sales $319.6\" (2026) and \"$324.1\" (2025), USD million; companyfacts shows 324,100,000 in acc 0001193125-26-336708 and 1,388,100,000 in the original 10-Q acc 0000950170-25-101615"
+        }
+      ]
+    },
+    {
+      "itemId": "VISN|grossProfitQ|2026-09-05",
+      "periodEnd": "2025-06-30",
+      "value": 148200000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): Same recast for discontinued operations; the filing history shows 591.7M, then 279.6M, then 148.2M as divestitures progressed, and the newest filing counts.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001517228/000119312526336708/visn-20260630.htm",
+          "quote": "10-Q 2026-06-30 income statement: \"Gross profit 112.9\" (2026) and \"148.2\" (2025), USD million; companyfacts GrossProfit 2025-04-01..2025-06-30 = 148,200,000 in acc 0001193125-26-336708"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|revenueQ|2026-09-08",
+      "periodEnd": "2026-03-31",
+      "value": 23483197265.995823,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The vendor series flipped between BRL and USD: the values from 08-09 to 09-24 (about 4.6B) were already-USD figures multiplied by the BRL rate a second time, the 09-01 accepted values were BRL times the spot rate (Q4 2025 27.4B USD, 16 percent above the filing), and since 09-29 the stored values equal the issuer's USD statements.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Sales revenues\" US$ million 4Q25 23,608, 3Q25 23,477; 6-K 2Q26: \"Sales revenues    33,607    23,535    21,037\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|revenueQ|2026-09-08",
+      "periodEnd": "2025-12-31",
+      "value": 23608000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The vendor series flipped between BRL and USD: the values from 08-09 to 09-24 (about 4.6B) were already-USD figures multiplied by the BRL rate a second time, the 09-01 accepted values were BRL times the spot rate (Q4 2025 27.4B USD, 16 percent above the filing), and since 09-29 the stored values equal the issuer's USD statements.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Sales revenues\" US$ million 4Q25 23,608, 3Q25 23,477; 6-K 2Q26: \"Sales revenues    33,607    23,535    21,037\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|revenueQ|2026-09-08",
+      "periodEnd": "2025-09-30",
+      "value": 23477000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The vendor series flipped between BRL and USD: the values from 08-09 to 09-24 (about 4.6B) were already-USD figures multiplied by the BRL rate a second time, the 09-01 accepted values were BRL times the spot rate (Q4 2025 27.4B USD, 16 percent above the filing), and since 09-29 the stored values equal the issuer's USD statements.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Sales revenues\" US$ million 4Q25 23,608, 3Q25 23,477; 6-K 2Q26: \"Sales revenues    33,607    23,535    21,037\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|revenueQ|2026-09-08",
+      "periodEnd": "2025-06-30",
+      "value": 21037000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The vendor series flipped between BRL and USD: the values from 08-09 to 09-24 (about 4.6B) were already-USD figures multiplied by the BRL rate a second time, the 09-01 accepted values were BRL times the spot rate (Q4 2025 27.4B USD, 16 percent above the filing), and since 09-29 the stored values equal the issuer's USD statements.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Sales revenues\" US$ million 4Q25 23,608, 3Q25 23,477; 6-K 2Q26: \"Sales revenues    33,607    23,535    21,037\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|revenueQ|2026-09-08",
+      "periodEnd": "2026-06-30",
+      "value": 33607000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The vendor series flipped between BRL and USD: the values from 08-09 to 09-24 (about 4.6B) were already-USD figures multiplied by the BRL rate a second time, the 09-01 accepted values were BRL times the spot rate (Q4 2025 27.4B USD, 16 percent above the filing), and since 09-29 the stored values equal the issuer's USD statements.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Sales revenues\" US$ million 4Q25 23,608, 3Q25 23,477; 6-K 2Q26: \"Sales revenues    33,607    23,535    21,037\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|grossProfitQ|2026-09-08",
+      "periodEnd": "2026-03-31",
+      "value": 11316119232.959938,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): Same BRL/USD flip as revenue: double conversion from 09-08 to 09-24 (about 2.1B for Q4 2025), BRL-times-spot accepted values on 09-01 (12.6B, 17 percent above the filing), and exact issuer USD figures stored since 09-29.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Gross profit\" US$ million 4Q25 10,842, 3Q25 11,217; 6-K 2Q26: \"Gross profit    19,493    11,340    10,012\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|grossProfitQ|2026-09-08",
+      "periodEnd": "2025-12-31",
+      "value": 10842000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): Same BRL/USD flip as revenue: double conversion from 09-08 to 09-24 (about 2.1B for Q4 2025), BRL-times-spot accepted values on 09-01 (12.6B, 17 percent above the filing), and exact issuer USD figures stored since 09-29.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Gross profit\" US$ million 4Q25 10,842, 3Q25 11,217; 6-K 2Q26: \"Gross profit    19,493    11,340    10,012\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|grossProfitQ|2026-09-08",
+      "periodEnd": "2025-09-30",
+      "value": 11217000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): Same BRL/USD flip as revenue: double conversion from 09-08 to 09-24 (about 2.1B for Q4 2025), BRL-times-spot accepted values on 09-01 (12.6B, 17 percent above the filing), and exact issuer USD figures stored since 09-29.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Gross profit\" US$ million 4Q25 10,842, 3Q25 11,217; 6-K 2Q26: \"Gross profit    19,493    11,340    10,012\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|grossProfitQ|2026-09-08",
+      "periodEnd": "2025-06-30",
+      "value": 10012000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): Same BRL/USD flip as revenue: double conversion from 09-08 to 09-24 (about 2.1B for Q4 2025), BRL-times-spot accepted values on 09-01 (12.6B, 17 percent above the filing), and exact issuer USD figures stored since 09-29.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Gross profit\" US$ million 4Q25 10,842, 3Q25 11,217; 6-K 2Q26: \"Gross profit    19,493    11,340    10,012\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "PBR-A|grossProfitQ|2026-09-08",
+      "periodEnd": "2026-06-30",
+      "value": 19493000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): Same BRL/USD flip as revenue: double conversion from 09-08 to 09-24 (about 2.1B for Q4 2025), BRL-times-spot accepted values on 09-01 (12.6B, 17 percent above the filing), and exact issuer USD figures stored since 09-29.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001119639/000129281426004129/pbrrmf2q26usd_6k.htm",
+          "quote": "Petrobras 6-K 4Q25: \"Gross profit\" US$ million 4Q25 10,842, 3Q25 11,217; 6-K 2Q26: \"Gross profit    19,493    11,340    10,012\" (2Q26, 1Q26, 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "IOVA|grossProfitQ|2026-09-08",
+      "periodEnd": "2025-06-30",
+      "value": 11071000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): Iovance restated the Q2 2025 comparative in its Q2 2026 report by moving depreciation and amortization (9,350 thousand USD) out of cost of sales, R&D and SG&A into a separate line, so cost of sales fell from 56,664 to 48,881 and gross profit rose from 3,288 to 11,071 thousand USD (total costs unchanged at 173,726).",
+      "sources": [
+        {
+          "url": "https://www.biospace.com/press-releases/iovance-biotherapeutics-reports-record-second-quarter-2026-revenue-of-99m-business-achievements-and-corporate-updates",
+          "quote": "Cost of sales ... $48,881"
+        }
+      ]
+    },
+    {
+      "itemId": "IMOS|revenueQ|2026-09-08",
+      "periodEnd": "2025-06-30",
+      "value": 182106229.669,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (97 %): The accepted value (USD 6.31M, about NT$203M, from the 2026-09-05 vintage, which also showed a negative gross profit for that quarter) was a vendor glitch; the 2026-09-08 refresh restored the real NT$5,735.8M, which matches the 6-K to 0.0%.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1123134/000095017025106897/imos-ex99_1.htm",
+          "quote": "Revenue for the second quarter of 2025 was NT$5,735.8 million or US$196.6 million"
+        }
+      ]
+    },
+    {
+      "itemId": "CIG-C|revenueQ|2026-09-08",
+      "periodEnd": "2026-03-31",
+      "value": 2014553277.1787698,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (85 %): The accepted value was the vendor figure read 1000 times too large (R$10.34 trillion); the new value R$10,341,911k is 1.15% below the filed net revenue R$10,462,543k (the vendor leaves out the R$120,632k financial-update line of the indemnifiable distribution asset), so it is inside the 2% tolerance but not the exact filed figure.",
+      "sources": [
+        {
+          "url": "https://ri.cemig.com.br/docs/Demonstracoes-Financeiras-Intermediarias-Cemig-2026-03-31-J7gKmtmr.pdf",
+          "quote": "RECEITA LÍQUIDA 10.462.543 9.844.231"
+        }
+      ]
+    },
+    {
+      "itemId": "9903.HK|marketCap|2026-09-17",
+      "value": 10909151667.450346,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): A 2-for-1 capitalization issue (269,174,736 to 807,524,208 shares, ex-rights about 15.09.2026) left the vendor on the old share count for one vintage (15.09.: 269.17 M shares x HKD 110.70 = 3.806 bn USD, 3x too low); the new value equals 807,524,208 shares x HKD 117.40 (close 29.09.) x 0.12744698 = 12.083 bn USD, 0.02 % from the stored 12.085 bn.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0922/2026092200971.pdf",
+          "quote": "the total issued Shares of the Company will increase from 269,174,736 Shares to 807,524,208 Shares"
+        }
+      ]
+    },
+    {
+      "itemId": "ESENTIA/II.MX|revenueQ|2026-09-19",
+      "periodEnd": "2026-06-30",
+      "value": 37584000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): The new values equal the issuer's IFRS revenue from contracts with customers (4Q25 94,913 th USD exactly; 1Q26 92.9 mn; 2Q26 about 37.6 mn from YTD 130.5 mn minus Q1), while the accepted values from the earlier pull of 19.08. (2,074.8 / 1,907.3 / 1,632.3 mn labelled USD) are 17x to 55x the issuer figures and match no issuer USD figure (likely a different currency or measure; mechanism unclear).",
+      "sources": [
+        {
+          "url": "https://esentiaenergy.com/wp-content/uploads/2026/02/ESENTIA-Earnings-Release-4Q25.pdf",
+          "quote": "Revenue from contracts with customers $ 99,026 $ 94,913"
+        }
+      ]
+    },
+    {
+      "itemId": "ESENTIA/II.MX|revenueQ|2026-09-19",
+      "periodEnd": "2026-03-31",
+      "value": 92869000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): The new values equal the issuer's IFRS revenue from contracts with customers (4Q25 94,913 th USD exactly; 1Q26 92.9 mn; 2Q26 about 37.6 mn from YTD 130.5 mn minus Q1), while the accepted values from the earlier pull of 19.08. (2,074.8 / 1,907.3 / 1,632.3 mn labelled USD) are 17x to 55x the issuer figures and match no issuer USD figure (likely a different currency or measure; mechanism unclear).",
+      "sources": [
+        {
+          "url": "https://esentiaenergy.com/wp-content/uploads/2026/02/ESENTIA-Earnings-Release-4Q25.pdf",
+          "quote": "Revenue from contracts with customers $ 99,026 $ 94,913"
+        }
+      ]
+    },
+    {
+      "itemId": "ESENTIA/II.MX|revenueQ|2026-09-19",
+      "periodEnd": "2025-12-31",
+      "value": 94913000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): The new values equal the issuer's IFRS revenue from contracts with customers (4Q25 94,913 th USD exactly; 1Q26 92.9 mn; 2Q26 about 37.6 mn from YTD 130.5 mn minus Q1), while the accepted values from the earlier pull of 19.08. (2,074.8 / 1,907.3 / 1,632.3 mn labelled USD) are 17x to 55x the issuer figures and match no issuer USD figure (likely a different currency or measure; mechanism unclear).",
+      "sources": [
+        {
+          "url": "https://esentiaenergy.com/wp-content/uploads/2026/02/ESENTIA-Earnings-Release-4Q25.pdf",
+          "quote": "Revenue from contracts with customers $ 99,026 $ 94,913"
+        }
+      ]
+    },
+    {
+      "itemId": "KRSA|marketCap|2026-09-19",
+      "value": 1457325568,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (90 %): A 1-for-7 reverse split (effective 08.09.2026, with the Cyclerion/Korsana merger) inflated the vendor value about 7x on 17.-18.09.; since 19.09. the vendor value again equals about 45.5 m shares x about 32 USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1755237/000119312526389318/d178159d8k.htm",
+          "quote": "45,541,425 shares of Company common stock (assuming the exercise in full of all Company pre-funded warrants and including conversion of Company Series B Preferred Stock)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|revenueQ|2026-09-29",
+      "periodEnd": "2026-03-31",
+      "value": 4943000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): YPF presents its statements in US$ million; the accepted values were the USD figures wrongly treated as ARS and multiplied by 0.000663, and the 27.09. statement-currency hand-table row (commit a4e8f0dec5) removed that double conversion.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000155485526000937/MainDocument.htm",
+          "quote": "Revenues 4,946 4,556 4,608 (Unaudited Figures, in US$ million, 1Q26 4Q25 1Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|revenueQ|2026-09-29",
+      "periodEnd": "2025-12-31",
+      "value": 4544000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): YPF presents its statements in US$ million; the accepted values were the USD figures wrongly treated as ARS and multiplied by 0.000663, and the 27.09. statement-currency hand-table row (commit a4e8f0dec5) removed that double conversion.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000155485526000937/MainDocument.htm",
+          "quote": "Revenues 4,946 4,556 4,608 (Unaudited Figures, in US$ million, 1Q26 4Q25 1Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|revenueQ|2026-09-29",
+      "periodEnd": "2025-09-30",
+      "value": 4643000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): YPF presents its statements in US$ million; the accepted values were the USD figures wrongly treated as ARS and multiplied by 0.000663, and the 27.09. statement-currency hand-table row (commit a4e8f0dec5) removed that double conversion.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000155485526000937/MainDocument.htm",
+          "quote": "Revenues 4,946 4,556 4,608 (Unaudited Figures, in US$ million, 1Q26 4Q25 1Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|revenueQ|2026-09-29",
+      "periodEnd": "2025-06-30",
+      "value": 4641000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): YPF presents its statements in US$ million; the accepted values were the USD figures wrongly treated as ARS and multiplied by 0.000663, and the 27.09. statement-currency hand-table row (commit a4e8f0dec5) removed that double conversion.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000155485526000937/MainDocument.htm",
+          "quote": "Revenues 4,946 4,556 4,608 (Unaudited Figures, in US$ million, 1Q26 4Q25 1Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|grossProfitQ|2026-09-29",
+      "periodEnd": "2026-03-31",
+      "value": 1755000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Same USD-as-ARS double conversion in the old values; new values are the USD figures, with 2Q25 matching the restated comparative (1,194 vs stored 1,193 vs original 1,173) and 4Q25 within 0.9% of the original release (1,324; restated 1,343, 2.3% off).",
+      "sources": [
+        {
+          "url": "https://www.stocktitan.net/sec-filings/YPF/6-k-ypf-sociedad-anonima-current-report-foreign-issuer-2d201f0c8b38.html",
+          "quote": "Gross profit 2,965 1,758 1,194 (Unaudited Figures, in US$ million, 2Q26 1Q26 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-12-31",
+      "value": 1312000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Same USD-as-ARS double conversion in the old values; new values are the USD figures, with 2Q25 matching the restated comparative (1,194 vs stored 1,193 vs original 1,173) and 4Q25 within 0.9% of the original release (1,324; restated 1,343, 2.3% off).",
+      "sources": [
+        {
+          "url": "https://www.stocktitan.net/sec-filings/YPF/6-k-ypf-sociedad-anonima-current-report-foreign-issuer-2d201f0c8b38.html",
+          "quote": "Gross profit 2,965 1,758 1,194 (Unaudited Figures, in US$ million, 2Q26 1Q26 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-09-30",
+      "value": 1324000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Same USD-as-ARS double conversion in the old values; new values are the USD figures, with 2Q25 matching the restated comparative (1,194 vs stored 1,193 vs original 1,173) and 4Q25 within 0.9% of the original release (1,324; restated 1,343, 2.3% off).",
+      "sources": [
+        {
+          "url": "https://www.stocktitan.net/sec-filings/YPF/6-k-ypf-sociedad-anonima-current-report-foreign-issuer-2d201f0c8b38.html",
+          "quote": "Gross profit 2,965 1,758 1,194 (Unaudited Figures, in US$ million, 2Q26 1Q26 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "YPF|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-06-30",
+      "value": 1193000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Same USD-as-ARS double conversion in the old values; new values are the USD figures, with 2Q25 matching the restated comparative (1,194 vs stored 1,193 vs original 1,173) and 4Q25 within 0.9% of the original release (1,324; restated 1,343, 2.3% off).",
+      "sources": [
+        {
+          "url": "https://www.stocktitan.net/sec-filings/YPF/6-k-ypf-sociedad-anonima-current-report-foreign-issuer-2d201f0c8b38.html",
+          "quote": "Gross profit 2,965 1,758 1,194 (Unaudited Figures, in US$ million, 2Q26 1Q26 2Q25)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|revenueQ|2026-09-29",
+      "periodEnd": "2026-03-31",
+      "value": 1446700000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Embraer reports in US$; the old values were the USD figures treated as BRL and multiplied by about 0.196, and the hand-table row for EMBJ now keeps the series in USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426002893/embjpr1q26_6k.htm",
+          "quote": "Revenue 1,446.7 2,651.8 1,103.0 (1Q26 4Q25 1Q25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|revenueQ|2026-09-29",
+      "periodEnd": "2025-12-31",
+      "value": 2651800000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Embraer reports in US$; the old values were the USD figures treated as BRL and multiplied by about 0.196, and the hand-table row for EMBJ now keeps the series in USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426002893/embjpr1q26_6k.htm",
+          "quote": "Revenue 1,446.7 2,651.8 1,103.0 (1Q26 4Q25 1Q25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|revenueQ|2026-09-29",
+      "periodEnd": "2025-06-30",
+      "value": 1819200000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Embraer reports in US$; the old values were the USD figures treated as BRL and multiplied by about 0.196, and the hand-table row for EMBJ now keeps the series in USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426002893/embjpr1q26_6k.htm",
+          "quote": "Revenue 1,446.7 2,651.8 1,103.0 (1Q26 4Q25 1Q25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|revenueQ|2026-09-29",
+      "periodEnd": "2025-03-31",
+      "value": 1103000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Embraer reports in US$; the old values were the USD figures treated as BRL and multiplied by about 0.196, and the hand-table row for EMBJ now keeps the series in USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426002893/embjpr1q26_6k.htm",
+          "quote": "Revenue 1,446.7 2,651.8 1,103.0 (1Q26 4Q25 1Q25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|grossProfitQ|2026-09-29",
+      "periodEnd": "2026-03-31",
+      "value": 260200000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Same BRL double conversion of USD statements in the old values; the new values equal Embraer's reported gross profit exactly.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426004151/embjpr2q26_6k1.htm",
+          "quote": "Gross profit 444.8 260.2 352.9 705.0 542.0 (2Q26 1Q26 2Q25 1H26 1H25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-12-31",
+      "value": 442200000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Same BRL double conversion of USD statements in the old values; the new values equal Embraer's reported gross profit exactly.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426004151/embjpr2q26_6k1.htm",
+          "quote": "Gross profit 444.8 260.2 352.9 705.0 542.0 (2Q26 1Q26 2Q25 1H26 1H25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-06-30",
+      "value": 352900000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Same BRL double conversion of USD statements in the old values; the new values equal Embraer's reported gross profit exactly.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426004151/embjpr2q26_6k1.htm",
+          "quote": "Gross profit 444.8 260.2 352.9 705.0 542.0 (2Q26 1Q26 2Q25 1H26 1H25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "EMBJ|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-03-31",
+      "value": 189100000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (98 %): Same BRL double conversion of USD statements in the old values; the new values equal Embraer's reported gross profit exactly.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001355444/000129281426004151/embjpr2q26_6k1.htm",
+          "quote": "Gross profit 444.8 260.2 352.9 705.0 542.0 (2Q26 1Q26 2Q25 1H26 1H25, US$ million)"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|revenueQ|2026-09-29",
+      "periodEnd": "2026-03-31",
+      "value": 9258000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Vale reports in US dollars, but the series carried a BRL label, so the old stored values were USD multiplied by 0.1948; the new values are the raw USD figures (1Q26 9,258 US$ m, 4Q25 11,060, 3Q25 10,420, 2Q25 8,804).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Net operating revenue 9,258 8,119 (three months ended March 31, 2026 / 2025; 'Expressed in millions of United States dollar')"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|revenueQ|2026-09-29",
+      "periodEnd": "2025-12-31",
+      "value": 11060000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Vale reports in US dollars, but the series carried a BRL label, so the old stored values were USD multiplied by 0.1948; the new values are the raw USD figures (1Q26 9,258 US$ m, 4Q25 11,060, 3Q25 10,420, 2Q25 8,804).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Net operating revenue 9,258 8,119 (three months ended March 31, 2026 / 2025; 'Expressed in millions of United States dollar')"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|revenueQ|2026-09-29",
+      "periodEnd": "2025-09-30",
+      "value": 10420000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Vale reports in US dollars, but the series carried a BRL label, so the old stored values were USD multiplied by 0.1948; the new values are the raw USD figures (1Q26 9,258 US$ m, 4Q25 11,060, 3Q25 10,420, 2Q25 8,804).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Net operating revenue 9,258 8,119 (three months ended March 31, 2026 / 2025; 'Expressed in millions of United States dollar')"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|revenueQ|2026-09-29",
+      "periodEnd": "2025-06-30",
+      "value": 8804000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (93 %): Vale reports in US dollars, but the series carried a BRL label, so the old stored values were USD multiplied by 0.1948; the new values are the raw USD figures (1Q26 9,258 US$ m, 4Q25 11,060, 3Q25 10,420, 2Q25 8,804).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Net operating revenue 9,258 8,119 (three months ended March 31, 2026 / 2025; 'Expressed in millions of United States dollar')"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|grossProfitQ|2026-09-29",
+      "periodEnd": "2026-03-31",
+      "value": 3085000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (91 %): Same wrong BRL label: Vale reports in USD, so the old gross profit was USD times 0.1948; new values equal the filed USD figures (1Q26 3,085, 4Q25 4,281 = 11,060 - 6,779, 3Q25 3,788 = 10,420 - 6,632; 2Q25 2,719 consistent with the BRL statement margin 15,386/49,807, not read directly in USD).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Gross profit 3,085 2,668 (three months ended March 31, 2026 / 2025; Cost of goods sold and services rendered (6,173))"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-12-31",
+      "value": 4281000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (91 %): Same wrong BRL label: Vale reports in USD, so the old gross profit was USD times 0.1948; new values equal the filed USD figures (1Q26 3,085, 4Q25 4,281 = 11,060 - 6,779, 3Q25 3,788 = 10,420 - 6,632; 2Q25 2,719 consistent with the BRL statement margin 15,386/49,807, not read directly in USD).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Gross profit 3,085 2,668 (three months ended March 31, 2026 / 2025; Cost of goods sold and services rendered (6,173))"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-09-30",
+      "value": 3788000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (91 %): Same wrong BRL label: Vale reports in USD, so the old gross profit was USD times 0.1948; new values equal the filed USD figures (1Q26 3,085, 4Q25 4,281 = 11,060 - 6,779, 3Q25 3,788 = 10,420 - 6,632; 2Q25 2,719 consistent with the BRL statement margin 15,386/49,807, not read directly in USD).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Gross profit 3,085 2,668 (three months ended March 31, 2026 / 2025; Cost of goods sold and services rendered (6,173))"
+        }
+      ]
+    },
+    {
+      "itemId": "VALE3.SA|grossProfitQ|2026-09-29",
+      "periodEnd": "2025-06-30",
+      "value": 2719000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (91 %): Same wrong BRL label: Vale reports in USD, so the old gross profit was USD times 0.1948; new values equal the filed USD figures (1Q26 3,085, 4Q25 4,281 = 11,060 - 6,779, 3Q25 3,788 = 10,420 - 6,632; 2Q25 2,719 consistent with the BRL statement margin 15,386/49,807, not read directly in USD).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "Gross profit 3,085 2,668 (three months ended March 31, 2026 / 2025; Cost of goods sold and services rendered (6,173))"
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|revenueQ|2026-09-30",
+      "periodEnd": "2026-03-31",
+      "value": 9258000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Vale reports in USD, so the old accepted values (e.g. 1.80 bn for 1Q26) were the real USD figures wrongly multiplied by a BRL rate (0.1943, factor 5.147); the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Net operating revenue\" 9,258 (three months ended March 31, 2026; 8,119 for 2025); \"Expressed in millions of United States dollar, unless otherwise stated\""
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|revenueQ|2026-09-30",
+      "periodEnd": "2025-12-31",
+      "value": 11060000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Vale reports in USD, so the old accepted values (e.g. 1.80 bn for 1Q26) were the real USD figures wrongly multiplied by a BRL rate (0.1943, factor 5.147); the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Net operating revenue\" 9,258 (three months ended March 31, 2026; 8,119 for 2025); \"Expressed in millions of United States dollar, unless otherwise stated\""
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|revenueQ|2026-09-30",
+      "periodEnd": "2025-09-30",
+      "value": 10420000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Vale reports in USD, so the old accepted values (e.g. 1.80 bn for 1Q26) were the real USD figures wrongly multiplied by a BRL rate (0.1943, factor 5.147); the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Net operating revenue\" 9,258 (three months ended March 31, 2026; 8,119 for 2025); \"Expressed in millions of United States dollar, unless otherwise stated\""
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|revenueQ|2026-09-30",
+      "periodEnd": "2025-06-30",
+      "value": 8804000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Vale reports in USD, so the old accepted values (e.g. 1.80 bn for 1Q26) were the real USD figures wrongly multiplied by a BRL rate (0.1943, factor 5.147); the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Net operating revenue\" 9,258 (three months ended March 31, 2026; 8,119 for 2025); \"Expressed in millions of United States dollar, unless otherwise stated\""
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|grossProfitQ|2026-09-30",
+      "periodEnd": "2026-03-31",
+      "value": 3085000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Same currency error as revenue: Vale reports gross profit in USD, the old accepted values were USD figures multiplied by a BRL rate (factor 5.147), and the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Gross profit\" 3,085 (three months ended March 31, 2026; 2,668 for 2025); 2Q26 6-K: \"Gross profit\" 2,719 for three months ended June 30, 2025"
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|grossProfitQ|2026-09-30",
+      "periodEnd": "2025-12-31",
+      "value": 4281000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Same currency error as revenue: Vale reports gross profit in USD, the old accepted values were USD figures multiplied by a BRL rate (factor 5.147), and the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Gross profit\" 3,085 (three months ended March 31, 2026; 2,668 for 2025); 2Q26 6-K: \"Gross profit\" 2,719 for three months ended June 30, 2025"
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|grossProfitQ|2026-09-30",
+      "periodEnd": "2025-09-30",
+      "value": 3788000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Same currency error as revenue: Vale reports gross profit in USD, the old accepted values were USD figures multiplied by a BRL rate (factor 5.147), and the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Gross profit\" 3,085 (three months ended March 31, 2026; 2,668 for 2025); 2Q26 6-K: \"Gross profit\" 2,719 for three months ended June 30, 2025"
+        }
+      ]
+    },
+    {
+      "itemId": "XVALO.MC|grossProfitQ|2026-09-30",
+      "periodEnd": "2025-06-30",
+      "value": 2719000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "Reviewed value is right (96 %): Same currency error as revenue: Vale reports gross profit in USD, the old accepted values were USD figures multiplied by a BRL rate (factor 5.147), and the current stored USD values match the filings in all four quarters.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/917851/000129281426002632/valedfifrs1q26_6k.htm",
+          "quote": "\"Gross profit\" 3,085 (three months ended March 31, 2026; 2,668 for 2025); 2Q26 6-K: \"Gross profit\" 2,719 for three months ended June 30, 2025"
+        }
+      ]
+    },
+    {
+      "itemId": "TENNIND.BO|marketCap|2026-08-16",
+      "value": 2174000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "One-day vendor spike, the earlier value is right (88 %); accepted at the issuer-based figure about 2.174bn USD = 403,604,309 shares x 508.75 INR (close 2026-09-29) x 0.0105870515 USD/INR. One-day vendor spike on 2026-08-16: 22.79bn USD is about ten times the real value (on the issuer share count it implies a price of about 5,300 INR, while the close on 08-13 was 533.7 INR). The accepted 2.38bn fits 403.6M shares x 562.2 INR (close of 08-07). The value today (2.159bn) is within 1% of the issuer-based value. Close the item with an acceptance entry at about 2.17bn, never at 22.79bn.",
+      "sources": [
+        {
+          "url": "https://tennecoindia.com/wp-content/uploads/2026/08/Q1-Financial-Results.pdf",
+          "quote": "Paid-up equity share capital (face value of INR 10 per share) 4,036.04"
+        }
+      ]
+    },
+    {
+      "itemId": "ACHR|grossProfitQ|2026-08-16",
+      "periodEnd": "2026-03-31",
+      "value": 300000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "One-day vendor spike, the earlier value is right (85 %); accepted at the issuer-based figure 300,000 USD (Q1 2026, single quarter: revenue 1.6m minus cost of revenue 1.3m; the issuer rounds to 0.1m). Archer reports revenue 1.6m and cost of revenue 1.3m for Q1 2026 (in millions, with no gross-profit line), so 0.3m equals the accepted 300,000. The vendor zero from 08-16 to 09-10 was temporary, and the value stored today is 300,000 again. Close with an acceptance entry at 300,000 (a 0 cannot be accepted).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1824502/000182450226000035/archerq126earningspressr.htm",
+          "quote": "Revenue $1.6; Cost of revenue $1.3 (three months ended March 31, 2026, in millions)"
+        }
+      ]
+    },
+    {
+      "itemId": "FOIL|marketCap|2026-08-18",
+      "value": 1270000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "One-day vendor spike, the earlier value is right (88 %); accepted at the issuer-based figure about 1.27bn USD = 390,792,185 ordinary / 5 = 78.16M ADS-equivalents x 16.26 USD (close 2026-09-30, the price in the stored snapshot); 1.52bn at the 2026-09-29 close of 19.39. Each NYSE ADS represents 5 ordinary shares. The jump value 8.55bn = 390.79M ordinary shares x 21.89 USD (the ADS price), five times too high. The accepted 1.87bn and today's 1.27bn are on the ADS-equivalent basis. Close with an acceptance entry at about 1.27bn.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2006960/000119312526351136/d476818d424b4.htm",
+          "quote": "American depositary shares, each representing five ordinary shares"
+        }
+      ]
+    },
+    {
+      "itemId": "1196.HK|marketCap|2026-09-12",
+      "value": 2190000000,
+      "acceptedAt": "2026-10-01",
+      "by": "AI daily run (source triage of 02.10.)",
+      "reason": "One-day vendor spike, the earlier value is right (92 %); accepted at the issuer-based figure 2.19bn USD = 5,769,239,520 shares x 2.98 HKD (close 2026-09-30) x 0.12747037 (2.13bn at the 09-29 close of 2.89); stored 2,191,110,960. A 1-into-4 share subdivision took effect 2026-09-14 (1,442,309,880 to 5,769,239,520 shares). The jump value 7.98bn = post-split count x 10.85 HKD (the unadjusted pre-split price the vendor shows for 09-14), so it is wrong. The accepted pre-split value and today's 2.19bn are right. Close with an acceptance entry at about 2.19bn.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100200989.pdf",
+          "quote": "Balance at close of the month 5,769,239,520"
+        }
+      ]
+    }
+  ]
 }
