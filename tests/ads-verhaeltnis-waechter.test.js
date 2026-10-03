@@ -174,7 +174,11 @@ pruefe('wiring: both marketCap write sites apply the table before the mcap floor
   // _priceOnlyUpdate and the full pull live in pullAll's closure (not callable from outside):
   // the call sites and their price arguments are pinned verbatim.
   const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
-  const priceOnly = "if (_applyAdsHandTable(existing, stock.ticker, existing.price && existing.price.regularMarketPrice).status === 'stale') {";
+  // Tag 1408: the price-only call passes only the price of the same quote (null without one).
+  const priceOnly = "if (_applyAdsHandTable(existing, stock.ticker, quotePrice).status === 'stale') {";
+  const quotePriceLine = "const quotePrice = q.regularMarketPrice != null ? existing.price && existing.price.regularMarketPrice : null;";
+  const qp = src.indexOf(quotePriceLine);
+  assert.ok(qp > 0 && qp < src.indexOf(priceOnly) && src.indexOf(priceOnly) - qp < 200, 'quotePrice must be taken from this quote right before the price-only call');
   const fullPull = "_applyAdsHandTable(canonical, stock.ticker, _y(yahoo.price, 'regularMarketPrice'));";
   assert.strictEqual([...src.matchAll(/_applyAdsHandTable\((existing|canonical), /g)].length, 2, 'expected exactly 2 call sites');
   for (const txt of [priceOnly, fullPull]) {

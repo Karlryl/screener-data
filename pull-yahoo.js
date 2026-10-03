@@ -3995,7 +3995,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
     // T322: ADS lines Yahoo prices with the ordinary share count (price is USD here). A stale
     // verdict here may only mean stale inputs (old price/shares from disk) -> the full pull decides.
-    if (_applyAdsHandTable(existing, stock.ticker, existing.price && existing.price.regularMarketPrice).status === 'stale') {
+    // Tag 1408 (Codex after-the-fact review of #406, P2): a quote with a marketCap but without
+    // regularMarketPrice leaves the stored, older price in existing.price; a correction computed
+    // on it shrank a right vendor value (ABTC 983 -> 588 m USD) and the mcap floor below could
+    // then drop the snapshot. Only this quote's own price counts; without it the row is stale
+    // and the full pull decides.
+    const quotePrice = q.regularMarketPrice != null ? existing.price && existing.price.regularMarketPrice : null;
+    if (_applyAdsHandTable(existing, stock.ticker, quotePrice).status === 'stale') {
       throw new Error('price-only refused: ADS hand table or share-count hand table row not confirmed on quote data — full pull re-checks');
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
