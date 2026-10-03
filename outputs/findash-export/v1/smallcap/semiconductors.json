@@ -1,21 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-02T09:51:48.329Z",
+  "generated_at": "2026-10-03T09:31:18.578Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.2,
-    "generated_at": "2026-10-02T09:44:09.691Z"
+    "coverage_pct": 73.1,
+    "generated_at": "2026-10-03T09:24:25.732Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "NVEC",
-      "score": 50.9,
+      "score": 53.8,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -40,8 +40,8 @@
       "coverageWeight": 1,
       "cohortN": 1,
       "cohortFallback": true,
-      "scoreBase": 52.6,
-      "scoreShrunk": 50.9,
+      "scoreBase": 61.3,
+      "scoreShrunk": 53.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -50,37 +50,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 87.5,
+          "pct": 90,
           "weight": 1.7
         },
         {
           "key": "revAcceleration",
-          "pct": 12.5,
+          "pct": 30,
           "weight": 2.6
         },
         {
           "key": "gpGrowth",
-          "pct": 12.5,
+          "pct": 30,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 87.5,
+          "pct": 90,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 83.3,
+          "pct": 62.5,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 87.5,
+          "pct": 90,
           "weight": 0.8
         },
         {
           "key": "dilution",
-          "pct": 87.5,
+          "pct": 90,
           "weight": 0.7
         }
       ],
@@ -103,8 +103,96 @@
     {
       "rank": 1,
       "rankGrund": null,
+      "ticker": "MRAM",
+      "score": 49.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.081,
+        "companion": 96.4
+      },
+      "name": "Everspin Technologies, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 49.1,
+      "scoreShrunk": 49.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 2.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 50,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 50,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 1.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 37.5,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 50,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 41.9286417695629,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
+    },
+    {
+      "rank": 2,
+      "rankGrund": null,
       "ticker": "ALMU",
-      "score": 45.6,
+      "score": 45.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -132,10 +220,10 @@
       "ipoYear": 2023,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 3,
+      "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 42.7,
-      "scoreShrunk": 45.6,
+      "scoreBase": 43.1,
+      "scoreShrunk": 45.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -144,37 +232,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 12.5,
+          "pct": 10,
           "weight": 2.3
         },
         {
           "key": "revAcceleration",
-          "pct": 62.5,
+          "pct": 70,
           "weight": 2.5
         },
         {
           "key": "gpGrowth",
-          "pct": 87.5,
+          "pct": 90,
           "weight": 2.1
         },
         {
           "key": "ruleOfX",
-          "pct": 12.5,
+          "pct": 10,
           "weight": 1.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 16.7,
+          "pct": 12.5,
           "weight": 0.7
         },
         {
           "key": "capitalEfficiency",
-          "pct": 37.5,
+          "pct": 30,
           "weight": 0.4
         },
         {
           "key": "dilution",
-          "pct": 37.5,
+          "pct": 30,
           "weight": 0.5
         }
       ],
@@ -193,98 +281,10 @@
       "revGrowthPriorPeriodEnd": "2025-03-31"
     },
     {
-      "rank": 2,
-      "rankGrund": null,
-      "ticker": "MRAM",
-      "score": 44.3,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.081,
-        "companion": 96.4
-      },
-      "name": "Everspin Technologies, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 3,
-      "cohortFallback": true,
-      "scoreBase": 40.6,
-      "scoreShrunk": 44.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 37.5,
-          "weight": 2.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 37.5,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 37.5,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 37.5,
-          "weight": 1.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 50,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 62.5,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 62.5,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": 41.9286417695629,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
-    },
-    {
       "rank": 3,
       "rankGrund": null,
       "ticker": "LAES",
-      "score": 34.4,
+      "score": 37,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -314,10 +314,10 @@
       "ipoYear": 2023,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 3,
+      "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 64.3,
-      "scoreShrunk": 57.7,
+      "scoreBase": 69.6,
+      "scoreShrunk": 62,
       "factors": {
         "burn": 0.597,
         "growth": 1,
@@ -326,22 +326,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.5,
+          "pct": 70,
           "weight": 2.3
         },
         {
           "key": "revAcceleration",
-          "pct": 87.5,
+          "pct": 90,
           "weight": 2.5
         },
         {
           "key": "gpGrowth",
-          "pct": 62.5,
+          "pct": 70,
           "weight": 2.1
         },
         {
           "key": "ruleOfX",
-          "pct": 62.5,
+          "pct": 70,
           "weight": 1.7
         },
         {
@@ -351,12 +351,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 12.5,
+          "pct": 10,
           "weight": 0.4
         },
         {
           "key": "dilution",
-          "pct": 12.5,
+          "pct": 10,
           "weight": 0.5
         }
       ],
@@ -369,10 +369,10 @@
         "pctl": 1
       },
       "ath": {
-        "distancePct": -89.3,
+        "distancePct": -89.2,
         "athDate": "2023-05-24",
         "monthsAgo": 40,
-        "lastDate": "2026-10-01"
+        "lastDate": "2026-10-02"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -381,6 +381,95 @@
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31"
+    },
+    {
+      "rank": 4,
+      "rankGrund": null,
+      "ticker": "ASYS",
+      "score": 35.6,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.255,
+        "companion": 44.5
+      },
+      "name": "Amtech Systems, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1983,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 28.5,
+      "scoreShrunk": 35.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 30,
+          "weight": 2.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 10,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 10,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 30,
+          "weight": 1.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 87.5,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 70,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 70,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 14.450069028992175,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30"
     }
   ]
 }
