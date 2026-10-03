@@ -128,6 +128,12 @@ Never closed by time, by a label, or by the value returning (that only adds `zur
 2. Per item decide with a primary source (filing, exchange notice): wrong value -> hand-table row
    (financial-known-cases, ADS or share-count table, own PR with the usual review); right value
    or explained move (split, restatement, our own repair) -> acceptance entry with the source.
+   The entry's `value` is the value the review checked: the value stored on the reviewed day
+   (`updatedFor`), not the cell's `newValue`. `newValue` is the last value that was still more than
+   factor 3 away; after a fix or a return it can be stale (PBR-A on 03.10.2026: `newValue` 4.6 bn
+   from 24.09., checked 6-K value 23.5 bn), and accepting it reopens the item at once. Before the
+   PR, replay into a new file (`--replay --out <file>`) and check that exactly the reviewed items
+   close and none opens.
 3. Labels help sort: `korrigiert-von-uns` and `kapitalmassnahme` are usually acceptances;
    unlabelled items are the likely real errors.
 
