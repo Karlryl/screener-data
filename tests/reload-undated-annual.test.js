@@ -37,4 +37,4 @@ const dated = snap(annual([182, 95], { annualRevEnds: ['2024-12-31', '2023-12-31
 assert.equal(historyIsThinner(snap(annual([200, 182], { annualRevEnds: ['2025-12-31', '2024-12-31'] })), dated), false,
   'dated window slide stays accepted');
 
-console.log('reload-undated-annual: 9 checks green');
+console.log('reload-undated-annual: 10 checks green');
