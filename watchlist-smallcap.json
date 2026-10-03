@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 496,
+    "count": 494,
     "partial": false
   },
   "stocks": [
@@ -1517,14 +1517,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "DNA",
-      "yahoo_symbol": "DNA",
-      "name": "Ginkgo Bioworks Holdings, Inc. Class A Common Stock",
-      "marketCapUsd": 515410240,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "ESEA",
       "yahoo_symbol": "ESEA",
       "name": "Euroseas Ltd. - Common Stock",
@@ -1625,14 +1617,6 @@
       "yahoo_symbol": "VALN",
       "name": "Valneva SE - American Depositary Shares",
       "marketCapUsd": 503449792,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "PAYS",
-      "yahoo_symbol": "PAYS",
-      "name": "Paysign, Inc. - Common Stock",
-      "marketCapUsd": 502033792,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -3981,27 +3965,17 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-09-26T10:43:13.476Z",
+  "lastReconcile": "2026-10-03T11:03:59.414Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "ASGI",
+      "ticker": "DNA",
       "grund": "band-austritt-oben",
-      "mcap": 812445056
+      "mcap": 831652480
     },
     {
-      "ticker": "NRGV",
+      "ticker": "PAYS",
       "grund": "band-austritt-oben",
-      "mcap": 800094144
-    },
-    {
-      "ticker": "NUAI",
-      "grund": "band-austritt-oben",
-      "mcap": 852827392
-    },
-    {
-      "ticker": "BUUU",
-      "grund": "band-austritt-oben",
-      "mcap": 833059520
+      "mcap": 803456448
     }
   ]
 }
