@@ -62,7 +62,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
-const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags, rankGrundShadowFor } = require('./write-findash-export.js'); // P89: guarded shadow lookup
+const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags, rankGrundShadowFor, ergaenzeMarketCapClassesShadow, ladeMcapClassesRegistry } = require('./write-findash-export.js'); // P89: guarded shadow lookup; P88: class-wise market value shadow
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -776,6 +776,13 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       // from the list. No open item: no key (absence, not an empty array).
       const flags = k.onBoard ? row.valueFlags : valueFlags.get(k.ticker);
       if (Array.isArray(flags) && flags.length) zeile.valueFlags = flags.map((f) => ({ ...f, labels: f.labels.slice() }));
+      // P88 shadow, additive last keys: on-board names carry the main export's value (same issuer, same number);
+      // off-board names get it from the same function. Never read for rank, score or membership.
+      if (!k.onBoard) return ergaenzeMarketCapClassesShadow(zeile);
+      if ('marketCapClassesShadow' in row) {
+        zeile.marketCapClassesShadow = row.marketCapClassesShadow;
+        zeile.marketCapClassesDeviationPct = row.marketCapClassesDeviationPct;
+      }
       return zeile;
     }),
   };
@@ -926,6 +933,7 @@ function build(opts = {}) {
   const v1Dir = opts.v1Dir || DEFAULT_V1_DIR;
   const outDir = opts.outDir || path.join(v1Dir, BOARD_ID);
   const { index, kandidaten, abgewiesen, gelesen, aufBrett } = sammleKandidaten(opts);
+  ladeMcapClassesRegistry(undefined, opts.snapshotsDir || DEFAULT_SNAPSHOTS_DIR); // P88 shadow for off-board rows
   if (!kandidaten.length) {
     throw new Error('[rule40] kein einziger rechenbarer Kandidat aus ' + gelesen + ' Zeilen ('
       + JSON.stringify(abgewiesen) + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
