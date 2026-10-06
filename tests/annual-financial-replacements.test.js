@@ -55,12 +55,24 @@ test('already correct vendor values pass unchanged, unrelated ticker and older c
   const raw = fixture(); raw.meta.ticker = 'OTHER'; assert.equal(applyFinancialCases(raw).snapshot,raw);
   const correct = fixture(); correct.annual.annualRev = expected.map(n => ({value:n*fx}));
   assert.equal(applyFinancialCases(correct).snapshot,correct);
+  // Review P50 round 2: an uncovered older year is not shown in an unverified scale next to replaced years.
   const extra = fixture(); extra.annual.annualRev.push({value:123}); extra.annual.annualRevEnds.push('2022-03-31');
-  assert.deepEqual(applyFinancialCases(extra).snapshot.annual.annualRev[4],{value:123});
-  const newer = fixture(); newer.annual.annualRev.unshift({value:777}); newer.annual.annualRevEnds.unshift('2027-03-31');
-  const shifted = applyFinancialCases(newer).snapshot;
-  assert.equal(shifted.annual.annualRev[0].value,777);
-  assert.deepEqual(shifted.annual.annualRev.slice(1).map(value),expected.map(n=>n*fx));
+  const older = applyFinancialCases(extra).snapshot.annual.annualRev;
+  assert.deepEqual(older.map(value),[...expected.map(n=>n*fx),null]);
+  assert.equal(older[4].financialMissing.reasonCode,'annual-older-than-cases');
+  assert.deepEqual(applyFinancialCases(applyFinancialCases(extra).snapshot).snapshot,applyFinancialCases(extra).snapshot);
+});
+test('review P50 round 2: a new vendor year in front or inserted withholds the whole series with a reason', () => {
+  for (const [label, edit] of [
+    ['new year in front', s=>{ s.annual.annualRev.unshift({value:s.annual.annualRev[0].value*1.2}); s.annual.annualRevEnds.unshift('2027-03-31'); }],
+    ['inserted year', s=>{ s.annual.annualRev.splice(1,0,{value:999}); s.annual.annualRevEnds.splice(1,0,'2025-09-30'); }],
+  ]) {
+    const raw=fixture(); edit(raw); const r=applyFinancialCases(raw), rows=r.snapshot.annual.annualRev;
+    assert.deepEqual(rows.map(value),rows.map(()=>null),label+': series empty');
+    assert.ok(rows.every(x=>x.financialMissing.reasonCode==='annual-value-changed'),label+': reason');
+    assert.ok(r.events.some(e=>e.reasonCode==='annual-value-changed' && e.period===raw.annual.annualRevEnds[label==='inserted year'?1:0]),label+': event for the new year');
+    assert.deepEqual(applyFinancialCases(r.snapshot).snapshot,r.snapshot,label+': idempotent');
+  }
 });
 test('currency, unit, source, duplicate date, missing date and vendor drift fail closed per cell', () => {
   for (const change of [
