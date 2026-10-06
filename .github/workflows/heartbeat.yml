@@ -92,6 +92,16 @@ jobs:
             echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage = ${max_hours} h)."
           fi
 
+      # P109 (06.10.): Herkunftsstatus des VEROEFFENTLICHTEN Exports (Tag 1422). Rot, wenn ein
+      # Statusmarker provenance/_failed.json bzw. rule40/provenance/_failed.json "failed" sagt
+      # oder ein Board-Kopf (provenanceRunId/provenanceManifestSha256) nicht zu Manifest und
+      # ok-Marker passt — dieselbe Pruefung wie `write-findash-export.js --check`
+      # (lib/export-provenance.js provenanceErrors). Ein Export von vor dem Merge des Vertrags
+      # bleibt gruen mit Hinweis; derselbe Zustand in einem spaeteren Export ist stiller Verlust
+      # und rot. Unerreichbar/unlesbar = rot, wie die Schritte darueber. Keine npm-Abhaengigkeit.
+      - name: Check published provenance status (P109)
+        run: node scripts/heartbeat-provenance.js --base "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/findash-export/v1"
+
       # T564-B1 (Review Tag 564, F-17a-Publish) — dieselbe Sonde ein zweites Mal, diesmal
       # auf den BEWEGUNGS-Kanal (NEU/Rangpfeile). Der Schritt darueber misst nur den
       # v1-Export; zwischen dessen Deploy und dem Vintage-Publish liegen im scoring-Job
