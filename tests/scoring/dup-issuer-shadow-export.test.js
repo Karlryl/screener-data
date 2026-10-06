@@ -19,6 +19,7 @@ function writer(apply = shadow.applyDupIssuerShadow, loader = shadow.loadDupIssu
       if (id === 'path') return path;
       if (id === 'fs') return { readFileSync() { throw new Error('Fixture has no external data'); } };
       if (id === '../lib/dup-issuer-shadow-table.js') return { ...shadow, applyDupIssuerShadow: apply, loadDupIssuerShadowTable: loader };
+      if (id === '../lib/non-operating-classes.js') return require('../../lib/non-operating-classes.js'); // P89 shadow lookup, real module
       return { displayFor: () => null, financialReasons: () => [], safeSnapshotFilename: (ticker) => ticker + '.json' };
     },
   };
