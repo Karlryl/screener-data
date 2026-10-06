@@ -15,7 +15,22 @@ const hash = x => crypto.createHash('sha256').update(x).digest('hex');
 const serial = JSON.stringify;
 const clone = x => structuredClone(x);
 
-function diffCells(before, after, events) {
+// Tag 1419 (#425, P108): applyFinancialCases may ANNOTATE timeseries.reportedRevenueQEnds (verified
+// period labels; no value change, no event). An annotation that is new on the `after` side is not a
+// cell change and must not trip the byte guard; it is reported separately. A CHANGED annotation
+// between two annotated snapshots stays an unrelated difference (guard fires).
+const LABEL_ANNOTATION = 'reportedRevenueQEnds';
+
+/**
+ * Lists the cell changes an overlay made and asserts every other byte is unchanged.
+ * @param {object} before Snapshot before the overlay.
+ * @param {object} after Snapshot after the overlay.
+ * @param {Array<object>} events Overlay events (corrected / missing / stale rows name the cells).
+ * @param {Array<object>|null} [annotations] Optional collector; a label annotation that is new in `after`
+ *   is pushed here as {ticker, field, ends} instead of counting as a cell change.
+ * @returns {Array<object>} The cell changes (event plus oldRow/newRow); throws on any unrelated byte.
+ */
+function diffCells(before, after, events, annotations = null) {
   const restore = clone(after), changes = [];
   // Stale cells are withheld as missing, so they are cell changes too and must be listed.
   for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status) &&
@@ -31,6 +46,12 @@ function diffCells(before, after, events) {
     const { financialDataIssue: newIssue, ...newMeta } = restore.meta;
     assert.equal(serial(newMeta), serial(oldMeta), before.meta.ticker + ': all unrelated bytes must match');
     restore.meta = clone(before.meta);
+  }
+  if (restore.timeseries && Object.hasOwn(restore.timeseries, LABEL_ANNOTATION) &&
+      !(before.timeseries && Object.hasOwn(before.timeseries, LABEL_ANNOTATION))) {
+    if (annotations) annotations.push({ ticker: before.meta.ticker, field: LABEL_ANNOTATION, ends: clone(restore.timeseries[LABEL_ANNOTATION]) });
+    const { [LABEL_ANNOTATION]: _dropped, ...timeseries } = restore.timeseries;
+    restore.timeseries = timeseries;
   }
   assert.equal(serial(restore), serial(before), before.meta.ticker + ': all unrelated bytes must match');
   return changes;
@@ -137,6 +158,7 @@ function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
   watchlistRef = '256d26910e637142ceddedf51cf39b394be9287f', live = false } = {}) {
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).sort();
   const hashes = [], snapshotNames = [], baseline = [], known = [], shadow = [], changes = [], zeroChanges = [], quarantines = [];
+  const labelAnnotations = []; // P108: verified period labels written by the overlay, reported apart from cells
   let unchanged = 0, nonzeroChangesByZeroRule = 0;
   for (const file of files) {
     const bytes = fs.readFileSync(path.join(dir, file)), raw = JSON.parse(bytes);
@@ -145,7 +167,7 @@ function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
     snapshotNames.push(file);
     const before = applyKnownCases(raw).snapshot;
     const f = applyFinancialCases(before), z = applyZeroGuard(f.snapshot, { mode: 'active' });
-    changes.push(...diffCells(before, f.snapshot, f.events));
+    changes.push(...diffCells(before, f.snapshot, f.events, labelAnnotations));
     const zChanges = diffCells(f.snapshot, z.snapshot, z.events);
     zeroChanges.push(...zChanges);
     for (const e of zChanges) if ((typeof e.oldRow === 'number' ? e.oldRow : e.oldRow?.value) !== 0) nonzeroChangesByZeroRule++;
@@ -206,6 +228,7 @@ function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
   return { snapshots: baseline.length, authorizedSnapshots: beforeU.length, watchlistRef, publicationRef: ref, growthCalibration: live ? 'live' : date,
     unchangedSnapshots: unchanged,
     changedCells: changes.length, staleCells: changes.filter(c => c.status === 'stale').length, quarantines, changes, allOtherRowsByteIdentical: true,
+    labelAnnotations, // P108: {ticker, field, ends} per snapshot that received verified period labels (no cell change)
     diskHashesUnchanged: hashes.length, aggregateSha256: hash(serial(hashes)),
     zeroRule: { candidateCells: zeroChanges.length, nonzeroChanges: nonzeroChangesByZeroRule,
       mode: modeForReplay(zeroBoardChanges.length), visibleScoreChanges: zeroBoardChanges.length, changes: zeroChanges },
