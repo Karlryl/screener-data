@@ -188,11 +188,13 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
     + 'er blind fuer genau den Weg, den Anklage A1.3 beschreibt');
   fremd.clear();
   const wurzel = path.join(REPO, 'outputs', 'findash-export', 'v1');
-  // Both root directories have their own schema and validator. Never exclude a
+  // These root directories have their own schema and validator. Never exclude a
   // nested directory, a similarly named directory or a sibling export root.
-  const AUSGENOMMEN = new Set(['druckenmiller', 'provenance'].map(name => path.join(wurzel, name)));
-  assert.equal(AUSGENOMMEN.size, 2, 'only the two independently validated schema roots may be excluded');
-  for (const name of ['druckenmiller', 'provenance']) {
+  const ROOTS = ['druckenmiller', 'provenance', path.join('rule40', 'provenance')];
+  const AUSGENOMMEN = new Set(ROOTS.map(name => path.join(wurzel, name)));
+  assert.equal(AUSGENOMMEN.size, 3, 'only the three independently validated schema roots may be excluded');
+  assert.ok(!AUSGENOMMEN.has(path.join(wurzel, 'rule40')), 'the rule40 board itself must stay in the walk');
+  for (const name of ROOTS) {
     assert.ok(AUSGENOMMEN.has(path.join(wurzel, name)));
     for (const other of [path.join(wurzel, 'full', name), path.join(wurzel, name + '-extra'),
       path.join(wurzel, '..', 'v1-other', name)]) assert.ok(!AUSGENOMMEN.has(other), 'exclusion escaped its exact root directory');
