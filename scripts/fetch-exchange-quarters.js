@@ -312,8 +312,9 @@ async function runTaiwan(ctx) {
       const r = j && j.result;
       if (!j || j.code !== 200 || !r) why = 'code ' + (j && j.code) + ' ' + JSON.stringify(j && j.message);
       else if (String(r.year) !== String(s.rocYear) || String(r.season) !== String(s.season)) why = 'answer is for ' + r.year + 'Q' + r.season;
+      else if (!Array.isArray(r.reportList)) why = 'reportList is not an array';
       else {
-        const rows = (r.reportList || []).filter((x) => Array.isArray(x) && TW_LINES.includes(x[0]));
+        const rows = r.reportList.filter((x) => Array.isArray(x) && TW_LINES.includes(x[0]));
         if (!rows.length) { c.noData[s.key] = { at, code: 'no-line' }; st.noLine += 1; inARow = 0; continue; }
         if (rows.length > 1) why = 'more than one revenue line';
         else {
