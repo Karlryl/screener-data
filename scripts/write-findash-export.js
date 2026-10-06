@@ -41,6 +41,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
 
@@ -248,6 +249,10 @@ function snapAbleitungenFuer(ticker) {
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
     snapFehler,
   };
+  // Retain evidence from the very snapshot used above. Defer helper failures,
+  // not source reads, until the isolated provenance step.
+  try { abl.provenanceInputs = captureSnapshot(snap); }
+  catch (error) { abl.provenanceError = error; }
   _snapCache.set(ticker, abl);
   return abl;
 }
@@ -267,16 +272,18 @@ function smallcapWachstumFuer(ticker) {
   try { return revGrowthLeg(prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SMALLCAP_SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')))); }
   catch (_) { return null; }
 }
-function ergaenzeWachstumsBasis(out) {
+function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   const wert = out.revGrowthYoYPct;
   let leg = wert === null ? { basis: 'none', pct: null, periodEnd: null, priorPeriodEnd: null }
-    : snapAbleitungenFuer(out.ticker).wachstum;
-  if (wert !== null && (!leg || leg.pct !== wert)) leg = smallcapWachstumFuer(out.ticker);
+    : snapshotStore === 'smallcap' ? smallcapWachstumFuer(out.ticker) : snapAbleitungenFuer(out.ticker).wachstum;
+  if (snapshotStore === 'auto' && wert !== null && (!leg || leg.pct !== wert)) leg = smallcapWachstumFuer(out.ticker);
   const passt = leg && leg.pct === wert;
   if (!passt) _wachstumOhneEtikett++;
   out.revGrowthBasis = passt ? leg.basis : null;
   out.revGrowthPeriodEnd = passt ? leg.periodEnd : null;
   out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
+  out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
+  out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
   return out;
 }
 function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
@@ -598,7 +605,7 @@ function gedeckelt(score) {
   return typeof score === 'number' && Number.isFinite(score) ? Math.min(SCORE_MAX, score) : score;
 }
 
-function mapBoardRow(r, i) {
+function mapBoardRow(r, i, snapshotStore) {
   const out = {
     rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
     rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
@@ -615,10 +622,10 @@ function mapBoardRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
   ergaenzeBelegpunkte(out);            // 29.08.: Belegpunkte neben der Coverage-Behauptung
-  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.: Basis/Zeitraum des Wachstums
+  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), snapshotStore === 'smallcap' ? 'smallcap' : 'main');
 }
 
-function mapOverviewRow(r, i) {
+function mapOverviewRow(r, i, snapshotStore) {
   const out = {
     rank: i + 1,
     rankGrund: null,            // 18.08.: gesetzt von vergebeRaenge(), s. Belegbarkeits-Gate
@@ -634,7 +641,7 @@ function mapOverviewRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
   ergaenzeBelegpunkte(out);            // 29.08.: s. mapBoardRow
-  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.
+  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), snapshotStore === 'smallcap' ? 'smallcap' : 'main');
 }
 
 function mapSurvivalRow(r, i) {
@@ -649,7 +656,7 @@ function mapSurvivalRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
-  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.
+  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), 'main');
 }
 
 // ---- build ---------------------------------------------------------------
@@ -968,6 +975,19 @@ function buildQuality(coverage, opts = {}) {
 // 'diagnostic' (board-status.js: 'smallcap-'-Praefix), Praereg-DIAGNOSTIC-Start.
 function smallcapStem(file) { return file.replace(/^smallcap-/, '').replace(/\.json$/, ''); }
 
+let _smallcapGrowthSource;
+function smallcapGrowthSource() {
+  if (_smallcapGrowthSource !== undefined) return _smallcapGrowthSource;
+  let files;
+  try { files = fs.readdirSync(SMALLCAP_SNAP_DIR); } catch (_) { return (_smallcapGrowthSource = 'main'); }
+  const usable = files.filter(f => f.endsWith('.json') && !f.startsWith('_manifest') && f !== '_last_good_disk.json')
+    .some(f => {
+      try { return !!prepareYahooQ4Snapshot(readJSON(path.join(SMALLCAP_SNAP_DIR, f)))?.meta?.ticker; }
+      catch (e) { if (e.code === 'YAHOO_Q4_HAND_TABLE_FAILED') throw e; return false; }
+    });
+  return (_smallcapGrowthSource = usable ? 'smallcap' : 'main');
+}
+
 function buildSmallcapBoard(file, coverage, smallcapDir) {
   const stem = smallcapStem(file);
   const b = readJSON(path.join(smallcapDir || SMALLCAP_DIR, file));
@@ -977,14 +997,14 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource())), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource())), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
 function buildSmallcapOverview(coverage, smallcapDir) {
   const o = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow), 'smallcap/overview') };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource())), 'smallcap/overview') };
 }
 
 function buildSmallcapIndex(coverage, smallcapDir) {
@@ -1095,6 +1115,23 @@ function build(seam = {}) {
       ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
       'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
   }
+  const provenancePaths = BRANCHES.map(id => id + '.json');
+  let provenanceFiles;
+  try {
+    // Baseline boards are complete. Only detached objects receive annotations.
+    provenanceFiles = provenancePaths.map(file => readJSON(path.join(OUT_DIR, file)));
+    (seam.writeProvenance || writeProvenance)(provenanceFiles, { outDir: OUT_DIR, reviewRoot: path.join(ROOT, 'verification-records'),
+      snapshotFor: ticker => {
+        const cached = snapAbleitungenFuer(ticker);
+        if (cached.provenanceError) throw cached.provenanceError;
+        return cached.provenanceInputs;
+      } });
+  } catch (error) {
+    provenanceFiles = null;
+    writeProvenanceFailure(OUT_DIR, 'hypergrowth', error);
+  }
+  if (provenanceFiles) provenancePaths.forEach((file, i) => writeJsonAtomic(path.join(OUT_DIR, file), provenanceFiles[i],
+    { assertFinite: true, indent: 2 }));
   return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
     mcapGenullt: bilanz };
 }
@@ -1271,13 +1308,16 @@ function checkShareDilution(r, where, errs) {
 // zur Zahl: 'none' genau dann, wenn revGrowthYoYPct null ist. null-Basis = unbeschriftet
 // (Zahl liess sich nicht nachrechnen); dann darf auch kein Zeitraum dastehen.
 const REV_GROWTH_FELDER = ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd'];
+const REV_GROWTH_SOURCE_FELDER = ['revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd'];
 function checkRevGrowthBasis(r, where, errs) {
   const da = REV_GROWTH_FELDER.filter((k) => k in r).length;
-  if (da === 0) return;
+  const quellenDa = REV_GROWTH_SOURCE_FELDER.filter((k) => k in r).length;
+  if (da === 0 && quellenDa === 0) return;
   if (da !== REV_GROWTH_FELDER.length) { errs.push(`${where}: revGrowthBasis/PeriodEnd/PriorPeriodEnd nur teilweise vorhanden`); return; }
+  if (quellenDa !== 0 && quellenDa !== REV_GROWTH_SOURCE_FELDER.length) errs.push(`${where}: revGrowthSourcePeriodEnd/SourcePriorPeriodEnd nur teilweise vorhanden`);
   const b = r.revGrowthBasis;
   if (b !== null && !REV_GROWTH_BASES.includes(b)) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)}`);
-  for (const k of REV_GROWTH_FELDER.slice(1)) {
+  for (const k of [...REV_GROWTH_FELDER.slice(1), ...REV_GROWTH_SOURCE_FELDER.filter(k => k in r)]) {
     if (r[k] !== null && isoTag(r[k]) !== r[k]) errs.push(`${where}: ${k}=${JSON.stringify(r[k])} kein ISO-Tag|null`);
     if (r[k] !== null && (b === null || b === 'none')) errs.push(`${where}: ${k} gesetzt bei revGrowthBasis=${JSON.stringify(b)}`);
   }
@@ -1660,7 +1700,7 @@ function validateFile(mk, kind, errs, opts = {}) {
 }
 
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
-function validateExport(outDir = OUT_DIR) {
+function validateExport(outDir = OUT_DIR, opts = {}) {
   const errs = [];
   const indexPath = path.join(outDir, 'index.json');
   const index = readJSONOrNull(indexPath);
@@ -1680,7 +1720,8 @@ function validateExport(outDir = OUT_DIR) {
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
+  return errs.concat(provenanceErrors(outDir, BRANCHES.map(id => id + '.json'), opts.requireProvenance))
+             .concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
              .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
              .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
 }
@@ -2038,7 +2079,7 @@ function selftest() {
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { selftest(); process.exit(0); }
   if (process.argv.includes('--check')) {
-    const errs = validateExport();
+    const errs = validateExport(OUT_DIR, { requireProvenance: true });
     if (errs.length) {
       console.error(`::error::findash-export/v1 schema contract violation (${errs.length}): ${errs.slice(0, 20).join('; ')}`);
       process.exit(1);
