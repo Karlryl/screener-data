@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-03T09:31:17.258Z",
+  "generated_at": "2026-10-06T10:26:13.599Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
     "coverage_pct": 73.1,
-    "generated_at": "2026-10-03T09:24:25.732Z"
+    "generated_at": "2026-10-06T10:19:16.526Z"
   },
-  "generatedFromSnapshots": 16099,
+  "generatedFromSnapshots": 16117,
   "boards": [
     "rule40"
   ],
@@ -17,19 +17,19 @@
     "materials": "diagnostic",
     "tech-hardware": "diagnostic",
     "health-care": "diagnostic",
-    "software-comm-services": "diagnostic",
     "semiconductors": "diagnostic",
+    "software-comm-services": "diagnostic",
     "energy": "diagnostic",
     "consumer-discretionary": "diagnostic",
     "industrials": "diagnostic",
-    "consumer-staples": "diagnostic",
     "utilities": "diagnostic",
+    "consumer-staples": "diagnostic",
     "it-services": "diagnostic"
   },
   "counts": {
     "rule40": {
-      "profitable": 433,
-      "unprofitable": 43
+      "profitable": 439,
+      "unprofitable": 48
     }
   },
   "rule40": {
@@ -54,55 +54,55 @@
       "Internet Content & Information"
     ],
     "growthBounds": {
-      "p1": -38.0072753015306,
-      "p99": 164.5983309224435
+      "p1": -38.84288912913867,
+      "p99": 165.52926952008303
     },
     "counts": {
       "universeBasis": "routed",
-      "universe": 16111,
-      "onBoard": 9648,
-      "computable": 5477,
-      "above40": 917,
-      "exported": 476,
-      "exportedLargeCap": 403,
-      "exportedSmallCap": 73,
-      "largeCapBeforeCap": 844,
-      "smallCapBeforeCap": 73,
-      "offBoardMcapUsdDirect": 2128,
+      "universe": 16152,
+      "onBoard": 9654,
+      "computable": 5599,
+      "above40": 936,
+      "exported": 487,
+      "exportedLargeCap": 405,
+      "exportedSmallCap": 82,
+      "largeCapBeforeCap": 854,
+      "smallCapBeforeCap": 82,
+      "offBoardMcapUsdDirect": 2132,
       "offBoardMcapNull": 0,
-      "excludedNotRouted": 3128,
-      "excludedDataSuspect": 108,
-      "excludedSector": 1299,
+      "excludedNotRouted": 3134,
+      "excludedDataSuspect": 122,
+      "excludedSector": 1301,
       "excludedOutlier": 9,
-      "excludedStale": 208,
-      "excludedNoPeriod": 124,
+      "excludedStale": 214,
+      "excludedNoPeriod": 0,
       "excludedTinyBase": 27,
       "excludedFcfAboveRevenue": 10,
-      "excludedDuplicateIssuer": 2061,
-      "noValidMargin": 3512,
+      "excludedDuplicateIssuer": 2067,
+      "noValidMargin": 3526,
       "noGrowth": 22,
-      "noRank": 117,
+      "noRank": 113,
       "unreadableSnapshot": 0,
       "missingFullBoard": 0
     },
     "rejected": {
       "keinVollboard": 0,
-      "nichtGeroutet": 3128,
-      "datenSuspekt": 108,
-      "sektorAusgeschlossen": 1299,
+      "nichtGeroutet": 3134,
+      "datenSuspekt": 122,
+      "sektorAusgeschlossen": 1301,
       "keinWachstum": 22,
-      "fcfUnterdrueckt": 115,
-      "fcfUngueltig": 3397,
+      "fcfUnterdrueckt": 116,
+      "fcfUngueltig": 3410,
       "fcfUeberUmsatz": 10,
       "einheitenVerdacht": 9,
       "basisQuartalStub": 27,
-      "basisJahrStub": 9,
-      "veraltet": 208,
-      "frischeUnbekannt": 124,
-      "ohneRang": 117,
+      "basisJahrStub": 8,
+      "veraltet": 214,
+      "frischeUnbekannt": 0,
+      "ohneRang": 113,
       "snapshotUnlesbar": 0,
-      "dupEmittent": 2061,
-      "offBoardMcapUsdDirect": 2128,
+      "dupEmittent": 2067,
+      "offBoardMcapUsdDirect": 2132,
       "offBoardMcapNull": 0
     }
   }
