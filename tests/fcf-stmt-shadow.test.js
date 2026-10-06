@@ -194,5 +194,17 @@ check('D3 buildBoard: an unreadable snapshot is named as such, not as missing', 
   assert.equal(W.buildBoard('utilities', null, { srcDir }).profitable[0].fcfShadow.grund, 'snapshot-unreadable');
 });
 
+check('E1 every key of both fcfShadow shapes is in the frozen v1 row-key list (G7 runs only on a real export)', () => {
+  const frozen = new Set(JSON.parse(fs.readFileSync(path.join(__dirname, 'druckenmiller', 'fixtures', 'v1-row-keys.snapshot.json'), 'utf8')));
+  const s = snap(); const sh = SH.fcfMarginStmtFY(s);
+  const hg = { fcfShadow: SH.boardSchatten(s, 2, null, undefined) };
+  const r40 = { fcfShadow: R40.r40SchattenZeile({ wachstum: 50, fcfSchatten: sh, fcfSchattenTor: 'ok' }) };
+  const missing = new Set();
+  const walk = (v) => { if (Array.isArray(v)) return v.forEach(walk); if (!v || typeof v !== 'object') return;
+    for (const [k, x] of Object.entries(v)) { if (!frozen.has(k)) missing.add(k); walk(x); } };
+  walk(hg); walk(r40);
+  assert.deepEqual([...missing], []);
+});
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`fcf-stmt-shadow.test.js: ${ok} ok`);
