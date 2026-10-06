@@ -15,7 +15,7 @@
   "scripts/ab-computed-margin.js": { "mode": "exempt", "reason": "Controlled annual operating-income-removal experiment, not production board input." },
   "scripts/build-secannual.js": { "mode": "hook", "hook": "route(prepareSnapshot(s))", "reason": "SEC candidate routing uses corrected quarterly inputs; raw annual evidence remains unchanged." },
   "scripts/build-secannual-smallcap.js": { "mode": "hook", "hook": "smallcapRoute(prepareSnapshot(s))", "reason": "SEC Smallcap candidate routing uses corrected quarterly inputs; raw annual evidence remains unchanged." },
-  "scripts/exchange-check-report.js": { "mode": "hook", "hook": "const s = prepareSnapshot(raw);", "reason": "Shadow report must see the same hand-table corrections and known gaps as scoring before the exchange step." },
+  "scripts/exchange-check-report.js": { "mode": "hook", "hook": "prepareSnapshot(X.stripOwn(raw), { atPull: true })", "reason": "Shadow and fill-only report must see the same hand-table corrections and known gaps as scoring before the exchange step; the step itself is skipped (atPull) and applied explicitly per mode." },
   "scripts/fetch-secbulk.js": { "mode": "hook", "hook": "route(prepareSnapshot(s))", "reason": "SEC bulk candidate routing uses corrected quarterly inputs; raw annual evidence remains unchanged." },
   "scripts/gqs00-equivalence.js": { "mode": "hook", "hook": "const universe = loadUniverse(snapshots);", "reason": "Imports the production scoring loader via path.join and receives its corrected universe." },
   "scripts/kalibrier-drift-feinmass.js": { "mode": "exempt", "reason": "Reads calibration drift artifacts only, without quarterly snapshot values." },
