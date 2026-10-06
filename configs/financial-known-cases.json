@@ -5902,6 +5902,118 @@
           "value": 26653210000
         }
       ]
+    },
+    {
+      "caseId": "aeon-2026-02-28-annualRev",
+      "revision": "2026-10-06-p47",
+      "ticker": "8570.T",
+      "field": "annualRev",
+      "period": "2026-02-28",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "JPY",
+      "unit": "currency",
+      "metricDefinition": "Consolidated operating revenue (営業収益, 連結経営成績)",
+      "expectedBadValue": 569370000000,
+      "replacementValue": 569370000000,
+      "reason": "bestätigt: Konzernumsatz laut Kurzbericht (決算短信), Anbieterwert stimmt.",
+      "sources": [
+        {
+          "url": "https://www.aeonfinancial.co.jp/-/media/AeonGroup/Aeonfinancial/Files/ir/library/tanshin/2025/tanshin260408.pdf?sc_lang=ja-JP",
+          "title": "AEON Financial Service 決算短信 FY2026 (2026-04-08), 連結経営成績",
+          "page": 1,
+          "quote": "569,370",
+          "start": "2025-03-01",
+          "end": "2026-02-28",
+          "currency": "JPY",
+          "unit": "currency",
+          "value": 569370000000
+        }
+      ]
+    },
+    {
+      "caseId": "aeon-2025-02-28-annualRev",
+      "revision": "2026-10-06-p47",
+      "ticker": "8570.T",
+      "field": "annualRev",
+      "period": "2025-02-28",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "unit": "currency",
+      "metricDefinition": "Consolidated operating revenue (営業収益, 連結経営成績)",
+      "expectedBadValue": 181699000000,
+      "replacementValue": 533262000000,
+      "reason": "Jahresumsatz korrigiert: Der Anbieter zeigte den Umsatz des Einzelabschlusses statt des Konzernumsatzes.",
+      "sources": [
+        {
+          "url": "https://www.aeonfinancial.co.jp/-/media/AeonGroup/Aeonfinancial/Files/ir/library/tanshin/2025/tanshin260408.pdf?sc_lang=ja-JP",
+          "title": "AEON Financial Service 決算短信 FY2026 (2026-04-08), 連結経営成績, Vorjahresspalte",
+          "page": 1,
+          "quote": "533,262",
+          "start": "2024-03-01",
+          "end": "2025-02-28",
+          "currency": "JPY",
+          "unit": "currency",
+          "value": 533262000000
+        }
+      ]
+    },
+    {
+      "caseId": "okasan-2026-03-31-annualRev",
+      "revision": "2026-10-06-p47",
+      "ticker": "8609.T",
+      "field": "annualRev",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "JPY",
+      "unit": "currency",
+      "metricDefinition": "Consolidated operating revenue (営業収益, 連結経営成績)",
+      "expectedBadValue": 11058000000,
+      "replacementValue": 95595000000,
+      "reason": "Jahresumsatz korrigiert: Der Anbieter zeigte den Umsatz des Einzelabschlusses statt des Konzernumsatzes.",
+      "sources": [
+        {
+          "url": "https://www.okasan.jp/ir/finance/pdf/statement_note/26_4Q_all.pdf",
+          "title": "Okasan Securities Group 決算短信 FY2026 (2026年3月期), 連結経営成績",
+          "page": 1,
+          "quote": "95,595",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "currency": "JPY",
+          "unit": "currency",
+          "value": 95595000000
+        }
+      ]
+    },
+    {
+      "caseId": "okasan-2025-03-31-annualRev",
+      "revision": "2026-10-06-p47",
+      "ticker": "8609.T",
+      "field": "annualRev",
+      "period": "2025-03-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "unit": "currency",
+      "metricDefinition": "Consolidated operating revenue (営業収益, 連結経営成績)",
+      "expectedBadValue": 81936000000,
+      "replacementValue": 81936000000,
+      "reason": "bestätigt: Konzernumsatz laut Kurzbericht (決算短信), Anbieterwert stimmt.",
+      "sources": [
+        {
+          "url": "https://www.okasan.jp/ir/finance/pdf/statement_note/26_4Q_all.pdf",
+          "title": "Okasan Securities Group 決算短信 FY2026 (2026年3月期), 連結経営成績, Vorjahreszeile",
+          "page": 1,
+          "quote": "81,936",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "currency": "JPY",
+          "unit": "currency",
+          "value": 81936000000
+        }
+      ]
     }
   ],
   "quarantines": [
