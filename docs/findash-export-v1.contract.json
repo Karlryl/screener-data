@@ -8,5 +8,147 @@
   "requiredIndex": ["schema", "generated_at", "coverage", "boardStatus", "branches", "counts"],
   "validProfitTiers": ["nicht-profitabel", "kurz-vor-profitabel", "seit-kurzem-profitabel", "langfristig-profitabel"],
   "validBoardStatus": ["core", "diagnostic"],
-  "validTracks": ["profitable", "unprofitable"]
+  "validTracks": ["profitable", "unprofitable"],
+  "provenanceContract": {
+    "schema": "findash-provenance/v1",
+    "version": 1,
+    "scopeId": "revGrowthYoYPct+marketCap/v1",
+    "fieldPaths": [
+      "revGrowthYoYPct",
+      "marketCap"
+    ],
+    "scopedFiles": [
+      "<branch>.json",
+      "rule40/overview.json"
+    ],
+    "headerFields": [
+      "provenanceVersion",
+      "provenanceRunId",
+      "provenanceManifest",
+      "provenanceManifestSha256",
+      "verificationSummary"
+    ],
+    "rowFields": [
+      "provenance",
+      "verification",
+      "fieldStatus"
+    ],
+    "verificationFields": [
+      "status",
+      "scopeId",
+      "requiredFields",
+      "verifiedFields",
+      "openFields",
+      "reviewIds",
+      "checkedAt",
+      "valueHash",
+      "reason"
+    ],
+    "summaryFields": [
+      "scopeId",
+      "eligibleRows",
+      "fullyVerifiedRows",
+      "partiallyVerifiedRows",
+      "uncheckedRows",
+      "withheldRows",
+      "checkedAt"
+    ],
+    "fieldStatusFields": [
+      "presence",
+      "verification",
+      "reason",
+      "reviewIds"
+    ],
+    "manifestFields": [
+      "schema",
+      "runId",
+      "generatedAt",
+      "records",
+      "reviews"
+    ],
+    "recordFields": [
+      "id",
+      "issuerId",
+      "listingId",
+      "ticker",
+      "fieldPath",
+      "valueHash",
+      "creatorEngine",
+      "creatorModel",
+      "creatorSessionId",
+      "createdAt",
+      "sourceType",
+      "provider",
+      "retrievedAt",
+      "observedAt",
+      "publishedAt",
+      "periodStart",
+      "periodEnd",
+      "periodType",
+      "comparativeBasis",
+      "metricDefinition",
+      "nativeValue",
+      "nativeCurrency",
+      "nativeUnit",
+      "unitMultiplier",
+      "normalizedValue",
+      "normalizedCurrency",
+      "documentUrl",
+      "documentTitle",
+      "documentId",
+      "documentSha256",
+      "filingAccession",
+      "filingForm",
+      "filedAt",
+      "taxonomy",
+      "concept",
+      "contextId",
+      "page",
+      "anchor",
+      "quote",
+      "fx",
+      "derivation",
+      "correctionCaseId",
+      "correctionRevision",
+      "supersedesId",
+      "missingReason",
+      "qualityWarnings"
+    ],
+    "fxFields": [
+      "rate",
+      "fromCurrency",
+      "toCurrency",
+      "asOf",
+      "sourceUrl",
+      "unitAdjustment",
+      "adrRatio"
+    ],
+    "derivationFields": [
+      "methodId",
+      "methodVersion",
+      "expression",
+      "inputIds",
+      "rounding",
+      "parametersHash",
+      "cohortId",
+      "cohortHash",
+      "cohortInputIds",
+      "cohortVerificationStatus"
+    ],
+    "reviewFields": [
+      "id",
+      "evidenceIds",
+      "scopeId",
+      "valueHash",
+      "methodVersion",
+      "reviewerEngine",
+      "reviewerModel",
+      "reviewerSessionId",
+      "checkedAt",
+      "result",
+      "reason",
+      "sourceReopenedAt",
+      "supersedesReviewId"
+    ]
+  }
 }

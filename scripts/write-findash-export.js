@@ -41,6 +41,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { captureSnapshot, writeProvenance, provenanceErrors } = require('../lib/export-provenance.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
 
@@ -197,6 +198,7 @@ function snapAbleitungenFuer(ticker) {
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
+    provenanceInputs: captureSnapshot(snap),
   };
   _snapCache.set(ticker, abl);
   return abl;
@@ -1034,6 +1036,12 @@ function build(seam = {}) {
       ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
       'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
   }
+  const provenancePaths = BRANCHES.map(id => id + '.json');
+  const provenanceFiles = provenancePaths.map(file => readJSON(path.join(OUT_DIR, file)));
+  writeProvenance(provenanceFiles, { outDir: OUT_DIR, reviewRoot: path.join(ROOT, 'verification-records'),
+    snapshotFor: ticker => snapAbleitungenFuer(ticker).provenanceInputs });
+  provenancePaths.forEach((file, i) => writeJsonAtomic(path.join(OUT_DIR, file), provenanceFiles[i],
+    { assertFinite: true, indent: 2 }));
   return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
     mcapGenullt: bilanz };
 }
@@ -1599,7 +1607,7 @@ function validateFile(mk, kind, errs, opts = {}) {
 }
 
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
-function validateExport(outDir = OUT_DIR) {
+function validateExport(outDir = OUT_DIR, opts = {}) {
   const errs = [];
   const indexPath = path.join(outDir, 'index.json');
   const index = readJSONOrNull(indexPath);
@@ -1619,7 +1627,8 @@ function validateExport(outDir = OUT_DIR) {
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
+  return errs.concat(provenanceErrors(outDir, BRANCHES.map(id => id + '.json'), opts.requireProvenance))
+             .concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
              .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
              .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
 }
@@ -1977,7 +1986,7 @@ function selftest() {
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { selftest(); process.exit(0); }
   if (process.argv.includes('--check')) {
-    const errs = validateExport();
+    const errs = validateExport(OUT_DIR, { requireProvenance: true });
     if (errs.length) {
       console.error(`::error::findash-export/v1 schema contract violation (${errs.length}): ${errs.slice(0, 20).join('; ')}`);
       process.exit(1);

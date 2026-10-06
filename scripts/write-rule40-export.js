@@ -55,6 +55,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { captureSnapshot, writeProvenance, provenanceErrors } = require('../lib/export-provenance.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
@@ -575,6 +576,7 @@ function sammleKandidaten(opts = {}) {
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
       wachstumBein,
+      provenanceInputs: captureSnapshot(snapshot),
     });
   }
 
@@ -868,6 +870,9 @@ function build(opts = {}) {
     bounds, kandidaten: kandidaten.length, gelesen, abgewiesen, aufBrett, ueber40,
     grossExportiert, kleinExportiert, grossVorKappung, kleinVorKappung, universeBasis: 'routed',
   });
+  const inputsByTicker = new Map(kandidaten.map(k => [k.ticker, k.provenanceInputs]));
+  writeProvenance([overview], { outDir: v1Dir, reviewRoot: path.join(__dirname, '..', 'verification-records'),
+    rounding: 'round1', snapshotFor: ticker => inputsByTicker.get(ticker) });
   schreibeBrett(outDir, overview, indexDatei);
   return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds, ueber40, aufBrett };
 }
@@ -975,6 +980,7 @@ function check(opts = {}) {
     }
   });
 
+  fehler.push(...provenanceErrors(v1Dir, [path.relative(v1Dir, path.join(outDir, 'overview.json'))], opts.requireProvenance));
   return { ok: fehler.length === 0, errors: fehler, rows: rows.length };
 }
 
@@ -985,7 +991,7 @@ function main(argv) {
   const v1Dir = process.env.RULE40_V1_DIR || DEFAULT_V1_DIR;
   const snapshotsDir = process.env.RULE40_SNAPSHOTS_DIR || DEFAULT_SNAPSHOTS_DIR;
   const outDir = process.env.RULE40_OUT_DIR || path.join(v1Dir, BOARD_ID);
-  const opts = { v1Dir, snapshotsDir, outDir, valueOpenItemsFile: DEFAULT_VALUE_OPEN_ITEMS_FILE };
+  const opts = { v1Dir, snapshotsDir, outDir, valueOpenItemsFile: DEFAULT_VALUE_OPEN_ITEMS_FILE, requireProvenance: true };
 
   if (argv.includes('--check')) {
     const res = check(opts);
