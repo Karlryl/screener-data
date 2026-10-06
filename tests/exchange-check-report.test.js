@@ -184,7 +184,7 @@ test('cell measurement detects fills, withheld numbers and unrelated changes; al
     ['    else out.otherChanged++;', '    else out.otherChanged += 0;']
   ]) { assert.throws(() => check(reportCopy(oldLine, newLine)), assert.AssertionError); check(reportLib); breaks++; }
 });
-test('report preparation skips the committed exchange step; missing bypass turns red in memory', () => {
+test('report preparation leaves out the committed exchange step; missing bypass turns red in memory', () => {
   const oldLine = "const beforeExchange = raw => X.applyExchangeCheck(prepareSnapshot(X.stripOwn(raw), { atPull: true }), { mode: 'off' }).snapshot;";
   const overrides = { '../lib/yahoo-q4-known-cases.js': { prepareSnapshot: (s, o = {}) => {
     assert.equal(o.atPull, true, 'default exchange context must never be used by the report'); return s;
