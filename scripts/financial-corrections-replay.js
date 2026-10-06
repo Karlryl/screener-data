@@ -18,16 +18,19 @@ const clone = x => structuredClone(x);
 function diffCells(before, after, events) {
   const restore = clone(after), changes = [];
   // Stale cells are withheld as missing, so they are cell changes too and must be listed.
-  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status))) {
+  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status) &&
+    typeof e.container === 'string' && typeof e.field === 'string' && Number.isInteger(e.index))) {
     const original = before[e.container][e.field][e.index];
     const changed = after[e.container][e.field][e.index];
     if (serial(original) === serial(changed)) continue;
     changes.push({ ...e, oldRow: original, newRow: changed });
     restore[e.container][e.field][e.index] = clone(original);
   }
-  if (events.some(e => e.status === 'quarantined')) {
-    if (before.meta.financialDataIssue === undefined) delete restore.meta.financialDataIssue;
-    else restore.meta.financialDataIssue = clone(before.meta.financialDataIssue);
+  if (events.some(e => e.status === 'quarantined' || e.reasonCode === 'quarantine-superseded')) {
+    const { financialDataIssue: oldIssue, ...oldMeta } = before.meta;
+    const { financialDataIssue: newIssue, ...newMeta } = restore.meta;
+    assert.equal(serial(newMeta), serial(oldMeta), before.meta.ticker + ': all unrelated bytes must match');
+    restore.meta = clone(before.meta);
   }
   assert.equal(serial(restore), serial(before), before.meta.ticker + ': all unrelated bytes must match');
   return changes;
