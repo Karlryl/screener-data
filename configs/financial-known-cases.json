@@ -6221,5 +6221,359 @@
       ],
       "vendorEvidence": "Snapshot of run 36984285974 (2026-10-02): KRW, fx 0.00073595974; revenueQ native (million KRW) 2026-06-30 19609774 = 328,549 + 19,281,225 (매출액 + 지분법이익), 2025-06-30 1837434 = 355,695 + 1,481,739; annualRev newest 10,455,553 vs 매출액 2025 1,411,521. One basis needs Q3 2025 and Q4 2025 restated for the Dreamus sale (decided 29.10.2025, DART 20251029800644); first expected with the 3Q 2026 report."
     }
+  ],
+  "periodLabels": [
+    {
+      "caseId": "adi-2026-07-31-revenueQ-period-label",
+      "ticker": "ADI",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2026-07-31",
+      "reportedPeriodEnd": "2026-08-01",
+      "currency": "USD",
+      "verifiedValue": 4021899000,
+      "reason": "Periodenende laut Originalbericht 2026-08-01; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://investor.analog.com/static-files/4c652382-cb7c-4418-a71f-45af25c7584b",
+          "page": "PDF page 2 (printed page 1)",
+          "quote": "Revenue $ 4,021,899 $ 2,880,348",
+          "value": 4021899000,
+          "end": "2026-08-01"
+        }
+      ]
+    },
+    {
+      "caseId": "adi-2025-07-31-revenueQ-period-label",
+      "ticker": "ADI",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-07-31",
+      "reportedPeriodEnd": "2025-08-02",
+      "currency": "USD",
+      "verifiedValue": 2880348000,
+      "reason": "Periodenende laut Originalbericht 2025-08-02; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://investor.analog.com/static-files/4c652382-cb7c-4418-a71f-45af25c7584b",
+          "page": "PDF page 2 (printed page 1)",
+          "quote": "Revenue $ 4,021,899 $ 2,880,348",
+          "value": 2880348000,
+          "end": "2025-08-02"
+        }
+      ]
+    },
+    {
+      "caseId": "crdo-2026-07-31-revenueQ-period-label",
+      "ticker": "CRDO",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2026-07-31",
+      "reportedPeriodEnd": "2026-08-01",
+      "currency": "USD",
+      "verifiedValue": 479003000,
+      "reason": "Periodenende laut Originalbericht 2026-08-01; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+          "page": "Statements of Operations",
+          "quote": "August 1, 2026",
+          "value": 479003000,
+          "end": "2026-08-01"
+        }
+      ]
+    },
+    {
+      "caseId": "crdo-2026-04-30-revenueQ-period-label",
+      "ticker": "CRDO",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2026-04-30",
+      "reportedPeriodEnd": "2026-05-02",
+      "currency": "USD",
+      "verifiedValue": 437003000,
+      "reason": "Periodenende laut Originalbericht 2026-05-02; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026043303/0001628280-26-043303-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, 0001628280-26-043303; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2025-05-04\",\n  \"end\": \"2026-05-02\",\n  \"val\": 1335116000,\n  \"accn\": \"0001628280-26-043303\",\n  \"fy\": 2026,\n  \"fp\": \"FY\",\n  \"form\": \"10-K\",\n  \"filed\": \"2026-06-15\",\n  \"frame\": \"CY2025\"\n}",
+          "value": 1335116000,
+          "start": "2025-05-04",
+          "end": "2026-05-02"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026014017/0001628280-26-014017-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, 0001628280-26-014017; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2025-05-04\",\n  \"end\": \"2026-01-31\",\n  \"val\": 898113000,\n  \"accn\": \"0001628280-26-014017\",\n  \"fy\": 2026,\n  \"fp\": \"Q3\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2026-03-03\"\n}",
+          "value": 898113000,
+          "start": "2025-05-04",
+          "end": "2026-01-31"
+        }
+      ]
+    },
+    {
+      "caseId": "crdo-2026-01-31-revenueQ-period-label",
+      "ticker": "CRDO",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2026-01-31",
+      "reportedPeriodEnd": "2026-01-31",
+      "currency": "USD",
+      "verifiedValue": 407012000,
+      "reason": "Periodenende laut Originalbericht 2026-01-31; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026014017/0001628280-26-014017-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, 0001628280-26-014017; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2025-11-02\",\n  \"end\": \"2026-01-31\",\n  \"val\": 407012000,\n  \"accn\": \"0001628280-26-014017\",\n  \"fy\": 2026,\n  \"fp\": \"Q3\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2026-03-03\",\n  \"frame\": \"CY2025Q4\"\n}",
+          "value": 407012000,
+          "start": "2025-11-02",
+          "end": "2026-01-31"
+        }
+      ]
+    },
+    {
+      "caseId": "crdo-2025-10-31-revenueQ-period-label",
+      "ticker": "CRDO",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-10-31",
+      "reportedPeriodEnd": "2025-11-01",
+      "currency": "USD",
+      "verifiedValue": 268027000,
+      "reason": "Periodenende laut Originalbericht 2025-11-01; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828025054549/0001628280-25-054549-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, 0001628280-25-054549; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2025-08-03\",\n  \"end\": \"2025-11-01\",\n  \"val\": 268027000,\n  \"accn\": \"0001628280-25-054549\",\n  \"fy\": 2026,\n  \"fp\": \"Q2\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2025-12-02\",\n  \"frame\": \"CY2025Q3\"\n}",
+          "value": 268027000,
+          "start": "2025-08-03",
+          "end": "2025-11-01"
+        }
+      ]
+    },
+    {
+      "caseId": "crdo-2025-07-31-revenueQ-period-label",
+      "ticker": "CRDO",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-07-31",
+      "reportedPeriodEnd": "2025-08-02",
+      "currency": "USD",
+      "verifiedValue": 223074000,
+      "reason": "Periodenende laut Originalbericht 2025-08-02; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+          "page": "Statements of Operations",
+          "quote": "August 2, 2025",
+          "value": 223074000,
+          "end": "2025-08-02"
+        }
+      ]
+    },
+    {
+      "caseId": "crdo-2025-04-30-revenueQ-period-label",
+      "ticker": "CRDO",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-04-30",
+      "reportedPeriodEnd": "2025-05-03",
+      "currency": "USD",
+      "verifiedValue": 170025000,
+      "reason": "Periodenende laut Originalbericht 2025-05-03; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828025033813/0001628280-25-033813-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, 0001628280-25-033813; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2024-04-28\",\n  \"end\": \"2025-05-03\",\n  \"val\": 436775000,\n  \"accn\": \"0001628280-25-033813\",\n  \"fy\": 2025,\n  \"fp\": \"FY\",\n  \"form\": \"10-K\",\n  \"filed\": \"2025-07-02\"\n}",
+          "value": 436775000,
+          "start": "2024-04-28",
+          "end": "2025-05-03"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828025011738/0001628280-25-011738-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, 0001628280-25-011738; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2024-04-28\",\n  \"end\": \"2025-02-01\",\n  \"val\": 266750000,\n  \"accn\": \"0001628280-25-011738\",\n  \"fy\": 2025,\n  \"fp\": \"Q3\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2025-03-10\"\n}",
+          "value": 266750000,
+          "start": "2024-04-28",
+          "end": "2025-02-01"
+        }
+      ]
+    },
+    {
+      "caseId": "klic-2026-06-30-revenueQ-period-label",
+      "ticker": "KLIC",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2026-06-30",
+      "reportedPeriodEnd": "2026-07-04",
+      "currency": "USD",
+      "verifiedValue": 330409000,
+      "reason": "Periodenende laut Originalbericht 2026-07-04; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/56978/000005697826000032/klic-20260704.htm",
+          "page": "Printed page 2, Statements of Operations",
+          "quote": "July 4, 2026",
+          "value": 330409000,
+          "end": "2026-07-04"
+        }
+      ]
+    },
+    {
+      "caseId": "klic-2026-03-31-revenueQ-period-label",
+      "ticker": "KLIC",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2026-03-31",
+      "reportedPeriodEnd": "2026-04-04",
+      "currency": "USD",
+      "verifiedValue": 242621000,
+      "reason": "Periodenende laut Originalbericht 2026-04-04; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/56978/000005697826000020/0000056978-26-000020-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:Revenues, 0000056978-26-000020; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2026-01-04\",\n  \"end\": \"2026-04-04\",\n  \"val\": 242621000,\n  \"accn\": \"0000056978-26-000020\",\n  \"fy\": 2026,\n  \"fp\": \"Q2\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2026-05-07\",\n  \"frame\": \"CY2026Q1\"\n}",
+          "value": 242621000,
+          "start": "2026-01-04",
+          "end": "2026-04-04"
+        }
+      ]
+    },
+    {
+      "caseId": "klic-2025-12-31-revenueQ-period-label",
+      "ticker": "KLIC",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-12-31",
+      "reportedPeriodEnd": "2026-01-03",
+      "currency": "USD",
+      "verifiedValue": 199625000,
+      "reason": "Periodenende laut Originalbericht 2026-01-03; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/56978/000005697826000012/0000056978-26-000012-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:Revenues, 0000056978-26-000012; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2025-10-05\",\n  \"end\": \"2026-01-03\",\n  \"val\": 199625000,\n  \"accn\": \"0000056978-26-000012\",\n  \"fy\": 2026,\n  \"fp\": \"Q1\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2026-02-05\",\n  \"frame\": \"CY2025Q4\"\n}",
+          "value": 199625000,
+          "start": "2025-10-05",
+          "end": "2026-01-03"
+        }
+      ]
+    },
+    {
+      "caseId": "klic-2025-09-30-revenueQ-period-label",
+      "ticker": "KLIC",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-09-30",
+      "reportedPeriodEnd": "2025-10-04",
+      "currency": "USD",
+      "verifiedValue": 177558000,
+      "reason": "Periodenende laut Originalbericht 2025-10-04; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/56978/000005697825000081/0000056978-25-000081-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:Revenues, 0000056978-25-000081; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2024-09-29\",\n  \"end\": \"2025-10-04\",\n  \"val\": 654081000,\n  \"accn\": \"0000056978-25-000081\",\n  \"fy\": 2025,\n  \"fp\": \"FY\",\n  \"form\": \"10-K\",\n  \"filed\": \"2025-11-20\",\n  \"frame\": \"CY2025\"\n}",
+          "value": 654081000,
+          "start": "2024-09-29",
+          "end": "2025-10-04"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/56978/000005697825000071/0000056978-25-000071-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:Revenues, 0000056978-25-000071; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2024-09-29\",\n  \"end\": \"2025-06-28\",\n  \"val\": 476523000,\n  \"accn\": \"0000056978-25-000071\",\n  \"fy\": 2025,\n  \"fp\": \"Q3\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2025-08-06\"\n}",
+          "value": 476523000,
+          "start": "2024-09-29",
+          "end": "2025-06-28"
+        }
+      ]
+    },
+    {
+      "caseId": "klic-2025-06-30-revenueQ-period-label",
+      "ticker": "KLIC",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-06-30",
+      "reportedPeriodEnd": "2025-06-28",
+      "currency": "USD",
+      "verifiedValue": 148413000,
+      "reason": "Periodenende laut Originalbericht 2025-06-28; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/56978/000005697826000032/klic-20260704.htm",
+          "page": "Printed page 2, Statements of Operations",
+          "quote": "June 28, 2025",
+          "value": 148413000,
+          "end": "2025-06-28"
+        }
+      ]
+    },
+    {
+      "caseId": "klic-2025-03-31-revenueQ-period-label",
+      "ticker": "KLIC",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-03-31",
+      "reportedPeriodEnd": "2025-03-29",
+      "currency": "USD",
+      "verifiedValue": 161986000,
+      "reason": "Periodenende laut Originalbericht 2025-03-29; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/56978/000005697826000020/0000056978-26-000020-index.html",
+          "page": "Copied SEC companyfacts, us-gaap:Revenues, 0000056978-26-000020; JSON fact, not a filing-page quotation",
+          "quote": "{\n  \"start\": \"2024-12-29\",\n  \"end\": \"2025-03-29\",\n  \"val\": 161986000,\n  \"accn\": \"0000056978-26-000020\",\n  \"fy\": 2026,\n  \"fp\": \"Q2\",\n  \"form\": \"10-Q\",\n  \"filed\": \"2026-05-07\",\n  \"frame\": \"CY2025Q1\"\n}",
+          "value": 161986000,
+          "start": "2024-12-29",
+          "end": "2025-03-29"
+        }
+      ]
+    },
+    {
+      "caseId": "skyt-2026-03-31-revenueQ-period-label",
+      "ticker": "SKYT",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2026-03-31",
+      "reportedPeriodEnd": "2026-03-29",
+      "currency": "USD",
+      "verifiedValue": 160686000,
+      "reason": "Periodenende laut Originalbericht 2026-03-29; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1819974/000181997426000014/skyt-20260329.htm",
+          "page": "Statements of Operations",
+          "quote": "First Quarter Ended",
+          "value": 160686000,
+          "end": "2026-03-29"
+        }
+      ]
+    },
+    {
+      "caseId": "skyt-2025-03-31-revenueQ-period-label",
+      "ticker": "SKYT",
+      "field": "revenueQ",
+      "periodType": "3M",
+      "period": "2025-03-31",
+      "reportedPeriodEnd": "2025-03-30",
+      "currency": "USD",
+      "verifiedValue": 61296000,
+      "reason": "Periodenende laut Originalbericht 2025-03-30; Umsatzwert unverändert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1819974/000181997426000014/skyt-20260329.htm",
+          "page": "Statements of Operations",
+          "quote": "First Quarter Ended",
+          "value": 61296000,
+          "end": "2025-03-30"
+        }
+      ]
+    }
   ]
 }
