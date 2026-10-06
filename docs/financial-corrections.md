@@ -762,3 +762,20 @@ Gesamtprüfung `node scripts/test-gate.js --mode=all`: 580 echte Testdateien, 49
 Befehle und Ausgaben liegen unter _scratch/f2: targeted-financial-final.log (42/41), targeted-q4-final.log, targeted-gqs-final.log, targeted-fx-final.log sowie full-test-gate-final.log. Reproduzierbare Belege sind die beiden echten Module mapFTSToQuarterly/_convertSnapshotToUSD, die Quellen-Handtabelle und financial-corrections-replay.js. Keine Datenhistorie, Formel, Achsengewichtung oder eingefrorene GQS-Referenz wurde verändert.
 
 Git-Abschluss (Stand 30.09.): Der ursprüngliche Lauf konnte wegen index.lock nicht committen. Inzwischen liegen alle Änderungen als Commits „Tag 1389“, „Tag 1389b“ und „Tag 1389c“ auf fix/banpu-htgc-and-false-zeros-20260929 und sind gepusht (PR #398); kein Merge. Sitzungs-ID und vorgesehene Trailer stehen in financial-corrections-validation.json.
+
+## Jahresersatzwerte für INDO-MIM (P50, Vorbereitung 06.10.2026)
+
+Vier einzeln belegte Kundenumsätze werden für INDOMIM.BO und die Zweitnotierung INDOMIM.NS ersetzt. Sicherheit der Quellenzuordnung 99 %. Die Beträge stehen in der Handtabelle in einzelnen INR; die Originalberichte verwenden Millionen INR. Es wird weder die Umsatzdefinition gewechselt noch die ganze Reihe pauschal multipliziert.
+
+| Jahresende | Anbieter, Mio. INR | Ersatz, Mio. INR | Originalquelle |
+|---|---:|---:|---|
+| 31.03.2026 | 4.141,056 | 41.410,56 | [Geschäftsbericht FY26, PDF-S. 253, Note 17](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf#page=253), „Contract Price“ |
+| 31.03.2025 | 3.278,469 | 32.784,69 | derselbe Bericht, PDF-S. 253 |
+| 31.03.2024 | 2.840,491 | 28.404,91 | [Prospekt, PDF-S. 284, gedruckte S. 280, Note 24](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf#page=284), „Total revenue from contracts with customers“ |
+| 31.03.2023 | 2.665,321 | 26.653,21 | derselbe Prospekt, PDF-S. 284 |
+
+Numerische Jahreskorrekturen nutzen denselben Zellpfad wie Quartalskorrekturen: exakter Anbieterwert, belegtes Jahresende, passende Berichts- und Speicherwährung, Einheit, Faktor und Quelle. Die Quellen müssen den Ersatzbetrag belegen, eine nichtleere Jahresperiode innerhalb des Falljahres mit gleichem Ende sowie Währung und Basiseinheit angeben. Ein Ersatzwert 0 wird abgewiesen. Bereits richtige Zellen bleiben unverändert; eine wiederholte Anwendung ist wirkungslos. Fehlende oder abweichende Belege ergeben einen fehlenden Wert mit Hinweis. Die bisherigen jährlichen Nullfälle behalten ihre Regel zum Leeren älterer Jahre. Numerische Einzelkorrekturen bekommen diese Regel nicht und begründen keine quartalsweite Abdeckung.
+
+Der Wächter in tests/annual-financial-replacements.test.js prüft alle vier Werte und beide Notierungen. Das absichtliche Zurückgeben des alten Anbieterwerts, eine falsche Währung und Ersatzwert 0 machen die Gegenprobe rot, ausschließlich im Speicher. Das Jahreswachstum bleibt rechnerisch 26,31066513058382 %. Auswirkungen auf absolute Kennzahlen, Score und Rang müssen mit demselben Datenstand ausgewiesen werden; sie sind abgeleitet und keine Originalberichtszahlen.
+
+Hyundai Marine bleibt als Versicherer ausgeschlossen. Heclas Jahreswerte werden hier nicht ergänzt. Diese Vorbereitung ist keine Veröffentlichung; die Anwendung durch D2 folgt nach P22 und Prüfung durch Claude.
