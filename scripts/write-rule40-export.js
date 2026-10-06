@@ -69,6 +69,8 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
+// P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
+const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -424,6 +426,54 @@ function r40GruppeVon(industry) {
  * Abweisungs-Statistik. Die Statistik ist kein Schmuck: ohne sie sieht "kleines Brett"
  * genauso aus wie "Snapshots fehlen".
  */
+/**
+ * P87: Tor fuer die Schattenmarge, Wort fuer Wort dieselben Tore wie fuer die heutige Marge
+ * (fcfMargeVertrauenswuerdig, einheitenVerdacht, MAX_FCF_MARGIN_PCT). Der Schatten aendert
+ * NICHT, wer aufs Brett kommt; er sagt nur, ob sein Wert dieselben Tore bestanden haette.
+ * @param {{value: (number|null), grund: string}} schatten Ergebnis von fcfMarginStmtFY().
+ * @param {number} wachstumRoh ungeklemmtes Umsatzwachstum der Zeile in Prozent.
+ * @param {object} snapshot Snapshot im Pull-Format.
+ * @returns {string} 'ok' oder der Grund, warum der Schattenwert nicht in r40Shadow eingeht.
+ */
+function r40SchattenTor(schatten, wachstumRoh, snapshot) {
+  if (!schatten || !istZahl(schatten.value)) return schatten ? schatten.grund : 'not-computed';
+  if (!fcfMargeVertrauenswuerdig(schatten.value, norm(snapshot, 'annualFCF'), norm(snapshot, 'annualOCF'))) return 'fcf-invalid';
+  if (einheitenVerdacht(wachstumRoh, schatten.value)) return 'unit-suspect';
+  if (schatten.value > MAX_FCF_MARGIN_PCT) return 'fcf-above-revenue';
+  return SCHATTEN_GRUND.OK;
+}
+
+/**
+ * P87: das additive Exportobjekt fcfShadow einer R40-Zeile. Geschaeftsjahreswerte, nie TTM.
+ * @param {object} k Kandidat aus sammleKandidaten() mit wachstum (geklemmt) aus baueZeilen().
+ * @returns {object|null} null, wenn der Kandidat ohne Schatten gebaut wurde (handgebaute Tests).
+ */
+function r40SchattenZeile(k) {
+  if (!k.fcfSchatten) return null;
+  const sh = k.fcfSchatten;
+  // round1 dieser Datei macht aus null eine 0 (Math.round(null)); der Schatten darf das nie (T2).
+  const r1 = (v) => (istZahl(v) ? round1(v) : null);
+  const tor = k.fcfSchattenTor || sh.grund;
+  const schutz = k.behoerdenSchutz || behoerdenSchutz(undefined, sh);
+  return {
+    fcfMarginStmtFY: r1(sh.value),
+    grund: sh.grund,
+    gjEnde: sh.gjEnde,
+    r40Shadow: tor === SCHATTEN_GRUND.OK ? r1(k.wachstum + sh.value) : null,
+    r40ShadowGrund: tor,
+    behoerdeFcfMarginFY: r1(schutz.marge),
+    behoerdeGeschaeftsjahr: schutz.geschaeftsjahr,
+    behoerdeQuelle: schutz.quelle,
+    behoerdeAbstandPp: r1(schutz.abstandPp),
+  };
+}
+
+let _behoerdenTabelle;
+function behoerdenTabelle() {
+  if (_behoerdenTabelle === undefined) _behoerdenTabelle = ladeBehoerdenJahre();
+  return _behoerdenTabelle;
+}
+
 function sammleKandidaten(opts = {}) {
   const v1Dir = opts.v1Dir || DEFAULT_V1_DIR;
   const snapshotsDir = opts.snapshotsDir || DEFAULT_SNAPSHOTS_DIR;
@@ -549,6 +599,11 @@ function sammleKandidaten(opts = {}) {
       abgewiesen.veraltet++; continue;
     }
 
+    // P87: Schatten aus derselben Datei, durch dieselben Tore; aendert keine Auswahl.
+    const fcfSchatten = fcfMarginStmtFY(snapshot);
+    const fcfSchattenTor = r40SchattenTor(fcfSchatten, wachstumRoh, snapshot);
+    const schutzEintrag = behoerdenSchutz(behoerdenTabelle().get(ticker), fcfSchatten);
+
     kandidaten.push({
       ticker,
       // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen) und
@@ -575,6 +630,9 @@ function sammleKandidaten(opts = {}) {
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
       wachstumBein,
+      fcfSchatten,
+      fcfSchattenTor,
+      behoerdenSchutz: schutzEintrag,
     });
   }
 
@@ -698,6 +756,7 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       zeile.fcfMarginPct = round1(k.fcfMarginPct);
       zeile.ebitdaMarginPct = k.ebitdaMarginPct === null ? null : round1(k.ebitdaMarginPct);
       zeile.r40Ebitda = k.r40Ebitda === null ? null : round1(k.r40Ebitda);
+      zeile.fcfShadow = r40SchattenZeile(k); // P87: Schatten, additiv, keine sichtbare Zahl aendert sich
       zeile.industry = k.industry;
       zeile.r40Group = k.gruppe;
       zeile.onBoard = k.onBoard;
@@ -1037,7 +1096,7 @@ module.exports = {
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
   basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
-  neuestesQuartalsEnde, fcfMargeVertrauenswuerdig,
+  neuestesQuartalsEnde, fcfMargeVertrauenswuerdig, r40SchattenTor, r40SchattenZeile,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
   schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,
 };

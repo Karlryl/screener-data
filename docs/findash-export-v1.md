@@ -927,3 +927,52 @@ Regeln, die der Leser voraussetzen darf:
   und commitet `druckenmiller-history/13f/<period>.json`; der Tageslauf hat keinen 13F-Schritt
   (arch-spec §3.3 Punkt 4). `--fetch` verlangt `SEC_CONTACT` im User-Agent und haelt 150 ms
   Abstand je Abruf; es gibt keinen Schluessel und keine Kosten.
+
+## 15. `fcfShadow` — FCF-Schatten aus der Jahres-Kapitalflussrechnung (P87, 06.10.2026, additiv)
+
+Ratsentscheid 06.10.2026, Frage 1, Option C, Formel-Weg Schritt 1. Heute speisen Rule of 40 und die
+Rule-of-X-Achse aller 13 HyperGrowth-Formeln `metrics.fcfMarginTTM` = Yahoo
+`financialData.freeCashflow / financialData.totalRevenue`. Dieses Kennzahlfeld ist eine andere
+Groesse als die Kapitalflussrechnung im selben Snapshot (P60, P73). Bis zur Umstellung laeuft die
+Alternative nur als **Schatten**: jede Zeile traegt zusaetzlich das Objekt `fcfShadow`. **Keine
+vorhandene Zahl aendert sich** — `score`, `rank`, `r40`, `fcfMarginPct`, `axisBreakdown` und alle
+uebrigen Felder sind fuer denselben Input unveraendert. findash liest `fcfShadow` nicht
+(unbekannte Schluessel werden in `data-layer/screener.js` verworfen). Die Umstellung auf live ist
+ein eigenes Paket nach mindestens vier Wochen Parallelbetrieb und Vorher/Nachher.
+
+Zeitraum: **Geschaeftsjahr (FY)**, nie TTM. Rechnung in `lib/fcf-stmt-shadow.js`
+(`fcfMarginStmtFY`): `annual.annualFCF[0] / annual.annualRev[0] × 100`, **nur** wenn beide Eintraege
+dasselbe belegte Geschaeftsjahresende tragen (`annual.<feld>Ends[0]` oder
+`meta.statementPeriods.<feld>[0].end`). Sonst `null` mit Grund. Kein Rueckfall auf `fcfMarginTTM`,
+nie eine 0 als Ersatz; eine echte 0 bleibt 0, ein negativer FCF bleibt negativ.
+T1: belegen `meta.statementPeriods` fuer FCF und Umsatz verschiedene Waehrungen (`currency-mismatch`), meldet
+`lamps.annualCurrencyLeak` eine Fremdwaehrungs-Jahresreihe (`currency-leak`) oder ist eine belegte Dauer kein
+volles Jahr (`period-not-12m`), bleibt der Wert `null`.
+
+**Wo:** HyperGrowth-Branchenboards (`<branch>.json`, beide Tracks), Vollboards (`full/<branch>.json`),
+`overview.json` und `rule40/overview.json`. Nicht in `quality/`, `smallcap/`, `survival.json`.
+
+**Felder auf HyperGrowth-Zeilen** (`fcfShadow` ist immer ein Objekt):
+
+| Feld | Typ | Bedeutung |
+|---|---|---|
+| `fcfMarginStmtFY` | number \| null | FY-Marge in Prozent, 1 Nachkommastelle |
+| `grund` | string | `ok`, `fy-end-missing`, `fy-end-mismatch`, `currency-mismatch`, `currency-leak`, `period-not-12m`, `fcf-missing`, `revenue-missing`, `revenue-nonpositive`, `no-snapshot`, `snapshot-unreadable` |
+| `gjEnde` | string \| null | gemeinsames Geschaeftsjahresende `YYYY-MM-DD` |
+| `ruleOfXHeute` | number \| null | Rule-of-X-Rohwert mit der heutigen Marge, aus demselben Snapshot neu gerechnet |
+| `ruleOfXShadow` | number \| null | Rule-of-X-Rohwert mit der FY-Marge; ohne FY-Marge `null` |
+| `schattenFcfAktiv` | boolean | ob der Schatten-FCF-Term die Datentore G0-G3 bestanden hat |
+| `behoerdeFcfMarginFY` | number \| null | Schutzspalte: FCF/Umsatz des juengsten Behoerden-Jahres (`external-data/*-secannual.json`) |
+| `behoerdeGeschaeftsjahr` | number \| null | Geschaeftsjahr des Behoerden-Werts (Store-Feld `nfy`) |
+| `behoerdeQuelle` | string \| null | Datei des Behoerden-Werts |
+| `behoerdeAbstandPp` | number \| null | Schatten minus Behoerden-Wert in pp, nur bei gleichem Kalenderjahr des GJ-Endes |
+
+**Felder auf Rule-of-40-Zeilen** (`fcfShadow` ist ein Objekt oder `null`): `fcfMarginStmtFY`, `grund`,
+`gjEnde`, `r40Shadow` (= `revGrowthPctUsed` + FY-Marge, nur wenn die FY-Marge dieselben Tore besteht
+wie heute: Vertrauens-Tor, Einheiten-Verdacht, hoechstens 100 % des Umsatzes), `r40ShadowGrund`
+(`ok`, `fcf-invalid`, `unit-suspect`, `fcf-above-revenue` oder der `grund` der Marge), und dieselben vier `behoerde*`-Felder. Der Schatten aendert nicht, welche
+Zeilen auf dem Brett stehen.
+
+Der Behoerden-Wert ist nur eine Schutzspalte und ersetzt den Schatten nie. Die Stores fuehren das
+Geschaeftsjahr als Zahl, kein Enddatum; verglichen wird das Kalenderjahr des Schatten-GJ-Endes.
+Waechter: `tests/fcf-stmt-shadow.test.js`.
