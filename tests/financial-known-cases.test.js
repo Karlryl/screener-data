@@ -1348,5 +1348,91 @@ test('CIG-C: gross profit on the restated basis of the 2Q26 ITR, Q3/Q4 2025 with
   assert.throws(() => guard(noCig), assert.AssertionError); guard(); breaks++;
 });
 
+test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture results byte-identical', () => {
+  const digest = x => crypto.createHash('sha256').update(serial(x)).digest('hex');
+  for (const [key, count, hash] of [
+    ['cases', 212, '7da9c61f93bbeff5cfdf2b6d6485a630f16ee1bdacd3dc9afb69241a5ef1a503'],
+    ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],
+    ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],
+  ]) {
+    // P50 appends four numeric annual INDO-MIM cases; the pin stays on exactly the 212 legacy rows.
+    const rows = key === 'cases' ? table.cases.filter(c => !/^indomim-\d{4}-03-31-annualRev$/.test(c.caseId)) : table[key];
+    assert.equal(rows.length, count); assert.equal(digest(rows), hash, key);
+  }
+  assert.equal(table.cases.length - 212, 4, 'only the four P50 cases are new');
+  assert.equal(Object.keys(fixture).length, 42);
+  const result = Object.entries(fixture).map(([ticker, s]) => [ticker, applyFinancialCases(clone(s)), financialReasons(applyFinancialCases(clone(s)).snapshot)]);
+  assert.equal(digest(result), '52d547a4beeeb24c30daf9cbf15b250fdf83af2263e1bd3168afb0e6700aef3a',
+    'Pre-change digest of snapshots, events and reader-facing reasons');
+});
+
+test('period-label validation rejects malformed dates, evidence, duplicate authority and contradictory values', () => {
+  const base = { schemaVersion: 1, cases: [], coverage: [], quarantines: [], periodLabels: [clone(table.periodLabels[0])] };
+  assert.equal(validateTable(clone(base)).periodLabels.length, 1);
+  for (const edit of [
+    t => { t.periodLabels = {}; }, t => { t.periodLabels[0] = null; },
+    t => { t.periodLabels[0].ticker = ''; }, t => { t.periodLabels[0].field = 'grossProfitQ'; },
+    t => { t.periodLabels[0].periodType = '12M'; }, t => { t.periodLabels[0].period = '2026-02-30'; },
+    t => { t.periodLabels[0].reportedPeriodEnd = '2026-08-32'; },
+    t => { t.periodLabels[0].reportedPeriodEnd = '2026-08-08'; },
+    t => { t.periodLabels[0].currency = ''; }, t => { t.periodLabels[0].verifiedValue = NaN; },
+    t => { t.periodLabels[0].verifiedValue++; }, t => { t.periodLabels[0].reason = ''; },
+    t => { t.periodLabels[0].sources = []; }, t => { t.periodLabels[0].sources[0].quote = ''; },
+    t => { t.periodLabels[0].sources[0].url = 'file:///x'; },
+    t => { t.periodLabels[0].sources[0].value = NaN; },
+    t => { t.periodLabels[0].sources[0].start = '2026-02-30'; },
+    t => { t.periodLabels[0].sources[0].start = '2026-08-02'; },
+    t => { t.periodLabels[0].sources.push({ ...t.periodLabels[0].sources[0], end: '2026-02-30' }); },
+    t => { t.periodLabels[0].expectedBadValue = 0; },
+    t => { t.periodLabels.push(clone(t.periodLabels[0])); },
+    t => { t.periodLabels.push({ ...clone(t.periodLabels[0]), caseId: 'other' }); },
+    t => { t.periodLabels[0].listingAliases = [t.periodLabels[0].ticker]; },
+    t => { t.periodLabels[0].listingAliases = ['ALIAS', 'ALIAS']; },
+    t => { const other = clone(t.periodLabels[0]); other.caseId = 'other'; other.reportedPeriodEnd = '2026-08-02';
+      other.sources[0].end = other.reportedPeriodEnd; t.periodLabels.push(other); },
+  ]) { const bad = clone(base); edit(bad); assert.throws(() => validateTable(bad), /period label/i); }
+  const contradiction = clone(base), c = contradiction.periodLabels[0];
+  contradiction.cases.push({ ...table.cases[0], caseId: 'conflicting-value', ticker: c.ticker,
+    period: c.period, field: c.field, currency: c.currency, expectedBadValue: c.verifiedValue, replacementValue: null });
+  assert.throws(() => validateTable(contradiction), /Contradictory period label/);
+  const reversed = clone(base);
+  reversed.periodLabels = [clone(table.periodLabels.find(c => c.sources.length === 2))];
+  reversed.periodLabels[0].sources[1].end = '2025-01-31';
+  assert.throws(() => validateTable(reversed), /Invalid period label/);
+});
+
+test('period metadata is exact-match only, aligned, idempotent, alias-aware and removed on drift', () => {
+  const c = table.periodLabels[0], config = { schemaVersion: 1, cases: [], coverage: [], quarantines: [],
+    periodLabels: [{ ...clone(c), listingAliases: ['LABEL-ALIAS'] }] };
+  const input = { meta: { ticker: c.ticker, reportingCurrency: c.currency, source: 'yahoo' }, timeseries: {
+    revenueQ: [{ value: c.verifiedValue }, { value: 0 }], revenueQEnds: [c.period, '2024-12-31'],
+  } };
+  const bytes = serial(input), out = applyFinancialCases(input, { table: config });
+  assert.equal(serial(input), bytes);
+  assert.deepEqual(out.snapshot.timeseries.reportedRevenueQEnds, [c.reportedPeriodEnd, null]);
+  assert.deepEqual(out.events, []);
+  assert.deepEqual(financialReasons(out.snapshot), []);
+  assert.equal(serial(out.snapshot.timeseries.revenueQ), serial(input.timeseries.revenueQ));
+  assert.deepEqual(applyFinancialCases(out.snapshot, { table: config }), out);
+  const alias = clone(input); alias.meta.ticker = 'LABEL-ALIAS';
+  assert.deepEqual(applyFinancialCases(alias, { table: config }).snapshot.timeseries.reportedRevenueQEnds, [c.reportedPeriodEnd, null]);
+  for (const mutate of [
+    s => { s.meta.ticker = 'UNKNOWN'; }, s => { s.meta.reportingCurrency = 'EUR'; },
+    s => { s.meta.source = 'sec'; }, s => { s.meta.ccyAmbiguous = true; },
+    s => { s.meta.fxConversionFailed = true; },
+    s => { s.timeseries.revenueQ[0].value++; }, s => { s.timeseries.revenueQ[0].value = null; },
+    s => { s.timeseries.revenueQ[0].currency = 'EUR'; }, s => { s.timeseries.revenueQ[0].unit = 'shares'; },
+    s => { s.timeseries.revenueQ[0].multiplier = 1000; }, s => { s.timeseries.revenueQ[0].periodType = '12M'; },
+    s => { s.timeseries.revenueQEnds[0] = '2026-07-30'; },
+    s => { s.timeseries.revenueQEnds[1] = c.period; }, s => { s.timeseries.revenueQEnds.pop(); },
+    s => { s.timeseries.revenueQEnds.reverse(); },
+  ]) {
+    const raw = clone(input); mutate(raw);
+    assert.deepEqual(applyFinancialCases(raw, { table: config }), { snapshot: raw, events: [] });
+    const annotated = clone(raw); annotated.timeseries.reportedRevenueQEnds = [c.reportedPeriodEnd, null];
+    assert.deepEqual(applyFinancialCases(annotated, { table: config }), { snapshot: raw, events: [] }, 'stale annotation removed');
+  }
+});
+
 for(const [file,before] of hashes) assert.equal(sha(path.join(__dirname,'..',file)),before,'Live artifact unchanged: '+file);
 console.log(`financial-known-cases: ${passed} passed; ${breaks} break-once canaries fired; live hashes unchanged`);

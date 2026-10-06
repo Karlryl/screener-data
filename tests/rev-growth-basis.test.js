@@ -45,13 +45,17 @@ function check(name, fn) {
   try { fn(); passed++; console.log('PASS ' + name); }
   catch (e) { failed++; console.error('FAIL ' + name + ': ' + e.message); }
 }
-const sameAsLevel = (s, leg) => assert.equal(leg.pct, axes.revGrowthLevel(s), 'pct must be exactly revGrowthLevel(s)');
+const sameAsLevel = (s, leg) => {
+  assert.equal(leg.pct, axes.revGrowthLevel(s), 'pct must be exactly revGrowthLevel(s)');
+  if (leg.basis !== 'quarter') assert.deepEqual([leg.sourcePeriodEnd, leg.sourcePriorPeriodEnd], [leg.periodEnd, leg.priorPeriodEnd]);
+};
 
 // ---- (A) the helper ------------------------------------------------------------------
 check('A1 quarter leg: newest quarter vs the dated year-ago quarter, both ends', () => {
   const s = snap({ rq: [120, 110, 105, 100, 100], ar: [400, 300], arEnds: ['2025-12-31', '2024-12-31'] });
   const leg = revGrowthLeg(s);
-  assert.deepEqual({ ...leg, pct: undefined }, { basis: 'quarter', pct: undefined, periodEnd: '2026-06-30', priorPeriodEnd: '2025-06-30' });
+  assert.deepEqual({ ...leg, pct: undefined }, { basis: 'quarter', pct: undefined, periodEnd: '2026-06-30', priorPeriodEnd: '2025-06-30',
+    sourcePeriodEnd: '2026-06-30', sourcePriorPeriodEnd: '2025-06-30' });
   sameAsLevel(s, leg);
 });
 check('A2 a quarter gap (gap rule) falls to the year leg, dated annual series gives both ends', () => {
@@ -90,10 +94,24 @@ check('A4 9992.HK type: a valid newer-year record makes the basis yearNewerRecor
 });
 check('A5 no growth figure: none, all null', () => {
   for (const s of [snap({}), snap({ ar: [400, 0] }), snap({ ar: [400] })]) {
-    assert.deepEqual(revGrowthLeg(s), { basis: 'none', pct: null, periodEnd: null, priorPeriodEnd: null });
+    assert.deepEqual(revGrowthLeg(s), { basis: 'none', pct: null, periodEnd: null, priorPeriodEnd: null,
+      sourcePeriodEnd: null, sourcePriorPeriodEnd: null });
     assert.equal(axes.revGrowthLevel(s), null);
   }
   assert.deepEqual(REV_GROWTH_BASES, ['quarter', 'year', 'yearNewerRecord', 'none']);
+});
+check('A6 metadata changes only aligned valid labels, never the growth value or selected source pair', () => {
+  const s = snap({ rq: [120, 110, 105, 100, 100] }), before = revGrowthLeg(s);
+  s.timeseries.reportedRevenueQEnds = ['2026-07-04', null, null, null, '2025-06-28'];
+  assert.deepEqual(revGrowthLeg(s), { ...before, periodEnd: '2026-07-04', priorPeriodEnd: '2025-06-28' });
+  sameAsLevel(s, revGrowthLeg(s));
+  for (const invalid of [undefined, {}, [], ['2026-07-04'], [null, null, null, null, '2025-02-30'],
+    ['garbage', null, null, null, null]]) {
+    s.timeseries.reportedRevenueQEnds = invalid;
+    assert.deepEqual(revGrowthLeg(s), before, 'misaligned/invalid metadata ignored');
+  }
+  s.timeseries.reportedRevenueQEnds = ['2026-07-04', null, null, null, '2025-02-30'];
+  assert.deepEqual(revGrowthLeg(s), { ...before, periodEnd: '2026-07-04' }, 'fallback is per end');
 });
 
 // ---- (B) the export labels only what it can reproduce --------------------------------
@@ -127,6 +145,23 @@ check('B4 a row without a number is basis none, whatever its snapshot says', () 
   const out = W.ergaenzeWachstumsBasis({ ticker: 'QTR', revGrowthYoYPct: null });
   assert.deepEqual([out.revGrowthBasis, out.revGrowthPeriodEnd, out.revGrowthPriorPeriodEnd], ['none', null, null]);
 });
+check('B5 all three row mappers carry source ends, also on none/unlabelled rows', () => {
+  const { fixtureSnapshot } = require('../scripts/period-labels-check.js');
+  const c = require('./fixtures/period-labels/period-fixtures.json').cases.find(c => c.ticker === 'CRDO');
+  const s = fixtureSnapshot(c);
+  writeSnap(tmpMain, s);
+  const pct = axes.revGrowthLevel(prepareSnapshot(s));
+  for (const mapper of [W.mapBoardRow, W.mapOverviewRow, W.mapSurvivalRow]) {
+    for (const value of [pct, null, 19.99]) {
+      const row = mapper({ ticker: c.ticker, revGrowthYoYPct: value }, 0);
+      assert.equal(row.revGrowthYoYPct, value);
+      assert.deepEqual([row.revGrowthSourcePeriodEnd, row.revGrowthSourcePriorPeriodEnd],
+        value === pct ? ['2026-04-30', '2025-04-30'] : [null, null]);
+      assert.deepEqual([row.revGrowthPeriodEnd, row.revGrowthPriorPeriodEnd],
+        value === pct ? ['2026-05-02', '2025-05-03'] : [null, null]);
+    }
+  }
+});
 
 // ---- (C) the --check guard, broken on purpose on test rows -----------------------------
 const errsOf = (r) => { const e = []; W.checkRevGrowthBasis(r, 'row', e); return e; };
@@ -149,6 +184,21 @@ check('C2 each broken row is reported', () => {
     { revGrowthYoYPct: 3, revGrowthBasis: 'year' },          // fields only partly present
   ];
   for (const r of broken) assert.ok(errsOf(r).length > 0, 'not reported: ' + JSON.stringify(r));
+});
+check('C3 optional source pair: both present or absent; ISO days; no dates without a basis', () => {
+  const source = { revGrowthSourcePeriodEnd: '2026-06-30', revGrowthSourcePriorPeriodEnd: '2025-06-30' };
+  assert.deepEqual(errsOf({ ...ok, ...source }), []);
+  assert.deepEqual(errsOf(ok), [], 'old exports remain valid');
+  for (const basis of [null, 'none']) assert.deepEqual(errsOf({ revGrowthYoYPct: basis === null ? 3 : null,
+    revGrowthBasis: basis, revGrowthPeriodEnd: null, revGrowthPriorPeriodEnd: null,
+    revGrowthSourcePeriodEnd: null, revGrowthSourcePriorPeriodEnd: null }), []);
+  for (const bad of [
+    { ...ok, revGrowthSourcePeriodEnd: null }, { ...ok, revGrowthSourcePriorPeriodEnd: null },
+    { ...source }, { ...ok, ...source, revGrowthSourcePeriodEnd: '2026-02-30' },
+    { ...ok, ...source, revGrowthSourcePriorPeriodEnd: '2025-06-30T00:00:00Z' },
+    { ...ok, ...source, revGrowthBasis: null, revGrowthPeriodEnd: null, revGrowthPriorPeriodEnd: null },
+    { ...ok, ...source, revGrowthBasis: 'none', revGrowthYoYPct: null, revGrowthPeriodEnd: null, revGrowthPriorPeriodEnd: null },
+  ]) assert.ok(errsOf(bad).length, JSON.stringify(bad));
 });
 
 // ---- (D) the real export -----------------------------------------------------------------
