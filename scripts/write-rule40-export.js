@@ -62,7 +62,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
-const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags } = require('./write-findash-export.js');
+const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags, rankGrundShadowFor } = require('./write-findash-export.js'); // P89: guarded shadow lookup
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -668,6 +668,7 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       const zeile = {
         rank: i + 1,
         rankGrund: null,               // das Brett fuehrt nur Zeilen, die die Achsenbelege haben
+        rankGrundShadow: rankGrundShadowFor(k.ticker), // SHADOW only; no filtering or renumbering.
         ticker: k.ticker,
         formulaId: k.branch,           // Herkunftsbrett bzw. Router-Formel; traegt den boardStatus-Schluessel
         track: k.track,

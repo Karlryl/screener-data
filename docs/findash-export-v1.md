@@ -80,6 +80,7 @@ Zusaetzlich zur Huelle (§2):
 | --- | --- | --- | --- | --- |
 | `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | **Abgeleitet** aus der score-desc-Reihenfolge. Die Engine hat KEIN rank-Feld; Rang war nur implizit ueber die Sortierung. Der Export macht ihn explizit. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
 | `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
+| `rankGrundShadow` | string \| null | **OPTIONAL (additiv, SHADOW)** | Klassenkonfiguration wird beim Laden validiert | Nicht-operativer Klassengrund aus `configs/non-operating-classes.json`. Abwesenheit bedeutet null. Rein additiv und score- sowie rangneutral: `rank`, `rankGrund`, Scores und Reihenfolge bleiben unverändert. Kein Live-Gate. |
 | `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"NVDA"`. |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Bereinigter Emittentenname aus `snapshot.meta.name`; Rand-/Mehrfach-Whitespace wird normalisiert. Fehlend, leer oder nicht-string wird `null`. Alte v1-Daten ohne Feld bleiben consumer-kompatibel. Reine Anzeige, kein Score-/Rang-Einfluss. |
 | `score` | number (round1, finite), **Spanne 0–100** | Pflicht | ja (finite) | Anzeige-gerundet, z.B. `88.2`. Sortier-Determinismus lag intern an `_raw` (nicht im Output) — daher ist `rank` die verbindliche Reihenfolge, nicht `score`-Vergleich. **Seit 19.08.2026 in DIESEM Feed bei 100,0 gedeckelt** — die Engine kann bis 105 liefern; Einzelheiten und der Grund fuer die zwei Skalen: §3a. |
@@ -281,6 +282,7 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 | --- | --- | --- | --- | --- |
 | `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | Abgeleitet aus der score-desc-Reihenfolge. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
 | `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
+| `rankGrundShadow` | string \| null | **OPTIONAL (additiv, SHADOW)** | Klassenkonfiguration wird beim Laden validiert | Nicht-operativer Klassengrund aus `configs/non-operating-classes.json`. Abwesenheit bedeutet null. Rein additiv und score- sowie rangneutral: `rank`, `rankGrund`, Scores und Reihenfolge bleiben unverändert. Kein Live-Gate. |
 | `ticker` | string (nichtleer) | Pflicht | ja | |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
 | `formulaId` | string (nichtleer) | Pflicht | ja | Branchen-ID (nur hier als Feld; in Boards implizit ueber Datei). |
@@ -305,6 +307,8 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 Huelle (§2) + `rows: Array<SurvivalRow>`, 73 Zeilen, **runway-desc nulls-last**, ungekappt.
 
 **Sonderform:** Pre-Revenue-Namen laufen NIE durch Scoring — es gibt **kein `score`, kein `track` profitable/unprofitable, kein `overview.kind`**. Stattdessen `runwayQuarters`. Der Check prueft hier bewusst KEIN `score`/`track` (existieren nicht), aber `rank`, `runwayQuarters` und alle 7 geo-Felder.
+
+**P89 SHADOW:** Survival-Zeilen erhalten kein `rankGrundShadow`-Feld, auch bei Mitgliedschaft in der Klassentabelle. Abwesenheit bedeutet null; der Runway-Rang bleibt unverändert.
 
 ### SurvivalRow — jedes Pflicht-Feld geprueft
 
@@ -440,6 +444,8 @@ Der **Quality-Compounder-Screener** (QC-Board, gebaut Tag 290) laeuft parallel z
 
 ### Zeilenform = HG-Board-/Overview-Zeilenform (voll wiederverwendet)
 
+`rankGrundShadow` wird auch auf allen Quality- und Smallcap-Board-/Overview-Zeilen nach §3/§4 ausgegeben, unabhängig von einem bereits bestehenden `rankGrund`. SHADOW, optional, score- und rangneutral.
+
 QC-Board-Zeilen sind **byte-fuer-byte dieselbe `BoardRow`-Form wie §3** (verschachteltes `overview`, alle geo-Felder inkl. `profitTier`/`ipoYear`/`cohortN`/`cohortFallback`, optional `scoreBase`/`scoreShrunk`/`factors`/`axisBreakdown`). QC-`overview.json`-Zeilen sind die **flache `OverviewRow`-Form wie §4** (mit `formulaId`, hier `quality-`-praefigiert). Der Writer nutzt darum `mapBoardRow`/`mapOverviewRow` und die Validatoren `validateBoardRow`/`validateOverviewRow` **unveraendert** — kein Parallel-Validator. Die QC-`index.json` ist die HG-`index.json` **ohne** `branches`/`survivalCount` (QC hat kein Survival-Board und eine dynamische Board-Menge); dafuer gibt es einen kleinen dedizierten `validateQualityIndex`.
 
 ### `boardStatus`-Semantik: QC ist bis auf Weiteres IMMER `diagnostic`
@@ -486,6 +492,8 @@ T194 erweitert die nachfolgende Kurzform jeder Board-Huelle um das Pflichtfeld `
 | `<branche>.json` (13, PFLICHT) | Dieselbe Board-Datei-Form wie §3 (`{schema, generated_at, branch, boardStatus, coverage, mcapBounds, profitable[], unprofitable[]}`), aber mit der **ganzen** Kohorte je Track | `outputs/hypergrowth/full/<branche>.json` |
 
 `survival` hat **kein** Vollboard und braucht keins: die Liste ist flach nach Runway sortiert und wird nie gekappt (§5). `overview.json` ebenfalls nicht — es ist per Definition ein Cross-Branch-Auszug, kein Board.
+
+Auch jede Vollboard-Zeile trägt das optionale, score- und rangneutrale SHADOW-Feld `rankGrundShadow` nach §3. Die Toplisten und Vollboards benutzen denselben Mapper.
 
 ### Verhaeltnis zur gekappten Datei - die tragende Zusage
 
@@ -747,6 +755,7 @@ Deckel sitzt, statt ihn zu verschweigen.
 
 | Feld | Typ | Bedeutung |
 | ---- | --- | --------- |
+| `rankGrundShadow` | string \| null, OPTIONAL, SHADOW | Nicht-operativer Klassengrund wie §3/§4; Abwesenheit bedeutet null. Score, `r40`, `rank`, `rankGrund` und Reihenfolge bleiben unverändert. |
 | `r40` | number | `revGrowthPctUsed + fcfMarginPct`, auf 1 Stelle gerundet |
 | `revGrowthPctUsed` | number | der geklemmte Wachstumsterm, der in `r40` eingeht |
 | `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur durch die Datentore G0-G2 |
