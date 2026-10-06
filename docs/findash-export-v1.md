@@ -941,3 +941,176 @@ Regeln, die der Leser voraussetzen darf:
   und commitet `druckenmiller-history/13f/<period>.json`; der Tageslauf hat keinen 13F-Schritt
   (arch-spec §3.3 Punkt 4). `--fetch` verlangt `SEC_CONTACT` im User-Agent und haelt 150 ms
   Abstand je Abruf; es gibt keinen Schluessel und keine Kosten.
+
+
+## 14. Feldherkunft P22 (additiv, findash-provenance/v1)
+
+Der Schema-String der Exporte bleibt `findash-export/v1`. Dieser Schritt ergaenzt ausschliesslich die 13 gekappten HG-Branchenboards sowie `rule40/overview.json`. Die `full/`-Dateien bleiben byte-identisch zur Basis und erhalten keine Herkunftsfelder; so bleibt das taegliche Manifest auf die gekappten Boards begrenzt. Haupt-overview, survival, quality, smallcap, druckenmiller und Indexdateien erhalten ebenfalls keine Herkunftsfelder. Kein bisheriger Feldwert, Rang oder Listeneintrag wird veraendert. Der Additivitaetsvergleich prueft fuer `full/` neben allen Blattwerten auch die exakten Dateibytes.
+
+Der Geltungsbereich `revGrowthYoYPct+marketCap/v1` umfasst je Zeile genau die vorhandenen Schluessel `revGrowthYoYPct` und `marketCap`, auch wenn ihr Wert null ist. Andere Zahlen bleiben ungeprueft. `verification.reason` nennt diese Grenze ausdruecklich auf Englisch. Eine belegte Null hat `presence: present`; ein null-Wert hat `presence: missing`.
+
+### 14.1 Identitaet, Hashes und Speicherung
+
+Jeder Writer erzeugt eine eigene Laufkennung und ersetzt sein Manifest atomar unter einem festen Dateinamen: `provenance/hypergrowth.json` fuer die 13 gekappten HG-Dateien, `rule40/provenance/rule40.json` fuer R40. `provenanceManifest` bleibt relativ zur Exportwurzel `outputs/findash-export/v1/`, auch fuer R40; bei einem eigenen R40-Ausgabeordner liegt das Manifest entsprechend unter dessen `provenance/`. Es entstehen keine neuen Dateinamen je Tageslauf. `provenanceVersion` ist 1; `provenanceRunId` und `manifest.runId` bezeichnen dieselbe, bei jedem Bau neue Generation. `generatedAt` und `createdAt` sind Erstellungszeiten, keine Quellenzeiten. `creatorEngine: node`, `creatorModel: null` und eine pro Writer-Prozess erzeugte UUID als `creatorSessionId` kennzeichnen die tatsaechlich erzeugende Sitzung. Derselbe unveraenderte Beleg wird innerhalb dieser Sitzung mit seiner ersten tatsaechlichen Erstellungszeit wiederverwendet.
+
+**Werte-Hash:** `valueHash = sha256(JSON.stringify(value))`, hexadezimal, UTF-8, ohne Zeilenumbruch. Der Hash eines Belegs bindet dessen `normalizedValue` und beim direkt referenzierten Feld exakt den exportierten Wert. `verification.valueHash` hasht das Objekt der vorhandenen beiden Zielfelder in der Reihenfolge revGrowthYoYPct, marketCap. Die Beleg-ID bindet die konkrete Zelle samt Ersteller-Sitzung und Erstellungszeit. Historische Pruefakten anderer Erzeugungen werden gelesen, aber nicht als aktuelle Pruefung uebernommen; ein frueheres Eigenurteil kann durch einen neuen Lauf niemals unabhaengig werden. Generationsuebergreifende Wiederverwendung benoetigt kuenftig einen eigenen, unveraenderlichen Herkunftsnachweis.
+
+Das Manifest wird mit `lib/atomic-write.js` atomar geschrieben und anschliessend gegen die exakten erwarteten Bytes geprueft; ein vorheriger Lauf wird ersetzt, niemals mit dem neuen vermischt. `provenanceManifestSha256` hasht genau die geschriebenen Bytes, einschliesslich deren Formatierung. Die bestehenden Objekt-Pruefschnittstellen akzeptieren weiterhin alte Test-/Exportobjekte ohne diese additive Struktur; sobald Herkunftsfelder vorhanden sind, werden sie geprueft. Alte Konsumenten koennen die Zusatzfelder ignorieren.
+
+**Verdichtete Speicherung:** Der logische Vertrag mit genau den Schluesseln aus 14.4 bleibt bestehen. Auf der Leitung entfallen ausschliesslich null-Felder eines Belegs und seiner `fx`-/`derivation`-Objekte; ein vollstaendig aus null bestehendes Unterobjekt entfaellt ganz. Leere Abhaengigkeitslisten und der Vergleichsgruppenstatus bleiben erhalten. Konsumenten behandeln fehlende Schluessel als null und expandieren fehlende Unterobjekte zu deren vollstaendiger null-Struktur. Der Validator expandiert vor der Schluesselpruefung; unbekannte Schluessel bleiben verboten. Manifest-Huelle und Pruefakten werden nicht verdichtet. JSON wird ohne Einrueckung gespeichert.
+
+Die Beleg-ID ist `e-` plus `sha256(JSON.stringify(logicalRecord))`, wobei `id` fuer diese Berechnung null ist und die Schluessel des Belegs sowie von `fx` und `derivation` in der Vertragsreihenfolge aus 14.4 stehen. Der Validator rechnet diese ID ueber den expandierten Beleg nach; das Entfernen eines vorher nicht-null belegten Felds wird dadurch erkannt. Verdichtung aendert weder Beleg-ID noch `valueHash`.
+
+**Ausfall der Herkunft:** Beide Writer schreiben zuerst ihre vollstaendigen normalen Boards und ergaenzen erst nach erfolgreicher Herkunftsberechnung die Zusatzfelder. Scheitert der Helfer, bleiben alle betroffenen Boards ohne die fuenf Kopf- und drei Zeilenfelder; ein eventuell geschriebenes Manifest wird entfernt. Der Lauf meldet `::warning::provenance withheld: <message>` und schreibt atomar `provenance/_failed.json` beziehungsweise `rule40/provenance/_failed.json`. Der Fehl-Marker hat genau `schema: findash-provenance/v1`, `status: "failed"`, `generated_at`, `board: hypergrowth | rule40` und `reason`; private Fehlerdetails werden nicht veroeffentlicht. Er kennzeichnet den Herkunftsausfall, nicht einen Board-Ausfall. Weil der gh-pages-Deploy nie Dateien loescht, **ueberschreibt** der naechste erfolgreiche Bau den Marker am selben Pfad mit genau `schema`, `status: "ok"`, `board`, `provenanceRunId`, `provenanceManifestSha256` und `at` (06.10.2026, P22 Runde 3). `--check` entscheidet ueber den Status zusammen mit dem Board-Kopf, nie ueber das blosse Vorhandensein der Datei: Kopf vorhanden verlangt fehlenden Marker oder `status: "ok"` mit derselben `provenanceRunId` und demselben `provenanceManifestSha256`; Kopf fehlt verlangt `status: "failed"`.
+
+Die beiden CLI-`--check`-Wege pruefen vorhandene Herkunft weiterhin vollstaendig. Ganz fehlende Herkunft mit gueltigem Fehlmarker ergibt dieselbe Warnung und blockiert die Board-Auslieferung nicht; ganz fehlende Herkunft ohne Marker sowie teilweise vorhandene oder beschaedigte Herkunft bleiben Fehler. Alle bisherigen Board-Pruefungen bleiben aktiv. Ein Heartbeat muss den publizierten Marker zusaetzlich sichtbar rot melden; diese Workflow-Ergaenzung gehoert nicht zu den hier geaenderten Dateien.
+
+### 14.2 Belege und offene Quellenluecken
+
+Anbieterbelege nennen Yahoo Finance und `documentUrl: null`. `retrievedAt` stammt ausschliesslich aus der eigenen Quelle: dem `exchangeFill.fetchedAt`, dem Abrufstempel der Zelle (`retrievedAt`, `fetchedAt`, `asOf`), dem passenden `reloadHistoryRetained`-Eintrag oder dem nach Periodenende zugeordneten `meta.statementPeriods[field][index]`. Ungestempelte Umsatzzellen erben niemals die Snapshot-Zeit. Der Snapshot-Schreiber verwendet `marketCap.asOf` als Abrufzeit der Zelle, nicht als Boersenzeit. Ein Kurs darf `meta.asOf` nur bei `_pullMode: price-only` und identischem `_pullModeAt` uebernehmen, weil dieser Weg den Stempel nur mit einem neu geschriebenen Kurs aktualisiert. `observedAt` des Kurses kommt aus einer gespeicherten Quote-Zeit oder bleibt null. Handtabellen verwenden ihren eigenen Abruf- beziehungsweise `verifiedAt`-Tag, sonst null; Berechnungen haben `retrievedAt: null` und verweisen auf die Zeiten ihrer Eingangsbelege. Es werden weder Anbieter-Dokumentlinks noch Originalberichte geraten. Umsatzwachstum verweist auf genau die beiden ausgewaehlten Umsatzoperanden; deren Perioden stammen aus demselben Rechenzweig wie `revGrowthBasis`, `revGrowthPeriodEnd` und `revGrowthPriorPeriodEnd`. R40 dokumentiert seine bereits bestehende Rundung auf eine Nachkommastelle. Fehlt ein nachweisbar passendes Operandenpaar, bleibt die Luecke mit `missingReason` offen.
+
+Handtabellenbelege entstehen nur fuer die verwendeten Operanden mit passendem Korrekturstempel, Tabellenfall, Periode, Notierung und Ersatzwert. Korrekturen anderer Quartale desselben Tickers zaehlen nicht. Aktienzahl-/ADS-Boersenwerte sind `calculation` mit `marketCapFromShares` beziehungsweise `marketCapFromAds`: getrennte Belege fuer den verwendeten Yahoo-Kurs, die Tabellen-Aktienzahl und den gespeicherten urspruenglichen Yahoo-Boersenwert; bei ADS kommt das Bezugsverhaeltnis als eigener Handtabellenbeleg hinzu. Die Formel bildet die Rechenreihenfolge des Anwenders ab: Aktienzahl `input[2] * (input[1] / (input[2] / input[0]))`, ADS `input[3] / input[2]`. Der Anwender wird auf einer Kopie des urspruenglichen Yahoo-Werts erneut ausgefuehrt. Herkunftsstempel allein reichen nicht: Kurs und Boersenwert muessen zum selben belegten Abruf gehoeren und Kurs mal Aktienzahl, bei ADS geteilt durch das Verhaeltnis, muss den Export bis auf Gleitkomma-Rechenfehler reproduzieren. Die 3-Prozent-Erkennungsgrenze des Anwenders ist keine Rechentoleranz. Andernfalls bleibt der exportierte Wert unveraendert, sein Beleg traegt `missingReason` und kann keine Bestaetigung erhalten. Jahresbezogene Waehrungskorrekturen gelten nicht fuer Quartale oder separat gespeicherte neuere Jahreswerte.
+
+Ein Aktienzahl-Zitat steht nur am Aktienzahlbeleg, nie am berechneten Boersenwert. Die ADS-Tabelle dokumentiert das Bezugsverhaeltnis, ihre Aktienzahl ist lediglich ein gespeicherter Yahoo-Vergleichswert ohne eigenen Originalbeleg. Deshalb stehen die dort woertlich gespeicherten Zitate nur am Verhaeltnisbeleg; der ADS-Aktienzahlbeleg hat kein solches Zitat und nennt den fehlenden Originalbeleg in `missingReason`. Auch eine exakt nachgerechnete ADS-Rechnung ist damit noch nicht bestaetigt. Die bestehenden Tabellen betreffen USD-Notierungen; andere oder ungeklaerte Kurswaehrungen erhalten keine Rechenbestaetigung.
+
+Finanz- und Q4-Tabellen liefern ihre vorhandene Fall-ID. Die schluesselbasierten Tabellen werden eindeutig als `hand-table:shares:<ticker>`, `hand-table:ads:<ticker>` bzw. `hand-table:statement-currency:<ticker>` referenziert. Der erste dokumentierte Quellenbeleg des angewendeten Falls wird mit vorhandener URL, Seite und Zitat uebernommen. Ein reiner Beschreibungstext wird als Dokumentbeschreibung bewahrt; fehlender Link ergibt `documentUrl: null` und `qualityWarnings: ["source link missing"]`. Fehlende Seiten und Zitate werden nicht erfunden.
+
+Unbekannte Quellenzeiten sind null, niemals 0 oder Exportzeit. Ein verlorener nativer Betrag wird nicht durch Rueckwaertsdivision als Original ausgegeben: `nativeValue` bleibt null. Explizit gespeicherte native Korrekturwerte und neuere Jahreswerte bleiben nutzbar. `fx` nennt nur gespeicherte angewendete Faktoren; unbekannte Kurszeit und Kursquelle bleiben null. Bei Pence-Kursnotierungen ist die native Marktkapitalisierung bereits in GBP; ihr Faktor ist deshalb der gespeicherte Preisfaktor mal 100, wie im bestehenden Umrechnungszweig. `marketCap.normalizedCurrency` ist immer USD. Unbekannte Emittenten-IDs bleiben null; `listingId` verwendet die Yahoo-Notierungskennung, keine Zusammenfuehrung anhand eines Firmennamens.
+
+### 14.3 Pruefstatus und Validator
+
+Pruefakten werden ausschliesslich aus einem vorhandenen `verification-records/**/*.json` gelesen. Der Writer legt diesen Ordner nicht an und schreibt niemals Pruefakten. Das Manifest enthaelt nur Akten, deren Beleg-IDs in dieser Generation vollstaendig aufloesbar sind. Ablosungen werden vor dieser Auswahl ausgewertet, damit eine alte Pruefung nicht wieder wirksam wird. Ohne solche Akten sind `reviews: []`, alle Zeilen und Felder `unchecked`, alle Pruefzeiten null und `fullyVerifiedRows: 0`. Tests enthalten ausschliesslich synthetische Pruefakten in Temp-Verzeichnissen.
+
+Zeilenstatus: `unchecked | partial | verified | withheld`. Feldpraesenz: `present | missing | withheld`. Feldpruefung: `unchecked | matched | reproduced | partial`. Pruefergebnis: `matched | reproduced | mismatch | unverifiable | superseded`. Quellenart: `filing | vendor | exchange | handTable | calculation`. Periodentyp: `quarter | year | ttm | instant | none`. Vergleichsgruppenstatus: `notApplicable | unchecked | partial | verified`.
+
+Nur ein zum Beleg, Werte-Hash, Geltungsbereich und zur Methodenversion passender aktiver Pruefdatensatz kann ein Feld bestaetigen. Seine Sitzungskennung muss von jedem Ersteller in der gesamten abhaengigen Belegkette verschieden sein. Gleichnamige Sitzungen, ueberholte Pruefungen, andere Hashes oder andere Geltungsbereiche tragen keine Bestaetigung. Fehlende Werte werden nicht als bestaetigte Zahlen gezaehlt. Eine Freigabe braucht ausserdem einen gespeicherten Zeitpunkt der erneuten Quellenoeffnung, Originalbelege mit URL und Seite, Anker oder Zitat fuer die Eingangswerte sowie vollstaendig gepruefte Vergleichsgruppen. Offene Herkunftsluecken verhindern die Freigabe. `eligibleRows` zaehlt alle Zeilen der jeweiligen Datei; die vier Statuszaehler werden rueckwaerts aus genau diesen Zeilen geprueft.
+
+Der Validator verwirft unaufloesbare oder doppelte Beleg-IDs, Zyklen und fehlende Abhaengigkeiten einschliesslich Vergleichsgruppen, unpassende Werte-Hashes, falsche Feld-/Tickerzuordnung, Nicht-USD-Marktkapitalisierung, unpassende Manifestbytes, falsche Statuszaehler und unbelegte Pruefbehauptungen. Nicht anwendbare Belegfelder sind null; `inputIds` und `cohortInputIds` sind Listen. Ohne Vergleichsrechnung sind `cohortId` und `cohortHash` null, `cohortInputIds` leer und `cohortVerificationStatus` notApplicable. Oeffentliche Zusatzfelder werden auf Kontakt-/Personenfelder und zugangsdatenartige Inhalte geprueft.
+
+### 14.4 Vollstaendige neue Feldpfade
+
+Die folgenden Pfade sind additiv. `manifest.` bezeichnet die separate Belegdatei; `[]` ein Listenelement. Logisch expandierte Beleg-, FX-, Ableitungs- und Pruefobjekte haben genau die hier aufgefuehrten Schluessel. Die Statusmarker verwenden separat die Pfade `_failed.schema`, `_failed.status`, `_failed.board` sowie bei `failed` `_failed.generated_at` und `_failed.reason`, bei `ok` `_failed.provenanceRunId`, `_failed.provenanceManifestSha256` und `_failed.at`.
+
+```text
+provenanceVersion
+provenanceRunId
+provenanceManifest
+provenanceManifestSha256
+verificationSummary
+verificationSummary.scopeId
+verificationSummary.eligibleRows
+verificationSummary.fullyVerifiedRows
+verificationSummary.partiallyVerifiedRows
+verificationSummary.uncheckedRows
+verificationSummary.withheldRows
+verificationSummary.checkedAt
+provenance
+verification
+fieldStatus
+provenance.revGrowthYoYPct[]
+fieldStatus.revGrowthYoYPct
+fieldStatus.revGrowthYoYPct.presence
+fieldStatus.revGrowthYoYPct.verification
+fieldStatus.revGrowthYoYPct.reason
+fieldStatus.revGrowthYoYPct.reviewIds
+provenance.marketCap[]
+fieldStatus.marketCap
+fieldStatus.marketCap.presence
+fieldStatus.marketCap.verification
+fieldStatus.marketCap.reason
+fieldStatus.marketCap.reviewIds
+verification.status
+verification.scopeId
+verification.requiredFields
+verification.verifiedFields
+verification.openFields
+verification.reviewIds
+verification.checkedAt
+verification.valueHash
+verification.reason
+manifest.schema
+manifest.runId
+manifest.generatedAt
+manifest.records
+manifest.reviews
+manifest.records[].id
+manifest.records[].issuerId
+manifest.records[].listingId
+manifest.records[].ticker
+manifest.records[].fieldPath
+manifest.records[].valueHash
+manifest.records[].creatorEngine
+manifest.records[].creatorModel
+manifest.records[].creatorSessionId
+manifest.records[].createdAt
+manifest.records[].sourceType
+manifest.records[].provider
+manifest.records[].retrievedAt
+manifest.records[].observedAt
+manifest.records[].publishedAt
+manifest.records[].periodStart
+manifest.records[].periodEnd
+manifest.records[].periodType
+manifest.records[].comparativeBasis
+manifest.records[].metricDefinition
+manifest.records[].nativeValue
+manifest.records[].nativeCurrency
+manifest.records[].nativeUnit
+manifest.records[].unitMultiplier
+manifest.records[].normalizedValue
+manifest.records[].normalizedCurrency
+manifest.records[].documentUrl
+manifest.records[].documentTitle
+manifest.records[].documentId
+manifest.records[].documentSha256
+manifest.records[].filingAccession
+manifest.records[].filingForm
+manifest.records[].filedAt
+manifest.records[].taxonomy
+manifest.records[].concept
+manifest.records[].contextId
+manifest.records[].page
+manifest.records[].anchor
+manifest.records[].quote
+manifest.records[].fx
+manifest.records[].derivation
+manifest.records[].correctionCaseId
+manifest.records[].correctionRevision
+manifest.records[].supersedesId
+manifest.records[].missingReason
+manifest.records[].qualityWarnings
+manifest.records[].fx.rate
+manifest.records[].fx.fromCurrency
+manifest.records[].fx.toCurrency
+manifest.records[].fx.asOf
+manifest.records[].fx.sourceUrl
+manifest.records[].fx.unitAdjustment
+manifest.records[].fx.adrRatio
+manifest.records[].derivation.methodId
+manifest.records[].derivation.methodVersion
+manifest.records[].derivation.expression
+manifest.records[].derivation.inputIds
+manifest.records[].derivation.rounding
+manifest.records[].derivation.parametersHash
+manifest.records[].derivation.cohortId
+manifest.records[].derivation.cohortHash
+manifest.records[].derivation.cohortInputIds
+manifest.records[].derivation.cohortVerificationStatus
+manifest.reviews[].id
+manifest.reviews[].evidenceIds
+manifest.reviews[].scopeId
+manifest.reviews[].valueHash
+manifest.reviews[].methodVersion
+manifest.reviews[].reviewerEngine
+manifest.reviews[].reviewerModel
+manifest.reviews[].reviewerSessionId
+manifest.reviews[].checkedAt
+manifest.reviews[].result
+manifest.reviews[].reason
+manifest.reviews[].sourceReopenedAt
+manifest.reviews[].supersedesReviewId
+```
+
+### 14.5 Additivitaetsnachweis
+
+`node scripts/check-export-additive.js <baseDir> <headDir>` vergleicht saemtliche JSON-Dateien und bisherigen Blattwerte ohne Ausschluss. Jeder bisherige Pfad muss denselben `JSON.stringify`-Wert behalten, einschliesslich `generated_at`; beide Laeufe brauchen deshalb dieselbe eingefrorene Uhr. Neue Schluessel sind nur die oben genannten Kopf- und Zeilenfelder an den betroffenen Boards; neue Dateien sind ausschliesslich die beiden festen Manifestpfade und ihre oben genannten Fehlmarker. Dateien, Zeilen, Blattwerte und Unterschiede werden gezaehlt, jeder Unterschied liefert Exit 1.

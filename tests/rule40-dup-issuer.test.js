@@ -39,6 +39,16 @@ function written(fixture, writer = W) {
   return read(path.join(fixture.outDir, 'overview.json'));
 }
 
+// Each build gets a fresh provenance run id, so the run id and the manifest hash differ between
+// two otherwise identical builds (additive provenance contract, P22). Only these two header
+// fields are run-specific; every row field incl. the content-hashed row provenance stays compared.
+const RUN_SPECIFIC = ['provenanceRunId', 'provenanceManifestSha256'];
+function withoutRunIds(document) {
+  const copy = structuredClone(document);
+  for (const key of RUN_SPECIFIC) delete copy[key];
+  return copy;
+}
+
 // Pure assertion only: the deliberate red proof flips this in memory, never a writing test.
 function assertRejected(result) {
   assert.equal(result.ok, false, 'written secondary without its exact dupIssuer must be rejected');
@@ -59,9 +69,10 @@ test('real written board marks the planted pair and preserves all other bytes', 
     'every unrelated row, including rank, must match the build without the planted pair');
   const stripped = structuredClone(after);
   for (const row of stripped.rows) delete row.dupIssuer;
-  assert.equal(JSON.stringify(stripped), JSON.stringify(withoutMarker), 'only the additive marker may change');
-  assert.deepEqual(fs.readFileSync(path.join(planted.outDir, 'index.json')),
-    fs.readFileSync(path.join(bypassed.outDir, 'index.json')), 'index bytes must not change');
+  assert.equal(JSON.stringify(withoutRunIds(stripped)), JSON.stringify(withoutRunIds(withoutMarker)),
+    'only the additive marker may change');
+  assert.equal(JSON.stringify(withoutRunIds(read(path.join(planted.outDir, 'index.json')))),
+    JSON.stringify(withoutRunIds(read(path.join(bypassed.outDir, 'index.json')))), 'index must not change');
   assert.equal(W.check(planted).ok, true);
   assertRejected(W.check(bypassed));
 });
@@ -91,6 +102,8 @@ test('check rejects missing and wrong markers in a written temporary copy', () =
   assert.ok(!outDir.startsWith(path.resolve(__dirname, '../outputs') + path.sep));
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'index.json'), fs.readFileSync(path.join(fixture.outDir, 'index.json')));
+  // The written board references its provenance manifest (P22); the copy carries it unchanged.
+  fs.cpSync(path.join(fixture.outDir, 'provenance'), path.join(outDir, 'provenance'), { recursive: true });
   const checkCopy = (overview) => {
     fs.writeFileSync(path.join(outDir, 'overview.json'), JSON.stringify(overview));
     return W.check({ v1Dir: fixture.v1Dir, outDir });

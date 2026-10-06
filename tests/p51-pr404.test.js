@@ -33,7 +33,11 @@ test('Smallcap tracks and overview retain their own growth provenance despite nu
     assert.equal(o.rows[1].revGrowthBasis, null, 'missing Smallcap ticker must not borrow main provenance');
     const mainRow = [row].map(w.mapBoardRow)[0], smallRow = w.mapBoardRow(row, 0, 'smallcap');
     assert.equal(mainRow.revGrowthBasis, 'year'); assert.equal(mainRow.revGrowthPeriodEnd, '2025-12-31');
-    for (const key of ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd']) { delete mainRow[key]; delete smallRow[key]; }
+    // Tag 1419 (#425): the computational source ends belong to the same store as the label.
+    assert.deepEqual([smallRow.revGrowthSourcePeriodEnd, smallRow.revGrowthSourcePriorPeriodEnd], ['2026-06-30', '2025-06-30']);
+    assert.deepEqual([mainRow.revGrowthSourcePeriodEnd, mainRow.revGrowthSourcePriorPeriodEnd], ['2025-12-31', '2024-12-31']);
+    for (const key of ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd',
+      'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd']) { delete mainRow[key]; delete smallRow[key]; }
     assert.deepEqual(mainRow, smallRow, 'only provenance labels may differ');
     process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR = path.join(dir, 'absent');
     delete require.cache[filename]; const fallback = require(filename);

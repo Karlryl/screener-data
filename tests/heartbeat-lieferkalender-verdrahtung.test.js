@@ -113,10 +113,26 @@ function stepRun(name) {
   return body.join('\n').replace(/\$\{\{[^}]*\}\}/g, 'X');
 }
 
-const BASH = 'bash';
+// Candidates as in bashBinaer() of tests/pipeline-status-marker.test.js: Linux/CI has bash
+// on PATH; a plain Windows PowerShell run does not, Git for Windows does. HEARTBEAT_BASH_CANDIDATES
+// (path-delimited) overrides the list, used only for the break-once check.
+const BASH_KANDIDATEN = process.env.HEARTBEAT_BASH_CANDIDATES
+  ? process.env.HEARTBEAT_BASH_CANDIDATES.split(path.delimiter)
+  // On win32 Git bash first: a bare 'bash' there may be WSL (System32), which cannot read Windows paths.
+  : process.platform === 'win32'
+    // usr/bin first: the bin/bash.exe wrapper prepends mingw64/bin, whose real curl would shadow the stub.
+    ? ['C:/Program Files/Git/usr/bin/bash.exe', 'C:/Program Files (x86)/Git/usr/bin/bash.exe',
+      'C:/Program Files/Git/bin/bash.exe', 'bash']
+    : ['bash'];
+const BASH = BASH_KANDIDATEN.find(k => spawnSync(k, ['-c', 'exit 0']).status === 0)
+  || 'bash (none of: ' + BASH_KANDIDATEN.join(', ') + ')';
+// A resolved Git bash also needs its coreutils (cat, mktemp) on PATH for the step body.
+const BASH_PATH = path.isAbsolute(BASH)
+  ? path.dirname(BASH) + path.delimiter
+  : '';
 
 test('bash is available for the export-step tests (fails visibly when missing)', () => {
-  assert.equal(spawnSync(BASH, ['-c', 'exit 0']).status, 0, 'bash missing: the export step cannot be executed');
+  assert.equal(spawnSync(BASH, ['-c', 'exit 0']).status, 0, 'no runnable bash, tried ' + BASH + ': the export step cannot be executed');
 });
 
 function exportLauf(jetzt, indexText, force = '') {
@@ -135,7 +151,7 @@ function exportLauf(jetzt, indexText, force = '') {
       cwd: ROOT, encoding: 'utf8',
       env: {
         ...process.env, MAX_AGE_DAYS: '2', FORCE: force, FIXTURE: fix,
-        PATH: bin + path.delimiter + process.env.PATH,
+        PATH: bin + path.delimiter + BASH_PATH + process.env.PATH,
         NODE_OPTIONS: '--require ' + JSON.stringify(uhr).slice(1, -1).replace(/\\\\/g, '/'),
       },
     });
