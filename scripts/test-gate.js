@@ -420,12 +420,18 @@ function runFiles(files, cwd, log) {
   }
   for (const t of files) {
     log(`--- ${t} ---`);
+    // P97 (06.10.2026): each test file gets its own temp root, removed right after it
+    // ends. Test files that never clean up (P94: ~49,800 dirs in %TEMP% on one day) can
+    // no longer leak into the real temp folder through a gate run.
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tg-')); // short prefix: deep fixture paths hit MAX_PATH
     const r = spawnSync(process.execPath, ['--test-reporter=tap', t], {
       cwd,
       encoding: 'utf8',
-      env: childEnv,
+      env: { ...childEnv, TMP: tmpRoot, TEMP: tmpRoot, TMPDIR: tmpRoot },
       stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
     });
+    try { fs.rmSync(tmpRoot, { recursive: true, force: true, maxRetries: 3 }); }
+    catch (err) { log(`WARN ${t}: Temp-Ordner ${tmpRoot} nicht entfernt (${err.message})`); }
     process.stdout.write(fremdeAusgabe((r.stdout || '') + (r.stderr || '')));
     const probeOutput = r.output && r.output[3] !== null && r.output[3] !== undefined
       ? String(r.output[3]).trim()
@@ -965,12 +971,31 @@ function selftest() {
     && r.lines.some(l => l.startsWith(`PASS ${nodetest}`)),
     `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
 
+  // 7. Temp-Leck-Probe (P97): eine Testdatei legt einen Ordner im Temp-Verzeichnis an
+  //    und raeumt ihn nicht weg. Nach dem Gate-Lauf darf er nicht mehr existieren, und
+  //    er darf nie im echten Temp-Verzeichnis dieses Prozesses gelegen haben.
+  const leck = 'tests/temp-leck.test.js';
+  const leckSpur = path.join(dir, 'temp-leck-pfad.txt');
+  fs.writeFileSync(path.join(dir, leck),
+    "const fs=require('fs'),os=require('os'),path=require('path');"
+    + "const d=fs.mkdtempSync(path.join(os.tmpdir(),'leck-'));fs.writeFileSync(path.join(d,'x'),'1');"
+    + `fs.writeFileSync(${JSON.stringify(leckSpur)},d);console.log("1 ok, 0 fail");process.exit(0);\n`);
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/temp-leck*test.js'], reportFiles: [], repoFiles: [leck],
+  });
+  const leckDir = fs.existsSync(leckSpur) ? fs.readFileSync(leckSpur, 'utf8') : '';
+  check('Temp-Leck-Probe (ungeraeumter Testordner ist nach dem Lauf weg, nie im echten Temp)',
+    r.code === 0 && leckDir !== '' && !fs.existsSync(leckDir) && !fs.existsSync(path.dirname(leckDir))
+    && path.resolve(path.dirname(path.dirname(leckDir))) === path.resolve(os.tmpdir()),
+    `code=${r.code} leckDir=${JSON.stringify(leckDir)}`);
+
   fs.rmSync(dir, { recursive: true, force: true });
   if (fails.length) {
     console.log(`::error::test-gate Selftest FAILED: ${fails.join(', ')}`);
     return 1;
   }
-  console.log('test-gate Selftest OK (21 Proben).');
+  console.log('test-gate Selftest OK (22 Proben).');
   return 0;
 }
 

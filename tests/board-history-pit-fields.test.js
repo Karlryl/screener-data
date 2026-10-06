@@ -19,6 +19,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { eigenerTempOrdner } = require('./hilfen/eigener-temp-ordner.js'); // P97: removed at process exit
 const W = require('../scripts/write-board-history.js');
 const priceStore = require('../lib/price-history-store.js');
 
@@ -34,7 +35,7 @@ const MOM_GAP = W._const.MOMENTUM_GAP_BARS;         // 21
 
 // ── Fixture-Helfer ───────────────────────────────────────────────────────────
 function mkBase() {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bhpit-'));
+  const base = eigenerTempOrdner('bhpit-');
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   return base;
