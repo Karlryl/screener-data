@@ -28,9 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 215 authorized cells (199 quarterly, 16 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 215);
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 16);
+test('all 216 authorized cells (199 quarterly, 17 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 216);
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 17);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 215);
+  assert.equal(validateTable(clone(table)).cases.length, 216);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -93,7 +93,15 @@ for (const c of table.cases.filter(x => x.periodType === '3M')) test(c.caseId + 
 // Annual withhold cells (01.10.): a false vendor year becomes missing (value null plus a marker with the reason,
 // never 0). Undated series: position plus the exact vendor value; dated series: fiscal-year end.
 const annualIndex = (s, c) => { const e = s.annual[c.field + 'Ends']; return Array.isArray(e) && e.some(Boolean) ? e.indexOf(c.period) : c.index; };
-for (const c of table.cases.filter(x => x.periodType === '12M')) test(c.caseId + ' annual cell: withheld on real input, others untouched, idempotent', () => {
+// Latent annual holds (P106): their period is not in the real vendor input yet, so they cannot be exercised on it here;
+// tests/p106-nonadjacent-annual-withhold.test.js covers them. The next test pins this list so nothing is skipped silently.
+const LATENT = new Set(['3391.t-2025-02-28-annualRev-shortyear']);
+test('latent annual holds are exactly the listed ones and their periods are absent from the real input', () => {
+  for (const c of table.cases.filter(x => x.periodType === '12M')) {
+    assert.equal(annualIndex(fixture[c.ticker], c) < 0, LATENT.has(c.caseId), c.caseId);
+  }
+});
+for (const c of table.cases.filter(x => x.periodType === '12M' && !LATENT.has(x.caseId))) test(c.caseId + ' annual cell: withheld on real input, others untouched, idempotent', () => {
   const input = clone(fixture[c.ticker]), original = serial(input), i = annualIndex(input, c);
   assert.equal(value(input.annual[c.field][i]), c.expectedBadValue * (input.meta.fxRateApplied || 1));
   const r = applyFinancialCases(input), out = r.snapshot, row = out.annual[c.field][i];
@@ -104,7 +112,7 @@ for (const c of table.cases.filter(x => x.periodType === '12M')) test(c.caseId +
   assert.ok(r.events.some(e => e.caseId === c.caseId && e.status === 'missing' && e.container === 'annual' && e.index === i));
   // Absence: every annual cell without its own case keeps the vendor row byte for byte, except a present cell older
   // than the newest withheld year, which the no-gap rule withholds too (HL 2022).
-  const own = new Set(table.cases.filter(x => listedIn(x, c.ticker) && x.field === c.field).map(x => annualIndex(input, x)));
+  const own = new Set(table.cases.filter(x => listedIn(x, c.ticker) && x.field === c.field).map(x => annualIndex(input, x)).filter(j => j >= 0));
   const newestOwn = Math.min(...own);
   input.annual[c.field].forEach((x, j) => {
     if (own.has(j)) return;
@@ -1039,7 +1047,7 @@ test('replacement values trace to their sources: the whole real table passes, a 
   const count = cases => cases.reduce((m, c) => { const k = traceKind(c); m[k] = (m[k] || 0) + 1; return m; }, {});
   // The 162 cases of revision 2026-10-01c: 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one
   // issuer-rounded confirmation (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 32 }); // P106: +3 annual withholds (non-adjacent prior year)
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 33 }); // P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year)
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
@@ -1350,7 +1358,8 @@ test('CIG-C: gross profit on the restated basis of the 2Q26 ITR, Q3/Q4 2025 with
 test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture results byte-identical', () => {
   const digest = x => crypto.createHash('sha256').update(serial(x)).digest('hex');
   // P106 (06.10.) adds three annual holds after this freeze; the guard keeps checking exactly the frozen rows and fixtures.
-  const added = new Set(['obm.ax-2024-06-30-annualRev-nonadjacent', 'cmm.ax-2024-06-30-annualRev-nonadjacent', '3391.t-2024-05-31-annualRev-nonadjacent']);
+  const added = new Set(['obm.ax-2024-06-30-annualRev-nonadjacent', 'cmm.ax-2024-06-30-annualRev-nonadjacent', '3391.t-2024-05-31-annualRev-nonadjacent',
+    '3391.t-2025-02-28-annualRev-shortyear']);
   const legacy = key => key === 'cases' ? table.cases.filter(c => !added.has(c.caseId)) : table[key];
   assert.equal(table.cases.length - legacy('cases').length, added.size, 'every added case exists');
   const legacyFixture = Object.fromEntries(Object.entries(fixture).filter(([t]) => !['OBM.AX', 'CMM.AX', '3391.T'].includes(t)));
