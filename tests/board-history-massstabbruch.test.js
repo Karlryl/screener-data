@@ -27,6 +27,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { eigenerTempOrdner } = require('./hilfen/eigener-temp-ordner.js'); // P97: removed at process exit
 const W = require('../scripts/write-board-history.js');
 
 let fail = 0;
@@ -80,7 +81,7 @@ function row(ticker, score) {
 // vorhandeneVintages: Datums-Verzeichnisse, die schon in board-history/ liegen — damit
 // steuert der Test, welchen Vorgaenger priorVintageDate() findet.
 function mkBaseMitRegister(brueche, vorhandeneVintages) {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-bruch-'));
+  const base = eigenerTempOrdner('bh-bruch-');
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   fs.mkdirSync(path.join(base, 'board-history'), { recursive: true });

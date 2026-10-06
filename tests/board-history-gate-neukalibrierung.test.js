@@ -33,6 +33,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { eigenerTempOrdner } = require('./hilfen/eigener-temp-ordner.js'); // P97: removed at process exit
 const W = require('../scripts/write-board-history.js');
 
 let fail = 0;
@@ -203,7 +204,7 @@ check('(4b) die uebrigen Integritaetspruefungen bleiben auch bei grossem Abstand
 
 // ── 5. Die Kalibrierung lernt pro TAG ────────────────────────────────────────
 check('(5) ein 4-Tages-Vergleich liefert die Stichprobe PRO TAG, nicht roh', () => {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-gate-'));
+  const base = eigenerTempOrdner('bh-gate-');
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   fs.writeFileSync(path.join(base, 'outputs', 'calibration.json'), JSON.stringify({ schema: 'calibration/v4', generated_at: 'x' }));
@@ -246,7 +247,7 @@ check('(6b) der naechste Lauf ueberschreibt die Herleitung nicht', () => {
   // write-board-history.js liest _gate-calibration.json und schreibt sie am Ende komplett
   // zurueck. Faellt dabei die Herleitung heraus, waere die Neukalibrierung nach einem
   // einzigen Lauf undokumentiert — und niemand merkte es, weil die Boards weiter stimmen.
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-gate6b-'));
+  const base = eigenerTempOrdner('bh-gate6b-');
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   fs.mkdirSync(path.join(base, 'board-history'), { recursive: true });
@@ -269,7 +270,7 @@ check('(6c) Waechter: eine rueckwirkend ausgeschlossene Stichprobe faellt aus de
   // ein und (6) riss am naechsten Morgen. updateGateCalibration muss excludedDates()
   // respektieren — dieser Test feuert, sobald der Aufruf dort fehlt (einmal absichtlich
   // gebrochen am 16.09.2026, Beleg im Vault-Report daily-pull-gate-fix-2026-09-16.md).
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-gate6c-'));
+  const base = eigenerTempOrdner('bh-gate6c-');
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   fs.mkdirSync(path.join(base, 'board-history'), { recursive: true });

@@ -18,6 +18,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { eigenerTempOrdner } = require('./hilfen/eigener-temp-ordner.js'); // P97: removed at process exit
 const W = require('../scripts/write-board-history.js');
 
 let fail = 0;
@@ -28,7 +29,7 @@ function check(name, fn) {
 
 // ── Fixture-Helfer (self-contained; gleiche Form wie board-history.test.js) ────
 function mkBase() {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bhfix-'));
+  const base = eigenerTempOrdner('bhfix-');
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   return base;
