@@ -711,6 +711,8 @@ und VOR dem Pages-Deploy. Er rechnet **keine Achse und keinen Score** neu. `scor
 jeder Zeile der unveraenderte Engine-Score — und ist `null` fuer Namen, die auf keinem Brett
 stehen (eine 0 waere dort eine Behauptung, die niemand aufgestellt hat).
 
+Seit 06.10.2026 traegt auch das Rule-of-40-Brett additiv denselben optionalen Schluessel `dupIssuer` mit der Semantik aus §3 und demselben Anwender `applyDupIssuerShadow` aus `lib/dup-issuer-shadow-table.js`; der Dateicheck weist fehlende oder abweichende Markierungen bekannter Zweitnotierungen zurueck.
+
 **Universum: das GEROUTETE Universum, nicht die Brett-Zeilen.** Der Schreiber laeuft ueber
 `snapshots/` und laesst jeden Namen durch `src/scoring/router.js route()` (read-only). Grund:
 die Vollboards aus §11 sind die besten 150 je Branche **nach Engine-Score** — eine

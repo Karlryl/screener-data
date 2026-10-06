@@ -53,6 +53,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
+const { isDeepStrictEqual } = require('node:util');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
@@ -69,6 +70,7 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
+const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -844,7 +846,19 @@ function schreibeFehlmarker(outDir, grund) {
   });
 }
 
+/**
+ * Marks every overview row through the shared applicator without changing selection or values.
+ * @param {object[]} rows Selected overview rows, mutated in place.
+ * @param {Map<string, object>} index Validated secondary index for this build.
+ * @returns {object[]} The same rows, with only known secondary markers added.
+ */
+function applyDupIssuerShadowRows(rows, index) {
+  for (const row of rows) applyDupIssuerShadow(row, index);
+  return rows;
+}
+
 function build(opts = {}) {
+  const dupIssuerShadow = secondaryIndex(loadDupIssuerShadowTable());
   const v1Dir = opts.v1Dir || DEFAULT_V1_DIR;
   const outDir = opts.outDir || path.join(v1Dir, BOARD_ID);
   const { index, kandidaten, abgewiesen, gelesen, aufBrett } = sammleKandidaten(opts);
@@ -863,6 +877,7 @@ function build(opts = {}) {
       + ' rechenbar aus ' + gelesen + ' gelesen, ' + JSON.stringify(abgewiesen)
       + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
   }
+  applyDupIssuerShadowRows(rows, dupIssuerShadow);
   const overview = buildOverview(index, rows);
   const indexDatei = buildIndex(index, rows, {
     bounds, kandidaten: kandidaten.length, gelesen, abgewiesen, aufBrett, ueber40,
@@ -888,6 +903,12 @@ function check(opts = {}) {
 
   if (fs.existsSync(path.join(outDir, FAILED_NAME))) {
     return { ok: false, failedMarker: true, errors: ['[rule40] ' + FAILED_NAME + ' liegt im Ordner — der Lauf hat sich selbst als gescheitert markiert.'] };
+  }
+
+  let dupIssuerShadow;
+  try { dupIssuerShadow = secondaryIndex(loadDupIssuerShadowTable()); }
+  catch (error) {
+    return { ok: false, errors: ['[rule40] dupIssuer-Handtabelle unlesbar oder ungueltig: ' + error.message] };
   }
 
   const hauptIndex = readJsonOrNull(path.join(v1Dir, 'index.json'));
@@ -928,6 +949,10 @@ function check(opts = {}) {
   const gesehen = new Set();
   let letzterR40 = Infinity;
   rows.forEach((r, i) => {
+    const expected = applyDupIssuerShadow({ ticker: r.ticker }, dupIssuerShadow).dupIssuer;
+    if (!isDeepStrictEqual(r.dupIssuer, expected)) {
+      melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): dupIssuer stimmt nicht mit der Handtabelle ueberein.');
+    }
     for (const f of REQUIRED_OVERVIEW_ROW) {
       if (!(f in r)) melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): Pflichtfeld "' + f + '" fehlt.');
     }
@@ -1039,5 +1064,5 @@ module.exports = {
   basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
   neuestesQuartalsEnde, fcfMargeVertrauenswuerdig,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
-  schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,
+  schreibeBrett, schreibeFehlmarker, pruefeZielordner, applyDupIssuerShadowRows, build, check, main,
 };
