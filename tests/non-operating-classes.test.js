@@ -104,23 +104,32 @@ function isolatedWriter(filename, findash, opts = {}) {
   return module.exports;
 }
 
-test('a broken class table never aborts the export: shadow null on all rows plus one loud warning', () => {
+// Builds the fixture export through the REAL writers. brokenTable forces the guarded lookup to null
+// (rankGrundShadow = null on every row), i.e. the same writers without any shadow information.
+// Differential reference instead of a frozen pre-change snapshot: later additive export fields
+// (e.g. fcfShadow from #432) appear on both sides and cannot break this inertness test (P112).
+function exportFixture(opts = {}) {
   const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/non-operating-shadow/export-fixture.json'), 'utf8'));
-  const warnings = [];
-  const quiet = { ...console, warn: (line) => warnings.push(String(line)) };
-  const w = isolatedWriter('write-findash-export.js', undefined, { brokenTable: true, console: quiet });
-  const r = isolatedWriter('write-rule40-export.js', w, { console: quiet });
+  const w = isolatedWriter('write-findash-export.js', undefined, opts);
+  const r = isolatedWriter('write-rule40-export.js', w, { console: opts.console });
   const input = fixture.input;
-  const actual = {
+  return {
     board: w.vergebeRaenge(input.board.map(w.mapBoardRow), 'fixture', { warn: false }),
     overview: w.vergebeRaenge(input.overview.map(w.mapOverviewRow), 'fixture', { warn: false }),
     survival: input.survival.map(w.mapSurvivalRow),
     rule40: r.baueZeilen(input.candidates),
   };
+}
+const stripShadow = (value) => JSON.parse(JSON.stringify(value, (key, v) => key === 'rankGrundShadow' ? undefined : v));
+
+test('a broken class table never aborts the export: shadow null on all rows plus one loud warning', () => {
+  const warnings = [];
+  const quiet = { ...console, warn: (line) => warnings.push(String(line)) };
+  const actual = exportFixture({ brokenTable: true, console: quiet });
   for (const rows of [actual.board, actual.overview, actual.rule40.rows]) {
     for (const row of rows) assert.equal(row.rankGrundShadow, null, row.ticker);
   }
-  assert.equal(JSON.stringify(stripShadow(actual)), JSON.stringify(fixture.before), 'ranks and all other fields unchanged');
+  assert.equal(JSON.stringify(stripShadow(actual)), JSON.stringify(stripShadow(exportFixture())), 'ranks and all other fields unchanged');
   const loud = warnings.filter((line) => line.startsWith('::warning::[non-operating-shadow]'));
   assert.equal(loud.length, 1, 'exactly one loud warning line');
   assert.match(loud[0], /duplicate ticker SBR/, 'the warning names the error');
@@ -133,22 +142,14 @@ test('a broken class table never aborts the export: shadow null on all rows plus
   assert.throws(() => isolatedWriter('write-findash-export.js', undefined, { brokenTable: true, console: quiet, mutate: removeGuard }),
     /duplicate ticker SBR/);
 });
-const stripShadow = (value) => JSON.parse(JSON.stringify(value, (key, v) => key === 'rankGrundShadow' ? undefined : v));
 
-test('real row exporters match the pre-change HEAD fixture byte for byte except shadow', () => {
+test('real row exporters: the shadow changes nothing but rankGrundShadow (differential against a null shadow)', () => {
   const fixturePath = path.join(__dirname, 'fixtures/non-operating-shadow/export-fixture.json');
   const originalHash = digest(fixturePath);
-  const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  const w = isolatedWriter('write-findash-export.js');
-  const r = isolatedWriter('write-rule40-export.js', w);
-  const input = fixture.input;
-  const actual = {
-    board: w.vergebeRaenge(input.board.map(w.mapBoardRow), 'fixture', { warn: false }),
-    overview: w.vergebeRaenge(input.overview.map(w.mapOverviewRow), 'fixture', { warn: false }),
-    survival: input.survival.map(w.mapSurvivalRow),
-    rule40: r.baueZeilen(input.candidates),
-  };
-  const check = (value) => assert.equal(JSON.stringify(stripShadow(value)), JSON.stringify(fixture.before));
+  const quiet = { ...console, warn: () => {} };
+  const reference = JSON.stringify(stripShadow(exportFixture({ brokenTable: true, console: quiet })));
+  const actual = exportFixture();
+  const check = (value) => assert.equal(JSON.stringify(stripShadow(value)), reference);
   check(actual);
   for (const rows of [actual.board, actual.overview, actual.rule40.rows]) {
     for (const row of rows) {
@@ -158,7 +159,9 @@ test('real row exporters match the pre-change HEAD fixture byte for byte except 
       assert.equal(keys.indexOf('rankGrundShadow'), keys.indexOf('rankGrund') + 1);
     }
   }
+  assert.ok(actual.board.some((row) => row.rankGrundShadow !== null), 'the fixture really carries a shadow code');
   for (const row of actual.survival) assert.equal(Object.hasOwn(row, 'rankGrundShadow'), false);
+  assert.equal(actual.board[0].ticker, 'SBR');
   assert.equal(actual.board[0].rank, 1, 'SBR keeps its actual rank');
   assert.equal(actual.board[1].rankGrund, 'zuWenigBelegteAchsen', 'existing gate stays unchanged');
   const broken = JSON.parse(JSON.stringify(actual));
