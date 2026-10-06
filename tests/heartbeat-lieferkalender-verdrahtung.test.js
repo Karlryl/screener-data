@@ -3,7 +3,7 @@
  * P33 (06.10.2026): runs the REAL board-history node block of heartbeat.yml with a pinned
  * clock against synthetic channel indexes. Proves the wiring of lib/liefer-kalender.js:
  * Monday 05.10. with the Saturday stand is green now and was red before (block of the
- * parent commit), a missed Saturday or Wednesday stays red, the manual-Sunday Mondays
+ * pinned pre-change copy tests/fixtures/heartbeat-vor-p33.yml = 330cc38856), a missed Saturday or Wednesday stays red, the manual-Sunday Mondays
  * 21.09./17.08. are green. Synthetic inputs only; nothing outside a temp dir is written.
  */
 const assert = require('node:assert/strict');
@@ -11,7 +11,7 @@ const { test } = require('node:test');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawnSync, execFileSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const WF = '.github/workflows/heartbeat.yml';
@@ -51,15 +51,13 @@ test('Monday 05.10. with the Saturday stand: green with the calendar', () => {
   assert.doesNotMatch(r.out, /::error::/);
 });
 
-test('the same Monday was red with the block before this change (counter-proof)', (t) => {
-  let alt;
-  try {
-    alt = execFileSync('git', ['show', 'HEAD:' + WF], { cwd: ROOT, encoding: 'utf8' });
-  } catch (e) {
-    t.skip('no git history available: ' + e.message);
-    return;
-  }
-  if (alt.includes('liefer-kalender')) { t.skip('HEAD already contains the calendar wiring'); return; }
+// Pinned copy of heartbeat.yml before P33 (git show 330cc38856:.github/workflows/heartbeat.yml),
+// so the counter-proof never depends on git history or on HEAD.
+const VOR_P33 = path.join(__dirname, 'fixtures', 'heartbeat-vor-p33.yml');
+
+test('the same Monday was red with the block before this change (counter-proof)', () => {
+  const alt = fs.readFileSync(VOR_P33, 'utf8');
+  assert.ok(!alt.includes('liefer-kalender'), 'fixture must be the pre-change workflow');
   const r = lauf(bhBlock(alt), '2026-10-05T20:42:16.469Z', idx('2026-10-03T09:31:53.394Z', '2026-10-02', '2026-10-03'));
   assert.equal(r.status, 1, r.out);
   assert.match(r.out, /::error::BEWEGUNGS-ANZEIGE VERALTET/);
@@ -115,7 +113,11 @@ function stepRun(name) {
   return body.join('\n').replace(/\$\{\{[^}]*\}\}/g, 'X');
 }
 
-const BASH = spawnSync('bash', ['-c', 'exit 0']).status === 0 ? 'bash' : null;
+const BASH = 'bash';
+
+test('bash is available for the export-step tests (fails visibly when missing)', () => {
+  assert.equal(spawnSync(BASH, ['-c', 'exit 0']).status, 0, 'bash missing: the export step cannot be executed');
+});
 
 function exportLauf(jetzt, indexText, force = '') {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hb-exp-'));
@@ -143,8 +145,7 @@ function exportLauf(jetzt, indexText, force = '') {
   }
 }
 
-test('export step: Monday with the Saturday export is green, Friday export is red', (t) => {
-  if (!BASH) { t.skip('bash not available'); return; }
+test('export step: Monday with the Saturday export is green, Friday export is red', () => {
   const mo = '2026-10-05T20:42:16.469Z';
   let r = exportLauf(mo, JSON.stringify({ generated_at: '2026-10-03T09:31:17.258Z' }));
   assert.equal(r.status, 0, r.out);
@@ -154,8 +155,7 @@ test('export step: Monday with the Saturday export is green, Friday export is re
   assert.match(r.out, /::error::Screener-Daten VERALTET/);
 });
 
-test('export step: empty response, missing stamp and FORCE stay red', (t) => {
-  if (!BASH) { t.skip('bash not available'); return; }
+test('export step: empty response, missing stamp and FORCE stay red', () => {
   const mo = '2026-10-05T20:42:16.469Z';
   for (const [text, force] of [['', ''], ['{}', ''], ['{"generated_at":"2026-10-05T20:00:00Z"}', 'true']]) {
     const r = exportLauf(mo, text, force);
@@ -207,4 +207,17 @@ test('price step: unreadable stamp is red, SPY keeps its own 6-day limit on a Mo
   r = preisLauf(mo, { updatedAt: '2026-10-03T09:24:34.702Z', tickerCount: 1 }, '2026-09-25');
   assert.equal(r.status, 1, r.out);
   assert.match(r.out, /SPY-Serie steht auf/);
+});
+
+// daily-pull.yml schedule and the helper constants must not drift apart.
+test('daily-pull cron matches the RUN_* constants of lib/liefer-kalender.js', () => {
+  const K = require('../lib/liefer-kalender.js');
+  const dp = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+  const crons = [...dp.matchAll(/^\s*-\s*cron:\s*'([^']+)'/gm)].map(m => m[1]);
+  assert.deepEqual(crons, ['17 2 * * 2-6'], 'expected exactly one daily-pull cron');
+  const [min, hour, , , dow] = crons[0].split(/\s+/);
+  assert.equal(Number(min), K.RUN_MINUTE);
+  assert.equal(Number(hour), K.RUN_HOUR);
+  const [a, b] = dow.split('-').map(Number);
+  assert.deepEqual(K.RUN_WEEKDAYS, Array.from({ length: b - a + 1 }, (_, i) => a + i));
 });

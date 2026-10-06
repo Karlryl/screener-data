@@ -1,0 +1,216 @@
+name: Data Freshness Heartbeat
+
+# Masterplan Task 0.7 — Fail-loud-Alarm fuer "Daily-Pull rot ODER laeuft gar nicht".
+#
+# WARUM EIGENER WORKFLOW: Der "Notify on failure"-Step im Daily-Pull feuert nur, wenn
+# der Daily-Pull ueberhaupt LAEUFT und dann failt. Startet der Cron gar nicht (still
+# gestoppt, GitHub-Auto-Disable, Konfig-Fehler), meldet dort nichts. Dieser Heartbeat
+# laeuft in einem VOM Daily-Pull UNABHAENGIGEN Kanal und misst die Export-Frische direkt.
+#
+# ALARMKANAL: fail-loud (exit 1) -> rotes X in Actions, dazu GitHubs native Fail-Mail an
+# den Repo-Owner (KEIN Secret noetig). Das ist seit dem 29.07. der EINZIGE Kanal — der
+# Discord-Zweig ist raus (Karl-Freigabe). Er war nie mehr als ein No-Op: DISCORD_WEBHOOK
+# war nie gesetzt, und Karl liest ohnehin kein Discord, sondern das rote X.
+#
+# RESTRISIKO (Masterplan 0.7, bewusst dokumentiert): GitHub deaktiviert GEPLANTE Workflows
+# nach 60 Tagen Repo-Inaktivitaet automatisch — dann waere auch dieser Heartbeat still tot.
+# Vollstaendige Abdeckung dieses Falls braucht einen EXTERNEN 0-EUR-Dead-Man-Switch
+# (z.B. healthchecks.io, einmaliger Karl-Signup) — als Follow-up empfohlen.
+#
+# SCHWELLE N: MAX_AGE_DAYS=2 (eine Nacht Puffer; nach 2 stillen/roten Naechten Alarm).
+
+on:
+  schedule:
+    - cron: '30 12 * * *'   # taeglich 12:30 UTC, ~6h nach dem Daily-Pull (~06:00 UTC)
+  workflow_dispatch:
+    inputs:
+      force_alarm:
+        description: 'Alarm erzwingen (Test der Meldekette, auch bei frischen Daten)'
+        type: boolean
+        default: false
+      backdate_days:
+        description: '0.10: Kadenz-Marker kuenstlich um N Tage altern (provoziert den Ausbleiben-Fall ohne 9-Tage-Warten)'
+        type: string
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      # BH-119 fix: snapshots/_manifest.json .pulled_at is stamped at the merge-commit (daily-
+      # pull.yml), which runs BEFORE scoring/export/gh-pages-deploy. A failure downstream of the
+      # merge commit (scoring crash, export contract violation, deploy push failure) left this
+      # stamp fresh while the actually PUBLISHED product (gh-pages) was stale or missing — the
+      # "independent" watchdog measured the pull, not the product. Measure the deployed
+      # findash-export/v1/index.json .generated_at instead (same gh-pages-fetch pattern already
+      # used by weekly-guard.yml for coverage-status.json). Unreachable/unparsable counts as
+      # 9999 (max-stale), same fail-loud convention as the previous local-read-failure branch.
+      - name: Check export freshness
+        env:
+          MAX_AGE_DAYS: '2'
+          FORCE: ${{ github.event.inputs.force_alarm }}
+        run: |
+          age_days=$( (curl -s --max-time 20 "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/findash-export/v1/index.json" || true) | node -e "
+            let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+              try {
+                const idx=JSON.parse(s);
+                const t=Date.parse(idx.generated_at);
+                if(!Number.isFinite(t)){ console.log(999999); return; }
+                console.log(require('./lib/alter.js').alterStunden(t, Date.now()));
+              } catch(e){ console.log(999999); }
+            });
+          ")
+          max_hours=$(( MAX_AGE_DAYS * 24 ))
+          echo "Export-Alter (gh-pages findash-export/v1/index.json .generated_at): ${age_days} Stunden (Schwelle: ${MAX_AGE_DAYS} d = ${max_hours} h)"
+          if [ "$FORCE" = "true" ] || [ "$age_days" -gt "$max_hours" ]; then
+            msg="Screener-Daten VERALTET: Export ${age_days} Stunden alt (Schwelle ${MAX_AGE_DAYS}d = ${max_hours} h). URSACHE: Daily-Pull ist rot oder laeuft nicht. NAECHSTER SCHRITT: Actions pruefen -> ${{ github.server_url }}/${{ github.repository }}/actions/workflows/daily-pull.yml"
+            # 29.07.: Discord-Zweig entfernt (Karl-Freigabe). Der Webhook war nie gesetzt,
+            # es lief also immer der else-Zweig — zwei Kanaele auf dem Papier, einer in
+            # Wirklichkeit. Der wirksame Alarm ist die Zeile darueber (::error:: + exit 1
+            # = rotes X in Actions) und GitHubs native Fail-Mail an den Besitzer.
+            echo "::error::$msg"
+            exit 1
+          fi
+          echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage = ${max_hours} h)."
+
+      # T564-B1 (Review Tag 564, F-17a-Publish) — dieselbe Sonde ein zweites Mal, diesmal
+      # auf den BEWEGUNGS-Kanal (NEU/Rangpfeile). Der Schritt darueber misst nur den
+      # v1-Export; zwischen dessen Deploy und dem Vintage-Publish liegen im scoring-Job
+      # vier weitere Schritte (Vintage schreiben, Wert-Gate, main-Commit, Publish).
+      # Scheitert einer davon, bleibt der Export frisch, waehrend outputs/board-history/
+      # unbegrenzt lange stehen bleibt — findash traegt dann heutige Boards ueber
+      # gestrigen Bewegungsdaten, und niemand erfaehrt es. Genau das macht diese Sonde rot.
+      #
+      # BEWUSST GEGEN DIE WANDUHR und NICHT gegen den generated_at des v1-Index: der
+      # Vintage-Publish liegt konstruktionsbedingt Minuten hinter dem Board-Deploy, ein
+      # Skew-Vergleich der beiden Stempel waere ein Dauer-Falschalarm. Schwelle, 9999-bei-
+      # unlesbar und Alarmweg sind identisch zum Export-Check darueber.
+      #
+      # T564-B5 mitgeloest: <2 Vintages im Kanal heisst, die Bewegungs-Anzeige BLEIBT leer
+      # (findash vergleicht die zwei juengsten Staende). stage-public-data.js kann das nur
+      # als ::warning:: melden — kein Kanal, den Karl je sieht. Hier wird es rot.
+      # if: always(), damit diese Zahl auch dann kommt, wenn der Export-Check schon rot ist.
+      #
+      # T568-F7 (Review Tag 568): der generated_at-Stempel sagt nur, dass der PUBLISH lief —
+      # nicht, dass er etwas Neues trug. Ein Lauf, der taeglich dieselben zwei alten Vintages
+      # erneut hochschiebt (Vintage-Schreiben tot, Publish gesund), haelt den Stempel ewig
+      # frisch und diese Sonde ewig gruen. Darum zusaetzlich das DATUM des juengsten Vintages
+      # gegen dieselbe Schwelle. Kadenz nachgerechnet: der Pull laeuft Di–Sa, der Heartbeat
+      # taeglich 12:30 UTC — am Montag ist der juengste Stand der Samstag, floor(2,5d) = 2,
+      # also gruen; faellt der Samstag aus, sind es 3 -> rot. MAX=2 bleibt damit richtig.
+      # Reihenfolge der drei Zweige ist Diagnose-Reihenfolge: erst "Publish laeuft gar nicht"
+      # (age), dann "kein Vergleichsstand" (n), dann "Publish laeuft, Daten stehen" (vAlter) —
+      # sonst meldete die Sonde "der Publish LAEUFT", waehrend er in Wahrheit tot ist.
+      - name: Check board-history channel freshness (T564-B1)
+        if: always()
+        env:
+          BH_MAX_AGE_DAYS: '2'
+        run: |
+          (curl -s --max-time 20 "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/board-history/index.json" || true) | node -e "
+            const A=require('./lib/alter.js');
+            let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+              const MAX=Number(process.env.BH_MAX_AGE_DAYS);
+              let idx=null; try { idx=JSON.parse(s); } catch(e){ idx=null; }
+              const t=idx?Date.parse(idx.generated_at):NaN;
+              const age=A.alterTage(t, Date.now());
+              const n=(idx&&Array.isArray(idx.vintages))?idx.vintages.length:0;
+              const vt=n?Date.parse(idx.vintages.at(-1).date):NaN;
+              const vAlter=A.alterTage(vt, Date.now());
+              console.log('Bewegungs-Kanal (gh-pages outputs/board-history/index.json): '+A.zeigeTage(age)+' Tage alt (Schwelle '+MAX+'), '+n+' Vintage(s), juengster Stand vom '+((idx&&n)?idx.vintages.at(-1).date:'?')+' ('+A.zeigeTage(vAlter)+' Tage alt)');
+              if(A.istVeraltet(age,MAX)){ console.log('::error::BEWEGUNGS-ANZEIGE VERALTET: board-history im Datenkanal '+A.zeigeTage(age)+' Tage alt (Schwelle '+MAX+'d), waehrend die Boards weiter deployt werden. URSACHE: einer der vier Schritte zwischen Board-Deploy und Vintage-Publish faellt aus. FOLGE: findash zeigt heutige Boards mit gestrigen Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritte \"Write board-history vintage\" / \"Commit board-history vintage\" / \"Publish board-history vintages\".'); process.exit(1); }
+              if(n<2){ console.log('::error::BEWEGUNGS-ANZEIGE OHNE VERGLEICHSSTAND: nur '+n+' Vintage(s) im Datenkanal — findash vergleicht die zwei juengsten Staende und zeigt ohne den zweiten gar keine Bewegung, ohne es zu melden. NAECHSTER SCHRITT: board-history/ im Repo und den Publish-Schritt in daily-pull.yml pruefen.'); process.exit(1); }
+              if(A.istVeraltet(vAlter,MAX)){ console.log('::error::BEWEGUNGS-DATEN VERALTET: der juengste publizierte Vintage traegt das Datum '+idx.vintages.at(-1).date+', ist also '+A.zeigeTage(vAlter)+' Tage alt (Schwelle '+MAX+'d). Der Publish LAEUFT (sein Stempel ist frisch), schiebt aber immer denselben alten Stand hoch — findash zeigt heutige Boards mit alten Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritt \"Write board-history vintage\": entsteht ueberhaupt noch ein Vintage von heute?'); process.exit(1); }
+              console.log('OK: Bewegungs-Kanal frisch (<= '+MAX+' Tage) mit '+n+' Vintages, juengster Stand '+A.zeigeTage(vAlter)+' Tage alt.');
+            });
+          "
+
+      # Masterplan 2.3-Vorbedingung A7-b — Fail-loud-Gate fuers Preis-Substrat (prices/history/-Shards).
+      # A7-Fehlermodus: der Pull-Historical-Prices-Step meldet success (continue-on-error), aber der
+      # Store wird nie geschrieben (Timeout-Kill vor dem Write) — wochenlang unbemerkt. Seit Tag 294/295
+      # stempelt JEDER echte Store-Write prices/history/_meta.json; dieser Check alarmiert, wenn der
+      # Stempel veraltet ODER die SPY-Serie (Benchmark, wird bei jedem Lauf zuerst gepullt) nicht mehr
+      # fortschreitet. _meta fehlt = Bootstrap (erster Lauf nach Tag 295 noch nicht durch) -> nur Warnung.
+      # Floor-Semantik wie oben (Di-Sa-Kadenz: Montag = floor(2.4d)=2 -> gruen).
+      - name: Check price-substrate freshness (A7-b)
+        if: always()
+        env:
+          PRICE_META_MAX_AGE_DAYS: '2'
+          SPY_MAX_AGE_DAYS: '6'
+        run: |
+          node -e "
+            const store=require('./lib/price-history-store.js');
+            const A=require('./lib/alter.js');
+            const META_MAX=Number(process.env.PRICE_META_MAX_AGE_DAYS), SPY_MAX=Number(process.env.SPY_MAX_AGE_DAYS);
+            const errs=[];
+            const m=store.loadMeta('prices');
+            if(!m){ console.log('::warning::prices/history/_meta.json fehlt — Bootstrap (erster gestempelter Pull nach Tag 295 steht aus); nicht rot.'); }
+            else {
+              const age=A.alterTage(Date.parse(m.updatedAt), Date.now());
+              console.log('Preis-Store-Stempel: '+A.zeigeTage(age)+' Tage alt (Schwelle '+META_MAX+'), tickerCount='+m.tickerCount);
+              if(A.istVeraltet(age,META_MAX)) errs.push('Preis-Store-Stempel '+A.zeigeTage(age)+'d > '+META_MAX+'d — der Preis-Pull schreibt den Store nicht mehr (A7-Fehlermodus).');
+              const spy=(store.loadShard('prices', store.shardOf('SPY'))['SPY'])||[];
+              const last=spy.length?spy[spy.length-1].date:null;
+              const spyAge=last?A.alterTage(Date.parse(last), Date.now()):null;
+              console.log('SPY letzte Bar: '+last+' ('+A.zeigeTage(spyAge)+' Tage alt, Schwelle '+SPY_MAX+')');
+              if(A.istVeraltet(spyAge,SPY_MAX)) errs.push('SPY-Serie steht auf '+last+' ('+A.zeigeTage(spyAge)+'d > '+SPY_MAX+'d) — Preis-Daten schreiten nicht fort.');
+            }
+            if(errs.length){ console.log('::error::PREIS-SUBSTRAT VERALTET — '+errs.join(' | ')+' NAECHSTER SCHRITT: daily-pull Step \"Pull Historical Prices\" pruefen.'); process.exit(1); }
+            console.log('OK: Preis-Substrat frisch (oder Bootstrap).');
+          "
+
+      # S4-PRICE-001 (Block-5-Verifikation 2026-08-03) — dritter Schritt: WIE VIEL Preis
+      # steht ueberhaupt da? Die beiden Schritte darueber messen, ob der Pull noch schreibt
+      # (Store-Stempel) und ob die Benchmark fortschreitet (SPY). Beide sahen am 03.08. frisch
+      # aus, waehrend 1.801 von 15.337 Watchlist-Titeln (11,7 %) keine einzige Kurszeile hatten
+      # und 38 Serien aelter als 30 Tage waren. Genau diese Luecke ist zwischen "der Pull lebt"
+      # und "die Benchmark lebt" hindurchgefallen.
+      #
+      # GATE SEIT TAG 632 (Karl-Entscheid F-29c, 10.08.2026): die KERN-Gruppe (US-Boersen +
+      # Altbestand ohne Boersen-Hint) faerbt den Schritt rot ab 5 % Titeln ohne jede Kurszeile.
+      # Der Auslandsteil bleibt reine MESSUNG und loest nie Alarm aus — dort fehlen schon heute
+      # 17,8 % (bekannte Beschaffungs-Luecke), und die Gesamtquote wandert allein durch Zu- und
+      # Abgaenge um Prozentpunkte. KEIN continue-on-error hier: ein Exit in einem maskierten
+      # Schritt waere wirkungslos und der Alarm nur Deko.
+      # if: always(), damit die Zahl, die erklaert WIE SCHLIMM es steht, nicht ausgerechnet dann
+      # ausfaellt, wenn der Substrat-Schritt darueber angeschlagen hat.
+      - name: Check price coverage (S4-PRICE-001, Kern-Gate ab 5 %)
+        if: always()
+        run: node scripts/heartbeat-preis-abdeckung.js
+
+      # Masterplan Task 0.10 — Dead-Man fuer die Schutz-Kadenzen (weekly-guard / monthly-plan-check).
+      # Der Heartbeat ist der bewiesen-taeglich-lebende, unabhaengige Kanal; er liest die committeten
+      # Kadenz-Marker und wird rot, wenn ein Trigger ausbleibt (Cron still gestoppt / disabled / Marker-
+      # Push haengt). null = noch nie gefeuert (Bootstrap) -> nur ::warning::, nie rot. if: always(),
+      # damit dieser Check unabhaengig vom Freshness-Ergebnis IMMER meldet.
+      - name: Check cadence liveness (0.10 Dead-Man)
+        if: always()
+        env:
+          BACKDATE_DAYS: ${{ github.event.inputs.backdate_days }}
+        run: |
+          node -e "
+            const fs=require('fs');
+            const WEEKLY_MAX=9, MONTHLY_MAX=38;
+            const back=Number(process.env.BACKDATE_DAYS||'0')||0;
+            let m; try{ m=JSON.parse(fs.readFileSync('./state/cadence-heartbeat.json','utf8')); }
+            catch(e){ console.log('::warning::cadence-heartbeat.json fehlt/unparsbar ('+e.message+') — Bootstrap oder geloescht; nicht rot.'); process.exit(0); }
+            const overdue=[];
+            const chk=(field,label,max)=>{
+              const v=m[field];
+              if(v==null){ console.log('::warning::'+label+' noch nie gefeuert (null) — Bootstrap, nicht rot.'); return; }
+              const t=Date.parse(v);
+              if(!Number.isFinite(t)){ console.log('::warning::'+label+' Marker unparsbar ('+v+') — nicht rot.'); return; }
+              const age=(Date.now()-t)/86400000 + back;
+              console.log(label+': '+age.toFixed(1)+' Tage alt (Schwelle '+max+', backdate +'+back+')');
+              if(age>max) overdue.push(label+' '+age.toFixed(1)+'d > '+max+'d');
+            };
+            chk('last_weekly_run','Wochen-Kadenz',WEEKLY_MAX);
+            chk('last_monthly_run','Monats-Kadenz',MONTHLY_MAX);
+            if(overdue.length){ console.log('::error::KADENZ-AUSFALL — '+overdue.join('; ')+'. URSACHE: ein Schutz-Kadenz-Trigger (weekly-guard.yml/monthly-plan-check.yml) laeuft nicht mehr ODER sein Marker-Push haengt. NAECHSTER SCHRITT: Actions + letzte cadence-heartbeat-Commits pruefen.'); process.exit(1); }
+            console.log('OK: Schutz-Kadenzen frisch.');
+          "
