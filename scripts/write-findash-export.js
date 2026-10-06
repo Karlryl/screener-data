@@ -41,8 +41,20 @@
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
+// P89 SHADOW (master decision on review finding 2): the class table is validated strictly
+// (lib throws, the PR check tests this exact file), but a shadow table must never abort the
+// live daily export. On a load/validation error every row gets rankGrundShadow = null and the
+// run log carries ONE loud warning naming the error. write-rule40-export.js reuses this lookup.
+let rankGrundShadowFor;
+try {
+  ({ rankGrundShadowFor } = require('../lib/non-operating-classes.js'));
+} catch (err) {
+  rankGrundShadowFor = () => null;
+  console.warn('::warning::[non-operating-shadow] Klassentabelle ungueltig, rankGrundShadow = null fuer alle Zeilen: ' + err.message);
+}
 
 const ROOT = path.join(__dirname, '..');
 const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
@@ -69,6 +81,53 @@ function readMcapBounds() {
     return b;
   } catch (_) { return null; }
 }
+// ---- P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, NUR additiv ----
+// Ratsentscheid Frage 1, Option C, Formel-Weg Schritt 1: jede HyperGrowth-Zeile (Branchen-
+// boards, Vollboards, Uebersicht) traegt zusaetzlich das Objekt fcfShadow. Es aendert KEINE
+// vorhandene Zahl; findash verwirft unbekannte Schluessel (data-layer/screener.js), die Anzeige
+// sieht den Schatten also nicht. Quality und Small-Cap bleiben ohne Schatten (Quality hat keine
+// Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
+// nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
+const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
+const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
+let _wachstumsSchranken;
+function wachstumsSchranken() {
+  if (_wachstumsSchranken !== undefined) return _wachstumsSchranken;
+  try {
+    const c = JSON.parse(fs.readFileSync(CALIBRATION_FILE, 'utf8'));
+    _wachstumsSchranken = Array.isArray(c && c.growthBounds) ? c.growthBounds : null;
+  } catch (_) { _wachstumsSchranken = null; }
+  return _wachstumsSchranken;
+}
+let _behoerde;
+let _schrankenGewarnt = false;
+// Alle vorkommenden Wachstumsgewichte; der Schatten wird beim EINEN Snapshot-Lesevorgang je Ticker
+// (snapAbleitungenFuer) fuer jedes Gewicht gerechnet. Ein zweites Lesen wuerde die Handtabellen-
+// Zaehler im Lauf-Protokoll doppelt zaehlen (lib/yahoo-q4-known-cases.js runtimeCounters).
+const SCHATTEN_ALPHAS = Array.from(new Set(FORMEL_ALPHA.values()));
+function fcfSchattenJeAlpha(snap, ticker) {
+  if (_behoerde === undefined) _behoerde = ladeBehoerdenJahre();
+  const schranken = wachstumsSchranken();
+  if (schranken === null && !_schrankenGewarnt) {
+    _schrankenGewarnt = true;
+    console.warn('::warning::[fcf-shadow] keine growthBounds in outputs/calibration.json — ruleOfXHeute/ruleOfXShadow ungeklemmt, nicht gleich dem gescorten Wert');
+  }
+  const m = new Map();
+  for (const a of SCHATTEN_ALPHAS.concat([null])) m.set(a, boardSchatten(snap, a, schranken, _behoerde.get(ticker)));
+  return m;
+}
+const LEERER_SCHATTEN = (grund) => ({ fcfMarginStmtFY: null, grund, gjEnde: null, ruleOfXHeute: null, ruleOfXShadow: null,
+  schattenFcfAktiv: false, behoerdeFcfMarginFY: null, behoerdeGeschaeftsjahr: null, behoerdeQuelle: null, behoerdeAbstandPp: null });
+function fcfSchattenFuer(ticker, formulaId) {
+  const abl = snapAbleitungenFuer(ticker);
+  if (!abl.fcfSchatten) return LEERER_SCHATTEN(abl.snapFehler || 'no-snapshot');
+  const alpha = FORMEL_ALPHA.has(formulaId) ? FORMEL_ALPHA.get(formulaId) : null;
+  return abl.fcfSchatten.get(alpha);
+}
+function mitFcfSchatten(formulaId) {
+  return (row) => Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) });
+}
+
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
 const SCOUT_DIR = path.join(OUT_DIR, 'smallcap'); // 5.2: Small-Cap-Board export subdir
@@ -192,8 +251,11 @@ function ladeMcapClassesRegistry(file, snapshotsDir = SNAP_DIR) {
   return entries.length;
 }
 
-/** Appends diagnostic fields after all existing row fields. @param {object} out Completed export row. @returns {object} The same row, with no existing field changed. */
-function ergaenzeMarketCapClassesShadow(out) {
+/** Appends diagnostic fields after all existing row fields. @param {object} out Completed export row. @param {string} [snapshotStore] 'main' or 'smallcap'; small-cap rows get no shadow. @returns {object} The same row, with no existing field changed. */
+function ergaenzeMarketCapClassesShadow(out, snapshotStore = 'main') {
+  // Small-cap rows come from snapshots-smallcap/, a different generation than the class registry's
+  // main snapshots; P88 covers the main store only, so they get no key (absence, not null).
+  if (snapshotStore === 'smallcap') return out;
   // Loaded only by build() (and explicitly by tests): a mapper without a loaded registry adds no key,
   // exactly like before P88, instead of opening files from inside a pure mapper.
   if (_mcapClassesByTicker === null) return out;
@@ -205,7 +267,9 @@ function ergaenzeMarketCapClassesShadow(out) {
     _mcapClassesCache.set(entry, computeClassesShadow(entry, snapshots));
   }
   out.marketCapClassesShadow = _mcapClassesCache.get(entry);
-  out.marketCapClassesDeviationPct = deviationPct(out.marketCap, out.marketCapClassesShadow.value);
+  // listed-classes-only (e.g. Alphabet, unlisted class B): the vendor value covers more than the shadow, so no deviation.
+  out.marketCapClassesDeviationPct = out.marketCapClassesShadow.status === 'ok'
+    ? deviationPct(out.marketCap, out.marketCapClassesShadow.value) : null;
   return out;
 }
 // Anteil genullter Zeilen, ab dem der Writer NICHT mehr ausliefert, sondern abbricht.
@@ -220,15 +284,21 @@ let _mcapGenullt = 0, _mcapGeprueft = 0;
 const _snapCache = new Map();
 function snapAbleitungenFuer(ticker) {
   if (_snapCache.has(ticker)) return _snapCache.get(ticker);
-  let snap = null;
+  let snap = null, snapFehler = null;
   try { snap = prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8'))); }
-  catch (_) { snap = null; }
+  catch (e) { snap = null; snapFehler = e && e.code === 'ENOENT' ? 'no-snapshot' : 'snapshot-unreadable'; } // P87: Grund nur fuer fcfShadow
   const abl = {
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
+    fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
+    snapFehler,
   };
+  // Retain evidence from the very snapshot used above. Defer helper failures,
+  // not source reads, until the isolated provenance step.
+  try { abl.provenanceInputs = captureSnapshot(snap); }
+  catch (error) { abl.provenanceError = error; }
   _snapCache.set(ticker, abl);
   return abl;
 }
@@ -248,16 +318,18 @@ function smallcapWachstumFuer(ticker) {
   try { return revGrowthLeg(prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SMALLCAP_SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')))); }
   catch (_) { return null; }
 }
-function ergaenzeWachstumsBasis(out) {
+function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   const wert = out.revGrowthYoYPct;
   let leg = wert === null ? { basis: 'none', pct: null, periodEnd: null, priorPeriodEnd: null }
-    : snapAbleitungenFuer(out.ticker).wachstum;
-  if (wert !== null && (!leg || leg.pct !== wert)) leg = smallcapWachstumFuer(out.ticker);
+    : snapshotStore === 'smallcap' ? smallcapWachstumFuer(out.ticker) : snapAbleitungenFuer(out.ticker).wachstum;
+  if (snapshotStore === 'auto' && wert !== null && (!leg || leg.pct !== wert)) leg = smallcapWachstumFuer(out.ticker);
   const passt = leg && leg.pct === wert;
   if (!passt) _wachstumOhneEtikett++;
   out.revGrowthBasis = passt ? leg.basis : null;
   out.revGrowthPeriodEnd = passt ? leg.periodEnd : null;
   out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
+  out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
+  out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
   return out;
 }
 function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
@@ -579,10 +651,11 @@ function gedeckelt(score) {
   return typeof score === 'number' && Number.isFinite(score) ? Math.min(SCORE_MAX, score) : score;
 }
 
-function mapBoardRow(r, i) {
+function mapBoardRow(r, i, snapshotStore) {
   const out = {
     rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
     rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
+    rankGrundShadow: rankGrundShadowFor(r.ticker), // SHADOW only; never used by the ranking gate.
     ticker: r.ticker,
     score: gedeckelt(r.score),        // round1 display score (sort determinism was internal _raw)
     track: r.track,        // 'profitable' | 'unprofitable'
@@ -596,13 +669,14 @@ function mapBoardRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
   ergaenzeBelegpunkte(out);            // 29.08.: Belegpunkte neben der Coverage-Behauptung
-  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out))); // Additive shadow, after existing fields.
+  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'); // P88 additive shadow, last keys.
 }
 
-function mapOverviewRow(r, i) {
+function mapOverviewRow(r, i, snapshotStore) {
   const out = {
     rank: i + 1,
     rankGrund: null,            // 18.08.: gesetzt von vergebeRaenge(), s. Belegbarkeits-Gate
+    rankGrundShadow: rankGrundShadowFor(r.ticker), // SHADOW only; scores and ranks stay unchanged.
     ticker: r.ticker,
     formulaId: r.formulaId,     // branch id — only present in the flat overview feed
     track: r.track,
@@ -615,7 +689,7 @@ function mapOverviewRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
   ergaenzeBelegpunkte(out);            // 29.08.: s. mapBoardRow
-  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out))); // Additive shadow, after existing fields.
+  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'); // P88 additive shadow, last keys.
 }
 
 function mapSurvivalRow(r, i) {
@@ -630,7 +704,7 @@ function mapSurvivalRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
-  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out))); // Additive shadow, after existing fields.
+  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), 'main')); // P88 additive shadow, last keys.
 }
 
 // ---- build ---------------------------------------------------------------
@@ -689,8 +763,8 @@ function buildBoard(id, coverage, opts = {}) {
     boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
     mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
-    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), id + '.profitable', rangOpts),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), id + '.unprofitable', rangOpts),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow).map(mitFcfSchatten(id)), id + '.profitable', rangOpts),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow).map(mitFcfSchatten(id)), id + '.unprofitable', rangOpts),
   };
   if (opts.deliveryMode) {
     board.cohortDelivery = cohortDeliveryFor(id, board, opts.deliveryMode, opts.cohortCounts);
@@ -779,7 +853,7 @@ function buildFullBoards(coverage, opts = {}) {
 
 function buildOverview(coverage) {
   const o = readJSON(path.join(HG_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: vergebeRaenge(o.map(mapOverviewRow), 'overview') };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: vergebeRaenge(o.map(mapOverviewRow).map(mitFcfSchatten(null)), 'overview') };
 }
 
 function buildSurvival(coverage) {
@@ -949,6 +1023,19 @@ function buildQuality(coverage, opts = {}) {
 // 'diagnostic' (board-status.js: 'smallcap-'-Praefix), Praereg-DIAGNOSTIC-Start.
 function smallcapStem(file) { return file.replace(/^smallcap-/, '').replace(/\.json$/, ''); }
 
+let _smallcapGrowthSource;
+function smallcapGrowthSource() {
+  if (_smallcapGrowthSource !== undefined) return _smallcapGrowthSource;
+  let files;
+  try { files = fs.readdirSync(SMALLCAP_SNAP_DIR); } catch (_) { return (_smallcapGrowthSource = 'main'); }
+  const usable = files.filter(f => f.endsWith('.json') && !f.startsWith('_manifest') && f !== '_last_good_disk.json')
+    .some(f => {
+      try { return !!prepareYahooQ4Snapshot(readJSON(path.join(SMALLCAP_SNAP_DIR, f)))?.meta?.ticker; }
+      catch (e) { if (e.code === 'YAHOO_Q4_HAND_TABLE_FAILED') throw e; return false; }
+    });
+  return (_smallcapGrowthSource = usable ? 'smallcap' : 'main');
+}
+
 function buildSmallcapBoard(file, coverage, smallcapDir) {
   const stem = smallcapStem(file);
   const b = readJSON(path.join(smallcapDir || SMALLCAP_DIR, file));
@@ -958,14 +1045,14 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource())), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource())), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
 function buildSmallcapOverview(coverage, smallcapDir) {
   const o = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow), 'smallcap/overview') };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource())), 'smallcap/overview') };
 }
 
 function buildSmallcapIndex(coverage, smallcapDir) {
@@ -1077,6 +1164,23 @@ function build(seam = {}) {
       ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
       'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
   }
+  const provenancePaths = BRANCHES.map(id => id + '.json');
+  let provenanceFiles;
+  try {
+    // Baseline boards are complete. Only detached objects receive annotations.
+    provenanceFiles = provenancePaths.map(file => readJSON(path.join(OUT_DIR, file)));
+    (seam.writeProvenance || writeProvenance)(provenanceFiles, { outDir: OUT_DIR, reviewRoot: path.join(ROOT, 'verification-records'),
+      snapshotFor: ticker => {
+        const cached = snapAbleitungenFuer(ticker);
+        if (cached.provenanceError) throw cached.provenanceError;
+        return cached.provenanceInputs;
+      } });
+  } catch (error) {
+    provenanceFiles = null;
+    writeProvenanceFailure(OUT_DIR, 'hypergrowth', error);
+  }
+  if (provenanceFiles) provenancePaths.forEach((file, i) => writeJsonAtomic(path.join(OUT_DIR, file), provenanceFiles[i],
+    { assertFinite: true, indent: 2 }));
   return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
     mcapGenullt: bilanz };
 }
@@ -1253,13 +1357,16 @@ function checkShareDilution(r, where, errs) {
 // zur Zahl: 'none' genau dann, wenn revGrowthYoYPct null ist. null-Basis = unbeschriftet
 // (Zahl liess sich nicht nachrechnen); dann darf auch kein Zeitraum dastehen.
 const REV_GROWTH_FELDER = ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd'];
+const REV_GROWTH_SOURCE_FELDER = ['revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd'];
 function checkRevGrowthBasis(r, where, errs) {
   const da = REV_GROWTH_FELDER.filter((k) => k in r).length;
-  if (da === 0) return;
+  const quellenDa = REV_GROWTH_SOURCE_FELDER.filter((k) => k in r).length;
+  if (da === 0 && quellenDa === 0) return;
   if (da !== REV_GROWTH_FELDER.length) { errs.push(`${where}: revGrowthBasis/PeriodEnd/PriorPeriodEnd nur teilweise vorhanden`); return; }
+  if (quellenDa !== 0 && quellenDa !== REV_GROWTH_SOURCE_FELDER.length) errs.push(`${where}: revGrowthSourcePeriodEnd/SourcePriorPeriodEnd nur teilweise vorhanden`);
   const b = r.revGrowthBasis;
   if (b !== null && !REV_GROWTH_BASES.includes(b)) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)}`);
-  for (const k of REV_GROWTH_FELDER.slice(1)) {
+  for (const k of [...REV_GROWTH_FELDER.slice(1), ...REV_GROWTH_SOURCE_FELDER.filter(k => k in r)]) {
     if (r[k] !== null && isoTag(r[k]) !== r[k]) errs.push(`${where}: ${k}=${JSON.stringify(r[k])} kein ISO-Tag|null`);
     if (r[k] !== null && (b === null || b === 'none')) errs.push(`${where}: ${k} gesetzt bei revGrowthBasis=${JSON.stringify(b)}`);
   }
@@ -1642,7 +1749,7 @@ function validateFile(mk, kind, errs, opts = {}) {
 }
 
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
-function validateExport(outDir = OUT_DIR) {
+function validateExport(outDir = OUT_DIR, opts = {}) {
   const errs = [];
   const indexPath = path.join(outDir, 'index.json');
   const index = readJSONOrNull(indexPath);
@@ -1662,7 +1769,8 @@ function validateExport(outDir = OUT_DIR) {
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
+  return errs.concat(provenanceErrors(outDir, BRANCHES.map(id => id + '.json'), opts.requireProvenance))
+             .concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
              .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
              .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
 }
@@ -2020,7 +2128,7 @@ function selftest() {
 if (require.main === module) {
   if (process.argv.includes('--selftest')) { selftest(); process.exit(0); }
   if (process.argv.includes('--check')) {
-    const errs = validateExport();
+    const errs = validateExport(OUT_DIR, { requireProvenance: true });
     if (errs.length) {
       console.error(`::error::findash-export/v1 schema contract violation (${errs.length}): ${errs.slice(0, 20).join('; ')}`);
       process.exit(1);
@@ -2033,6 +2141,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.
   loadCoverage,

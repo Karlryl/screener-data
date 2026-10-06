@@ -21,6 +21,8 @@ function git(cwd, args, identity = 'Alpha Tester') {
   const env = { ...process.env, GIT_AUTHOR_DATE: DATE, GIT_COMMITTER_DATE: DATE };
   for (const k of Object.keys(env)) if (/^GIT_(DIR|WORK_TREE|INDEX_FILE)$/.test(k)) delete env[k];
   const mail = `${identity.split(' ')[0].toLowerCase()}@example.invalid`;
+  Object.assign(env, { GIT_AUTHOR_NAME: identity, GIT_AUTHOR_EMAIL: mail,
+    GIT_COMMITTER_NAME: identity, GIT_COMMITTER_EMAIL: mail });
   const r = spawnSync('git', ['-c', `user.name=${identity}`, '-c', `user.email=${mail}`,
     '-c', 'commit.gpgsign=false', '-c', 'init.defaultBranch=main', ...args], { cwd, env, encoding: 'utf8' });
   assert.equal(r.status, 0, `git ${args.join(' ')}: ${r.stderr}`);

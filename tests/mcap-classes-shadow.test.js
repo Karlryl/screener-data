@@ -265,3 +265,16 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
     assert.deepEqual(Object.keys(row).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
   }
 });
+
+test('small-cap rows get no shadow key; listed-classes-only rows keep the shadow but no deviation', () => {
+  writer.ladeMcapClassesRegistry(REGISTRY, SNAPSHOTS);
+  const small = writer.ergaenzeMarketCapClassesShadow({ ticker: '688428.SS', marketCap: 1350000000 }, 'smallcap');
+  assert.equal(Object.hasOwn(small, 'marketCapClassesShadow'), false);
+  assert.equal(Object.hasOwn(small, 'marketCapClassesDeviationPct'), false);
+  const listedOnly = writeFixture('listed-only.json', { synthetic: { ...entry, unlistedClasses: true } });
+  writer.ladeMcapClassesRegistry(listedOnly, SNAPSHOTS);
+  const row = writer.ergaenzeMarketCapClassesShadow({ ticker: '688428.SS', marketCap: 1350000000 });
+  assert.equal(row.marketCapClassesShadow.status, 'listed-classes-only');
+  assert.equal(row.marketCapClassesShadow.value, 710000000);
+  assert.equal(row.marketCapClassesDeviationPct, null);
+});

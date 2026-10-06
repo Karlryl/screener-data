@@ -41,6 +41,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { eigenerTempOrdner } = require('./hilfen/eigener-temp-ordner.js'); // P97: removed at process exit
 const W = require('../scripts/write-board-history.js');
 
 let fail = 0;
@@ -288,7 +289,7 @@ check('SCOPING: der Integritaets-Vorrang faerbt NICHT auf den Schrumpfungs-Arm a
 
 // ── BP-9 (WB-9): Zuschlag UND Blendung zugleich -> harter Abbruch ───────────
 function mitRegister(eintraege, fn) {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-ds-'));
+  const base = eigenerTempOrdner('bh-ds-');
   fs.mkdirSync(path.join(base, 'board-history'), { recursive: true });
   fs.writeFileSync(path.join(base, 'board-history', '_excluded.json'),
     JSON.stringify({ _doc: 'test', excluded: [], _massstab_brueche: eintraege }));
@@ -363,7 +364,7 @@ check('REGISTER: kein einziger Eintrag kombiniert daten-schub mit einer Lampe', 
 // Q2-Ehrlichkeitszeile in derselben Ausgabe.
 function boardDatei(rows) { return { profitable: rows, unprofitable: [] }; }
 function laufBasis(mitEintrag) {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-lauf-'));
+  const base = eigenerTempOrdner('bh-lauf-');
   fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
   fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
   fs.writeFileSync(path.join(base, 'outputs', 'calibration.json'),

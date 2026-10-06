@@ -53,14 +53,16 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
+const { isDeepStrictEqual } = require('node:util');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
-const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags, ergaenzeMarketCapClassesShadow, ladeMcapClassesRegistry } = require('./write-findash-export.js');
+const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags, rankGrundShadowFor, ergaenzeMarketCapClassesShadow, ladeMcapClassesRegistry } = require('./write-findash-export.js'); // P89: guarded shadow lookup; P88: class-wise market value shadow
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -69,6 +71,9 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
+// P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
+const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
+const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -303,11 +308,10 @@ function neuestesQuartalsEnde(snapshot) {
   // Quartal, fast alle genau eines zu weit. Die Pruefung haengt am VORHANDENSEIN des
   // Wertes, nie am Wert selbst — ein Rueckfall auf 0 waere hier genau die Luege, die
   // dieser Anker verhindern soll.
+  // A partial quarterly series cannot date growth carried by a valid newer-year record.
+  const neuer = !quartalsBeinTraegt(snapshot) ? axesFns.annualLegNewerYear(snapshot) : null;
+  if (neuer && Number.isFinite(Date.parse(neuer.end))) return Date.parse(neuer.end);
   for (const [enden, feld] of [[ts.revenueQEnds, 'revenueQ'], [an.annualRevEnds, 'annualRev']]) {
-    // Tag 1391: no quarter with a value -> the Jahresbein carries; with a recorded newer fiscal
-    // year it speaks about that year, so that is the period shown and checked for freshness.
-    const neuer = feld === 'annualRev' && !quartalsBeinTraegt(snapshot) ? axesFns.annualLegNewerYear(snapshot) : null;
-    if (neuer && Number.isFinite(Date.parse(neuer.end))) return Date.parse(neuer.end);
     if (!Array.isArray(enden) || !enden.length) continue;
     const werte = norm(snapshot, feld);
     for (let i = 0; i < enden.length; i++) {
@@ -424,6 +428,54 @@ function r40GruppeVon(industry) {
  * Abweisungs-Statistik. Die Statistik ist kein Schmuck: ohne sie sieht "kleines Brett"
  * genauso aus wie "Snapshots fehlen".
  */
+/**
+ * P87: Tor fuer die Schattenmarge, Wort fuer Wort dieselben Tore wie fuer die heutige Marge
+ * (fcfMargeVertrauenswuerdig, einheitenVerdacht, MAX_FCF_MARGIN_PCT). Der Schatten aendert
+ * NICHT, wer aufs Brett kommt; er sagt nur, ob sein Wert dieselben Tore bestanden haette.
+ * @param {{value: (number|null), grund: string}} schatten Ergebnis von fcfMarginStmtFY().
+ * @param {number} wachstumRoh ungeklemmtes Umsatzwachstum der Zeile in Prozent.
+ * @param {object} snapshot Snapshot im Pull-Format.
+ * @returns {string} 'ok' oder der Grund, warum der Schattenwert nicht in r40Shadow eingeht.
+ */
+function r40SchattenTor(schatten, wachstumRoh, snapshot) {
+  if (!schatten || !istZahl(schatten.value)) return schatten ? schatten.grund : 'not-computed';
+  if (!fcfMargeVertrauenswuerdig(schatten.value, norm(snapshot, 'annualFCF'), norm(snapshot, 'annualOCF'))) return 'fcf-invalid';
+  if (einheitenVerdacht(wachstumRoh, schatten.value)) return 'unit-suspect';
+  if (schatten.value > MAX_FCF_MARGIN_PCT) return 'fcf-above-revenue';
+  return SCHATTEN_GRUND.OK;
+}
+
+/**
+ * P87: das additive Exportobjekt fcfShadow einer R40-Zeile. Geschaeftsjahreswerte, nie TTM.
+ * @param {object} k Kandidat aus sammleKandidaten() mit wachstum (geklemmt) aus baueZeilen().
+ * @returns {object|null} null, wenn der Kandidat ohne Schatten gebaut wurde (handgebaute Tests).
+ */
+function r40SchattenZeile(k) {
+  if (!k.fcfSchatten) return null;
+  const sh = k.fcfSchatten;
+  // round1 dieser Datei macht aus null eine 0 (Math.round(null)); der Schatten darf das nie (T2).
+  const r1 = (v) => (istZahl(v) ? round1(v) : null);
+  const tor = k.fcfSchattenTor || sh.grund;
+  const schutz = k.behoerdenSchutz || behoerdenSchutz(undefined, sh);
+  return {
+    fcfMarginStmtFY: r1(sh.value),
+    grund: sh.grund,
+    gjEnde: sh.gjEnde,
+    r40Shadow: tor === SCHATTEN_GRUND.OK ? r1(k.wachstum + sh.value) : null,
+    r40ShadowGrund: tor,
+    behoerdeFcfMarginFY: r1(schutz.marge),
+    behoerdeGeschaeftsjahr: schutz.geschaeftsjahr,
+    behoerdeQuelle: schutz.quelle,
+    behoerdeAbstandPp: r1(schutz.abstandPp),
+  };
+}
+
+let _behoerdenTabelle;
+function behoerdenTabelle() {
+  if (_behoerdenTabelle === undefined) _behoerdenTabelle = ladeBehoerdenJahre();
+  return _behoerdenTabelle;
+}
+
 function sammleKandidaten(opts = {}) {
   const v1Dir = opts.v1Dir || DEFAULT_V1_DIR;
   const snapshotsDir = opts.snapshotsDir || DEFAULT_SNAPSHOTS_DIR;
@@ -549,6 +601,14 @@ function sammleKandidaten(opts = {}) {
       abgewiesen.veraltet++; continue;
     }
 
+    // P87: Schatten aus derselben Datei, durch dieselben Tore; aendert keine Auswahl.
+    const fcfSchatten = fcfMarginStmtFY(snapshot);
+    const fcfSchattenTor = r40SchattenTor(fcfSchatten, wachstumRoh, snapshot);
+    const schutzEintrag = behoerdenSchutz(behoerdenTabelle().get(ticker), fcfSchatten);
+
+    let provenanceInputs, provenanceError;
+    try { provenanceInputs = captureSnapshot(snapshot); }
+    catch (error) { provenanceError = error; }
     kandidaten.push({
       ticker,
       // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen) und
@@ -575,6 +635,10 @@ function sammleKandidaten(opts = {}) {
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
       wachstumBein,
+      fcfSchatten,
+      fcfSchattenTor,
+      behoerdenSchutz: schutzEintrag,
+      provenanceInputs, provenanceError,
     });
   }
 
@@ -662,6 +726,7 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       const zeile = {
         rank: i + 1,
         rankGrund: null,               // das Brett fuehrt nur Zeilen, die die Achsenbelege haben
+        rankGrundShadow: rankGrundShadowFor(k.ticker), // SHADOW only; no filtering or renumbering.
         ticker: k.ticker,
         formulaId: k.branch,           // Herkunftsbrett bzw. Router-Formel; traegt den boardStatus-Schluessel
         track: k.track,
@@ -698,6 +763,7 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       zeile.fcfMarginPct = round1(k.fcfMarginPct);
       zeile.ebitdaMarginPct = k.ebitdaMarginPct === null ? null : round1(k.ebitdaMarginPct);
       zeile.r40Ebitda = k.r40Ebitda === null ? null : round1(k.r40Ebitda);
+      zeile.fcfShadow = r40SchattenZeile(k); // P87: Schatten, additiv, keine sichtbare Zahl aendert sich
       zeile.industry = k.industry;
       zeile.r40Group = k.gruppe;
       zeile.onBoard = k.onBoard;
@@ -851,7 +917,19 @@ function schreibeFehlmarker(outDir, grund) {
   });
 }
 
+/**
+ * Marks every overview row through the shared applicator without changing selection or values.
+ * @param {object[]} rows Selected overview rows, mutated in place.
+ * @param {Map<string, object>} index Validated secondary index for this build.
+ * @returns {object[]} The same rows, with only known secondary markers added.
+ */
+function applyDupIssuerShadowRows(rows, index) {
+  for (const row of rows) applyDupIssuerShadow(row, index);
+  return rows;
+}
+
 function build(opts = {}) {
+  const dupIssuerShadow = secondaryIndex(loadDupIssuerShadowTable());
   const v1Dir = opts.v1Dir || DEFAULT_V1_DIR;
   const outDir = opts.outDir || path.join(v1Dir, BOARD_ID);
   const { index, kandidaten, abgewiesen, gelesen, aufBrett } = sammleKandidaten(opts);
@@ -871,12 +949,30 @@ function build(opts = {}) {
       + ' rechenbar aus ' + gelesen + ' gelesen, ' + JSON.stringify(abgewiesen)
       + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
   }
+  applyDupIssuerShadowRows(rows, dupIssuerShadow);
   const overview = buildOverview(index, rows);
   const indexDatei = buildIndex(index, rows, {
     bounds, kandidaten: kandidaten.length, gelesen, abgewiesen, aufBrett, ueber40,
     grossExportiert, kleinExportiert, grossVorKappung, kleinVorKappung, universeBasis: 'routed',
   });
   schreibeBrett(outDir, overview, indexDatei);
+  let annotated;
+  try {
+    // schreibeBrett clears rule40/, so manifest/marker creation must follow it.
+    annotated = JSON.parse(JSON.stringify(overview));
+    const inputsByTicker = new Map(kandidaten.map(k => [k.ticker, k]));
+    (opts.writeProvenance || writeProvenance)([annotated], { outDir: path.dirname(outDir), board: BOARD_ID,
+      reviewRoot: path.join(__dirname, '..', 'verification-records'), rounding: 'round1',
+      snapshotFor: ticker => {
+        const cached = inputsByTicker.get(ticker);
+        if (cached?.provenanceError) throw cached.provenanceError;
+        return cached?.provenanceInputs;
+      } });
+  } catch (error) {
+    annotated = null;
+    writeProvenanceFailure(path.dirname(outDir), BOARD_ID, error);
+  }
+  if (annotated) writeJsonAtomic(path.join(outDir, 'overview.json'), annotated);
   return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds, ueber40, aufBrett };
 }
 
@@ -896,6 +992,12 @@ function check(opts = {}) {
 
   if (fs.existsSync(path.join(outDir, FAILED_NAME))) {
     return { ok: false, failedMarker: true, errors: ['[rule40] ' + FAILED_NAME + ' liegt im Ordner — der Lauf hat sich selbst als gescheitert markiert.'] };
+  }
+
+  let dupIssuerShadow;
+  try { dupIssuerShadow = secondaryIndex(loadDupIssuerShadowTable()); }
+  catch (error) {
+    return { ok: false, errors: ['[rule40] dupIssuer-Handtabelle unlesbar oder ungueltig: ' + error.message] };
   }
 
   const hauptIndex = readJsonOrNull(path.join(v1Dir, 'index.json'));
@@ -936,6 +1038,10 @@ function check(opts = {}) {
   const gesehen = new Set();
   let letzterR40 = Infinity;
   rows.forEach((r, i) => {
+    const expected = applyDupIssuerShadow({ ticker: r.ticker }, dupIssuerShadow).dupIssuer;
+    if (!isDeepStrictEqual(r.dupIssuer, expected)) {
+      melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): dupIssuer stimmt nicht mit der Handtabelle ueberein.');
+    }
     for (const f of REQUIRED_OVERVIEW_ROW) {
       if (!(f in r)) melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): Pflichtfeld "' + f + '" fehlt.');
     }
@@ -983,6 +1089,7 @@ function check(opts = {}) {
     }
   });
 
+  fehler.push(...provenanceErrors(path.dirname(outDir), ['rule40/overview.json'], opts.requireProvenance));
   return { ok: fehler.length === 0, errors: fehler, rows: rows.length };
 }
 
@@ -993,7 +1100,7 @@ function main(argv) {
   const v1Dir = process.env.RULE40_V1_DIR || DEFAULT_V1_DIR;
   const snapshotsDir = process.env.RULE40_SNAPSHOTS_DIR || DEFAULT_SNAPSHOTS_DIR;
   const outDir = process.env.RULE40_OUT_DIR || path.join(v1Dir, BOARD_ID);
-  const opts = { v1Dir, snapshotsDir, outDir, valueOpenItemsFile: DEFAULT_VALUE_OPEN_ITEMS_FILE };
+  const opts = { v1Dir, snapshotsDir, outDir, valueOpenItemsFile: DEFAULT_VALUE_OPEN_ITEMS_FILE, requireProvenance: true };
 
   if (argv.includes('--check')) {
     const res = check(opts);
@@ -1045,7 +1152,7 @@ module.exports = {
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
   basisQuartal, basisJahr, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
-  neuestesQuartalsEnde, fcfMargeVertrauenswuerdig,
+  neuestesQuartalsEnde, fcfMargeVertrauenswuerdig, r40SchattenTor, r40SchattenZeile,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
-  schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,
+  schreibeBrett, schreibeFehlmarker, pruefeZielordner, applyDupIssuerShadowRows, build, check, main,
 };

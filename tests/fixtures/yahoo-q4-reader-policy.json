@@ -4,6 +4,8 @@
   "lib/e1-compression.js": { "mode": "exempt", "reason": "Comment-only hit: the module explicitly does not read quarterly arrays." },
   "lib/e2-earnings-blowout.js": { "mode": "exempt", "reason": "Reads frozen historical PIT observations; never retrofit historical inputs." },
   "lib/exchange-quarter-check.js": { "mode": "upstream", "reason": "Exchange cross-check step; prepareSnapshot calls it after the hand tables, it compares the original vendor cells with the exchange store." },
+  "lib/fcf-stmt-shadow.js": { "mode": "upstream", "reason": "P87 shadow helper, pure; both callers (write-findash-export.js snapAbleitungenFuer, write-rule40-export.js sammleKandidaten) pass snapshots through prepareYahooQ4Snapshot first." },
+  "lib/export-provenance.js": { "mode": "upstream", "reason": "Pure additive provenance helper; both export writers pass snapshots already processed by prepareYahooQ4Snapshot before captureSnapshot." },
   "lib/newest-qtr-guard.js": { "mode": "exempt", "reason": "Raw vendor anomaly observation before FX; preserves evidence of vendor shape, changes no values." },
   "lib/reload-history.js": { "mode": "upstream", "reason": "Pull supplies a Q4-prepared prior and a hand-table-prepared current snapshot; Q4 gaps, financial false-value corrections and withheld cells in the current snapshot are authoritative and never refilled; raw cache comparisons only preserve provider evidence." },
   "lib/rev-growth-basis.js": { "mode": "upstream", "reason": "Pure label helper; both callers (write-findash-export.js, write-rule40-export.js) pass snapshots already through prepareYahooQ4Snapshot." },
@@ -70,5 +72,6 @@
   "lib/zero-financials-guard.js": { "mode": "exempt", "reason": "Pure financial correction authority compares original provider evidence; invoked by the existing shared production adapter." },
   "scripts/financial-corrections-replay.js": { "mode": "exempt", "reason": "Read-only counterfactual replay intentionally compares original and corrected inputs; no published or historical data writes." },
   "scripts/mcap-classes-shadow-report.js": { "mode": "exempt", "reason": "Shadow report for council question 6: imports only the size-class helpers mcapBandOf/mcapKlasseOf from score.js and reads marketCap and class share fields; it reads no quarterly value and writes only to the --out file outside the repo." },
-  "scripts/fetch-exchange-quarters.js": { "mode": "exempt", "reason": "Reads frozen board-history PIT quarter gaps only to order the Taiwan fetch queue of the exchange-quarters store; writes no quarterly value into any snapshot, score or export." }
+  "scripts/fetch-exchange-quarters.js": { "mode": "exempt", "reason": "Reads frozen board-history PIT quarter gaps only to order the Taiwan fetch queue of the exchange-quarters store; writes no quarterly value into any snapshot, score or export." },
+  "scripts/period-labels-check.js": { "mode": "hook", "hook": "applyFinancialCases(input).snapshot", "reason": "Offline shadow check (P68, 06.10.2026): reads fixture rows and the frozen published export only, applies the hand-table overlay itself before labelling and writes nothing." }
 }
