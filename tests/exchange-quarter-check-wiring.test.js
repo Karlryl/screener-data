@@ -1,6 +1,6 @@
 'use strict';
 // tests/exchange-quarter-check-wiring.test.js — standalone runner (exit 0/1). Tag 1403 (G2b) wiring:
-// prepareSnapshot runs the exchange step at read time (committed mode off = no-op), the pull never runs it
+// prepareSnapshot runs the exchange step at read time (committed mode fill-only), the pull never runs it
 // (critique 2: a persisted fill or guard null would block the November reload), board history records it
 // additively, the reason reaches financialReasons. Active mode is injected only into memory module copies.
 const assert = require('node:assert/strict');
@@ -45,14 +45,19 @@ const activeStep = { ...X, defaultContext: () => CTX,
 const quiet = fn => { const w = console.warn, e = console.error; console.warn = console.error = () => {};
   try { return fn(); } finally { console.warn = w; console.error = e; } };
 const q4Active = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-quarter-check.js': activeStep });
-const marked = s => serial(s).includes('"exchangeFill"') || serial(s).includes('exchange-pair-mismatch') || serial(s).includes('exchange-annual-mismatch');
+const fillStep = { ...X, defaultContext: () => CTX,
+  applyExchangeCheck: (s, o = {}) => X.applyExchangeCheck(s, { ...o, context: CTX }) };
+const q4Fill = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-quarter-check.js': fillStep });
+const q4Off = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-quarter-check.js': {
+  ...fillStep, applyExchangeCheck: s => X.applyExchangeCheck(s, { mode: 'off' }) } });
+const marked = s => serial(s).includes('"exchangeFill"') || /exchange-(pair|annual|quarter)-mismatch/.test(serial(s));
 const T = Object.keys(F.snapshots);
 
-test('committed mode off: prepareSnapshot equals the hand-table chain of origin/main for every fixture snapshot', () => {
+test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/main for every fixture snapshot', () => {
   for (const t of T) {
     const s = clone(F.snapshots[t]);
     const chain = applyZeroGuard(applyFinancialCases(applyKnownCases(clone(s)).snapshot).snapshot).snapshot;
-    const out = quiet(() => q4.prepareSnapshot(s));
+    const out = quiet(() => q4Off.prepareSnapshot(s));
     assert.equal(serial(out), serial(chain), t);
     assert.equal(out, s, t + ': identical object (no hand-table hit, step is a no-op)');
   }
@@ -111,7 +116,7 @@ test('stale-quarter reload: latestReportedQuarter is the same with the step acti
 test('board history: pit.revenueQExchange only with markers (active), with the original vendor values; absent in mode off', () => {
   const W = require('../scripts/write-board-history.js');
   for (const t of ['000599.SZ', '000002.SZ', '600150.SS']) {
-    const off = W.buildPit(quiet(() => q4.prepareSnapshot(clone(F.snapshots[t]))), new Set(), t);
+    const off = W.buildPit(quiet(() => q4Off.prepareSnapshot(clone(F.snapshots[t]))), new Set(), t);
     assert.ok(!Object.hasOwn(off, 'revenueQExchange'), t);
     const on = W.buildPit(quiet(() => q4Active.prepareSnapshot(clone(F.snapshots[t]))), new Set(), t);
     const rec = on.revenueQExchange;
@@ -137,6 +142,42 @@ test('store older than the limit: the rows stay unchecked and the process prints
   } finally { console.error = e; console.warn = w; }
   for (const [a, b] of out) assert.equal(b, a, 'unchecked: nothing applied');
   assert.equal(lines.filter(l => l.startsWith('::warning::[exchange-check]') && l.includes('store-old')).length, 1, lines.join('\n'));
+});
+
+test('committed fill-only is wired through prepareSnapshot but never through the pull; break-once red', () => {
+  assert.equal(X.policy.mode, 'fill-only');
+  const check = reader => {
+    for (const t of T) {
+      const original = clone(F.snapshots[t]), before = serial(original);
+      const expected = X.applyExchangeCheck(clone(original), { mode: 'fill-only', context: CTX }).snapshot;
+      const read = quiet(() => reader.prepareSnapshot(original));
+      assert.equal(serial(read), serial(expected), t);
+      assert.equal(serial(original), before, t + ': read-time only');
+      assert.equal(serial(quiet(() => reader.prepareSnapshot(clone(original), { atPull: true }))), before, t + ': pull has no fill');
+    }
+  };
+  check(q4Fill);
+  const inert = moduleCopy('lib/yahoo-q4-known-cases.js', s => replaceLine(s,
+    '    const exchange = applyExchangeCheck(zero.snapshot);', "    const exchange = { snapshot: zero.snapshot, mode: 'off' };"),
+    { './exchange-quarter-check.js': fillStep });
+  assert.throws(() => check(inert), assert.AssertionError); breaks++;
+  const persists = moduleCopy('lib/yahoo-q4-known-cases.js', s => replaceLine(s,
+    '    if (options.atPull) return zero.snapshot;', ''), { './exchange-quarter-check.js': fillStep });
+  assert.throws(() => check(persists), assert.AssertionError); breaks++;
+  const pull = moduleCopy('pull-yahoo.js', s => s, { './lib/yahoo-q4-known-cases.js': q4Fill });
+  const checkPull = lib => {
+    for (const t of T) {
+      const s = clone(F.snapshots[t]); quiet(() => lib._convertSnapshotToUSD(s));
+      assert.ok(!marked(s), t);
+      assert.equal(serial(s.timeseries), serial(F.snapshots[t].timeseries), t);
+    }
+  };
+  checkPull(pull);
+  const brokenPull = moduleCopy('pull-yahoo.js', s => replaceLine(s,
+    '  const q4Checked = yahooQ4.prepareSnapshot(snap, { atPull: true });', '  const q4Checked = yahooQ4.prepareSnapshot(snap);'),
+    { './lib/yahoo-q4-known-cases.js': q4Fill });
+  assert.throws(() => checkPull(brokenPull), assert.AssertionError); breaks++;
+  check(q4Fill); checkPull(pull);
 });
 
 test('live files unchanged by this test run', () => assert.deepEqual(LIVE.map(sha), liveBefore));

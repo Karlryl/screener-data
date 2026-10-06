@@ -117,6 +117,7 @@ Zusaetzlich zur Huelle (§2):
 | `financialDataReasons` | string[] | **OPTIONAL (additiv, 30.09.2026)** | nein (Anwesenheit NEIN; nur geschrieben, wenn mindestens ein Grund vorliegt) | Deutsche Klartext-Gruende aus der Finanzdaten-Handtabelle (`configs/financial-known-cases.json`, `lib/financial-known-cases.js financialReasons()`): ein Anbieterwert wurde durch einen Primaerquellen-Wert ersetzt oder ist absichtlich leer (z. B. falsche Null, neues Quartal nicht gegen Primaerquelle geprueft). Reine Anzeige, kein Score-Input. **Bewusst NICHT im `lamps`-Array:** `lamps` bleibt eine geschlossene Schluessel-Liste der Registry, ein freier Satz dort erschiene beim Konsumenten als unbekannte Lampe. Dasselbe Feld traegt die Ausschlussliste (`scripts/write-excluded-list.js`). Konsumenten, die das Feld nicht kennen, ignorieren es. |
 | `revGrowthBasis` / `revGrowthPeriodEnd` / `revGrowthPriorPeriodEnd` | `"quarter"`\|`"year"`\|`"yearNewerRecord"`\|`"none"`\|null; Daten: ISO-Tag `YYYY-MM-DD`\|null | **OPTIONAL (additiv, 01.10.2026)** | ja, wenn present: alle drei zusammen, Basis im Enum, Daten echte ISO-Tage; `"none"` genau dann, wenn `revGrowthYoYPct` null ist; bei Basis null oder `"none"` kein Zeitraum. Datei-Ebene: auf allen Zeilen oder auf keiner | **Was `revGrowthYoYPct` misst.** `quarter` = juengstes Quartal gegen das Vorjahresquartal (`revQuartalsYoY`); `year` = Rueckfall Geschaeftsjahr gegen Vorjahr (`annualRev[0]/annualRev[1]`, z. B. wenn die Lueckenregel das Quartalsbein verwirft oder es keine Quartale gibt); `yearNewerRecord` = Rueckfall ueber das vermerkte neuere Geschaeftsjahr (`meta.annualRevNewerYear`, Tag 1391); `none` = keine Wachstumszahl. `revGrowthPeriodEnd` = Ende der neueren Periode, `revGrowthPriorPeriodEnd` = Ende der Vergleichsperiode, beide nur aus den gespeicherten Daten (`revenueQEnds`, `annualRevEnds`, `annualRevNewerYear.end/priorEnd`); **null heisst undatiert, es wird nie ein Datum geraten** (gemessen 01.10.2026: bei 558 von 600 Jahreszeilen der 13 Branchenbretter ist die Jahresreihe im Snapshot undatiert). **Basis null** heisst unbeschriftet: der Schreiber setzt das Etikett nur, wenn er die exportierte Zahl aus dem Snapshot exakt nachrechnet (`lib/rev-growth-basis.js`, derselbe Zweig wie `revGrowthLevel`), sonst bleiben alle drei null und der Lauf meldet die Zahl als Warnung. Quelle `scripts/write-findash-export.js ergaenzeWachstumsBasis()`; Waechter `tests/rev-growth-basis.test.js` (prueft an einem echten Export jede Zeile gegen eine frische Nachrechnung). Reine Anzeige, kein Score-, Rang- oder Gate-Einfluss. |
 | `valueFlags` | `[{field, periodEnd, acceptedValue, newValue, factor, firstSeen, labels}]` | **OPTIONAL (additive, 02.10.2026, Tag 1401)** | shape yes, when present: non-empty list; `field` in `revenueQ`\|`grossProfitQ`\|`marketCap`; `periodEnd` an ISO day for the two quarterly fields and `null` for `marketCap`; `acceptedValue` finite > 0; `newValue` finite >= 0; `factor` `null` exactly when `newValue` is 0, else >= 3; `firstSeen` ISO day; `labels` from `korrigiert-von-uns`\|`kapitalmassnahme`\|`zurueckgekehrt`\|`nicht-auf-board`. Presence NO | **Marks a value that is still under review; it never blanks or changes one (owner decision 01.10.2026).** Present only on rows whose ticker has an OPEN item in `data-health/value-open-items.json` (the list the step "Value open-items (factor 3, sticky)" writes earlier in the same run, guide `docs/value-open-items.md`): one entry per open cell, i.e. a stored `revenueQ`/`grossProfitQ` quarter or the `marketCap` that moved by more than factor 3 (or to 0) against its last accepted value. A row without an open item carries NO key (absence, not an empty array); a closed item gives no flag. `acceptedValue`/`newValue` are in stored units (USD, as in `board-history/` `pit`); `newValue` is the last value that was still more than factor 3 away; `factor` is the larger of new/accepted and accepted/new; `firstSeen` is the day the cell opened. Score, rank, growth, `marketCap` and every other key of the row are byte-identical to a build without the list. A missing or unreadable list file gives no flags and a `::warning::` line, never a failed export; a single cell that breaks the shape rule above is dropped with a `::warning::` (the reader and this check share one rule, `lib/value-open-items.js valueFlagProblems()`), so the list can never turn this gate red; a list whose `updatedFor` is not the run day (the open-items step failed) is still used and gives a `::warning::`. Source `scripts/write-findash-export.js ergaenzeWaehrungsbeleg()` (all three row mappers, also `full/`, `quality/`, `smallcap/`), and the `rule40/` board (§14); the stored vintage row carries the same list (`scripts/write-board-history.js buildBoardVintage()`); the public data channel (§12) keeps rank/ticker/score only. Guard `tests/value-flags.test.js`. Owner-facing sentence the app shows next to a marked value (German, `TT.MM.JJJJ` = the earliest `firstSeen` of the row's flags): "Dieser Wert hat sich seit TT.MM.JJJJ um mehr als das Dreifache verändert und wird noch geprüft." ("verändert", not "gesprungen": it covers a drop to a third or to 0 as well as a rise) Additive optional field, no v2 bump (§7: a v1 consumer reads the file without a code change; unknown keys are ignored). |
+| `dupIssuer` | `{of: string, issuer: string, basis: "hand-table:dup-issuer-shadow"}` | **OPTIONAL (additive, 06.10.2026, shadow)** | presence and exact marker checked by `tests/scoring/dup-issuer-shadow-export.test.js`; additive key accepted by `--check` | Reports a known secondary ticker from `configs/dup-issuer-shadow-table.json`. `of` is the recorded `codeKeeps`, not a primary-listing decision; `issuer` is a report label, never a name override. Absence means "not a known secondary listing"; never `null` or `false`. Also marked when `of` is absent from this board. No rank, score, name, exclusion or membership changes. Same shared applicator for BoardRow, OverviewRow and SurvivalRow, including `full/`, `quality/` and `smallcap/`. `homeListingProposal` is information only and is not emitted. |
 
 ---
 
@@ -293,6 +294,7 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 | `financialDataReasons` | wie BoardRow §3 | **OPTIONAL (additiv, 30.09.2026)** | nein | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWaehrungsbeleg`). |
 | `revGrowthBasis` / `revGrowthPeriodEnd` / `revGrowthPriorPeriodEnd` | wie BoardRow §3 | **OPTIONAL (additiv, 01.10.2026)** | ja, wenn present (wie §3) | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWachstumsBasis`). |
 | `valueFlags` | as BoardRow §3 | **OPTIONAL (additive, 02.10.2026, Tag 1401)** | shape yes, when present (as §3) | As BoardRow §3, same mapper branch (`ergaenzeWaehrungsbeleg`). |
+| `dupIssuer` | `{of: string, issuer: string, basis: "hand-table:dup-issuer-shadow"}` | **OPTIONAL (additive, 06.10.2026, shadow)** | presence and exact marker checked by `tests/scoring/dup-issuer-shadow-export.test.js`; additive key accepted by `--check` | Reports a known secondary ticker from `configs/dup-issuer-shadow-table.json`. `of` is the recorded `codeKeeps`, not a primary-listing decision; `issuer` is a report label, never a name override. Absence means "not a known secondary listing"; never `null` or `false`. Also marked when `of` is absent from this board. No rank, score, name, exclusion or membership changes. Same shared applicator for BoardRow, OverviewRow and SurvivalRow, including `full/`, `quality/` and `smallcap/`. `homeListingProposal` is information only and is not emitted. |
 
 ---
 
@@ -315,6 +317,7 @@ Huelle (§2) + `rows: Array<SurvivalRow>`, 73 Zeilen, **runway-desc nulls-last**
 | `financialDataReasons` | wie BoardRow §3 | **OPTIONAL (additiv, 30.09.2026)** | nein | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWaehrungsbeleg`). |
 | `revGrowthBasis` / `revGrowthPeriodEnd` / `revGrowthPriorPeriodEnd` | wie BoardRow §3 | **OPTIONAL (additiv, 01.10.2026)** | ja, wenn present (wie §3) | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWachstumsBasis`). Survival-Zeilen tragen nie eine Wachstumszahl und stehen deshalb auf `"none"` |
 | `valueFlags` | as BoardRow §3 | **OPTIONAL (additive, 02.10.2026, Tag 1401)** | shape yes, when present (as §3) | As BoardRow §3, same mapper branch (`ergaenzeWaehrungsbeleg`). |
+| `dupIssuer` | `{of: string, issuer: string, basis: "hand-table:dup-issuer-shadow"}` | **OPTIONAL (additive, 06.10.2026, shadow)** | presence and exact marker checked by `tests/scoring/dup-issuer-shadow-export.test.js`; additive key accepted by `--check` | Reports a known secondary ticker from `configs/dup-issuer-shadow-table.json`. `of` is the recorded `codeKeeps`, not a primary-listing decision; `issuer` is a report label, never a name override. Absence means "not a known secondary listing"; never `null` or `false`. Also marked when `of` is absent from this board. No rank, score, name, exclusion or membership changes. Same shared applicator for BoardRow, OverviewRow and SurvivalRow, including `full/`, `quality/` and `smallcap/`. `homeListingProposal` is information only and is not emitted. |
 
 ---
 
@@ -374,6 +377,23 @@ Huelle (§2) +:
 - Bei v2: neue Datei `outputs/findash-export/v2/`, der v1-Ordner bleibt eine Migrationsphase lang parallel bestehen, damit das Dashboard umstellen kann. `SCHEMA`, die `VALID_*`-Enum-Listen und `validateFile()`/`validate*Row()` im Writer werden auf v2 gepinnt, der Selftest auf v2-Cases.
 
 Faustregel: **Kann ein v1-Consumer die Datei ohne Code-Aenderung weiterlesen? → v1. Sonst → v2.**
+
+---
+
+### Shadow verification on the frozen export (06.10.2026)
+
+`node scripts/dup-issuer-shadow-diff.js` verifies every `SHA256SUMS.txt` entry in
+`outputs/findash-export/v1-frozen-20261003/`, marks copies under `os.tmpdir()`,
+and prints the after directory and every changed row. It never rebuilds from engine outputs
+or snapshots. To run the same validator used by `--check` on that temporary tree:
+
+```sh
+node -e "const e=require('./scripts/write-findash-export.js').validateExport(process.argv[1]); if(e.length){console.error(e.join('\n'));process.exit(1)} console.log('findash-export/v1 schema OK.');" "<after-directory>"
+```
+
+The CLI `--check` uses its fixed production directory; the exported `validateExport(outDir)`
+provides this existing read-only seam. The shared `.contract.json` remains unchanged because
+it lists required fields and accepts additive optional keys.
 
 ---
 
@@ -690,6 +710,8 @@ Oberflaeche — keinen neuen Leser.
 und VOR dem Pages-Deploy. Er rechnet **keine Achse und keinen Score** neu. `score` bleibt in
 jeder Zeile der unveraenderte Engine-Score — und ist `null` fuer Namen, die auf keinem Brett
 stehen (eine 0 waere dort eine Behauptung, die niemand aufgestellt hat).
+
+Seit 06.10.2026 traegt auch das Rule-of-40-Brett additiv denselben optionalen Schluessel `dupIssuer` mit der Semantik aus §3 und demselben Anwender `applyDupIssuerShadow` aus `lib/dup-issuer-shadow-table.js`; der Dateicheck weist fehlende oder abweichende Markierungen bekannter Zweitnotierungen zurueck.
 
 **Universum: das GEROUTETE Universum, nicht die Brett-Zeilen.** Der Schreiber laeuft ueber
 `snapshots/` und laesst jeden Namen durch `src/scoring/router.js route()` (read-only). Grund:
