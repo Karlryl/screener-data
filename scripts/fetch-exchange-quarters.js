@@ -254,6 +254,11 @@ function taiwanQueue(store, tickers, seasons, priority, nowMs) {
   const rank = (t) => (priority.get(t) ? priority.get(t).rank : 1e9);
   tw.sort((a, b) => tier(a) - tier(b) || rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0));
   const first = [], refresh = [];
+  const deferred = nd => {
+    if (!nd) return false;
+    const wait = nd.code === 406 ? TW_RETRY_NODATA_MS : nd.code === 'no-line' || nd.code === 'bad-id' || nd.code === 'ceased' ? TW_RETRY_NOLINE_MS : TW_RETRY_FAIL_MS;
+    return nowMs - Date.parse(nd.at) < wait;
+  };
   for (const tk of tw) {
     const c = (store && store.companies[tk]) || { seasons: {}, noData: {} };
     for (const s of seasons) {
@@ -262,16 +267,13 @@ function taiwanQueue(store, tickers, seasons, priority, nowMs) {
       // before 25 days after its quarter end (02.10.2026: 115Q3 waits, it would only answer 406).
       if (nowMs - Date.parse(s.periodEnd + 'T00:00:00Z') < TW_SEASON_LEAD_MS) continue;
       const nd = c.noData && c.noData[s.key];
-      if (nd) {
-        const wait = nd.code === 406 ? TW_RETRY_NODATA_MS : nd.code === 'no-line' || nd.code === 'bad-id' || nd.code === 'ceased' ? TW_RETRY_NOLINE_MS : TW_RETRY_FAIL_MS;
-        if (nowMs - Date.parse(nd.at) < wait) continue;
-      }
+      if (deferred(nd)) continue;
       first.push({ tk, s });
     }
     const newest = seasons.find((s) => c.seasons[s.key]);
     if (newest) {
       const nd = c.noData && c.noData[newest.key];
-      if (nd && nd.code === 'ceased' && nowMs - Date.parse(nd.at) < TW_RETRY_NOLINE_MS) continue;
+      if (deferred(nd)) continue;
       const at = lastRead.get(tk + ' ' + newest.key);
       if (!at || nowMs - Date.parse(at) >= TW_REFRESH_MS) refresh.push({ tk, s: newest });
     }
