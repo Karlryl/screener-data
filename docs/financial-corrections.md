@@ -562,6 +562,18 @@ Eingetragen ist trotzdem nichts, und die Erweiterung für Jahres-Ersatzwerte ist
 
 Die Prüfung beim Laden der Tabelle verlangt jetzt zusätzlich, dass der Quellwert, auf den ein Ersatzwert zurückgeht, für das Quartal des Falls gilt: Das Ende des Quellzeitraums (bei einer Differenz das Ende des abgeleiteten Zeitraums, also bei gleichem Beginn das Ende des längeren Zeitraums, bei gleichem Ende der Tag vor Beginn des kürzeren) liegt höchstens sieben Tage neben der Periode des Falls. Die sieben Tage braucht DCO, dessen Quartale nach 52/53 Wochen bis zu vier Tage neben dem Kalenderquartal enden. Vertauscht jemand die Perioden zweier Fälle derselben Firma und lässt Werte und Quellen stehen, lehnt die Prüfung die ganze Tabelle ab. Alle 212 Fälle bestehen; die Regel ändert keinen Wert.
 
+## Wachstum über zwei Geschäftsjahre: Ora Banda, Capricorn, Tsuruha leer (06.10.2026)
+
+Problem: Der Anbieter liefert bei drei Firmen das mittlere Geschäftsjahr nicht. Die Jahresreihe springt dadurch von 2026 direkt auf 2024, und das angezeigte Umsatzwachstum lief über zwei Jahre (Stand 06.10.: Ora Banda Mining OBM.AX 276,9 %, Rule of 40 Platz 16; Capricorn Metals CMM.AX 97,8 %, Rule of 40 Platz 134; Tsuruha 3391.T 41,2 % über 21 Monate, Gesundheit Platz 78).
+
+- Ora Banda: Geschäftsjahr bis 30.06.2025 fehlt; Geschäftsbericht 2025, PDF-Seite 69: „Revenue 2 404,292 214,236“ (Tsd. AUD).
+- Capricorn: Geschäftsjahr bis 30.06.2025 fehlt; Mitteilung vom 29.08.2025, PDF-Seite 31: „Revenue 2 505,892 359,727“ (Tsd. AUD).
+- Tsuruha: Umstellung des Geschäftsjahres auf Ende Februar; das Rumpfjahr bis 28.02.2025 (9,5 Monate) fehlt, und die Firma nennt selbst keine Veränderungsrate (Ergebnisbericht 2026年2月期, Anmerkung zum 決算期変更).
+
+Regel: Gesperrt wird das falsche Vorjahr (Position 1) samt älteren Jahren, das neueste Jahr bleibt. Liefert der Anbieter das fehlende Jahr nach, ergibt sich wieder ein Paar benachbarter Jahre, ohne dass die Tabelle geändert werden muss (Test `tests/p106-nonadjacent-annual-withhold.test.js`). Keine Formeländerung; die allgemeine Regel „Jahrespaare nur 11 bis 13 Monate auseinander" liegt beim Rat (Frage 10).
+
+Wirkung auf den eingefrorenen Rohständen vom 06.10.: Die drei Zeilen verlieren ihr Wachstum und stehen auf den HyperGrowth-Boards ohne Rang („zu wenig belegte Achsen") mit dem Sperrgrund. In den Top 20 ändert sich nur Rule of 40 (Ora Banda heraus, SQM rückt auf Platz 20). Die Perzentile der Vergleichsgruppen Rohstoffe und Gesundheit verschieben sich leicht (Ränge höchstens 13 Plätze). Ora Banda und Capricorn erscheinen neu auf der nicht angezeigten Quality-Liste.
+
 ## Breite Nullregel: ausschließlich Schattenrechnung
 
 Alle 122 gemessenen Scoreänderungen stehen in der folgenden Tabelle und in financial-corrections-board-changes.csv. Alle 9900 Zellen stehen in financial-corrections-shadow-cells.csv. 26 sichtbare Auswirkungen bleiben auch bei festgehaltener Vergleichskalibrierung; die übrigen entstehen bei der regulären Neukalibrierung. Keine dieser breiten Änderungen ist aktiviert.
