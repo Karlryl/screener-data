@@ -28,9 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 220 authorized cells (199 quarterly, 21 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 220);
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 21);
+test('all 224 authorized cells (199 quarterly, 25 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 224);
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 25);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 220);
+  assert.equal(validateTable(clone(table)).cases.length, 224);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -1038,9 +1038,9 @@ const traceKind = c => {
 const TRACE_LINE = "    if (!traceable(c)) throw new Error('Replacement matches no source value: ' + key);";
 test('replacement values trace to their sources: the whole real table passes, a typo throws at validation', () => {
   const count = cases => cases.reduce((m, c) => { const k = traceKind(c); m[k] = (m[k] || 0) + 1; return m; }, {});
-  // The 162 cases of revision 2026-10-01c plus four annual P50 and four annual P47 cases: 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one
+  // The 162 cases of revision 2026-10-01c plus four annual P50 and eight annual P47 cases: 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one
   // issuer-rounded confirmation (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 114, difference: 16, rounded: 1, exempt: 10, null: 29 });
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 118, difference: 16, rounded: 1, exempt: 10, null: 29 });
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
@@ -1359,7 +1359,7 @@ test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture
     const rows = key === 'cases' ? table.cases.filter(c => !/^(indomim|aeon|okasan)-\d{4}-\d{2}-\d{2}-annualRev$/.test(c.caseId)) : table[key];
     assert.equal(rows.length, count); assert.equal(digest(rows), hash, key);
   }
-  assert.equal(table.cases.length - 212, 8, 'only the four P50 and four P47 cases are new');
+  assert.equal(table.cases.length - 212, 12, 'only the four P50 and eight P47 cases are new');
   assert.equal(Object.keys(fixture).length, 42);
   const result = Object.entries(fixture).map(([ticker, s]) => [ticker, applyFinancialCases(clone(s)), financialReasons(applyFinancialCases(clone(s)).snapshot)]);
   assert.equal(digest(result), '52d547a4beeeb24c30daf9cbf15b250fdf83af2263e1bd3168afb0e6700aef3a',
