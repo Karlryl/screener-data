@@ -80,8 +80,39 @@ test('currency, unit, source, duplicate date, missing date and vendor drift fail
     assert.deepEqual(raw,saved);
     assert.deepEqual(applyFinancialCases(r.snapshot).snapshot,r.snapshot);
   }
+  // P99 merge condition: a withheld newest year withholds every older year too (no comparison across the hole).
   const drift=fixture(); drift.annual.annualRev[0].value++;
-  assert.deepEqual(applyFinancialCases(drift).snapshot.annual.annualRev.slice(1).map(value),expected.slice(1).map(n=>n*fx));
+  assert.deepEqual(applyFinancialCases(drift).snapshot.annual.annualRev.map(value),[null,null,null,null]);
+});
+test('P99 lock 1: a withheld middle year withholds every older year; newer corrected year stays; idempotent', () => {
+  const { revAcceleration } = require('../src/scoring/axes.js');
+  const raw=fixture(); raw.annual.annualRev[1].value+=1; // FY2025 vendor value drifted -> held
+  const r=applyFinancialCases(raw), rows=r.snapshot.annual.annualRev;
+  assert.deepEqual(rows.map(value),[expected[0]*fx,null,null,null]);
+  assert.equal(rows[1].financialMissing.reasonCode,'vendor-value-changed');
+  assert.deepEqual(rows.slice(2).map(x=>x.financialMissing.reasonCode),['annual-older-than-withheld','annual-older-than-withheld']);
+  assert.deepEqual(rows.slice(2).map(x=>x.financialMissing.caseId),[cases[2].caseId,cases[3].caseId]);
+  assert.deepEqual(applyFinancialCases(r.snapshot).snapshot,r.snapshot,'second pass is idempotent');
+  // The annual fallback of revAcceleration() needs three present years; it must not pair FY2026 with FY2024.
+  assert.equal(revAcceleration({ ...r.snapshot, timeseries:{} }, null),null);
+  // Break once: without the lock the older years stay present and the fallback compares across the hole.
+  const unlocked=clone(rows); unlocked[2]={value:expected[2]*fx}; unlocked[3]={value:expected[3]*fx};
+  assert.notEqual(revAcceleration({ ...r.snapshot, annual:{ ...r.snapshot.annual, annualRev:unlocked }, timeseries:{} }, null),null); breaks++;
+});
+test('P99 lock 2: reload never refills a withheld annual hand-table hole, not even with an earlier corrected value', () => {
+  const { preserveReloadHistory } = require('../lib/reload-history.js');
+  const period = (end, fetchedAt) => ({ end, duration:'12M', currency:'INR', unit:'currency', basis:'reported', fetchedAt });
+  const ends=fixture().annual.annualRevEnds;
+  const previous=applyFinancialCases(fixture()).snapshot; // stored, fully corrected
+  previous.meta={ ...previous.meta, fetchedAt:'2026-10-01T00:00:00Z', statementPeriods:{ annualRev: ends.map(e=>period(e,'2026-10-01T00:00:00Z')) } };
+  const raw=fixture(); raw.annual.annualRev[1].value+=1;
+  const next=applyFinancialCases(raw).snapshot; // FY2025 and older withheld
+  next.meta={ ...next.meta, fetchedAt:'2026-10-06T00:00:00Z', statementPeriods:{ annualRev: ends.map(e=>period(e,'2026-10-06T00:00:00Z')) } };
+  const kept=preserveReloadHistory(clone(next), previous);
+  assert.deepEqual(kept.annual.annualRev.map(value),[expected[0]*fx,null,null,null],'withheld years stay withheld');
+  // Break once: an unmarked hole IS refilled, so the protection comes from the hand-table marker.
+  const plain=clone(next); for (const i of [1,2,3]) plain.annual.annualRev[i]=null;
+  assert.notEqual(value(preserveReloadHistory(plain, previous).annual.annualRev[1]),null); breaks++;
 });
 test('source period, amount, currency, unit and zero replacement are rejected at load time', () => {
   for(const change of [
