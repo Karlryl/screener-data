@@ -69,6 +69,7 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
+const { rankGrundShadowFor } = require('../lib/non-operating-classes.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -662,6 +663,7 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       const zeile = {
         rank: i + 1,
         rankGrund: null,               // das Brett fuehrt nur Zeilen, die die Achsenbelege haben
+        rankGrundShadow: rankGrundShadowFor(k.ticker), // SHADOW only; no filtering or renumbering.
         ticker: k.ticker,
         formulaId: k.branch,           // Herkunftsbrett bzw. Router-Formel; traegt den boardStatus-Schluessel
         track: k.track,

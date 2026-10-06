@@ -43,6 +43,7 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
+const { rankGrundShadowFor } = require('../lib/non-operating-classes.js');
 
 const ROOT = path.join(__dirname, '..');
 const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
@@ -553,6 +554,7 @@ function mapBoardRow(r, i) {
   const out = {
     rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
     rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
+    rankGrundShadow: rankGrundShadowFor(r.ticker), // SHADOW only; never used by the ranking gate.
     ticker: r.ticker,
     score: gedeckelt(r.score),        // round1 display score (sort determinism was internal _raw)
     track: r.track,        // 'profitable' | 'unprofitable'
@@ -573,6 +575,7 @@ function mapOverviewRow(r, i) {
   const out = {
     rank: i + 1,
     rankGrund: null,            // 18.08.: gesetzt von vergebeRaenge(), s. Belegbarkeits-Gate
+    rankGrundShadow: rankGrundShadowFor(r.ticker), // SHADOW only; scores and ranks stay unchanged.
     ticker: r.ticker,
     formulaId: r.formulaId,     // branch id — only present in the flat overview feed
     track: r.track,

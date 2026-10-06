@@ -1,0 +1,1728 @@
+{
+  "schemaVersion": 1,
+  "boundary": "nichtOperativGeschlossenerFonds: Geschlossener Fonds oder börsennotierter Investmenttrust/-fonds (einschließlich Unit-Trusts, die ein Wertpapier- oder Kreditportfolio halten), der als Portfolio verwaltet wird.\n\nnichtOperativEtf: ETF oder ETN.\n\nnichtOperativSpac: Blank-Check-Gesellschaft vor dem abgeschlossenen Unternehmenszusammenschluss.\n\nnichtOperativHolding: Holding- oder Investmentgesellschaft, deren eigene Berichte ihr Geschäft als Halten und Verwalten von Beteiligungen beschreiben (P66-Klasse „Holdingmantel/Investmentgesellschaft“). Operative Mischkonzerne, die operative Tochtergesellschaften konsolidieren und führen, gehören NICHT zu dieser Klasse.\n\nnichtOperativBdc: US-amerikanische Business Development Company.\n\nnichtOperativRoyaltyTrust: Royalty- oder Unit-Trust in TRUST-Rechtsform, dessen Vermögenswerte Royalty-/Nettogewinnrechte sind und der keinen eigenen operativen Betrieb hat (z. B. SBR, Sabine Royalty Trust). Royalty- oder Streaming-GESELLSCHAFTEN in Gesellschafts- oder Partnerschaftsform (Ltd., Corp., Inc., L.P., z. B. FRU.TO, BSM, TPZ.TO, PSK.TO, Wheaton, Franco-Nevada) bleiben operativ und erhalten keinen Schattengrund.\n\nnichtOperativKryptoTreasury: Gesellschaft, deren digitale Vermögenswerte zum Buchwert mindestens 50 % der Bilanzsumme in ihrer jüngsten veröffentlichten Bilanz betragen. Die Schwelle cryptoTreasuryMinShareOfTotalAssets ist vor dem Lauf auf 0.5 festgelegt und wird niemals an die Daten angepasst.\n\nAußerhalb des Umfangs (kein Grundcode): P66-Klasse „Sonstige nicht-operative Gesellschaft“ (Hypotheken-REITs usw.), Royalty-/Streaming-Gesellschaften und survival-Listen (Runway-Rang, niemals durch dieses Gate eingeschränkt). Für die Zuordnung entscheidet die Rechtsform.",
+  "classes": {
+    "nichtOperativGeschlossenerFonds": "nicht operativ: geschlossener Fonds",
+    "nichtOperativEtf": "nicht operativ: ETF oder ETN",
+    "nichtOperativSpac": "nicht operativ: SPAC vor dem Unternehmenszusammenschluss",
+    "nichtOperativHolding": "nicht operativ: Beteiligungs- oder Investmentgesellschaft",
+    "nichtOperativBdc": "nicht operativ: Business Development Company",
+    "nichtOperativRoyaltyTrust": "nicht operativ: Royalty-Trust",
+    "nichtOperativKryptoTreasury": "nicht operativ: Krypto-Bestand ab 50 % der Bilanzsumme"
+  },
+  "cryptoTreasuryMinShareOfTotalAssets": 0.5,
+  "evidenceAsOf": "2026-10-06",
+  "p66Inputs": [
+    {
+      "file": "nicht-operative.md",
+      "sha256": "237e04d1b23f61b57127adc0ea1c701228f0dc3ff1c2d1cb0924097f1cb2f966"
+    },
+    {
+      "file": "nicht-operative-universum.csv",
+      "sha256": "9b6b6e8adf956d793cdb48c9312919d537a6aaa24c9978208a31fc6c600875de"
+    },
+    {
+      "file": "nicht-operative-boards.csv",
+      "sha256": "06e8b313e9ba3ef7ee1933fcca6e7816402bc4fe24cf21c695dbbd6b6283cb91"
+    }
+  ],
+  "remappings": [
+    {
+      "ticker": "1INVEB.MI",
+      "from": "Holdingmantel/Investmentgesellschaft",
+      "to": null,
+      "reason": "Unabhaengig nachgeprueft. Aktive Industriebeteiligungsgesellschaft mit konsolidierten operativen Tochterunternehmen. Zustimmung nur zum weiten Begriff Investmentgesellschaft, ausdrücklich nicht zum Begriff Holdingmantel oder zu einer vollständig nicht-operativen Gesellschaft. Investor konsolidiert operative Tochterunternehmen und erklärt, die IFRS-10-Investment-Entity-Kriterien wegen Geschäftszweck und fehlender Ausstiegsstrategien nicht zu erfüllen. Dies ist kein Beleg gegen jede umgangssprachliche Investmentgesellschaft, aber ein unmittelbarer Gegenbeleg gegen die Gleichsetzung mit einem passiven Anlagevehikel. Bei einer ausschließlich nicht-operativen Klassentaxonomie müsste dieser Fall als operative Holding getrennt werden. Quelle: Geschäftsbericht 2025, veröffentlicht vor dem Stichtag, PDF-Seite 125, Note 1, Consolidation principles; Patricia Industries ab PDF-Seite 40",
+      "sourceUrl": "https://www.investorab.com/media/mjzjnq4d/investor_ar25_eng.pdf",
+      "sourceQuote": "criteria in IFRS 10 Consolidated Financial Statements are not fulfilled",
+      "confidence": 97
+    },
+    {
+      "ticker": "AD.TO",
+      "from": "Unit-/Royalty-Trust",
+      "to": "nichtOperativHolding",
+      "reason": "Annual Information Form vom 23.03.2026, PDF-Seite 11, gedruckte Seite 9; Beteiligungsdetails PDF-Seiten 12 und 17 bis 25. Die Unterart ist ein Income-/Unit-Trust mit strukturierten Vorzugs- und Minderheitsbeteiligungen, kein Rohstoff-Royalty-Trust. Erträge entstehen überwiegend aus Partnerausschüttungen und Kapitalanlagen. Gegenbeleg: Management-/Transaktionsgebühren existieren, prägen aber nicht das beschriebene Anlagevehikel. AD.TO ist der eingefrorene Eingabecode; ein aktueller Börsensymbol-Abgleich ist nicht Gegenstand dieser Beurteilung.",
+      "sourceUrl": "https://www.alarisequitypartners.com/upload/media_element/attachments/728/AIF%20-%20YE%202025.pdf",
+      "sourceQuote": "Alaris invests in a diversified group of private businesses primarily through structured equity.",
+      "confidence": 96
+    },
+    {
+      "ticker": "INVE-A.ST",
+      "from": "Holdingmantel/Investmentgesellschaft",
+      "to": null,
+      "reason": "Unabhaengig nachgeprueft. Aktive Industriebeteiligungsgesellschaft mit konsolidierten operativen Tochterunternehmen. Zustimmung nur zum weiten Begriff Investmentgesellschaft, ausdrücklich nicht zum Begriff Holdingmantel oder zu einer vollständig nicht-operativen Gesellschaft. Investor konsolidiert operative Tochterunternehmen und erklärt, die IFRS-10-Investment-Entity-Kriterien wegen Geschäftszweck und fehlender Ausstiegsstrategien nicht zu erfüllen. Dies ist kein Beleg gegen jede umgangssprachliche Investmentgesellschaft, aber ein unmittelbarer Gegenbeleg gegen die Gleichsetzung mit einem passiven Anlagevehikel. Bei einer ausschließlich nicht-operativen Klassentaxonomie müsste dieser Fall als operative Holding getrennt werden. Quelle: Geschäftsbericht 2025, veröffentlicht vor dem Stichtag, PDF-Seite 125, Note 1, Consolidation principles; Patricia Industries ab PDF-Seite 40",
+      "sourceUrl": "https://www.investorab.com/media/mjzjnq4d/investor_ar25_eng.pdf",
+      "sourceQuote": "criteria in IFRS 10 Consolidated Financial Statements are not fulfilled",
+      "confidence": 97
+    },
+    {
+      "ticker": "INVE-B.ST",
+      "from": "Holdingmantel/Investmentgesellschaft",
+      "to": null,
+      "reason": "Unabhaengig nachgeprueft. Aktive Industriebeteiligungsgesellschaft mit konsolidierten operativen Tochterunternehmen. Zustimmung nur zum weiten Begriff Investmentgesellschaft, ausdrücklich nicht zum Begriff Holdingmantel oder zu einer vollständig nicht-operativen Gesellschaft. Investor konsolidiert operative Tochterunternehmen und erklärt, die IFRS-10-Investment-Entity-Kriterien wegen Geschäftszweck und fehlender Ausstiegsstrategien nicht zu erfüllen. Dies ist kein Beleg gegen jede umgangssprachliche Investmentgesellschaft, aber ein unmittelbarer Gegenbeleg gegen die Gleichsetzung mit einem passiven Anlagevehikel. Bei einer ausschließlich nicht-operativen Klassentaxonomie müsste dieser Fall als operative Holding getrennt werden. Quelle: Geschäftsbericht 2025, veröffentlicht vor dem Stichtag, PDF-Seite 125, Note 1, Consolidation principles; Patricia Industries ab PDF-Seite 40",
+      "sourceUrl": "https://www.investorab.com/media/mjzjnq4d/investor_ar25_eng.pdf",
+      "sourceQuote": "criteria in IFRS 10 Consolidated Financial Statements are not fulfilled",
+      "confidence": 97
+    },
+    {
+      "ticker": "IVSBF",
+      "from": "Holdingmantel/Investmentgesellschaft",
+      "to": null,
+      "reason": "Unabhaengig nachgeprueft. Aktive Industriebeteiligungsgesellschaft mit konsolidierten operativen Tochterunternehmen. Zustimmung nur zum weiten Begriff Investmentgesellschaft, ausdrücklich nicht zum Begriff Holdingmantel oder zu einer vollständig nicht-operativen Gesellschaft. Investor konsolidiert operative Tochterunternehmen und erklärt, die IFRS-10-Investment-Entity-Kriterien wegen Geschäftszweck und fehlender Ausstiegsstrategien nicht zu erfüllen. Dies ist kein Beleg gegen jede umgangssprachliche Investmentgesellschaft, aber ein unmittelbarer Gegenbeleg gegen die Gleichsetzung mit einem passiven Anlagevehikel. Bei einer ausschließlich nicht-operativen Klassentaxonomie müsste dieser Fall als operative Holding getrennt werden. Quelle: Geschäftsbericht 2025, veröffentlicht vor dem Stichtag, PDF-Seite 125, Note 1, Consolidation principles; Patricia Industries ab PDF-Seite 40",
+      "sourceUrl": "https://www.investorab.com/media/mjzjnq4d/investor_ar25_eng.pdf",
+      "sourceQuote": "criteria in IFRS 10 Consolidated Financial Statements are not fulfilled",
+      "confidence": 97
+    },
+    {
+      "ticker": "MF.PA",
+      "from": "Holdingmantel/Investmentgesellschaft",
+      "to": null,
+      "reason": "Unabhaengig nachgeprueft. Aktive Beteiligungsgruppe mit bedeutender operativer Vermögensverwaltung. Der weite Oberbegriff Investmentgesellschaft passt weiterhin zum eigenen Beteiligungsgeschäft. Wendel ist jedoch zugleich eine aktive Vermögensverwaltungsgruppe mit Gebühreneinnahmen und konsolidiertem operativem Umsatz. Die Zuordnung darf deshalb keinen passiven Mantel oder ein vollständig nicht-operatives Unternehmen suggerieren. Eine reine Liste bestätigter nicht-operativer Gesellschaften müsste Wendel gesondert ausweisen; dies ist ein Definitionsbefund zur Sammelklasse. Quelle: 2026-02-26, PDF-Seiten 1 bis 3, Wendel Investment Managers und konsolidierte Ergebnisse",
+      "sourceUrl": "https://www.wendelgroup.com/wp-content/uploads/2026/02/wendel-en-fy-2025.pdf",
+      "sourceQuote": "Management fees & others totaled €349 million reported in 2025",
+      "confidence": 97
+    }
+  ],
+  "notes": [
+    "P66-Restklasse „Sonstige nicht-operative Gesellschaft“ wird nicht pauschal aufgenommen. XXI wird ausschließlich nach dem gesonderten, belegten Krypto-Bilanztest beurteilt.",
+    "PBT und SBR bleiben Royalty-Trusts. AD.TO hält strukturierte Eigenkapitalbeteiligungen und wird deshalb Holding. FRU.TO, BSM, DMLP, TPZ.TO, PSK.TO, WPM und andere Royalty-/Streaming-Gesellschaften erhalten keinen Grundcode.",
+    "MFF.AX bleibt gemäß P66 Investmentgesellschaft: Ein kleiner operativer Montaka-Geschäftsbereich ist dokumentiert, ebenso die weiterhin prägende Wertpapieranlage. Die Zuordnung behauptet keine völlige Umsatzlosigkeit; P66-Sicherheit 96 %.",
+    "AUI.AX wird gemäß der beauftragten Universumstabelle als Holding übernommen. Die P66-Boardtabelle nennt stattdessen closed-end-fund; diese Abweichung wird nicht eigenmächtig aufgelöst.",
+    "Die P66-Boardtabelle enthält zusätzlich ADMIE.AT, BANVIDA.SN, P15.SI und VAPORES.SN als investment-holding, die in der beauftragten P66-Universumstabelle fehlen. Sie wurden nicht zusätzlich klassifiziert; für diese vier Fälle fehlt hier ein vollständiger beauftragter Mitgliedschaftsdatensatz. BANVIDA.SN und VAPORES.SN stehen ohnehin nur auf der ausgenommenen Survival-Liste.",
+    "Keine Änderung von rank, rankGrund, Scores, Sortierung, Router oder Universum. Der Bericht simuliert ausschließlich die spätere Rangwirkung. Ein Live-Schalter ist nicht Bestandteil von P89."
+  ],
+  "cryptoCandidates": [
+    {
+      "ticker": "SBET",
+      "digitalAssets": 1357986000,
+      "totalAssets": 1416092000,
+      "currency": "USD",
+      "balanceSheetDate": "2026-06-30",
+      "publishedAt": "2026-08-07",
+      "source": "Form 10-Q, 2026-06-30, p. 4; filed 2026-08-07",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1981535/000149315226036620/form10-q.htm",
+      "sourceQuote": "Crypto assets at fair value; Crypto assets at cost; Total assets",
+      "confidence": 75,
+      "note": "10-Q, Seite 4, in Tausend USD: 988.838 zum Fair Value + 369.148 zum Buchwert nach Wertminderungen = 1.357.986; Bilanzsumme 1.416.092. In der Tabelle stehen ganze USD. Veröffentlicht am 07.08.2026; bis 06.10. keine neuere periodische Bilanz im SEC-Verzeichnis. P66 nennt für diese Krypto-Klassenempfehlung 75 %.",
+      "share": 0.9589673552283327,
+      "included": true
+    },
+    {
+      "ticker": "3350.T",
+      "digitalAssets": 409743000000,
+      "totalAssets": 418177000000,
+      "currency": "JPY",
+      "balanceSheetDate": "2026-06-30",
+      "publishedAt": "2026-08-13",
+      "source": "Consolidated interim financial statements, 2026-06-30, p. 11; published 2026-08-13",
+      "sourceUrl": "https://contents.xj-storage.jp/xcontents/33500/ccef5126/8cc0/4501/b779/01892d97a274/140120260813519694.pdf",
+      "sourceQuote": "Millions of yen; Bitcoin assets; USDC; Total assets",
+      "confidence": 75,
+      "note": "Zwischenabschluss, Seite 11, in Millionen JPY: Bitcoin 409.493 + USDC 250 = 409.743; Bilanzsumme 418.177. In der Tabelle stehen ganze JPY. Digitale Vermögenswerte umfassen USDC; selbst Bitcoin allein liegt bei 97,923367 %. Veröffentlicht am 13.08.2026, jüngste gefundene vollständige Bilanz bis 06.10. (Sicherheit der Aktualitätsprüfung 98 %). Die ursprüngliche P66-Quelle ist eine Super-League-Transaktionsmitteilung und wurde durch Metaplanets eigene Bilanz ersetzt. P66-Klassenempfehlung 75 %.",
+      "share": 0.979831506754317,
+      "included": true
+    },
+    {
+      "ticker": "XXI",
+      "digitalAssets": 2550162413,
+      "totalAssets": 2664352676,
+      "currency": "USD",
+      "balanceSheetDate": "2026-06-30",
+      "publishedAt": "2026-08-11",
+      "source": "Form 10-Q, 2026-06-30, p. 1; filed 2026-08-11",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/2070457/000121390026087471/ea0299640-10q_twentyone.htm",
+      "sourceQuote": "Digital assets - non-current, at fair value; Total Assets",
+      "confidence": 90,
+      "note": "10-Q, Seite 1, ganze USD. Veröffentlicht am 11.08.2026; bis 06.10. keine neuere periodische Bilanz im SEC-Verzeichnis. Die ausgewiesene Bilanzsumme wird unverändert verwendet, obwohl die Passivseite im Original um 1 USD abweicht. P66-Universumszeile: 90 %. Abweichend von P66s Restklasse erfolgt die Aufnahme ausschließlich nach dem festen Krypto-Bilanztest. Auf der eingefrorenen Survival-Liste bleibt XXI dennoch ohne Schattenfeld.",
+      "share": 0.9571414610278117,
+      "included": true
+    }
+  ],
+  "entries": [
+    {
+      "ticker": "3350.T",
+      "digitalAssets": 409743000000,
+      "totalAssets": 418177000000,
+      "currency": "JPY",
+      "balanceSheetDate": "2026-06-30",
+      "publishedAt": "2026-08-13",
+      "source": "Consolidated interim financial statements, 2026-06-30, p. 11; published 2026-08-13",
+      "sourceUrl": "https://contents.xj-storage.jp/xcontents/33500/ccef5126/8cc0/4501/b779/01892d97a274/140120260813519694.pdf",
+      "sourceQuote": "Millions of yen; Bitcoin assets; USDC; Total assets",
+      "confidence": 75,
+      "share": 0.979831506754317,
+      "class": "nichtOperativKryptoTreasury"
+    },
+    {
+      "ticker": "3IN.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Factsheet Mai 2025, PDF-Seite 2. Börsennotiertes Infrastruktur-Anlagevehikel mit externem Investmentmanager 3i Investments; von diesem gebührenverdienenden Manager zu unterscheiden. Auch kontrollierende Portfoliobeteiligungen ändern hier die ausdrückliche Fondsstruktur nicht. Quelle liegt vor dem Stichtag 03.10.2026.",
+      "sourceUrl": "https://www.3i-infrastructure.com/media/3ibix4hr/3in_highlights_may_2025_final.pdf",
+      "sourceQuote": "3i Infrastructure plc is a closed-ended investment company incorporated in Jersey",
+      "confidence": 99
+    },
+    {
+      "ticker": "AAS.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittentenbeschreibung, abgerufen 06.10.2026; geschlossener britischer Investment Trust mit asiatischem Aktienportfolio. Ergänzend Halbjahresbericht zum 31.01.2026 auf derselben Emittentenseite gefunden.",
+      "sourceUrl": "https://www.aberdeeninvestments.com/en-gb/aas/about-us",
+      "sourceQuote": "Aberdeen Asia Focus PLC is an investment trust listed on the London Stock Exchange.",
+      "confidence": 99
+    },
+    {
+      "ticker": "AD.TO",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Annual Information Form vom 23.03.2026, PDF-Seite 11, gedruckte Seite 9; Beteiligungsdetails PDF-Seiten 12 und 17 bis 25. Die Unterart ist ein Income-/Unit-Trust mit strukturierten Vorzugs- und Minderheitsbeteiligungen, kein Rohstoff-Royalty-Trust. Erträge entstehen überwiegend aus Partnerausschüttungen und Kapitalanlagen. Gegenbeleg: Management-/Transaktionsgebühren existieren, prägen aber nicht das beschriebene Anlagevehikel. AD.TO ist der eingefrorene Eingabecode; ein aktueller Börsensymbol-Abgleich ist nicht Gegenstand dieser Beurteilung.",
+      "sourceUrl": "https://www.alarisequitypartners.com/upload/media_element/attachments/728/AIF%20-%20YE%202025.pdf",
+      "sourceQuote": "Alaris invests in a diversified group of private businesses primarily through structured equity.",
+      "confidence": 96
+    },
+    {
+      "ticker": "AFI.AX",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "https://www.afi.com.au/new-investors",
+      "sourceQuote": "AFIC is an LIC with a long-term investment approach.",
+      "confidence": 99
+    },
+    {
+      "ticker": "AGT.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Halbjahresbericht zum 31.03.2026, PDF-Seite 2. Ausdrücklicher Investmenttrust und Alternative Investment Fund; Asset Value Investors ist der getrennte externe Manager. Anlageportfolio zur Wertsteigerung, kein operativer Konzern.",
+      "sourceUrl": "https://data.fca.org.uk/artefacts/NSM/DirectUpload/NI-000146220/NI-000146220.pdf",
+      "sourceQuote": "shares in an authorised investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "AIO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#AIO",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "ARCC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1287750/000162828026027685/arccq1-2026exhibit991.htm",
+      "sourceQuote": "elected to be regulated as a business development company",
+      "confidence": 99
+    },
+    {
+      "ticker": "ARG.AX",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ARG.AX",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "ASA",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ASA",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "ASGI",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ASGI",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "ASL.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Manager-Primärseite bestätigt börsengehandelten Investmenttrust, britisches Small-Cap-Wertpapierportfolio und Investmenttrust-Status gemäß Section 1158. Der Trust ist das Anlagevehikel, nicht der gebührenverdienende Verwalter. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.aberforth.co.uk/trusts-and-funds/aberforth-smaller-companies-trust-plc/",
+      "sourceQuote": "Aberforth Smaller Companies Trust plc is an investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "ATT.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Geschäftsbericht zum 31.12.2024, gedruckte Seite 12, PDF-Seite 14. Derselbe Abschnitt beschreibt Investmenttrusts ausdrücklich als geschlossene kollektive Anlagegesellschaften; Tagesgeschäft an AllianzGI/Voya und weitere Dienstleister ausgelagert. Weltweites Technologie-Aktienportfolio. Datiert, jedoch kein frischer Rechtsformnachweis exakt zum 03.10.2026; aktuelle HTML-Seite war wegen Weiterleitungsschleife nicht lesbar.",
+      "sourceUrl": "https://www.allianztechnologytrust.com/-/media/allianzgi/eu/allianz-technology-trust/docs/annual-financial-report/annual-financial-report-allianz-technology-trust-31-12-2024.pdf?rev=-1",
+      "sourceQuote": "The Company carries on business as an investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "AUI.AX",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#AUI.AX",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "AWF",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#AWF",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BAJAJHLDNG.NS",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BAJAJHLDNG.NS",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "BBDC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BBDC",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "BBN",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BBN",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BCAT",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BCAT",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BCX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BCX",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BDJ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BDJ",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BGFD.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Halbjahresbericht zum 28.02.2026, unterzeichnet 01.04.2026; PDF-Seite 2. Portfolio japanischer Aktien, NAV und Börsenabschlag; PDF-Seite 19 erläutert börsengehandelte Trust-Anteile. Gegencheck mit aktueller Produktseite des Managers: https://www.bailliegifford.com/en/uk/individual-investors/funds/baillie-gifford-japan-trust/ . Fondsvermögen, kein selbst operierender japanischer Konzern.",
+      "sourceUrl": "https://www.bailliegifford.com/en/uk/individual-investors/literature-library/funds/investment-trusts/japan-trust/half-yearly/japan-trust-interim-financial-report-february-2026/",
+      "sourceQuote": "long-term capital growth principally through investment in medium to smaller sized Japanese companies",
+      "confidence": 99
+    },
+    {
+      "ticker": "BHMG.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Sterling-Aktienklasse desselben BH-Macro-Fonds wie BHMU.L; Halbjahresbericht Juni 2026, PDF-Seite 7, gedruckt 6. Zusätzliche Währungsklasse zählt als eigene Universumszeile.",
+      "sourceUrl": "https://bhmacro.com/wp-content/uploads/2026/09/BH-Macro-Limited-Interim-Report-2026-1.pdf",
+      "sourceQuote": "closed-ended investment company",
+      "confidence": 99
+    },
+    {
+      "ticker": "BHMU.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "https://bhmacro.com/wp-content/uploads/2026/09/BH-Macro-Limited-Interim-Report-2026-1.pdf",
+      "sourceQuote": "BH Macro Limited is a limited liability closed-ended investment company",
+      "confidence": 99
+    },
+    {
+      "ticker": "BKI.AX",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BKI.AX",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "BMEZ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BMEZ",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BNKR.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Primärseite des Verwalters beschreibt einen globalen Aktieninvestmenttrust und getrennte Fondsmanager. Börsenpreis/NAV und internationales Beteiligungsportfolio. Trotz Name kein Bankbetrieb. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.janushenderson.com/en-gb/uk-investment-trusts/trust/the-bankers-investment-trust-plc/",
+      "sourceQuote": "The Bankers Investment Trust is a global equity investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "BPCR.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent beschreibt sich als Fund mit Darlehen und Finanzinstrumenten gegen Produkt-Cashflows sowie Pharmakon Advisors als getrenntem Investmentmanager. Ausschüttungsorientiertes Kreditportfolio, kein Arzneimittelhersteller; zugrunde liegende Royalties machen die Aktie nicht zum Royalty-Trust. LSE-Suchergebnis ordnet BPCR geschlossenen Investmentfonds zu, geöffnete Börsenseite lieferte jedoch keinen Text; maßgeblich ist die lesbare Emittentenbeschreibung. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://bpcruk.com/about-us/",
+      "sourceQuote": "a diversified portfolio of loans and other instruments backed by royalties",
+      "confidence": 98
+    },
+    {
+      "ticker": "BRAP3.SA",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Originalbericht von Bradespar zum ersten Quartal 2026, veröffentlicht am 14.05.2026 und über die Börse Latibex bereitgestellt. S. 2 beschreibt die Vale-Beteiligung, S. 4 erklärt, dass die als operativer Ertrag bezeichneten Einnahmen aus dem Beteiligungsergebnis und Kapitalvergütungen der Vale stammen. Keine eigene Bergbautätigkeit. B3 BRAP3 und LATIBEX XBRPO sind auf S. 2 ausdrücklich miteinander verknüpft; XBRPO.MC ist die vorgegebene Anbieterkennung. Strukturbeleg vor dem Stichtag 03.10.2026, kein exakter Tagesstand; geöffnet am 06.10.2026.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BRAP3.SA",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Originalbericht von Bradespar zum ersten Quartal 2026, veröffentlicht am 14.05.2026 und über die Börse Latibex bereitgestellt. S. 2 beschreibt die Vale-Beteiligung, S. 4 erklärt, dass die",
+      "confidence": 99,
+      "primarySourceUrl": "https://www.latibex.com/docs/Documentos/esp/hechosrelev/2026/260514%20Resultados%201T26.pdf"
+    },
+    {
+      "ticker": "BREB.BR",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BREB.BR",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "BRSC.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Primäres Basisinformationsblatt vom 08.09.2026, Seite 1. Rechtsform ausdrücklich geschlossene Investmentgesellschaft mit an der LSE gehandelten Aktien; BlackRock Fund Managers ist der getrennte Verwalter. Beleg liegt vor dem Stichtag.",
+      "sourceUrl": "https://www.blackrock.com/uk/literature/kiid/uk_priips-blackrock-smaller-companies-trust-plc-class-1-dist-gb-gb0006436108-en.pdf",
+      "sourceQuote": "The Fund is a closed-ended investment company",
+      "confidence": 99
+    },
+    {
+      "ticker": "BRWM.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BRWM.L",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BST",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BST",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BSTZ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://www.blackrock.com/us/individual/literature/fund-commentary/bstz-quarterly-commentary.pdf",
+      "sourceQuote": "Common shares for the closed-end fund identified above",
+      "confidence": 99
+    },
+    {
+      "ticker": "BTT",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BTT",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BTX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BTX",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "BTZ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1379384/000119312519166288/d746032ddef14a.htm",
+      "sourceQuote": "The Trust is organized as a Delaware statutory trust and is a closed-end management investment company",
+      "confidence": 98
+    },
+    {
+      "ticker": "BURE.ST",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "https://www.bure.se/en/home-en",
+      "sourceQuote": "by actively developing a diversified portfolio of professionally managed companies and businesses.",
+      "confidence": 99
+    },
+    {
+      "ticker": "BUT.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Halbjahresbericht zum 31.05.2025, PDF-Seiten 1 und 2. Titelseite bezeichnet das Vehikel ausdrücklich als globalen Aktieninvestmenttrust; Verwaltung und Administration werden an Allianz Global Investors/Dritte vergeben. Der historische Industriename bezeichnet keinen fortbestehenden Industriebetrieb. Beleg vor Stichtag, aber kein aktueller 2026-Rechtsformnachweis; HTML-Seite war wegen Weiterleitungsschleife nicht lesbar.",
+      "sourceUrl": "https://www.brunner.co.uk/-/media/allianzgi/eu/brunner-trust/docs/half-year-report/half-year-report-the-brunner-investment-trust-plc-31-may25-final.pdf?rev=-1",
+      "sourceQuote": "Brunner has an independent board of directors and no employees.",
+      "confidence": 99
+    },
+    {
+      "ticker": "BXSL",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#BXSL",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "CEF",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Sprott Physical Gold and Silver Trust. Die Produktseite nennt ausdrücklich diesen Fondstyp und den überwiegenden Besitz physischen Goldes und Silbers. NYSE- und TSX-Notierungen betreffen denselben Trust. Wirtschaftlich geschlossener Edelmetallfonds, kein operatives Bergbauunternehmen. Für den 03.10.2026 eingeordnet; abgerufen am 06.10.2026, Produktseite undatiert, mit Bestandsdaten zum 30.09.2026. Kein archivierter Tagesstand vom 03.10.2026.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CEF",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Sprott Physical Gold and Silver Trust. Die Produktseite nennt ausdrücklich diesen Fondstyp und den überwiegenden Besitz physischen Goldes und Silbers. NYSE- und TSX-Notierungen betreffen",
+      "confidence": 99,
+      "primarySourceUrl": "https://sprott.com/investment-strategies/exchange-listed-products/physical-bullion-funds/gold-and-silver/"
+    },
+    {
+      "ticker": "CEF.TO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Sprott Physical Gold and Silver Trust. Die Produktseite nennt ausdrücklich diesen Fondstyp und den überwiegenden Besitz physischen Goldes und Silbers. NYSE- und TSX-Notierungen betreffen denselben Trust. Wirtschaftlich geschlossener Edelmetallfonds, kein operatives Bergbauunternehmen. Für den 03.10.2026 eingeordnet; abgerufen am 06.10.2026, Produktseite undatiert, mit Bestandsdaten zum 30.09.2026. Kein archivierter Tagesstand vom 03.10.2026.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CEF.TO",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Sprott Physical Gold and Silver Trust. Die Produktseite nennt ausdrücklich diesen Fondstyp und den überwiegenden Besitz physischen Goldes und Silbers. NYSE- und TSX-Notierungen betreffen",
+      "confidence": 99,
+      "primarySourceUrl": "https://sprott.com/investment-strategies/exchange-listed-products/physical-bullion-funds/gold-and-silver/"
+    },
+    {
+      "ticker": "CET",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CET",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "CGT.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Primärtabelle des Managers nennt für Capital Gearing Trust diese Rechtsform und börsengehandelte Anteile. Die daneben genannten UCITS-Produkte sind gesonderte offene Fonds. Tabellenstand 31.08.2026; gemischtes Wertpapierportfolio, keine operativen Tochterbetriebe.",
+      "sourceUrl": "https://www.cgasset.com/our-funds/",
+      "sourceQuote": "Closed Ended Investment Company",
+      "confidence": 99
+    },
+    {
+      "ticker": "CHI",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://www.calamos.com/funds/closed-end/convertible-opportunities-income-chi/",
+      "sourceQuote": "Calamos closed-end funds’ Automatic Dividend Reinvestment Plan",
+      "confidence": 99
+    },
+    {
+      "ticker": "CHY",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CHY",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "CII",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CII",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "CLDN.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Jahresbericht zum 31.03.2026. Eigenverwaltung allein macht den Investmenttrust nicht operativ. Expliziter Gegencheck im geöffneten Abschluss https://wp-caledonia-2025.s3.eu-west-2.amazonaws.com/media/2026/06/CAL-AR26-Web-Financials.pdf , PDF-Seiten 12 und 13: IFRS-10-Investmententity; kontrollierte Investmentbeteiligungen zum Fair Value statt operativ konsolidiert, nur zwei interne Servicegesellschaften konsolidiert. Somit kein konsolidierter Industriekonzern.",
+      "sourceUrl": "https://www.caledonia.com/investors/2026-annual-report/",
+      "sourceQuote": "Caledonia is a FTSE 250 self-managed investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "CLM",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CLM",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "CORD.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Unabhaengig nachgeprueft. Extern verwalteter geschlossener Infrastruktur-Investmentfonds. Der vor dem Stichtag veröffentlichte Geschäftsbericht bestätigt die Fondsstruktur ausdrücklich. Er dokumentiert auch den Wechsel in die Börsenkategorie geschlossener Investmentfonds am 30.04.2026. Rechenzentren, Türme und Glasfasernetze werden von Portfoliogesellschaften betrieben; Fonds und externe Verwaltung sind davon zu trennen. Diese datierte Quelle schließt die in der CSV erwähnte Lücke einer lediglich aktuellen undatierten Website für die Strukturfrage. Quelle: 2026-06-19, PDF-Seite 76, gedruckte Seite 73, Directors' report; ergänzend PDF-Seite 64",
+      "sourceUrl": "https://wp-cordiantdigitaltrust-2022.s3.eu-west-2.amazonaws.com/media/2026/06/CORDIANT-AR-PROOF-09-18.06.26-FINAL.pdf",
+      "sourceQuote": "The Company is an externally managed closed-ended investment company",
+      "confidence": 99
+    },
+    {
+      "ticker": "CRED-A.ST",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "https://www.creades.se/",
+      "sourceQuote": "Creades är ett svenskt noterat investeringsbolag",
+      "confidence": 99
+    },
+    {
+      "ticker": "CRF",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CRF",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "CSQ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CSQ",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "CSWC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#CSWC",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "CTY.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Primärseite des Verwalters beschreibt ein diversifiziertes Aktienportfolio mit überwiegend großen britisch notierten Gesellschaften. Ein Investmenttrust, nicht die separate gebührenverdienende City of London Investment Group. Portfolio ist zum 31.08.2026 angegeben. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.janushenderson.com/en-gb/uk-investment-trusts/trust/the-city-of-london-investment-trust-plc/portfolio/",
+      "sourceQuote": "The City of London Investment Trust invests mainly in companies listed on the London Stock Exchange",
+      "confidence": 99
+    },
+    {
+      "ticker": "CYB.TO",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Eigenes Wertpapierportfolio und Minderheitsanteil an EdgePoint; festes Kapital, keine Einordnung als operativer Vermögensverwalter. Im Bericht unter Investmentgesellschaften wie australische LICs, nicht als regulatorisch bestätigter Fonds geführt. Emittentenbeschreibung, Abruf 06.10.2026.",
+      "sourceUrl": "https://www.cymbria.com/cymbria-faq/",
+      "sourceQuote": "Cymbria is an investment corporation",
+      "confidence": 98
+    },
+    {
+      "ticker": "DFN.TO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Split-Share-Fonds mit 15 kanadischen Dividendenaktien; Class A DFN, nicht Vorzugsaktie DFN.PR.A. Emittentenbeschreibung mit NAV zum 30.09.2026. Split-Share-Fonds werden als geschlossene Fonds gezählt.",
+      "sourceUrl": "https://www.quadravest.com/dfn-fund-features",
+      "sourceQuote": "To view a Split Share Fund overview",
+      "confidence": 99
+    },
+    {
+      "ticker": "DNP",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#DNP",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "DSL",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#DSL",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "DXYZ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#DXYZ",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "ECAT",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ECAT",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "EDIN.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent nennt Investmenttrust-Status und Aktienportfolio von 40 bis 50 Positionen, dessen Verwaltung Liontrust-Portfoliomanager übernehmen. Anlagevehikel, kein eigener operativer Aktienkonzern. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.edinburgh-investment-trust.co.uk/about-us",
+      "sourceQuote": "Established in 1889, Edinburgh Investment Trust is one of the UK's oldest investment trusts.",
+      "confidence": 99
+    },
+    {
+      "ticker": "EIT.TO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Originalmitteilung des Fonds vom 05.03.2026 über GlobeNewswire, geöffnet am 06.10.2026. Aktiv verwaltetes Wertpapierportfolio; Fondsanteile sind von der operativen Verwaltungsgesellschaft Canoe Financial zu unterscheiden. Die Quelle nennt als offizielles TSX-Symbol EIT.UN; EIT.TO ist die vorgegebene Datenkennung und nicht die exakte Börsenschreibweise. Strukturbeleg liegt vor dem Stichtag 03.10.2026; kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#EIT.TO",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Originalmitteilung des Fonds vom 05.03.2026 über GlobeNewswire, geöffnet am 06.10.2026. Aktiv verwaltetes Wertpapierportfolio; Fondsanteile sind von der operativen Verwaltungsgesellschaft",
+      "confidence": 99,
+      "primarySourceUrl": "https://www.globenewswire.com/news-release/2026/03/05/3250730/0/en/Canoe-EIT-Income-Fund-Announces-March-2026-Monthly-Distribution.html"
+    },
+    {
+      "ticker": "EMO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://www.franklintempleton.com/investments/options/closed-end-funds/products/90813/SINGLCLASS/clearbridge-energy-midstream-opportunity-fund-inc-/XEMOX",
+      "sourceQuote": "Unlike open-end funds, shares are not continually offered.",
+      "confidence": 99
+    },
+    {
+      "ticker": "EOI",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#EOI",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "EOS",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#EOS",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "ETG",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ETG",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "ETV",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ETV",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "ETW",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ETW",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "ETY",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#ETY",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "EVT",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#EVT",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "EVV",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://www.eatonvance.com/content/dam/im/assets/publication/thought-leadership/press-release/PR_CMBD_040126.pdf?1775088000467=",
+      "sourceQuote": "Distribution Dates and Amounts Announced for Eaton Vance Closed-End Funds … Eaton Vance Limited Duration Income Fund EVV",
+      "confidence": 99
+    },
+    {
+      "ticker": "EWI.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Primäres Basisinformationsblatt vom 20.05.2026, Seite 1. Ausdrücklich geschlossene Investmentgesellschaft; Baillie Gifford & Co Limited als getrennten Verwalter bestellt. Diversifiziertes Aktienportfolio, einschließlich junger börsennotierter und privater Unternehmen. Beleg vor dem Stichtag.",
+      "sourceUrl": "https://www.bailliegifford.com/en/uk/individual-investors/literature-library/funds/investment-trusts/ewit/edinburgh-worldwide-key-information-document/",
+      "sourceQuote": "The Product is an ordinary share in a closed-ended investment company",
+      "confidence": 99
+    },
+    {
+      "ticker": "EXG",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://www.eatonvance.com/content/dam/im/assets/publication/product-literature/eatonvanceclosedend/fundgeneral/6349.pdf?1759795201491=",
+      "sourceQuote": "Eaton Vance Equity Option Closed-End Funds",
+      "confidence": 99
+    },
+    {
+      "ticker": "EXO.AS",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Halbjahresbericht 2026, veröffentlicht 22.09.2026, PDF-Seiten 22 und 24. Seit 01.01.2024 Investment Entity nach IFRS 10; Beteiligungen außerhalb der konzerninternen Investmentdienstleistungen werden zum Fair Value statt als industrielle Umsatzgruppe abgebildet. Daher für gewöhnlichen industriellen Umsatzvergleich nicht operativ. Gleiche Emittentenregel für beide separat aufgeführten Aliaszeilen.",
+      "sourceUrl": "https://www.exor.com/system/files/2026/document-documents/EXOR%202026%20First-Half%20Report.pdf",
+      "sourceQuote": "meets the definition of an investment entity",
+      "confidence": 99
+    },
+    {
+      "ticker": "EXO.VI",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Aliaszeile desselben im eingefrorenen Bestand als Exor N.V. bezeichneten Emittenten; gleiche Regel wie EXO.AS. Halbjahresbericht 2026, PDF-Seite 24, Investment Entity seit 01.01.2024. Börsenplatz-/ISIN-Gleichheit hier nicht zusätzlich unabhängig geprüft.",
+      "sourceUrl": "https://www.exor.com/system/files/2026/document-documents/EXOR%202026%20First-Half%20Report.pdf",
+      "sourceQuote": "meets the definition of an investment entity",
+      "confidence": 99
+    },
+    {
+      "ticker": "EXXRF",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Weiterer Exor-Ticker laut eigenem eingefrorenem Exportnamen; gleiche Emittentenklasse wie EXO.AS. Halbjahresbericht 2026, PDF-Seiten 22 und 24; Investment-Entity-Bilanzierung seit 01.01.2024. Keine zusätzliche Firma.",
+      "sourceUrl": "https://www.exor.com/system/files/2026/document-documents/EXOR%202026%20First-Half%20Report.pdf",
+      "sourceQuote": "investment entity",
+      "confidence": 98
+    },
+    {
+      "ticker": "EYX.DE",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Aliaszeile desselben im eingefrorenen Bestand als Exor N.V. bezeichneten Emittenten; gleiche Regel wie EXO.AS. Halbjahresbericht 2026, PDF-Seite 24, Investment Entity seit 01.01.2024. Börsenplatz-/ISIN-Gleichheit hier nicht zusätzlich unabhängig geprüft.",
+      "sourceUrl": "https://www.exor.com/system/files/2026/document-documents/EXOR%202026%20First-Half%20Report.pdf",
+      "sourceQuote": "meets the definition of an investment entity",
+      "confidence": 99
+    },
+    {
+      "ticker": "FEV.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Geschäftsbericht zum 31.12.2025, gedruckte Seite 23, PDF-Seite 28. Investmenttrust-Zulassung, LSE-Aktien, keine Beschäftigten, Portfolioverwaltung an FIL Investment Services ausgelagert. Kontinentaleuropäische Aktienanlagen; kein operativer Unternehmensverbund.",
+      "sourceUrl": "https://investment-trusts.fidelity.co.uk/media/Investment%20Trusts/PDFs/Investment%20Trust%20Range/European%20Values%20PLC/Annual%20Reports/european-trust-report-2025.pdf",
+      "sourceQuote": "has been accepted as an approved investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "FGT.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Fußtext bestätigt Investmenttrust ausdrücklich; Haupttext erläutert konzentriertes britisches Aktienportfolio. Die Gesellschaft ist das börsennotierte Anlagevehikel. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.finsburygt.com/",
+      "sourceQuote": "they are shares in a UK-listed investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "FIH.TO",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Fairfax India Holdings bezeichnet sich ausdrücklich als Investmentholding mit Eigenkapital- und Fremdkapitalanlagen in indischen Unternehmen. Die Investments werden laut Emittent von Hamblin Watsa Investment Counsel zentral verwaltet. Nicht mit der operativen Versicherungsgruppe Fairfax Financial verwechseln. Die zusätzlich geöffnete Investorenseite nennt das offizielle TSX-Symbol FIH.U: https://www.fairfaxindia.ca/investors/ . FIH.TO ist die vorgegebene Datenkennung. Für den 03.10.2026 eingeordnet; undatierte aktuelle Emittentenseiten, abgerufen am 06.10.2026, kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#FIH.TO",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Fairfax India Holdings bezeichnet sich ausdrücklich als Investmentholding mit Eigenkapital- und Fremdkapitalanlagen in indischen Unternehmen. Die Investments werden laut Emittent von",
+      "confidence": 99,
+      "primarySourceUrl": "https://www.fairfaxindia.ca/about-fairfax/"
+    },
+    {
+      "ticker": "FMONC.PA",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Originalmitteilung vom 27.03.2026 zu den Ergebnissen 2025, PDF-S. 1, vom Emittenten über GlobeNewswire verbreitet. Sie nennt ausdrücklich die Beteiligungsholding und fehlende Umsatzerlöse 2025 sowie 2024. Der ebenfalls geöffnete Halbjahresbericht 2026 der Mutter Compagnie du Cambodge bestätigt auf gedruckter S. 3 fehlende eigene Umsatzerlöse auch im ersten Halbjahr 2026 und die Equity-Erfassung der Artois-Beteiligung: https://www.compagnie-du-cambodge.com/wp-content/uploads/2026/09/RFS_Cie_Cambodge_2026_MEL.pdf . Damit für den Stichtag 03.10.2026 klare Investmentholding trotz operativer Geschäfte auf anderen Ebenen des Bolloré-Konzerns. Quellen am 06.10.2026 geöffnet.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#FMONC.PA",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Originalmitteilung vom 27.03.2026 zu den Ergebnissen 2025, PDF-S. 1, vom Emittenten über GlobeNewswire verbreitet. Sie nennt ausdrücklich die Beteiligungsholding und fehlende Umsatzerlöse",
+      "confidence": 99,
+      "primarySourceUrl": "https://ml-eu.globenewswire.com/Resource/Download/36a8693f-ba6b-4164-a24d-003416952d13"
+    },
+    {
+      "ticker": "FPF",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#FPF",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "FSCO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#FSCO",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "FSK",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "https://www.fskkrcapitalcorp.com/",
+      "sourceQuote": "FS KKR Capital Corp. (NYSE: FSK) is a publicly traded business development company (BDC)",
+      "confidence": 99
+    },
+    {
+      "ticker": "FSSL",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#FSSL",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "FSV.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittenten-Geschäftsbericht zum 31.08.2025, PDF-Seite 66, Rechnungslegungsnote Steuern. PDF-Seite 38 benennt FIL Investment Services als externen AIFM und delegierte Portfolioverwaltung. Ein geschlossenes Aktienanlagevehikel; keine Rücknahmezwänge wie bei offenen Fonds laut Risikobeschreibung auf PDF-Seite 30.",
+      "sourceUrl": "https://www.fidelityinternational.com/legal/documents/INVTRUST/en/ar.invtrust.en.xx.GB00BWXC7Y93.pdf",
+      "sourceQuote": "The Company is an approved Investment Trust under Section 1158",
+      "confidence": 99
+    },
+    {
+      "ticker": "GAB",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GAB",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "GAM",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GAM",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "GBDC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GBDC",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "GBLB.BR",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GBLB.BR",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "GBLB.VI",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GBLB.VI",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "GBLBF",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GBLBF",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "GCI.AX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Produktprospekt vom 29.01.2024, PDF-Seite 45, Abschnitt 5.14. Geschlossener börsennotierter Investment-Trust mit RMBS-/ABS-Portfolio; Manager und verantwortliche Gesellschaft werden getrennt genannt. Unit-Trust-Rechtsform, kein Royalty-Trust. Quelle vor dem Stichtag.",
+      "sourceUrl": "https://www.gcapinvest.com/cmsb/media/current-product-disclosure-statement-gryphon-capital-income-trust.pdf",
+      "sourceQuote": "Because the Trust is a closed-end vehicle",
+      "confidence": 99
+    },
+    {
+      "ticker": "GCP.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Primärseite des Investmentmanagers, Unternehmensübersicht mit Datenstand 30.06.2026. Geschlossenes Infrastruktur-Anlagevehikel, 47 Anlagen mit Kapitalbetrag und Rendite; keine Einstufung als gebührenverdienender Gravis-Manager. Grundbeschreibung ohne Veröffentlichungsdatum, abgerufen am 06.10.2026; exakter Seitenwortlaut zum eingefrorenen 03.10.2026 nicht archiviert.",
+      "sourceUrl": "https://www.graviscapital.com/our-products/gcp-infra/fund-info",
+      "sourceQuote": "A FTSE 250, closed-ended investment company listed on the Main Market of the LSE",
+      "confidence": 99
+    },
+    {
+      "ticker": "GDV",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GDV",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "GGN",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GGN",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "GIMB.BR",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Gimv beschreibt Eigenkapitalinvestitionen über Branchenplattformen und langfristige Beteiligungen über Gimv Anchor. Die Umsätze und Mitarbeiterzahlen der Portfoliounternehmen werden ausdrücklich als solche bezeichnet. Aktive Beteiligungsbetreuung macht die börsennotierte Investmentgesellschaft nicht zu deren operativem Branchenunternehmen. Für den 03.10.2026 eingeordnet; undatierte Unternehmensbeschreibung auf einer Seite mit Nachrichten bis 30.09.2026, abgerufen am 06.10.2026, kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GIMB.BR",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Gimv beschreibt Eigenkapitalinvestitionen über Branchenplattformen und langfristige Beteiligungen über Gimv Anchor. Die Umsätze und Mitarbeiterzahlen der Portfoliounternehmen werden",
+      "confidence": 99,
+      "primarySourceUrl": "https://www.gimv.com/en"
+    },
+    {
+      "ticker": "GMPP.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Gabelli-verwaltetes Investmentportfolio im Specialist Fund Segment. Unternehmensregister nennt SIC 64301 (Activities of investment trusts), https://find-and-update.company-information.service.gov.uk/company/10747219 . RNS zum 30.06.2026 vom 14.08.2026 bestätigt geschlossene Kapitalstruktur; die steuerliche Investment-Trust-Begünstigung endete zuvor. Fondsstruktur hier wirtschaftlich, nicht Behauptung fortbestehender Steuerbegünstigung. Abruf 06.10.2026.",
+      "sourceUrl": "https://www.gabelli.co.uk/investment-products/gabelli-merchant-partners/",
+      "sourceQuote": "INVESTMENT MANAGER",
+      "confidence": 94
+    },
+    {
+      "ticker": "GOF",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GOF",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "GRP.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Jahresbericht 2025, veröffentlicht 04.03.2026, PDF-Seite 56, gedruckt 56: Windparkgesellschaften zum Fair Value statt operativ konsolidiert; externes Investmentmanagement. Als geschlossener Infrastruktur-Fonds zusammen mit UKW/HICL erfasst, obwohl Portfolioanlagen Strom liefern.",
+      "sourceUrl": "https://www.greencoat-renewables.com/download_file/force/1847e508-fd6c-4509-91f5-f6a840720657/239/",
+      "sourceQuote": "the Company satisfies the criteria to be regarded as an investment entity",
+      "confidence": 97
+    },
+    {
+      "ticker": "GSBD",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#GSBD",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "HGT.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Halbjahresbericht zum 30.06.2026, veröffentlicht 14.09.2026, PDF-Seite 56, Note 1. Investmentgesellschaft und Investment Trust; das Börsenvehikel ist vom Manager Hg getrennt. Gegenstand sind Beteiligungen an unnotierten Firmen, keine konsolidierte Software-Umsatzgruppe.",
+      "sourceUrl": "https://www.hgcapitaltrust.com/~/media/Files/H/Hgcapital-Trust-V2/documents/investors/publications/2026/hgt-interim-report-and-accounts-2026.pdf",
+      "sourceQuote": "The principal activity of HgT is investment.",
+      "confidence": 99
+    },
+    {
+      "ticker": "HICL.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Jahresbericht zum 31.03.2025, unterzeichnet 20.05.2025, PDF-Seite 62, gedruckte Seite 60. Extern verwaltetes geschlossenes Infrastruktur-Anlagevehikel. Die operativen Infrastrukturunternehmen im Portfolio machen die börsennotierte Fondsgesellschaft nicht selbst zum gebührenverdienenden Asset Manager.",
+      "sourceUrl": "https://www.hicl.com/wp-content/uploads/2025/05/HICL_Annual-Report-2025.pdf",
+      "sourceQuote": "As a closed-ended investment company, HICL has no employees.",
+      "confidence": 99
+    },
+    {
+      "ticker": "HQH",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#HQH",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "HTGC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#HTGC",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "HYT",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#HYT",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "INVES.IS",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Original-Tätigkeitsbericht für 01.01.–31.03.2026, S. 4. Investco beschreibt unmittelbare und mittelbare Beteiligungen zur Erzielung von Wertsteigerungen und Anlageerträgen über mehrere Branchen. S. 3 nennt INVES und als Tätigkeit Investment-Unternehmensaktivitäten. Die operativen Tätigkeiten der investierten Firmen werden nicht ohne Weiteres zur eigenen operativen Tätigkeit umgedeutet. Strukturbeleg vor dem Stichtag 03.10.2026; der angebotene Halbjahresbericht war nicht lesbar abrufbar, deshalb ausdrücklich Q1-Beleg. Geöffnet am 06.10.2026.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#INVES.IS",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Original-Tätigkeitsbericht für 01.01.–31.03.2026, S. 4. Investco beschreibt unmittelbare und mittelbare Beteiligungen zur Erzielung von Wertsteigerungen und Anlageerträgen über mehrere",
+      "confidence": 99,
+      "primarySourceUrl": "https://panel.investco.com.tr/images/uploads/F206/13ac0c4c-aaa3-453f-aa20-d890c0b7098c_Investco_Faaliyet_Raporu_31032026.pdf"
+    },
+    {
+      "ticker": "IPO.L",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Ergebnisbericht vom 17.03.2026, PDF-Seite 29, gedruckte Seite 28, Note 3. Wechsel zur Investment Entity am 16.12.2025; Investmenttöchter werden nicht mehr konsolidiert, sondern zum Fair Value bewertet. Gegenbeleg geprüft: Parkwalk verdient Verwaltungsgebühren; sonstige Erträge aus Gebühren/Lizenzen betragen 7,4 Mio. GBP. Das ändert das beherrschende Beteiligungs-/Lizenzportfolio und die Investment-Entity-Bilanzierung des börsennotierten Emittenten nicht. Im Gegensatz zu reinen aktiven Gebührenmanagern hier nicht operativ für industrielles Umsatzwachstum.",
+      "sourceUrl": "https://www.ipgroupplc.com/~/media/Files/I/IPGroup-PLC/documents/ip-group-fy2025-results-rns-vf.pdf",
+      "sourceQuote": "Following the decision to change in investment entity status on 16 December 2025",
+      "confidence": 98
+    },
+    {
+      "ticker": "JFR",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#JFR",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "JPC",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#JPC",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "JSWHL.BO",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#JSWHL.BO",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "JSWHL.NS",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#JSWHL.NS",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "KBCA.BR",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#KBCA.BR",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "KBCA.VI",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "https://www.kbcancora.be/en/over-kbc-ancora/aandeelhouder-kbc-groep",
+      "sourceQuote": "KBC Ancora is a listed company that holds approximately 18.6% of the shares in the listed KBC Group",
+      "confidence": 99
+    },
+    {
+      "ticker": "KBDC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#KBDC",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "KINV-A.ST",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#KINV-A.ST",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "KINV-B.ST",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#KINV-B.ST",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "KNEVF",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#KNEVF",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "KYN",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#KYN",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "LBS.TO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Split-Share-Fonds mit Bank-/Versicherungsaktien, Class A LBS. Portfolio per 30.09.2026 und Fondsdaten auf Emittentenseite; Abruf 06.10.2026. Keine operative Bankgesellschaft.",
+      "sourceUrl": "https://www.bromptongroup.com/product/life-banc-split-corp/",
+      "sourceQuote": "Invests in Canada’s four largest publicly traded life insurance companies and six largest banks",
+      "confidence": 99
+    },
+    {
+      "ticker": "LSF.AX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#LSF.AX",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "LTA.PA",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent beschreibt Altamir als börsennotierte Private-Equity-Gesellschaft mit Beteiligungsportfolio und unterscheidet sie von traditionellen Private-Equity-Fonds. Ergänzender geöffneter Emittentenbeleg https://www.altamir.fr/wp-content/uploads/2020/04/Altamir-DEU-2019.pdf , gedruckte Seite 19, PDF-Seite 21, nennt die Holding-Ausnahme vom AIF-Status; dieser Rechtsformbeleg ist von 2019 und deshalb nur historischer Gegencheck. Der auf der Emittentenseite verlinkte Jahresbericht 2025, veröffentlicht 09.04.2026, ließ sich nicht öffnen. Restunsicherheit betrifft die genaue Abgrenzung Investmentgesellschaft/geschlossener Fonds am Stichtag, nicht den belegten Portfoliocharakter. Kein Nachweis eines operativ konsolidierten Industriekonzerns. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.altamir.fr/fr/notre-societe/private-equity-cote/",
+      "sourceQuote": "qui investissent dans un portefeuille constitué principalement d’entreprises non cotées",
+      "confidence": 94
+    },
+    {
+      "ticker": "MAIN",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "https://www.mainstcapital.com/investors/sec-filings/all-sec-filings/content/0001396440-26-000096/q22026mainiplpfwp.htm",
+      "sourceQuote": "Internally-managed business development company (BDC)",
+      "confidence": 99
+    },
+    {
+      "ticker": "MFF.AX",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "https://www.mffcapital.com.au/wp-content/uploads/2026/08/MFF-Group-FY26-Annual-Report.pdf",
+      "sourceQuote": "The Group comprises of a core investment portfolio",
+      "confidence": 96
+    },
+    {
+      "ticker": "MNTN.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#MNTN.L",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "MSDL",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "https://www.msdl.com/investor-relations/newsroom/msdl-announces-june-2026-financial-results.html",
+      "sourceQuote": "a business development company externally managed by MS Capital Partners Adviser Inc.",
+      "confidence": 99
+    },
+    {
+      "ticker": "MUC",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#MUC",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "MXT.AX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; ASX-Jahresbericht zum 30.06.2025, veröffentlicht 27.08.2025, PDF-Seite 35, gedruckte Seite 33. Börsennotierter Unit-Trust mit geschlossener Kapitalbasis; Anlagen in Wholesale-Kreditfonds. Der Manager Metrics ist ein eigener operativer Dienstleister. Kein Royalty-Trust.",
+      "sourceUrl": "https://announcements.asx.com.au/asxpdf/20250827/pdf/06ndq62ntmrznk.pdf",
+      "sourceQuote": "The Fund is a closed‑end vehicle and accordingly there are no redemptions by investors.",
+      "confidence": 99
+    },
+    {
+      "ticker": "NAC",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NAC",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NAD",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NAD",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NBXG",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NBXG",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NEA",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NEA",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NFJ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NFJ",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NMZ",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NMZ",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NRK",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NRK",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NUV",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NUV",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NVG",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NVG",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "NXP",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NXP",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "NZF",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#NZF",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "OBDC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#OBDC",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "OCSL",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#OCSL",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "OTF",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "https://www.blueowltechnologyfinance.com/news/press-releases/detail/118/blue-owl-technology-finance-corp-schedules-earnings-release-and-quarterly-earnings-call-to-discuss-its-third-quarter-ended-september-30-2026-financial-results",
+      "sourceQuote": "OTF has elected to be regulated as a business development company",
+      "confidence": 99
+    },
+    {
+      "ticker": "OXLC",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#OXLC",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "PBT",
+      "class": "nichtOperativRoyaltyTrust",
+      "source": "P66 R4: ausdrückliches Royalty-Trust-/Royalties-Income-Fund-Muster",
+      "sourceUrl": "https://pbt-permian.com/",
+      "sourceQuote": "The Trust’s net overriding royalty interests represent burdens against the properties in favor of the Trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "PCN",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PCN",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "PDI",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://www.pimco.com/us/en/documents/1dd4ec77e6e62c9e60e6483908b54d6ffbb9e92cbd0998fb927889cd1dfc426e9d03503d69f4ea48caae8808ad20221af89c970e7440c7333cf0869f36dc49ff4ba8d1f5f66a4e659fb7ea84db9d139888aefaca3dc7a07049d3f4521e902964?app=dot",
+      "sourceQuote": "PIMCO CLOSED-END FUNDS DECLARE MONTHLY COMMON SHARE DISTRIBUTIONS … PIMCO Dynamic Income Fund (NYSE: PDI)",
+      "confidence": 99
+    },
+    {
+      "ticker": "PDO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PDO",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "PDX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PDX",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "PEUG.PA",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "https://peugeot-invest.com/en",
+      "sourceQuote": "Peugeot Invest is a long-term investment company, listed and majority-owned by Etablissements Peugeot Frères.",
+      "confidence": 99
+    },
+    {
+      "ticker": "PGF.AX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PGF.AX",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "PHYS",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Die rechtlichen Hinweise der Produktseite bezeichnen den Ontario-Trust ausdrücklich als geschlossenen Fonds. Physischer Goldbestand; die Börsennotierung macht das Vehikel nicht zu einem ETF. Die Seite bestätigt NYSE-Arca- und TSX-Notierungen. Für den 03.10.2026 eingeordnet; undatierte aktuelle Emittentenseite, abgerufen am 06.10.2026, kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PHYS",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Die rechtlichen Hinweise der Produktseite bezeichnen den Ontario-Trust ausdrücklich als geschlossenen Fonds. Physischer Goldbestand; die Börsennotierung macht das Vehikel nicht zu einem",
+      "confidence": 99,
+      "primarySourceUrl": "https://sprott.com/investment-strategies/exchange-listed-products/physical-bullion-funds/gold/"
+    },
+    {
+      "ticker": "PHYS.TO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Die rechtlichen Hinweise der Produktseite bezeichnen den Ontario-Trust ausdrücklich als geschlossenen Fonds. Physischer Goldbestand; die Börsennotierung macht das Vehikel nicht zu einem ETF. Die Seite bestätigt NYSE-Arca- und TSX-Notierungen. Für den 03.10.2026 eingeordnet; undatierte aktuelle Emittentenseite, abgerufen am 06.10.2026, kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PHYS.TO",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Die rechtlichen Hinweise der Produktseite bezeichnen den Ontario-Trust ausdrücklich als geschlossenen Fonds. Physischer Goldbestand; die Börsennotierung macht das Vehikel nicht zu einem",
+      "confidence": 99,
+      "primarySourceUrl": "https://sprott.com/investment-strategies/exchange-listed-products/physical-bullion-funds/gold/"
+    },
+    {
+      "ticker": "PIN.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent beschreibt einen börsengehandelten Private-Equity-Investmenttrust mit unabhängigem Verwaltungsrat und getrenntem Investmentmanager. Das Vehikel bietet Portfoliozugang zu privaten Unternehmen, während Pantheon als Manager eine gesonderte Funktion hat. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.pantheon-international.com/",
+      "sourceQuote": "Listed on the London Stock Exchange since 1987, this investment trust",
+      "confidence": 99
+    },
+    {
+      "ticker": "PINC",
+      "class": "nichtOperativEtf",
+      "source": "P66 R2: ETF/ETN/ETRACS/iPath im Namen oder quoteType",
+      "sourceUrl": "https://www.pgim.com/lu/en/borrower/about/newsroom/press-releases/pgim-launches-two-new-securitized-credit-etfs-including-a-aaa-rated-clo-etf-with-core-like-duration-exposure",
+      "sourceQuote": "The PGIM Securitized Income ETF (PINC) invests primarily in securitized credit",
+      "confidence": 99
+    },
+    {
+      "ticker": "PSEC",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PSEC",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "PSLV",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent beschreibt einen geschlossenen Trust mit vollständig zugeordneten physischen Silberbarren. NYSE-Arca- und TSX-Notierungen desselben Trusts. Für den 03.10.2026 eingeordnet; undatierte aktuelle Emittentenseite, abgerufen am 06.10.2026, kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PSLV",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Emittent beschreibt einen geschlossenen Trust mit vollständig zugeordneten physischen Silberbarren. NYSE-Arca- und TSX-Notierungen desselben Trusts. Für den 03.10.2026 eingeordnet;",
+      "confidence": 99,
+      "primarySourceUrl": "https://sprott.com/investment-strategies/exchange-listed-products/physical-bullion-funds/silver/"
+    },
+    {
+      "ticker": "PSLV.TO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent beschreibt einen geschlossenen Trust mit vollständig zugeordneten physischen Silberbarren. NYSE-Arca- und TSX-Notierungen desselben Trusts. Für den 03.10.2026 eingeordnet; undatierte aktuelle Emittentenseite, abgerufen am 06.10.2026, kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PSLV.TO",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Emittent beschreibt einen geschlossenen Trust mit vollständig zugeordneten physischen Silberbarren. NYSE-Arca- und TSX-Notierungen desselben Trusts. Für den 03.10.2026 eingeordnet;",
+      "confidence": 99,
+      "primarySourceUrl": "https://sprott.com/investment-strategies/exchange-listed-products/physical-bullion-funds/silver/"
+    },
+    {
+      "ticker": "PTA",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PTA",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "PTY",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#PTY",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "QQQX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#QQQX",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "REINA.AS",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#REINA.AS",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "RNP",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#RNP",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "RQI",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#RQI",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "RVT",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#RVT",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "SBET",
+      "digitalAssets": 1357986000,
+      "totalAssets": 1416092000,
+      "currency": "USD",
+      "balanceSheetDate": "2026-06-30",
+      "publishedAt": "2026-08-07",
+      "source": "Form 10-Q, 2026-06-30, p. 4; filed 2026-08-07",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1981535/000149315226036620/form10-q.htm",
+      "sourceQuote": "Crypto assets at fair value; Crypto assets at cost; Total assets",
+      "confidence": 75,
+      "share": 0.9589673552283327,
+      "class": "nichtOperativKryptoTreasury"
+    },
+    {
+      "ticker": "SBR",
+      "class": "nichtOperativRoyaltyTrust",
+      "source": "P66 R4: ausdrückliches Royalty-Trust-/Royalties-Income-Fund-Muster",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/710752/000119312526081251/sbr_10-k_2025-12-31.htm",
+      "sourceQuote": "The Trust has no employees.",
+      "confidence": 99
+    },
+    {
+      "ticker": "SFNXF",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#SFNXF",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "SOF.BR",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#SOF.BR",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "SOF.VI",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#SOF.VI",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "SRTG.JK",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; PT Saratoga Investama Sedaya beschreibt sich als aktive Investmentgesellschaft mit Beteiligungen in mehreren Branchen und nennt ihre Portfoliounternehmen getrennt. Die strategische Unterstützung dieser Unternehmen ist Teil des Beteiligungsmodells. Nicht mit der US-amerikanischen Saratoga Investment Corp. verwechseln. Für den 03.10.2026 eingeordnet; undatierte aktuelle Unternehmensseite mit teilweise älteren Kontextdaten aus 2024, geöffnet am 06.10.2026. Kein archivierter Tagesstand; deshalb 98 % Sicherheit.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#SRTG.JK",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; PT Saratoga Investama Sedaya beschreibt sich als aktive Investmentgesellschaft mit Beteiligungen in mehreren Branchen und nennt ihre Portfoliounternehmen getrennt. Die strategische",
+      "confidence": 98,
+      "primarySourceUrl": "https://www.saratoga-investama.com/who-we-are"
+    },
+    {
+      "ticker": "STEW",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "https://srhfunds.com/fund-overview/stew/",
+      "sourceQuote": "SRH Total Return Fund, Inc. (the “Fund”) is a non-diversified closed-end fund",
+      "confidence": 99
+    },
+    {
+      "ticker": "STK",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#STK",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "SVOL-A.ST",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#SVOL-A.ST",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "TATAINVEST.NS",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#TATAINVEST.NS",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "TFG.AS",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent benennt geschlossene Investmentgesellschaft und beide Börsenplätze Amsterdam/London ausdrücklich. Eigene Beteiligungen an Vermögensverwaltern ändern die Rechts-/Fondsstruktur nicht. Webseite mit Halbjahresbericht 2026, Abruf 06.10.2026.",
+      "sourceUrl": "https://www.tetragoninv.com/shareholders/",
+      "sourceQuote": "Tetragon Financial Group is a Guernsey closed-ended investment company.",
+      "confidence": 99
+    },
+    {
+      "ticker": "TFG.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent benennt geschlossene Investmentgesellschaft und beide Börsenplätze Amsterdam/London ausdrücklich. Eigene Beteiligungen an Vermögensverwaltern ändern die Rechts-/Fondsstruktur nicht. Webseite mit Halbjahresbericht 2026, Abruf 06.10.2026.",
+      "sourceUrl": "https://www.tetragoninv.com/shareholders/",
+      "sourceQuote": "Tetragon Financial Group is a Guernsey closed-ended investment company.",
+      "confidence": 99
+    },
+    {
+      "ticker": "TGOPF",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; 3i Group, Jahresabschluss zum 31.03.2026, gedruckte S. 187 beziehungsweise PDF-S. 11. Investment-Entity-Ausnahme nach IFRS 10; Portfoliogesellschaften werden zum Fair Value statt mit ihren operativen Umsätzen konsolidiert. Das trennt 3i von einer operativen Konzernholding. Eigene Anlagen prägen das Modell; Infrastruktur-Fondsverwaltung und deren Gebühren bestehen daneben. Der zusätzlich geöffnete Glossarteil beschreibt den steuerlichen Status Approved Investment Trust Company: https://www.3i.com/investor-relations/annual-report-2026/downloads/3i-Group-2026-Portfolio-and-other-information.pdf . Nach dem vorgegebenen Schema als börsennotierte Investmentgesellschaft eingeordnet; steuerlicher Investment-Trust-Status und verwaltete geschlossene Dritt-Fonds werden nicht mit dem Emittenten gleichgesetzt. TGOPF-Emittentenzuordnung aus dem Auftrag, OTC-Notierungsstatus nicht separat geprüft. Für den 03.10.2026 eingeordnet, Primärquellen am 06.10.2026 geöffnet.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#TGOPF",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; 3i Group, Jahresabschluss zum 31.03.2026, gedruckte S. 187 beziehungsweise PDF-S. 11. Investment-Entity-Ausnahme nach IFRS 10; Portfoliogesellschaften werden zum Fair Value statt mit",
+      "confidence": 98,
+      "primarySourceUrl": "https://www.3i.com/investor-relations/annual-report-2026/downloads/3i-Group-2026-Audited-financial-statements.pdf"
+    },
+    {
+      "ticker": "TIP.MI",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Tamburi Investment Partners beschreibt das Geschäftsmodell als aktiver Aktionär börsennotierter und nicht notierter Unternehmen; zusätzlich besteht eine Corporate-Finance-/M&A-Beratung. Zuordnung als börsennotierte Investmentgesellschaft nach dem prägenden Beteiligungsmodell, nicht als rein passive leere Hülle. Die vorhandene Beratung ist ausdrücklich berücksichtigt; die Website allein liefert keine aktuelle quantitative Segmentabgrenzung. Für den 03.10.2026 eingeordnet; undatierte Geschäftsmodellseite, abgerufen am 06.10.2026, kein archivierter Tagesstand.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#TIP.MI",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Tamburi Investment Partners beschreibt das Geschäftsmodell als aktiver Aktionär börsennotierter und nicht notierter Unternehmen; zusätzlich besteht eine Corporate-Finance-/M&A-Beratung.",
+      "confidence": 97,
+      "primarySourceUrl": "https://tipspa.it/en/about-us/business-model/"
+    },
+    {
+      "ticker": "TRIN",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "p66://nicht-operative-universum.csv#TRIN",
+      "sourceQuote": "R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "confidence": 85
+    },
+    {
+      "ticker": "TSLX",
+      "class": "nichtOperativBdc",
+      "source": "P66 R1: BDC-Tickerliste; Vorrang vor Closed-End-Bezeichnung",
+      "sourceUrl": "https://sixthstreetspecialtylending.gcs-web.com/company-profile",
+      "sourceQuote": "We have elected to be regulated as a business development company, or a BDC",
+      "confidence": 99
+    },
+    {
+      "ticker": "TY",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#TY",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "TYG",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R1b: benannte geschlossene Investmentvehikel",
+      "sourceUrl": "p66://nicht-operative-universum.csv#TYG",
+      "sourceQuote": "R1b: benannte geschlossene Investmentvehikel",
+      "confidence": 85
+    },
+    {
+      "ticker": "UKW.L",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Extern verwalteter Infrastruktur-Investment-Trust. Die Windparks erzeugen Strom, der börsennotierte Mantel ist ein Fonds; deshalb nicht allein aufgrund operierender Portfolioanlagen als Industriebetrieb eingestuft. Emittentenseite mit 2026-Angaben, Abruf 06.10.2026.",
+      "sourceUrl": "https://www.greencoat-ukwind.com/about-us/",
+      "sourceQuote": "As the first listed renewable infrastructure investment trust",
+      "confidence": 98
+    },
+    {
+      "ticker": "UNC.TO",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Emittent bestätigt geschlossene Investmentgesellschaft seit 1929 und erklärt ausdrücklich, keine Umwandlung in einen offenen Fonds zu planen. Aktienportfolio ohne laufende Anlegerzeichnungen oder Rücknahmen. Der Firmenname Corporations ist hier kein Beleg für einen operativen Konzern. Undatierte Primärseite, abgerufen am 06.10.2026; kein archivierter Seitenstand exakt zum 03.10.2026.",
+      "sourceUrl": "https://www.ucorp.ca/content/about-us",
+      "sourceQuote": "United is a closed-end investment corporation",
+      "confidence": 99
+    },
+    {
+      "ticker": "USA",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#USA",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "UTF",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#UTF",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "UTG",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#UTG",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "VCX",
+      "class": "nichtOperativGeschlossenerFonds",
+      "source": "P66 R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "sourceUrl": "p66://nicht-operative-universum.csv#VCX",
+      "sourceQuote": "R8: Fonds-/Investment-Trust-/Income-Portfolio-Name oder Fallliste",
+      "confidence": 85
+    },
+    {
+      "ticker": "WAM.AX",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "https://wilsonassetmanagement.com.au/listed-investment-companies/",
+      "sourceQuote": "Listed investment companies (LICs) are considered closed-end investment vehicles",
+      "confidence": 99
+    },
+    {
+      "ticker": "WLE.AX",
+      "class": "nichtOperativHolding",
+      "source": "P66 R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "sourceUrl": "p66://nicht-operative-universum.csv#WLE.AX",
+      "sourceQuote": "R9: benannte Beteiligungs-/Investmentgesellschaft",
+      "confidence": 85
+    },
+    {
+      "ticker": "XBRPO.MC",
+      "class": "nichtOperativHolding",
+      "source": "P66 R0: Primärquelle korrigiert Operatives Unternehmen; Originalbericht von Bradespar zum ersten Quartal 2026, veröffentlicht am 14.05.2026 und über die Börse Latibex bereitgestellt. S. 2 beschreibt die Vale-Beteiligung, S. 4 erklärt, dass die als operativer Ertrag bezeichneten Einnahmen aus dem Beteiligungsergebnis und Kapitalvergütungen der Vale stammen. Keine eigene Bergbautätigkeit. B3 BRAP3 und LATIBEX XBRPO sind auf S. 2 ausdrücklich miteinander verknüpft; XBRPO.MC ist die vorgegebene Anbieterkennung. Strukturbeleg vor dem Stichtag 03.10.2026, kein exakter Tagesstand; geöffnet am 06.10.2026.",
+      "sourceUrl": "p66://nicht-operative-universum.csv#XBRPO.MC",
+      "sourceQuote": "R0: Primärquelle korrigiert Operatives Unternehmen; Originalbericht von Bradespar zum ersten Quartal 2026, veröffentlicht am 14.05.2026 und über die Börse Latibex bereitgestellt. S. 2 beschreibt die Vale-Beteiligung, S. 4 erklärt, dass die",
+      "confidence": 99,
+      "primarySourceUrl": "https://www.latibex.com/docs/Documentos/esp/hechosrelev/2026/260514%20Resultados%201T26.pdf"
+    },
+    {
+      "ticker": "XRPN",
+      "class": "nichtOperativSpac",
+      "source": "P66 R3: Erwerbsmantel-Namensmuster",
+      "sourceUrl": "https://www.prnewswire.com/news-releases/shareholders-approve-evernorth-business-combination-transaction-and-related-private-placements-have-raised-over-1-billion-nasdaq-trading-under-xrpn-expected-to-begin-on-october-8-302895260.html?tc=eml_cleartime",
+      "sourceQuote": "The business combination is expected to close on October 7, 2026",
+      "confidence": 99
+    },
+    {
+      "ticker": "XXI",
+      "digitalAssets": 2550162413,
+      "totalAssets": 2664352676,
+      "currency": "USD",
+      "balanceSheetDate": "2026-06-30",
+      "publishedAt": "2026-08-11",
+      "source": "Form 10-Q, 2026-06-30, p. 1; filed 2026-08-11",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/2070457/000121390026087471/ea0299640-10q_twentyone.htm",
+      "sourceQuote": "Digital assets - non-current, at fair value; Total Assets",
+      "confidence": 90,
+      "share": 0.9571414610278117,
+      "class": "nichtOperativKryptoTreasury"
+    }
+  ]
+}
