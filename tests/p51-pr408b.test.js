@@ -9,7 +9,7 @@ test('stored-quarter refresh honors the same retry deadlines as first acquisitio
     companies: { '9001.TW': { seasons: stored ? { '115Q2': [{}] } : {},
       noData: { '115Q2': { code, at: new Date(now - age).toISOString() } } } },
   }, ['9001.TW'], [season], new Map(), now);
-  for (const [code, days] of [[406, 3], ['no-line', 30], ['bad-id', 30], ['ceased', 30], ['failed', 1]]) {
+  for (const [code, days] of [[406, 3], ['no-line', 30], ['bad-id', 30], ['ceased', 30], ['delisted', 30], ['failed', 1]]) {
     for (const stored of [true, false]) {
       assert.equal(queue(code, stored, days * day - 1).length, 0, String(code) + ' before deadline, stored=' + stored);
       assert.equal(queue(code, stored, days * day).length, 1, String(code) + ' at deadline, stored=' + stored);
