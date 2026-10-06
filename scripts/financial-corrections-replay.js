@@ -16,9 +16,11 @@ const serial = JSON.stringify;
 const clone = x => structuredClone(x);
 
 // Tag 1419 (#425, P108): applyFinancialCases may ANNOTATE timeseries.reportedRevenueQEnds (verified
-// period labels; no value change, no event). An annotation that is new on the `after` side is not a
-// cell change and must not trip the byte guard; it is reported separately. A CHANGED annotation
-// between two annotated snapshots stays an unrelated difference (guard fires).
+// period labels; no value change, no event). The pull persists prepared snapshots (pull-yahoo.js
+// _convertSnapshotToUSD, Object.assign of prepareSnapshot), so a stored snapshot may already carry an
+// annotation from an older label table; replaying a revised table then yields a changed or removed
+// annotation (D10, review of #437). The annotation is therefore taken out of the byte comparison on
+// BOTH sides and every difference (new / changed / removed) is reported separately, never as a cell.
 const LABEL_ANNOTATION = 'reportedRevenueQEnds';
 
 /**
@@ -26,8 +28,9 @@ const LABEL_ANNOTATION = 'reportedRevenueQEnds';
  * @param {object} before Snapshot before the overlay.
  * @param {object} after Snapshot after the overlay.
  * @param {Array<object>} events Overlay events (corrected / missing / stale rows name the cells).
- * @param {Array<object>|null} [annotations] Optional collector; a label annotation that is new in `after`
- *   is pushed here as {ticker, field, ends} instead of counting as a cell change.
+ * @param {Array<object>|null} [annotations] Optional collector; a label annotation that differs between
+ *   `before` and `after` is pushed here as {ticker, field, kind: 'new'|'changed'|'removed', before, after}
+ *   instead of counting as a cell change (identical annotations on both sides are not reported).
  * @returns {Array<object>} The cell changes (event plus oldRow/newRow); throws on any unrelated byte.
  */
 function diffCells(before, after, events, annotations = null) {
@@ -47,13 +50,20 @@ function diffCells(before, after, events, annotations = null) {
     assert.equal(serial(newMeta), serial(oldMeta), before.meta.ticker + ': all unrelated bytes must match');
     restore.meta = clone(before.meta);
   }
-  if (restore.timeseries && Object.hasOwn(restore.timeseries, LABEL_ANNOTATION) &&
-      !(before.timeseries && Object.hasOwn(before.timeseries, LABEL_ANNOTATION))) {
-    if (annotations) annotations.push({ ticker: before.meta.ticker, field: LABEL_ANNOTATION, ends: clone(restore.timeseries[LABEL_ANNOTATION]) });
-    const { [LABEL_ANNOTATION]: _dropped, ...timeseries } = restore.timeseries;
-    restore.timeseries = timeseries;
+  const hat = (s) => Boolean(s && s.timeseries && Object.hasOwn(s.timeseries, LABEL_ANNOTATION));
+  const vor = hat(before) ? before.timeseries[LABEL_ANNOTATION] : undefined;
+  const nach = hat(restore) ? restore.timeseries[LABEL_ANNOTATION] : undefined;
+  let vergleich = before; // the caller's `before` is never mutated
+  if (vor !== undefined || nach !== undefined) {
+    if (serial(vor) !== serial(nach) && annotations) {
+      annotations.push({ ticker: before.meta.ticker, field: LABEL_ANNOTATION,
+        kind: vor === undefined ? 'new' : nach === undefined ? 'removed' : 'changed',
+        before: vor === undefined ? null : clone(vor), after: nach === undefined ? null : clone(nach) });
+    }
+    if (nach !== undefined) { const { [LABEL_ANNOTATION]: _n, ...ts } = restore.timeseries; restore.timeseries = ts; }
+    if (vor !== undefined) { vergleich = clone(before); const { [LABEL_ANNOTATION]: _v, ...ts } = vergleich.timeseries; vergleich.timeseries = ts; }
   }
-  assert.equal(serial(restore), serial(before), before.meta.ticker + ': all unrelated bytes must match');
+  assert.equal(serial(restore), serial(vergleich), before.meta.ticker + ': all unrelated bytes must match');
   return changes;
 }
 
@@ -228,7 +238,7 @@ function replay(dir, { ref = 'origin/gh-pages', date = '2026-09-29',
   return { snapshots: baseline.length, authorizedSnapshots: beforeU.length, watchlistRef, publicationRef: ref, growthCalibration: live ? 'live' : date,
     unchangedSnapshots: unchanged,
     changedCells: changes.length, staleCells: changes.filter(c => c.status === 'stale').length, quarantines, changes, allOtherRowsByteIdentical: true,
-    labelAnnotations, // P108: {ticker, field, ends} per snapshot that received verified period labels (no cell change)
+    labelAnnotations, // P108: {ticker, field, kind new|changed|removed, before, after} per snapshot whose label annotation differs (no cell change)
     diskHashesUnchanged: hashes.length, aggregateSha256: hash(serial(hashes)),
     zeroRule: { candidateCells: zeroChanges.length, nonzeroChanges: nonzeroChangesByZeroRule,
       mode: modeForReplay(zeroBoardChanges.length), visibleScoreChanges: zeroBoardChanges.length, changes: zeroChanges },
