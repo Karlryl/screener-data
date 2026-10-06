@@ -81,6 +81,53 @@ function readMcapBounds() {
     return b;
   } catch (_) { return null; }
 }
+// ---- P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, NUR additiv ----
+// Ratsentscheid Frage 1, Option C, Formel-Weg Schritt 1: jede HyperGrowth-Zeile (Branchen-
+// boards, Vollboards, Uebersicht) traegt zusaetzlich das Objekt fcfShadow. Es aendert KEINE
+// vorhandene Zahl; findash verwirft unbekannte Schluessel (data-layer/screener.js), die Anzeige
+// sieht den Schatten also nicht. Quality und Small-Cap bleiben ohne Schatten (Quality hat keine
+// Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
+// nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
+const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
+const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
+let _wachstumsSchranken;
+function wachstumsSchranken() {
+  if (_wachstumsSchranken !== undefined) return _wachstumsSchranken;
+  try {
+    const c = JSON.parse(fs.readFileSync(CALIBRATION_FILE, 'utf8'));
+    _wachstumsSchranken = Array.isArray(c && c.growthBounds) ? c.growthBounds : null;
+  } catch (_) { _wachstumsSchranken = null; }
+  return _wachstumsSchranken;
+}
+let _behoerde;
+let _schrankenGewarnt = false;
+// Alle vorkommenden Wachstumsgewichte; der Schatten wird beim EINEN Snapshot-Lesevorgang je Ticker
+// (snapAbleitungenFuer) fuer jedes Gewicht gerechnet. Ein zweites Lesen wuerde die Handtabellen-
+// Zaehler im Lauf-Protokoll doppelt zaehlen (lib/yahoo-q4-known-cases.js runtimeCounters).
+const SCHATTEN_ALPHAS = Array.from(new Set(FORMEL_ALPHA.values()));
+function fcfSchattenJeAlpha(snap, ticker) {
+  if (_behoerde === undefined) _behoerde = ladeBehoerdenJahre();
+  const schranken = wachstumsSchranken();
+  if (schranken === null && !_schrankenGewarnt) {
+    _schrankenGewarnt = true;
+    console.warn('::warning::[fcf-shadow] keine growthBounds in outputs/calibration.json — ruleOfXHeute/ruleOfXShadow ungeklemmt, nicht gleich dem gescorten Wert');
+  }
+  const m = new Map();
+  for (const a of SCHATTEN_ALPHAS.concat([null])) m.set(a, boardSchatten(snap, a, schranken, _behoerde.get(ticker)));
+  return m;
+}
+const LEERER_SCHATTEN = (grund) => ({ fcfMarginStmtFY: null, grund, gjEnde: null, ruleOfXHeute: null, ruleOfXShadow: null,
+  schattenFcfAktiv: false, behoerdeFcfMarginFY: null, behoerdeGeschaeftsjahr: null, behoerdeQuelle: null, behoerdeAbstandPp: null });
+function fcfSchattenFuer(ticker, formulaId) {
+  const abl = snapAbleitungenFuer(ticker);
+  if (!abl.fcfSchatten) return LEERER_SCHATTEN(abl.snapFehler || 'no-snapshot');
+  const alpha = FORMEL_ALPHA.has(formulaId) ? FORMEL_ALPHA.get(formulaId) : null;
+  return abl.fcfSchatten.get(alpha);
+}
+function mitFcfSchatten(formulaId) {
+  return (row) => Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) });
+}
+
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
 const SCOUT_DIR = path.join(OUT_DIR, 'smallcap'); // 5.2: Small-Cap-Board export subdir
@@ -202,14 +249,16 @@ let _mcapGenullt = 0, _mcapGeprueft = 0;
 const _snapCache = new Map();
 function snapAbleitungenFuer(ticker) {
   if (_snapCache.has(ticker)) return _snapCache.get(ticker);
-  let snap = null;
+  let snap = null, snapFehler = null;
   try { snap = prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8'))); }
-  catch (_) { snap = null; }
+  catch (e) { snap = null; snapFehler = e && e.code === 'ENOENT' ? 'no-snapshot' : 'snapshot-unreadable'; } // P87: Grund nur fuer fcfShadow
   const abl = {
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
+    fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
+    snapFehler,
   };
   // Retain evidence from the very snapshot used above. Defer helper failures,
   // not source reads, until the isolated provenance step.
@@ -679,8 +728,8 @@ function buildBoard(id, coverage, opts = {}) {
     boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
     mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
-    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), id + '.profitable', rangOpts),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), id + '.unprofitable', rangOpts),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow).map(mitFcfSchatten(id)), id + '.profitable', rangOpts),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow).map(mitFcfSchatten(id)), id + '.unprofitable', rangOpts),
   };
   if (opts.deliveryMode) {
     board.cohortDelivery = cohortDeliveryFor(id, board, opts.deliveryMode, opts.cohortCounts);
@@ -769,7 +818,7 @@ function buildFullBoards(coverage, opts = {}) {
 
 function buildOverview(coverage) {
   const o = readJSON(path.join(HG_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: vergebeRaenge(o.map(mapOverviewRow), 'overview') };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: vergebeRaenge(o.map(mapOverviewRow).map(mitFcfSchatten(null)), 'overview') };
 }
 
 function buildSurvival(coverage) {

@@ -4,6 +4,7 @@
   "lib/e1-compression.js": { "mode": "exempt", "reason": "Comment-only hit: the module explicitly does not read quarterly arrays." },
   "lib/e2-earnings-blowout.js": { "mode": "exempt", "reason": "Reads frozen historical PIT observations; never retrofit historical inputs." },
   "lib/exchange-quarter-check.js": { "mode": "upstream", "reason": "Exchange cross-check step; prepareSnapshot calls it after the hand tables, it compares the original vendor cells with the exchange store." },
+  "lib/fcf-stmt-shadow.js": { "mode": "upstream", "reason": "P87 shadow helper, pure; both callers (write-findash-export.js snapAbleitungenFuer, write-rule40-export.js sammleKandidaten) pass snapshots through prepareYahooQ4Snapshot first." },
   "lib/export-provenance.js": { "mode": "upstream", "reason": "Pure additive provenance helper; both export writers pass snapshots already processed by prepareYahooQ4Snapshot before captureSnapshot." },
   "lib/newest-qtr-guard.js": { "mode": "exempt", "reason": "Raw vendor anomaly observation before FX; preserves evidence of vendor shape, changes no values." },
   "lib/reload-history.js": { "mode": "upstream", "reason": "Pull supplies a Q4-prepared prior and a hand-table-prepared current snapshot; Q4 gaps, financial false-value corrections and withheld cells in the current snapshot are authoritative and never refilled; raw cache comparisons only preserve provider evidence." },
