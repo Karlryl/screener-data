@@ -33,6 +33,13 @@ const badCases = [
   ['confidence missing', (c) => { delete c.entries[0].confidence; }, /confidence/],
   ['confidence zero', (c) => { c.entries[0].confidence = 0; }, /confidence/],
   ['confidence high', (c) => { c.entries[0].confidence = 101; }, /confidence/],
+  ['remappings not an array', (c) => { c.remappings = {}; }, /remappings/],
+  ['remapping target unknown', (c) => { c.remappings.find((r) => r.to)['to'] = 'invented'; }, /unknown remapping target/],
+  ['remapped to null but still listed', (c) => { const r = c.remappings.find((x) => x.to === null);
+    c.entries.push({ ...c.entries.find((e) => e.class === 'nichtOperativHolding'), ticker: r.ticker }); }, /remapping disagrees/],
+  ['cryptoCandidates not an array', (c) => { c.cryptoCandidates = null; }, /cryptoCandidates/],
+  ['crypto candidate included without entry', (c) => { const t = c.cryptoCandidates.find((x) => x.included).ticker;
+    c.entries = c.entries.filter((e) => e.ticker !== t); }, /inclusion disagrees/],
 ];
 const cryptoEntry = (c) => c.entries.find((entry) => entry.class === 'nichtOperativKryptoTreasury');
 const cryptoCases = [

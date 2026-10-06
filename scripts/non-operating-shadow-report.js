@@ -53,7 +53,8 @@ function readGeneration(outputs) {
   let generatedAt = null;
   for (const family of FAMILIES) {
     const dir = path.join(base, family);
-    if (family && !fs.existsSync(dir)) continue;
+    // A missing family would silently undercount affected rows (review finding): fail loud instead.
+    if (family && !fs.existsSync(dir)) throw new Error('Exportfamilie fehlt in der Eingabe: ' + family);
     for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
       if (!entry.isFile() || !entry.name.endsWith('.json') || entry.name === 'excluded.json') continue;
       const filename = path.join(dir, entry.name);

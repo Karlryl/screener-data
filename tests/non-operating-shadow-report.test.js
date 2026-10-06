@@ -39,7 +39,7 @@ test('small frozen generation includes prior gates, all five families, and cross
   assert.ok(buildShadowReport(wrongDay).problems.some((problem) => problem.includes('Generation vom 03.10.2026')));
 });
 
-function readerWithMemoryBreak(mutate, omitIndex = false) {
+function readerWithMemoryBreak(mutate, omitIndex = false, hideFamily = null) {
   const filename = path.resolve(__dirname, '../scripts/non-operating-shadow-report.js');
   const requireFromReport = createRequire(filename);
   const target = path.join(OUTPUTS, 'findash-export/v1/energy.json');
@@ -55,6 +55,9 @@ function readerWithMemoryBreak(mutate, omitIndex = false) {
     },
     readdirSync(dir, options) {
       return fs.readdirSync(dir, options).filter((entry) => !omitIndex || entry.name !== 'index.json');
+    },
+    existsSync(p) {
+      return hideFamily && path.basename(p) === hideFamily ? false : fs.existsSync(p);
     },
   };
   const module = { exports: {} };
@@ -78,6 +81,9 @@ test('input schema, timestamp, list shape, index and mixed-day guards each break
     assert.doesNotThrow(() => verifyGeneration(generation));
   }
   assert.throws(() => readerWithMemoryBreak(() => {}, true)(OUTPUTS), /ohne Index/);
+  for (const family of ['full', 'quality', 'smallcap', 'rule40']) {
+    assert.throws(() => readerWithMemoryBreak(() => {}, false, family)(OUTPUTS), /Exportfamilie fehlt/, family);
+  }
   assert.doesNotThrow(() => readGeneration(OUTPUTS));
 });
 
