@@ -7,7 +7,8 @@ const path = require('node:path');
 const p = require('../lib/export-provenance.js');
 const { applyFinancialCases, table: financialTable } = require('../lib/financial-known-cases.js');
 const { applyKnownCases } = require('../lib/yahoo-q4-known-cases.js');
-const { applyShareCountTable, loadShareCountTable } = require('../lib/ads-hand-table.js');
+const { applyShareCountTable, loadShareCountTable, applyAdsHandTable, loadAdsHandTable } = require('../lib/ads-hand-table.js');
+const { preserveReloadHistory } = require('../lib/reload-history.js');
 const { statementFactor, loadStatementCurrencyTable } = require('../lib/statement-currency-hand-table.js');
 const { compareExports } = require('../scripts/check-export-additive.js');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'export-provenance-test-'));
@@ -57,7 +58,7 @@ test('exact keys, two operand paths/periods, hashes and honest unknown times', (
     assert.deepEqual(Object.keys(r.fx).sort(), [...p.FX_FIELDS].sort());
     assert.deepEqual(Object.keys(r.derivation).sort(), [...p.DERIVATION_FIELDS].sort());
     assert.equal(r.valueHash, p.sha256(JSON.stringify(r.normalizedValue)));
-    assert.equal(r.retrievedAt, '2026-10-03T08:00:00Z');
+    assert.equal(r.retrievedAt, null); // Snapshot-wide time proves none of these unstamped sources.
     assert.equal(r.publishedAt, null);
   }
   const growth = f.manifest.records.find(r => r.fieldPath === 'revGrowthYoYPct');
@@ -165,6 +166,105 @@ test('actual exchange-filled revenue retains its source and retrieval time', () 
   const r = p.captureSnapshot(filled).inputs[1];
   assert.equal(r.provider, 'MOPS t164sb04'); assert.equal(r.sourceType, 'exchange');
   assert.equal(r.retrievedAt, '2026-10-01T00:00:00Z');
+});
+
+test('own cell and matched period times survive reload; unstamped cells never inherit snapshot time', () => {
+  const s = snapshot(), previous = snapshot(), oldTime = '2026-09-01T08:00:00Z';
+  previous.meta.fetchedAt = oldTime;
+  for (const snap of [previous, s]) snap.meta.statementPeriods = { revenueQ: snap.timeseries.revenueQEnds.map(end => ({
+    end, duration: '3M', currency: 'USD', unit: 'currency', basis: 'reported', fetchedAt: snap.meta.fetchedAt,
+  })) };
+  s.timeseries.revenueQ[4] = null;
+  preserveReloadHistory(s, previous);
+  assert.equal(s.meta.statementPeriods.revenueQ[4].fetchedAt, oldTime);
+  const inputs = p.captureSnapshot(s).inputs;
+  assert.equal(inputs[0].retrievedAt, s.meta.fetchedAt);
+  assert.equal(inputs[1].retrievedAt, oldTime);
+  assert.notEqual(inputs[1].retrievedAt, s.meta.fetchedAt);
+  delete s.meta.statementPeriods;
+  assert.equal(p.captureSnapshot(s).inputs[1].retrievedAt, oldTime); // retained field/end marker
+  delete s.meta.reloadHistoryRetained;
+  assert(p.captureSnapshot(s).inputs.every(r => r.retrievedAt === null));
+  for (const key of ['retrievedAt', 'fetchedAt', 'asOf']) {
+    s.timeseries.revenueQ[4] = { value: 100, [key]: oldTime };
+    assert.equal(p.captureSnapshot(s).inputs[1].retrievedAt, oldTime);
+  }
+  s.timeseries.revenueQ[4] = { value: 100 };
+  s.meta.statementPeriods = { revenueQ: [{ end: '1999-12-31', fetchedAt: oldTime }] };
+  assert.equal(p.captureSnapshot(s).inputs[0].retrievedAt, null); // wrong period is not this cell
+  s.marketCap.asOf = '2026-10-03T09:00:00Z';
+  assert.equal(p.captureSnapshot(s).marketCap.retrievedAt, s.marketCap.asOf);
+  assert.equal(p.captureSnapshot(s).marketCap.observedAt, null); // fetch clock is not quote clock
+});
+
+function correctedCap(kind) {
+  const s = snapshot(), ads = kind === 'ads', ticker = ads ? 'HSAI' : 'ANDG';
+  const table = ads ? loadAdsHandTable() : loadShareCountTable(), entry = table[ticker];
+  Object.assign(s.meta, { ticker, asOf: '2026-10-03T09:00:00Z', priceCurrency: 'USD',
+    impliedSharesOutstanding: ads ? entry.yahooOrdinaryShares : entry.wrongShares[0] });
+  s._pullMode = 'price-only'; s._pullModeAt = s.meta.asOf;
+  s.price = { regularMarketPrice: ads ? 16 : 57.14, currencyUnit: 'USD' };
+  s.marketCap = { value: s.price.regularMarketPrice * s.meta.impliedSharesOutstanding, source: 'yahoo_quote', asOf: s.meta.asOf };
+  assert.equal((ads ? applyAdsHandTable : applyShareCountTable)(s, ticker, s.price.regularMarketPrice, table).status, 'corrected');
+  return s;
+}
+
+test('share-count cap is the applier calculation with separate price, shares and original vendor cap', () => {
+  const s = correctedCap('shares'), entry = loadShareCountTable().ANDG;
+  // Match the real vendor numerator, including its arithmetic order.
+  s.marketCap.yahooValue = 1059399040;
+  s.marketCap.value = 1059399040 * (entry.shares / (1059399040 / 57.14));
+  s.price.regularMarketTime = '2026-10-02T20:00:00Z';
+  const before = JSON.stringify(s), f = fixture(s), cap = f.manifest.records.find(r => r.fieldPath === 'marketCap');
+  const [price, shares, vendor] = cap.derivation.inputIds.map(id => f.manifest.records.find(r => r.id === id));
+  assert.equal(JSON.stringify(s), before);
+  assert.equal(cap.sourceType, 'calculation'); assert.equal(cap.derivation.methodId, 'marketCapFromShares');
+  assert.equal(cap.normalizedValue, 6450385007.48); assert.equal(cap.normalizedValue, f.row.marketCap);
+  assert.equal(vendor.normalizedValue * (shares.normalizedValue / (vendor.normalizedValue / price.normalizedValue)), cap.normalizedValue);
+  assert.equal(cap.missingReason, null); assert.equal(cap.quote, null); assert.equal(cap.retrievedAt, null);
+  assert.equal(price.sourceType, 'vendor'); assert.equal(price.provider, 'Yahoo Finance');
+  assert.equal(price.nativeValue, 57.14); assert.equal(price.nativeCurrency, 'USD'); assert.equal(price.quote, null);
+  assert.equal(price.retrievedAt, s.meta.asOf); assert.equal(price.observedAt, s.price.regularMarketTime);
+  assert.equal(shares.sourceType, 'handTable'); assert.equal(shares.nativeValue, entry.shares);
+  assert.equal(shares.nativeUnit, 'shares'); assert.equal(shares.quote, entry.source.quote);
+  assert.equal(shares.documentUrl, entry.source.url); assert.equal(shares.retrievedAt, entry.verifiedAt);
+  assert.equal(shares.correctionCaseId, 'hand-table:shares:ANDG');
+  for (const mutate of [
+    x => { x.price.regularMarketPrice++; }, x => { delete x.price; },
+    x => { x.marketCap.yahooValue++; }, x => { x.marketCap.value++; },
+    x => { x._pullModeAt = '2026-10-02T09:00:00Z'; },
+    x => { x.marketCap.asOf = '2026-10-02T09:00:00Z'; },
+    x => { x.meta.tradingCurrency = 'EUR'; },
+  ]) {
+    const broken = clone(s); mutate(broken);
+    assert(p.captureSnapshot(broken).marketCap.missingReason);
+  }
+  const unstamped = clone(s); delete unstamped._pullMode;
+  assert.equal(p.captureSnapshot(unstamped).marketCapInputs[0].retrievedAt, null);
+});
+
+test('ADS ratio evidence never pretends to prove shares; irreproducible product prevents a claim', () => {
+  const s = correctedCap('ads'), f = fixture(s), cap = f.manifest.records.find(r => r.fieldPath === 'marketCap');
+  const [price, shares, ratio, vendor] = cap.derivation.inputIds.map(id => f.manifest.records.find(r => r.id === id));
+  assert.equal(cap.sourceType, 'calculation'); assert.equal(cap.derivation.methodId, 'marketCapFromAds');
+  assert.equal(cap.derivation.expression, 'input[3] / input[2]');
+  assert.equal(vendor.normalizedValue / ratio.normalizedValue, cap.normalizedValue);
+  assert.equal(price.normalizedValue * shares.normalizedValue / ratio.normalizedValue, cap.normalizedValue);
+  assert.equal(cap.missingReason, null); assert.equal(cap.quote, null); assert.equal(cap.retrievedAt, null);
+  assert.equal(price.observedAt, null); assert.equal(price.nativeCurrency, 'USD');
+  assert.equal(shares.sourceType, 'handTable'); assert.equal(shares.nativeValue, 1257137688);
+  assert.equal(shares.nativeUnit, 'shares'); assert.equal(shares.quote, null); assert.equal(shares.documentUrl, null);
+  assert(shares.missingReason); assert.equal(shares.retrievedAt, '2026-09-26');
+  assert.equal(ratio.nativeValue, 8); assert.equal(ratio.retrievedAt, '2026-09-26');
+  assert.equal(ratio.quote, 'Following the ADS Ratio Change, each ADS now represents eight (8) Class B ordinary shares.');
+  s.price.regularMarketPrice = 15.38; s.marketCap.yahooValue = 19334776832; s.marketCap.value = 2416847104;
+  const real = fixture(s), root = real.manifest.records.find(r => r.fieldPath === 'marketCap');
+  assert.equal(root.normalizedValue, s.marketCap.value); assert(root.missingReason);
+  assert.equal(real.row.fieldStatus.marketCap.verification, 'unchecked');
+  assert.notEqual(15.38 * shares.nativeValue / 8, s.marketCap.value);
+  for (const mutate of [x => { x.marketCap.ordinaryPerAds = 2; }, x => { x.meta.impliedSharesOutstanding++; }]) {
+    const broken = correctedCap('ads'); mutate(broken); assert(p.captureSnapshot(broken).marketCap.missingReason);
+  }
 });
 
 test('Q4 correction follows the actual selected quarter and documented source', () => {
@@ -369,6 +469,28 @@ test('(b) slim bytes expand losslessly; deleting any non-null source field is re
     f.file.provenanceManifestSha256 = p.sha256(badBytes);
     assert.throws(() => p.validateProvenance([f.file], badBytes), /expanded record|invalid dependency/);
   }
+});
+
+test('changed input in delivered slim manifest invalidates its independently verified dependent row', () => {
+  const original = fixture(snapshot(), [], undefined, true);
+  const reviews = original.manifest.records.filter(r => p.FIELDS.includes(r.fieldPath)).map((r, i) => reviewFor(r, 'input-review-' + i));
+  const f = fixture(snapshot(), reviews, undefined, true);
+  assert.equal(f.row.verification.status, 'verified');
+  const live = path.join(tmp, 'verified-delivery.json'), target = path.resolve(tmp, 'tampered-input.json');
+  assert.notEqual(target, path.resolve(live)); assert(target.startsWith(path.resolve(tmp) + path.sep));
+  const goodBytes = p.serializeManifest(f.manifest);
+  fs.writeFileSync(live, goodBytes); const before = p.sha256(fs.readFileSync(live));
+  f.file.provenanceManifestSha256 = before;
+  assert(p.validateProvenance([f.file], fs.readFileSync(live)));
+  const broken = JSON.parse(goodBytes), growth = broken.records.find(r => r.fieldPath === 'revGrowthYoYPct');
+  const input = broken.records.find(r => r.id === growth.derivation.inputIds[0]);
+  input.normalizedValue++;
+  input.valueHash = p.valueHash(input.normalizedValue); // Even a recomputed value hash cannot preserve the evidence ID.
+  const badBytes = JSON.stringify(broken); fs.writeFileSync(target, badBytes);
+  f.file.provenanceManifestSha256 = p.sha256(badBytes);
+  assert.throws(() => p.validateProvenance([f.file], fs.readFileSync(target)), /evidence id does not match expanded record/);
+  assert.equal(p.sha256(fs.readFileSync(live)), before);
+  console.log('RED changed-input: verified dependent row rejected; protected SHA256 unchanged: ' + before);
 });
 
 function writerFixtures() {
