@@ -323,6 +323,91 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
     assert.equal(fs.existsSync(path.join(dir, 'tw.json')), false);
   });
 
+  await test('TW ceased (6a): twelve companies in a row no longer reporting do not abort; every season is recorded', async () => {
+    const dir = tmpDir();
+    const many = Array.from({ length: 12 }, (_, i) => (1258 + i) + '.TW');
+    const m = mops({ before: (b) => ({ code: 500, message: '該 ' + b.companyId + ' 公開發行公司不繼續公開發行！', result: null }) });
+    const r = await main({ dir, markets: ['tw'], tickers: many, fetchJson: m, priority: new Map(), now: NOW('2026-10-06T07:00:00Z'), log: quiet });
+    assert.equal(r.exitCode, 0, JSON.stringify(r));
+    assert.equal(r.results[0].aborted, undefined);
+    assert.equal(r.results[0].written, true);
+    assert.equal(m.log.length, 48, 'twelve companies, four due seasons each');
+    assert.equal(r.results[0].ceased, m.log.length);
+    assert.equal(r.results[0].failed, 0);
+    const s = read(dir, 'tw');
+    assert.deepEqual(Object.keys(s.companies).sort(), many);
+    for (const { b } of m.log) {
+      assert.deepEqual(s.companies[b.companyId + '.TW'].noData[b.year + 'Q' + b.season], { at: '2026-10-06T07:00:00.000Z', code: 'ceased' });
+      assert.deepEqual(s.companies[b.companyId + '.TW'].seasons, {});
+    }
+    assert.equal(s.sources[r.results[0].src].ceased, m.log.length);
+    assert.equal(s.sources[r.results[0].src].failed, 0);
+  });
+
+  await test('TW ceased (6b): another company id, a partial id, or any other answer remains a failure', async () => {
+    const answers = [
+      ...['1258', '11262', '12620', '1262A', ''].map((id) => ({ code: 500, message: '該 ' + id + ' 公開發行公司不繼續公開發行！', result: null })),
+      { code: 500, message: '該 1262 unknown error', result: null },
+      { code: 501, message: '該 1262 公開發行公司不繼續公開發行！', result: null },
+      { code: 500, message: null, result: null },
+    ];
+    for (const answer of answers) {
+      const dir = tmpDir();
+      const m = mops({ before: () => answer });
+      const r = await main({ dir, markets: ['tw'], tickers: ['1262.TW'], fetchJson: m, priority: new Map(), now: NOW('2026-10-06T07:00:00Z'), log: quiet });
+      assert.equal(r.exitCode, 0, JSON.stringify(r));
+      assert.equal(m.log.length, 4);
+      assert.equal(r.results[0].failed, 4, JSON.stringify(answer));
+      assert.equal(r.results[0].ceased, 0);
+      const s = read(dir, 'tw');
+      assert.deepEqual(Object.values(s.companies['1262.TW'].noData).map((x) => x.code), Array(4).fill('failed'));
+      assert.equal(s.sources[r.results[0].src].failed, 4);
+      assert.equal(s.sources[r.results[0].src].ceased, 0);
+    }
+  });
+
+  await test('TW ceased (6c): missing and stored seasons wait 30 days, not queued after 10 days, queued after 31', () => {
+    const seasons = S.taiwanSeasonWindow('2026-10-02').filter((s) => s.key === '115Q2');
+    for (const stored of [false, true]) {
+      const store = { sources: {}, companies: { '1262.TW': {
+        seasons: stored ? { '115Q2': [{}] } : {}, noData: { '115Q2': { at: '2026-09-22T07:00:00Z', code: 'ceased' } },
+      } } };
+      assert.deepEqual(taiwanQueue(store, ['1262.TW'], seasons, new Map(), Date.parse('2026-10-02T07:00:00Z')), [], '10 days: stored=' + stored);
+      assert.deepEqual(taiwanQueue(store, ['1262.TW'], seasons, new Map(), Date.parse('2026-10-23T07:00:00Z')).map((x) => x.s.key), ['115Q2'], '31 days: stored=' + stored);
+    }
+  });
+
+  await test('TW ceased (6d): a previously reporting company keeps every stored season unchanged', async () => {
+    const dir = tmpDir();
+    const initial = await main({ dir, markets: ['tw'], tickers: ['2548.TW'], fetchJson: mops(), priority: new Map(), now: NOW('2026-10-02T07:00:00Z'), log: quiet });
+    assert.equal(initial.exitCode, 0, JSON.stringify(initial));
+    const before = read(dir, 'tw');
+    assert.equal(Object.keys(before.companies['2548.TW'].seasons).length, 4);
+    const m = mops({ before: (b) => ({ code: 500, message: '該 ' + b.companyId + ' 公開發行公司不繼續公開發行！', result: null }) });
+    const r = await main({ dir, markets: ['tw'], tickers: ['2548.TW'], fetchJson: m, priority: new Map(), now: NOW('2026-10-12T07:00:00Z'), log: quiet });
+    assert.equal(r.exitCode, 0, JSON.stringify(r));
+    assert.equal(m.log.length, 1, 'only the newest stored season is due for refresh');
+    assert.equal(r.results[0].ceased, 1);
+    assert.equal(r.results[0].failed, 0);
+    const after = read(dir, 'tw');
+    assert.deepEqual(after.companies['2548.TW'].seasons, before.companies['2548.TW'].seasons);
+    assert.deepEqual(after.companies['2548.TW'].noData['115Q2'], { at: '2026-10-12T07:00:00.000Z', code: 'ceased' });
+    assert.equal(after.sources[r.results[0].src].ceased, 1);
+    S.assertAppendOnly(before, after);
+  });
+
+  await test('TW ceased: a matching answer resets the consecutive failure count', async () => {
+    const dir = tmpDir();
+    const many = Array.from({ length: 15 }, (_, i) => (1258 + i) + '.TW');
+    const m = mops({ before: (b, n) => ({ code: 500, message: n <= 9 || n === 11 ? 'unknown error' : '該 ' + b.companyId + ' 公開發行公司不繼續公開發行！', result: null }) });
+    const r = await main({ dir, markets: ['tw'], tickers: many, fetchJson: m, priority: new Map(), now: NOW('2026-10-06T07:00:00Z'), log: quiet });
+    assert.equal(r.exitCode, 0, JSON.stringify(r));
+    assert.equal(r.results[0].written, true);
+    assert.equal(m.log.length, 60);
+    assert.equal(r.results[0].failed, 10);
+    assert.equal(r.results[0].ceased, 50);
+  });
+
   await test('TW queue: never-fetched keys first, then the newest season of each company after 7 days', () => {
     const seasons = S.taiwanSeasonWindow('2026-10-20');
     const store = { sources: { r1: { fetchedAt: '2026-10-10T00:00:00Z', read: ['2548.TW 115Q2'] } },
