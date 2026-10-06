@@ -303,11 +303,10 @@ function neuestesQuartalsEnde(snapshot) {
   // Quartal, fast alle genau eines zu weit. Die Pruefung haengt am VORHANDENSEIN des
   // Wertes, nie am Wert selbst — ein Rueckfall auf 0 waere hier genau die Luege, die
   // dieser Anker verhindern soll.
+  // A partial quarterly series cannot date growth carried by a valid newer-year record.
+  const neuer = !quartalsBeinTraegt(snapshot) ? axesFns.annualLegNewerYear(snapshot) : null;
+  if (neuer && Number.isFinite(Date.parse(neuer.end))) return Date.parse(neuer.end);
   for (const [enden, feld] of [[ts.revenueQEnds, 'revenueQ'], [an.annualRevEnds, 'annualRev']]) {
-    // Tag 1391: no quarter with a value -> the Jahresbein carries; with a recorded newer fiscal
-    // year it speaks about that year, so that is the period shown and checked for freshness.
-    const neuer = feld === 'annualRev' && !quartalsBeinTraegt(snapshot) ? axesFns.annualLegNewerYear(snapshot) : null;
-    if (neuer && Number.isFinite(Date.parse(neuer.end))) return Date.parse(neuer.end);
     if (!Array.isArray(enden) || !enden.length) continue;
     const werte = norm(snapshot, feld);
     for (let i = 0; i < enden.length; i++) {
