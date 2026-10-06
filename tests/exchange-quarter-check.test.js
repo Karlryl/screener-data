@@ -48,8 +48,10 @@ function replaceLine(source, oldLine, newLine) {
 const mutant = (oldLine, newLine) => moduleCopy('lib/exchange-quarter-check.js', s => replaceLine(s, oldLine, newLine));
 
 // ── Policy and mode off ──────────────────────────────────────────────────────
-test('committed policy: mode off, tolerance 0.1 %, fill period 2025-09-30, baseline before 2026-08-01', () => {
-  assert.equal(X.policy.mode, 'off');
+test('committed policy: mode fill-only, tolerance 0.1 %, fill period 2025-09-30, baseline before 2026-08-01', () => {
+  assert.equal(X.policy.mode, 'fill-only');
+  assert.deepEqual(X.MODES, ['off', 'shadow', 'fill-only', 'active']);
+  for (const mode of X.MODES) assert.equal(X.validatePolicy({ ...X.policy, mode }).mode, mode);
   assert.equal(X.policy.tolerance, 0.001);
   assert.deepEqual(X.policy.fillPeriods, ['2025-09-30']);
   assert.equal(X.policy.restatementBaselineBefore, '2026-08-01');
@@ -529,6 +531,57 @@ test('break-once: each guard line, when removed, turns its check red; the live m
       y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
       assert.equal(r(lib, y).growth, null); });
   assert.equal(breaks, 18);
+});
+
+test('fill-only: identical active fills, no withholding, no residue on mode switches, no input mutation', () => {
+  for (const t of Object.keys(F.snapshots)) {
+    const s = snap(t), before = serial(s), a = run(s, 'active'), f = run(s, 'fill-only');
+    const expected = a.result?.category === 'would-fill' ? a.snapshot : s;
+    assert.equal(serial(f.snapshot), serial(expected), t);
+    assert.deepEqual(f.result, a.result, t + ': evaluation unchanged');
+    assert.equal(serial(s), before, t + ': input untouched');
+    assert.equal(serial(run(a.snapshot, 'fill-only').snapshot), serial(expected), t + ': old holds restored');
+    assert.equal(serial(run(f.snapshot, 'fill-only').snapshot), serial(expected), t + ': idempotent');
+    assert.equal(serial(run(f.snapshot, 'off').snapshot), before, t + ': off restores');
+    assert.equal(serial(run(f.snapshot, 'shadow').snapshot), before, t + ': shadow restores');
+    assert.ok(!/exchange-(pair|annual|quarter)-mismatch/.test(serial(f.snapshot)), t);
+  }
+});
+
+test('fill-only break-once: fills, all four withholding paths, default policy and off no-op turn red in memory', () => {
+  const anchor = "  const apply = mode === 'active' || (mode === 'fill-only' && result?.category === 'would-fill');";
+  const checkFill = lib => {
+    for (const t of ['000002.SZ', '6446.TW']) {
+      const s = snap(t), expected = run(clone(s), 'active').snapshot;
+      assert.equal(serial(lib.applyExchangeCheck(s, { mode: 'fill-only', context: CTX }).snapshot), serial(expected));
+    }
+  };
+  assert.throws(() => checkFill(mutant(anchor, "  const apply = mode === 'active';")), assert.AssertionError);
+  checkFill(X); breaks++;
+  const cases = [['level', snap('000599.SZ'), X.REASONS.level], ['acceleration', snap('601901.SS'), X.REASONS.acceleration],
+    ['growth', snap('600150.SS'), X.REASONS.growth], ['late-quarter', offQ3().s, X.REASONS.lateQuarter]];
+  const broken = mutant(anchor, "  const apply = mode === 'active' || mode === 'fill-only';");
+  for (const [name, s, reason] of cases) {
+    const check = lib => {
+      const f = lib.applyExchangeCheck(clone(s), { mode: 'fill-only', context: CTX }).snapshot;
+      assert.equal(serial(f), serial(s), name + ': no cell or reason changes');
+      const a = lib.applyExchangeCheck(clone(s), { mode: 'active', context: CTX }).snapshot;
+      assert.ok(serial(a).includes(reason), name + ': active still withholds');
+    };
+    assert.throws(() => check(broken), assert.AssertionError); check(X); breaks++;
+  }
+  const policyCheck = lib => {
+    assert.equal(lib.policy.mode, 'fill-only');
+    assert.ok(lib.applyExchangeCheck(base(), { context: CTX }).snapshot.timeseries.revenueQ.some(c => c?.exchangeFill));
+  };
+  const policyOff = moduleCopy('lib/exchange-quarter-check.js', s => s,
+    { '../configs/exchange-quarter-policy.json': { ...X.policy, mode: 'off' } });
+  assert.throws(() => policyCheck(policyOff), assert.AssertionError); policyCheck(X); breaks++;
+  const offCheck = lib => assert.equal(serial(lib.applyExchangeCheck(base(), { mode: 'off', context: CTX }).snapshot), serial(base()));
+  const offBroken = moduleCopy('lib/exchange-quarter-check.js', s => replaceLine(replaceLine(s,
+    "  if (mode === 'off' || !base?.meta?.ticker) return { snapshot: base, mode, result: null };",
+    "  if (!base?.meta?.ticker) return { snapshot: base, mode, result: null };"), anchor, '  const apply = true;'));
+  assert.throws(() => offCheck(offBroken), assert.AssertionError); offCheck(X); breaks++;
 });
 
 test('live files unchanged by this test run', () => {
