@@ -445,7 +445,11 @@ test('(a) fixed filename replaces a different run with exactly one manifest per 
     assert.equal(delivered.runId, file.provenanceRunId);
     assert.notDeepEqual(bytes, firstBytes);
     assert.deepEqual(delivered.records.map(p.expandRecord), second.records);
-    assert.deepEqual(fs.readdirSync(path.dirname(path.join(dir, relative))), [board + '.json']);
+    // Exactly one manifest per board; next to it only the status marker, overwritten by the latest run.
+    assert.deepEqual(fs.readdirSync(path.dirname(path.join(dir, relative))).sort(), ['_failed.json', board + '.json']);
+    const marker = JSON.parse(fs.readFileSync(path.join(path.dirname(path.join(dir, relative)), '_failed.json')));
+    assert.equal(marker.status, 'ok'); assert.equal(marker.provenanceRunId, 'second');
+    assert.equal(marker.provenanceManifestSha256, p.sha256(bytes));
     assert(p.validateProvenance([file], bytes));
   }
 });
@@ -557,7 +561,8 @@ test('(c) both writers ship complete baseline boards on helper throw, with marke
       const manifestFile = path.join(w.root, p.MANIFEST_PATHS[w.board]);
       assert.equal(fs.existsSync(manifestFile), false);
       const marker = JSON.parse(fs.readFileSync(path.join(path.dirname(manifestFile), '_failed.json')));
-      assert.deepEqual(Object.keys(marker).sort(), ['schema', 'generated_at', 'board', 'reason'].sort());
+      assert.deepEqual(Object.keys(marker).sort(), ['schema', 'status', 'generated_at', 'board', 'reason'].sort());
+      assert.equal(marker.status, 'failed');
       assert.equal(marker.board, w.board); assert.equal(marker.schema, p.SCHEMA); p.assertPublic(marker);
       assert.deepEqual(w.check(), []);
       assert.equal(warnings.filter(s => s === '::warning::provenance withheld: forced helper failure').length, 2);
@@ -573,9 +578,9 @@ test('(d) present but corrupt provenance and partial row-only metadata still fai
     fs.writeFileSync(target, JSON.stringify(partial));
     assert(w.check().some(e => /manifest path|partially withheld/.test(e)));
     fs.writeFileSync(target, original);
-    w.build(); // recovery removes the old failure marker
+    w.build(); // recovery OVERWRITES the old failure marker with status ok (gh-pages never deletes files)
     const manifestFile = path.join(w.root, p.MANIFEST_PATHS[w.board]);
-    assert.equal(fs.existsSync(path.join(path.dirname(manifestFile), '_failed.json')), false);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(path.dirname(manifestFile), '_failed.json'))).status, 'ok');
     assert.deepEqual(w.check(), []);
     const good = fs.readFileSync(target), corrupt = JSON.parse(good);
     corrupt.provenanceManifestSha256 = '0'.repeat(64);
@@ -599,7 +604,40 @@ test('(e) absent provenance without a failure marker fails each writer check', (
       p.rowsOf(data).forEach(row => p.ROW_FIELDS.forEach(key => { delete row[key]; }));
       fs.writeFileSync(file, JSON.stringify(data));
     }
-    assert(w.check().some(e => /missing provenance without _failed.json marker/.test(e)));
+    // A successful build left an ok marker; stripped headers must still fail (status decides, not existence).
+    assert(w.check().some(e => /missing provenance (without _failed.json marker|but the marker says ok)/.test(e)));
+  }
+});
+
+test('(f) a failure marker is overwritten with status ok by the next success; --check decides on status plus header', () => {
+  for (const w of integrations) {
+    const target = path.join(w.root, w.relative);
+    const markerFile = path.join(path.dirname(path.join(w.root, p.MANIFEST_PATHS[w.board])), '_failed.json');
+    const warn = console.warn; console.warn = () => {};
+    try { w.build(() => { throw new Error('forced helper failure'); }); } finally { console.warn = warn; }
+    assert.equal(JSON.parse(fs.readFileSync(markerFile)).status, 'failed');
+    const withheldBoard = fs.readFileSync(target);
+    w.build();
+    const marker = JSON.parse(fs.readFileSync(markerFile)), board = JSON.parse(fs.readFileSync(target));
+    assert.deepEqual(Object.keys(marker).sort(), ['at', 'board', 'provenanceManifestSha256', 'provenanceRunId', 'schema', 'status']);
+    assert.equal(marker.status, 'ok');
+    assert.equal(marker.board, w.board);
+    assert.equal(marker.provenanceRunId, board.provenanceRunId);
+    assert.equal(marker.provenanceManifestSha256, board.provenanceManifestSha256);
+    assert.deepEqual(w.check(), []);
+    const okBytes = fs.readFileSync(markerFile);
+    // ok marker whose hash does not match the header is rejected
+    fs.writeFileSync(markerFile, JSON.stringify({ ...marker, provenanceManifestSha256: '0'.repeat(64) }));
+    assert(w.check().some(e => /ok marker does not match the board header/.test(e)));
+    // a stale failed marker next to present provenance is rejected
+    fs.writeFileSync(markerFile, JSON.stringify({ schema: p.SCHEMA, status: 'failed', generated_at: marker.at, board: w.board, reason: 'old failure' }));
+    assert(w.check().some(e => /marker still says failed/.test(e)));
+    // an ok marker cannot excuse a board without provenance
+    fs.writeFileSync(markerFile, okBytes);
+    fs.writeFileSync(target, withheldBoard);
+    assert(w.check().some(e => /missing provenance but the marker says ok/.test(e)));
+    w.build();
+    assert.deepEqual(w.check(), []);
   }
 });
 
