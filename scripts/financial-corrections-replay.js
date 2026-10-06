@@ -26,9 +26,11 @@ function diffCells(before, after, events) {
     changes.push({ ...e, oldRow: original, newRow: changed });
     restore[e.container][e.field][e.index] = clone(original);
   }
-  if (events.some(e => e.status === 'quarantined')) {
-    if (before.meta.financialDataIssue === undefined) delete restore.meta.financialDataIssue;
-    else restore.meta.financialDataIssue = clone(before.meta.financialDataIssue);
+  if (events.some(e => e.status === 'quarantined' || e.reasonCode === 'quarantine-superseded')) {
+    const { financialDataIssue: oldIssue, ...oldMeta } = before.meta;
+    const { financialDataIssue: newIssue, ...newMeta } = restore.meta;
+    assert.equal(serial(newMeta), serial(oldMeta), before.meta.ticker + ': all unrelated bytes must match');
+    restore.meta = clone(before.meta);
   }
   assert.equal(serial(restore), serial(before), before.meta.ticker + ': all unrelated bytes must match');
   return changes;
