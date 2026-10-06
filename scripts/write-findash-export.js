@@ -228,6 +228,8 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   out.revGrowthBasis = passt ? leg.basis : null;
   out.revGrowthPeriodEnd = passt ? leg.periodEnd : null;
   out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
+  out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
+  out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
   return out;
 }
 function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
@@ -1235,13 +1237,16 @@ function checkShareDilution(r, where, errs) {
 // zur Zahl: 'none' genau dann, wenn revGrowthYoYPct null ist. null-Basis = unbeschriftet
 // (Zahl liess sich nicht nachrechnen); dann darf auch kein Zeitraum dastehen.
 const REV_GROWTH_FELDER = ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd'];
+const REV_GROWTH_SOURCE_FELDER = ['revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd'];
 function checkRevGrowthBasis(r, where, errs) {
   const da = REV_GROWTH_FELDER.filter((k) => k in r).length;
-  if (da === 0) return;
+  const quellenDa = REV_GROWTH_SOURCE_FELDER.filter((k) => k in r).length;
+  if (da === 0 && quellenDa === 0) return;
   if (da !== REV_GROWTH_FELDER.length) { errs.push(`${where}: revGrowthBasis/PeriodEnd/PriorPeriodEnd nur teilweise vorhanden`); return; }
+  if (quellenDa !== 0 && quellenDa !== REV_GROWTH_SOURCE_FELDER.length) errs.push(`${where}: revGrowthSourcePeriodEnd/SourcePriorPeriodEnd nur teilweise vorhanden`);
   const b = r.revGrowthBasis;
   if (b !== null && !REV_GROWTH_BASES.includes(b)) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)}`);
-  for (const k of REV_GROWTH_FELDER.slice(1)) {
+  for (const k of [...REV_GROWTH_FELDER.slice(1), ...REV_GROWTH_SOURCE_FELDER.filter(k => k in r)]) {
     if (r[k] !== null && isoTag(r[k]) !== r[k]) errs.push(`${where}: ${k}=${JSON.stringify(r[k])} kein ISO-Tag|null`);
     if (r[k] !== null && (b === null || b === 'none')) errs.push(`${where}: ${k} gesetzt bei revGrowthBasis=${JSON.stringify(b)}`);
   }
