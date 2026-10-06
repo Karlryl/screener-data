@@ -188,6 +188,17 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
     + 'er blind fuer genau den Weg, den Anklage A1.3 beschreibt');
   fremd.clear();
   const wurzel = path.join(REPO, 'outputs', 'findash-export', 'v1');
+  // These root directories have their own schema and validator. Never exclude a
+  // nested directory, a similarly named directory or a sibling export root.
+  const ROOTS = ['druckenmiller', 'provenance', path.join('rule40', 'provenance')];
+  const AUSGENOMMEN = new Set(ROOTS.map(name => path.join(wurzel, name)));
+  assert.equal(AUSGENOMMEN.size, 3, 'only the three independently validated schema roots may be excluded');
+  assert.ok(!AUSGENOMMEN.has(path.join(wurzel, 'rule40')), 'the rule40 board itself must stay in the walk');
+  for (const name of ROOTS) {
+    assert.ok(AUSGENOMMEN.has(path.join(wurzel, name)));
+    for (const other of [path.join(wurzel, 'full', name), path.join(wurzel, name + '-extra'),
+      path.join(wurzel, '..', 'v1-other', name)]) assert.ok(!AUSGENOMMEN.has(other), 'exclusion escaped its exact root directory');
+  }
   if (!fs.existsSync(wurzel)) {
     console.log('       (keine Auslieferung auf der Platte — nur der Waechter selbst geprueft)');
     return;
@@ -199,25 +210,25 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
   // Schluessel in DIESE Fixture zu ziehen waere die Umkehrung des Waechters: `l1`, `asOf`
   // oder `freshShare` waeren danach auch in einer BOARD-Zeile erlaubt. Der Ausschluss ist
   // eng — er nennt genau ein Verzeichnis, und der Gegen-Test unten prueft das.
-  const AUSGENOMMEN = 'druckenmiller';
+  // v1/provenance/ likewise uses findash-provenance/v1 and validateProvenance;
+  // manifest-record keys must not become permitted board-row keys.
   const dateien = [];
   const uebersprungen = [];
   const sammle = (d) => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const f = path.join(d, e.name);
       if (e.isDirectory()) {
-        if (e.name === AUSGENOMMEN) { uebersprungen.push(f); continue; }
+        if (AUSGENOMMEN.has(f)) { uebersprungen.push(f); continue; }
         sammle(f);
       } else if (e.name.endsWith('.json')) dateien.push(f);
     }
   };
   sammle(wurzel);
-  // Gegen-Test zum Ausschluss: er darf NUR diesen einen Ordner treffen. Liegt er da,
-  // muss er auch wirklich uebersprungen worden sein — und nichts sonst.
-  assert.ok(uebersprungen.length <= 1, 'der Ausschluss trifft mehr als einen Ordner: ' + uebersprungen);
-  if (fs.existsSync(path.join(wurzel, AUSGENOMMEN))) {
-    assert.equal(uebersprungen.length, 1, 'der Druckenmiller-Ordner liegt da, wurde aber mitgezaehlt');
-    assert.ok(dateien.every((f) => !f.includes(path.sep + AUSGENOMMEN + path.sep)));
+  // Every existing excluded root must be skipped, and no other directory may be skipped.
+  assert.deepEqual(uebersprungen.sort(), [...AUSGENOMMEN].filter(f => fs.existsSync(f)).sort(),
+    'only the existing, exact root directories may be excluded');
+  if (uebersprungen.length) {
+    assert.ok(dateien.every(f => uebersprungen.every(dir => !f.startsWith(dir + path.sep))));
     assert.ok(dateien.some((f) => f.includes('overview.json') || f.includes('index.json')),
       'nach dem Ausschluss sieht der Waechter die Board-Auslieferung nicht mehr — dann prueft er nichts');
   }
