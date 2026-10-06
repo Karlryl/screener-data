@@ -60,7 +60,8 @@ function compareExports(baseDir, headDir, log = console.log) {
     compare(base, head, []);
   }
   const baseSet = new Set(baseFiles);
-  for (const relative of headFiles) if (!baseSet.has(relative) && !/^provenance\/[^/]+\.json$/.test(relative)) diff(relative, 'unapproved new file');
+  for (const relative of headFiles) if (!baseSet.has(relative) &&
+    !/^(?:provenance\/(?:hypergrowth|_failed)|rule40\/provenance\/(?:rule40|_failed))\.json$/.test(relative)) diff(relative, 'unapproved new file');
   for (const detail of details) log(detail);
   log(`Compared ${stats.files} files, ${stats.rows} rows, ${stats.leafValues} leaf values; differences: ${stats.differences}`);
   return stats;

@@ -13,6 +13,18 @@
     "schema": "findash-provenance/v1",
     "version": 1,
     "scopeId": "revGrowthYoYPct+marketCap/v1",
+    "manifestPaths": {
+      "hypergrowth": "provenance/hypergrowth.json",
+      "rule40": "rule40/provenance/rule40.json"
+    },
+    "serialization": "Compact JSON; omitted record/fx/derivation keys expand to null in contract order; all-null subobjects may be omitted. Other values, envelope and reviews stay present. Evidence IDs hash the expanded record with id:null.",
+    "failureMarkerPaths": [
+      "provenance/_failed.json",
+      "rule40/provenance/_failed.json"
+    ],
+    "failureMarkerFields": ["schema", "generated_at", "board", "reason"],
+    "failureMarkerSchema": "findash-provenance/v1",
+    "failureMarkerBoards": ["hypergrowth", "rule40"],
     "fieldPaths": [
       "revGrowthYoYPct",
       "marketCap"

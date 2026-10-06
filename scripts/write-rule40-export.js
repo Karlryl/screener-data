@@ -55,7 +55,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
-const { captureSnapshot, writeProvenance, provenanceErrors } = require('../lib/export-provenance.js');
+const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
@@ -550,6 +550,9 @@ function sammleKandidaten(opts = {}) {
       abgewiesen.veraltet++; continue;
     }
 
+    let provenanceInputs, provenanceError;
+    try { provenanceInputs = captureSnapshot(snapshot); }
+    catch (error) { provenanceError = error; }
     kandidaten.push({
       ticker,
       // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen) und
@@ -576,7 +579,7 @@ function sammleKandidaten(opts = {}) {
       industry: typeof meta.industry === 'string' ? meta.industry : null,
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
       wachstumBein,
-      provenanceInputs: captureSnapshot(snapshot),
+      provenanceInputs, provenanceError,
     });
   }
 
@@ -870,10 +873,24 @@ function build(opts = {}) {
     bounds, kandidaten: kandidaten.length, gelesen, abgewiesen, aufBrett, ueber40,
     grossExportiert, kleinExportiert, grossVorKappung, kleinVorKappung, universeBasis: 'routed',
   });
-  const inputsByTicker = new Map(kandidaten.map(k => [k.ticker, k.provenanceInputs]));
-  writeProvenance([overview], { outDir: v1Dir, reviewRoot: path.join(__dirname, '..', 'verification-records'),
-    rounding: 'round1', snapshotFor: ticker => inputsByTicker.get(ticker) });
   schreibeBrett(outDir, overview, indexDatei);
+  let annotated;
+  try {
+    // schreibeBrett clears rule40/, so manifest/marker creation must follow it.
+    annotated = JSON.parse(JSON.stringify(overview));
+    const inputsByTicker = new Map(kandidaten.map(k => [k.ticker, k]));
+    (opts.writeProvenance || writeProvenance)([annotated], { outDir: path.dirname(outDir), board: BOARD_ID,
+      reviewRoot: path.join(__dirname, '..', 'verification-records'), rounding: 'round1',
+      snapshotFor: ticker => {
+        const cached = inputsByTicker.get(ticker);
+        if (cached?.provenanceError) throw cached.provenanceError;
+        return cached?.provenanceInputs;
+      } });
+  } catch (error) {
+    annotated = null;
+    writeProvenanceFailure(path.dirname(outDir), BOARD_ID, error);
+  }
+  if (annotated) writeJsonAtomic(path.join(outDir, 'overview.json'), annotated);
   return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds, ueber40, aufBrett };
 }
 
@@ -980,7 +997,7 @@ function check(opts = {}) {
     }
   });
 
-  fehler.push(...provenanceErrors(v1Dir, [path.relative(v1Dir, path.join(outDir, 'overview.json'))], opts.requireProvenance));
+  fehler.push(...provenanceErrors(path.dirname(outDir), ['rule40/overview.json'], opts.requireProvenance));
   return { ok: fehler.length === 0, errors: fehler, rows: rows.length };
 }
 

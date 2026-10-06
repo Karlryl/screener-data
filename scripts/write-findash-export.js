@@ -41,7 +41,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
-const { captureSnapshot, writeProvenance, provenanceErrors } = require('../lib/export-provenance.js');
+const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
 
@@ -198,8 +198,11 @@ function snapAbleitungenFuer(ticker) {
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
-    provenanceInputs: captureSnapshot(snap),
   };
+  // Retain evidence from the very snapshot used above. Defer helper failures,
+  // not source reads, until the isolated provenance step.
+  try { abl.provenanceInputs = captureSnapshot(snap); }
+  catch (error) { abl.provenanceError = error; }
   _snapCache.set(ticker, abl);
   return abl;
 }
@@ -1037,10 +1040,21 @@ function build(seam = {}) {
       'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
   }
   const provenancePaths = BRANCHES.map(id => id + '.json');
-  const provenanceFiles = provenancePaths.map(file => readJSON(path.join(OUT_DIR, file)));
-  writeProvenance(provenanceFiles, { outDir: OUT_DIR, reviewRoot: path.join(ROOT, 'verification-records'),
-    snapshotFor: ticker => snapAbleitungenFuer(ticker).provenanceInputs });
-  provenancePaths.forEach((file, i) => writeJsonAtomic(path.join(OUT_DIR, file), provenanceFiles[i],
+  let provenanceFiles;
+  try {
+    // Baseline boards are complete. Only detached objects receive annotations.
+    provenanceFiles = provenancePaths.map(file => readJSON(path.join(OUT_DIR, file)));
+    (seam.writeProvenance || writeProvenance)(provenanceFiles, { outDir: OUT_DIR, reviewRoot: path.join(ROOT, 'verification-records'),
+      snapshotFor: ticker => {
+        const cached = snapAbleitungenFuer(ticker);
+        if (cached.provenanceError) throw cached.provenanceError;
+        return cached.provenanceInputs;
+      } });
+  } catch (error) {
+    provenanceFiles = null;
+    writeProvenanceFailure(OUT_DIR, 'hypergrowth', error);
+  }
+  if (provenanceFiles) provenancePaths.forEach((file, i) => writeJsonAtomic(path.join(OUT_DIR, file), provenanceFiles[i],
     { assertFinite: true, indent: 2 }));
   return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
     mcapGenullt: bilanz };

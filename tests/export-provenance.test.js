@@ -329,5 +329,157 @@ test('full boards permit neither provenance additions nor byte changes', () => {
   fs.writeFileSync(target, bytes); assert.equal(compare().differences, 0);
 });
 
+test('(a) fixed filename replaces a different run with exactly one manifest per board', () => {
+  for (const board of ['hypergrowth', 'rule40']) {
+    const dir = path.join(tmp, 'two-builds', board);
+    const file = { rows: [rowFor(snapshot())] };
+    const first = p.writeProvenance([file], { outDir: dir, board, runId: 'first' });
+    const relative = file.provenanceManifest;
+    const firstBytes = fs.readFileSync(path.join(dir, relative));
+    file.rows[0].marketCap = 17;
+    const second = p.writeProvenance([file], { outDir: dir, board, runId: 'second' });
+    const bytes = fs.readFileSync(path.join(dir, relative)), delivered = JSON.parse(bytes);
+    assert.equal(relative, p.MANIFEST_PATHS[board]);
+    assert.equal(file.provenanceManifest, relative);
+    assert.notEqual(first.runId, second.runId);
+    assert.equal(delivered.runId, file.provenanceRunId);
+    assert.notDeepEqual(bytes, firstBytes);
+    assert.deepEqual(delivered.records.map(p.expandRecord), second.records);
+    assert.deepEqual(fs.readdirSync(path.dirname(path.join(dir, relative))), [board + '.json']);
+    assert(p.validateProvenance([file], bytes));
+  }
+});
+
+test('(b) slim bytes expand losslessly; deleting any non-null source field is rejected', () => {
+  const f = fixture(), bytes = p.serializeManifest(f.manifest), wire = JSON.parse(bytes);
+  f.file.provenanceManifestSha256 = p.sha256(bytes);
+  assert(p.validateProvenance([f.file], bytes));
+  assert(bytes.length < JSON.stringify(f.manifest, null, 2).length);
+  assert.deepEqual(wire.records.map(p.expandRecord), f.manifest.records);
+  wire.records.map(p.expandRecord).forEach((r, i) => {
+    assert.deepEqual(Object.keys(r).sort(), [...p.RECORD_FIELDS].sort());
+    assert.deepEqual(Object.keys(r.fx).sort(), [...p.FX_FIELDS].sort());
+    assert.deepEqual(Object.keys(r.derivation).sort(), [...p.DERIVATION_FIELDS].sort());
+    assert.equal(r.id, 'e-' + p.valueHash({ ...r, id: null }));
+    assert.equal(r.valueHash, f.manifest.records[i].valueHash);
+  });
+  for (const mutate of [r => { delete r.provider; }, r => { delete r.derivation.inputIds; }]) {
+    const broken = clone(wire); mutate(broken.records[0]);
+    const badBytes = JSON.stringify(broken);
+    f.file.provenanceManifestSha256 = p.sha256(badBytes);
+    assert.throws(() => p.validateProvenance([f.file], badBytes), /expanded record|invalid dependency/);
+  }
+});
+
+function writerFixtures() {
+  const fixture40 = require('./rule40-fixture.js');
+  const r40 = require('../scripts/write-rule40-export.js');
+  const r40Paths = fixture40.baueExport([{ row: fixture40.boardZeile() }]);
+  // Execute the actual HG writer against a temporary root without changing its code.
+  const root = path.join(tmp, 'hg-writer'), script = require.resolve('../scripts/write-findash-export.js');
+  const Module = require('node:module'), vm = require('node:vm');
+  const mod = { exports: {} }, snapDir = path.join(root, 'snapshots');
+  const old = process.env.FINDASH_SNAPSHOTS_DIR;
+  process.env.FINDASH_SNAPSHOTS_DIR = snapDir;
+  try {
+    vm.runInThisContext(Module.wrap(fs.readFileSync(script, 'utf8').replace(/^#![^\n]*/, '')), { filename: script })(
+      mod.exports, Module.createRequire(script), mod, script, path.join(root, 'scripts'));
+  } finally {
+    if (old === undefined) delete process.env.FINDASH_SNAPSHOTS_DIR;
+    else process.env.FINDASH_SNAPSHOTS_DIR = old;
+  }
+  const hg = mod.exports, source = path.join(root, 'outputs', 'hypergrowth');
+  const out = path.join(root, 'outputs', 'findash-export', 'v1');
+  fs.mkdirSync(path.join(source, 'full'), { recursive: true }); fs.mkdirSync(snapDir, { recursive: true });
+  const snap = snapshot(); fs.writeFileSync(path.join(snapDir, 'TEST.json'), JSON.stringify(snap));
+  const row = fixture40.boardZeile({ ticker: 'TEST', marketCap: 0, revGrowthYoYPct: p.captureSnapshot(snap).leg.pct,
+    ipoRecency: 'mature', profitStreak: null });
+  const counts = {};
+  for (const branch of hg.BRANCHES) {
+    const data = { profitable: branch === 'energy' ? [row] : [], unprofitable: [] };
+    counts[branch] = { profitable: data.profitable.length, unprofitable: 0 };
+    for (const prefix of ['', 'full']) fs.writeFileSync(path.join(source, prefix, branch + '.json'), JSON.stringify(data));
+  }
+  fs.writeFileSync(path.join(source, 'index.json'), JSON.stringify({ generatedFromSnapshots: 1, branches: hg.BRANCHES,
+    counts, survivalCount: 0, excluded: {} }));
+  for (const name of ['overview', 'survival']) fs.writeFileSync(path.join(source, name + '.json'), '[]');
+  return [
+    { board: 'hypergrowth', root: out, relative: 'energy.json',
+      build: writeProvenance => hg.build({ writeProvenance }),
+      check: () => hg.validateExport(out, { requireProvenance: true }) },
+    { board: 'rule40', root: r40Paths.v1Dir, relative: 'rule40/overview.json',
+      build: writeProvenance => r40.build({ ...r40Paths, writeProvenance }),
+      check: () => r40.check({ ...r40Paths, requireProvenance: true }).errors },
+  ];
+}
+
+const integrations = writerFixtures();
+test('(c) both writers ship complete baseline boards on helper throw, with marker and warning-only check', () => {
+  for (const w of integrations) {
+    let original;
+    const warnings = [], warn = console.warn; console.warn = message => warnings.push(message);
+    try {
+      w.build((files, options) => {
+        const { jsonFiles } = require('../scripts/check-export-additive.js');
+        original = new Map(jsonFiles(w.root).map(relative => [relative, fs.readFileSync(path.join(w.root, relative))]));
+        // Force a late helper failure AFTER all in-memory annotations and manifest writing.
+        p.writeProvenance(files, options);
+        throw new Error('forced helper failure');
+      });
+      assert(original.size >= (w.board === 'hypergrowth' ? 29 : 4));
+      for (const [relative, bytes] of original) assert.deepEqual(fs.readFileSync(path.join(w.root, relative)), bytes, relative);
+      const file = JSON.parse(fs.readFileSync(path.join(w.root, w.relative)));
+      assert(p.rowsOf(file).length > 0);
+      assert(p.HEADER_FIELDS.every(key => !Object.hasOwn(file, key)));
+      assert(p.rowsOf(file).every(row => p.ROW_FIELDS.every(key => !Object.hasOwn(row, key))));
+      const manifestFile = path.join(w.root, p.MANIFEST_PATHS[w.board]);
+      assert.equal(fs.existsSync(manifestFile), false);
+      const marker = JSON.parse(fs.readFileSync(path.join(path.dirname(manifestFile), '_failed.json')));
+      assert.deepEqual(Object.keys(marker).sort(), ['schema', 'generated_at', 'board', 'reason'].sort());
+      assert.equal(marker.board, w.board); assert.equal(marker.schema, p.SCHEMA); p.assertPublic(marker);
+      assert.deepEqual(w.check(), []);
+      assert.equal(warnings.filter(s => s === '::warning::provenance withheld: forced helper failure').length, 2);
+    } finally { console.warn = warn; }
+    console.log('WITHHELD ' + w.board + ': complete boards, no manifest, marker + build/check warnings, check exit 0');
+  }
+});
+
+test('(d) present but corrupt provenance and partial row-only metadata still fail each writer check', () => {
+  for (const w of integrations) {
+    const target = path.join(w.root, w.relative), original = fs.readFileSync(target);
+    const partial = JSON.parse(original); p.rowsOf(partial)[0].provenance = {};
+    fs.writeFileSync(target, JSON.stringify(partial));
+    assert(w.check().some(e => /manifest path|partially withheld/.test(e)));
+    fs.writeFileSync(target, original);
+    w.build(); // recovery removes the old failure marker
+    const manifestFile = path.join(w.root, p.MANIFEST_PATHS[w.board]);
+    assert.equal(fs.existsSync(path.join(path.dirname(manifestFile), '_failed.json')), false);
+    assert.deepEqual(w.check(), []);
+    const good = fs.readFileSync(target), corrupt = JSON.parse(good);
+    corrupt.provenanceManifestSha256 = '0'.repeat(64);
+    fs.writeFileSync(target, JSON.stringify(corrupt));
+    assert(w.check().some(e => /exact bytes/.test(e)));
+    fs.writeFileSync(target, good);
+    const missingLinks = JSON.parse(good);
+    p.rowsOf(missingLinks)[0].provenance.marketCap = [];
+    fs.writeFileSync(target, JSON.stringify(missingLinks));
+    assert(w.check().some(e => /invalid row evidence ids/.test(e)));
+    fs.writeFileSync(target, good);
+  }
+});
+
+test('(e) absent provenance without a failure marker fails each writer check', () => {
+  for (const w of integrations) {
+    const relativeFiles = w.board === 'hypergrowth' ? require('../scripts/write-findash-export.js').BRANCHES.map(b => b + '.json') : [w.relative];
+    for (const relative of relativeFiles) {
+      const file = path.join(w.root, relative), data = JSON.parse(fs.readFileSync(file));
+      p.HEADER_FIELDS.forEach(key => { delete data[key]; });
+      p.rowsOf(data).forEach(row => p.ROW_FIELDS.forEach(key => { delete row[key]; }));
+      fs.writeFileSync(file, JSON.stringify(data));
+    }
+    assert(w.check().some(e => /missing provenance without _failed.json marker/.test(e)));
+  }
+});
+
 console.log(`export-provenance: ${ok} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
