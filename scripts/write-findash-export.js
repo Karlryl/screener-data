@@ -43,7 +43,17 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
-const { rankGrundShadowFor } = require('../lib/non-operating-classes.js');
+// P89 SHADOW (master decision on review finding 2): the class table is validated strictly
+// (lib throws, the PR check tests this exact file), but a shadow table must never abort the
+// live daily export. On a load/validation error every row gets rankGrundShadow = null and the
+// run log carries ONE loud warning naming the error. write-rule40-export.js reuses this lookup.
+let rankGrundShadowFor;
+try {
+  ({ rankGrundShadowFor } = require('../lib/non-operating-classes.js'));
+} catch (err) {
+  rankGrundShadowFor = () => null;
+  console.warn('::warning::[non-operating-shadow] Klassentabelle ungueltig, rankGrundShadow = null fuer alle Zeilen: ' + err.message);
+}
 
 const ROOT = path.join(__dirname, '..');
 const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
@@ -2023,6 +2033,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.
   loadCoverage,

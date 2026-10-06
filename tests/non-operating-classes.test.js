@@ -89,18 +89,50 @@ test('legal-form boundary, exact threshold, and German display lookup', () => {
   assert.doesNotThrow(() => validateNonOperatingConfig(copy), 'equality qualifies');
 });
 
-function isolatedWriter(filename, findash) {
+function isolatedWriter(filename, findash, opts = {}) {
   const absolute = path.resolve(__dirname, '../scripts', filename);
   const realRequire = createRequire(absolute);
   const module = { exports: {} };
   const fixtureFs = { ...fs, readFileSync() { throw new Error('Fixture has no external data'); } };
   const localRequire = (id) => id === 'fs' || id === 'node:fs' ? fixtureFs
-    : id === './write-findash-export.js' ? findash : realRequire(id);
-  const source = fs.readFileSync(absolute, 'utf8').replace(/^#![^\n]*\n/, '');
+    : id === './write-findash-export.js' ? findash
+    : id === '../lib/non-operating-classes.js' && opts.brokenTable ? (() => { throw new Error('non-operating-classes: duplicate ticker SBR'); })()
+    : realRequire(id);
+  const source = (opts.mutate || ((s) => s))(fs.readFileSync(absolute, 'utf8').replace(/^#![^\n]*\n/, ''));
   vm.runInNewContext('(function(require,module,exports,__dirname,__filename){' + source + '\n})',
-    { console, process, URL, Buffer })(localRequire, module, module.exports, path.dirname(absolute), absolute);
+    { console: opts.console || console, process, URL, Buffer })(localRequire, module, module.exports, path.dirname(absolute), absolute);
   return module.exports;
 }
+
+test('a broken class table never aborts the export: shadow null on all rows plus one loud warning', () => {
+  const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/non-operating-shadow/export-fixture.json'), 'utf8'));
+  const warnings = [];
+  const quiet = { ...console, warn: (line) => warnings.push(String(line)) };
+  const w = isolatedWriter('write-findash-export.js', undefined, { brokenTable: true, console: quiet });
+  const r = isolatedWriter('write-rule40-export.js', w, { console: quiet });
+  const input = fixture.input;
+  const actual = {
+    board: w.vergebeRaenge(input.board.map(w.mapBoardRow), 'fixture', { warn: false }),
+    overview: w.vergebeRaenge(input.overview.map(w.mapOverviewRow), 'fixture', { warn: false }),
+    survival: input.survival.map(w.mapSurvivalRow),
+    rule40: r.baueZeilen(input.candidates),
+  };
+  for (const rows of [actual.board, actual.overview, actual.rule40.rows]) {
+    for (const row of rows) assert.equal(row.rankGrundShadow, null, row.ticker);
+  }
+  assert.equal(JSON.stringify(stripShadow(actual)), JSON.stringify(fixture.before), 'ranks and all other fields unchanged');
+  const loud = warnings.filter((line) => line.startsWith('::warning::[non-operating-shadow]'));
+  assert.equal(loud.length, 1, 'exactly one loud warning line');
+  assert.match(loud[0], /duplicate ticker SBR/, 'the warning names the error');
+  // Break once, in memory only: with the guard removed the same broken table aborts the export.
+  const anchor = "  ({ rankGrundShadowFor } = require('../lib/non-operating-classes.js'));\n} catch (err) {\n  rankGrundShadowFor = () => null;";
+  const removeGuard = (s) => {
+    assert.ok(s.includes(anchor), 'guard anchor present in the writer');
+    return s.replace(anchor, "  ({ rankGrundShadowFor } = require('../lib/non-operating-classes.js'));\n} catch (err) {\n  throw err;");
+  };
+  assert.throws(() => isolatedWriter('write-findash-export.js', undefined, { brokenTable: true, console: quiet, mutate: removeGuard }),
+    /duplicate ticker SBR/);
+});
 const stripShadow = (value) => JSON.parse(JSON.stringify(value, (key, v) => key === 'rankGrundShadow' ? undefined : v));
 
 test('real row exporters match the pre-change HEAD fixture byte for byte except shadow', () => {

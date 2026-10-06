@@ -61,7 +61,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
-const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags } = require('./write-findash-export.js');
+const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags, rankGrundShadowFor } = require('./write-findash-export.js'); // P89: guarded shadow lookup
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -70,7 +70,6 @@ const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
-const { rankGrundShadowFor } = require('../lib/non-operating-classes.js');
 const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
