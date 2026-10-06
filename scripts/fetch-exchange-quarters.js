@@ -32,7 +32,13 @@
  *           change, and it falls under the abort rule below. A share threshold on the bad-id count
  *           cannot do this: on a quiet day the two preferred ids are 2 of 2 calls (100 %), while a
  *           systemic answer in the fill phase hits up to 600 numeric ids. The letter rule depends on
- *           neither the call count nor the day. Any other failure skips the company and is counted.
+ *           neither the call count nor the day. Code 500 "該 1262 公開發行公司不繼續公開發行！" (measured
+ *           06.10.2026), when it names the requested company, is recorded per season as 'ceased' and
+ *           retried after 30 days, including for companies with stored seasons, without counting as a failure.
+ *           Code 500 "該 <id> 上市公司已下市！" (measured 06.10.2026), with the requested company id as
+ *           its own token, is recorded per season as 'delisted' and retried after 30 days, including for
+ *           companies with stored seasons, without counting as a failure.
+ *           Any other failure skips the company and is counted.
  *           10 failures in a row, or at least 5 failures that are more than 20 % of the calls -> abort, tw.json is not written, exit 1.
  *   Before every write the new store is checked against the old one (assertAppendOnly): an old
  *   observation that would be lost or changed throws and nothing is written. Writes are atomic.
@@ -65,7 +71,7 @@ const DAY_MS = 24 * 3600 * 1000;
 const CN_WEEKLY_MS = 6 * DAY_MS;          // outside the report seasons: at most one China pass per 6 days
 const TW_REFRESH_MS = 7 * DAY_MS;         // newest season of every company re-read once every 7 days
 const TW_RETRY_NODATA_MS = 3 * DAY_MS;    // 406: season not filed yet
-const TW_RETRY_NOLINE_MS = 30 * DAY_MS;   // statement without 營業收入合計/收益合計, or a rejected company id
+const TW_RETRY_NOLINE_MS = 30 * DAY_MS;   // no revenue line, a rejected company id, ceased public reporting, or delisted
 const TW_RETRY_FAIL_MS = 1 * DAY_MS;
 const TW_SEASON_LEAD_MS = 25 * DAY_MS;    // no MOPS call for a season younger than this
 const MOPS_URL = 'https://mops.twse.com.tw/mops/api/t164sb04';
@@ -73,6 +79,12 @@ const TW_LINES = ['營業收入合計', '收益合計'];
 // MOPS t164sb04 answer for a preferred-share id, measured 02.10.2026 for 1312A and 2002A (115Q2):
 // {"code":500,"message":"公司代號格式錯誤","result":null}
 const MOPS_BAD_ID = '公司代號格式錯誤';
+// MOPS t164sb04 answer for 1262 (115Q2), measured 06.10.2026:
+// {"code":500,"message":"該 1262 公開發行公司不繼續公開發行！","result":null}
+const MOPS_CEASED = '公開發行公司不繼續公開發行';
+// MOPS t164sb04 answer for 1311, 1523, 2446 and 2463, measured 06.10.2026:
+// {"code":500,"message":"該 1311 上市公司已下市！","result":null}
+const MOPS_DELISTED = '上市公司已下市';
 const EASTMONEY_ENDPOINT = 'https://datacenter.eastmoney.com/securities/api/data/v1/get (source=HSF10)';
 
 const CN_TABLES = [
@@ -257,13 +269,15 @@ function taiwanQueue(store, tickers, seasons, priority, nowMs) {
       if (nowMs - Date.parse(s.periodEnd + 'T00:00:00Z') < TW_SEASON_LEAD_MS) continue;
       const nd = c.noData && c.noData[s.key];
       if (nd) {
-        const wait = nd.code === 406 ? TW_RETRY_NODATA_MS : nd.code === 'no-line' || nd.code === 'bad-id' ? TW_RETRY_NOLINE_MS : TW_RETRY_FAIL_MS;
+        const wait = nd.code === 406 ? TW_RETRY_NODATA_MS : nd.code === 'no-line' || nd.code === 'bad-id' || nd.code === 'ceased' || nd.code === 'delisted' ? TW_RETRY_NOLINE_MS : TW_RETRY_FAIL_MS;
         if (nowMs - Date.parse(nd.at) < wait) continue;
       }
       first.push({ tk, s });
     }
     const newest = seasons.find((s) => c.seasons[s.key]);
     if (newest) {
+      const nd = c.noData && c.noData[newest.key];
+      if (nd && (nd.code === 'ceased' || nd.code === 'delisted') && nowMs - Date.parse(nd.at) < TW_RETRY_NOLINE_MS) continue;
       const at = lastRead.get(tk + ' ' + newest.key);
       if (!at || nowMs - Date.parse(at) >= TW_REFRESH_MS) refresh.push({ tk, s: newest });
     }
@@ -281,7 +295,7 @@ async function runTaiwan(ctx) {
   const next = prev ? clone(prev) : emptyStore('TW');
   const fetchedAt = now.toISOString();
   const src = 'tw-' + stamp(fetchedAt);
-  const st = { calls: 0, ok: 0, noData: 0, noLine: 0, badId: 0, failed: 0, new: 0, confirmed: 0, changed: 0 };
+  const st = { calls: 0, ok: 0, noData: 0, noLine: 0, badId: 0, ceased: 0, delisted: 0, failed: 0, new: 0, confirmed: 0, changed: 0 };
   const failures = [];
   const read = [];
   let inARow = 0;
@@ -296,6 +310,13 @@ async function runTaiwan(ctx) {
       if (j && j.code === 406) { c.noData[s.key] = { at, code: 406 }; st.noData += 1; inARow = 0; continue; }
       if (j && j.code === 500 && j.message === MOPS_BAD_ID && /[A-Za-z]/.test(c.companyId) && !Object.keys(c.seasons).length) {
         c.noData[s.key] = { at, code: 'bad-id' }; st.badId += 1; inARow = 0; continue;
+      }
+      if (j && j.code === 500 && typeof j.message === 'string' && j.message.includes(MOPS_CEASED)
+        && j.message.split(/[^A-Za-z0-9]+/).includes(c.companyId)) {
+        c.noData[s.key] = { at, code: 'ceased' }; st.ceased += 1; inARow = 0; continue;
+      }
+      if (j && j.code === 500 && c.companyId && j.message === '該 ' + c.companyId + ' ' + MOPS_DELISTED + '！') {
+        c.noData[s.key] = { at, code: 'delisted' }; st.delisted += 1; inARow = 0; continue;
       }
       const r = j && j.result;
       if (!j || j.code !== 200 || !r) why = 'code ' + (j && j.code) + ' ' + JSON.stringify(j && j.message);
@@ -332,7 +353,7 @@ async function runTaiwan(ctx) {
     throw new Error('MOPS: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
   }
   next.sources[src] = { fetchedAt, endpoint: 'POST ' + MOPS_URL, seasons: seasons.map((x) => x.key), calls: st.calls,
-    ok: st.ok, noData: st.noData, noLine: st.noLine, badId: st.badId, failed: st.failed, read };
+    ok: st.ok, noData: st.noData, noLine: st.noLine, badId: st.badId, ceased: st.ceased, delisted: st.delisted, failed: st.failed, read };
   S.assertAppendOnly(prev, next);
   const text = S.serialiseStore(next);
   if (!ctx.dryRun) writeFileAtomic(file, text);

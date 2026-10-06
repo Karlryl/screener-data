@@ -173,6 +173,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
 const { readValueFlags, valueFlagProblems } = require('../lib/value-open-items.js');
+const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
 // Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
@@ -349,8 +350,18 @@ function ladeValueFlags(file = VALUE_OPEN_ITEMS_FILE, warn = console.warn, day =
   return _valueFlags.size;
 }
 
+// Shadow reports are repository inputs: missing or malformed tables must throw.
+let _dupIssuerShadow = null;
+function ladeDupIssuerShadowTable(file) {
+  _dupIssuerShadow = secondaryIndex(loadDupIssuerShadowTable(file));
+  return _dupIssuerShadow.size;
+}
+
 // Ein Anwender fuer alle drei Zeilen-Mapper — drei Kopien derselben Regel laufen auseinander.
 function ergaenzeWaehrungsbeleg(out) {
+  // Direct mapper callers share the same cached table as the production build.
+  if (_dupIssuerShadow === null) ladeDupIssuerShadowTable();
+  applyDupIssuerShadow(out, _dupIssuerShadow);
   // Additive, optional field (docs/findash-export-v1.md); lamps stay closed keys the consumer knows.
   const reasons = snapAbleitungenFuer(out.ticker).financialReasons;
   if (reasons.length) out.financialDataReasons = reasons;
@@ -1004,6 +1015,7 @@ function loadCoverage(file = COVERAGE) {
 // passes none. tests/value-flags.test.js points sourceIndexFile at a missing file, so build() stops
 // right after loading the list and before anything is written.
 function build(seam = {}) {
+  ladeDupIssuerShadowTable();
   const day = (seam.now || new Date()).toISOString().slice(0, 10);
   const nFlagged = ladeValueFlags(seam.valueOpenItemsFile || VALUE_OPEN_ITEMS_FILE, console.warn, day); // Tag 1401: before the first mapper runs
   console.log('valueFlags: ' + nFlagged + ' ticker(s) with an open value item are marked (data-health/value-open-items.json)');
