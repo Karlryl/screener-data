@@ -18,7 +18,8 @@ const clone = x => structuredClone(x);
 function diffCells(before, after, events) {
   const restore = clone(after), changes = [];
   // Stale cells are withheld as missing, so they are cell changes too and must be listed.
-  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status))) {
+  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status) &&
+    typeof e.container === 'string' && typeof e.field === 'string' && Number.isInteger(e.index))) {
     const original = before[e.container][e.field][e.index];
     const changed = after[e.container][e.field][e.index];
     if (serial(original) === serial(changed)) continue;
