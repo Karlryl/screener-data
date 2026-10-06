@@ -173,11 +173,41 @@ const { financialReasons } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
 const { readValueFlags, valueFlagProblems } = require('../lib/value-open-items.js');
 const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
+const { loadRegistry, computeClassesShadow, deviationPct } = require('../lib/mcap-classes-shadow.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
 // Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
 // snapshots/ ab — aus dem run-screener.js sein Universum baut (M9).
 const SNAP_DIR = process.env.FINDASH_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots');
+let _mcapClassesByTicker = null;
+let _mcapClassesDir = SNAP_DIR;
+const _mcapClassesCache = new Map();
+
+/** Loads the shadow registry and resets its generation cache. @param {string} [file] Registry path. @param {string} [snapshotsDir] Merged generation directory. */
+function ladeMcapClassesRegistry(file, snapshotsDir = SNAP_DIR) {
+  const entries = Object.values(loadRegistry(file));
+  _mcapClassesByTicker = new Map(entries.flatMap((entry) => entry.classes.map((leg) => [leg.ticker, entry])));
+  _mcapClassesDir = snapshotsDir;
+  _mcapClassesCache.clear();
+  return entries.length;
+}
+
+/** Appends diagnostic fields after all existing row fields. @param {object} out Completed export row. @returns {object} The same row, with no existing field changed. */
+function ergaenzeMarketCapClassesShadow(out) {
+  // Loaded only by build() (and explicitly by tests): a mapper without a loaded registry adds no key,
+  // exactly like before P88, instead of opening files from inside a pure mapper.
+  if (_mcapClassesByTicker === null) return out;
+  const entry = _mcapClassesByTicker.get(out.ticker);
+  if (!entry) return out;
+  if (!_mcapClassesCache.has(entry)) {
+    const snapshots = Object.fromEntries(entry.classes.map(({ ticker }) =>
+      [ticker, readJSONOrNull(path.join(_mcapClassesDir, safeSnapshotFilename(ticker)))]));
+    _mcapClassesCache.set(entry, computeClassesShadow(entry, snapshots));
+  }
+  out.marketCapClassesShadow = _mcapClassesCache.get(entry);
+  out.marketCapClassesDeviationPct = deviationPct(out.marketCap, out.marketCapClassesShadow.value);
+  return out;
+}
 // Anteil genullter Zeilen, ab dem der Writer NICHT mehr ausliefert, sondern abbricht.
 // Grund: bei einem Schema-Bruch (z. B. der Snapshot-Bestand ist aelter als der Stempel)
 // wuerde der Waechter der halben Rangliste die Groesse nehmen und das Board damit
@@ -566,7 +596,7 @@ function mapBoardRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
   ergaenzeBelegpunkte(out);            // 29.08.: Belegpunkte neben der Coverage-Behauptung
-  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.: Basis/Zeitraum des Wachstums
+  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out))); // Additive shadow, after existing fields.
 }
 
 function mapOverviewRow(r, i) {
@@ -585,7 +615,7 @@ function mapOverviewRow(r, i) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
   ergaenzeBelegpunkte(out);            // 29.08.: s. mapBoardRow
-  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.
+  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out))); // Additive shadow, after existing fields.
 }
 
 function mapSurvivalRow(r, i) {
@@ -600,7 +630,7 @@ function mapSurvivalRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
-  return ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out)); // Chunk 4a + 01.10.
+  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out))); // Additive shadow, after existing fields.
 }
 
 // ---- build ---------------------------------------------------------------
@@ -1011,6 +1041,7 @@ function loadCoverage(file = COVERAGE) {
 // right after loading the list and before anything is written.
 function build(seam = {}) {
   ladeDupIssuerShadowTable();
+  ladeMcapClassesRegistry();
   const day = (seam.now || new Date()).toISOString().slice(0, 10);
   const nFlagged = ladeValueFlags(seam.valueOpenItemsFile || VALUE_OPEN_ITEMS_FILE, console.warn, day); // Tag 1401: before the first mapper runs
   console.log('valueFlags: ' + nFlagged + ' ticker(s) with an open value item are marked (data-health/value-open-items.json)');
@@ -2031,4 +2062,5 @@ module.exports = {
   ergaenzeWachstumsBasis, checkRevGrowthBasis, wachstumOhneEtikett,
   // Tag 1401: valueFlags loader seam (tests/value-flags.test.js runs the mappers with a fixture list).
   ladeValueFlags, checkValueFlags,
+  ladeMcapClassesRegistry, ergaenzeMarketCapClassesShadow,
 };
