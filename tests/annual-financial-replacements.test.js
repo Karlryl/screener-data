@@ -111,6 +111,17 @@ test('P99 lock 1: a withheld middle year withholds every older year; newer corre
   const unlocked=clone(rows); unlocked[2]={value:expected[2]*fx}; unlocked[3]={value:expected[3]*fx};
   assert.notEqual(revAcceleration({ ...r.snapshot, annual:{ ...r.snapshot.annual, annualRev:unlocked }, timeseries:{} }, null),null); breaks++;
 });
+test('review D15 H1: a stored state stays withheld after a table revision change (both drift variants)', () => {
+  const { revAcceleration } = require('../src/scoring/axes.js');
+  const next = clone(table); next.revision = '2026-10-07a';
+  for (const [i, want] of [[1,[expected[0]*fx,null,null,null]], [0,[null,null,null,null]]]) {
+    const raw=fixture(); raw.annual.annualRev[i].value+=1;
+    const stored=applyFinancialCases(raw).snapshot;                 // persisted with the old revision
+    const again=applyFinancialCases(stored,{table:next}).snapshot;  // read later with a new revision
+    assert.deepEqual(again.annual.annualRev.map(value),want,'drift at '+i+': withheld years stay withheld');
+    assert.equal(revAcceleration({ ...again, timeseries:{} }, null),null);
+  }
+});
 test('P99 lock 2: reload never refills a withheld annual hand-table hole, not even with an earlier corrected value', () => {
   const { preserveReloadHistory } = require('../lib/reload-history.js');
   const period = (end, fetchedAt) => ({ end, duration:'12M', currency:'INR', unit:'currency', basis:'reported', fetchedAt });

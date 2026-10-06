@@ -778,4 +778,4 @@ Numerische Jahreskorrekturen nutzen denselben Zellpfad wie Quartalskorrekturen: 
 
 Der Wächter in tests/annual-financial-replacements.test.js prüft alle vier Werte und beide Notierungen. Das absichtliche Zurückgeben des alten Anbieterwerts, eine falsche Währung und Ersatzwert 0 machen die Gegenprobe rot, ausschließlich im Speicher. Das Jahreswachstum bleibt rechnerisch 26,31066513058382 %. Auswirkungen auf absolute Kennzahlen, Score und Rang müssen mit demselben Datenstand ausgewiesen werden; sie sind abgeleitet und keine Originalberichtszahlen.
 
-Hyundai Marine bleibt als Versicherer ausgeschlossen. Heclas Jahreswerte werden hier nicht ergänzt. Diese Vorbereitung ist keine Veröffentlichung; die Anwendung durch D2 folgt nach P22 und Prüfung durch Claude.
+Hyundai Marine bleibt als Versicherer ausgeschlossen. Heclas Jahreswerte werden hier nicht ergänzt. Angewendet mit P50 (PR 431, 06.10.2026) nach blinder Prüfung durch D20 und D15.
