@@ -109,6 +109,7 @@ const SELECTOR_COUNTERS = ['n_sel_young_enough', 'n_sel_young_and_stale',
   'n_sel_not_young_but_stale', 'n_sel_not_young_unknown'];
 const { COUNTERS: QUARTER_RELOAD_COUNTERS, REASON: QUARTER_RELOAD_REASON } = require('../lib/stale-quarter-reload.js');
 const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_missing_mcap', 'n_skipped_owned', 'n_ccy_missing_completely',
+  'n_full_period_regression_blocked',
   ...SELECTOR_COUNTERS, ...QUARTER_RELOAD_COUNTERS];
 const Q4_COUNTERS = ['observed', 'corrected', 'missing', 'stale', 'alreadyCorrected'];
 
@@ -140,6 +141,19 @@ function hasValidShardCounters(manifest) {
     const q4 = manifest.yahooQ4HandTable;
     if (!isPlainObject(q4) || Q4_COUNTERS.some(field =>
       Object.hasOwn(q4, field) && !isNonNegativeSafeInteger(q4[field]))) return false;
+  }
+  if (Object.hasOwn(manifest, 'n_full_period_regression_blocked') || Object.hasOwn(manifest, '_fullPeriodRegressions')) {
+    const rows = manifest._fullPeriodRegressions, seen = new Set();
+    const end = v => v === null || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v));
+    if (!Array.isArray(rows) || manifest.n_full_period_regression_blocked !== rows.length) return false;
+    for (const r of rows) {
+      if (!isPlainObject(r) || typeof r.ticker !== 'string' || !r.ticker.trim() || seen.has(r.ticker)
+          || r.outcome !== 'blocked' || typeof r.priceUpdated !== 'boolean'
+          || r.reason !== 'period-regression-retained'
+          || typeof r.reasonDe !== 'string' || !r.reasonDe.trim()
+          || !['previousQuarterEnd', 'nextQuarterEnd', 'previousAnnualEnd', 'nextAnnualEnd'].every(k => end(r[k]))) return false;
+      seen.add(r.ticker);
+    }
   }
   const retained = manifest.n_retained ?? 0;
   if (!Number.isSafeInteger(retained) || retained < 0) return false;
@@ -181,6 +195,8 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_full: sum('n_full'),
     n_priceonly: sum('n_priceonly'),
     n_retained: sum('n_retained'),
+    n_full_period_regression_blocked: sum('n_full_period_regression_blocked'),
+    _fullPeriodRegressions: present.flatMap(m => m._fullPeriodRegressions || []).sort((a, b) => a.ticker.localeCompare(b.ticker)),
     n_skipped_mcap: sum('n_skipped_mcap'),
     n_missing_mcap: sum('n_missing_mcap'),
     n_ccy_missing_completely: sum('n_ccy_missing_completely'),
@@ -342,6 +358,7 @@ function run() {
   writeFileAtomic(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
   console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} valid=${merged.n_shards_valid} invalid=${merged.n_shards_invalid} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}, ccy-Skips ${merged.n_ccy_missing_completely}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
   console.log(`Missing-market-cap observations: ${merged.n_missing_mcap} (not counted as successful pulls)`);
+  console.log(`full-pull period regression: blocked=${merged.n_full_period_regression_blocked} tickers=${merged._fullPeriodRegressions.map(r => r.ticker).join(',')}`);
   // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr
   // n_failed sein. Am Lauf 30230485209 nachgerechnet: 12373-10672 = 1701 gegen 1678
   // Fehlschlaege -> 23 unerklaert. Vor dem Fix waren es 2284 gegen 1678, also 606 unerklaert.
