@@ -10,7 +10,7 @@ const { applyKnownCases } = require('../lib/yahoo-q4-known-cases.js');
 const { applyShareCountTable, loadShareCountTable, applyAdsHandTable, loadAdsHandTable } = require('../lib/ads-hand-table.js');
 const { preserveReloadHistory } = require('../lib/reload-history.js');
 const { statementFactor, loadStatementCurrencyTable } = require('../lib/statement-currency-hand-table.js');
-const { compareExports } = require('../scripts/check-export-additive.js');
+const { compareExports, jsonFiles } = require('../scripts/check-export-additive.js');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'export-provenance-test-'));
 const clone = value => JSON.parse(JSON.stringify(value));
 let ok = 0, fail = 0;
@@ -405,14 +405,142 @@ test('additive checker permits only scoped fields and provenance files, with no 
   const target = path.join(head, 'energy.json'); fs.writeFileSync(target, JSON.stringify(additive));
   const compare = () => compareExports(base, head, () => {});
   assert.equal(compare().differences, 0); assert.equal(compare().rows, 1); assert(compare().leafValues > 0);
-  additive.generated_at = '2026-10-04T09:31:00Z'; fs.writeFileSync(target, JSON.stringify(additive));
+  fs.writeFileSync(target, JSON.stringify({ ...additive, generated_at: '2026-10-04T09:31:00Z' }));
   assert(compare().differences > 0);
+  fs.writeFileSync(target, JSON.stringify(additive)); assert.equal(compare().differences, 0);
   fs.writeFileSync(target, JSON.stringify({ ...original, arbitrary: true })); assert(compare().differences > 0);
-  fs.writeFileSync(target, JSON.stringify(additive));
-  fs.writeFileSync(path.join(base, 'overview.json'), JSON.stringify({ rows: [rowFor(snapshot())] }));
+  fs.writeFileSync(target, JSON.stringify(additive)); assert.equal(compare().differences, 0);
+  fs.writeFileSync(path.join(base, 'survival.json'), JSON.stringify({ rows: [rowFor(snapshot())] }));
   assert(compare().differences > 0); // missing existing file
-  fs.writeFileSync(path.join(head, 'overview.json'), JSON.stringify({ rows: [{ ...rowFor(snapshot()), provenance: {} }] }));
+  fs.writeFileSync(path.join(head, 'survival.json'), JSON.stringify({ rows: [rowFor(snapshot())] }));
+  assert.equal(compare().differences, 0);
+  fs.writeFileSync(path.join(head, 'survival.json'), JSON.stringify({ rows: [{ ...rowFor(snapshot()), provenance: {} }] }));
   assert(compare().differences > 0); // unscoped addition
+});
+
+function contentExports(name, board = 'hypergrowth') {
+  const relative = board === 'hypergrowth' ? 'energy.json' : 'rule40/overview.json';
+  const roots = ['A', 'B'].map(sessionId => {
+    const dir = path.join(tmp, name, sessionId), s = snapshot();
+    const file = { generated_at: '2026-10-03T09:31:00Z', ...(board === 'hypergrowth'
+      ? { branch: 'energy', profitable: [rowFor(s)], unprofitable: [] } : { rows: [rowFor(s)] }) };
+    p.writeProvenance([file], { outDir: dir, board, runId: sessionId,
+      generatedAt: sessionId === 'A' ? '2026-10-03T09:31:00Z' : '2026-10-04T09:32:00Z',
+      creator: { engine: 'node', model: null, sessionId }, snapshotFor: () => p.captureSnapshot(s) });
+    fs.writeFileSync(path.join(dir, relative), JSON.stringify(file));
+    if (board === 'hypergrowth') {
+      const { branch, profitable, unprofitable, ...header } = file;
+      fs.writeFileSync(path.join(dir, 'overview.json'), JSON.stringify({ ...header, rows: profitable }));
+    }
+    return dir;
+  });
+  return { base: roots[0], head: roots[1], relative, manifest: p.MANIFEST_PATHS[board] };
+}
+const exportHashes = dir => jsonFiles(dir).map(relative => [relative, p.sha256(fs.readFileSync(path.join(dir, relative)))]);
+const compareContent = (base, head, log = () => {}) => compareExports(base, head, log, { provenanceContent: true });
+
+test('P122: equal content across creator sessions compares equal only with the flag, without writes', () => {
+  for (const board of ['hypergrowth', 'rule40']) {
+    const { base, head, manifest } = contentExports('sessions-' + board, board);
+    const before = [exportHashes(base), exportHashes(head)];
+    assert(compareExports(base, head, () => {}).differences > 0);
+    assert.equal(compareContent(base, head).differences, 0);
+    assert.deepEqual([exportHashes(base), exportHashes(head)], before);
+    // Expanded and compact wire forms represent the same record content.
+    const target = path.join(head, manifest), expanded = JSON.parse(fs.readFileSync(target));
+    expanded.records = expanded.records.map(p.expandRecord);
+    fs.writeFileSync(target, JSON.stringify(expanded));
+    assert.equal(compareContent(base, head).differences, 0);
+  }
+});
+
+test('P122: each content change is independently red on a copy', () => {
+  const { base, head, relative, manifest } = contentExports('content-breaks');
+  const before = [exportHashes(base), exportHashes(head)];
+  const records = JSON.parse(fs.readFileSync(path.join(head, manifest))).records;
+  const contentId = record => {
+    const content = p.expandRecord(record);
+    for (const key of ['id', 'creatorSessionId', 'createdAt']) delete content[key];
+    const id = p.sha256(JSON.stringify(content));
+    assert(!records.some(record => record.id === id));
+    return id;
+  };
+  const cases = [
+    ['normalized-value', manifest, m => { m.records[0].normalizedValue++; }, 'normalizedValue'],
+    ['document-url', manifest, m => { m.records[0].documentUrl = 'https://example.invalid/changed'; }, 'documentUrl'],
+    ['native-value', manifest, m => { m.records[0].nativeValue++; }, 'nativeValue'],
+    ['value-hash', manifest, m => { m.records[0].valueHash = '0'.repeat(64); }, 'valueHash'],
+    ['field-path', manifest, m => { m.records[0].fieldPath = 'other'; }, 'fieldPath'],
+    ['expression', manifest, m => { m.records.find(r => r.fieldPath === 'revGrowthYoYPct').derivation.expression = 'input[0]'; }, 'expression'],
+    ['unknown-evidence', relative, f => { f.profitable[0].provenance.marketCap = ['e-unknown']; }, 'provenance.marketCap'],
+    ['canonical-token-row', relative, f => {
+      f.profitable[0].provenance.marketCap = [contentId(records.find(r => r.fieldPath === 'marketCap'))];
+    }, 'provenance.marketCap'],
+    ['canonical-token-input', manifest, m => {
+      const growth = m.records.find(r => r.fieldPath === 'revGrowthYoYPct');
+      growth.derivation.inputIds[0] = contentId(m.records.find(r => r.id === growth.derivation.inputIds[0]));
+    }, 'derivation.inputIds'],
+    ['scoped-value', relative, f => { f.profitable[0].marketCap = 42; }, 'marketCap'],
+    ['unscoped-key', relative, f => { f.profitable[0].arbitrary = true; }, 'arbitrary'],
+    ['verification-status', relative, f => { f.profitable[0].verification.status = 'verified'; }, 'verification.status'],
+    ['export-time', relative, f => { f.generated_at = '2026-10-04T09:31:00Z'; }, 'generated_at'],
+    ['marker-status', 'provenance/_failed.json', m => { m.status = 'failed'; }, 'status'],
+    ['unknown-record-key', manifest, m => { m.records[0].extra = true; }, 'extra'],
+    ['record-order', manifest, m => { m.records.reverse(); }, 'records.0'],
+  ];
+  for (const [name, file, corrupt, expected] of cases) {
+    const target = path.resolve(tmp, 'content-break-' + name);
+    assert.notEqual(target, path.resolve(base)); assert.notEqual(target, path.resolve(head));
+    assert(target.startsWith(path.resolve(tmp) + path.sep));
+    fs.cpSync(head, target, { recursive: true });
+    assert.equal(compareContent(base, target).differences, 0, name + ': clean starting point');
+    const targetFile = path.join(target, file), broken = JSON.parse(fs.readFileSync(targetFile));
+    corrupt(broken); fs.writeFileSync(targetFile, JSON.stringify(broken));
+    const messages = [];
+    assert(compareContent(base, target, message => messages.push(message)).differences > 0, name);
+    assert(messages.some(message => message.includes(expected)), name + ': intended difference');
+    assert.deepEqual([exportHashes(base), exportHashes(head)], before);
+    console.log('RED P122 ' + name + ': isolated difference detected; source hashes unchanged');
+  }
+});
+
+test('P122: recursive operand and cohort IDs, review evidence and verification lists normalize by content', () => {
+  const { base, head, relative, manifest } = contentExports('dependency-chain');
+  const rawInputs = [], rawRoots = [];
+  for (const dir of [base, head]) {
+    const manifestFile = path.join(dir, manifest), m = JSON.parse(fs.readFileSync(manifestFile));
+    const growth = m.records.find(r => r.fieldPath === 'revGrowthYoYPct');
+    const inputs = growth.derivation.inputIds.map(id => m.records.find(r => r.id === id));
+    assert.equal(inputs.length, 2);
+    assert.equal((inputs[0].normalizedValue / inputs[1].normalizedValue - 1) * 100, growth.normalizedValue);
+    rawInputs.push(inputs.map(r => r.id)); rawRoots.push(growth.id);
+    growth.derivation.cohortInputIds = inputs.map(r => r.id);
+    m.reviews = [{ ...reviewFor(growth, 'stable-review'), result: 'unverifiable' }];
+    m.records.reverse(); // Dependencies now follow their parent, forcing recursive resolution.
+    fs.writeFileSync(manifestFile, JSON.stringify(m));
+    const target = path.join(dir, relative), file = JSON.parse(fs.readFileSync(target));
+    file.profitable[0].verification.evidenceIds = [growth.id, ...growth.derivation.inputIds];
+    fs.writeFileSync(target, JSON.stringify(file));
+  }
+  assert.notDeepEqual(rawInputs[0], rawInputs[1]); assert.notEqual(rawRoots[0], rawRoots[1]);
+  assert.equal(compareContent(base, head).differences, 0);
+  const target = path.join(head, manifest), good = fs.readFileSync(target);
+  for (const key of ['reviewerSessionId', 'checkedAt', 'result']) {
+    const broken = JSON.parse(good); broken.reviews[0][key] = 'changed';
+    fs.writeFileSync(target, JSON.stringify(broken));
+    assert(compareContent(base, head).differences > 0, key + ' must remain significant');
+    fs.writeFileSync(target, good); assert.equal(compareContent(base, head).differences, 0);
+  }
+  for (const key of ['inputIds', 'cohortInputIds']) {
+    const broken = JSON.parse(good), record = broken.records[0];
+    record.derivation[key] = [record.id];
+    fs.writeFileSync(target, JSON.stringify(broken));
+    assert.throws(() => compareContent(base, head), /evidence dependency cycle/);
+    fs.writeFileSync(target, good); assert.equal(compareContent(base, head).differences, 0);
+  }
+  const duplicate = JSON.parse(good); duplicate.records.push(clone(duplicate.records[0]));
+  fs.writeFileSync(target, JSON.stringify(duplicate));
+  assert.throws(() => compareContent(base, head), /duplicate evidence id/);
 });
 
 test('full boards permit neither provenance additions nor byte changes', () => {
