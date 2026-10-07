@@ -49,7 +49,7 @@ if (process.env.P138_RED_CASE) {
 }
 
 test('P138 appends exactly ten cells, two coverage entries and two genuine trimmed packets', () => {
-  assert.deepEqual(table.cases.slice(216).map(c => c.caseId), cells.map(idFor)); // P138: +10
+  assert.deepEqual(table.cases.slice(225).map(c => c.caseId), cells.map(idFor)); // P138: +10 after the nine P129 cases (216 + 9)
   assert.deepEqual(table.coverage.slice(34), ['000688.SZ', 'GRANULES.NS'].map(ticker =>
     ({ ticker, field: 'revenueQ', coversThrough: '2026-06-30' }))); // P138: +2
   for (const [key, count, digest] of [
@@ -60,7 +60,7 @@ test('P138 appends exactly ten cells, two coverage entries and two genuine trimm
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
     '1f6b5fff99c92ceed65ae735e785e65f0bf82f41be04a3dfea20e832c3cdf1e8');
-  assert.equal(Object.keys(fixtures).length, 47); // P138: +2
+  assert.equal(Object.keys(fixtures).length, 62); // P138: +2 after the 15 P129 fixtures
   assert.equal(hash(fixtures['000688.SZ']), '74c1bfc25c4fe547fb5a3ab14e730095ad46671a8212f92846bd838ff266f408');
   assert.equal(hash(fixtures['GRANULES.NS']), '2205dd5cbaf8ab29e2766e78298b2535404b4364a0de0b0d9b935a5121622483');
 });

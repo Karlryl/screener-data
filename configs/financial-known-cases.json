@@ -5870,6 +5870,229 @@
       ]
     },
     {
+      "caseId": "mad.ax-2023-06-30-revenueQ-p129",
+      "ticker": "MAD.AX",
+      "field": "revenueQ",
+      "period": "2023-06-30",
+      "periodType": "3M",
+      "index": 0,
+      "currency": "AUD",
+      "expectedBadValue": 172844000,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz zurückgehalten: Die jüngste Anbieterperiode endet bereits am 30.06.2023. Aktuelle vergleichbare Quartale fehlen; der vorhandene Jahresvergleich bis 30.06.2026 und 30.06.2025 ist im Geschäftsbericht belegt.",
+      "sources": [
+        {
+          "url": "https://clients3.weblink.com.au/pdf/MAD/03125319.pdf",
+          "page": "PDF page 63",
+          "quote": "Total operating revenue 1,001,140 872,202",
+          "unit": "AUD thousands",
+          "value": 1001140000,
+          "start": "2025-07-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://clients3.weblink.com.au/pdf/MAD/03125319.pdf",
+          "page": "PDF page 63",
+          "quote": "Total operating revenue 1,001,140 872,202",
+          "unit": "AUD thousands",
+          "value": 872202000,
+          "start": "2024-07-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "ajbu.si-2021-03-31-revenueQ-p129",
+      "ticker": "AJBU.SI",
+      "field": "revenueQ",
+      "period": "2021-03-31",
+      "periodType": "3M",
+      "index": 0,
+      "currency": "SGD",
+      "expectedBadValue": 67570000,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz zurückgehalten: Die jüngste Anbieterperiode endet bereits am 31.03.2021. Die belegten Quartale bis 30.06.2026 und 30.06.2025 fehlen in der Anbieterreihe und können durch diese Handtabelle nicht ergänzt werden.",
+      "sources": [
+        {
+          "url": "https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcr-1h-2026-unaudited-results.pdf",
+          "page": "PDF page 4",
+          "quote": "Gross Revenue 242,048 211,309",
+          "unit": "SGD thousands",
+          "value": 242048000,
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcreit-1q-2026-operational-updates.pdf",
+          "page": "PDF page 6",
+          "quote": "Gross Revenue 120,956 102,179",
+          "unit": "SGD thousands",
+          "value": 120956000,
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "1ane.mi-2022-09-30-revenueQ-p129",
+      "ticker": "1ANE.MI",
+      "field": "revenueQ",
+      "period": "2022-09-30",
+      "periodType": "3M",
+      "index": 0,
+      "currency": "EUR",
+      "expectedBadValue": 1133660000,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz zurückgehalten: Die jüngste Anbieterperiode endet bereits am 30.09.2022. Ein aktuelles vergleichbares Quartalspaar fehlt; der neuere Halbjahresbericht ist kein Ersatz für ein einzelnes Quartal.",
+      "sources": [
+        {
+          "url": "https://www.cnmv.es/webservices/verdocumento/ver?t=%7B4c831015-242a-423a-9a67-ddcc2bc17119%7D",
+          "page": "PDF page 11, printed page 10",
+          "quote": "TOTAL Revenues 1,288 1,469",
+          "unit": "EUR millions",
+          "value": 1288000000,
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "aiai-2025-12-31-annualRev-p129",
+      "ticker": "AIAI",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 271996000,
+      "replacementValue": null,
+      "reason": "Jahresumsatz zurückgehalten: Die Anbieterwerte vermischen den Pro-forma-Konzern, den Vorgänger CCCI und das historische AIAI. Ein vergleichbares historisches Jahresumsatzpaar fehlt; 2024 umfasst zudem nur die Zeit seit der Gründung am 19.07.2024.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2096362/000149315226022855/form424b4.htm",
+          "page": "Printed page 110, explanation page 111 and pro forma page 92",
+          "quote": "Total revenue — —",
+          "unit": "USD thousands",
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "aiai-2024-12-31-annualRev-p129",
+      "ticker": "AIAI",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 23616400000,
+      "replacementValue": null,
+      "reason": "Jahresumsatz zurückgehalten: Die Anbieterwerte vermischen den Pro-forma-Konzern, den Vorgänger CCCI und das historische AIAI. Ein vergleichbares historisches Jahresumsatzpaar fehlt; 2024 umfasst zudem nur die Zeit seit der Gründung am 19.07.2024.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2096362/000149315226022855/form424b4.htm",
+          "page": "Printed page 110, explanation page 111 and pro forma page 92",
+          "quote": "Total revenue — —",
+          "unit": "USD thousands",
+          "start": "2024-07-19",
+          "end": "2024-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "6269.t-2026-06-30-revenueQ-p129",
+      "ticker": "6269.T",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "index": 0,
+      "currency": "JPY",
+      "expectedBadValue": 225152000000,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz zurückgehalten: MODEC berichtet in US-Dollar, der Anbieter liefert jedoch aus kumulierten Yen-Umrechnungen zu wechselnden Stichtagskursen gebildete Quartale. Quartale in der Berichtswährung fehlen im Datenpfad; gemäß Ratsbeschluss F5 vom 06.10.2026 bleiben diese Zellen leer.",
+      "sources": [
+        {
+          "url": "https://www.modec.com/ir/library/result/assets/pdf/2026_2Q_results_en.pdf",
+          "page": "PDF page 9",
+          "quote": "Revenue 2,074,296 2,447,050",
+          "unit": "USD thousands",
+          "value": 2447050000,
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "6269.t-2026-03-31-revenueQ-p129",
+      "ticker": "6269.T",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "index": 1,
+      "currency": "JPY",
+      "expectedBadValue": 172224000000,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz zurückgehalten: MODEC berichtet in US-Dollar, der Anbieter liefert jedoch aus kumulierten Yen-Umrechnungen zu wechselnden Stichtagskursen gebildete Quartale. Quartale in der Berichtswährung fehlen im Datenpfad; gemäß Ratsbeschluss F5 vom 06.10.2026 bleiben diese Zellen leer.",
+      "sources": [
+        {
+          "url": "https://www.modec.com/ir/library/result/assets/pdf/2026_1Q_results_en.pdf",
+          "page": "PDF page 9",
+          "quote": "Revenue 873,038 1,077,078",
+          "unit": "USD thousands",
+          "value": 1077078000,
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "6269.t-2025-12-31-revenueQ-p129",
+      "ticker": "6269.T",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "index": 2,
+      "currency": "JPY",
+      "expectedBadValue": 218333000000,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz zurückgehalten: MODEC berichtet in US-Dollar, der Anbieter liefert jedoch aus kumulierten Yen-Umrechnungen zu wechselnden Stichtagskursen gebildete Quartale. Quartale in der Berichtswährung fehlen im Datenpfad; gemäß Ratsbeschluss F5 vom 06.10.2026 bleiben diese Zellen leer.",
+      "sources": [
+        {
+          "url": "https://www.modec.com/ir/library/result/assets/pdf/2025_YE_results_en.pdf",
+          "page": "PDF page 13",
+          "quote": "Revenue 4,186,461 4,581,232",
+          "unit": "USD thousands",
+          "value": 4581232000,
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "6269.t-2025-09-30-revenueQ-p129",
+      "ticker": "6269.T",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "index": 3,
+      "currency": "JPY",
+      "expectedBadValue": 197686707200,
+      "replacementValue": null,
+      "reason": "Quartalsumsatz zurückgehalten: MODEC berichtet in US-Dollar, der Anbieter liefert jedoch aus kumulierten Yen-Umrechnungen zu wechselnden Stichtagskursen gebildete Quartale. Quartale in der Berichtswährung fehlen im Datenpfad; gemäß Ratsbeschluss F5 vom 06.10.2026 bleiben diese Zellen leer.",
+      "sources": [
+        {
+          "url": "https://www.modec.com/ir/library/result/assets/pdf/2025_3Q_results_en.pdf",
+          "page": "PDF page 9",
+          "quote": "Revenue 2,994,718 3,351,705",
+          "unit": "USD thousands",
+          "value": 3351705000,
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
       "caseId": "000688.sz-2026-06-30-revenueQ-p138",
       "ticker": "000688.SZ",
       "field": "revenueQ",

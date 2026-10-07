@@ -28,9 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 226 authorized cells (209 quarterly, 17 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 226); // P138: +10
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 17);
+test('all 235 authorized cells (216 quarterly, 19 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 235); // P129: +9; P138: +10
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 19); // P129: +2
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -39,7 +39,7 @@ test('all 226 authorized cells (209 quarterly, 17 annual) and eleven held packet
 
 // M1: a series with any non-null value (replaced or confirmed) needs exactly one coverage entry.
 test('coverage is mandatory for every series with a non-null value, unique, and absent for false-zero series', () => {
-  const need = new Set(table.cases.filter(c => c.replacementValue !== null).map(c => c.ticker + '|' + c.field));
+  const need = new Set(table.cases.filter(c => c.periodType === '3M' && c.replacementValue !== null).map(c => c.ticker + '|' + c.field));
   assert.deepEqual([...need].sort(), [...['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
@@ -54,7 +54,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 226); // P138: +10
+  assert.equal(validateTable(clone(table)).cases.length, 235); // P129: +9; P138: +10
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -98,11 +98,11 @@ const annualIndex = (s, c) => { const e = s.annual[c.field + 'Ends']; return Arr
 // tests/p106-nonadjacent-annual-withhold.test.js covers them. The next test pins this list so nothing is skipped silently.
 const LATENT = new Set(['3391.t-2025-02-28-annualRev-shortyear']);
 test('latent annual holds are exactly the listed ones and their periods are absent from the real input', () => {
-  for (const c of table.cases.filter(x => x.periodType === '12M')) {
+  for (const c of table.cases.filter(x => x.periodType === '12M' && x.replacementValue === null)) {
     assert.equal(annualIndex(fixture[c.ticker], c) < 0, LATENT.has(c.caseId), c.caseId);
   }
 });
-for (const c of table.cases.filter(x => x.periodType === '12M' && !LATENT.has(x.caseId))) test(c.caseId + ' annual cell: withheld on real input, others untouched, idempotent', () => {
+for (const c of table.cases.filter(x => x.periodType === '12M' && x.replacementValue === null && !LATENT.has(x.caseId))) test(c.caseId + ' annual cell: withheld on real input, others untouched, idempotent', () => {
   const input = clone(fixture[c.ticker]), original = serial(input), i = annualIndex(input, c);
   assert.equal(value(input.annual[c.field][i]), c.expectedBadValue * (input.meta.fxRateApplied || 1));
   const r = applyFinancialCases(input), out = r.snapshot, row = out.annual[c.field][i];
@@ -166,7 +166,7 @@ test('annual cells: dated by fiscal-year end, undated by position plus value, wi
   for (const [ticker, s] of Object.entries(fixture)) assert.equal(serial(applyFinancialCases(clone(s), { table: noAnnual }).snapshot.annual), serial(s.annual), ticker);
   // Withhold only: a value, a missing index, a quarterly period type or annual coverage are entry errors.
   const bad = mutate => { const x = clone(table); mutate(x.cases.find(c => c.caseId === 'infq-2024-12-31-annualRev'), x); return x; };
-  assert.throws(() => validateTable(bad(c => { c.replacementValue = 28094000; c.reason = 'Umsatz korrigiert'; })), /Invalid annual cell/);
+  assert.throws(() => validateTable(bad(c => { c.replacementValue = 28094000; c.reason = 'Umsatz korrigiert'; })), /Invalid annual replacement/);
   assert.throws(() => validateTable(bad(c => { delete c.index; })), /Invalid annual cell/);
   assert.throws(() => validateTable(bad(c => { c.periodType = '3M'; })), /Invalid or duplicate/);
   assert.throws(() => validateTable(bad((c, x) => { x.coverage.push({ ticker: 'INFQ', field: 'annualRev', coversThrough: '2024-12-31' }); })), /Invalid financial coverage/);
@@ -174,7 +174,7 @@ test('annual cells: dated by fiscal-year end, undated by position plus value, wi
   // without the value check a changed vendor value would be blanked; without the match nothing is withheld.
   const lib = 'lib/financial-known-cases.js';
   const noValidation = moduleCopy(lib, s => replaceLine(s,
-    '    if (annual.has(c.field) && (c.replacementValue !== null || !Number.isInteger(c.index) || c.index < 0)) {', '    if (false) {'));
+    '    if (annual.has(c.field) && (!Number.isInteger(c.index) || c.index < 0)) {', '    if (false) {'));
   assert.throws(() => assert.throws(() => noValidation.validateTable(bad(c => { delete c.index; })), /Invalid annual cell/), assert.AssertionError); breaks++;
   const noValueCheck = moduleCopy(lib, s => replaceLine(s, driftLine, '    const drift = hits.find(({ c, i }) => !env || env.currency !== c.currency);'));
   const changed = clone(fixture.INFQ); changed.annual.annualRev[0].value += 1;
@@ -263,7 +263,7 @@ test('annual series fail closed on drift, withhold older years (no gaps), check 
   red(fxCut, mutant(driftLine, ' * env.factor', ''));
   // Without the envelope check the null envelope crashes (TypeError) instead of failing closed.
   red(fn => closed(fn(clone(noEnv)), 'annualRev'), mutant(driftLine, '!env || ', ''), TypeError);
-  const validationLine = '    if (annual.has(c.field) && (c.replacementValue !== null || !Number.isInteger(c.index) || c.index < 0)) {';
+  const validationLine = '    if (annual.has(c.field) && (!Number.isInteger(c.index) || c.index < 0)) {';
   const noNegative = moduleCopy(lib, s => replaceLine(s, validationLine, validationLine.replace(' || c.index < 0', '')));
   assert.throws(() => assert.throws(() => noNegative.validateTable(badIndex(-1)), /Invalid annual cell/), assert.AssertionError); breaks++;
 });
@@ -620,7 +620,8 @@ test('excluded list: a quarantined packet has null sector, industry, market cap 
 
 // R2: other listings of the same issuer carry the identical false cells (checked in the 29.09. archive).
 test('listing aliases: YSNG.VI, PDN.TO and PALAF are corrected like their primary; unrelated ticker untouched', () => {
-  const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases).map(c => [c.ticker, c.listingAliases]));
+  // Numeric annual aliases are exercised in annual-financial-replacements.test.js.
+  const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases && (c.periodType !== '12M' || c.replacementValue === null)).map(c => [c.ticker, c.listingAliases]));
   assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], HL: ['HL.SW'] });
   const leg = (primary, alias) => { const s = clone(fixture[primary]); s.meta.ticker = alias; return s; };
   for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
@@ -884,8 +885,8 @@ test('confirmed cells: OXLC today unchanged; a next vendor quarter (also 0) is w
   const needsCoverage = lib => assert.throws(() => lib.validateTable(confirmedOnly), /Missing financial coverage: OXLC\|revenueQ/);
   needsCoverage({ validateTable });
   const exempt = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
-    '    if (c.replacementValue !== null) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);',
-    '    if (c.replacementValue !== null && c.expectedBadValue !== c.replacementValue) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);'));
+    '    if (allowed.has(c.field) && c.replacementValue !== null) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);',
+    '    if (allowed.has(c.field) && c.replacementValue !== null && c.expectedBadValue !== c.replacementValue) for (const t of listings(c)) basisWrong.add(`${t}|${c.field}`);'));
   assert.throws(() => needsCoverage(exempt), assert.AssertionError); breaks++;
   // Break-once in memory (presence): if confirmed periods do not count as verified, today's true quarters are withheld.
   const unconfirmed = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
@@ -1046,9 +1047,10 @@ const traceKind = c => {
 const TRACE_LINE = "    if (!traceable(c)) throw new Error('Replacement matches no source value: ' + key);";
 test('replacement values trace to their sources: the whole real table passes, a typo throws at validation', () => {
   const count = cases => cases.reduce((m, c) => { const k = traceKind(c); m[k] = (m[k] || 0) + 1; return m; }, {});
-  // The 162 cases of revision 2026-10-01c: 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one
-  // issuer-rounded confirmation (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 115, difference: 17, rounded: 1, exempt: 10, null: 33 } /* P138: +9 single, +1 difference */); // P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year)
+  // The 162 cases of revision 2026-10-01c plus four annual P106 withholds:
+  // 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one issuer-rounded confirmation
+  // (OXLC 2025-03-31, "$121.2 million") pass; none fails.
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 115, difference: 17, rounded: 1, exempt: 10, null: 38 } /* P138: +9 single, +1 difference */); // P129: +5 non-MODEC withholds; P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year)
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
@@ -1358,18 +1360,15 @@ test('CIG-C: gross profit on the restated basis of the 2Q26 ITR, Q3/Q4 2025 with
 
 test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture results byte-identical', () => {
   const digest = x => crypto.createHash('sha256').update(serial(x)).digest('hex');
-  // P106 (06.10.) adds three annual holds after this freeze; the guard keeps checking exactly the frozen rows and fixtures.
+  // P106 adds four annual withholds; the pin stays on the frozen rows and fixtures.
   const added = new Set(['obm.ax-2024-06-30-annualRev-nonadjacent', 'cmm.ax-2024-06-30-annualRev-nonadjacent', '3391.t-2024-05-31-annualRev-nonadjacent',
-    '3391.t-2025-02-28-annualRev-shortyear',
-    // P138: +10; keep the old checksum over its original rows.
-    '000688.sz-2026-06-30-revenueQ-p138', '000688.sz-2026-03-31-revenueQ-p138',
-    '000688.sz-2025-12-31-revenueQ-p138', '000688.sz-2025-06-30-revenueQ-p138',
-    '000688.sz-2025-03-31-revenueQ-p138', 'granules.ns-2026-06-30-revenueQ-p138',
-    'granules.ns-2026-03-31-revenueQ-p138', 'granules.ns-2025-12-31-revenueQ-p138',
-    'granules.ns-2025-09-30-revenueQ-p138', 'granules.ns-2025-06-30-revenueQ-p138']);
-  const legacy = key => key === 'cases' ? table.cases.filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
-  assert.equal(table.cases.length - legacy('cases').length, added.size, 'every added case exists');
-  const legacyFixture = Object.fromEntries(Object.entries(fixture).filter(([t]) => !['OBM.AX', 'CMM.AX', '3391.T', '000688.SZ', 'GRANULES.NS'].includes(t)));
+    '3391.t-2025-02-28-annualRev-shortyear']);
+  assert.equal(added.size, 4, 'exactly four P106 cases are new');
+  for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
+  // P129: +9 withholds and +15 fixtures; all old digests and the complete coverage guard remain unchanged.
+  const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
+  assert.equal(table.cases.length - legacy('cases').length, added.size + 19, 'every added case exists'); // P129: +9; P138: +10
+  const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [
     ['cases', 212, '7da9c61f93bbeff5cfdf2b6d6485a630f16ee1bdacd3dc9afb69241a5ef1a503'],
     ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],
