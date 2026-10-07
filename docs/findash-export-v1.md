@@ -1178,6 +1178,11 @@ Produktion **ausgeschaltet**. Jede HyperGrowth-Zeile auf Branchenboards, Vollboa
 `annualPairsShadow`. Bestehende Werte, Scores, Ränge und Board-Zusammensetzungen bleiben
 unverändert. Quality, Small-Cap und Survival erhalten diesen Schlüssel nicht.
 findash verwirft unbekannte Schlüssel und verwendet die Schattenwerte nicht für die Anzeige.
+Die Jahresprüfung und ihr Datumsleser liegen in `lib/annual-pairs.js`; der Zusatz entsteht
+erst in den Board-Erzeugern, während die gemeinsamen Zeilenmapper unverändert bleiben.
+Im offenen Siegelübergang `protocol/gqs-00/1.2.0-pending/transition.json` ist unter
+`annualPairsShadow` ausschließlich der neue Fingerabdruck von `src/scoring/axes.js`
+registriert; das bestehende Siegel und `src/scoring/snapshot.js` bleiben unverändert.
 
 `windowDays` ist `[334, 397]`, einschließlich beider Grenzen. Geprüft wird der Abstand zweier
 Geschäftsjahresenden, kein Test auf eine Periodenlänge von 357 bis 378 Tagen. Messbeleg P115-M

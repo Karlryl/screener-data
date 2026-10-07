@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const { buildFirmMap, countEntities, compareBoard, datedPairs, isGapless, counterCheck } = require('../scripts/p115-jahrespaare-vorher-nachher.js');
-const { annualPairsShadow, withAnnualPairRule } = require('../src/scoring/annual-pairs.js');
+const { annualPairsShadow, withAnnualPairRule } = require('../lib/annual-pairs.js');
 
 const snap = (ticker, name = ticker, distances = [366, 336], values = [180, 120, 80]) => {
   let day = Date.parse('2025-12-31T00:00:00Z');

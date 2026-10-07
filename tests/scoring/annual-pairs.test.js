@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const crypto = require('node:crypto');
 const { createRequire } = require('node:module');
 const A = require('../../src/scoring/axes.js');
-const P = require('../../src/scoring/annual-pairs.js');
+const P = require('../../lib/annual-pairs.js');
 const { revGrowthLeg } = require('../../lib/rev-growth-basis.js');
 const { rawAxisValue, robustG } = require('../../src/scoring/score.js');
 let passed = 0;
@@ -110,7 +110,7 @@ check('undated, invalid ISO days and misaligned arrays pass with identical value
 check('default off is byte-identical to the original axes code path', () => {
   const file = require.resolve('../../src/scoring/axes.js');
   const module = { exports: {} }, realRequire = createRequire(file);
-  const localRequire = id => id === './annual-pairs.js' ? { ...P, annualPairRuleEnabled: () => false } : realRequire(id);
+  const localRequire = id => id === '../../lib/annual-pairs.js' ? { ...P, annualPairRuleEnabled: () => false } : realRequire(id);
   vm.runInThisContext('(function(require,module,exports){' + fs.readFileSync(file, 'utf8') + '\n})', { filename: file })(localRequire, module, module.exports);
   const old = module.exports;
   for (const s of [snap(), pairSnapshot(731), pairSnapshot(304), pairSnapshot(365, 150), snap([180, null, 120, 100])]) {
@@ -274,7 +274,7 @@ check('restore after throw, nested overrides, thenable and throwing then getter'
 });
 
 check('break-once: raising the minimum to 335 makes the real 334-day assertion red', () => {
-  const file = require.resolve('../../src/scoring/annual-pairs.js');
+  const file = require.resolve('../../lib/annual-pairs.js');
   const digest = () => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   const before = digest(), source = fs.readFileSync(file, 'utf8');
   const anchor = 'const ANNUAL_PAIR_MIN_DAYS = 334;';
@@ -293,7 +293,7 @@ check('break-once: raising the minimum to 335 makes the real 334-day assertion r
 });
 
 check('break-once: disabling duplicate skipping makes the ABF.L assertion red in memory', () => {
-  const file = require.resolve('../../src/scoring/annual-pairs.js');
+  const file = require.resolve('../../lib/annual-pairs.js');
   const digest = () => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   const before = digest(), source = fs.readFileSync(file, 'utf8');
   const anchor = '  while (Number.isFinite(values[index]) && values[next] === values[index] && older !== null) {';

@@ -5,7 +5,7 @@ const path = require('node:path');
 const os = require('node:os');
 const vm = require('node:vm');
 const { createRequire } = require('node:module');
-const P = require('../src/scoring/annual-pairs.js');
+const P = require('../lib/annual-pairs.js');
 const A = require('../src/scoring/axes.js');
 const { snapshot, boardZeile, baueExport } = require('./rule40-fixture.js');
 const ROOT = path.resolve(__dirname, '..');
@@ -53,7 +53,7 @@ function writers(files, { baseline = false, calibration = true, diskRoot } = {})
       if (id === './write-findash-export.js') return findash;
       if (id === '../lib/atomic-write.js') return { writeJsonAtomic: (file, value) => written.set(path.resolve(file), JSON.parse(JSON.stringify(value))) };
       if (id === '../lib/fcf-stmt-shadow.js') return { ...fcf, ladeBehoerdenJahre: () => new Map() };
-      if (id === '../src/scoring/annual-pairs.js') return { ...P, annualPairsShadow: (s, ...args) => {
+      if (id === '../lib/annual-pairs.js') return { ...P, annualPairsShadow: (s, ...args) => {
         if (s) shadows.set(s.meta.ticker, (shadows.get(s.meta.ticker) || 0) + 1);
         return baseline ? undefined : P.annualPairsShadow(s, ...args);
       } };
@@ -105,6 +105,9 @@ function exportFixture(options = {}) {
   put(path.join(source, 'quality-financials.json'), board);
   put(path.join(source, 'smallcap-financials.json'), board);
   put(path.join(source, 'overview.json'), allRows);
+  const mapped = [W.mapBoardRow(allRows[0], 0), W.mapOverviewRow(allRows[0], 0)];
+  for (const row of mapped) assert.equal(Object.hasOwn(row, 'annualPairsShadow'), false, 'shared mappers add no annual-pair shadow');
+  assert.equal(harness.shadows.size, 0, 'shared mappers never invoke the shadow calculator');
   const top = W.buildBoard('financials', null, { srcDir: source, rangOpts: { warn: false } });
   W.buildFullBoards(null, { hgFullDir: fullSource, outFullDir: fullTarget });
   const full = harness.written.get(path.join(fullTarget, 'financials.json'));
@@ -116,7 +119,7 @@ function exportFixture(options = {}) {
   const smallcapOverview = W.testBuilders.buildSmallcapOverview(null, source);
   const survival = input.survival.map(W.mapSurvivalRow);
   const rule40 = R.baueZeilen(input.candidates);
-  return { harness, output: { top, full, overview, quality, qualityOverview, smallcap, smallcapOverview, survival, rule40 } };
+  return { harness, output: { mapped, top, full, overview, quality, qualityOverview, smallcap, smallcapOverview, survival, rule40 } };
 }
 
 check('real writers: every existing row key, value, rank and score is byte-identical', () => {

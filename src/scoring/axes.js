@@ -30,7 +30,7 @@ const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, j
   histOpInc } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 const { annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
-  checkNewerAnnualPair, checkAnnualAcceleration } = require('./annual-pairs.js');
+  checkNewerAnnualPair, checkAnnualAcceleration } = require('../../lib/annual-pairs.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 

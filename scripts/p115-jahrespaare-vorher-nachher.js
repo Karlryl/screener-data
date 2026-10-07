@@ -8,9 +8,9 @@ const crypto = require('node:crypto');
 const { loadUniverse, filterToAuthorizedUniverse } = require('../src/scoring/run-screener.js');
 const { scoreUniverse, produceRankings, issuerDedupGroups, issuerDedupComparator, quantile } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
-const { norm, annualPeriodEnds, _tagesnummer } = require('../src/scoring/snapshot.js');
-const { withAnnualPairRule, annualPairsShadow, checkAnnualPair, checkAnnualAcceleration,
-  nextDistinctAnnualIndex, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../src/scoring/annual-pairs.js');
+const { norm } = require('../src/scoring/snapshot.js');
+const { annualPeriodEnds, _tagesnummer, withAnnualPairRule, annualPairsShadow, checkAnnualPair, checkAnnualAcceleration,
+  nextDistinctAnnualIndex, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../lib/annual-pairs.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeReportArtifact } = require('./f4-quartalsvergleich.js');
