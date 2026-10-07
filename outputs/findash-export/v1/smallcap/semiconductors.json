@@ -1,19 +1,20 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-06T10:26:14.692Z",
+  "generated_at": "2026-10-07T09:54:16.784Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.1,
-    "generated_at": "2026-10-06T10:19:16.526Z"
+    "coverage_pct": 72.9,
+    "generated_at": "2026-10-07T09:47:22.288Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "NVEC",
       "score": 53.8,
       "track": "profitable",
@@ -96,13 +97,16 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     }
   ],
   "unprofitable": [
     {
       "rank": 1,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "MRAM",
       "score": 49.4,
       "track": "unprofitable",
@@ -186,11 +190,14 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 2,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "ALMU",
       "score": 45.4,
       "track": "unprofitable",
@@ -213,7 +220,7 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -278,11 +285,14 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-03-31",
-      "revGrowthPriorPeriodEnd": "2025-03-31"
+      "revGrowthPriorPeriodEnd": "2025-03-31",
+      "revGrowthSourcePeriodEnd": "2026-03-31",
+      "revGrowthSourcePriorPeriodEnd": "2025-03-31"
     },
     {
       "rank": 3,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "LAES",
       "score": 37,
       "track": "unprofitable",
@@ -372,7 +382,7 @@
         "distancePct": -89,
         "athDate": "2023-05-24",
         "monthsAgo": 40,
-        "lastDate": "2026-10-05"
+        "lastDate": "2026-10-06"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -380,11 +390,14 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
-      "revGrowthPriorPeriodEnd": "2024-12-31"
+      "revGrowthPriorPeriodEnd": "2024-12-31",
+      "revGrowthSourcePeriodEnd": "2025-12-31",
+      "revGrowthSourcePriorPeriodEnd": "2024-12-31"
     },
     {
       "rank": 4,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "ASYS",
       "score": 35.6,
       "track": "unprofitable",
@@ -469,7 +482,9 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     }
   ]
 }

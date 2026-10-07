@@ -1,19 +1,20 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-06T10:26:14.685Z",
+  "generated_at": "2026-10-07T09:54:16.776Z",
   "branch": "it-services",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 73.1,
-    "generated_at": "2026-10-06T10:19:16.526Z"
+    "coverage_pct": 72.9,
+    "generated_at": "2026-10-07T09:47:22.288Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "IBEX",
       "score": 58.4,
       "track": "profitable",
@@ -94,11 +95,14 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 2,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "TASK",
       "score": 51.4,
       "track": "profitable",
@@ -179,11 +183,14 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 3,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "GDYN",
       "score": 47.9,
       "track": "profitable",
@@ -271,11 +278,14 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
       "rank": 4,
       "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "VRRM",
       "score": 42.3,
       "track": "profitable",
@@ -359,7 +369,9 @@
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30"
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     }
   ],
   "unprofitable": []
