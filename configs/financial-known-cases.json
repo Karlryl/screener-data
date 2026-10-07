@@ -35,7 +35,9 @@
     { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" }
+    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "000688.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "GRANULES.NS", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -5864,6 +5866,271 @@
           "start": "2024-05-16",
           "end": "2025-02-28",
           "value": 845603000000
+        }
+      ]
+    },
+    {
+      "caseId": "000688.sz-2026-06-30-revenueQ-p138",
+      "ticker": "000688.SZ",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 1666778278.46,
+      "replacementValue": 1666778278.46,
+      "reason": "Umsatz bestätigt: Die Konzernreihe berücksichtigt den Zusammenschluss unter gemeinsamer Kontrolle und die angepassten Vorjahreszahlen.",
+      "sources": [
+        {
+          "url": "https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-27/63fc6eef-28b1-4473-9984-2d6c192c4f87.PDF",
+          "page": "PDF 8, gedruckte Seite 8",
+          "published": "2026-08-27",
+          "quote": "营业收入（元） 3,362,995,987.59",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 3362995987.59
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-23/1225144333.PDF",
+          "page": "PDF 2, gedruckte Seite 2",
+          "published": "2026-04-23",
+          "quote": "营业收入（元） 1,696,217,709.13",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 1696217709.13
+        }
+      ]
+    },
+    {
+      "caseId": "000688.sz-2026-03-31-revenueQ-p138",
+      "ticker": "000688.SZ",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 1696217709.13,
+      "replacementValue": 1696217709.13,
+      "reason": "Umsatz bestätigt: Die Konzernreihe berücksichtigt den Zusammenschluss unter gemeinsamer Kontrolle und die angepassten Vorjahreszahlen.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-23/1225144333.PDF",
+          "page": "PDF 2, gedruckte Seite 2",
+          "published": "2026-04-23",
+          "quote": "营业收入（元） 1,696,217,709.13",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 1696217709.13
+        }
+      ]
+    },
+    {
+      "caseId": "000688.sz-2025-12-31-revenueQ-p138",
+      "ticker": "000688.SZ",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 3087702614.19,
+      "replacementValue": 1428454750.76,
+      "reason": "Umsatz korrigiert: Die Konzernreihe berücksichtigt den Zusammenschluss unter gemeinsamer Kontrolle und die angepassten Vorjahreszahlen. Der Anbieterwert entspricht rechnerisch dem neu ausgewiesenen Jahresumsatz abzüglich der neun Monate auf alter Basis; maßgeblich ist das direkt berichtete vierte Quartal.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-24/1225025043.PDF",
+          "page": "PDF 10, gedruckte Seite 9, 第四季度",
+          "published": "2026-03-24",
+          "quote": "营业收入 第一季度 第二季度 第三季度 第四季度 1,086,391,910.94 1,073,278,451.44 1,217,843,179.31 1,428,454,750.76",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 1428454750.76
+        }
+      ]
+    },
+    {
+      "caseId": "000688.sz-2025-06-30-revenueQ-p138",
+      "ticker": "000688.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 555470993.66,
+      "replacementValue": 1073278451.44,
+      "reason": "Umsatz korrigiert: Die Konzernreihe berücksichtigt den Zusammenschluss unter gemeinsamer Kontrolle und die angepassten Vorjahreszahlen.",
+      "sources": [
+        {
+          "url": "https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-27/63fc6eef-28b1-4473-9984-2d6c192c4f87.PDF",
+          "page": "PDF 8, gedruckte Seite 8, 调整后",
+          "published": "2026-08-27",
+          "quote": "营业收入（元） 2,159,670,362.38",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "value": 2159670362.38
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-23/1225144333.PDF",
+          "page": "PDF 2, gedruckte Seite 2, 调整后",
+          "published": "2026-04-23",
+          "quote": "营业收入（元） 1,086,391,910.94",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "value": 1086391910.94
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-24/1225025043.PDF",
+          "page": "PDF 10, gedruckte Seite 9, 第二季度",
+          "published": "2026-03-24",
+          "quote": "营业收入 第一季度 第二季度 第三季度 第四季度 1,086,391,910.94 1,073,278,451.44 1,217,843,179.31 1,428,454,750.76",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 1073278451.44
+        }
+      ]
+    },
+    {
+      "caseId": "000688.sz-2025-03-31-revenueQ-p138",
+      "ticker": "000688.SZ",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "expectedBadValue": 1086391910.94,
+      "replacementValue": 1086391910.94,
+      "reason": "Umsatz bestätigt: Die Konzernreihe berücksichtigt den Zusammenschluss unter gemeinsamer Kontrolle und die angepassten Vorjahreszahlen.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-23/1225144333.PDF",
+          "page": "PDF 2, gedruckte Seite 2, 调整后",
+          "published": "2026-04-23",
+          "quote": "营业收入（元） 1,086,391,910.94",
+          "unit": "CNY 元, multiplier 1",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "value": 1086391910.94
+        }
+      ]
+    },
+    {
+      "caseId": "granules.ns-2026-06-30-revenueQ-p138",
+      "ticker": "GRANULES.NS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 14649730000,
+      "replacementValue": 14767740000,
+      "reason": "Umsatz korrigiert: Der Anbieter führt nur die Zeile \"Sale of products\"; maßgeblich ist der gesamte Konzernumsatz aus \"Total revenue from operations\" einschließlich der sonstigen betrieblichen Umsätze.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/e573b415-05b3-456d-97f7-b731a64f118b.pdf",
+          "page": "PDF 7, ohne gedruckte Seitenzahl",
+          "published": "2026-07-21",
+          "quote": "Total revenue from operations 14,767.74",
+          "unit": "INR, Rs in millions, multiplier 1000000",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 14767740000,
+          "vendorBasis": "Sale of products; issuer revenue is Total revenue from operations."
+        }
+      ]
+    },
+    {
+      "caseId": "granules.ns-2026-03-31-revenueQ-p138",
+      "ticker": "GRANULES.NS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 14574310000,
+      "replacementValue": 14706080000,
+      "reason": "Umsatz korrigiert: Der Anbieter führt nur die Zeile \"Sale of products\"; maßgeblich ist der gesamte Konzernumsatz aus \"Total revenue from operations\" einschließlich der sonstigen betrieblichen Umsätze.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/e573b415-05b3-456d-97f7-b731a64f118b.pdf",
+          "page": "PDF 7, ohne gedruckte Seitenzahl",
+          "published": "2026-07-21",
+          "quote": "Total revenue from operations 14,706.08",
+          "unit": "INR, Rs in millions, multiplier 1000000",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 14706080000,
+          "vendorBasis": "Sale of products; issuer revenue is Total revenue from operations."
+        }
+      ]
+    },
+    {
+      "caseId": "granules.ns-2025-12-31-revenueQ-p138",
+      "ticker": "GRANULES.NS",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 13780200000,
+      "replacementValue": 13879400000,
+      "reason": "Umsatz korrigiert: Der Anbieter führt nur die Zeile \"Sale of products\"; maßgeblich ist der gesamte Konzernumsatz aus \"Total revenue from operations\" einschließlich der sonstigen betrieblichen Umsätze.",
+      "sources": [
+        {
+          "url": "https://assets.granulesindia.com/investors/financial-reports/quarterly-results/2026/Q4-Financials-FY26%E2%80%93Fourth-Quarter-1.pdf",
+          "page": "PDF 13, ohne gedruckte Seitenzahl",
+          "published": "2026-04-29",
+          "quote": "Total revenue from operations 13,879.40",
+          "unit": "INR, Rs in millions, multiplier 1000000",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 13879400000,
+          "vendorBasis": "Sale of products; issuer revenue is Total revenue from operations."
+        }
+      ]
+    },
+    {
+      "caseId": "granules.ns-2025-09-30-revenueQ-p138",
+      "ticker": "GRANULES.NS",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 12946740000,
+      "replacementValue": 12969880000,
+      "reason": "Umsatz korrigiert: Der Anbieter führt nur die Zeile \"Sale of products\"; maßgeblich ist der gesamte Konzernumsatz aus \"Total revenue from operations\" einschließlich der sonstigen betrieblichen Umsätze.",
+      "sources": [
+        {
+          "url": "https://assets.granulesindia.com/investors/financial-reports/quarterly-results/2026/GLL-Third-Quarter.pdf",
+          "page": "PDF 6, ohne gedruckte Seitenzahl",
+          "published": "2026-01-23",
+          "quote": "Total revenue from operations 12,969.88",
+          "unit": "INR, Rs in millions, multiplier 1000000",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 12969880000,
+          "vendorBasis": "Sale of products; issuer revenue is Total revenue from operations."
+        }
+      ]
+    },
+    {
+      "caseId": "granules.ns-2025-06-30-revenueQ-p138",
+      "ticker": "GRANULES.NS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 12087920000,
+      "replacementValue": 12101060000,
+      "reason": "Umsatz korrigiert: Der Anbieter führt nur die Zeile \"Sale of products\"; maßgeblich ist der gesamte Konzernumsatz aus \"Total revenue from operations\" einschließlich der sonstigen betrieblichen Umsätze.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/e573b415-05b3-456d-97f7-b731a64f118b.pdf",
+          "page": "PDF 7, ohne gedruckte Seitenzahl",
+          "published": "2026-07-21",
+          "quote": "Total revenue from operations 12,101.06",
+          "unit": "INR, Rs in millions, multiplier 1000000",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 12101060000,
+          "vendorBasis": "Sale of products; issuer revenue is Total revenue from operations."
         }
       ]
     }

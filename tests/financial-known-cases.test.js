@@ -28,8 +28,8 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 216 authorized cells (199 quarterly, 17 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 216);
+test('all 226 authorized cells (209 quarterly, 17 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 226); // P138: +10
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 17);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
@@ -43,7 +43,8 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.deepEqual([...need].sort(), [...['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
-    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ', 'CIG-C|grossProfitQ'].sort());
+    ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ', 'CIG-C|grossProfitQ',
+    '000688.SZ|revenueQ', 'GRANULES.NS|revenueQ'].sort()); // P138: +2
   assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
   assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
@@ -53,7 +54,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 216);
+  assert.equal(validateTable(clone(table)).cases.length, 226); // P138: +10
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -304,7 +305,7 @@ const nextQuarter = (s, v = 60e6) => {
 };
 test('coversThrough: newer vendor quarter is missing and stale; covered quarters corrected; unrelated ticker untouched', () => {
   const revenueCovered = table.coverage.filter(v => v.field === 'revenueQ').map(v => v.ticker);
-  assert.deepEqual(revenueCovered.slice().sort(), ['8020.T', 'ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CARG', 'CSWC', 'DCO', 'FSK', 'GBDC', 'HTGC',
+  assert.deepEqual(revenueCovered.slice().sort(), ['000688.SZ', '8020.T', 'ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CARG', 'CSWC', 'DCO', 'FSK', 'GBDC', 'GRANULES.NS', 'HTGC', // P138: +2
     'INFQ', 'KBDC', 'MAIN', 'MSDL', 'OBDC', 'OTF', 'OXLC', 'PLUS', 'PSEC', 'SLCE3.SA', 'TRIN', 'TSLX']);
   for (const ticker of revenueCovered.filter(t => t !== 'BANPU.BK')) {
     const input = nextQuarter(clone(fixture[ticker])), original = serial(input);
@@ -1047,7 +1048,7 @@ test('replacement values trace to their sources: the whole real table passes, a 
   const count = cases => cases.reduce((m, c) => { const k = traceKind(c); m[k] = (m[k] || 0) + 1; return m; }, {});
   // The 162 cases of revision 2026-10-01c: 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one
   // issuer-rounded confirmation (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 33 }); // P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year)
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 115, difference: 17, rounded: 1, exempt: 10, null: 33 } /* P138: +9 single, +1 difference */); // P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year)
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
@@ -1359,10 +1360,16 @@ test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture
   const digest = x => crypto.createHash('sha256').update(serial(x)).digest('hex');
   // P106 (06.10.) adds three annual holds after this freeze; the guard keeps checking exactly the frozen rows and fixtures.
   const added = new Set(['obm.ax-2024-06-30-annualRev-nonadjacent', 'cmm.ax-2024-06-30-annualRev-nonadjacent', '3391.t-2024-05-31-annualRev-nonadjacent',
-    '3391.t-2025-02-28-annualRev-shortyear']);
-  const legacy = key => key === 'cases' ? table.cases.filter(c => !added.has(c.caseId)) : table[key];
+    '3391.t-2025-02-28-annualRev-shortyear',
+    // P138: +10; keep the old checksum over its original rows.
+    '000688.sz-2026-06-30-revenueQ-p138', '000688.sz-2026-03-31-revenueQ-p138',
+    '000688.sz-2025-12-31-revenueQ-p138', '000688.sz-2025-06-30-revenueQ-p138',
+    '000688.sz-2025-03-31-revenueQ-p138', 'granules.ns-2026-06-30-revenueQ-p138',
+    'granules.ns-2026-03-31-revenueQ-p138', 'granules.ns-2025-12-31-revenueQ-p138',
+    'granules.ns-2025-09-30-revenueQ-p138', 'granules.ns-2025-06-30-revenueQ-p138']);
+  const legacy = key => key === 'cases' ? table.cases.filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
   assert.equal(table.cases.length - legacy('cases').length, added.size, 'every added case exists');
-  const legacyFixture = Object.fromEntries(Object.entries(fixture).filter(([t]) => !['OBM.AX', 'CMM.AX', '3391.T'].includes(t)));
+  const legacyFixture = Object.fromEntries(Object.entries(fixture).filter(([t]) => !['OBM.AX', 'CMM.AX', '3391.T', '000688.SZ', 'GRANULES.NS'].includes(t)));
   for (const [key, count, hash] of [
     ['cases', 212, '7da9c61f93bbeff5cfdf2b6d6485a630f16ee1bdacd3dc9afb69241a5ef1a503'],
     ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],

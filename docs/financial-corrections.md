@@ -774,3 +774,46 @@ Gesamtprüfung `node scripts/test-gate.js --mode=all`: 580 echte Testdateien, 49
 Befehle und Ausgaben liegen unter _scratch/f2: targeted-financial-final.log (42/41), targeted-q4-final.log, targeted-gqs-final.log, targeted-fx-final.log sowie full-test-gate-final.log. Reproduzierbare Belege sind die beiden echten Module mapFTSToQuarterly/_convertSnapshotToUSD, die Quellen-Handtabelle und financial-corrections-replay.js. Keine Datenhistorie, Formel, Achsengewichtung oder eingefrorene GQS-Referenz wurde verändert.
 
 Git-Abschluss (Stand 30.09.): Der ursprüngliche Lauf konnte wegen index.lock nicht committen. Inzwischen liegen alle Änderungen als Commits „Tag 1389“, „Tag 1389b“ und „Tag 1389c“ auf fix/banpu-htgc-and-false-zeros-20260929 und sind gepusht (PR #398); kein Merge. Sitzungs-ID und vorgesehene Trailer stehen in financial-corrections-validation.json.
+
+
+## Handtabelle P138 vom 07.10.2026
+
+> **Auf einen Blick**
+> Die belegten Umsatzreihen ergeben 55,30 % für 000688.SZ und 22,04 % für GRANULES.NS.
+> Zehn Quartalszellen sind abgedeckt, davon sieben korrigiert und drei bestätigt.
+> Der Vergleich auf dem Rohstand vom 06.10. weist 0 andere geänderte Quellwerte aus.
+
+Die folgenden Zellen wurden mit `-p138` an die bestehende Tabelle angehängt. Beide Reihen haben `coversThrough: 2026-06-30`; kein gespeichertes Umsatzquartal wird geleert. Die alten 216 Fälle, 34 Abdeckungen, 11 Sperren und 16 Periodenetiketten behalten ihre bisherigen Prüfsummen. Alle zehn Fingerabdrücke multiplizieren sich in JavaScript exakt mit dem gespeicherten Währungsfaktor zum vorhandenen USD-Wert.
+
+| Ticker | Periode | Feld | Währung | Alt | Neu | Status |
+|---|---|---|---|---:|---:|---|
+| 000688.SZ | 2026-06-30 | revenueQ | CNY | 1666778278.46 | 1666778278.46 | bestätigt |
+| 000688.SZ | 2026-03-31 | revenueQ | CNY | 1696217709.13 | 1696217709.13 | bestätigt |
+| 000688.SZ | 2025-12-31 | revenueQ | CNY | 3087702614.19 | 1428454750.76 | korrigiert |
+| 000688.SZ | 2025-06-30 | revenueQ | CNY | 555470993.66 | 1073278451.44 | korrigiert |
+| 000688.SZ | 2025-03-31 | revenueQ | CNY | 1086391910.94 | 1086391910.94 | bestätigt |
+| GRANULES.NS | 2026-06-30 | revenueQ | INR | 14649730000 | 14767740000 | korrigiert |
+| GRANULES.NS | 2026-03-31 | revenueQ | INR | 14574310000 | 14706080000 | korrigiert |
+| GRANULES.NS | 2025-12-31 | revenueQ | INR | 13780200000 | 13879400000 | korrigiert |
+| GRANULES.NS | 2025-09-30 | revenueQ | INR | 12946740000 | 12969880000 | korrigiert |
+| GRANULES.NS | 2025-06-30 | revenueQ | INR | 12087920000 | 12101060000 | korrigiert |
+
+Bei 000688.SZ wurden die Vorjahreszahlen wegen eines Zusammenschlusses unter gemeinsamer Kontrolle angepasst. Die beiden zweiten Quartale sind jeweils Halbjahr minus erstes Quartal, mit beiden Operanden samt eigenen Seiten und Zitaten. Das vierte Quartal 2025 steht direkt im [Jahresbericht, PDF-Seite 10, gedruckt 9](https://static.cninfo.com.cn/finalpage/2026-03-24/1225025043.PDF), „第四季度“ und „1,428,454,750.76“. Der Anbieterwert entspricht rechnerisch dem neuen Jahresumsatz abzüglich der alten Neunmonatszahl; der interne Verarbeitungsschritt des Anbieters ist nicht nachgewiesen. Der nicht gespeicherte September 2025 wird nicht ergänzt.
+
+Bei GRANULES.NS führt der Anbieter nur „Sale of products“. Maßgeblich ist „Total revenue from operations“, einschließlich sonstiger betrieblicher Umsätze. Die Werte aus „Rs in millions“ werden mit 1.000.000 in volle INR umgerechnet. Das [BSE-Dokument vom 21.07.2026, PDF-Seite 7](https://www.bseindia.com/xml-data/corpfiling/AttachHis/e573b415-05b3-456d-97f7-b731a64f118b.pdf) zeigt unter anderem „Total revenue from operations 14,767.74“. Wegen der beschädigten Textebene wurden die vorhandenen Seitenbilder geprüft. Das Märzquartal ist eine direkt veröffentlichte Quartalsspalte. Alle weiteren Quellen, Seiten, Originalzitate, Perioden und Einheiten stehen an den einzelnen Fällen.
+
+**Boardwirkung auf dem eingefrorenen Stand:** 000688.SZ wächst vorher um 200,065764 %, nachher um 55,297842 %; auf dem profitablen Rohstoffboard bewegt sich der Rang von 73 auf 329 und der Score von 75,8 auf 57,0. GRANULES.NS wächst vorher um 21,193142 %, nachher um 22,036747 %; auf dem profitablen Gesundheitsboard bleibt Rang 16, der Score steigt von 85,7 auf 85,9. Zwei Quellzellen ändern sich bei 000688.SZ und fünf bei GRANULES.NS, 0 bei anderen Tickern. Die vollständigen Feldzählungen und Einzelzellen stehen unter `outputs/p138-replay/vorher-nachher.md` und `.csv`. Über die gemeinsame Kalibrierung und neue Rangfolge ändern sich 4.288 Exportzellen bei 1.265 Tickern; darin sind Aufnahme und Wegfall von Zeilen in Kurzlisten als Zellen mitgezählt.
+
+**Toplisten:** Im profitablen Rohstoffboard tritt SBSW in die Top 100 ein und 000688.SZ aus. Bei Rule of 40 tritt 2344.TW in die Top 20 ein und 000688.SZ aus; in die Top 100 treten VLE.TO und 600012.SS ein, 000688.SZ und 001309.SZ aus. Alle übrigen Top-20-/Top-100-Mitgliedschaften bleiben gleich. 122 JSON-Ausgabedateien des Ausgangslaufs sind bei Wiederholung bytegleich. Alle 16.924 Rohdateien bleiben unverändert; 16.152 Hauptbestandsdateien stimmen mit der gelieferten Artefaktprüfsumme überein. Die versionierte `snapshots/_manifest.json` bleibt wie beauftragt auf HEAD statt auf der Artefaktfassung. Die Uhr steht in allen Läufen auf 06.10.2026, 20:00 UTC. Es entstehen keine Replay-Dateien außerhalb von `outputs/p138-replay`.
+
+**Deutsche Quellentitel, P142 Teil 2:** Die drei beanstandeten Fassungen zu Petrobras, dessen Geschwisternotierungen und dem 424B4-Prospekt stehen deutsch an der Quelle. Auch die neun gleichartigen zusätzlichen Felder in denselben Dateien sind übersetzt: EMBJ, EMBJ3.SA, VALE3.SA, XVALO.MC, YPF, YPFD.BA, 6269.T sowie die 10-Q-Titel von ABTC und JBS. Insgesamt sind es 14 Textfelder. Zahlen, URLs, Zugangsnummern und Originalzitate bleiben gleich. Die Parsernotation `p.`/`pp.` bleibt erhalten, damit der Export die Seiten weiter ausliest; dies ist mit dem echten Manifestbau abgesichert. Der eingefrorene HG-Lauf enthält die Titelfassungen für PBR-A und ANDG; die Geschwisterfassung wird zusätzlich im Manifesttest erzeugt und geprüft. Kein alter englischer Text war durch einen bisherigen Test wörtlich festgeschrieben, deshalb wurde keine alte Titelassertion ersetzt.
+
+**Weitere englische Titel:** Außerhalb der beiden Textdateien bleiben die zwei ADS-Quellenbeschreibungen von HSAI (SEC 6-K Juli 2026, Zugangsnummer 0001104659-26-082432) und BSBR (SEC 20-F vom 27.02.2026, Anlage 2.5) unverändert. `configs/yahoo-q4-known-cases.json` enthält 33 Titelvorkommen und bleibt vollständig unverändert. Andere gefundene `source`-Felder aus Kalender, Klassenregister und Firmenklassifikation speisen keinen `documentTitle` des Manifests.
+
+**Offene Paare, unverändert:**
+
+- CDR.WA benötigt die vom Emittenten veröffentlichten Umsätze des dritten und vierten Quartals 2025 aus fortgeführten Aktivitäten oder dazu passende neu ausgewiesene Neunmonatszahlen mit abgestimmter Darstellungsänderung. Die 349.072.000 PLN des alten dritten Quartals enthalten GOG. Der Anbieterwert des vierten Quartals von 74.877.000 PLN entspricht dem Jahresumsatz aus fortgeführten Aktivitäten von 866.989.000 PLN minus den alten neun Monaten von 792.112.000 PLN. Das belegt kein vergleichbares Quartal.
+- 000552.SZ benötigt konsistent neu ausgewiesene konsolidierte Neunmonatszahlen oder eine ausdrücklich angepasste Quartalsübersicht für Q3/Q4. Angepasstes Halbjahr plus alte Q3/Q4 übersteigt den Jahresumsatz um 50.056.182,60 CNY; das angepasste vierte Quartal ist nicht belegt.
+- BYLOT.AT benötigt ausdrücklich veröffentlichte Q3-/Neunmonatsumsätze 2025 in der späteren Darstellung oder eine exakte Überleitung zu dieser Basis, abgestimmt mit Jahr/Q4 und überarbeitetem Halbjahr/Q1. Auf alter Basis sind für Q3 74.461.000 EUR „Sale Proceeds“ belegt; der spätere Vergleichswert fehlt. **Masterentscheidung offen:** Ob Q3 auf dieser ursprünglichen Basis bestehen bleiben darf, ist nicht durch das Recherchepaket genehmigt. Die verfügbaren Quartale lassen 7.429.000 EUR zum Jahr offen; der direkt veröffentlichte Q4-Wert 254.100.000 EUR ist nur auf 0,1 Mio. EUR genau.
+
+**Prüfung und Übergabe:** Der vorgeschriebene Testbefehl besteht mit Exit 0, 32 bestandenen Testeinheiten und 0 Fehlern. Der neue Einzeltest enthält zwölf Testfälle und zehn unabhängige Rotproben durch Entfernen je eines Falls aus einer Speicherkopie. Ein echter CLI-Rotlauf liefert Exit 1 mit `actual: null`, `expected: 248635565.94855413` für die bestätigte Juni-Zelle von 000688.SZ; die Live-Prüfsummen bleiben gleich. Keine neuen Exporte und keine Änderungen in lib/, src/, scripts/ oder pull-yahoo.js. Beim späteren Zusammenführen mit PR #443 müssen beide angehängten Tabellenpakete sowie ihre Zählprüfungen erhalten bleiben.
