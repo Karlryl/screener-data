@@ -52,7 +52,7 @@ if (process.env.P129_RED_CASE) {
 }
 
 test('P129 manifest pins every cell and preserves all original authority and fixture hashes', () => {
-  assert.deepEqual(table.cases.slice(216).map(c => c.caseId), cells.map(idFor));
+  assert.deepEqual(table.cases.slice(216, 225).map(c => c.caseId), cells.map(idFor));
   for (const [key, count, digest] of [
     ['cases', 216, '495cee60cd67f8ae1813a39f26d66887a38ecf9af5886c2846fb7ce867327707'],
     ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],
@@ -64,7 +64,7 @@ test('P129 manifest pins every cell and preserves all original authority and fix
   assert.equal(table.coverage.length, 34, 'no coverage expansion without a fully verified quarterly series');
   assert.equal(table.periodLabels.length, 16, 'GRGD labels stay open; no ineffective live row');
   assert.equal(Object.keys(fixtures).length, 60); // P129: +15
-  assert.equal(table.cases.slice(216).filter(c => c.periodType === '12M').every(c => c.ticker === 'AIAI' && c.replacementValue === null), true,
+  assert.equal(table.cases.slice(216, 225).filter(c => c.periodType === '12M').every(c => c.ticker === 'AIAI' && c.replacementValue === null), true,
     'no annual replacement from the #431 waiting list');
 });
 
@@ -104,7 +104,7 @@ test('retained withholds select source-verified annual pairs or an empty growth'
 });
 
 test('P129 authorizes only named withholds and cannot reintroduce the rejected quarterly coverage', () => {
-  const additions = table.cases.slice(216);
+  const additions = table.cases.slice(216, 225);
   assert.ok(additions.every(row => row.replacementValue === null));
   assert.deepEqual([...new Set(additions.map(row => row.ticker))].sort(), ['1ANE.MI', '6269.T', 'AIAI', 'AJBU.SI', 'MAD.AX']);
   assert.equal(table.coverage.length, 34);
