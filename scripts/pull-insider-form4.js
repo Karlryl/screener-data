@@ -55,7 +55,7 @@ const https = require('https');
 
 // Tag 189: atomic tmp+rename writes for both cache files.
 const { writeFileAtomic } = require('../lib/atomic-write.js');
-const { readJsonExistingOrThrow, FEHLT } = require('../lib/read-json.js');
+const { readJsonExistingOrThrow, FEHLT, readJsonOrNull: readJsonSafe } = require('../lib/read-json.js');
 
 // ─── Config ─────────────────────────────────────────────────────────────
 const ROOT = path.join(__dirname, '..');
@@ -111,10 +111,6 @@ const SAMPLE_LIMIT = process.env.SAMPLE_LIMIT
 // ─── Tiny utils ─────────────────────────────────────────────────────────
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function readJsonSafe(p) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
-  catch (e) { return null; }
-}
 
 // F-CGPT-029 (P0-Haertung 09.08.2026): der Form-4-Cache wurde mit
 // `readJsonSafe(FORM4_CACHE_PATH) || {}` geladen — eine vorhandene, aber unlesbare Datei

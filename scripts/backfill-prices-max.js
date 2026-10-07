@@ -22,6 +22,7 @@
  * (BH-145) alle Ticker fehlgeschlagen (0 ok bei >0 versuchten).
  */
 const fs = require('fs');
+const { readJsonOrNull } = require('../lib/read-json.js');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
@@ -53,7 +54,6 @@ function yahooFinanceClient() {
 
 const log = (m) => console.log(`[${new Date().toISOString()}] ${m}`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-function readJsonOrNull(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return null; } }
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
