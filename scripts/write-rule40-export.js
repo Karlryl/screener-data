@@ -771,6 +771,8 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       zeile.revGrowthBasis = k.wachstumBein ? k.wachstumBein.basis : null;
       zeile.revGrowthPeriodEnd = k.wachstumBein ? k.wachstumBein.periodEnd : null;
       zeile.revGrowthPriorPeriodEnd = k.wachstumBein ? k.wachstumBein.priorPeriodEnd : null;
+      zeile.revGrowthSourcePeriodEnd = k.wachstumBein ? k.wachstumBein.sourcePeriodEnd ?? null : null;
+      zeile.revGrowthSourcePriorPeriodEnd = k.wachstumBein ? k.wachstumBein.sourcePriorPeriodEnd ?? null : null;
       // Tag 1401: marks only, never changes a value. On-board names carry the flags of their
       // full-board row (the main export wrote them from the same list); off-board names get them
       // from the list. No open item: no key (absence, not an empty array).
