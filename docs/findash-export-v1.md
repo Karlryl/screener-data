@@ -1172,3 +1172,84 @@ Zeilen auf dem Brett stehen.
 Der Behoerden-Wert ist nur eine Schutzspalte und ersetzt den Schatten nie. Die Stores fuehren das
 Geschaeftsjahr als Zahl, kein Enddatum; verglichen wird das Kalenderjahr des Schatten-GJ-Endes.
 Waechter: `tests/fcf-stmt-shadow.test.js`.
+
+## 16. `annualPairsShadow` (P115, 07.10.2026, nur Schattenrechnung)
+
+Ratsblock Frage 10, Formel-Weg, Lauf 1 von 2. Die zusätzliche Datumsprüfung ist in der
+Produktion **ausgeschaltet**. Jede HyperGrowth-Zeile auf Branchenboards, Vollboards und
+Übersicht sowie jede Rule-of-40-Zeile erhält genau einen zusätzlichen Schlüssel
+`annualPairsShadow`. Bestehende Werte, Scores, Ränge und Board-Zusammensetzungen bleiben
+unverändert. Quality, Small-Cap und Survival erhalten diesen Schlüssel nicht.
+findash verwirft unbekannte Schlüssel und verwendet die Schattenwerte nicht für die Anzeige.
+Die Jahresprüfung und ihr Datumsleser liegen in `lib/annual-pairs.js`; der Zusatz entsteht
+erst in den Board-Erzeugern, während die gemeinsamen Zeilenmapper unverändert bleiben.
+Im offenen Siegelübergang `protocol/gqs-00/1.2.0-pending/transition.json` ist unter
+`annualPairsShadow` ausschließlich der neue Fingerabdruck von `src/scoring/axes.js`
+registriert; das bestehende Siegel und `src/scoring/snapshot.js` bleiben unverändert.
+
+`windowDays` ist `[334, 397]`, einschließlich beider Grenzen. Geprüft wird der Abstand zweier
+Geschäftsjahresenden, kein Test auf eine Periodenlänge von 357 bis 378 Tagen. Messbeleg P115-M
+über 16.148 Snapshots des CI-Laufs 37439518589 vom 06.10.2026: 19.996 von 20.114 datierten
+aufeinanderfolgenden Paaren liegen genau 365 oder 366 Tage auseinander. In den Bereichen
+337 bis 364 und 367 bis 455 gab es kein Paar. Zwischen 300 und 349 lagen nur 304 (zweimal,
+echte Rumpfzeiträume), 335 (einmal) und 336 Tage (zweimal). Die lückenlosen Reihen der
+52/53-Wochen-Berichterstatter ABF.L/ASBFF und 4291.SR dürfen deshalb nicht an einer engeren
+Prüfung scheitern. Der nächste größere Abstand war 456 Tage; 77 Paare lagen bei mindestens
+700 Tagen. Das Fenster 334 bis 397 leerte in der Messung keine lückenlose Reihe fälschlich.
+
+Die drei Objekte `growth`, `grossProfit` und `acceleration` tragen jeweils:
+
+| Feld | Bedeutung |
+|---|---|
+| `code` | Ergebnis der Prüfung des tatsächlich verwendeten Jahrespaars |
+| `reason` | Deutscher Satz mit belegten Geschäftsjahren und gerundeten Monaten, soweit datiert |
+| `distanceDays` | Abstand der beiden Enden in Tagen, sonst `null` |
+| `priorLengthDays` | Abstand des älteren Endes zum folgenden gespeicherten Ende, sonst `null` |
+| `today` | Heutiger Wert, bei fehlendem Wert `null` |
+| `shadow` | Wert mit Jahresprüfung, bei verworfenem Vergleich `null`, niemals Ersatzwert 0 |
+
+`growth.today` und `growth.shadow` sind das angezeigte Umsatzwachstum in Prozent aus
+`revGrowthLeg`. Der Code prüft auch bei Quartalsanzeige das Jahresbein des Wachstumsbonus.
+Ohne Quartalsbein gilt ein gültiger neuerer Jahresvermerk mit seinen eigenen Enddaten;
+sein Vorjahreszeitraum kommt aus dem Eintrag nach `priorEnd` in der gespeicherten Reihe.
+Bei der Vorjahreslänge werden unmittelbar folgende Doppel-Einträge mit exakt gleichem endlichem normalisiertem Wert und weniger als 334 Tagen Abstand zum älteren Paarende übersprungen, bei neueren Jahresvermerken anhand des zu `priorEnd` gespeicherten Umsatzes; fehlt danach ein datiertes Ende, bleibt die Länge `null`, während ein Doppel-Eintrag im geprüften Paar selbst weiterhin `short-period` ergibt.
+Es wird nie ein anderes Paar gesucht. `grossProfit` zeigt den rohen Wert von `gpGrowth`;
+nur dessen Jahreswachstumspaar wird geprüft, die Bruttomargenentwicklung bleibt unberührt.
+`acceleration` zeigt den rohen Wert von `revAcceleration` mit `winsorBounds.qoq` aus derselben
+Kalibrierungsdatei wie `fcfShadow`. Fehlen diese Grenzen, wird ungeklemmt gerechnet und
+einmal gewarnt. Der Quartalszweig bleibt unverändert. Beim Jahreszweig müssen beide Paare
+der ersten drei positiven Jahre bestehen; angezeigt wird der erste Fehler, jüngeres Paar zuerst.
+
+| Code | Bedeutung |
+|---|---|
+| `adjacent` | 334 bis 397 Tage; das Vorjahr ist nicht als Rumpfzeitraum oder verlängerter Zeitraum belegt |
+| `undated` | Mindestens ein Ende fehlt oder ist ungültig; die heutige Rechnung bleibt bestehen |
+| `missing-year` | Paarabstand mindestens 700 Tage |
+| `long-period` | Paarabstand größer als 397 und kleiner als 700 Tage |
+| `short-period` | Paarabstand kleiner als 334 Tage |
+| `short-prior-period` | Paar selbst zulässig, aber Vorjahresabstand kleiner als 334 Tage |
+| `long-prior-period` | Paar selbst zulässig, aber Vorjahresabstand größer als 397 und kleiner als 700 Tage |
+| `zero-year` | Beschleunigung überspringt einen gemeldeten Umsatz von 0 oder darunter, ohne zugleich eine Datenlücke zu überspringen |
+| `no-annual-pair` | Die heutige Rechnung bildet für diese Achse kein Jahrespaar |
+| `no-snapshot` | Kein gespeicherter Snapshot vorhanden |
+| `snapshot-unreadable` | Gespeicherter Snapshot nicht lesbar |
+
+Ein Vorjahresabstand ab 700 Tagen sperrt das Paar nicht, die Lücke liegt hinter dem Paar.
+Bei übersprungenen fehlenden Werten entscheidet allein die Datumsprüfung. Ohne Enddaten
+bleibt deshalb auch hier die heutige Rechnung bestehen. Nur zur Wertreihe längengleiche
+Enddatumslisten werden verwendet, jeder Eintrag durchläuft die ISO-Rückprüfung von F-4.
+
+Der synchrone Schalter `withAnnualPairRule({growth, acceleration}, fn)` trennt Umsatz und
+Bruttogewinn (Teil a) von Beschleunigung (Teil b), stellt den vorherigen Zustand auch bei
+Fehlern und Verschachtelung wieder her und weist asynchrone Ergebnisse zurück. Nicht genannte
+Teile behalten ihren vorherigen Zustand. Produktionswerte werden nie unter diesem Schalter
+gerechnet; nur die zusätzliche Schattenrechnung aktiviert ihn vorübergehend.
+Wächter: `tests/scoring/annual-pairs.test.js` und `tests/annual-pairs-shadow-export.test.js`.
+`capitalEfficiency`, Rangneuberechnung und Vorher/Nachher-Messung gehören nicht zu Lauf 1.
+
+**Messung.** `scripts/p115-jahrespaare-vorher-nachher.js` vergleicht die ausgeschaltete Regel,
+den Wachstumsteil und die vollständige Jahresprüfung mit der Produktionsengine. Aufruf:
+`node scripts/p115-jahrespaare-vorher-nachher.js --snapshots <eingefrorener-ordner> --out <neuer-ausgabeordner-außerhalb-des-repos>`.
+Optional begrenzt `--limit <anzahl>` die alphabetische Stichprobe. Der Ausgabeordner enthält
+den deutschen Bericht, die JSON- und CSV-Belege sowie eine Arbeitskopie der Eingaben;
+die Quelldateien bleiben unverändert.

@@ -73,6 +73,7 @@ const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { readValueFlags } = require('../lib/value-open-items.js');
 // P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, nur additiv (fcfShadow).
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
+const { annualPairsShadowForSnapshot } = require('./write-findash-export.js');
 const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -636,6 +637,7 @@ function sammleKandidaten(opts = {}) {
       quartalsEnde: periodeDesBeins(wachstumBein, quartalsEndeMs),
       wachstumBein,
       fcfSchatten,
+      annualPairsShadow: annualPairsShadowForSnapshot(snapshot),
       fcfSchattenTor,
       behoerdenSchutz: schutzEintrag,
       provenanceInputs, provenanceError,
@@ -764,6 +766,7 @@ function baueZeilen(kandidaten, valueFlags = new Map()) {
       zeile.ebitdaMarginPct = k.ebitdaMarginPct === null ? null : round1(k.ebitdaMarginPct);
       zeile.r40Ebitda = k.r40Ebitda === null ? null : round1(k.r40Ebitda);
       zeile.fcfShadow = r40SchattenZeile(k); // P87: Schatten, additiv, keine sichtbare Zahl aendert sich
+      zeile.annualPairsShadow = k.annualPairsShadow || annualPairsShadowForSnapshot(null);
       zeile.industry = k.industry;
       zeile.r40Group = k.gruppe;
       zeile.onBoard = k.onBoard;

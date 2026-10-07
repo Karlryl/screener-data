@@ -6,8 +6,8 @@
 // (B) Rule-of-X shadow and the authority guard column.
 // (C) Rule of 40 rows: fcfShadow is additive, a missing shadow is null and never 0 (the local
 //     round1 of write-rule40-export.js turns null into 0, the shadow must not).
-// (D) HyperGrowth board rows: buildBoard adds fcfShadow as the LAST key and every other field is
-//     exactly what mapBoardRow produced (no visible number changes).
+// (D) HyperGrowth board rows: buildBoard adds annualPairsShadow directly before the LAST key
+//     fcfShadow; every other field is exactly what mapBoardRow produced (no visible number changes).
 // Hermetic: temp dirs only, no network, no real snapshots.
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -165,7 +165,7 @@ check('C5 R40: baueZeilen keeps every existing field, fcfShadow is purely additi
 });
 
 // ---------------------------------------------------------------- (D)
-check('D1 buildBoard: fcfShadow is the last key, all other fields equal mapBoardRow', () => {
+check('D1 buildBoard: annualPairsShadow precedes last fcfShadow, all other fields equal mapBoardRow', () => {
   const s = snap({ ticker: 'TST' });
   fs.writeFileSync(path.join(snapDir, 'TST.json'), JSON.stringify(s));
   const src = { ticker: 'TST', score: 61.2, track: 'profitable', lamps: [], overview: null, name: 'Test Corp', country: 'US',
@@ -175,8 +175,20 @@ check('D1 buildBoard: fcfShadow is the last key, all other fields equal mapBoard
   const row = board.profitable[0];
   const keys = Object.keys(row);
   assert.equal(keys[keys.length - 1], 'fcfShadow');
-  const { fcfShadow, ...rest } = row;
+  assert.equal(keys[keys.length - 2], 'annualPairsShadow');
+  const { fcfShadow, annualPairsShadow, ...rest } = row;
+  const noAnnualPair = {
+    code: 'no-annual-pair', reason: 'Die heutige Rechnung bildet für diese Achse kein Jahrespaar, daher ist kein Jahresvergleich zu prüfen.',
+    distanceDays: null, priorLengthDays: null, today: null, shadow: null,
+  };
+  assert.deepEqual(annualPairsShadow, {
+    windowDays: [334, 397],
+    growth: { code: 'adjacent', reason: 'Benachbarte volle Geschäftsjahre 2025 und 2024 (12 Monate).',
+      distanceDays: 365, priorLengthDays: null, today: 25, shadow: 25 },
+    grossProfit: noAnnualPair, acceleration: noAnnualPair,
+  });
   const expected = W.mapBoardRow(src, 0);
+  assert.equal(Object.hasOwn(expected, 'annualPairsShadow'), false);
   expected.rank = row.rank; expected.rankGrund = row.rankGrund;
   assert.deepEqual(rest, expected);
   assert.equal(fcfShadow.fcfMarginStmtFY, 20); assert.equal(fcfShadow.grund, 'ok');
