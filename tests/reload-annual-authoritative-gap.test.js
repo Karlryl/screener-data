@@ -5,7 +5,7 @@ const assert = require('node:assert/strict'), fs = require('node:fs'), path = re
 const { Module } = require('node:module');
 const { applyFinancialCases } = require('../lib/financial-known-cases.js');
 const { historyIsThinner, preserveReloadHistory } = require('../lib/reload-history.js');
-const { fixture } = require('./annual-financial-replacements.test.js');
+const { fixture, fixtureTable } = require('./annual-financial-replacements.test.js');
 const file = path.resolve(__dirname, '../lib/reload-history.js');
 const digest = () => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const before = digest(), source = fs.readFileSync(file, 'utf8');
@@ -31,20 +31,23 @@ const p106 = [
   annual:{ annualRev:stored.map(value => ({ value })), annualRevEnds:ends },
   timeseries:{ revenueQ:[], revenueQEnds:[] },
 }));
+const table = fixtureTable();
+const synthetic = [fixture(), fixture('ANNTEST.Y')];
+for (const prior of synthetic) prior.annual.annualRev[1].value += 1; // Drift creates authoritative annual gaps.
 let passed = 0, red = 0;
-for (const prior of [...p106, fixture(), fixture('INDOMIM.NS')]) {
+for (const prior of [...p106, ...synthetic]) {
   // Supply comparable provenance, so preservation would refill an ordinary hole.
   prior.meta.fetchedAt = '2026-10-06T00:00:00Z';
   prior.meta.statementPeriods = Object.fromEntries(Object.entries(prior.annual)
     .filter(([field, rows]) => Array.isArray(rows) && !/Ends$/.test(field))
     .map(([field]) => [field, (prior.annual[field + 'Ends'] || []).map(end => ({ end, duration:'12M',
       currency:prior.meta.reportingCurrencyOriginal, unit:'currency', basis:'reported', fetchedAt:prior.meta.fetchedAt }))]));
-  const saved = structuredClone(prior), next = applyFinancialCases(prior).snapshot;
+  const saved = structuredClone(prior), next = applyFinancialCases(prior, { table }).snapshot;
   assert.deepEqual(prior, saved, 'overlay does not mutate raw input');
   assert.equal(historyIsThinner(next, prior), false, prior.meta.ticker + ': hand-table annual gaps accepted');
   assert.equal(oldThinner(next, prior), true, prior.meta.ticker + ': old line demonstrably refuses the same gaps'); red++;
   const kept = preserveReloadHistory(structuredClone(next), prior);
-  assert.deepEqual(kept.annual, next.annual, 'every withheld currency and balance cell stays withheld');
+  assert.deepEqual(kept.annual, next.annual, 'every withheld annual cell stays withheld');
   assert.deepEqual(prior, saved, 'preservation does not mutate prior input');
   const plain = structuredClone(prior); plain.annual.annualRev[1] = null;
   assert.equal(historyIsThinner(plain, prior), true, 'L10: plain dated null remains a loss');

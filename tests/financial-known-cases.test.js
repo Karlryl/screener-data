@@ -28,9 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 220 authorized cells (199 quarterly, 21 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 220);
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 21);
+test('all 216 authorized cells (199 quarterly, 17 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 216);
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 17);
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 220);
+  assert.equal(validateTable(clone(table)).cases.length, 216);
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -1046,10 +1046,10 @@ const traceKind = c => {
 const TRACE_LINE = "    if (!traceable(c)) throw new Error('Replacement matches no source value: ' + key);";
 test('replacement values trace to their sources: the whole real table passes, a typo throws at validation', () => {
   const count = cases => cases.reduce((m, c) => { const k = traceKind(c); m[k] = (m[k] || 0) + 1; return m; }, {});
-  // The 162 cases of revision 2026-10-01c plus four annual P50 INDO-MIM cases and four annual P106 withholds:
+  // The 162 cases of revision 2026-10-01c plus four annual P106 withholds:
   // 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one issuer-rounded confirmation
   // (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 110, difference: 16, rounded: 1, exempt: 10, null: 33 });
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 33 });
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
@@ -1359,11 +1359,10 @@ test('CIG-C: gross profit on the restated basis of the 2Q26 ITR, Q3/Q4 2025 with
 
 test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture results byte-identical', () => {
   const digest = x => crypto.createHash('sha256').update(serial(x)).digest('hex');
-  // P106 adds four annual withholds and P50 four numeric annual INDO-MIM cases; the pin stays on the frozen rows and fixtures.
+  // P106 adds four annual withholds; the pin stays on the frozen rows and fixtures.
   const added = new Set(['obm.ax-2024-06-30-annualRev-nonadjacent', 'cmm.ax-2024-06-30-annualRev-nonadjacent', '3391.t-2024-05-31-annualRev-nonadjacent',
-    '3391.t-2025-02-28-annualRev-shortyear', 'indomim-2026-03-31-annualRev', 'indomim-2025-03-31-annualRev',
-    'indomim-2024-03-31-annualRev', 'indomim-2023-03-31-annualRev']);
-  assert.equal(added.size, 8, 'exactly four P106 and four P50 cases are new');
+    '3391.t-2025-02-28-annualRev-shortyear']);
+  assert.equal(added.size, 4, 'exactly four P106 cases are new');
   for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
   const legacy = key => key === 'cases' ? table.cases.filter(c => !added.has(c.caseId)) : table[key];
   assert.equal(table.cases.length - legacy('cases').length, added.size, 'every added case exists');
