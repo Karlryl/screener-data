@@ -24,6 +24,7 @@
   "scripts/roic-reliability.js": { "mode": "exempt", "reason": "Raw research population selection for an annual ROIC reliability measurement." },
   "scripts/t139-marketcap-herkunft.js": { "mode": "exempt", "reason": "Imports market-cap classification only and does not consume quarterly series." },
   "src/scoring/engine.js": { "mode": "exempt", "reason": "Imports the array helper only; no quarterly snapshot input is consumed here." },
+  "src/scoring/annual-pairs.js": { "mode": "upstream", "reason": "Pure P115 annual-pair shadow helper; both export writers pass the same already prepared snapshot, and scoring callers use the prepared scoring universe." },
   "src/scoring/quality-route.js": { "mode": "upstream", "reason": "Quarter-sensitive routing delegates over the corrected production scoring universe." },
   "src/scoring/smallcap-route.js": { "mode": "upstream", "reason": "Quarter-sensitive routing receives corrected Smallcap/SEC inputs; research callers are explicitly classified." },
   "scripts/data-quality-report.js": { "mode": "hook", "hook": "const s = prepareSnapshot(JSON.parse(fs.readFileSync(fp, 'utf8')));", "reason": "Published coverage and grades must see the same known gaps as scoring." },

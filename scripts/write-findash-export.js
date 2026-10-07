@@ -89,15 +89,36 @@ function readMcapBounds() {
 // Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
 // nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
+const { annualPairsShadow } = require('../src/scoring/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
 let _wachstumsSchranken;
+let _annualPairsBounds = null;
+let _annualPairsBoundsWarned = false;
 function wachstumsSchranken() {
   if (_wachstumsSchranken !== undefined) return _wachstumsSchranken;
   try {
     const c = JSON.parse(fs.readFileSync(CALIBRATION_FILE, 'utf8'));
     _wachstumsSchranken = Array.isArray(c && c.growthBounds) ? c.growthBounds : null;
+    const qoq = c && c.winsorBounds && c.winsorBounds.qoq;
+    _annualPairsBounds = Array.isArray(qoq) && qoq.length === 2 && qoq.every(Number.isFinite) && qoq[0] <= qoq[1] ? qoq : null;
   } catch (_) { _wachstumsSchranken = null; }
   return _wachstumsSchranken;
+}
+/**
+ * Computes the annual-pair shadow from a prepared snapshot and the existing calibration source.
+ * @param {object|null} snapshot Already prepared snapshot; no second file read or overlay.
+ * @param {string} [missingCode] Missing/unreadable snapshot reason.
+ * @returns {object} Additive shadow with acceleration clamped as in score.rawAxisValue.
+ */
+function annualPairsShadowForSnapshot(snapshot, missingCode) {
+  if (snapshot) {
+    wachstumsSchranken();
+    if (_annualPairsBounds === null && !_annualPairsBoundsWarned) {
+      _annualPairsBoundsWarned = true;
+      console.warn('::warning::[annual-pairs-shadow] Keine Beschleunigungsgrenzen in outputs/calibration.json vorhanden, die Schattenrechnung bleibt ungeklemmt.');
+    }
+  }
+  return annualPairsShadow(snapshot, _annualPairsBounds, missingCode || 'no-snapshot');
 }
 let _behoerde;
 let _schrankenGewarnt = false;
@@ -293,6 +314,7 @@ function snapAbleitungenFuer(ticker) {
     financialReasons: financialReasons(snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
+    annualPairsShadow: annualPairsShadowForSnapshot(snap, snapFehler), // P115: once per ticker, rule off outside this call.
     snapFehler,
   };
   // Retain evidence from the very snapshot used above. Defer helper failures,
@@ -651,7 +673,7 @@ function gedeckelt(score) {
   return typeof score === 'number' && Number.isFinite(score) ? Math.min(SCORE_MAX, score) : score;
 }
 
-function mapBoardRow(r, i, snapshotStore) {
+function mapBoardRow(r, i, snapshotStore, includeAnnualPairs = true) {
   const out = {
     rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
     rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
@@ -668,11 +690,12 @@ function mapBoardRow(r, i, snapshotStore) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
+  if (includeAnnualPairs && snapshotStore !== 'smallcap') out.annualPairsShadow = snapAbleitungenFuer(r.ticker).annualPairsShadow;
   ergaenzeBelegpunkte(out);            // 29.08.: Belegpunkte neben der Coverage-Behauptung
   return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'); // P88 additive shadow, last keys.
 }
 
-function mapOverviewRow(r, i, snapshotStore) {
+function mapOverviewRow(r, i, snapshotStore, includeAnnualPairs = true) {
   const out = {
     rank: i + 1,
     rankGrund: null,            // 18.08.: gesetzt von vergebeRaenge(), s. Belegbarkeits-Gate
@@ -688,6 +711,7 @@ function mapOverviewRow(r, i, snapshotStore) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
+  if (includeAnnualPairs && snapshotStore !== 'smallcap') out.annualPairsShadow = snapAbleitungenFuer(r.ticker).annualPairsShadow;
   ergaenzeBelegpunkte(out);            // 29.08.: s. mapBoardRow
   return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'); // P88 additive shadow, last keys.
 }
@@ -897,14 +921,14 @@ function buildQualityBoard(file, coverage, qualityDir) {
     branch: stem,                                   // = filename stem (prefix dropped)
     boardStatus: boardStatusOf('quality-' + stem),  // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), 'quality/' + qualityStem(file) + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), 'quality/' + qualityStem(file) + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, undefined, false)), 'quality/' + qualityStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, undefined, false)), 'quality/' + qualityStem(file) + '.unprofitable'),
   };
 }
 
 function buildQualityOverview(coverage, qualityDir) {
   const o = readJSON(path.join(qualityDir || QUALITY_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow), 'quality/overview') };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, undefined, false)), 'quality/overview') };
 }
 
 function buildQualityIndex(coverage, qualityDir) {
@@ -1045,14 +1069,14 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource())), 'smallcap/' + smallcapStem(file) + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource())), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), false)), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), false)), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
 function buildSmallcapOverview(coverage, smallcapDir) {
   const o = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource())), 'smallcap/overview') };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource(), false)), 'smallcap/overview') };
 }
 
 function buildSmallcapIndex(coverage, smallcapDir) {
@@ -2141,6 +2165,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  annualPairsShadowForSnapshot,
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.

@@ -29,6 +29,8 @@
 const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx,
   histOpInc } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
+const { annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
+  checkNewerAnnualPair, checkAnnualAcceleration } = require('./annual-pairs.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 
@@ -70,6 +72,7 @@ function adjacentTwoPresent(series) {
 function revAnnualYoY(s) {
   const ar = adjacentTwoPresent(norm(s, 'annualRev'));
   if (!ar || !(ar[1] > 0)) return null;
+  if (annualPairRuleEnabled('growth') && !annualPairPasses(checkAnnualPair(s, 'annualRev', 0, 1))) return null;
   const g = ar[0] / ar[1] - 1;
   return Number.isFinite(g) ? g : null;
 }
@@ -121,6 +124,7 @@ function annualLegNewerYear(s) {
 }
 function revAnnualLegYoY(s) {
   const n = annualLegNewerYear(s);
+  if (n && annualPairRuleEnabled('growth') && !annualPairPasses(checkNewerAnnualPair(s, n))) return null;
   return n ? n.revenue / n.priorRevenue - 1 : revAnnualYoY(s);
 }
 function revYoYComponents(s) {
@@ -233,6 +237,7 @@ function revAcceleration(s, bounds) {
   // Fallback Jahresreihe: drei present Jahre -> zwei Jahres-Wachstumsraten.
   const ar = norm(s, 'annualRev').filter((v) => v !== null && v !== undefined && v > 0);
   if (ar.length >= 3) {
+    if (annualPairRuleEnabled('acceleration') && !annualPairPasses(checkAnnualAcceleration(s))) return null;
     const neu = clampWinsor(ar[0] / ar[1] - 1, bounds);
     const alt = clampWinsor(ar[1] / ar[2] - 1, bounds);
     if (Number.isFinite(neu) && Number.isFinite(alt)) return neu - alt;
@@ -245,6 +250,7 @@ function gpGrowth(s) {
   const gp = norm(s, 'annualGP');
   const two = adjacentTwoPresent(gp);
   if (!two || two[1] <= 0) return null;
+  if (annualPairRuleEnabled('growth') && !annualPairPasses(checkAnnualPair(s, 'annualGP', 0, 1))) return null;
   const gpYoY = two[0] / two[1] - 1;
   // GM-Trajektorie (Margenpunkt-Delta neu vs. alt), additiver Tilt
   // audit/fix (Court Fall 1, F9): gm-Endpunkte gegen physikalisch unmoegliche Werte guarden.

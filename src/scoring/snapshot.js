@@ -252,6 +252,7 @@ const MS_PRO_TAG = 86400000;
 // eine Kandidaten-Entscheidung kippen. Deshalb: das aus der Tagesnummer zurueckformatierte
 // Datum muss dem Original entsprechen, sonst null (ehrlich kein Datum statt ein falsches).
 // 0 Vorkommen im lokalen Bestand — die Pruefung kostet nichts und schliesst die Klasse.
+/** Converts a round-trip validated ISO day to UTC days. @param {*} iso Stored end. @returns {number|null} Day number or null. */
 function _tagesnummer(iso) {
   if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
   const t = Date.parse(iso.slice(0, 10) + 'T00:00:00Z');
@@ -270,6 +271,19 @@ function periodEnds(snapshot, field) {
   const roh = (snapshot && snapshot.timeseries) ? snapshot.timeseries[field + 'Ends'] : undefined;
   if (!Array.isArray(roh) || roh.length !== werte.length) return werte.map(() => null);
   return roh.map((d) => (_tagesnummer(d) === null ? null : d));
+}
+
+/**
+ * Reads aligned annual ends using the same date validation as F-4.
+ * @param {object} snapshot Prepared snapshot.
+ * @param {string} field Annual value field registered in norm().
+ * @returns {Array<string|null>} Valid ISO days, or null at undated positions.
+ */
+function annualPeriodEnds(snapshot, field) {
+  const values = norm(snapshot, field);
+  const ends = snapshot && snapshot.annual && snapshot.annual[field + 'Ends'];
+  if (!Array.isArray(ends) || ends.length !== values.length) return values.map(() => null);
+  return ends.map((end) => _tagesnummer(end) === null ? null : end.slice(0, 10));
 }
 
 /**
@@ -335,5 +349,6 @@ module.exports = {
   presentValues, firstTwoPresent, recentSumPresent, metricVal, ratioSeries,
   // F-4: datumsbewusste Auswahl des Jahres-Vergleichsquartals
   periodEnds, jahresVergleichIdx, jahresFensterAusgerichtet,
+  _tagesnummer, annualPeriodEnds,
   JAHR_TAGE, JAHRESVERGLEICH_TOLERANZ_TAGE,
 };
