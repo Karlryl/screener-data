@@ -71,6 +71,7 @@
   "lib/financial-known-cases.js": { "mode": "exempt", "reason": "Pure financial correction authority compares original provider evidence; invoked by the existing shared production adapter." },
   "lib/zero-financials-guard.js": { "mode": "exempt", "reason": "Pure financial correction authority compares original provider evidence; invoked by the existing shared production adapter." },
   "scripts/financial-corrections-replay.js": { "mode": "exempt", "reason": "Read-only counterfactual replay intentionally compares original and corrected inputs; no published or historical data writes." },
+  "scripts/mcap-classes-shadow-report.js": { "mode": "exempt", "reason": "Shadow report for council question 6: imports only the size-class helpers mcapBandOf/mcapKlasseOf from score.js and reads marketCap and class share fields; it reads no quarterly value and writes only to the --out file outside the repo." },
   "scripts/fetch-exchange-quarters.js": { "mode": "exempt", "reason": "Reads frozen board-history PIT quarter gaps only to order the Taiwan fetch queue of the exchange-quarters store; writes no quarterly value into any snapshot, score or export." },
   "scripts/period-labels-check.js": { "mode": "hook", "hook": "applyFinancialCases(input).snapshot", "reason": "Offline shadow check (P68, 06.10.2026): reads fixture rows and the frozen published export only, applies the hand-table overlay itself before labelling and writes nothing." }
 }

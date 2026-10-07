@@ -5778,6 +5778,94 @@
           "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
         }
       ]
+    },
+    {
+      "caseId": "obm.ax-2024-06-30-annualRev-nonadjacent",
+      "ticker": "OBM.AX",
+      "field": "annualRev",
+      "period": "2024-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "expectedBadValue": 214236000,
+      "replacementValue": null,
+      "reason": "Ältere Jahresumsätze zurückgehalten: Der Anbieter lieferte das Geschäftsjahr bis 30.06.2025 nicht (laut Geschäftsbericht 404,3 Mio. AUD). Das Jahr bis 30.06.2024 ist nicht das Vorjahr von 2026; ein Wachstum daraus liefe über zwei Jahre. Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20250925/pdf/06ppkm0c2q3y96.pdf",
+          "page": "Annual Report 2025, PDF page 69, consolidated statement of profit or loss and other comprehensive income for the year ended 30 June 2025 (2025 and 2024 columns, A$000)",
+          "quote": "Revenue 2 404,292 214,236",
+          "unit": "AUD thousands",
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "value": 404292000
+        }
+      ]
+    },
+    {
+      "caseId": "cmm.ax-2024-06-30-annualRev-nonadjacent",
+      "ticker": "CMM.AX",
+      "field": "annualRev",
+      "period": "2024-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "expectedBadValue": 359727000,
+      "replacementValue": null,
+      "reason": "Ältere Jahresumsätze zurückgehalten: Der Anbieter lieferte das Geschäftsjahr bis 30.06.2025 nicht (laut Jahresabschluss 505,9 Mio. AUD). Das Jahr bis 30.06.2024 ist nicht das Vorjahr von 2026; ein Wachstum daraus liefe über zwei Jahre. Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20250829/pdf/06nk3sb6k3l5dr.pdf",
+          "page": "ASX release 29 August 2025 with annual financial report, PDF page 31, consolidated statement of profit or loss for the year ended 30 June 2025 (2025 and 2024 columns, A$000)",
+          "quote": "Revenue 2 505,892 359,727",
+          "unit": "AUD thousands",
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "value": 505892000
+        }
+      ]
+    },
+    {
+      "caseId": "3391.t-2024-05-31-annualRev-nonadjacent",
+      "ticker": "3391.T",
+      "field": "annualRev",
+      "period": "2024-05-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "expectedBadValue": 1027462000000,
+      "replacementValue": null,
+      "reason": "Ältere Jahresumsätze zurückgehalten: Tsuruha hat das Geschäftsjahr auf Ende Februar umgestellt; vor Februar 2026 liegt nur ein Rumpfjahr von 9,5 Monaten bis 28.02.2025, und die Firma nennt selbst keine Veränderungsrate. Das Jahr bis Mai 2024 ist nicht das Vorjahr von Februar 2026. Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www2.jpx.co.jp/disc/33910/081220260408500334_tse-acedjpsm-33910-20260409333910-ixbrl.htm",
+          "page": "2026年2月期 決算短信〔日本基準〕(連結), 1. (1) 連結経営成績, note 2 (決算期変更)",
+          "quote": "2025年２月期は決算期変更の経過期間となることから9.5ヶ月決算となっております。このため、2026年２月期及び2025年２月期の対前期増減率は記載しておりません。"
+        }
+      ]
+    },
+    {
+      "caseId": "3391.t-2025-02-28-annualRev-shortyear",
+      "ticker": "3391.T",
+      "field": "annualRev",
+      "period": "2025-02-28",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "expectedBadValue": 845603000000,
+      "replacementValue": null,
+      "reason": "Rumpfjahr zurückgehalten: Das Geschäftsjahr bis 28.02.2025 umfasst wegen der Umstellung nur 9,5 Monate (845,6 Mrd. JPY); ein Vergleich mit dem vollen Jahr bis Februar 2026 ergäbe kein Jahreswachstum, und die Firma nennt selbst keine Veränderungsrate. Ältere Jahre fehlen mit, damit keine Lücke entsteht.",
+      "sources": [
+        {
+          "url": "https://www2.jpx.co.jp/disc/33910/081220260408500334_tse-acedjpsm-33910-20260409333910-ixbrl.htm",
+          "page": "2026年2月期 決算短信〔日本基準〕(連結), 1. (1) 連結経営成績 (売上高, 百万円) and note 2 (決算期変更)",
+          "quote": "2025年２月期は決算期変更の経過期間となることから9.5ヶ月決算となっております。",
+          "unit": "JPY millions",
+          "start": "2024-05-16",
+          "end": "2025-02-28",
+          "value": 845603000000
+        }
+      ]
     }
   ],
   "quarantines": [
