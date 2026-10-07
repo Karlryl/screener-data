@@ -191,6 +191,8 @@ const BRANCHES = [
 // Die Lampe sagte nur an/aus: ein Kohorten-Spitzenreiter mit +1 % Aktienzahl im Jahr sah aus
 // wie einer mit +66 %. NUR Zeilen mit der Lampe duerfen einen Betrag fuehren — und sie
 // MUESSEN einen fuehren; checkShareDilution prueft beide Richtungen.
+// P22/P118: the files that carry provenance against provenance/hypergrowth.json.
+const PROVENANCE_FILES = () => [...BRANCHES.map(id => id + '.json'), 'overview.json'];
 const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct', 'profitStreak', 'einmalertragPrognose', 'einmalertragBewertbarkeit', 'shareDilution'];
 // Task 4.5: profitStreak = {jahre, basis, tiefe, mindestens, letzterVerlust} | null.
 // Additiv OPTIONAL wie revGrowthYoYPct. Belegte Laenge der ununterbrochenen Gewinnserie
@@ -1164,7 +1166,9 @@ function build(seam = {}) {
       ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
       'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
   }
-  const provenancePaths = BRANCHES.map(id => id + '.json');
+  // P118: overview.json (the flat cross-branch feed findash's HyperGrowth tab reads) is annotated against
+  // the SAME manifest as the branch boards; same ticker and value give the same evidence ids.
+  const provenancePaths = PROVENANCE_FILES();
   let provenanceFiles;
   try {
     // Baseline boards are complete. Only detached objects receive annotations.
@@ -1769,7 +1773,7 @@ function validateExport(outDir = OUT_DIR, opts = {}) {
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(provenanceErrors(outDir, BRANCHES.map(id => id + '.json'), opts.requireProvenance))
+  return errs.concat(provenanceErrors(outDir, PROVENANCE_FILES(), opts.requireProvenance))
              .concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
              .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
              .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
