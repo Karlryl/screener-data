@@ -28,9 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 216 authorized cells (199 quarterly, 17 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 216);
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 17);
+test('all 225 authorized cells (206 quarterly, 19 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 225); // P129: +9
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 19); // P129: +2
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -53,7 +53,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 216);
+  assert.equal(validateTable(clone(table)).cases.length, 225); // P129: +9
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -1049,7 +1049,7 @@ test('replacement values trace to their sources: the whole real table passes, a 
   // The 162 cases of revision 2026-10-01c plus four annual P106 withholds:
   // 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one issuer-rounded confirmation
   // (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 33 });
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 106, difference: 16, rounded: 1, exempt: 10, null: 38 }); // P129: +5 non-MODEC withholds; P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year)
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
@@ -1364,9 +1364,10 @@ test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture
     '3391.t-2025-02-28-annualRev-shortyear']);
   assert.equal(added.size, 4, 'exactly four P106 cases are new');
   for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
-  const legacy = key => key === 'cases' ? table.cases.filter(c => !added.has(c.caseId)) : table[key];
-  assert.equal(table.cases.length - legacy('cases').length, added.size, 'every added case exists');
-  const legacyFixture = Object.fromEntries(Object.entries(fixture).filter(([t]) => !['OBM.AX', 'CMM.AX', '3391.T'].includes(t)));
+  // P129: +9 withholds and +15 fixtures; all old digests and the complete coverage guard remain unchanged.
+  const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : table[key];
+  assert.equal(table.cases.length - legacy('cases').length, added.size + 9, 'every added case exists'); // P129: +9
+  const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [
     ['cases', 212, '7da9c61f93bbeff5cfdf2b6d6485a630f16ee1bdacd3dc9afb69241a5ef1a503'],
     ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],

@@ -74,7 +74,7 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die sechs gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "d43eea326244576024cbceeb3464558ac3caa356a47600015009d996c5a2762a",
+    "src/scoring/axes.js": "5eb51891020ca59abbd6693fa57d8da493fb5acd3335f2d398744da67c709eb0",
     "src/scoring/score.js": "a5af5595213c0ebffda09b34864384451b399acbc79cb335d099cd0d30534c1f",
     "src/scoring/smallcap-route.js": "46311394e2175e28e796efc5bb0453c4bed8f2802e6a21c4dfdb17fe204aa132",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
@@ -84,7 +84,7 @@
   },
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
-    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg.",
+    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow).",
     "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair.",
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm",
@@ -136,5 +136,15 @@
     "previousPendingSha256LF": "48022620d5dc488600b6d1dec1a5e048f26d9f6832daaaf7c8646884614d5288",
     "evidence": "verify() recomputes the 25 golden traces (none carries a record) and reproduces the sealed traces; its score/rank mismatch zeros come from the committed production-equivalence proof of the 1.1.0 seal. Universe identity comes from the separate re-score over 16,114 live-store snapshots: new code without records byte-identical to old code; records on quarter-leg rows inert. Live store with the 12 records: growth changes on 4 rows (9992.HK, SKS.AX, UEC, 6227.T); 002294.SZ changes only after its quarterly series is replaced by a full pull (pre-existing quarter-merge behaviour picks quoteSummary 2018/2019 quarters). Builder evidence: VORHER-NACHHER.md of PR #401.",
     "review": "Build registration only; independent blind release review remains required. No merge by the builder."
+  },
+  "annualPairsShadow": {
+    "date": "2026-10-07",
+    "authority": "Ratsblock Frage 10 of 06.10.2026, option A as a shadow on the Formel-Weg; master decision 15:4x with a window of 334-397 days. Production switch off, so no formula, weight or threshold change and no production value change.",
+    "scope": "Only the axes.js fingerprint; the four annual-pair sites consult the rule controlled by withAnnualPairRule from lib/annual-pairs.js, default off. No other src/scoring file differs from cea8e79876.",
+    "file": "src/scoring/axes.js",
+    "sourceSha256LF": "5eb51891020ca59abbd6693fa57d8da493fb5acd3335f2d398744da67c709eb0",
+    "previousPendingSha256LF": "d43eea326244576024cbceeb3464558ac3caa356a47600015009d996c5a2762a",
+    "evidence": "verify() rebuilds the 25 golden traces byte-identically. Checks: tests/scoring/gqs00-freeze.test.js, tests/scoring/annual-pairs.test.js, tests/annual-pairs-shadow-export.test.js, tests/p115-jahrespaare-vorher-nachher.test.js, tests/p51-pr404.test.js, tests/scoring/dup-issuer-shadow-export.test.js, tests/yahoo-q4-known-cases.test.js; full gate node scripts/test-gate.js --mode=all.",
+    "review": "Build registration only; two independent Claude blind reviews ordered by the master; no merge by the builder"
   }
 }

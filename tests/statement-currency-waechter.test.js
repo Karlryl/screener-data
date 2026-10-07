@@ -75,7 +75,7 @@ for (const [ticker, currency, listing, annual, ttm, quarter] of [
   });
 }
 
-pruefe('presence: MODEC corrects annual USD statements and retains quarterly JPY conversion', () => {
+pruefe('presence: MODEC retains annual USD statements and withholds quarterly revenue per council F5', () => {
   const raw = snap('6269.T', 'JPY', 'JPY', 4581232e3, 814098022400);
   raw.annual.annualOCF = [{ value: 350e6 }, null, -10e6];
   raw.annual.annualBalance = [{ totalAssets: 8000e6, totalCash: 500e6 }];
@@ -86,8 +86,11 @@ pruefe('presence: MODEC corrects annual USD statements and retains quarterly JPY
   const f = s.meta.fxRateApplied;
   assert.ok(f > 0 && f < 0.02, 'JPY factor expected');
   assert.deepStrictEqual(s.annual, raw.annual, 'all annual USD amounts and share counts must stay unchanged');
-  assert.ok(close(s.timeseries.revenueQ[0].value, 225152e6 * f), 'MODEC quarter must keep the JPY factor');
-  assert.ok(close(s.timeseries.revenueQ[1].value, 172224e6 * f));
+  // RATSBLOCK-2026-10-06 F5: JPY-derived quarters remain empty until reporting-currency quarters exist.
+  assert.strictEqual(s.timeseries.revenueQ[0].value, null);
+  assert.strictEqual(s.timeseries.revenueQ[1].value, null);
+  assert.match(s.timeseries.revenueQ[0].financialCorrection.reason, /Ratsbeschluss F5/);
+  assert.match(s.timeseries.revenueQ[1].financialCorrection.reason, /Ratsbeschluss F5/);
   assert.deepStrictEqual(s.timeseries.ocfQ, [{ value: 20e9 * f }, null, -2e9 * f]);
   assert.deepStrictEqual(s.timeseries.revenueQEnds, raw.timeseries.revenueQEnds);
   assert.ok(close(s.metrics.revenueTTM.value, 814098022400 * f));
@@ -111,7 +114,9 @@ pruefe('absence: D3 NOT_A_CASE Pop Mart retains CNY conversion despite the suspi
 pruefe('annual-only row whose mismatch disappeared falls back for both series', () => {
   const s = _convertSnapshotToUSD(snap('6269.T', 'JPY', 'JPY', 717100e6, 814098022400));
   assert.ok(close(s.annual.annualRev[0].value, 717100e6 * s.meta.fxRateApplied));
-  assert.ok(close(s.timeseries.revenueQ[0].value, 1446.7e6 * s.meta.fxRateApplied));
+  // RATSBLOCK-2026-10-06 F5: a drifted MODEC quarterly fingerprint fails closed as well.
+  assert.strictEqual(s.timeseries.revenueQ[0].value, null);
+  assert.strictEqual(s.timeseries.revenueQ[0].financialMissing.reasonCode, 'vendor-value-changed');
   assert.ok(/no longer visible/.test(s.meta._statementCcyHandTableStale));
   assert.strictEqual(s.meta.statementCurrencySource, undefined);
   assert.strictEqual(s.meta.statementCurrencySeries, undefined);
