@@ -774,3 +774,205 @@ Gesamtprüfung `node scripts/test-gate.js --mode=all`: 580 echte Testdateien, 49
 Befehle und Ausgaben liegen unter _scratch/f2: targeted-financial-final.log (42/41), targeted-q4-final.log, targeted-gqs-final.log, targeted-fx-final.log sowie full-test-gate-final.log. Reproduzierbare Belege sind die beiden echten Module mapFTSToQuarterly/_convertSnapshotToUSD, die Quellen-Handtabelle und financial-corrections-replay.js. Keine Datenhistorie, Formel, Achsengewichtung oder eingefrorene GQS-Referenz wurde verändert.
 
 Git-Abschluss (Stand 30.09.): Der ursprüngliche Lauf konnte wegen index.lock nicht committen. Inzwischen liegen alle Änderungen als Commits „Tag 1389“, „Tag 1389b“ und „Tag 1389c“ auf fix/banpu-htgc-and-false-zeros-20260929 und sind gepusht (PR #398); kein Merge. Sitzungs-ID und vorgesehene Trailer stehen in financial-corrections-validation.json.
+
+## Handtabelle P129 vom 07.10.2026
+
+> **Auf einen Blick**
+>
+> Neun neue Tabellenfälle ohne neue Abdeckung ändern neun Quellzellen bei fünf beauftragten Tickern; es gibt **0 andere Quellwerte**.
+> * 123 fachliche JSON-Ergebnisse der Vorher-Wiederholung sind bitidentisch; alle 16.924 Rohdateien bleiben unverändert.
+> * MAD.AX wechselt auf den richtigen Jahresvergleich mit 14,78 %, AIAI wird leer und MODEC erhält vier leere Quartale gemäß F5.
+> * Die fünf Quartalspaare sind vollständig aus dem Kandidaten entfernt und bleiben OPEN. AJBU.SI und 1ANE.MI verwenden gegen die vollständigen Emittentenabschlüsse bestätigte Jahrespaare.
+
+Alle Fingerabdrücke und Ersatzbeträge stehen in ganzen Einheiten der ursprünglichen Zellwährung, nicht in den bereits auf USD umgerechneten Snapshot-Beträgen. Gegenprobe an bestehenden Fällen und deren Fixtures: HTGC 158.252.000 USD × 1 = 158.252.000 gespeicherte USD; CIG-C 1.804.157.000 BRL × 0,19479507 = 351.440.889,10599 gespeicherte USD. Für jeden neuen Fall gilt der im jeweiligen Rohpaket gespeicherte Währungsfaktor. Die Tabellen unten runden nur zur lesbaren Darstellung auf Cent; JSON und CSV bewahren die gespeicherten Zahlen. Ein leeres Feld ist null, niemals ein Ersatzbetrag von 0.
+
+### Jede geänderte Quellzelle
+
+| Ticker | Periode | Feld | Währung | Vorher | Nachher | Auslöser |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1ANE.MI | 2022-09-30 | timeseries.revenueQ[0] | EUR | 1.133.660.000 | leer | 1ane.mi-2022-09-30-revenueQ-p129 |
+| 6269.T | 2026-06-30 | timeseries.revenueQ[0] | JPY | 225.152.000.000 | leer | 6269.t-2026-06-30-revenueQ-p129 |
+| 6269.T | 2026-03-31 | timeseries.revenueQ[1] | JPY | 172.224.000.000 | leer | 6269.t-2026-03-31-revenueQ-p129 |
+| 6269.T | 2025-12-31 | timeseries.revenueQ[2] | JPY | 218.333.000.000 | leer | 6269.t-2025-12-31-revenueQ-p129 |
+| 6269.T | 2025-09-30 | timeseries.revenueQ[3] | JPY | 197.686.707.200 | leer | 6269.t-2025-09-30-revenueQ-p129 |
+| AJBU.SI | 2021-03-31 | timeseries.revenueQ[0] | SGD | 67.570.000 | leer | ajbu.si-2021-03-31-revenueQ-p129 |
+| MAD.AX | 2023-06-30 | timeseries.revenueQ[0] | AUD | 172.844.000 | leer | mad.ax-2023-06-30-revenueQ-p129 |
+| AIAI | null | annual.annualRev[0] | USD | 271.996.000 | leer | aiai-2025-12-31-annualRev-p129 |
+| AIAI | null | annual.annualRev[1] | USD | 23.616.400.000 | leer | aiai-2024-12-31-annualRev-p129 |
+
+Zehn Quartalsersatz- und Bestätigungsfälle sowie fünf Abdeckungseinträge wurden nach Claudes Prüfung vollständig aus dem Kandidaten entfernt. Die 15 zuvor ausgeblendeten realen Zwischenquartale bleiben unverändert. Die alten 216 Fälle und sämtliche alten Abdeckungs-, Quarantäne- und Periodenetiketten-Zeilen bleiben erhalten. AJBU.SI und 1ANE.MI behalten ihre belegten Jahreswerte; die genaue Quellenprüfung steht unten.
+
+### Board-Wirkung aus dem eingefrorenen Replay
+
+| Ticker | Wachstum vorher | Wachstum nachher | P69-Ziel | Tatsächliche Wirkung |
+| --- | --- | --- | --- | --- |
+| CDR.WA | 12,67 % (Quartal) | 12,67 % (Quartal) | 39,6 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| 000552.SZ | 22,2 % (Quartal) | 22,2 % (Quartal) | 21,2 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| BYLOT.AT | 246,89 % (Quartal) | 246,89 % (Quartal) | 219,2 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| 000688.SZ | 200,07 % (Quartal) | 200,07 % (Quartal) | 55,3 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| GRANULES.NS | 21,19 % (Quartal) | 21,19 % (Quartal) | 22,04 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| MAGN | -7,1 % (Jahr) | -7,1 % (Jahr) | 2,15 % | Offen; Perioden fehlen |
+| AJBU.SI | 12,11 % (Quartal) | 42,24 % (Jahr) | 10,96 % | Altes Quartal zurückgehalten; Jahrespaar durch Emittentenabschluss bestätigt; neues Quartalspaar fehlt |
+| MAD.AX | 59,38 % (Quartal) | 14,78 % (Jahr) | 14,78 % | Ziel erreicht; im Vollboard sichtbar, aus Industrials-Top100 ausgeschieden |
+| 1ANE.MI | 49,28 % (Quartal) | -4,04 % (Jahr) | Alter Quartalsvergleich zurückhalten; Ersatzperiode offen | Alter Vergleich beendet; bestätigtes Jahrespaar im Vollboard; aus Utilities-Top100 ausgeschieden |
+| AIAI | -98,85 % (Jahr) | leer (keine Basis) | Nicht vergleichbares Wachstum leer | Wachstum leer; gesamte Smallcap-Industrials-Zeile entfällt |
+| 6269.T | 9,43 % (Jahr) | 9,43 % (Jahr) | Vier Quartale leer gemäß F5 | Vier Quartale leer; Jahreswert unverändert |
+| GRGD.TO | 29,78 % (Quartal) | 29,78 % (Quartal) | Perioden 2026-08-01 / 2025-08-02 | Offen; Währungsprüfung verhindert Periodenetikett |
+| HMSO.IR | 78,49 % (Jahr) | 78,49 % (Jahr) | 74,57 % | wartet auf #431 |
+| SLX.AX | 95,56 % (Jahr) | 95,56 % (Jahr) | 88,62 % | wartet auf #431 |
+| CPPLUS.NS | 89,51 % (Quartal) | 89,51 % (Quartal) | 81,33 % Bruttogewinn | wartet auf #431; Umsatzwachstum nur Diagnose, exakter Ticker nicht im Export |
+| ARGX | 59,82 % (Quartal) | 59,82 % (Quartal) | Börsenwert 57,70 Mrd. USD, datiert | Offen; Aktienzahlbereiche überlappen |
+| LLY | 47,67 % (Quartal) | 47,67 % (Quartal) | Börsenwert 1.075,8 Mrd. USD, datiert | Offen; Aktienzahlbereiche überlappen |
+| 688428.SS | 135,27 % (Jahr) | 135,27 % (Jahr) | Börsenwert 3,78 Mrd. USD, datiert | Offen; zwei Klassen und Nicht-USD |
+| 301200.SZ | 72,68 % (Jahr) | 72,68 % (Jahr) | Börsenwert 15,15 Mrd. USD, datiert | Offen; zwei Klassen und Nicht-USD |
+| 0622.HK | 33,97 % (Jahr) | 33,97 % (Jahr) | Börsengang 1991 | Offen; keine IPO-Handkorrektur |
+
+AIAI entfällt als ganze Smallcap-Zeile. 1ANE.MI und MAD.AX stehen nachher mit dem genannten Jahresvergleich im Vollboard, aber nicht mehr in den betreffenden Top 100. CPPLUS.NS fehlt im Export; sein hier genanntes Umsatzwachstum ist nur eine Rohpaketdiagnose. Vergleich, jede Quellzelle, abgeleitete Feldzählungen und sämtliche Top-20-/Top-100-Wechsel stehen in outputs/p129-replay/vorher-nachher.md und .csv. Nachweis: neun Quellzellen bei fünf beauftragten Tickern, 0 andere Quellwerte, 123 bitidentische Wiederholungsergebnisse, alle 16.924 Rohdateien unverändert. Tatsächliche Schreibziele außerhalb outputs/p129-replay: keine.
+
+### Prüfungen und Quellen
+
+Der vorgegebene Testbefehl besteht mit Exit 0, 32 Tests, 32 bestanden und 0 fehlgeschlagen. Darunter bestehen die 13 P129-Prüfblöcke und die Einzelentnahme aller neun neuen Tabellenzeilen. Die alten Prüfsummen bleiben unverändert; insbesondere sind alle 216 alten Fälle, 34 alten Abdeckungen, 11 Quarantänen, 16 Periodenetiketten und 45 bisherigen Fixtures erhalten. 15 echte Rohpakete wurden als Fixtures ergänzt. Alle neun Einzelentnahmen wurden außerdem als echte CLI-Aufrufe mit erwarteter Exit-Nummer 1 wiederholt; red-once-proofs.json enthält jede Ausgabe. Es wurden keine neuen Modul-Exporte angelegt; der JSDoc-Test besteht.
+
+Die MODEC-Prüfung erwartet nun gemäß RATSBLOCK-2026-10-06 F5 leere Quartalsumsätze mit Begründung. Nur MODEC-bezogene Quartalsaussagen wurden angepasst; Prüfungen zu Jahreswerten, Cashflow, Währungsfaktoren und allen anderen Firmen bleiben erhalten. ARGX und LLY wurden zusätzlich mit den echten 06.10.-Snapshots gegen den vorhandenen Aktienzahltabellen-Lader geprüft; beide Kandidaten scheitern an dessen unverändertem Schutz vor überlappenden Aktienzahlbereichen.
+
+Echte rote Gegenprobe, nur durch Entnahme einer Zeile aus einer Speicherkopie, Exit 1:
+
+```text
+P129_RED_CASE=mad.ax-2023-06-30-revenueQ-p129
+AssertionError [ERR_ASSERTION]: mad.ax-2023-06-30-revenueQ-p129: corrected cell
++ actual - expected
++ 120507567.93011999
+- null
+```
+
+Die Hash-Prüfung der echten Eingaben lief auch beim absichtlichen Fehler; es wurde keine Live-Zeile beschädigt. Vollständige Ausgaben: tests-final.log, red-once.log und share-count-probe.log.
+
+| Ticker | Quelle | Seite | Wörtliches Zitat | Berichtseinheit |
+| --- | --- | --- | --- | --- |
+| MAD.AX | [Quelle](https://clients3.weblink.com.au/pdf/MAD/03125319.pdf) | PDF S. 63 | „Total operating revenue 1,001,140 872,202“ | AUD thousands |
+| AJBU.SI | [Quelle](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcr-1h-2026-unaudited-results.pdf) | PDF S. 4 | „Gross Revenue 242,048 211,309“ | SGD thousands |
+| AJBU.SI | [Quelle](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcreit-1q-2026-operational-updates.pdf) | PDF S. 6 | „Gross Revenue 120,956 102,179“ | SGD thousands |
+| 1ANE.MI | [Quelle](https://www.cnmv.es/webservices/verdocumento/ver?t=%7B4c831015-242a-423a-9a67-ddcc2bc17119%7D) | PDF S. 11, printed page 10 | „TOTAL Revenues 1,288 1,469“ | EUR millions |
+| AIAI | [Quelle](https://www.sec.gov/Archives/edgar/data/2096362/000149315226022855/form424b4.htm) | Printed page 110, explanation page 111 and pro forma page 92 | „Total revenue — —“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2026_2Q_results_en.pdf) | PDF S. 9 | „Revenue 2,074,296 2,447,050“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2026_1Q_results_en.pdf) | PDF S. 9 | „Revenue 873,038 1,077,078“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2025_YE_results_en.pdf) | PDF S. 13 | „Revenue 4,186,461 4,581,232“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2025_3Q_results_en.pdf) | PDF S. 9 | „Revenue 2,994,718 3,351,705“ | USD thousands |
+
+### Quartalspaare: vollständig OPEN und aus dem Kandidaten entfernt
+
+Die folgende Messung unterscheidet ausdrücklich den verworfenen ersten Kandidaten vom endgültigen Stand. Kein verworfener Jahreswert ist eine Wirkung des endgültigen Kandidaten.
+
+| Ticker | Ursprüngliches Quartalswachstum | Verworfener Kandidat: Jahreswachstum | Endgültig: unverändertes Quartalswachstum | P69-Quartalsziel |
+|---|---:|---:|---:|---:|
+| CDR.WA | 12,673139 % | 8,594615 % | 12,673139 % | 39,599268 % |
+| 000552.SZ | 22,20494 % | -19,130828 % | 22,20494 % | 21,195349 % |
+| BYLOT.AT | 246,891413 % | 34,794544 % | 246,891413 % | 219,201064 % |
+| 000688.SZ | 200,065764 % | 17,130394 % | 200,065764 % | 55,297842 % |
+| GRANULES.NS | 21,193142 % | 19,814869 % | 21,193142 % | 22,036747 % |
+
+Alle zehn Ersatz- und Bestätigungsfälle, die fünf Abdeckungseinträge und die fünf nur hierfür ergänzten Fixtures sind aus dem aktiven Kandidaten entfernt. Die 15 realen Zwischenquartale bleiben deshalb unverändert. Offen sind quellengeprüfte Bestätigungszellen für eine vollständig passende Quartalsreihe, insbesondere 2026-03-31, 2025-12-31 und 2025-09-30. Bei den beiden chinesischen Reihen fehlt 2025-09-30 im Rohbestand; dort wurde zuvor zusätzlich die vorhandene Periode 2025-03-31 ausgeblendet. Fehlende Zellen kann die Handtabelle nicht ergänzen. Alternativ wäre eine Änderung von `lib/financial-known-cases.js::applyFinancialCases`, `lib/rev-growth-basis.js::revGrowthLeg` oder `src/scoring/axes.js::revQuartalsYoY` nötig. Das ist eine Methodenfrage für den Master und wird hier nicht umgesetzt.
+
+Die Fehlwirkung des verworfenen Kandidaten und der ursprüngliche Datenstand sind unter rejected-candidate-before-claude-review archiviert. Die neue Vergleichsrechnung prüft für alle fünf Ticker zusätzlich die vollständige Gleichheit der Wachstumsbasis und 0 geänderte Quellzellen.
+
+Die Paarrechnungen lauten jeweils `(aktuell / Vorjahr − 1) × 100`. Quellen und Ableitung:
+
+* CDR.WA: [H1-Bericht](https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf), PDF S. 7, „Sales revenue 435 308 355 021“, minus [Q1-Bericht](https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf), PDF S. 7, „Sales revenue 191 107 180 091“. Jeweils Tausend PLN; nur fortgeführte Tätigkeiten nach dem GOG-Abgang. Beide Quellen neu geöffnet.
+* 000552.SZ: [H1](https://static.cninfo.com.cn/finalpage/2026-08-25/1225495701.PDF), PDF S. 2, und [Q1](https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF), PDF S. 2, „营业收入（元）“, Vergleichsspalte „调整后“. H1 4.697.622.710,99 / 3.767.757.991,30 minus Q1 2.495.330.187,99 / 1.950.615.225,65 CNY. Beide Quellen neu geöffnet.
+* BYLOT.AT: [H1](https://ballysintralot.com/wp-content/uploads/2026/09/Report_IFRS_1%CE%97_2026_EN_final.pdf), PDF S. 42, gedruckt S. 41, und [Q1](https://ballysintralot.com/wp-content/uploads/2026/08/Report_IFRS_Q12026_EN.pdf), PDF S. 5, gedruckt S. 4, jeweils „Revenue“. Tausend EUR: H1 544.161 / 182.047 minus Q1 268.084 / 95.557. Vorjahr reklassifiziert; der veränderte Konzernkreis ist kein organisches Wachstum. Beide Quellen nicht neu geöffnet; Beträge und Zitate aus P69 und dem dort genannten P06-Bericht.
+* 000688.SZ: [H1](https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-27/63fc6eef-28b1-4473-9984-2d6c192c4f87.PDF), PDF S. 8, und [Q1](https://static.cninfo.com.cn/finalpage/2026-04-23/1225144333.PDF), PDF S. 2, „营业收入（元）“, „调整后“. H1 3.362.995.987,59 / 2.159.670.362,38 minus Q1 1.696.217.709,13 / 1.086.391.910,94 CNY. Beide Quellen neu geöffnet.
+* GRANULES.NS: [Konzernrechnung](https://www.bseindia.com/xml-data/corpfiling/AttachHis/e573b415-05b3-456d-97f7-b731a64f118b.pdf), PDF S. 7, „Total revenue from operations“, „Rs in millions“: 14.767,74 / 12.101,06 Mio. INR. Produktumsatz allein lässt sonstige Betriebserlöse aus. Exaktes PDF nicht neu geöffnet; die [Ergebnismeldung](https://nsearchives.nseindia.com/corporate/GRANULES_21072026123641_NSEBSEPR.pdf), PDF S. 2, „Revenue from Operations“, wurde neu geöffnet und bestätigt gerundet 14.768 Mio. INR und 22 %.
+
+### Fehlende Perioden und Zeitangaben
+
+| Ticker | Bestätigtes Ziel und Stand des Kandidaten | Konkrete Lücke |
+|---|---|---|
+| MAGN | Quartal 27.06.2026 / 28.06.2025 mit 857.000.000 / 839.000.000 USD, 2,145411 %. Kein Eintrag. | In der eingefrorenen Reihe stehen Kalenderenden 30.06.2026, 31.03.2026, 31.12.2025 und 30.09.2025; das Vorjahresquartal und die beiden exakten Geschäftsquartalsenden fehlen. `lib/financial-known-cases.js::applyFinancialCases` kann keine Zellen anlegen. Auch eine reine Datumsumbenennung würde den fehlenden Nenner nicht liefern. |
+| AJBU.SI | Gewünschtes Quartal 30.06.2026 / 30.06.2025 mit 121.092.000 / 109.130.000 SGD, 10,961239 %. Das veraltete aktuelle Quartal wird zurückgehalten; gegen den vollständigen Emittentenjahresabschluss bestätigter Jahresvergleich nun 42,243149 %. | In der Rohreihe fehlen beide neuen Quartale; vorhanden sind nur alte Perioden aus 2021/2020. `applyFinancialCases` kann sie nicht ergänzen. Der Jahresrückfall ist keine Umsetzung des gewünschten Quartalsvergleichs. |
+| 1ANE.MI | Veralteter Vergleich mit aktuellem Ende 30.09.2022 wird durch gezieltes Zurückhalten des aktuellen Quartals beendet. Der gegen den vollständigen Emittentenjahresabschluss bestätigte Jahreszweig zeigt −4,035433 % statt des alten Quartalswerts 49,277748 %. | Der neuere Beleg enthält nur H1 2026/2025, kein eigenständiges vergleichbares Q2-Paar. `applyFinancialCases` kann weder fehlende Quartale ergänzen noch eine neue Halbjahresbasis schaffen; `revGrowthLeg` kennt hier den bestehenden Jahresrückfall. |
+| GRGD.TO | Nur Periodenetiketten sollen 01.08.2026 / 02.08.2025 lauten; 423.638.000 / 326.425.000 CAD und 29,781114 % bleiben richtig. Kein Eintrag. | Der Periodenetikettenpfad in `lib/financial-known-cases.js::applyFinancialCases` verlangt `env.factor === 1`. Im echten Snapshot liegt CAD mit Faktor 0,72103256 vor. Ein Eintrag würde dort nicht angewandt; eine Erweiterung muss die vorhandene Währungsprüfung erhalten. |
+| 0622.HK | Börsengangsjahr 1991 statt Rohwert 2000. Kein Eintrag. | `pull-yahoo.js::pullAll` leitet `ipoYear` ab; eine Handkorrektur für dieses Feld besteht nicht. Sie müsste dort samt Übernahme in den Snapshot ergänzt werden. |
+
+Belege:
+
+* MAGN: [10-Q](https://www.sec.gov/Archives/edgar/data/41719/000004171926000049/form10q.htm), gedruckte S. 4, „Net sales“, 857 / 839 Mio. USD und die ausdrücklich genannten Geschäftsquartalsenden. Neu geöffnet.
+* AJBU.SI: [H1](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcr-1h-2026-unaudited-results.pdf), PDF S. 4, „Gross Revenue 242,048 211,309“, minus [Q1](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcreit-1q-2026-operational-updates.pdf), PDF S. 6, „Gross Revenue 120,956 102,179“. Tausend SGD; beide neu geöffnet.
+* 1ANE.MI: [H1-Ergebnisbericht](https://www.cnmv.es/webservices/verdocumento/ver?t=%7B4c831015-242a-423a-9a67-ddcc2bc17119%7D), PDF S. 11, gedruckt S. 10, „TOTAL Revenues 1,288 1,469“. Halbjahr, Mio. EUR. [FY2025](https://www.acciona-energia.com/content/dam/energiacom/accionistas-e-inversores/informacion-financiera/informes-trimestrales/2025/acciona-energia-results-report-2025.pdf), PDF S. 10, gedruckt S. 9, „TOTAL Revenues“: gerundet 2.925 / 3.048 Mio. EUR ergeben −4,035433 %; die Meldung nennt −4,1 %. Beide Quellen neu geöffnet.
+* GRGD.TO: [Q2-Abschluss](https://investisseurs.groupedynamite.com/image/GDI-Q2-2026-Financial-Statements-FR_FINAL.pdf), PDF S. 2, „1er août 2026“ / „2 août 2025“, jeweils 13 Wochen. Nicht neu geöffnet; P69 und P05 enthalten die Bestätigung.
+* 0622.HK: [HKEX Fact Book 2019](https://www.hkex.com.hk/-/media/HKEX-Market/Market-Data/Statistics/Consolidated-Reports/HKEX-Fact-Book/HKEX-Fact-Book-2019/FB_2019.pdf), PDF S. 232, gedruckt S. 230, „00622 Oshidori International Holdings Ltd. Bermuda 1991/09/16“. Im selben Lauf vom Mechanismenhelfer neu geöffnet und bestätigt.
+
+### Börsenwerte: bestehende Aktienzahltabelle passt nicht
+
+| Ticker | P69-Vergleichsrechnung, kein heutiger Festwert | Konkrete Lücke |
+|---|---|---|
+| ARGX | 62.767.243 Aktien vom 20.08.2026 × 919,21 USD vom 02.10.2026 = 57.696.277.438,03 USD, rund 57,70 Mrd. USD. | Rohstand 06.10.: 56.769.351.680 USD / 912,87 USD = 62.187.772,2786 implizite Aktien. Das liegt schon innerhalb der bestehenden 3-%-Bestätigungstoleranz zur Emittentenanzahl. `lib/ads-hand-table.js::applyShareCountTable` stuft diesen Kandidaten als bestätigt ein; `loadShareCountTable` weist die überlappenden richtigen/falschen Aktienzahlbereiche zurück. Eine andere Toleranz oder ein datierter Bestandsmechanismus wäre eine gesonderte Codeänderung. |
+| LLY | 941.357.065 Aktien vom 03.08.2026 × 1.142,85 USD vom 02.10.2026 = 1.075.829.921.735,25 USD, rund 1.075,8 Mrd. USD. | Rohstand 06.10.: 1.019.367.391.232 USD / 1.143,12 USD = 891.741.366,8136 implizite Aktien. Die Abstände der Bestätigungs- und Fehlwertbereiche sind unter 6 %; `loadShareCountTable` weist deren Überlappung zurück. Keine Lockerung des Schutzes in diesem Paket. |
+| 688428.SS | 273.403.904 CNY-Aktien × 29,11 CNY × (1,1225 / 7,5259) plus 1.493.798.235 Hongkong-Aktien × 13,63 HKD × (1,1225 / 8,8084) = 3.781.705.944,1626244 USD, rund 3,78 Mrd. USD. | CNY-Notierung; `lib/ads-hand-table.js::applyShareCountTable` erlaubt nur USD-Kurszeilen. Zwei Klassen brauchen eigene Kurse und datierte Devisenfaktoren; `pull-yahoo.js::_applyAdsHandTable` übergibt hierfür kein solches Paket. |
+| 301200.SZ | 430.988.241 A-Aktien × 224,79 CNY × (1,1225 / 7,5259) plus 58.019.500 H-Aktien × 94 HKD × (1,1225 / 8,8084) = 15.145.092.270,638153 USD, rund 15,15 Mrd. USD. | Gleiche fehlende Mehrklassen- und Nicht-USD-Verarbeitung wie bei 688428.SS; eine gewöhnliche Aktienzahlzeile darf nicht alle Klassen mit einem einzigen Kurs bewerten. |
+
+Bei allen vier Vergleichen unterscheiden sich Aktienzahl- und Kursstichtag. Bestätigt ist die datierte P69-Rechenkette; ein centgenauer Wert zum 06.10.2026 ist damit nicht behauptet. Die Funktion wird beim Datenabruf aufgerufen, nicht durch den eingefrorenen Scoring-Lauf. Es gibt deshalb keine Marktwertzeile in diesem Kandidaten und keine behauptete Marktwertänderung durch den Replay.
+
+* ARGX: [EGM-Aktienzahl](https://argenx.com/content/dam/argenx-corp/media-documents/Voting-results-argenx-SE-2026-SEPTEMBER-EGM(10940312.1).pdf), PDF S. 1, „Total number of outstanding shares at the record date.“ 62,767,243; [Einladung](https://argenx.com/content/dam/argenx-corp/media-documents/2026_SEPTEMBER_EGM-Convocation_Notice.pdf), PDF S. 1, „August 20, 2026“; [ADS-Verhältnis](https://reports.argenx.com/2025/share-capital/share-capital.html), „Each ADS represents one share“. Alle drei Quellen im selben Lauf vom Mechanismenhelfer neu geöffnet. [Kurstag](https://stockanalysis.com/stocks/argx/history/), 02.10.2026, „919.21“, nur aus P69 übernommen und nicht erneut abgerufen.
+* LLY: [10-Q](https://www.sec.gov/Archives/edgar/data/59478/000005947826000081/lly-20260630.htm), Deckblatt, „Common 941,357,065“, Stand 03.08.2026, vom Mechanismenhelfer neu geöffnet und bestätigt. [Kurs-JSON](https://query1.finance.yahoo.com/v8/finance/chart/LLY?period1=1790553600&period2=1791072000&interval=1d), Tageszeile 02.10.2026, „close“, Rohkurs 1142.8499755859375, nur aus P69 übernommen und nicht erneut abgerufen.
+* 688428.SS: [Aktienzahlmeldung](https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700793.pdf), PDF S. 2, „Closing balance as at“, und S. 1, „Number of issued shares (excluding treasury shares)“. Der Mechanismenhelfer hat die URL versucht; sie wurde wegen eines Werkzeugfehlers nicht neu geöffnet. Angaben aus P69/P08; 2.486.000 eigene Hongkong-Aktien sind ausgeschlossen. [A-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/688428.SS?period1=1790553600&period2=1791072000&interval=1d), 29,11 CNY am 30.09.2026, und [Hongkong-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/9969.HK?period1=1790553600&period2=1791072000&interval=1d), 13,63 HKD am 02.10.2026, wurden nur aus P69 übernommen und nicht erneut abgerufen.
+* 301200.SZ: [Halbjahresbericht](https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-21/d0e5db05-96ad-4d6e-a5b6-663fd0f3a83c.PDF), PDF S. 42, „430,988,241 股“ und „58,019,500“, Aktienstand 30.06.2026; vom Mechanismenhelfer neu geöffnet. [A-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/301200.SZ?period1=1790553600&period2=1791072000&interval=1d), 224,79 CNY vom 30.09.2026, und [H-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/3200.HK?period1=1790553600&period2=1791072000&interval=1d), 94 HKD vom 02.10.2026, wurden nur aus P69 übernommen und nicht erneut abgerufen.
+* Devisen für beide Klassenrechnungen: [EZB](https://www.ecb.europa.eu/stats/exchange/eurofxref/shared/pdf/2026/10/20261002.pdf), PDF S. 1, „02 October 2026“, USD 1,1225, CNY 7,5259 und HKD 8,8084 je EUR. Nur aus P69 übernommen und nicht erneut abgerufen.
+
+Die Quellenstatus gelten gemeinsam für alle Helfer dieses Laufs. Insgesamt wurden 34 verschiedene Original- und Emittenten-URLs versucht: 24 wurden neu geöffnet, zehn konnten mit dem Webwerkzeug nicht neu geöffnet werden. Nicht erneut abgerufene Kurs- und EZB-Quellen sind darin nicht als fehlgeschlagene Versuche gezählt.
+
+### wartet auf #431
+
+`lib/financial-known-cases.js::validateTable` erlaubt auf diesem Stand für `annualRev` und `annualGP` nur `replacementValue: null`. Jahresersatzwerte werden ausdrücklich nicht eingetragen. Ein Merge von #431 allein bestätigt weder neue Fingerabdrücke noch den anschließend tatsächlich gewählten Wachstumszweig.
+
+| Ticker und Feld | Bestätigte Werte in ganzen Währungseinheiten | Zielwachstum | Quelle und genaue Abgrenzung |
+|---|---|---:|---|
+| HMSO.IR, annualRev | 31.12.2025: 211.400.000 GBP; 31.12.2024: 121.100.000 GBP | 74,5664739884 % | [FY2025](https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf), PDF S. 19 und Note 4 S. 31, „Revenue 2A,4 211.4 121.1“. Mio. GBP, IFRS-Konzern ohne proportionale JV-Erweiterung. Neu geöffnet. |
+| SLX.AX, annualRev | 30.06.2026: 13.708.525 AUD; 30.06.2025: 7.267.654 AUD | 88,6237979959 % | [Annual Report](https://clients3.weblink.com.au/pdf/SLX/03126941.pdf), PDF S. 52, gedruckt S. 50, „Revenue from contracts with customers 13,708,525 7,267,654“. Volle AUD, Konzernkundenumsatz ohne Zinsertrag; einschließlich Zinsen wäre es ein anderer Vergleich mit 76,869910 %. Nicht neu geöffnet. |
+| CPPLUS.NS, annualGP | 31.03.2026: 12.139.000.000 INR; 31.03.2025: 6.694.280.000 INR | 81,3339149244 % | [Konzernjahresabschluss](https://adityagroup.com//uploads/investor/resultandreport/financialresult/Financial_Results_for_quarter_and_financial_year_ended_March_31_2026.pdf), PDF S. 6, „Revenue from operations“, „Cost of materials consumed“, „Purchases of stock-in-trade“. GP aus berichteten Operanden abgeleitet, nicht als exakt so gedruckte Zwischensumme ausgegeben. Nicht neu geöffnet. |
+
+CPPLUS-Rechnung in Mio. INR: FY2026 `42.208,12 − (20.312,79 + 6.925,12 + 2.831,21) = 12.139,00`; FY2025 `31.118,72 − (7.038,30 + 18.031,57 − 645,43) = 6.694,28`. Die [Präsentation](https://adityagroup.com//uploads/investor/statutorycommunications/earninginvestorcall/Investor_Presentation_for_quarter_and_financial_year_ended_March_31_2026.pdf), PDF S. 17, „Gross Profit“, bestätigt laut P69 die gerundeten Crore-Beträge 1.213,9 / 669,4 und 81,3 %; in diesem Lauf nicht erneut geöffnet.
+
+MAD.AX gehört zum angefragten Jahrespaket, benötigt im eingefrorenen Stand aber keinen Jahresersatz: Die vorhandenen Werte zum 30.06.2026 / 30.06.2025 sind bereits 1.001.140.000 / 872.202.000 AUD und ergeben 14,7830433776 %. Das Zurückhalten des veralteten aktuellen Quartals schaltet auf diesen vorhandenen Jahresvergleich um. [Jahresbericht](https://clients3.weblink.com.au/pdf/MAD/03125319.pdf), PDF S. 63, „Total operating revenue 1,001,140 872,202“, Tausend AUD; nicht neu geöffnet. Kein MAD-Jahreseintrag wartet hier auf #431.
+
+### Absichtlich leere Werte ohne Ersatzbehauptung
+
+MODEC 6269.T: vier Quartalsumsätze bleiben gemäß RATSBLOCK-2026-10-06 F5 leer, bis Berichtswährungsquartale verarbeitet werden können. `applyFinancialCases` nimmt keine vom Zellanker abweichende Ersatzwährung an. Die [H1-Ergebnisse](https://www.modec.com/ir/library/result/assets/pdf/2026_2Q_results_en.pdf), PDF S. 9, „Revenue 2,074,296 2,447,050“, stehen in Tausend USD; die Anbieterquartale entstanden aus JPY-Umrechnungen. Die weiteren drei Quellen wurden ebenfalls geöffnet: [Q1](https://www.modec.com/ir/library/result/assets/pdf/2026_1Q_results_en.pdf), PDF S. 9; [FY2025](https://www.modec.com/ir/library/result/assets/pdf/2025_YE_results_en.pdf), PDF S. 13; [9M2025](https://www.modec.com/ir/library/result/assets/pdf/2025_3Q_results_en.pdf), PDF S. 9. Der Jahresvergleich bleibt bei 9,429707 %; die Originalquartalsrate 14,044776 % ist kein gegenwärtiger Ersatzwert.
+
+AIAI: Die beiden unvereinbaren Jahresumsätze 2025/2024 werden zurückgehalten; das Wachstum bleibt leer. [Prospekt](https://www.sec.gov/Archives/edgar/data/2096362/000149315226022855/form424b4.htm), gedruckte S. 110, „Total revenue — —“, und Erläuterung S. 111; neu geöffnet. FY2025, das Rumpfjahr ab 19.07.2024, CCCI und Pro-forma-Konzern sind keine beliebig austauschbaren Berichtsreihen. Der [spätere 10-Q](https://www.sec.gov/Archives/edgar/data/2096362/000119312526352653/aiai-20260630.htm) wurde versucht, aber nicht neu geöffnet. Eine vergleichbare neue Wachstumsbasis bleibt offen.
+
+### Bestätigung der beibehaltenen Jahresvergleiche
+
+> **Auf einen Blick**
+>
+> Beide vorhandenen Jahrespaare stimmen mit beiden Operanden und beiden Geschäftsjahren im vollständigen Emittenten-Jahresabschluss überein; Sicherheit 100 % für den Abgleich in der veröffentlichten Genauigkeit.
+> * AJBU.SI: 441.362.000 / 310.287.000 SGD, Geschäftsjahre 2025/2024, daraus 42,243149 %.
+> * 1ANE.MI: 2.925.000.000 / 3.048.000.000 EUR, Geschäftsjahre 2025/2024, daraus −4,035433 % aus gerundeten Millionenbeträgen.
+
+Die Nachprüfung liefert keinen belegten Grund für eine zusätzliche Sperre der Jahreszellen. Die weiterhin fehlenden aktuellen Quartalspaare bleiben offen. Produktionsdateien und eingefrorene Rohdaten wurden nicht verändert.
+
+### AJBU.SI
+
+Im echten Snapshot stehen `annual.annualRev[0/1]` mit 345.118.752,34308 / 242.625.922,27758 USD. Division durch den dort dokumentierten Berichtswährungsfaktor 0,78194034 ergibt exakt 441.362.000 / 310.287.000 SGD; Periodenenden 31.12.2025 / 31.12.2024, jeweils zwölf Monate.
+
+[Annual Report 2025](https://www.keppeldcreit.com/en/file/investor-relations/publications/annual-report/kdcr-ar2025.pdf), **PDF-Seite 103, gedruckte Seite 108**: Konzern-Gewinnrechnung, Suchzitat „Gross revenue“, Spalten 2025/2024, Einheit „$'000“, 441.362 / 310.287. Die Währungsnote auf PDF-Seite 113, gedruckt 118, bestätigt „Singapore dollars“ und Tausenderrundung. Note 20 auf PDF-Seite 141, gedruckt 146, bestätigt unabhängig die Summen 435.168 + 6.194 = 441.362 und 305.696 + 4.591 = 310.287.
+
+Stärkster Gegencheck: Mieteinnahmen allein wären eine engere Kennzahl. Der Abschluss zählt die übrigen Erlöse ausdrücklich zum ausgewiesenen Gesamtumsatz. Beide gespeicherten Werte passen zur selben Definition. Die Rate ist keine Behauptung organischen Wachstums.
+
+Das Webwerkzeug lehnte das 18-MB-PDF wegen seiner Größenbegrenzung ab. Anschließend wurde genau diese Emittentendatei direkt mit HTTP 200 abgerufen und mit dem vorhandenen `pdftotext` gelesen. Der ungewöhnliche Seitenversatz wurde zusätzlich durch ausdrücklich auf PDF-Seite 103 begrenzte Extraktion überprüft, nicht geschätzt.
+
+### 1ANE.MI
+
+Im echten Snapshot stehen 3.321.976.027,5 / 3.461.669.378,4 USD. Division durch den dokumentierten Berichtswährungsfaktor 1,1357183 ergibt exakt 2.925.000.000 / 3.048.000.000 EUR; Periodenenden 31.12.2025 / 31.12.2024, jeweils zwölf Monate.
+
+[Konzernjahresabschluss 2025 mit Prüfungsvermerk](https://www.acciona-energia.com/content/dam/energiacom/accionistas-e-inversores/informacion-bursatil/annual-accounts/consolidated-annual-accounts-2025-ane.pdf), **PDF-Seite 12, gedruckte Seite 5**: „Net revenue“, Einheit „millions of euros“, 2025/2024 mit 2.925 / 3.048. Note 24 auf PDF-Seite 99, gedruckt 92, bestätigt „Total revenue 2,925 3,048“. Geprüft ist Acciona Energía samt Tochtergesellschaften, nicht der Mutterkonzern Acciona.
+
+Stärkster Gegenbeleg: Die Erläuterung auf PDF-Seite 161 nennt −4,1 %, eine Tabelle auf PDF-Seite 162 hingegen −4,0 %. Die Millionenbeträge stimmen in der Konzernrechnung überein. Daher ist −4,035433 % ausschließlich der Quotient aus veröffentlichten gerundeten Operanden; ungerundete Eurobeträge oder eine genauere Emittentenrate sind damit nicht bestätigt. Das ist kein Nachweis einer falschen gespeicherten Jahreszelle.
+
+Das vollständige Original wurde über das Webwerkzeug und zusätzlich direkt mit HTTP 200 geöffnet. Die Seiten 12 und 99 wurden lokal gezielt extrahiert. Die englische Emittentenfassung ist eine Übersetzung; bei einem Widerspruch gilt das spanische Original.
+
+### Nachweisdateien
+
+Die JSON-Datei enthält beide Rohdatei-Hashes, USD- und native Werte, Perioden, Quellen und Einzelurteile. Die beiden heruntergeladenen Originale liegen ausschließlich unter `correction-annual-evidence/`:
+
+* `AJBU.SI-annual-report-2025.pdf`, SHA256 `445a8e655891d458559a6f4d91e6d3c9828d58c7d83ef9050468608fcd6ec7e3`.
+* `1ANE.MI-consolidated-annual-accounts-2025.pdf`, SHA256 `31cc65b7254a41086d02539493099a95f801cf264948bcced583d82aadebc0f5`.
