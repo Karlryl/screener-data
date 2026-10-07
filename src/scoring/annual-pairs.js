@@ -60,6 +60,24 @@ function checkEnds(newEnd, oldEnd, priorEnd) {
 }
 
 /**
+ * Finds the next stored position after duplicates of one fixed annual entry.
+ * @param {Array<number|null>} values Annual values normalized by norm().
+ * @param {Array<string|null>} ends Aligned annual period ends.
+ * @param {number} index Selected older position, retained as the duplicate anchor.
+ * @returns {number} First nonduplicate position, or values.length if none remains.
+ */
+function nextDistinctAnnualIndex(values, ends, index) {
+  const older = _tagesnummer(ends[index]);
+  let next = index + 1;
+  while (Number.isFinite(values[index]) && values[next] === values[index] && older !== null) {
+    const prior = _tagesnummer(ends[next]);
+    if (prior === null || Math.abs(older - prior) >= ANNUAL_PAIR_MIN_DAYS) break;
+    next++;
+  }
+  return next;
+}
+
+/**
  * Judges only the two selected annual positions, never searches for a replacement.
  * @param {object} snapshot Prepared snapshot.
  * @param {string} field Annual field, e.g. annualRev or annualGP.
@@ -69,7 +87,7 @@ function checkEnds(newEnd, oldEnd, priorEnd) {
  */
 function checkAnnualPair(snapshot, field, iNew, iOld) {
   const ends = annualPeriodEnds(snapshot, field);
-  return checkEnds(ends[iNew], ends[iOld], ends[iOld + 1]);
+  return checkEnds(ends[iNew], ends[iOld], ends[nextDistinctAnnualIndex(norm(snapshot, field), ends, iOld)]);
 }
 
 /**
@@ -82,7 +100,8 @@ function checkNewerAnnualPair(snapshot, record) {
   const ends = annualPeriodEnds(snapshot, 'annualRev');
   const priorDay = _tagesnummer(record.priorEnd);
   const index = priorDay === null ? -1 : ends.findIndex((end) => _tagesnummer(end) === priorDay);
-  return checkEnds(record.end, record.priorEnd, index < 0 ? null : ends[index + 1]);
+  return checkEnds(record.end, record.priorEnd,
+    index < 0 ? null : ends[nextDistinctAnnualIndex(norm(snapshot, 'annualRev'), ends, index)]);
 }
 
 const emptyCheck = (code) => ({ code, distanceDays: null, priorLengthDays: null });
@@ -180,5 +199,5 @@ function annualPairsShadow(snapshot, bounds = null, missingCode = 'no-snapshot')
 }
 
 module.exports = { ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS, MISSING_YEAR_MIN_DAYS,
-  withAnnualPairRule, annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
+  withAnnualPairRule, annualPairRuleEnabled, annualPairPasses, nextDistinctAnnualIndex, checkAnnualPair,
   checkNewerAnnualPair, checkAnnualAcceleration, annualPairsShadow };

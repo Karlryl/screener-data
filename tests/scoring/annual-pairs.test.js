@@ -19,6 +19,63 @@ const date = (day) => new Date(day * 86400000).toISOString().slice(0, 10);
 const pairSnapshot = (distance, prior = 365) => snap([180, 120, 100], [date(21000), date(21000 - distance), date(21000 - distance - prior)]);
 const all = { growth: true, acceleration: true };
 const outputs = s => [A.revGrowthLevel(s), A.gpGrowth(s), A.revAcceleration(s), A.revYoYComponents(s), revGrowthLeg(s)];
+const abf = () => snap([25756111422.8, 26568807471.6, 26141281700, 26141281700],
+  ['2025-08-31', '2024-08-31', '2023-09-30', '2023-08-31']);
+
+check('ABF.L duplicate prior entry preserves annual acceleration without changing the pair', () => {
+  const s = abf(), before = JSON.stringify(s);
+  assert.deepEqual(P.checkAnnualPair(s, 'annualRev', 1, 2), { code: 'adjacent', distanceDays: 336, priorLengthDays: null });
+  const result = P.annualPairsShadow(s).acceleration;
+  assert.equal(result.code, 'adjacent');
+  assert.ok(Number.isFinite(result.today));
+  assert.equal(result.shadow, result.today);
+  assert.deepEqual(P.withAnnualPairRule(all, () => outputs(s)), outputs(s));
+  assert.equal(JSON.stringify(s), before);
+  assert.equal(P.checkAnnualPair(s, 'annualRev', 2, 3).code, 'short-period', 'a duplicate at the selected pair still fails');
+});
+
+check('duplicate lookup skips repeated entries but stops at unknown values or dates', () => {
+  const s = snap([180, 120, 120, 120, 100], ['2025-12-31', '2024-12-31', '2024-11-30', '2024-10-31', '2023-12-31']);
+  assert.deepEqual(P.checkAnnualPair(s, 'annualRev', 0, 1), { code: 'adjacent', distanceDays: 365, priorLengthDays: 366 });
+  s.annual.annualRevEnds[4] = null;
+  assert.equal(P.checkAnnualPair(s, 'annualRev', 0, 1).priorLengthDays, null);
+  s.annual.annualRevEnds[2] = null;
+  assert.equal(P.checkAnnualPair(s, 'annualRev', 0, 1).priorLengthDays, null, 'an undated duplicate is not skipped');
+  for (const value of [null, NaN, Infinity, 120.0000000001]) {
+    const unknown = pairSnapshot(365, 30);
+    unknown.annual.annualRev[2] = { value };
+    assert.equal(P.checkAnnualPair(unknown, 'annualRev', 0, 1).code, 'short-prior-period', 'only finite exact equality permits skipping');
+  }
+  const boundary = pairSnapshot(365, 334); boundary.annual.annualRev[2] = { value: 120 };
+  assert.equal(P.checkAnnualPair(boundary, 'annualRev', 0, 1).priorLengthDays, 334, '334 days is not a duplicate');
+  const chain = snap([180, 120, 120, 120], [date(21000), date(20635), date(20435), date(20235)]);
+  assert.equal(P.checkAnnualPair(chain, 'annualRev', 0, 1).priorLengthDays, 400, 'duplicates retain the fixed older anchor');
+  const reversed = pairSnapshot(365, -700); reversed.annual.annualRev[2] = { value: 120 };
+  assert.equal(P.checkAnnualPair(reversed, 'annualRev', 0, 1).code, 'short-prior-period', 'distant reversed dates are not duplicates');
+});
+
+check('different-valued stubs retain their codes including SIG.AX', () => {
+  for (const prior of [150, 91, 304, 183, 184]) {
+    const s = pairSnapshot(365, prior);
+    s.annual.annualRev = [5000000000, 4184504749.76, 3383060818.13];
+    assert.equal(P.checkAnnualPair(s, 'annualRev', 0, 1).code, 'short-prior-period', `stub ${prior}`);
+    assert.equal(P.annualPairsShadow(s).acceleration.shadow, null);
+  }
+  assert.equal(P.checkAnnualPair(pairSnapshot(184), 'annualRev', 0, 1).code, 'short-period');
+});
+
+check('gross profit and newer-year records use their own normalized stored values', () => {
+  const s = pairSnapshot(365, 30);
+  s.annual.annualGP = [{ value: 90 }, { value: 60 }, 60];
+  s.annual.annualGPEnds = s.annual.annualRevEnds.slice();
+  assert.equal(P.checkAnnualPair(s, 'annualGP', 0, 1).code, 'adjacent');
+  assert.equal(P.checkAnnualPair(s, 'annualRev', 0, 1).code, 'short-prior-period');
+  const record = { end: s.annual.annualRevEnds[0], priorEnd: s.annual.annualRevEnds[1], priorRevenue: 100 };
+  assert.equal(P.checkNewerAnnualPair(s, record).code, 'short-prior-period', 'record currency is not the stored value');
+  s.annual.annualRev[2] = { value: 120 };
+  assert.equal(P.checkNewerAnnualPair(s, record).code, 'adjacent');
+  assert.equal(P.checkNewerAnnualPair(s, record).priorLengthDays, null);
+});
 
 check('distance boundaries, 52/53-week distance and prior-period boundaries', () => {
   for (const [distance, code] of [[333, 'short-period'], [334, 'adjacent'], [336, 'adjacent'],
@@ -229,6 +286,25 @@ check('break-once: raising the minimum to 335 makes the real 334-day assertion r
   assert.throws(() => probe(module.exports), error => {
     assert.equal(error.code, 'ERR_ASSERTION');
     console.log('BREAK-ONCE ERR_ASSERTION: 334 days must pass; actual short-period, expected adjacent');
+    return true;
+  });
+  probe(P);
+  assert.equal(digest(), before, 'live source never changed; discarded in-memory mutant only');
+});
+
+check('break-once: disabling duplicate skipping makes the ABF.L assertion red in memory', () => {
+  const file = require.resolve('../../src/scoring/annual-pairs.js');
+  const digest = () => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const before = digest(), source = fs.readFileSync(file, 'utf8');
+  const anchor = '  while (Number.isFinite(values[index]) && values[next] === values[index] && older !== null) {';
+  assert.equal(source.split(/\r?\n/).filter(line => line === anchor).length, 1, 'whole-line mutation anchor occurs exactly once');
+  const module = { exports: {} };
+  vm.runInThisContext('(function(require,module,exports){' + source.replace(anchor, '  while (false) {') + '\n})',
+    { filename: file + '.duplicate-mutant' })(createRequire(file), module, module.exports);
+  const probe = api => assert.equal(api.checkAnnualAcceleration(abf()).code, 'adjacent', 'ABF.L duplicate must preserve acceleration');
+  assert.throws(() => probe(module.exports), error => {
+    assert.equal(error.code, 'ERR_ASSERTION');
+    console.log(`BREAK-ONCE ERR_ASSERTION: ABF.L duplicate must preserve acceleration; actual ${error.actual}, expected ${error.expected}`);
     return true;
   });
   probe(P);

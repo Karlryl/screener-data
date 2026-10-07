@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const { buildFirmMap, countEntities, compareBoard, datedPairs, isGapless, counterCheck } = require('../scripts/p115-jahrespaare-vorher-nachher.js');
-const { annualPairsShadow } = require('../src/scoring/annual-pairs.js');
+const { annualPairsShadow, withAnnualPairRule } = require('../src/scoring/annual-pairs.js');
 
 const snap = (ticker, name = ticker, distances = [366, 336], values = [180, 120, 80]) => {
   let day = Date.parse('2025-12-31T00:00:00Z');
@@ -37,6 +37,43 @@ assert.deepEqual(compareBoard([], before, firms).counts.gained, { firms: 110, ti
 assert.equal(isGapless(datedPairs(snap('GOOD'), 'annualRev')), true, '336 and 366 days are gapless');
 for (const days of [456, 730]) assert.equal(isGapless(datedPairs(snap('GAP', 'Gap', [366, days]), 'annualRev')), false);
 assert.equal(isGapless([]), false, 'no dated evidence is not a checked gapless series');
+const abf = snap('ABF.L', 'Associated British Foods', [365, 336, 30], [25756111422.8, 26568807471.6, 26141281700, 26141281700]);
+abf.annual.annualRevEnds = abf.annual.annualGPEnds = ['2025-08-31', '2024-08-31', '2023-09-30', '2023-08-31'];
+assert.equal(isGapless(datedPairs(abf, 'annualRev')), false, 'raw distances still retain the duplicate');
+for (const field of ['annualRev', 'annualGP']) assert.equal(isGapless(datedPairs(abf, field, true)), true, 'ABF.L is gapless after duplicate collapse');
+const abfShadow = annualPairsShadow(abf), abfCheck = counterCheck(abf, abfShadow);
+assert.equal(abfCheck.checked.length, 2);
+assert.equal(abfCheck.falseFailures.length, 0);
+assert.deepEqual(abfCheck.duplicateEntriesCollapsed, ['annualRev', 'annualGP'].map(field => ({
+  ticker: 'ABF.L', field, newer: '2023-09-30', older: '2023-08-31', value: 26141281700,
+})));
+const brokenAbf = structuredClone(abfShadow);
+brokenAbf.acceleration = { ...brokenAbf.acceleration, code: 'short-prior-period', priorLengthDays: 30, shadow: null };
+assert.equal(counterCheck(abf, brokenAbf).falseFailures.length, 1, 'counter-check detects the original duplicate-induced failure');
+const stub = snap('SIG.AX', 'Stub', [365, 150], [5000000000, 4184504749.76, 3383060818.13]);
+assert.equal(isGapless(datedPairs(stub, 'annualRev', true)), false, 'different-valued stubs are not gapless');
+assert.equal(counterCheck(stub, annualPairsShadow(stub)).checked.length, 0);
+assert.deepEqual(counterCheck(stub, annualPairsShadow(stub)).duplicateEntriesCollapsed, []);
+const repeated = snap('REPEATED', 'Repeated', [365, 30, 30, 306], [180, 120, 120, 120, 100]);
+assert.deepEqual(datedPairs(repeated, 'annualRev', true).map(p => [p.iNew, p.iOld]), [[0, 1], [1, 4]]);
+assert.equal(isGapless(datedPairs(repeated, 'annualRev', true)), true);
+assert.equal(counterCheck(repeated, annualPairsShadow(repeated)).duplicateEntriesCollapsed.length, 4);
+assert.equal(annualPairsShadow(repeated).acceleration.code, 'short-period');
+assert.equal(counterCheck(repeated, annualPairsShadow(repeated)).falseFailures.length, 0, 'a selected duplicate pair is intentionally rejected');
+assert.equal(counterCheck(repeated, annualPairsShadow(repeated)).checked[0].failures[0].code, 'short-period', 'intentional rejection remains documented');
+const firstDuplicate = snap('PAIR', 'Pair', [30, 335, 365], [180, 180, 120, 80]);
+const pairShadow = annualPairsShadow(firstDuplicate), pairCheck = counterCheck(firstDuplicate, pairShadow);
+for (const axis of ['growth', 'grossProfit', 'acceleration']) assert.equal(pairShadow[axis].code, 'short-period');
+assert.equal(pairCheck.falseFailures.length, 0);
+assert.equal(pairCheck.zeroOnly.length, 0);
+const brokenPair = structuredClone(pairShadow);
+brokenPair.acceleration.code = 'short-prior-period';
+assert.equal(counterCheck(firstDuplicate, brokenPair).falseFailures.length, 1, 'only the intended short-period code is exempt');
+firstDuplicate.meta.annualRevNewerYear = { end: '2026-06-30', priorEnd: firstDuplicate.annual.annualRevEnds[0], revenue: 360, priorRevenue: 180, priorStored: 180 };
+assert.equal(counterCheck(firstDuplicate, annualPairsShadow(firstDuplicate)).falseFailures.length, 1, 'a newer record is not a collapsed stored pair');
+const newerShadow = annualPairsShadow(firstDuplicate);
+assert.deepEqual(withAnnualPairRule({ growth: true }, () => counterCheck(firstDuplicate, newerShadow)),
+  counterCheck(firstDuplicate, newerShadow), 'counter-check is independent of the ambient growth switch');
 const zero = snap('ZERO', 'Zero', [366, 365, 365], [180, 0, 120, 80]);
 const zeroCheck = counterCheck(zero, annualPairsShadow(zero));
 assert.equal(zeroCheck.falseFailures.length, 0);

@@ -10,7 +10,7 @@ const { scoreUniverse, produceRankings, issuerDedupGroups, issuerDedupComparator
 const formulas = require('../src/scoring/formulas/index.js');
 const { norm, annualPeriodEnds, _tagesnummer } = require('../src/scoring/snapshot.js');
 const { withAnnualPairRule, annualPairsShadow, checkAnnualPair, checkAnnualAcceleration,
-  ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../src/scoring/annual-pairs.js');
+  nextDistinctAnnualIndex, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../src/scoring/annual-pairs.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeReportArtifact } = require('./f4-quartalsvergleich.js');
@@ -96,11 +96,15 @@ function compareBoard(before, after, firms) {
  * Reads dated consecutive present values, retaining zero and negative reported values.
  * @param {object} snapshot Snapshot in the engine's annual representation.
  * @param {string} field annualRev or annualGP.
+ * @param {boolean} collapseDuplicates Whether to collapse duplicates for the gapless counter-check only.
  * @returns {object[]} Dated pairs with original indices and the production date verdict.
  */
-function datedPairs(snapshot, field) {
+function datedPairs(snapshot, field, collapseDuplicates = false) {
   const values = norm(snapshot, field), ends = annualPeriodEnds(snapshot, field);
-  const present = values.map((v, i) => v !== null ? i : null).filter(i => i !== null);
+  const present = [];
+  for (let i = 0; i < values.length; i = collapseDuplicates ? nextDistinctAnnualIndex(values, ends, i) : i + 1) {
+    if (values[i] !== null) present.push(i);
+  }
   return present.slice(1).flatMap((iOld, k) => {
     const iNew = present[k];
     if (_tagesnummer(ends[iNew]) === null || _tagesnummer(ends[iOld]) === null) return [];
@@ -122,20 +126,34 @@ function isGapless(pairs) {
  * Separates date-window failures on gapless series from intentional zero-year emptying.
  * @param {object} snapshot Loaded snapshot, with zero distinguished from missing data.
  * @param {object} shadow The production annualPairsShadow result, not rebuilt verdicts.
- * @returns {object} Tested fields and exhaustive failure/zero-only series lists.
+ * @returns {object} Tested fields, failure/zero-only series and collapsed duplicate entries.
  */
 function counterCheck(snapshot, shadow) {
-  const checked = [], falseFailures = [], zeroOnly = [];
+  const checked = [], falseFailures = [], zeroOnly = [], duplicateEntriesCollapsed = [];
   for (const [field, axes] of [['annualRev', ['growth', 'acceleration']], ['annualGP', ['grossProfit']]]) {
-    const pairs = datedPairs(snapshot, field);
+    const values = norm(snapshot, field), ends = annualPeriodEnds(snapshot, field);
+    for (let i = 0; i < values.length;) {
+      const next = nextDistinctAnnualIndex(values, ends, i);
+      for (let j = i + 1; j < next; j++) duplicateEntriesCollapsed.push({
+        ticker: snapshot.meta.ticker, field, newer: ends[i], older: ends[j], value: values[i],
+      });
+      i = next;
+    }
+    const pairs = datedPairs(snapshot, field, true);
     if (!isGapless(pairs)) continue;
     const failures = axes.filter(axis => FAILING.has(shadow[axis].code)).map(axis => ({ axis, ...shadow[axis] }));
     const row = { ticker: snapshot.meta.ticker, field, failures };
     checked.push(row);
-    if (failures.some(p => p.code !== 'zero-year')) falseFailures.push(row);
-    else if (failures.some(p => p.code === 'zero-year' && Number.isFinite(p.today) && p.shadow === null)) zeroOnly.push(row);
+    const intentionalDuplicate = p => {
+      if (p.code !== 'short-period' || (p.axis === 'growth'
+        && withAnnualPairRule({ growth: false }, () => revGrowthLeg(snapshot).basis) === 'yearNewerRecord')) return false;
+      const pair = p.axis === 'acceleration' ? checkAnnualAcceleration(snapshot) : { iNew: 0, iOld: 1 };
+      return pair.iOld < nextDistinctAnnualIndex(values, ends, pair.iNew);
+    };
+    if (failures.some(p => p.code !== 'zero-year' && !intentionalDuplicate(p))) falseFailures.push(row);
+    else if (failures.every(p => p.code === 'zero-year') && failures.some(p => Number.isFinite(p.today) && p.shadow === null)) zeroOnly.push(row);
   }
-  return { checked, falseFailures, zeroOnly };
+  return { checked, falseFailures, zeroOnly, duplicateEntriesCollapsed };
 }
 
 function snapshotRows(snapshots, firms, bounds) {
@@ -229,9 +247,13 @@ function report(data) {
     table(['Prüfung', 'Reihen', 'Firmen', 'Ticker'], ['checked', 'falseFailures', 'zeroOnly'].map(k => [
       { checked: 'Lückenlose datierte Reihen', falseFailures: 'Fälschlich beanstandete lückenlose Reihen, Soll null', zeroOnly: 'Nur wegen zero-year geleert' }[k],
       counter[k].rows.length, counter[k].counts.firms, counter[k].counts.tickers])), '',
-    'Vorhandene Werte umfassen echte Nullen und negative Zahlen. Fehlwerte werden übersprungen; nur direkt aufeinanderfolgende vorhandene Werte mit zwei gültigen Enddaten bilden ein datiertes Paar. Mindestens ein solches Paar muss vorhanden sein, und alle beobachteten Abstände müssen im Fenster aus Tabelle A liegen. Undatierte Paare beweisen weder eine Lücke noch Lückenlosigkeit. Der Gegencheck zählt bereits jeden Fehlercode außer `zero-year`, auch wenn die Anzeige dank eines anderen Beins erhalten bleibt.', '',
+    'Vorhandene Werte umfassen echte Nullen und negative Zahlen. Für diesen Gegencheck werden zunächst unmittelbar folgende Doppel-Einträge mit exakt gleichem endlichem normalisiertem Wert und weniger als 334 Tagen Abstand zum beibehaltenen Ende zusammengefasst (Tabelle E2). Fehlwerte werden übersprungen; nur direkt aufeinanderfolgende vorhandene Werte mit zwei gültigen Enddaten bilden ein datiertes Paar. Mindestens ein solches Paar muss vorhanden sein, und alle beobachteten Abstände müssen im Fenster aus Tabelle A liegen. Undatierte Paare beweisen weder eine Lücke noch Lückenlosigkeit. Der Gegencheck zählt bereits jeden Fehlercode außer `zero-year` und berechtigt verworfenen Doppel-Einträgen im ausgewählten Vergleichspaar, auch wenn die Anzeige dank eines anderen Beins erhalten bleibt; alle verworfenen Vergleiche bleiben unter `counter.checked.rows` belegt.', '',
     table(['Ticker', 'Firma', 'Reihe', 'Art', 'Achse und Grund'], ['falseFailures', 'zeroOnly'].flatMap(k => counter[k].rows.map(r => [r.ticker, r.firmName, r.field,
       k === 'falseFailures' ? 'Gegencheck verletzt' : 'Begründete Nulljahr-Leerung', r.failures.map(p => `${p.axis}: ${p.code}. ${p.reason}`).join(' ')]))), '',
+    '### Tabelle E2. Zusammengefasste Doppel-Einträge', '',
+    'Die Liste steht in `zahlen.json` unter `counter.duplicateEntriesCollapsed.rows`; die ursprünglichen Abstände in Tabelle F bleiben erhalten.', '',
+    table(['Ticker', 'Reihe', 'Beibehaltenes Ende', 'Doppeltes Ende', 'Wert'],
+      counter.duplicateEntriesCollapsed.rows.map(r => [r.ticker, r.field, r.newer, r.older, r.value])), '',
     '## Tabelle F. Verteilung der Jahresendabstände', '',
     'Die Verteilung umfasst alle datierten aufeinanderfolgenden vorhandenen Umsatzwerte des Produktionsladers. Die Zahl der Paare zählt Beobachtungen; Firmen und Ticker sind je Abstand dedupliziert. `abstaende.csv` enthält zusätzlich die Bruttogewinnpaare. Der Rohdatenvergleich steht in `zahlen.json` unter `distribution.raw`.', '',
     table(['Abstand Tage', 'Paare', 'Firmen', 'Ticker'], distribution.loaded.histogram.map(r => [r.days, r.pairs, r.firms, r.tickers])), '',
@@ -376,7 +398,7 @@ function main(argv) {
   reference.notes.push('Die Referenz für Teil (a) wird mit `growthYear` verglichen. Ob P115-M darüber hinaus Bruttogewinnfehler mitzählte, geht aus dem Auftrag nicht eindeutig hervor; deshalb stehen `grossProfit` und der vollständige Teil (a) separat in Tabelle D.');
   const counter = {};
   const checks = prepared.map(s => counterCheck(s, byTicker.get(s.meta.ticker).annualPairsShadow));
-  for (const key of ['checked', 'falseFailures', 'zeroOnly']) {
+  for (const key of ['checked', 'falseFailures', 'zeroOnly', 'duplicateEntriesCollapsed']) {
     const list = checks.flatMap(r => r[key]).map(r => ({ ...r, firm: firmOf(r.ticker, firms).id, firmName: firmOf(r.ticker, firms).name }));
     counter[key] = { counts: countEntities(list.map(r => r.ticker), firms), rows: list };
   }

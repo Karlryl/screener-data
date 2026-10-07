@@ -1204,6 +1204,7 @@ Die drei Objekte `growth`, `grossProfit` und `acceleration` tragen jeweils:
 `revGrowthLeg`. Der Code prüft auch bei Quartalsanzeige das Jahresbein des Wachstumsbonus.
 Ohne Quartalsbein gilt ein gültiger neuerer Jahresvermerk mit seinen eigenen Enddaten;
 sein Vorjahreszeitraum kommt aus dem Eintrag nach `priorEnd` in der gespeicherten Reihe.
+Bei der Vorjahreslänge werden unmittelbar folgende Doppel-Einträge mit exakt gleichem endlichem normalisiertem Wert und weniger als 334 Tagen Abstand zum älteren Paarende übersprungen, bei neueren Jahresvermerken anhand des zu `priorEnd` gespeicherten Umsatzes; fehlt danach ein datiertes Ende, bleibt die Länge `null`, während ein Doppel-Eintrag im geprüften Paar selbst weiterhin `short-period` ergibt.
 Es wird nie ein anderes Paar gesucht. `grossProfit` zeigt den rohen Wert von `gpGrowth`;
 nur dessen Jahreswachstumspaar wird geprüft, die Bruttomargenentwicklung bleibt unberührt.
 `acceleration` zeigt den rohen Wert von `revAcceleration` mit `winsorBounds.qoq` aus derselben
