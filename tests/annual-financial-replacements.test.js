@@ -2,6 +2,7 @@
 
 // Break-once probes use only memory objects, never a writing test or a live data file.
 const assert = require('assert/strict'), fs = require('fs'), path = require('path'), crypto = require('crypto');
+const { Module } = require('node:module');
 const { applyFinancialCases, validateTable, table: liveTable } = require('../lib/financial-known-cases.js');
 const value = x => typeof x === 'number' ? x : x?.value;
 const clone = structuredClone;
@@ -144,6 +145,78 @@ test('P99 lock 1: a withheld middle year withholds every older year; newer corre
   // Break once: without the lock the older years stay present and the fallback compares across the hole.
   const unlocked=clone(rows); unlocked[2]={value:expected[2]*fx}; unlocked[3]={value:expected[3]*fx};
   assert.notEqual(revAcceleration({ ...r.snapshot, annual:{ ...r.snapshot.annual, annualRev:unlocked }, timeseries:{} }, null),null); breaks++;
+});
+test('vendor already delivers the correct value for one year', () => {
+  const { revAcceleration } = require('../src/scoring/axes.js');
+  const check = apply => {
+    for (const correctIndex of [0, 1, 2, 3]) for (const factor of [1, fx]) {
+      const raw = fixture('ANNTEST.X', factor);
+      raw.annual.annualRev[correctIndex].value = expected[correctIndex] * factor;
+      const saved = clone(raw), good = apply(raw, { table }).snapshot;
+      guard(good, factor);
+      assert.ok(good.annual.annualRev.every(row => !row.financialMissing), 'no gaps or missing markers');
+      assert.equal(JSON.stringify(apply(good, { table }).snapshot), JSON.stringify(good), 'correct packet is byte-identical on reread');
+      assert.deepEqual(raw, saved, 'correct packet is not mutated');
+
+      const driftIndex = correctIndex === 1 ? 2 : 1;
+      raw.annual.annualRev[driftIndex].value += 1;
+      const before = clone(raw), held = apply(raw, { table }).snapshot, rows = held.annual.annualRev;
+      assert.deepEqual(rows.map(value), expected.map((n, i) => i < driftIndex ? n * factor : null));
+      assert.equal(rows[driftIndex].financialMissing.reasonCode, 'vendor-value-changed');
+      for (const row of rows.slice(driftIndex + 1)) assert.equal(row.financialMissing.reasonCode, 'annual-older-than-withheld');
+      assert.ok(rows.slice(0, driftIndex).every(row => !row.financialMissing), 'newer years stay present');
+      assert.equal(revAcceleration(held, null), null, 'no comparison across the withheld year');
+      assert.equal(JSON.stringify(apply(held, { table }).snapshot), JSON.stringify(held), 'withheld packet is byte-identical on reread');
+      assert.deepEqual(raw, before, 'drift packet is not mutated');
+    }
+  };
+  check(applyFinancialCases);
+  const file = path.resolve(__dirname, '../lib/financial-known-cases.js');
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  const anchor = line => {
+    assert.equal(lines.filter(x => x === line).length, 1, 'exact whole-line mutation anchor');
+    return lines.indexOf(line);
+  };
+  const start = anchor('  // This numeric annual no-gap lock must stay last: no annual cell may change before return.');
+  const end = anchor('  return { snapshot: out, events };');
+  const beforeCases = anchor('  for (const c of config.cases.filter(c => (allowed.has(c.field) || annual.has(c.field) && c.replacementValue !== null) && listed(c, ticker))) {');
+  assert.ok(beforeCases < start && start < end, 'lock follows the case loop and ends immediately before return');
+  const lock = lines.splice(start, end - start);
+  lines.splice(beforeCases, 0, ...lock);
+  const moved = new Module(file, module); moved.filename = file; moved.paths = module.paths;
+  moved._compile(lines.join('\n'), file);
+  assert.throws(() => check(moved.exports.applyFinancialCases), assert.AssertionError, 'moving the lock before cases makes this test red'); breaks++;
+  check(applyFinancialCases);
+});
+test('numeric cases never refill a prior null-annual hold, including whole-series drift', () => {
+  const { revAcceleration } = require('../src/scoring/axes.js');
+  const mixed = clone(table), hold = mixed.cases.find(c => c.caseId === cases[1].caseId);
+  hold.replacementValue = null;
+  const check = apply => {
+    for (const drift of [false, true]) {
+      const raw = fixture(); if (drift) raw.annual.annualRev[1].value += 1;
+      const saved = clone(raw), out = apply(raw, { table: mixed }).snapshot;
+      assert.deepEqual(out.annual.annualRev.map(value), [drift ? null : expected[0] * fx, null, null, null]);
+      if (drift) assert.ok(out.annual.annualRev.every(row => row.financialMissing.reasonCode === 'annual-value-changed'));
+      else {
+        assert.equal(out.annual.annualRev[1].financialCorrection.caseId, hold.caseId);
+        for (const row of out.annual.annualRev.slice(2)) assert.equal(row.financialMissing.reasonCode, 'annual-older-than-withheld');
+      }
+      assert.equal(revAcceleration(out, null), null);
+      assert.equal(JSON.stringify(apply(out, { table: mixed }).snapshot), JSON.stringify(out), 'mixed authority is idempotent');
+      const revised = clone(mixed); revised.revision = 'synthetic-next-revision';
+      assert.equal(JSON.stringify(apply(out, { table: revised }).snapshot), JSON.stringify(out), 'revision changes cannot release another annual hold');
+      assert.deepEqual(raw, saved);
+    }
+  };
+  check(applyFinancialCases);
+  const file = path.resolve(__dirname, '../lib/financial-known-cases.js'), lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  const anchor = "    if (container === 'annual' && current?.financialMissing && (current !== stored || !holdIds.includes(current.financialMissing.caseId))) continue;";
+  assert.equal(lines.filter(line => line === anchor).length, 1, 'exact whole-line mutation anchor');
+  const unguarded = new Module(file, module); unguarded.filename = file; unguarded.paths = module.paths;
+  unguarded._compile(lines.map(line => line === anchor ? '' : line).join('\n'), file);
+  assert.throws(() => check(unguarded.exports.applyFinancialCases), assert.AssertionError); breaks++;
+  check(applyFinancialCases);
 });
 test('review D15 H1: a stored state stays withheld after a table revision change (both drift variants)', () => {
   const { revAcceleration } = require('../src/scoring/axes.js');
