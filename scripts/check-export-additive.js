@@ -31,8 +31,9 @@ function compareExports(baseDir, headDir, log = console.log) {
     const board = /^[^/]+\.json$/.test(relative) &&
       base.branch === path.posix.basename(relative, '.json') && Array.isArray(base.profitable) && Array.isArray(base.unprofitable);
     const r40 = relative === 'rule40/overview.json';
+    const overview = relative === 'overview.json'; // P118: flat {rows[]} feed, annotated like rule40
     function allowed(keys, key) {
-      if (!board && !r40) return false;
+      if (!board && !r40 && !overview) return false;
       if (!keys.length) return HEADER_FIELDS.includes(key);
       return keys.length === 2 && Number.isInteger(keys[1]) && ROW_FIELDS.includes(key) &&
         (board ? ['profitable', 'unprofitable'].includes(keys[0]) : keys[0] === 'rows');

@@ -528,7 +528,9 @@ function writerFixtures() {
   }
   fs.writeFileSync(path.join(source, 'index.json'), JSON.stringify({ generatedFromSnapshots: 1, branches: hg.BRANCHES,
     counts, survivalCount: 0, excluded: {} }));
-  for (const name of ['overview', 'survival']) fs.writeFileSync(path.join(source, name + '.json'), '[]');
+  // P118: the flat overview feed carries the same row as its branch board (formulaId = branch).
+  fs.writeFileSync(path.join(source, 'overview.json'), JSON.stringify([{ ...row, formulaId: 'energy', track: 'profitable', overviewKind: 'gp', overviewValue: 0.1, overviewCompanion: null }]));
+  fs.writeFileSync(path.join(source, 'survival.json'), '[]');
   return [
     { board: 'hypergrowth', root: out, relative: 'energy.json',
       build: writeProvenance => hg.build({ writeProvenance }),
@@ -639,6 +641,28 @@ test('(f) a failure marker is overwritten with status ok by the next success; --
     w.build();
     assert.deepEqual(w.check(), []);
   }
+});
+
+test('P118: overview.json rows carry the same provenance as their branch rows, against the same manifest', () => {
+  const hgw = integrations.find(w => w.board === 'hypergrowth');
+  hgw.build();
+  const read = rel => JSON.parse(fs.readFileSync(path.join(hgw.root, rel), 'utf8'));
+  const board = read('energy.json'), overview = read('overview.json');
+  const b = p.rowsOf(board).find(r => r.ticker === 'TEST'), o = p.rowsOf(overview).find(r => r.ticker === 'TEST');
+  assert(b && o, 'TEST row in both files');
+  assert.equal(overview.provenanceManifest, p.MANIFEST_PATHS.hypergrowth);
+  assert.equal(overview.provenanceManifestSha256, board.provenanceManifestSha256);
+  assert.equal(overview.provenanceRunId, board.provenanceRunId);
+  for (const field of p.FIELDS) assert.deepEqual(o.provenance[field], b.provenance[field], field + ': identical evidence ids');
+  assert.deepEqual(o.fieldStatus, b.fieldStatus);
+  assert.deepEqual(hgw.check(), []);
+  // Break once on a copy: a foreign evidence id in the overview row makes --check red.
+  const target = path.join(hgw.root, 'overview.json'), good = fs.readFileSync(target);
+  const bad = JSON.parse(good); p.rowsOf(bad)[0].provenance.marketCap = ['e-' + '0'.repeat(64)];
+  fs.writeFileSync(target, JSON.stringify(bad));
+  assert(hgw.check().some(e => /overview|missing evidence|evidence/.test(e)));
+  fs.writeFileSync(target, good);
+  assert.deepEqual(hgw.check(), []);
 });
 
 console.log(`export-provenance: ${ok} passed, ${fail} failed`);
