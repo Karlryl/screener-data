@@ -1237,3 +1237,10 @@ Teile behalten ihren vorherigen Zustand. Produktionswerte werden nie unter diese
 gerechnet; nur die zusätzliche Schattenrechnung aktiviert ihn vorübergehend.
 Wächter: `tests/scoring/annual-pairs.test.js` und `tests/annual-pairs-shadow-export.test.js`.
 `capitalEfficiency`, Rangneuberechnung und Vorher/Nachher-Messung gehören nicht zu Lauf 1.
+
+**Messung.** `scripts/p115-jahrespaare-vorher-nachher.js` vergleicht die ausgeschaltete Regel,
+den Wachstumsteil und die vollständige Jahresprüfung mit der Produktionsengine. Aufruf:
+`node scripts/p115-jahrespaare-vorher-nachher.js --snapshots <eingefrorener-ordner> --out <neuer-ausgabeordner-außerhalb-des-repos>`.
+Optional begrenzt `--limit <anzahl>` die alphabetische Stichprobe. Der Ausgabeordner enthält
+den deutschen Bericht, die JSON- und CSV-Belege sowie eine Arbeitskopie der Eingaben;
+die Quelldateien bleiben unverändert.
