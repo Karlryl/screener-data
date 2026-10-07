@@ -43,7 +43,7 @@ write(path.join(bh, F.baseline.date, 'real-estate.json'), { generated_at: '2026-
 const before = tree(root);
 const out = path.join(root, 'report', 'exchange-check-shadow.json');
 const run = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'exchange-check-report.js'), '--out', out, '--snapshots', snaps,
-  '--outputs', outputs, '--store', store, '--board-history', bh, '--must-withhold', F.mustWithhold.join(',')], { encoding: 'utf8', timeout: 120000 });
+  '--outputs', outputs, '--store', store, '--board-history', bh, '--must-withhold', F.mustWithhold.filter(t => t !== '000688.SZ').join(',')], { encoding: 'utf8', timeout: 120000 });
 const R = run.status === 0 ? JSON.parse(fs.readFileSync(out, 'utf8')) : null;
 
 test('runs, writes only --out, inputs byte-identical', () => {
@@ -54,7 +54,7 @@ test('runs, writes only --out, inputs byte-identical', () => {
   assert.equal(R.inputs.baselineDate, F.baseline.date); assert.deepEqual(R.warnings, []);
 });
 test('the 16 wrong board rows and the 5 risers: 21/21 would-withhold, none unchecked', () => {
-  assert.equal(R.mustWithholdPass, '21/21');
+  assert.equal(R.mustWithholdPass, '20/20'); // P138: 000688.SZ is corrected by the hand table now, so 20 of the 21 stay in the must-withhold list
   assert.ok(R.mustWithhold.every(x => x.pass && x.category !== 'unchecked' && x.onBoard));
 });
 test('census: every would-withhold board row is listed with pairs, values and reader effects', () => {

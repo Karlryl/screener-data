@@ -51,7 +51,8 @@ const q4Fill = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-q
 const q4Off = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-quarter-check.js': {
   ...fillStep, applyExchangeCheck: s => X.applyExchangeCheck(s, { mode: 'off' }) } });
 const marked = s => serial(s).includes('"exchangeFill"') || /exchange-(pair|annual|quarter)-mismatch/.test(serial(s));
-const T = Object.keys(F.snapshots);
+// P138: 000688.SZ is now corrected by the hand table (tests/hand-table-p138-20261007.test.js); this file checks the rows the hand table does not own.
+const T = Object.keys(F.snapshots).filter(t => t !== '000688.SZ');
 
 test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/main for every fixture snapshot', () => {
   for (const t of T) {

@@ -80,7 +80,11 @@ test('mode off: the identical object for every fixture snapshot; the store is ne
 // ── Real-data acceptance: the 16 wrong board rows and the 5 wrong risers ────
 test('all 21 known wrong rows are checked and withheld (none unchecked); the withheld cell is the year-ago partner', () => {
   assert.equal(F.mustWithhold.length, 21);
-  for (const t of F.mustWithhold) {
+  // P138: 000688.SZ is now corrected by the hand table, so the exchange check leaves it alone (unchecked, hand-table); the other 20 stay withheld.
+  const handOwned = res(snap('000688.SZ'));
+  assert.equal(handOwned.category, 'unchecked');
+  assert.equal(handOwned.why, 'hand-table');
+  for (const t of F.mustWithhold.filter(t => t !== '000688.SZ')) {
     const s = snap(t), r = res(s);
     assert.ok(['would-withhold', 'would-withhold-growth'].includes(r.category), t + ' ' + r.category + ' ' + r.why);
     const lvl = r.withhold.find(w => w.level);
