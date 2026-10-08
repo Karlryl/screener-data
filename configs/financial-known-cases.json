@@ -6313,6 +6313,130 @@
           "value": 66551000000
         }
       ]
+    },
+    {
+      "caseId": "indomim-2026-03-31-annualRev",
+      "revision": "2026-10-08-p140",
+      "ticker": "INDOMIM.BO",
+      "listingAliases": [
+        "INDOMIM.NS"
+      ],
+      "field": "annualRev",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "INR",
+      "unit": "currency",
+      "metricDefinition": "Consolidated revenue from contracts with customers",
+      "expectedBadValue": 4141056000,
+      "replacementValue": 41410560000,
+      "reason": "Jahresumsatz korrigiert: Kundenumsatz laut Konzernbericht; Anbieterwert um Faktor 10 zu klein.",
+      "sources": [
+        {
+          "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf#page=253",
+          "title": "INDO-MIM Annual Report FY2026, Note 17",
+          "page": 253,
+          "quote": "Contract Price 41,410.56 32,784.69",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "value": 41410560000
+        }
+      ]
+    },
+    {
+      "caseId": "indomim-2025-03-31-annualRev",
+      "revision": "2026-10-08-p140",
+      "ticker": "INDOMIM.BO",
+      "listingAliases": [
+        "INDOMIM.NS"
+      ],
+      "field": "annualRev",
+      "period": "2025-03-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "INR",
+      "unit": "currency",
+      "metricDefinition": "Consolidated revenue from contracts with customers",
+      "expectedBadValue": 3278469000,
+      "replacementValue": 32784690000,
+      "reason": "Jahresumsatz korrigiert: Kundenumsatz laut Konzernbericht; Anbieterwert um Faktor 10 zu klein.",
+      "sources": [
+        {
+          "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf#page=253",
+          "title": "INDO-MIM Annual Report FY2026, Note 17",
+          "page": 253,
+          "quote": "Contract Price 41,410.56 32,784.69",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "value": 32784690000
+        }
+      ]
+    },
+    {
+      "caseId": "indomim-2024-03-31-annualRev",
+      "revision": "2026-10-08-p140",
+      "ticker": "INDOMIM.BO",
+      "listingAliases": [
+        "INDOMIM.NS"
+      ],
+      "field": "annualRev",
+      "period": "2024-03-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "INR",
+      "unit": "currency",
+      "metricDefinition": "Consolidated revenue from contracts with customers",
+      "expectedBadValue": 2840491000,
+      "replacementValue": 28404910000,
+      "reason": "Jahresumsatz korrigiert: Kundenumsatz laut Konzernbericht; Anbieterwert um Faktor 10 zu klein.",
+      "sources": [
+        {
+          "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf#page=284",
+          "title": "INDO-MIM Draft Red Herring Prospectus 2025, Note 24",
+          "page": 284,
+          "quote": "Total revenue from contracts with customers 32,784.69 28,404.91 26,653.21",
+          "start": "2023-04-01",
+          "end": "2024-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "value": 28404910000
+        }
+      ]
+    },
+    {
+      "caseId": "indomim-2023-03-31-annualRev",
+      "revision": "2026-10-08-p140",
+      "ticker": "INDOMIM.BO",
+      "listingAliases": [
+        "INDOMIM.NS"
+      ],
+      "field": "annualRev",
+      "period": "2023-03-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "INR",
+      "unit": "currency",
+      "metricDefinition": "Consolidated revenue from contracts with customers",
+      "expectedBadValue": 2665321000,
+      "replacementValue": 26653210000,
+      "reason": "Jahresumsatz korrigiert: Kundenumsatz laut Konzernbericht; Anbieterwert um Faktor 10 zu klein.",
+      "sources": [
+        {
+          "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf#page=284",
+          "title": "INDO-MIM Draft Red Herring Prospectus 2025, Note 24",
+          "page": 284,
+          "quote": "Total revenue from contracts with customers 32,784.69 28,404.91 26,653.21",
+          "start": "2022-04-01",
+          "end": "2023-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "value": 26653210000
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -7107,6 +7231,360 @@
           "quote": "First Quarter Ended",
           "value": 61296000,
           "end": "2025-03-30"
+        }
+      ]
+    }
+  ],
+  "statementScales": [
+    {
+      "caseId": "indomim-statement-scale-20261008",
+      "revision": "2026-10-08-p140",
+      "ticker": "INDOMIM.BO",
+      "listingAliases": [
+        "INDOMIM.NS"
+      ],
+      "currency": "INR",
+      "factor": 10,
+      "basis": "five independently proven lines",
+      "reason": "Jahreswert korrigiert. Die gesamte Jahresrechnung des Anbieters steht für diese Firma zehnfach zu klein. Fünf Zeilen sind einzeln gegen den Geschäftsbericht belegt, alle anderen Geldbeträge sind mit dem Faktor 10 umgerechnet.",
+      "scale": [
+        "annualRev",
+        "annualOpInc",
+        "annualNetIncome",
+        "annualGP",
+        "annualFCF",
+        "annualOCF",
+        "annualCostOfRevenue",
+        "annualSBC",
+        "annualRnD",
+        "annualCapex",
+        "annualSGA",
+        "annualDepreciation",
+        "annualDividendsPaid",
+        "annualRepurchase",
+        "annualNetCommonStockIssuance",
+        "annualBalance"
+      ],
+      "balance": {
+        "keys": [
+          "totalCash",
+          "totalDebt",
+          "totalAssets",
+          "accountsReceivable",
+          "netPPE",
+          "currentAssets",
+          "currentLiabilities",
+          "totalLiabilities",
+          "totalEquity"
+        ]
+      },
+      "exempt": [
+        "annualShares",
+        "annualSharesBasic",
+        "annualEPS",
+        "annualEPSBasic",
+        "annualEPSDiluted",
+        "annualEarningsPerShare",
+        "annualDividendPerShare",
+        "annualGrossMargin",
+        "annualOperatingMargin",
+        "annualNetMargin",
+        "annualROE",
+        "annualROA",
+        "*Ends",
+        "annualBalance._debtPartial",
+        "annualBalance._debtPartialReason"
+      ],
+      "anchors": [
+        {
+          "line": "annualRev",
+          "period": "2026-03-31",
+          "caseId": "indomim-2026-03-31-annualRev"
+        },
+        {
+          "line": "annualRev",
+          "period": "2025-03-31",
+          "caseId": "indomim-2025-03-31-annualRev"
+        },
+        {
+          "line": "annualRev",
+          "period": "2024-03-31",
+          "caseId": "indomim-2024-03-31-annualRev"
+        },
+        {
+          "line": "annualRev",
+          "period": "2023-03-31",
+          "caseId": "indomim-2023-03-31-annualRev"
+        },
+        {
+          "line": "annualNetIncome",
+          "period": "2026-03-31",
+          "expectedBadValue": 533543000,
+          "provenValue": 5335430000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 224,
+              "quote": "Profit for the year 5,335.43 4,237.34",
+              "value": 5335430000,
+              "start": "2025-04-01",
+              "end": "2026-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualNetIncome",
+          "period": "2025-03-31",
+          "expectedBadValue": 423734000,
+          "provenValue": 4237340000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 224,
+              "quote": "Profit for the year 5,335.43 4,237.34",
+              "value": 4237340000,
+              "start": "2024-04-01",
+              "end": "2025-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualNetIncome",
+          "period": "2024-03-31",
+          "expectedBadValue": 283734000,
+          "provenValue": 2837340000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf",
+              "page": 256,
+              "quote": "Restated Profit for the year (VII = V - VI) 4,237.34 2,837.34 4,626.93",
+              "value": 2837340000,
+              "start": "2023-04-01",
+              "end": "2024-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(All amounts in Rs. million, except as otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualNetIncome",
+          "period": "2023-03-31",
+          "expectedBadValue": 462693000,
+          "provenValue": 4626930000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf",
+              "page": 256,
+              "quote": "Restated Profit for the year (VII = V - VI) 4,237.34 2,837.34 4,626.93",
+              "value": 4626930000,
+              "start": "2022-04-01",
+              "end": "2023-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(All amounts in Rs. million, except as otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualOCF",
+          "period": "2026-03-31",
+          "expectedBadValue": 1077241000,
+          "provenValue": 10772410000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 226,
+              "quote": "Net Cash from / (used in) Operating Activities 10,772.41 5,062.71",
+              "value": 10772410000,
+              "start": "2025-04-01",
+              "end": "2026-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualOCF",
+          "period": "2025-03-31",
+          "expectedBadValue": 506271000,
+          "provenValue": 5062710000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 226,
+              "quote": "Net Cash from / (used in) Operating Activities 10,772.41 5,062.71",
+              "value": 5062710000,
+              "start": "2024-04-01",
+              "end": "2025-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualOCF",
+          "period": "2024-03-31",
+          "expectedBadValue": 458334000,
+          "provenValue": 4583340000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf",
+              "page": 258,
+              "quote": "Net cash generated from operating activities (I) 5,062.71 4,583.34 6,057.15",
+              "value": 4583340000,
+              "start": "2023-04-01",
+              "end": "2024-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(All amounts in Rs. million, except as otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualOCF",
+          "period": "2023-03-31",
+          "expectedBadValue": 605715000,
+          "provenValue": 6057150000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf",
+              "page": 258,
+              "quote": "Net cash generated from operating activities (I) 5,062.71 4,583.34 6,057.15",
+              "value": 6057150000,
+              "start": "2022-04-01",
+              "end": "2023-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(All amounts in Rs. million, except as otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualBalance",
+          "key": "totalAssets",
+          "period": "2026-03-31",
+          "expectedBadValue": 4897333000,
+          "provenValue": 48973330000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 222,
+              "quote": "TOTAL ASSETS 48,973.33 41,408.41",
+              "value": 48973330000,
+              "start": "2025-04-01",
+              "end": "2026-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualBalance",
+          "key": "totalAssets",
+          "period": "2025-03-31",
+          "expectedBadValue": 4140841000,
+          "provenValue": 41408410000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 222,
+              "quote": "TOTAL ASSETS 48,973.33 41,408.41",
+              "value": 41408410000,
+              "start": "2024-04-01",
+              "end": "2025-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualBalance",
+          "key": "totalAssets",
+          "period": "2024-03-31",
+          "expectedBadValue": 3757513000,
+          "provenValue": 37575130000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf",
+              "page": 255,
+              "quote": "Total assets 41,408.41 37,575.13 33,804.46",
+              "value": 37575130000,
+              "start": "2023-04-01",
+              "end": "2024-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(All amounts in Rs. million, except as otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualBalance",
+          "key": "totalAssets",
+          "period": "2023-03-31",
+          "expectedBadValue": 3380446000,
+          "provenValue": 33804460000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf",
+              "page": 255,
+              "quote": "Total assets 41,408.41 37,575.13 33,804.46",
+              "value": 33804460000,
+              "start": "2022-04-01",
+              "end": "2023-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(All amounts in Rs. million, except as otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualSBC",
+          "period": "2026-03-31",
+          "expectedBadValue": 14515000,
+          "provenValue": 145150000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 226,
+              "quote": "Employee stock compensation expenses 145.15 57.59",
+              "value": 145150000,
+              "start": "2025-04-01",
+              "end": "2026-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
+        },
+        {
+          "line": "annualSBC",
+          "period": "2025-03-31",
+          "expectedBadValue": 5759000,
+          "provenValue": 57590000,
+          "sources": [
+            {
+              "url": "https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf",
+              "page": 226,
+              "quote": "Employee stock compensation expenses 145.15 57.59",
+              "value": 57590000,
+              "start": "2024-04-01",
+              "end": "2025-03-31",
+              "currency": "INR",
+              "unit": "currency",
+              "unitStatement": "(Amounts in INR million, unless otherwise stated)"
+            }
+          ]
         }
       ]
     }
