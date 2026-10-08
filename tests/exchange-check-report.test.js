@@ -114,6 +114,66 @@ test('store older than the limit: rows unchecked(store-old) plus one warning, ex
   assert.equal(j.warnings.filter(w => /store-old/.test(w)).length, 1, JSON.stringify(j.warnings));
 });
 
+test('no-own-read report: distinct counts, German text and codes; only the old own read counts as store-old', () => {
+  const mixed = path.join(root, 'mixed'), mixedSnaps = path.join(mixed, 'snapshots'), mixedStore = path.join(mixed, 'store');
+  const mixedOutputs = path.join(mixed, 'outputs'), st = structuredClone(F.store);
+  st.tw.sources.fresh = { fetchedAt: '2026-10-20T07:00:00.000Z', read: ['2548.TW 115Q2'] };
+  for (const [ticker, code] of [['2885.TW', 'no-line'], ['1312A.TW', 'bad-id']]) {
+    st.tw.companies[ticker] = { companyId: ticker.split('.')[0], seasons: {},
+      noData: { '115Q2': { at: '2026-10-20T07:00:00.000Z', code } } };
+  }
+  const ts = ['2885.TW', '1312A.TW', '6446.TW'];
+  for (const ticker of ts) {
+    const s = structuredClone(F.snapshots['6446.TW']);
+    Object.assign(s.meta, { ticker, fetchedAt: '2026-10-20T09:00:00.000Z',
+      industry: ticker === '2885.TW' ? 'Financial Conglomerates' : 'Chemicals' });
+    write(path.join(mixedSnaps, ticker + '.json'), s);
+  }
+  write(path.join(mixedSnaps, '_manifest.json'), { pulled_at: '2026-10-20T09:00:00.000Z' });
+  for (const k of ['cn', 'tw']) write(path.join(mixedStore, k + '.json'), st[k]);
+  write(path.join(mixedOutputs, 'findash-export', 'v1', 'real-estate.json'),
+    { generated_at: '2026-10-20T09:00:00.000Z', profitable: ranked(ts), unprofitable: [] });
+  const args = ['--snapshots', mixedSnaps, '--outputs', mixedOutputs, '--store', mixedStore, '--board-history', bh];
+  const inputBefore = [mixedSnaps, mixedOutputs, mixedStore, bh].map(tree), json = path.join(root, 'report', 'mixed.json');
+  const result = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'exchange-check-report.js'), '--out', json, ...args],
+    { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stderr);
+  const j = JSON.parse(fs.readFileSync(json, 'utf8'));
+  for (const bucket of ['all', 'all:TW', 'board', 'board:TW']) {
+    assert.deepEqual(j.counts[bucket], { 'unchecked(no-own-read)': 2, 'unchecked(store-old)': 1 });
+  }
+  for (const [ticker, code] of [['2885.TW', 'no-line'], ['1312A.TW', 'bad-id']]) {
+    const r = j.boardRows.find(r => r.ticker === ticker);
+    assert.equal(r.category, 'unchecked'); assert.equal(r.why, 'no-own-read');
+    assert.equal(r.whyText, 'Börsenquelle hat diese Firma noch nie geliefert');
+    assert.deepEqual(r.noDataCodes, [code]); assert.equal(r.fill, null); assert.deepEqual(r.withhold, []);
+  }
+  const old = j.boardRows.find(r => r.ticker === '6446.TW');
+  assert.equal(old.whyText, 'Der letzte Abruf der Börsenquelle für diese Firma ist älter als die Frist');
+  assert.ok(!Object.hasOwn(old, 'noDataCodes'));
+  assert.deepEqual(j.warnings, [
+    'exchange store older than the limit (store-old): 1 China/Taiwan rows unchecked',
+    '2 China/Taiwan rows: Börsenquelle hat diese Firma noch nie geliefert (no-own-read)',
+  ]);
+  assert.deepEqual(j.census, []);
+  const reference = path.join(root, 'report', 'mixed-reference.json'), md = path.join(root, 'report', 'mixed.md');
+  const expected = structuredClone(R.census.find(r => r.ticker === '6446.TW'));
+  expected.ticker = '2885.TW';
+  write(reference, { census: [expected], boardRows: [expected], counts: { all: { 'would-fill': 1 }, board: { 'would-fill': 1 } },
+    inputs: { baselineDate: F.baseline.date } });
+  const filled = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'exchange-check-report.js'), '--mode', 'fill-only',
+    '--out', md, '--reference', reference, ...args], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(filled.status, 0, filled.stderr);
+  const text = fs.readFileSync(md, 'utf8');
+  assert.ok(text.includes('| board | 2885.TW | fehlt jetzt | Börsenquelle hat diese Firma noch nie geliefert |'));
+  assert.ok(!text.includes('| fehlt jetzt | no-own-read |'));
+  const summary = JSON.parse(filled.stdout.split('\n').find(l => l.startsWith('[exchange-fill-only] ')).slice('[exchange-fill-only] '.length));
+  for (const k of ['all', 'board']) assert.deepEqual(summary.counts[k], { rows: 3, filled: 0, withheld: 0, otherChanged: 0 });
+  assert.deepEqual([mixedSnaps, mixedOutputs, mixedStore, bh].map(tree), inputBefore);
+  assert.ok(!Object.hasOwn(R.boardRows.find(r => r.ticker === '000002.SZ'), 'whyText'));
+  assert.ok(!Object.hasOwn(R.boardRows.find(r => r.ticker === '000002.SZ'), 'noDataCodes'));
+});
+
 test('fill-only CLI: measured counts, every board membership, growth legs, input hashes and exact reconciliation', () => {
   const md = path.join(root, 'report', 'fill-only.md'), csv = md.replace(/\.md$/, '.csv');
   const inputBefore = [snaps, outputs, store, bh].map(tree);

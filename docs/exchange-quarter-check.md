@@ -22,6 +22,9 @@ No reader sees any change; the measurement runs in mode `shadow` through `script
   a mode change leaves no residue.
 - Store missing, unreadable or older than 8 days before the snapshot (2 days between 15.10. and 20.11.): every
   row of that market is `unchecked`, one `::warning::` per process (`store-old` included), never a reader failure.
+  With a fresh store, a company with neither an own run read nor any observations is `unchecked(no-own-read)`;
+  an older own read is `unchecked(store-old)`. The runtime summary counts these separately and emits no
+  `::warning::` for `no-own-read`.
 - Hand tables keep authority: a ticker with any case in `configs/financial-known-cases.json` or
   `configs/yahoo-q4-known-cases.json`, or any foreign marker on a revenue cell, is `unchecked(hand-table)`.
 - No file under `src/scoring/` changes. Feeding Eastmoney values into scoring is the route `scripts/build-cnannual.js`
@@ -72,7 +75,14 @@ value of 0 are real wrong values and go on the false-hold list for G2c and the h
 Store age is measured per company: the newest run that read one of the company's own keys again (China: a
 listed period the company has and is not absent for; Taiwan: an entry in the run's `read` list) must be within
 the limit of the snapshot's fetch time. A newer run that did not read the company (partial Taiwan pass) does not
-make its data fresh; such a row is `unchecked(store-old)`. A store whose newest run is too old is old for every row.
+make an older own read fresh: that row stays `unchecked(store-old)`. A store whose newest run is too old is old
+for every row, including companies never read. In a fresh store, no own run read and no non-empty observation
+list (Taiwan `seasons`, China `ytd`) means `unchecked(no-own-read)`: the source has never delivered the company.
+The 25 Taiwan cases found on 07.10.2026 comprise 23 with `no-line` and two with `bad-id` (`1312A.TW`, `2002A.TW`).
+Observations without a matching run read are inconsistent and conservatively remain `unchecked(store-old)`.
+Both reasons carry `whyText`; `no-own-read` also carries the sorted unique `noDataCodes` from the entry's
+`noData`. German labels: `no-own-read` = "Börsenquelle hat diese Firma noch nie geliefert";
+`store-old` = "Der letzte Abruf der Börsenquelle für diese Firma ist älter als die Frist".
 
 ## Reason texts (German, `financialDataReasons`)
 
