@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-07T09:54:16.747Z",
+  "generated_at": "2026-10-08T10:19:51.950Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 72.9,
-    "generated_at": "2026-10-07T09:47:22.288Z"
+    "coverage_pct": 72.6,
+    "generated_at": "2026-10-08T10:11:24.378Z"
   },
   "profitable": [
     {
@@ -636,7 +636,7 @@
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": -31.38217279149377,
+      "revGrowthYoYPct": -31.38217279149376,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -934,6 +934,105 @@
       "rank": 2,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "LDI",
+      "score": 60.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "crashRisk",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 51.5
+      },
+      "name": "loanDepot, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "4/7",
+      "coverageWeight": 0.51,
+      "cohortN": 10,
+      "cohortFallback": true,
+      "scoreBase": 69,
+      "scoreShrunk": 60.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 70,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.7
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 63.5,
+          "weight": 0.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 1.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.7
+        },
+        {
+          "key": "dilution",
+          "pct": 71.9,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 22.394147867502777,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -97.9,
+        "athDate": "2021-02-12",
+        "monthsAgo": 68,
+        "lastDate": "2026-10-07"
+      },
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30"
+    },
+    {
+      "rank": 3,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "ALTI",
       "score": 55.1,
       "track": "unprofitable",
@@ -1028,7 +1127,7 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
-      "rank": 3,
+      "rank": 4,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "TMS",
@@ -1122,7 +1221,7 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
-      "rank": 4,
+      "rank": 5,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "PRAA",
@@ -1215,7 +1314,7 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
-      "rank": 5,
+      "rank": 6,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CNCK",
@@ -1308,7 +1407,7 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
-      "rank": 6,
+      "rank": 7,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "AXG",
@@ -1404,7 +1503,7 @@
       "revGrowthSourcePriorPeriodEnd": null
     },
     {
-      "rank": 7,
+      "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "GEMI",
@@ -1501,7 +1600,7 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30"
     },
     {
-      "rank": 8,
+      "rank": 9,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MTC",
@@ -1600,7 +1699,7 @@
       "revGrowthSourcePriorPeriodEnd": "2024-12-31"
     },
     {
-      "rank": 9,
+      "rank": 10,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BTBT",
