@@ -334,6 +334,35 @@ test('share-count application versus table membership; statement scope and missi
   assert.equal(fixture(st).manifest.records.filter(r => r.sourceType === 'handTable').length, 0);
 });
 
+test('P142 German source titles reach the manifest without the former English descriptions', () => {
+  const statements = loadStatementCurrencyTable();
+  assert.equal(statements['PBR-A'].source, 'Die Konzernabschlüsse in den SEC-Formularen 20-F/6-K sind in US-Dollar dargestellt; der Umsatz 2024 von 91.416 Mio. USD entspricht dem unverarbeiteten Jahreswert von Yahoo.');
+  assert.equal(loadShareCountTable().ANDG.source.form, 'Der Prospekt im Formular 424B4 vom 2026-08-20 mit der Zugangsnummer 0001193125-26-359181 beschreibt das Angebot im Abschnitt „The offering“.');
+  for (const [ticker, entry] of Object.entries(statements)) {
+    const s = snapshot(); s.meta.ticker = ticker; s.meta.reportingCurrency = entry.yahooFinancialCurrency;
+    s.annual.annualRev = [100, 90]; s.metrics = { revenueTTM: 500 };
+    assert.equal(statementFactor(s, entry.yahooFinancialCurrency, 0.2, statements).status, 'corrected');
+    s.meta.reportingCurrency = 'USD';
+    if (entry.series === 'annual') s.timeseries = {};
+    const records = fixture(s).manifest.records.filter(r => r.sourceType === 'handTable');
+    const titles = records.map(r => r.documentTitle);
+    assert.ok(titles.length > 0, ticker + ': real manifest title exists');
+    assert.ok(titles.every(title => title === entry.source && !/consolidated statements|same issuer|annual filing|matches Yahoo|revenue US\$|results pp\./.test(title)), ticker);
+    // German wording must retain the page tokens consumed by sourceDocument.
+    const pages = { 'VALE3.SA': '33', 'XVALO.MC': '33', YPF: '13,72', 'YPFD.BA': '13,72', '6269.T': '1-2' };
+    if (pages[ticker]) assert.ok(records.every(r => r.page === pages[ticker]), ticker + ': source page preserved');
+  }
+  for (const [ticker, entry] of Object.entries(loadShareCountTable())) {
+    const s = snapshot(); s.meta.ticker = ticker; s.meta.asOf = '2026-10-06';
+    s.marketCap = { value: entry.wrongShares[0] * 50, source: 'yahoo_quote', asOf: '2026-10-06' };
+    s.price = { regularMarketPrice: 50 };
+    assert.equal(applyShareCountTable(s, ticker, 50, loadShareCountTable()).status, 'corrected');
+    const titles = fixture(s).manifest.records.filter(r => r.sourceType === 'handTable').map(r => r.documentTitle);
+    assert.ok(titles.includes(entry.source.form), ticker + ': share-count title reaches manifest');
+    assert.ok(titles.every(title => !/prospectus of|for the period ended|cover page/.test(title || '')));
+  }
+});
+
 test('annual/newer-record legs and R40 rounding keep original value hashes', () => {
   const s = snapshot(); s.timeseries = {};
   assert.equal(fixture(s).row.revGrowthBasis, 'year');
