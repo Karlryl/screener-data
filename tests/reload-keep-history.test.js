@@ -174,9 +174,15 @@ async function main() {
       const f = fixture(options), cp = path.join(root, 'fundamentals-cache/OLD.json'), sp = path.join(f.out, 'OLD.json');
       f.files.delete(cp); const before = f.files.get(sp).toString();
       const rejects = !old;
-      assert.equal((await f.run()).results[0].status, rejects ? 'reload-retained' : 'ok');
-      assert.notEqual(f.files.get(sp).toString(), before); assert.equal(f.files.has(cp), !rejects);
-      if (rejects) { assert.deepEqual(f.stored('OLD').timeseries, s.timeseries); assert.deepEqual(f.stored('OLD').annual, s.annual); }
+      const m = await f.run();
+      // P137: ordinary full pull now protects against a lost reporting period
+      assert.equal(m.results[0].status, rejects ? 'reload-retained' : 'price-only');
+      assert.notEqual(f.files.get(sp).toString(), before); assert.equal(f.files.has(cp), false);
+      assert.deepEqual(f.stored('OLD').timeseries, s.timeseries); assert.deepEqual(f.stored('OLD').annual, s.annual);
+      if (old) {
+        assert.equal(m.n_full_period_regression_blocked, 1);
+        assert.deepEqual(clone(m._fullPeriodRegressions).map(r => r.ticker), ['OLD']);
+      }
     });
   }
   await check('missing FCF/OCF in both answers remains null with a reason', async () => {
