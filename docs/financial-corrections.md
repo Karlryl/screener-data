@@ -990,7 +990,7 @@ Die JSON-Datei enthält beide Rohdatei-Hashes, USD- und native Werte, Perioden, 
 > Zehn Quartalszellen sind abgedeckt, davon sieben korrigiert und drei bestätigt.
 > Der Vergleich auf dem Rohstand vom 06.10. weist 0 andere geänderte Quellwerte aus.
 
-Die folgenden Zellen wurden mit `-p138` an die bestehende Tabelle angehängt. Beide Reihen haben `coversThrough: 2026-06-30`; kein gespeichertes Umsatzquartal wird geleert. Die alten 216 Fälle, 34 Abdeckungen, 11 Sperren und 16 Periodenetiketten behalten ihre bisherigen Prüfsummen. Alle zehn Fingerabdrücke multiplizieren sich in JavaScript exakt mit dem gespeicherten Währungsfaktor zum vorhandenen USD-Wert.
+Die folgenden Zellen wurden mit `-p138` an die bestehende Tabelle angehängt. Beide Reihen haben `coversThrough: 2026-06-30`; kein gespeichertes Umsatzquartal wird geleert. Die 225 Fälle bis P129 (216 ältere und die neun von P129), 34 Abdeckungen, 11 Sperren und 16 Periodenetiketten bleiben unverändert; die ersten 216 Fälle sind zusätzlich durch ihre bisherigen Prüfsummen festgehalten. Die acht Fälle von P47 (AEON und Okasan) stehen in der Tabelle vor den zehn neuen und sind nicht berührt. Alle zehn Fingerabdrücke multiplizieren sich in JavaScript exakt mit dem gespeicherten Währungsfaktor zum vorhandenen USD-Wert.
 
 | Ticker | Periode | Feld | Währung | Alt | Neu | Status |
 |---|---|---|---|---:|---:|---|

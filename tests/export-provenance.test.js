@@ -11,6 +11,8 @@ const { applyShareCountTable, loadShareCountTable, applyAdsHandTable, loadAdsHan
 const { preserveReloadHistory } = require('../lib/reload-history.js');
 const { statementFactor, loadStatementCurrencyTable } = require('../lib/statement-currency-hand-table.js');
 const { compareExports, jsonFiles } = require('../scripts/check-export-additive.js');
+const { fixtureSnapshot } = require('../scripts/period-labels-check.js');
+const crdo = require('./fixtures/period-labels/period-fixtures.json').cases.find(c => c.ticker === 'CRDO');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'export-provenance-test-'));
 const clone = value => JSON.parse(JSON.stringify(value));
 let ok = 0, fail = 0;
@@ -70,6 +72,42 @@ test('exact keys, two operand paths/periods, hashes and honest unknown times', (
   assert.equal(f.row.fieldStatus.marketCap.presence, 'present'); // real zero
   const s = snapshot(); delete s.meta.fetchedAt;
   assert(fixture(s).manifest.records.every(r => r.retrievedAt === null));
+});
+
+test('P134: relabelled CRDO operands keep source-period stamps and display periods', () => {
+  const s = fixtureSnapshot(crdo), fetchedAt = '2026-08-08T04:11:22.446Z';
+  s.meta.statementPeriods = { revenueQ: crdo.rows.map(r => ({ end: r.vendorEnd, fetchedAt })) };
+  const prepared = applyFinancialCases(s).snapshot, before = JSON.stringify(prepared);
+  const captured = p.captureSnapshot(prepared);
+  assert.deepEqual(captured.inputs.map(r => r.retrievedAt), [fetchedAt, fetchedAt]);
+  assert.deepEqual(captured.inputs.map(r => r.periodEnd), ['2026-05-02', '2025-05-03']);
+  assert.deepEqual([captured.leg.sourcePeriodEnd, captured.leg.sourcePriorPeriodEnd], ['2026-04-30', '2025-04-30']);
+  const file = { rows: [rowFor({ ...prepared, marketCap: { value: null } })] };
+  const manifest = p.buildProvenance([file], { snapshotFor: () => captured });
+  const growth = manifest.records.find(r => r.fieldPath === 'revGrowthYoYPct');
+  assert.equal(growth.periodEnd, file.rows[0].revGrowthPeriodEnd);
+  assert.equal(growth.comparativeBasis, file.rows[0].revGrowthPriorPeriodEnd);
+  assert.equal(JSON.stringify(prepared), before);
+});
+
+test('P134: retained CRDO stamps match source periods', () => {
+  const s = fixtureSnapshot(crdo), fetchedAt = '2026-08-08T04:11:22.446Z';
+  s.meta.reloadHistoryRetained = crdo.rows.map(r => ({ field: 'revenueQ', end: r.vendorEnd, fetchedAt }));
+  const inputs = p.captureSnapshot(applyFinancialCases(s).snapshot).inputs;
+  assert.deepEqual(inputs.map(r => r.retrievedAt), [fetchedAt, fetchedAt]);
+  assert.deepEqual(inputs.map(r => r.periodEnd), ['2026-05-02', '2025-05-03']);
+});
+
+test('P134: display-only CRDO stamps prove neither revenue operand', () => {
+  for (const retained of [false, true]) {
+    const s = fixtureSnapshot(crdo), fetchedAt = '2026-08-08T04:11:22.446Z';
+    const stamps = crdo.rows.map(r => ({ field: 'revenueQ', end: r.reportedEnd, fetchedAt }));
+    if (retained) s.meta.reloadHistoryRetained = stamps;
+    else s.meta.statementPeriods = { revenueQ: stamps };
+    const inputs = p.captureSnapshot(applyFinancialCases(s).snapshot).inputs;
+    assert.deepEqual(inputs.map(r => r.retrievedAt), [null, null]);
+    assert.deepEqual(inputs.map(r => r.periodEnd), ['2026-05-02', '2025-05-03']);
+  }
 });
 
 test('no reviews means zero verified, requiredFields follow present keys, null stays missing', () => {

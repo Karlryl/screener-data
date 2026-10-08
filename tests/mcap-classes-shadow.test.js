@@ -252,8 +252,9 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
   candidates[0].row.marketCapClassesShadow = shadow;          // as the main export writes it
   candidates[0].row.marketCapClassesDeviationPct = deviationPct(candidates[0].row.marketCap, shadow.value);
   const rows = rule40.baueZeilen(candidates).rows;
+  // P134 adds source-period labels; exclude only these additions alongside the shadows from the frozen baseline.
   const stripped = rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) =>
-    !['marketCapClassesShadow', 'marketCapClassesDeviationPct'].includes(key))));
+    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd'].includes(key))));
   assert.equal(JSON.stringify(stripped), JSON.stringify(fixture.before.rows));
   const byTicker = Object.fromEntries(rows.map((row) => [row.ticker, row]));
   assert.deepEqual(byTicker['688428.SS'].marketCapClassesShadow, shadow, 'on-board: same issuer value as the sector board');
