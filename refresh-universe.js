@@ -576,12 +576,12 @@ function exchangeFehlerIstTransient(meldung, httpStatus) {
 }
 
 // Die USD-Schranken in die LISTING-Waehrung der Boerse umrechnen (Messbefund 2, siehe
-// EXCHANGE_KANAELE). toUsd(1, ccy, rates) liefert den USD-Wert EINER Einheit und kennt
-// dabei die Sub-Einheiten (GBp/ZAc) — die Umrechnung wird deshalb nicht nachgebaut,
-// sondern ueber dieselbe Funktion gefuehrt, die spaeter auch das USD-Gate rechnet.
+// EXCHANGE_KANAELE). No EXCHANGE_KANAELE entry uses a sub-unit code (LSE and JNB are excluded channels).
+// The bound is in the major unit of the filter currency; the same conversion serves the USD gate.
 // Fehlt der Kurs, gibt es keine sinnvollen Schranken: null zurueck, der Aufrufer
 // ueberspringt die Boerse LAUT statt sie mit falschen Grenzen abzufragen.
 function lokaleSchranken(ccy, rates) {
+  // toUsd unit: AGGREGATE bound, USD per one major unit of the intradaymarketcap filter currency
   const kurs = toUsd(1, ccy, rates);
   if (!Number.isFinite(kurs) || kurs <= 0) return null;
   return { min: Math.floor(MIN_MCAP_DISCOVERY / kurs), max: Math.ceil(MAX_MCAP_DISCOVERY / kurs) };
@@ -1266,6 +1266,7 @@ async function main() {
         const sym = q.symbol.toUpperCase();
         // Bug 4: q.marketCap ist in q.currency (Listing-Waehrung), das Gate in USD.
         // Nach USD konvertieren, gegen $800M/$500B pruefen und den USD-Wert speichern.
+        // toUsd unit: AGGREGATE (market cap), sub-unit currency codes are read as their major unit
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
         // T562-M1: Drop-Grund trennen, BEVOR das Gate verwirft — "Waehrung fehlt in
         // fx-rates.json" ist ein Artefakt-Problem, "ausserhalb des Bands" eine Entscheidung.
@@ -1483,6 +1484,7 @@ async function main() {
         if (istZweitlistung(q)) { zweitlistung++; exchangeZweitlistung++; continue; }
         const sym = q.symbol.toUpperCase();
         // Bug 4: USD-konvertieren vor dem Gate (die Schwellen sind USD-Schwellen).
+        // toUsd unit: AGGREGATE (market cap), sub-unit currency codes are read as their major unit
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
         if (isUnpriceable(q.marketCap, q.currency, _FX_RATES)) exchangeFxLuecke++;  // T562-M1
         if (!inDiscoveryMcapBand(mcap)) continue;  // F-11: identischer Boden wie oben
