@@ -17,7 +17,7 @@
       "hypergrowth": "provenance/hypergrowth.json",
       "rule40": "rule40/provenance/rule40.json"
     },
-    "serialization": "Compact JSON; omitted record/fx/derivation keys expand to null in contract order; all-null subobjects may be omitted. Other values, envelope and reviews stay present. Evidence IDs hash the expanded record with id:null.",
+    "serialization": "Compact JSON; omitted record/fx/derivation keys expand to null in contract order; all-null subobjects may be omitted. Other values, envelope and reviews stay present. Evidence IDs hash the expanded record with id:null, omitting handTableDerivation when null so IDs of records without it are unchanged.",
     "failureMarkerPaths": [
       "provenance/_failed.json",
       "rule40/provenance/_failed.json"
@@ -125,8 +125,12 @@
       "correctionRevision",
       "supersedesId",
       "missingReason",
-      "qualityWarnings"
+      "qualityWarnings",
+      "handTableDerivation"
     ],
+    "handTableDerivationFields": ["formulaDe", "inputs"],
+    "handTableDerivationInputFields": ["labelDe", "value", "currency", "quote", "url", "page", "form", "filed"],
+    "handTableDerivationDescriptionDe": "Nur bei Handtabellen-Zellen, deren angezeigter Wert in keiner einzelnen Quelle steht, sondern aus zwei Quellwerten berechnet ist (zum Beispiel Viertes Quartal = Geschäftsjahr minus neun Monate) oder von der Firma nur gerundet genannt wird. Sonst fehlt der Schlüssel und gilt als null.",
     "fxFields": [
       "rate",
       "fromCurrency",
