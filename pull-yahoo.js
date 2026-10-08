@@ -3661,6 +3661,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     sizeExits: mergeSizeExits([[..._sizeExits.values()]]),
   }));
   const failures = [];
+  let n_full_period_regression_blocked = 0;
+  const _fullPeriodRegressions = [];
+  const manualPeriodRegressionWarnings = new Set();
+  const fullPeriodReasonDe = 'Die neue Yahoo-Antwort enthält ein älteres Berichtsquartal oder Geschäftsjahr als gespeichert. Die bisherigen Fundamentaldaten bleiben erhalten, nur Kurs und Börsenwert wurden aktualisiert.';
   // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
   //
   // Tag 436 (Dosis-Korrektur zu BH-043): BH-043 hat die GLIEDERUNG richtig gestellt
@@ -3791,6 +3795,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_priceonly: nPriceOnly, n_retained: okResults.filter(r => r.status === 'reload-retained').length,
         ..._selectorCounters(),
         ...reloadCounters(),
+        n_full_period_regression_blocked,
+        _fullPeriodRegressions: _fullPeriodRegressions.slice().sort((a, b) => a.ticker.localeCompare(b.ticker)),
         _staleQuarterReload: reloadMeta,
         n_skipped_mcap: skippedMcap,
         n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
@@ -3896,22 +3902,61 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     } catch { return false; }
   }
 
+  // Cheap pre-check: the exact reader applies hand tables and records runtime diagnostics.
+  function _rawQuarterEnd(snapshot, now) {
+    const ts = snapshot?.timeseries || {};
+    let latest = null;
+    for (const [values, ends] of [['revenueQ', 'revenueQEnds'], ['grossProfitQ', 'grossProfitQEnds'],
+      ['opIncQ', 'opIncQEnds'], ['netIncomeQ', 'revenueQEnds']]) {
+      if (!Array.isArray(ts[values]) || !Array.isArray(ts[ends])) continue;
+      ts[ends].forEach((end, i) => {
+        if (typeof end !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return;
+        const t = Date.parse(end), raw = ts[values][i], value = raw && typeof raw === 'object' ? raw.value : raw;
+        if (Number.isFinite(t) && t <= now && new Date(t).toISOString().slice(0, 10) === end && Number.isFinite(value)) {
+          if (!latest || end > latest) latest = end;
+        }
+      });
+    }
+    return latest;
+  }
+
+  // Ordinary full pulls count only real, positive annual revenue, not vendor padding (T2).
+  function _rawAnnualEnd(snapshot, now) {
+    const annual = snapshot?.annual || {};
+    let latest = null;
+    (Array.isArray(annual.annualRevEnds) ? annual.annualRevEnds : []).forEach((end, i) => {
+      if (typeof end !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return;
+      const t = Date.parse(end), raw = annual.annualRev?.[i], value = raw && typeof raw === 'object' ? raw.value : raw;
+      if (Number.isFinite(t) && t <= now && new Date(t).toISOString().slice(0, 10) === end && Number.isFinite(value) && value > 0) {
+        if (!latest || end > latest) latest = end;
+      }
+    });
+    return latest;
+  }
+
   // Tag 166: lightweight price-only update — preserves fundamentals from previous snapshot
   // audit F-A-2026-06-21: accepts an optional pre-parsed snapshot (preParsed) so
   // the fast-path doesn't parse the file a THIRD time after the schema/currency
   // probes already parsed it. Falls back to read+parse when called without one
   // (preserves the original contract for any other caller). Failure mode
   // prevented: triple JSON.parse per fast-path ticker.
-  async function _priceOnlyUpdate(stock, outputDir, preParsed) {
+  async function _priceOnlyUpdate(stock, outputDir, preParsed, suppliedQuote) {
     const fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
     let existing = preParsed;
     if (existing == null) {
       if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
       existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
-    const q = await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
+    const q = suppliedQuote ?? await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
     if (!Number.isFinite(q && q.marketCap)) {
       throw new Error('price-only refused: quote without finite marketCap - full pull decides');
+    }
+    if (suppliedQuote) {
+      if (!Number.isFinite(q.regularMarketPrice) || q.regularMarketPrice <= 0 || typeof q.currency !== 'string' || !q.currency.trim()) {
+        throw new Error('price-only refused: supplied summary without a usable price or trading currency');
+      }
+      // Copy-on-write: even a late validation failure must leave the retained input pristine.
+      existing = JSON.parse(JSON.stringify(existing));
     }
     // P0-Haertung 2 (F-CGPT-003): frueher nur `if (!q)`. Eine wahrheitswerte, aber
     // leere Quote ({currency:'USD'}) aktualisierte nichts, schrieb den Snapshot
@@ -4022,6 +4067,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
       // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
       existing.marketCap.source = 'yahoo_quote';
+      if (suppliedQuote) existing.marketCap.source = 'yahoo_quoteSummary';
       if (existing.marketCap.missing === true) {
         delete existing.marketCap.missing;
         existing.marketCap.confidence = 0.9;
@@ -4048,6 +4094,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     const MIN_MCAP = MIN_MCAP_USD;
     const mcapNow = existing.marketCap && existing.marketCap.value;
     if (mcapNow != null && mcapNow < MIN_MCAP) {
+      if (suppliedQuote) throw new Error('price-only floor: supplied summary cap below minimum; stored snapshot retained');
       const deleteFailures = _removeStaleFiles([fp], stock.ticker);
       if (deleteFailures.length) {
         throw new Error('price-only floor: stale snapshot removal failed: ' + deleteFailures[0].error);
@@ -4147,10 +4194,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // fast-path ticker (the ~80%-hit path). Failure mode prevented: redundant
       // triple parse of every young snapshot.
       let _parsedSnapshot = null;
+      let _priorSnapshotText = null;
       {
         try {
           const _fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
-          if (fs.existsSync(_fp)) _parsedSnapshot = JSON.parse(fs.readFileSync(_fp, 'utf8'));
+          if (fs.existsSync(_fp)) {
+            _priorSnapshotText = fs.readFileSync(_fp, 'utf8');
+            _parsedSnapshot = JSON.parse(_priorSnapshotText);
+          }
         } catch (e) {
           // TASK 0.11: a corrupt young snapshot was silently treated as no-cache. Keep that
           // (the staleness probes then re-fetch, self-healing) but COUNT+log it so disk
@@ -5266,6 +5317,52 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const r0 = canonical.annual.annualRev?.[0];
         canonical.meta.annualRevNewerYear.priorStored = (r0 != null && typeof r0 === 'object' ? r0.value : r0) ?? null;
       }
+      // Retaining an old schema or FX envelope would defeat those forced repairs.
+      // A summary without finite cap exits earlier via the existing missing-cap path, before this guard.
+      if (!reloadOnly && !staleSchema && !staleCurrency && _parsedSnapshot) { // P137: ordinary full-pull period guard
+        const prior = JSON.parse(_priorSnapshotText);
+        const now = Date.now();
+        let previousAnnualEnd = _rawAnnualEnd(prior, now);
+        const nextAnnualEnd = _rawAnnualEnd(canonical, now);
+        let previousQuarterEnd = _rawQuarterEnd(prior, now), nextQuarterEnd = _rawQuarterEnd(canonical, now);
+        // The candidate already passed the at-pull hook. Only a raw regression needs exact confirmation.
+        if (previousAnnualEnd && (!nextAnnualEnd || nextAnnualEnd < previousAnnualEnd)) {
+          previousAnnualEnd = reload.latestPreparedAnnualRevenueEnd(prior, now);
+        }
+        if (previousQuarterEnd && (!nextQuarterEnd || nextQuarterEnd < previousQuarterEnd)) {
+          previousQuarterEnd = reload.latestReportedQuarter(prior, now);
+          nextQuarterEnd = reload.latestReportedQuarter(canonical, now);
+        }
+        // Retain the whole bundle if either dimension regresses, even when the other advances.
+        if ((previousAnnualEnd && (!nextAnnualEnd || nextAnnualEnd < previousAnnualEnd)) ||
+            (previousQuarterEnd && (!nextQuarterEnd || nextQuarterEnd < previousQuarterEnd))) {
+          // Old snapshots bypass the young-only repair probes above; never retain their broken envelope.
+          const guardNeedsSchemaRepair = _existingSnapshotMissingTag211lFields(prior);
+          const guardNeedsCurrencyRepair = _existingSnapshotMissingCurrencyNormalization(prior);
+          if (vollPullAngefordert && !guardNeedsSchemaRepair && !guardNeedsCurrencyRepair && !manualPeriodRegressionWarnings.has(stock.ticker)) {
+            manualPeriodRegressionWarnings.add(stock.ticker);
+            console.warn(`::warning::${stock.ticker} full-pull period regression NOT blocked: manual full pull requested (voll_pull_ticker); quarter ${previousQuarterEnd} -> ${nextQuarterEnd}, annual ${previousAnnualEnd} -> ${nextAnnualEnd}`);
+          } else if (!vollPullAngefordert && !guardNeedsSchemaRepair && !guardNeedsCurrencyRepair) {
+            let event = _fullPeriodRegressions.find(r => r.ticker === stock.ticker);
+            if (!event) {
+              event = { ticker: stock.ticker, outcome: 'blocked', previousQuarterEnd, nextQuarterEnd,
+                previousAnnualEnd, nextAnnualEnd, priceUpdated: false, reason: 'period-regression-retained', reasonDe: fullPeriodReasonDe };
+              n_full_period_regression_blocked++;
+              _fullPeriodRegressions.push(event);
+              console.warn(`::warning::${stock.ticker} full-pull period regression blocked (quarter ${previousQuarterEnd} -> ${nextQuarterEnd}, annual ${previousAnnualEnd} -> ${nextAnnualEnd})`);
+            }
+            prior.meta = prior.meta || {};
+            prior.meta.fundamentalsRetainedReason = fullPeriodReasonDe;
+            const r = await _priceOnlyUpdate(stock, outputDir, prior, {
+              regularMarketPrice: _y(yahoo.price, 'regularMarketPrice'), currency: _y(yahoo.price, 'currency'),
+              marketCap: _y(yahoo.summaryDetail, 'marketCap') ?? _y(yahoo.price, 'marketCap'),
+            });
+            event.priceUpdated = true;
+            results.push({ ...r, fundamentalsRetainedReason: fullPeriodReasonDe });
+            return;
+          }
+        }
+      }
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
@@ -5509,6 +5606,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     yahooQ4HandTable: q4Counts(),
     _silentErrors,
     ...reloadCounters(),
+    n_full_period_regression_blocked,
+    _fullPeriodRegressions: _fullPeriodRegressions.slice().sort((a, b) => a.ticker.localeCompare(b.ticker)),
     _staleQuarterReload: reloadMeta,
     // FN-2: derselbe Zaehler maschinenlesbar. Das Protokoll ist die Sichtspur, das
     // Manifest der Vergleichspunkt — ein Vintage-gegen-Vintage-Diff braucht die Zahl als
@@ -5534,8 +5633,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diesem Manifest bereits die gefilterte Liste. Nur der Merge, der n_total durch das volle
   // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.filter(r => r.status === 'price-only').length, n_retained: okResultsFinal.filter(r => r.status === 'reload-retained').length, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.filter(r => r.status === 'price-only').length, n_retained: okResultsFinal.filter(r => r.status === 'reload-retained').length, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false,
+    n_full_period_regression_blocked,
+    _fullPeriodRegressions: manifest._fullPeriodRegressions,
+  };
   slim.yahooQ4HandTable = manifest.yahooQ4HandTable;
+  _log('INFO', `full-pull period regression: blocked=${n_full_period_regression_blocked} tickers=${manifest._fullPeriodRegressions.map(r => r.ticker).join(',')}`);
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, pulled=${reloadStats.pulled}, newer=${reloadStats.newer}, still-old-yahoo=${reloadStats.still_old_yahoo}, skipped-cap=${reloadStats.skipped_cap}, fetch-failed=${reloadStats.fetch_failed}, reload-failed=${reloadStats.reload_failed}, no-quarter=${reloadStats.no_quarter}`);
   _log('INFO', `Missing-market-cap observations: ${manifest.n_missing_mcap} (not counted as successful pulls)`);
   // Tag 189: factored into writeFileAtomic helper.
