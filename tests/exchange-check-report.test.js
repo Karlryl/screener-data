@@ -53,7 +53,7 @@ test('runs, writes only --out, inputs byte-identical', () => {
   assert.equal(R.schema, 'exchange-check-shadow/v1'); assert.equal(R.mode, 'shadow'); assert.equal(R.committedMode, 'fill-only');
   assert.equal(R.inputs.baselineDate, F.baseline.date); assert.deepEqual(R.warnings, []);
 });
-test('the 16 wrong board rows and the 5 risers: 21/21 would-withhold, none unchecked', () => {
+test('the 16 wrong board rows and the 5 risers: 20/20 would-withhold, none unchecked', () => {
   assert.equal(R.mustWithholdPass, '20/20'); // P138: 000688.SZ is corrected by the hand table now, so 20 of the 21 stay in the must-withhold list
   assert.ok(R.mustWithhold.every(x => x.pass && x.category !== 'unchecked' && x.onBoard));
 });
