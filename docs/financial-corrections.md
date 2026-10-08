@@ -779,7 +779,7 @@ Git-Abschluss (Stand 30.09.): Der ursprüngliche Lauf konnte wegen index.lock ni
 
 Numerische Jahreskorrekturen nutzen denselben Zellpfad wie Quartalskorrekturen: exakter Anbieterwert, belegtes Jahresende, passende Berichts- und Speicherwährung, Einheit, Faktor und Quelle. Die Quellen müssen den Ersatzbetrag belegen, eine nichtleere Jahresperiode innerhalb des Falljahres mit gleichem Ende sowie Währung und Basiseinheit angeben. Ein Ersatzwert 0 wird abgewiesen. Bereits richtige Zellen bleiben unverändert; eine wiederholte Anwendung ist wirkungslos. Fehlende oder abweichende Belege ergeben einen fehlenden Wert mit Hinweis. Die jährlichen Nullfälle behalten ihre Regel zum Leeren älterer Jahre. Seit der Bedingung aus P99 gilt dieselbe Lückensperre auch für numerische Jahresfälle; sie läuft als letzter Schritt nach allen Ersatz- und Rückhalteschritten, und ein numerischer Fall füllt keine Zelle wieder auf, die ein früherer Jahresschritt zurückgehalten hat. Numerische Einzelkorrekturen begründen keine quartalsweite Abdeckung.
 
-INDO-MIM ist bewusst nicht eingetragen, weil die gesamte Jahresrechnung des Anbieters für diese Firma zehnfach zu klein ist und ein reiner Umsatzersatz Maßstäbe vermischen würde; der Folgeauftrag P140 entscheidet darüber.
+Die vier INDO-MIM-Umsatzfälle werden gemeinsam mit der Maßstabsregel angewandt. Register, Belege und Wirkung stehen im Abschnitt „Ganze Jahresrechnung von INDO-MIM“.
 
 ## Handtabelle P129 vom 07.10.2026
 
@@ -1026,3 +1026,111 @@ Bei GRANULES.NS führt der Anbieter nur „Sale of products“. Maßgeblich ist 
 **Prüfung und Übergabe:** Der vorgeschriebene Testbefehl besteht mit Exit 0, 32 bestandenen Testeinheiten und 0 Fehlern. Der neue Einzeltest enthält zwölf Testfälle und zehn unabhängige Rotproben durch Entfernen je eines Falls aus einer Speicherkopie. Ein echter CLI-Rotlauf liefert Exit 1 mit `actual: null`, `expected: 248635565.94855413` für die bestätigte Juni-Zelle von 000688.SZ; die Live-Prüfsummen bleiben gleich. Keine neuen Exporte und keine Änderungen in lib/, src/, scripts/ oder pull-yahoo.js. Nach dem Zusammenführen mit main (Tag 1435 mit P129 und Tag 1436 mit dem Jahreswert-Mechanismus) stehen die neun P129-Fälle vor den zehn P138-Fällen (233 und dann 243 Fälle); die Zählprüfungen führen drei Pakete (P129, P47, P138). Der Vergleich auf dem eingefrorenen Rohstand (Zeilen oben) wurde vor dieser Zusammenführung auf dem Stand f33c6ec5f9 gerechnet; P129 berührt andere Firmen (MAD.AX, AJBU.SI, 1ANE.MI, AIAI, MODEC).
 
 Bei 000688.SZ zum 30.06.2025 steht nun die direkt veröffentlichte Zeile des zweiten Quartals an erster Quellenposition. Abgeleitete Umsatzzellen, etwa das vierte Quartal als Geschäftsjahr minus neun Monate, exportieren ihre beiden Quellwerte als `handTableDerivation`.
+
+## Ganze Jahresrechnung von INDO-MIM: Maßstabsregel (P140, 08.10.2026)
+
+> **Auf einen Blick**
+>
+> Die Jahresrechnung wird bei INDOMIM.BO und INDOMIM.NS einheitlich mit dem Faktor 10 korrigiert.
+> * Vier Umsatzfälle und 79 weitere Geldzellen ergeben 83 Korrekturen im Stand vom 06.10.2026.
+> * Alle sieben geprüften Achsen bleiben bis auf Rechenrundung gleich. Der Umsatz 2026 steigt von 4,141056 auf 41,41056 Milliarden INR.
+> * Bei verändertem Fingerabdruck werden die betroffenen Geldzellen zurückgehalten und der Tageslauf warnt.
+
+### Register der Jahreszeilen
+
+Die ausdrücklichen Listen heißen `scale`, `balance.keys` und `exempt`. Der Umsatz steht im Geldregister, wird aber ausschließlich durch seine vier numerischen P50-Fälle geschrieben. Es gibt keinen numerischen Bruttogewinnfall. Die übrigen Geldzeilen erhalten den Faktor 10 nur bei passendem Fingerabdruck. Skalare Reihen bleiben Zahlen, Objektzeilen behalten ihre Form. Fehlende Zellen und null bleiben leer, echte Nullen bleiben unverändert.
+
+| Feld | Klasse | Umrechnung | Begründung |
+| --- | --- | --- | --- |
+| `annualRev` | Geldbetrag | Ja, über P50. | Vier einzeln belegte Umsatzfälle. |
+| `annualOpInc` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualNetIncome` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualGP` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualFCF` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualOCF` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualCostOfRevenue` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualSBC` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualRnD` | Geldbetrag | Ja. | Nur gelieferte Werte; im eingefrorenen Stand fehlen sie. |
+| `annualCapex` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualSGA` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualDepreciation` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualDividendsPaid` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualRepurchase` | Geldbetrag | Ja. | Nur gelieferte Werte; im eingefrorenen Stand fehlen sie. |
+| `annualNetCommonStockIssuance` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualBalance` mit `totalCash`, `totalDebt`, `totalAssets`, `accountsReceivable`, `netPPE`, `currentAssets`, `currentLiabilities`, `totalLiabilities`, `totalEquity` | Geldbetrag | Ja, je Schlüssel. | Bilanzbeträge bleiben Stichtagswerte. |
+| `annualShares`, `annualSharesBasic` | Aktienzahl | Nein. | Stückzahlen sind keine Geldbeträge. |
+| `annualEPS`, `annualEPSBasic`, `annualEPSDiluted`, `annualEarningsPerShare`, `annualDividendPerShare` | Betrag je Aktie | Nein. | Diese Werte sind ausdrücklich ausgenommen. |
+| `annualGrossMargin`, `annualOperatingMargin`, `annualNetMargin`, `annualROE`, `annualROA` | Verhältnis | Nein. | Diese Größen haben keinen Währungsmaßstab. |
+| Jede `<field>Ends`-Reihe | Datum | Nein. | Perioden bleiben unverändert. |
+| `annualBalance._debtPartial`, `annualBalance._debtPartialReason` | Kennzeichen | Nein. | Vollständigkeitsangaben bleiben erhalten. |
+| `timeseries.*`, `metrics.*`, `marketCap`, `price`, `external.*`, `meta.sharesOutstanding` | Außerhalb der Jahresregel | Nein. | Nur der registrierte Jahresblock wird umgerechnet. |
+
+Ein Test gleicht das Register mit jedem Jahresfeld in `src/scoring/snapshot.js::FIELD_REGISTRY` ab. Neue, nicht eingeordnete Jahresreihen werden mit deutschem Grund zurückgehalten. Die Umsatzkosten besitzen im echten Snapshot keine eigene Datumsliste. Sie verwenden wie im bestehenden Mapper und Nachladeleser die Umsatzjahre, sofern beide Reihen gleich lang sind. Eine ausdrücklich vorhandene leere oder ungültige Datumsliste wird nicht ersetzt.
+
+### Fünf unabhängig belegte Zeilen
+
+Die 18 Ankerzellen umfassen alle gelieferten Jahre von Umsatz, Jahresüberschuss, Gesamtvermögen, SBC und operativem Cashflow. SBC ist nur für 2026 und 2025 vorhanden. Die Umsatzanker verweisen auf `indomim-<Jahresende>-annualRev`; die übrigen Anker tragen eigene Quellen mit Betrag, Jahresgrenzen, Währung und Einheit. Bilanzanker sind Stichtagswerte und keine Zahlungsströme. Alle Seiten sind PDF-Seitenpositionen.
+
+| Zeile | Geschäftsjahr | Anbieterwert INR | Gedruckter Wert Millionen INR | Dokument | PDF-Seite | Wörtliches Zitat |
+| --- | --- | --- | --- | --- | --- | --- |
+| `annualRev` | 2026 | 4.141.056.000 | 41.410,56 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf#page=253) | 253 | „Contract Price 41,410.56 32,784.69“ |
+| `annualRev` | 2025 | 3.278.469.000 | 32.784,69 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf#page=253) | 253 | „Contract Price 41,410.56 32,784.69“ |
+| `annualRev` | 2024 | 2.840.491.000 | 28.404,91 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf#page=284) | 284 | „Total revenue from contracts with customers 32,784.69 28,404.91 26,653.21“ |
+| `annualRev` | 2023 | 2.665.321.000 | 26.653,21 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf#page=284) | 284 | „Total revenue from contracts with customers 32,784.69 28,404.91 26,653.21“ |
+| `annualNetIncome` | 2026 | 533.543.000 | 5.335,43 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 224 | „Profit for the year 5,335.43 4,237.34“ |
+| `annualNetIncome` | 2025 | 423.734.000 | 4.237,34 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 224 | „Profit for the year 5,335.43 4,237.34“ |
+| `annualNetIncome` | 2024 | 283.734.000 | 2.837,34 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 256 | „Restated Profit for the year (VII = V - VI) 4,237.34 2,837.34 4,626.93“ |
+| `annualNetIncome` | 2023 | 462.693.000 | 4.626,93 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 256 | „Restated Profit for the year (VII = V - VI) 4,237.34 2,837.34 4,626.93“ |
+| `annualOCF` | 2026 | 1.077.241.000 | 10.772,41 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Net Cash from / (used in) Operating Activities 10,772.41 5,062.71“ |
+| `annualOCF` | 2025 | 506.271.000 | 5.062,71 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Net Cash from / (used in) Operating Activities 10,772.41 5,062.71“ |
+| `annualOCF` | 2024 | 458.334.000 | 4.583,34 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 258 | „Net cash generated from operating activities (I) 5,062.71 4,583.34 6,057.15“ |
+| `annualOCF` | 2023 | 605.715.000 | 6.057,15 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 258 | „Net cash generated from operating activities (I) 5,062.71 4,583.34 6,057.15“ |
+| `annualBalance.totalAssets` | 2026 | 4.897.333.000 | 48.973,33 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 222 | „TOTAL ASSETS 48,973.33 41,408.41“ |
+| `annualBalance.totalAssets` | 2025 | 4.140.841.000 | 41.408,41 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 222 | „TOTAL ASSETS 48,973.33 41,408.41“ |
+| `annualBalance.totalAssets` | 2024 | 3.757.513.000 | 37.575,13 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 255 | „Total assets 41,408.41 37,575.13 33,804.46“ |
+| `annualBalance.totalAssets` | 2023 | 3.380.446.000 | 33.804,46 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 255 | „Total assets 41,408.41 37,575.13 33,804.46“ |
+| `annualSBC` | 2026 | 14.515.000 | 145,15 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Employee stock compensation expenses 145.15 57.59“ |
+| `annualSBC` | 2025 | 5.759.000 | 57,59 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Employee stock compensation expenses 145.15 57.59“ |
+
+Der Geschäftsbericht nennt „(Amounts in INR million, unless otherwise stated)“, der Prospekt „(All amounts in Rs. million, except as otherwise stated)“. Die Quellenobjekte führen ganze INR und jeweils das Geschäftsjahr vom 1. April bis 31. März. Die lokalen Belegdateien sind `vendor-lines.csv`, `anker-final.json`, `anker-final.md` und `anker-final-gp-sga.md` aus dem P140-Paket. Die Seitenbilder der fünf Ankerzeilen wurden erneut gelesen.
+
+### Gedruckte Summen und Anbieteraggregate
+
+| Zeilen | Befund | Belegumfang |
+| --- | --- | --- |
+| Umsatz, Jahresüberschuss, operativer Cashflow, SBC, Investitionsauszahlungen, Abschreibungen, gelieferte Dividendenzahlungen und Nettoaktienemissionen | MATCH, gedruckte Beträge. | Betrag, Vorzeichen und Periode stimmen bei Faktor 10 unmittelbar überein. |
+| Alle gelieferten Bilanzschlüssel außer `netPPE` | MATCH, gedruckte Beträge. | Die jeweiligen Bilanzwerte stimmen unmittelbar überein. |
+| `annualGP`, `annualCostOfRevenue`, `annualOpInc`, `annualSGA`, `annualFCF` | Exakt rekonstruierte Anbieteraggregate, keine gedruckten Summen. | Die Komponenten ergeben den zehnfachen Anbieterwert. Die Anbieterklassifikation ist dadurch nicht vom Emittenten bestätigt. |
+| `annualBalance.netPPE` | Abweichend abgegrenztes, exakt rekonstruiertes Anbieteraggregat. | Sachanlagen, Anlagen im Bau, Nutzungsrechte und Kapitalvorschüsse ergeben die Anbieterzeile. Sie ist nicht mit gewöhnlichen Sachanlagen gleichzusetzen. |
+
+Die Belegdatei zählt 59 unmittelbar passende Werte, 20 nicht gedruckte Summen und 4 Werte mit abweichender Definition. Das begründet den Verzicht auf einen numerischen Bruttogewinnfall. Die Maßstabsregel bewahrt die Anbieterdefinitionen.
+
+### Veränderte Anbieterstände und Wiederholung
+
+Die Prüfung liest den Eingang vor den Umsatzersatzwerten. Alle vorhandenen Anker müssen exakt den kleinen Anbieterwerten mit dem gespeicherten Währungsfaktor entsprechen; jede der fünf Zeilen muss als brauchbarer Anker vorhanden sein. Gemischte Maßstäbe, abweichende Anker, fehlende Ankerzeilen, falsche Währung oder unbrauchbare Währungsangaben führen zum Rückhalt. Anker, die schon den Berichtswert tragen, werden nur zusammen mit dem gespeicherten Fallkennzeichen und derselben Fallrevision als bereits korrigiert akzeptiert. Ohne Kennzeichen werden sie nicht nochmals verzehnfacht.
+
+Nur die vier belegten Geschäftsjahre sind freigegeben. Ein neues Jahr vor der Reihe hält den gesamten durch die Regel bearbeiteten Geldbestand zurück. Ältere, undatierte oder doppelt datierte Zellen werden einzeln zurückgehalten. Jede umgerechnete Zelle erhält ein Ereignis mit Jahresfeld, gegebenenfalls Bilanzschlüssel, Periode und altem sowie neuem Wert. Ein Rückhalt trägt den ursprünglichen Anbieterwert, Fallrevision und `statement-scale-changed` beziehungsweise `statement-scale-unclassified`; der Tageslauf zählt ihn als `stale` und warnt. Die Umsatzfälle behalten ihre eigene Prüfung und die letzte Jahressperre.
+
+Die Gesamtmarke `meta.financialStatementScale` hält Fall, Revision, Faktor, Grundlage, deutschen Grund, Zeilen und Perioden fest. Sie dient auch den skalaren Reihen als dauerhafter Nachweis und überlebt den Währungsdurchlauf. Der Grund wird einmal in die exportierten Finanzdatenhinweise aufgenommen. Bei späterem Rückhalt wegen geändertem Fingerabdruck entfällt die veraltete Gesamtmarke. Der Fingerabdruck umfasst genau die fünf beauftragten Ankerzeilen; eine isolierte Änderung anderer Anbieterzeilen bei unveränderten Ankern ist damit nicht erkennbar.
+
+Der Test führt die echte Währungsfunktion des Abrufprogramms aus. Native Korrektur, anschließende Währungsumrechnung und erneutes Lesen ergeben dieselben Geldwerte bis auf eine ULP und dieselbe Gesamtmarke wie die direkte Korrektur des USD-Stands. Vollständige Objektgleichheit ist mit dem bestehenden P50-Nachweis nicht möglich, weil `originalVendorRow` die tatsächliche Eingangswährung bewahrt, einmal INR und einmal USD. Im synthetischen nativen Test werden nur die 18 unabhängig belegten Anker nach der Rückdivision exakt wiederhergestellt; produktiv wird kein Fingerabdruck gerundet.
+
+Diese Dokumentation enthält keine allgemeine Revisionsrichtlinie; die Tabellenrevision bleibt bei `2026-10-02i`, damit gespeicherte Rückhalte anderer Firmen ihren Revisionsstempel behalten, und nur die fünf neuen Einträge tragen `2026-10-08-p140`.
+
+### Vollständig fehlendes Anbieterjahr nach V-B1c-1
+
+Die letzte Sperre erkennt nun auch eine ganz ausgelassene Jahreszeile. Liegen aufeinanderfolgende datierte Jahre nicht 365 oder 366 Tage mit höchstens 14 Tagen Abweichung auseinander, oder fehlt ein Falljahr zwischen dem jüngsten vorhandenen Jahr und dem ältesten Falljahr, bleiben die neueren Jahre erhalten und ältere vorhandene Werte werden mit `annual-older-than-withheld` zurückgehalten. Damit vergleicht `revAcceleration` nicht über eine Lücke hinweg. Der Test entfernt ein ganzes Jahr und wird ohne die Erweiterung rot.
+
+Die allgemeine Erweiterung bleibt aktiv. Gegen `cf75d29997` unterscheiden sich im Hauptbestand 2 von 16.152 Firmenständen, ausschließlich INDOMIM.BO und INDOMIM.NS; im Smallcap-Bestand unterscheiden sich 0 von 770. Je Ordner wurde eine JSON-Datei ohne nutzbaren Firmenstand nicht eingelesen. Der Vergleich umfasst Snapshots und Ereignisse. AEON, Okasan und sämtliche anderen Tabellenfälle bleiben identisch.
+
+### Sichtbare Beträge 2026 vor und nach der Korrektur
+
+| Zeile | Vorher INR | Nachher INR | Gedruckt Millionen INR |
+| --- | --- | --- | --- |
+| `annualRev` | 4.141.056.000 | 41.410.560.000 | 41.410,56 |
+| `annualNetIncome` | 533.543.000 | 5.335.430.000 | 5.335,43 |
+| `annualOCF` | 1.077.241.000 | 10.772.410.000 | 10.772,41 |
+| `annualBalance.totalAssets` | 4.897.333.000 | 48.973.330.000 | 48.973,33 |
+| `annualSBC` | 14.515.000 | 145.150.000 | 145,15 |
+
+Fixture-SHA256 ist `3a83255930cf2c69433602ffbf83925194ab7b917a26bc2b15e2b61b3056a7cc`. Der gespeicherte INR-USD-Faktor beträgt `0.010384216`. Alle sieben Achsen sind an dieser echten Datei mit relativer Toleranz `1e-9` unverändert. Absichtliche Brüche laufen nur an Modulkopien und Tabellen im Speicher; die Prüfsummen der echten Dateien bleiben gleich.

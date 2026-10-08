@@ -49,7 +49,7 @@ if (process.env.P138_RED_CASE) {
 }
 
 test('P138 appends exactly ten cells, two coverage entries and two genuine trimmed packets', () => {
-  assert.deepEqual(table.cases.slice(233).map(c => c.caseId), cells.map(idFor)); // P138: +10 after the nine P129 and eight P47 cases (216 + 9 + 8)
+  assert.deepEqual(table.cases.slice(233, 243).map(c => c.caseId), cells.map(idFor)); // P138: +10 after the nine P129 and eight P47 cases (216 + 9 + 8); P140 appends its four cases after index 243
   assert.deepEqual(table.coverage.slice(34), ['000688.SZ', 'GRANULES.NS'].map(ticker =>
     ({ ticker, field: 'revenueQ', coversThrough: '2026-06-30' }))); // P138: +2
   for (const [key, count, digest] of [

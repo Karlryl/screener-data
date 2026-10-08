@@ -177,7 +177,7 @@ test('vendor already delivers the correct value for one year', () => {
     assert.equal(lines.filter(x => x === line).length, 1, 'exact whole-line mutation anchor');
     return lines.indexOf(line);
   };
-  const start = anchor('  // This numeric annual no-gap lock must stay last: no annual cell may change before return.');
+  const start = anchor('  // This numeric annual no-gap lock must stay last: no numeric-case field may change after it.');
   const end = anchor('  return { snapshot: out, events };');
   const beforeCases = anchor('  for (const c of config.cases.filter(c => (allowed.has(c.field) || annual.has(c.field) && c.replacementValue !== null) && listed(c, ticker))) {');
   assert.ok(beforeCases < start && start < end, 'lock follows the case loop and ends immediately before return');
