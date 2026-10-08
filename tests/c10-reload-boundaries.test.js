@@ -31,7 +31,9 @@ cases['ordinary-failures'] = async () => {
     f.files.delete(cp);
     const m = await f.run();
     // P137: ordinary full pull now protects against a lost reporting period
-    if ((mode === 'manual' || mode === 'old') && failure === 'quarterFails') {
+    // P137 round 2: a manual full pull (voll_pull_ticker) bypasses the period guard and writes as before.
+    if (mode === 'manual') assert.equal(m.n_full_period_regression_blocked, 0, mode + '/' + failure);
+    if (mode === 'old' && failure === 'quarterFails') {
       assert.equal(m.results[0].status, 'price-only', mode + '/' + failure);
       assert.deepEqual(f.stored('OLD').annual, s.annual); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
       assert.equal(m.n_full_period_regression_blocked, 1);
@@ -198,10 +200,10 @@ cases['empty-annual-scope'] = async () => {
   for (const manual of [false, true]) {
     const old = await baseline(), f = fixture({ snapshots: [old], annualEmpty: true, manual: manual ? ['OLD'] : [] }); f.files.delete(cp);
     const m = await f.run();
-    // P137: ordinary full pull now protects against a lost reporting period
-    assert.equal(m.results[0].status, manual ? 'price-only' : 'reload-retained');
+    // P137 round 2: a manual full pull (voll_pull_ticker) bypasses the period guard and writes as before.
+    assert.equal(m.results[0].status, manual ? 'ok' : 'reload-retained');
     if (!manual) assert.deepEqual(f.stored('OLD').annual, old.annual);
-    else { assert.deepEqual(f.stored('OLD').annual, old.annual); assert.equal(m.n_full_period_regression_blocked, 1); }
+    else { assert.deepEqual(f.stored('OLD').annual.annualRev, []); assert.equal(m.n_full_period_regression_blocked, 0); }
   }
 };
 cases['archive-bounded'] = async () => {
