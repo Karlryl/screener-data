@@ -358,7 +358,16 @@ function run() {
   writeFileAtomic(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
   console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} valid=${merged.n_shards_valid} invalid=${merged.n_shards_invalid} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}, ccy-Skips ${merged.n_ccy_missing_completely}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
   console.log(`Missing-market-cap observations: ${merged.n_missing_mcap} (not counted as successful pulls)`);
-  console.log(`full-pull period regression: blocked=${merged.n_full_period_regression_blocked} tickers=${merged._fullPeriodRegressions.map(r => r.ticker).join(',')}`);
+  const blocked = merged.n_full_period_regression_blocked;
+  const firstTickers = merged._fullPeriodRegressions.slice(0, 10).map(r => r.ticker).join(',');
+  console.log(`full-pull period regression: blocked=${blocked} tickers=${firstTickers || '-'}${blocked > 10 ? ` (+${blocked - 10} more)` : ''}`);
+  if (typeof process.env.GITHUB_STEP_SUMMARY === 'string' && process.env.GITHUB_STEP_SUMMARY.length > 0) {
+    const summary = blocked === 0 ? 'Vollabruf-Periodenschutz: keine Firma gehalten.'
+      : `Vollabruf-Periodenschutz: ${blocked} Firmen blieben auf ihren gespeicherten Fundamentaldaten, weil die neue Yahoo-Antwort ein älteres Berichtsquartal oder Geschäftsjahr lieferte. Erste ${Math.min(blocked, 10)}: ${firstTickers}.`
+        + (blocked > 10 ? ` Weitere ${blocked - 10} stehen im Manifest unter _fullPeriodRegressions.` : '');
+    try { fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n' + summary + '\n', 'utf8'); }
+    catch (error) { console.warn('::warning::Could not append full-pull period summary to GITHUB_STEP_SUMMARY: ' + error.message); }
+  }
   // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr
   // n_failed sein. Am Lauf 30230485209 nachgerechnet: 12373-10672 = 1701 gegen 1678
   // Fehlschlaege -> 23 unerklaert. Vor dem Fix waren es 2284 gegen 1678, also 606 unerklaert.

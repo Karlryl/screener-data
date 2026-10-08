@@ -3626,6 +3626,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const failures = [];
   let n_full_period_regression_blocked = 0;
   const _fullPeriodRegressions = [];
+  const manualPeriodRegressionWarnings = new Set();
   const fullPeriodReasonDe = 'Die neue Yahoo-Antwort enthält ein älteres Berichtsquartal oder Geschäftsjahr als gespeichert. Die bisherigen Fundamentaldaten bleiben erhalten, nur Kurs und Börsenwert wurden aktualisiert.';
   // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
   //
@@ -3879,6 +3880,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
       });
     }
+    return latest;
+  }
+
+  // Ordinary full pulls count only real, positive annual revenue, not vendor padding (T2).
+  function _rawAnnualEnd(snapshot, now) {
+    const annual = snapshot?.annual || {};
+    let latest = null;
+    (Array.isArray(annual.annualRevEnds) ? annual.annualRevEnds : []).forEach((end, i) => {
+      if (typeof end !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return;
+      const t = Date.parse(end), raw = annual.annualRev?.[i], value = raw && typeof raw === 'object' ? raw.value : raw;
+      if (Number.isFinite(t) && t <= now && new Date(t).toISOString().slice(0, 10) === end && Number.isFinite(value) && value > 0) {
+        if (!latest || end > latest) latest = end;
+      }
+    });
     return latest;
   }
 
@@ -5265,12 +5280,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // A summary without finite cap exits earlier via the existing missing-cap path, before this guard.
       if (!reloadOnly && !staleSchema && !staleCurrency && _parsedSnapshot) { // P137: ordinary full-pull period guard
         const prior = JSON.parse(_priorSnapshotText);
-        const annualEnd = a => (a?.annualRevEnds || []).filter((end, i) => end &&
-          Number.isFinite(a.annualRev?.[i]?.value ?? a.annualRev?.[i]) && Date.parse(end) <= Date.now()).sort().pop() || null;
-        const previousAnnualEnd = annualEnd(prior.annual), nextAnnualEnd = annualEnd(canonical.annual);
         const now = Date.now();
+        let previousAnnualEnd = _rawAnnualEnd(prior, now);
+        const nextAnnualEnd = _rawAnnualEnd(canonical, now);
         let previousQuarterEnd = _rawQuarterEnd(prior, now), nextQuarterEnd = _rawQuarterEnd(canonical, now);
         // The candidate already passed the at-pull hook. Only a raw regression needs exact confirmation.
+        if (previousAnnualEnd && (!nextAnnualEnd || nextAnnualEnd < previousAnnualEnd)) {
+          previousAnnualEnd = reload.latestPreparedAnnualRevenueEnd(prior, now);
+        }
         if (previousQuarterEnd && (!nextQuarterEnd || nextQuarterEnd < previousQuarterEnd)) {
           previousQuarterEnd = reload.latestReportedQuarter(prior, now);
           nextQuarterEnd = reload.latestReportedQuarter(canonical, now);
@@ -5278,23 +5295,31 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Retain the whole bundle if either dimension regresses, even when the other advances.
         if ((previousAnnualEnd && (!nextAnnualEnd || nextAnnualEnd < previousAnnualEnd)) ||
             (previousQuarterEnd && (!nextQuarterEnd || nextQuarterEnd < previousQuarterEnd))) {
-          let event = _fullPeriodRegressions.find(r => r.ticker === stock.ticker);
-          if (!event) {
-            event = { ticker: stock.ticker, outcome: 'blocked', previousQuarterEnd, nextQuarterEnd,
-              previousAnnualEnd, nextAnnualEnd, priceUpdated: false, reason: 'period-regression-retained', reasonDe: fullPeriodReasonDe };
-            n_full_period_regression_blocked++;
-            _fullPeriodRegressions.push(event);
-            console.warn(`::warning::${stock.ticker} full-pull period regression blocked (quarter ${previousQuarterEnd} -> ${nextQuarterEnd}, annual ${previousAnnualEnd} -> ${nextAnnualEnd})`);
+          // Old snapshots bypass the young-only repair probes above; never retain their broken envelope.
+          const guardNeedsSchemaRepair = _existingSnapshotMissingTag211lFields(prior);
+          const guardNeedsCurrencyRepair = _existingSnapshotMissingCurrencyNormalization(prior);
+          if (vollPullAngefordert && !guardNeedsSchemaRepair && !guardNeedsCurrencyRepair && !manualPeriodRegressionWarnings.has(stock.ticker)) {
+            manualPeriodRegressionWarnings.add(stock.ticker);
+            console.warn(`::warning::${stock.ticker} full-pull period regression NOT blocked: manual full pull requested (voll_pull_ticker); quarter ${previousQuarterEnd} -> ${nextQuarterEnd}, annual ${previousAnnualEnd} -> ${nextAnnualEnd}`);
+          } else if (!vollPullAngefordert && !guardNeedsSchemaRepair && !guardNeedsCurrencyRepair) {
+            let event = _fullPeriodRegressions.find(r => r.ticker === stock.ticker);
+            if (!event) {
+              event = { ticker: stock.ticker, outcome: 'blocked', previousQuarterEnd, nextQuarterEnd,
+                previousAnnualEnd, nextAnnualEnd, priceUpdated: false, reason: 'period-regression-retained', reasonDe: fullPeriodReasonDe };
+              n_full_period_regression_blocked++;
+              _fullPeriodRegressions.push(event);
+              console.warn(`::warning::${stock.ticker} full-pull period regression blocked (quarter ${previousQuarterEnd} -> ${nextQuarterEnd}, annual ${previousAnnualEnd} -> ${nextAnnualEnd})`);
+            }
+            prior.meta = prior.meta || {};
+            prior.meta.fundamentalsRetainedReason = fullPeriodReasonDe;
+            const r = await _priceOnlyUpdate(stock, outputDir, prior, {
+              regularMarketPrice: _y(yahoo.price, 'regularMarketPrice'), currency: _y(yahoo.price, 'currency'),
+              marketCap: _y(yahoo.summaryDetail, 'marketCap') ?? _y(yahoo.price, 'marketCap'),
+            });
+            event.priceUpdated = true;
+            results.push({ ...r, fundamentalsRetainedReason: fullPeriodReasonDe });
+            return;
           }
-          prior.meta = prior.meta || {};
-          prior.meta.fundamentalsRetainedReason = fullPeriodReasonDe;
-          const r = await _priceOnlyUpdate(stock, outputDir, prior, {
-            regularMarketPrice: _y(yahoo.price, 'regularMarketPrice'), currency: _y(yahoo.price, 'currency'),
-            marketCap: _y(yahoo.summaryDetail, 'marketCap') ?? _y(yahoo.price, 'marketCap'),
-          });
-          event.priceUpdated = true;
-          results.push({ ...r, fundamentalsRetainedReason: fullPeriodReasonDe });
-          return;
         }
       }
       writeFileAtomic(outPath, JSON.stringify(canonical));

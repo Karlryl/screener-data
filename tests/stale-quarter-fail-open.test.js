@@ -20,6 +20,39 @@ const retainedReason = 'Die neue Yahoo-Antwort enthält ein älteres Berichtsqua
 const frozenHashes = ['pull-yahoo.js', 'tests/fixtures/full-pull-period-regression.json'].map(p => digest(fs.readFileSync(path.join(root, p))));
 const frozenInputHash = digest(JSON.stringify(regression));
 
+// Real annual blocks from the 03/06 October PCVX and SYRE snapshots; provider envelopes below are synthetic.
+const annualZeroCases = {
+  PCVX: {
+    old: { annualRev: [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }],
+      annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'] },
+    next: { annualRev: [null, null, null, null],
+      annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'] },
+  },
+  SYRE: {
+    old: { annualRev: [{ value: 0 }, { value: 0 }, { value: 886000 }, { value: 2329000 }],
+      annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'] },
+    next: { annualRev: [null, null, { value: 886000 }, { value: 2329000 }],
+      annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'] },
+  },
+};
+function annualZeroFixture(ticker, { source = pullSource, positive = false } = {}) {
+  const c = copy(annualZeroCases[ticker]), old = snapshot(ticker);
+  old.meta.asOf = old.meta.fundamentalsAsOf = old.meta.fetchedAt = '2026-08-01T00:00:00Z';
+  Object.assign(old.annual, c.old);
+  if (positive) c.next.annualRev[0] = { value: 123456 };
+  const rows = c.next.annualRevEnds.map((date, i) => ({ date, periodType: '12M', currencyCode: 'USD',
+    totalRevenue: c.next.annualRev[i]?.value ?? null, netIncome: -100, operatingIncome: -200 }));
+  const f = fixture({ snapshots: [old], now: regressionNow, pullSource: source,
+    env: { STALE_QUARTER_RELOAD: '0' },
+    annualResponses: { financials: rows.slice().reverse(), 'cash-flow': [], 'balance-sheet': [] },
+    summaryResponse: { price: { currency: 'USD', marketCap: 1e12, regularMarketPrice: 123 },
+      financialData: { financialCurrency: 'USD' }, quoteType: { quoteType: 'EQUITY' },
+      incomeStatementHistory: { incomeStatementHistory: [] } } });
+  const cp = path.join(root, 'fundamentals-cache', ticker + '.json'), cache = JSON.parse(f.files.get(cp));
+  cache.cachedAt = '2026-08-01T00:00:00Z'; f.files.set(cp, Buffer.from(JSON.stringify(cache)));
+  return Object.assign(f, { expectedAnnual: c.next });
+}
+
 // Synthetic provider envelopes from dated canonical values, not archived Yahoo payloads.
 // The frozen monetary values are already USD; normalize only the test copies' currency metadata.
 function regressionInputs(ticker) {
@@ -507,6 +540,88 @@ function assertPriceOnly(f, m) {
   await check('P137 annual regression retains KCN.AX annual history and cache', async () => {
     const f = regressionFixture('KCN.AX'); assertRetained(f, await f.run(), 'KCN.AX');
   });
+  for (const ticker of ['PCVX', 'SYRE']) await check('P137 R2 ' + ticker + ' annual zeros become gaps without retaining the old bundle', async () => {
+    const f = annualZeroFixture(ticker), m = await f.run(), out = f.stored(ticker);
+    assert.equal(m.n_full_period_regression_blocked, 0);
+    assert.equal(JSON.parse(f.files.get(path.join(f.out, '_manifest.json'))).n_full, 1);
+    assert.equal(m.results[0].status, 'ok'); assert.deepEqual(m._fullPeriodRegressions, []);
+    assert.deepEqual(out.annual.annualRev, f.expectedAnnual.annualRev);
+    assert.deepEqual(out.annual.annualRevEnds, f.expectedAnnual.annualRevEnds);
+    assert.equal(out.meta.fundamentalsAsOf, new Date(regressionNow).toISOString());
+  });
+  await check('P137 R2 positive newest annual revenue replaces stored zeros', async () => {
+    const f = annualZeroFixture('PCVX', { positive: true }), m = await f.run();
+    assert.equal(m.n_full_period_regression_blocked, 0); assert.equal(m.results[0].status, 'ok');
+    assert.equal(f.stored('PCVX').annual.annualRev[0].value, 123456);
+  });
+  await check('P137 R2 annual zeros do not disable an independent quarter block', async () => {
+    const f = regressionFixture('EA', { change: ({ old }) => Object.assign(old.annual, copy(annualZeroCases.PCVX.old)) });
+    const m = await f.run();
+    assert.equal(m.n_full_period_regression_blocked, 1); assert.equal(m.results[0].status, 'price-only');
+    assert.deepEqual(f.stored('EA').timeseries, f.input.old.timeseries);
+  });
+  await check('P137 R2 manual full pull writes the regressed answer and warns exactly once', async () => {
+    for (const ticker of ['EA', 'KCN.AX', 'AUGO']) {
+      const f = regressionFixture(ticker); f.Y.__manual([ticker]);
+      const m = await f.run();
+      assert.equal(m.n_full_period_regression_blocked, 0); assert.deepEqual(m._fullPeriodRegressions, []);
+      assert.equal(m.results[0].status, 'ok');
+      assert.equal(JSON.parse(f.files.get(path.join(f.out, '_manifest.json'))).n_full, 1);
+      assert.deepEqual(periodEnds(f.stored(ticker)), periodEnds(regression.cases[ticker].candidate));
+      const warnings = f.logs.filter(l => l.includes('full-pull period regression NOT blocked'));
+      const p = periodEnds(f.input.old), n = periodEnds(regression.cases[ticker].candidate);
+      assert.deepEqual(warnings, ticker === 'AUGO' ? [] : [
+        `::warning::${ticker} full-pull period regression NOT blocked: manual full pull requested (voll_pull_ticker); quarter ${p.quarterEnd} -> ${n.quarterEnd}, annual ${p.annualEnd} -> ${n.annualEnd}`,
+      ]);
+    }
+  });
+  await check('P137 R2 stored annual hold row is not a reported year', async () => {
+    const f = regressionFixture('KCN.AX', { change: ({ old }) => {
+      old.annual.annualRev[0] = { value: null, financialMissing: { reasonCode: 'fixture-hold' } };
+    } });
+    const m = await f.run();
+    assert.equal(m.n_full_period_regression_blocked, 0); assert.equal(m.results[0].status, 'ok');
+  });
+  await check('P137 R2 duplicate manual ticker warns once per run without counting a block', async () => {
+    const f = regressionFixture('EA', { copies: 2, env: { PULL_CONCURRENCY: '2' } }); f.Y.__manual(['EA']);
+    const m = await f.run();
+    assert.equal(m.results.length, 2); assert(m.results.every(r => r.status === 'ok'));
+    assert.equal(m.n_full_period_regression_blocked, 0); assert.deepEqual(m._fullPeriodRegressions, []);
+    assert.equal(f.logs.filter(l => l.startsWith('::warning::EA full-pull period regression NOT blocked:')).length, 1);
+  });
+  await check('P137 R2 hand-table-withheld newest annual does not retain a raw positive year', async () => {
+    const old = snapshot('INFQ'); old.meta.asOf = '2026-08-01T00:00:00Z';
+    old.annual.annualRev = [{ value: 28836000 }]; old.annual.annualRevEnds = ['2024-12-31'];
+    const f = fixture({ snapshots: [old], env: { STALE_QUARTER_RELOAD: '0' },
+      annualResponses: { financials: [], 'cash-flow': [], 'balance-sheet': [] } });
+    const m = await f.run();
+    assert.equal(m.n_full_period_regression_blocked, 0); assert.equal(m.results[0].status, 'ok');
+    assert.equal(require('../lib/stale-quarter-reload.js').latestPreparedAnnualRevenueEnd(old, NOW), null);
+    assert.equal(old.annual.annualRev[0].value, 28836000, 'the raw input must remain untouched');
+  });
+  await check('P137 R2 withheld stored newest quarter already permits the fresh older quarter', async () => {
+    const old = snapshot('VCTR', '2025-09-30'); old.meta.asOf = '2026-08-01T00:00:00Z';
+    old.timeseries.grossProfitQ = [{ value: 43903000 }, { value: 40 }];
+    old.timeseries.grossProfitQEnds = ['2025-12-31', '2025-09-30'];
+    const f = fixture({ snapshots: [old], env: { STALE_QUARTER_RELOAD: '0' },
+      quarterlyRows: [{ date: '2025-09-30', totalRevenue: 100, operatingIncome: 20, netIncome: 10 }] });
+    const m = await f.run();
+    assert.equal(m.n_full_period_regression_blocked, 0); assert.equal(m.results[0].status, 'ok');
+    assert.equal(require('../lib/stale-quarter-reload.js').latestReportedQuarter(old, NOW), '2025-09-30');
+  });
+  for (const repair of ['schema', 'currency']) await check('P137 R2 old ' + repair + ' snapshot is repaired despite a quarter regression', async () => {
+    const f = regressionFixture('EA', { change: ({ old }) => {
+      old.meta.asOf = old.meta.fundamentalsAsOf = old.meta.fetchedAt = '2026-08-01T00:00:00Z';
+      if (repair === 'schema') old.annual.annualBalance = [{}];
+      else { old.meta.reportingCurrency = 'EUR'; delete old.meta.reportingCurrencyOriginal; delete old.meta.fxConverted; }
+    } });
+    const m = await f.run(), out = f.stored('EA');
+    assert(regressionNow - Date.parse(f.input.old.meta.asOf) > 30 * 86400000);
+    assert.equal(m.results[0].status, 'ok'); assert.equal(m.n_full_period_regression_blocked, 0);
+    assert.deepEqual(periodEnds(out), periodEnds(regression.cases.EA.candidate));
+    if (repair === 'schema') assert(out.annual.annualBalance.some(row => row && Object.hasOwn(row, 'currentAssets')));
+    else assert.equal(out.meta.fxConverted, true);
+  });
   await check('P137 exact quarter checks run only for a raw quarterly regression', async () => {
     const source = replaceOnce(pullSource, "  const reload = require('./lib/stale-quarter-reload.js');",
       "  const reloadBase = require('./lib/stale-quarter-reload.js');\n" +
@@ -516,6 +631,16 @@ function assertPriceOnly(f, m) {
       const calls = f.logs.filter(line => line === 'P137-exact-quarter-call').length;
       assert.equal(calls, ['EA', 'FMS', 'CACC'].includes(ticker) ? 2 : 0, ticker);
       assert.equal(m.n_failed, 0);
+    }
+  });
+  await check('P137 R2 no regression means no additional hand-table preparation', async () => {
+    const source = replaceOnce(pullSource, "  const reload = require('./lib/stale-quarter-reload.js');",
+      "  const reloadBase = require('./lib/stale-quarter-reload.js');\n" +
+      "  const reload = { ...reloadBase, latestPreparedAnnualRevenueEnd(...args) { console.log('P137-annual-prepare'); return reloadBase.latestPreparedAnnualRevenueEnd(...args); }, latestReportedQuarter(...args) { console.log('P137-quarter-prepare'); return reloadBase.latestReportedQuarter(...args); } };");
+    for (const ticker of ['AUGO', 'SHA1.VI', '290A.T', 'KCN.AX']) {
+      const f = regressionFixture(ticker, { source }); await f.run();
+      assert.equal(f.logs.filter(l => l === 'P137-annual-prepare').length, ticker === 'KCN.AX' ? 1 : 0);
+      assert.equal(f.logs.filter(l => l === 'P137-quarter-prepare').length, 0);
     }
   });
   for (const repair of ['schema', 'currency']) await check('P137 ' + repair + ' repair rewrites even when the fresh answer loses its newest quarter', async () => {
@@ -580,7 +705,8 @@ function assertPriceOnly(f, m) {
     assert(m._fullPeriodRegressions[0].nextQuarterEnd > m._fullPeriodRegressions[0].previousQuarterEnd);
     assert(m._fullPeriodRegressions[0].nextAnnualEnd < m._fullPeriodRegressions[0].previousAnnualEnd);
   });
-  await check('P137 annual finite zero counts, future ends do not, and a missing next period is retained', async () => {
+  await check('P137 annual zero and future ends do not count, and a missing next period is retained', async () => {
+    // P137 round 2: annual revenue 0 is padding (T2), not a reported year
     for (const mode of ['zero', 'future', 'missing']) {
       const f = regressionFixture('KCN.AX', { change: ({ old, provider }) => {
         if (mode === 'zero') old.annual.annualRev[0] = { value: 0 };
@@ -592,9 +718,9 @@ function assertPriceOnly(f, m) {
         }
       } });
       const m = await f.run();
-      assert.equal(m.n_full_period_regression_blocked, mode === 'future' ? 0 : 1);
-      assert.equal(m.results[0].status, mode === 'future' ? 'ok' : 'price-only');
-      if (mode !== 'future') assert.deepEqual(f.stored('KCN.AX').annual, f.input.old.annual);
+      assert.equal(m.n_full_period_regression_blocked, mode === 'missing' ? 1 : 0);
+      assert.equal(m.results[0].status, mode === 'missing' ? 'price-only' : 'ok');
+      if (mode === 'missing') assert.deepEqual(f.stored('KCN.AX').annual, f.input.old.annual);
       if (mode === 'missing') assert.equal(m._fullPeriodRegressions[0].nextAnnualEnd, null);
     }
   });
@@ -751,6 +877,25 @@ function assertPriceOnly(f, m) {
     console.log('P137-BEFORE-AFTER-SUMMARY ' + JSON.stringify(result));
     assert.deepEqual(result, { groupAProtected: 4, unintendedBCBlocks: 0, otherFinancialLeavesChanged: 0, inputHashesUnchanged: true });
     assert.equal(currentHashes[1], 'a083ab460683d4dad88496166689bd766e2f33221ffeb05a7bb6f191022d8cd9');
+    // Restore the round-1 annual predicate and its raw-prior path in memory only.
+    // Never mutate a writing test or a live artifact for the red proof.
+    const round1 = replaceOnce(replaceOnce(pullSource,
+      '      if (Number.isFinite(t) && t <= now && new Date(t).toISOString().slice(0, 10) === end && Number.isFinite(value) && value > 0) {',
+      '      if (Number.isFinite(t) && t <= now && new Date(t).toISOString().slice(0, 10) === end && Number.isFinite(value)) {'),
+      '          previousAnnualEnd = reload.latestPreparedAnnualRevenueEnd(prior, now);',
+      '          previousAnnualEnd = _rawAnnualEnd(prior, now);');
+    for (const ticker of ['PCVX', 'SYRE']) {
+      const before = annualZeroFixture(ticker, { source: round1 }), after = annualZeroFixture(ticker);
+      const mb = await before.run(), ma = await after.run();
+      assert.equal(mb.n_full_period_regression_blocked, 1); assert.equal(mb.results[0].status, 'price-only');
+      assert.equal(ma.n_full_period_regression_blocked, 0); assert.equal(ma.results[0].status, 'ok');
+      assert.throws(() => assert.equal(mb.n_full_period_regression_blocked, 0), assert.AssertionError);
+      assert.deepEqual(before.stored(ticker).annual.annualRev, annualZeroCases[ticker].old.annualRev);
+      assert.deepEqual(after.stored(ticker).annual.annualRev, annualZeroCases[ticker].next.annualRev);
+      console.log('P137-R2-BEFORE-AFTER ' + JSON.stringify({ ticker, guardRound1: 'blocked', guardRound2: 'written',
+        annualBefore: before.stored(ticker).annual.annualRev, annualAfter: after.stored(ticker).annual.annualRev }));
+    }
+    assert.deepEqual(['pull-yahoo.js', 'tests/fixtures/full-pull-period-regression.json'].map(p => digest(fs.readFileSync(path.join(root, p)))), frozenHashes);
   });
   console.log(`stale-quarter-fail-open.test.js: ${passed} passed, ${failed} failed`);
   process.exitCode = failed ? 1 : 0;

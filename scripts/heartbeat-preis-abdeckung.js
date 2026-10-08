@@ -154,6 +154,20 @@ function messePreisAbdeckung(zeilen, alle, opts = {}) {
   };
 }
 
+/** Format informational full-pull retention diagnostics without affecting the price gate.
+ * @param {?object} manifest Parsed manifest, or undefined when unreadable.
+ * @returns {string} German count/list or an explicit missing-measurement message.
+ */
+function formatFullPullPeriodGuard(manifest) {
+  const prefix = 'Vollabruf-Periodenschutz (snapshots/_manifest.json): ';
+  if (manifest === undefined) return prefix + 'Manifest nicht verfuegbar';
+  const count = manifest?.n_full_period_regression_blocked;
+  if (!Number.isSafeInteger(count) || count < 0) return prefix + 'nicht erhoben';
+  const tickers = (Array.isArray(manifest._fullPeriodRegressions) ? manifest._fullPeriodRegressions : [])
+    .map(row => row?.ticker).filter(ticker => typeof ticker === 'string' && ticker.trim()).sort().slice(0, 10);
+  return prefix + `gesperrt=${count} erste Ticker: ${tickers.join(',') || '-'}`;
+}
+
 function main(opts = {}) {
   const fsApi = opts.fs || fs;
   const storeApi = opts.store || store;
@@ -261,12 +275,15 @@ function main(opts = {}) {
       + ' (Karl-Entscheid F-29c). Kern = US-Boersen + Altbestand ohne Boersen-Hint; der Auslandsteil'
       + ' (' + quote(ausland) + ') ist hier NICHT eingerechnet. NAECHSTER SCHRITT: daily-pull Step'
       + ' "Pull Historical Prices" und den Preis-Store (prices/history/) pruefen.');
-    return 1;
   }
-  return 0;
+  let manifest;
+  try { manifest = JSON.parse(fsApi.readFileSync(path.join(wurzel, 'snapshots', '_manifest.json'), 'utf8')); }
+  catch (_) { /* An unavailable manifest is informational, never a price-coverage failure. */ }
+  log(formatFullPullPeriodGuard(manifest));
+  return kernAlarm ? 1 : 0;
 }
 
-module.exports = { messePreisAbdeckung, watchlistZeilen, istKern, main, KERN_ALARM_ANTEIL, leseTageSchwelle };
+module.exports = { messePreisAbdeckung, watchlistZeilen, istKern, main, KERN_ALARM_ANTEIL, leseTageSchwelle, formatFullPullPeriodGuard };
 
 // exitCode statt process.exit(): node stdout/stderr sind auf eine PIPE (CI) asynchron —
 // process.exit() kann die eben geschriebene ::error::-Zeile abschneiden, und dann faerbt
