@@ -35,6 +35,7 @@ const path = require('path');
 const { safeSnapshotFilename, isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+const { mergeSizeExits, sizeExitRunTag, currentRunReports, SIZE_EXITS_FILE, SIZE_EXIT_SHARD_PATTERN } = require('../lib/size-exits.js');
 // U2-BO/NS (s. WURZEL_ZWILLING unten): der Emittenten-Schluessel wird IMPORTIERT, nie nachgebaut.
 // Lesen aus src/scoring/** ist ausdruecklich erlaubt; das GQS-Siegel bindet nur AENDERUNGEN dort.
 // U3-Milan (s. MILAN_KANDIDATEN unten) braucht zusaetzlich den STRENGEN Schluessel und den
@@ -2162,7 +2163,18 @@ function run(argv) {
   }
 
   fs.mkdirSync(ziel, { recursive: true });
-  for (const f of uebernehmen) fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
+  const sizeExitTag = sizeExitRunTag(process.env);
+  // Per shard the newest attempt of this run (a partial rerun keeps the reports of shards that already succeeded).
+  const sizeExitFiles = currentRunReports(files, process.env);
+  // Local shard pulls have no shared generation; do not guess from cached dates.
+  if (!sizeExitTag) console.log('[size-exits] No shared run identity. Current size exits are unknown.');
+  const sizeExits = mergeSizeExits(sizeExitFiles.map(f => JSON.parse(fs.readFileSync(path.join(eingang, f), 'utf8')).sizeExits));
+  for (const f of uebernehmen) {
+    if (f === SIZE_EXITS_FILE || SIZE_EXIT_SHARD_PATTERN.test(f)) continue;
+    fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
+  }
+  if (!sizeExitFiles.length) console.log('[size-exits] No completed reports for this pull. Current size exits are unknown.');
+  writeFileAtomic(path.join(ziel, SIZE_EXITS_FILE), JSON.stringify(sizeExits));
 
   // DAS EINZIGE LOCH IM AUSSCHLUSS: dieser Schritt KOPIERT nur, er raeumt das Ziel nicht ab.
   // In CI ist das folgenlos (frischer Runner, `snapshots/` ist gitignoriert und existiert
