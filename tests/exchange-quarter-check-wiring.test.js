@@ -6,6 +6,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const { Module, createRequire } = require('node:module');
+const { spawnSync } = require('node:child_process');
 const X = require('../lib/exchange-quarter-check.js');
 const q4 = require('../lib/yahoo-q4-known-cases.js');
 const { applyKnownCases } = q4;
@@ -143,6 +144,42 @@ test('store older than the limit: the rows stay unchecked and the process prints
   } finally { console.error = e; console.warn = w; }
   for (const [a, b] of out) assert.equal(b, a, 'unchecked: nothing applied');
   assert.equal(lines.filter(l => l.startsWith('::warning::[exchange-check]') && l.includes('store-old')).length, 1, lines.join('\n'));
+});
+
+test('no-own-read wiring: two never-read rows and one old own read have separate exit counters and one warning', () => {
+  const child = spawnSync(process.execPath, ['-e', `
+    const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
+    const { Module, createRequire } = require('node:module');
+    const X = require('./lib/exchange-quarter-check.js'), F = require('./tests/fixtures/exchange-quarter-check.json');
+    const st = structuredClone(F.store);
+    st.tw.sources.fresh = { fetchedAt: '2026-10-20T07:00:00.000Z', read: ['2548.TW 115Q2'] };
+    for (const [ticker, code] of [['2885.TW', 'no-line'], ['1312A.TW', 'bad-id']]) {
+      st.tw.companies[ticker] = { companyId: ticker.split('.')[0], seasons: {},
+        noData: { '115Q2': { at: '2026-10-20T07:00:00.000Z', code } } };
+    }
+    const ctx = { stores: { ...st, warnings: [] }, baseline: { rows: new Map() }, warnings: [] };
+    const file = path.resolve('lib/yahoo-q4-known-cases.js'), m = new Module(file), real = createRequire(file);
+    m.filename = file; m.paths = module.paths;
+    m.require = id => id === './exchange-quarter-check.js' ? { ...X, defaultContext: () => ctx,
+      applyExchangeCheck: s => X.applyExchangeCheck(s, { context: ctx }) } : real(id);
+    m._compile(fs.readFileSync(file, 'utf8'), file);
+    for (const ticker of ['2885.TW', '1312A.TW', '6446.TW']) {
+      const s = structuredClone(F.snapshots['6446.TW']);
+      Object.assign(s.meta, { ticker, fetchedAt: '2026-10-20T09:00:00.000Z',
+        industry: ticker === '2885.TW' ? 'Financial Conglomerates' : 'Chemicals' });
+      const before = JSON.stringify(s);
+      assert.equal(m.exports.prepareSnapshot(s), s);
+      assert.equal(JSON.stringify(s), before);
+    }
+  `], { cwd: ROOT, encoding: 'utf8', timeout: 30000 });
+  assert.equal(child.status, 0, child.stderr);
+  const lines = child.stderr.trim().split(/\r?\n/), warnings = lines.filter(l => l.startsWith('::warning::'));
+  const summary = lines.filter(l => l.startsWith('[exchange-check-summary] '));
+  assert.equal(summary.length, 1, child.stderr);
+  assert.deepEqual(JSON.parse(summary[0].slice('[exchange-check-summary] '.length)),
+    { 'unchecked(no-own-read)': 2, 'unchecked(store-old)': 1 });
+  assert.equal(warnings.length, 1, child.stderr); assert.match(warnings[0], /store-old/);
+  assert.ok(!warnings.some(l => l.includes('no-own-read')), child.stderr);
 });
 
 test('committed fill-only is wired through prepareSnapshot but never through the pull; break-once red', () => {

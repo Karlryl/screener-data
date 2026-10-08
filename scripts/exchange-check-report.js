@@ -170,7 +170,7 @@ function fillOnlyReport(outFile) {
       const a = actual.get(ticker), e = expected.get(ticker), measured = results.get(ticker);
       if (!a || !e) differences.push([scope, ticker, e ? 'fehlt jetzt' : 'zusätzlich', !measured ? 'Rohsnapshot fehlt' :
         scope === 'board' && !measured.onBoard ? 'In den eingefrorenen Ausgaben auf keinem Board' :
-        e ? (measured.result?.fill?.blocked || measured.result?.why || measured.result?.category || 'Außerhalb der Börsenkohorten') :
+        e ? (measured.result?.fill?.blocked || measured.result?.whyText || measured.result?.why || measured.result?.category || 'Außerhalb der Börsenkohorten') :
         'In den Referenz-Füllzeilen nicht enthalten; aktuelle Prüfung erlaubt die Füllung']);
       else if (e.fill.period !== a.fill.period || e.fill.nativeValue !== round(a.fill.nativeValue)) {
         differences.push([scope, ticker, 'Wert oder Zeitraum abweichend', JSON.stringify({ reference: e.fill, measured: a.fill })]);
@@ -235,6 +235,8 @@ function effects(before, after) {
 
 function compactResult(r) {
   return { category: r.category, why: r.why, stratum: r.stratum, line: r.line,
+    ...(r.whyText !== undefined ? { whyText: r.whyText } : {}),
+    ...(r.noDataCodes !== undefined ? { noDataCodes: r.noDataCodes } : {}),
     pairs: r.pairs.map(p => ({ end: p.end, priorEnd: p.priorEnd, level: p.level, status: p.status,
       vendor: p.vendor.map(round), exchange: p.exchange.map(round), ratio: p.ratio && p.ratio.map(round) })),
     withhold: r.withhold.map(w => ({ period: w.period, level: w.level, vendorNative: round(w.vendorNative), exchangeNative: round(w.exchangeNative) })),
@@ -340,6 +342,8 @@ function main() {
   report.counts.census = report.census.length;
   const old = report.counts.all?.['unchecked(store-old)'];
   if (old) report.warnings.push(`exchange store older than the limit (store-old): ${old} China/Taiwan rows unchecked`);
+  const neverRead = report.counts.all?.['unchecked(no-own-read)'];
+  if (neverRead) report.warnings.push(`${neverRead} China/Taiwan rows: Börsenquelle hat diese Firma noch nie geliefert (no-own-read)`);
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   fs.writeFileSync(out, JSON.stringify(report, null, 1) + '\n');
   console.log(`[exchange-check-shadow] ${JSON.stringify({ board: report.counts.board, census: report.census.length, gapBlocked: report.gapBlockedBoardRows,
