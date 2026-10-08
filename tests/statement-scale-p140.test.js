@@ -88,14 +88,20 @@ check('share counts per-share ratios dates flags gaps and genuine zeros stay unc
   input.annual.annualBalance[0]._debtPartial = true;
   input.annual.annualBalance[0]._debtPartialReason = 'Synthetic flag.';
   input.annual.annualCapex[0] = 0;
+  input.annual.annualGP[0] = { ...input.annual.annualGP[0], value: 0 };
   input.annual.annualGP[1] = { value: null, flag: true };
-  const out = apply(input).snapshot;
+  const result = apply(input), out = result.snapshot;
   for (const f of ['annualShares','annualSharesBasic','annualEarningsPerShare','annualGrossMargin']) assert.deepEqual(out.annual[f], input.annual[f]);
   assert.equal(out.annual.annualBalance[0]._debtPartial, true);
   assert.equal(out.annual.annualBalance[0]._debtPartialReason, 'Synthetic flag.');
   assert.equal(out.annual.annualCapex[0], 0); assert.deepEqual(out.annual.annualGP[1], input.annual.annualGP[1]);
   assert.equal(out.annual.annualRnD[0], null);
   close(value(out.annual.annualOpInc[0]), value(input.annual.annualOpInc[0]) * 10, 'monetary field still scales');
+  for (const field of ['annualCapex', 'annualGP']) {
+    assert.deepEqual(out.annual[field][0], input.annual[field][0], field + ': zero row stays unchanged');
+    assert.equal(Object.hasOwn(out.annual[field][0], 'financialCorrection'), false, field + ': zero has no correction marker');
+    assert.equal(result.events.some(e => e.field === field && e.index === 0), false, field + ': zero emits no event');
+  }
 });
 check('unclassified annual array is withheld with a visible reason', apply => {
   const input = clone(raw); input.annual.annualNewMoney = [123, null];
@@ -252,6 +258,37 @@ test('optional statementScales and every invalid authority are validated', () =>
   for (const [i,edit] of bad.entries()) { const c=clone(lib.table); edit(c); assert.throws(()=>lib.validateTable(c), Error, 'negative '+i); }
   console.log('validation negatives: '+bad.length);
 });
+for (const ticker of ['INDOMIM.BO', 'INDOMIM.NS']) test('statement scale rejects an annual hold on ' + ticker, () => {
+  const config = clone(lib.table), period = '2025-03-31', index = raw.annual.annualGPEnds.indexOf(period);
+  config.cases.push({ ...clone(config.cases.find(c => c.ticker === 'INFQ' && c.field === 'annualRev' && c.replacementValue === null)),
+    caseId: 'p155-annualGP-hold', ticker, field: 'annualGP', period, index, currency: 'INR',
+    expectedBadValue: value(raw.annual.annualGP[index]) / fx });
+  const guard = validate => assert.throws(() => validate(config), {
+    name: 'Error', message: 'Statement scale conflicts with an annual hold or quarantine: ' + rule.caseId,
+  });
+  guard(lib.validateTable);
+  if (ticker === 'INDOMIM.BO') {
+    const broken = moduleCopy(s => replaceLine(s,
+      "    if (conflicts) throw new Error('Statement scale conflicts with an annual hold or quarantine: ' + c.caseId);",
+      '    void conflicts;'));
+    assert.throws(() => guard(broken.validateTable), e => {
+      assert.ok(e instanceof assert.AssertionError); console.log('RED guard mutant: ' + e.toString()); return true;
+    }); breaks++;
+  }
+});
+for (const ticker of ['INDOMIM.BO', 'INDOMIM.NS']) test('statement scale rejects a quarantine on ' + ticker, () => {
+  const config = clone(lib.table);
+  config.quarantines.push({ ...clone(config.quarantines.find(q => q.ticker === 'BANPU.BK')), caseId: 'p155-quarantine', ticker });
+  assert.throws(() => lib.validateTable(config), {
+    name: 'Error', message: 'Statement scale conflicts with an annual hold or quarantine: ' + rule.caseId,
+  });
+});
+test('statement scale permits the committed table and an extra numeric annual case', () => {
+  assert.equal(lib.validateTable(lib.table), lib.table);
+  const config = clone(lib.table);
+  config.cases.push({ ...clone(cases[0]), caseId: 'p155-numeric-annualGP', field: 'annualGP' });
+  assert.equal(lib.validateTable(config), config);
+});
 test('V-B1c-1 omitted vendor year keeps newer years and withholds older years', () => {
   const {fixture,fixtureTable}=require('./annual-financial-replacements.test.js');
   const table=fixtureTable();
@@ -277,12 +314,14 @@ test('break-once state factor exemption period guards and disabled stage', () =>
       '          const replacement = a ? a.provenValue : oldValue * rule.factor;', 'all 83 monetary cells scale with exact anchors and scalar shapes'],
     ["      if (!Array.isArray(rows) || field.endsWith('Ends') || rule.exempt.includes(field) || numericFields.has(field)) continue;",
       "      if (!Array.isArray(rows) || field.endsWith('Ends') || numericFields.has(field)) continue;", 'share counts per-share ratios dates flags gaps and genuine zeros stay unchanged'],
+    ['          if (oldValue == null || oldValue === 0) continue;',
+      '          if (oldValue == null) continue;', 'share counts per-share ratios dates flags gaps and genuine zeros stay unchanged'],
     ['        const periodOk = periods.includes(period) && ends.indexOf(period) === ends.lastIndexOf(period);',
       '        const periodOk = true;', 'older undated and duplicate-period cells are withheld without filling gaps'],
   ]) {
     const broken=moduleCopy(s=>{
       let changed=replaceLine(s,line,replacement);
-      if(name.startsWith('share counts')) changed=replaceLine(changed,
+      if(line.includes('rule.exempt.includes(field)')) changed=replaceLine(changed,
         '      const classified = rule.scale.includes(field);', '      const classified = true;');
       return changed;
     });

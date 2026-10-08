@@ -36,7 +36,7 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // unchanged — only the on-disk filename differs.
 // audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
 const { safeSnapshotFilename, isMetadataSnapshot } = require('./lib/snapshot-fs.js');
-const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitRunTag } = require('./lib/size-exits.js');
+const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitRunTag, pruneSizeExitReports } = require('./lib/size-exits.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 // T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
@@ -3579,6 +3579,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Run + attempt prevents cached reports from earlier pulls posing as today's exits.
   const sizeExitTag = sizeExitRunTag(process.env) || 'local-' + new Date().toISOString().replace(/\D/g, '');
   const sizeExitPath = path.join(outputDir, `_manifest-size-exits.shard-${watchlist._pullShard ? watchlist._pullShard.index : 'unsharded'}.run-${sizeExitTag}.json`);
+  const prunedSizeExitReports = pruneSizeExitReports(outputDir, sizeExitPath, { warn: message => _log('WARN', message) });
+  _log('INFO', `[size-exits] Pruned ${prunedSizeExitReports.length} stale shard reports: ${prunedSizeExitReports.join(', ')}`);
   _needsFullPullThrew = 0;
   _corruptYoungSnapshots = 0;
   _schemaProbeErrors = 0;
