@@ -967,7 +967,7 @@ Das Manifest wird mit `lib/atomic-write.js` atomar geschrieben und anschliessend
 
 **Verdichtete Speicherung:** Der logische Vertrag mit genau den Schluesseln aus 14.4 bleibt bestehen. Auf der Leitung entfallen ausschliesslich null-Felder eines Belegs und seiner `fx`-/`derivation`-Objekte; ein vollstaendig aus null bestehendes Unterobjekt entfaellt ganz. Leere Abhaengigkeitslisten und der Vergleichsgruppenstatus bleiben erhalten. Konsumenten behandeln fehlende Schluessel als null und expandieren fehlende Unterobjekte zu deren vollstaendiger null-Struktur. Der Validator expandiert vor der Schluesselpruefung; unbekannte Schluessel bleiben verboten. Manifest-Huelle und Pruefakten werden nicht verdichtet. JSON wird ohne Einrueckung gespeichert.
 
-Die Beleg-ID ist `e-` plus `sha256(JSON.stringify(logicalRecord))`, wobei `id` fuer diese Berechnung null ist und die Schluessel des Belegs sowie von `fx` und `derivation` in der Vertragsreihenfolge aus 14.4 stehen. Der Validator rechnet diese ID ueber den expandierten Beleg nach; das Entfernen eines vorher nicht-null belegten Felds wird dadurch erkannt. Verdichtung aendert weder Beleg-ID noch `valueHash`.
+Die Beleg-ID ist `e-` plus `sha256(JSON.stringify(logicalRecord))`, wobei `id` fuer diese Berechnung null ist, `handTableDerivation` bei null weggelassen wird und die Schluessel des Belegs sowie von `fx` und `derivation` in der Vertragsreihenfolge aus 14.4 stehen. Der Validator rechnet diese ID ueber den expandierten Beleg nach; das Entfernen eines vorher nicht-null belegten Felds wird dadurch erkannt. Verdichtung aendert weder Beleg-ID noch `valueHash`.
 
 **Ausfall der Herkunft:** Beide Writer schreiben zuerst ihre vollstaendigen normalen Boards und ergaenzen erst nach erfolgreicher Herkunftsberechnung die Zusatzfelder. Scheitert der Helfer, bleiben alle betroffenen Boards ohne die fuenf Kopf- und drei Zeilenfelder; ein eventuell geschriebenes Manifest wird entfernt. Der Lauf meldet `::warning::provenance withheld: <message>` und schreibt atomar `provenance/_failed.json` beziehungsweise `rule40/provenance/_failed.json`. Der Fehl-Marker hat genau `schema: findash-provenance/v1`, `status: "failed"`, `generated_at`, `board: hypergrowth | rule40` und `reason`; private Fehlerdetails werden nicht veroeffentlicht. Er kennzeichnet den Herkunftsausfall, nicht einen Board-Ausfall. Weil der gh-pages-Deploy nie Dateien loescht, **ueberschreibt** der naechste erfolgreiche Bau den Marker am selben Pfad mit genau `schema`, `status: "ok"`, `board`, `provenanceRunId`, `provenanceManifestSha256` und `at` (06.10.2026, P22 Runde 3). `--check` entscheidet ueber den Status zusammen mit dem Board-Kopf, nie ueber das blosse Vorhandensein der Datei: Kopf vorhanden verlangt fehlenden Marker oder `status: "ok"` mit derselben `provenanceRunId` und demselben `provenanceManifestSha256`; Kopf fehlt verlangt `status: "failed"`.
 
@@ -984,6 +984,8 @@ Ein Aktienzahl-Zitat steht nur am Aktienzahlbeleg, nie am berechneten Boersenwer
 Finanz- und Q4-Tabellen liefern ihre vorhandene Fall-ID. Die schluesselbasierten Tabellen werden eindeutig als `hand-table:shares:<ticker>`, `hand-table:ads:<ticker>` bzw. `hand-table:statement-currency:<ticker>` referenziert. Der erste dokumentierte Quellenbeleg des angewendeten Falls wird mit vorhandener URL, Seite und Zitat uebernommen. Ein reiner Beschreibungstext wird als Dokumentbeschreibung bewahrt; fehlender Link ergibt `documentUrl: null` und `qualityWarnings: ["source link missing"]`. Fehlende Seiten und Zitate werden nicht erfunden.
 
 Unbekannte Quellenzeiten sind null, niemals 0 oder Exportzeit. Ein verlorener nativer Betrag wird nicht durch Rueckwaertsdivision als Original ausgegeben: `nativeValue` bleibt null. Explizit gespeicherte native Korrekturwerte und neuere Jahreswerte bleiben nutzbar. `fx` nennt nur gespeicherte angewendete Faktoren; unbekannte Kurszeit und Kursquelle bleiben null. Bei Pence-Kursnotierungen ist die native Marktkapitalisierung bereits in GBP; ihr Faktor ist deshalb der gespeicherte Preisfaktor mal 100, wie im bestehenden Umrechnungszweig. `marketCap.normalizedCurrency` ist immer USD. Unbekannte Emittenten-IDs bleiben null; `listingId` verwendet die Yahoo-Notierungskennung, keine Zusammenfuehrung anhand eines Firmennamens.
+
+`handTableDerivation` ergänzt bei Handtabellen-Zellen eine deutsche Formel und die ursprünglichen Quellwerte, wenn keine einzelne Quelle den angezeigten Wert trägt, weil er aus zwei Quellen berechnet oder von der Firma nur gerundet genannt wird. Sonst fehlt der Schlüssel und gilt als null. Das Zitat des Belegs wird wie bisher aus der ersten Quelle übernommen; die zusätzliche Herleitung ist additiv und verändert weder Boardwerte noch Prüfstatus. Belege ohne Herleitung behalten ihre bisherige Beleg-ID, ein Beleg mit Herleitung bindet sie in seine ID ein.
 
 ### 14.3 Pruefstatus und Validator
 
@@ -1087,6 +1089,9 @@ manifest.records[].correctionRevision
 manifest.records[].supersedesId
 manifest.records[].missingReason
 manifest.records[].qualityWarnings
+manifest.records[].handTableDerivation
+manifest.records[].handTableDerivation.formulaDe
+manifest.records[].handTableDerivation.inputs
 manifest.records[].fx.rate
 manifest.records[].fx.fromCurrency
 manifest.records[].fx.toCurrency

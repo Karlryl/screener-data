@@ -164,6 +164,179 @@ test('applied financial case is traced; equal vendor values and unrelated operan
   assert.equal(fixture(intervening).manifest.records.filter(r => r.sourceType === 'handTable').length, 0);
 });
 
+const p154Case = (ticker, period) => financialTable.cases.find(c => c.ticker === ticker && c.field === 'revenueQ' && c.period === period);
+function p154Fixture(c) {
+  const s = snapshot(), prior = new Date(c.period);
+  prior.setUTCFullYear(prior.getUTCFullYear() - 1);
+  Object.assign(s.meta, { ticker: c.ticker, reportingCurrency: c.currency, tradingCurrency: c.currency });
+  // Exercise an existing persisted marker; equal confirmed cells deliberately acquire no new marker.
+  s.timeseries = { revenueQ: [{ value: c.replacementValue, financialCorrection: {
+    caseId: c.caseId, replacementNativeValue: c.replacementValue, nativeCurrency: c.currency, revision: financialTable.revision,
+  } }, s.timeseries.revenueQ[4]], revenueQEnds: [c.period, prior.toISOString().slice(0, 10)] };
+  return fixture(s);
+}
+
+test('p154: ARCC fourth quarter exports the two original source operands in native USD', () => {
+  const c = p154Case('ARCC', '2025-12-31'), f = p154Fixture(c);
+  const r = f.manifest.records.find(r => r.correctionCaseId === c.caseId), d = r.handTableDerivation;
+  assert.equal(d.formulaDe, 'Viertes Quartal = Geschäftsjahr minus neun Monate');
+  assert.deepEqual(d.inputs.map(i => i.value), [3052000000, 2259000000]);
+  assert.deepEqual(d.inputs.map(i => i.currency), ['USD', 'USD']);
+  assert.deepEqual(d.inputs.map(i => i.labelDe), ['Geschäftsjahr (01.01.2025 bis 31.12.2025)', 'neun Monate (01.01.2025 bis 30.09.2025)']);
+  d.inputs.forEach((input, i) => {
+    for (const key of ['quote', 'url', 'page', 'form', 'filed']) assert.equal(input[key], c.sources[i][key] ?? null, key);
+  });
+  assert.equal(d.inputs[0].value - d.inputs[1].value, r.nativeValue);
+  assert.equal(r.quote, c.sources[0].quote); assert.equal(r.documentUrl, c.sources[0].url);
+  assert.equal(r.page, c.sources[0].page); assert.equal(r.documentTitle, c.sources[0].title || c.sources[0].form || null);
+  assert.equal(r.derivation.inputIds.length, 0); assert.equal(f.manifest.records.length, 4);
+  assert.equal(f.row.verification.status, 'unchecked');
+  const wire = JSON.parse(p.serializeManifest(f.manifest));
+  assert.deepEqual(wire.records.map(p.expandRecord), f.manifest.records);
+});
+
+test('p154: 000688 direct Q2 quote comes first and the later derived Q2 names both periods', () => {
+  const c = p154Case('000688.SZ', '2025-06-30');
+  const raw = require('./fixtures/financial-known-cases.json').snapshots[c.ticker];
+  const prepared = applyFinancialCases(raw).snapshot;
+  const r = fixture({ ...prepared, marketCap: { value: 0 } }).manifest.records.find(r => r.correctionCaseId === c.caseId);
+  assert.ok(r); assert.match(r.quote, /1,073,278,451\.44/); assert.ok(!r.quote.includes('2,159,670,362.38'));
+  assert.equal(r.nativeValue, 1073278451.44); assert.equal(r.handTableDerivation, null);
+  const later = p154Case('000688.SZ', '2026-06-30');
+  const derived = p154Fixture(later).manifest.records.find(r => r.correctionCaseId === later.caseId);
+  assert.equal(derived.handTableDerivation.formulaDe, 'Zweites Quartal = Halbjahr minus erstes Quartal');
+  assert.equal(derived.handTableDerivation.inputs[0].value - derived.handTableDerivation.inputs[1].value, later.replacementValue);
+  const japanese = p154Case('8020.T', '2025-12-31');
+  const japaneseRecord = p154Fixture(japanese).manifest.records.find(r => r.correctionCaseId === japanese.caseId);
+  assert.equal(japaneseRecord.handTableDerivation.formulaDe, 'Drittes Quartal = neun Monate minus Halbjahr');
+});
+
+test('p154: single source has logical null and no handTableDerivation key on the wire', () => {
+  const c = p154Case('ARCC', '2026-06-30'), f = p154Fixture(c);
+  const r = f.manifest.records.find(r => r.correctionCaseId === c.caseId);
+  assert.equal(r.handTableDerivation, null);
+  const wire = JSON.parse(p.serializeManifest(f.manifest)).records.find(r => r.correctionCaseId === c.caseId);
+  assert.equal(Object.hasOwn(wire, 'handTableDerivation'), false);
+  const expanded = p.expandRecord(wire);
+  assert.equal(Object.hasOwn(expanded, 'handTableDerivation'), true); assert.equal(expanded.handTableDerivation, null);
+});
+
+test('p154: issuer-rounded OXLC exports its original rounded source without an invented filed date', () => {
+  const c = p154Case('OXLC', '2025-03-31'), f = p154Fixture(c);
+  const r = f.manifest.records.find(r => r.correctionCaseId === c.caseId), d = r.handTableDerivation;
+  assert.equal(d.formulaDe, 'Die Firma nennt den Wert nur gerundet (auf 100.000 USD); der angezeigte Wert liegt innerhalb dieser Rundung.');
+  assert.equal(d.inputs.length, 1); assert.equal(d.inputs[0].value, 121200000);
+  assert.equal(d.inputs[0].labelDe, 'Quartal (01.01.2025 bis 31.03.2025)');
+  for (const key of ['quote', 'url', 'page', 'form', 'filed']) assert.equal(d.inputs[0][key], c.sources[0][key] ?? null, key);
+  assert.equal(d.inputs[0].filed, null); assert.equal(r.nativeValue, 121161000);
+});
+
+test('p154: every real single-source revenue case leads with its matching source, with an isolated red proof', () => {
+  const before = p.sha256(fs.readFileSync(path.join(__dirname, '../configs/financial-known-cases.json')));
+  const guard = table => {
+    for (const c of table.cases.filter(c => ['revenueQ', 'annualRev'].includes(c.field) &&
+      Number.isFinite(c.replacementValue) && c.sources.some(s => Number.isFinite(s.value) && s.value === c.replacementValue))) {
+      assert.equal(c.sources[0].value, c.replacementValue, c.caseId);
+      assert.equal(p.handTableDerivation(c), null, c.caseId);
+    }
+  };
+  guard(financialTable);
+  const broken = clone(financialTable), c = broken.cases.find(c => c.caseId === '000688.sz-2025-06-30-revenueQ-p138');
+  c.sources = [c.sources[1], c.sources[2], c.sources[0]];
+  assert.throws(() => guard(broken), e => e instanceof assert.AssertionError && e.message.includes(c.caseId));
+  assert.equal(p.sha256(fs.readFileSync(path.join(__dirname, '../configs/financial-known-cases.json'))), before);
+  console.log('RED p154: original 000688 source order rejected on a copy; live SHA256 unchanged');
+});
+
+test('p154: all real derived revenue cases export original inputs and reproduce every difference', () => {
+  // Measurement command: node -e "const fs=require('node:fs'),vm=require('node:vm'),t=require('./configs/financial-known-cases.json');const k=vm.runInNewContext(fs.readFileSync('tests/financial-known-cases.test.js','utf8').match(/^const traceKind = c => \{[\s\S]*?^\};/m)[0]+';traceKind');for(const revenue of [true,false])console.log(revenue,t.cases.filter(c=>['revenueQ','annualRev'].includes(c.field)===revenue&&['difference','rounded'].includes(k(c))).length);"
+  const definition = fs.readFileSync(path.join(__dirname, 'financial-known-cases.test.js'), 'utf8').match(/^const traceKind = c => \{[\s\S]*?^\};/m);
+  assert.ok(definition);
+  const traceKind = require('node:vm').runInNewContext(definition[0] + ';traceKind');
+  const cases = financialTable.cases.filter(c => ['revenueQ', 'annualRev'].includes(c.field) && ['difference', 'rounded'].includes(traceKind(c)));
+  assert.equal(cases.length, 20); // 19 differences and 1 issuer-rounded case; other fields have 5 differences.
+  for (const c of financialTable.cases.filter(c => ['revenueQ', 'annualRev'].includes(c.field))) {
+    const d = p.handTableDerivation(c), kind = traceKind(c);
+    if (!cases.includes(c)) { assert.equal(d, null, c.caseId); continue; }
+    assert.ok(d, c.caseId); assert.deepEqual(Object.keys(d).sort(), ['formulaDe', 'inputs']);
+    assert.ok(!/[\u2010-\u2015\u2212]|\s-\s/.test(d.formulaDe), c.caseId);
+    assert.equal(d.inputs.length, kind === 'difference' ? 2 : 1, c.caseId);
+    for (const input of d.inputs) {
+      assert.deepEqual(Object.keys(input).sort(), ['currency', 'filed', 'form', 'labelDe', 'page', 'quote', 'url', 'value']);
+      assert.ok(!/[\u2010-\u2015\u2212]|\s-\s/.test(input.labelDe), c.caseId);
+      assert.equal(input.currency, c.currency);
+      assert.ok(c.sources.some(s => s.value === input.value && ['quote', 'url', 'page', 'form', 'filed'].every(key => (s[key] ?? null) === input[key])), c.caseId);
+    }
+    if (kind === 'difference') assert.equal(d.inputs[0].value - d.inputs[1].value, c.replacementValue, c.caseId);
+  }
+});
+
+test('p154: derivation contract and validation reject malformed copies before any identity checks', () => {
+  const f = p154Fixture(p154Case('ARCC', '2025-12-31'));
+  assert.equal(p.validateProvenance([f.file], f.manifest), true);
+  const contract = require('../docs/findash-export-v1.contract.json').provenanceContract;
+  assert.deepEqual(contract.recordFields, p.RECORD_FIELDS);
+  assert.deepEqual(contract.handTableDerivationFields, ['formulaDe', 'inputs']);
+  assert.deepEqual(contract.handTableDerivationInputFields, ['labelDe', 'value', 'currency', 'quote', 'url', 'page', 'form', 'filed']);
+  for (const [name, mutate, diagnostic] of [
+    ['extra key', d => { d.extra = true; }, /invalid keys in handTableDerivation/],
+    ['missing input key', d => { delete d.inputs[0].filed; }, /invalid keys in handTableDerivation input/],
+    ['non-finite value', d => { d.inputs[0].value = Infinity; }, /invalid handTableDerivation input value/],
+    ['wrong difference', d => { d.inputs[0].value++; }, /handTableDerivation backwards value mismatch/],
+    ['empty formula', d => { d.formulaDe = ''; }, /invalid handTableDerivation formulaDe/],
+    ['empty inputs', d => { d.inputs = []; }, /invalid handTableDerivation inputs/],
+    ['non-string currency', d => { d.inputs[0].currency = 0; }, /invalid handTableDerivation input value or currency/],
+  ]) {
+    const broken = { ...f, file: clone(f.file), manifest: clone(f.manifest) };
+    mutate(broken.manifest.records.find(r => r.handTableDerivation).handTableDerivation); rehash(broken);
+    assert.throws(() => p.validateProvenance([broken.file], broken.manifest), diagnostic, name);
+    console.log('RED p154: ' + name + ' rejected on a copy');
+  }
+});
+
+test('p154: every record without a hand-table derivation keeps the independent pre-P154 ID', () => {
+  const f = p154Fixture(p154Case('ARCC', '2026-06-30'));
+  for (const r of f.manifest.records) {
+    assert.equal(r.handTableDerivation, null);
+    const oldRecord = Object.fromEntries(p.RECORD_FIELDS.filter(key => key !== 'handTableDerivation')
+      .map(key => [key, key === 'id' ? null : r[key]]));
+    assert.equal(r.id, 'e-' + p.valueHash(oldRecord));
+  }
+});
+
+test('p154: published-style manifests with no handTableDerivation key still validate', () => {
+  const f = fixture(), ids = f.manifest.records.map(r => r.id);
+  for (const r of f.manifest.records) delete r.handTableDerivation;
+  rehash(f);
+  assert.equal(p.validateProvenance([f.file], f.manifest), true);
+  assert.deepEqual(f.manifest.records.map(r => r.id), ids);
+  const bytes = p.serializeManifest(f.manifest);
+  f.file.provenanceManifestSha256 = p.sha256(bytes);
+  assert.equal(p.validateProvenance([f.file], bytes), true);
+});
+
+test('p154: a present derivation binds its formula and input values into the evidence ID', () => {
+  for (const [c, mutate] of [
+    [p154Case('ARCC', '2025-12-31'), d => { d.formulaDe += ' (geprüft)'; }],
+    [p154Case('OXLC', '2025-03-31'), d => { d.inputs[0].value++; }],
+  ]) {
+    const f = p154Fixture(c), good = clone(f.manifest);
+    good.records = [good.records.find(r => r.correctionCaseId === c.caseId)];
+    assert.equal(p.validateProvenance([], good), true);
+    const broken = clone(good), r = broken.records[0];
+    mutate(r.handTableDerivation);
+    assert.throws(() => p.validateProvenance([], broken), /evidence id does not match expanded record/);
+    r.id = 'e-' + p.valueHash({ ...r, id: null });
+    assert.notEqual(r.id, good.records[0].id);
+    assert.equal(p.validateProvenance([], broken), true);
+  }
+  const broken = clone(p154Fixture(p154Case('ARCC', '2025-12-31')).manifest);
+  const r = broken.records.find(r => r.handTableDerivation);
+  broken.records = [r]; r.handTableDerivation.inputs[0].value++;
+  r.id = 'e-' + p.valueHash({ ...r, id: null });
+  assert.throws(() => p.validateProvenance([], broken), /handTableDerivation backwards value mismatch/);
+});
+
 test('historical reviews do not break the next run or turn self-review into independence', () => {
   const f = fixture(snapshot(), [], undefined, true), mc = f.manifest.records.find(r => r.fieldPath === 'marketCap');
   const review = reviewFor(mc, 'prior-run');
@@ -659,7 +832,8 @@ test('(b) slim bytes expand losslessly; deleting any non-null source field is re
     assert.deepEqual(Object.keys(r).sort(), [...p.RECORD_FIELDS].sort());
     assert.deepEqual(Object.keys(r.fx).sort(), [...p.FX_FIELDS].sort());
     assert.deepEqual(Object.keys(r.derivation).sort(), [...p.DERIVATION_FIELDS].sort());
-    assert.equal(r.id, 'e-' + p.valueHash({ ...r, id: null }));
+    assert.equal(r.id, 'e-' + p.valueHash(Object.fromEntries(p.RECORD_FIELDS.filter(key => key !== 'handTableDerivation')
+      .map(key => [key, key === 'id' ? null : r[key]]))));
     assert.equal(r.valueHash, f.manifest.records[i].valueHash);
   });
   for (const mutate of [r => { delete r.provider; }, r => { delete r.derivation.inputIds; }]) {
