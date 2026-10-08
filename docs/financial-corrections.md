@@ -1117,6 +1117,12 @@ Der Test führt die echte Währungsfunktion des Abrufprogramms aus. Native Korre
 
 Diese Dokumentation enthält keine allgemeine Revisionsrichtlinie; die Tabellenrevision bleibt bei `2026-10-02i`, damit gespeicherte Rückhalte anderer Firmen ihren Revisionsstempel behalten, und nur die fünf neuen Einträge tragen `2026-10-08-p140`.
 
+### Härtung nach der Prüfung (P155)
+
+Die Tabellenprüfung lehnt Jahresfälle mit `replacementValue: null` und Quarantänen für eine Firma mit Maßstabsregel ab. Das gilt für die Hauptnotierung und ihre Aliasnotierungen. Die Regel liest den Eingang und könnte deshalb einen zuvor zurückgehaltenen Wert wieder auffüllen. Numerische Jahresfälle bleiben erlaubt.
+
+Echte Nullen bekommen weder ein Ereignis noch eine Korrekturmarke. Das ist jetzt für skalare Nullen und Objektzeilen mit `value: 0` durch Tests belegt, die auch die unveränderte Zeilenform prüfen.
+
 ### Vollständig fehlendes Anbieterjahr nach V-B1c-1
 
 Die letzte Sperre erkennt nun auch eine ganz ausgelassene Jahreszeile. Liegen aufeinanderfolgende datierte Jahre nicht 365 oder 366 Tage mit höchstens 14 Tagen Abweichung auseinander, oder fehlt ein Falljahr zwischen dem jüngsten vorhandenen Jahr und dem ältesten Falljahr, bleiben die neueren Jahre erhalten und ältere vorhandene Werte werden mit `annual-older-than-withheld` zurückgehalten. Damit vergleicht `revAcceleration` nicht über eine Lücke hinweg. Der Test entfernt ein ganzes Jahr und wird ohne die Erweiterung rot.
