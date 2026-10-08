@@ -52,11 +52,12 @@ const q4Fill = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-q
 const q4Off = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-quarter-check.js': {
   ...fillStep, applyExchangeCheck: s => X.applyExchangeCheck(s, { mode: 'off' }) } });
 const marked = s => serial(s).includes('"exchangeFill"') || /exchange-(pair|annual|quarter)-mismatch/.test(serial(s));
-// P138: 000688.SZ is now corrected by the hand table (tests/hand-table-p138-20261007.test.js); this file checks the rows the hand table does not own.
-const T = Object.keys(F.snapshots).filter(t => t !== '000688.SZ');
+// P138: only the identity and fill-only tests exclude 000688.SZ, whose hand-table corrections change the raw snapshot.
+const T = Object.keys(F.snapshots);
+const noHandTable = T.filter(t => t !== '000688.SZ');
 
 test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/main for every fixture snapshot', () => {
-  for (const t of T) {
+  for (const t of noHandTable) {
     const s = clone(F.snapshots[t]);
     const chain = applyZeroGuard(applyFinancialCases(applyKnownCases(clone(s)).snapshot).snapshot).snapshot;
     const out = quiet(() => q4Off.prepareSnapshot(s));
@@ -185,7 +186,7 @@ test('no-own-read wiring: two never-read rows and one old own read have separate
 test('committed fill-only is wired through prepareSnapshot but never through the pull; break-once red', () => {
   assert.equal(X.policy.mode, 'fill-only');
   const check = reader => {
-    for (const t of T) {
+    for (const t of noHandTable) {
       const original = clone(F.snapshots[t]), before = serial(original);
       const expected = X.applyExchangeCheck(clone(original), { mode: 'fill-only', context: CTX }).snapshot;
       const read = quiet(() => reader.prepareSnapshot(original));
@@ -204,7 +205,7 @@ test('committed fill-only is wired through prepareSnapshot but never through the
   assert.throws(() => check(persists), assert.AssertionError); breaks++;
   const pull = moduleCopy('pull-yahoo.js', s => s, { './lib/yahoo-q4-known-cases.js': q4Fill });
   const checkPull = lib => {
-    for (const t of T) {
+    for (const t of noHandTable) {
       const s = clone(F.snapshots[t]); quiet(() => lib._convertSnapshotToUSD(s));
       assert.ok(!marked(s), t);
       assert.equal(serial(s.timeseries), serial(F.snapshots[t].timeseries), t);
