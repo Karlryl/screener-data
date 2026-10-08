@@ -36,6 +36,7 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // unchanged — only the on-disk filename differs.
 // audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
 const { safeSnapshotFilename, isMetadataSnapshot } = require('./lib/snapshot-fs.js');
+const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitRunTag } = require('./lib/size-exits.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 // T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
@@ -160,6 +161,9 @@ function istTeilmengenLauf(anzahlListe, bekanntesNTotal) {
 }
 let _manifestSubsetTag = null;   // gesetzt in main(), gelesen an der Schreibstelle
 let _manifestSchutzUmgangen = null;  // Grund, falls das Altmanifest nicht lesbar war
+const _sizeExits = new Map();
+let _sizeExitSnapshotTickers = new Set();
+let _sizeExitCheckpoint = null;
 const FUNDAMENTALS_REFRESH_DAYS = parseInt(process.env.FUNDAMENTALS_REFRESH_DAYS || '30', 10);
 const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
 
@@ -3336,6 +3340,24 @@ function countSkippedMcap(results) {
   return results.filter(r => r && r.status === 'skipped-mcap').length;
 }
 
+/**
+ * Record a floor removal only for a ticker present before this pull or already removed by it.
+ * @param {string} ticker Removed snapshot ticker.
+ * @param {number} marketCapUsd Measured USD market cap.
+ * @param {number} floorUsd Applied USD floor.
+ * @param {string} asOf Existing pull timestamp.
+ * @param {string} source Either price-only or full-pull.
+ * @returns {object|null} Recorded exit, or null when this is not an existing ticker's floor exit.
+ */
+function recordSizeExit(ticker, marketCapUsd, floorUsd, asOf, source) {
+  if (!Number.isFinite(marketCapUsd) || marketCapUsd < 0 || marketCapUsd >= floorUsd ||
+      (!_sizeExitSnapshotTickers.has(ticker) && !_sizeExits.has(ticker))) return null;
+  const record = buildSizeExit(ticker, marketCapUsd, floorUsd, asOf, source);
+  _sizeExits.set(ticker, record);
+  if (_sizeExitCheckpoint) _sizeExitCheckpoint();
+  return record;
+}
+
 // B5: missing size is an observation, not evidence that a company is too small.
 // Read the prior file regardless of age; never refresh its financial/price clocks.
 function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepStreak = false } = {}) {
@@ -3548,6 +3570,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Versuch landete diese Zeile in _recordGpZeroCoding — also in einer Funktion, die JE ZEILE
   // laeuft und den Schutz mitten im Lauf abgeraeumt haette. Anker war mehrdeutig.)
   _manifestSubsetTag = null; _manifestSchutzUmgangen = null;
+  _sizeExits.clear();
+  _sizeExitCheckpoint = null;
+  _sizeExitSnapshotTickers = new Set(watchlist.stocks.filter(stock =>
+    fs.existsSync(path.join(outputDir, safeSnapshotFilename(stock.ticker))) ||
+    fs.existsSync(path.join(outputDir, `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`)))
+    .map(stock => stock.ticker));
+  // Run + attempt prevents cached reports from earlier pulls posing as today's exits.
+  const sizeExitTag = sizeExitRunTag(process.env) || 'local-' + new Date().toISOString().replace(/\D/g, '');
+  const sizeExitPath = path.join(outputDir, `_manifest-size-exits.shard-${watchlist._pullShard ? watchlist._pullShard.index : 'unsharded'}.run-${sizeExitTag}.json`);
   _needsFullPullThrew = 0;
   _corruptYoungSnapshots = 0;
   _schemaProbeErrors = 0;
@@ -3623,6 +3654,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     newerMeaning: 'newer reported quarter (annual-only rows: fiscal year, incl. undated -> dated and young) persisted', legacyClock: 'fundamentalsAsOf/fetchedAt proxy until first measured FTS success' };
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, eligible=${reloadStats.eligible}, skipped-cap=${reloadStats.skipped_cap}, shard-cap=${reloadPlan.cap}, run-cap=${reloadConfig.maxPerRun}, legacy-clock=${reloadStats.legacy_clock}, unknown-clock=${reloadStats.unknown_clock}, read-errors=${reloadPlan.readErrors}`);
   const results = [];
+  // Persist each removal: timed-out shards still upload their surviving snapshots.
+  // The frozen manifest contract pins the missing-cap counter on every _manifest report.
+  _sizeExitCheckpoint = () => writeFileAtomic(sizeExitPath, JSON.stringify({
+    n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
+    sizeExits: mergeSizeExits([[..._sizeExits.values()]]),
+  }));
   const failures = [];
   // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
   //
@@ -4015,7 +4052,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (deleteFailures.length) {
         throw new Error('price-only floor: stale snapshot removal failed: ' + deleteFailures[0].error);
       }
-      throw new Error('price-only floor: mcap=' + (mcapNow/1e9).toFixed(2) + 'B < $' + (MIN_MCAP/1e9).toFixed(0) + 'B — snapshot removed');
+      recordSizeExit(stock.ticker, mcapNow, MIN_MCAP, newAsOf, 'price-only');
+      throw new Error('price-only floor: mcap=' + (mcapNow/1e9).toFixed(2) + 'B < $' + formatSizeFloor(MIN_MCAP) + 'B — snapshot removed');
     }
     // Mark mode for downstream visibility
     existing._pullMode = 'price-only';
@@ -5106,7 +5144,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       }
       const mcapOutOfRange = mcapVal < MIN_MCAP || mcapVal > MAX_MCAP;
       if (mcapOutOfRange) {
-        const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $${(MIN_MCAP/1e9).toFixed(0)}B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $${MAX_MCAP === Infinity ? 'Infinity' : (MAX_MCAP/1e12).toFixed(0)+'T'} (Mega-Cap)`;
+        const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $${formatSizeFloor(MIN_MCAP)}B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $${MAX_MCAP === Infinity ? 'Infinity' : (MAX_MCAP/1e12).toFixed(0)+'T'} (Mega-Cap)`;
         _log('INFO', `  ⊘ ${stock.ticker} skipped: ${reason}`);
         // Remove existing snapshot if was previously included
         const filename = safeSnapshotFilename(stock.ticker);
@@ -5121,6 +5159,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const deleteFailures = _removeStaleFiles(
           legacyFilename !== filename ? [outPath, legacyPath, fundCachePath] : [outPath, fundCachePath],
           stock.ticker);
+        if (mcapVal < MIN_MCAP && !fs.existsSync(outPath) && !fs.existsSync(legacyPath)) {
+          recordSizeExit(stock.ticker, mcapVal, MIN_MCAP, asOf, 'full-pull');
+        }
         if (deleteFailures.length) {
           failures.push({ ticker: stock.ticker, error: 'mcap stale data removal failed: ' + deleteFailures.map(x => x.path + ': ' + x.error).join('; ') });
           results.push({ ticker: stock.ticker, status: 'failed-delete', reason });
@@ -5512,6 +5553,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     ? '_manifest-full.subset-' + _manifestSubsetTag + '.json'
     : '_manifest-full.json');
   writeFileAtomic(fullPath, JSON.stringify(manifest));
+  _sizeExitCheckpoint();
   _log('INFO', `Pull complete: ${okResultsFinal.length}/${watchlist.stocks.length} ok (${skippedMcapFinal} skipped-mcap), ${failures.length} failed`);
   return manifest;
 }
@@ -5919,6 +5961,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
   countSkippedMcap,
+  recordSizeExit,
   preserveSnapshotForMissingCurrency,
   // Tag 466: Ueberspring-Entscheidung der Small-Cap-Eigentumsgrenze — an ihr haengt, ob
   // Aufsteiger im Hauptboard sichtbar sind. Waechter: tests/smallcap-eigentumsgrenze.test.js
