@@ -438,6 +438,91 @@ test('store age per company: a later run that did not read the company leaves it
   assert.equal(res(snap('1101.TW')).why, 'no-store-entry');
 });
 
+// P151: the empty MOPS entry shape seen for no-line and letter-suffixed bad-id companies.
+const neverReadTaiwan = (ticker = '2885.TW', code = 'no-line', industry = 'Financial Conglomerates') => {
+  const st = clone(F.store), s = snap('6446.TW'), at = '2026-10-02T07:00:00.000Z';
+  st.tw.companies[ticker] = { companyId: ticker.split('.')[0], seasons: {},
+    noData: Object.fromEntries(['115Q2', '115Q1', '114Q4', '114Q3'].map(k => [k, { at, code }])) };
+  Object.assign(s.meta, { ticker, industry, fetchedAt: '2026-10-02T09:00:00.000Z' });
+  return { s, st, ctx: ctxOf(st) };
+};
+test('no-own-read: Taiwan no-line, including banks/insurers, keeps all snapshot values', () => {
+  const { s, st, ctx } = neverReadTaiwan(), storeBefore = serial(st);
+  for (const industry of ['Financial Conglomerates', 'Banks - Regional', 'Insurance - Life']) {
+    s.meta.industry = industry;
+    const before = serial(s);
+    for (const mode of ['shadow', 'fill-only', 'active']) {
+      const out = run(s, mode, ctx), r = out.result;
+      assert.equal(r.why, 'no-own-read'); assert.equal(r.category, 'unchecked');
+      assert.equal(r.whyText, 'Börsenquelle hat diese Firma noch nie geliefert');
+      assert.deepEqual(r.noDataCodes, ['no-line']);
+      assert.deepEqual(r.withhold, []); assert.equal(r.fill, null); assert.equal(r.growth, null);
+      assert.equal(out.snapshot, s); assert.equal(serial(s), before);
+      assert.equal(serial(st), storeBefore);
+    }
+  }
+  assert.deepEqual(X.UNCHECKED_TEXT, {
+    'no-own-read': 'Börsenquelle hat diese Firma noch nie geliefert',
+    'store-old': 'Der letzte Abruf der Börsenquelle für diese Firma ist älter als die Frist',
+  });
+});
+for (const [ticker, industry] of [['1312A.TW', 'Chemicals'], ['2002A.TW', 'Steel']]) {
+  test('no-own-read: ' + ticker + ' keeps its bad-id diagnosis', () => {
+    const { s, st, ctx } = neverReadTaiwan(ticker, 'bad-id', industry), before = serial(s), storeBefore = serial(st);
+    const out = run(s, 'fill-only', ctx);
+    assert.equal(out.result.why, 'no-own-read'); assert.equal(out.result.category, 'unchecked');
+    assert.equal(out.result.whyText, 'Börsenquelle hat diese Firma noch nie geliefert');
+    assert.deepEqual(out.result.noDataCodes, ['bad-id']);
+    assert.equal(out.snapshot, s); assert.equal(serial(s), before); assert.equal(serial(st), storeBefore);
+  });
+}
+test('no-own-read: China with no YTD observations has no diagnostic codes', () => {
+  const st = clone(F.store), s = base();
+  st.cn.companies[s.meta.ticker].ytd = {};
+  s.meta.fetchedAt = '2026-10-02T09:00:00.000Z';
+  const before = serial(s), storeBefore = serial(st), out = run(s, 'fill-only', ctxOf(st));
+  assert.equal(out.result.why, 'no-own-read'); assert.equal(out.result.category, 'unchecked');
+  assert.equal(out.result.whyText, 'Börsenquelle hat diese Firma noch nie geliefert');
+  assert.deepEqual(out.result.noDataCodes, []);
+  assert.equal(out.snapshot, s); assert.equal(serial(s), before); assert.equal(serial(st), storeBefore);
+});
+test('no-own-read: codes are sorted and unique; empty lists are not observations', () => {
+  const { s, st } = neverReadTaiwan();
+  st.tw.companies[s.meta.ticker].seasons = { '115Q2': [] };
+  st.tw.companies[s.meta.ticker].noData['114Q4'].code = 'bad-id';
+  const r = res(s, ctxOf(st));
+  assert.equal(r.why, 'no-own-read'); assert.deepEqual(r.noDataCodes, ['bad-id', 'no-line']);
+  const empty = clone(st); empty.tw.companies[s.meta.ticker].noData = {};
+  assert.deepEqual(res(s, ctxOf(empty)).noDataCodes, []);
+});
+test('no-own-read: global age wins; absent entries and observations without a run keep their reasons', () => {
+  const { s, st } = neverReadTaiwan();
+  assert.equal(res(s, ctxOf(st)).why, 'no-own-read', 'fresh store, no observations or own read');
+  const checkOld = (snapshot, stores) => {
+    const r = res(snapshot, ctxOf(stores));
+    assert.equal(r.why, 'store-old'); assert.equal(r.category, 'unchecked');
+    assert.equal(r.whyText, 'Der letzte Abruf der Börsenquelle für diese Firma ist älter als die Frist');
+    assert.ok(!Object.hasOwn(r, 'noDataCodes'));
+  };
+  const old = clone(st);
+  for (const src of Object.values(old.tw.sources)) src.fetchedAt = '2026-01-01T00:00:00.000Z';
+  checkOld(s, old);
+  const later = clone(s); later.meta.fetchedAt = '2026-10-11T09:00:00.000Z';
+  checkOld(later, clone(st)); // newest run nine days before the snapshot
+  const invalid = clone(s); invalid.meta.fetchedAt = 'invalid'; checkOld(invalid, clone(st));
+  const noRuns = clone(st); noRuns.tw.sources = {}; checkOld(s, noRuns);
+  assert.equal(res(snap('1101.TW'), ctxOf(clone(st))).why, 'no-store-entry');
+  const inconsistent = clone(F.store);
+  for (const src of Object.values(inconsistent.tw.sources)) src.read = src.read.filter(r => !r.startsWith('6446.TW '));
+  checkOld(snap('6446.TW'), inconsistent);
+  const cn = clone(F.store);
+  for (const src of Object.values(cn.cn.sources)) for (const p of src.periods) src.absent[p] = ['000002.SZ'];
+  checkOld(base(), cn);
+  const malformedRead = clone(st);
+  malformedRead.tw.sources.bad = { fetchedAt: 'invalid', read: [s.meta.ticker + ' 115Q2'] };
+  checkOld(s, malformedRead); // a recorded but invalid own read is not a missing read
+});
+
 // ── Mode switch leaves no residue ────────────────────────────────────────────
 test('mode switch: active -> off restores every cell; active twice = active once; shadow never changes', () => {
   const all = [...Object.keys(F.snapshots).map(t => [snap(t), CTX]), [november(true).s, november(true).ctx]];
@@ -509,7 +594,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
       s.timeseries.revenueQ[k] = { value: res(november(true).s, ctx).fill.nativeValue * s.meta.fxRateApplied * 1.05 };
       assert.ok(!r(lib, s, ctx).withhold.some(w => w.fillPeriod)); });
   // store age is measured per company, not on the newest run of the market
-  red("  return !finite(own) || (at - own) / 864e5 > limit;", "  return false;",
+  red("  return !finite(own) || (at - own) / 864e5 > limit ? 'store-old' : false;", "  return false;",
     lib => { const o = partialTaiwan(['2548.TW 115Q2']); assert.equal(r(lib, o.s, o.ctx).why, 'store-old'); });
   // one fetch vintage per derived quarter
   red("          S.lastConfirmedAt(store, ticker, p) !== S.lastConfirmedAt(store, ticker, p.slice(0, 5) + prev)) single[p] = null;",
