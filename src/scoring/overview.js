@@ -18,54 +18,83 @@
  *   - REITs            -> FFO-Proxy-YoY-Badge
  *   - Pre-Revenue/Biotech -> Cash-Runway-Quartale-Badge
  * Begleitspalte: Rule-of-X (alpha=2.3) fuer den Wachstum-vs-Effizienz-Blick.
+ * P158 / V-DL3 F-08 (08.10.2026): Jahreswachstum nur aus den zwei juengsten
+ * vorhandenen Werten an benachbarten Positionen; gueltige Jahresenden muessen
+ * 334 bis 397 Tage auseinanderliegen. Sonst null mit Grund und Fehlwert-Marker.
  */
 
-const { norm, firstPresent, firstTwoPresent, jahresFensterAusgerichtet } = require('./snapshot.js');
+const { norm, firstPresent, jahresFensterAusgerichtet } = require('./snapshot.js');
 const { ruleOfX } = require('./axes.js');
+const { annualPeriodEnds, _tagesnummer, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../../lib/annual-pairs.js');
+
+/**
+ * German reason for withheld non-adjacent annual growth.
+ * @param {void} none No parameters; this export is a text constant.
+ * @returns {string} Reason attached to the overview metric.
+ */
+const OVERVIEW_YEARS_NOT_ADJACENT_TEXT = 'Jahreswachstum nicht belegt, Jahre liegen nicht hintereinander';
+
+// Annual field names request annual-only growth; badge kinds select TTM/FFO inputs.
+function growthVerdict(s, field) {
+  if (field === 'gp') {
+    // Fix Bug 24: TTM-Fenster POSITIONAL auf der ROH-Serie schneiden (Muster
+    // growthYoYComponents in score.js:162-171). presentValues() komprimiert
+    // null-Luecken -> slice(4,8) wuerde bei interner Luecke das Vorjahres-Fenster
+    // verschieben (kein Jahresvergleich mehr). Nur wenn die ersten 8 Quartale
+    // luecken-frei finit sind, ist die positionale TTM-ueber-TTM-Bildung ehrlich.
+    // F-4 (03.08.2026): "luecken-frei finit" reicht nicht — eine Reihe kann acht finite
+    // Quartale tragen und trotzdem ein Quartal AUSLASSEN (bei chinesischen A-Aktien der
+    // Normalfall). Dann ist slice(4,8) nicht das Vorjahr, sondern ein verschobenes Fenster.
+    // jahresFensterAusgerichtet prueft genau das am Enddatum; ohne Enden ist es true und
+    // das Verhalten byte-identisch zu vorher.
+    const raw = norm(s, 'grossProfitQ');
+    if (raw.length >= 8 && raw.slice(0, 8).every(Number.isFinite)
+        && jahresFensterAusgerichtet(s, 'grossProfitQ', 4)) {
+      const ttmNew = raw.slice(0, 4).reduce((p, c) => p + c, 0);
+      const ttmOld = raw.slice(4, 8).reduce((p, c) => p + c, 0);
+      if (ttmOld > 0) return { value: ttmNew / ttmOld - 1, withheld: false };
+    }
+    field = 'annualGP';
+  }
+  let values;
+  if (field === 'ffo-badge') {
+    const ni = norm(s, 'annualNetIncome');
+    const dep = norm(s, 'annualDepreciation');
+    const n = Math.min(ni.length, dep.length); // Laengen clampen (kein undefined-Zip)
+    values = [];
+    for (let i = 0; i < n; i++) {
+      const a = ni[i], b = dep[i];
+      values.push((a !== null && b !== null && Number.isFinite(a + b)) ? a + b : null);
+    }
+    field = 'annualNetIncome';
+  } else {
+    values = norm(s, field);
+  }
+  const newer = values.findIndex(Number.isFinite);
+  const older = values.findIndex((value, i) => i > newer && Number.isFinite(value));
+  if (newer < 0 || older < 0 || values[older] <= 0) return { value: null, withheld: false };
+  const ends = annualPeriodEnds(s, field);
+  const newEnd = _tagesnummer(ends[newer]), oldEnd = _tagesnummer(ends[older]);
+  // Use P115's measured 334..397 days, not the brief's rounded 330..400 window.
+  const withheld = older !== newer + 1 || (newEnd !== null && oldEnd !== null
+    && (newEnd - oldEnd < ANNUAL_PAIR_MIN_DAYS || newEnd - oldEnd > ANNUAL_PAIR_MAX_DAYS));
+  return { value: withheld ? null : values[newer] / values[older] - 1, withheld };
+}
 
 // YoY-Wachstum einer {value}-Jahres-/Quartalsserie via norm()-Feldname.
 function yoyAnnual(s, field) {
-  const two = firstTwoPresent(norm(s, field));
-  if (!two || two[1] <= 0) return null;
-  return two[0] / two[1] - 1;
+  return growthVerdict(s, field).value;
 }
 
 // Bruttogewinn-Wachstum YoY: TTM-ueber-TTM wenn >=8 present Quartale, sonst
 // annualGP-YoY. (Aktuell 5 Quartale -> annual; zukunftssicher bei 8 Quartalen.)
 function grossProfitGrowthYoY(s) {
-  // Fix Bug 24: TTM-Fenster POSITIONAL auf der ROH-Serie schneiden (Muster
-  // growthYoYComponents in score.js:162-171). presentValues() komprimiert
-  // null-Luecken -> slice(4,8) wuerde bei interner Luecke das Vorjahres-Fenster
-  // verschieben (kein Jahresvergleich mehr). Nur wenn die ersten 8 Quartale
-  // luecken-frei finit sind, ist die positionale TTM-ueber-TTM-Bildung ehrlich.
-  // F-4 (03.08.2026): "luecken-frei finit" reicht nicht — eine Reihe kann acht finite
-  // Quartale tragen und trotzdem ein Quartal AUSLASSEN (bei chinesischen A-Aktien der
-  // Normalfall). Dann ist slice(4,8) nicht das Vorjahr, sondern ein verschobenes Fenster.
-  // jahresFensterAusgerichtet prueft genau das am Enddatum; ohne Enden ist es true und
-  // das Verhalten byte-identisch zu vorher.
-  const raw = norm(s, 'grossProfitQ');
-  if (raw.length >= 8 && raw.slice(0, 8).every(Number.isFinite)
-      && jahresFensterAusgerichtet(s, 'grossProfitQ', 4)) {
-    const ttmNew = raw.slice(0, 4).reduce((p, c) => p + c, 0);
-    const ttmOld = raw.slice(4, 8).reduce((p, c) => p + c, 0);
-    if (ttmOld > 0) return ttmNew / ttmOld - 1;
-  }
-  return yoyAnnual(s, 'annualGP');
+  return growthVerdict(s, 'gp').value;
 }
 
 // FFO-Proxy-YoY (REIT-Badge): (NetIncome + Depreciation) je GJ, YoY.
 function ffoProxyGrowthYoY(s) {
-  const ni = norm(s, 'annualNetIncome');
-  const dep = norm(s, 'annualDepreciation');
-  const n = Math.min(ni.length, dep.length); // Laengen clampen (kein undefined-Zip)
-  const ffo = [];
-  for (let i = 0; i < n; i++) {
-    const a = ni[i], b = dep[i];
-    ffo.push((a !== null && b !== null && Number.isFinite(a + b)) ? a + b : null);
-  }
-  const two = firstTwoPresent(ffo);
-  if (!two || two[1] <= 0) return null; // negative Basis kippt sonst das Vorzeichen
-  return two[0] / two[1] - 1;
+  return growthVerdict(s, 'ffo-badge').value;
 }
 
 // Cash-Runway in Quartalen (Pre-Revenue/Biotech-Badge): Cash / (Burn/4).
@@ -94,23 +123,26 @@ function ruleOfXCompanion(s, growthBounds) {
  * opts: { gpClass:'real'|'degenerate'|'none', specialTrack:'reit'|'biotech'|null,
  *         growthBounds:[lo,hi]|null }
  * kind: 'gp' | 'revenue-badge' | 'ffo-badge' | 'runway-badge'
+ * Non-adjacent annual pairs additionally carry valuePresent:false and reason.
  */
 function overviewMetric(s, opts = {}) {
   const companion = ruleOfXCompanion(s, opts.growthBounds);
-  if (opts.specialTrack === 'reit') {
-    return { kind: 'ffo-badge', value: ffoProxyGrowthYoY(s), companion };
-  }
   if (opts.specialTrack === 'biotech') {
     return { kind: 'runway-badge', value: cashRunwayQuarters(s), companion };
   }
-  if (opts.gpClass === 'degenerate') {
-    return { kind: 'revenue-badge', value: yoyAnnual(s, 'annualRev'), companion };
+  const kind = opts.specialTrack === 'reit' ? 'ffo-badge'
+    : opts.gpClass === 'degenerate' ? 'revenue-badge' : 'gp';
+  const { value, withheld } = growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind);
+  const metric = { kind, value, companion };
+  if (withheld) {
+    metric.valuePresent = false;
+    metric.reason = OVERVIEW_YEARS_NOT_ADJACENT_TEXT;
   }
-  // Default / echter GP
-  return { kind: 'gp', value: grossProfitGrowthYoY(s), companion };
+  return metric;
 }
 
 module.exports = {
   overviewMetric, grossProfitGrowthYoY, ffoProxyGrowthYoY,
   cashRunwayQuarters, ruleOfXCompanion, yoyAnnual,
+  OVERVIEW_YEARS_NOT_ADJACENT_TEXT,
 };
