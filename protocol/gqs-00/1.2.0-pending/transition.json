@@ -80,7 +80,8 @@
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "e68ecf6ebdf1da2f18c0eece6575035a964d449020275974dbad509d6a74dd03",
     "src/scoring/profit-tier.js": "a7af103912b2bfdec3dbe5bfa40268ec95d5fb8f12b87a0661af8f347f5c3eaf",
-    "src/scoring/run-screener.js": "5baa8445eaf96997066706b91849ae1aa19064c4c21d053a982525abd15be040"
+    "src/scoring/run-screener.js": "5baa8445eaf96997066706b91849ae1aa19064c4c21d053a982525abd15be040",
+    "src/scoring/overview.js": "a73e61a61a3047f74ebfc1e67776cfc926d893040b9ed25e14a67037eedb37d9"
   },
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
@@ -89,7 +90,8 @@
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme)",
-    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair."
+    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair.",
+    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change."
   },
   "nichtBeruehrt": [
     "protocol/gqs-00/1.1.0/ und protocol/gqs-00/1.0.0/ (byte-identisch erhalten)",
@@ -145,6 +147,22 @@
     "sourceSha256LF": "5eb51891020ca59abbd6693fa57d8da493fb5acd3335f2d398744da67c709eb0",
     "previousPendingSha256LF": "d43eea326244576024cbceeb3464558ac3caa356a47600015009d996c5a2762a",
     "evidence": "verify() rebuilds the 25 golden traces byte-identically. Checks: tests/scoring/gqs00-freeze.test.js, tests/scoring/annual-pairs.test.js, tests/annual-pairs-shadow-export.test.js, tests/p115-jahrespaare-vorher-nachher.test.js, tests/p51-pr404.test.js, tests/scoring/dup-issuer-shadow-export.test.js, tests/yahoo-q4-known-cases.test.js; full gate node scripts/test-gate.js --mode=all.",
+    "review": "Build registration only; two independent Claude blind reviews ordered by the master; no merge by the builder"
+  },
+  "overviewAdjacentYears": {
+    "date": "2026-10-08",
+    "authority": "Master order for package P158 of the Daylauf 08.10.2026, finding F-08 of V-DL3: a display-only correction of a wrongly shown number under Regelblatt G2 and T2; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only the overview.js fingerprint; the overview growth column is not an input of any score or rank. No scoring formula, weight or threshold change. The P115 constants 334 and 397 are imported from lib/annual-pairs.js, not redefined.",
+    "file": "src/scoring/overview.js",
+    "sourceSha256LF": "a73e61a61a3047f74ebfc1e67776cfc926d893040b9ed25e14a67037eedb37d9",
+    "previousSealedSha256LF": "1b62c0ba1b5bcef666f0e91f9c7b586a0a6ea02a84f4e1a1623de264b1cb1bdd",
+    "definitionAmendmentAt120Seal": {
+      "column": "overview.value for kinds gp, revenue-badge, ffo-badge",
+      "formula": "GP keeps the unchanged aligned, gapless eight-quarter TTM ratio; its annual fallback, the revenue badge and the FFO proxy use newest / older - 1 from the two newest present finite values only at consecutive stored positions, with a positive older value and, when both ends are valid, an inclusive 334..397-day newer-minus-older distance. FFO sums NetIncome and Depreciation positionally, keeping null when either component is missing.",
+      "missing": "A non-adjacent pair gives null plus valuePresent:false and reason 'Jahreswachstum nicht belegt, Jahre liegen nicht hintereinander' on the metric object. Fewer than two present values or an older value <= 0 stays plain null without reason; reported zero growth stays 0. One missing or invalid end makes the pair undated, so only positions apply. Reason and marker are not exported; findash-export/v1 is unchanged.",
+      "newInputPointer": "$.annual.annual*Ends read through lib/annual-pairs.js annualPeriodEnds: annualGPEnds, annualRevEnds, and annualNetIncomeEnds for the FFO proxy."
+    },
+    "evidence": "Checks: tests/scoring/overview.test.js, tests/scoring/overview-adjacent-years.test.js (red on old code, green after correction), tests/scoring/jahresvergleich-datum.test.js, tests/scoring/gqs00-freeze.test.js (green baseline, red after the source edit before this transition entry, green afterwards), scripts/gqs00-freeze.js --verify, tests/financial-known-cases.test.js, tests/scoring/annual-pairs.test.js, tests/jsdoc-exports.test.js. verify() rebuilds the 25 golden traces unchanged; they carry no overview. The before/after replay on fresh snapshots is written separately by the supervisor into docs/overview-adjacent-years-vorher-nachher-2026-10-08.md; no replay numbers are registered here.",
     "review": "Build registration only; two independent Claude blind reviews ordered by the master; no merge by the builder"
   }
 }

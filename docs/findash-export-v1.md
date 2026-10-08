@@ -88,7 +88,7 @@ Zusaetzlich zur Huelle (§2):
 | `lamps` | string[] | Pflicht | ja (Array) | z.B. `["peakMargin","cyclePeak"]`, kann `[]`. Registry: `src/scoring/lamps.js` `LAMPS` (18 Lampen); ausgewiesen wird nur, was `true` ist (`evaluateLamps().active`) — `false` und `null` sind im Array nicht unterscheidbar. Die zwei juengsten Eintraege `opIncSynthetisch`/`opIncYahooAdjusted` sind der EINZIGE Weg, auf dem `meta.opIncSource` diesen Feed erreicht: §3c. |
 | `overview` | Objekt \| null | Pflicht (Wert nullable) | ja (Schluessel-Praesenz; wenn Objekt: alle Sub-Felder) | VERSCHACHTELT (im Gegensatz zu overview.json). |
 | `overview.kind` | `"gp"`\|`"revenue-badge"`\|`"ffo-badge"`\|`"runway-badge"` (Enum) | wenn overview≠null | ja (Enum gegen die 4 Werte) | In Boards nur `gp`/`revenue-badge`/`ffo-badge` beobachtet; `runway-badge` schema-erlaubt. |
-| `overview.value` | number \| null | wenn overview≠null | ja (finite\|null) | **KANN NEGATIV sein** (z.B. `-0.055`, `-1.17` = YoY-Schrumpfung). |
+| `overview.value` | number \| null | wenn overview≠null | ja (finite\|null) | **KANN NEGATIV sein** (z.B. `-0.055`, `-1.17` = YoY-Schrumpfung). Seit 08.10.2026 (P158) auch `null`, wenn die zwei jüngsten vorhandenen Jahreswerte nicht benachbart sind (aufeinanderfolgende gespeicherte Positionen und, sofern beide gültig, Periodenenden 334 bis 397 Tage auseinander); Grund und Präsenzmarker werden nicht exportiert, das Schema bleibt `findash-export/v1`. |
 | `overview.companion` | number (round1) \| null | wenn overview≠null | ja (finite\|null) | Rule-of-X-Companion, z.B. `195.3`; kann `null`. |
 | `country` | string \| null | Pflicht (nullable) | ja (Praesenz + string\|null) | z.B. `"United States"`, `"Taiwan"`. |
 | `region` | string \| null | Pflicht (nullable) | ja (Praesenz + string\|null) | z.B. `"North America"`, `"Asia"`, `"Europe"`. |
@@ -291,7 +291,7 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 | `track` | `"profitable"`\|`"unprofitable"` (Enum) | Pflicht | ja (Enum) | **Meistgelesene Cross-Branch-Liste — der Enum-Bruch bei `track` wird hier erkannt.** |
 | `score` | number (round1, finite), **Spanne 0–100** | Pflicht | ja (finite) | z.B. `94.9`. Derselbe Deckel wie in §3 (`mapOverviewRow`, seit 19.08.2026) — s. §3a zu den zwei Skalen. |
 | `overviewKind` | `"gp"`\|`"revenue-badge"`\|`"ffo-badge"`\|`"runway-badge"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Wie board `overview.kind`, aber FLACH. |
-| `overviewValue` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | KANN NEGATIV. |
+| `overviewValue` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | KANN NEGATIV. Seit 08.10.2026 (P158) auch `null`, wenn die zwei jüngsten vorhandenen Jahreswerte nicht benachbart sind (aufeinanderfolgende gespeicherte Positionen und, sofern beide gültig, Periodenenden 334 bis 397 Tage auseinander); Grund und Präsenzmarker werden nicht exportiert, das Schema bleibt `findash-export/v1`. |
 | `overviewCompanion` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | |
 | `lamps` | string[] | Pflicht | ja (Array) | Kann `[]`. |
 | `country/region/sector/marketCap/phase/mcapBand/ipoRecency/profitTier/ipoYear` | wie BoardRow §3 | Pflicht (nullable) | ja (jedes einzeln, Praesenz + Typ/Enum\|null) | Volle geo-Felder (inkl. 1.2 `profitTier`+`ipoYear`). |
