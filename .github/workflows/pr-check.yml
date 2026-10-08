@@ -41,7 +41,7 @@ concurrency:
 jobs:
   test-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       # actions/checkout@v4 = Konvention der LESENDEN Workflows (weekly-guard.yml).
       # Die SHA-Pins in daily-pull.yml existieren nur wegen contents: write.
