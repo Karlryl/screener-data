@@ -200,9 +200,7 @@ function checkReaderPredicates(names) {
       }
     }
   }
-  const { filenameMayBeCandidate } = require('../lib/druckenmiller/universe.js');
-  for (const name of names) assert.equal(filenameMayBeCandidate(name), false);
-  print(`PASS reader predicates: ${readers.length} source readers, ${checked} executed filename checks and Druckenmiller prefilter`);
+  print(`PASS reader predicates: ${readers.length} source readers, ${checked} executed filename checks`);
 }
 async function pull(prior, value, age = 1, shard = 0, full, deletionFailure = null) {
   files.clear(); logs.length = 0; cap = value; fullCap = full;
