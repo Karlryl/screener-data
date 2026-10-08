@@ -177,6 +177,7 @@ function verarbeiteZeilen(key, cfg, rows, rates, totalCount, right) {
     if (d[I.subtype] && d[I.subtype] !== 'common') continue;      // preferred/DR raus (Wertpapiertyp an der Quelle)
     if (cfg.exch && !cfg.exch.includes(d[I.exch])) continue;      // Boersen-Routing (JP=TSE, CN=SZSE), killt zugleich NAG/FSE-Dubletten
     if (cfg.domicile && d[I.country] !== cfg.domicile) continue;  // BR/MX: auslands-domizilierte BDR/SIC raus
+    // toUsd unit: AGGREGATE (market cap), sub-unit currency codes are read as their major unit
     const usd = toUsd(d[I.mcap], d[I.ccy], rates);                // grober USD-Vorcut; null (unbekannte ccy) -> durchlassen
     if (usd != null && usd < MIN_USD_PRECUT) {
       unterSchwelle.push({ ticker: (d[I.code] || '?') + cfg.suffix, name: d[I.name] || null, mcapUsd: Math.round(usd) });

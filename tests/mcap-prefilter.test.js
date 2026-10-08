@@ -129,8 +129,21 @@ check('Batch-Fehler bleibt unbeantwortet (kein stiller Ausschluss)', async () =>
 });
 
 // ── Reine Helfer (waren bisher ebenfalls ungetestet) ─────────────────────────────
-check('toUsd rechnet Pence korrekt (GBp -> GBP/100)', () => {
-  assert.equal(toUsd(200e9, 'GBp', { GBP: 1.3 }), 200e9 / 100 * 1.3);
+check('LLOY.L keeps its GBP aggregate above the $800M floor', async () => {
+  // The old code produced $0.798B and dropped LLOY.L; marketCap is already in GBP.
+  const quote = async () => [{ symbol: 'LLOY.L', quoteType: 'EQUITY', currency: 'GBp', marketCap: 60249000000 }];
+  const r = await prefilterByMcap(['LLOY.L'], { minUsd: 800e6, quote, rates: { USD: 1, GBP: 1.324398 } });
+  assert.ok(r.kept.has('LLOY.L'));
+  assert.ok(Math.abs(r.kept.get('LLOY.L') - 79.79e9) < 0.01e9);
+  assert.ok(!r.belowUsd.has('LLOY.L'));
+});
+check('toUsd treats every sub-unit code as its major currency for aggregates', () => {
+  const rates = { GBP: 1.324398, ZAR: 0.058, ILS: 0.27 };
+  for (const [subunit, major] of [['GBp', 'GBP'], ['GBX', 'GBP'], ['ZAc', 'ZAR'], ['ILA', 'ILS']]) {
+    for (const mcap of [1, 500e6, 60249000000]) {
+      assert.equal(toUsd(mcap, subunit, rates), toUsd(mcap, major, rates), `${subunit}: ${mcap}`);
+    }
+  }
 });
 check('toUsd: fehlende Waehrung -> null (fail-closed)', () => {
   assert.equal(toUsd(2e9, 'XXX', { USD: 1 }), null);
