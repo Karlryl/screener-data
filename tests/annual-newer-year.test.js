@@ -179,7 +179,10 @@ async function check(name, fn) {
     incomeStatementHistory: { incomeStatementHistory: [['2026-06-30', 347927740], ['2025-06-30', 261655010], ['2024-06-30', 0], ['2022-06-30', 0]]
       .map(([endDate, totalRevenue]) => ({ endDate, totalRevenue, grossProfit: 0, netIncome: totalRevenue ? 9e6 : null })) } };
   const pull = async (extra) => {
-    const f = fixture({ snapshots: [snapshot('OLD', '2026-06-30')], manual: ['OLD'], annualResponses: answers(),
+    // P137: SKS.AX has no quarterly series. A stored quarter that the fresh answer lacks is retained by the
+    // ordinary full-pull guard, so the stored snapshot starts without quarters like the real case.
+    const prior = snapshot('OLD', '2026-06-30'); prior.timeseries = {};
+    const f = fixture({ snapshots: [prior], manual: ['OLD'], annualResponses: answers(),
       summaryResponse: summary, ...extra });
     f.files.delete(path.join(root, 'fundamentals-cache', 'OLD.json'));
     const m = await f.run(); assert.equal(m.results[0].status, 'ok');
