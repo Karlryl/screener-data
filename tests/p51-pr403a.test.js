@@ -18,7 +18,7 @@ test('the superseded OTF marker is removed only after the annual replacement saf
     const control = structuredClone(old); change(control);
     assert.deepEqual(apply(control).snapshot.meta.financialDataIssue, control.meta.financialDataIssue);
   }
-  const noAnnual = structuredClone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType !== '12M');
+  const noAnnual = structuredClone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType !== '12M'); noAnnual.statementScales = [];
   assert.ok(apply(old, { table: noAnnual }).snapshot.meta.financialDataIssue);
   const unrelated = { meta: { ticker: 'UNLISTED' } };
   Object.defineProperty(unrelated, 'annual', { get() { throw new Error('unrelated annual block must not be read'); } });

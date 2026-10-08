@@ -28,9 +28,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 243 authorized cells (216 quarterly, 27 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 243); // P129: +9; P47: +8; P138: +10
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 27); // P129: +2; P47: +8
+test('all 247 authorized cells (216 quarterly, 31 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 247); // P129: +9; P47: +8; P138: +10; P140: +4
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 31); // P129: +2; P47: +8; P140: +4
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -54,7 +54,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 243); // P129: +9; P47: +8; P138: +10
+  assert.equal(validateTable(clone(table)).cases.length, 247); // P129: +9; P47: +8; P138: +10; P140: +4
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -162,7 +162,7 @@ test('annual cells: dated by fiscal-year end, undated by position plus value, wi
   assert.deepEqual(norm(ir.snapshot, 'annualRev'), [null, null]); assert.deepEqual(norm(ir.snapshot, 'annualGP'), [null, null]);
   assert.equal(ir.events.filter(e => e.container === 'annual' && e.status === 'stale' && e.reasonCode === 'annual-value-changed').length, 4);
   // Absence: without annual cases no annual block of any fixture changes.
-  const noAnnual = clone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType === '3M');
+  const noAnnual = clone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType === '3M'); noAnnual.statementScales = [];
   for (const [ticker, s] of Object.entries(fixture)) assert.equal(serial(applyFinancialCases(clone(s), { table: noAnnual }).snapshot.annual), serial(s.annual), ticker);
   // Withhold only: a value, a missing index, a quarterly period type or annual coverage are entry errors.
   const bad = mutate => { const x = clone(table); mutate(x.cases.find(c => c.caseId === 'infq-2024-12-31-annualRev'), x); return x; };
@@ -942,7 +942,7 @@ test('covered company series: growth pair formable with issuer values; next quar
 test('annual readers: INFQ badge, gross-profit growth and annual fallback empty; CARG without 2022; OTF back on the board', () => {
   const axes = require('../src/scoring/axes.js'), { overviewMetric } = require('../src/scoring/overview.js');
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
-  const noAnnual = clone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType === '3M');
+  const noAnnual = clone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType === '3M'); noAnnual.statementScales = [];
   const infq = cfg => applyFinancialCases(clone(fixture.INFQ), cfg && { table: cfg }).snapshot;
   const readersInfq = s => {
     assert.equal(overviewMetric(s, {}).value, null, 'badge empty');
@@ -1050,7 +1050,7 @@ test('replacement values trace to their sources: the whole real table passes, a 
   // The 162 cases of revision 2026-10-01c plus four annual P106 withholds:
   // 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one issuer-rounded confirmation
   // (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 123, difference: 17, rounded: 1, exempt: 10, null: 38 }); // P129: +5 non-MODEC withholds; P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year); P47: +8 annual AEON/Okasan cases (single source); P138: +9 single, +1 difference
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 127, difference: 17, rounded: 1, exempt: 10, null: 38 }); // P129: +5 non-MODEC withholds; P106: +4 annual withholds (non-adjacent prior year, Tsuruha short year); P47: +8 annual AEON/Okasan cases (single source); P138: +9 single, +1 difference; P140: +4 annual INDO-MIM cases (single source)
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
   assert.equal(count(table.cases).none, undefined);
@@ -1367,7 +1367,7 @@ test('period labels leave the 212/11/34 legacy authority rows and all 42 fixture
   for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
   // P129: +9 withholds and +15 fixtures; all old digests and the complete coverage guard remain unchanged.
   const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
-  assert.equal(table.cases.length - legacy('cases').length, added.size + 27, 'every added case exists'); // P129: +9; P47: +8; P138: +10
+  assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4, 'every added case exists'); // P129: +9; P47: +8; P138: +10; P140: +4
   const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [
     ['cases', 212, '7da9c61f93bbeff5cfdf2b6d6485a630f16ee1bdacd3dc9afb69241a5ef1a503'],
