@@ -10,9 +10,9 @@ Yahoo liefert Kurse britischer Notierungen in Pence, südafrikanischer Notierung
 
 ## Was wurde gemessen?
 
-Die Messdatei vom 08.10.2026 enthält den Marktwert, den Kurs und die Aktienzahl. Das Verhältnis wird als `marketCap / (price * shares)` berechnet. Ein Verhältnis nahe 0,01 zeigt, dass der Marktwert in der hundertmal größeren Währungseinheit als der Kurs vorliegt.
+Die Messung vergleicht den Marktwert mit Kurs mal Aktienzahl. Ein Verhältnis nahe 0,01 zeigt, dass der Marktwert in der hundertmal größeren Währungseinheit als der Kurs vorliegt.
 
-Quelle ist die lokale [Messdatei probe-units.json](C:/Users/Anwender/.codex/reports/warteschlange-2026-10-05/ergebnisse/P157/replay/probe-units.json). Der gesuchte Feldname lautet wörtlich `ratio_mcap_over_priceXshares`. Die folgenden Werte sind auf zehn Nachkommastellen gerundet.
+Gemessen wurde am 08.10.2026 gegen 12 Uhr MESZ mit einem einzigen Abruf der Yahoo-Kursantwort (`quote`) für die 14 Ticker der Tabelle; berechnet wurde `marketCap / (regularMarketPrice * sharesOutstanding)`. Die folgenden Werte sind auf zehn Nachkommastellen gerundet.
 
 | Ticker | Währungscode des Kurses | Verhältnis |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ Quelle ist die lokale [Messdatei probe-units.json](C:/Users/Anwender/.codex/repo
 | ICL.TA | ILA | 0,0099999993 |
 | ESLT.TA | ILA | 0,0100000002 |
 
-NPN.JO liegt nahe 0,01, aber nicht exakt darauf. Die Messdatei enthält zusätzlich RIO.L mit rund 0,012963; dieser Wert wird hier nicht als Einheitenbeleg verwendet. GBX wird als weiterer Code für Pence getestet, ist jedoch in dieser Messdatei nicht vertreten.
+NPN.JO liegt nahe 0,01, aber nicht exakt darauf. Der Abruf enthielt zusätzlich RIO.L mit rund 0,012963; dieser Wert wird hier nicht als Einheitenbeleg verwendet. GBX wird als weiterer Code für Pence getestet, kam in dieser Messung jedoch nicht vor.
 
 ## Was rechnen die fünf Aufrufer um?
 
