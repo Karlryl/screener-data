@@ -139,7 +139,9 @@ Tier thresholds: A ≥ 80, B 65–79, NEAR_MISS 50–64 (or ≥65 with a red fla
 
 ## The dashboard
 
-`generate-screener.js` produces a single self-contained `screener.html` (Bloomberg-terminal-styled, no external assets). Features:
+> **Historical description, no longer valid.** `generate-screener.js` and the `screener.html` it produced were removed with the legacy generators (see the banner at the top and "What this is"); no `package.json` script or workflow starts it. The feature list and the run instruction below are kept only as a record of that generation.
+
+`generate-screener.js` produced a single self-contained `screener.html` (Bloomberg-terminal-styled, no external assets). Features:
 
 - Six tabs: `HG`, `QC`, `SMALL`, `R40`, `PRE_BREAKOUT`, `WATCH`.
 - Dark / light theme toggle (`Tag 210f`).
@@ -148,7 +150,7 @@ Tier thresholds: A ≥ 80, B 65–79, NEAR_MISS 50–64 (or ≥65 with a red fla
 - Per-ticker detail modal with ΔScore badges and sparkline (fed by `scripts/snapshot-score-history.js`, `Tag 203`).
 - Sticky headers + column toggles + accessibility / keyboard shortcuts (`Tag 223b`).
 
-Run with `AUDIT_SCORE_MULTIPLIERS=1` to enable q-spike-penalty + listing-age multipliers in the aggregator (scoped to the dashboard step in CI; un-multiplied scores are kept for picks-history and fixture-hash stability).
+**No longer valid:** the old run instruction was to set `AUDIT_SCORE_MULTIPLIERS=1` to enable q-spike-penalty + listing-age multipliers in the aggregator (scoped to the dashboard step in CI; un-multiplied scores were kept for picks-history and fixture-hash stability). No current code reads that variable.
 
 ---
 
@@ -250,15 +252,16 @@ The `daily-pull.yml` workflow is the canonical sequence — see it for the exact
 
 ## Tests
 
-Every `*test.js` file under `tests/`, `tests/scoring/`, and `lib/` is a standalone
-runner (`node <file>`, exit 0/1). `GATE_GLOB` in `.github/workflows/daily-pull.yml`
-is the source of truth for which files are gated in CI:
+Run the whole suite with the existing test runner (the same call as the PR check):
 
 ```bash
-for f in $(git ls-files 'tests/*test.js' 'tests/scoring/*test.js' 'lib/*test.js'); do
-  node "$f" || echo "FAIL: $f"
-done
+node scripts/test-gate.js --mode=all
 ```
+
+The blocking track globs `tests/*test.js`, `tests/scoring/*test.js`, `lib/*test.js`, and
+`tests/druckenmiller/*test.js` (`BLOCKING_GLOBS` in `scripts/test-gate.js` is the source of
+truth; the daily run uses `--mode=blocking`). Every such file is a standalone runner
+(`node <file>`, exit 0/1).
 
 `tests/scoring/anchors.fixture.test.js` is the load-bearing test — its
 fixture-hash assertion is the production guardrail against accidental scoring
@@ -316,4 +319,4 @@ Development is tagged sequentially (`Tag NNN`, `Tag NNNa`, `Tag NNNb` …). Audi
 
 ## License
 
-Proprietary (private repo). No external contributors expected.
+Proprietary (public repo, so no secrets or personal data in commits). No external contributors expected.

@@ -23,8 +23,9 @@ oben in der Datei) — keine bindende Engine-Wahrheit, nicht mehr referenzieren.
    `git log --oneline` + 1). Vor Commit `git status --short`, dann gezielt
    `git commit -- <pfade>` — nie pauschal alles stagen.
 4. **Test-Gate nach jeder Scoring-/Methoden-Änderung:** komplette Suite grün fahren —
-   `node scripts/test-gate.js --mode=all` (CI-Gate-Glob `tests/*test.js`, `tests/scoring/*test.js`,
-   `lib/*test.js`; jede Datei einzeln: `node <datei>`, Exit 0/1).
+   `node scripts/test-gate.js --mode=all` (blockierende Spur, `BLOCKING_GLOBS` in `scripts/test-gate.js`:
+   `tests/*test.js`, `tests/scoring/*test.js`, `lib/*test.js`, `tests/druckenmiller/*test.js`;
+   jede Datei einzeln: `node <datei>`, Exit 0/1).
 5. Force-Push, History-Rewrite und Löschen nur mit Karls Ja. Secrets nie ausgeben, committen oder in Reports schreiben.
 6. `GitHub\screener-data-fix` und `GitHub\docGPT` nie anfassen.
 7. Code, Commits und Agenten-Prompts auf Englisch; Berichte an Karl auf Deutsch, knapp.
@@ -43,8 +44,9 @@ Im Zweifel: kleiner Diff, nichts außerhalb des Auftrags anfassen.
 
 **0. Vorbedingung:** `git status` muss sauber sein — wenn nicht: anhalten und
 melden, nie über fremde Änderungen hinweg arbeiten oder committen.
-`.codex-deny.txt` (Schutzliste des Delegations-Gates: Daten-Verläufe + Selbstschutz) ändern
-Claude oder Codex nur mit Prüfung durch den anderen.
+`.codex-deny.txt` (Schutzliste des Delegations-Gates: Daten-Verläufe + Selbstschutz) und das
+Gate (`gate-check.ps1`) passt Claude an, nicht Codex (`C:\Users\Anwender\.codex\AGENTS.md`); die
+Datenpfade bleiben dabei immer geschützt und werden nie gestrichen.
 
 **1. Auftrag wählen:** aus `karl-plan\WUNSCHLISTE.md` (Reihenfolge bestimmt Karl) oder aus einem
 konkreten Auftrag; die Wahl im Ergebnis begründen.
