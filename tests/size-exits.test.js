@@ -14,7 +14,7 @@ if (process.argv.includes('--break-once')) {
   const targets = ['lib/size-exits.js', 'pull-yahoo.js', 'scripts/filter-snapshot-merge.js', 'src/scoring/run-screener.js'];
   const hashes = () => targets.map(p => crypto.createHash('sha256').update(readSource(path.join(ROOT, p))).digest('hex'));
   const before = hashes();
-  for (const mutation of ['floor', 'record', 'merge', 'metadata', 'generation']) {
+  for (const mutation of ['floor', 'record', 'merge', 'metadata', 'generation', 'newest']) {
     const r = cp.spawnSync(process.execPath, [__filename], { cwd: ROOT, encoding: 'utf8',
       env: { ...process.env, SIZE_EXIT_MUTATION: mutation } });
     assert.equal(r.status, 1, mutation + ' must turn the guard red');
@@ -30,7 +30,8 @@ const mutations = {
   record: ['pull-yahoo.js', '  _sizeExits.set(ticker, record);', '  // mutant: lose the recorded exit'],
   merge: ['scripts/filter-snapshot-merge.js', '  writeFileAtomic(path.join(ziel, SIZE_EXITS_FILE), JSON.stringify(sizeExits));', '  // mutant: lose the merged exits'],
   metadata: ['src/scoring/run-screener.js', "    if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;", '    // mutant: parse metadata as snapshots'],
-  generation: ['scripts/filter-snapshot-merge.js', '    return match && match[1] === sizeExitTag;', '    return match;'],
+  generation: ['lib/size-exits.js', '    if (!m || m[2] !== runId || Number(m[3]) > Number(attempt)) continue;', '    if (!m) continue;'],
+  newest: ['lib/size-exits.js', '    if (!known || Number(m[3]) > known.attempt) newest.set(m[1], { file: f, attempt: Number(m[3]) });', '    if (!known) newest.set(m[1], { file: f, attempt: Number(m[3]) });'],
 };
 function mutate(source, file) {
   const row = mutations[process.env.SIZE_EXIT_MUTATION];
@@ -329,10 +330,22 @@ async function run() {
   vm.runInNewContext(mergeBlock, context);
   assert.deepEqual(JSON.parse(files.get(path.join(merged, SIZE_EXITS_FILE))), []);
   files.set(path.join(merged, SIZE_EXITS_FILE), JSON.stringify([exit]));
-  const noCurrent = { ...context, files: [oldRun, oldAttempt, ticker + '.json'], uebernehmen: [oldRun, oldAttempt, ticker + '.json'] };
+  const noCurrent = { ...context, files: [oldRun, ticker + '.json'], uebernehmen: [oldRun, ticker + '.json'] };
   vm.runInNewContext(mergeBlock, noCurrent);
   assert.deepEqual(JSON.parse(files.get(path.join(merged, SIZE_EXITS_FILE))), [], 'a prior merged report must not survive a pull with no completed current report');
-  print('PASS shard merge: dedupe/sort, empty completion, old run/attempt rejection and no shard reports copied');
+  // Partial rerun (Codex review P2): attempt 2 re-ran only the merge job or one failed shard, so the
+  // shard that already succeeded keeps its attempt-1 report. It is still true for today and must survive.
+  const keptShard0 = current.replace('123456-2', '123456-1');
+  const future = current.replace('123456-2', '123456-3');
+  files.set(path.join(incoming, keptShard0), JSON.stringify({ n_missing_mcap: 0, sizeExits: [exit] }));
+  files.set(path.join(incoming, future), JSON.stringify({ n_missing_mcap: 0, sizeExits: [buildSizeExit('FUTURE', 1, 8e8, iso(0), 'full-pull')] }));
+  const rerun = { ...context, files: [keptShard0, emptyShard, future], uebernehmen: [keptShard0, emptyShard, future] };
+  vm.runInNewContext(mergeBlock, rerun);
+  assert.deepEqual(JSON.parse(files.get(path.join(merged, SIZE_EXITS_FILE))), [exit],
+    'a succeeded shard of an earlier attempt of the same run keeps its exits; a later attempt than the merge job is ignored');
+  assert.deepEqual(helpers.currentRunReports([keptShard0, current, emptyShard, oldRun, future, SIZE_EXITS_FILE, ticker + '.json'], process.env), [current, emptyShard].sort());
+  assert.deepEqual(helpers.currentRunReports([current], {}), []);
+  print('PASS shard merge: dedupe/sort, empty completion, old run rejection, partial rerun keeps earlier-attempt reports (newest per shard) and no shard reports copied');
   print('size-exits.test.js: all passed; diskWrites=0 networkCalls=0');
 }
 run().catch(e => { process.stderr.write(e.stack + '\n'); process.exitCode = 1; });

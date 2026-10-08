@@ -35,7 +35,7 @@ const path = require('path');
 const { safeSnapshotFilename, isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
-const { mergeSizeExits, sizeExitRunTag, SIZE_EXITS_FILE, SIZE_EXIT_SHARD_PATTERN } = require('../lib/size-exits.js');
+const { mergeSizeExits, sizeExitRunTag, currentRunReports, SIZE_EXITS_FILE, SIZE_EXIT_SHARD_PATTERN } = require('../lib/size-exits.js');
 // U2-BO/NS (s. WURZEL_ZWILLING unten): der Emittenten-Schluessel wird IMPORTIERT, nie nachgebaut.
 // Lesen aus src/scoring/** ist ausdruecklich erlaubt; das GQS-Siegel bindet nur AENDERUNGEN dort.
 // U3-Milan (s. MILAN_KANDIDATEN unten) braucht zusaetzlich den STRENGEN Schluessel und den
@@ -2164,10 +2164,8 @@ function run(argv) {
 
   fs.mkdirSync(ziel, { recursive: true });
   const sizeExitTag = sizeExitRunTag(process.env);
-  const sizeExitFiles = files.filter(f => {
-    const match = f.match(SIZE_EXIT_SHARD_PATTERN);
-    return match && match[1] === sizeExitTag;
-  }).sort();
+  // Per shard the newest attempt of this run (a partial rerun keeps the reports of shards that already succeeded).
+  const sizeExitFiles = currentRunReports(files, process.env);
   // Local shard pulls have no shared generation; do not guess from cached dates.
   if (!sizeExitTag) console.log('[size-exits] No shared run identity. Current size exits are unknown.');
   const sizeExits = mergeSizeExits(sizeExitFiles.map(f => JSON.parse(fs.readFileSync(path.join(eingang, f), 'utf8')).sizeExits));
