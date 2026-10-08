@@ -147,8 +147,8 @@ test('store older than the limit: the rows stay unchecked and the process prints
   assert.equal(lines.filter(l => l.startsWith('::warning::[exchange-check]') && l.includes('store-old')).length, 1, lines.join('\n'));
 });
 
-test('no-own-read wiring: two never-read rows and one old own read have separate exit counters and one warning', () => {
-  const child = spawnSync(process.execPath, ['-e', `
+function noOwnReadChild(tickers, source = fs.readFileSync(path.join(ROOT, 'lib/yahoo-q4-known-cases.js'), 'utf8')) {
+  return spawnSync(process.execPath, ['-e', `
     const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
     const { Module, createRequire } = require('node:module');
     const X = require('./lib/exchange-quarter-check.js'), F = require('./tests/fixtures/exchange-quarter-check.json');
@@ -163,8 +163,8 @@ test('no-own-read wiring: two never-read rows and one old own read have separate
     m.filename = file; m.paths = module.paths;
     m.require = id => id === './exchange-quarter-check.js' ? { ...X, defaultContext: () => ctx,
       applyExchangeCheck: s => X.applyExchangeCheck(s, { context: ctx }) } : real(id);
-    m._compile(fs.readFileSync(file, 'utf8'), file);
-    for (const ticker of ['2885.TW', '1312A.TW', '6446.TW']) {
+    m._compile(fs.readFileSync(0, 'utf8'), file);
+    for (const ticker of ${JSON.stringify(tickers)}) {
       const s = structuredClone(F.snapshots['6446.TW']);
       Object.assign(s.meta, { ticker, fetchedAt: '2026-10-20T09:00:00.000Z',
         industry: ticker === '2885.TW' ? 'Financial Conglomerates' : 'Chemicals' });
@@ -172,7 +172,11 @@ test('no-own-read wiring: two never-read rows and one old own read have separate
       assert.equal(m.exports.prepareSnapshot(s), s);
       assert.equal(JSON.stringify(s), before);
     }
-  `], { cwd: ROOT, encoding: 'utf8', timeout: 30000 });
+  `], { cwd: ROOT, encoding: 'utf8', input: source, timeout: 30000 });
+}
+
+test('no-own-read wiring: two never-read rows and one old own read have separate exit counters and one warning', () => {
+  const child = noOwnReadChild(['2885.TW', '1312A.TW', '6446.TW']);
   assert.equal(child.status, 0, child.stderr);
   const lines = child.stderr.trim().split(/\r?\n/), warnings = lines.filter(l => l.startsWith('::warning::'));
   const summary = lines.filter(l => l.startsWith('[exchange-check-summary] '));
@@ -181,6 +185,38 @@ test('no-own-read wiring: two never-read rows and one old own read have separate
     { 'unchecked(no-own-read)': 2, 'unchecked(store-old)': 1 });
   assert.equal(warnings.length, 1, child.stderr); assert.match(warnings[0], /store-old/);
   assert.ok(!warnings.some(l => l.includes('no-own-read')), child.stderr);
+});
+
+test('no-own-read only: two unchecked rows print one summary and no warnings; break-once red', () => {
+  const tickers = ['2885.TW', '1312A.TW'];
+  const check = child => {
+    assert.equal(child.status, 0, child.stderr);
+    const lines = child.stderr.trim().split(/\r?\n/);
+    const summary = lines.filter(line => line.startsWith('[exchange-check-summary] '));
+    assert.equal(summary.length, 1, child.stderr);
+    assert.deepEqual(JSON.parse(summary[0].slice('[exchange-check-summary] '.length)),
+      { 'unchecked(no-own-read)': 2 });
+    assert.equal(lines.filter(line => line.startsWith('::warning::')).length, 0,
+      'no-own-read rows must not warn\n' + child.stderr);
+  };
+  check(noOwnReadChild(tickers));
+  const file = 'lib/yahoo-q4-known-cases.js', before = sha(file);
+  const broken = replaceLine(fs.readFileSync(path.join(ROOT, file), 'utf8'),
+    "  if (result.why === 'store-old' && !exchangeStoreOldWarned) {",
+    "  if ((result.why === 'store-old' || result.why === 'no-own-read') && !exchangeStoreOldWarned) {");
+  let red;
+  try {
+    assert.throws(() => check(noOwnReadChild(tickers, broken)), error => {
+      red = error;
+      return error instanceof assert.AssertionError && error.actual === 1 && error.expected === 0
+        && error.message.startsWith('no-own-read rows must not warn');
+    });
+  } finally {
+    assert.equal(sha(file), before, 'live source changed during no-own-read break-once');
+  }
+  breaks++;
+  console.log('  BREAK_ONCE no-own-read ' + red.name + ': ' + red.message);
+  check(noOwnReadChild(tickers));
 });
 
 test('committed fill-only is wired through prepareSnapshot but never through the pull; break-once red', () => {

@@ -59,7 +59,7 @@ const {
 } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
-const { mergeSizeExits, sizeExitReasonDe, SIZE_EXITS_FILE } = require('../lib/size-exits.js');
+const { mergeSizeExits, sizeExitReasonDe, sizeExitRunDay, readSizeExitHistory, validateSizeExitManifest, SIZE_EXITS_FILE } = require('../lib/size-exits.js');
 
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -166,10 +166,11 @@ const istRaus = (e) => e.action === 'exclude' || e.action === 'unrouted';
  * Reine Funktion, kein I/O — der Waechter fuettert sie mit Fixtures.
  * @param {Array<object>} results Scored results in snapshot order.
  * @param {Array<object>} universe Loaded scoring snapshots.
- * @param {Array<object>} exits Current pull's measured size exits.
+ * @param {Array<object>} exits Measured size exits from the retained history.
+ * @param {object} options Optional referenceDay for the inclusive 30-day export window.
  * @returns {object} Existing exclusions plus a separate, ticker-sorted size-exit list.
  */
-function buildExcludedList(results, universe, exits = []) {
+function buildExcludedList(results, universe, exits = [], options = {}) {
   // scoreUniverse LOESCHT e.snapshot am Ende jedes Laufs (score.js, "SOLANGE der Snapshot
   // lebt"). Ohne ihn gaebe es weder industry noch einen Emittenten-Schluessel, und beides
   // waere still leer. Er kommt ueber die POSITION zurueck, nicht ueber den Ticker: die
@@ -228,6 +229,7 @@ function buildExcludedList(results, universe, exits = []) {
 
   const present = new Set((universe || []).map(s => s && s.meta && s.meta.ticker));
   const sizeExits = mergeSizeExits([exits]).filter(r => !present.has(r.ticker))
+    .filter(r => options.referenceDay === undefined || (r.date <= options.referenceDay && Date.parse(options.referenceDay) - Date.parse(r.date) <= 30 * 86400000))
     .map(r => ({ ...r, reasonDe: sizeExitReasonDe(r) }));
   return { rows, legs: raus.length, byReason, sizeExits };
 }
@@ -405,13 +407,17 @@ function main() {
   }
   console.log(`[scoring-modus] Deklaration "${dekl.modus}" bestaetigt: ${LINEAL_SKALARE.length}/${LINEAL_SKALARE.length} Lineal-Skalare des Zweitlaufs decken sich mit outputs/calibration.json (${tragend} tragend)`);
 
-  let exits = [];
-  try { exits = JSON.parse(fs.readFileSync(SIZE_EXITS_PATH, 'utf8')); }
+  let exits, sizeExitsKnown = false, referenceDay;
+  try {
+    const manifest = validateSizeExitManifest(JSON.parse(fs.readFileSync(SIZE_EXITS_PATH, 'utf8')));
+    exits = manifest.exits; sizeExitsKnown = manifest.known; referenceDay = manifest.runDate;
+  }
   catch (e) {
     if (e.code !== 'ENOENT') throw e;
-    console.log('[excluded-list] Die Datei mit den Gr\u00f6\u00dfenabg\u00e4ngen fehlt. Es sind keine Abg\u00e4nge bekannt.');
+    exits = readSizeExitHistory(undefined, fs).exits;
+    referenceDay = sizeExitRunDay();
   }
-  const { rows, legs, byReason, sizeExits } = buildExcludedList(results, universe, exits);
+  const { rows, legs, byReason, sizeExits } = buildExcludedList(results, universe, exits, { referenceDay });
 
   const fehler = pruefeSummen(byReason, readExcludedCounter(INDEX_FILE));
   if (fehler.length) {
@@ -436,6 +442,7 @@ function main() {
     universeHash,
     counts: { firmen: rows.length, zeilen: legs, byReason, sizeExits: sizeExits.length },
     rows,
+    sizeExitsKnown,
     sizeExits,
   });
   fs.mkdirSync(path.dirname(UNIVERSE_HASH_FILE), { recursive: true });
@@ -450,7 +457,9 @@ function main() {
     + `(${(fs.statSync(OUT_FILE).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`[excluded-list] Summen je Grund decken sich mit index.json.excluded: `
     + Object.keys(byReason).sort().map((k) => `${k}=${byReason[k]}`).join(' · '));
-  console.log(`[excluded-list] ${sizeExits.length} Gr\u00f6\u00dfenabg\u00e4nge sind in der Ausschlussliste enthalten.`);
+  if (sizeExitsKnown) console.log(`[excluded-list] ${sizeExits.length} Gr\u00f6\u00dfenabg\u00e4nge sind in der Ausschlussliste enthalten.`);
+  else console.log('[excluded-list] Austritte unbekannt, weil kein vollst\u00e4ndiger Bericht dieses Laufs vorliegt.'
+    + (sizeExits.length ? ` Es sind weiterhin ${sizeExits.length} fr\u00fchere Austritte aus der Historie aufgef\u00fchrt.` : ''));
 }
 
 module.exports = {
