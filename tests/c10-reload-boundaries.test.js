@@ -30,7 +30,17 @@ cases['ordinary-failures'] = async () => {
       manual: mode === 'manual' ? ['OLD'] : [] });
     f.files.delete(cp);
     const m = await f.run();
-    assert.equal(m.results[0].status, 'ok', mode + '/' + failure);
+    // P137: ordinary full pull now protects against a lost reporting period
+    // P137 round 2: a manual full pull (voll_pull_ticker) bypasses the period guard and writes as before.
+    if (mode === 'manual') assert.equal(m.n_full_period_regression_blocked, 0, mode + '/' + failure);
+    if (mode === 'old' && failure === 'quarterFails') {
+      assert.equal(m.results[0].status, 'price-only', mode + '/' + failure);
+      assert.deepEqual(f.stored('OLD').annual, s.annual); assert.deepEqual(f.stored('OLD').timeseries, s.timeseries);
+      assert.equal(m.n_full_period_regression_blocked, 1);
+      // The selected provider attempt keeps its existing diagnostics; this is not a reload fallback.
+      for (const key of ['selected', 'pulled', 'fetch_failed']) assert.equal(m['n_stale_quarter_' + key], 1);
+      for (const key of ['newer', 'still_old_yahoo']) assert.equal(m['n_stale_quarter_' + key], 0);
+    } else assert.equal(m.results[0].status, 'ok', mode + '/' + failure);
     assert.equal(f.stored('OLD').meta.asOf, new Date(NOW).toISOString());
     assert.equal(m.n_stale_quarter_reload_failed, 0);
     assert(!f.logs.some(l => l.includes('stale-quarter-reload: reload-failed')));
@@ -189,9 +199,11 @@ cases['trimmed-quarter-cache-ni'] = async () => {
 cases['empty-annual-scope'] = async () => {
   for (const manual of [false, true]) {
     const old = await baseline(), f = fixture({ snapshots: [old], annualEmpty: true, manual: manual ? ['OLD'] : [] }); f.files.delete(cp);
-    assert.equal((await f.run()).results[0].status, manual ? 'ok' : 'reload-retained');
+    const m = await f.run();
+    // P137 round 2: a manual full pull (voll_pull_ticker) bypasses the period guard and writes as before.
+    assert.equal(m.results[0].status, manual ? 'ok' : 'reload-retained');
     if (!manual) assert.deepEqual(f.stored('OLD').annual, old.annual);
-    else assert.deepEqual(f.stored('OLD').annual.annualRev, []);
+    else { assert.deepEqual(f.stored('OLD').annual.annualRev, []); assert.equal(m.n_full_period_regression_blocked, 0); }
   }
 };
 cases['archive-bounded'] = async () => {
