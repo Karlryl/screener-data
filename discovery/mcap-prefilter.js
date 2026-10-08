@@ -24,18 +24,22 @@ function loadRates() {
   try { return (JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fx-rates.json'), 'utf8')).rates) || { USD: 1 }; }
   catch (_) { return { USD: 1 }; }
 }
-// Marktkap (Handelswaehrung) -> USD. GBp/GBX (Pence) -> /100. Unbekannte Waehrung -> null (fail-closed,
-// wird nicht faelschlich aufgenommen; taucht bei naechster Runde ueber den normalen Pull wieder auf).
-// Subunit-Waehrungen (Pence/Cents/Agorot) -> Basiswaehrung, /100. ILA = israelische Agorot (Yahoo
-// liefert TASE-marketCap in Agorot, nicht Shekel) — sonst faellt jeder israelische Name fail-closed raus.
+// Yahoo: price quotes in sub-units, market caps always in the major unit (measured 08.10.2026).
+// These codes select the base currency's FX rate only; aggregate amounts need no divisor.
 const SUBUNIT = { GBp: 'GBP', GBX: 'GBP', ZAc: 'ZAR', ILA: 'ILS' };
 const isUsableFxRate = (rate) => Number.isFinite(rate) && rate > 0;
+/**
+ * Convert an aggregate to USD: price quotes in sub-units, market caps always in the major unit (measured 08.10.2026).
+ * @param {number} mcap Market cap or aggregate bound in major currency units.
+ * @param {string} cur Listing currency code, including GBp/GBX/ZAc/ILA aliases.
+ * @param {Object<string, number>} rates USD per major currency unit.
+ * @returns {number|null} USD aggregate, or null for invalid inputs or an unusable FX rate.
+ */
 function toUsd(mcap, cur, rates) {
   if (!Number.isFinite(mcap) || mcap <= 0 || !cur) return null;
-  let c = cur, m = mcap;
-  if (SUBUNIT[c]) { c = SUBUNIT[c]; m = m / 100; }
+  const c = SUBUNIT[cur] || cur;
   const r = rates[c];
-  return isUsableFxRate(r) ? m * r : null;
+  return isUsableFxRate(r) ? mcap * r : null;
 }
 
 // BH-041: reine Funktion (offline testbar) — unterscheidet, WARUM toUsd() null geliefert hat.
@@ -43,6 +47,13 @@ function toUsd(mcap, cur, rates) {
 // deren Rate fehlt oder keine positive endliche Zahl ist (FX-Artefakt-Luecke bzw. korrupter
 // Eintrag). false bei echtem "kein/kein positives marketCap" (dann ist die Zeile schlicht nicht
 // bewertbar, unabhaengig von FX - kein 'unpriceable' im BH-041-Sinn).
+/**
+ * Detect missing aggregate FX: price quotes in sub-units, market caps always in the major unit (measured 08.10.2026).
+ * @param {number} mcap Market cap in major currency units.
+ * @param {string} cur Listing currency code, mapped to its base currency for FX lookup.
+ * @param {Object<string, number>} rates USD per major currency unit.
+ * @returns {boolean} Whether a positive market cap lacks a usable base-currency FX rate.
+ */
 function isUnpriceable(mcap, cur, rates) {
   if (!Number.isFinite(mcap) || mcap <= 0 || !cur) return false;
   const c = SUBUNIT[cur] || cur;
@@ -115,12 +126,20 @@ async function prefilterByMcap(symbols, opts = {}) {
   // die neu zu quotenden .KQ-Symbole.
   const renamed = new Map();
   const requoteTargets = [];
+  const subunit = { byCurrency: {}, largest: null };
   let checked = 0, errors = 0;
   const gradeQuote = (q) => {
     // gemeinsame Bewertung einer Quote-Antwort (Haupt- und Requote-Pass).
     if (q.quoteType && q.quoteType !== 'EQUITY') { nichtAktie.add(q.symbol); return; } // fail-open bei fehlendem quoteType
     checked++;
+    // toUsd unit: AGGREGATE (market cap), sub-unit currency codes are read as their major unit
     const usd = toUsd(q.marketCap, q.currency, rates);
+    if (q.quoteType === 'EQUITY' && Object.hasOwn(SUBUNIT, q.currency) && Number.isFinite(usd)) {
+      const counts = subunit.byCurrency[q.currency] || (subunit.byCurrency[q.currency] = { priced: 0, kept: 0 });
+      counts.priced++;
+      if (usd >= minUsd) counts.kept++;
+      if (!subunit.largest || usd > subunit.largest.usd) subunit.largest = { symbol: q.symbol, usd };
+    }
     if (usd != null) {
       if (usd >= minUsd) kept.set(q.symbol, usd);
       else belowUsd.set(q.symbol, usd);
@@ -159,8 +178,14 @@ async function prefilterByMcap(symbols, opts = {}) {
       gradeQuote(q);
     }
   }
-  console.log(`[mcap-prefilter] ${symbols.length} geprueft (${checked} beantwortet, ${errors} Batch-Fehler, ${renamed.size} KOSDAQ .KS->.KQ, ${unpriceable.size} unbewertbar/FX-Luecke) -> ${kept.size} >= $${(minUsd / 1e9).toFixed(1)}B`);
-  return { kept, answered, renamed, unpriceable, belowUsd, nichtAktie };
+  const subunitCounts = Object.entries(subunit.byCurrency).map(([code, counts], i) => i === 0
+    ? `${code} ${counts.priced} bepreist/${counts.kept} ueber der Schwelle`
+    : `${code} ${counts.priced}/${counts.kept}`).join(', ');
+  const subunitSummary = subunit.largest
+    ? `; Sub-Einheit-Notierungen (Kurs in Pence/Cent/Agorot, Marktwert in Hauptwaehrung): ${subunitCounts}, groesster ${subunit.largest.symbol} $${(subunit.largest.usd / 1e9).toFixed(1)}B`
+    : '; Sub-Einheit-Notierungen: keine';
+  console.log(`[mcap-prefilter] ${symbols.length} geprueft (${checked} beantwortet, ${errors} Batch-Fehler, ${renamed.size} KOSDAQ .KS->.KQ, ${unpriceable.size} unbewertbar/FX-Luecke) -> ${kept.size} >= $${(minUsd / 1e9).toFixed(1)}B${subunitSummary}`);
+  return { kept, answered, renamed, unpriceable, belowUsd, nichtAktie, subunit };
 }
 
 module.exports = { prefilterByMcap, toUsd, kosdaqTarget, isUnpriceable };
