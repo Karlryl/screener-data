@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-09T10:35:30.304Z",
+  "generated_at": "2026-10-10T09:52:36.398Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 72.3,
-    "generated_at": "2026-10-09T10:24:36.469Z"
+    "coverage_pct": 72.5,
+    "generated_at": "2026-10-10T09:44:19.898Z"
   },
-  "generatedFromSnapshots": 16062,
+  "generatedFromSnapshots": 16225,
   "boards": [
     "rule40"
   ],
@@ -28,8 +28,8 @@
   },
   "counts": {
     "rule40": {
-      "profitable": 438,
-      "unprofitable": 49
+      "profitable": 440,
+      "unprofitable": 48
     }
   },
   "rule40": {
@@ -54,55 +54,55 @@
       "Internet Content & Information"
     ],
     "growthBounds": {
-      "p1": -38.88728020912723,
-      "p99": 166.0521378953909
+      "p1": -38.92853271552021,
+      "p99": 166.8879152762513
     },
     "counts": {
       "universeBasis": "routed",
-      "universe": 16217,
-      "onBoard": 9611,
-      "computable": 5615,
-      "above40": 973,
-      "exported": 487,
+      "universe": 16233,
+      "onBoard": 9712,
+      "computable": 5633,
+      "above40": 974,
+      "exported": 488,
       "exportedLargeCap": 408,
-      "exportedSmallCap": 79,
+      "exportedSmallCap": 80,
       "largeCapBeforeCap": 894,
-      "smallCapBeforeCap": 79,
-      "offBoardMcapUsdDirect": 2171,
+      "smallCapBeforeCap": 80,
+      "offBoardMcapUsdDirect": 2144,
       "offBoardMcapNull": 0,
       "excludedNotRouted": 3174,
-      "excludedDataSuspect": 120,
-      "excludedSector": 1324,
+      "excludedDataSuspect": 97,
+      "excludedSector": 1330,
       "excludedOutlier": 9,
       "excludedStale": 225,
       "excludedNoPeriod": 1,
-      "excludedTinyBase": 27,
+      "excludedTinyBase": 28,
       "excludedFcfAboveRevenue": 9,
-      "excludedDuplicateIssuer": 2074,
-      "noValidMargin": 3493,
-      "noGrowth": 24,
-      "noRank": 116,
+      "excludedDuplicateIssuer": 2080,
+      "noValidMargin": 3499,
+      "noGrowth": 22,
+      "noRank": 120,
       "unreadableSnapshot": 0,
       "missingFullBoard": 0
     },
     "rejected": {
       "keinVollboard": 0,
       "nichtGeroutet": 3174,
-      "datenSuspekt": 120,
-      "sektorAusgeschlossen": 1324,
-      "keinWachstum": 24,
+      "datenSuspekt": 97,
+      "sektorAusgeschlossen": 1330,
+      "keinWachstum": 22,
       "fcfUnterdrueckt": 110,
-      "fcfUngueltig": 3383,
+      "fcfUngueltig": 3389,
       "fcfUeberUmsatz": 9,
       "einheitenVerdacht": 9,
-      "basisQuartalStub": 27,
+      "basisQuartalStub": 28,
       "basisJahrStub": 6,
       "veraltet": 225,
       "frischeUnbekannt": 1,
-      "ohneRang": 116,
+      "ohneRang": 120,
       "snapshotUnlesbar": 0,
-      "dupEmittent": 2074,
-      "offBoardMcapUsdDirect": 2171,
+      "dupEmittent": 2080,
+      "offBoardMcapUsdDirect": 2144,
       "offBoardMcapNull": 0
     }
   }
