@@ -45,7 +45,9 @@ function filesContaining(terms) {
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 }
 
-const terms = guardTerms();
+// Armed only by explicit terms: an address in SEC_CONTACT alone is not the maintainer's data (blind review 13.10.2026).
+const armed = Boolean(process.env.PII_GUARD_TERMS || (process.env.PII_GUARD_TERMS_FILE && fs.existsSync(process.env.PII_GUARD_TERMS_FILE)));
+const terms = armed ? guardTerms() : [];
 const skip = terms.length ? false : 'PII guard not armed: PII_GUARD_TERMS / PII_GUARD_TERMS_FILE missing';
 if (skip && process.env.GITHUB_ACTIONS) console.log('::warning::' + skip);
 

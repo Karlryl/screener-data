@@ -85,6 +85,8 @@ permissions:
   # same lib/sec-user-agent.js.
 env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+  # Terms of the PII guard (tests/kein-kontakt-im-repo.test.js); the terms live only in this secret.
+  PII_GUARD_TERMS: ${{ secrets.PII_GUARD_TERMS }}
 
   # ZWEIG-WACHE — die EINZIGE Stelle, an der "darf dieser Lauf veroeffentlichen?"
   # entschieden wird. Die sechs gefaehrlichen Schritte lesen nur noch diese Variable.

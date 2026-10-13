@@ -30,6 +30,8 @@ permissions:
 # und blocken kann dieser Job ohnehin niemanden.
 env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+  # Terms of the PII guard (tests/kein-kontakt-im-repo.test.js); the terms live only in this secret.
+  PII_GUARD_TERMS: ${{ secrets.PII_GUARD_TERMS }}
 
 concurrency:
   # Auf push hat das Event keine PR-Nummer; ohne den sha-Zweig teilten sich ALLE
