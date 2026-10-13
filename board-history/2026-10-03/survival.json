@@ -1,0 +1,6204 @@
+{
+  "date": "2026-10-03",
+  "board": "survival",
+  "boardStatus": "diagnostic",
+  "formulaVersion": "calibration/v4",
+  "formulaCommit": "4610e69e8be881c2a1e0dfa28e449f5423223f50",
+  "universeHash": "e757769dca82396a",
+  "calibrationGeneratedAt": "2026-10-03T09:31:06.998Z",
+  "cohortCount": {
+    "profitable": 107,
+    "unprofitable": 0
+  },
+  "pitCoverage": {
+    "beta": 0.7570093457943925,
+    "evSales": 0.08411214953271028,
+    "priceGrossProfit": 0.08411214953271028,
+    "revenueQEnds": 0.8598130841121495,
+    "grossProfitQEnds": 0.8598130841121495,
+    "revenueQEndsFresh": 0.822429906542056,
+    "grossProfitQEndsFresh": 0.822429906542056
+  },
+  "pitFieldCoverage": {
+    "vol_decile": 0.9065420560747663,
+    "momentum_12m_residual_decile": 0.794392523364486
+  },
+  "pitGaps": [
+    "earningsDate-missing",
+    "grossProfitQEnds-missing",
+    "revenueQEnds-missing"
+  ],
+  "gate": {
+    "calibrating": true,
+    "p99Delta": null,
+    "threshold": null,
+    "wirksameSchwelle": 11.5,
+    "gapDays": 1,
+    "abstandZuGross": false,
+    "bruchGrenze": null,
+    "suspect": false,
+    "structural": false,
+    "reasons": [],
+    "priorDate": "2026-10-02",
+    "calibrationSamples": 0
+  },
+  "cohort": {
+    "profitable": [
+      {
+        "rank": 1,
+        "ticker": "BANVIDA.SN",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 9999,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "lowRoic",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 0.182,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:32.602Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CLP",
+          "fxRateApplied": 0.0010355182,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1288654319.1176512,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 1600065708
+        },
+        "vol_60d": 0.003974242599030624,
+        "vol_decile": 1,
+        "momentum_12m_residual": -0.17774891995092112,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 2,
+        "ticker": "SLSR",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 9999,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "lowRoic",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 2.241,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-03T08:47:54.937Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1184537728,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 167071622
+        },
+        "vol_60d": 0.03453984253203449,
+        "vol_decile": 3,
+        "momentum_12m_residual": -0.3049208308970699,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 3,
+        "ticker": "VAPORES.SN",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 9999,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": 0.251,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-25T08:38:06.921Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2644819989.919957,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 51319876188
+        },
+        "vol_60d": 0.007194755690984249,
+        "vol_decile": 1,
+        "momentum_12m_residual": -0.46866773064904144,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 4,
+        "ticker": "DMRA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 153.21082366934286,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.47,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-11T07:48:47.477Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1274838528,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 61735519
+        },
+        "vol_60d": 0.0446040733234414,
+        "vol_decile": 8,
+        "momentum_12m_residual": 1.4338957794367806,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 5,
+        "ticker": "TALA.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 39.99712176931003,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 5.819,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-17T08:26:00.983Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -14298.991999999998,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.7149496,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 910612316.3155584,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 160166582
+        },
+        "vol_60d": 0.03697593678455752,
+        "vol_decile": 4,
+        "momentum_12m_residual": 0.42164811740742203,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 6,
+        "ticker": "VZLA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 38.70035774124892,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.651,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:29.935Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-07-31",
+            "2026-04-30",
+            "2026-01-31",
+            "2025-10-31",
+            "2025-07-31",
+            "2025-04-30",
+            "2025-01-31"
+          ],
+          "grossProfitQ": [
+            -35000,
+            -32824.012916,
+            39721.855277,
+            -79519.821489,
+            -50000,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-07-31",
+            "2026-04-30",
+            "2026-01-31",
+            "2025-10-31",
+            "2025-07-31",
+            "2025-04-30",
+            "2025-01-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1281755264,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 355056872
+        },
+        "vol_60d": 0.03572145561767847,
+        "vol_decile": 4,
+        "momentum_12m_residual": -0.6513855912588045,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 7,
+        "ticker": "BLTE",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 37.98439433891191,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": -1.235,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-11T07:48:23.976Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 6425823232,
+          "earningsDate": "2026-08-10",
+          "earningsDateAsOf": "2026-07-29",
+          "sharesOutstanding": 40272144
+        },
+        "vol_60d": 0.030984442880096812,
+        "vol_decile": 2,
+        "momentum_12m_residual": 0.21987692779181123,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 8,
+        "ticker": "688759.SS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 35.74677964588346,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-25T08:33:44.262Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14917135,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1455866650.089523,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 450036657
+        },
+        "vol_60d": 0.04739827589814002,
+        "vol_decile": 9,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 9,
+        "ticker": "NG",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 31.406615340747077,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 2.262,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:24.485Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-05-31",
+            "2026-02-28",
+            "2025-11-30",
+            "2025-08-31",
+            "2025-05-31"
+          ],
+          "grossProfitQ": [
+            -5000,
+            -6000,
+            -5000,
+            -6000,
+            -5000
+          ],
+          "grossProfitQEnds": [
+            "2026-05-31",
+            "2026-02-28",
+            "2025-11-30",
+            "2025-08-31",
+            "2025-05-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2874013184,
+          "earningsDate": "2026-10-08",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 438780614
+        },
+        "vol_60d": 0.044457295646612695,
+        "vol_decile": 8,
+        "momentum_12m_residual": -0.7133540406903653,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 10,
+        "ticker": "LBRX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 28.380374361883153,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:28.630Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1193266944,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 32259175
+        },
+        "vol_60d": 0.037177209705945936,
+        "vol_decile": 5,
+        "momentum_12m_residual": 0.5844362634242694,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 11,
+        "ticker": "PPTA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 24.12332376287789,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 0.762,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:44:02.402Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -163000,
+            -115000,
+            -69116,
+            -35694,
+            -32000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2549452288,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 125095803
+        },
+        "vol_60d": 0.040813423737992974,
+        "vol_decile": 6,
+        "momentum_12m_residual": -0.41757876417552703,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 12,
+        "ticker": "GHRS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 22.554072310122958,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.279,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:42:37.034Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1574654080,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-12",
+          "sharesOutstanding": 68642287
+        },
+        "vol_60d": 0.030178222191677238,
+        "vol_decile": 2,
+        "momentum_12m_residual": 0.18873440356188653,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 13,
+        "ticker": "NEWP",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 20.865791201842278,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 2.655,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:42.269Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -38945,
+            -39740,
+            -44624,
+            -47090,
+            -48414
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1165517056,
+          "earningsDate": "2026-11-13",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 185591894
+        },
+        "vol_60d": 0.04160114125795704,
+        "vol_decile": 7,
+        "momentum_12m_residual": 0.36168033081752426,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 14,
+        "ticker": "IMMX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 15.233782405377658,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 0.203,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-02T09:17:03.551Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 802500608,
+          "earningsDate": "2026-11-06",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 82902951
+        },
+        "vol_60d": 0.04865097091131686,
+        "vol_decile": 9,
+        "momentum_12m_residual": 1.3682534177948513,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 15,
+        "ticker": "GPCR",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 14.164339519868209,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": -1.521,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:42:44.099Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1973143680,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-12",
+          "sharesOutstanding": 71309857
+        },
+        "vol_60d": 0.03713593638678729,
+        "vol_decile": 5,
+        "momentum_12m_residual": 0.041666259530637184,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 16,
+        "ticker": "NXE",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 13.771602369686546,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.668,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-05T07:25:29.902Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.7227,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5957185024,
+          "earningsDate": "2026-11-03",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 661909421
+        },
+        "vol_60d": 0.030423653748635416,
+        "vol_decile": 2,
+        "momentum_12m_residual": -0.4110419862032668,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 17,
+        "ticker": "ANRO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 13.629949993242331,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.156,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-12T07:42:28.317Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 973204160,
+          "earningsDate": "2026-11-11",
+          "earningsDateAsOf": "2026-09-04",
+          "sharesOutstanding": 39242104
+        },
+        "vol_60d": 0.03556787788500928,
+        "vol_decile": 4,
+        "momentum_12m_residual": 1.5475907898453585,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 18,
+        "ticker": "CNL",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 12.39901710610652,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.032,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:49.079Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -96030,
+            -84602,
+            -44271,
+            -30404,
+            -11481
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1124968960,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 92742707
+        },
+        "vol_60d": 0.03903933001159563,
+        "vol_decile": 6,
+        "momentum_12m_residual": -0.39954592911540265,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 19,
+        "ticker": "SGP",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 11.508868318901165,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:23:02.672Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 833523648,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 33447979
+        },
+        "vol_60d": 0.03326235054921056,
+        "vol_decile": 3,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 20,
+        "ticker": "VOR",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 11.040026730895068,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.715,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-15T08:16:07.419Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1105743360,
+          "earningsDate": "2026-08-14",
+          "earningsDateAsOf": "2026-07-02",
+          "sharesOutstanding": 59162294
+        },
+        "vol_60d": 0.04271718367030187,
+        "vol_decile": 7,
+        "momentum_12m_residual": -1.0120940889070078,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 21,
+        "ticker": "TMC",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 10.918229069983292,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 2.104,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-25T08:30:37.275Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2144521984,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 565836927
+        },
+        "vol_60d": 0.04962847058901916,
+        "vol_decile": 9,
+        "momentum_12m_residual": -0.9984613251281979,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 22,
+        "ticker": "SX2.AX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 10.109123150604207,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:48.248Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-05-31",
+            "2026-02-28",
+            "2025-11-30",
+            "2025-05-31",
+            "2025-02-28"
+          ],
+          "grossProfitQ": [
+            -167478.27028986,
+            -94547.77558539,
+            -70100.46546126,
+            -52524.27189402001,
+            -46063.18197879
+          ],
+          "grossProfitQEnds": [
+            "2026-05-31",
+            "2026-02-28",
+            "2025-11-30",
+            "2025-05-31",
+            "2025-02-28"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70451313,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2196927143.2847357,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 269653562
+        },
+        "vol_60d": 0.03445885931410692,
+        "vol_decile": 3,
+        "momentum_12m_residual": -0.16022057931733086,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 23,
+        "ticker": "BRVE",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 10.02287609251609,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "lowRoic",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-30T09:03:58.108Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1915128832,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 90038969
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 24,
+        "ticker": "CADY.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 9.369403325329039,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-17T21:02:23.012Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.71483207,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1113581933.783213,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 269358286
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 25,
+        "ticker": "PVLA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 9.274894025433897,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:24:44.400Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1908681728,
+          "earningsDate": "2026-11-11",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 14408407
+        },
+        "vol_60d": 0.046101831464847635,
+        "vol_decile": 8,
+        "momentum_12m_residual": 0.34747020203199275,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 26,
+        "ticker": "BNZ.AX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 9.209920952716157,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 1.911,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:58.879Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-07-31",
+            "2026-04-30",
+            "2026-01-31",
+            "2025-10-31",
+            "2025-07-31"
+          ],
+          "grossProfitQ": [
+            -46554.93214353,
+            -27235.068579540002,
+            -19717.913482440003,
+            -13249.77843591,
+            -11923.18021212
+          ],
+          "grossProfitQEnds": [
+            "2026-07-31",
+            "2026-04-30",
+            "2026-01-31",
+            "2025-10-31",
+            "2025-07-31"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70451313,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1242226287.700224,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 379883348
+        },
+        "vol_60d": 0.0507287940923792,
+        "vol_decile": 9,
+        "momentum_12m_residual": 0.3101699918218639,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 27,
+        "ticker": "IMVT",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 8.859024153118693,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 0.81,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:44:21.039Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 6944301056,
+          "earningsDate": "2026-11-09",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 206552682
+        },
+        "vol_60d": 0.02181623589164353,
+        "vol_decile": 1,
+        "momentum_12m_residual": 0.3395922149267252,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 28,
+        "ticker": "NCX.V",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 8.565861168489205,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 2.116,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:49.593Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70451313,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 885673744.1564928,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 332057717
+        },
+        "vol_60d": 0.03818907370228316,
+        "vol_decile": 5,
+        "momentum_12m_residual": 0.5897936833496001,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 29,
+        "ticker": "PHVS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 8.501387379217075,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": -2.324,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-12T07:42:33.828Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.1602274,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2189678592,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 70204506
+        },
+        "vol_60d": 0.027391760802392293,
+        "vol_decile": 2,
+        "momentum_12m_residual": -0.11952444309634541,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 30,
+        "ticker": "DYN",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 8.429659579587513,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.078,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:24:09.554Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2838545664,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 186746431
+        },
+        "vol_60d": 0.03372801792405026,
+        "vol_decile": 3,
+        "momentum_12m_residual": 0.16356652098516133,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 31,
+        "ticker": "NGEX.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 8.237700870268831,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 1.868,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-25T08:36:05.122Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.7069936,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 3858615900.958541,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 216858780
+        },
+        "vol_60d": 0.035473967406888345,
+        "vol_decile": 4,
+        "momentum_12m_residual": -0.5428001429743612,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 32,
+        "ticker": "LAR",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 8.101242338910055,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 2.457,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:18:03.220Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            -87000,
+            -87000,
+            null,
+            null,
+            -68000,
+            -117000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 900908992,
+          "earningsDate": "2026-11-09",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 164100000
+        },
+        "vol_60d": 0.039944739404396204,
+        "vol_decile": 6,
+        "momentum_12m_residual": 0.04830048590808367,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 33,
+        "ticker": "DFTX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 7.839373669808452,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 2.236,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-02T09:09:53.616Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5025324032,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 134366950
+        },
+        "vol_60d": 0.03653780275464771,
+        "vol_decile": 4,
+        "momentum_12m_residual": 0.618003606123721,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 34,
+        "ticker": "MARI.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 7.583262363027309,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 0.844,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-03T08:55:20.233Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -73000,
+            -61000,
+            -66000,
+            -19000,
+            -59000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 803523026.6770176,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 135156928
+        },
+        "vol_60d": 0.03104791859338619,
+        "vol_decile": 2,
+        "momentum_12m_residual": -0.8657069438754854,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 35,
+        "ticker": "MI6.AX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 7.505527971094339,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.74,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:26:29.674Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "AUD",
+          "fxRateApplied": 0.69905627,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1489641756.569984,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 2475216089
+        },
+        "vol_60d": 0.044747643911877494,
+        "vol_decile": 8,
+        "momentum_12m_residual": 0.4121891709022648,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 36,
+        "ticker": "SGD.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 7.091397676493039,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.651,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:49:46.447Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            178325.4738,
+            -210945.9873,
+            -231907.20437480003,
+            -217025.7261161,
+            -192823.4798
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.7249003,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2198172276.5541377,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 188431760
+        },
+        "vol_60d": 0.03792058354536704,
+        "vol_decile": 5,
+        "momentum_12m_residual": -0.1876289825775016,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 37,
+        "ticker": "MLTX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 6.825414962099958,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.035,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:49.690Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 971067328,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 85106685
+        },
+        "vol_60d": 0.03326533132840159,
+        "vol_decile": 3,
+        "momentum_12m_residual": 0.17754345646011715,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 38,
+        "ticker": "OICT",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 6.672097949302856,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": -1.348,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:45:54.923Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5052734976,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 449131998
+        },
+        "vol_60d": 0,
+        "vol_decile": 1,
+        "momentum_12m_residual": -0.41678518440803275,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 39,
+        "ticker": "FF.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 6.327883211678832,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 1.179,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-03T08:55:08.263Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -30181.79245,
+            -20355.16235,
+            -20355.16235,
+            -18951.35805,
+            -30883.6946
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70190215,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 815834996.8314753,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 1490154003
+        },
+        "vol_60d": 0.03838495787153236,
+        "vol_decile": 5,
+        "momentum_12m_residual": 0.4975726968292765,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 40,
+        "ticker": "KOD",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 6.149171513544398,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 2.18,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:45:31.610Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5936131072,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 62849457
+        },
+        "vol_60d": 0.13617134772429332,
+        "vol_decile": 10,
+        "momentum_12m_residual": 0.4854665650797273,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 41,
+        "ticker": "FBRX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 6.036079846268481,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "crashRisk",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 2.645,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-03T08:48:20.263Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1634427392,
+          "earningsDate": "2026-11-09",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 21229087
+        },
+        "vol_60d": 0.10707695798166304,
+        "vol_decile": 10,
+        "momentum_12m_residual": 0.011606427833209976,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 42,
+        "ticker": "LGD.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 5.897924136285657,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 2.451,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-03T08:55:23.628Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -29742,
+            -29563,
+            -25351,
+            -16755,
+            -16836
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 808715799.8566272,
+          "earningsDate": "2026-11-10",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 548655934
+        },
+        "vol_60d": 0.04038300260153021,
+        "vol_decile": 6,
+        "momentum_12m_residual": 0.4455505325858754,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 43,
+        "ticker": "VERA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 5.869674931949994,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.953,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:59.076Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2192166656,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 72063335
+        },
+        "vol_60d": 0.03706436527885999,
+        "vol_decile": 4,
+        "momentum_12m_residual": -0.37030442356779525,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 44,
+        "ticker": "COAG",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 5.722723650615538,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:00.247Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1453213952,
+          "earningsDate": "2026-08-14",
+          "earningsDateAsOf": "2026-07-29",
+          "sharesOutstanding": 46712117
+        },
+        "vol_60d": 0.045502587895030984,
+        "vol_decile": 8,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 45,
+        "ticker": "OM.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 5.6730181301102025,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.436,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:28:06.499Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70451313,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1112079211.8170176,
+          "earningsDate": "2026-11-10",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 895129538
+        },
+        "vol_60d": 0.042142379967582765,
+        "vol_decile": 7,
+        "momentum_12m_residual": 0.7781234313108615,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 46,
+        "ticker": "ELVN",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 5.614385671099504,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.245,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-12T07:42:57.073Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 3441527808,
+          "earningsDate": "2026-11-11",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 73270761
+        },
+        "vol_60d": 0.02510805452999089,
+        "vol_decile": 1,
+        "momentum_12m_residual": 0.536721394535501,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 47,
+        "ticker": "FDY.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 5.418955066314418,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.915,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:29:36.695Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -68154.6001962,
+            -62391.682792800006,
+            -64574.26446954,
+            -53436.61639737,
+            -46882.53074898
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70451313,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1138290866.0196671,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 294323575
+        },
+        "vol_60d": 0.03992145419394156,
+        "vol_decile": 6,
+        "momentum_12m_residual": 0.5922884230151776,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 48,
+        "ticker": "KLRA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 5.241851870022404,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:44:22.248Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1346997888,
+          "earningsDate": "2026-11-04",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 129643676
+        },
+        "vol_60d": 0.04058082437660403,
+        "vol_decile": 6,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 49,
+        "ticker": "MLYS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 4.856274266135883,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.675,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:44:44.137Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2089054720,
+          "earningsDate": "2026-11-10",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 88158479
+        },
+        "vol_60d": 0.03302256887795935,
+        "vol_decile": 2,
+        "momentum_12m_residual": -0.9884746913182412,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 50,
+        "ticker": "PYC.AX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 4.755596302123201,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 1.08,
+          "evSales": 75.882,
+          "priceGrossProfit": 93.07522,
+          "fetchedAt": "2026-10-03T08:45:22.603Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "AUD",
+          "fxRateApplied": 0.695749,
+          "priceSales": 93.07522,
+          "priceSalesAsOf": "2026-10-03T08:45:22.603Z",
+          "marketCap": 1683320021.716224,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 983510447
+        },
+        "vol_60d": 0.03601999768237327,
+        "vol_decile": 4,
+        "momentum_12m_residual": 0.2237048222217063,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 51,
+        "ticker": "COGT",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 4.691945052218438,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.307,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:18:04.888Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5382745088,
+          "earningsDate": "2026-08-04",
+          "earningsDateAsOf": "2026-07-29",
+          "sharesOutstanding": 173524982
+        },
+        "vol_60d": 0.029048453270555767,
+        "vol_decile": 2,
+        "momentum_12m_residual": 0.32533941835149127,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 52,
+        "ticker": "HELP",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 4.671816048245744,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.632,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-24T08:22:12.008Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 854804032,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-12",
+          "sharesOutstanding": 73060172
+        },
+        "vol_60d": 0.056338062748282444,
+        "vol_decile": 9,
+        "momentum_12m_residual": 0.09526356933463864,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 53,
+        "ticker": "CELC",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 4.317177862162849,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.196,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-15T08:16:15.983Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 3527990528,
+          "earningsDate": "2026-08-13",
+          "earningsDateAsOf": "2026-07-29",
+          "sharesOutstanding": 48931908
+        },
+        "vol_60d": 0.04097214275759241,
+        "vol_decile": 6,
+        "momentum_12m_residual": 0.09163537552375645,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 54,
+        "ticker": "OMG.V",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 4.30277969583325,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 2.873,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:16:59.299Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -70737,
+            -48725,
+            -24412,
+            -24649,
+            -13948
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1009775973.945856,
+          "earningsDate": "2026-11-27",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 675412078
+        },
+        "vol_60d": 0.04422449882487475,
+        "vol_decile": 8,
+        "momentum_12m_residual": 0.15159034133730676,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 55,
+        "ticker": "TRAX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.9022225040423577,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:16.644Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1189122432,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 35730843
+        },
+        "vol_60d": 0.07612289485535922,
+        "vol_decile": 10,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 56,
+        "ticker": "CMPS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.8058509285169166,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "crashRisk",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 2.549,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-02T09:09:55.495Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1647874048,
+          "earningsDate": "2026-07-30",
+          "earningsDateAsOf": "2026-07-29",
+          "sharesOutstanding": 138476822
+        },
+        "vol_60d": 0.0410472996310012,
+        "vol_decile": 7,
+        "momentum_12m_residual": 0.26023708701631465,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 57,
+        "ticker": "NUVL",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.8043087253687196,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.138,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-07-08T05:56:45.281Z",
+          "revenueQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 9808736256,
+          "earningsDate": "2026-08-06",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 79128241
+        },
+        "vol_60d": 0.05117906827651426,
+        "vol_decile": 9,
+        "momentum_12m_residual": -0.13198244835031725,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 58,
+        "ticker": "JBIO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.7282183696053117,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-09T07:53:50.286Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 897995136,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 63597387
+        },
+        "vol_60d": 0.03659758340136463,
+        "vol_decile": 4,
+        "momentum_12m_residual": 0.3960302806317362,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 59,
+        "ticker": "MBX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.678106451061335,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.038,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:23:54.092Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2817847040,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 48160096
+        },
+        "vol_60d": 0.03758814513367712,
+        "vol_decile": 5,
+        "momentum_12m_residual": 0.7617467514231729,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 60,
+        "ticker": "BCAX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.6105457736617064,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": -0.816,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:30.677Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1166628864,
+          "earningsDate": "2026-11-10",
+          "earningsDateAsOf": "2026-09-04",
+          "sharesOutstanding": 66172934
+        },
+        "vol_60d": 0.03506363358361362,
+        "vol_decile": 3,
+        "momentum_12m_residual": -0.19199758596568417,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 61,
+        "ticker": "QS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.3079677130044844,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 2.692,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-25T08:30:10.036Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2811213056,
+          "earningsDate": "2026-10-21",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 615145076
+        },
+        "vol_60d": 0.038746029985670984,
+        "vol_decile": 6,
+        "momentum_12m_residual": -1.490561632101047,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 62,
+        "ticker": "TYRA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.248722227469748,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.734,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-15T08:16:30.095Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1404683776,
+          "earningsDate": "2026-08-13",
+          "earningsDateAsOf": "2026-07-02",
+          "sharesOutstanding": 59470381
+        },
+        "vol_60d": 0.0554889689956764,
+        "vol_decile": 9,
+        "momentum_12m_residual": 0.10671552065966416,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 63,
+        "ticker": "SIND",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.213876596030737,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:21.084Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2210369024,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 158790885
+        },
+        "vol_60d": 0.044737648650516985,
+        "vol_decile": 8,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 64,
+        "ticker": "SA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.0840970668696,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.889,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:18:30.075Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70451313,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2909286656,
+          "earningsDate": "2026-11-11",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 107871216
+        },
+        "vol_60d": 0.04058189220335781,
+        "vol_decile": 6,
+        "momentum_12m_residual": -0.34391127181210823,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 65,
+        "ticker": "1779.HK",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 3.059421965317919,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": 2186.22576172879,
+          "priceGrossProfit": 2603.9107152964943,
+          "fetchedAt": "2026-09-29T09:27:31.801Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14918248,
+          "priceSales": 2603.9107152964943,
+          "priceSalesAsOf": "2026-09-29T09:27:31.801Z",
+          "marketCap": 989250535.5771904,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 76322100
+        },
+        "vol_60d": 0.06125184161114233,
+        "vol_decile": 10,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 66,
+        "ticker": "REPL",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.9381340773877507,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.942,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:42:33.016Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1231450624,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 94219634
+        },
+        "vol_60d": 0.1219923411967168,
+        "vol_decile": 10,
+        "momentum_12m_residual": 0.6853001615535462,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 67,
+        "ticker": "LTGO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.843069616042091,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:34.348Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1054159616,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 66299347
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 68,
+        "ticker": "ERAS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.80939828516506,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.645,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-12T07:42:38.023Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5155492352,
+          "earningsDate": "2026-11-11",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 349762035
+        },
+        "vol_60d": 0.038037987259967765,
+        "vol_decile": 5,
+        "momentum_12m_residual": 1.5332924156861245,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 69,
+        "ticker": "KARD",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.764534293831169,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:05.566Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1382919680,
+          "earningsDate": "2026-11-09",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 93503699
+        },
+        "vol_60d": 0.043038115021430866,
+        "vol_decile": 7,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 70,
+        "ticker": "LAC",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.750813902544701,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 3.467,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:17.240Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            -10000,
+            -12000,
+            119000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 925759488,
+          "earningsDate": "2026-11-13",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 363042943
+        },
+        "vol_60d": 0.03375145149833201,
+        "vol_decile": 3,
+        "momentum_12m_residual": -1.3667261583276367,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 71,
+        "ticker": "NVA.AX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.7137192678141586,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 0.789,
+          "evSales": -155.231,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-02T09:17:15.351Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "AUD",
+          "fxRateApplied": 0.69439626,
+          "priceSales": -2328.3179,
+          "priceSalesAsOf": "2026-10-02T09:17:15.351Z",
+          "marketCap": 2682535454.9199357,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 5931704664
+        },
+        "vol_60d": 0.04587620212480005,
+        "vol_decile": 8,
+        "momentum_12m_residual": -0.405966720630558,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 72,
+        "ticker": "FRMI",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.7079334830269035,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-15T08:16:02.398Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2581083392,
+          "earningsDate": "2026-11-09",
+          "earningsDateAsOf": "2026-09-12",
+          "sharesOutstanding": 640467348
+        },
+        "vol_60d": 0.06805615633805114,
+        "vol_decile": 10,
+        "momentum_12m_residual": -2.356704492077028,
+        "momentum_12m_residual_decile": 1
+      },
+      {
+        "rank": 73,
+        "ticker": "AVLN",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.5573153443808967,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:16.549Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1247089920,
+          "earningsDate": "2026-11-16",
+          "earningsDateAsOf": "2026-09-04",
+          "sharesOutstanding": 44333095
+        },
+        "vol_60d": 0.0372792813039251,
+        "vol_decile": 5,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 74,
+        "ticker": "VKTX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.379891275095538,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 0.679,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-02T09:08:27.658Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 3763118080,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 125688651
+        },
+        "vol_60d": 0.05215738407877979,
+        "vol_decile": 9,
+        "momentum_12m_residual": -0.3408830365748752,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 75,
+        "ticker": "SPTX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.3521418171600805,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:46.257Z",
+          "revenueQ": [
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 986032768,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 53530550
+        },
+        "vol_60d": 0.04357504971083588,
+        "vol_decile": 7,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 76,
+        "ticker": "ABRA.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.3180412197155675,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.941,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:38.252Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            -469205.74458000006,
+            null,
+            -2037607.66936173,
+            null,
+            -500204.32230000006,
+            null,
+            -312210.62966454
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.70451313,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1412500699.181984,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 165492573
+        },
+        "vol_60d": 0.04154094131109129,
+        "vol_decile": 7,
+        "momentum_12m_residual": 0.11766551108777157,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 77,
+        "ticker": "APGE",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.262264775556005,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.343,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-08-30T08:41:51.614Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 10223142912,
+          "earningsDate": "2026-11-09",
+          "earningsDateAsOf": "2026-09-04",
+          "sharesOutstanding": 75687735
+        },
+        "vol_60d": 0.05665242192880443,
+        "vol_decile": 10,
+        "momentum_12m_residual": 0.28625241809045754,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 78,
+        "ticker": "ORKA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.1232992908763952,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": -0.206,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-11T07:48:39.208Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5596043776,
+          "earningsDate": "2026-11-11",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 66209699
+        },
+        "vol_60d": 0.033180501416623126,
+        "vol_decile": 2,
+        "momentum_12m_residual": 1.0395347766852554,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 79,
+        "ticker": "IRON",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.010632782943428,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 2.048,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:44:06.130Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 2476722432,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 38392844
+        },
+        "vol_60d": 0.02119729976731476,
+        "vol_decile": 1,
+        "momentum_12m_residual": -0.35185008072439294,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 80,
+        "ticker": "CGEM",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.00984078407727,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.02,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:42:20.567Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 953214336,
+          "earningsDate": "2026-08-06",
+          "earningsDateAsOf": "2026-07-29",
+          "sharesOutstanding": 61458046
+        },
+        "vol_60d": 0.04627104629091761,
+        "vol_decile": 8,
+        "momentum_12m_residual": 0.8026706765884252,
+        "momentum_12m_residual_decile": 10
+      },
+      {
+        "rank": 81,
+        "ticker": "SANA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.9858254009919456,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 2.131,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-11T07:48:35.139Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 865152256,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 299360637
+        },
+        "vol_60d": 0.04399774150826522,
+        "vol_decile": 7,
+        "momentum_12m_residual": -0.5654819782080257,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 82,
+        "ticker": "MAU.TO",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.956358962326706,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 2.214,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-25T08:35:59.924Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 5084709447.63904,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 404251425
+        },
+        "vol_60d": 0.0400634737513411,
+        "vol_decile": 6,
+        "momentum_12m_residual": 0.4436042612496597,
+        "momentum_12m_residual_decile": 8
+      },
+      {
+        "rank": 83,
+        "ticker": "TRVI",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.7970119474596804,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.046,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-25T08:30:13.622Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1981838976,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 142475841
+        },
+        "vol_60d": 0.03531199068129744,
+        "vol_decile": 4,
+        "momentum_12m_residual": 0.02042538249005077,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 84,
+        "ticker": "OBX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.786527535206597,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 2.6,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:36:04.997Z",
+          "revenueQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "revenueQEnds": [
+            "2023-09-30",
+            "2023-06-30",
+            "2023-03-31",
+            "2022-12-31"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2023-09-30",
+            "2023-06-30",
+            "2023-03-31",
+            "2022-12-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 839493376,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 61772876
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 85,
+        "ticker": "EWTX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.6977067022044534,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.331,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:42:39.994Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 4496210944,
+          "earningsDate": "2026-11-05",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 108604129
+        },
+        "vol_60d": 0.03842342905759088,
+        "vol_decile": 5,
+        "momentum_12m_residual": 0.5059734931261889,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 86,
+        "ticker": "ORIC",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.6356798767930374,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.991,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:43:48.473Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1265080704,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 103652656
+        },
+        "vol_60d": 0.04515452684069624,
+        "vol_decile": 8,
+        "momentum_12m_residual": -0.39969986180491945,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 87,
+        "ticker": "BHVN",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.5075366342540313,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 3.17,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:29.901Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1943933440,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 151043781
+        },
+        "vol_60d": 0.04906076817072703,
+        "vol_decile": 9,
+        "momentum_12m_residual": -0.5148604230724363,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 88,
+        "ticker": "DRTS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.4900476248626207,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.206,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-11T07:48:42.739Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1365902336,
+          "earningsDate": "2026-11-19",
+          "earningsDateAsOf": "2026-09-10",
+          "sharesOutstanding": 92478154
+        },
+        "vol_60d": 0.03358345179858645,
+        "vol_decile": 3,
+        "momentum_12m_residual": 0.6250108778934022,
+        "momentum_12m_residual_decile": 9
+      },
+      {
+        "rank": 89,
+        "ticker": "SKE",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.3852990481602503,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 2.28,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-15T08:16:18.058Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -148152.3984,
+            -147433.212,
+            -147433.212,
+            -147433.212,
+            -148152.3984
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.7191864,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 3756353536,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 125462705
+        },
+        "vol_60d": 0.037140487505639065,
+        "vol_decile": 5,
+        "momentum_12m_residual": 0.027482262566103755,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 90,
+        "ticker": "SVRA",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.3132922352289256,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.252,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-09T07:53:59.858Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 985699904,
+          "earningsDate": "2026-11-11",
+          "earningsDateAsOf": "2026-09-26",
+          "sharesOutstanding": 204927212
+        },
+        "vol_60d": 0.02788986723734727,
+        "vol_decile": 2,
+        "momentum_12m_residual": -0.10238585543948403,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 91,
+        "ticker": "MANE",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.2155362577834865,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:17.296Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 4878248960,
+          "earningsDate": "2026-11-12",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 41780136
+        },
+        "vol_60d": 0.04187025541174525,
+        "vol_decile": 7,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 92,
+        "ticker": "AVBP",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.1343313323536006,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.358,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-15T08:16:17.801Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1393929472,
+          "earningsDate": "2026-11-16",
+          "earningsDateAsOf": "2026-09-04",
+          "sharesOutstanding": 49307729
+        },
+        "vol_60d": 0.03512703399112772,
+        "vol_decile": 3,
+        "momentum_12m_residual": -0.05884708767132307,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 93,
+        "ticker": "TBN",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.128720837687003,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.281,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:17:30.138Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            -2000,
+            -2000,
+            -2000,
+            -1315,
+            -23000
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1176404352,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 34960006
+        },
+        "vol_60d": 0.026050666811875452,
+        "vol_decile": 1,
+        "momentum_12m_residual": -0.1793052720510978,
+        "momentum_12m_residual_decile": 4
+      },
+      {
+        "rank": 94,
+        "ticker": "PCVX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 0.9765434004631254,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.22,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-05T07:25:27.517Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 8404521984,
+          "earningsDate": "2026-11-03",
+          "earningsDateAsOf": "2026-09-30",
+          "sharesOutstanding": 148805278
+        },
+        "vol_60d": 0.02276956808254497,
+        "vol_decile": 1,
+        "momentum_12m_residual": -0.11395059875465957,
+        "momentum_12m_residual_decile": 5
+      },
+      {
+        "rank": 95,
+        "ticker": "CRVS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 0.5551545297382549,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 0.864,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-08T07:42:21.229Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 916918272,
+          "earningsDate": "2026-08-06",
+          "earningsDateAsOf": "2026-07-29",
+          "sharesOutstanding": 84120944
+        },
+        "vol_60d": 0.03246778333317245,
+        "vol_decile": 2,
+        "momentum_12m_residual": 0.17697063924135725,
+        "momentum_12m_residual_decile": 6
+      },
+      {
+        "rank": 96,
+        "ticker": "CRML",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 0.3110982040187201,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.946,
+          "evSales": 557.47,
+          "priceGrossProfit": 595.1338,
+          "fetchedAt": "2026-09-29T09:27:43.406Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 595.1338,
+          "priceSalesAsOf": "2026-09-29T09:27:43.406Z",
+          "marketCap": 1032627968,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 146888753
+        },
+        "vol_60d": 0.07747719788878907,
+        "vol_decile": 10,
+        "momentum_12m_residual": -0.6870289876934892,
+        "momentum_12m_residual_decile": 2
+      },
+      {
+        "rank": 97,
+        "ticker": "NEXT",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 0.11465402922209703,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": 1.569,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-02T09:09:38.380Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            -7897000,
+            -3031000,
+            -3025000,
+            -2977000,
+            -393000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1724881664,
+          "earningsDate": "2026-10-29",
+          "earningsDateAsOf": "2026-10-02",
+          "sharesOutstanding": 266185433
+        },
+        "vol_60d": 0.0332420623248068,
+        "vol_decile": 3,
+        "momentum_12m_residual": -0.3782693836617089,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 98,
+        "ticker": "IMC",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 0.013778578553671362,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "burnAccelerating",
+          "opIncYahooAdjusted"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-02T09:16:06.814Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 962926976,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 105700000
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 99,
+        "ticker": "0625.HK",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": null,
+          "evSales": 0.50276122146,
+          "priceGrossProfit": 0.46867111616474194,
+          "fetchedAt": "2026-09-05T07:30:19.873Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.325960761292578,
+          "priceSalesAsOf": "2026-09-05T07:30:19.873Z",
+          "marketCap": 16709599402.033152,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 2810867743
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 100,
+        "ticker": "6731.HK",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": 19.115554902358998,
+          "priceGrossProfit": 102.47324723967559,
+          "fetchedAt": "2026-10-03T08:52:21.262Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14914687,
+          "priceSales": 22.846410472085672,
+          "priceSalesAsOf": "2026-10-03T08:52:21.262Z",
+          "marketCap": 1154035400.7474174,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 369588080
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 101,
+        "ticker": "6802.HK",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": null,
+          "evSales": 11.986315986383087,
+          "priceGrossProfit": 76.25524367064827,
+          "fetchedAt": "2026-10-03T08:51:58.299Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14914687,
+          "priceSales": 13.761020510252749,
+          "priceSalesAsOf": "2026-10-03T08:51:58.299Z",
+          "marketCap": 1390823790.1078527,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 96573639
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 102,
+        "ticker": "950260.KQ",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": null,
+          "evSales": 177.578,
+          "priceGrossProfit": 192.24564,
+          "fetchedAt": "2026-10-03T08:50:45.960Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "KRW",
+          "fxRateApplied": 0.0007448734,
+          "priceSales": 192.24564,
+          "priceSalesAsOf": "2026-10-03T08:50:45.960Z",
+          "marketCap": 1062426655.5406942,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 49439111
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 103,
+        "ticker": "BXDC",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-03T08:48:01.167Z",
+          "revenueQ": [
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30"
+          ],
+          "grossProfitQ": [
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 1738223872,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 100649905
+        },
+        "vol_60d": 0.018965608625789956,
+        "vol_decile": 1,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 104,
+        "ticker": "IPEU",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": 0.928,
+          "evSales": 6.997,
+          "priceGrossProfit": 672.4047020834342,
+          "fetchedAt": "2026-10-03T08:49:04.338Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 210.13318,
+          "priceSalesAsOf": "2026-10-03T08:49:04.338Z",
+          "marketCap": 3641550848,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 260110780
+        },
+        "vol_60d": 0.11602290819455288,
+        "vol_decile": 10,
+        "momentum_12m_residual": 0.3177172008124197,
+        "momentum_12m_residual_decile": 7
+      },
+      {
+        "rank": 105,
+        "ticker": "MONEYVIEW.NS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": 5.201331527812471,
+          "fetchedAt": "2026-10-03T08:52:08.595Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010384216,
+          "priceSales": 3.9562888,
+          "priceSalesAsOf": "2026-10-03T08:52:08.595Z",
+          "marketCap": 975712882.0266762,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 1760231268
+        },
+        "vol_60d": null,
+        "vol_decile": null,
+        "momentum_12m_residual": null,
+        "momentum_12m_residual_decile": null
+      },
+      {
+        "rank": 106,
+        "ticker": "RCIT",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": 1.48,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-10-03T08:49:02.061Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 295782711296,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 130732697
+        },
+        "vol_60d": 0.0073199075880434755,
+        "vol_decile": 1,
+        "momentum_12m_residual": -0.4146680493104497,
+        "momentum_12m_residual_decile": 3
+      },
+      {
+        "rank": 107,
+        "ticker": "XXI",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": null,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [],
+        "pit": {
+          "beta": -1.224,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-09-29T09:18:08.248Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 4299761152,
+          "earningsDate": null,
+          "earningsDateAsOf": null,
+          "sharesOutstanding": 651478970
+        },
+        "vol_60d": 0.04668731495468279,
+        "vol_decile": 9,
+        "momentum_12m_residual": -1.9145788145383218,
+        "momentum_12m_residual_decile": 1
+      }
+    ],
+    "unprofitable": []
+  }
+}

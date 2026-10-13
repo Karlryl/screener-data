@@ -1,0 +1,194 @@
+{
+ "_doc": "Vintage-Ausschlussliste. Von Hand/Audit gepflegt (Datum + Grund). scripts/rank-ic.js KONSUMIERT diese Liste und schließt gelistete Vintages aus der Auswertung aus. write-board-history.js schreibt hier NIE Einträge (legt nur dieses Gerüst an). Keine Löschung, nur ein Flag.",
+ "excluded": [
+  {
+   "date": "2026-07-14",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-15",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-16",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-17",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-18",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-26",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 489, 5888764562): der Screener las bis dahin Yahoos NORMALISIERTES Betriebsergebnis statt des berichteten. Der Wechsel aendert Score-Niveau UND Profitabilitaets-Track universumsweit (zwei volle Vergleichslaeufe ueber 4.037 Snapshots: 170 Stufenwechsel, 20 Track-Flips, 54 Quality-Board-Abgaenge). Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Nachgetragen am 29.07. — die Commit-Nachricht meldete den Bruch, dieser Eintrag fehlte, und nur DIESE Datei wird von scripts/rank-ic.js gelesen. Das Vintage bleibt unveraendert stehen und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-27",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 489, 5888764562): der Screener las bis dahin Yahoos NORMALISIERTES Betriebsergebnis statt des berichteten. Der Wechsel aendert Score-Niveau UND Profitabilitaets-Track universumsweit (zwei volle Vergleichslaeufe ueber 4.037 Snapshots: 170 Stufenwechsel, 20 Track-Flips, 54 Quality-Board-Abgaenge). Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Nachgetragen am 29.07. — die Commit-Nachricht meldete den Bruch, dieser Eintrag fehlte, und nur DIESE Datei wird von scripts/rank-ic.js gelesen. Das Vintage bleibt unveraendert stehen und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-28",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 489, 5888764562): der Screener las bis dahin Yahoos NORMALISIERTES Betriebsergebnis statt des berichteten. Der Wechsel aendert Score-Niveau UND Profitabilitaets-Track universumsweit (zwei volle Vergleichslaeufe ueber 4.037 Snapshots: 170 Stufenwechsel, 20 Track-Flips, 54 Quality-Board-Abgaenge). Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Nachgetragen am 29.07. — die Commit-Nachricht meldete den Bruch, dieser Eintrag fehlte, und nur DIESE Datei wird von scripts/rank-ic.js gelesen. Das Vintage bleibt unveraendert stehen und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-29",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 579, 828cba41a9, Exchange-Kanal-Go-live): watchlist 15337->19866 Firmen (+4529) am 04.08.; Scores sind kohorten-relative Perzentile (score.js:5-8), die Kohorten-Erweiterung verschiebt jedes Score-Niveau. Vintages davor sind mit spaeteren nicht vergleichbar. Vintage bleibt unveraendert stehen, faellt nur aus der laufenden Auswertung. Folge: der erste Post-Transitions-Lauf schreibt mit priorDate=null (GATE BLIND) und ist der neue Anker; er entstand per manuellem workflow_dispatch und zaehlt NICHT als sauberer automatischer Lauftag. Court-Akte: _COURT-GATE-NEUANKER-2026-08-05.md (PASSED 8/10)."
+  },
+  {
+   "date": "2026-08-03",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 579, 828cba41a9, Exchange-Kanal-Go-live): watchlist 15337->19866 Firmen (+4529) am 04.08.; Scores sind kohorten-relative Perzentile (score.js:5-8), die Kohorten-Erweiterung verschiebt jedes Score-Niveau. Vintages davor sind mit spaeteren nicht vergleichbar. Vintage bleibt unveraendert stehen, faellt nur aus der laufenden Auswertung. Folge: der erste Post-Transitions-Lauf schreibt mit priorDate=null (GATE BLIND) und ist der neue Anker; er entstand per manuellem workflow_dispatch und zaehlt NICHT als sauberer automatischer Lauftag. Court-Akte: _COURT-GATE-NEUANKER-2026-08-05.md (PASSED 8/10)."
+  }
+ ],
+ "_massstab_brueche": [
+  {
+   "ab_commit": "ece786900b",
+   "tag": "Tag 437",
+   "datum": "2026-07-26",
+   "was": "revAcceleration saison-bereinigt (Umsatz-Beschleunigung)",
+   "wirkung": "Score-Niveau und Rangfolge aendern sich; Vintages davor sind mit spaeteren nicht vergleichbar.",
+   "betroffene_vintages": [
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-18"
+   ],
+   "entscheid": "Karl-Entscheid 10 (26.07.2026): Bruch markieren, Altes stehen lassen, NICHT neu rechnen."
+  },
+  {
+   "ab_commit": "e15b83a778",
+   "tag": "Tag 467-469",
+   "datum": "2026-07-27",
+   "was": "Issuer-Dedup erkennt Anteilsklassen im Firmennamen (\"... Class A\") als denselben Emittenten; zusaetzlich erscheinen Firmen ab 22,7 Mrd. nicht mehr in der Hypergrowth-Uebersicht.",
+   "wirkung": "Der Groessen-Filter beruehrt die Messreihe NICHT — board-history friert die volle Kohorte ein, nicht die Uebersicht. Der Dedup verschiebt die Kohorten-Zusammensetzung leicht.",
+   "letztes_altes_vintage": "2026-07-27",
+   "boards": [
+    "software-comm-services"
+   ],
+   "_bindung_doc": "Die Ausnahme haengt am EXAKTEN Vorgaenger (letztes_altes_vintage), nicht am Datum des neuen Vintages. Grund: (a) waere sie an einen Kalendertag gebunden und das Vintage dieses Tages landete aus einem FREMDEN Grund nicht (ein anderes Board wird suspect -> der Commit-Schritt nimmt das ganze Tagesverzeichnis raus), waere sie verbraucht ohne je gewirkt zu haben, und die Dauersperre kaeme zurueck; (b) waere sie an 'Vorgaenger aelter als X' gebunden, aktivierte auch eine Datenluecke die erhoehte Grenze. Der exakte Vorgaenger greift nur beim echten Neu-gegen-Alt-Vergleich, ueberlebt einen ausgefallenen Lauf und endet von selbst, sobald ein Vintage im neuen Massstab gelandet ist (dann ist der Vorgaenger ein anderer). 2026-07-27 ist der letzte committete Stand im alten Massstab (Lauf 01:43 UTC, Commit 96071fa048).",
+   "_boards_doc": "NUR Namen, bewusst KEINE Groessenangabe: die Hoehe der Tagesgrenze rechnet write-board-history.js selbst aus den beiden verglichenen Vintages (gemessene Kohorten-Schrumpfung, gedeckelt auf THRESHOLD_MULTIPLIER x kalibrierte Schwelle). Es gibt hier also nichts, dessen Vertippen die Grenze aufblaehen koennte. Aufgenommen ist genau das Board, dessen kalibrierte Schwelle den gemessenen Bruch NICHT abdeckt: software-comm-services (Bruch-Delta 1,10 gegen Schwelle 1,00). Die anderen 12 Boards wurden nachgerechnet - bei ihnen deckt die normale Schwelle den Bruch bereits ab (groesster Fall financials: Strukturgrenze 1,82 gegen Schwelle 3,20), sie stehen deshalb NICHT hier und behalten ihre unveraenderte Schwelle.",
+   "ab_wann_wirksam": "Die Vintages 2026-07-26 und 2026-07-27 stammen aus Laeufen VOR der Aenderung (der 27.07. aus Commit 042bd7f3f3, 01:43 UTC). Wirksam ist die Aenderung erstmals im Vintage 2026-07-28.",
+   "wert_gate": "Ein Nachlauf am 27.07. abends (Lauf 30252496643) wollte den Messpunkt desselben Tages mit den neuen Werten ueberschreiben. Das Wert-Gate hat das als SUSPECT abgelehnt (software-comm-services p99-Delta 1,10 gegen Schwelle 1,00, ein Board von 14). Richtig so: zwei Maßstaebe unter demselben Datum waeren der schlimmste Fall. Der urspruengliche Messpunkt blieb unveraendert stehen.",
+   "entscheid": "KEIN Vintage ausgeschlossen. Der Bruch ist um Groessenordnungen kleiner als Tag 437 (dort wurde eine ganze Achse neu berechnet), und ein Ausschluss wuerde die einzigen verwertbaren Messpunkte vernichten. Die Zahl steht hier, damit eine spaetere Auswertung selbst entscheiden kann.",
+   "korrektur_27_07_abends": "Der urspruengliche nachpruefen-Satz war FALSCH und ist ersetzt. Er lautete: 'Meldet das Wert-Gate auch fuer das Vintage 2026-07-28 SUSPECT, ist die Ursache NICHT die einmalige Umstellung.' Genau das Gegenteil stimmt: weil der committete 27.07. aus dem Lauf VOR der Aenderung stammt, zeigt sich die Umstellung ERSTMALS im Vergleich 28.07. gegen 27.07. Ein SUSPECT am 28.07. waere also die Vorhersage der Umstellung gewesen, nicht ihr Gegenbeweis. Schlimmer: das 28.07.-Vintage waere nicht committet worden, der 29.07. haette wieder gegen den 27.07. verglichen und dasselbe Urteil gefaellt — die Messreihe waere dauerhaft blockiert und das CI dauerhaft rot geblieben.",
+   "nachpruefen": "BEANTWORTET am 2026-07-30, Lauf 30516194703: JA, software-comm-services steht ERNEUT auf suspect (p99-Delta 2,50 gegen Schwelle 1,00). Damit gilt der hier vorgesehene Schluss: die Ursache ist NICHT die einmalige Umstellung von Tag 467-469. Sie ist aber auch kein Defekt an diesem Board - der Lauf hat gleichzeitig health-care (2,20 gegen 1,00) und materials (1,60 gegen 1,40) gemeldet, waehrend real-estate mit einer GROESSEREN Bewegung von 4,30 durchging. Die normale Tagesbewegung lag bei Median 2,00. Die Ursache ist die Kalibrierung selbst: acht von zwoelf Schwellen sind falsch, vier zu streng und vier praktisch abgeschaltet (it-services 40,20 aus Stichproben 0/0/0/0/0/20,1). Vollstaendig belegt in Jarvis/Knowledge/Trading/growth-screener/_BEFUND-GATE-KALIBRIERUNG-DEFEKT-2026-07-30.md. Dieser board-enge Vermerk ist damit erledigt und durch einen system-weiten Befund ersetzt."
+  },
+  {
+   "ab_commit": "ef430194be",
+   "tag": "Tag 489",
+   "datum": "2026-07-28",
+   "was": "Yahoo-Feldreihenfolge fuer das Betriebsergebnis gedreht: totalOperatingIncomeAsReported (die BERICHTETE Zahl) statt operatingIncome (Yahoos NORMALISIERTE Zahl ohne Wertminderungen, Restrukturierung, M&A).",
+   "wirkung": "Score-Niveau und Rangfolge aendern sich universumsweit. Zwei volle Vergleichslaeufe ueber 4.037 Snapshots ergaben 170 Wechsel der Profitabilitaets-Stufe, 20 Track-Flips und 54 Abgaenge aus dem Quality-Board. Der Wert-Gate wird am ersten Lauf danach mit hoher Wahrscheinlichkeit SUSPECT melden — das ist die ERWARTETE Folge der Umstellung, KEIN Defekt.",
+   "letztes_altes_vintage": "2026-07-28",
+   "boards": null,
+   "belege": "An 143 Konfliktfirmen live gemessen (516 vergleichbare Jahre): die berichtete Zahl deckt sich zu 93,6 % mit dem SEC-Abschluss, die normalisierte nur zu 23,4 %. End-to-end verifiziert: AGCO [699,927,1716,1308] -> [596,-122,1700,1265] = exakt die eingereichten Werte; ALB ebenso.",
+   "nachpruefen": "Meldet der Wert-Gate am Lauf NACH dem naechsten erneut SUSPECT, ist die Umstellung NICHT mehr die Ursache — dann echter Defekt, eigener Befund.",
+   "entscheid": "Rat (4 Stimmen, alle vier laufen auf dieselbe Zeile zu) + 9 adversarische Gegenproben, 8 halten. Der Gegenvorschlag SEC-Quelle ist tot: der Bulk-Extrakt hat 0 von 1.589 Nicht-US-Tickern, ein Wechsel liesse ein Drittel des Universums unversorgt."
+  },
+  {
+   "ab_commit": "828cba41a9",
+   "tag": "Tag 579",
+   "datum": "2026-08-04",
+   "was": "Exchange-Kanal-Go-live erweitert das watchlist-Universum 15337->19866 Firmen (+4529).",
+   "wirkung": "Scores sind kohorten-relative Perzentile (score.js:5-8); die Kohorten-Erweiterung verschiebt jedes Score-Niveau universumsweit. Vintages davor sind mit spaeteren nicht vergleichbar.",
+   "letztes_altes_vintage": "2026-08-03",
+   "boards": null,
+   "entscheid": "Court-Urteil PASSED 8/10 (Karl-Zuruf 'gate court'), Akte _COURT-GATE-NEUANKER-2026-08-05.md: Bruch rein dokumentarisch fuehren, boards:null (massstabBruchFuer liefert dadurch null, keine Schwelle wird angehoben). Vintages 2026-07-29 und 2026-08-03 zusaetzlich global in excluded[] ausgeschlossen; der erste Post-Transitions-Lauf (2026-08-05) laeuft mit priorDate=null als neuer Gate-Anker (GATE BLIND)."
+  },
+  {
+   "ab_commit": "PR #45 (fix/einmalertrag-konsequenz)",
+   "tag": "Tag 938",
+   "datum": "2026-08-16",
+   "typ": "score-definitions-bruch",
+   "was": "Die Lampe 'einmalertrag' wird folgenreich: bei brennender Lampe droppen fuenf Wachstums-Achsen der Zeile (EINMALERTRAG_BLIND in src/scoring/score.js); renorm-on-drop + C4-Coverage-Shrinkage ziehen den Score Richtung Kohorten-Median.",
+   "wirkung": "KEINE Zeile geht verloren — die Kohortengroessen bleiben gleich, nur Scores aendern sich. Der bestehende Massstabbruch-Zweig greift deshalb NICHT: er verlangt eine geschrumpfte Kohorte (nowMap.size < priorMap.size). Gemessen am Vorher/Nachher-Lauf ueber 4.769 Snapshots gegen das eingefrorene Lineal: 3.393 von 3.428 Zeilen score-identisch, veraendert sind ausschliesslich die 35 Zeilen mit der Lampe.",
+   "letztes_altes_vintage": "2026-08-16",
+   "erklaerende_lampe": "einmalertrag",
+   "boards": [
+    "real-estate",
+    "tech-hardware",
+    "industrials",
+    "semiconductors",
+    "utilities",
+    "consumer-discretionary",
+    "health-care",
+    "materials",
+    "financials",
+    "software-comm-services"
+   ],
+   "_mechanik_doc": "Anders als beim Schrumpfungs-Bruch wird hier KEINE Tagesgrenze angehoben. Der Eintrag benennt die LAMPE; write-board-history.js laesst fuer diesen einen registrierten Vergleich genau die Zeilen aus dem p99 heraus, die sie vorher oder nachher tragen. Alles andere wird unveraendert streng gemessen — eine unabhaengige Drift in derselben Nacht faellt weiterhin auf. Ein Zuschlag waere hier gefaehrlich: er muesste ~28-37 Punkte abdecken (2548.TW 78->50, 8926.TW/LKFT ueber 36) und liesse in derselben Nacht jeden echten Wertfehler mit durch. Es steht deshalb wie beim Schrumpfungs-Bruch KEINE Zahl im Register.",
+   "_boards_doc": "GEMESSEN, nicht gesetzt: aufgenommen ist jedes Board, das im Uebergang mindestens eine Zeile mit der Lampe traegt. Gemessene p99-Tagesdeltas des reinen Code-Effekts (alle Boards in Kalibrierphase -> Boden MIN_GATE_THRESHOLD 11,5): health-care 25,78 (18 Lampen-Zeilen) REISST den Boden; tech-hardware 0,29; alle uebrigen 0,00. OHNE die Lampen-Zeilen liegt das p99 in JEDEM Board bei 0,00 — der Code-Effekt bewegt nachweislich nichts ausser den markierten Zeilen. Die neun Boards unter der Reissgrenze stehen mit drin, weil sie einzelne Lampen-Zeilen mit 28-37 Punkten Bewegung tragen (real-estate 27,9 / utilities 32,3 / industrials 36,3 / software-comm-services 36,7), die bei der Zusammensetzung am Dienstag das p99 erreichen koennen (KORRIGIERT Tag 953: hier stand 'am Mittwoch' — derselbe Rest aus dem Plan vor Karls Entscheid vom 16.08.; der erste Lauf mit neuem Code ist Di 18.08., wie _bindung_doc weiter unten korrekt sagt). Das ist gefahrlos, weil die Ausnahme zeilenweise an der Lampe haengt und keine Schwelle anhebt — ein nicht betroffenes Board verliert dadurch nichts an Strenge.",
+   "_bindung_doc": "Gebunden an den EXAKTEN Vorgaenger 2026-08-16, nicht an einen Kalendertag. PLAN-AENDERUNG Karl 16.08.: gemergt wird HEUTE (16.08.), nicht nach Dienstag — der urspruenglich geplante Dienstag-Beweislauf mit ALTEM Code entfaellt ersatzlos. Damit ist der naechste Cron-Lauf (Di-Sa, 17 2 * * 2-6, also Di 18.08. ~02:17 UTC) bereits der ERSTE Lauf mit NEUEM Code, und er vergleicht gegen den Vorgaenger 2026-08-16 (Commit 67ef7ca851, Karls Handlauf vom 16.08. = letzter committeter Stand im alten Massstab). FALLE: schreibt IRGENDEIN Lauf vor Dienstag noch einen Vintage (Handlauf, workflow_dispatch, nachgezogener Cron), ist der Vorgaenger ein anderer, diese Bindung wieder falsch und die Ausnahme greift NICHT (fail-closed) — dann MUSS letztes_altes_vintage auf den dann tatsaechlichen Vorgaenger nachgezogen werden, bevor der naechste Lauf startet, statt den Fall still durchzuwinken. Ein Verfehlen ist seit Tag 951 nicht mehr still: write-board-history.js meldet 'GATE-BINDUNG VERFEHLT' mit beiden Daten im Lauf-Protokoll (::warning::-Kanal).",
+   "nebenwirkung_kalibrierung": "Erwuenscht: alle 13 Boards sind seit der Neukalibrierung vom 03.08. in der Kalibrierphase (threshold null, 3 von 20 Samples). Ohne diese Ausnahme ginge das health-care-p99 von 25,78 als Kalibrier-Sample in die Messreihe ein und verzerrte die kuenftige Schwelle dauerhaft nach oben. Da die erklaerten Zeilen gar nicht erst ins p99 gelangen, bleibt die Messreihe sauber.",
+   "entscheid": "Gerichtsurteil Einmalertrag-Konsequenz 16.08.2026 (F-16-Einzelfreigabe) + Karl-Freigabe 16.08. ('Ja, so machen'). Waechter: tests/board-history-score-definitions-bruch.test.js (mit Ausbau-Probe)."
+  },
+  {
+   "ab_commit": "ab733eea15 (PR #93)",
+   "tag": "Tag 1085",
+   "datum": "2026-08-30",
+   "typ": "score-definitions-bruch",
+   "was": "K2/K3-Hartgate gegen synthetische OpInc-Jahresreihen (Urteil T164, ENTSCHIED 15/18): histOpInc() liefert fuer meta.opIncSource === 'computed-margin' eine LEERE Reihe. Alle historischen OpInc-Achsen, Profitphasen und longitudinalen Lampen fallen fuer diese Zeilen weg; renorm-on-drop zieht den Score Richtung Kohorten-Median. Bis PR #93 erreichte das Etikett die Engine ueberhaupt nicht (K3-Auflage 3: grep in src/scoring = 0 Treffer).",
+   "wirkung": "KEINE Zeile geht verloren — nur Scores aendern sich. Gemessen am ersten Rechenlauf danach (33289964981, nur_rechnen, Wochenende = praktisch keine Marktbewegung): financials p99-Tagesdelta 16,80 gegen Boden 11,50, waehrend zwoelf von dreizehn uebrigen Boards bei 0,20-0,50 liegen (Vortag financials 0,50). Der Effekt ist per Konstruktion auf ein Board konzentriert.",
+   "letztes_altes_vintage": "2026-08-29",
+   "erklaerende_lampe": "opIncSynthetisch",
+   "boards": [
+    "financials",
+    "survival"
+   ],
+   "_boards_doc": "GEMESSEN, nicht gesetzt: aufgenommen ist jedes Board, das im Uebergang mindestens eine Zeile mit der Lampe traegt. Eigenstaendig gezaehlt ueber die 29.08.-Kohorten gegen die Snapshot-Etiketten beider CI-Artefakte (9713240274 / 9726391386): financials 299 von 354 Zeilen (84,7 %), survival 1 von 106 (0,9 %), alle zwoelf uebrigen Boards 0 von 9.052 (0,0 %). Der Urteilstext in lamps.js:798 nennt 300 von 354 — die Abweichung von eins ist ein in keinem Artefakt auffindbarer Snapshot, kein Zaehlfehler. survival steht mit drin, weil die Tag-938-Konvention jedes Board mit mindestens einer Lampen-Zeile aufnimmt; sein p99 ist ohnehin '—'.",
+   "_mechanik_doc": "Wie Tag 938 und anders als beim Schrumpfungs-Bruch wird KEINE Tagesgrenze angehoben. Das waere hier zusaetzlich wirkungslos: die Kohorte schrumpft 354 -> 350 (1,13 %), strukturgrenze = SCORE_SKALA x 0,0113 = 1,13 und damit weit unter basisSchwelle 11,50 — der Schrumpfungs-Zweig laeuft mit, seine allowance ist exakt 0. Was herausgerechnet wird, ist an der Lampe abzaehlbar statt gesetzt; jede unabhaengige Drift in derselben Nacht faellt weiterhin auf.",
+   "_bindung_doc": "Gebunden an den EXAKTEN Vorgaenger 2026-08-29, nicht an einen Kalendertag. VERIFIZIERT vor dem Registrierungs-Commit (30.08., ENTSCHIED 108): origin/main traegt kein board-history/2026-08-30; juengster Vintage-Commit ist 2604eebc2a 'chore: board-history vintage 2026-08-29'. Beide Dispatches des 30.08. liefen mit nur_rechnen=true und veroeffentlichen nichts — 33289964981 (03:18 UTC, VEROEFFENTLICHEN=false) und 33293687092 (04:59 UTC, im Lauf-Protokoll als VEROEFFENTLICHEN=false / NUR_RECHNEN=true gelesen). Zusaetzlich strukturell abgesichert: daily-pull.yml:2068 nimmt ein SUSPECT-Vintage (rc=2) auch im veroeffentlichenden Lauf per :(exclude) vom Commit aus. FALLE (Tag-938-Erfahrung): schreibt IRGENDEIN Lauf vor dem Dienstag doch noch ein Vintage, ist der Vorgaenger ein anderer, die Bindung falsch und die Ausnahme greift NICHT (fail-closed) — dann MUSS letztes_altes_vintage vor dem naechsten Lauf nachgezogen werden. Ein Verfehlen ist seit Tag 951 nicht mehr still: write-board-history.js meldet 'GATE-BINDUNG VERFEHLT' mit beiden Daten.",
+   "nachpruefen": "Meldet das Wert-Gate financials im Lauf NACH dem naechsten erneut SUSPECT, obwohl die Ausnahme greift und die Lampen-Zeilen aus dem p99 fallen, ist die Umstellung NICHT mehr die Ursache — dann echter Defekt, eigener Befund.",
+   "entscheid": "Gerichtsurteil T164/165/166 vom 29.08.2026, K2 EINSTIMMIG 3:0 'zulaessig-mit-Kennzeichnung mit hartem Gate', ratifiziert als ENTSCHIED 15, Karl-Freigabe 29.08.2026 20:10 (ENTSCHIED 18). Doppel-Autorisierung in protocol/gqs-00/1.2.0-pending/. Registrierung dieses Bruchs: ENTSCHIED 99 (Registrierung vor dem ersten Post-Fix-PUBLISH), Messung ENTSCHIED 107, Eintragung ENTSCHIED 108. Waechter: tests/board-history-score-definitions-bruch.test.js (Block 'Tag 1085', mit Ausbau-Probe)."
+  },
+  {
+   "ab_commit": "Dispatch-Lauf 33613948152 auf 2a28b1dcc2",
+   "tag": "Tag 1204",
+   "datum": "2026-09-02",
+   "typ": "daten-schub",
+   "was": "Kein Massstab-Bruch: einmaliger Datenschub durch 1.136 Voll-Pulls (833 aus der 30-Tage-Frist der 02.08.-Kohorte, frische Quartalszahlen) plus 21 SEC-XBRL-Neuzugaenge im Pull-Commit. p99-Delta in drei Boards ueber dem Boden 11,50 (energy 17,40 / it-services 12,50 / utilities 14,40), jeweils von 2-4 grossen Einzelzeilen getragen (BYAN.JK, CVX, EPD, PBR-A, FET; 7203.SR, DTL.AX; ENEL.SW, RENE.LS, 1VER.MI, POR, WTRG); Median der Bewegungen 0,3-0,4 Punkte.",
+   "wirkung": "Vintages bleiben vergleichbar - die Bewegungen sind echte Fundamentaldaten-Aktualisierungen, kein Skalen- oder Definitionswechsel. Ohne Ausnahme misst der Folgelauf dieselben Spruenge erneut gegen den Boden (Dauersperren-Klasse aus dem Gate-Kommentar).",
+   "beleg": "agent-reports/p99-suspect-boards-2026-09-02.md im Vault (Harness-Reproduktion der drei p99-Werte, Top-Bewegungen je Board vollstaendig erklaert, unerklaerter Rest: keiner; LSE-Heilungs- und Milan-Hypothesen gemessen widerlegt).",
+   "entscheid": "Orchestrator-Entscheid unter delegierter Tor-Entscheidungsgewalt (29.08.), 2026-09-02: Ausnahme fuer genau diesen einen Uebergang, drei benannte Boards; Karl informiert.",
+   "letztes_altes_vintage": "2026-09-01",
+   "boards": null,
+   "boards_bis_2026-09-05": ["energy", "it-services", "utilities"],
+   "fti_ausnahme_2026-09-05": "FTI 5/7 nach Heilung (Run 33963865924, 2026-09-05T12:09:54Z, A′ #286): annualGP = Umsatz − COGS exakt wiederhergestellt (source derived_rev_minus_cogs, 2.181,4 / 1.723,1 / 1.274,1 / 896,3 Mio = Werte vom 01.09.), opInc + Lampen zurueck; verbleibende Achse capitalEfficiency null, weil Yahoo fundamentalsTimeSeries balance-sheet fuer FTI seit dem Neuabruf weder currentLiabilities noch totalCurrentLiabilities liefert (Nachweis am Rohbezug 2026-09-05 ~12:55Z; 01.09.-Stand 4.914,8 Mio). Kein Datenschaden der Pipeline, anbieterseitig entfallen, BEWUSST ZUGELASSEN (Master-Entscheid 2026-09-05, ~75 %): das Vintage darf FTI mit 5/7 und scoreBase ~50,5 fuehren; gegen den Vorgaenger 2026-09-01 ist das formal ein Achsenverlust (6/7 -> 5/7), der ohne Bindung nicht als Verfall urteilt. Nie still: dieser Vermerk + Anker orchestrator-2026-09-05-tag N15/N16.",
+   "beschluss_2026-09-05": "Beschluss 05.09.2026 (Master-Ratifikation, Delegation 29.08.): Court-02.09. Q3 (‚#261 bleibt') wird für die Board-Bindung des Eintrags Tag 1204/#261 aufgehoben; WB-11 (Feld `boards` unveränderlich) wird für diesen Eintrag einmalig durchbrochen: `boards` → null, `boards_bis_2026-09-05`, `entbunden_2026-09-05`. Neue Evidenz: 14 von 15 Verfallszeilen am ersten Live-Tag von WB-4 waren gemessene Fehlalarme (Klassen 2–4, Anker orchestrator-2026-09-05-tag N3); ohne landendes Vintage konnte der Eintrag nie erlöschen — Dauersperre aller 13 Boards. Bedingungen: FTI (Klasse 1, echter Schaden) ist vor dem Merge geheilt und am Objekt verifiziert; eine Verfallszeile außerhalb der Klassen 1–4 im Live-Lauf setzt die Entbindung aus, bis WB-4′ steht. Dokumentationsteil bleibt; WB-4 bleibt für künftige Registrierungen unverändert, bis WB-4′ ratifiziert gebaut ist.",
+   "entbunden_2026-09-05": "ENTBUNDEN am 2026-09-05 (Master-Ratifikation unter der Delegation vom 29.08., Anker agent-reports/orchestrator-2026-09-05-tag.md N3/N6): boards -> null, damit massstabBruchFuer fuer den Vorgaenger 2026-09-01 null liefert (Praezedenz Tag 579) und der Datenschub-Arm samt Integritaets-Vorrang fuer DIESEN Uebergang nicht mehr greift. GRUND, GEMESSEN: am ersten Live-Tag der Regel (Vintage 2026-09-04) waren 14 von 15 gemeldeten Verfallszeilen falsch-positiv (Lampe durch frische Daten erloschen x8, Quell-Upgrade Yahoo->SEC-GAAP x2 [FET, WKC], fuehrende Null-Quartalsluecke 2026-06-30 -> marginTrajectory null x4 [DUK, PPL, AVA, ENB]); der einzige echte Schaden (FTI, annualOpInc -> [], annualGP -> 0) wird per voll_pull_ticker=FTI (#271) VOR dem Landen des naechsten Vintages geheilt und am Artefakt verifiziert. Die Klassen (2)-(4) bestehen gegen den Vorgaenger 2026-09-01 dauerhaft, kein Vintage koennte je landen, der Eintrag wuerde nie verbraucht: Dauersperre aller 13 Boards. Ohne Bindung urteilt die Wert-Achse allein (p99 x gapDays, bei 4 Tagen 46,00 gegen gemessene 23,40 / 15,10 / 29,40). Court 02.09. Q3 (#261 bleibt) ist damit fuer die BINDUNG amendiert, der Eintrag selbst bleibt als Dokumentation stehen; WB-4 bleibt im Code unveraendert fuer den naechsten registrierten Datenschub, die Regel selbst geht als WB-14-Wiedervorlage an den Rat (Klassen (2)-(4) als Falsch-Positiv-Fixtures in tests/wertgate-wb14-falschpositive.test.js). Kipp-Bedingung: zeigt der Lauf vom 05.09. eine Verfallszeile ausserhalb der Klassen (1)-(4), wird die Bindung NICHT geloest (WB-14 zuerst). Waechter: tests/wertgate-261-entbunden.test.js.",
+   "wirkung_gemessen": "2026-09-02 (rein dokumentarisch, verhaltensneutral - massstabBruchFuer liest dieses Feld nicht). BEFUND: Der Eintrag war bei seiner Aufnahme inhaltlich richtig und mechanisch WIRKUNGSLOS - Bedingung 3 des Bruch-Zweigs verlangte eine geschrumpfte Kohorte, die drei Kohorten sind gewachsen (+34 / +5 / +31), und das Feld typ wurde im ganzen Modul nirgends ausgewertet. Gemessen: 0 Boards mit erhoehter Tagesschwelle im Lauf 33623850297, alle drei SUSPECT (p99 17,40 / 12,50 / 14,40 gegen thr 11,50). FUNDSTELLE: agent-reports/diagnose-wertgate-ausnahme-261-2026-09-02.md (Harness gegen das echte Modul, alle Assertions gruen) und das Gerichtsprotokoll agent-reports/_COURT-WERTGATE-BEWEGUNG-2026-09-02.md (ratifiziert 2026-09-02T13:23:01Z). WIRKSAMKEIT AB: dem Umsetzungs-PR zum Beschluss Q1 - dort oeffnet typ 'daten-schub' den ZUSCHLAGS-Arm in evaluateGate (Tagesschwelle einmalig auf den bestehenden Deckel THRESHOLD_MULTIPLIER x basisSchwelle = 23,00), gebunden an das Faecherungs-Tor 8 % und ueberstimmt vom Integritaets-Vorrang. Der Eintrag wird dadurch NACHTRAEGLICH wirksam, obwohl er geschrieben wurde, als es die Mechanik nicht gab; er darf nicht still wirksam werden (WB-10: datierte Bestaetigung und schriftliche Vorhersage vor dem ersten Lauf). Bindungsfelder unveraendert; das Vintage 2026-09-02 wird NICHT rueckwirkend erzeugt und bleibt ein dokumentiertes Loch (WB-12)."
+  },
+  {
+   "ab_commit": "95541fa078 (PR #268)",
+   "tag": "Tag 1205",
+   "datum": "2026-09-02",
+   "typ": "score-definitions-bruch",
+   "was": "Jahres-Einkommensbuendel: die Dichte-Zaehlung zaehlt mit _nonZeroCount statt _nonNullCount (Fix 1), und eine ueber die ganze Historie exakt genullte Bruttogewinn-Reihe bei irgendwo positivem Umsatz wird zu ehrlichen Fehlwerten (Fix 2, Bedingung geschaerft auf >=2 dokumentierte Nulljahre). Yahoo kodiert einen fehlenden Bruttogewinn in incomeStatementHistory als literale 0; die alte Zaehlung kaufte quoteSummary damit den Gleichstand, den es zum Gewinnen braucht. Kein neuer Fakt vom Anbieter - dieselbe Nutzlast wird anders kodiert.",
+   "wirkung": "KEINE Zeile geht verloren; die Kohortengroessen bleiben gleich. Der Schrumpfungs-Zweig greift deshalb nicht. Zwei getrennte Groessen, die nicht verwechselt werden duerfen: (a) 94 Zeilen auf 10 von 13 Boards haben einen GEAENDERTEN SCORE-EINGANG - das ist Eingangs-BERUEHRUNG, keine gemessene Score-Bewegung (financials 34, health-care 31, industrials 8, software-comm-services 7, consumer-discretionary 4, real-estate 3, energy 2, materials 2, tech-hardware 2, semiconductors 1; nicht betroffen: consumer-staples, it-services, utilities); (b) 2 Zeilen auf 1 Board tragen eine REPRODUZIERBARE SCORE-BEWEGUNG - tech-hardware, UMAC scoreBase 52,4 -> 98,7 (Delta 46,3) und ASTS 9,2 -> 21,3 (Delta 12,1); alle zwoelf uebrigen Boards hit 0. Wer nur (a) eintraegt, behauptet eine Score-Bewegung, die nicht gemessen ist; wer nur (b) eintraegt, verschweigt die Vergleichbarkeits-Pflicht fuer 94 Zeilen.",
+   "vergleichbarkeit": "Fuer die 94 beruehrten Zeilen sind gpGrowth, capitalEfficiency, marginLevel, marginTrajectory und ruleOfX ueber den Schnitt hinweg NICHT vergleichbar; jede Trend- oder Historien-Abfrage bricht am 2026-09-02. Rangvergleiche ueber den Uebergang hinweg sind fuer Zeilen der Null-Klasse ungueltig. Keine Historien-Rueckrechnung: board-history vor dem Schnitt bleibt unangetastet.",
+   "keine_hoehe_keine_bindung": "BEWUSST ohne letztes_altes_vintage und ohne boards - der Eintrag gewaehrt NICHTS und hebt keine Schwelle. Grund, gemessen: (1) Der einzige tatsaechliche Vorgaenger ist 2026-09-01, und der ist bereits durch Tag 1204 (#261) belegt; zwei Eintraege mit demselben letztes_altes_vintage brechen in massstabBruchFuer HART ab (kein stiller Merge), der Wurf ist nicht gefangen und endet in process.exit(1) - an dem Tag wuerde ueberhaupt kein Vintage geschrieben. (2) Ein Eintrag auf 2026-09-02 waere ein stiller Blindgaenger: dieses Vintage existiert nicht und wird nicht erzeugt (Wert-Gate-Beschluss WB-12), es wird nie ein Vorgaenger, und die Sichtspur GATE-BINDUNG VERFEHLT feuert nur im Zweig treffer.length === 0 - solange #261 den 2026-09-01 belegt, meldet nichts. (3) Der behavioural einzige Hebel eines score-definitions-bruch ist erklaerende_lampe; der Griff aus #268 ist meta.gpZeroCodingNulled, ein SNAPSHOT-Feld. write-board-history.js liest fuer die Ausnahme ausschliesslich row.lamps, und weder src/scoring/lamps.js noch buildPit fuehren das Feld. Der Hebel ist unter den Sperrzonen beider Gerichte (src/scoring in jeder Form; Schema-Zusatz an der Messreihe) nicht baubar. (4) Die Wirkung TROEPFELT: das Jahres-Buendel wird nur beim Voll-Pull neu entschieden, und der steht je Ticker erst nach FUNDAMENTALS_REFRESH_DAYS = 30 wieder an; die Schema-Melder-Regel (!hasCA) wurde von #268 nicht angefasst, es gibt also keinen erzwungenen Massen-Neuabruf. Die 94 beruehrten Zeilen verteilen sich ueber rund 30 Handelstage - eine Ein-Uebergangs-Bindung koennte davon einen einzigen Tag decken und liesse die uebrigen ungedeckt. Der Eintrag ist deshalb, was er nach der eigenen Messung ohnehin fast ausschliesslich ist: Vergleichbarkeits-Dokumentation. Praezedenz der Form: Tag 437 (ohne Bindungsfeld) und Tag 579 (boards: null, 'massstabBruchFuer liefert dadurch null, keine Schwelle wird angehoben').",
+   "wenn_doch_eine_schwelle_noetig_wird": "Reisst ein Board wegen dieser Umstellung das p99, wird der Fall an dem TATSAECHLICHEN Uebergang neu bewertet und dann - und erst dann - mit dem dann freien, exakten Vorgaenger gebunden. Eintrag #261 ist ab dem ersten Vintage nach 2026-09-01 verbraucht; der Schluessel 2026-09-01 wird nie wieder abgefragt.",
+   "ehrliche_fehlwerte_vorbehalt": "Der Guard erzeugt ehrliche Fehlwerte nur, solange der Wert wirklich fehlt. GEMESSEN: 702 Live-Buendel tragen eine komplett genullte GP-Reihe, davon fuehren 344 im Schwester-Buendel einen ECHTEN Bruttogewinn. Nach Fix1+Fix2 bleiben 106 Zeilen mit GP=null stehen, obwohl der Wert im Haus liegt (ASTS 35,7 Mio auf 70,9 Mio Umsatz; UMAC 3,9 auf 11,2; MAQ.AX 363,3; GILLETTE.BO 14,82 Mrd auf 26,33 Mrd; weiter IVN.TO, GMIN.TO, 4194.T, BASS.PA, MIN.AX; Sektoren: Basic Materials 21, Industrials 20, Healthcare 19, Real Estate 12, Consumer Cyclical 11, Technology 7). Dieser Eintrag behauptet 'ehrliche Fehlwerte' NICHT ohne diesen Vorbehalt. Ein GP-Rueckfall auf das Schwester-Buendel ist ein EIGENER Befund und geht als eigener Punkt in die Inbox, nicht in diesen Vollzug.",
+   "sektor_beschraenkung_abgelehnt": "Eine Beschraenkung von Fix 2 auf Financials/RealEstate/Utilities wurde 2:0 VERWORFEN, und die Ablehnung gehoert in den Registertext. Sie liesse 332 von 2.014 Snapshots (16,5 % der Klasse) unrepariert - darunter ALLE DREI belegten Kontaminationsfaelle: UMAC und ASTS (Technology) und FTI (Energy); in der zweiten Grundgesamtheit 228 von 702 genullten Reihen. Die umgekehrte Beschraenkung liesse die 271 Banken mit kodierten Nullen stehen und liefe damit dem Zweck des Guards zuwider. Beide Zuschnitte senken Reichweite, nicht Risiko. Fix 2 ist ohnehin sektor-blind (kein Sektorterm im Guard). Die Zahl '276 strukturell GP-los / 82 unaufloesbar' wird ausdruecklich NICHT als hart gefuehrt - unter der schlichten Regel sector === 'Financial Services' misst sie sich zu 271/87 nach; fuenf Zeilen wandern je nach Klassifikationsregel.",
+   "filing_stichprobe": "FN-8, K1 BESTANDEN. Drei der 63 wert-umbasierenden Flip-Zeilen wurden gegen Originalabschluesse geprueft. BEFUND: 000166.SZ - die FTS-Reihe stimmt exakt mit dem testierten Abschluss ueberein; die quoteSummary-Reihe trug eine rueckwirkend entfernte Brutto-Basis. KYN - die FTS-Reihe bedient FY2013-2018 unter den heutigen Etiketten und stimmt mit dem testierten Abschluss ueberein. 003540.KS - das Nettoergebnis ist exakt, der Umsatz bleibt MEHRDEUTIG. WORTLAUT-AUFLAGE aus der Stichprobe: dieser Eintrag behauptet NICHT 'FTS = testierter Umsatz'. Richtig ist: die FTS-Reihe ist fuer die chinesischen Faelle abschluss-KONSISTENT und fuer Fonds und koreanische Broker ein abschluss-NAHES Komposit. Keine der drei Proben faellt gegen die FTS-Umsatzdefinition aus; K1 ist damit nicht erreicht.",
+   "restluecke_marginLevel": "BENANNT, NICHT ERLEDIGT. Fix 2 schliesst die heute bekannte Tuer (Anbieter-Null in incomeStatementHistory erreicht marginLevel nicht mehr), NICHT den Kontrakt. Kommt eine kuenftige Quelle mit einer kodierten oder echten 0-GP an der Pull-Schicht vorbei, faellt marginLevel wieder herein. Die Pull-Schicht ist eine Tuer, kein Vertrag. Der marginLevel-Fehlwert-Kontrakt ist dem zustaendigen Gremium VORGELEGT, nicht entschieden - src/scoring ist Sperrzone.",
+   "board_kopf_wechsel": "tech-hardware bekommt einen neuen Kopf: UMAC R45 -> R1 (scoreBase 52,4 -> 98,7). VORBEHALT, mitveroeffentlicht: UMAC steht auf Rang 1 von 702 bei coverageAxes 4/8 - das ist ein Coverage-Artefakt, kein Fund.",
+   "nachpruefen": "Meldet der Zaehler aus dem Lauf-Protokoll im Lauf NACH dem naechsten einen Sprung der Null-Klasse um mehrere hundert Zeilen in EINEM Vintage, der nicht durch neu gezogene Ticker erklaert ist, ist das NICHT mehr diese Umstellung, sondern ein eigener Befund (Anbieter-Ausfall oder Mapper-Regression) - und wird als solcher untersucht, nicht als Rauschen abgehakt. Grundlinie zum Vergleichen: 2.014 von 15.040 Snapshots (13,4 %), diffus ueber 20+ Boersen, keine ueber 50 % (US 17,1 / MI 15,8 / DE 15,0 / T 12,4 / AX 25,6 / SZ 2,1 %), stabil ueber 21 asOf-Tage.",
+   "entscheid": "Gerichtsprotokoll _COURT-FTI-NULLWERTE-2026-09-02.md (sha256 604409d5a4084584295bafe2e90829b9e1550ecadbe60d85b1bf9429ccc9dffe, 57.372 B), Beschluss Q1 2:0 angenommen als EIN untrennbares Paket, Q2 Registerklasse score-definitions-bruch (1:1, strengere Fassung gewinnt). Ratifiziert 2026-09-02T12:20:22Z, BERICHTIGT 2026-09-02T12:58:26Z: der Ratifikations-Nachtrag hatte die Klasse als daten-schub bezeichnet - es gilt der Urteilstext, score-definitions-bruch. Vollzug Fix 1 + Fix 2 mit Zaehler, Per-Zeile-Marker und Waechter: PR #268 (95541fa078). Waechter: tests/fti-jahresbuendel-nullwerte.test.js.",
+   "variante_1b_reserviert": "Variante 1b (literale 0-Umsatzjahre zaehlen nicht als Datum) ist 2:0 RESERVIERT fuer ein eigenes Gericht, weder angenommen noch verworfen. Preisschild als Beweismittel: 285 statt 133 kippende Sonden, 134 statt 92 board-residente Quellwechsel, 218 statt 66 Zeilen gewinnen OpInc-Jahre, 152 Ticker kippen NUR unter 1b. Gegengewicht: 261 Live-Ticker tragen mindestens ein literales 0-Umsatzjahr, davon 129 mit Umsatz 0 in ALLEN Jahren (echte Pre-Revenue-Form). Die Umsatz-Vorabentscheidung zaehlt deshalb weiterhin mit _nonNullCount. Gegen ein stilles Abgleiten schuetzt die UMAC-Abwesenheitsprobe im Waechter (revNN [3,2] muss unter Fix 1 bei QS bleiben)."
+  }
+ ]
+}
