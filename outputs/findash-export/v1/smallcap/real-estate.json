@@ -1,0 +1,1941 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-10-13T10:52:16.254Z",
+  "branch": "real-estate",
+  "boardStatus": "diagnostic",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 72.7,
+    "generated_at": "2026-10-13T10:44:00.703Z"
+  },
+  "profitable": [
+    {
+      "rank": 1,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "FVR",
+      "score": 79.6,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 3.397,
+        "companion": 107.9
+      },
+      "name": "FrontView REIT, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 501698816,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 82.6,
+      "scoreShrunk": 79.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 97.4,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 97.2,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 97.4,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 71.1,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 91.7,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 65.4,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 2.569214993733615,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 34.8,
+        "pctl": 1
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 2.569214993733615,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.06010781671159027,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "PINE",
+      "score": 71.6,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.198,
+        "companion": 79.5
+      },
+      "name": "Alpine Income Property Trust, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 343333952,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 73.7,
+      "scoreShrunk": 71.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 97.4,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 55.3,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 80.6,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 92.1,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 86.8,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 20.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 88.5,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 34.57579223575322,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 5.4,
+        "pctl": 0.778
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 34.57579223575322,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.40437372628938695,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 3,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "OLP",
+      "score": 63.9,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.065,
+        "companion": 65.7
+      },
+      "name": "One Liberty Properties, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 480933952,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1983,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 67.4,
+      "scoreShrunk": 63.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 76.3,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 71.1,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58.3,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 81.6,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 81.6,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 45.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 10.00203707476064,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 10.00203707476064,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.12297751093924901,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 4,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "AHRT",
+      "score": 62.4,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.026,
+        "companion": 61.4
+      },
+      "name": "AH REALTY TRUST INC",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 579291584,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 63.7,
+      "scoreShrunk": 62.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 65.8,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 23.7,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 86.1,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 76.3,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 18.4,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 79.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 42.3,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 3.604100946372246,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": {
+        "ratePct": 10.3,
+        "pctl": 0.889
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 3.604100946372246,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.022469958013609403,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 5,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "GOOD",
+      "score": 59.6,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.07,
+        "companion": 66.9
+      },
+      "name": "Gladstone Commercial Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 619110400,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2003,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 62,
+      "scoreShrunk": 59.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 86.8,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 65.8,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 75,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 86.8,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 60.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 4.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 11.271595881921437,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 9.2,
+        "pctl": 0.833
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 11.271595881921437,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.1453239758446221,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 6,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "UHT",
+      "score": 58.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.001,
+        "companion": 46.7
+      },
+      "name": "Universal Health Realty Income Trust",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 522173568,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1986,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 59.7,
+      "scoreShrunk": 58.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 28.9,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 28.9,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 41.7,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 65.8,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 55.3,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 95.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 80.8,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 0.4946115489786074,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 0.4946115489786074,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.0036631596882055195,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 7,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "REAX",
+      "score": 54.2,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.444,
+        "companion": 71.3
+      },
+      "name": "Real REMAX Group Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 567451968,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 54.6,
+      "scoreShrunk": 54.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 92.1,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.6,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 91.7,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 71.1,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 28.9,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 8.3,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 50,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 29.55689074557972,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 29.55689074557972,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.2171914502413239,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 8,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "XRN",
+      "score": 54.2,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "fcfArtefact",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.054,
+        "companion": 6.2
+      },
+      "name": "Chiron Real Estate Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 486387104,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 54.6,
+      "scoreShrunk": 54.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 55.3,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 81.6,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 52.8,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 18.4,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 39.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 87.5,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 57.7,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 2.6953537486800405,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 2.6953537486800405,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.02686758360302055,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 9,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "ILPT",
+      "score": 50.7,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "crashRisk",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.02,
+        "companion": 45.3
+      },
+      "name": "Industrial Logistics Properties Trust",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 476565568,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 50.9,
+      "scoreShrunk": 50.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 39.5,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 50,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 47.2,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 60.5,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 34.2,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 62.5,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 1.8073632657430672,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 1.8073632657430672,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.00808834966557792,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 10,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "AGNT",
+      "score": 49,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.026,
+        "companion": 26.7
+      },
+      "name": "AGNT, Inc",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 621678720,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 48.9,
+      "scoreShrunk": 49,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 81.6,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 34.2,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 30.6,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 39.5,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 44.7,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 41.7,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 73.1,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 10.74745755330715,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 10.74745755330715,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.06630042955511906,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 11,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "LAND",
+      "score": 43.3,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "lowRoic",
+        "fcfArtefact",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.098,
+        "companion": 7.4
+      },
+      "name": "Gladstone Land Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 408934688,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 41.6,
+      "scoreShrunk": 43.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 60.5,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 86.8,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 8.3,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 23.7,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 50,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 54.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 3.2205595315549784,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 15.1,
+        "pctl": 0.944
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 3.2205595315549784,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.02614438212411807,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 12,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "FRPH",
+      "score": 43.1,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.016,
+        "companion": 35.3
+      },
+      "name": "FRP Holdings, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 384733952,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1986,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 42.4,
+      "scoreShrunk": 43.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 44.7,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 60.5,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 69.4,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 23.7,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 29.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 11.5,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 2.14746543778801,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 2.14746543778801,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.01959788789601946,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 13,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "FPI",
+      "score": 41,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.107,
+        "companion": 19.6
+      },
+      "name": "Farmland Partners Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 459881536,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2014,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 40.1,
+      "scoreShrunk": 41,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 18.4,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 18.4,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 19.4,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 44.7,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 76.3,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 70.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 26.9,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": -5.65261044176707,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": -5.65261044176707,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.02931785195936132,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 14,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "AIV",
+      "score": 39.5,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.007,
+        "companion": -24.9
+      },
+      "name": "Apartment Investment and Management Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 307005248,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 1994,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 38.4,
+      "scoreShrunk": 39.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 34.2,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 13.2,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 13.9,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 13.2,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 92.1,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 75,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 34.6,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 0.5708061002178688,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 4,
+      "qSpanTage": 275,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2025-12-31",
+      "revGrowthPriorPeriodEnd": "2024-12-31",
+      "revGrowthSourcePeriodEnd": "2025-12-31",
+      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
+      "g31Shadow": {
+        "v1": {
+          "pct": 0.5708061002178688,
+          "basis": "year",
+          "periodEnd": "2025-12-31"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.007296439395027443,
+        "period": {
+          "basis": "year",
+          "periodEnd": "2025-12-31"
+        }
+      }
+    },
+    {
+      "rank": 15,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "RMR",
+      "score": 36.6,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.045,
+        "companion": 40
+      },
+      "name": "The RMR Group Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 302490784,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2015,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 33.3,
+      "scoreShrunk": 36.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 23.7,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 7.9,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 63.9,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 55.3,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 7.9,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 12.5,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": -0.7846026575668241,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": -0.7846026575668241,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.07248155386876354,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 16,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "RMAX",
+      "score": 27.2,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.043,
+        "companion": 6.6
+      },
+      "name": "RE/MAX Holdings Inc",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 681161536,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": null,
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": null,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 24.9,
+      "scoreShrunk": 27.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 13.2,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 44.7,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 25,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 28.9,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 2.6,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 37.5,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 19.2,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": -5.828178694158071,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": -5.828178694158071,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.050553444572939095,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 17,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "SEG",
+      "score": 22.2,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "fcfArtefact",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.915,
+        "companion": -31.8
+      },
+      "name": "Seaport Entertainment Group Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 302945536,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 19.5,
+      "scoreShrunk": 22.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 2.6,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 92.1,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 2.8,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 2.6,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 65.8,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 25,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 3.8,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": -13.846385769201774,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": -13.846385769201774,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.70187265917603,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 18,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "TCI",
+      "score": 17.5,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "arDivergence",
+        "burnAccelerating",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.044,
+        "companion": 14.5
+      },
+      "name": "Transcontinental Realty Investors, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 418956832,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 1985,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 47.4,
+      "scoreShrunk": 47.9,
+      "factors": {
+        "burn": 0.914,
+        "growth": 1,
+        "cycle": 0.4
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 71.1,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 76.3,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 36.1,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 34.2,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 13.2,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 58.3,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 6.307558644656819,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 6.307558644656819,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.18391959798994972,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    }
+  ],
+  "unprofitable": []
+}

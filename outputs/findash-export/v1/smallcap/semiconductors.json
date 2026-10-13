@@ -1,0 +1,560 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-10-13T10:52:16.267Z",
+  "branch": "semiconductors",
+  "boardStatus": "diagnostic",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 72.7,
+    "generated_at": "2026-10-13T10:44:00.703Z"
+  },
+  "profitable": [
+    {
+      "rank": 1,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "NVEC",
+      "score": 53.8,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.042,
+        "companion": 210.7
+      },
+      "name": "NVE Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 550566336,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1995,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 1,
+      "cohortFallback": true,
+      "scoreBase": 61.3,
+      "scoreShrunk": 53.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 90,
+          "weight": 1.7
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 30,
+          "weight": 2.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 30,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 90,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 62.5,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 90,
+          "weight": 0.8
+        },
+        {
+          "key": "dilution",
+          "pct": 90,
+          "weight": 0.7
+        }
+      ],
+      "revGrowthYoYPct": 80.74857436404154,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 80.74857436404154,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.8219812150087331,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    }
+  ],
+  "unprofitable": [
+    {
+      "rank": 1,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "MRAM",
+      "score": 49.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.081,
+        "companion": 96.4
+      },
+      "name": "Everspin Technologies, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 400557664,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 49.1,
+      "scoreShrunk": 49.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 2.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 50,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 50,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 1.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 37.5,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 50,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 41.9286417695629,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 41.9286417695629,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.4918735224586288,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "ALMU",
+      "score": 45.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 8.27,
+        "companion": -6
+      },
+      "name": "Aeluma, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 325468896,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 43.1,
+      "scoreShrunk": 45.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 10,
+          "weight": 2.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 70,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 90,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 10,
+          "weight": 1.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 12.5,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 30,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 30,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -2.6294820717131517,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-03-31",
+      "revGrowthPriorPeriodEnd": "2025-03-31",
+      "revGrowthSourcePeriodEnd": "2026-03-31",
+      "revGrowthSourcePriorPeriodEnd": "2025-03-31",
+      "g31Shadow": {
+        "v1": {
+          "pct": -2.6294820717131517,
+          "basis": "quarter",
+          "periodEnd": "2026-03-31"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.5911016949152542,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-03-31"
+        }
+      }
+    },
+    {
+      "rank": 3,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "LAES",
+      "score": 37,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "burnAccelerating",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.315,
+        "companion": 152.3
+      },
+      "name": "SEALSQ Corp",
+      "country": "Switzerland",
+      "region": "Europe",
+      "sector": "Technology",
+      "marketCap": 474603456,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 69.6,
+      "scoreShrunk": 62,
+      "factors": {
+        "burn": 0.597,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 70,
+          "weight": 2.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 90,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 70,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 70,
+          "weight": 1.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 10,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 10,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 66.21437027593116,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": {
+        "ratePct": 91.4,
+        "pctl": 1
+      },
+      "ath": {
+        "distancePct": -90.8,
+        "athDate": "2023-05-24",
+        "monthsAgo": 41,
+        "lastDate": "2026-10-12"
+      },
+      "qPunkte": 0,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2025-12-31",
+      "revGrowthPriorPeriodEnd": "2024-12-31",
+      "revGrowthSourcePeriodEnd": "2025-12-31",
+      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
+      "g31Shadow": {
+        "v1": {
+          "pct": 66.21437027593116,
+          "basis": "year",
+          "periodEnd": "2025-12-31"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 1.3149141630901289,
+        "period": {
+          "basis": "year",
+          "periodEnd": "2025-12-31"
+        }
+      }
+    },
+    {
+      "rank": 4,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "ASYS",
+      "score": 35.6,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.255,
+        "companion": 44.5
+      },
+      "name": "Amtech Systems, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 308142560,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1983,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 28.5,
+      "scoreShrunk": 35.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 30,
+          "weight": 2.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 10,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 10,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 30,
+          "weight": 1.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 87.5,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 70,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 70,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 14.450069028992175,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 14.450069028992175,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.22568988173455984,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    }
+  ]
+}

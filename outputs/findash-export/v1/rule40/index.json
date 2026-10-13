@@ -1,0 +1,111 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-10-13T10:52:13.972Z",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 72.7,
+    "generated_at": "2026-10-13T10:44:00.703Z"
+  },
+  "generatedFromSnapshots": 16275,
+  "boards": [
+    "rule40"
+  ],
+  "boardStatus": {
+    "rule40": "diagnostic",
+    "industrials": "diagnostic",
+    "materials": "diagnostic",
+    "tech-hardware": "diagnostic",
+    "semiconductors": "diagnostic",
+    "software-comm-services": "diagnostic",
+    "energy": "diagnostic",
+    "consumer-discretionary": "diagnostic",
+    "utilities": "diagnostic",
+    "consumer-staples": "diagnostic",
+    "health-care": "diagnostic",
+    "it-services": "diagnostic"
+  },
+  "counts": {
+    "rule40": {
+      "profitable": 442,
+      "unprofitable": 48
+    }
+  },
+  "rule40": {
+    "universeBasis": "routed",
+    "r40Min": 40,
+    "topN": 100,
+    "minBaseQuarterShare": 0.25,
+    "minBaseYearShare": 0.25,
+    "maxFiscalAgeDays": 550,
+    "maxFcfMarginPct": 100,
+    "minWinsorSample": 200,
+    "displayLargeMcapUsd": 1000000000,
+    "topNLarge": 300,
+    "sectorExclusions": [
+      "Financial Services",
+      "Real Estate"
+    ],
+    "softwareIndustries": [
+      "Software - Application",
+      "Software - Infrastructure",
+      "Information Technology Services",
+      "Internet Content & Information"
+    ],
+    "growthBounds": {
+      "p1": -38.60281538493589,
+      "p99": 165.91519617804877
+    },
+    "counts": {
+      "universeBasis": "routed",
+      "universe": 16300,
+      "onBoard": 9708,
+      "computable": 5637,
+      "above40": 977,
+      "exported": 490,
+      "exportedLargeCap": 408,
+      "exportedSmallCap": 82,
+      "largeCapBeforeCap": 895,
+      "smallCapBeforeCap": 82,
+      "offBoardMcapUsdDirect": 2160,
+      "offBoardMcapNull": 0,
+      "excludedNotRouted": 3189,
+      "excludedMarketCap": 1,
+      "excludedDataSuspect": 97,
+      "excludedSector": 1351,
+      "excludedOutlier": 10,
+      "excludedStale": 228,
+      "excludedNoPeriod": 1,
+      "excludedTinyBase": 29,
+      "excludedFcfAboveRevenue": 8,
+      "excludedDuplicateIssuer": 2097,
+      "noValidMargin": 3508,
+      "noGrowth": 20,
+      "noRank": 118,
+      "unreadableSnapshot": 0,
+      "missingFullBoard": 0
+    },
+    "rejected": {
+      "keinVollboard": 0,
+      "nichtGeroutet": 3189,
+      "datenSuspekt": 97,
+      "sektorAusgeschlossen": 1351,
+      "keinWachstum": 20,
+      "fcfUnterdrueckt": 108,
+      "fcfUngueltig": 3400,
+      "fcfUeberUmsatz": 8,
+      "einheitenVerdacht": 10,
+      "basisQuartalStub": 29,
+      "basisJahrStub": 6,
+      "veraltet": 228,
+      "frischeUnbekannt": 1,
+      "ohneRang": 118,
+      "snapshotUnlesbar": 0,
+      "dupEmittent": 2097,
+      "offBoardMcapUsdDirect": 2160,
+      "offBoardMcapNull": 0,
+      "marketCap": 1
+    }
+  }
+}
