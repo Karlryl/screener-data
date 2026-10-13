@@ -95,4 +95,55 @@ Genau zwei USD-Schlüssel und zwei native Identitäten kommen in der vorhandenen
 
 Die Handtabelle und der Programmcode bleiben unverändert. Die Änderung betrifft nur die bekannte Fallliste des Wächters; kein Jahreswert, Score oder Rang wird geändert. Bei Uhr `2026-10-13T12:00:00Z` sinkt der Stand vom 13.10. von zehn auf acht neue Einzelwerte und von sechs auf fünf Ereignisse. Der Stand vom 10.10. bleibt bei acht Einzelwerten und fünf Ereignissen; dort fehlt 300715.SZ noch. Beide Nachläufe enden mit Exit 0, genau bei erlaubten fünf. Faktor 8, Toleranz 1,02, `MELDEND_BIS` und Altersprüfung bleiben unverändert. Alle bisherigen 23 Eichformen bleiben erhalten; Canlon ergänzt genau eine nicht auslösende Form (24 insgesamt, acht auslösend, 16 nicht auslösend).
 
-000301.SZ bleibt ausdrücklich offen: `annualOpInc|1`, ursprünglicher Beginn 29.08., erneuerter Beginn `offenSeit = 2026-09-26`, am 13.10. 17 Tage alt. Die Sperre verhindert die Aufnahme als bekannt und nimmt den Fund aus dem Ereignisbudget. Das unveränderte Tor wird ab **27.10.2026 00:00 UTC** rot, weil es erst bei mehr als 30 vollen Tagen greift. P168f belegt keine fachliche Klärung. Vorher werden ein unabhängiger Originalbericht und die eindeutige Zuordnung von Betriebsergebnis, Geschäftsjahr 2024 und Nachbarjahren benötigt; eine native Identität allein genügt dafür nicht.
+Stand P211, durch P218 unten geklärt: 000301.SZ blieb ausdrücklich offen: `annualOpInc|1`, ursprünglicher Beginn 29.08., erneuerter Beginn `offenSeit = 2026-09-26`, am 13.10. 17 Tage alt. Die Sperre verhinderte die Aufnahme als bekannt und nahm den Fund aus dem Ereignisbudget. Das unveränderte Tor wäre ab **27.10.2026 00:00 UTC** rot geworden, weil es erst bei mehr als 30 vollen Tagen greift. P168f belegte keine fachliche Klärung. Benötigt wurden ein unabhängiger Originalbericht und die eindeutige Zuordnung von Betriebsergebnis, Geschäftsjahr 2024 und Nachbarjahren; eine native Identität allein genügt dafür nicht.
+
+## Gezielte Klärung P218 am 13.10.2026
+
+000301.SZ ist Jiangsu Eastern Shenghong (江苏东方盛虹股份有限公司). Im Snapshot vom 13.10.2026, Abruf 10:02:57.950 UTC, stimmen `meta.statementPeriods` und `annual.*Ends` für beide Ergebnisreihen überein: Index 0 ist 2025, Index 1 ist 2024 und Index 2 ist 2023, jeweils zwölf Monate bis 31.12., Währung CNY. Die Rückrechnung verwendet den gespeicherten Kurs `fxRateApplied = 0.14963564`. Die folgenden Konzernbeträge stimmen centgenau mit dem Anbieter überein.
+
+| Index / Jahr | Betriebsergebnis in CNY Yuan | Nettoergebnis der Mutteraktionäre in CNY Yuan | Originalbericht und gedruckte Seite |
+|---|---:|---:|---|
+| 0 / 2025 | −264.997.053,94 | 133.746.317,81 | [Geschäftsbericht 2025](https://static.cninfo.com.cn/finalpage/2026-04-29/1225243361.pdf), Seite 89, Einheit auf Seite 88 |
+| 1 / 2024 | −3.470.528.891,53 | −2.296.841.255,74 | [Geschäftsbericht 2024](https://static.cninfo.com.cn/finalpage/2025-04-29/1223385370.PDF), Seite 98, Einheit auf Seite 97 |
+| 2 / 2023 | 243.863.557,83 | 717.031.594,87 | [Geschäftsbericht 2023](https://static.cninfo.com.cn/finalpage/2024-04-26/1219829278.PDF), Seite 115/242, Einheit auf Seite 114 |
+
+Die Einheit lautet jeweils `单位：元`. Der Geschäftsbericht 2024 erklärt auf Seite 117 `本财务报表以人民币列示。`, also Darstellung in Renminbi. Die Originalzitate aus den Konzernrechnungen, mit zusammengezogenen Zeilenumbrüchen und unveränderten Beträgen, lauten:
+
+* 2025, Seite 89, Spalten 2025/2024: `三、营业利润（亏损以“－”号填列） -264,997,053.94 -3,470,528,891.53`; `1.归属于母公司股东的净利润 133,746,317.81 -2,296,841,255.74`.
+* 2024, Seite 98, Spalten 2024/2023: `三、营业利润（亏损以“-”号填列） -3,470,528,891.53 243,863,557.83`; `1.归属于母公司股东的净利润 -2,296,841,255.74 717,031,594.87`.
+* 2023, Seite 115, Spalten 2023/2022: `三、营业利润（亏损以“－”号填列） 243,863,557.83 500,886,016.41`; `1.归属于母公司股东的净利润 717,031,594.87 611,000,794.98`.
+
+Der gesuchte Begriff `归属于上市公司股东的净利润（元）` steht außerdem im Kennzahlenüberblick 2024 auf Seite 8 mit −2.296.841.255,74 für 2024 und 717.031.594,87 für 2023. Er entspricht dem hier verwendeten zurechenbaren Ergebnis. Der stärkste Gegencheck ist die Abgrenzung zum gesamten Konzern-Nettoergebnis: Dieses beträgt 2024 −2.283.873.644,82 CNY und ist ausdrücklich nicht der gespeicherte Wert.
+
+Der Bericht 2024 nennt auf Seite 25 schwankende Ölpreise und schwache petrochemische Nachfrage als Hintergrund. Das kurze Originalzitat `公司部分产品价差收窄导致炼化业务亏损` benennt geringere Produktspannen als Ursache der Raffinerieverluste. Damit ist das ungewöhnliche Verlustjahr belegt, Sicherheit 99 %. Eine einmalige Abschreibung als Hauptursache wird nicht behauptet.
+
+Genau ein USD-Schlüssel und eine native Identität für `annualOpInc`, Ende 31.12.2024, kommen hinzu. Der native Vergleich lautet unverändert auf zehn signifikante Stellen gerundet `[-264997053.9, -3470528892, 243863557.8]`. Bestand 163 → 164 Schlüssel, 145 → 146 native Einträge. `usdFaktor = 1` und `maxRelativeAbweichung = 0` beziehen sich auf denselben Snapshot. Alle bisherigen Einträge, Aufnahmedatum und Vergleichspopulation bleiben erhalten. Die einzige entfernte Sperre ist `000301.SZ|annualOpInc|1`, weil ihr ausdrücklich vorgesehener Quellenbeleg nun vorliegt; ihr Beginn wird nicht verschoben. Die frühere Begründung bleibt in der Versionsgeschichte und der historische Ablauf im Hinweis erhalten.
+
+**Boardwirkung: keine.** Geändert werden nur die bekannte Fallliste des Wächters, ihre Sperrliste, Dokumentation und Tests. Die Handtabelle, ihre Bibliothek, der Wächtercode und die Formeln bleiben unverändert. Kein Jahreswert, Score oder Rang ändert sich. Das Nettoergebnis wurde gegengeprüft, ist aber selbst kein Jahresausreißer und erhält keine zusätzliche Freigabe.
+
+Der neue Test `annual-spikes-p218.test.js` prüft Quellenzuordnung, Wechselkursdrift, geänderte Zentral- und Nachbarwerte, Währung, Jahr, Firma, Reihe, fehlende Autorität und die unveränderte Altersgrenze. Zwei absichtliche Bruchproben entfernen ausschließlich im Arbeitsspeicher die native Autorität beziehungsweise setzen die erledigte Sperre wieder ein; Live-Prüfsummen bleiben dabei gleich. Der bestehende Vergleich bei fehlender nativer Datierung und der exakte USD-Rückfall bleiben unverändert. Die 24 historischen Zwei-Reihen-Eichformen werden nicht geändert.
+
+Die Nachstellung verwendet ausschließlich die 16.300 Snapshots vom 13.10.2026. Der Produktionswächter wird im Arbeitsspeicher mit diesem Eingabeordner und der jeweils festgehaltenen Uhr aufgerufen, ohne Aufnahmeflag. Die Prüfsumme aller Snapshot-JSON-Dateien vor und nach beiden Nachläufen ist identisch. Der Wächtercode ist bytegleich mit dem Ausgangsstand, einschließlich aller Grenzwerte und Altersregeln.
+
+| Uhr in UTC | Neue Einzelwerte vorher → nachher | Gezählt, erlaubt 5 | Sperren vorher → nachher | Exit vorher → nachher |
+|---|---:|---:|---:|---:|
+| 13.10.2026 12:00 | 8 → 7 | 5 → 5 | 1 → 0 | 0 → 0 |
+| 27.10.2026 12:00 | 8 → 7 | 5 → 5 | 1 → 0 | 1 → 0 |
+
+Die identischen Zusammenfassungen für beide Uhren, abgesehen vom früheren Altersalarm, lauten:
+
+```text
+Vorher:
+Jahres-Ausreisser: 158 in 16300 gelesenen Snapshots · davon NEU: 8
+Handtabelle: 7 Ausreisser vor der Board-Berechnung korrigiert oder gezielt zurueckgehalten
+Zaehlwerk: roh 8 · naiver Set-Key 7 · zwei Relationen 6 · zwei Relationen ohne Sperren 5 (erlaubt 5)
+2-von-3: 1 · faktorgleich (Tol 1,02): 0 · NICHT erfasst: 1
+
+Nachher:
+Jahres-Ausreisser: 158 in 16300 gelesenen Snapshots · davon NEU: 7
+Handtabelle: 7 Ausreisser vor der Board-Berechnung korrigiert oder gezielt zurueckgehalten
+Zaehlwerk: roh 7 · naiver Set-Key 6 · zwei Relationen 5 · zwei Relationen ohne Sperren 5 (erlaubt 5)
+2-von-3: 1 · faktorgleich (Tol 1,02): 0 · NICHT erfasst: 1
+```
+
+Vorher hatte die Sperre am 13.10. ein Alter von 17 Tagen, am 27.10. von 31 Tagen; nur letzteres überschritt die unveränderte Altersgrenze. Nachher bleiben BANPU.BK, KINV-A.ST, KINV-B.ST, PCT.L und das gemeinsame Ereignis TSRYF/TWE.AX unverändert offen und meldbar. Beide Nachläufe sind grün, aber das Budget bleibt ausgeschöpft. Das Ergebnis mit der Uhr am 27.10. gilt für den geprüften Datenstand vom 13.10.; unbekannte spätere Anbieteränderungen sind damit nicht vorweggenommen.

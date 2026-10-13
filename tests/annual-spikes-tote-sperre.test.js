@@ -43,7 +43,11 @@ check('REGISTER: die zwei toten 300715.SZ-Sperren sind entfernt; jede verbleiben
   const b = require(path.join('..', 'data-health', 'annual-spikes-baseline.json'));
   const tot = (b.ausgeschlossen || []).filter((a) => a && String(a.sperrschluessel).startsWith('300715.SZ|'));
   assert.strictEqual(tot.length, 0, 'tote Sperren noch da: ' + tot.map((a) => a.sperrschluessel).join(','));
-  assert.ok(b.ausgeschlossen.length >= 1, 'Sperrliste darf durch die Bereinigung nicht leer werden (BANPU.BK, 000301.SZ bleiben)');
+  // P218 resolves the last remaining block with issuer reports; synthetic live/dead block checks above remain.
+  assert.strictEqual(b.ausgeschlossen.length, 0, 'P218 removes only the last, now sourced 000301.SZ block');
+  assert.ok(b.hinweis.includes('000301.SZ|annualOpInc|1 ENTFERNT') && b.hinweis.includes('1223385370.PDF'));
+  assert.strictEqual(b.nativeIdentitaeten.filter(a => a.ticker === '000301.SZ' && a.reihe === 'annualOpInc'
+    && a.nativ.periode === '2024-12-31').length, 1, 'removal requires the sourced FY2024 identity');
   for (const a of b.ausgeschlossen) {
     assert.ok(/^[^|]+\|[^|]+\|\d+$/.test(a.sperrschluessel) && typeof a.hinweis === 'string' && a.hinweis.length > 20 && /^\d{4}-\d{2}-\d{2}$/.test(a.seit), JSON.stringify(a).slice(0, 120));
   }
