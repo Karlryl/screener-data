@@ -61,7 +61,7 @@ check('E4: Bestand konsistent (anzahl == faelle.length, keine Duplikate, sortier
   assert.strictEqual(b.anzahl, b.faelle.length);
   assert.strictEqual(new Set(b.faelle).size, b.faelle.length);
   assert.deepStrictEqual(b.faelle, [...b.faelle].sort());
-  assert.strictEqual(b.faelle.length, 163); // P211 adds two sourced Canlon series for one FY2024 event; all previous keys remain.
+  assert.strictEqual(b.faelle.length, 164); // P218 adds one sourced Shenghong FY2024 OpInc case; all 163 previous keys remain.
 });
 
 if (fail) { console.log('FAIL: annual-spikes-q1-eichformen (' + fail + ')'); process.exit(1); }
