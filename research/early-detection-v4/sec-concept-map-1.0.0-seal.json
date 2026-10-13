@@ -1,0 +1,18 @@
+{
+  "schema": "early-detection-sec-concept-map-seal/v1",
+  "version": "FEM-SEC-CONCEPT-MAP@1.0.0",
+  "sealedAt": "2026-08-08T20:00:00Z",
+  "status": "LOCAL_SEAL_PASS_REMOTE_COMMIT_AND_INDEPENDENT_AUDIT_PENDING",
+  "artifact": {
+    "path": "research/early-detection-v4/sec-concept-map-1.0.0.json",
+    "sha256": "192919af3d6e494b93a27c6cb889a198b65ad473913669689bd37eecec20872f"
+  },
+  "coverageEvidence": {
+    "path": "reports/early-detection/sec-concept-coverage-2009-2012.json",
+    "reportSha256": "9a4cae681ee1782ad67e930d375e5eb82c27a2f16379434ba7955d4cebbe3f33",
+    "verdict": "COVERAGE_PASS_MAP_FROZEN_PERIOD_EXTENSION_PENDING"
+  },
+  "outcomeStateAtSeal": "No real-data growth outcome labels or GQS-vs-growth timing results had been materialized.",
+  "changeControl": "Any semantic change requires a new map version and a new protocol seal before real growth outcomes are opened.",
+  "gateDecision": "The semantic map itself is locally frozen; conceptMapFrozen remains red in the confirmatory readiness contract until the artifact is bound to an authorized remote commit, full-period coverage passes and an independent semantic audit passes."
+}

@@ -1,0 +1,120 @@
+{
+  "schema": "early-detection-gate-decision/v6",
+  "generatedAt": "2026-08-10T19:20:30.727Z",
+  "gate": "appendOnlySecStore",
+  "status": "TECHNICAL_CHECKPOINT_PASS_OFFICIAL_GATE_RED_UNTIL_EXACT_INPUT_BINDING",
+  "gatePassed": false,
+  "technicalCheckpointPassed": true,
+  "verdict": "The complete append-only SEC component checkpoint is locally reproduced, includes all valid FSD revisions and all required original/amended filing populations, and is byte-identically bound to authorized origin/main history. The official execution gate remains red because the sealed protocol additionally requires a run-bound artifact attesting the exact authorized full-input hash and gate-specific component hashes.",
+  "checkpoint": {
+    "path": "reports/early-detection/append-only-sec-store-checkpoint-2026-08-10-v2.json",
+    "fileSha256": "bba43cefcc0f2cb0bb6102ff1a8bccaf3684112c8f2ac5550d0daa2db2161cb4",
+    "localCheckoutFileSha256": "42c3b0618269e21f57d04f65ce0ca26b3864335cab50b2f60ebf478ddcb07cd7",
+    "localCheckoutLineEndingsNormalized": true,
+    "reportSha256": "c3815a4248508b08505d10efefecfa1324337ac1271474b1828bd8f94c6360fb",
+    "checkpointCommit": "4055c8a2212cc4ce691fc319826b960b58b0544c",
+    "remoteRef": "origin/main",
+    "remoteCommit": "ebdd42e575b23e212fb7c420edf4890e72e1338d",
+    "checkpointCommitIsRemoteAncestor": true,
+    "remoteBytesMatch": true
+  },
+  "coverage": {
+    "snapshot": {
+      "observationFiles": 952,
+      "distinctPayloads": 794,
+      "distinctPayloadBytes": 12930873291,
+      "observationIndexSha256": "08c70789b6191fe8766d88f896e2445bfd1345397d57115881342a2ce03584ba",
+      "payloadIndexSha256": "1d93184de1c41d3214c80db4e2848104965da2c1ac010ec7d0c823d0affa2b32"
+    },
+    "revisionCoverage": {
+      "secFsd": {
+        "cdxUniqueDigestCaptures": 179,
+        "invalidTruncatedDuplicateCaptures": 1,
+        "validDistinctPayloadRevisions": 178,
+        "locallyVerifiedValidPayloadRevisions": 178,
+        "missingValidPayloadRevisions": 0,
+        "truncatedDuplicateDigest": "3TP45IUUW5FNEIPMYIJW7RLTGWJTIRVE"
+      },
+      "form8aNationalExchangeRegistration": {
+        "forms": {
+          "8-A12B": 16395,
+          "8-A12B/A": 1922
+        },
+        "populationEvents": 18317,
+        "verifiedPayloads": 18317,
+        "explicitNonPayloadOutcomes": 0
+      },
+      "form25And15CorporateActions": {
+        "form25Family": {
+          "25": 1823,
+          "25/A": 18,
+          "25-NSE": 25028,
+          "25-NSE/A": 416
+        },
+        "form15Family": {
+          "15-12B": 3400,
+          "15-12B/A": 56,
+          "15-12G": 5719,
+          "15-12G/A": 194,
+          "15-15D": 7011,
+          "15-15D/A": 188,
+          "15F-12B": 198,
+          "15F-12B/A": 5,
+          "15F-12G": 143,
+          "15F-12G/A": 10,
+          "15F-15D": 139,
+          "15F-15D/A": 4
+        },
+        "populationEvents": 44352,
+        "verifiedPayloads": 44352,
+        "explicitNonPayloadOutcomes": 0
+      },
+      "effectNotices": {
+        "populationEvents": 115932,
+        "verifiedPayloads": 115929,
+        "explicitNonPayloadOutcomes": 3,
+        "nonPayloadOutcomesByStatus": {
+          "NOT_FOUND": 3
+        }
+      }
+    },
+    "originalFilingCaptureCheckpoint": {
+      "captureRows": 178601,
+      "captureIndexSha256": "21ba358f9fbe6f72cbd78e9eaf75d85cd362d047a5c08088e11b90cee4b2e945",
+      "verifiedPayloadFiles": 101881,
+      "verifiedPayloadBytes": 1577838623,
+      "verifiedPayloadIndexSha256": "119e98f8b40ebe4a5ffb5ae42cd318ae3e845b5121f3aa83fa6967a046b12678",
+      "familyCounts": {
+        "corporateActions": {
+          "events": 44352,
+          "verified": 44352,
+          "notFound": 0
+        },
+        "effectNotices": {
+          "events": 115932,
+          "verified": 115929,
+          "notFound": 3
+        },
+        "form8aFilings": {
+          "events": 18317,
+          "verified": 18317,
+          "notFound": 0
+        }
+      }
+    }
+  },
+  "officialGateRequirementsStillMissing": [
+    "exactAuthorizedFullInputSha256",
+    "runBoundAppendOnlySecStoreComponentSha256",
+    "remoteExecutionGateArtifactOnAuthorizedHistory"
+  ],
+  "separateExecutionGatesStillRed": [
+    "independentAuditPassed"
+  ],
+  "interpretation": "The SEC component store is technically complete and immutable. That does not by itself satisfy the stricter run-bound gateEvidenceRule or the separate independent human audit gate.",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "7666f4e26d97febf7b0c402776df94d7ec5e3261fd6592a21dbdff733691dd6f"
+}

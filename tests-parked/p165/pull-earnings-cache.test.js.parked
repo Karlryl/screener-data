@@ -1,0 +1,47 @@
+'use strict';
+// EXPECTED RED until DL3 pull-yahoo-11 / DL8 F-04 is fixed.
+// Pins actual processOne earnings forcing and FTS cache choice, lines4267-4269,4399-4495.
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { fixture, snapshot, root, NOW } = require('./dl23-pull-fixture.js');
+async function runCase(kind) {
+  const ticker = 'DL13EARN', old = snapshot(ticker);
+  const calendar = kind === 'no-report' ? {} : { [ticker]: { date: '2026-09-27' } };
+  const f = fixture({ snapshots: [old], calendar, env: { STALE_QUARTER_RELOAD: '0' }, ftsFails: kind === 'fresh-fetch-fails' || kind === 'pre-report-fetch-fails' });
+  const cachePath = path.join(root, 'fundamentals-cache', ticker + '.json');
+  if (kind === 'post-report-cache') {
+    const cache = JSON.parse(f.files.get(cachePath)); cache.cachedAt = '2026-09-28T02:17:00Z';
+    f.files.set(cachePath, Buffer.from(JSON.stringify(cache)));
+  }
+  if (kind === 'fresh-fetch-fails') f.files.delete(cachePath);
+  const before = f.files.get(path.join(f.out, ticker + '.json'));
+  const m = await f.run(), fetched = f.calls.filter(call => call[1].includes('/')).length;
+  if (kind === 'no-report') {
+    assert.equal(m.results[0].status, 'price-only'); assert.equal(fetched, 0);
+    assert.equal(f.stored(ticker).meta.fundamentalsAsOf, old.meta.fundamentalsAsOf);
+  } else if (kind === 'post-report-cache') {
+    assert.equal(m.results[0].status, 'ok'); assert.equal(fetched, 0, 'control: cache already fetched after report can be reused');
+  } else if (kind === 'fresh-fetch-fails') {
+    assert.equal(m.n_failed, 1); assert.equal(m.n_ok, 0);
+    assert.deepEqual(f.files.get(path.join(f.out, ticker + '.json')), before, 'failed refresh must not advance a data clock');
+  } else if (kind === 'pre-report-fetch-fails') {
+    const stored = f.stored(ticker);
+    assert.equal(stored.annual.annualRev[0].value, old.annual.annualRev[0].value, 'failed fresh fetch must retain known revenue');
+    assert.equal(stored.timeseries.revenueQ[0].value, old.timeseries.revenueQ[0].value, 'failed fresh fetch must retain known quarter');
+    assert.equal(stored.meta.fundamentalsAsOf, old.meta.fundamentalsAsOf, 'an old cache plus failed fresh provider must not mark fundamentals refreshed');
+    assert.equal(stored.meta.fundamentalsTimeseriesFetchedAt, old.meta.fundamentalsTimeseriesFetchedAt);
+  } else {
+    assert.equal(m.results[0].status, 'ok');
+    assert.equal(fetched, 4, 'pre-report cache must not satisfy an earnings-triggered full refresh');
+    assert.equal(f.stored(ticker).meta.fundamentalsTimeseriesFetchedAt, new Date(NOW).toISOString());
+    assert.equal(f.stored(ticker).timeseries.revenueQEnds[0], '2026-06-30');
+  }
+}
+(async () => {
+  let failed = 0;
+  for (const kind of ['no-report', 'post-report-cache', 'fresh-fetch-fails', 'pre-report-cache', 'pre-report-fetch-fails']) {
+    try { await runCase(kind); console.log('PASS ' + kind); }
+    catch (error) { failed++; console.error('FAIL ' + kind + ': ' + error.message); }
+  }
+  process.exitCode = failed ? 1 : 0;
+})().catch(error => { console.error(error); process.exitCode = 1; });

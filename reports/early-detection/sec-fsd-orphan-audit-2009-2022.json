@@ -1,0 +1,46 @@
+{
+  "schema": "early-detection-pit-orphan-audit/v1",
+  "status": "PASS_QUARANTINED_SOURCE_INCONSISTENCY",
+  "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-fsd-compact.sqlite",
+  "payloadsWithOrphans": 1,
+  "orphanRows": 1953,
+  "memberCounts": {
+    "num.txt": 1953
+  },
+  "reasonCounts": {
+    "missing_submission": 1953
+  },
+  "distinctMissingAccessions": 4,
+  "topMissingAccessions": [
+    {
+      "accession": "0001193125-13-087869",
+      "rows": 844
+    },
+    {
+      "accession": "0001084048-13-000002",
+      "rows": 547
+    },
+    {
+      "accession": "0001193125-13-087866",
+      "rows": 452
+    },
+    {
+      "accession": "0001524777-13-000093",
+      "rows": 110
+    }
+  ],
+  "payloadEvidence": [
+    {
+      "quarter": "2013q1",
+      "payloadSha256": "329f4e3e40c0351001037ad1dea3fd28c07100f6f6d6d64d5998ea01b060a790",
+      "rows": 1953,
+      "sequenceSha256": "cccf0356297ac113e24415540a8199cf7a338c7da0a9b816133b513be69d138f"
+    }
+  ],
+  "hashVerification": "PASS",
+  "usableTableOverlap": 0,
+  "issues": [],
+  "decision": "Rows remain preserved in the immutable raw ZIP and the hash-bound orphan table, but are excluded from facts and presentations because their filing identity has no same-payload submission evidence.",
+  "confirmatoryUseAllowed": false,
+  "reportSha256": "df02740c90fb433d2ae632f7edcd0dde446e7a355da9a9f55463f48252c25f48"
+}

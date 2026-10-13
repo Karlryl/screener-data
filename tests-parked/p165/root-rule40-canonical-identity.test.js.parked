@@ -1,0 +1,41 @@
+'use strict';
+// EXPECTED RED until DL8 F-28 / DL3 write-rule40-export filename-identity finding is fixed.
+// Branch: sammleKandidaten derives the join key from the escaped filename rather than meta.ticker.
+// Existing rule40-reserved-name-snapshot.test.js explicitly pins the wrong _CON identity.
+const assert=require('node:assert/strict'),{copy}=require('./dl23-exports-copy-helper');
+const names=copy('lib/snapshot-fs.js',['safeSnapshotFilename','WINDOWS_RESERVED']);
+assert.equal(names.safeSnapshotFilename('CON'),'_CON.json');
+assert.equal(names.safeSnapshotFilename('A/B'),'A_B.json');
+const prelude=`
+const path=require('node:path');
+const rows=[{ticker:'AAA',score:71,marketCap:2000},{ticker:'CON',score:73,marketCap:3000},{ticker:'A/B',score:75,marketCap:4000}];
+const samples={'AAA.json':{meta:{ticker:'AAA'}},'_CON.json':{meta:{ticker:'CON'}},'A_B.json':{meta:{ticker:'A/B'}}};
+for(const [i,ticker] of ['',null,undefined,123,{}].entries())samples['INVALID'+i+'.json']={meta:{ticker}};
+const fs={readdirSync:()=>Object.keys(samples)};
+const readJson=p=>({schema:SCHEMA,generated_at:'2026-10-07T00:00:00Z',branches:['synthetic']});
+const readJsonOrNull=p=>p.includes('full')?{profitable:rows,unprofitable:[]}:samples[path.basename(p)];
+const isMetadataSnapshot=()=>false,prepareYahooQ4Snapshot=s=>s;
+const route=()=>({action:'route',formulaId:'synthetic'}),datenSuspekt=()=>false;
+const axesFns={revGrowthLevel:()=>50},revGrowthLeg=()=>({pct:50}),metricVal=()=>10,norm=()=>[];
+const fcfMargeVertrauenswuerdig=()=>true,einheitenVerdacht=()=>false,basisQuartal=()=>null,basisJahr=()=>null;
+const neuestesQuartalsEnde=()=>Date.parse('2026-06-30');
+const fcfMarginStmtFY=()=>null,r40SchattenTor=()=>null,behoerdenSchutz=()=>null,behoerdenTabelle=()=>new Map();
+const captureSnapshot=()=>({}),ebitdaMargePct=()=>null,periodeDesBeins=()=>null,annualPairsShadowForSnapshot=()=>null;
+const mcapBelegt=(joined)=>joined?joined.row.marketCap:null;
+const issuerDedupGroups=()=>[],issuerDedupComparator=()=>0;
+`;
+const M=copy('scripts/write-rule40-export.js',['sammleKandidaten','SCHEMA','SEKTOR_AUSSCHLUSS','MAX_FCF_MARGIN_PCT','MIN_BASE_QUARTER_SHARE','MIN_BASE_YEAR_SHARE','MAX_FISCAL_AGE_DAYS','istZahl'],prelude);
+const result=M.sammleKandidaten({v1Dir:'synthetic',snapshotsDir:'synthetic-snapshots'});
+const control=result.kandidaten.find(k=>k.ticker==='AAA');
+assert.equal(control.onBoard,true);assert.equal(control.row.score,71);assert.equal(control.marketCap,2000);
+assert.equal(result.kandidaten.filter(k=>['AAA','CON','A/B'].includes(k.meta.ticker)).length,3,'all three valid identities pass unrelated selection controls');
+console.log('PASS ordinary identity, board score and candidate-count controls');
+if(!process.argv.includes('--controls')){
+ const failures=[];
+ const observed=result.kandidaten.filter(k=>['CON','A/B'].includes(k.meta.ticker)).map(k=>({ticker:k.ticker,onBoard:k.onBoard,score:k.row?.score??null}));
+ try{assert.deepEqual(observed,[{ticker:'CON',onBoard:true,score:73},{ticker:'A/B',onBoard:true,score:75}],
+  'escaped storage filenames must retain canonical identity and the corresponding full-board score');}catch(e){failures.push(e.message);}
+ const invalid=result.kandidaten.filter(k=>typeof k.meta.ticker!=='string'||!k.meta.ticker.trim());
+ try{assert.equal(invalid.length,0,'empty, missing and non-string canonical identities must not become candidate tickers');}catch(e){failures.push(e.message);}
+ assert.deepEqual(failures,[],'canonical identity and metadata validation both remain required');
+}

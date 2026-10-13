@@ -1,0 +1,87 @@
+# A/B-Messung Financials-Notbehelf (computed-margin) — DISCOVERY, score-neutral.
+#
+# Spezifikation: _SPEC-AB-MESSUNG-NOTBEHELF-2026-07-30.md (Karl-Kreuzerl M, 10.08.2026).
+# Nimmt das fertige Snapshot-Paket EINES Tageslaufs und rechnet es zweimal durch:
+# einmal normal, einmal so, als haette der Notbehelf nie gerechnet. Kein Datenabruf,
+# kein Eingriff in den Tageslauf, kein Commit, kein Push.
+#
+# Warum manuell (workflow_dispatch) und nicht im Tageslauf: die Messung beantwortet eine
+# einmalige Frage fuer Rat und Gericht. Ein Dauerlauf wuerde Runner-Zeit fuer eine Zahl
+# verbrennen, die sich nur aendert, wenn jemand am Notbehelf arbeitet.
+name: A/B Computed-Margin (Messung)
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'run_id des daily-pull-Laufs, dessen "snapshots"-Artefakt gemessen wird'
+        required: true
+        type: string
+      min_snapshots:
+        description: 'Selbstpruefung A: Mindest-Bestand (Tageslauf ~12.500; nur fuer bewusst nicht-belastbare Probelaeufe senken)'
+        required: false
+        default: '10000'
+        type: string
+
+permissions:
+  contents: read
+  actions: read        # gh run download
+
+jobs:
+  messung:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Das fertige Snapshot-Paket des angegebenen Tageslaufs (daily-pull.yml:1016ff,
+      # Artefaktname "snapshots", 7 Tage haltbar).
+      - name: Snapshot-Artefakt laden
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          mkdir -p ab-snapshots
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name snapshots --dir ab-snapshots
+          echo "Geladen: $(find ab-snapshots -name '*.json' | wc -l) Dateien"
+
+      # Die Selbstpruefungen A (Bestandsgroesse), B (gibt es computed-margin ueberhaupt),
+      # C (Determinismus) und die Ruecknahme-Probe stecken im Skript und brechen fail-loud ab.
+      - name: A/B-Messung
+        env:
+          MIN_SNAPSHOTS: ${{ inputs.min_snapshots }}
+        run: |
+          node scripts/ab-computed-margin.js ab-snapshots \
+            --min-snapshots="$MIN_SNAPSHOTS" \
+            --selbsttest \
+            --out=ab-report.md
+
+      - name: Report als Artefakt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ab-computed-margin-report
+          path: ab-report.md
+          retention-days: 30
+
+      # Waechter gegen den eigenen Blast-Radius: dieser Lauf darf NICHTS am Repo
+      # hinterlassen. Ein veraenderter Arbeitsbaum in getrackten Pfaden heisst, dass
+      # die Messung doch in den Lauf-Pfad geschrieben hat -> rot.
+      - name: Kein Schreiben in getrackte Pfade
+        if: always()
+        run: |
+          if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+            echo "::error::Die Messung hat getrackte Dateien veraendert — sie ist nicht mehr score-neutral."
+            git status --porcelain --untracked-files=no
+            exit 1
+          fi
+          echo "Arbeitsbaum sauber: keine getrackte Datei angefasst."

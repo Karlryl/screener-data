@@ -1,0 +1,131 @@
+O1-Fingerabdruck-Zensus ueber /home/runner/work/screener-data/screener-data/snapshots (Ebene: snapshot.timeseries, auf Melde-Waehrung zurueckgerechnet)
+  Snapshots .................... 16044
+  ohne brauchbaren FX-Kurs ..... 0
+  belastbar (>=4 Umsatzquartale) ... 13890
+  Fingerabdruck-Klassen (>=2) .. 2614
+  davon divergente issuerKeyLoose 110
+  davon mit Mailaender Bein .... 847
+     davon divergent ........... 37
+  MELDEPFLICHTIG (§6.5) ........ 39
+
+Meldepflichtig = divergente Emittenten-Schluessel UND (Aktienzahl-Abstand > 20 % ODER verschiedenes Land).
+Das ist die Drift-Spur, nicht das Tor: dieses Skript entscheidet nichts.
+
+── Meldepflichtige Klassen ────────────────────────────────────────
+  000039.SZ + 2039.HK + CNINF
+      Namen: "China International Marine Containers (Group) Co., Ltd." / "China International Marine Containers (Group) Co., Ltd." / "CHINA INTERNATIONAL MARINE-H"
+      Land: China  Aktienzahl-Abstand: 0.255
+  000333.SZ + MGCLY
+      Namen: "Midea Group Co., Ltd." / "Midea Group Co., Ltd./ADR"
+      Land: China  Aktienzahl-Abstand: 0.907
+  0B2.DE + 1BGA.MI + BAWAY + BG.VI + BWAGF
+      Namen: "BAWAG Group AG" / "BAWAG Group AG" / "BAWAG Group AG/ADR" / "BAWAG Group AG" / "BAWAG Group AG"
+      Land: Austria /   Aktienzahl-Abstand: unbekannt  [Mailaender Bein]
+  1276.HK + 600276.SS + JHPCY
+      Namen: "Jiangsu Hengrui Pharmaceuticals Co.,Ltd" / "Jiangsu Hengrui Pharmaceuticals Co.,Ltd" / "Jiangsu Hengrui Pharmaceuticals Co., Ltd./ADR"
+      Land: China  Aktienzahl-Abstand: 0.980
+  1BMW.MI + BMW.DE + BMW.VI + BMW.WA + BMWKY + BYMOF
+      Namen: "Bayerische Motoren Werke Aktiengesellschaft" / "Bayerische Motoren Werke Aktiengesellschaft" / "Bayerische Motoren Werke Aktiengesellschaft" / "Bayerische Motoren Werke Aktiengesellschaft" / "Bayerische Motoren Werke AG/ADR" / "Bayerische Motoren Werke Aktiengesellschaft"
+      Land: Germany  Aktienzahl-Abstand: 0.970  [Mailaender Bein]
+  1ENR.MI + ENR.DE + ENR.SW + ENR.VI + SMEGF + SMERY
+      Namen: "Siemens Energy AG" / "Siemens Energy AG" / "Siemens Energy AG" / "Siemens Energy AG" / "Siemens Energy AG" / "Siemens Energy AG/ADR"
+      Land: Germany  Aktienzahl-Abstand: 0.800  [Mailaender Bein]
+  1FWON.MI + FWONA + FWONB + FWONK
+      Namen: "Liberty Media Corporation Series C Liberty Formula One" / "Formula One Group" / "Formula One Group" / "Liberty Media Corporation Series C Liberty Formula One"
+      Land: United States  Aktienzahl-Abstand: 0.989  [Mailaender Bein]
+  1GALD.MI + GALD.SW + GALD.VI + GALDY + GDERF
+      Namen: "Galderma Group AG" / "Galderma Group AG" / "Galderma Group AG" / "Galderma Group AG/ADR" / "Galderma Group AG/ADR"
+      Land: Switzerland  Aktienzahl-Abstand: 0.800  [Mailaender Bein]
+  1HOLM.MI + HOLM-A.ST + HOLM-B.ST
+      Namen: "Holmen AB Class B" / "Holmen AB (publ)" / "Holmen AB (publ)"
+      Land: Sweden  Aktienzahl-Abstand: 0.582  [Mailaender Bein]
+  1PUIG.MI + PUGBY + PUIG.MC + PUIGF
+      Namen: "Puig Brands, S.A. Class B" / "Puig Brands S.A./ADR" / "Puig Brands, S.A." / "Puig Brands S.A./ADR"
+      Land: Spain  Aktienzahl-Abstand: 0.500  [Mailaender Bein]
+  1TEL.MI + TEL2-A.ST + TEL2-B.ST
+      Namen: "Tele2 AB Class B" / "Tele2 AB (publ)" / "Tele2 AB (publ)"
+      Land: Sweden  Aktienzahl-Abstand: 0.986  [Mailaender Bein]
+  1ZGU.MI + 1ZUS.MI + Z + ZG
+      Namen: "Zillow Group, Inc. Class A" / "Zillow Group, Inc. Class C" / "Z" / "Zillow Group, Inc."
+      Land: United States  Aktienzahl-Abstand: 0.765  [Mailaender Bein]
+  2076.HK + BZ
+      Namen: "Kanzhun Limited" / "KANZHUN LIMITED - American Depository Shares"
+      Land: China  Aktienzahl-Abstand: 0.500
+  2593.T + 25935.T + ITOEF
+      Namen: "Ito En, Ltd." / "ITO EN LTD NPV PRF STOCK TYPE 1" / "Ito En, Ltd."
+      Land: Japan  Aktienzahl-Abstand: 0.633
+  300308.SZ + 3308.HK
+      Namen: "Zhongji Innolight Co., Ltd." / "ZJ INNOLIGHT"
+      Land: China  Aktienzahl-Abstand: 0.951
+  300433.SZ + 6613.HK + LNTCY
+      Namen: "Lens Technology Co., Ltd." / "Lens Technology Co., Ltd." / "Lens Technology Co., Ltd./ADR"
+      Land: China  Aktienzahl-Abstand: 0.985
+  300750.SZ + 3750.HK + CYATY
+      Namen: "Contemporary Amperex Technology Co., Limited" / "Contemporary Amperex Technology Co., Limited" / "Contemporary Amperex Technology Co., Limited/ADR"
+      Land: China  Aktienzahl-Abstand: 0.950
+  4684.T + OBICY + OBIIF
+      Namen: "OBIC Co.,Ltd." / "OBIC Co., Ltd./ADR" / "OBIC Co.,Ltd."
+      Land: Japan  Aktienzahl-Abstand: 0.500
+  600031.SS + 6031.HK + SNHIY
+      Namen: "Sany Heavy Industry Co.,Ltd" / "Sany Heavy Industry Co.,Ltd" / "Sany Heavy Industries Co., Ltd./ADR"
+      Land: China  Aktienzahl-Abstand: 0.915
+  7267.T + HMC
+      Namen: "Honda Motor Co., Ltd." / "HMC"
+      Land: Japan  Aktienzahl-Abstand: 0.667
+  7701.T + SHMXY + SHMZF
+      Namen: "Shimadzu Corporation" / "Shimadzu Corporation/ADR" / "Shimadzu Corporation"
+      Land: Japan  Aktienzahl-Abstand: 0.500
+  AERO + AERO.MX
+      Namen: "Grupo Aeroméxico, S.A.B. de C.V." / "Grupo Aeromexico, S.A.B. de C.V"
+      Land: Mexico  Aktienzahl-Abstand: 0.900
+  ARIS.MI + ARSTY
+      Namen: "Ariston Holding N.V." / "Ariston Holding N.V./ADR"
+      Land: Italy  Aktienzahl-Abstand: 0.672
+  AVIO.MI + AVVSY
+      Namen: "Avio S.p.A." / "Avio S.p.A./ADR"
+      Land: Italy  Aktienzahl-Abstand: 0.750
+  CPLE3.SA + ELPC
+      Namen: "Companhia Paranaense de Energia - COPEL" / "Companhia Paranaense de Energia (COPEL) American Depositary Shares (each representing four (4) Common Shares)"
+      Land: Brazil  Aktienzahl-Abstand: 0.750
+  DLMAF + DLMAY + DOL.TO
+      Namen: "Dollarama Inc." / "Dollarama Inc./ADR" / "Dollarama Inc."
+      Land: Canada  Aktienzahl-Abstand: 0.900
+  EBCRY + EMBRAC-B.ST + THQQF
+      Namen: "Embracer Group AB/ADR" / "Embracer Group AB (publ)" / "Embracer Group AB (publ)"
+      Land:  / Sweden  Aktienzahl-Abstand: unbekannt
+  EGCO.BK + EYGPF + EYUUF
+      Namen: "Electricity Generating Public Company Limited" / "Electricity Generating Public Company Limited" / "Electricity Generating Public Co Limited/ADR"
+      Land: Thailand  Aktienzahl-Abstand: unbekannt
+  EMBJ + EMBJ3.SA
+      Namen: "Embraer S.A. Common Stock" / "Embraer S.A."
+      Land: Brazil  Aktienzahl-Abstand: 0.750
+  GGB + GGBR3.SA
+      Namen: "GGB" / "Gerdau S.A."
+      Land: Brazil  Aktienzahl-Abstand: 0.425
+  IFCN.SW + IFCNF + IFHLY
+      Namen: "INFICON Holding AG" / "Inficon Holding AG/ADR" / "Inficon Holding AG/ADR"
+      Land: Switzerland  Aktienzahl-Abstand: 0.900
+  KINV-A.ST + KINV-B.ST + KNEVF
+      Namen: "Kinnevik AB" / "Kinnevik AB" / "KINNEVIK AB - B"
+      Land: Sweden  Aktienzahl-Abstand: 0.861
+  MDCOY + MEDC.JK + PTGIF
+      Namen: "PT Medco Energi Internasional Tbk/ADR" / "PT Medco Energi Internasional Tbk" / "PT Medco Energi Internasional Tbk"
+      Land: Indonesia  Aktienzahl-Abstand: 0.990
+  PINFRA.MX + PINFRA_L.MX + PYOIF + PYYIF
+      Namen: "Promotora y Operadora de Infraestructura, S. A. B. de C. V." / "Promotora y Operadora de Infraestructura, S. A. B. de C. V." / "Promotora y Operadora de Infraestructura, S. A. B. de C. V." / "PROMOTORA Y OPERAD DE INF-L"
+      Land: Mexico  Aktienzahl-Abstand: 0.848
+  PNDORA.CO + PNDRY
+      Namen: "Pandora A/S" / "Pandora A/S / ADR"
+      Land: Denmark  Aktienzahl-Abstand: 0.875
+  R902.DE + RCWLY + ROCK-A.CO + ROCK-B.CO + ROCK.VI
+      Namen: "Rockwool A/S" / "Rockwool A/S/ADR" / "Rockwool A/S" / "Rockwool A/S" / "Rockwool A/S"
+      Land: Denmark /   Aktienzahl-Abstand: unbekannt
+  SIM + SIMEC_B.MX
+      Namen: "Grupo Simec, S.A.B. de C.V. American Depositary Shares" / "Grupo Simec, S.A.B. de C.V."
+      Land: Mexico  Aktienzahl-Abstand: 0.667
+  SPIE.PA + SPIE.VI + SPIIY + SPIWF
+      Namen: "SPIE SA" / "SPIE SA" / "SPIE SA/ADR" / "SPIE SA"
+      Land: France  Aktienzahl-Abstand: 0.750
+  VBBR3.SA + VBREY
+      Namen: "Vibra Energia S.A." / "Vibra Energia S.A./ADR"
+      Land: Brazil  Aktienzahl-Abstand: 0.501

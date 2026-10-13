@@ -1,0 +1,64 @@
+{
+  "schema": "early-detection-file-list-supersede-record/v1",
+  "protocol": "FEM-SEC-US@1.0.0",
+  "supersededBy": "FEM-SEC-US@1.2.0",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "status": "active",
+  "recordedAt": "2026-08-30",
+  "title": "The three shared implementation files of the 1.0.0 file list were superseded at the 1.2.0 cut -- recorded 22 days late",
+  "authority": {
+    "discovery": "Orchestrator ENTSCHIED 63 (2026-08-30 01:35), first run of the vault seal-drift checker: 'NEU: early-detection/1.0.0 DRIFT 3/7 - lib/early-detection.js + audit + test stehen exakt auf den 1.2.0-Siegelwerten (ueberlappende Siegel, superseded beim 1.2.0-Schnitt 08.08., KEIN Supersede-Record existiert; Ancestor-Pin bccdb61f intakt, Repo-Tooling strukturell blind dafuer).'",
+    "ruling": "Same entry: 'NICHT stummschalten' -- the overlap gets a formal record rather than a mute.",
+    "dispatch": "Orchestrator ENTSCHIED 110 (2026-08-30 08:55), seal slot (2).",
+    "delegation": "Standing delegation (verdict + ratification)."
+  },
+  "sealReference": {
+    "manifest": "protocol/early-detection/1.0.0/hash-manifest.json",
+    "manifestSha256": "bccdb61fa9ba73ee578049e9a4069a9db106bf90270d2b0fc6f167227c7cec42",
+    "sealedAt": "2026-08-08T00:00:00+02:00",
+    "manifestUntouched": true,
+    "manifestUntouchedReason": "This manifest's own byte hash IS the ancestor pin. It is quoted in protocol/early-detection/1.2.0/preregistration.json (identity.lastSealedAncestorManifestSha256), in 1.2.0/hash-manifest.json, and hardcoded as PARENT_MANIFEST_SHA256 in scripts/early-detection-audit.js. Editing one byte of it would break the ancestor chain of every descendant. It stays exactly as it is; this record sits beside it.",
+    "ancestorPinVerified": "bccdb61fa9ba73ee578049e9a4069a9db106bf90270d2b0fc6f167227c7cec42 recomputed 2026-08-30 -- intact."
+  },
+  "finding": {
+    "what": "Three of the seven files in the 1.0.0 file list are shared with FEM-SEC-US@1.2.0. When 1.2.0 was sealed on 2026-08-08 (055061f50f) it re-pinned those three at new values. From that moment the 1.0.0 file list described a state that no longer existed, with no record saying so.",
+    "why_invisible": "No tool ever looked. scripts/early-detection-audit.js verifies the 1.2.0 manifest only; of 1.0.0 it checks a single thing -- the byte hash of the manifest FILE (PARENT_MANIFEST_SHA256), never the files it lists. The overlap therefore could not surface from inside the repo; it took the vault-side, shape-based drift checker to see it.",
+    "evidenceIntact": "The four files that belong to 1.0.0 itself -- README.md, fixtures.json, preregistration.json, readiness-and-blockers.md -- are byte-identical with their seal (verified 2026-08-30). The preregistered content of 1.0.0 has not moved; only the shared implementation moved forward.",
+    "notADrift": "This is a supersede, not tampering: the observed values are not arbitrary, they are exactly the values that the successor version sealed. That is what makes it recordable rather than a finding."
+  },
+  "supersededFiles": [
+    {
+      "path": "lib/early-detection.js",
+      "sealedIn100": "ba8476539a8b88f4f10230bc00ab4ba081bae59c9149097377e8a7bb9b832ef4",
+      "supersedingSeal": "FEM-SEC-US@1.2.0",
+      "supersedingSha256": "54bd56cf0356bbe1a97f6ff6d8b8559c2d3b721e1216d0f7b774e916da612017",
+      "currentSha256": "54bd56cf0356bbe1a97f6ff6d8b8559c2d3b721e1216d0f7b774e916da612017"
+    },
+    {
+      "path": "scripts/early-detection-audit.js",
+      "sealedIn100": "63212957230a7905c4c8c5603c51e8fd88232ae08524a055a366b661846b90e5",
+      "supersedingSeal": "FEM-SEC-US@1.2.0",
+      "supersedingSha256": "cebd5c19cc167a89ab054bf21f76bb86c84836249aa568df20c9bd191770f030",
+      "currentSha256": "4bf0bbafead56b5c56327279ae970932e2c39fee3389f7e99044e76df3f8bbb9",
+      "note": "Two hops, both recorded: 1.0.0 -> 1.2.0 at the 2026-08-08 cut, and 1.2.0 -> the value entered in protocol/early-detection/1.2.0/drift-record-2026-08-30.json when verifyManifest learned to read that record. currentSha256 differs from supersedingSha256 by design; the live pin for this file is the 1.2.0 drift record, not this one."
+    },
+    {
+      "path": "tests/early-detection.test.js",
+      "sealedIn100": "7c799c8855baa381e90bc85df3a480ff740e596b81d9122b6a483da8d8bf00b0",
+      "supersedingSeal": "FEM-SEC-US@1.2.0",
+      "supersedingSha256": "732cf9165492846a775496cc011585af3bdd2c5a45cc6b98124ab86a23b32e7b",
+      "currentSha256": "732cf9165492846a775496cc011585af3bdd2c5a45cc6b98124ab86a23b32e7b"
+    }
+  ],
+  "unchangedFiles": [
+    { "path": "protocol/early-detection/1.0.0/README.md", "sha256": "7df11305856a2c832a77779da97cc29adc5f27dd670600e7b2bfc8a8ec09ec57" },
+    { "path": "protocol/early-detection/1.0.0/fixtures.json", "sha256": "98bcd8f2e2c00e392a33fa6e0b918b9406b75b2118f941d4d395357cfc37e711" },
+    { "path": "protocol/early-detection/1.0.0/preregistration.json", "sha256": "69a25d4652d876e3a5a56ab35bb9ea2bb2dacb0c799a725c6f590df0140f74d7" },
+    { "path": "protocol/early-detection/1.0.0/readiness-and-blockers.md", "sha256": "f9b2fc0585dd42089a3725d5c69a8879d8edf906029e9efe54e8e5bce47ec5a5" }
+  ],
+  "rule": "For the three files listed above, FEM-SEC-US@1.0.0 is no longer the governing pin -- FEM-SEC-US@1.2.0 is, together with its drift record. The 1.0.0 file list stays readable as history and is never rewritten. The four files that are 1.0.0's own evidence remain governed by the 1.0.0 seal at the values quoted here; if one of them ever moves, that is a genuine finding and no record covers it.",
+  "consequence": "No repository tooling changes because of this record: verifyManifest keeps checking the 1.0.0 manifest exactly as before, by its own byte hash. The record exists so that the overlap is documented where a reader of 1.0.0 will find it, and so the vault drift checker can classify the 3/7 finding as resolved instead of repeating it every morning.",
+  "relatedRecords": [
+    "protocol/early-detection/1.2.0/drift-record-2026-08-30.json"
+  ]
+}

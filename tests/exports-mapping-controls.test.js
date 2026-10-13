@@ -1,0 +1,22 @@
+'use strict';
+// Pins previously unproven precedence paths; no DL3/DL8 numerical finding is claimed.
+const assert = require('node:assert/strict');
+const { copy } = require('./dl23-exports-copy-helper');
+const { getRegion } = copy('lib/region-mapping.js');
+const { classifySubProfile } = copy('lib/sub-profile.js');
+assert.equal(getRegion(null), 'OTHER');
+assert.equal(getRegion({ meta: { region: 'EU', exchange: 'NYQ', currency: 'JPY' } }), 'EU');
+assert.equal(getRegion({ meta: { region: 'Nasdaq', exchange: 'TYO' } }), 'US');
+assert.equal(getRegion({ meta: { region: 'unknown', exchange: 'TYO', currency: 'USD' } }), 'APAC');
+assert.equal(getRegion({ price: { currency: 'SAR' }, meta: { exchange: 'unknown' } }), 'EM');
+assert.equal(getRegion({ meta: { currency: 'EUR' } }), 'EU');
+assert.equal(getRegion({}), 'OTHER');
+const profile = stock => classifySubProfile(stock).id;
+assert.equal(profile(null), 'OTHER');
+assert.equal(profile({ manualSubProfile: 'BANK', meta: { ticker: 'NVDA' } }), 'BANK');
+assert.equal(profile({ manualSubProfile: 'unknown', meta: { ticker: ' nvda ', sector: 'Healthcare' } }), 'HARDWARE');
+assert.equal(profile({ meta: { sector: 'Healthcare', industry: 'software bank' } }), 'HEALTHCARE');
+assert.equal(profile({ meta: { sector: 'Financial Services', industry: 'Regional Banks' } }), 'BANK');
+for (const [industry, expected] of [['Credit Services','FINTECH'],['Asset Management','FINTECH'],['Pharma','HEALTHCARE'],['Defense','INDUSTRIAL'],['Payments','FINTECH'],['Semiconductors','HARDWARE'],['Information Technology Services','SAAS'],['E-commerce','MARKETPLACE'],['Beverages','CONSUMER_STAPLES'],['Oil & Gas','ENERGY'],['REIT','REIT']]) assert.equal(profile({ meta: { industry } }), expected, industry);
+assert.equal(profile({}), 'OTHER');
+console.log('PASS region and sub-profile precedence/fallback controls');

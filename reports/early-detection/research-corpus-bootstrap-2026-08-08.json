@@ -1,0 +1,61 @@
+{
+  "schema": "early-detection-research-corpus-bootstrap/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "status": "PARTIAL_NOT_SIGNAL_ELIGIBLE",
+  "verifiedAt": "2026-08-08T17:32:49.258Z",
+  "dataRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4",
+  "registry": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\Jarvis\\Knowledge\\Trading\\growth-screener\\frueherkennung-v4\\SOURCE_REGISTRY.csv",
+  "registrySources": 55,
+  "capturedSources": 39,
+  "capturedSourceIds": [
+    "L001", "L002", "L003", "L004", "L005", "L006",
+    "S005", "S006", "S007", "S008", "S009", "S010", "S012", "S013", "S014", "S015",
+    "S022", "S023", "S024", "S025", "S027", "S028", "S029", "S030", "S031", "S032",
+    "S033", "S034", "S036", "S037", "S040", "S042", "S043", "S044", "S045", "S046",
+    "S047", "S048", "S049"
+  ],
+  "unresolvedSources": 16,
+  "unresolvedSourceIds": [
+    "S001", "S002", "S003", "S004", "S011", "S016", "S017", "S018",
+    "S019", "S020", "S021", "S026", "S035", "S038", "S039", "S041"
+  ],
+  "storeVerification": {
+    "status": "PASS",
+    "observations": 168,
+    "accepted": 56,
+    "quarantined": 112,
+    "researchSourcePayloads": 39,
+    "secCompanyfactsPayloads": 129,
+    "distinctPayloads": 168,
+    "distinctPayloadBytes": 301876035,
+    "issues": [],
+    "observationIndexSha256": "94f6213860d3677bce29315deba5f0095e874e06ed6a11bebed4b3fac102aab8",
+    "payloadIndexSha256": "7738968ecabc557e8ab81f9a70e0d94ea556edb1c87ab3a6a19431aaee1a7d85"
+  },
+  "qualityDecision": {
+    "capturedResearchPayloadsAccepted": 0,
+    "capturedResearchPayloadsQuarantined": 39,
+    "reason": "The inherited source registry records publication dates at day precision. FEM-SEC-US@1.2.0 requires a timezone-qualified source_published_at plus observed_at for these source classes. A day is not silently promoted to a timestamp.",
+    "claimMatrixUnblocked": false,
+    "confirmatoryUseAllowed": false
+  },
+  "sourceCorrections": [
+    {
+      "sourceId": "S026",
+      "correction": "The invalid nlr.gov hostname was corrected to the current official nrel.gov page.",
+      "captureStatus": "UNRESOLVED_LOCAL_DNS"
+    },
+    {
+      "sourceId": "S032",
+      "correction": "The FDA slug was corrected to include drug-and-biological-product-submissions.",
+      "captureStatus": "CAPTURED_QUARANTINED"
+    },
+    {
+      "sourceId": "S049",
+      "correction": "The OECD landing page was replaced with the official direct report PDF.",
+      "captureStatus": "CAPTURED_QUARANTINED"
+    }
+  ],
+  "decision": "The corpus is preserved and hash-verifiable but cannot be called signal-eligible. Exact publication timestamps must be established from source metadata or each affected observation must remain quarantined.",
+  "productiveGqsModified": false
+}

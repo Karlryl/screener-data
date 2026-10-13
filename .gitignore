@@ -1,0 +1,162 @@
+node_modules/
+*.log
+.DS_Store
+.env
+
+# ── Generated HTML artifacts ─────────────────────────────────────────
+# methods-report.html is deprecated (replaced by outputs/methodology-report.md).
+# 27 MB per run × daily commits = repo bloat. Regenerate locally with:
+#   node generate-methods-report.js (if it still exists)
+methods-report.html
+
+# dashboard.html is a supplementary view not linked from index.html.
+# Gitignored to reduce daily commit size. Still generated on the runner.
+dashboard.html
+
+# ── fundamentals-cache ───────────────────────────────────────────────
+# 28-day local cache; not needed in git history, rebuilt on each runner.
+fundamentals-cache/
+
+# Tag 133k: SEC XBRL cache lives on the runner; only _manifest.json is committed
+external-data/sec-xbrl/*.json
+!external-data/sec-xbrl/_manifest.json
+
+# Workstream A1: backfill-form345.js downloads + extracts quarterly form345
+# zips here, then deletes them per-quarter. Ignore the staging dir so a
+# crash mid-extract never commits a multi-MB zip / TSV dump.
+external-data/tmp/
+# Workstream A1: deep insider history (8 quarters of every Form-3/4/5 txn for
+# watchlist issuers) is ~70 MB/quarter → ~500 MB full. It's a runner-side /
+# local bootstrap feeding the routine-vs-opportunistic feature, rebuildable
+# from the SEC quarterly datasets — do NOT commit it. The lightweight 180-day
+# daily cache (sec-form4-cache.json) IS committed.
+external-data/sec-form4-history.json
+
+# Tag 134 — Phase 5.1: archive of old methods-history / picks-history / prices snapshots
+external-data/methods-history-archive/
+external-data/picks-history-archive/
+external-data/prices-archive/
+
+# Tag 134 — Phase 5.2: methodHistory subtree moved to method-history-state.json (repo root).
+# F-SM-001: file is now committed so trend signals accumulate across CI runs.
+# (Previously gitignored, which caused _loadMethodHistory to return {} every run.)
+
+# F-SM-009: prevent accidental commits of tmp files from atomic write pattern
+*.tmp
+*.tmp.*
+
+# Tag 150: outputs/ contains daily-regenerated reports; committed via gh-pages only.
+# .gitkeep keeps the directory tracked so scripts can write without mkdir.
+outputs/
+!outputs/.gitkeep
+
+# Tag 151: snapshots/ is regenerated fresh every run — no need to commit 3528 files.
+# _manifest.json is kept so the quality gate can read n_ok after a run.
+snapshots/
+!snapshots/_manifest.json
+snapshots/_manifest-full.json
+
+# F-12 (04.08.2026): Eingangsordner des Karteileichen-Filters im merge-Job — dorthin
+# laedt download-artifact die Shard-Segmente, scripts/filter-snapshot-merge.js uebernimmt
+# von dort nur die autorisierten Staende nach snapshots/. Der Ordner MUSS ignoriert sein:
+# der Commit-Schritt in daily-pull.yml faehrt `git add -A` und wuerde sonst taeglich
+# ~12.500 Snapshot-JSONs (30 MB) ins Repo schreiben — genau der Bloat, den Tag 151
+# fuer snapshots/ abgestellt hat.
+snapshots-eingang/
+
+# 5.2 WEG 1b: der getrennte Small-Cap-Snapshot-Store, genau wie snapshots/ oben NICHT
+# committet (gleicher Grund: taeglicher Git-Commit von hunderten Snapshot-JSONs waere
+# Repo-Bloat, exakt was Tag 151 fuer snapshots/ vermeiden wollte). KORRIGIERT (Tag 432,
+# Council-Verdikt Auflage 4/CI-Job): der urspruengliche Plan "Artefakt-Handoff an den
+# Scoring-Job" waere gescheitert — GitHub-Actions-Artefakte sind pro Workflow-RUN
+# gescopt, ein separater Workflow (smallcap-pull.yml) kann sie dem scoring-Job in
+# daily-pull.yml nicht zustellen. Stattdessen: GH-Actions-CACHE (repo-weit, nicht
+# run-gescopt) unter einem stabilen Key — smallcap-pull.yml schreibt, der scoring-Job
+# in daily-pull.yml restored (ein einzelner zusaetzlicher Cache-Restore-Schritt, gleiche
+# Technik wie der bestehende "Restore Coverage-Floor Baseline"-Schritt dort).
+snapshots-smallcap/
+
+# Tag 280 (0.2/0.9 Sharding): transient per-run merge-job scratch. The merge job
+# downloads every shard's manifest into shard-manifests/ (flat shard-<i>.json) to
+# recount ONE full-universe _manifest.json, and the pull runner stages its own
+# manifest into shard-manifest-out/. Both are runner-ephemeral — without these
+# ignores the merge job's `git add -A` would commit 17 shard-<i>.json to main and
+# churn them every run. Same rationale as snapshots/ / outputs/ / pipeline-health/.
+shard-manifests/
+shard-manifest-out/
+
+# Tag 168: pipeline-health/ is transient per-run state written by the 3 pipeline scripts.
+# Consumed by scripts/pipeline-health-check.js on the same runner, not needed in git history.
+pipeline-health/
+
+# Tag 199: precision-audit tool — local-only, not committed per /audit skill spec.
+# Karl runs this manually to inspect borderline classifications.
+audit-classifications.js
+audit-report.json
+
+# Tag 203: score-history/ IS committed per design doc §2 (4147 tickers × 4.5 KB
+# ≈ 18.7 MB, well under the 50 MB GitHub cap). The directory is created and
+# populated by CI (snapshot-score-history step in daily-pull.yml). Do not
+# pre-populate locally — let the first cron run own the seed commit. No
+# ignore line here; this comment exists so future contributors don't add a
+# blanket `score-history/` ignore (it would silently break the dashboard's
+# ΔScore/sparkline rendering on every fresh clone). If size ever crosses
+# 50 MB (universe > 6000 tickers) revisit by capping entries to 14 for
+# tickers outside HG ∪ QC ∪ PRE_BREAKOUT (design §2 mitigation).
+
+# Tag 246: screener-detail.json is the lazy-loaded heavy per-row payload
+# (results/scoreHistory/r40rxHistory/scoreDrivers/annual, ~44 MB) split out of
+# screener.html (#5 data-slice: 50 MB → ~5 MB initial load). It is regenerated
+# every run by generate-screener.js and deployed to gh-pages via the daily-pull
+# "Deploy to GitHub Pages" step (cp screener-detail.json _site/) — NOT committed
+# to main, to avoid ~44 MB/day of git-history bloat. The dashboard fetches it
+# lazily on first modal open; main only carries the slim screener.html.
+screener-detail.json
+
+.gen-formulas.js
+.extract-calib.js
+.probe*.js
+.hg-synthesis*.json
+
+# Session-runtime lock for the scheduled-tasks harness — machine/session-local state
+# (sessionId/pid/acquiredAt), never a work product. Was accidentally tracked and rewritten
+# by every session + the CI `git add -A`, causing perpetual churn on main. Untracked here.
+.claude/scheduled_tasks.lock
+
+# Masterplan 2.3 / 2.8-A12 — GG7(c)-Store: PIT-Voll-Snapshots vor der Kompaktierung.
+# Liegt außerhalb des CI-Checkouts (Betriebs-Sache, Muster analog prices-max/).
+# board-history/ selbst BLEIBT getrackt (GG7b, Messgrundlage) — nur das Archiv nicht.
+board-history-archive/
+
+# T564-B4: Runner-Scratch des F-17a-Publish. _public/ baut scripts/stage-public-data.js
+# (schlanke Vintages vor dem Push), _ghp/ ist der gh-pages-Klon des Deploy-Schritts.
+# Beide liegen im Arbeitsbaum, waehrend im selben Job noch nach main committet wird —
+# ein kuenftiges `git add -A` statt des gezielten `git add board-history/` wuerde sie
+# sonst mit ins Repo nehmen (gleiche Klasse wie snapshots-eingang/ oben).
+_public/
+_ghp/
+# Tag 971: Runner-Scratch des Statusmarker-Jobs (laufstatus). _ghp_status/ ist sein
+# eigener gh-pages-Klon, _vorgaenger.json der geholte Vorlauf-Marker.
+_ghp_status/
+_vorgaenger.json
+
+# 2.2: Max-Preis-Historie lebt AUSSERHALB des CI-Checkouts (GG7c) — nur der kleine
+# committete Vertrag external-data/ath-state.json fliesst in CI/Export.
+prices-max/
+
+# Python-Bytecode der Studien-Skripte (entsteht beim Import der Bau-Module)
+__pycache__/
+
+# Studie 2.0.0 / R2: der Schluessel der versiegelten Endtest-Datei lebt AUSSERHALB
+# des Repos, unter $EARLY_DETECTION_DATA_ROOT/schluessel/endtest.key — er wird nie
+# committet, sonst waere die Verschluesselung Theater. Diese Muster sind das Netz
+# fuer den Fall, dass ihn jemand doch einmal ins Repo kopiert; sie fangen ausserdem
+# die Panel-Dateien selbst ab (mehrere GB, gehoeren nie in die Historie).
+*.key
+/schluessel/
+panel-*.sqlite
+panel-*.sqlite.enc
+
+# Generated by scripts/f24-streak.js for manual status checks (hand runs, no workflow calls it; reproducible from run history)
+/reports/f24-streak.md
+/reports/f24-streak.json

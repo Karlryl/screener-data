@@ -1,0 +1,26 @@
+O1-Fingerabdruck-Zensus ueber /home/runner/work/screener-data/screener-data/snapshots (Ebene: snapshot.timeseries, auf Melde-Waehrung zurueckgerechnet)
+  Snapshots .................... 16108
+  ohne brauchbaren FX-Kurs ..... 0
+  belastbar (>=4 Umsatzquartale) ... 14067
+  Fingerabdruck-Klassen (>=2) .. 2756
+  davon divergente issuerKeyLoose 12
+  davon mit Mailaender Bein .... 876
+     davon divergent ........... 6
+  MELDEPFLICHTIG (§6.5) ........ 4
+
+Meldepflichtig = divergente Emittenten-Schluessel UND (Aktienzahl-Abstand > 20 % ODER verschiedenes Land).
+Das ist die Drift-Spur, nicht das Tor: dieses Skript entscheidet nichts.
+
+── Meldepflichtige Klassen ────────────────────────────────────────
+  0107.HK + 601107.SS + SEXHF
+      Namen: "Sichuan Expressway Group Company Limited" / "Sichuan Expressway Group Company Limited" / "Sichuan Expressway Company Limited"
+      Land: China  Aktienzahl-Abstand: 0.586
+  1AMGN.MI + 4332.HK + AMG.DE + AMGN + AMGN.VI
+      Namen: "Amgen Inc." / "AMGEN-T" / "Amgen Inc." / "Amgen Inc." / "Amgen Inc."
+      Land: United States /   Aktienzahl-Abstand: unbekannt  [Mailaender Bein]
+  1MSFT.MI + 4338.HK + MSF.DE + MSFT + MSFT.SW + MSFT.TO + MSFT.VI + MSFT.WA
+      Namen: "Microsoft Corporation" / "MICROSOFT-T" / "Microsoft Corporation" / "Microsoft Corporation" / "Microsoft Corporation" / "Microsoft Corporation" / "Microsoft Corporation" / "Microsoft Corporation"
+      Land: United States /   Aktienzahl-Abstand: unbekannt  [Mailaender Bein]
+  CPLE3.SA + ELPC
+      Namen: "Companhia Paranaense de Energia - COPEL" / "Companhia Paranaense de Energia"
+      Land: Brazil  Aktienzahl-Abstand: 0.750

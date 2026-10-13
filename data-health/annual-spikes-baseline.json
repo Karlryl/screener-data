@@ -1,0 +1,2792 @@
+{
+ "hinweis": "Bestand der bekannten Jahres-Ausreisser, aufgenommen am 2026-07-29, ERWEITERT 2026-08-04 (Tag 583): Exchange-Kanal (Tag 579/828cba41a9) brachte heute erstmals produktiv +4529 Ticker, davon 22 mit Jahres-Ausreissern (Erstaufnahmen, keine Vorgeschichte moeglich) + 3 bereits laenger gefuehrte Ticker (CORZ, LUMN, 1CYTH.MI) mit plausibel geprueften Werten (CORZ deckt sich mit der bereits bekannten Zweitnotierung 1CORZ.MI; LUMN/1CYTH.MI sind dieselbe Zahl fuer Lumen Technologies und ihre Mailand-Zweitnotierung, das etablierte Zwillingsnotierungs-Muster wie bei 4335.HK/INTC.MI). 601068.SS (China Aluminum International Engineering) war am 2026-08-04 als offener Verdachtsfall NICHT aufgenommen worden — GEKLAERT am 2026-08-09 (Jahresbericht 2023: Wertberichtigungen bei 中铝国际, -2945,6 Mio CNY OpInc / -2658 Mio CNY NetInc, NetInc exakt), daher jetzt im Bestand. ERWEITERT 2026-08-09 (Tag 599) um die 8 NEUEN Faelle aus Run 31237778038 (08.08.), alle extern an Primaerquellen als reale Sonderjahre belegt: NEOG OpInc[1]/NetIncome[1] (FY2025 zum 31.05.2025, Goodwill-Impairment 1059,3 Mio USD aus dem 3M-Food-Safety-Geschaeft, exakt lt. IR-Release/10-K); SMTC OpInc[2] (FY2024 zum 28.01.2024, Impairment Sierra Wireless, exakt lt. 10-K); GNK OpInc[1] (FY2024, realer Dry-Bulk-Zyklus, exakt lt. Q4/FY2024-Release); NHP OpInc[1] (FY2024, Internalisierungsgebuehr 98,2 Mio USD des ehemaligen Healthcare Trust, <1 % Abweichung lt. 10-K); MDV.WA NetIncome[1] (GJ Feb2024-Jan2025, Modivo/CCC-Rekordjahr, 925,3 Mio PLN, <0,1 % Abweichung lt. Notoria/Bankier); 601068.SS OpInc[2]/NetIncome[2] wie oben. Der Waechter scripts/watch-annual-spikes.js meldet nur, was DAZUKOMMT. Ein Fall verschwindet von selbst, sobald der Snapshot repariert ist — dann faellt er hier beim naechsten bewussten Neuaufnehmen raus. ERWEITERT 2026-08-19 (Tag 996) um 6 der 7 NEUEN Faelle aus Run 32279520654 (19.08., Handlauf), jeder einzeln an einer vom Store UNABHAENGIGEN Quelle belegt: AAP annualOpInc[1] -713 Mio USD (FY2024, Ende 28.12.2024, Jahr der Worldpac-Veraeusserung) — identisch mit den SEC-XBRL-Zahlen im Repo (external-data/sec-annual-bulk.jsonl, CIK 0001158449: Rev 9094 / OpInc -713 / NetInc -336 Mio), Yahoo hatte die Reihe zwischen 18.07. und 19.08. auf den Filing-Stand revidiert (vorher -404 bei Nachbarn 161/55, deshalb bis dahin unauffaellig); WOOF annualNetIncome[2] -1280,210 Mio USD (FY2023, Ende 03.02.2024, Goodwill-Abschreibung Petco) — auf den Dollar identisch mit external-data/sec-secannual-smallcap.json (CIK 0001826470); CXO.AX annualNetIncome[1] -146,247 Mio USD (GJ per 30.06.2024, Finniss-Impairment) — /0,7064641 FX = -207,013 Mio AUD, exakt der von Yahoo nativ und von stockanalysis.com unabhaengig gemeldete Statutory-Verlust; DIGIS.MC annualOpInc[1] 485,168 / annualNetIncome[1] 343,801 Mio USD (GJ2024) — /1,1587486 FX = 418,7 / 296,7 Mio EUR, das Jahr des FTTH-Netzverkaufs (Operacion Sota, bis 750 Mio EUR), extern gemeldeter Jahresgewinn 294,7 Mio EUR; AHG annualOpInc[1] -166,304 Mio USD (GJ per 31.03.2025) — Nettoverlust desselben Jahres extern mit 134,98 Mio USD bei 14,78 Mio USD Umsatz und Going-Concern-Vermerk belegt, Yahoo liefert den Store-Wert heute live identisch (kein eingefrorener Fehlabruf); Vorbehalt festgehalten: stockanalysis.com weist fuer dasselbe Jahr -3,92 Mio operating income aus, d. h. die Vendoren ordnen die Wertberichtigungen unterschiedlich zu — das Sonderjahr selbst ist davon unberuehrt. NICHT aufgenommen: BANPU.BK annualOpInc[2] (6003 Mio, GJ2023). Kein Fehlabruf im Cigna-Sinn (Yahoo liefert denselben Wert live), aber NICHT ENTSCHEIDBAR: die Jahresreihe widerspricht sich selbst (annualRev 27850 Mio gegen revenueTTM 5536 Mio USD im selben Snapshot, Faktor 5) und dem Emittenten (Banpu meldet 2022 als Rekordjahr mit 1162 Mio USD Gewinn, waehrend die Reihe 2023 als Ausreisser zeigt und 2022 klein) — der Verdacht liegt eher auf dem NACHBARJAHR 2022 als auf 2023. Bleibt bewusst offen und damit rot-faehig, wie 601068.SS am 04.08. | 2026-09-05 (Master-Auflage Weg C): zwei tote Sperren 300715.SZ (annualOpInc|1, annualNetIncome|1) entfernt - sie trafen seit dem Lauf 33951123754 keinen Fund mehr (JA-6); tote Sperren sind ab jetzt ein Fehler (toteSperrenUrteil). Klassifikation der 30 neuen Ereignisse: Vault agent-reports/ja-klassifikation-2026-09-05.md - 0 Neuverankerungen (kein A-Beleg im Haus), 5 REAL-Kandidaten (B), 4 SUSPECT, 21 OPEN; faelle unveraendert. | 2026-09-06 (Weg C, Grad A - Master-Brief 20260906 / Worker 3): 5 der 30 NEUEN Ereignisse aus Run 33951123754 (7 Zeilen inkl. Zwillingsnotizen) je an einer vom Store UNABHAENGIGEN Primaerquelle belegt; Signaturen aus dem Snapshots-Artefakt des Laufs 33967836117 (CI-Population), Rueckrechnung Wert / fxRateApplied des Snapshots: 1VIV.MI NetIncome[1] -6982,2 Mio USD = -6.004 Mio EUR x FX 1,162926 (exakt; Zwilling der bereits gefuehrten VVU.DE-Zeile) - Vivendi SE GJ2024, Ergebnis Konzernanteil -6.004 Mio EUR nach dem Spin-off (Entkonsolidierungsverluste Canal+/Louis Hachette/Havas -5.875 Mio EUR) lt. Pressemitteilung 06.03.2025; 4005.T + SOMMF NetIncome[2] -1994,9 Mio USD = -311.838 Mio JPY x FX 0,006397216 (exakt) - Sumitomo Chemical GJ2023 (per 31.03.2024), Net income attributable to owners of the parent (311,8) Mrd JPY (Petro-Rabigh-Wertberichtigungen) lt. Key Figures of Consolidated Financial Results 15.05.2024; ASTERDM.BO NetIncome[1] 569,4 Mio USD = 5.377,83 Cr INR x FX 0,0105870515 (exakt) - Aster DM Healthcare GJ2025 (per 31.03.2025), Jahresgewinn inkl. aufgegebener GCC-Sparte (Veraeusserung 03.04.2024, Gewinn ~5.148 Cr INR) lt. gepruefte Ergebnisse 20.05.2025 (NSE-Outcome, Deloitte unmodified opinion) / Capital Market 21.05.2025 (NP 5377.83 Cr vs 129.28 Vorjahr); OCI.AS NetIncome[1] 4978,8 Mio USD (Berichtswaehrung USD, FX 1) - OCI N.V. GJ2024, Reported net profit attributable to shareholders 12M 2024 Total 4.978,8 Mio USD (Gewinne aus Verkauf IFCo 1.769,0 / Fertiglobe 2.392,9 / Clean Ammonia 776,2) lt. H2 2024 Results Report 14.03.2025, Nachbarn 183,7 / -392,0 ebenfalls exakt; SESG.PA + SGBAF NetIncome[2] -1047,6 Mio USD = -905 Mio EUR x FX 1,1575414 (exakt) - SES S.A. GJ2023, Net loss attributable to owners of the parent (905) Mio EUR (Impairments 3.676 Mio EUR) lt. Full Year 2023 Results 28.02.2024. PREIS (JA-7): werte-Signaturen driften beim naechsten Voll-Pull des Tickers mit dem FX-Satz; der Fall laeuft dann LAUT als NEU auf und wird mit demselben Beleg neu verankert - kein stilles Verschwinden. NICHT verankert (kein A-Beleg): 4 SUSPECT (BANPU.BK gesperrt, KINV-A.ST, MFSL.BO, VPLAY-A.ST) und 21 OPEN, Waechter bleibt rot. | 2026-09-06 (Weg C, Master-Entscheid C2/ii 13:15): die sechs RA7-Zeilen KINV-A.ST (annualOpInc|2, annualRev|2), MFSL.BO (annualOpInc|1, annualRev|1) und VPLAY-A.ST (annualNetIncome|2, annualOpInc|2) sind laut Klassifikation agent-reports/ja-klassifikation-2026-09-05.md SUSPECT (Gleichfaktor-/Einheiten- bzw. Vorzeichen-/Feld-Artefakte) und bleiben NUR als Eich-Formen des Gleichfaktor-Detektors (Ratsbeschluss Q1 03.09., tests/annual-spikes.test.js Q1-3 liest den Bestand als Eichmenge) im Bestand - NICHT als bekannte Faelle. Sie tragen die Signaturen vom 30.08.; die heutigen Funde dieser Ticker laufen seit dem FX-Drift als NEU (05.09.: 30 NEU) und werden durch diese Zeilen nicht verankert. Ein Entfernen (Weg C) setzt voraus, dass die Eichmenge als eingefrorenes Fixture vom 30.08. gefuehrt wird - Gerichtspunkt (Kipp-Bedingung Q1-5), nicht Nachtlauf. Waechter: tests/annual-spikes-q1-eichformen.test.js. | 2026-09-19 (Weg C, Master-Entscheid Daylauf Lane A): die Sperre BANPU.BK|annualOpInc|2 ENTFERNT - der Fall hat sich aufgeloest, nicht der Entscheid. Beleg aus der CI-Population des Laufs 35319115201 (Artefakt 'snapshots', BANPU.BK.json, meta.fetchedAt 2026-09-11T07:53:06Z): annualOpInc lautet jetzt 215,95 / 303,99 / 482,74 / 2810,29 Mio - KEINER der drei Sperrwerte (-28259000 | 6003496000 | 524803000) steht noch in der Reihe, die Quelle hat sie revidiert. Damit ist der 2023er Ausreisser von 6003 Mio weg und mit ihm der Widerspruch, der den Fall am 19.08. NICHT ENTSCHEIDBAR machte; auch an keinem anderen Index liegt der Wert (Fall 1 des Fix-Briefs agent-reports/autotriage-2026-09-12-run34573562886.md, nicht Fall 2). Der Waechter meldete die Sperre seit dem 11.09.-Pull taeglich als tot (zuletzt Lauf 35319115201); sie wurde NICHT wegen des Alters-Tors verlaengert, sondern am Fall geschlossen. Waechter: tests/annual-spikes-tote-sperre.test.js. | 2026-09-26 (D1(c), Master-Auftrag Nachtlauf): Sperre 000301.SZ|annualOpInc|1 ERNEUERT, offenSeit 2026-08-29 -> 2026-09-26 (das Alters-Tor waere am 29.09. gefallen). Der Fall besteht unveraendert fort (nur FX-Drift, Beleg im Eintrag) und ist NICHT geklaert; faelle unveraendert. | ERWEITERT 2026-10-11 (P168d, Pruefdatum je Quelle 2026-10-11, Datenstand 2026-10-10): vier einzeln am Originalbericht bestaetigte Sonderjahre, sechs Fallschluessel einschliesslich drei Sofina-Notierungen; keine Gesamtneuaufnahme. AHG annualOpInc, Berichtsende 2025-03-31, -166304352 USD; Quelle https://www.sec.gov/Archives/edgar/data/1702318/000121390025076862/ea0250582-20f_akso.htm, Abschlussseite F-7 (Waehrung Seite iii), Originalzitat: \"LOSS FROM CONTINUING OPERATIONS\". CREDIA.AT annualNetIncome, Quellenjahr per 2024-12-31, -325459000 EUR; Quelle https://www.crediabank.com/media/sarlu5f3/annual-report-2024-2025-03-15t005950.pdf, Druckseite 260/PDF-Seite 261, Originalzitat: \"Equity owners of the Bank\"; fehlende Snapshot-Datierung bleibt null. SFNXF/SOF.BR/SOF.VI annualNetIncome, Berichtsende 2024-12-31, 1359505000 EUR; Quelle https://www.sofinagroup.com/~/media/Files/S/Sofina-Corp/annual-report/2024/annual-report-2024-print-out-pdf.pdf, Druck-/PDF-Seite 92, Originalzitat: \"SHARE OF THE GROUP IN THE RESULT\"; beide Nachbarn 113001000 EUR (2025) und -104267000 EUR (2023) bestaetigt, ergaenzende Quelle https://www.sofinagroup.com/~/media/Files/S/Sofina-Corp/annual-report/2025/annual-report-2025-print-out-pdf.pdf, Druck-/PDF-Seite 107, Originalzitat: \"SHARE OF THE GROUP IN THE RESULT\". SYNC.L annualNetIncome, Berichtsende 2025-03-31, -143160000 GBP; Quelle https://www.synconaltd.com/media/0mzdlits/syn-ar25-web.pdf, Druckseite 107/PDF-Seite 109, Originalzitat: \"(Loss)/profit after tax\". Die nativen Nachbarwerte verankern die vorgefundene Dreiergruppe; AHGs, Credias und Synconas juengerer Nachbar ist mit diesen Quellen nicht zusaetzlich bestaetigt. usdFaktor=1 und maxRelativeAbweichung=0 beziehen sich auf denselben Oktober-Snapshot, nicht auf eine Migration alter Werte. Die sechs F-Ereignisse und zwei U-Ereignisse werden hier nicht freigegeben. P168f, geprüft am 11.10.2026: Viaplays Nettoverlust 2023 ist ein belegtes Sonderjahr, keine Anbieterpanne. Quelle: https://www.viaplaygroup.com/sites/viaplay-corp/files/pr/202503276922-1.pdf?ts=1743174178, Geschäftsbericht 2024, Seite 32, \"Net income for the year 106 –9,747\" (2024/2023, Mio. SEK); Vergleich 2022 +323 Mio. SEK auf Seite 130. Der bestehende VPLAY-A.ST-Nettoergebnis-Schlüssel erhält genau eine native Identität für 2023-12-31, SEK [106000000,-9747000000,323000000]. Seine historische Form bleibt unverändert für Q1-3 erhalten; nur die pauschale Eichsperre dieser Nettoergebnisreihe entfällt. Alle anderen Eichreihen bleiben gesperrt. Keine Neuaufnahme des Bestands. P211, geprüft am 13.10.2026, Datenstand 13.10.2026: 300715.SZ (Jiangsu Canlon Building Materials), Geschäftsjahr 2024, ist ein belegtes Verlustjahr. Zwei Fallschlüssel für Betriebsergebnis und Nettoergebnis, ein Ereignis. Konzernabschluss 2024, https://static.cninfo.com.cn/finalpage/2025-04-19/1223143379.PDF, Druck-/PDF-Seite 72 (Einheit 元 auf Seite 71; 人民币元 auf Seite 6): \"三、营业利润（亏损以“－”号填列） -651,163,336.96 -1,528,740.02\" und \"1.归属于母公司股东的净利润 -538,648,272.66 22,637,174.89\", Spalten 2024/2023. Dieselbe Seite nennt 信用减值损失 -481,462,169.29 und 资产减值损失 -105,566,816.26 CNY für 2024; Seite 2 erklärt den Verlust mit Umsatzrückgang und Wertberichtigungen. Nachbar 2025: Konzernabschluss 2025, https://static.cninfo.com.cn/finalpage/2026-04-24/1225163584.PDF, Seite 73 (Einheit 元, Seite 72), \"三、营业利润（亏损以“－”号填列） 16,789,103.06 -651,163,336.96\" und \"1.归属于母公司股东的净利润 20,396,737.72 -538,648,272.66\", Spalten 2025/2024. Nachbar 2023: Konzernabschluss 2023, https://static.cninfo.com.cn/finalpage/2024-04-20/1219690891.PDF, Seite 80 (Einheit 元, Seite 79), \"三、营业利润（亏损以“－”号填列） -1,528,740.02 -186,294,318.77\" und \"1.归属于母公司股东的净利润 22,637,174.89 -159,018,962.78\", Spalten 2023/2022. Alle sechs Werte stimmen centgenau mit der Rückrechnung des Snapshots überein; die native Identität verwendet unverändert zehn signifikante Stellen (2024: -651163337 und -538648272.7). usdFaktor=1 und maxRelativeAbweichung=0 bezeichnen denselben Oktober-Snapshot, keine historische Migration. Keine Zahlenkorrektur, keine neue Handtabellenautorität, keine Änderung an Ausschlüssen oder Grenzwerten; alle 161 bisherigen Schlüssel und 143 bisherigen nativen Einträge bleiben erhalten.",
+ "aufgenommenAm": "2026-08-30",
+ "snapshotsBeiAufnahme": 16045,
+ "anzahl": 163,
+ "ausgeschlossen": [
+  {
+   "schluessel": "000301.SZ|annualOpInc|werte:-39434672.69168525|-516455443.0688506|36289760.36327293",
+   "sperrschluessel": "000301.SZ|annualOpInc|1",
+   "seit": "2026-08-29",
+   "offenSeit": "2026-09-26",
+   "hinweis": "UNGEPRUEFT (Duennmargen-Klasse, 29.08.): keine Repo-Belege (kein SEC-Kanal fuer A-Shares, keine Schwesterreihe im Bestand). Bleibt rot-faehig, bis eine vom Store unabhaengige Quelle das Sonderjahr belegt. ERNEUERT 2026-09-26 (offenSeit 2026-08-29 -> 2026-09-26; Entscheid erneuert, Fall NICHT geklaert): der Fall besteht unveraendert fort. CI-Population Lauf 36227380588 (26.09., Artefakt snapshots, 000301.SZ.json meta.fetchedAt 2026-09-25T08:30:54Z): annualOpInc -39,53 / -517,70 / 36,38 / 74,72 Mio USD, Index 1 weiterhin Faktor 13,1 ueber dem groesseren Nachbarn; alle drei Sperrwerte um denselben Faktor 1,0024165 verschoben = FX-Drift (fxRateApplied 0,14917135), nativ unveraendert -265,00 / -3470,53 / 243,86 Mio CNY. Eine vom Store unabhaengige Quelle liegt weiterhin nicht vor. Alters-Tor wieder faellig ab 2026-10-27. Ausweg: Beleg aus dem Jahresbericht des Emittenten (dann verankern oder Sperre entfernen) oder T339 (Bekannt-Identitaet in Nativwaehrung)."
+  }
+ ],
+ "faelle": [
+  "000815.SZ|annualNetIncome|werte:9867396.696321366|-81227616.98389228|-2631194.6290613865",
+  "001450.KS|annualOpInc|werte:4085611.0168801122|145145887.4848816|5430383.133459464",
+  "001450.KS|annualRev|werte:279644833.46202|9934694557.486763|371689468.409272",
+  "002446.SZ|annualNetIncome|werte:10311793.399718395|-110989551.0669367|7759186.68946062",
+  "002446.SZ|annualOpInc|werte:10373743.797269838|-112244404.5408278|10819629.352018392",
+  "002583.SZ|annualNetIncome|werte:-38364274.240275934|-518551730.5870835|-57717593.712587856",
+  "002759.SZ|annualNetIncome|werte:12170686.981668107|-200030255.89915913|5197431.624665658",
+  "002759.SZ|annualOpInc|werte:21342011.76616921|-209441649.621875|7658780.818812172",
+  "097230.KS|annualOpInc|werte:5077435.5856|-76166434.7836|4638446.05",
+  "1BR1.DE|annualNetIncome|werte:168530251.74|-1877924987.0700002|205417858.14000002",
+  "1BTDR.MI|annualNetIncome|werte:65597000|-599151000|-56656000",
+  "1CORZ.MI|annualOpInc|werte:8961000|-2109553000|131494000",
+  "1CPNG.MI|annualNetIncome|werte:154000000|1360000000|-92000000",
+  "1CYTH.MI|annualOpInc|werte:460000000|-9584000000|95000000",
+  "1INTC.MI|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+  "1SINC.MI|annualNetIncome|werte:22941478.7|-677989414.3|4440286.2",
+  "1SMTC.MI|annualOpInc|werte:49934000|-944322000|92799000",
+  "1STZ.MI|annualNetIncome|werte:-81400000|1727400000|-71000000",
+  "1TUB.MI|annualRev|werte:42779.511000000006|93652443|0",
+  "1VIV.MI|annualNetIncome|werte:23258519.999999996|-6982207703.999999|470985029.99999994",
+  "1VIV.MI|annualNetIncome|werte:23339946|-7006651789.2|472633906.5",
+  "2007.HK|annualOpInc|werte:-2633434968.1|-24097313783.7|958559614.9",
+  "2050.SR|annualNetIncome|werte:232910374.0371|2656616325.0153|239495272.15424997",
+  "2160.T|annualOpInc|werte:8800728.8948|82287712.8156182|8649691.5638886",
+  "300377.SZ|annualOpInc|werte:-1405229.869908907|-71515270.28402407|8595223.127583755",
+  "300715.SZ|annualNetIncome|werte:3052078.9026443404|-80600979.01437359|3387328.1524570794",
+  "300715.SZ|annualOpInc|werte:2512248.181409058|-97437242.67054525|-228753.99128631278",
+  "4005.T|annualNetIncome|werte:245065777.985|-1980275765.73|44369790.645",
+  "4005.T|annualNetIncome|werte:246874962.656|-1994895043.008|44697348.192",
+  "4335.HK|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+  "600094.SS|annualNetIncome|werte:21248591.342083693|-345953740.6292422|32958845.363830097",
+  "600166.SS|annualNetIncome|werte:11985712.574054742|135341434.63944775|9935003.688474188",
+  "600166.SS|annualOpInc|werte:3230531.0409957045|134673481.38684216|14528971.361937525",
+  "600310.SS|annualOpInc|werte:-6741614.228046895|73323061.16095003|-934081.782175466",
+  "600590.SS|annualNetIncome|werte:8965267.583881883|-146767731.96277723|8329548.548752891",
+  "600973.SS|annualOpInc|werte:3462817.055928838|-53093083.903985165|5822652.200127648",
+  "600975.SS|annualNetIncome|werte:5823172.666917703|-178220779.29708824|-11507512.470333636",
+  "600975.SS|annualOpInc|werte:10243624.182274686|-180669883.52220175|-3890608.6087859008",
+  "601068.SS|annualNetIncome|werte:32759197.84808|-393678980.13752|16656496.25232",
+  "601068.SS|annualOpInc|werte:50175810.22168|-436985011.33792|44220629.2224",
+  "601606.SS|annualNetIncome|werte:1242014.394117928|-54059892.99297001|3979745.5469456143",
+  "601606.SS|annualOpInc|werte:2051145.3995218494|-59762445.03771995|1906711.6949601797",
+  "601718.SS|annualNetIncome|werte:-43581641.128932565|-626185909.5555199|27003597.165528394",
+  "601718.SS|annualOpInc|werte:-41603297.75738904|-621439845.8177376|31913575.51222798",
+  "8795.T|annualOpInc|werte:353762635.379229|12886262324.940367|208984589.9559405",
+  "8795.T|annualRev|werte:558293435.4599999|20336561705.895|329810762.96999997",
+  "AAP|annualOpInc|werte:-43000000|-713000000|39000000",
+  "AFK.OL|annualNetIncome|werte:-5980286.256|238997868.588|3480313.01934",
+  "AHG|annualOpInc|werte:-20700332|-166304352|-8638040",
+  "AKBM.OL|annualNetIncome|werte:-22800000|182600000|-9000000",
+  "ALPA3.SA|annualNetIncome|werte:20743651.327800002|-358593008.28400004|23333846.1884",
+  "ASTERDM.BO|annualNetIncome|werte:40716475.9728|564142541.3016001|13561668.505600002",
+  "ASTERDM.BO|annualNetIncome|werte:41092581.692099996|569353631.6824499|13686940.1792",
+  "ASTERDM.NS|annualNetIncome|werte:40684679.544|563701989.468|13551077.888",
+  "BBUC.TO|annualNetIncome|werte:15000000|565000000|63000000",
+  "BBUC|annualNetIncome|werte:15000000|565000000|63000000",
+  "BTDR|annualNetIncome|werte:65597000|-599151000|-56656000",
+  "BVS.AX|annualNetIncome|werte:6163190.52945|-197116767.2649|21013972.8591",
+  "CB1A.DE|annualNetIncome|werte:-81400000|1727400000|-71000000",
+  "CGD.DE|annualNetIncome|werte:-90494000|1720716000|-142077000",
+  "CMHC.SW|annualNetIncome|werte:-4180764.9488|154387028.4696|-12494786.1538",
+  "CMHC.SW|annualOpInc|werte:-3749710.4696|172516809.0652|-2172653.625",
+  "CMOPF|annualNetIncome|werte:-4210526.2584|155486052.2628|-12583731.8859",
+  "CMOPF|annualOpInc|werte:-3776403.2628|173744892.01860002|-2188119.9375",
+  "CNX|annualNetIncome|werte:-90494000|1720716000|-142077000",
+  "COPN.VI|annualNetIncome|werte:-4180764.9488|154387028.4696|-12494786.1538",
+  "COPN.VI|annualOpInc|werte:-3749710.4696|172516809.0652|-2172653.625",
+  "CORZ|annualOpInc|werte:8961000|-2109553000|131494000",
+  "CPNG|annualNetIncome|werte:154000000|1360000000|-92000000",
+  "CREDIA.AT|annualNetIncome|werte:17333106.015499998|-370766700.6703|31460470.3072",
+  "CREDIA.AT|annualNetIncome|werte:17755863.9195|-379809774.2607|32209125.48",
+  "CRSP|annualRev|werte:37314000|371206000|1198000",
+  "CUBEINVIT.BO|annualNetIncome|werte:-3748446.0141600003|-74052290.80144|-2915003.43776",
+  "CWAN|annualNetIncome|werte:-38807000|424378000|-21627000",
+  "CXO.AX|annualNetIncome|werte:-16510066.017|-146247252.7333|7636876.921",
+  "DIGIS.MC|annualNetIncome|werte:4403244.68|343800709.62|-18887602.18",
+  "DIGIS.MC|annualOpInc|werte:55851682.52|485168038.82|10660487.120000001",
+  "DK|annualNetIncome|werte:-22800000|-560400000|19800000",
+  "ENTOF|annualNetIncome|werte:1378257.4|-577701890.1999999|-67216553.2",
+  "ENTRA.OL|annualNetIncome|werte:1386989.24|-581361874.52|-67642398.32000001",
+  "FG|annualNetIncome|werte:0|622000000|-58000000",
+  "FLR|annualNetIncome|werte:-51000000|2145000000|139000000",
+  "FMCC|annualNetIncome|werte:5000000|-166000000|0",
+  "GCP.L|annualNetIncome|werte:0|84393732.808|-982581.468",
+  "GNIIF|annualOpInc|werte:8797690.2|82259300.7093|8646705.0189",
+  "GNK|annualOpInc|werte:7470000|87049000|-5847000",
+  "H15.SI|annualNetIncome|werte:21439093.292600002|441924318.3315|31645072.1225",
+  "HMMC.TO|annualRev|werte:0|487159620|5618960",
+  "HMMCF|annualRev|werte:0|487159620|5618960",
+  "INL.DE|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+  "INTC.SW|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+  "INTC.VI|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+  "INTC|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+  "INTL.WA|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+  "INVES.IS|annualRev|werte:1108589.427415512|86828820.87533456|3178750.9853304243",
+  "KINV-A.ST|annualOpInc|werte:2296750.789494|93467771.259408|0",
+  "KINV-A.ST|annualRev|werte:2405050.2|97875086.4|0",
+  "KINV-B.ST|annualOpInc|werte:2318005.76210255|94332756.2316516|0",
+  "KINV-B.ST|annualRev|werte:2427307.415|98780858.28|0",
+  "KNEVF|annualRev|werte:2427307.415|98780858.28|0",
+  "KYN|annualOpInc|werte:9578698.5|176823233.72|18377778.23",
+  "KYN|annualRev|werte:20850000|384892000|40003000",
+  "LAR.TO|annualNetIncome|werte:-15234000|1288369000|-93568000",
+  "LAR|annualNetIncome|werte:-15234000|1288369000|-93568000",
+  "LB|annualNetIncome|werte:5110000|63172000|-6361000",
+  "LMN.V|annualNetIncome|werte:-258909000|-2825588000|27402000",
+  "LUMN|annualOpInc|werte:460000000|-9584000000|95000000",
+  "MDV.WA|annualNetIncome|werte:5852506.044|248355657.85799998|-15060806.838",
+  "MFSL.BO|annualOpInc|werte:77576.68814918402|224906349.31044692|280926.029286504",
+  "MFSL.BO|annualRev|werte:1686816.4416000003|4890331578.831201|6108415.5096",
+  "MFSL.NS|annualOpInc|werte:77516.10673632001|224730714.79022723|280706.64771492",
+  "MFSL.NS|annualRev|werte:1685499.168|4886512606.876|6103645.308",
+  "NATU3.SA|annualNetIncome|werte:147782984.39366|1251204230.62712|24036721.072979998",
+  "NEOG|annualNetIncome|werte:-7900000|-1092000000|-9400000",
+  "NEOG|annualOpInc|werte:-21600000|-1061000000|58600000",
+  "NHP|annualOpInc|werte:3300000|-123541000|-4738000",
+  "NMZ|annualNetIncome|werte:26234679|258785930|7255561",
+  "NMZ|annualOpInc|werte:23659798.95523|226809613.99913|7460507.597890001",
+  "NMZ|annualRev|werte:27143069|260201239|8558867",
+  "NVG|annualNetIncome|werte:57029572|555649234|27293130",
+  "NVG|annualOpInc|werte:57780453.2613|465171402.82734|33149342.39826",
+  "NVG|annualRev|werte:70801570|570000126|40619714",
+  "NVST|annualNetIncome|werte:47000000|-1118600000|-100200000",
+  "OCI.AS|annualNetIncome|werte:183700000|4978800000|-392000000",
+  "PLGO|annualNetIncome|werte:113300000|2132500000|52600000",
+  "PPT.AX|annualNetIncome|werte:-41151099.192|-333875413.032|41716750.04",
+  "PRSU|annualNetIncome|werte:22668000|368544000|16017000",
+  "SESG.PA|annualNetIncome|werte:17291065.5|-1043227618.5000001|-39193081.800000004",
+  "SESG.PA|annualNetIncome|werte:17363121|-1047574967|-39356407.6",
+  "SFNXF|annualNetIncome|werte:127138837.6125|1529596069.3125|-117312105.0375",
+  "SGBAF|annualNetIncome|werte:17291065.5|-1043227618.5000001|-39193081.800000004",
+  "SGBAF|annualNetIncome|werte:17363121|-1047574967|-39356407.6",
+  "SGM.AX|annualOpInc|werte:-2828254.24|-83292087.368|-7141341.956",
+  "SINCH.ST|annualNetIncome|werte:22941478.7|-677989414.3|4440286.2",
+  "SMSAAM.SN|annualNetIncome|werte:59185000|500920000|48176000",
+  "SMTC|annualOpInc|werte:49934000|-944322000|92799000",
+  "SOF.BR|annualNetIncome|werte:127138837.6125|1529596069.3125|-117312105.0375",
+  "SOF.VI|annualNetIncome|werte:127138837.6125|1529596069.3125|-117312105.0375",
+  "SOMMF|annualNetIncome|werte:245065777.985|-1980275765.73|44369790.645",
+  "SOMMF|annualNetIncome|werte:246874962.656|-1994895043.008|44697348.192",
+  "SPB|annualNetIncome|werte:124800000|1801500000|71600000",
+  "STZ.VI|annualNetIncome|werte:-81400000|1727400000|-71000000",
+  "STZ|annualNetIncome|werte:-81400000|1727400000|-71000000",
+  "SYNC.L|annualNetIncome|werte:-11658699.6195|-189558141.684|5015690.4212",
+  "TABCF|annualNetIncome|werte:25878526.296|-961394322.5320001|47019726.74",
+  "TAH.AX|annualNetIncome|werte:25878526.296|-961394322.5320001|47019726.74",
+  "TDHOF|annualOpInc|werte:353762635.379229|12886262324.940367|208984589.9559405",
+  "TDHOF|annualRev|werte:558293435.4599999|20336561705.895|329810762.96999997",
+  "TDS|annualNetIncome|werte:-27705000|-500009000|62000000",
+  "TKFEN.IS|annualOpInc|werte:-4361724.857412|-107776503.208902|5632075.20057",
+  "TUB.BR|annualRev|werte:42873.6982|93858636.6|0",
+  "TUBI.VI|annualRev|werte:42873.6982|93858636.6|0",
+  "UNBLF|annualNetIncome|werte:169036878.60000002|-1883570307.3000002|206035374.60000002",
+  "URW.PA|annualNetIncome|werte:169036878.60000002|-1883570307.3000002|206035374.60000002",
+  "VIV.PA|annualNetIncome|werte:23124060|-6941842812.000001|468262215.00000006",
+  "VIV.VI|annualNetIncome|werte:23339946|-7006651789.2|472633906.5",
+  "VOGL.BO|annualNetIncome|werte:5664682.08|203508948.8|-12317536.478400001",
+  "VOGL.BO|annualOpInc|werte:-18567569.040000003|167737530.48000002|-9102304.8904",
+  "VOGL.NS|annualNetIncome|werte:5664682.08|203508948.8|-12317536.478400001",
+  "VOGL.NS|annualOpInc|werte:-18567569.040000003|167737530.48000002|-9102304.8904",
+  "VPLAY-A.ST|annualNetIncome|werte:11084144.4|-1019218447.8000001|33775270.2",
+  "VPLAY-A.ST|annualOpInc|werte:-58348609.2|1074534602.4|43186336.2",
+  "VVU.DE|annualNetIncome|werte:23339946|-7006651789.2|472633906.5"
+ ],
+ "nativeIdentitaeten": [
+  {
+   "schluessel": "000815.SZ|annualNetIncome|werte:9867396.696321366|-81227616.98389228|-2631194.6290613865",
+   "ticker": "000815.SZ",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     66628610.34,
+     -548481368.2,
+     -17766878.85
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "001450.KS|annualRev|werte:279644833.46202|9934694557.486763|371689468.409272",
+   "ticker": "001450.KS",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "KRW",
+    "werte": [
+     396111300000,
+     14072295660000,
+     526490680000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.00073595974,
+   "usdFaktor": 1.0424722164540012,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "002446.SZ|annualNetIncome|werte:10311793.399718395|-110989551.0669367|7759186.68946062",
+   "ticker": "002446.SZ",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     69629354.68,
+     -749445854.6,
+     52393132.9
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "002446.SZ|annualOpInc|werte:10373743.797269838|-112244404.5408278|10819629.352018392",
+   "ticker": "002446.SZ",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     70047668.55,
+     -757919127.3,
+     73058466.21
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "002583.SZ|annualNetIncome|werte:-38364274.240275934|-518551730.5870835|-57717593.712587856",
+   "ticker": "002583.SZ",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     -257804083.5,
+     -3484615734,
+     -387856453.5
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14917135,
+   "usdFaktor": 1.0024165432109053,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "002759.SZ|annualNetIncome|werte:12170686.981668107|-200030255.89915913|5197431.624665658",
+   "ticker": "002759.SZ",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     82181347.87,
+     -1350684318,
+     35095137.77
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "002759.SZ|annualOpInc|werte:21342011.76616921|-209441649.621875|7658780.818812172",
+   "ticker": "002759.SZ",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     144109802.2,
+     -1414233814,
+     51715152.29
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "097230.KS|annualOpInc|werte:5077435.5856|-76166434.7836|4638446.05",
+   "ticker": "097230.KS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "KRW",
+    "werte": [
+     7252000000,
+     -108787000000,
+     6625000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.0007370827,
+   "usdFaktor": 1.052760522567682,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "1BR1.DE|annualNetIncome|werte:168530251.74|-1877924987.0700002|205417858.14000002",
+   "ticker": "1BR1.DE",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     146200000,
+     -1629100000,
+     178200000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1238481,
+   "usdFaktor": 0.9749382708659566,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "1BTDR.MI|annualNetIncome|werte:65597000|-599151000|-56656000",
+   "ticker": "1BTDR.MI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     65597000,
+     -599151000,
+     -56656000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1CORZ.MI|annualOpInc|werte:8961000|-2109553000|131494000",
+   "ticker": "1CORZ.MI",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     8961000,
+     -2109553000,
+     131494000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1CPNG.MI|annualNetIncome|werte:154000000|1360000000|-92000000",
+   "ticker": "1CPNG.MI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     154000000,
+     1360000000,
+     -92000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1CYTH.MI|annualOpInc|werte:460000000|-9584000000|95000000",
+   "ticker": "1CYTH.MI",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     460000000,
+     -9584000000,
+     95000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1INTC.MI|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+   "ticker": "1INTC.MI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -267000000,
+     -18756000000,
+     1689000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1SINC.MI|annualNetIncome|werte:22941478.7|-677989414.3|4440286.2",
+   "ticker": "1SINC.MI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "SEK",
+    "werte": [
+     217000000,
+     -6413000000,
+     42000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.10088008,
+   "usdFaktor": 0.9542095191972085,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1SMTC.MI|annualOpInc|werte:49934000|-944322000|92799000",
+   "ticker": "1SMTC.MI",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     49934000,
+     -944322000,
+     92799000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1STZ.MI|annualNetIncome|werte:-81400000|1727400000|-71000000",
+   "ticker": "1STZ.MI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-02-29",
+    "waehrung": "USD",
+    "werte": [
+     -81400000,
+     1727400000,
+     -71000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "1TUB.MI|annualRev|werte:42779.511000000006|93652443|0",
+   "ticker": "1TUB.MI",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2011-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     37000,
+     81000000,
+     0
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1224604,
+   "usdFaktor": 0.9708160245216455,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "1VIV.MI|annualNetIncome|werte:23258519.999999996|-6982207703.999999|470985029.99999994",
+   "ticker": "1VIV.MI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     20000000,
+     -6004000000,
+     405000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1199462,
+   "usdFaktor": 0.9630416724709915,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "1VIV.MI|annualNetIncome|werte:23339946|-7006651789.2|472633906.5",
+   "ticker": "1VIV.MI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     20000000,
+     -6004000000,
+     405000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1199462,
+   "usdFaktor": 0.9596819118604645,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "2007.HK|annualOpInc|werte:-2633434968.1|-24097313783.7|958559614.9",
+   "ticker": "2007.HK",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "CNY",
+    "werte": [
+     -17698000000,
+     -161946000000,
+     6442000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14943662,
+   "usdFaktor": 1.004288821556945,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "2050.SR|annualNetIncome|werte:232910374.0371|2656616325.0153|239495272.15424997",
+   "ticker": "2050.SR",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "SAR",
+    "werte": [
+     874462000,
+     9974266000,
+     899185000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.26633996,
+   "usdFaktor": 0.9999733805949794,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "2160.T|annualOpInc|werte:8800728.8948|82287712.8156182|8649691.5638886",
+   "ticker": "2160.T",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "JPY",
+    "werte": [
+     1402000000,
+     13108843000,
+     1377939000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.006321592,
+   "usdFaktor": 1.0070611298158176,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "300377.SZ|annualOpInc|werte:-1405229.869908907|-71515270.28402407|8595223.127583755",
+   "ticker": "300377.SZ",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     -9488674.3,
+     -482899717.5,
+     58038385.42
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737956,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "4005.T|annualNetIncome|werte:245065777.985|-1980275765.73|44369790.645",
+   "ticker": "4005.T",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-03-31",
+    "waehrung": "JPY",
+    "werte": [
+     38591000000,
+     -311838000000,
+     6987000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.006321592,
+   "usdFaktor": 0.9954737820918109,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "4005.T|annualNetIncome|werte:246874962.656|-1994895043.008|44697348.192",
+   "ticker": "4005.T",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-03-31",
+    "waehrung": "JPY",
+    "werte": [
+     38591000000,
+     -311838000000,
+     6987000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.006321592,
+   "usdFaktor": 0.9881786076943471,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "4335.HK|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+   "ticker": "4335.HK",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     -267000000,
+     -18756000000,
+     1689000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "600094.SS|annualNetIncome|werte:21248591.342083693|-345953740.6292422|32958845.363830097",
+   "ticker": "600094.SS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     143478990.1,
+     -2336018069,
+     222551310.4
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737956,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "600166.SS|annualNetIncome|werte:11985712.574054742|135341434.63944775|9935003.688474188",
+   "ticker": "600166.SS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     80542788.99,
+     909480896.1,
+     66762230.51
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14917135,
+   "usdFaktor": 1.0024165432109053,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "600166.SS|annualOpInc|werte:3230531.0409957045|134673481.38684216|14528971.361937525",
+   "ticker": "600166.SS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     21708845.29,
+     904992317,
+     97633233.52
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14917135,
+   "usdFaktor": 1.0024165432109053,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "600310.SS|annualOpInc|werte:-6741614.228046895|73323061.16095003|-934081.782175466",
+   "ticker": "600310.SS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "CNY",
+    "werte": [
+     -45522076.52,
+     495106644.8,
+     -6307293.91
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.149158,
+   "usdFaktor": 1.0071744926195931,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "600590.SS|annualNetIncome|werte:8965267.583881883|-146767731.96277723|8329548.548752891",
+   "ticker": "600590.SS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     60537073.64,
+     -991034446.5,
+     56244444.37
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "600973.SS|annualOpInc|werte:3462817.055928838|-53093083.903985165|5822652.200127648",
+   "ticker": "600973.SS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     23382326.2,
+     -358505744.5,
+     39316877.24
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "600975.SS|annualNetIncome|werte:5823172.666917703|-178220779.29708824|-11507512.470333636",
+   "ticker": "600975.SS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     39320391.64,
+     -1203418006,
+     -77703328.24
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "600975.SS|annualOpInc|werte:10243624.182274686|-180669883.52220175|-3890608.6087859008",
+   "ticker": "600975.SS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     69169048.85,
+     -1219955338,
+     -26270945.92
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "601068.SS|annualNetIncome|werte:32759197.84808|-393678980.13752|16656496.25232",
+   "ticker": "601068.SS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "CNY",
+    "werte": [
+     221177000,
+     -2657963000,
+     112458000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.1492827,
+   "usdFaktor": 1.0078970764491768,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "601068.SS|annualOpInc|werte:50175810.22168|-436985011.33792|44220629.2224",
+   "ticker": "601068.SS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "CNY",
+    "werte": [
+     338767000,
+     -2950348000,
+     298560000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.1492827,
+   "usdFaktor": 1.0078970764491768,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "601606.SS|annualNetIncome|werte:1242014.394117928|-54059892.99297001|3979745.5469456143",
+   "ticker": "601606.SS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     8346212.43,
+     -363277070.7,
+     26743491.79
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14917135,
+   "usdFaktor": 1.0024165432109053,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "601606.SS|annualOpInc|werte:2051145.3995218494|-59762445.03771995|1906711.6949601797",
+   "ticker": "601606.SS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     13783491.81,
+     -401597649.7,
+     12812911.77
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14917135,
+   "usdFaktor": 1.0024165432109053,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "601718.SS|annualNetIncome|werte:-43581641.128932565|-626185909.5555199|27003597.165528394",
+   "ticker": "601718.SS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     -294280677.5,
+     -4228257792,
+     182339091.9
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737956,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "601718.SS|annualOpInc|werte:-41603297.75738904|-621439845.8177376|31913575.51222798",
+   "ticker": "601718.SS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "CNY",
+    "werte": [
+     -280922111.5,
+     -4196210471,
+     215493230.2
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.14918248,
+   "usdFaktor": 1.0073397913737954,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "8795.T|annualRev|werte:558293435.4599999|20336561705.895|329810762.96999997",
+   "ticker": "8795.T",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2024-03-31",
+    "waehrung": "JPY",
+    "werte": [
+     88068000000,
+     3207991000000,
+     52026000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.0063202335,
+   "usdFaktor": 0.9969852563632363,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "AAP|annualOpInc|werte:-43000000|-713000000|39000000",
+   "ticker": "AAP",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -43000000,
+     -713000000,
+     39000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "AFK.OL|annualNetIncome|werte:-5980286.256|238997868.588|3480313.01934",
+   "ticker": "AFK.OL",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "NOK",
+    "werte": [
+     -56000000,
+     2238000000,
+     32590000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.104307264,
+   "usdFaktor": 0.9767436764652424,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "AKBM.OL|annualNetIncome|werte:-22800000|182600000|-9000000",
+   "ticker": "AKBM.OL",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -22800000,
+     182600000,
+     -9000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "ALPA3.SA|annualNetIncome|werte:20743651.327800002|-358593008.28400004|23333846.1884",
+   "ticker": "ALPA3.SA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "BRL",
+    "werte": [
+     107979000,
+     -1866620000,
+     121462000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.19184652,
+   "usdFaktor": 0.9986378509610729,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "ASTERDM.BO|annualNetIncome|werte:40716475.9728|564142541.3016001|13561668.505600002",
+   "ticker": "ASTERDM.BO",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "INR",
+    "werte": [
+     3881400000,
+     53778300000,
+     1292800000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010384216,
+   "usdFaktor": 0.9899013856043267,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "ASTERDM.BO|annualNetIncome|werte:41092581.692099996|569353631.6824499|13686940.1792",
+   "ticker": "ASTERDM.BO",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "INR",
+    "werte": [
+     3881400000,
+     53778300000,
+     1292800000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010384216,
+   "usdFaktor": 0.9808411718786861,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "ASTERDM.NS|annualNetIncome|werte:40684679.544|563701989.468|13551077.888",
+   "ticker": "ASTERDM.NS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "INR",
+    "werte": [
+     3881400000,
+     53778300000,
+     1292800000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010432696,
+   "usdFaktor": 0.99530011562723,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "BBUC.TO|annualNetIncome|werte:15000000|565000000|63000000",
+   "ticker": "BBUC.TO",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     15000000,
+     565000000,
+     63000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "BBUC|annualNetIncome|werte:15000000|565000000|63000000",
+   "ticker": "BBUC",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     15000000,
+     565000000,
+     63000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "BTDR|annualNetIncome|werte:65597000|-599151000|-56656000",
+   "ticker": "BTDR",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     65597000,
+     -599151000,
+     -56656000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CB1A.DE|annualNetIncome|werte:-81400000|1727400000|-71000000",
+   "ticker": "CB1A.DE",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-02-29",
+    "waehrung": "USD",
+    "werte": [
+     -81400000,
+     1727400000,
+     -71000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CGD.DE|annualNetIncome|werte:-90494000|1720716000|-142077000",
+   "ticker": "CGD.DE",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     -90494000,
+     1720716000,
+     -142077000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CMHC.SW|annualNetIncome|werte:-4180764.9488|154387028.4696|-12494786.1538",
+   "ticker": "CMHC.SW",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     -3608000,
+     133236000,
+     -10783000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1238481,
+   "usdFaktor": 0.9698808697589798,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "CMHC.SW|annualOpInc|werte:-3749710.4696|172516809.0652|-2172653.625",
+   "ticker": "CMHC.SW",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     -3236000,
+     148882000,
+     -1875000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1238481,
+   "usdFaktor": 0.9698808697589797,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CMOPF|annualNetIncome|werte:-4210526.2584|155486052.2628|-12583731.8859",
+   "ticker": "CMOPF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     -3608000,
+     133236000,
+     -10783000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 0.9641089143908044,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "CMOPF|annualOpInc|werte:-3776403.2628|173744892.01860002|-2188119.9375",
+   "ticker": "CMOPF",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     -3236000,
+     148882000,
+     -1875000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 0.9641089143908044,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "CNX|annualNetIncome|werte:-90494000|1720716000|-142077000",
+   "ticker": "CNX",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     -90494000,
+     1720716000,
+     -142077000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "COPN.VI|annualNetIncome|werte:-4180764.9488|154387028.4696|-12494786.1538",
+   "ticker": "COPN.VI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     -3608000,
+     133236000,
+     -10783000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1238481,
+   "usdFaktor": 0.9698808697589798,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "COPN.VI|annualOpInc|werte:-3749710.4696|172516809.0652|-2172653.625",
+   "ticker": "COPN.VI",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     -3236000,
+     148882000,
+     -1875000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1238481,
+   "usdFaktor": 0.9698808697589797,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CORZ|annualOpInc|werte:8961000|-2109553000|131494000",
+   "ticker": "CORZ",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     8961000,
+     -2109553000,
+     131494000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CPNG|annualNetIncome|werte:154000000|1360000000|-92000000",
+   "ticker": "CPNG",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     154000000,
+     1360000000,
+     -92000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CRSP|annualRev|werte:37314000|371206000|1198000",
+   "ticker": "CRSP",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     37314000,
+     371206000,
+     1198000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CUBEINVIT.BO|annualNetIncome|werte:-3748446.0141600003|-74052290.80144|-2915003.43776",
+   "ticker": "CUBEINVIT.BO",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "INR",
+    "werte": [
+     -357330000,
+     -7059220000,
+     -277880000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010418294,
+   "usdFaktor": 0.9931499562637415,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "CWAN|annualNetIncome|werte:-38807000|424378000|-21627000",
+   "ticker": "CWAN",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     -38807000,
+     424378000,
+     -21627000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "DIGIS.MC|annualNetIncome|werte:4403244.68|343800709.62|-18887602.18",
+   "ticker": "DIGIS.MC",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     3800000,
+     296700000,
+     -16300000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1199462,
+   "usdFaktor": 0.9665135301997345,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "DIGIS.MC|annualOpInc|werte:55851682.52|485168038.82|10660487.120000001",
+   "ticker": "DIGIS.MC",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     48200000,
+     418700000,
+     9200000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1199462,
+   "usdFaktor": 0.9665135301997344,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "DK|annualNetIncome|werte:-22800000|-560400000|19800000",
+   "ticker": "DK",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     -22800000,
+     -560400000,
+     19800000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "ENTOF|annualNetIncome|werte:1378257.4|-577701890.1999999|-67216553.2",
+   "ticker": "ENTOF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "NOK",
+    "werte": [
+     13000000,
+     -5449000000,
+     -634000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.10619194,
+   "usdFaktor": 1.001623658976908,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "ENTRA.OL|annualNetIncome|werte:1386989.24|-581361874.52|-67642398.32000001",
+   "ticker": "ENTRA.OL",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "NOK",
+    "werte": [
+     13000000,
+     -5449000000,
+     -634000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.104307264,
+   "usdFaktor": 0.9776531734305308,
+   "maxRelativeAbweichung": 3.3306690738754696e-16
+  },
+  {
+   "schluessel": "FG|annualNetIncome|werte:0|622000000|-58000000",
+   "ticker": "FG",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     0,
+     622000000,
+     -58000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "FLR|annualNetIncome|werte:-51000000|2145000000|139000000",
+   "ticker": "FLR",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     -51000000,
+     2145000000,
+     139000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "FMCC|annualNetIncome|werte:5000000|-166000000|0",
+   "ticker": "FMCC",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     5000000,
+     -166000000,
+     0
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "GNIIF|annualOpInc|werte:8797690.2|82259300.7093|8646705.0189",
+   "ticker": "GNIIF",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "JPY",
+    "werte": [
+     1402000000,
+     13108843000,
+     1377939000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.006325511,
+   "usdFaktor": 1.0080334974741438,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "GNK|annualOpInc|werte:7470000|87049000|-5847000",
+   "ticker": "GNK",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     7470000,
+     87049000,
+     -5847000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "H15.SI|annualNetIncome|werte:21439093.292600002|441924318.3315|31645072.1225",
+   "ticker": "H15.SI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "SGD",
+    "werte": [
+     27218000,
+     561045000,
+     40175000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.78194034,
+   "usdFaktor": 0.9927123262001977,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "HMMC.TO|annualRev|werte:0|487159620|5618960",
+   "ticker": "HMMC.TO",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     0,
+     487159620,
+     5618960
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "HMMCF|annualRev|werte:0|487159620|5618960",
+   "ticker": "HMMCF",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     0,
+     487159620,
+     5618960
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "INL.DE|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+   "ticker": "INL.DE",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -267000000,
+     -18756000000,
+     1689000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "INTC.SW|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+   "ticker": "INTC.SW",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -267000000,
+     -18756000000,
+     1689000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "INTC.VI|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+   "ticker": "INTC.VI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -267000000,
+     -18756000000,
+     1689000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "INTC|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+   "ticker": "INTC",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     -267000000,
+     -18756000000,
+     1689000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "INTL.WA|annualNetIncome|werte:-267000000|-18756000000|1689000000",
+   "ticker": "INTL.WA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -267000000,
+     -18756000000,
+     1689000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "INVES.IS|annualRev|werte:1108589.427415512|86828820.87533456|3178750.9853304243",
+   "ticker": "INVES.IS",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": null,
+    "waehrung": "TRY",
+    "werte": [
+     53328807,
+     4176909247,
+     152914139
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.020423919,
+   "usdFaktor": 0.9824946978557053,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "KYN|annualOpInc|werte:9578698.5|176823233.72|18377778.23",
+   "ticker": "KYN",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2015-11-30",
+    "waehrung": "USD",
+    "werte": [
+     9578698.5,
+     176823233.7,
+     18377778.23
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "KYN|annualRev|werte:20850000|384892000|40003000",
+   "ticker": "KYN",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2015-11-30",
+    "waehrung": "USD",
+    "werte": [
+     20850000,
+     384892000,
+     40003000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "LAR.TO|annualNetIncome|werte:-15234000|1288369000|-93568000",
+   "ticker": "LAR.TO",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -15234000,
+     1288369000,
+     -93568000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "LAR|annualNetIncome|werte:-15234000|1288369000|-93568000",
+   "ticker": "LAR",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -15234000,
+     1288369000,
+     -93568000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "LB|annualNetIncome|werte:5110000|63172000|-6361000",
+   "ticker": "LB",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     5110000,
+     63172000,
+     -6361000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "LMN.V|annualNetIncome|werte:-258909000|-2825588000|27402000",
+   "ticker": "LMN.V",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -258909000,
+     -2825588000,
+     27402000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "LUMN|annualOpInc|werte:460000000|-9584000000|95000000",
+   "ticker": "LUMN",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     460000000,
+     -9584000000,
+     95000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "MDV.WA|annualNetIncome|werte:5852506.044|248355657.85799998|-15060806.838",
+   "ticker": "MDV.WA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2025-01-31",
+    "waehrung": "PLN",
+    "werte": [
+     21800000,
+     925100000,
+     -56100000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.25642407,
+   "usdFaktor": 0.9551540287140625,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "NATU3.SA|annualNetIncome|werte:147782984.39366|1251204230.62712|24036721.072979998",
+   "ticker": "NATU3.SA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "BRL",
+    "werte": [
+     760639000,
+     6439948000,
+     123717000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.1926337,
+   "usdFaktor": 0.9914856269514206,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NEOG|annualNetIncome|werte:-7900000|-1092000000|-9400000",
+   "ticker": "NEOG",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2025-05-31",
+    "waehrung": "USD",
+    "werte": [
+     -7900000,
+     -1092000000,
+     -9400000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NEOG|annualOpInc|werte:-21600000|-1061000000|58600000",
+   "ticker": "NEOG",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2025-05-31",
+    "waehrung": "USD",
+    "werte": [
+     -21600000,
+     -1061000000,
+     58600000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NHP|annualOpInc|werte:3300000|-123541000|-4738000",
+   "ticker": "NHP",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     3300000,
+     -123541000,
+     -4738000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NMZ|annualNetIncome|werte:26234679|258785930|7255561",
+   "ticker": "NMZ",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-10-31",
+    "waehrung": "USD",
+    "werte": [
+     26234679,
+     258785930,
+     7255561
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NMZ|annualOpInc|werte:23659798.95523|226809613.99913|7460507.597890001",
+   "ticker": "NMZ",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-10-31",
+    "waehrung": "USD",
+    "werte": [
+     23659798.96,
+     226809614,
+     7460507.598
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NMZ|annualRev|werte:27143069|260201239|8558867",
+   "ticker": "NMZ",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2024-10-31",
+    "waehrung": "USD",
+    "werte": [
+     27143069,
+     260201239,
+     8558867
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NVG|annualNetIncome|werte:57029572|555649234|27293130",
+   "ticker": "NVG",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-10-31",
+    "waehrung": "USD",
+    "werte": [
+     57029572,
+     555649234,
+     27293130
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NVG|annualRev|werte:70801570|570000126|40619714",
+   "ticker": "NVG",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2024-10-31",
+    "waehrung": "USD",
+    "werte": [
+     70801570,
+     570000126,
+     40619714
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "NVST|annualNetIncome|werte:47000000|-1118600000|-100200000",
+   "ticker": "NVST",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     47000000,
+     -1118600000,
+     -100200000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "OCI.AS|annualNetIncome|werte:183700000|4978800000|-392000000",
+   "ticker": "OCI.AS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     183700000,
+     4978800000,
+     -392000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "PLGO|annualNetIncome|werte:113300000|2132500000|52600000",
+   "ticker": "PLGO",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "USD",
+    "werte": [
+     113300000,
+     2132500000,
+     52600000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "PPT.AX|annualNetIncome|werte:-41151099.192|-333875413.032|41716750.04",
+   "ticker": "PPT.AX",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-06-30",
+    "waehrung": "AUD",
+    "werte": [
+     -58200000,
+     -472200000,
+     59000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.6979828,
+   "usdFaktor": 0.987157081040918,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "PRSU|annualNetIncome|werte:22668000|368544000|16017000",
+   "ticker": "PRSU",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "USD",
+    "werte": [
+     22668000,
+     368544000,
+     16017000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SESG.PA|annualNetIncome|werte:17291065.5|-1043227618.5000001|-39193081.800000004",
+   "ticker": "SESG.PA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     15000000,
+     -905000000,
+     -34000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 0.9760351379155899,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SESG.PA|annualNetIncome|werte:17363121|-1047574967|-39356407.6",
+   "ticker": "SESG.PA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     15000000,
+     -905000000,
+     -34000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 0.9719846737231169,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SGBAF|annualNetIncome|werte:17291065.5|-1043227618.5000001|-39193081.800000004",
+   "ticker": "SGBAF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     15000000,
+     -905000000,
+     -34000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 0.9760351379155899,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SGBAF|annualNetIncome|werte:17363121|-1047574967|-39356407.6",
+   "ticker": "SGBAF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     15000000,
+     -905000000,
+     -34000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 0.9719846737231169,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SGM.AX|annualOpInc|werte:-2828254.24|-83292087.368|-7141341.956",
+   "ticker": "SGM.AX",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-06-30",
+    "waehrung": "AUD",
+    "werte": [
+     -4000000,
+     -117800000,
+     -10100000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.69720423,
+   "usdFaktor": 0.9860559494821087,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SINCH.ST|annualNetIncome|werte:22941478.7|-677989414.3|4440286.2",
+   "ticker": "SINCH.ST",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "SEK",
+    "werte": [
+     217000000,
+     -6413000000,
+     42000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.10088008,
+   "usdFaktor": 0.9542095191972085,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SMSAAM.SN|annualNetIncome|werte:59185000|500920000|48176000",
+   "ticker": "SMSAAM.SN",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     59185000,
+     500920000,
+     48176000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SMTC|annualOpInc|werte:49934000|-944322000|92799000",
+   "ticker": "SMTC",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     49934000,
+     -944322000,
+     92799000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SOMMF|annualNetIncome|werte:245065777.985|-1980275765.73|44369790.645",
+   "ticker": "SOMMF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-03-31",
+    "waehrung": "JPY",
+    "werte": [
+     38591000000,
+     -311838000000,
+     6987000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.006321592,
+   "usdFaktor": 0.9954737820918109,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "SOMMF|annualNetIncome|werte:246874962.656|-1994895043.008|44697348.192",
+   "ticker": "SOMMF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-03-31",
+    "waehrung": "JPY",
+    "werte": [
+     38591000000,
+     -311838000000,
+     6987000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.006321592,
+   "usdFaktor": 0.9881786076943471,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "SPB|annualNetIncome|werte:124800000|1801500000|71600000",
+   "ticker": "SPB",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-09-30",
+    "waehrung": "USD",
+    "werte": [
+     124800000,
+     1801500000,
+     71600000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "STZ.VI|annualNetIncome|werte:-81400000|1727400000|-71000000",
+   "ticker": "STZ.VI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-02-29",
+    "waehrung": "USD",
+    "werte": [
+     -81400000,
+     1727400000,
+     -71000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "STZ|annualNetIncome|werte:-81400000|1727400000|-71000000",
+   "ticker": "STZ",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-02-29",
+    "waehrung": "USD",
+    "werte": [
+     -81400000,
+     1727400000,
+     -71000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "TABCF|annualNetIncome|werte:25878526.296|-961394322.5320001|47019726.74",
+   "ticker": "TABCF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-06-30",
+    "waehrung": "AUD",
+    "werte": [
+     36600000,
+     -1359700000,
+     66500000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.697496,
+   "usdFaktor": 0.9864685997960353,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "TAH.AX|annualNetIncome|werte:25878526.296|-961394322.5320001|47019726.74",
+   "ticker": "TAH.AX",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-06-30",
+    "waehrung": "AUD",
+    "werte": [
+     36600000,
+     -1359700000,
+     66500000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.69720423,
+   "usdFaktor": 0.9860559494821087,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "TDHOF|annualRev|werte:558293435.4599999|20336561705.895|329810762.96999997",
+   "ticker": "TDHOF",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2024-03-31",
+    "waehrung": "JPY",
+    "werte": [
+     88068000000,
+     3207991000000,
+     52026000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.0063202335,
+   "usdFaktor": 0.9969852563632363,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "TDS|annualNetIncome|werte:-27705000|-500009000|62000000",
+   "ticker": "TDS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "USD",
+    "werte": [
+     -27705000,
+     -500009000,
+     62000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "TKFEN.IS|annualOpInc|werte:-4361724.857412|-107776503.208902|5632075.20057",
+   "ticker": "TKFEN.IS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": null,
+    "waehrung": "TRY",
+    "werte": [
+     -210366000,
+     -5198061000,
+     271635000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.02041012,
+   "usdFaktor": 0.9843801349880597,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "TUB.BR|annualRev|werte:42873.6982|93858636.6|0",
+   "ticker": "TUB.BR",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2011-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     37000,
+     81000000,
+     0
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1238481,
+   "usdFaktor": 0.9698808697589797,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "TUBI.VI|annualRev|werte:42873.6982|93858636.6|0",
+   "ticker": "TUBI.VI",
+   "reihe": "annualRev",
+   "nativ": {
+    "periode": "2011-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     37000,
+     81000000,
+     0
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1238481,
+   "usdFaktor": 0.9698808697589797,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "UNBLF|annualNetIncome|werte:169036878.60000002|-1883570307.3000002|206035374.60000002",
+   "ticker": "UNBLF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     146200000,
+     -1629100000,
+     178200000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1199462,
+   "usdFaktor": 0.9686414928866297,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "URW.PA|annualNetIncome|werte:169036878.60000002|-1883570307.3000002|206035374.60000002",
+   "ticker": "URW.PA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     146200000,
+     -1629100000,
+     178200000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1199462,
+   "usdFaktor": 0.9686414928866297,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "VIV.PA|annualNetIncome|werte:23124060|-6941842812.000001|468262215.00000006",
+   "ticker": "VIV.PA",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     20000000,
+     -6004000000,
+     405000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1199462,
+   "usdFaktor": 0.9686414928866297,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "VIV.VI|annualNetIncome|werte:23339946|-7006651789.2|472633906.5",
+   "ticker": "VIV.VI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     20000000,
+     -6004000000,
+     405000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1224604,
+   "usdFaktor": 0.9618363298698293,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "VOGL.BO|annualNetIncome|werte:5664682.08|203508948.8|-12317536.478400001",
+   "ticker": "VOGL.BO",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "INR",
+    "werte": [
+     540000000,
+     19400000000,
+     -1174200000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010384216,
+   "usdFaktor": 0.9899013856043267,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "VOGL.BO|annualOpInc|werte:-18567569.040000003|167737530.48000002|-9102304.8904",
+   "ticker": "VOGL.BO",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "INR",
+    "werte": [
+     -1770000000,
+     15990000000,
+     -867700000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010384216,
+   "usdFaktor": 0.9899013856043267,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "VOGL.NS|annualNetIncome|werte:5664682.08|203508948.8|-12317536.478400001",
+   "ticker": "VOGL.NS",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "INR",
+    "werte": [
+     540000000,
+     19400000000,
+     -1174200000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010384216,
+   "usdFaktor": 0.9899013856043267,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "VOGL.NS|annualOpInc|werte:-18567569.040000003|167737530.48000002|-9102304.8904",
+   "ticker": "VOGL.NS",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "INR",
+    "werte": [
+     -1770000000,
+     15990000000,
+     -867700000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.010384216,
+   "usdFaktor": 0.9899013856043267,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "VVU.DE|annualNetIncome|werte:23339946|-7006651789.2|472633906.5",
+   "ticker": "VVU.DE",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     20000000,
+     -6004000000,
+     405000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1224604,
+   "usdFaktor": 0.9618363298698293,
+   "maxRelativeAbweichung": 1.1102230246251565e-16
+  },
+  {
+   "schluessel": "AHG|annualOpInc|werte:-20700332|-166304352|-8638040",
+   "ticker": "AHG",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "USD",
+    "werte": [
+     -20700332,
+     -166304352,
+     -8638040
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "CREDIA.AT|annualNetIncome|werte:17333106.015499998|-370766700.6703|31460470.3072",
+   "ticker": "CREDIA.AT",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": null,
+    "waehrung": "EUR",
+    "werte": [
+     15215000,
+     -325459000,
+     27616000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1392117,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SFNXF|annualNetIncome|werte:127138837.6125|1529596069.3125|-117312105.0375",
+   "ticker": "SFNXF",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     113001000,
+     1359505000,
+     -104267000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SOF.BR|annualNetIncome|werte:127138837.6125|1529596069.3125|-117312105.0375",
+   "ticker": "SOF.BR",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     113001000,
+     1359505000,
+     -104267000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SOF.VI|annualNetIncome|werte:127138837.6125|1529596069.3125|-117312105.0375",
+   "ticker": "SOF.VI",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "EUR",
+    "werte": [
+     113001000,
+     1359505000,
+     -104267000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.1251125,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "SYNC.L|annualNetIncome|werte:-11658699.6195|-189558141.684|5015690.4212",
+   "ticker": "SYNC.L",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2025-03-31",
+    "waehrung": "GBP",
+    "werte": [
+     -8805000,
+     -143160000,
+     3788000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 1.3240999,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "VPLAY-A.ST|annualNetIncome|werte:11084144.4|-1019218447.8000001|33775270.2",
+   "ticker": "VPLAY-A.ST",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2023-12-31",
+    "waehrung": "SEK",
+    "werte": [
+     106000000,
+     -9747000000,
+     323000000
+    ]
+   },
+   "datenstand": "2026-10-10",
+   "fxRateApplied": 0.099577785,
+   "usdFaktor": 0.9522832641913254,
+   "maxRelativeAbweichung": 2.220446049250313e-16
+  },
+  {
+   "schluessel": "300715.SZ|annualOpInc|werte:2512248.181409058|-97437242.67054525|-228753.99128631278",
+   "ticker": "300715.SZ",
+   "reihe": "annualOpInc",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "CNY",
+    "werte": [
+     16789103.06,
+     -651163337,
+     -1528740.02
+    ]
+   },
+   "datenstand": "2026-10-13",
+   "fxRateApplied": 0.14963564,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  },
+  {
+   "schluessel": "300715.SZ|annualNetIncome|werte:3052078.9026443404|-80600979.01437359|3387328.1524570794",
+   "ticker": "300715.SZ",
+   "reihe": "annualNetIncome",
+   "nativ": {
+    "periode": "2024-12-31",
+    "waehrung": "CNY",
+    "werte": [
+     20396737.72,
+     -538648272.7,
+     22637174.89
+    ]
+   },
+   "datenstand": "2026-10-13",
+   "fxRateApplied": 0.14963564,
+   "usdFaktor": 1,
+   "maxRelativeAbweichung": 0
+  }
+ ]
+}

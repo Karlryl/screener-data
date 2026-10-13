@@ -1,0 +1,30 @@
+{
+  "schema": "early-detection-nasdaq-directory-gate-verification/v1",
+  "generatedAt": "2026-08-10T21:05:29.629Z",
+  "status": "PASS",
+  "gate": "entityListingLedger",
+  "verifierScript": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\verify_nasdaq_directory_gate_decision_v6.py",
+  "verifierScriptSha256": "d90f3221755f39ed0a337c22d887fa4a921b39fb8b95bebce6294ba10077b113",
+  "sourceDecision": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-ledger-gate-decision-2026-08-10-v6-partial.json",
+  "sourceDecisionFileSha256": "6e3ffceae5951e96f0e89a5adb3d975e5f02bd29943ca1707c8ae2b119084cbc",
+  "sourceDecisionReportSha256": "8b0901d27778b51d2c23604aa38e6277d06f9128e47ad4e121860287ded5b5e7",
+  "checks": {
+    "signedDecision": true,
+    "boundArtifactsRehashed": 6,
+    "baseGateVerificationPassed": true,
+    "nasdaqDirectoryVerificationPassed": true,
+    "snapshots": 103,
+    "observations": 434214,
+    "distinctSymbols": 24672,
+    "identityResolvedRows": 0,
+    "redGateBoundaryPreserved": true,
+    "resultComputationProhibited": true,
+    "tamperDetected": true
+  },
+  "interpretation": "PASS proves the V6 hash chain and preservation of the red gate. It does not prove permanent identity, continuous listings, prices, terminal sessions or returns.",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "a3a3eee94dd9802969e8fcdf530060b310be2225e63ee5714a2a84f56fcaee83"
+}

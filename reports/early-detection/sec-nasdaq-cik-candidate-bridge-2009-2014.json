@@ -1,0 +1,25 @@
+{
+  "schema": "early-detection-entity-bridge/v1",
+  "status": "CANDIDATE_BRIDGE_PASS_NOT_ADJUDICATED",
+  "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-nasdaq-cik-candidate-bridge.sqlite",
+  "databaseBytes": 6635520,
+  "snapshots": 12,
+  "rows": 43068,
+  "byStatus": {
+    "AMBIGUOUS": 139,
+    "CANDIDATE_UNADJUDICATED": 15888,
+    "EXCLUDE_NON_OPERATING_SECURITY": 3821,
+    "EXCLUDE_TEST_ISSUE": 243,
+    "UNRESOLVED": 22977
+  },
+  "candidateRate": 0.3689049874616885,
+  "candidateSequenceSha256": "dd598689c7684cf36163c22e8c4bfa96152c600545256a2b9db4cf10bb4328a2",
+  "confirmatoryEligible": false,
+  "limitations": [
+    "Name matching is a candidate generator and never establishes a permanent entity or listing identity.",
+    "Snapshots are sparse exact captures and are never forward-filled between dates.",
+    "Every candidate still requires filing-cover, Form 25/15 or equivalent event evidence and independent audit."
+  ],
+  "productiveGqsModified": false,
+  "reportSha256": "66c9f9c8a7b7a20364c82bbb69836b34893983d4618040a19162c7c3976c4bf3"
+}

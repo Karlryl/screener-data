@@ -1,0 +1,58 @@
+{
+  "schema": "early-detection-sec-wayback-bootstrap/v1",
+  "asOf": "2026-08-08",
+  "status": "PARTIAL_16_OF_69_QUARTERS_ACQUIRED",
+  "sourceInventory": {
+    "provider": "Internet Archive Wayback Machine",
+    "originalPublisher": "U.S. Securities and Exchange Commission",
+    "cdxRecords": 247,
+    "quarterCoverage": 69,
+    "firstQuarter": "2009q1",
+    "lastQuarter": "2026q1",
+    "cdxQuerySha256": "2a831623802c5c2898ffb465c242dbce2c0ddcc5b6ca30e0fdc40898f2084315",
+    "earliestCaptureVariantBytes": 3010493223,
+    "quartersCapturedWithin120DaysOfRoughQuarterRelease": 22,
+    "quartersCapturedWithin365DaysOfRoughQuarterRelease": 36,
+    "quartersCapturedLaterThan365Days": 33
+  },
+  "acquisition": {
+    "fromQuarter": "2009q1",
+    "toQuarter": "2012q4",
+    "quarters": 16,
+    "payloadVersions": 32,
+    "variantsPerQuarter": ["legacy_earliest_archived", "post_2024_reprocessed_or_current"],
+    "failed": 0,
+    "missing": 0,
+    "cdxDigestVerified": true,
+    "zipMembersVerified": ["sub.txt", "num.txt", "pre.txt", "tag.txt"]
+  },
+  "pitIndex": {
+    "sourcePayloadsCommitted": 32,
+    "quartersCommitted": 16,
+    "timePolicy": "SEC_EASTERN_US_DST_2007PLUS_V1",
+    "realFormatCorrections": [
+      "fractional legacy accepted timestamps such as 2009-05-29 15:59:00.0",
+      "SEC tables with fields above Python's default CSV field limit",
+      "legacy Windows-1252 table members"
+    ],
+    "fastStatus": "RECOVERY_OPEN_PASS_NOT_FULL_INTEGRITY_AUDIT",
+    "fullIntegrityAudit": "PENDING_COMPACT_OR_LONG_RUNNING_FINAL_GATE"
+  },
+  "storeVerification": {
+    "status": "PASS",
+    "observations": 202,
+    "accepted": 89,
+    "quarantined": 113,
+    "distinctPayloads": 202,
+    "distinctPayloadBytes": 1154177335,
+    "observationIndexSha256": "4713704bbf45374bbf26c887489e66719282e8b0fd73a6bd787e8a9568508987",
+    "payloadIndexSha256": "7125f859ed7d89714b8abbf3eab793653dede3c806472a0a655a6fb21052fd3a",
+    "issues": []
+  },
+  "limits": {
+    "remainingQuarters": 53,
+    "historicFilingAvailability": "FSD transport capture time is not promoted to filing known_at; filing accepted metadata remains authoritative.",
+    "confirmatoryReadiness": false
+  },
+  "productiveGqsModified": false
+}

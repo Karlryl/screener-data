@@ -1,0 +1,2166 @@
+'use strict';
+/**
+ * scripts/write-board-history.js — Vintage-Writer der eigenen Messreihe (Masterplan 2.3).
+ *
+ * INERT gebaut: KEIN CI-Wiring, KEIN echtes Vintage #1. Grundgesetz 6 / Task 2.14
+ * (revAcceleration-Fix) blockieren den scharfen Start — die Formel darf nicht auf
+ * der P2-kaputten Accel-Achse eingefroren werden. Dieses Werkzeug steht bereit,
+ * damit es beim 2.14-Landing sofort scharfgeschaltet werden kann.
+ *
+ * Setzt die 2.8-MESS-FUNDAMENT-Spezifikation um (Formel-Ledger §6/§7, A9/A10/A12):
+ *   §6  Voll-Kohorten je Board einfrieren (nicht Top-N) — Substrat outputs/hypergrowth/full/.
+ *   §7  PIT-Freeze der Kontroll-Felder je Zeile: Markt-Beta, EV/Sales, Preis/Bruttogewinn
+ *       + Umsatz-/GP-Quartalsserien MIT Perioden-Ende + fetchedAt.
+ *   A9  Kontroll-Felder aus snapshots/<TICKER>.json joinen (Board-Rows tragen sie nicht);
+ *       Beta-Coverage real ~60 % → fehlend explizit null + pitCoverage-Block (Attenuations-Ausweis).
+ *   A10 revenueQEnds/grossProfitQEnds kommen parallel via pull-yahoo; fehlt es → null + pitGaps.
+ *   A12 Kompaktierung frühestens t0+2Q (≈180 Kalendertage); PIT-Voll-Snapshots vorher nach
+ *       board-history-archive/ (GG7c, außerhalb CI-Checkout). NICHTS wird ohne Archiv-Kopie entfernt.
+ *       Das Archivziel MUSS per BOARD_HISTORY_ARCHIVE_DIR gesetzt sein (T20, fail-closed) —
+ *       weder Temp noch Checkout überleben, und die Archiv-Kopie ist die einzige der PIT-Blöcke.
+ *
+ * Wert-Plausibilitäts-Gate VOR dem Schreiben (Ledger 2.3 „Wert-Plausibilitäts-Gate"):
+ *   Vergleich gegen das jüngste nicht ausgeschlossene Vorgänger-Vintage; P99-Tages-Delta
+ *   der Scores. Die wirksame Grenze ist IMMER
+ *       Tagesgrenze × Tagesabstand zum Vorgänger,
+ *   wobei die Tagesgrenze der gemessene Boden MIN_GATE_THRESHOLD ist, solange ein Board
+ *   keine eigene eingefrorene Schwelle hat, sonst die eingefrorene Schwelle (Herleitung
+ *   an den Konstanten). Eigene Schwelle = GATE_CALIB_QUANTILE der Tages-Stichproben × 2,
+ *   eingefroren erst nach CALIBRATION_SAMPLES Stichproben MIT Bewegung; Stichproben sind
+ *   pro Tag normiert, suspect-/Bruch-Tage liefern keine. Liegt der Vorgänger mehr als
+ *   GATE_MAX_ABSTAND_TAGE zurück, urteilt die Wert-Achse NICHT (gate.abstandZuGross +
+ *   ::warning::) — sonst sperrt sich die Messreihe selbst fest, je länger sie steht.
+ *   Schwellen-Bruch / NaN-Einbruch / Coverage-Absturz / Kohorten-Kollaps → Vintage MIT
+ *   suspect:true geschrieben (nie still). KEINE Löschung je.
+ *   Tag 1396: every vintage is committed with its verdict in each board file.
+ *   gate.structural (lib/board-history-flag.js) separates structural breaks (exit 2, run
+ *   red) from p99-only flags (exit 0, ::warning::GATE FLAG). Comparison base per board:
+ *   the newest stored vintage whose board file is NOT structural (p99-only days count);
+ *   a registered massstab-bruch / daten-schub entry binds to that board prior.
+ *   Neukalibrierung 2026-08-03: die bis dahin eingefrorenen Schwellen stammten
+ *   ausnahmslos aus Vintages, die auf board-history/_excluded.json stehen — Details und
+ *   Messgrundlage im Kopf von board-history/_gate-calibration.json.
+ *
+ * picks-history/ wird NIE berührt (Schutzliste, GG). Strukturell erzwungen: assertNoPicksHistory()
+ * prüft jeden Ausgabepfad; dieses Skript baut nie einen Pfad mit picks-history-Bezug.
+ *
+ * Usage:
+ *   node scripts/write-board-history.js [--date YYYY-MM-DD] [--dry-run] [--compact]
+ * Exit: 0 = ok (p99-only flags allowed) · 1 = harter Fehler (Inputs fehlen) ·
+ *       2 = vintage written, at least one board structurally flagged.
+ */
+const fs = require('fs');
+const path = require('path');
+const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
+const { exchangeRecord } = require('../lib/exchange-quarter-check.js');
+const { boardStatus } = require('../src/scoring/board-status.js');
+const priceStore = require('../lib/price-history-store.js');   // LT1: Quelle der PIT-Preisfelder
+const { istStrukturell } = require('../lib/board-history-flag.js');   // Tag 1396: one rule, one place
+const { readValueFlags } = require('../lib/value-open-items.js');   // Tag 1401: valueFlags on stored rows
+
+// ── benannte Konstanten (keine Magic Numbers; Herkunft dokumentiert) ─────────
+const REPO_ROOT = path.resolve(__dirname, '..');
+
+// Pfade werden aus einem Base gebildet, damit Tests hermetisch gegen ein Temp-Verzeichnis
+// laufen können (L4 — keine Abhängigkeit von echten snapshots/outputs). Default = REPO_ROOT.
+function resolvePaths(base) {
+  // BH-154: ARCHIVE_DIR lag vorher IMMER unter base — für den Produktionspfad
+  // (base===REPO_ROOT) hieß das INNERHALB des Checkouts, entgegen dem eigenen
+  // Kommentar "außerhalb CI-Checkout": ein frischer actions/checkout löscht den
+  // kompletten Baum, eine dort abgelegte Archiv-Kopie wäre flüchtig (BH-103
+  // verschärft das zur Messblockade).
+  //
+  // T20 (03.08.2026): Der BH-154-Fix wählte als Default den Temp-Ordner des Systems.
+  // Das tauscht nur die Art der Flüchtigkeit: die Archiv-Kopie ist der EINZIGE
+  // Verbleib der PIT-Blöcke, die compact() danach aus dem Vintage strippt — im Temp
+  // löscht sie das Betriebssystem, ohne dass irgendjemand es merkt. Es gibt keinen
+  // richtigen Default: repo-lokal dupliziert committete Vintages, Temp verliert sie.
+  // Also fail-closed — ohne konfiguriertes Ziel wirft der Archivpfad, statt still
+  // irgendwohin zu schreiben. Ein Archivziel IM Checkout wirft ebenfalls (das ist
+  // genau der BH-154-Defekt). Getter statt Feld, weil resolvePaths() beim Laden des
+  // Moduls läuft und jeder Aufrufer sonst am Archiv-Wurf stürbe, auch der normale
+  // Vintage-Lauf, der das Archiv nie anfasst. Test-Hermetik (_setPaths(base)) bleibt
+  // unverändert base-relativ, weil board-history.test.js Check (c) das Archiv
+  // gezielt unter dem Test-Sandkasten erwartet.
+  const isDefaultBase = base === REPO_ROOT;
+  return {
+    FULL_DIR: path.join(base, 'outputs', 'hypergrowth', 'full'),
+    CALIBRATION_FILE: path.join(base, 'outputs', 'calibration.json'),
+    MACRO_REGIME_FILE: path.join(base, 'outputs', 'macro-regime.json'),
+    // T155/W3: Träger des Universums-Hashes, geschrieben von scripts/write-excluded-list.js.
+    UNIVERSE_HASH_FILE: path.join(base, 'outputs', 'universe-hash.json'),
+    SNAP_DIR: path.join(base, 'snapshots'),
+    // LT1 (Rat 10 vom 19.09.2026): Quelle der beiden PIT-Matching-Felder je Kohorten-Zeile.
+    // Derselbe kumulative Store, den backfill-prices/rank-ic schreiben bzw. lesen
+    // (lib/price-history-store.js) — hier AUSSCHLIESSLICH lesend und ausschliesslich mit
+    // Balken, deren Datum <= Vintage-Datum ist.
+    PRICES_DIR: path.join(base, 'prices'),
+    // WB-4' (c): der Beweis eines Quell-Upgrades Yahoo -> SEC-GAAP ist die Anwesenheit des
+    // Tickers in den SEC-Jahresreihen, die opinc-source-migrate.js im Scoring-Job liest.
+    EXTERNAL_DIR: path.join(base, 'external-data'),
+    HISTORY_DIR: path.join(base, 'board-history'),          // GG7b: committet, Messgrundlage
+    get ARCHIVE_DIR() {                                      // GG7c: gitignored, außerhalb CI-Checkout
+      if (!isDefaultBase) return path.join(base, 'board-history-archive');
+      const dir = (process.env.BOARD_HISTORY_ARCHIVE_DIR || '').trim();
+      if (!dir) {
+        throw new Error('write-board-history: Archivziel nicht konfiguriert — PIT-Daten gehören nicht nach tmp. '
+          + 'BOARD_HISTORY_ARCHIVE_DIR auf ein dauerhaftes Verzeichnis AUSSERHALB des Checkouts setzen '
+          + '(GG7c); ohne das darf keine Kompaktierung laufen, weil die Archiv-Kopie der einzige '
+          + 'Verbleib der PIT-Blöcke ist.');
+      }
+      const abs = path.resolve(dir);
+      if (abs === REPO_ROOT || abs.startsWith(REPO_ROOT + path.sep)) {
+        throw new Error('write-board-history: Archivziel liegt innerhalb des Checkouts (' + abs + ') — '
+          + 'ein frischer actions/checkout löscht es (BH-154). Ziel außerhalb des Repos wählen.');
+      }
+      return abs;
+    },
+    get EXCLUDED_FILE() { return path.join(this.HISTORY_DIR, '_excluded.json'); },
+    get GATE_CALIB_FILE() { return path.join(this.HISTORY_DIR, '_gate-calibration.json'); },
+    // F-9 Stufe 1 (Rat-gedeckt, REINE MESSUNG): committete Sidecar-Reihe der p99Δ/thr/
+    // beta-cov-Werte, die sonst nur im fluechtigen Lauf-Protokoll stehen. Eigener
+    // Top-Level-Ordner (nicht unter board-history/). Until Tag 1396 this kept it out of the
+    // commit step's suspect exclude pathspec; since then every vintage is committed and the
+    // location simply stays. The daily run check reads `suspect` per board from this file;
+    // value jumps per company and field are in data-health/value-open-items.json (Tag 1398).
+    P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
+    // Tag 1401: the open-items list written earlier in the same run; its open cells are copied
+    // onto the stored row as valueFlags (point-in-time record of which row was flagged).
+    VALUE_OPEN_ITEMS_FILE: path.join(base, 'data-health', 'value-open-items.json'),
+    // 6.2-E2 (Earnings-Blowout): Quelle des Report-Datums, das buildPit PIT-einfriert.
+    EARNINGS_CAL_FILE: path.join(base, 'earnings-calendar.json'),
+    base,
+  };
+}
+let P = resolvePaths(REPO_ROOT);
+function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); _earningsCache = null; _priceFeatCache = null; return P; }
+
+// 2.3-Gate-Kalibrierung: Anzahl messbarer Tages-Deltas, bevor eine board-eigene Schwelle
+// eingefroren wird. Ein Vintage ist erst messbar, wenn es einen Vorgänger hat (Vintage #1
+// hat keinen). MINDEST-Anzahl, kein Ausreichen-Kriterium: siehe updateGateCalibration
+// (Bewegung nötig).
+//
+// WAR 3 („erste 3 Live-Vintages", Ledger) — und 3 ist nachweislich zu wenig. Am Live-Stand
+// vom 30.07.2026 gemessen: 8 von 13 eingefrorenen Schwellen lagen falsch, in BEIDE Richtungen.
+// Vier stammten aus zufällig ruhigen Fenstern und lagen UNTER der normalen Tagesbewegung
+// (health-care 1,00 · software-comm-services 1,00 · utilities 1,20 · materials 1,40), vier
+// hatten einen einzelnen Bruchtag im Fenster und lagen ÜBER allem, was je gemessen wurde
+// (industrials 17,60 · consumer-staples 18,00 · semiconductors 38,20 · it-services 40,20 —
+// letzteres aus der Stichprobe [0,0,0,0,0,20,1]). Bei drei Stichproben setzt EINE Messung
+// die Schwelle allein; das ist eine Lotterie über die Kalibrierphase, keine Kalibrierung.
+// 20 ≈ vier Betriebswochen (Lauf Di–Sa) und ist die Anzahl, ab der GATE_CALIB_QUANTILE
+// (s. u.) die beiden größten Stichproben nicht mehr durchschlagen lässt.
+const CALIBRATION_SAMPLES = 20;
+// Schwelle = P99-Tagesdelta × 2 (Ledger-Anhalt „P99-Tagesdelta × 2").
+const THRESHOLD_MULTIPLIER = 2;
+// Welche Stichprobe als „repräsentatives Tagesdelta" in die Schwelle eingeht. WAR: das
+// MAXIMUM der Stichproben. Genau daran sind die vier zu lockeren Schwellen entstanden —
+// ein einziger Bruchtag im Kalibrierfenster hat die Schwelle für alle Zukunft gesetzt
+// (it-services: fünf Nullen und eine 20,1 → 40,2). Ein Quantil statt des Maximums heilt
+// das automatisch, sobald genug Stichproben da sind — also keine zweite Regel, kein Zweig.
+// Nearest-rank heißt idx = ceil(0,9·n)−1: bis n=9 ist das Quantil GENAU das Maximum, ab
+// n=10 fällt die größte Stichprobe heraus, ab n=20 die beiden größten. Eingefroren wird
+// erst bei n ≥ CALIBRATION_SAMPLES = 20, das Maximum kann eine Schwelle also nie mehr
+// allein setzen.
+const GATE_CALIB_QUANTILE = 0.9;
+// GEMESSENER Boden unter der wirksamen Wert-Gate-Grenze — pro Tag Abstand.
+//
+// WAR 1.0, hergeleitet als „1 % der 0–100-Skala" — eine gesetzte Zahl, keine Messung, und
+// damit zu tief: die normale Tagesbewegung des Universums liegt heute darüber.
+//
+// Herleitung der 11.5 (nachrechenbar, board-history/_gate-calibration.json → _boden_herleitung):
+// Es gibt auf dem HEUTIGEN Maßstab genau zwei Messungen der Tagesbewegung — die beiden
+// Läufe, deren Vintages das Gate verworfen hat:
+//   Lauf 30516194703 (2026-07-30 gegen 2026-07-29, 1 Tag):  0,40 … 5,30 je Board
+//   Lauf 30752200575 (2026-08-02 gegen 2026-07-29, 4 Tage): 1,70 … 22,90 → pro Tag 0,43 … 5,73
+// Größte gemessene Tagesbewegung = 5,73 (utilities, in beiden Läufen das lauteste Board:
+// 5,30 bzw. 5,73/Tag — also sein Niveau, kein Ausreißertag). × THRESHOLD_MULTIPLIER = 11,46,
+// aufgerundet 11,5.
+//
+// Der Boden gilt für JEDES Board ohne eigene eingefrorene Schwelle. Das ist die Umkehr der
+// R3-Regel „ohne Bewegung keine Schwelle", und sie ist begründet: jene Regel wehrte einen
+// ERFUNDENEN Boden ab (1.0 stand für kein einziges Messergebnis). Dieser Boden ist an 26
+// echten Tagesbewegungen gemessen, die JEDES Board abdecken. Ohne ihn hätte die
+// Neukalibrierung — die alle Boards auf „noch nicht kalibriert" zurücksetzt — die Wert-Achse
+// für ~20 Läufe komplett abgeschaltet.
+//
+// PRÄZISIERUNG (Codex-Gegenprüfung 04.08.2026 — die vorherige Fassung hier behauptete, dieser
+// Boden mache survival „ab jetzt" wertgeprüft; das ist zu ungenau). evaluateGate() läuft für
+// survival GENAUSO wie für jedes andere Board (buildBoardVintage friert es als Single-Track
+// 'flat' ein, s. Kommentar dort, und run() ruft evaluateGate() dafür unverändert auf) — die
+// STRUKTUR-Prüfungen (cohort-empty, cohort-overlap-collapse, coverage-collapse) greifen also
+// genauso. Der WERT-BODEN hier (MIN_GATE_THRESHOLD als Ersatz für eine fehlende eingefrorene
+// Schwelle) kann survival dagegen strukturell NIE beurteilen: survival-Zeilen tragen nie einen
+// Score (s. „survival-Zeilen sind nie gescort" in buildTrack unten), evaluateGate() sammelt
+// Tages-Deltas aber nur aus Zeilenpaaren mit BEIDSEITIG finitem score — die deltas-Liste bleibt
+// für survival also immer leer, p99Delta ist immer null, und „p99-delta-exceeds-threshold" kann
+// nie feuern. Ohne je ein Sample zu liefern, friert für survival auch nie eine board-eigene
+// Schwelle ein (tagesSample bleibt null) — das Board steht im Lauf-Protokoll dauerhaft als
+// „calibrating" mit p99Δ=—, mit oder ohne diesen Boden. Der Boden ändert an survivals
+// Wert-Prüfbarkeit also NICHTS; er wirkt ausschließlich auf die score-tragenden Boards.
+//
+// ER IST EIN KALIBRIER-ERSATZ, KEINE DAUER-UNTERGRENZE (Review 03.08.2026). Bis dahin wurde
+// er auch auf jede board-eigene, eingefrorene Schwelle gelegt. Damit hätte ein RUHIGES Board
+// nie darunter fallen können: it-services misst ein Tagesrauschen von ~2 Punkten, seine
+// eigene Schwelle wäre 2 × 2 = 4 — ein Wertfehler von 5 Punkten wäre dort auf ewig unsichtbar
+// geblieben, weil 11,5 (aus dem LAUTESTEN Board utilities abgeleitet) darüber lag. Sobald ein
+// Board 20 eigene Stichproben hat, zählt nur noch sein eigenes Maß. Das macht das Gate
+// schärfer, nicht laxer, und hält die Kalibrierung echt.
+const MIN_GATE_THRESHOLD = 11.5;
+// Maximaler Vintage-Abstand, über den die Wert-Achse noch urteilt (Kalendertage).
+// Darüber wird NICHT gesperrt, sondern laut abgestanden (gate.abstandZuGross + ::warning::).
+// Grund ist die Selbstverstärkung, die den Betrieb seit dem 30.07. blockiert hat: ein
+// verworfenes Vintage vergrößert den Abstand des nächsten Vergleichs, der dadurch mehr
+// Bewegung sieht und noch sicherer verworfen wird. Ein Deckel, der bei Überschreitung
+// SPERRT, wäre genau diese Falle mit einer Stufe mehr. Also: über einer Woche gibt es
+// keinen Tages-Maßstab mehr — dann ist „nicht geprüft" die ehrliche Antwort, nicht
+// „verdächtig". Die übrigen Integritätsprüfungen (NaN-Einbruch, Coverage-Absturz,
+// Kohorten-Überlappung) laufen unverändert weiter. 7 Kalendertage = eine volle Woche;
+// derselbe Anhalt wie REGIME_MAX_STALE_DAYS weiter unten (Lauf Di–Sa, größte planmäßige
+// Lücke Sa→Di = 3 Tage, plus Feiertags-/Ausfallpuffer).
+const GATE_MAX_ABSTAND_TAGE = 7;
+const P99 = 0.99;
+// ── Fächerungs-Tor der Bruch-Klasse „daten-schub" (Court 02.09.2026, WB-3) ───
+// Anteil der GEMESSENEN Zeilen, die sich um mehr als die normale Tagesschwelle bewegen.
+// Der Zuschlag des Datenschub-Arms wird nur gewährt, solange die Bewegung SCHMAL ist:
+// ein benigner Voll-Pull bewegt wenige Zeilen weit, ein echter Maßstab- oder Wertbruch
+// bewegt einen spürbaren Teil der Kohorte. GEMESSEN über alle 20 realen Board-Übergänge
+// in board-history/, nicht gesetzt:
+//   benigne Frisch-Pull-Wellen: 1,50 / 1,85 / 2,27 % (02.09.) · 3,15 / 5,16 / 5,28 % (25.→28.08.)
+//   Bruch-Klasse:              10,53 / 10,68 / 11,74 % (03.→05.08.) · 25,00 / 29,46 % (Tag 437)
+// 8 % liegt zwischen beiden Klassen mit Faktor >2 Luft nach jeder Seite. Reißt der Anteil
+// den Cap, gilt UNVERÄNDERT die normale Schwelle — der Cap wird dann NICHT nachjustiert
+// (K1: die Kipp-Bedingung fällt zugunsten der Strenge aus). Nach drei protokollierten
+// Ausnahmetagen ist er gegen das Kanal-B-Log aus WB-5 zu überprüfen (WB-14).
+const GATE_FANOUT_CAP = 0.08;
+// WB-4' Betreiber-Auflage (05.09.2026): mehr als so viele Tage ohne gelandetes Vintage sind ein
+// Alarm im Kanal-B-Protokoll — dieselbe Zahl wie WB-14s „nach drei Ausnahmetagen ueberpruefen".
+const GATE_SERIE_ALARM_TAGE = 3;
+// Coverage-Absturz: fällt der present-Anteil eines Kontroll-Felds gegenüber dem
+// Vortag um mehr als das → suspect. Heuristik-Decke (kein Ledger-Wert); 0.25 = ein
+// Viertel der Kohorte verliert ein Kontroll-Feld über Nacht = unplausibel.
+// ponytail: fixe Decke; datengetrieben nachziehen, falls Coverage real ruckelt.
+const COVERAGE_COLLAPSE_DROP = 0.25;
+// BH-111: Überlappungs-Boden gegen den Vortag. NaN/Coverage/P99-Delta wurden vorher
+// NUR auf der Schnittmenge nowMap∩priorMap gebildet — verschwinden 50–90 % der
+// Boardzeilen (Audit-Beleg), sieht die verbleibende Schnittmenge trotzdem "sauber"
+// aus. Der Boden liegt an der unteren Kante des beobachteten Bruchbereichs (schon
+// 50 % Verlust ist Bruch, nicht erst 90 %).
+const MIN_COHORT_OVERLAP = 0.5;
+// Maßstab-Bruch: Skala, auf der die Scores laufen (dieselbe 0–100-Skala, auf die sich
+// schon MIN_GATE_THRESHOLD beruft, s. o.). Sie übersetzt einen KOHORTEN-Anteil in
+// Score-Punkte: fällt der Anteil x der Kohorte weg, kann sich ein kohorten-relatives
+// Rang-Perzentil um bis zu x der Skala verschieben. Obere Heuristik, kein Beweis — und
+// sie wirkt nur nach UNTEN begrenzend (min gegen den Deckel), nie aufweitend.
+const SCORE_SKALA = 100;
+// ── LT1-PIT-Matching-Felder (Rat 10 vom 19.09.2026, Option ii) ───────────────
+// Die Marktstruktur-Studie LT1 matcht Board-Eintritte gegen Kontrollen auf
+// Sektor × MarketCap-Dezil × Vol-Dezil × Momentum-Dezil. Die ersten beiden liegen
+// im Archiv (board + pit.marketCap), die beiden Preis-Dezile nicht — deshalb rechnet
+// der Writer sie ab jetzt JE VINTAGE aus der eigenen Preis-Historie mit. Die Fenster
+// sind die vom Rat deklarierten und dürfen nicht ohne neuen Vertrags-Hash wandern.
+const VOL_WINDOW_BARS = 60;          // Vol: 60 tägliche Log-Return-Balken (= 61 Schlusskurse)
+const MOMENTUM_LOOKBACK_BARS = 250;  // Momentum: 12 Monate Handelstage (= 251 Schlusskurse)
+const MOMENTUM_GAP_BARS = 21;        // 1 Monat Lücke vor dem Vintage-Datum (Standard-12-1)
+const PIT_DECILES = 10;
+// A12: Kompaktierung frühestens nach t0+2Q ≈ 180 Kalendertage (NICHT 84 — §4b/§7-Kopplung).
+const RETENTION_DAYS = 180;
+const MS_PER_DAY = 86400000;
+// F7: Der Regime-Fallback (jüngster Key <= Datum) darf nicht unbegrenzt zurückgreifen —
+// ein Wochen-altes Regime als „heute" auszugeben wäre eine stille Lüge. SPY handelt
+// ~5 Tage/Woche; die größte normale Lücke (Fr→Mo, plus Feiertag, oder ein Lauf vor
+// US-Handelsschluss über ein langes Wochenende) ist ~3–4 Kalendertage. 7 deckt Wochenende
+// + Feiertagscluster ab und schlägt erst an, wenn der Macro-Feed wirklich steht — dann ist
+// 'unknown' die ehrliche Antwort, kein geerbtes Alt-Label. Kalendertage (kein Ledger-Wert).
+const REGIME_MAX_STALE_DAYS = 7;
+
+// ── kleine Helfer ────────────────────────────────────────────────────────────
+function isoDay(d) { return new Date(d).toISOString().slice(0, 10); }
+
+// Kalendertage zwischen dem Vorgänger-Vintage und diesem. Die Wert-Achse misst eine
+// TAGESbewegung; vergleicht sie in Wahrheit über mehrere Tage, muss die Grenze mitwachsen.
+// Belegt an den beiden Läufen mit demselben Vorgänger (2026-07-29): über 1 Tag lagen die
+// Board-Bewegungen bei 0,40–5,30, über 4 Tage bei 1,70–22,90 — pro Tag also auf demselben
+// Niveau (Median-Verhältnis 0,8 nach Normierung). Deshalb linear in den Tagen, nicht
+// wurzelförmig: die Wurzel (Faktor 2,0 statt 4,0) hätte den 4-Tages-Lauf weiter verworfen.
+// Ohne verwertbare Daten (Test-Gerippe ohne date, kein Vorgänger) konservativ 1 Tag.
+function tagesabstand(vintage, priorVintage) {
+  const neu = vintage && vintage.date;
+  const alt = priorVintage && priorVintage.date;
+  if (typeof neu !== 'string' || typeof alt !== 'string') return 1;
+  const tage = Math.round((Date.parse(neu + 'T00:00:00Z') - Date.parse(alt + 'T00:00:00Z')) / MS_PER_DAY);
+  return Number.isFinite(tage) && tage >= 1 ? tage : 1;
+}
+
+// BH-147: --date wurde bisher jeder String verbatim übernommen und direkt in
+// path.join(HISTORY_DIR, date) verwendet — weder Format- noch Zukunfts- noch
+// Pfadprüfung. Das Format-Regex schließt einen Pfad-Escape ('../foo') strukturell
+// aus (kann nie auf YYYY-MM-DD passen); der resolved-path-Guard in run() ist
+// zusätzliche Absicherung an der Schreib-Grenze.
+function isValidDateStr(d) { return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d); }
+
+// BH-147: reine Entscheidungsfunktion (hermetisch testbar ohne CLI-Subprozess).
+// Ein --date, das vom heutigen Tag abweicht, ist im Live-Betrieb (daily-pull.yml
+// läuft OHNE --date) immer manueller Operator-Eingriff — Audit-Risiko "manueller
+// Operator-Fehlgebrauch der committeten PIT-Messreihe". --allow-backfill ist der
+// explizite Vertrag dafür; --dry-run schreibt nichts und braucht keinen Vertrag.
+// Gilt NUR an der CLI-Grenze (require.main===module) — run()/Tests rufen die
+// interne API direkt und bewusst mit beliebigem --date auf (Backfill-Fixtures,
+// L4-Hermetik), das ist kein Operator-Fehlgebrauch.
+function requiresBackfillContract(date, allowBackfill, dryRun) {
+  return !!date && date !== isoDay(Date.now()) && !allowBackfill && !dryRun;
+}
+
+function assertNoPicksHistory(p) {
+  // audit/fix: GG-Schutzliste — kein Ausgabepfad darf je picks-history berühren.
+  if (/(^|[\\/])picks-history([\\/]|$)/i.test(p)) {
+    throw new Error('write-board-history: refusing to touch picks-history path: ' + p);
+  }
+  return p;
+}
+
+function readJsonOrNull(file) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch (_) { return null; }
+}
+
+/**
+ * T155/W3 — Universums-Hash des Laufs lesen (Träger: scripts/write-excluded-list.js).
+ *
+ * BEWUSST NICHT readJsonOrNull: dessen pauschales catch würde "Datei gibt es nicht"
+ * (legitim — lokaler Lauf ohne Export-Schritt) und "Datei ist kaputt" (ein Defekt, der
+ * still eine Metadaten-Spalte der Messreihe leert) ununterscheidbar machen. Genau diese
+ * Klasse stillen Fehlschlags soll die Zahl ja aufdecken.
+ *
+ * KEIN Wurf: ein fehlendes Metadaten-Feld darf das Vintage nicht verhindern — das
+ * Vintage ist die Messreihe, der Hash ist Zubehör. Der Defekt wird laut gemeldet und
+ * das Feld bleibt ehrlich null.
+ */
+// Form, die der Erzeuger garantiert (write-excluded-list.js universumsHash: sha256,
+// auf 16 Hex gekürzt). Review-Befund MITTEL (28.08.): "irgendein nicht-leerer String"
+// nähme auch einen abgeschnittenen, verrutschten oder aus einem anderen Feld kopierten
+// Wert widerspruchslos an — und eine falsche Zahl, die richtig aussieht, ist in dieser
+// Messreihe der teuerste Ausgang.
+const UNIVERSE_HASH_FORM = /^[0-9a-f]{16}$/;
+
+function readUniverseHash(file) {
+  // ::warning:: über console.log, wie an jeder anderen Stelle dieser Datei (968, 1268,
+  // 1285, 1301) — nicht über console.warn: ein späterer Schritt, der nur stdout mitschneidet,
+  // verschluckte sonst genau diese drei Meldungen.
+  const meldung = (text) => console.log('::warning::write-board-history: ' + text
+    + ' — Vintage wird ohne universeHash geschrieben.');
+  let roh;
+  try {
+    roh = fs.readFileSync(file, 'utf8');
+  } catch (e) {
+    if (e.code !== 'ENOENT') { meldung('Universums-Hash nicht lesbar (' + file + '): ' + e.message); return null; }
+    // FEHLT: lokal legitim (kein Export-Schritt gelaufen), in der CI NICHT — dort läuft
+    // write-excluded-list.js im selben Job vor diesem Schritt. Ein fehlender Träger in der
+    // CI heißt, dass die Übergabe gebrochen ist; ohne diese Unterscheidung trüge JEDES
+    // künftige Vintage still null, und niemand sähe es. GITHUB_SHA als CI-Merkmal ist
+    // dieselbe Quelle, die formulaCommit oben schon benutzt.
+    if (process.env.GITHUB_SHA) meldung('Universums-Hash-Träger fehlt (' + file + '), obwohl dieser Lauf in der CI '
+      + 'läuft — dort schreibt ihn write-excluded-list.js im selben Job. Die Übergabe ist gebrochen');
+    return null;
+  }
+  let geparst;
+  try {
+    geparst = JSON.parse(roh);
+  } catch (e) {
+    meldung('Universums-Hash-Datei ist kein gültiges JSON (' + file + '): ' + e.message);
+    return null;
+  }
+  const h = geparst && typeof geparst === 'object' ? geparst.universeHash : undefined;
+  if (typeof h === 'string' && UNIVERSE_HASH_FORM.test(h)) return h;
+  meldung('Universums-Hash-Datei ohne brauchbares Feld universeHash (' + file + ', erwartet 16 Hex-Zeichen, '
+    + 'gelesen ' + JSON.stringify(h) + ')');
+  return null;
+}
+
+// AX-SK-001 (Hard Review 2026-07-31): readJsonOrNull() is intentionally lenient for
+// most callers here (excludedDates(), per-ticker readSnapshot(), prior-vintage board
+// reads) — those read thousands of files per run and a single missing/corrupt one
+// must not crash the whole write, documented explicitly at excludedDates(). The TWO
+// GOVERNANCE state files below are different: "file missing" legitimately means
+// "scaffold a fresh empty structure" (readOrScaffoldExcluded) or "start calibration
+// from scratch" (gate-calibration) — but readJsonOrNull() made "file exists but is
+// corrupt/unreadable" look IDENTICAL to "missing", so a truncated write or a bad
+// permission silently replaced hand-curated exclusions or reset frozen gate
+// thresholds instead of failing loud. Distinguish ENOENT (genuinely absent, safe to
+// scaffold) from every other failure (refuse — never silently treat as absent).
+function readJsonExistingOrThrow(file) {
+  let raw;
+  try { raw = fs.readFileSync(file, 'utf8'); }
+  catch (e) {
+    if (e.code === 'ENOENT') return null; // legitimately absent — scaffold/reset is safe
+    throw new Error('write-board-history: ' + file + ' exists but is unreadable (' + e.message
+      + ') — refusing to silently scaffold over it.');
+  }
+  try { return JSON.parse(raw); }
+  catch (e) {
+    throw new Error('write-board-history: ' + file + ' exists but contains invalid JSON (' + e.message
+      + ') — refusing to silently scaffold over it. Fix it, restore from git history, or delete it explicitly if it should truly be reset.');
+  }
+}
+
+// Die EINE Wahrheit darüber, ob ein Board eine gültige, eingefrorene Gate-Schwelle hat.
+// Beide Wege gehen hier durch (Auswerten in evaluateGate, Weiter-Sammeln in
+// updateGateCalibration), damit „eingefroren" nie zwei Bedeutungen bekommt.
+//
+// DEGENERIERT = frozen:true mit threshold <= 0 (live: energy und it-services, je 3× Delta 0).
+// Eine 0-Schwelle stammt aus keinem einzigen echten Messwert — das Board hat sich im ganzen
+// Kalibrierfenster nicht bewegt. Solche Boards gelten hier als NICHT eingefroren und sammeln
+// weiter, bis echte Bewegung da war. Bewusst als Laufzeit-Heilung statt Datei-Migration:
+// board-history/_gate-calibration.json ist eine Datendatei mit echten Messwerten, die
+// dailyP99Samples bleiben unangetastet roh; threshold/frozen sind daraus ABGELEITETE Felder
+// und werden beim nächsten Schreiben ohnehin neu berechnet (dann auch in der Datei geheilt).
+//
+// OHNE BODEN (Review 03.08.2026): MIN_GATE_THRESHOLD ist der Kalibrier-ERSATZ, keine
+// Dauer-Untergrenze — Begründung an der Konstante selbst.
+function frozenThresholdOf(gateState) {
+  if (!gateState || !gateState.frozen) return null;
+  const t = gateState.threshold;
+  return Number.isFinite(t) && t > 0 ? t : null;
+}
+
+// P-Quantil einer Zahlenliste (nearest-rank, konservativ aufgerundet).
+function quantile(values, p) {
+  const v = values.filter((x) => Number.isFinite(x)).sort((a, b) => a - b);
+  if (v.length === 0) return null;
+  const idx = Math.min(v.length - 1, Math.ceil(p * v.length) - 1);
+  return v[Math.max(0, idx)];
+}
+
+// ── §7 PIT-Extraktion aus einem Snapshot (A9-Join) ───────────────────────────
+function readSnapshot(ticker) {
+  const fp = path.join(P.SNAP_DIR, safeSnapshotFilename(ticker));
+  return prepareSnapshot(readJsonOrNull(fp));
+}
+
+// 6.2-E2 (Earnings-Blowout): Report-Datum je Ticker aus earnings-calendar.json. Einmal je
+// Lauf gelesen (585 KB Datei, ~9 000 Board-Zeilen — je Zeile neu parsen waere der Lauf-Killer);
+// _setPaths setzt den Cache zurueck, damit Tests mit eigenem baseDir nie den Repo-Kalender
+// sehen. Fehlt die Datei, bleibt der Cache ein leeres Objekt: das ist eine Datenluecke
+// (pitGaps), kein Grund, den Tageslauf anzuhalten.
+let _earningsCache = null;
+function earningsEntryFor(ticker) {
+  if (_earningsCache === null) {
+    const raw = readJsonOrNull(P.EARNINGS_CAL_FILE);
+    _earningsCache = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  }
+  const e = ticker ? _earningsCache[ticker] : null;
+  return (e && typeof e === 'object' && typeof e.date === 'string') ? e : null;
+}
+
+// Preis/Bruttogewinn = MarketCap/GrossProfit = priceSales / grossMargin.
+// (grossMargin ist in %.) Nenner ≤0/undefiniert → null (LOSS-/GM0-Firmen, §4a-NaN-Linie).
+function priceGrossProfit(metrics) {
+  const ps = metrics && metrics.priceSales && metrics.priceSales.value;
+  const gm = metrics && metrics.grossMargin && metrics.grossMargin.value;
+  if (!Number.isFinite(ps) || !Number.isFinite(gm) || gm <= 0) return null;
+  return ps / (gm / 100);
+}
+
+function seriesValues(arr) {
+  if (!Array.isArray(arr)) return null;
+  // revenueQ/grossProfitQ sind [{value}] (pull-yahoo-Serialisierung).
+  return arr.map((x) => (x && typeof x === 'object' && 'value' in x ? x.value : x));
+}
+
+/**
+ * Extract a finite ratio unless the caller's currency guard withholds it.
+ * @param {object|null} metric Canonical metric envelope.
+ * @param {boolean} mixedCurrency Whether the ratio is unsafe under the caller's policy.
+ * @returns {number|null} Unchanged finite value, or null when missing or withheld.
+ */
+function mischVal(metric, mixedCurrency = false) {
+  return mixedCurrency ? null : (metric && Number.isFinite(metric.value) ? metric.value : null);
+}
+
+/**
+ * Detect trading/reporting ratios without the pull's recorded FX correction.
+ * @param {object} meta Snapshot currency metadata.
+ * @returns {boolean} Whether PIT sales ratios must be withheld.
+ */
+function mischVerhaeltnisUnkorrigiert(meta) {
+  const reporting = meta.reportingCurrencyOriginal || meta.reportingCurrency;
+  const trading = meta.tradingCurrencyOriginal || meta.tradingCurrency;
+  return !!reporting && !!trading
+    && String(reporting).toUpperCase() !== String(trading).toUpperCase()
+    && !Number.isFinite(meta.mischVerhaeltnisFaktor);
+}
+
+// Baut den §7-PIT-Block je Board-Zeile. Fehlende Kontroll-Felder EXPLIZIT null
+// (Missing-Beta-Regel), fehlende Perioden-Enden → null + pitGaps-Vermerk.
+function buildPit(snap, pitGaps, ticker) {
+  if (!snap) { pitGaps.add('snapshot-missing'); return null; }
+  const m = snap.metrics || {};
+  const ts = snap.timeseries || {};
+  const meta = snap.meta || {};
+  const val = (o) => (o && Number.isFinite(o.value) ? o.value : null);
+  // bh-null-ends (T2, Karl-Semantik freigegeben): present = das Array traegt MINDESTENS
+  // EIN gueltiges (nicht-null) Perioden-Ende. Ein FTS-Cache-Treffer vor A10 liefert []
+  // (leer) oder [null,null,null] (Serie ohne echtes Datum) — beides ist truthy != null
+  // und wurde vorher faelschlich als "vorhanden" gezaehlt (weder pitGaps-Vermerk noch
+  // Coverage-Verlust). Normalisierung an EINER Stelle heilt pitGaps UND pitCoverageBlock
+  // gleichzeitig, da beide von revEnds/gpEnds lesen.
+  const validEnds = (a) => (Array.isArray(a) && a.some((x) => x != null)) ? a : null;
+  // Waehrungs-Waechter fuer die MISCH-Verhaeltnisse (Review-Fix 16.08.).
+  // evSales (metrics.enterpriseToRevenue) und priceSales sind Yahoo-Verhaeltnisse mit dem
+  // Zaehler in der HANDELS- und dem Nenner in der BERICHTS-Waehrung. Fallen die beiden
+  // auseinander, ist der Wert um genau Handelsfaktor/Berichtsfaktor verzerrt — bei BREN.JK
+  // war das der Faktor 17 831 (evSales 766 149 statt ~43). pull-yahoo korrigiert das seit
+  // Waehrungs-Chunk 3 und vermerkt es als meta.mischVerhaeltnisFaktor; ein Snapshot OHNE
+  // diesen Vermerk hat die Korrektur nachweislich nicht gesehen. Anders als beim Board ist
+  // das hier nicht nur Anzeige: board-history ist die DAUERHAFTE Vintage-Historie, aus der
+  // rank-ic.js und lib/e1-compression.js rechnen — ein falscher Wert bleibt dort fuer immer.
+  // Genullt wird nur bei SICHTBARER Divergenz ohne Vermerk (am eingefrorenen Bestand 501 von
+  // 2 800 Zeilen mit evSales); wo Handel und Bericht uebereinstimmen oder die Waehrungen
+  // unbekannt sind, bleibt alles wie bisher — der Wert ist dann nicht verzerrt.
+  const mischVerzerrt = mischVerhaeltnisUnkorrigiert(meta);
+  if (mischVerzerrt) pitGaps.add('mischverhaeltnis-unkorrigiert');
+  const revEnds = validEnds(ts.revenueQEnds);
+  const gpEnds = validEnds(ts.grossProfitQEnds);
+  if (revEnds == null) pitGaps.add('revenueQEnds-missing');   // A10: parallel in pull-yahoo
+  if (earningsEntryFor(ticker) == null) pitGaps.add('earningsDate-missing');   // 6.2-E2
+  if (gpEnds == null) pitGaps.add('grossProfitQEnds-missing');
+  return {
+    beta: val(m.beta),                       // Markt-Beta (Kontroll-Feld §7)
+    evSales: mischVal(m.enterpriseToRevenue, mischVerzerrt), // EV/Sales (§7) — Misch-Verhaeltnis, s. Waechter oben
+    priceGrossProfit: priceGrossProfit(m),   // Preis/Bruttogewinn (§7)
+    fetchedAt: meta.fetchedAt || meta.asOf || null,
+    revenueQ: seriesValues(ts.revenueQ),
+    revenueQEnds: revEnds,
+    grossProfitQ: seriesValues(ts.grossProfitQ),
+    grossProfitQEnds: gpEnds,
+    // BH-108: revenueQ/grossProfitQ werden bei JEDEM pull-yahoo-Abruf mit dem dann
+    // aktuellen FX-Faktor neu in USD umgerechnet (live belegt: identische Periode
+    // driftet über Vintages ohne neue Unternehmensperiode). Ohne Provenienz kann
+    // niemand nachträglich zwischen echtem Umsatzdelta und Abruf-FX-Bewegung
+    // unterscheiden. pull-yahoo.js schreibt reportingCurrencyOriginal/fxRateApplied
+    // bereits (Tag 134/148ff) — hier nur additiv PIT-gefroren, kein neuer Fetch.
+    // Konsum (Delivery-IC auf konsistenter FX-Basis) ist Sache von rank-ic.js, nicht
+    // dieses Writers.
+    reportingCurrencyOriginal: (typeof meta.reportingCurrencyOriginal === 'string' && meta.reportingCurrencyOriginal) || null,
+    fxRateApplied: Number.isFinite(meta.fxRateApplied) ? meta.fxRateApplied : null,
+    // 6.2-E1 Option B (Court 2026-07-17, PASS_MIT_AUFLAGEN, Auflage 4): echtes Price/Sales
+    // MIT eigener Bewertungs-asOf ab heute additiv in die committete Historie schreiben —
+    // startet die 12-Monats-Eigenhistorie-Uhr. Rein additiv (kein neuer Fetch: metrics.priceSales
+    // wird bereits Z. priceGrossProfit() gelesen); ans Ende gehängt, damit alle Bestandsfelder
+    // (evSales …) byte-identisch bleiben. priceSalesAsOf ist der WAHRE Bewertungs-Zeitstempel
+    // (kann Wochen VOR meta.fetchedAt liegen — genau der KILL-4-Widerspruch); E1s Freshness-Gate
+    // keyed hierauf, NIE auf fetchedAt.
+    priceSales: mischVal(m.priceSales, mischVerzerrt),
+    priceSalesAsOf: (m.priceSales && m.priceSales.asOf) || null,
+    // audit/fix (Hard-Review R4-SCR-02): screener-formel-ledger.md §4a fixiert die Regressor-Liste
+    // 'Size (log-MarketCap), Markt-Beta, 1-2 Bewertungs-Proxys' -- buildPit() lieferte beta/evSales/
+    // priceGrossProfit, aber KEIN marketCap-Feld, obwohl rank-ic.js Size als Kontroll-Regressor
+    // braucht. Rein additiv am ENDE (wie priceSales/priceSalesAsOf, E1 Option B): kein neuer Fetch
+    // (snap.marketCap liegt bereits am Snapshot, wie score.js mcapOf() es liest), Bestandsfelder
+    // bleiben byte-identisch positioniert.
+    marketCap: val(snap.marketCap),
+    // 6.2-E2 (Earnings-Blowout), analog E1 Option B: das Report-Datum PIT einfrieren.
+    // WARUM HIER UND NICHT ERST IM MELDEWEG: earnings-calendar.json ist eine LEBENDE Datei —
+    // sie kennt nur den heutigen Stand. Wer sie beim Auswerten eines alten Vintages liest,
+    // datiert einen Report mit Wissen von spaeter (derselbe Anachronismus, den E1s
+    // priceSalesAsOf verhindert). Rein additiv, kein neuer Abruf: die Datei liegt committet
+    // im Repo. earningsDateAsOf = wann WIR das Datum gezogen haben (pulledAt), nicht der
+    // Report selbst — dieselbe Trennung wie priceSales/priceSalesAsOf.
+    earningsDate: (earningsEntryFor(ticker) || {}).date || null,
+    earningsDateAsOf: (earningsEntryFor(ticker) || {}).pulledAt || null,
+    // Tag 1398 (value-gate PR2): the vendor share count behind marketCap, same expression as
+    // lib/ads-hand-table.js. The open-items list (scripts/value-open-items.js) labels a marketCap
+    // jump 'kapitalmassnahme' when this count moved by the same factor. Appended LAST (additive,
+    // earlier keys keep their order); not > 0 -> null, never a stored 0.
+    sharesOutstanding: sharesOutstandingOf(meta),
+    // Tag 1403 (G5): only in active mode of the exchange cross-check, additive: which revenue cells came from the
+    // exchange or were withheld, with the original vendor values (board-history is backward-check data).
+    ...(exchangeRecord(snap) ? { revenueQExchange: exchangeRecord(snap) } : {}),
+  };
+}
+
+function sharesOutstandingOf(meta) {
+  const s = meta.impliedSharesOutstanding || meta.sharesOutstanding;
+  return Number.isFinite(s) && s > 0 ? s : null;
+}
+
+// BH-109: juengstes Ende einer Enden-Serie als ms-Timestamp (oder null). Serien
+// sind [ISO-Datum|null, ...] — Reihenfolge nicht vorausgesetzt, es zaehlt das Max.
+function latestEndMs(ends) {
+  if (!Array.isArray(ends)) return null;
+  let latest = null;
+  for (const e of ends) {
+    if (typeof e !== 'string') continue;
+    const t = Date.parse(e + 'T00:00:00Z');
+    if (Number.isFinite(t) && (latest == null || t > latest)) latest = t;
+  }
+  return latest;
+}
+
+// ── Quartals-Spur (SHADOW ONLY, Nachtlauf 26.09.2026) ────────────────────────
+// Eine Zeile gilt als „durch ein NEUES berichtetes Quartal erklärt", wenn alle drei Wächter halten:
+//   P  das jüngste Quartalsende ist später als vorher und liegt 0–120 Tage vor dem Laufdatum,
+//   S  jedes überlappende Quartal behält sein Umsatzverhältnis neu/alt in [0,5 ; 2,0],
+//   J  der neue Quartalsumsatz gegen das Vorquartal liegt in [0,5 ; 2,0].
+// Das Band ist dasselbe wie das Skalen-Tor aus #319 (tests/waehrung-ausliefer-waechter.test.js,
+// SKALEN_UNTEN/SKALEN_OBEN) — dort nur im Test definiert, darum hier eine eigene benannte Konstante.
+// Die Spur URTEILT NICHT: quartalLaneShadow() loggt nur, das echte Urteil bleibt unverändert.
+const QUARTAL_LANE_MAX_ALTER_TAGE = 120;
+const QUARTAL_LANE_BAND = [0.5, 2.0];
+// J vergleicht nur mit dem UNMITTELBAREN Vorquartal: Kalenderquartale liegen 90–92 Tage auseinander,
+// 13/14-Wochen-Fiskalquartale 91/98 — [80, 100] deckt beides, eine Lücke (~180 d) nicht.
+const QUARTAL_LANE_VORGAENGER_TAGE = [80, 100];
+// Striktes YYYY-MM-DD mit Rundreise: Date.parse rollt 2026-06-31 still auf den 1. Juli.
+function strengesDatumMs(s) {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return NaN;
+  const t = Date.parse(s + 'T00:00:00Z');
+  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === s ? t : NaN;
+}
+function neuesQuartalErklaert(prev, cur, runDate) {
+  // null = Zeile unbrauchbar (unmögliches Datum oder doppeltes Quartal). Ein null-Ende ist Füllung
+  // und wird übersprungen; Werte bleiben ungefiltert und werden dort geprüft, wo P/S/J sie nutzen.
+  const paare = (pit) => {
+    const e = pit && pit.revenueQEnds, v = pit && pit.revenueQ;
+    if (!Array.isArray(e) || !Array.isArray(v)) return null;
+    const out = [], gesehen = new Set();
+    for (let i = 0; i < e.length; i++) {
+      if (e[i] == null) continue;
+      const t = strengesDatumMs(e[i]);
+      if (!Number.isFinite(t)) return null;   // F4
+      if (gesehen.has(t)) return null;   // F2: doppeltes Quartal
+      gesehen.add(t);
+      out.push([t, v[i]]);
+    }
+    return out.sort((a, b) => b[0] - a[0]);   // jüngstes Quartal zuerst, Reihenfolge nicht vorausgesetzt
+  };
+  const alt = paare(prev && prev.pit), neu = paare(cur && cur.pit);
+  const lauf = strengesDatumMs(runDate);
+  if (!alt || !neu || !alt.length || neu.length < 2 || !Number.isFinite(lauf)) return false;
+  const imBand = (q) => Number.isFinite(q) && q >= QUARTAL_LANE_BAND[0] && q <= QUARTAL_LANE_BAND[1];
+  const alterTage = (lauf - neu[0][0]) / MS_PER_DAY;
+  if (!(neu[0][0] > alt[0][0] && alterTage >= 0 && alterTage <= QUARTAL_LANE_MAX_ALTER_TAGE)) return false;   // P
+  const abstandTage = (neu[0][0] - neu[1][0]) / MS_PER_DAY;
+  if (!(abstandTage >= QUARTAL_LANE_VORGAENGER_TAGE[0] && abstandTage <= QUARTAL_LANE_VORGAENGER_TAGE[1])) return false;   // F2: Vorquartal
+  if (!Number.isFinite(neu[0][1]) || !Number.isFinite(neu[1][1])) return false;   // F3: jüngste zwei
+  const altWert = new Map(alt);
+  let ueberlappung = 0;
+  for (const [t, v] of neu) {
+    if (!altWert.has(t)) continue;
+    // Auf BEIDEN Seiten leer = stabile Datenlücke der Quelle (09-25: fast nur CN-A-Aktien, 2025-09-30):
+    // zählt nicht als Überlappung, blockiert S aber auch nicht. Nur EINE Seite leer bleibt ein Bruch.
+    if (!Number.isFinite(v) && !Number.isFinite(altWert.get(t))) continue;   // F3: Lücke beidseitig
+    ueberlappung++;
+    if (!Number.isFinite(v) || !Number.isFinite(altWert.get(t))) return false;   // F3: Überlappung
+    if (!imBand(v / altWert.get(t))) return false;   // S
+  }
+  return ueberlappung > 0 && imBand(neu[0][1] / neu[1][1]);   // J
+}
+
+// pitCoverage: Anteil present je Kontroll-Feld über die Kohorte (A9-Attenuations-Ausweis).
+function pitCoverageBlock(rows, date) {
+  const fields = ['beta', 'evSales', 'priceGrossProfit', 'revenueQEnds', 'grossProfitQEnds'];
+  const cov = {};
+  const n = rows.length || 1;
+  for (const f of fields) {
+    let present = 0;
+    for (const r of rows) if (r.pit && r.pit[f] != null) present++;
+    cov[f] = present / n;
+  }
+  // BH-109: "present" oben zaehlt jedes Enden-Array mit MINDESTENS einem gueltigen
+  // Datum, auch wenn das juengste Ende Jahre alt ist (Audit-Beleg 18.07.2026: 26/205
+  // present-Zeilen mit juengstem Ende >1 Jahr alt — u. a. MKS.L 2023-03-31, SBRY.L
+  // 2011-06-30). Additive Fresh-Metrik: nur Zeilen, deren juengstes Ende innerhalb
+  // RETENTION_DAYS (~2Q, dieselbe A12-Konstante) vor dem Vintage-Datum liegt, gelten
+  // als fuer den +2Q-Delivery-Vergleich tatsaechlich nutzbar. Bestehende *Ends-Felder
+  // bleiben unveraendert (Bestandsleser/Tests).
+  if (date) {
+    const vintageMs = Date.parse(date + 'T00:00:00Z');
+    if (Number.isFinite(vintageMs)) {
+      for (const f of ['revenueQEnds', 'grossProfitQEnds']) {
+        let fresh = 0;
+        for (const r of rows) {
+          const latest = latestEndMs(r.pit && r.pit[f]);
+          if (latest != null && (vintageMs - latest) <= RETENTION_DAYS * MS_PER_DAY) fresh++;
+        }
+        cov[f + 'Fresh'] = fresh / n;
+      }
+    }
+  }
+  return cov;
+}
+
+// ── LT1-PIT-Preisfelder (Rat 10, Option ii) ─────────────────────────────────
+// vol_60d und das 12-1-Momentum EINER Zeile, gerechnet am Vintage-Datum.
+// STRIKT PIT: nur Balken mit Datum <= date. Reicht das Fenster nicht, ist der Wert
+// null — NIE ein kürzeres Ersatzfenster; ein aufgefülltes Dezil wäre ein erfundenes
+// Matching-Feld und genau das, was der Rat als „Substitution" verboten hat.
+function pitPriceFeatures(series, date) {
+  const leer = { vol60d: null, momentumRaw: null };
+  if (!Array.isArray(series) || typeof date !== 'string') return leer;
+  const bars = [];
+  for (const b of series) {
+    if (!b || typeof b.date !== 'string') continue;
+    if (b.date.slice(0, 10) > date) continue;          // DIE MAUER: kein Balken von nach dem Stichtag
+    if (!Number.isFinite(b.close) || b.close <= 0) continue;  // log braucht einen positiven Kurs
+    bars.push(b);
+  }
+  // Die Reihenfolge im Store ist nicht vertraglich zugesichert; ISO-Daten sortieren
+  // lexikografisch korrekt.
+  bars.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const n = bars.length;
+  let vol60d = null;
+  if (n >= VOL_WINDOW_BARS + 1) {
+    const rets = [];
+    for (let i = n - VOL_WINDOW_BARS; i < n; i++) rets.push(Math.log(bars[i].close / bars[i - 1].close));
+    let mean = 0;
+    for (const r of rets) mean += r;
+    mean /= rets.length;
+    let ss = 0;
+    for (const r of rets) ss += (r - mean) * (r - mean);
+    const sd = Math.sqrt(ss / (rets.length - 1));      // Stichproben-SD (ddof=1), wie representation.local_vol
+    if (Number.isFinite(sd)) vol60d = sd;
+  }
+  let momentumRaw = null;
+  if (n >= MOMENTUM_LOOKBACK_BARS + 1) {
+    const ende = bars[n - 1 - MOMENTUM_GAP_BARS].close;
+    const start = bars[n - 1 - MOMENTUM_LOOKBACK_BARS].close;
+    const m = Math.log(ende / start);
+    if (Number.isFinite(m)) momentumRaw = m;
+  }
+  return { vol60d, momentumRaw };
+}
+
+// Ein Durchgang über die Shards je Lauf, Ergebnis im Modul gecacht: geladen wird
+// IMMER nur ein Shard (~12 MB), nie der ganze 400-MB-Store — loadAll() wäre hier ein
+// zweiter Vollabzug neben dem, was der Tageslauf ohnehin hält; andere Shard-Leser im
+// Repo fahren aus demselben Grund shard-weise. Der Cache hängt am Datum, weil das Datum
+// die PIT-Grenze IST.
+let _priceFeatCache = null;
+function priceFeaturesForRun(date) {
+  // Schlüssel ist Datum UND Store-Pfad: _setPaths leert den Cache zwar, aber ein falsch
+  // wiederverwendeter Eintrag hiesse ein dauerhaft falscher Wert in der Messreihe — der
+  // Schlüssel macht die Bedingung an Ort und Stelle prüfbar statt drei Funktionen weiter.
+  if (_priceFeatCache && _priceFeatCache.date === date && _priceFeatCache.dir === P.PRICES_DIR) {
+    return _priceFeatCache.byTicker;
+  }
+  // VOLLSTÄNDIGKEITS-WACHE, bevor ein einziger Balken gelesen wird.
+  // loadShard() liefert für eine FEHLENDE Datei {} — ohne diese Wache setzt ein halb
+  // ausgecheckter Store (abgebrochener Checkout, OneDrive-Teilsynchronisation) jeden Ticker
+  // dieses Shards still auf null, ununterscheidbar von „hat keine 12 Monate Historie", und
+  // zwar DAUERHAFT in der committeten Messreihe. Nachgestellt am 19.09.: ein gelöschter
+  // Shard machte aus vol_60d = 0,01513 ein null, ohne eine einzige Meldung.
+  // loadAll() hat genau diese Prüfung (BH-139) — der shard-weise Weg hier nicht, also
+  // steht sie hier. Ein Store, den es gar nicht gibt, ist dagegen kein Fehler: hermetische
+  // Testläufe haben keinen, und volle Null-Coverage ist dort die ehrliche Antwort.
+  const meta = priceStore.loadMeta(P.PRICES_DIR);
+  const fehlendeShards = [];
+  for (let n = 0; n < priceStore.SHARD_COUNT; n++) {
+    if (!fs.existsSync(priceStore.shardPath(P.PRICES_DIR, n))) fehlendeShards.push(priceStore.shardFilename(n));
+  }
+  const gibtEsEinenStore = !!meta || fs.existsSync(priceStore.legacyPath(P.PRICES_DIR))
+    || fehlendeShards.length < priceStore.SHARD_COUNT;
+  if (gibtEsEinenStore && (!meta || fehlendeShards.length > 0)) {
+    throw new Error('write-board-history: Preis-Store unvollstaendig — '
+      + (meta ? fehlendeShards.length + ' Shard(s) fehlen (' + fehlendeShards.join(', ') + ')'
+        : 'kein _meta.json (unmigrierter oder halb ausgecheckter Store)')
+      + ' in ' + P.PRICES_DIR + '. Ein teilweiser Store wuerde die PIT-Matchingfelder jedes '
+      + 'betroffenen Tickers still auf null setzen und damit dauerhaft falsche Nullen in die '
+      + 'Messreihe schreiben. Store vollstaendig auschecken (bzw. migrieren), dann erneut laufen.');
+  }
+  const byTicker = new Map();
+  for (let n = 0; n < priceStore.SHARD_COUNT; n++) {
+    // Kein try/catch: ein kaputter Shard ist ein kaputter INPUT (Exit-Vertrag 1) —
+    // stillschweigend genullte Matching-Felder wären in der Messreihe nicht mehr von
+    // „Ticker hat keine 12 Monate Historie" zu unterscheiden.
+    // ponytail: es wird JEDER Ticker jedes Shards gerechnet, nicht nur die Kohorten-Ticker
+    // (34.926 statt ~9.600; gemessen 1,6 s und 435 MB RSS für den ganzen Store). Die
+    // Kohorten verteilen sich ohnehin über alle 32 Shards, ein Vorlauf zum Einsammeln der
+    // Ticker spart also keinen Shard-Ladevorgang. Nachziehen, falls der Store je so wächst,
+    // dass die zwei Sekunden zählen.
+    const shard = priceStore.loadShard(P.PRICES_DIR, n);
+    for (const t of Object.keys(shard)) {
+      const f = pitPriceFeatures(shard[t], date);
+      if (f.vol60d != null || f.momentumRaw != null) byTicker.set(t, f);
+    }
+  }
+  _priceFeatCache = { date, dir: P.PRICES_DIR, byTicker };
+  return byTicker;
+}
+
+// Gleich besetzte Dezile 1..10 (1 = kleinster Wert) über die Zeilen der Kohorte MIT Wert.
+// Position statt Wertgrenzen, Gleichstände nach Ticker aufgelöst: damit hängt die Ausgabe
+// nicht an der Zeilenreihenfolge und ein Lauf ist reproduzierbar.
+function pitDecileByIndex(entries) {
+  const sorted = entries.slice().sort((a, b) => (a.value - b.value)
+    || (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0)
+    || (a.i - b.i));
+  const out = new Map();
+  for (let k = 0; k < sorted.length; k++) {
+    out.set(sorted[k].i, 1 + Math.floor((k * PIT_DECILES) / sorted.length));
+  }
+  return out;
+}
+
+// Hängt die vier LT1-Felder an JEDE Kohorten-Zeile — auf ZEILEN-Ebene, nicht in den
+// pit-Block: compact() strippt pit nach ~2Q (A12), die Matching-Felder müssen die
+// Kompaktierung aber überleben (der erste LT1-Read liegt Jahre nach dem Vintage).
+// Bezugsgesamtheit für Residualisierung UND Dezile ist die VOLLE Kohorte dieses Boards
+// (beide Tracks zusammen), wie vom Rat deklariert.
+function attachPitPriceFields(rows, date) {
+  const feats = priceFeaturesForRun(date);
+  const volEntries = [];
+  const momRaw = [];
+  rows.forEach((r, i) => {
+    const f = feats.get(r.ticker) || { vol60d: null, momentumRaw: null };
+    r.vol_60d = f.vol60d;
+    r.vol_decile = null;
+    r.momentum_12m_residual = null;
+    r.momentum_12m_residual_decile = null;
+    if (f.vol60d != null) volEntries.push({ i, ticker: r.ticker, value: f.vol60d });
+    momRaw.push(f.momentumRaw);
+  });
+  const vorhanden = momRaw.filter((x) => x != null);
+  // Residualisierung = einfaches querschnittliches Zentrieren am Kohorten-Mittel
+  // (kein Markt-Beta-Regress — die Kohorte IST der Querschnitt dieses Vintages).
+  const mittel = vorhanden.length ? vorhanden.reduce((a, b) => a + b, 0) / vorhanden.length : null;
+  const momEntries = [];
+  rows.forEach((r, i) => {
+    if (momRaw[i] == null || mittel == null) return;
+    r.momentum_12m_residual = momRaw[i] - mittel;
+    momEntries.push({ i, ticker: r.ticker, value: r.momentum_12m_residual });
+  });
+  for (const [i, d] of pitDecileByIndex(volEntries)) rows[i].vol_decile = d;
+  for (const [i, d] of pitDecileByIndex(momEntries)) rows[i].momentum_12m_residual_decile = d;
+  const n = rows.length || 1;
+  return {
+    vol_decile: volEntries.length / n,
+    momentum_12m_residual_decile: momEntries.length / n,
+  };
+}
+
+// ── Vintage-Aufbau für EIN Board ─────────────────────────────────────────────
+// valueFlags (Tag 1401): optional Map ticker -> flags (lib/value-open-items.js valueFlagsByTicker).
+// run() passes the list of the same run; scripts/value-open-items.js passes none (it builds
+// today's values, which must not depend on the list it is about to write).
+function buildBoardVintage(board, boardData, date, calibMeta, universeHash = null, valueFlags = null) {
+  const pitGaps = new Set();
+  const buildTrack = (arr, track) => (Array.isArray(arr) ? arr : []).map((row, i) => ({
+    rank: i + 1,                    // Board-Rang (Zeilenreihenfolge = sortierte Kohorte)
+    ticker: row.ticker,
+    track,
+    // KEIN Skalen-Deckel hier — und das ist die wichtigste Zeile dieser Datei (19.08.2026).
+    //
+    // Der erste Entwurf deckelte hier ebenfalls auf 100. Der Waechter (f3) in
+    // tests/board-history.test.js wurde daraufhin ROT und legte den Grund offen: er stellt
+    // einen echten Wertbruch nach (Score springt 92 -> 132) und erwartet, dass das Wert-Gate
+    // anschlaegt. Gedeckelt wurde aus dem Sprung von +40 ein Sprung von +8 — unter der
+    // Alarmschwelle. Der Deckel haette das Sicherheitsnetz stillgelegt.
+    //
+    // board-history ist die MESSREIHE, auf der das Wert-Gate rechnet: hier steht der echte
+    // Wert. Gedeckelt wird ausschliesslich die ANZEIGE (scripts/write-findash-export.js) —
+    // Karl sieht 100, gemessen wird 101. Wer das je zusammenlegt, blendet das Gate.
+    score: row.score != null ? row.score : null, // survival-Zeilen sind nie gescort → null statt key-drop
+    runwayQuarters: row.runwayQuarters != null ? row.runwayQuarters : null, // survival-Sortier-Substanz
+    scoreBase: row.scoreBase != null ? row.scoreBase : null,
+    scoreShrunk: row.scoreShrunk != null ? row.scoreShrunk : null,
+    coverageAxes: row.coverageAxes != null ? row.coverageAxes : null,
+    axisBreakdown: Array.isArray(row.axisBreakdown) ? row.axisBreakdown : null,
+    lamps: Array.isArray(row.lamps) ? row.lamps : null,
+    pit: buildPit(readSnapshot(row.ticker), pitGaps, row.ticker),  // §7-PIT-Freeze (A9-Join)
+  }));
+  // audit/fix: survival.json ist eine FLACHE Liste (nie gescort, keine Tracks) — als
+  // Single-Track 'flat' einfrieren statt still leere profitable/unprofitable zu schreiben.
+  const isFlat = Array.isArray(boardData);
+  const profitable = isFlat ? buildTrack(boardData, 'flat') : buildTrack(boardData.profitable, 'profitable');
+  const unprofitable = isFlat ? [] : buildTrack(boardData.unprofitable, 'unprofitable');
+  const allRows = profitable.concat(unprofitable);
+  // LT1 (Rat 10): erst NACH dem Bau aller Zeilen — Residualisierung und Dezile brauchen
+  // die volle Kohorte, nicht die einzelne Zeile.
+  const pitFieldCoverage = attachPitPriceFields(allRows, date);
+  // Tag 1401: marks only, LAST key of a flagged row; rows without an open item get no key.
+  if (valueFlags) {
+    for (const r of allRows) {
+      const f = valueFlags.get(r.ticker);
+      if (f) r.valueFlags = f.map((x) => ({ ...x, labels: x.labels.slice() }));
+    }
+  }
+  return {
+    date,
+    board,
+    boardStatus: boardStatus(board),           // core|diagnostic (src/scoring/board-status.js)
+    formulaVersion: calibMeta.formulaVersion,  // Proxy: calibration.schema (siehe Kopf-Doku)
+    // BH-105: formulaVersion haengt an calibration.schema und blieb ueber mehrfache
+    // Scoring-Aenderungen (Tags 323, 334-340) konstant "calibration/v4" — kein
+    // unveraenderlicher Formel-Marker. GITHUB_SHA ist der commit, der die Vintage-
+    // Zeile TATSAECHLICH erzeugt hat; in der CI (daily-pull.yml, der einzige Ort,
+    // der committete Messreihen erzeugt) automatisch gesetzt. Additiv, formulaVersion
+    // bleibt fuer Bestandsleser unveraendert.
+    // ponytail: kein git-rev-parse-Fallback fuer lokale Ad-hoc-Laeufe — die reale
+    // Messreihe entsteht ausschliesslich in CI. Fallback nachziehen, falls lokale
+    // Vintages je in rank-ic einfliessen sollen.
+    formulaCommit: process.env.GITHUB_SHA || null,
+    // T155/W3 (Rat vom 25.08.): Prüfsumme über die Menge der bewerteten Ticker DIESES
+    // Laufs. Erst damit ist die Herkunft einer Score-Verschiebung ein Zeichenketten-
+    // Vergleich statt einer Vermutung: gleicher Hash + andere Scores = Datenänderung,
+    // anderer Hash = Kohortenwechsel. Das Produkt normiert kohorten-relativ; ohne diese
+    // Zahl war die Kohortenwirkung von der Datenwirkung nicht trennbar (B1/B2).
+    // Berechnet wird er genau EINMAL pro Lauf, in scripts/write-excluded-list.js (dort
+    // liegt das Universum ohnehin geladen); hier wird er nur mitgeschrieben. Zwei
+    // Rechenstellen würden driften, ein zweiter Scan über ~15.000 Snapshots wäre
+    // derselbe Wert zum doppelten Preis.
+    // null ist ein gültiger, ehrlicher Wert (lokaler Ad-hoc-Lauf ohne Export-Schritt).
+    universeHash,
+    calibrationGeneratedAt: calibMeta.generatedAt,
+    cohortCount: { profitable: profitable.length, unprofitable: unprofitable.length },
+    pitCoverage: pitCoverageBlock(allRows, date),
+    // LT1 (Rat 10): Anteil der Kohorten-Zeilen MIT je Dezil — die Null-Quote der beiden
+    // neuen Matching-Felder ist damit je Vintage ablesbar, ohne die Zeilen zu zählen.
+    pitFieldCoverage,
+    pitGaps: Array.from(pitGaps).sort(),
+    // gate wird nach der Gate-Auswertung befüllt (calibrating/threshold/suspect/...)
+    gate: null,
+    cohort: { profitable, unprofitable },
+  };
+}
+
+// ── Integritäts-Vorrang (Court 02.09.2026, WB-4 — die FTI-Regel) ─────────────
+// Der Zuschlag des Datenschub-Arms deckt BEWEGUNG, niemals VERFALL. Eine Zeile, deren
+// Integrität über den Übergang abbaut, ist NIEMALS gedeckt — was auch immer das Register
+// sagt und wie klein ihr |D| ist. Der Anlass ist gemessen, nicht erfunden: FTI verlor im
+// Übergang 01.→02.09. annualOpInc ([1.393,0 · 982,6 · 529,2 · 212,5 Mio] → []), bekam
+// annualGP [0,0,0,0], fiel coverageAxes 6/7 → 4/7 und verlor beide Lampen — bei einem
+// Delta von 12,00, also UNTER dem Deckel 23,00. Ohne diese Regel ließe der Zuschlag genau
+// den einzigen echten Datenschaden derselben Nacht durch, für die er geschrieben wurde.
+//
+// GEMESSEN WIRD AN DER VINTAGE-ZEILE, WEIL DORT BEIDE STÄNDE STEHEN (Auflösung der
+// K2-Messvorbedingung): priorMap/nowMap führen vollständige Vintage-Zeilen, erreichbar
+// sind coverageAxes, lamps und die PIT-Quellreihen (revenueQ/revenueQEnds/grossProfitQ/
+// grossProfitQEnds). NICHT erreichbar ist meta.opIncSource — es steht im Snapshot, nicht
+// in der Vintage-Zeile (buildPit übernimmt es nicht), ebenso wenig die Jahresreihen
+// annualOpInc/annualGP. Blind ist die Regel dadurch nicht: derselbe FTI-Fall fällt über
+// den coverageAxes-Zähler UND über den Lampen-Verlust auf, beides gemessen. Wer
+// meta.opIncSource selbst prüfen will, muss es zuerst in buildPit aufnehmen — das wäre ein
+// Schema-Zusatz an der Messreihe und gehört nicht in diesen Beschluss (Sperre §10).
+function axenZaehler(v) {
+  const m = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(typeof v === 'string' ? v : '');
+  return m ? Number(m[1]) : null;
+}
+// „gefüllt" = Array mit mindestens EINEM nicht-null Wert. Leer, komplett null oder ganz
+// weg ist Verfall — dieselbe Semantik wie validEnds() in buildPit (T2/bh-null-ends).
+function reiheGefuellt(a) { return Array.isArray(a) && a.some((x) => x != null); }
+// ── WB-4' (Master-Ratifikation 05.09.2026 als AMENDMENT zu WB-4, Council 05.09.) ────────
+// Gemessen am ersten Live-Tag der Regel (Vintage 2026-09-04 gegen 2026-09-01): 15 Treffer,
+// davon 14 Fehlalarme — Diagnose-Lampen, die frische Daten zu Recht loeschen (8), Quell-
+// Upgrades Yahoo -> SEC-GAAP (FET, WKC), fuehrende Null-Quartalsslots, die marginTrajectory
+// ehrlich auf null setzen (DUK, PPL, AVA, ENB). Der einzige echte Schaden (FTI) faellt ueber
+// (a) UND (b). Die vier Arme, in der Reihenfolge des Urteils:
+//   (a) coverageAxes-Rueckgang = Verfall, AUSSER er ist vollstaendig durch einen fuehrenden
+//       Null-Slot erklaert: laut axisBreakdown geht genau KOPF_ACHSE verloren, der Kopf der
+//       Eingangsreihe rueckt vor (revenueQEnds[0] bzw. opIncQEnds[0] juenger als vorher), die
+//       Null sitzt in Slot [0] (revenueQ[0] und/oder opIncQ[0]), kein historischer Wert geht
+//       verloren (Anzahl gefuellter Werte >= vorher). Ohne axisBreakdown: Verfall (fail-closed).
+//   (b) PIT-Reihe gefuellt -> leer/null = Verfall, unveraendert.
+//   (c) Lampen-Verlust zaehlt nur fuer QUELL_LAMPEN; ein Quell-Lampen-Verlust ist freigegeben,
+//       wenn der Ticker in den SEC-Jahresreihen (opts.secTicker) steht — Beweis des Upgrades —,
+//       sonst Verfall. meta.opIncSource steht nicht in der Zeile; ein toter Diskriminator
+//       (Ticker in SEC, Quelle auf null) zeigt sich als Reihen-Leerung/Achsenverlust in (a)/(b),
+//       die die Freigabe NIE ueberstimmt (Waechter-Arm C3).
+//   (d) jeder andere Lampen-Uebergang (true -> false/null) ist Beobachtung: gezaehlt und
+//       namentlich im Kanal-B-Protokoll und im Sidecar, ohne Veto (lampenBeobachtung).
+// opts.quartale(ticker) liefert { opIncQ, opIncQEnds } aus dem AKTUELLEN Snapshot (kein
+// Schema-Zusatz an der Messreihe); fehlt es, wird der opIncQ-Slot nicht angenommen.
+const QUELL_LAMPEN = new Set(['opIncSynthetisch', 'opIncYahooAdjusted']);
+const KOPF_ACHSE = 'marginTrajectory';   // einzige Achse mit Kopf-Null-Guard (src/scoring/axes.js:288-301)
+const anzahlGefuellt = (a) => (Array.isArray(a) ? a.filter((x) => x != null).length : 0);
+// Achsen, die vorher einen Wert hatten und nachher keinen; null wenn axisBreakdown fehlt.
+function verloreneAchsen(vorher, nachher) {
+  if (!Array.isArray(vorher.axisBreakdown) || !Array.isArray(nachher.axisBreakdown)) return null;
+  const nach = new Map(nachher.axisBreakdown.map((x) => [x.key, x.pct]));
+  return vorher.axisBreakdown.filter((x) => x.pct != null && nach.get(x.key) == null).map((x) => x.key);
+}
+function fuehrenderNullSlot(pv, pn, quartale) {
+  const kopfVorher = Array.isArray(pv.revenueQEnds) ? pv.revenueQEnds[0] : null;
+  if (typeof kopfVorher !== 'string') return false;
+  const q = quartale || {};
+  const kopfRev = Array.isArray(pn.revenueQEnds) ? pn.revenueQEnds[0] : null;
+  const kopfOp = Array.isArray(q.opIncQEnds) ? q.opIncQEnds[0] : null;
+  const revSlot = typeof kopfRev === 'string' && kopfRev > kopfVorher && Array.isArray(pn.revenueQ) && pn.revenueQ[0] == null;
+  // opIncQ hat KEINEN Vorher-Stand in der Zeile (nur der aktuelle Snapshot ist lesbar). Ein
+  // historischer Verlust ist deshalb nicht per Zaehler-Vergleich zu erkennen — fail-closed: der
+  // opIncQ-Slot gilt nur, wenn ausser dem Kopf KEIN Wert der Reihe fehlt (Review 05.09., HIGH).
+  const opSlot = typeof kopfOp === 'string' && kopfOp > kopfVorher && Array.isArray(q.opIncQ) && q.opIncQ.length > 1
+    && q.opIncQ[0] == null && q.opIncQ.slice(1).every((x) => x != null);
+  if (!revSlot && !opSlot) return false;
+  for (const f of ['revenueQ', 'grossProfitQ']) if (anzahlGefuellt(pn[f]) < anzahlGefuellt(pv[f])) return false;
+  return true;
+}
+// Liefert das auslösende Feld als Klartext oder null. Die erste Fundstelle genügt: die
+// Zeile ist damit ungedeckt, weitere Felder ändern das Urteil nicht mehr.
+function integritaetsVerfall(vorher, nachher, opts) {
+  if (!vorher || !nachher) return null;
+  opts = opts || {};
+  const pv = vorher.pit || {};
+  const pn = nachher.pit || {};
+  for (const f of ['revenueQ', 'revenueQEnds', 'grossProfitQ', 'grossProfitQEnds']) {          // (b)
+    if (reiheGefuellt(pv[f]) && !reiheGefuellt(pn[f])) return f + ' gefuellt -> leer/null';
+  }
+  const a = axenZaehler(vorher.coverageAxes);                                                     // (a)
+  const b = axenZaehler(nachher.coverageAxes);
+  if (a != null && b != null && b < a) {
+    const verloren = verloreneAchsen(vorher, nachher);
+    const quartale = typeof opts.quartale === 'function' ? opts.quartale(nachher.ticker) : null;
+    const slot = !!(verloren && verloren.length === 1 && verloren[0] === KOPF_ACHSE && fuehrenderNullSlot(pv, pn, quartale));
+    if (!slot) {
+      return 'coverageAxes ' + vorher.coverageAxes + ' -> ' + nachher.coverageAxes
+        + (verloren ? ' [' + (verloren.length ? verloren.join(',') : 'Achse unbenannt') + ']' : '');
+    }
+  }
+  if (Array.isArray(vorher.lamps) && vorher.lamps.length) {                                       // (c)
+    const jetzt = new Set(Array.isArray(nachher.lamps) ? nachher.lamps : []);
+    const sec = opts.secTicker instanceof Set ? opts.secTicker : null;
+    for (const l of vorher.lamps) {
+      if (jetzt.has(l) || !QUELL_LAMPEN.has(l)) continue;
+      if (sec && sec.has(nachher.ticker)) continue;   // Quell-Upgrade, am Objekt bewiesen
+      return 'Lampe ' + l + ' verloren';
+    }
+  }
+  return null;
+}
+// (d)/(c): Beobachtung ohne Veto — verlorene Diagnose-Lampen und freigegebene Quell-Upgrades,
+// namentlich, damit die K7-Beweisbasis waechst statt dunkel zu werden.
+function lampenBeobachtung(vorher, nachher, opts) {
+  const out = { verloren: [], quellUpgrade: [] };
+  if (!vorher || !nachher || !Array.isArray(vorher.lamps)) return out;
+  const jetzt = new Set(Array.isArray(nachher.lamps) ? nachher.lamps : []);
+  const sec = opts && opts.secTicker instanceof Set ? opts.secTicker : null;
+  for (const l of vorher.lamps) {
+    if (jetzt.has(l)) continue;
+    if (QUELL_LAMPEN.has(l)) { if (sec && sec.has(nachher.ticker)) out.quellUpgrade.push(l); }
+    else out.verloren.push(l);
+  }
+  return out;
+}
+// Ticker mit SEC-GAAP-Jahresreihe: dieselben Dateien wie scripts/opinc-source-migrate.js
+// (SECANNUAL_FILES). Fehlende Dateien = kein Beweis = fail-closed (Quell-Verlust bleibt Verfall).
+const SECANNUAL_FILES = ['sec-secannual.json', 'sec-secannual-smallcap.json', 'kr-secannual.json', 'jp-secannual.json', 'tw-secannual.json'];
+function secTickerLesen(dir) {
+  const s = new Set();
+  for (const f of SECANNUAL_FILES) {
+    const j = readJsonOrNull(path.join(dir, f));
+    if (!j || typeof j !== 'object' || Array.isArray(j)) continue;   // Array-Form = kein Beweis (Indizes sind keine Ticker)
+    if (Array.isArray(j.tickers)) continue;                           // unbekannte Form = kein Beweis
+    const m = (j.tickers && typeof j.tickers === 'object') ? j.tickers : j;
+    for (const k of Object.keys(m)) if (!k.startsWith('_')) s.add(k);
+  }
+  return s;
+}
+
+// ── Wert-Plausibilitäts-Gate ─────────────────────────────────────────────────
+// Vergleicht das neue Board-Vintage gegen das Vortags-Vintage. Liefert
+// { calibrating, p99Delta, threshold, suspect, reasons }.
+function evaluateGate(vintage, priorVintage, gateState, bruch, board, opts) {
+  const reasons = [];
+  opts = opts || {};
+  const rowsByTicker = (v) => {
+    const m = new Map();
+    if (!v) return m;
+    for (const t of ['profitable', 'unprofitable']) {
+      for (const r of (v.cohort && v.cohort[t]) || []) m.set(r.ticker, r);
+    }
+    return m;
+  };
+  const nowMap = rowsByTicker(vintage);
+  const priorMap = rowsByTicker(priorVintage);
+
+  // BH-111: absolute Mindestgröße + Überlappungs-Boden GEGEN DIE VOLLEN Ticker-Sets
+  // (vor jeder Schnittmengen-Bildung) — NaN/Coverage/P99-Delta unten werden NUR auf
+  // nowMap∩priorMap gebildet, sodass ein fast leerer Volloutput trotzdem "sauber"
+  // aussehen kann (Audit-Beleg: 50–90 % Boardzeilen-Verlust blieb unauffällig). Ein
+  // leeres Board (0 Zeilen) ist unabhängig von jeder Schnittmenge ein Datenbruch.
+  if (nowMap.size === 0) reasons.push('cohort-empty');
+  if (priorVintage && priorMap.size > 0) {
+    let matched = 0;
+    for (const tk of nowMap.keys()) if (priorMap.has(tk)) matched++;
+    if (matched / priorMap.size < MIN_COHORT_OVERLAP) reasons.push('cohort-overlap-collapse');
+  }
+
+  // Harter Integritäts-Check: NaN/null-Score wo vorher ein Wert stand (immer suspect,
+  // auch in der Kalibrierphase — kein Threshold-Thema, sondern Datenbruch).
+  let nanBreak = false;
+  for (const [tk, r] of nowMap) {
+    const p = priorMap.get(tk);
+    if (p && Number.isFinite(p.score) && !Number.isFinite(r.score)) { nanBreak = true; break; }
+  }
+  if (nanBreak) reasons.push('nan-break');
+
+  // Coverage-Absturz gegen Vortag (immer suspect).
+  if (priorVintage && priorVintage.pitCoverage) {
+    for (const f of Object.keys(vintage.pitCoverage)) {
+      const drop = (priorVintage.pitCoverage[f] || 0) - vintage.pitCoverage[f];
+      if (drop > COVERAGE_COLLAPSE_DROP) { reasons.push('coverage-collapse:' + f); }
+    }
+  }
+
+  // Tages-Delta der Scores (nur wo Ticker in beiden Vintages vorhanden).
+  // SCORE-DEFINITIONS-BRUCH (16.08.2026): ist dieses Board im Register namentlich genannt UND
+  // benennt der Eintrag eine erklaerende Lampe, bleiben die Zeilen MIT dieser Lampe aus dem
+  // p99 heraus — ihre Bewegung IST die registrierte Definitionsaenderung, nicht der Messfehler,
+  // den das Gate sucht. Bewusst kein Zuschlag auf die Schwelle: ein Deckel, der eine Bewegung
+  // von ~28 Punkten (2548.TW 78->50) abdeckt, wuerde in derselben Nacht jeden beliebigen echten
+  // Wertfehler mit durchlassen. So bleibt die Schwelle fuer ALLE anderen Zeilen unveraendert
+  // streng, und was herausgerechnet wird, ist an der Lampe abzaehlbar statt gesetzt.
+  const erklaerendeLampe = (bruch && board && bruch.boards.has(board)) ? bruch.erklaerendeLampe : null;
+  const traegtLampe = (row) => !!row && Array.isArray(row.lamps) && row.lamps.includes(erklaerendeLampe);
+  const deltas = [];
+  // WB-5 verlangt JEDE breite Zeile NAMENTLICH. deltas bleibt ein reines number[] (quantile
+  // kopiert und sortiert, die Reihenfolge hier bleibt also unberührt) und bekommt daneben
+  // ein index-gleiches Ticker-Array — dieselbe Bauart wie dailyP99Samples/sampleDates.
+  const deltaTicker = [];
+  let erklaerteZeilen = 0;
+  for (const [tk, r] of nowMap) {
+    const p = priorMap.get(tk);
+    if (!(p && Number.isFinite(p.score) && Number.isFinite(r.score))) continue;
+    // Vorher ODER nachher: eine Zeile, die die Lampe gerade VERLIERT, bewegt sich aus
+    // demselben Grund wie eine, die sie bekommt.
+    if (erklaerendeLampe && (traegtLampe(r) || traegtLampe(p))) { erklaerteZeilen++; continue; }
+    deltas.push(Math.abs(r.score - p.score));
+    deltaTicker.push(tk);
+  }
+  const p99Delta = deltas.length ? quantile(deltas, P99) : null;
+
+  // Keine gültige eingefrorene Schwelle (nie kalibriert ODER degeneriert) → Kalibrierphase.
+  // Die BOARD-EIGENE Schwelle fehlt dann; geprüft wird trotzdem, nämlich am gemessenen
+  // Boden (MIN_GATE_THRESHOLD, Herleitung dort). Nur so ist die Neukalibrierung — die alle
+  // Boards auf „noch nicht kalibriert" zurücksetzt — keine Abschaltung der Wert-Achse.
+  const threshold = frozenThresholdOf(gateState);
+  const calibrating = threshold == null;
+  const basisSchwelle = threshold != null ? threshold : MIN_GATE_THRESHOLD;
+
+  // Tagesabstand zum Vorgänger. Über GATE_MAX_ABSTAND_TAGE hinaus gibt es keinen
+  // Tages-Maßstab mehr: dann urteilt die Wert-Achse NICHT (kein suspect aus dem Delta),
+  // sondern weist den Abstand aus. Alles andere wäre die Selbstverstärkung mit einer
+  // Stufe mehr — je länger die Messreihe steht, desto sicherer bliebe sie stehen.
+  const gapDays = priorVintage ? tagesabstand(vintage, priorVintage) : 1;
+  const abstandZuGross = !!priorVintage && gapDays > GATE_MAX_ABSTAND_TAGE;
+
+  // ── Maßstab-Bruch: erhöhte Tagesgrenze für den EINEN Neu-gegen-Alt-Vergleich ──
+  // Ändert sich die Score-DEFINITION (z. B. die Kohorte wird entdoppelt), misst der
+  // Vergleich Neu-gegen-Alt zwei verschiedene Maßstäbe. Die eingefrorene Schwelle kann
+  // das nicht beurteilen — sie ist auf dem alten Maßstab kalibriert. Ohne Ausnahme
+  // bliebe das Folge-Vintage dauerhaft suspect (es landet nie, der Vergleich zeigt
+  // morgen wieder auf denselben alten Stand) und die Messreihe stünde still.
+  //
+  // DREI Bedingungen MÜSSEN zusammenkommen, sonst gilt unverändert die normale Schwelle:
+  //   1. der gefundene Vorgänger ist im Register EXAKT als letztes_altes_vintage eines
+  //      Bruchs benannt (prüft der Aufrufer über massstabBruchFuer — Begründung dort),
+  //   2. dieses Board steht dort NAMENTLICH (Court-Auflage: keine rein dynamische
+  //      Auswahl — sonst hebt ein beliebiger unabhängiger Datenfehler, der die Kohorte
+  //      schrumpfen lässt, seine eigene Grenze an),
+  //   3. die Kohorte ist gegenüber dem Vergleichsstand MESSBAR geschrumpft.
+  // Die HÖHE kommt bewusst NICHT aus dem Register (eine von Hand eingetragene Messzahl
+  // wäre eine ungeprüfte Selbstauskunft), sondern aus den beiden verglichenen Vintages.
+  //
+  // Eine VIERTE Bedingung stand hier bis zum 03.08.2026: „es gibt überhaupt eine
+  // eingefrorene Schwelle (in der Kalibrierphase wäre jeder Deckel erfunden)". Sie ist
+  // gefallen, weil die Neukalibrierung von Tag 513 ALLE Boards auf calibrating gesetzt
+  // hat und CALIBRATION_SAMPLES=20 ≈ vier Betriebswochen bedeutet: ein in diesem Fenster
+  // registrierter Maßstab-Bruch (historisch ~1×/Monat) hätte auf bruchGrenze=null
+  // getroffen und wäre nur am nackten Boden gemessen worden — mehrtägiger Rückfall in
+  // genau die Dauersperre, die Tag 513 beheben soll. Erfunden ist der Deckel dabei nicht:
+  // basisSchwelle ist in der Kalibrierphase der an 26 echten Tagesbewegungen GEMESSENE
+  // Boden (Herleitung an MIN_GATE_THRESHOLD), keine gesetzte Zahl.
+  //
+  // ZWEITER ARM: „daten-schub" (Court-Beschluss 02.09.2026, WB-2). Ein benigner
+  // Datenschub (Voll-Pull mit frischen Quartalszahlen) ändert die Score-DEFINITION nicht
+  // und verliert keine Zeile — die Kohorte WÄCHST sogar. Bedingung 3 oben fällt damit, der
+  // Registereintrag ist inhaltlich richtig und mechanisch wirkungslos, und der Folgetag
+  // misst dieselben Sprünge erneut: die Dauersperren-Klasse, gegen die dieses ganze
+  // Konstrukt gebaut ist. Die Alternative „aushalten" verbirgt MEHR, nicht weniger — der
+  // gapDays-Faktor unten verteilt bei jedem ausgefallenen Vintage 23,00 / 34,50 / 57,50
+  // ohne Board-Nennung und ohne Log, und ab GATE_MAX_ABSTAND_TAGE urteilt die Wert-Achse
+  // gar nicht mehr.
+  //
+  // DIE FORM IST ZUSCHLAG, NICHT AUSSCHLUSS: keine einzige Zeile verlässt das p99 (anders
+  // als im Lampen-Pfad, der 44–99 % der Messfläche blendet). Gewährt wird ausschließlich
+  // der BEREITS BESTEHENDE Deckel THRESHOLD_MULTIPLIER × basisSchwelle — keine neue Zahl,
+  // kein neuer Multiplikator, nichts aus dem Register. Drei Schranken hängen daran:
+  //   • das Fächerungs-Tor (WB-3, GATE_FANOUT_CAP): schmale Bewegung ja, breite Welle nein,
+  //   • der Integritäts-Vorrang (WB-4): abbauende Zeilen sind nie gedeckt,
+  //   • WB-9/BP-9: ein daten-schub-Eintrag darf NIE zusätzlich eine Lampe blenden
+  //     (harter Abbruch in massstabBruchFuer).
+  // Was der Zuschlag weiterhin verbirgt, steht benannt in der WB-15-Zeile am Dateikopf des
+  // Wächters (tests/board-history-datenschub-zuschlag.test.js) — nicht wegerklärt.
+  let bruchGrenze = null;
+  const registriert = !!(bruch && board && bruch.boards.has(board));
+  const istDatenSchub = registriert && bruch.typ === 'daten-schub';
+  // Fächerung: Anteil der gemessenen Zeilen ÜBER der normalen Tagesschwelle. deltas liegt
+  // hier bereits vor; gezählt wird gegen dieselbe Zahl, gegen die auch geurteilt wird.
+  const breiteZeilen = [];
+  for (let i = 0; i < deltas.length; i++) {
+    if (deltas[i] > basisSchwelle) breiteZeilen.push({ ticker: deltaTicker[i], delta: deltas[i] });
+  }
+  const fanOut = deltas.length ? breiteZeilen.length / deltas.length : 0;
+  const fanOutHaelt = deltas.length > 0 && fanOut <= GATE_FANOUT_CAP;
+  // WB-4: an einem Datenschub-Übergang wird JEDE gematchte Zeile auf Integritäts-Verfall
+  // geprüft, auch die mit winzigem |D|. Nur dort, nicht auf fremden Boards und nicht an
+  // gewöhnlichen Tagen: die Ausnahme färbt nicht ab (BP-6), ihre Auflage ebenso wenig.
+  const verfallsZeilen = [];
+  const beobachteteLampen = [];   // WB-4' (d): verlorene Diagnose-Lampen, namentlich, ohne Veto
+  const quellUpgrades = [];       // WB-4' (c): freigegebene Quell-Lampen-Verluste (Ticker in SEC)
+  if (istDatenSchub) {
+    for (const [tk, r] of nowMap) {
+      const p = priorMap.get(tk);
+      if (!p) continue;
+      const feld = integritaetsVerfall(p, r, opts);
+      if (feld) verfallsZeilen.push({ ticker: tk, feld });
+      const beob = lampenBeobachtung(p, r, opts);
+      if (beob.verloren.length) beobachteteLampen.push({ ticker: tk, lampen: beob.verloren });
+      if (beob.quellUpgrade.length) quellUpgrades.push({ ticker: tk, lampen: beob.quellUpgrade });
+    }
+  }
+  const geschrumpft = registriert && priorMap.size > 0 && nowMap.size < priorMap.size;
+  const zuschlagsArm = istDatenSchub && fanOutHaelt && verfallsZeilen.length === 0;
+  if (geschrumpft || zuschlagsArm) {
+    const schrumpfung = priorMap.size > 0 ? (priorMap.size - nowMap.size) / priorMap.size : 0;
+    const strukturgrenze = SCORE_SKALA * schrumpfung;
+    const deckel = THRESHOLD_MULTIPLIER * basisSchwelle;
+    // max(): die Grenze wird nie STRENGER als die normale Schwelle (sonst erzeugte eine
+    // Mini-Schrumpfung Fehlalarme). min(): sie wird nie weiter als das Doppelte —
+    // derselbe Multiplikator, mit dem das System aus einer gemessenen Spitze ohnehin
+    // eine Schwelle macht.
+    // Im Datenschub-Arm ist die Höhe GENAU dieser Deckel: eine Schrumpfung, aus der sich
+    // eine Strukturgrenze ableiten ließe, gibt es dort per Definition nicht (die Kohorte
+    // wächst, strukturgrenze wäre negativ). Höher als der Deckel wird es dadurch nie.
+    const tagesschwelle = zuschlagsArm ? deckel : Math.max(basisSchwelle, Math.min(strukturgrenze, deckel));
+    bruchGrenze = {
+      tag: bruch.tag,
+      typ: zuschlagsArm ? 'daten-schub' : 'schrumpfung',
+      zeilenVorher: priorMap.size,
+      zeilenNachher: nowMap.size,
+      strukturgrenze,
+      deckel,
+      normaleSchwelle: basisSchwelle,
+      tagesschwelle,
+      // Der Zuschlag ÜBER der normalen Schwelle — das, was der Maßstab-Wechsel selbst
+      // erklärt. Er wird genau EINMAL gewährt (s. wirksameSchwelle).
+      allowance: tagesschwelle - basisSchwelle,
+    };
+  }
+  // Normale Tagesgrenze × Tagesabstand: dieselbe Bewegung ist über vier Tage normal und
+  // an einem Tag ein Fund. Ohne diesen Faktor scheitert jede Neukalibrierung am ersten
+  // Lauf nach einer Lücke — genau daran ist der Betrieb seit dem 30.07. hängen
+  // geblieben (30.07. gegen 29.07. = 1 Tag → 4 Boards suspect; 02.08. gegen denselben
+  // 29.07. = 4 Tage → 8 Boards suspect, utilities 22,90 gegen Schwelle 1,20).
+  //
+  // Die Bruch-Allowance wird dabei NICHT mitskaliert (Review 03.08.2026): eine
+  // Definitionsänderung passiert EINMAL für den einen Alt-gegen-Neu-Vergleich, sie
+  // akkumuliert nicht pro Kalendertag. Vorher wurde die ganze Bruch-Tagesschwelle mit
+  // gapDays multipliziert — bei fünf Tagen Abstand stand die Grenze bei 74,56 statt
+  // 60,91 (Fixture-Zahlen aus tests/board-history-massstabbruch.test.js), ein echter
+  // Wertfehler dazwischen wäre verschluckt worden. Bei gapDays=1 — dem Normalfall am
+  // Bruch-Tag — ist die Zerlegung identisch mit der alten Rechnung.
+  const wirksameSchwelle = abstandZuGross
+    ? null
+    : basisSchwelle * gapDays + (bruchGrenze ? bruchGrenze.allowance : 0);
+
+  if (!abstandZuGross && p99Delta != null && p99Delta > wirksameSchwelle) {
+    reasons.push('p99-delta-exceeds-threshold');
+  }
+  // WB-4, eigenständig: der Verfall urteilt UNGEACHTET des Eintrags und UNGEACHTET des
+  // Deckels. Die Zeile vom Zuschlag auszunehmen genügt nicht — ein Verfall unter der
+  // normalen Schwelle (FTI: |D| 12,00 gegen Boden 11,50 und Deckel 23,00) käme sonst
+  // durch, sobald die übrige Nacht ruhig ist. Das Board wird deshalb suspect, nicht bloß
+  // ungedeckt. Der abstandZuGross-Zweig ändert daran nichts: ein Datenschaden ist kein
+  // Tages-Maßstab-Thema.
+  if (verfallsZeilen.length) reasons.push('integritaets-verfall:' + verfallsZeilen.length);
+
+  return {
+    calibrating, p99Delta, threshold, bruchGrenze,
+    gapDays, abstandZuGross, wirksameSchwelle,
+    // Sichtbar machen, was herausgerechnet wurde — eine stille Ausnahme waere schlimmer
+    // als keine. Ohne registrierten Definitions-Bruch: null / 0.
+    erklaerendeLampe: erklaerendeLampe || null, erklaerteZeilen,
+    // Kanal B (WB-5): die zählbare Spur des Ausnahmetags. basisSchwelle steht mit dabei,
+    // weil „angewandte Schwelle" ohne „normale Schwelle" nicht nachprüfbar ist.
+    datenSchub: istDatenSchub, basisSchwelle,
+    fanOut, fanOutZaehler: breiteZeilen.length, fanOutNenner: deltas.length,
+    fanOutHaelt,   // Tag 1396: input of istStrukturell (p99 on a daten-schub transition with broken cap)
+    breiteZeilen, verfallsZeilen, beobachteteLampen, quellUpgrades,
+    suspect: reasons.length > 0, reasons,
+  };
+}
+
+// Quartals-Spur SHADOW: dasselbe evaluateGate, nur ohne die durch ein neues Quartal erklärten
+// Zeilen (beide Seiten), gemessen gegen DIESELBE wirksameSchwelle wie das echte Urteil. Liefert
+// ein reines Protokoll-Objekt (oder null) und schreibt nichts: kein Einfluss auf gate, suspect,
+// Exit-Code oder Vintage. Jeder Fehler hier drin wird gefangen und nur als ::warning:: gemeldet.
+function quartalLaneShadow(vintage, priorVintage, gate, gateState, bruch, board, opts, runDate, erklaert = neuesQuartalErklaert) {
+  try {
+    const thr = gate.wirksameSchwelle;
+    if (!priorVintage || gate.abstandZuGross || thr == null) {
+      console.log('[quartal-lane SHADOW] ' + board + ': no value verdict today (no prior or gap too large)');
+      return null;
+    }
+    const zeilen = (v) => [].concat((v.cohort && v.cohort.profitable) || [], (v.cohort && v.cohort.unprofitable) || []);
+    const vorher = new Map(zeilen(priorVintage).map((r) => [r.ticker, r]));
+    const raus = new Set();
+    let n = 0;
+    for (const r of zeilen(vintage)) {
+      const p = vorher.get(r.ticker);
+      if (!(p && Number.isFinite(p.score) && Number.isFinite(r.score))) continue;
+      n++;
+      if (erklaert(p, r, runDate)) raus.add(r.ticker);
+    }
+    const ohne = (v) => ({ ...v, cohort: { ...v.cohort,
+      profitable: ((v.cohort && v.cohort.profitable) || []).filter((r) => !raus.has(r.ticker)),
+      unprofitable: ((v.cohort && v.cohort.unprofitable) || []).filter((r) => !raus.has(r.ticker)) } });
+    const rest = evaluateGate(ohne(vintage), ohne(priorVintage), gateState, bruch, board, opts);
+    const p99Rest = rest.p99Delta;
+    // Alle übrigen Gründe (NaN-Bruch, Coverage, Integrität …) sieht die Spur nicht — sie bleiben stehen.
+    const andereGruende = gate.reasons.filter((x) => x !== 'p99-delta-exceeds-threshold');
+    // Alles erklärt = nichts mehr gemessen: das ist KEIN „OK" (fehlend ≠ sauber), sondern
+    // NO-SURFACE und zählt konservativ als would-be SUSPECT.
+    const keineFlaeche = p99Rest == null && gate.p99Delta != null;
+    const wouldSuspect = andereGruende.length > 0 || keineFlaeche || (p99Rest != null && p99Rest > thr);
+    const f = (x) => (x == null ? '—' : x.toFixed(2));
+    // „real-gate p99", nicht „p99 all": an Lampen-Ausschluss-Tagen misst das echte Tor weniger Zeilen
+    // (fanOutNenner) als die Spur Kandidaten prüft (n) — beide Zahlen stehen getrennt im Log.
+    console.log('[quartal-lane SHADOW] ' + board + ': real-gate p99=' + f(gate.p99Delta) + ' over ' + gate.fanOutNenner + ' measured rows; p99 unexplained=' + f(p99Rest)
+      + ' over ' + rest.fanOutNenner + '; thr=' + f(thr) + '; quarter-explained=' + raus.size + ' of ' + n + ' candidates → would be ' + (keineFlaeche ? 'SUSPECT (NO-SURFACE)' : wouldSuspect ? 'SUSPECT' : 'OK')
+      + ' (real: ' + (gate.suspect ? 'SUSPECT' : 'OK') + ')');
+    return { board, p99RealGate: gate.p99Delta, measured: gate.fanOutNenner, p99Unexplained: p99Rest, measuredUnexplained: rest.fanOutNenner,
+      thr, explained: [...raus], n, wouldSuspect, realSuspect: gate.suspect };
+  } catch (e) {
+    // Even the warning must not throw into run(): a throwing logger or an odd error value stays here.
+    try { console.log('::warning::[quartal-lane SHADOW] failed: ' + board + ': ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
+    return null;
+  }
+}
+
+function quartalLaneShadowSummary(shadows) {
+  try {
+    const ok = shadows.filter(Boolean);
+    const namen = ok.flatMap((s) => s.explained.map((t) => s.board + ':' + t));
+    console.log('[quartal-lane SHADOW] summary: would-be SUSPECT ' + ok.filter((s) => s.wouldSuspect).length + '/' + ok.length
+      + ' boards (real SUSPECT ' + ok.filter((s) => s.realSuspect).length + '/' + ok.length + '; boards without shadow '
+      + (shadows.length - ok.length) + ', see lines above); excluded rows ' + namen.length
+      + (namen.length ? ': ' + namen.slice(0, 50).join(', ') + (namen.length > 50 ? ' … +' + (namen.length - 50) + ' more' : '') : ''));
+  } catch (e) {
+    try { console.log('::warning::[quartal-lane SHADOW] failed: summary: ' + String((e && e.message) || e)); } catch (_) { /* shadow only */ }
+  }
+}
+
+// Aktualisiert den Gate-Kalibrierungs-Zustand je Board: sammelt messbare P99-Tagesdeltas
+// und friert die Schwelle ein, sobald das Fenster AUSSAGEKRÄFTIG ist.
+// Aussagekräftig = genug Samples DA (>= CALIBRATION_SAMPLES) UND mindestens eines > 0.
+// Die zweite Bedingung ist der Kern: aus 3× Delta 0 lässt sich keine Schwelle ableiten —
+// „das Board hat sich nie bewegt" heißt „noch nicht gemessen", nicht „Schwelle 0".
+// Ein solches Fenster sammelt weiter (Gate bleibt im Log-Modus), bis echte Bewegung da war.
+function updateGateCalibration(gateCalib, board, p99Delta, date) {
+  const b = gateCalib.boards[board] || (gateCalib.boards[board] = { dailyP99Samples: [], sampleDates: [], threshold: null, frozen: false });
+  // Court 05.08.2026 (Tag 589, _COURT-GATE-NEUANKER): global ausgeschlossene Vintages
+  // (board-history/_excluded.json, board:null) zaehlen NIE zur Kalibrierung — auch dann
+  // nicht, wenn der Ausschluss erst NACH der Stichprobe kam. Genau so riss Run 35069668890
+  // (16.09.2026): 2026-08-03 stand seit dem 03.08. in jeder Messreihe, der Ausschluss kam
+  // am 05.08., sechs Boards froren am 15.09. damit ein, Test (6) fiel am naechsten Morgen.
+  // Eine eingefrorene Schwelle, in die ein solches Datum eingeht, ist unbrauchbar: die
+  // Stichprobe faellt heraus, die Schwelle geht wieder auf, das Board kalibriert neu — das
+  // ist der Hand-Reset, den das _doc der Datei erlaubt, nur mechanisch und rueckwirkend.
+  // Vor dem Frozen-Return, sonst waere eine bereits eingefrorene Reihe nie mehr erreichbar.
+  const ausgeschlossen = excludedDates();
+  if (ausgeschlossen.size > 0 && Array.isArray(b.sampleDates)) {
+    let entfernt = 0;
+    for (let i = b.sampleDates.length - 1; i >= 0; i--) {
+      if (!ausgeschlossen.has(b.sampleDates[i])) continue;
+      b.sampleDates.splice(i, 1);
+      if (i < b.dailyP99Samples.length) b.dailyP99Samples.splice(i, 1);   // index-gleiche Arrays (F8)
+      entfernt++;
+    }
+    if (entfernt > 0 && b.frozen) { b.threshold = null; b.frozen = false; }
+  }
+  if (frozenThresholdOf(b) != null) return b;   // echt eingefroren → Messreihe ist abgeschlossen
+  // Ein heute ausgeschlossenes Vintage-Datum liefert auch keine NEUE Stichprobe — sonst
+  // kaeme dieselbe Zeile im naechsten Lauf wieder heraus und nie zur Ruhe.
+  if (p99Delta != null && !(date != null && ausgeschlossen.has(date))) {
+    // F8: je Vintage-Datum genau EIN Sample. dailyP99Samples[i] gehört zu sampleDates[i]
+    // (Map Datum→Sample als zwei index-gleiche Arrays — hält dailyP99Samples ein reines
+    // number[], sodass Schwellen-Mathematik, .length und alle Leser unverändert bleiben).
+    if (!Array.isArray(b.sampleDates)) b.sampleDates = [];
+    // Migration bestehender Roh-Arrays (Live-Stand: energy/it-services tragen [0,0,0] OHNE
+    // sampleDates): die N Alt-Samples stammen aus N distinkten VERGANGENEN Tagen, deren
+    // Datum die Datei nie festhielt. Distinkte Platzhalter-Keys bewahren die Zählung, ohne
+    // einen Kalendertag zu erfinden (kollidieren nie mit einem echten ISO-Datum). Roh-Werte
+    // bleiben unangetastet — nichts wird umgeschrieben, nur die fehlenden Datums-Marker ergänzt.
+    while (b.sampleDates.length < b.dailyP99Samples.length) b.sampleDates.push('legacy#' + b.sampleDates.length);
+    const idx = date != null ? b.sampleDates.indexOf(date) : -1;
+    if (idx >= 0) b.dailyP99Samples[idx] = p99Delta;   // Rerun DESSELBEN Vintage-Tags → ersetzen, nicht anhängen
+    else { b.dailyP99Samples.push(p99Delta); b.sampleDates.push(date != null ? date : ('nodate#' + b.sampleDates.length)); }
+  }
+  // Repräsentatives Tagesdelta = GATE_CALIB_QUANTILE der Kalibrier-Stichproben, × 2.
+  // WAR: das Maximum. Damit setzte ein einzelner Bruchtag die Schwelle für alle Zukunft
+  // (it-services [0,0,0,0,0,20.1] → 40,2 — das Board konnte danach nicht mehr auffallen).
+  // nearest-rank (idx = ceil(0,9·n)−1): bis n=9 ist das Quantil exakt das Maximum, ab
+  // n=10 fällt die größte Stichprobe heraus, ab n=20 (= CALIBRATION_SAMPLES, dem
+  // frühesten Einfrier-Zeitpunkt) die beiden größten.
+  const peak = quantile(b.dailyP99Samples, GATE_CALIB_QUANTILE);
+  const ready = b.dailyP99Samples.length >= CALIBRATION_SAMPLES && Number.isFinite(peak) && peak > 0;
+  // KEIN Boden auf der board-eigenen Schwelle (Review 03.08.2026): der Boden stammt aus
+  // dem lautesten Board und würde ein ruhiges Board (it-services, Tagesrauschen ~2) für
+  // immer bei 11,5 halten — Wertfehler von 2 bis 11 Punkten blieben dort unsichtbar.
+  // Er gilt nur, solange es kein board-eigenes Maß gibt (evaluateGate: basisSchwelle).
+  b.threshold = ready ? peak * THRESHOLD_MULTIPLIER : null;
+  b.frozen = ready;
+  return b;
+}
+
+// F-9 Stufe 1 (Rat-gedeckt, REINE MESSUNG — kein Gate-/rc-Einfluss): traegt die
+// Tageswerte aus dem Lauf-Protokoll (p99Δ/thr/beta-cov, s. CLI-Ausgabe unten) zusaetzlich
+// in die committete Sidecar-Datei ein. AUCH an SUSPECT-Tagen (results traegt jeden Board-
+// Eintrag unabhaengig von suspect) — seit Tag 1396 committet .github/workflows/daily-pull.yml
+// "Commit board-history vintage to main" jedes Vintage samt Sidecars unabhaengig vom rc;
+// data-health/p99-delta-history.json faehrt im selben Commit mit.
+// _doc wird nur fuer eine NEUE Datei gesetzt; eine bestehende behaelt ihren Text byte-gleich.
+// thr = wirksameSchwelle (exakt die Zahl hinter "thr=" im Lauf-Protokoll, NICHT die roh
+// eingefrorene threshold — die ist mit Tagesabstand/Bruch-Allowance bereits multipliziert).
+// betaCov = pitCoverage.beta (Anteil 0..1, Log zeigt denselben Wert ×100 gerundet als %).
+// Reines Anhaengen je Datum (byDate[date] = ...) — ein Rerun desselben Tages ersetzt den
+// Eintrag statt ihn zu duplizieren, fruehere Tage bleiben unberuehrt.
+function updateP99DeltaHistory(existing, date, results) {
+  const out = existing && typeof existing === 'object' ? existing : {};
+  if (typeof out._doc !== 'string') {
+    out._doc = 'Taegliche p99Δ/thr/beta-cov-Messreihe je Board (F-9 Stufe 1, Rat-gedeckt, REINE '
+      + 'MESSUNG — kein Gate-Verhalten, keine rc-Semantik). thr = wirksameSchwelle des Laufs '
+      + '(dieselbe Zahl wie "thr=" im Lauf-Protokoll), betaCov = pitCoverage.beta (Anteil 0..1), '
+      + 'suspect = gate.suspect. Wird AUCH an SUSPECT-Tagen geschrieben; seit Tag 1396 wird '
+      + 'jedes Vintage samt dieser Datei committet, geflaggt oder nicht.';
+  }
+  if (!out.byDate || typeof out.byDate !== 'object') out.byDate = {};
+  const day = {};
+  for (const b of results) {
+    day[b.board] = { p99Delta: b.p99Delta, thr: b.wirksameSchwelle, betaCov: b.pitCoverage.beta, suspect: b.suspect };
+    // Kanal B (Court 02.09.2026, WB-5): ein Ausnahmetag hinterlässt eine ZÄHLBARE Spur,
+    // sonst ist er von einem abgeschalteten Gate nicht zu unterscheiden. Geschrieben wird
+    // ausschließlich am Datenschub-Übergang — an jedem anderen Tag bliebe der Block leer
+    // und blähte die Messreihe ohne Aussage auf.
+    if (b.datenSchub) {
+      day[b.board].datenSchub = {
+        zuschlagGewaehrt: !!(b.bruchGrenze && b.bruchGrenze.typ === 'daten-schub'),
+        angewandteSchwelle: b.wirksameSchwelle,
+        normaleSchwelle: b.basisSchwelle,
+        fanOut: { zaehler: b.fanOutZaehler, nenner: b.fanOutNenner, anteil: b.fanOut, cap: GATE_FANOUT_CAP },
+        breiteZeilen: b.breiteZeilen,          // JEDE Zeile |D| > normaler Schwelle, namentlich
+        integritaetsVerfall: b.verfallsZeilen, // je gefasster Zeile das auslösende Feld
+        beobachteteLampen: b.beobachteteLampen || [],   // WB-4' (d): ohne Veto, namentlich
+        quellUpgrades: b.quellUpgrades || [],           // WB-4' (c): freigegeben, Ticker in SEC
+      };
+    }
+  }
+  out.byDate[date] = day;
+  return out;
+}
+
+// ── Exclusion-Gerüst (Writer schreibt nie Einträge, legt nur das Gerüst an) ───
+function readOrScaffoldExcluded(dryRun) {
+  const existing = readJsonExistingOrThrow(P.EXCLUDED_FILE);
+  if (existing) return existing;
+  const scaffold = {
+    _doc: 'Vintage-Ausschlussliste. Von Hand/Audit gepflegt (Datum + Grund). ' +
+      'scripts/rank-ic.js KONSUMIERT diese Liste und schließt gelistete Vintages aus der Auswertung aus. ' +
+      'write-board-history.js schreibt hier NIE Einträge (legt nur dieses Gerüst an). Keine Löschung, nur ein Flag.',
+    excluded: [],  // z. B. [{ "date": "2026-08-01", "board": "semiconductors", "reason": "..." }]
+  };
+  if (!dryRun) { fs.mkdirSync(P.HISTORY_DIR, { recursive: true }); writeJsonAtomic(assertNoPicksHistory(P.EXCLUDED_FILE), scaffold); }
+  return scaffold;
+}
+
+// ── Vorheriges Vintage-Datum finden (jüngstes Datum < target) ────────────────
+// Ausgeschlossene Vintages kommen NICHT als Vergleichsbasis in Frage. Das ist keine
+// Kosmetik, sondern verhindert einen Dauerzustand: nach dem Maßstab-Bruch von Tag 437/438
+// stehen die Vintages bis 2026-07-18 in board-history/_excluded.json. Das Wert-Gate verglich
+// das erste neue Vintage gegen den 18.07., meldete erwartungsgemäß ein zu großes Tagesdelta
+// (die Beschleunigungs-Achse misst seither etwas anderes) → suspect → rc=2 → der Commit-Schritt
+// nimmt genau dieses Vintage vom Commit aus und der Lauf wird rot. Weil das suspect-Vintage
+// dadurch NIE in main landet, bleibt der 18.07. auch morgen der jüngste Vorgänger — der Lauf
+// wäre ab jetzt JEDEN TAG rot, ohne dass sich etwas ändern kann. Live eingetreten im Lauf
+// 30217057400 (26.07.2026).
+//
+// Karl-Entscheid 10 sagt genau das aus, was hier zu tun ist: über den Bruch hinweg wird nicht
+// verglichen. Ein ausgeschlossener Vorgänger zählt deshalb als „kein vergleichbarer Vorgänger"
+// — dasselbe, was beim allerersten Vintage gilt. Das Gate straft dann nicht, es sammelt.
+function priorVintageDate(date) {
+  if (!fs.existsSync(P.HISTORY_DIR)) return null;
+  const ausgeschlossen = excludedDates();
+  const dates = fs.readdirSync(P.HISTORY_DIR)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < date && !ausgeschlossen.has(d))
+    .sort();
+  return dates.length ? dates[dates.length - 1] : null;
+}
+
+// Tag 1396: per-board comparison base. Since every vintage is committed, a structurally
+// flagged board file (cohort-empty, NaN break, coverage collapse, ...) must not become the
+// next day's base, or the day after a break would be judged against the broken state.
+// Walk the stored dirs < date, newest first, skipping global exclusions (as above):
+//   - board file missing/unreadable -> stop, no prior (unchanged behaviour); date = that dir,
+//   - board file structural (lib/board-history-flag.js) -> skip to the next older dir,
+//   - otherwise (clean or p99-only) -> this is the board's prior.
+// p99-only days ARE a valid base: re-measuring a broad reload every day against an older
+// base is the self-locking cascade described at GATE_MAX_ABSTAND_TAGE and the daten-schub arm.
+// Returns { date, vintage }; date is null when there is no dir or every dir was structural.
+function priorBoardVintage(board, date) {
+  if (!fs.existsSync(P.HISTORY_DIR)) return { date: null, vintage: null };
+  const ausgeschlossen = excludedDates();
+  const dates = fs.readdirSync(P.HISTORY_DIR)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < date && !ausgeschlossen.has(d))
+    .sort().reverse();
+  for (const d of dates) {
+    const v = readJsonOrNull(path.join(P.HISTORY_DIR, d, board + '.json'));
+    if (!v) return { date: d, vintage: null };
+    if (istStrukturell(v.gate)) continue;
+    return { date: d, vintage: v };
+  }
+  return { date: null, vintage: null };
+}
+
+// Live belegt am 2026-07-29: an diesem Tag standen ALLE Vorgaenger (14.-18.07. wegen
+// Tag 437, 26.-28.07. wegen Tag 489) auf der Ausschlussliste. priorDate war null, das
+// Wert-Gate hat also NICHTS verglichen — und im geschriebenen Vintage steht dann
+// p99Delta: null, suspect: false. Das ist von "geprueft und sauber" nicht zu
+// unterscheiden, weder in der Datei noch im Lauf-Protokoll (dort stand nur ein
+// beilaeufiges "prior=null" in der Kopfzeile).
+//
+// Genau dieselbe Luecke, die der Kommentar an der GATE-Kopfzeile im CLI-Teil fuer den
+// Bruch-Fall schon benennt: "sonst ist gruen nicht von Gate uebergangen zu
+// unterscheiden". Der Fall "gar keine Vergleichsbasis" gehoert in denselben Kanal.
+//
+// Unterschieden werden muessen zwei Faelle, die beide priorDate=null ergeben:
+//   (a) erster Lauf ueberhaupt — es gibt nichts zu vergleichen, voellig in Ordnung
+//   (b) es GAB Vorgaenger, sie sind nur alle ausgeschlossen — heute wurde blind
+//       geschrieben, und das muss im Protokoll stehen
+// Diese Funktion liefert die uebersprungenen Daten; leer heisst Fall (a).
+function uebersprungeneVorgaenger(date) {
+  if (!fs.existsSync(P.HISTORY_DIR)) return [];
+  const ausgeschlossen = excludedDates();
+  return fs.readdirSync(P.HISTORY_DIR)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < date && ausgeschlossen.has(d))
+    .sort();
+}
+
+// Global ausgeschlossene Vintage-Daten aus board-history/_excluded.json. Bewusst nur die
+// GLOBALEN Einträge (ohne board-Feld): ein board-enger Ausschluss betrifft die Messreihe
+// dieses einen Boards, nicht die Vergleichbarkeit des Tages insgesamt. Defensiv: eine
+// fehlende oder unlesbare Datei ergibt eine leere Menge — das Gate verhält sich dann wie
+// bisher, statt hier hart abzubrechen.
+function excludedDates() {
+  const raw = readJsonOrNull(P.EXCLUDED_FILE);
+  const out = new Set();
+  if (!raw) return out;
+  const eintraege = Array.isArray(raw) ? raw : (Array.isArray(raw.excluded) ? raw.excluded : []);
+  for (const e of eintraege) {
+    if (typeof e === 'string') out.add(e);
+    else if (e && typeof e === 'object' && !e.board && typeof e.date === 'string') out.add(e.date);
+  }
+  return out;
+}
+
+// Maßstab-Bruch-Eintrag aus board-history/_excluded.json (_massstab_brueche), gesucht
+// über den ERWARTETEN VORGÄNGER — nicht über das Datum des neuen Vintages.
+//
+// Warum der Vorgänger und nicht der Bruch-Tag: beides wurde durchgespielt, beides bricht.
+//   • „gilt am Tag X" (festes Kalenderdatum): landet das Vintage von X aus einem FREMDEN
+//     Grund nicht (ein anderes Board wird suspect — der Commit-Schritt nimmt das ganze
+//     Tagesverzeichnis raus), ist die Ausnahme verbraucht, ohne je gewirkt zu haben. Am
+//     Folgetag zeigt der Vergleich wieder auf denselben alten Stand → dieselbe Dauersperre.
+//   • „gilt, solange der Vorgänger älter als X ist": dann aktiviert auch eine DATENLÜCKE
+//     die erhöhte Grenze — fehlt der 27.07. und liegt nur der 26.07. vor, ginge eine über
+//     mehrere Tage kumulierte Bewegung unbeanstandet durch.
+// Der exakte Vorgänger löst beides: er greift genau dann, wenn wirklich Neu-gegen-Alt
+// verglichen wird, überlebt einen ausgefallenen Lauf, endet von selbst, sobald ein Vintage
+// im neuen Maßstab gelandet ist (dann ist der Vorgänger ein anderer), und eine unerwartete
+// Vergleichsbasis fällt auf die strengere normale Schwelle zurück.
+//
+// Ein Eintrag trägt NUR Daten und eine Board-NAMENSLISTE — bewusst keine Größenangabe:
+// die Höhe der Tagesgrenze rechnet evaluateGate selbst aus den verglichenen Vintages,
+// damit es nichts gibt, dessen Vertippen die Grenze aufblähen könnte.
+// Fail-closed in jeder Richtung: fehlende/unlesbare Datei, kein Eintrag, anderer
+// Vorgänger, kein Vorgänger oder eine leere Board-Liste ergeben null.
+// Zwei Einträge mit demselben letztes_altes_vintage sind mehrdeutig (welche Board-Liste
+// gilt?) und brechen HART ab, statt still zu mergen — der Fall entsteht real beim
+// Nachtragen eines späteren Bruchs ohne Blick auf den vorherigen.
+function massstabBruchFuer(priorDate) {
+  if (!priorDate) return null;
+  const raw = readJsonOrNull(P.EXCLUDED_FILE);
+  if (!raw || !Array.isArray(raw._massstab_brueche)) return null;
+  const treffer = raw._massstab_brueche.filter((b) => b && b.letztes_altes_vintage === priorDate);
+  if (treffer.length > 1) {
+    throw new Error('write-board-history: ' + treffer.length + ' Massstab-Brueche nennen dasselbe '
+      + 'letztes_altes_vintage ' + priorDate + ' — mehrdeutig. Register bereinigen (kein stiller Merge).');
+  }
+  if (treffer.length === 0) {
+    // Tag 951: Das VERFEHLEN der Bindung war der stillste Pfad im ganzen Gate. Zeigt ein
+    // Eintrag auf ein anderes Vintage als das tatsächlich verglichene, liefert diese
+    // Funktion null, die Ausnahme greift nicht, das Board wird SUSPECT — und der
+    // Commit-Schritt nimmt das ganze TAGESVERZEICHNIS raus, ohne dass im Protokoll ein
+    // Wort dazu stünde. Genau diese Bugklasse hat Karls Boards vom 12.–15.08. stillgelegt.
+    // Das Verhalten bleibt unverändert fail-closed (null); ergänzt wird nur Sichtbarkeit.
+    //
+    // Gemeldet wird ausschließlich der WARTENDE Eintrag — einer, dessen gebundenes Vintage
+    // NACH dem verglichenen Vorgänger liegt, der sein Vintage also noch nicht gesehen hat.
+    // Ein Eintrag HINTER der Vergleichsfront ist verbraucht und von einem sauber erledigten
+    // Übergang nicht zu unterscheiden; würde er mitmelden, schrien die drei Alt-Einträge
+    // (2026-07-27/-07-28/-08-03) ab sofort jeden Tag für immer, und ein Alarm, der immer
+    // feuert, ist in Karls einzigem Alarmkanal schlechter als keiner.
+    // Kanal ist derselbe wie bei GATE BLIND / Maßstab-Bruch / GATE ABSTAND.
+    for (const w of raw._massstab_brueche) {
+      if (!w || typeof w.letztes_altes_vintage !== 'string') continue;
+      if (w.letztes_altes_vintage <= priorDate) continue;
+      console.log('::warning::GATE-BINDUNG VERFEHLT: Register-Eintrag '
+        + (w.tag || w.typ || '(ohne tag)') + ' ist an den Vorgaenger '
+        + w.letztes_altes_vintage + ' gebunden, verglichen wird aber gegen ' + priorDate
+        + '. Die registrierte Ausnahme greift deshalb NICHT (fail-closed) — der Uebergang '
+        + 'wird gegen die normale Schwelle gemessen und voraussichtlich mit SUSPECT-Kennzeichen '
+        + 'gespeichert. letztes_altes_vintage im Register auf ' + priorDate
+        + ' nachziehen oder den Fall neu bewerten.');
+    }
+    return null;
+  }
+  const b = treffer[0];
+  const boards = Array.isArray(b.boards) ? b.boards.filter((s) => typeof s === 'string' && s) : [];
+  if (boards.length === 0) return null;
+  // Typ 2 (16.08.2026): SCORE-DEFINITIONS-BRUCH. Der Schrumpfungs-Zweig oben deckt nur
+  // Brueche ab, bei denen die Kohorte kleiner wird. Aendert sich die Score-DEFINITION ohne
+  // eine einzige Zeile zu verlieren (Einmalertrag-Verdrahtung: gleiche Zeilenzahl, andere
+  // Scores), greift er nicht — und der erste Neu-gegen-Alt-Lauf misst die volle Bewegung
+  // gegen eine Schwelle, die auf dem alten Massstab kalibriert ist.
+  // Statt eine HOEHE zu gewaehren, benennt der Eintrag die LAMPE, welche die betroffenen
+  // Zeilen traegt: genau diese Zeilen zaehlen fuer den einen registrierten Vergleich nicht
+  // in das p99. Alles andere wird unveraendert streng gemessen — eine unabhaengige Drift
+  // in derselben Nacht faellt weiterhin auf. Auch hier steht keine Zahl im Register.
+  const erklaerendeLampe = (typeof b.erklaerende_lampe === 'string' && b.erklaerende_lampe) ? b.erklaerende_lampe : null;
+  // Typ 3 (Court 02.09.2026): DATENSCHUB. Bis heute wurde `typ` nirgends ausgewertet (der
+  // einzige Treffer im Modul war ein Fallback-Label im VERFEHLT-Warntext) — genau deshalb
+  // war Eintrag Tag 1204 inhaltlich richtig und mechanisch wirkungslos. Ab hier ist das
+  // Feld verhaltensrelevant: es öffnet in evaluateGate den ZUSCHLAGS-Arm, der die
+  // Tagesschwelle einmalig auf den bestehenden Deckel hebt. Eine ZAHL kommt weiterhin
+  // nicht aus dem Register.
+  const typ = (typeof b.typ === 'string' && b.typ) ? b.typ : null;
+  // WB-9/BP-9: Zuschlag UND Blendung zugleich sind ausgeschlossen. Ein Eintrag, der die
+  // Schwelle auf den Deckel hebt UND zusätzlich die Lampen-Zeilen aus dem p99 nimmt, wäre
+  // in dieser Nacht ein praktisch abgeschaltetes Gate. Harter Abbruch wie beim
+  // mehrdeutigen Doppeleintrag — kein stilles Ignorieren eines der beiden Felder.
+  if (typ === 'daten-schub' && erklaerendeLampe) {
+    throw new Error('write-board-history: Register-Eintrag ' + (b.tag || priorDate) + ' traegt typ "daten-schub" '
+      + 'UND erklaerende_lampe "' + erklaerendeLampe + '" — Zuschlag (Deckel auf der Tagesschwelle) und '
+      + 'Blendung (Zeilen aus dem p99) zugleich sind ausgeschlossen (Court 02.09.2026, WB-9). '
+      + 'Register bereinigen: entweder der eine Typ oder der andere.');
+  }
+  return { tag: b.tag || null, typ, letztesAltesVintage: priorDate, boards: new Set(boards), erklaerendeLampe };
+}
+
+// ── Retention/Kompaktierung (A12) ────────────────────────────────────────────
+// Vintages älter als RETENTION_DAYS: PIT-Voll-Snapshot nach board-history-archive/
+// kopieren (GG7c), dann im Vintage die per-Zeile-pit-Blöcke strippen (Kern bleibt:
+// rank/score/scoreBase/scoreShrunk/flags/axisBreakdown). NICHTS ohne Archiv-Kopie.
+//
+// NICHT VERDRAHTET, UND DAS IST SO GEWOLLT (F-16-Akte §6/§7, gemessen 03.08.2026):
+// compact() steht in KEINEM der 7 Workflows. Im Mess-Zweig-Konzept ist das
+// Kompaktieren bereits COMMITTETER Vintages verboten — ein committetes Vintage ist
+// die Messgrundlage, sein nachträgliches Strippen ändert rückwirkend, was gemessen
+// wurde. Wer diesen Pfad scharfschaltet, braucht vorher eine Entscheidung zu §6/§7,
+// nicht nur ein Archivziel. Das Archivziel (P.ARCHIVE_DIR) ist seit T20 fail-closed.
+function compact(date, dryRun) {
+  if (!fs.existsSync(P.HISTORY_DIR)) return { compacted: [] };
+  const cutoff = new Date(date + 'T00:00:00Z').getTime() - RETENTION_DAYS * MS_PER_DAY;
+  const compacted = [];
+  for (const d of fs.readdirSync(P.HISTORY_DIR)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    if (new Date(d + 'T00:00:00Z').getTime() > cutoff) continue;  // jünger als t0+2Q → unberührt
+    const dir = path.join(P.HISTORY_DIR, d);
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.json') || f.startsWith('_')) continue;
+      const fp = path.join(dir, f);
+      const v = readJsonOrNull(fp);
+      // F9: nur echte Board-Vintages kompaktieren. Sidecars (calibration.json/regime.json —
+      // ohne '_'-Präfix und ohne cohort) bekämen sonst vom Lean-Write ein leeres cohort
+      // injiziert; rank-ic.js:boardsOf erkennt Boards genau über !!(v && v.cohort) und
+      // zählte sie danach als Phantom-Boards. Gleiche inhaltsbasierte Prüfung wie dort.
+      if (!v || v.compacted || !v.cohort) continue;
+      const archivePath = assertNoPicksHistory(path.join(P.ARCHIVE_DIR, d, f));
+      if (!dryRun) {
+        fs.mkdirSync(path.dirname(archivePath), { recursive: true });
+        writeJsonAtomic(archivePath, v);           // 1) Archiv-Kopie ZUERST (Voll-Snapshot)
+      }
+      // 2) Kern-Version schreiben (pit gestrippt, Rest bleibt)
+      const strip = (rows) => (rows || []).map((r) => { const { pit, ...core } = r; return core; });
+      const lean = {
+        ...v,
+        compacted: true,
+        compactedAt: isoDay(Date.now()),
+        archivedTo: path.relative(REPO_ROOT, archivePath),
+        cohort: { profitable: strip(v.cohort && v.cohort.profitable), unprofitable: strip(v.cohort && v.cohort.unprofitable) },
+      };
+      if (!dryRun) writeJsonAtomic(assertNoPicksHistory(fp), lean);
+      compacted.push(path.relative(REPO_ROOT, fp));
+    }
+  }
+  return { compacted };
+}
+
+// ── Regime-Ausweis (nur Ausweis, §5) ─────────────────────────────────────────
+// macro.regimes ist nach SPY-Handelsdatum gekeyt (macro-regime.js). Ein exakter
+// Key-Lookup verfehlt jeden Lauf, dessen Vintage-Datum (heute UTC) noch keinen
+// SPY-Schluss trägt — Wochenenden, Feiertage, Läufe vor US-Handelsschluss (F7):
+// er lieferte dann fälschlich 'unknown' statt des letzten gültigen Regimes. Fix:
+// den jüngsten Key <= Ziel-Datum erben. Der Staleness-Wächter (REGIME_MAX_STALE_DAYS)
+// verhindert, dass ein Wochen-altes Regime still als „heute" durchgeht; asOf weist
+// immer aus, WELCHER Handelstag tatsächlich gilt.
+function regimeForDate(date) {
+  const macro = readJsonOrNull(P.MACRO_REGIME_FILE);
+  const regimes = macro && macro.regimes;
+  if (!regimes) return { date, label: 'unknown', source: 'macro-regime.json(absent)' };
+  let keyDate = regimes[date] ? date : null;
+  if (!keyDate) {
+    const priorKeys = Object.keys(regimes).filter((k) => k < date).sort();
+    keyDate = priorKeys.length ? priorKeys[priorKeys.length - 1] : null;
+  }
+  // §5: kein Key <= Datum (Macro beginnt erst später) → 'unknown', kein Datenfehler.
+  if (!keyDate) return { date, label: 'unknown', source: 'macro-regime.json(date-missing)' };
+  const ageDays = Math.round((Date.parse(date + 'T00:00:00Z') - Date.parse(keyDate + 'T00:00:00Z')) / MS_PER_DAY);
+  if (ageDays > REGIME_MAX_STALE_DAYS) {
+    // Zu alt → ehrlich 'unknown' MIT Grund + Alter; kein geerbtes Alt-Label (keine stille Lüge).
+    return { date, label: 'unknown', source: 'macro-regime.json(stale>' + REGIME_MAX_STALE_DAYS + 'd)', asOf: keyDate, staleDays: ageDays };
+  }
+  const entry = regimes[keyDate];
+  // Schema-Toleranz wie walk-forward-perf._regimeOf (G-B, Alt-Format-Robustheit).
+  const isObj = entry && typeof entry === 'object';
+  return { date, label: isObj ? entry.regime : entry, price: isObj ? entry.price : undefined, sma200: isObj ? entry.sma200 : undefined, source: 'macro-regime.json', asOf: keyDate };
+}
+
+// BH-155: folgt sameAs-Verweisen rückwärts bis zur echten Vollkopie der
+// Kalibrierung (Dedup-Kette). Deckel = RETENTION_DAYS (wiederverwendete Konstante,
+// kein neuer Magic-Wert) als reine Bremse gegen korrupte/zyklische Verweise.
+function resolveFullCalibration(date) {
+  let d = date;
+  for (let hops = 0; hops < RETENTION_DAYS; hops++) {
+    const v = readJsonOrNull(path.join(P.HISTORY_DIR, d, 'calibration.json'));
+    if (!v) return null;
+    if (v.sameAs) { d = v.sameAs; continue; }
+    return { date: d, json: JSON.stringify(v) };
+  }
+  return null;
+}
+
+// ── Hauptlauf ────────────────────────────────────────────────────────────────
+function run(opts) {
+  opts = opts || {};
+  if (opts.baseDir) _setPaths(opts.baseDir);   // Test-Hermetik (L4); Default bleibt REPO_ROOT
+  const date = opts.date || isoDay(Date.now());
+  const dryRun = !!opts.dryRun;
+
+  // BH-147: Format- + Zukunfts-Guard gilt für JEDEN Aufrufer (auch --compact nutzt
+  // date als Cutoff-Referenz). Das Format-Regex schließt einen Pfad-Escape strukturell
+  // aus; die "Backfill-Vertrag"-Regel (--allow-backfill) ist eine CLI-Grenze und lebt
+  // bewusst NICHT hier — run() ist die interne API, die Tests/andere Skripte mit
+  // beliebigem historischem --date aufrufen dürfen.
+  if (!isValidDateStr(date)) throw new Error('write-board-history: invalid --date (expected YYYY-MM-DD): ' + date);
+  if (date > isoDay(Date.now())) throw new Error('write-board-history: --date is in the future: ' + date);
+
+  if (opts.compact) {
+    const res = compact(date, dryRun);
+    return { mode: 'compact', date, dryRun, ...res, exitCode: 0 };
+  }
+
+  if (!fs.existsSync(P.FULL_DIR)) throw new Error('missing full-cohort dir: ' + P.FULL_DIR);
+  const calib = readJsonOrNull(P.CALIBRATION_FILE);
+  const calibMeta = {
+    formulaVersion: (calib && calib.schema) || null,     // Proxy für Formel-Lineage (§7)
+    generatedAt: (calib && calib.generated_at) || null,
+  };
+  const boards = fs.readdirSync(P.FULL_DIR).filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, '')).sort();
+  if (boards.length === 0) throw new Error('no full-cohort board files in ' + P.FULL_DIR);
+
+  readOrScaffoldExcluded(dryRun);
+  const gateCalib = readJsonExistingOrThrow(P.GATE_CALIB_FILE)
+    || { _doc: 'Gate-Kalibrierung je Board: messbare P99-Tagesdeltas sammeln; nach '
+      + CALIBRATION_SAMPLES + ' Stichproben MIT Bewegung wird die Schwelle eingefroren '
+      + '(Quantil ' + GATE_CALIB_QUANTILE + ' der Stichproben x ' + THRESHOLD_MULTIPLIER + '). '
+      + 'Bis dahin gilt der gemessene Boden ' + MIN_GATE_THRESHOLD + ' je Tag Abstand.', boards: {} };
+  const priorDate = priorVintageDate(date);
+  // Der Bruch hängt am EXAKTEN Vorgänger (Begründung an der Funktion): er greift genau
+  // dann, wenn tatsächlich gegen den letzten Stand des alten Maßstabs verglichen wird,
+  // und endet von selbst, sobald ein Vintage im neuen Maßstab gelandet ist.
+  const bruch = massstabBruchFuer(priorDate);
+  const dateDir = path.join(P.HISTORY_DIR, date);
+  // BH-147: Defense-in-depth — der resolved Pfad muss unter HISTORY_DIR bleiben.
+  // Das Format-Regex oben schließt einen Escape bereits strukturell aus; dieser
+  // Guard fängt jede künftige Aufweichung der Regex an der Schreib-Grenze selbst ab.
+  const resolvedDateDir = path.resolve(dateDir);
+  const resolvedHistoryDir = path.resolve(P.HISTORY_DIR);
+  if (resolvedDateDir !== resolvedHistoryDir && !resolvedDateDir.startsWith(resolvedHistoryDir + path.sep)) {
+    throw new Error('write-board-history: resolved date dir escapes HISTORY_DIR: ' + resolvedDateDir);
+  }
+
+  const results = [];
+  const quartalShadows = [];   // SHADOW ONLY, nur fürs Protokoll
+  let anyStructural = false;   // Tag 1396: exit 2 only for a structural board
+  // T155/W3: einmal je Lauf lesen, nicht je Board — 13 identische Lesevorgänge derselben
+  // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
+  const universeHash = readUniverseHash(P.UNIVERSE_HASH_FILE);
+  // Tag 1401: once per run; missing/unreadable -> no flags + ::warning::, never a failed vintage.
+  // A list for another day (open-items step failed) is used but warned as stale.
+  const valueFlags = readValueFlags(P.VALUE_OPEN_ITEMS_FILE, console.warn, date);
+  // WB-4': einmal je Lauf — SEC-Ticker als Upgrade-Beweis (c) und der Quartals-Kopf des
+  // AKTUELLEN Snapshots fuer den Null-Slot (a); beides nur am Datenschub-Uebergang gelesen.
+  // Round 3 (Codex P1): built lazily for the first board whose OWN comparison is a daten-schub
+  // transition — after a structural day that board may be on the transition while the global
+  // prior is not.
+  let datenSchubOpts = null;
+  const gateOptsFuer = (b) => {
+    if (!(b && b.typ === 'daten-schub')) return {};
+    if (!datenSchubOpts) datenSchubOpts = {
+      secTicker: secTickerLesen(P.EXTERNAL_DIR),
+      quartale: (ticker) => { const s = readSnapshot(ticker); const ts = (s && s.timeseries) || {}; return { opIncQ: ts.opIncQ, opIncQEnds: ts.opIncQEnds }; },
+    };
+    return datenSchubOpts;
+  };
+  // Round 3 (Codex P1): the registered transition is looked up for the date each board is
+  // ACTUALLY compared against (same exact-prior binding as massstabBruchFuer), once per date.
+  // On a day without a structural prior every board's prior IS the global prior, so this is
+  // the global `bruch` itself. After a structural day the board compares against the last
+  // non-structural day; if that day is the registered letztes_altes_vintage, the transition
+  // and its integrity check (WB-4) apply again, as when the structural day was never committed.
+  // No entry for that date -> null: no allowance, and every other check runs unchanged.
+  const bruchJeDatum = new Map([[priorDate, bruch]]);
+  const bruchFuer = (d) => {
+    if (!bruchJeDatum.has(d)) bruchJeDatum.set(d, massstabBruchFuer(d));
+    return bruchJeDatum.get(d);
+  };
+  let boardBruchAngewandt = null;   // for the run header (bruchProtokollZeilen) when the global prior has none
+  for (const board of boards) {
+    const boardPath = path.join(P.FULL_DIR, board + '.json');
+    const boardData = readJsonOrNull(boardPath);
+    // X2: an unreadable/corrupt board file is a missing INPUT — the same class as the
+    // FULL_DIR-guards above (missing dir / no board files), which already throw -> exit 1.
+    // It is NOT a value-plausibility question (exit 2 "suspect"), which presumes a parsed
+    // vintage exists to judge. A silent `continue` here left anySuspect untouched -> exit 0
+    // with a board missing from the vintage, contradicting the header's own exit contract
+    // ("1 = harter Fehler (Inputs fehlen)") and the fail-loud line the FULL_DIR-guards set.
+    if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
+    const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash, valueFlags);
+    // Tag 1396: per-board prior (skips structural days). The registered bruch is bound to the
+    // EXACT prior of THIS board (round 3, Codex P1: bound to the global prior, the day after a
+    // structural day lost the integrity check while the damage persisted).
+    const prior = priorBoardVintage(board, date);
+    const priorVintage = prior.vintage;
+    const boardBruch = bruchFuer(prior.date);
+    if (boardBruch && !boardBruchAngewandt) boardBruchAngewandt = boardBruch;
+    const gateOpts = gateOptsFuer(boardBruch);
+    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], boardBruch, board, gateOpts);
+    const structural = istStrukturell(gate);
+    // SHADOW ONLY: loggt, urteilt nicht (gate/exit code/Vintage bleiben unberührt). Vor
+    // updateGateCalibration, damit die Spur exakt denselben Kalibrier-Zustand sieht.
+    quartalShadows.push(quartalLaneShadow(vintage, priorVintage, gate, gateCalib.boards[board], boardBruch, board, gateOpts, date));
+    // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
+    // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
+    // BH-111: ein bereits als suspect erkannter Tag darf die eingefrorene Schwelle
+    // NICHT mitziehen — sonst kalibriert genau der Datenbruch, den das Gate fangen
+    // soll, das Gate selbst hoch. suspect-Tage liefern daher kein Sample (null statt
+    // p99Delta); die Kalibrierung sammelt einfach weiter, bis ein sauberer Tag kommt.
+    // Ein Bruch-Tag liefert AUCH kein Sample: sein Delta enthält den Maßstab-Wechsel,
+    // nicht nur Tagesbewegung — es würde die eingefrorene Schwelle dauerhaft hochziehen
+    // (dieselbe Falle wie beim suspect-Tag, nur mit umgekehrtem Vorzeichen im Urteil).
+    // Die Kalibrierung lernt eine TAGESbewegung: ein Vergleich über mehrere Tage geht
+    // deshalb pro Tag ein, nicht roh — sonst zöge jede Lücke die Schwelle hoch (dieselbe
+    // Falle wie beim suspect- und beim Bruch-Tag, nur mit dem Kalender als Auslöser).
+    // Ein Vergleich jenseits von GATE_MAX_ABSTAND_TAGE liefert gar kein Sample: er wurde
+    // nicht beurteilt, und eine Normierung über mehr als eine Woche wäre eine Annahme,
+    // keine Messung.
+    const tagesSample = (gate.suspect || gate.bruchGrenze || gate.abstandZuGross || gate.p99Delta == null)
+      ? null : gate.p99Delta / gate.gapDays;
+    const gs = updateGateCalibration(gateCalib, board, tagesSample, date);
+    vintage.gate = {
+      calibrating: gate.calibrating,
+      p99Delta: gate.p99Delta,
+      threshold: gate.threshold,          // unverändert die KALIBRIERTE Schwelle (Historie bleibt ehrlich)
+      // …und daneben die Grenze, an der HEUTE tatsächlich gemessen wurde (Boden bzw.
+      // Bruch-Grenze × Tagesabstand). Ohne sie stünde in der Historie ein threshold:null,
+      // obwohl geprüft wurde — „nicht kalibriert" wäre von „nicht geprüft" nicht zu
+      // unterscheiden, dieselbe Lücke, die Tag 502 für den blinden Tag geschlossen hat.
+      wirksameSchwelle: gate.wirksameSchwelle,
+      gapDays: gate.gapDays,
+      abstandZuGross: gate.abstandZuGross,
+      bruchGrenze: gate.bruchGrenze || null,   // an einem Bruch-Tag: die tatsächlich angelegte Grenze + ihre Herleitung
+      suspect: gate.suspect,
+      structural,                        // Tag 1396: derived class (lib/board-history-flag.js), additive
+      reasons: gate.reasons,
+      priorDate: prior.date,             // Tag 1396: the date this board was actually compared against
+      calibrationSamples: gs.dailyP99Samples.length,
+    };
+    if (structural) anyStructural = true;
+    if (!dryRun) {
+      fs.mkdirSync(dateDir, { recursive: true });
+      writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, board + '.json')), vintage);
+    }
+    results.push({ board, suspect: gate.suspect, structural, priorDate: prior.date, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, wirksameSchwelle: gate.wirksameSchwelle, gapDays: gate.gapDays, abstandZuGross: gate.abstandZuGross, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage,
+      // Kanal B (WB-5): nur am Datenschub-Übergang gefüllt, an jedem anderen Tag inert.
+      datenSchub: gate.datenSchub, basisSchwelle: gate.basisSchwelle,
+      fanOut: gate.fanOut, fanOutZaehler: gate.fanOutZaehler, fanOutNenner: gate.fanOutNenner,
+      breiteZeilen: gate.breiteZeilen, verfallsZeilen: gate.verfallsZeilen,
+      beobachteteLampen: gate.beobachteteLampen, quellUpgrades: gate.quellUpgrades });
+  }
+  quartalLaneShadowSummary(quartalShadows);
+
+  // Seiten-Artefakte je Datum: calibration.json-Kopie + regime.json.
+  if (!dryRun) {
+    fs.mkdirSync(dateDir, { recursive: true });
+    if (calib) {
+      // BH-155: calibration.json wurde bisher JEDEN Tag voll kopiert (~0,8 MB, Stand
+      // 18.07.2026), obwohl sich die Kalibrierung oft tagelang nicht ändert; compact()
+      // überspringt Sidecars ausdrücklich (F9) UND läuft in Produktion nie (BH-153) —
+      // Kompaktierung allein löst das Wachstum also nicht, der Fix muss am
+      // Schreib-Zeitpunkt selbst ansetzen. Dedup gegen die letzte VOLLE Kopie (Kette
+      // folgt sameAs-Verweise zurück); bei Byte-Gleichheit nur ein kleiner Verweis.
+      const prevFull = priorDate ? resolveFullCalibration(priorDate) : null;
+      const calibJson = JSON.stringify(calib);
+      if (prevFull && prevFull.json === calibJson) {
+        writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'calibration.json')),
+          { sameAs: prevFull.date, _doc: 'BH-155-Dedup: unveraendert seit sameAs; volle Kopie dort.' });
+      } else {
+        writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'calibration.json')), calib);
+      }
+    }
+    writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'regime.json')), regimeForDate(date));
+    writeJsonAtomic(assertNoPicksHistory(P.GATE_CALIB_FILE), gateCalib);
+    // F-9 Stufe 1: UNBEDINGT (auch bei anySuspect) — reine Zusatzmessung, kein Gate-Zweig.
+    const p99History = readJsonExistingOrThrow(P.P99_DELTA_HISTORY_FILE) || {};
+    fs.mkdirSync(path.dirname(P.P99_DELTA_HISTORY_FILE), { recursive: true });
+    writeJsonAtomic(assertNoPicksHistory(P.P99_DELTA_HISTORY_FILE), updateP99DeltaHistory(p99History, date, results));
+  }
+
+  // Fall (b) aus uebersprungeneVorgaenger(): es gab Vorgaenger, alle ausgeschlossen.
+  // Nur dann ist "heute wurde nichts verglichen" eine meldepflichtige Tatsache.
+  const blind = priorDate === null ? uebersprungeneVorgaenger(date) : [];
+
+  // res.bruch drives the run header; a transition applied only through a board's own prior
+  // (round 3) must reach it too, or the alarm channel would hide the active allowance.
+  const kopfBruch = bruch || boardBruchAngewandt;
+  return { mode: 'write', date, dryRun, priorDate, ohneVergleichsbasis: blind.length ? blind : null, bruch: kopfBruch ? { tag: kopfBruch.tag, boards: Array.from(kopfBruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anyStructural ? 2 : 0 };
+}
+
+// ── CLI ──────────────────────────────────────────────────────────────────────
+// ── Bruch-Kanal im Lauf-Protokoll (Kanal B, WB-5/WB-7) ───────────────────────
+// Karls einziger Alarmkanal ist das Lauf-Protokoll: eine ausgesetzte oder erhöhte Grenze
+// MUSS im Klartext dort stehen, sonst ist „gruen" nicht von „Gate uebergangen" zu
+// unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
+//
+// EIGENE FUNKTION STATT INLINE IM CLI-BLOCK (Court 02.09.2026, WB-8): der Wächter muss
+// diese Zeilen am ECHTEN Lauf-Ergebnis prüfen können. Inline unter `require.main === module`
+// wäre nur eine Text-Kopie im Test prüfbar gewesen — und ein Wächter, der eine Kopie prüft,
+// hält seine eigene Formulierung fest, nicht die Sache.
+function bruchProtokollZeilen(res) {
+  if (!res || !res.bruch || !Array.isArray(res.boards)) return [];
+  const zeilen = [];
+  // Q2 / WB-7: NUR eine Bindung mit echtem Zuschlag ist eine ERHOEHTE Tagesschwelle.
+  // Gezählt wurde bisher jede gesetzte bruchGrenze — auch die mit allowance 0, bei der die
+  // Strukturgrenze unter dem Boden liegt und von Math.max() geklemmt wird (gemessen:
+  // 4,42 / 6,34 / 7,21 gegen Boden 11,50). Der einzige Alarmkanal behauptete damit eine
+  // Anhebung, die nie stattgefunden hat; genau diese Verwechslung hat den Vorgang vom
+  // 02.09. gekostet. Gebundene Boards ohne Wirkung verschwinden nicht — sie bekommen eine
+  // eigene, ehrliche Klausel statt eines falschen Etiketts.
+  const erhoeht = res.boards.filter((b) => b.bruchGrenze && b.bruchGrenze.allowance > 0).length;
+  const inert = res.boards.filter((b) => b.bruchGrenze && !(b.bruchGrenze.allowance > 0)).length;
+  // 30.07.: ::warning:: ERGAENZT. Der Kanal war asymmetrisch — der BLINDE Tag meldete im
+  // Warnkanal, die AKTIVE Ausnahme schrieb nur eine stille Zeile. Damit war ausgerechnet
+  // der Fall, in dem die Grenze bewusst angehoben wurde, schlechter sichtbar als der, in
+  // dem gar nicht verglichen wurde. Alle drei Richter des Gate-Urteils vom 30.07. haben
+  // dieselbe Ein-Zeilen-Korrektur gefordert.
+  zeilen.push('::warning::GATE: Massstab-Bruch aktiv fuer ' + res.date
+    + (res.bruch.tag ? ' (' + res.bruch.tag + ')' : '')
+    + ' — ' + erhoeht + ' Board(s) mit erhoehter Tagesschwelle, '
+    + (inert ? inert + ' gebunden, ohne Wirkung (Allowance 0), ' : '')
+    + (res.boards.length - erhoeht - inert) + ' unveraendert; uebrige Integritaetspruefungen AKTIV');
+  // WB-5/WB-7: der Datenschub-Arm meldet mit EIGENER, unverwechselbarer Zeile je Board —
+  // nicht unter derselben Formulierung wie der Schrumpfungs-Arm. Mitgeführt werden die
+  // Größen, an denen die Ausnahme nachprüfbar ist: angewandte Schwelle, normale Schwelle,
+  // p99, Fächerungs-Anteil mit Zähler/Nenner, JEDE breite Zeile namentlich mit ihrem Delta
+  // und jede vom Integritäts-Vorrang gefasste Zeile mit ihrem auslösenden Feld.
+  for (const b of res.boards.filter((x) => x.datenSchub)) {
+    const gewaehrt = !!(b.bruchGrenze && b.bruchGrenze.typ === 'daten-schub');
+    zeilen.push('::warning::GATE DATENSCHUB-ZUSCHLAG ' + (gewaehrt ? 'GEWAEHRT' : 'VERWEIGERT')
+      + ' fuer ' + res.date + ' / ' + b.board
+      + ': Tagesschwelle ' + (b.wirksameSchwelle == null ? '—' : b.wirksameSchwelle.toFixed(2))
+      + ' statt ' + b.basisSchwelle.toFixed(2)
+      + ', p99D=' + (b.p99Delta == null ? '—' : b.p99Delta.toFixed(2))
+      + ', Faecherung ' + b.fanOutZaehler + '/' + b.fanOutNenner + ' = '
+      + (100 * b.fanOut).toFixed(2) + '% (Cap ' + (100 * GATE_FANOUT_CAP).toFixed(0) + '%)'
+      + '; breite Zeilen: ' + (b.breiteZeilen.length
+        ? b.breiteZeilen.map((z) => z.ticker + ' ' + z.delta.toFixed(2)).join(', ') : 'keine')
+      + '; Integritaets-Vorrang: ' + (b.verfallsZeilen.length
+        ? b.verfallsZeilen.map((z) => z.ticker + ' (' + z.feld + ')').join(', ') : 'keine Zeile')
+      // WB-4' (d)/(c): Beobachtung ohne Veto, gezaehlt UND namentlich — die K7-Beweisbasis.
+      + '; beobachtete Lampen ohne Veto: ' + ((b.beobachteteLampen || []).length
+        ? (b.beobachteteLampen.length + ' — ' + b.beobachteteLampen.map((z) => z.ticker + ' (' + z.lampen.join('+') + ')').join(', ')) : '0')
+      + '; Quell-Upgrades (SEC): ' + ((b.quellUpgrades || []).length
+        ? b.quellUpgrades.map((z) => z.ticker).join(', ') : 'keine'));
+  }
+  return zeilen;
+}
+
+// WB-4' Betreiber-Auflage (ratifiziert 05.09.2026), rewritten Tag 1396: the day directory is
+// no longer excluded from the commit, so there is no sibling coupling left to report. Instead
+// one flag line names every flagged board, split into value warnings (p99 only) and structural
+// breaks (the boards behind exit 2). Runs independent of the register. A comparison base
+// further back than GATE_SERIE_ALARM_TAGE stays an alarm in the same channel; it uses the
+// MAXIMUM per-board gap and names that board (per-board priors differ after a structural day).
+// (Function name kept: callers and tests import it.)
+function kopplungProtokollZeilen(res) {
+  if (!res || !Array.isArray(res.boards)) return [];
+  const zeilen = [];
+  const geflaggt = res.boards.filter((x) => x.suspect);
+  if (geflaggt.length) {
+    const liste = (bs) => (bs.length ? bs.map((x) => x.board).join(', ') : 'keines');
+    zeilen.push('::warning::GATE FLAG fuer ' + res.date + ': gespeichert mit Kennzeichen: '
+      + liste(geflaggt.filter((x) => !x.structural)) + ' (Wert-Warnung); strukturell: '
+      + liste(geflaggt.filter((x) => x.structural)));
+  }
+  let weitester = null;
+  for (const x of res.boards) {
+    if (Number.isFinite(x.gapDays) && (!weitester || x.gapDays > weitester.gapDays)) weitester = x;
+  }
+  if (weitester && weitester.gapDays > GATE_SERIE_ALARM_TAGE) {
+    zeilen.push('::warning::GATE SERIE: ' + weitester.gapDays + ' Tage ohne gelandetes Vintage (Vorgaenger '
+      + (weitester.priorDate !== undefined ? weitester.priorDate : res.priorDate) + ', Schwelle ' + GATE_SERIE_ALARM_TAGE
+      + ' Tage, WB-14, Board ' + weitester.board + ') — Vergleichsbasis liegt so weit zurueck (ausgefallene Laeufe '
+      + 'oder strukturell geflaggte Tage dazwischen); reine Wert-Warnungen verlaengern die Luecke nicht.');
+  }
+  return zeilen;
+}
+
+function parseArgs(argv) {
+  const o = { dryRun: false, compact: false, date: null, allowBackfill: false };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--dry-run') o.dryRun = true;
+    else if (a === '--compact') o.compact = true;
+    else if (a === '--allow-backfill') o.allowBackfill = true;   // BH-147: expliziter Operator-Vertrag
+    else if (a === '--date') o.date = argv[++i];
+    else if (a.startsWith('--date=')) o.date = a.slice(7);
+  }
+  return o;
+}
+
+if (require.main === module) {
+  try {
+    const opts = parseArgs(process.argv.slice(2));
+    // BH-147: manuelles --date-Backfill ist Operator-Risiko (Audit: "manueller
+    // Operator-Fehlgebrauch der committeten PIT-Messreihe"). CI läuft ohne --date
+    // (daily-pull.yml). Ein von heute abweichendes Datum verlangt daher explizit
+    // --allow-backfill; ohne den Vertrag bricht die CLI VOR jedem Schreibzugriff.
+    if (requiresBackfillContract(opts.date, opts.allowBackfill, opts.dryRun)) {
+      console.error('write-board-history: --date ' + opts.date + ' weicht vom heutigen Tag ab — erfordert --allow-backfill (Operator-Vertrag, BH-147).');
+      process.exit(1);
+    }
+    const res = run(opts);
+    const tag = res.dryRun ? '[dry-run] ' : '';
+    if (res.mode === 'compact') {
+      console.log(tag + 'compact ' + res.date + ': ' + res.compacted.length + ' Vintages kompaktiert');
+      res.compacted.forEach((f) => console.log('  archiviert+gestrippt: ' + f));
+    } else {
+      console.log(tag + 'board-history ' + res.date + ' (prior=' + res.priorDate + ', regime=' + res.regime.label + ')');
+      // "Heute wurde gar nicht verglichen" gehoert in denselben Alarmkanal wie die
+      // erhoehte Bruch-Schwelle darunter — sonst sieht ein blinder Tag im Protokoll
+      // genauso aus wie ein sauber gepruefter (p99Delta null, suspect false).
+      if (res.ohneVergleichsbasis) {
+        console.log('::warning::GATE BLIND fuer ' + res.date + ': keine Vergleichsbasis — alle '
+          + res.ohneVergleichsbasis.length + ' Vorgaenger stehen auf der Ausschlussliste ('
+          + res.ohneVergleichsbasis.join(', ') + '). Das Wert-Gate hat heute NICHTS geprueft; '
+          + 'p99Delta=null in allen Boards heisst "nicht gemessen", nicht "sauber". Der naechste '
+          + 'Lauf vergleicht wieder, sobald ein nicht ausgeschlossenes Vintage vorliegt.');
+      }
+      // Karls einziger Alarmkanal ist das Lauf-Protokoll: eine ausgesetzte oder erhöhte
+      // Grenze MUSS im Klartext dort stehen, sonst ist "gruen" nicht von "Gate uebergangen"
+      // zu unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
+      for (const z of bruchProtokollZeilen(res)) console.log(z);
+      for (const z of kopplungProtokollZeilen(res)) console.log(z);   // WB-4': auch ohne Register-Eintrag
+      // Dritter Fall im selben Alarmkanal wie GATE BLIND und Massstab-Bruch: der Vergleich
+      // spannt mehr als GATE_MAX_ABSTAND_TAGE. Dann urteilt die Wert-Achse bewusst nicht —
+      // das MUSS im Klartext stehen, sonst sieht ein ungeprueftes Vintage aus wie ein
+      // bestandenes (dieselbe Verwechslung, die Tag 502 fuer den blinden Tag geschlossen hat).
+      const zuWeit = res.boards.filter((b) => b.abstandZuGross);
+      if (zuWeit.length) {
+        // Der Abstand wird je Board gemessen (ein Board ohne Vorgaenger-Datei hat einen
+        // anderen). Deshalb die tatsaechlich vorkommenden Abstaende ausgeben statt
+        // zuWeit[0] fuer alle zu behaupten — sonst steht im Alarm eine Zahl, die fuer
+        // einen Teil der genannten Boards nicht gilt.
+        const abstaende = [...new Set(zuWeit.map((b) => b.gapDays))].sort((a, b) => a - b);
+        console.log('::warning::GATE ABSTAND fuer ' + res.date + ': Vorgaenger ' + res.priorDate
+          + ' liegt ' + abstaende.join('/') + ' Tage zurueck (Maximum ' + GATE_MAX_ABSTAND_TAGE
+          + '). Die Wert-Achse hat in ' + zuWeit.length + ' Board(s) NICHT geurteilt — p99Δ steht '
+          + 'im Protokoll, ist aber "nicht geprueft", nicht "sauber". NaN-Einbruch, Coverage-Absturz '
+          + 'und Kohorten-Ueberlappung wurden unveraendert geprueft.');
+      }
+      for (const b of res.boards) {
+        if (b.error) { console.log('  ' + b.board + ': ' + b.error); continue; }
+        const flag = b.suspect ? ' SUSPECT[' + '⚠' + ']' : (b.calibrating ? ' (calibrating)' : '');
+        const g = b.bruchGrenze;
+        // Alle Bestandteile getrennt: gemessene Schrumpfung → Strukturgrenze → Deckel →
+        // angelegte Grenze. Wer die Zeile liest, kann die Rechnung nachvollziehen.
+        // Der Datenschub-Arm bekommt seine eigene Zerlegung: „Kohorte X von Y = -Z %" wäre
+        // dort sinnlos (die Kohorte WÄCHST, die Prozentzahl stünde negativ da) und die
+        // Strukturgrenze geht in seine Höhe gar nicht ein.
+        const bruchText = g && g.typ === 'daten-schub'
+          ? ' [Datenschub: Kohorte ' + g.zeilenVorher + ' -> ' + g.zeilenNachher
+            + ', Deckel ' + g.deckel.toFixed(2)
+            + ' -> Tagesschwelle ' + g.tagesschwelle.toFixed(2)
+            + ' statt ' + g.normaleSchwelle.toFixed(2)
+            + ', Faecherung ' + b.fanOutZaehler + '/' + b.fanOutNenner
+            + ' = ' + (100 * b.fanOut).toFixed(2) + '%]'
+          : g
+          ? ' [Bruch: Kohorte ' + g.zeilenNachher + ' von ' + g.zeilenVorher
+            + ' = -' + (100 * (g.zeilenVorher - g.zeilenNachher) / g.zeilenVorher).toFixed(1) + '%'
+            + ' -> Strukturgrenze ' + g.strukturgrenze.toFixed(2)
+            + ', Deckel ' + g.deckel.toFixed(2)
+            + ' -> Tagesschwelle ' + g.tagesschwelle.toFixed(2)
+            + ' statt ' + g.normaleSchwelle.toFixed(2) + ']'
+          : '';
+        // thr= ist jetzt die WIRKSAME Grenze (Tagesgrenze × Tagesabstand) und sagt in
+        // Klammern dazu, woher die Tagesgrenze kommt — Boden oder board-eigene Messung.
+        // Vorher stand hier die kalibrierte Schwelle, die seit der Tagesabstands-Rechnung
+        // nicht mehr die Zahl ist, an der geurteilt wurde.
+        const grenzeText = b.abstandZuGross
+          ? ', thr=— (Abstand ' + b.gapDays + 'd > ' + GATE_MAX_ABSTAND_TAGE + 'd: Wert-Achse NICHT geprueft)'
+          : ', thr=' + (b.wirksameSchwelle == null ? '—' : b.wirksameSchwelle.toFixed(2))
+            + ' (' + (b.threshold == null ? 'Boden ' + MIN_GATE_THRESHOLD.toFixed(2) : 'kalibriert ' + b.threshold.toFixed(2))
+            + ' x ' + b.gapDays + 'd'
+            + (b.bruchGrenze ? ' + Bruch-Allowance ' + b.bruchGrenze.allowance.toFixed(2) + ' einmalig' : '')
+            + ')';
+        console.log('  ' + b.board + ': ' + b.rows + ' Zeilen, p99Δ=' + (b.p99Delta == null ? '—' : b.p99Delta.toFixed(2)) +
+          grenzeText +
+          ', beta-cov=' + (b.pitCoverage.beta * 100).toFixed(0) + '%' + flag + bruchText);
+      }
+      if (res.exitCode === 2) console.log('EXIT 2: Vintage geschrieben, mindestens ein Board strukturell geflaggt (0.7-Kanal).');
+    }
+    process.exit(res.exitCode);
+  } catch (e) {
+    console.error('write-board-history FEHLER: ' + (e && e.stack || e));
+    process.exit(1);
+  }
+}
+
+module.exports = {
+  run, parseArgs, buildBoardVintage, readUniverseHash, evaluateGate, updateGateCalibration,
+  updateP99DeltaHistory,
+  compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
+  quantile, assertNoPicksHistory, buildPit, mischVal, mischVerhaeltnisUnkorrigiert,
+  pitPriceFeatures, pitDecileByIndex, attachPitPriceFields,   // LT1 (Rat 10)
+  priorVintageDate, priorBoardVintage, excludedDates, massstabBruchFuer, bruchProtokollZeilen,
+  integritaetsVerfall, lampenBeobachtung, secTickerLesen, kopplungProtokollZeilen,   // WB-4'
+  _setPaths, resolvePaths,
+  frozenThresholdOf,
+  neuesQuartalErklaert, quartalLaneShadow, quartalLaneShadowSummary,   // Quartals-Spur (SHADOW, 26.09.)
+  isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
+  tagesabstand,
+  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP, GATE_SERIE_ALARM_TAGE, QUELL_LAMPEN, KOPF_ACHSE,
+    VOL_WINDOW_BARS, MOMENTUM_LOOKBACK_BARS, MOMENTUM_GAP_BARS, PIT_DECILES },
+};

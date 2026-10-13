@@ -1,0 +1,31 @@
+'use strict';
+// F-20 / lib/reload-history.js:129,173-199. Synthetic cache data only.
+// EXPECTED RED until F-20 is fixed: a successful answer must not erase an entire dated cash series.
+const assert = require('node:assert/strict');
+const { cacheIsThinner, historyIsThinner } = require('../lib/reload-history.js');
+const controlsOnly = process.argv.includes('--controls-only');
+function check(name, fn, expectedRed = false) {
+  if (controlsOnly && expectedRed) return;
+  try { fn(); console.log('PASS ' + name); } catch (e) { console.error('FAIL ' + name + ': ' + e.message); process.exitCode = 1; }
+}
+const cash = (ends, values) => ({ ftsAnnualFCF: values, ftsAnnualOCF: values,
+  ftsPeriods: { cash: ends.map(end => ({ end })) } });
+const old = cash(['2025-12-31', '2024-12-31', '2023-12-31'], [30, 20, 10]);
+check('F-20 successful empty cash response retains previously dated FCF and OCF', () => {
+  assert.equal(cacheIsThinner(cash([], []), old), true);
+}, true);
+check('F-20 successful missing cash keys retain previously dated FCF and OCF', () => {
+  assert.equal(cacheIsThinner({ ftsPeriods: { cash: [] } }, old), true);
+}, true);
+check('control first cache creation has no prior history to lose', () => assert.equal(cacheIsThinner(cash([], []), null), false));
+check('control a dated null at a shared cash period is loss', () => {
+  assert.equal(cacheIsThinner(cash(['2025-12-31', '2024-12-31', '2023-12-31'], [30, null, 10]), old), true);
+});
+check('control a legitimate dated fiscal window advance remains admissible', () => {
+  assert.equal(cacheIsThinner(cash(['2026-12-31', '2025-12-31', '2024-12-31'], [40, 30, 20]), old), false);
+});
+check('control an explicit corrected gap remains authoritative in snapshot history', () => {
+  const prior = { annual: { annualFCF: [30], annualFCFEnds: ['2025-12-31'] } };
+  const next = { annual: { annualFCF: [{ value: null, financialCorrection: { replacementNativeValue: null } }], annualFCFEnds: ['2025-12-31'] } };
+  assert.equal(historyIsThinner(next, prior), false);
+});

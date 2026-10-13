@@ -1,0 +1,58 @@
+{
+  "schema": "early-detection-free-ohlcv-source-audit/v1",
+  "asOf": "2026-08-08",
+  "status": "NO_CONFIRMATORY_FULL_UNIVERSE_SOURCE_FOUND",
+  "mandate": "free_only",
+  "productiveGqsModified": false,
+  "findings": [
+    {
+      "sourceId": "STOOQ_US_BULK",
+      "result": "BLOCKED_AND_UNPROVEN",
+      "evidence": "HTTP 401 at https://static.stooq.com/db/h/d_us_txt.zip on 2026-08-08; current documentation describes API-key/CAPTCHA access.",
+      "confirmatoryEligible": false
+    },
+    {
+      "sourceId": "HF_JINJING_DELISTED",
+      "result": "REJECTED_WRONG_MARKET",
+      "revision": "466227b2149352d28edb6da26871a8c04e5e5894",
+      "payloadSha256": "9ad4a783b179401b645a675e2c09a8c596f411f18c992f694aba232cd9aadfb8",
+      "payloadBytes": 18701359,
+      "rows": 1207970,
+      "symbols": 318,
+      "marketCounts": {"CN": 1207970},
+      "knownDeadUsTickerCoverage": {"TWTR": 0, "ATVI": 0, "CERN": 0, "XLNX": 0, "WORK": 0, "FRC": 0, "SIVB": 0, "LEH": 0, "BBBY": 0},
+      "confirmatoryEligible": false
+    },
+    {
+      "sourceId": "HF_FINNHUB_OHLCV_1M",
+      "result": "REJECTED_CONFIRMATORY_PROVENANCE_AND_LICENSE",
+      "evidence": "The card names Finnhub as the original source, declares no reusable dataset license, and supplies no permanent listing identity, adjustment ledger or corporate-action provenance.",
+      "estimatedPayloadBytes": 87700000000,
+      "confirmatoryEligible": false
+    },
+    {
+      "sourceId": "KAGGLE_ARANDKEI_DELISTED",
+      "result": "EXPLORATORY_SMALL_SUBSET_ONLY",
+      "version": 2,
+      "license": "CC BY 4.0",
+      "archiveSha256": "606d3b6c70552edd65a0971d79af2520e3588e580fe8647a6e0c8c2062117e99",
+      "archiveBytes": 6297555,
+      "tickerFiles": 20,
+      "limitations": [
+        "no primary-source provenance",
+        "adjusted close may be copied from unadjusted close",
+        "no action or delisting-return ledger",
+        "far below full-universe coverage"
+      ],
+      "confirmatoryEligible": false
+    },
+    {
+      "sourceId": "YAHOO_CHART",
+      "result": "EXPLORATORY_ACTIVE_SYMBOLS_ONLY",
+      "evidence": "Current active symbols resolve, while nine known acquired, bankrupt or delisted symbols returned HTTP 404 in the audit.",
+      "confirmatoryEligible": false
+    }
+  ],
+  "decision": "The 2009-2024 full-universe adjusted-OHLCV and delisting gate remains RED. Free sources may support declared validation cohorts, but none can honestly be represented as a complete survivorship-safe U.S. panel.",
+  "fallback": "Continue the SEC-complete fundamental reconstruction and build an explicitly coverage-bounded price cohort. Do not execute or rename the sealed FEM-SEC-US@1.2.0 confirmatory result unless a complete action-provenance price source is later proven."
+}

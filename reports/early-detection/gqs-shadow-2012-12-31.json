@@ -1,0 +1,42 @@
+{
+  "schema": "early-detection-gqs-shadow-summary/v1",
+  "status": "EXPLORATORY_BASELINE_PASS_OUTCOME_STUDY_PENDING",
+  "evaluationAt": "2012-12-31T23:59:59Z",
+  "mode": "SEC_ONLY_SHADOW_NOT_PRODUCTION_RECONSTRUCTION",
+  "input": {
+    "snapshots": 8618,
+    "bundleSha256": "c923dcf3eb12ef0058359593ad8d4f9647f38636d67ee3827bdcda0a38e5cc23",
+    "fileSha256": "b2d969d1fcf3d75d11f9a3afb3cd7a2d554b01c993d80b8130254e850b72bb95",
+    "payloadManifestSha256": "1b648d4120c8fd485fffc05dfb6d627672f0a8178457841ba71eba990353229d",
+    "semanticHashVerification": "PASS",
+    "conceptMapVersion": "FEM-SEC-CONCEPT-MAP@1.0.0",
+    "conceptMapFileSha256": "192919af3d6e494b93a27c6cb889a198b65ad473913669689bd37eecec20872f"
+  },
+  "engine": {
+    "protocol": "GQS-00@1.0.0",
+    "scoringTreeSha256": "297d53aa8e36332cd629fd843235b0ed7f1e3a77f07eca02b6799d8a1ea35eb0",
+    "productiveLogicChanged": false
+  },
+  "result": {
+    "entities": 8618,
+    "scored": 4325,
+    "qualifiedExploratory": 1992,
+    "dataSuspect": 2100,
+    "sicExcluded": 1355,
+    "sicAmbiguous": 699,
+    "sicUnresolved": 46,
+    "noAxes": 88,
+    "duplicateIssuer": 5
+  },
+  "qualification": {
+    "rule": "top 100 per formula and profitability track",
+    "confirmatoryEligible": false,
+    "interpretation": "The high candidate count is a deliberately broad historical board baseline, not evidence of early detection and not an investment signal."
+  },
+  "artifact": {
+    "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\gqs-shadow\\2012-12-31.json",
+    "bytes": 2634872,
+    "reportSha256": "69c1ae18141381f79e9c21d1bd115d58d705e06e51225d855c549dfa8b541ab2"
+  },
+  "nextGate": "Build the monthly/quarterly shadow calendar and compare first GQS appearance with pre-registered growth outcomes and market timing."
+}

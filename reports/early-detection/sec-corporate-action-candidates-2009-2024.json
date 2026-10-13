@@ -1,0 +1,26 @@
+{
+  "schema": "early-detection-sec-corporate-action-candidates/v1",
+  "status": "EVENT_CANDIDATE_LEDGER_PASS_ORIGINAL_FILINGS_PENDING",
+  "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-corporate-action-candidates-2009-2024.sqlite",
+  "databaseBytes": 19906560,
+  "edgarDatabase": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-edgar-master-index.sqlite",
+  "bridgeDatabase": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-nasdaq-cik-candidate-bridge-v2.sqlite",
+  "events": 44352,
+  "byClass": {
+    "DELISTING_FORM25_CANDIDATE": 27285,
+    "DEREGISTRATION_FORM15_CANDIDATE": 17067
+  },
+  "linkedEvents": 9570,
+  "linkedEventRate": 0.21577380952380953,
+  "linkedTickers": 4263,
+  "eventSequenceSha256": "af54a9caa0e83eb26e985ceaeabff42659ddc3b5b2e22fb3687b560e1c85aedc",
+  "confirmatoryEligible": false,
+  "limitations": [
+    "Filed date is a locator date, not the exchange-effective date or exact SEC acceptance timestamp.",
+    "Every event remains a candidate until its original Form 25/15 submission is captured and parsed.",
+    "A current-name or sparse-snapshot ticker link is not a permanent security identity.",
+    "The ledger contains no delisting return or post-delisting price continuation."
+  ],
+  "productiveGqsModified": false,
+  "reportSha256": "472c8e938dfc8ffae930bb6efcb27e9042d90b11e7090bab427eeefd30bf3c63"
+}

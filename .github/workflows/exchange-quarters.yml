@@ -1,0 +1,77 @@
+name: Exchange Quarters
+
+# Tag 1399 — fills the append-only store external-data/exchange-quarters/{cn,tw}.json with revenue
+# as printed by exchange-fed sources (China: Eastmoney GINCOME/SINCOME, Taiwan: MOPS t164sb04),
+# see scripts/fetch-exchange-quarters.js. NOTHING READS THE STORE YET; no board number can change.
+#
+# TIMING (spec S3, measured 02.10.2026 with `gh run list --workflow daily-pull.yml`): the last 10
+# scheduled "Daily Yahoo Pull" runs (cron 02:17 UTC) were created between 07:18 and 08:53 UTC and
+# finished by 10:21 UTC at the latest — the cron fires 5 to 6.5 hours late on this repository.
+# 13:47 UTC leaves room for that delay on both sides: even 6.5 hours late this run ends long before
+# the next daily pull starts. China runs daily only inside the A-share report seasons (15.03.-05.05.,
+# 15.07.-05.09., 15.10.-20.11.) and at most every 6 days outside; Taiwan works through a capped
+# queue (600 calls) every day. Both decisions come from the committed store, not from the clock of
+# this run, so a run cancelled while pending in the shared main-push group loses nothing: the next
+# run picks up the same queue. Every write is atomic and checked append-only before it happens.
+#
+# Branch runs (workflow_dispatch on a feature branch) use --dry-run: the full China pass and at most
+# 40 Taiwan calls, all checks run, nothing is written or committed (runner reachability check, S4).
+on:
+  schedule:
+    - cron: '47 13 * * *'   # daily 13:47 UTC, after the delayed daily pull (see above)
+  workflow_dispatch: {}
+
+# Only the scheduled run joins main-push (serialised with daily-pull, monthly-sec-xbrl, the guards);
+# a manual run gets its own group so it can never cancel a pending scheduled run of another workflow.
+concurrency:
+  group: ${{ github.event_name == 'schedule' && 'main-push' || format('manual-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+# ZWEIG-WACHE (see tests/zweig-wache.test.js): only refs/heads/main may publish.
+env:
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'  # BH-134: package.json engines requires >=22
+
+      - name: Fetch exchange quarters
+        id: fetch
+        run: |
+          if [ "$VEROEFFENTLICHEN" = "true" ]; then
+            node scripts/fetch-exchange-quarters.js
+          else
+            node scripts/fetch-exchange-quarters.js --dry-run --force-cn --tw-cap=40
+          fi
+
+      # Runs after a red fetch too: each market is written atomically and only when it passed all
+      # checks, so a market that succeeded is kept even when the other one aborted.
+      - name: Commit store + push
+        if: ${{ !cancelled() }}
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — Lauf auf $GITHUB_REF (Trockenlauf mit --dry-run). Beide Quellen wurden abgefragt und geprueft, geschrieben und gepusht wurde nichts."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add external-data/exchange-quarters/
+          if git diff --cached --quiet; then echo "kein Delta"; exit 0; fi
+          git commit -m "chore: exchange-quarters store [skip ci]"
+          for i in 1 2 3; do
+            # BH-131: abort any rebase left hanging by a prior failed attempt.
+            git rebase --abort >/dev/null 2>&1 || true
+            if git pull --rebase --autostash origin main && git push origin HEAD:main; then echo "gepusht (Versuch $i)"; exit 0; fi
+            echo "Push-Versuch $i fehlgeschlagen, retry..."; sleep 5
+          done
+          echo "::error::exchange-quarters push failed after 3 attempts — main-push conflict; the next run fetches again."
+          exit 1

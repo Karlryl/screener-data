@@ -1,0 +1,42 @@
+'use strict';
+// EXPECTED RED until DL3 pull-yahoo-13 / DL8 F-05 is fixed.
+// Pins actual processOne wiring at pull-yahoo.js:4794-4795,4861-4873,4984-4988.
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { fixture, snapshot, root } = require('./dl23-pull-fixture.js');
+const { dilution } = require('../src/scoring/axes.js');
+const val = value => ({ value });
+async function runCase(kind) {
+  const ticker = 'DL13SIDE';
+  const qsNewest = kind === 'older-fts' ? 2026 : 2025;
+  const qs = Array.from({ length: 4 }, (_, i) => ({ endDate: `${qsNewest - i}-12-31`, totalRevenue: 100, grossProfit: 20, operatingIncome: 10, netIncome: 5 }));
+  const length = kind === 'same-window' ? 4 : 5;
+  const fin = Array.from({ length }, (_, i) => ({ date: kind === 'undated-fts' ? undefined : `${2025 - length + 1 + i}-12-31`, totalRevenue: length === 5 && i === 2 ? null : 100,
+    grossProfit: length === 5 && i === 2 ? null : 20, operatingIncome: length === 5 && i === 2 ? null : 10, netIncome: length === 5 && i === 2 ? null : 5 }));
+  const cash = fin.map(row => ({ date: row.date, stockBasedCompensation: 10, freeCashFlow: 10, operatingCashFlow: 15 }));
+  const f = fixture({ snapshots: [snapshot(ticker)], manual: [ticker], env: { STALE_QUARTER_RELOAD: '0' },
+    annualResponses: { financials: fin, 'cash-flow': cash, 'balance-sheet': fin.map(row => ({ date: row.date, totalAssets: 1000, currentAssets: 200 })) },
+    summaryResponse: { price: { currency: 'USD', regularMarketPrice: 100, marketCap: 1e12 }, financialData: { financialCurrency: 'USD' },
+      quoteType: { quoteType: 'EQUITY' }, summaryProfile: { sector: 'Technology', industry: 'Software' }, incomeStatementHistory: { incomeStatementHistory: qs } } });
+  f.files.delete(path.join(root, 'fundamentals-cache', ticker + '.json'));
+  const manifest = await f.run();
+  assert.equal(manifest.results[0].status, 'ok');
+  assert.equal(f.calls.filter(call => call[1].includes('/')).length, 4, 'real FTS fetch must run');
+  const out = f.stored(ticker);
+  if (kind === 'same-window') assert.equal(out.annual.annualSBC[0], 10, 'control: equal windows keep current SBC');
+  else if (kind === 'older-fts' || kind === 'undated-fts') assert.equal(out.annual.annualSBC[0], null, 'control: no established current fiscal date remains a gap');
+  else {
+    assert.equal(out.annual.annualRevEnds[0], '2025-12-31');
+    assert.equal(out.annual.annualSBC[0], 10, 'equal latest dates must not create a leading SBC gap because window lengths differ');
+    assert.equal(out.annual.annualSBCEnds[0], '2025-12-31');
+    assert.equal(dilution({ annual: { annualRev: [val(100)], annualSBC: out.annual.annualSBC } }), -0.1);
+  }
+}
+(async () => {
+  let failed = 0;
+  for (const kind of ['same-window', 'older-fts', 'undated-fts', 'equal-date-longer-window']) {
+    try { await runCase(kind); console.log('PASS ' + kind); }
+    catch (error) { failed++; console.error('FAIL ' + kind + ': ' + error.message); }
+  }
+  process.exitCode = failed ? 1 : 0;
+})().catch(error => { console.error(error); process.exitCode = 1; });

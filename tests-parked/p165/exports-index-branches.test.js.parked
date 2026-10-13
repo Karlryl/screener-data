@@ -1,0 +1,21 @@
+'use strict';
+// EXPECTED RED until DL3 write-findash-export.js index GUARD-GAP / DL8 F-29 is fixed.
+// Uses the exact index validator, branch IDs and coverage validator; no I/O entry point.
+const assert = require('node:assert/strict');
+const { copy } = require('./dl23-exports-copy-helper');
+const W = copy('scripts/write-findash-export.js', ['SCHEMA', 'BRANCHES', 'VALID_BOARDSTATUS', 'VALID_COVERAGE_STATUS', 'COHORT_TRACKS', 'isNonNegativeInteger', 'validateCoverage', 'validateCohortCounts', 'validateFile']);
+const base = { schema: W.SCHEMA, generated_at: '2026-10-07T00:00:00Z', coverage: null, generatedFromSnapshots: 0,
+  branches: [...W.BRANCHES], boardStatus: Object.fromEntries(W.BRANCHES.map(b => [b, 'core'])),
+  counts: Object.fromEntries(W.BRANCHES.map(b => [b, { profitable: 0, unprofitable: 0 }])), survivalCount: 0, excluded: {} };
+const errors = branches => { const result = []; W.validateFile({ ...base, branches }, 'index', result, { requireCohortCounts: true }); return result; };
+assert.deepEqual(errors(base.branches), [], 'exact branch set passes');
+assert.deepEqual(errors([...base.branches].reverse()), [], 'order is not prescribed');
+assert.ok(errors([]).some(e => e.includes('branches')), 'wrong-length control rejects');
+console.log('PASS exact set, reordered set and wrong-length controls');
+if (!process.argv.includes('--controls')) {
+  const failures = [];
+  for (const [name, values] of [['duplicate', Array(W.BRANCHES.length).fill(W.BRANCHES[0])], ['unknown', Array(W.BRANCHES.length).fill('unknown')], ['non-string', Array(W.BRANCHES.length).fill(null)], ['single-duplicate', [W.BRANCHES[1], ...W.BRANCHES.slice(1)]], ['single-unknown', ['unknown', ...W.BRANCHES.slice(1)]], ['single-non-string', [123, ...W.BRANCHES.slice(1)]]]) {
+    if (!errors(values).some(e => e.includes('branches'))) failures.push(name);
+  }
+  assert.deepEqual(failures, [], 'equal length must not substitute for an exact unique string branch set');
+}

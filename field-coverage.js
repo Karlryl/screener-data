@@ -1,0 +1,251 @@
+'use strict';
+/**
+ * Tag 22: Yahoo-Field-Drift-Detector
+ * ====================================
+ * Tracks coverage (% of stocks with non-null values) of critical Yahoo-derived
+ * fields across all snapshots in a run. Maintains a rolling baseline in
+ * alert-state.fieldCoverage. When current coverage drops >= DROP_THRESHOLD
+ * vs baseline, signals drift — typically caused by Yahoo schema changes
+ * (z.B. Nov 2024: incomeStatementHistoryQuarterly leer geliefert).
+ *
+ * Verwendung: aus detect-changes.js heraus.
+ */
+
+// Tracked fields — diejenigen kritisch für Engine-Scoring.
+// Tag 153: paths corrected to match pull-yahoo.js canonical snapshot structure.
+// Previous paths used 'metrics.*' for all fields; actual structure has annual.*/timeseries.*/meta.*
+// Those 12 wrong-path fields reported 0% coverage on every run since Tag 22.
+// F-DQ-006: added fcfMarginTTM, forwardPE, annualSBC, annualCapex, totalDebt, insidersOwnership
+// Tag 232c-9 (audit F-DQ-005 HIGH): the F-DQ-006 entry was added as
+// `insiderOwnerPercent` — that name doesn't exist in any snapshot. Canonical
+// is `insidersOwnership` (verified live: NVDA.metrics.insidersOwnership =
+// 0.04). Pre-fix this tracker reported permanent 0% coverage on the field,
+// triggered the below-50%-floor HIGH alert every workflow run, contributed
+// to alert fatigue.
+const TRACKED_FIELDS = [
+  'annual.annualRev',           // array of {value,...} — check non-empty
+  'annual.annualOpInc',
+  'annual.annualNetIncome',
+  'annual.annualGP',            // was: metrics.annualGrossProfit (field is annualGP not annualGrossProfit)
+  'annual.annualFCF',
+  'timeseries.revenueQ',        // was: metrics.quarterlyRev
+  'timeseries.opIncQ',          // was: metrics.quarterlyOpInc
+  'marketCap.value',            // was: metrics.marketCapUSD — marketCap is a _metric wrapper
+  'metrics.pe.value',           // was: metrics.peRatio — pe is a _metric wrapper
+  'metrics.priceSales.value',   // was: metrics.psRatio — priceSales is a _metric wrapper
+  'meta.sector',                // was: metrics.sector
+  'meta.industry',              // was: metrics.industry
+  'metrics.operatingMargin.value', // .value to check actual data, not just wrapper presence
+  'metrics.grossMargin.value',
+  // F-DQ-006: previously missing fields — methods depend on these
+  'metrics.fcfMarginTTM.value',    // FCF margin TTM — used by fcf-yield, rule-of-40
+  'metrics.forwardPE.value',       // Forward P/E — used by forward-pe method
+  'annual.annualSBC',              // Stock-based compensation — used by sbc-revenue method
+  'annual.annualCapex',            // Capital expenditures — used by capex-trend, reinvestment-rate
+  'annual.annualOCF',              // sole source for ocf-based methods (e.g. reinvestment-rate OCF denominator)
+  'annual.annualRnD',              // Tag 202: R&D — second input to reinvestment-rate ((Capex+RnD)/OCF)
+  'annual.annualBalance',          // Balance sheet (includes totalDebt) — used by altman-z, net-debt-ebitda
+  'metrics.insidersOwnership.value', // Tag 232c-9: was insiderOwnerPercent (typo); canonical field name is insidersOwnership
+  // Tag 232c-31 (audit F-DQ-002 HIGH): track Tag 211l/219/220c additions so
+  // Yahoo silently dropping any of them is detectable. Pre-fix coverage gate
+  // saw 100% on these fields because they weren't enumerated — any deprecation
+  // would have gone unnoticed for months. CRITICAL_FIELDS in methods/data-
+  // quality.js was already updated in Tag 232c-4; this is the parallel update
+  // to TRACKED_FIELDS for the coverage-history baseline.
+  'annual.annualSGA',              // Tag 211l: feeds sga-revenue-trend, beneish-m
+  'annual.annualDepreciation',     // Tag 211l: feeds ohlson-o-score
+  'annual.annualShares',           // Tag 219: feeds buyback-yield
+  'metrics.ebitda.value',          // Tag 219: feeds ev-ebitda
+  'metrics.enterpriseValue.value', // Tag 219: feeds ev-ebitda, magic-formula
+  'metrics.beta.value',            // Tag 219: feeds betting-against-beta
+  'timeseries.netIncomeQ',         // Tag 220c: feeds earnings-surprise-momentum
+  // F-DQ-005: previously-omitted consumed metrics — track so Yahoo dropping any
+  // of them is detectable instead of silently passing the coverage gate at 100%.
+  'metrics.targetMeanPrice.value', // analyst target price — consumed downstream
+  'metrics.returnOnEquity.value',  // ROE — consumed downstream
+  'metrics.enterpriseToEbitda.value', // EV/EBITDA ratio — consumed downstream
+  'meta.sharesOutstanding',        // shares outstanding — consumed downstream
+];
+
+const HISTORY_WINDOW = 14;      // Rolling window: letzte 14 Runs für Baseline (war 6 — zu kurz bei 2 Runs/Tag)
+const DROP_THRESHOLD = 0.20;    // 20 percentage-points = Drift-Alarm
+const MIN_HISTORY_FOR_ALERT = 2; // erst nach 2 Runs vergleichen
+
+function getField(obj, path) {
+  if (obj == null) return undefined;
+  const parts = path.split('.');
+  let cur = obj;
+  for (const p of parts) {
+    if (cur == null) return undefined;
+    cur = cur[p];
+  }
+  return cur;
+}
+
+function isPresent(v) {
+  if (v == null) return false;
+  if (v === '') return false;
+  if (typeof v === 'number' && Number.isNaN(v)) return false;
+  if (Array.isArray(v)) {
+    if (v.length === 0) return false;
+    // F-DQ-005 (Tag 179): an array of all-null placeholders (Bug #26 positional
+    // alignment artifact) was previously treated as "present" because length>0,
+    // blinding drift detection to Yahoo schema gaps. Now: an array counts as
+    // present only if it contains at least one non-null finite entry.
+    return v.some(x => {
+      if (x == null) return false;
+      if (typeof x === 'number') return Number.isFinite(x);
+      if (typeof x === 'object' && 'value' in x) return Number.isFinite(x.value);
+      return true; // balance-row objects etc. count
+    });
+  }
+  return true;
+}
+
+// Berechnet pro Field % der Stocks mit Wert.
+function computeCoverage(snapshots) {
+  const coverage = {};
+  if (!snapshots || snapshots.length === 0) {
+    for (const f of TRACKED_FIELDS) coverage[f] = 0;
+    return coverage;
+  }
+  for (const field of TRACKED_FIELDS) {
+    let count = 0;
+    for (const s of snapshots) {
+      if (isPresent(getField(s, field))) count++;
+    }
+    coverage[field] = count / snapshots.length;
+  }
+  return coverage;
+}
+
+// Hängt neuen Entry an History, behält nur letzte HISTORY_WINDOW.
+function updateHistory(history, newEntry) {
+  const safe = Array.isArray(history) ? history : [];
+  const extended = [...safe, newEntry];
+  // F-SM-010: log when history is truncated due to HISTORY_WINDOW change
+  if (extended.length > HISTORY_WINDOW) {
+    console.warn('fieldCoverage: history truncated from', extended.length, 'to', HISTORY_WINDOW);
+  }
+  return extended.slice(-HISTORY_WINDOW);
+}
+
+// Baseline = Mittel aus allen Entries OHNE den aktuellen (letzten).
+// Bei erstem Run: history hat 1 Entry → baseline = leer (kein Vergleich möglich).
+function computeBaseline(history) {
+  const safe = Array.isArray(history) ? history : [];
+  if (safe.length < MIN_HISTORY_FOR_ALERT) return {};
+  const useEntries = safe.slice(0, -1); // alle außer aktuellem
+  const baseline = {};
+  for (const field of TRACKED_FIELDS) {
+    const values = useEntries
+      .map(e => (e && e.coverage) ? e.coverage[field] : null)
+      .filter(v => typeof v === 'number');
+    if (values.length === 0) continue;
+    baseline[field] = values.reduce((a, b) => a + b, 0) / values.length;
+  }
+  return baseline;
+}
+
+// F-DQ-005: Absolute floor for coverage — below this level always alert regardless of baseline.
+const ABSOLUTE_FLOOR = 0.50;  // 50% coverage floor
+
+// Liefert Liste der Fields die signifikant gedroppt sind.
+// F-DQ-005: emits a HIGH-severity floor alert for fields below ABSOLUTE_FLOOR.
+// audit F-A-2026-06-22: the floor is now relative — it only fires for a field whose
+// own baseline proves it normally clears the floor (baseline >= ABSOLUTE_FLOOR &&
+// cur < ABSOLUTE_FLOOR). On cold start (no baseline) the floor is suppressed, so
+// legitimately-sparse fields no longer trigger HIGH alerts (alert-fatigue fix).
+function detectDrift(currentCoverage, baseline) {
+  const drifts = [];
+  const seenFields = new Set();
+
+  // audit BH-066: zero-disappearance contract, checked BEFORE the floor gate below.
+  // The floor-check only escalates when a field's OWN baseline was >= ABSOLUTE_FLOOR
+  // (structurally-sparse fields are exempted to avoid alert fatigue). The standard
+  // baseline-drop check below requires drop >= DROP_THRESHOLD (0.20). A field that
+  // sat at e.g. 10% baseline and drops to exactly 0% has drop=0.10 — under BOTH
+  // gates, so it vanished silently. Any base>0 -> cur===0 transition is always a
+  // genuine "field removed" event regardless of how sparse it normally was.
+  for (const field of TRACKED_FIELDS) {
+    const cur = currentCoverage[field];
+    const base = baseline[field];
+    if (typeof cur !== 'number' || typeof base !== 'number') continue;
+    if (base > 0 && cur === 0) {
+      drifts.push({
+        field,
+        current:  0,
+        baseline: Math.round(base * 100) / 100,
+        drop:     Math.round(base * 100) / 100,
+        severity: 'HIGH',
+        reason:   'field-vanished'
+      });
+      seenFields.add(field);
+    }
+  }
+
+  // audit F-A-2026-06-22: prevents alert fatigue from structurally-sparse fields.
+  // The old absolute floor fired a HIGH 'below-50pct-floor' alert for ANY tracked
+  // field below 50% coverage "independent of baseline ... even on cold start".
+  // But many TRACKED_FIELDS (forwardPE, targetMeanPrice, insidersOwnership,
+  // annualSBC, ...) are legitimately absent for most non-US/small-cap/non-covered
+  // names across the ~25k universe, so they sit permanently under 50% — re-creating
+  // the exact alert-fatigue this file's header (:19-24) documents fixing.
+  // Floor is now RELATIVE to each field's own established baseline: only fire the
+  // HIGH alert when a field that HISTORICALLY sat at/above the floor drops below it.
+  // On cold start (no numeric baseline) the floor is suppressed entirely — a field
+  // that is merely structurally sparse is never escalated.
+  for (const field of TRACKED_FIELDS) {
+    if (seenFields.has(field)) continue; // already reported via zero-disappearance check
+    const cur = currentCoverage[field];
+    if (typeof cur !== 'number') continue;
+    const base = baseline[field];
+    // Only escalate fields whose own baseline proves they normally clear the floor.
+    if (typeof base !== 'number') continue;          // cold start / no baseline → suppress
+    if (base < ABSOLUTE_FLOOR) continue;             // structurally-sparse field → never floor-alert
+    if (cur < ABSOLUTE_FLOOR) {
+      drifts.push({
+        field,
+        current:  Math.round(cur * 100) / 100,
+        baseline: Math.round(base * 100) / 100,
+        drop:     Math.round((base - cur) * 100) / 100,
+        severity: 'HIGH',
+        reason:   'below-50pct-floor'
+      });
+      seenFields.add(field);
+    }
+  }
+
+  // Standard baseline-vs-current drift detection
+  for (const field of TRACKED_FIELDS) {
+    if (seenFields.has(field)) continue; // already reported via floor check
+    const cur = currentCoverage[field];
+    const base = baseline[field];
+    if (typeof cur !== 'number' || typeof base !== 'number') continue;
+    const drop = base - cur;
+    if (drop >= DROP_THRESHOLD) {
+      drifts.push({
+        field,
+        current:  Math.round(cur * 100) / 100,
+        baseline: Math.round(base * 100) / 100,
+        drop:     Math.round(drop * 100) / 100,
+        severity: 'MEDIUM',
+        reason:   'baseline-drop'
+      });
+    }
+  }
+  return drifts;
+}
+
+module.exports = {
+  TRACKED_FIELDS,
+  HISTORY_WINDOW,
+  DROP_THRESHOLD,
+  MIN_HISTORY_FOR_ALERT,
+  ABSOLUTE_FLOOR,
+  computeCoverage,
+  updateHistory,
+  computeBaseline,
+  detectDrift,
+  _internal: { getField, isPresent }
+};

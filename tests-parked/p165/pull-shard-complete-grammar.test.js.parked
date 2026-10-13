@@ -1,0 +1,17 @@
+'use strict';
+// EXPECTED RED until DL8 F-26-pull-yahoo / DL3 pull-yahoo-14-1 is fixed.
+// Branch: parseArgs shard validity must reject truncation, extra parts and unsafe integers.
+const assert = require('node:assert/strict');
+const { fixture } = require('./dl23-pull-fixture.js');
+const Y = fixture({ snapshots: [] }).Y;
+const parse = raw => Y.parseArgs(['node', 'pull-yahoo.js', '--shard', raw]);
+for (const raw of ['0/1', '1/17', '16/17']) {
+  const [index, count] = raw.split('/').map(Number), got = parse(raw);
+  assert.equal(got.argError, null);
+  assert.equal(got.shard.index, index); assert.equal(got.shard.count, count);
+}
+assert(parse('5/3').argError);
+assert(parse('x/y').argError);
+console.log('GREEN controls: valid partitions unchanged; reversed and nonnumeric ranges rejected');
+const accepted = ['1.5/4', '1junk/4', '1/4junk', '1/4/9', '1/9007199254740993', ''].filter(raw => !parse(raw).argError);
+assert.deepEqual(accepted, [], 'Malformed shard parameters must not select an unintended partition');

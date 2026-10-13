@@ -1,0 +1,70 @@
+# Market-Screener — Projekt-Kontext
+
+> **Stabile** Projekt-Wahrheit & Prozesse. Dynamische, sich mit dem Code ändernde Fakten leben im Memory (`~/.claude/projects/…-screener-data/memory/`), **nicht** hier. Globale Person/Umgebung: `~/.claude/CLAUDE.md`. Keine Info zwischen den Ebenen duplizieren.
+
+## Was das Projekt ist
+Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branch `main`, GitHub-Pages-Deploy via Cron `17 2 * * 2-6`, Di–Sa 02:17 UTC). Verbindliche Engine-Leitplanken & Details: `README.md` und `docs/` im Repo (Source of Truth für Engine-Regeln). `CONTEXT.md` ist ein SUPERSEDED-markiertes historisches Resume-Briefing — keine Engine-Wahrheit mehr.
+
+## Regelblatt, Einstieg (erster Lese-Stopp) & bindende Arbeitsregeln
+**Bindend (Karl 26.09.2026):** `C:\Users\Anwender\OneDrive\Dokumente\GitHub\karl-plan\REGELBLATT-v4.md` — gilt für Claude, Codex und jede Automatik; ältere Fassungen sind Geschichte, bei Widerspruch gewinnt das Regelblatt. Zum Start wird nicht das ganze Blatt gelesen, sondern der gemeinsame Kern in `C:\Users\Anwender\.claude\CLAUDE.md` (seine verbindliche Kurzfassung); das Regelblatt wird bei Zweifel oder Widerspruch, vor jeder Änderung an Regeln oder Wunschliste und für den Wortlaut einer Schutzregel (Teil 3) nachgeschlagen, sobald ihr Fall eintritt (G22, Nachtrag 05.10.).
+**Vault-Einstieg (Source of Truth im Vault):** `C:\Users\Anwender\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\START.md`.
+Reihenfolge und Status: `C:\Users\Anwender\OneDrive\Dokumente\GitHub\karl-plan\WUNSCHLISTE.md` (neue Zeilen/Reihenfolge nur durch Karl). Der Vault-Masterplan (`…\growth-screener\_MASTERPLAN-screener-findash.md`) ist Archiv/Nachschlagewerk, kein Auftragsgeber.
+- **Arbeitsnachweis:** Tests, Freigabe und nötige Übergabe knapp dokumentieren. Das alte Update-Ritual (Masterplan-Häkchen, WORKLOG mit 4 Pflichtteilen, Lektionen-Register als Pflicht-Lektüre) ist archiviert (Karl 26.09.2026).
+- **Commit-Konvention (H2):** `Tag <n>: <Betreff>` — `n` = höchste `Tag`-Nummer aus `git log --oneline` + 1, ein Tag pro logischem Chunk.
+- **Push/Merge auf `main`:** grüne Gates UND Prüfung durch jemand anderen als den Erbauer (Claude↔Codex; ist Claude leer: zweite blinde Codex-Prüfung + grüne Tests). Force-Push/History-Rewrite nur mit Karls Ja; Löschen nur über die monatliche Löschliste mit Karls „ja" (Regelblatt G25). Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
+- **Schutzliste (nie löschen/überschreiben):** `picks-history/`, `methods-history/`, `earnings-calendar.json`, Branch `loop/formel-haertung`. `picks-history/` ist darüber hinaus **inhaltlich eingefroren** (Stichtag 2026-07-02, Karl 2026-08-16, dauerhaft) — auch keine Korrektur, kein Backfill, kein Aufräum-Commit und keine „Reparatur" von Prüfskript-Meldungen; Details und Begründung in [`picks-history/_FROZEN.md`](./picks-history/_FROZEN.md). Nachfolger: `board-history/`.
+
+## Kern-Designprinzip: NUR Qualität, nie Bewertung
+Der Screener misst **bewusst ausschließlich fundamentale Qualität** — nie ob eine Aktie günstig/teuer ist. Bewertung sowie Entry/Exit-Timing macht Karl **extern über Elliott-Wellen-Analyse** (getrennter, menschlicher Schritt nach dem Screen).
+- Jedes preisnormierte Signal (Yield, P/E, PEG, EV/EBITDA, DCF/Margin-of-Safety, Target-Upside, Preis-Momentum) im 0–100-Score ist ein **Mandats-Verstoß** → raus aus `SCORE_WEIGHTS`.
+- **BUFFETT-Mode** (value+quality, DCF/MoS) wird entfernt (Karl-Entscheidung 2026-06-20).
+- **Fitness-Gate-Spannung:** Das Fitness-Maß (`scripts/rank-ic.js`, Mess-Artefakte in `fitness/`) optimiert Forward-Return-Rank-IC und belohnt damit strukturell Cheapness — es zieht genau die verbotenen Bewertungssignale zurück. Sinkt die Fitness nach dem Entfernen von Bewertung: **erwartet und korrekt, NICHT durch Wieder-Einbau „reparieren".**
+
+## Pflicht-Test-Gates (bindend nach jeder Methoden-/Scoring-Änderung)
+Die alten Root-Gates (`tag28-tests.js`, `engine-cli-tests.js`, `tests/integration-anchor-test.js`) sind **entfernt**. Bindend ist der vorhandene Testläufer `node scripts/test-gate.js --mode=all` (beide Spuren, Exit 1 bei rot; derselbe Aufruf läuft im PR-Check, der Tageslauf fährt `--mode=blocking`). Die blockierende Spur globbt **`tests/*test.js`, `tests/scoring/*test.js`, `lib/*test.js`, `tests/druckenmiller/*test.js`** (`BLOCKING_GLOBS` in `scripts/test-gate.js`; jede Datei ist ein Standalone-Runner: `node <datei>`, Exit 0/1). Nach jeder Scoring-/Methoden-Änderung die **komplette Suite** grün fahren — Anker u. a. `tests/scoring/anchors.fixture.test.js` (Fixture-Oracle), `score.integration.test.js`, `run-screener.test.js`.
+```powershell
+node scripts/test-gate.js --mode=all
+```
+Score-Methoden-Änderungen flippen den Fixture-Hash → das ist gewollt und der Nachweis. Quelle der Wahrheit: `BLOCKING_GLOBS` in `scripts/test-gate.js`. (node/gh sind auf PATH — siehe globale `~/.claude/CLAUDE.md`.)
+
+## Formel-Änderungen (Karl 26.09.2026, ersetzt Gauntlet/F-16/3-grüne-Läufe)
+Einheit = eine Formel pro GICS-Sub-Industry. Eine Formel darf sich ändern: sichtbar, mit Vorher/Nachher auf dem echten Board, von der zweiten KI (Claude↔Codex) blind geprüft, alt und neu höchstens 4 Wochen parallel; umgeschaltet wird nur mit dem vorher festgelegten Beleg, ohne ihn bleibt die alte Formel. Alte Vorschläge werden nie geschönt. Rat/Gericht nur bei großer Auswirkung („groß" = ändert sichtbare Board-Zahlen, kostet Geld oder ist nicht umkehrbar; Regelblatt v4 Teil 2).
+
+Neue Methoden starten **DIAGNOSTIC** (fixture-hash-safe); Promotion zu CORE erst nach Walk-Forward-Beleg pro Sektor.
+
+Neue Board-/Achsen-Kandidaten: belegte Recherche → Formel-Weg (oben). Reihenfolge nur über `karl-plan\WUNSCHLISTE.md`. Das Ideen-Ledger `…\growth-screener\_IDEEN-LEDGER-2026-07-16.md` parkt nur (Nachschlagewerk).
+
+## Formel-Arbeit & Budget
+Formel-Arbeit nur aus Wunschliste-Zeilen über den Formel-Weg. Übriges Limit → größter sinnvoller Hebel, Bulk bis ~60 Agenten erlaubt, wenn sinnvoll. Keine Rückfragen zum Token-Budget; jeder Euro braucht weiter Karls Ja.
+Nachschlagewerk (kein Auftragsgeber): Formel-Ledger `…\growth-screener\screener-formel-ledger.md` (Fitness-Baseline, Befunde); Mess-Artefakte in `screener-data\fitness\`. Der frühere Dauer-Härtungs-Loop ist archiviert.
+
+## Wissensbasis / Recherche (getrennt vom Code)
+Sektor-Dossiers (evidence-graded, zitiert; neue und überarbeitete auf Deutsch nach Regelblatt G13, ältere liegen noch englisch vor) liegen im **Obsidian-Vault**
+`C:\Users\Anwender\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\` — **NICHT** im screener-data-Repo. Hub: `growth-screener-knowledge-base`, verlinkt mit `elliott-wellen-referenz`.
+
+## Engineering-Regeln für Multi-Agent-Arbeit
+- **Nie shared Registry-Files parallel editieren:** `src/scoring/formulas/index.js`, `src/scoring/formulas/quality/index.js`, `src/scoring/score.js` → Write-Races. Parallel arbeiten nur lesende Helfer und getrennte frische Klone mit eigener Sperre, eigenem Zweig und eigenem Pull Request (Schreibregel in der globalen `~/.claude/CLAUDE.md`, Abschnitt „Bauen und Prüfen“); die Registry besitzt dabei ein einziger Schreiber (Coordinator-Pattern), die Reihenfolge der Zusammenführung entscheidet der Master der Sitzung. Neue `src/scoring/formulas/<sector>.js` und Per-Cycle-Audit-Reports kollidieren nicht, entstehen aber ebenfalls nur in einem solchen Klon.
+- **`git commit` ohne Pathspec staged ALLES** (auch Dateien laufender Agenten) → vor Commit `git status --short`, dann gezielt `git commit -- <pfade>`.
+- **`/audit`-Zyklen:** 5 general-purpose-Agenten parallel in **einer** Nachricht, dann je Output als `Tag NNNa-e` committen; Zyklus endet mit `audit-reports/YYYY-MM-DD-tagNNN-cycle.md`. Audit-Befunde sind Vorschläge; Auftrag werden sie erst, wenn ein Fehler an etwas nachgewiesen ist, das Karl sieht, oder eine konkrete Daten-/Sicherheitsgefahr belegt ist — oder Karl es beauftragt. `.claude/commands/audit.md` ist ein SUPERSEDED-markiertes altes Verfahren gegen entfernte Architektur — nicht wörtlich ausführen.
+
+## Fallen
+- **`GitHub\screener-data-fix`** = eingefrorene Kopie/Ex-Worktree (18.05.2026) — **nicht anfassen**.
+- **`GitHub\docGPT`** = totes Fremd-Repo (Kandidat für die monatliche Löschliste) — nie als Workspace nutzen.
+- **Zwei Tests sind auf dieser Maschine dauerhaft rot und in CI grün — kein Defekt, sondern Umgebung.** Gemessen 30.08.2026 gegen den gleichen Stand, der als PR-Check grün durchlief:
+  - `tests/scoring/calibration-ref.test.js` — genau ein Block (*R2.9 Test B*) hat eine **Vorbedingung**, die lokal nicht gilt: er braucht die Kohorte `utilities|unprofitable` als FEHLEND im lokalen Kalibrier-Artefakt. Lokal ist sie da. 16 von 17 Blöcken grün.
+  - `tests/waehrung-ausliefer-waechter.test.js` — der LIVE-Block läuft über die **lokal ausgelieferten** Beine und findet dort Kreuznotiz-Verstöße (Mehrfachlistings desselben Emittenten). Das ist die bekannte Listing-Währungs-Falle. **Listing-Währungs-Klasse: keine Datums-Sperre**; Bau erlaubt, Bedingung: Vorher/Nachher auf der ausgelieferten Menge zeigt 0 veränderte korrekte Zeilen, zweite KI geprüft. Die synthetischen Blöcke derselben Datei sind grün.
+  - **Regel:** Diese zwei lokalen Roten sind **kein** Grund, einen Chunk anzuhalten oder zu „reparieren". Jede *dritte* rote Datei ist es sehr wohl. Wer den lokalen Lauf sauber braucht: `git config core.autocrlf false` beseitigt eine dritte, ältere Klasse (Zeilenenden), nicht diese beiden.
+- **Höchstens zwei volle Test-Gate-Läufe gleichzeitig, und nur solange C: beim Start mehr als 60 GB frei hat; darunter nur einer.** Die Tests legen Tempordner (`bh-*` u. a.) an und räumen sie selbst nicht auf; seit Tag 1425 (#434) gibt `scripts/test-gate.js` jeder Testdatei einen eigenen Temp-Ordner und entfernt ihn danach (vorher am 06.10.: fast 50.000 Temp-Ordner an einem Tag, laut P94). Die Größe hängt stark vom Präfix ab: `bh-*` sind klein, `findash-movement-*` und `fd-deploy-git-*` belegten je mehrere GB (Nachmessung D12, `ergebnisse\P90\findash-tmp-befund.md`). Während des Laufs belegt ein volles Gate trotzdem vorübergehend viel Platz (Brief §3.26: rund 17 GB). Den Plattenengpass am 06.10. verursachten vor allem Codex-Arbeitsbereiche (49 GB). Vor dem Start die offenen `GATE-START`-Zeilen ohne `GATE-END` (jünger als 40 Minuten) zählen, dann `GATE-START <lane>` und danach `GATE-END` ins Heartbeat-Log schreiben. (Beleg: `done\P94.md`, #434, Brief §3.17 und §3.26)
+- **`TEMP`/`TMP` vor jedem vollen Lauf umlenken** auf `C:\Users\Anwender\.codex\t\<ID>`, und zwar außerhalb des Klons, weil ungetrackte Ordner im Klon gate-check rot machen. (Beleg: Brief §3.19; Brief §3.24: kurzer Pfad, sonst scheitert early-detection-foundation an 260 Zeichen)
+- **Windows-Speicheroptimierung räumt `%TEMP%`, sobald C: knapp wird.** Am 06.10. um 13:04 lag C: unter 5 GB, danach verschwanden Tempordner mitten im Lauf, und Tests meldeten `EBUSY`. Arbeits- und Testordner gehören nicht nach `%TEMP%`. Die Einstellung ist Systemsache, also Karls. (Beleg: Brief §3.22)
+- **`tests/in-nse-adapter.test.js` ist nur rot, wenn er aus `%TEMP%` heraus läuft**; im Klon oder bei umgelenktem TEMP ist er grün. Rot in `%TEMP%` gilt als Umgebung, nicht als Defekt. (Beleg: nacht-heartbeat.log 13:24 (D10): EBUSY beim Umbenennen, mit umgelenktem TMP 49 bestanden / 0 rot)
+- **Jedes neue Export-Modul unter `lib/` braucht JSDoc** (Zweckzeile und `@param`), sonst bricht `tests/jsdoc-exports.test.js` die blockierende Testspur ab („blocking run before Yahoo pull“). Lokal leicht als Umgebungsrot zu verkennen. (Beleg: PR #420, CI-Lauf 37434939947; `done\P33.md`)
+- **Die Tag-Nummer („Tag <n>: …“) steht erst beim Zusammenführen fest.** Mehrere Lanes vergeben parallel dieselbe Nummer; maßgeblich ist der Betreff des Merge-Commits auf main. So wurde #420 mit „Tag 1411“ gebaut und als `b0406b20e4 … Tag 1416` zusammengeführt. (Beleg: `git log origin/main`)
+- **Zweiter Schreiber nur in einer frischen Klon-Lane** unter `C:\Users\Anwender\.codex\worktrees\<lane>`, mit eigenem `.git`, eigener Sperre nach dem Klon-Ordner, eigenem Zweig und PR. Den Hauptordner fasst diese Lane nie an, auch kein `git fetch`. (Beleg: Kernregel Zeile 56 in `~\.claude\CLAUDE.md` und `~\.codex\AGENTS.md`, KI 06.10.; Fehler F6047)
+
+
+## Zwei-Motoren-Betrieb (Codex) — Stand 26.09.2026 (Regelblatt v4 G17–G19)
+
+- **Gleichberechtigt:** Codex plant mit (Fable + Codex), baut und prüft gleichberechtigt — auch Scoring/Methodik/Architektur; wer baut, wird vom anderen geprüft. Planung/Review auf höchstem Aufwand (astra). Codex' Rechte stehen ausschließlich in `C:\Users\Anwender\.codex\AGENTS.md`.
+- **Delegations-Default:** Fix-Loops mit vielen Iterationen, Chart-/Render-Iterationen und Bulk-Mechanik gehen an Codex (Skill `codex-delegieren`) — Selbermachen ist dort die begründungspflichtige Ausnahme (1 Log-Zeile).
+- **Vor jeder Schreibarbeit:** Delegations-Lock prüfen (`%USERPROFILE%\.codex\delegation-locks\<repo>.lock.json`). Aktiv/pending → nicht ins Repo schreiben; Krisenpfad steht im Skill. Commits `WIP (Codex, ungereviewt)` zuerst reviewen; ist etwas zu ändern, kommt ein neuer Korrekturcommit obendrauf, ohne Zurücksetzen oder Umschreiben der Versionsgeschichte.

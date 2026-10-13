@@ -1,0 +1,1427 @@
+# findash-export v1 — Datenvertrag (Task 1.1)
+
+> **Schema-String:** `findash-export/v1` (Feld `schema` auf JEDER Datei).
+> **Status:** 1.1 umgesetzt; **1.2 ergaenzt `profitTier` + `ipoYear`** (real emittiert); **2.13 #23 ergaenzt `coverageAxes` + `coverageWeight`** (optional additiv; die FELDER sind reine Ausgabe, die dahinterliegende Coverage-Groesse ist dagegen **score-wirksam und nicht monoton** — hier stand bis zum 30.08.2026 „score-inert", s. §3d); **2.10 ergaenzt `cohortN` + `cohortFallback`** (Pflicht, `--check`-geprueft, Tamper→exit1); **2.11 Stufe A ergaenzt `scoreBase` + `scoreShrunk` + `factors`** (optional additiv, Score-Herkunft); **2.7 ergaenzt `axisBreakdown`** (optional additiv, Achsen-Beitrag je Zeile). **Court-Auflage 27.07. ergaenzt `mcapBounds`** (optional additiv, auf Overview- und Board-DATEI-Ebene, nicht je Zeile: `[p20,p40,p60,p80]` in USD oder `null` — macht `mcapBand` lesbar, damit „mega" nicht nur „oberstes Fuenftel dieser Liste" heisst. Quelle sind die data-learned Quintil-Grenzen aus `outputs/calibration.json`, es wird NICHTS neu gerechnet. Fehlt die Datei oder ist das Feld unbrauchbar: `null`, und die Anzeige laesst die Spanne weg). **F-5 ergaenzt `revGrowthYoYPct`** (optional additiv, REINE ANZEIGE fuer die findash-Spalte "Umsatzwachstum": Quartals-Jahreswachstum in Prozent oder, als Rueckfall, Geschaeftsjahres-Wachstum; welches von beiden, sagt seit 01.10.2026 `revGrowthBasis` (§3), aus den Rohreihen gerechnet wie die Achse `revGrowthLevel` — bewusst NICHT Yahoos `metrics.revenueGrowthYoY`, das wegen belegter Defekte am 14.07.2026 aus der Achse entfernt wurde; ungeklemmt, da Winsorisierung dem Ranking dient und in der Anzeige eine Verfaelschung waere. Kein Score-Input. Abdeckung auf dem Stand vom 26.07.2026: 418 von 421 Board-Zeilen = 99,3 %. ECHT optional: Abwesenheit des Feldes wird vom --check NICHT beanstandet, ein vorhandener Wert dagegen voll geprueft. Das ist bewusst so - Karls einziger Alarmkanal darf nicht an einem additiven Anzeigefeld rot werden). Nur `currency` bleibt RESERVIERT.
+> **T194 ergaenzt `cohortDelivery`:** Jede produktive HG-Board-Datei sagt maschinenlesbar, wie viele Zeilen je Track geliefert wurden, wie gross die volle Kohorte laut `index.json.counts` ist und ob die schnelle Datei am 100er-Deckel gekappt wurde. `full/` weist sich spiegelbildlich als ungekappt und vollstaendig aus; `--check` prueft beide Richtungen.
+> **Quelle der Wahrheit:** Engine-Output `outputs/hypergrowth/*.json` samt `index.json.counts` (score.js / run-screener.js). Der Writer mappt echte Engine-Felder und leitet nur die ausdruecklich dokumentierten Export-Belege ab - darunter `rank` und `cohortDelivery`; im Produktionsbuild werden Kohortengroessen nie geraten.
+> **Publiziert:** ausschliesslich nach gh-pages (`outputs/` ist gitignored). Der Dashboard-Consumer liest von der gh-pages-URL, nie von main.
+
+---
+
+## 0. Warum es diesen Vertrag gibt
+
+Das Dashboard (findash-Cockpit) bindet an eine **stabile, versionierte** Form. Der Engine-Output (`outputs/hypergrowth/`) ist ein internes Rechen-Artefakt und darf sich frei aendern; dieser Export ist die **eingefrorene Aussenschnittstelle**.
+
+Bricht das Schema still (fehlendes Feld, falscher Typ, kaputter Enum), zeigt das Dashboard falsche Daten ohne Warnung. **Dagegen steht der Schema-Check-Step (rotes X, Karls einziger Alarm-Kanal).** Damit dieses Versprechen echt ist, muss der Check JEDES Pflicht-Feld auf **Praesenz UND Typ/Enum** pruefen — sonst ist der Alarm-Kanal eine Attrappe.
+
+**Vertrags-Garantie (verifiziert gegen echte `outputs/hypergrowth/*` via materialisiertem Writer):** Der `--check`-Step blockt den Deploy (exit 1) bei jedem der folgenden Brueche auf einer beliebigen der 16 Dateien: fehlendes Pflicht-Feld, falsch getyptes Feld (Zahl statt String, String statt Zahl, NaN/Infinity), kaputter Enum-Wert (`track`, `phase`, `mcapBand`, `ipoRecency`, `overview.kind`/`overviewKind`, `coverage.status`), fehlendes/falsch getyptes Huellen-Feld (`schema`, `generated_at`, `branch`, `coverage`), verletzte Meta-Struktur (`index`). Empirisch: 22 Bruch-Varianten getestet, davon der 4-fach-gleichzeitige Bruch auf `energy.json` (branch entfernt + country entfernt + sector=42 numerisch + overview.companion='X') => **exit 1, Deploy geblockt** (frueher: exit 0).
+
+**Konvention der Pflicht-Semantik:**
+- **Pflicht** = Schluessel muss existieren UND den geforderten Typ/Enum haben (nicht null, ausser explizit "nullable").
+- **Pflicht (nullable)** = Schluessel muss existieren und ist entweder `null` oder der geforderte Typ/Enum. **Abwesenheit des Schluessels ist ein Bruch**, `null` ist es nicht.
+- **optional / reserviert** = darf fehlen; Abwesenheit ist vertragskonform ("nicht verfuegbar").
+
+---
+
+## 1. Dateien (alle unter `outputs/findash-export/v1/`)
+
+| Datei | Inhalt | Laenge |
+| --- | --- | --- |
+| `<branche>.json` (13) | Ein Board je Branche: `{branch, cohortDelivery, profitable[], unprofitable[]}` | topN=100 je Track (score-desc); Vollstaendigkeit explizit |
+| `overview.json` | Flaches Cross-Branch-Top nach Score | ~200 (topN*2) |
+| `survival.json` | Flaches Pre-Revenue-Board nach Runway | 73 (ungekappt) |
+| `index.json` | Meta/Zaehlung + Coverage-Banner-Marker | 1 Objekt |
+
+Die 13 Branchen (formulaId): `consumer-discretionary, consumer-staples, energy, financials, health-care, industrials, it-services, materials, real-estate, semiconductors, software-comm-services, tech-hardware, utilities`.
+
+**NICHT im Export:** `outputs/hypergrowth/calib/<branche>.json` (Roh-Perzentil-Matrix ueber die GANZE Kohorte) bleibt getrennter Diagnostik-Kanal — siehe §6. Die Achsen-Perzentile der **exportierten** Zeilen stehen dagegen sehr wohl im Vertrag, per `axisBreakdown` (§3).
+
+---
+
+## 2. Gemeinsame Datei-Huelle (jede der 16 Dateien)
+
+| Feld | Typ | Pflicht | Geprueft vom `--check` | Bedeutung |
+| --- | --- | --- | --- | --- |
+| `schema` | `"findash-export/v1"` | Pflicht | ja (String-Gleichheit) | Versions-Pin. Aenderung nur per v2-Bump (§7). |
+| `generated_at` | string (ISO-8601) | Pflicht | ja (Typ string) | Build-Zeit des Writers. |
+| `coverage` | `{status,degraded,blocked,coverage_pct,generated_at}` \| null | Pflicht (Wert nullable) | ja (Schluessel-Praesenz + Objekt-Typen; `generated_at` NICHT geprueft, s.u.) | Durchgereicht aus `outputs/coverage-status.json`. `null` = Marker fehlte (Consumer liest als "unbekannt"). |
+
+`coverage`-Objekt (wenn nicht null), alle Felder geprueft:
+
+| Sub-Feld | Typ | Pflicht |
+| --- | --- | --- |
+| `status` | `'ok'`\|`'degradiert'`\|`'katastrophal'` (Enum) | Pflicht |
+| `degraded` | boolean | Pflicht |
+| `blocked` | boolean | Pflicht |
+| `coverage_pct` | number (finite) | Pflicht |
+| `generated_at` | string (ISO-8601) \| undefined | **OPTIONAL (additiv)**, NICHT im `--check` |
+
+**`coverage.generated_at` (Rat Q2-2, 02.09.2026) — additiv, kein v2-Bump (§7 erlaubt neue optionale Felder in v1).** Zeitstempel des Markers SELBST, nicht des Exports: Marker (merge-Job) und Index (scoring-Job) entstehen in ZWEI verschiedenen CI-Jobs, am Stand vom 29.07. ~29 Minuten auseinander. Ohne diesen Wert traegt die eingebettete Marker-Kopie keine eigene Zeit, und der Ruecksetz-Pfad des Consumers (`env.coverage = index.coverage`, findash `data-layer/screener.js:602`) kann einen Marker aus einem FRUEHEREN Lauf nicht von dem dieses Laufs unterscheiden. findash fuehrt genau diesen Vergleich heute schon — aber nur auf der eigenstaendigen `coverage-status.json` (`COVERAGE_STALE_MS` = 6 h, `screener.js:641-648`); die eingebettete Kopie hatte das Feld bisher nicht. **Bewusst NICHT im `--check`:** Karls einziger Alarmkanal darf nicht an einem additiven Anzeigefeld rot werden (dieselbe Begruendung wie bei `revGrowthYoYPct` in §3). Quelle `scripts/write-findash-export.js loadCoverage()`; Waechter `tests/coverage-gate-truth-table.test.js`.
+
+Treibt das Degradiert-Banner im Dashboard. **Faellt `coverage` still weg oder wird `status` kaputt** (real relevant: aktuell `status='degradiert'`, `coverage_pct` 20.1), blockt der Check den Deploy — genau der stille Datenbruch, gegen den §0 den Gate positioniert.
+
+---
+
+## 3. Board-Datei `<branche>.json`
+
+Zusaetzlich zur Huelle (§2):
+
+| Feld | Typ | Pflicht | Geprueft | Bedeutung |
+| --- | --- | --- | --- | --- |
+| `branch` | string (= Dateiname) | Pflicht | ja (Typ string UND `=== <dateiname>`) | Branchen-ID (= formulaId, = Dateiname). Implizit im Board, hier explizit gemacht. |
+| `boardStatus` | `'core'` \| `'diagnostic'` | Pflicht | ja (Enum) | **Court-Standing des Boards** (Quelle `src/scoring/board-status.js`, Vault-Ledger §2.1). `core` = Court-PASSED/bewiesen; `diagnostic` = gebaut, aber Court NICHT bestanden → laeuft sichtbar als „unbewiesen" mit, zaehlt nicht als geprueft (Board-NO-GO-Ausweg). Das Dashboard (1.3) MUSS `diagnostic`-Boards sichtbar als unbewiesen kennzeichnen. Aktuell `diagnostic`: consumer-staples, materials, real-estate, it-services. |
+| `cohortDelivery` | `{cap,fullBoard,profitable,unprofitable}` | Pflicht auf produktiven HG-Boards | ja (Form + Arrays + `index.counts`) | **T194 Vollstaendigkeitsbeleg.** Auf der schnellen Datei: `cap:100`, `fullBoard:"full/<branche>.json"`; je Track `{delivered,total,truncated}`. `delivered` muss der Array-Laenge entsprechen, `total` dem vollen Index-Count, `truncated` exakt `total > delivered`; geliefert werden exakt `min(total,100)` Zeilen. Auf `full/`: `cap:null`, `fullBoard:null`, `delivered===total`, `truncated:false`. |
+| `profitable` | Array\<BoardRow\> | Pflicht | ja (Array + jede Zeile) | Track `profitable`, score-desc, topN=100. |
+| `unprofitable` | Array\<BoardRow\> | Pflicht | ja (Array + jede Zeile) | Track `unprofitable`, score-desc, topN=100 (kann `[]`). |
+
+### BoardRow — jedes Pflicht-Feld wird vom `--check` auf Praesenz+Typ/Enum geprueft
+
+| Feld | Typ | Pflicht | Geprueft | Bedeutung / Herkunft |
+| --- | --- | --- | --- | --- |
+| `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | **Abgeleitet** aus der score-desc-Reihenfolge. Die Engine hat KEIN rank-Feld; Rang war nur implizit ueber die Sortierung. Der Export macht ihn explizit. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
+| `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
+| `rankGrundShadow` | string \| null | **OPTIONAL (additiv, SHADOW)** | Klassenkonfiguration wird beim Laden validiert | Nicht-operativer Klassengrund aus `configs/non-operating-classes.json`. Abwesenheit bedeutet null. Rein additiv und score- sowie rangneutral: `rank`, `rankGrund`, Scores und Reihenfolge bleiben unverändert. Kein Live-Gate. |
+| `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"NVDA"`. |
+| `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Bereinigter Emittentenname aus `snapshot.meta.name`; Rand-/Mehrfach-Whitespace wird normalisiert. Fehlend, leer oder nicht-string wird `null`. Alte v1-Daten ohne Feld bleiben consumer-kompatibel. Reine Anzeige, kein Score-/Rang-Einfluss. |
+| `score` | number (round1, finite), **Spanne 0–100** | Pflicht | ja (finite) | Anzeige-gerundet, z.B. `88.2`. Sortier-Determinismus lag intern an `_raw` (nicht im Output) — daher ist `rank` die verbindliche Reihenfolge, nicht `score`-Vergleich. **Seit 19.08.2026 in DIESEM Feed bei 100,0 gedeckelt** — die Engine kann bis 105 liefern; Einzelheiten und der Grund fuer die zwei Skalen: §3a. |
+| `track` | `"profitable"` \| `"unprofitable"` (Enum) | Pflicht | ja (Enum) | |
+| `lamps` | string[] | Pflicht | ja (Array) | z.B. `["peakMargin","cyclePeak"]`, kann `[]`. Registry: `src/scoring/lamps.js` `LAMPS` (18 Lampen); ausgewiesen wird nur, was `true` ist (`evaluateLamps().active`) — `false` und `null` sind im Array nicht unterscheidbar. Die zwei juengsten Eintraege `opIncSynthetisch`/`opIncYahooAdjusted` sind der EINZIGE Weg, auf dem `meta.opIncSource` diesen Feed erreicht: §3c. |
+| `overview` | Objekt \| null | Pflicht (Wert nullable) | ja (Schluessel-Praesenz; wenn Objekt: alle Sub-Felder) | VERSCHACHTELT (im Gegensatz zu overview.json). |
+| `overview.kind` | `"gp"`\|`"revenue-badge"`\|`"ffo-badge"`\|`"runway-badge"` (Enum) | wenn overview≠null | ja (Enum gegen die 4 Werte) | In Boards nur `gp`/`revenue-badge`/`ffo-badge` beobachtet; `runway-badge` schema-erlaubt. |
+| `overview.value` | number \| null | wenn overview≠null | ja (finite\|null) | **KANN NEGATIV sein** (z.B. `-0.055`, `-1.17` = YoY-Schrumpfung). Seit 08.10.2026 (P158) auch `null`, wenn die zwei jüngsten vorhandenen Jahreswerte nicht benachbart sind (aufeinanderfolgende gespeicherte Positionen und, sofern beide gültig, Periodenenden 334 bis 397 Tage auseinander); Grund und Präsenzmarker werden nicht exportiert, das Schema bleibt `findash-export/v1`. |
+| `overview.companion` | number (round1) \| null | wenn overview≠null | ja (finite\|null) | Rule-of-X-Companion, z.B. `195.3`; kann `null`. |
+| `country` | string \| null | Pflicht (nullable) | ja (Praesenz + string\|null) | z.B. `"United States"`, `"Taiwan"`. |
+| `region` | string \| null | Pflicht (nullable) | ja (Praesenz + string\|null) | z.B. `"North America"`, `"Asia"`, `"Europe"`. |
+| `sector` | string \| null | Pflicht (nullable) | ja (Praesenz + string\|null) | Yahoo-Sektor (≠ formulaId-Branche!), z.B. `"Technology"`. |
+| `marketCap` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | Roh, ungerundet (z.B. `5457368842240` oder `26183936833.024`). **Immer USD** (seit 16.08. explizit ueber `marketCapCurrency`). **null auch dann, wenn die Umrechnung aus der Handelswaehrung nicht nachgewiesen ist** — Waehrungs-Waechter (Chunk 4a). P205: Belegte Aktienzahlfehler aus `configs/share-count-hand-table.json` werden beim Abruf und beim Lesen vorhandener Snapshots korrigiert; ein nicht mehr belegbarer Fall bleibt mit deutschem Grund in `financialDataReasons` leer. Umsatzverhältnisse und Tagessprünge sind Suchsignale, keine automatische Korrektur. Korrigierte Werte unter der jeweiligen bestehenden Mindestgröße verlassen die Boards und stehen in `excluded.json` unter `skipped-mcap`; gespeicherte Snapshots bleiben beim Lesen unverändert. |
+| `marketCapCurrency` | `"USD"` \| null | additiv OPTIONAL (seit 16.08.) | ja, wenn present (Enum) | Die Einheit des FELDES `marketCap`, nicht die des Werts — im v1-Vertrag immer `"USD"`. Ein anderer Wert ist ein Vertragsbruch und blockt den Deploy. Abwesenheit bleibt legitim (Altbestands-Export). |
+| `tradingFxRateApplied` | number > 0 \| null | additiv OPTIONAL (seit 16.08.) | ja, wenn present (positive-finite\|null) | Der positive Kurs, mit dem die marketCap aus der HANDELS-Waehrung nach USD gebracht wurde (`meta.tradingFxRateApplied` bzw. bei bestaetigter Waehrungsidentitaet `meta.fxRateApplied` des Snapshots). `null` = in USD gehandelt (nichts umzurechnen) oder kein brauchbarer Kursnachweis; im zweiten Fall liefert der Waehrungs-Waechter `marketCap: null` aus. Die numerische `0` und negative Kurse sind kein Nachweis und blockieren den Deploy. |
+| `phase` | `"inflected"`\|`"established"`\|`"unprofitable"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Nur ueber Gewinn-Vorzeichen. **Real nullable** (3 Board-Rows null beobachtet). |
+| `mcapBand` | `"micro"`\|`"small"`\|`"mid"`\|`"large"`\|`"mega"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil. |
+| `ipoRecency` | `"recent"`\|`"growth"`\|`"seasoned"`\|`"veteran"`\|`"mature"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil. **Real nullable** (8 Board-Rows null beobachtet). |
+| `profitTier` | `"nicht-profitabel"`\|`"kurz-vor-profitabel"`\|`"seit-kurzem-profitabel"`\|`"langfristig-profitabel"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | **Task 1.2** (Karl B3). 4 lueckenlos kachelnde Stufen aus dem Yahoo-JAHRES-Stream (≥4 Perioden fuer „langfristig") + Quartals-Trajektorie. Deskriptiv, KEIN Score-Einfluss. Quelle `src/scoring/profit-tier.js`. `null` = zu wenig Daten. |
+| `ipoYear` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | **Task 1.2** — Boersen-IPO-Jahr (`meta.ipoYear` bzw. Jahr aus `firstTradeDate`), nur durchgereicht (nicht neu berechnet). Ergaenzt das abgeleitete `ipoRecency`-Quintil um die Rohzahl. |
+| `coverageAxes` | string `"n/m"` \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`, Auflage B1) | **Task 2.13 #23** — present-Leitachsen / Achsenzahl der Formel (z.B. `"5/7"`). „Ausweisen statt verrechnen": macht sichtbar, dass ein Name auf weniger Achsen gerankt wurde (UK/AU/JP duenner als US). **Score-Einfluss: JA.** Hier stand bis zum 30.08.2026 „KEIN Score-Einfluss (der Score ist per C4-Shrinkage schon fair)" — **gemessen falsch** (Urteil `_COURT-S1-2026-08-30.md` Auflage S1-01, ratifiziert als Orchestrator ENTSCHIED 79). Richtig ist: die C4-Shrinkage ist im Aggregat wirksam (Median-Abstand zum eigenen Kohorten-Median: 7/7 **+3,90/+3,87**, 5/7 **−3,07/−3,05**), aber **NICHT monoton** — weniger belegte Achsen koennen den Score HEBEN. Ziel des Shrinks ist der **Kohorten-Median**, nicht 0. Die `qPunkte`-Zeile weiter unten beschreibt den Sachverhalt bereits korrekt; die Korrektur stellt Konsistenz innerhalb dieser Datei her. Vollstaendige Kurve, dritte Coverage-Ursache und Vergleichs-Vorbehalt: **§3d**. Quelle `src/scoring/score.js`. |
+| `coverageWeight` | number `[0,1]` \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.13 #23** — C4-Achsen-Gewichts-Coverage (1.0 = alle Achsen present, data-learned Shrink-Faktor). `n/n` ⇔ `1.0`. Reine Anzeige-Rohzahl zu `coverageAxes`. **Legendensatz (Auflage S1-04): bei `coverageWeight < 1` wird das fehlende Achsengewicht derzeit mit dem KOHORTEN-MEDIAN der Zeile angesetzt** — dieser Anteil des Scores ist geliehen, nicht belegt. Einzelheiten §3d. |
+| `qPunkte` | int ≥ 0 \| null | **OPTIONAL (additiv)** | FORM ja, wenn present (ganzzahlig ≥ 0 \| null) | **Abhilfe A der Coverage-Akte (29.08.2026, Orchestrator ENTSCHIED 20)** — Anzahl der Quartale mit einem echten Umsatzwert (`snapshot.timeseries.revenueQ`, dieselbe Reihe, aus der `write-board-history.js` `pit.revenueQ` baut). **Warum es dieses Feld gibt:** `coverageAxes` zaehlt, wie viele Achsenfunktionen eine Zahl ZURUECKGEGEBEN haben — nicht, wie viele Rohdatenpunkte dahinterstanden. Die meisten Achsen liefern schon ab ZWEI Punkten einen Wert, deshalb kann eine Zeile `"7/7"` tragen und real auf zwei Quartalen ruhen (gemessen am Vintage 2026-08-29: 295 solche Zeilen; `7666.HK` steht mit `"7/7"` und zwei Quartalen auf Rang 7 des health-care-Boards). `qPunkte` stellt die Beleglage neben die Behauptung. **`null` heisst „nicht gemessen"** (kein Snapshot / kein Feld), NICHT „null Punkte" — eine erfundene 0 waere genau die Sorte Behauptung, die dieses Feld abschafft. **`0` heisst „kein QUARTALS-Beleg", nicht „keine Daten":** mehrere Achsen (`revGrowthLevel`, `revAcceleration`) haben einen JAHRES-Fallback, und Halbjahres-/Jahresmelder (HK/UK/SG) scoren genau darueber — am Vintage 2026-08-29 stehen 592 der 8.946 gescorten Zeilen bei `qPunkte: 0` und tragen trotzdem zu Recht einen Score. Wer das Feld als Datenluecken-Alarm liest, faerbt eine legitime Melde-Klasse falsch-rot. **Reine Anzeige:** kein Score-, kein Rang-, kein Gate-Einfluss; das Belegbarkeits-Gate prueft weiterhin `coverageAxes` (die Wurzel-Umstellung „rechenbar → belegt" in `src/scoring/score.js` ist versiegelt und braucht einen eigenen Gerichtstermin). Quelle `scripts/write-findash-export.js belegPunkte()`; Waechter `tests/belegpunkte.test.js`. |
+| `qSpanTage` | number ≥ 0 \| null | **OPTIONAL (additiv)** | FORM ja, wenn present (finite \| null) | **Abhilfe A (29.08.2026)** — Tage zwischen aeltestem und juengstem DATIERTEN Quartalsende (`snapshot.timeseries.revenueQEnds`). Macht neben der ANZAHL auch die SPANNE der Belege lesbar: zwei Punkte 365 Tage auseinander sind eine Jahres-Kadenz, zwei Punkte 91 Tage auseinander echte Nachbarquartale. `null` = keine gueltigen Perioden-Enden (A10-Nachzuegler, ~6,6 % der Zeilen) — ohne Datum ist keine Spanne belegbar. Reine Anzeige wie `qPunkte`. **⚠ Die Kadenz-Zusage im vorigen Satz gilt NICHT — `qSpanTage` misst eine andere Menge als `qPunkte` (zwei unabhaengige Filter). Verbindlich ist §3b; dort steht, was das Feld wirklich misst.** |
+| `cohortN` | number (finite) | **Pflicht** | ja (Praesenz + finite) | **Task 2.10** — Groesse der Kohorte (formulaId\|track), gegen die dieser Name perzentiliert wurde. Ehrliche n-Ausweisung fuer die Anzeige: „Score 87 (n=424)" vs. „Score 71 (n=3 ⚠)". Auf gescorten Board/Overview-Zeilen IMMER eine finite Zahl (auf `survival.json` null, da nie gescort). Quelle `src/scoring/score.js`. |
+| `cohortFallback` | boolean | **Pflicht** | ja (Praesenz + boolean) | **Task 2.10** — `true`, wenn die Kohorte < 15 Namen hatte und die Achsen gegen die ELTERN-Kohorte (Branche ueber beide Tracks) perzentiliert wurden (n-Ceiling-Reparatur, „unvergleichbare" Mini-Kohorten-Perzentile vermieden). Transparenz-Flag; `false` fuer ausreichend grosse Kohorten. |
+| `scoreBase` | number \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.11 Stufe A** — der ROHE Perzentil-Score VOR EB-Shrinkage/C4/Post-Faktoren (Score-Herkunft; Nordstern „nachvollziehbare Begruendung"). Quelle `src/scoring/score.js`. |
+| `scoreShrunk` | number \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.11 Stufe A** — Score NACH EB-Shrinkage + C4-Coverage-Shrinkage, VOR den Post-Faktoren. Die Shrinks sind affin (Richtung 50/Median), daher als Zwischenzahl statt Ratio ausgewiesen (robust bei scoreBase≈0). |
+| `factors` | `{burn,growth,cycle}` (je number\|null) \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.11 Stufe A** — die 3 ECHTEN multiplikativen Post-Faktoren (burnPress/growthBoost/cycleDamper). **Rang-identisch rekonstruierbar:** `score ≈ scoreShrunk·burn·growth·cycle` (Test `score-breakdown.test.js`). |
+| `axisBreakdown` | `[{key,pct,weight}]` \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.7 (Score-Transparenz)** — je Achse der Perzentil-Beitrag `pct` (0–100, `null` = gedroppt/renorm-on-drop) + `weight`. Der Nordstern verlangt „nachvollziehbare Begründung": `scoreBase` == gewichtetes Mittel der present-Achsen. Quelle `src/scoring/score.js`. |
+| `ath` | `{distancePct,athDate,monthsAgo}` \| null | **OPTIONAL (additiv)** | FORM ja (wenn present: distancePct finite, athDate ISO, monthsAgo ≥ 0), Anwesenheit NEIN | **Task 2.2 (Karl-A6-Lösung)** — Abstand zum ALLZEIT-Hoch als reine **Anzeige** (nie Score-Input, Grundgesetz 1). `distancePct` = lastClose/ATH−1 in % (≤ 0 unter ATH; währungsfrei, Verhältnis in Handelswährung), `monthsAgo` = Monate seit ATH. **Semantik (dokumentierte Abweichung, L7):** ATH = höchster **adjustierter Tagesschluss** (A7-b-Preis-Vertrag: nur Closes, adjclose) — Chart-Spitzen (Intraday-Dochte, z. B. TradingView-52w-Hoch) liegen typisch 1–3 % darüber; bei Dividenden-Zahlern weicht die adjustierte Serie zusätzlich vom nominalen Chart ab (im Growth-Universum selten relevant). Verifiziert 14.07.: lastClose NVDA/CRDO/AAPL auf den Cent identisch mit externen Quotes; NVDA-ATH in korrekter Post-10:1-Split-Skala (235,47 close-basiert vs 236,54 Intraday-52w-Hoch = −0,45 %). Quelle: `external-data/ath-state.json` (committeter Vertrag; geseedet vom **lokalen** Max-Batch `scripts/backfill-prices-max.js` — die Max-Historie `prices-max/` liegt per GG7c AUSSERHALB des CI-Checkouts; täglich billig fortgeschrieben via `scripts/update-ath-state.js` aus dem 400d-Store). `null` = nicht geseedet ODER Split-Wächter aktiv (adjclose-Re-Basierung erkannt → ehrlich aus statt falsch, bis der lokale Batch `--only-stale` neu seedet). |
+| `einmalertragPrognose` | `"bestaetigt"`\|`"eingebrochen"`\|`"nichtAnwendbar"`\|`"nichtPruefbar"` \| null | **OPTIONAL (additiv)** | WERTE ja (bekannter Zustand UND nur auf Zeilen mit der Lampe `einmalertrag`), Anwesenheit NEIN | **F-2 Stufe 1 (Karl-Mandat, 03.08.2026)** — Prognose-Zustand zur Lampe `einmalertrag`: haelt der Umsatzsprung nach heutigem Analystenstand? Quelle `src/scoring/lamps.js einmalertragPrognose()`, gelesen wird `external.revenueEstimates["+1y"]` (Periode = naechstes Geschaeftsjahr). Konsument: `findash/data-layer/lamp-legend.js einmalertragZustand()`. **Stufe 1 emittiert NUR die schwellenfreien Verfuegbarkeits-Zustaende** `nichtPruefbar` (keine verwertbare Prognose) und `nichtAnwendbar` (Schaetzung da, aber `growth === null` — Rechenartefakt der Quelle, in pull-yahoo.js so benannt). Die urteilenden Zustaende `bestaetigt`/`eingebrochen` stehen fuer Stufe 2 im Vertrag, werden heute NIE erzeugt: sie brauchen eine gelernte und praeregistrierte Einbruchs-Schwelle (Invariante 3; `scripts/einmalertrag-trefferquote.js` hat am 29.07. gezeigt, dass eine frei gewaehlte Schwelle das Vorzeichen des Befunds bestimmt). **`null` heisst NICHT "keine Daten" — es gibt genau zwei `null`-Faelle, und sie sind an der Lampe unterscheidbar:** (a) **Zeile OHNE die Lampe `einmalertrag`** → es gibt nichts auszusagen, die Frage stellt sich nicht. (b) **Zeile MIT der Lampe und trotzdem `null`** → die Prognosedaten sind **vollstaendig und vergleichbar** (Analysten > 0, `avg` > 0, `growth` finit); was fehlt, ist allein die Einbruchs-SCHWELLE. Die ist weder gelernt noch praeregistriert (Invariante 3), deshalb faellt Stufe 1 hier bewusst kein Urteil — genau diese Zeilen fuellt Stufe 2 mit `bestaetigt`/`eingebrochen`. Wer (b) als "keine Daten" anzeigt, dreht die Aussage um: es sind die am besten belegten Zeilen von allen. findash faellt dafuer heute auf seinen Fall D ("nicht pruefbar") zurueck — das ist der dokumentierte Uebergangszustand bis Stufe 2, keine Datenaussage. Reine Anzeige, kein Score-Input (Score-Neutralitaet bewiesen: Digest ueber 4.769 Snapshots / 1.087 Board-Zeilen vor und nach dem Einbau identisch). |
+| `einmalertragBewertbarkeit` | `"zuWenigQuartale"`\|`"ungleicheKadenz"` \| null | **OPTIONAL (additiv)** | WERTE ja (bekannter Grund UND nur auf Zeilen OHNE die Lampe `einmalertrag`), Anwesenheit NEIN | **Urteil 16.08.2026 (Sichtbarkeits-Stufe, F-16-Einzelfreigabe Karl)** — der DRITTE Zustand der Lampe `einmalertrag`. `src/scoring/lamps.js einmalertrag()` hat drei Ausgaenge: `true` (Lampe an), `false` (geprueft und sauber) und `null` (**nicht bewertbar**). Bis heute kam `null` stumm an und war von "sauber" ununterscheidbar — drei verschiedene Lagen lieferten dasselbe Schweigen, und Zeilen wie 2548.TW (real-estate Rang 1) und 298380.KQ (Rang 5) standen ungeprueft oben und sahen aus wie geprueft. Dieses Feld benennt den Grund: `zuWenigQuartale` = keine vier verwertbaren Quartale im Fenster (Luecke, 0 oder negativ); `ungleicheKadenz` = vier Quartale vorhanden, aber die Periodenenden liegen nicht im Quartalsabstand (Halbjahres-Eimer bei CN-A-Aktien u. a.) oder ein Datum ist unlesbar. Quelle `src/scoring/lamps.js einmalertragBewertbarkeit()`, abgeleitet aus denselben Daten wie die `null`-Ausgaenge der Lampe — keine zweite Regel. **`null` heisst hier "die Lampe konnte urteilen"** (an ODER sauber), nicht "keine Daten". **Gegenrichtung geprueft:** ein Grund auf einer Zeile MIT der Lampe ist ein Widerspruch (brennt sie, WAR die Zeile bewertbar) und faellt im `--check` auf. Konsument: graue Kennzeichnung in `findash/data-layer/lamp-legend.js`. Reine Anzeige, KEIN Score-Input — die Score-Wirkung der Lampe haengt allein an der brennenden Lampe selbst (`EINMALERTRAG_BLIND` in `src/scoring/score.js`), nicht an diesem Feld. |
+| `shareDilution` | `{ratePct,pctl}` | null | **OPTIONAL (additiv)** | WERTE ja (beide Zahlen finit, `pctl` in [0,1]; nur auf Zeilen MIT der Lampe `shareCountDilution` — und dort verpflichtend, s.u.), Anwesenheit NEIN | **03.08.2026, Betrag statt an/aus** — der Zahlenwert hinter der Lampe `shareCountDilution`: `ratePct` = Jahres-Verwaesserungsrate in Prozent (Median der organischen, split-bereinigten YoY-Beine der Aktienzahl, eine Nachkommastelle), `pctl` = Rang dieser Rate in der Board-Kohorte (0..1, Anteil strikt kleinerer Werte, drei Nachkommastellen). Quelle `src/scoring/lamps.js shareDilutionDetail()`, angeheftet in `src/scoring/run-screener.js lampeBNachruesten()`. **Warum:** seit dem Reichweiten-Fix (Tag 536) feuert die Lampe fuer 437 von 3.042 gerouteten Zeilen, sagte aber nur an/aus — ein Kohorten-Spitzenreiter mit +1 % Aktienzahl im Jahr sah exakt aus wie einer mit +66 %. **Ein Rechenweg:** die Lampe liest ihren Schwellvergleich an genau diesen Zahlen ab, es gibt keine zweite Rechnung, die ausscheren koennte; gerundet wird erst bei der Ausgabe, nie im Schwellvergleich. **Beide Richtungen geprueft, und anders als bei `einmalertragPrognose` gilt hier AUCH "Lampe ⟹ Betrag":** die Lampe feuert ausschliesslich, wenn Rate UND Perzentil vorliegen — ein leeres Feld auf einer Lampen-Zeile ist deshalb kein Schweigen, sondern eine gerissene Erzeuger-Kette (genau die Panne, die die Lampe von Tag 421 bis zum 03.08. unsichtbar stumm hielt). Die SCHWELLE prueft der `--check` bewusst NICHT, nur den Wertebereich — eine legitime Schwellen-Aenderung darf Karls Alarmkanal nicht falsch-rot faerben. Nur das 5.2-Small-Cap-Board verdrahtet die Lampe; auf HG/QC steht das Feld auf allen Zeilen `null`. Reine Anzeige, kein Score-Input (Score-Neutralitaet belegt: Gesamt-Digest ueber 4.036 Snapshots / 3.042 gescorte Zeilen vor und nach dem Einbau `1d8db4b2eb5ec8085fdefad68da0cb7ffb7fb26fca94d3d1e9525c002795443a`). |
+| `financialDataReasons` | string[] | **OPTIONAL (additiv, 30.09.2026)** | nein (Anwesenheit NEIN; nur geschrieben, wenn mindestens ein Grund vorliegt) | Deutsche Klartext-Gruende aus der Finanzdaten-Handtabelle (`configs/financial-known-cases.json`, `lib/financial-known-cases.js financialReasons()`): ein Anbieterwert wurde durch einen Primaerquellen-Wert ersetzt oder ist absichtlich leer (z. B. falsche Null, neues Quartal nicht gegen Primaerquelle geprueft). Reine Anzeige, kein Score-Input. **Bewusst NICHT im `lamps`-Array:** `lamps` bleibt eine geschlossene Schluessel-Liste der Registry, ein freier Satz dort erschiene beim Konsumenten als unbekannte Lampe. Dasselbe Feld traegt die Ausschlussliste (`scripts/write-excluded-list.js`). Konsumenten, die das Feld nicht kennen, ignorieren es. |
+| `revGrowthBasis` / `revGrowthPeriodEnd` / `revGrowthPriorPeriodEnd` | `"quarter"`\|`"year"`\|`"yearNewerRecord"`\|`"none"`\|null; Daten: ISO-Tag `YYYY-MM-DD`\|null | **OPTIONAL (additiv, 01.10.2026)** | ja, wenn present: alle drei zusammen, Basis im Enum, Daten echte ISO-Tage; `"none"` genau dann, wenn `revGrowthYoYPct` null ist; bei Basis null oder `"none"` kein Zeitraum. Datei-Ebene: auf allen Zeilen oder auf keiner | **Was `revGrowthYoYPct` misst.** `quarter` = juengstes Quartal gegen das Vorjahresquartal (`revQuartalsYoY`); `year` = Rueckfall Geschaeftsjahr gegen Vorjahr (`annualRev[0]/annualRev[1]`, z. B. wenn die Lueckenregel das Quartalsbein verwirft oder es keine Quartale gibt); `yearNewerRecord` = Rueckfall ueber das vermerkte neuere Geschaeftsjahr (`meta.annualRevNewerYear`, Tag 1391); `none` = keine Wachstumszahl. `revGrowthPeriodEnd` = Ende der neueren Periode, `revGrowthPriorPeriodEnd` = Ende der Vergleichsperiode, beide nur aus den gespeicherten Daten (`revenueQEnds`, `annualRevEnds`, `annualRevNewerYear.end/priorEnd`); **null heisst undatiert, es wird nie ein Datum geraten** (gemessen 01.10.2026: bei 558 von 600 Jahreszeilen der 13 Branchenbretter ist die Jahresreihe im Snapshot undatiert). **Basis null** heisst unbeschriftet: der Schreiber setzt das Etikett nur, wenn er die exportierte Zahl aus dem Snapshot exakt nachrechnet (`lib/rev-growth-basis.js`, derselbe Zweig wie `revGrowthLevel`), sonst bleiben alle drei null und der Lauf meldet die Zahl als Warnung. Quelle `scripts/write-findash-export.js ergaenzeWachstumsBasis()`; Waechter `tests/rev-growth-basis.test.js` (prueft an einem echten Export jede Zeile gegen eine frische Nachrechnung). Reine Anzeige, kein Score-, Rang- oder Gate-Einfluss. |
+| `revGrowthSourcePeriodEnd` / `revGrowthSourcePriorPeriodEnd` | ISO-Tag `YYYY-MM-DD` oder null | **OPTIONAL (additiv, 06.10.2026)** | Beide zusammen oder beide abwesend; nur mit den drei Basis-/Label-Feldern; bei Basis null oder `"none"` beide null | Die Label-Felder zeigen die belegten Berichtsenden, wo die Handtabelle sie nachweist; die Source-Felder zeigen immer die rechnerischen Anbieterenden, die der Wachstumszahl und dem Abgleich von Warnungen zugrunde liegen. Fehlende Source-Felder kennzeichnen einen älteren Export. Bei Jahresbasen sind Source und Label identisch. Alle drei Zeilentypen verwenden `ergaenzeWachstumsBasis`; die Übereinstimmungsprüfung der Wachstumszahl bleibt verbindlich. |
+| `valueFlags` | `[{field, periodEnd, acceptedValue, newValue, factor, firstSeen, labels}]` | **OPTIONAL (additive, 02.10.2026, Tag 1401)** | shape yes, when present: non-empty list; `field` in `revenueQ`\|`grossProfitQ`\|`marketCap`; `periodEnd` an ISO day for the two quarterly fields and `null` for `marketCap`; `acceptedValue` finite > 0; `newValue` finite >= 0; `factor` `null` exactly when `newValue` is 0, else >= 3; `firstSeen` ISO day; `labels` from `korrigiert-von-uns`\|`kapitalmassnahme`\|`zurueckgekehrt`\|`nicht-auf-board`. Presence NO | **Marks a value that is still under review; it never blanks or changes one (owner decision 01.10.2026).** Present only on rows whose ticker has an OPEN item in `data-health/value-open-items.json` (the list the step "Value open-items (factor 3, sticky)" writes earlier in the same run, guide `docs/value-open-items.md`): one entry per open cell, i.e. a stored `revenueQ`/`grossProfitQ` quarter or the `marketCap` that moved by more than factor 3 (or to 0) against its last accepted value. A row without an open item carries NO key (absence, not an empty array); a closed item gives no flag. `acceptedValue`/`newValue` are in stored units (USD, as in `board-history/` `pit`); `newValue` is the last value that was still more than factor 3 away; `factor` is the larger of new/accepted and accepted/new; `firstSeen` is the day the cell opened. Score, rank, growth, `marketCap` and every other key of the row are byte-identical to a build without the list. A missing or unreadable list file gives no flags and a `::warning::` line, never a failed export; a single cell that breaks the shape rule above is dropped with a `::warning::` (the reader and this check share one rule, `lib/value-open-items.js valueFlagProblems()`), so the list can never turn this gate red; a list whose `updatedFor` is not the run day (the open-items step failed) is still used and gives a `::warning::`. Source `scripts/write-findash-export.js ergaenzeWaehrungsbeleg()` (all three row mappers, also `full/`, `quality/`, `smallcap/`), and the `rule40/` board (§14); the stored vintage row carries the same list (`scripts/write-board-history.js buildBoardVintage()`); the public data channel (§12) keeps rank/ticker/score only. Guard `tests/value-flags.test.js`. Owner-facing sentence the app shows next to a marked value (German, `TT.MM.JJJJ` = the earliest `firstSeen` of the row's flags): "Dieser Wert hat sich seit TT.MM.JJJJ um mehr als das Dreifache verändert und wird noch geprüft." ("verändert", not "gesprungen": it covers a drop to a third or to 0 as well as a rise) Additive optional field, no v2 bump (§7: a v1 consumer reads the file without a code change; unknown keys are ignored). |
+| `dupIssuer` | `{of: string, issuer: string, basis: "hand-table:dup-issuer-shadow"}` | **OPTIONAL (additive, 06.10.2026, shadow)** | presence and exact marker checked by `tests/scoring/dup-issuer-shadow-export.test.js`; additive key accepted by `--check` | Reports a known secondary ticker from `configs/dup-issuer-shadow-table.json`. `of` is the recorded `codeKeeps`, not a primary-listing decision; `issuer` is a report label, never a name override. Absence means "not a known secondary listing"; never `null` or `false`. Also marked when `of` is absent from this board. No rank, score, name, exclusion or membership changes. Same shared applicator for BoardRow, OverviewRow and SurvivalRow, including `full/`, `quality/` and `smallcap/`. `homeListingProposal` is information only and is not emitted. |
+| `marketCapClassesShadow` | `{value: number\|null, status: "ok"\|"incomplete"\|"listed-classes-only", reason: string\|null, classes: [{ticker, class, shares, sharesField, sharesAsOf, price, currency, priceAsOf, usdPerUnit, fxSource, valueUsd}]}` | **OPTIONAL (additive, 06.10.2026, P88, SHADOW ONLY)** | shape and fail-closed rules checked by `tests/mcap-classes-shadow.test.js`; additive key accepted by `--check` | Class-wise market value of a multi-class issuer from `configs/mcap-classes-registry.json` (220 issuers with explicit listed classes from the P72 census): sum over the listed classes of class shares (`meta.sharesOutstanding` of that class's own snapshot, never `impliedSharesOutstanding`) × that class's own price × the FX the pipeline already applied to that snapshot (`meta.tradingFxRateApplied` from `fx-rates.json`, recorded as `usdPerUnit`/`fxSource`; not ECB). Computed at export time from the same snapshot generation (`SNAP_DIR`, main store). `sharesAsOf` is the fundamentals fetch time (`meta.fetchedAt`), not a share register date; `priceAsOf` is the quote time (`meta.asOf`). Any missing class input gives `value: null`, `status: "incomplete"` and a `reason` naming the class and what is missing; never the vendor value, never 0. `listed-classes-only` = the issuer has unlisted classes (e.g. Alphabet class B) that are not valued. Present only on rows whose ticker is a class ticker of a registry entry; other rows carry no key (absence). Small-cap rows (`smallcap/`) carry no key. **Nothing reads it:** `marketCap`, `mcapBand`, `mcapKlasse`, score, rank, dedup and membership are byte-identical to a build without the registry (council question 6). Source `scripts/write-findash-export.js ergaenzeMarketCapClassesShadow()` via `lib/mcap-classes-shadow.js`; registry loaded only in `build()`. |
+| `marketCapClassesDeviationPct` | number \| null | **OPTIONAL (additive, 06.10.2026, P88, SHADOW ONLY)** | checked by `tests/mcap-classes-shadow.test.js` | `100 × (marketCap / marketCapClassesShadow.value − 1)`: how far the shown vendor value lies above (+) or below (−) the class-wise value. `null` when either side is missing or not positive and when `status` is not `ok` (for `listed-classes-only` the vendor value also covers the unlisted classes). Present exactly when `marketCapClassesShadow` is present. |
+
+---
+
+## 3a. Skala des `score`-Feldes: hier gedeckelt, in `board-history/` ungedeckelt
+
+**Die eine Zeile, die zaehlt: derselbe Name kann heute zwei verschiedene Scores tragen — 100,0 in diesem Feed und bis zu 101,0 in `board-history/`. Das ist gewollt und hier dokumentiert, damit keine Auswertung die zwei Quellen stillschweigend mischt.**
+
+**Wo der Deckel sitzt:** `scripts/write-findash-export.js`, Konstante `SCORE_MAX = 100` + Funktion `gedeckelt()` — zum Zeitpunkt des Befunds Zeilen **411–414**, heute (nach dem Belegpunkte-Einbau vom 29.08.) Zeilen 461–464; verlaesslicher Anker ist der Funktionsname, nicht die Zeilennummer. Angewandt in `mapBoardRow` und `mapOverviewRow`, also auf `<branche>.json`, `overview.json`, `full/` und die additiven Feeds, die dieselben Mapper benutzen.
+
+**Seit wann:** 19.08.2026.
+
+**Warum die Engine ueber 100 kommt:** der Wachstums-Bonus in `src/scoring/score.js` (`GROWTH_BOOST_K = 0.05`) hebt einen Basis-Score strukturell um bis zu Faktor 1,05 — 96,2 × 1,05 = 101,0. Der Bonus ist gerichtlich bestaetigt; der Skalenbruch ist ein AUSGABE-Problem.
+
+**Warum der Deckel hier steht und nicht in der Engine:** `Math.min(100, …)` VOR der Sortierung machte aus 101,0 und 100,5 einen exakten Gleichstand — dann entschiede der Ticker-Tie-Break ueber Platz 1 und 2. Der Deckel wuerde genau das verschieben, was er schuetzen soll. Hier ist der Rang bereits vergeben und positional (`rank: i + 1`), der Deckel kann also per Konstruktion keinen Rang aendern. `Infinity` wird bewusst nicht gedeckelt.
+
+**Warum `board-history/` ungedeckelt bleibt — Absicht, kein vergessener Schritt:** `board-history/` ist das Forschungs-Substrat (Rank-IC, Vintage-Vergleiche, `lib/e1-compression.js`, `scripts/rank-ic.js`). Fuer eine Messung ist der ungekappte Wert der richtige: ein Deckel wuerde die Spitze kuenstlich zusammenschieben und Rangkorrelationen ueber Vintages verfaelschen. `scripts/write-board-history.js` kennt deshalb keinen Deckel und soll keinen bekommen. Dieser Feed ist die ANZEIGE fuer findash, `board-history/` ist die MESSUNG — zwei Zwecke, zwei zulaessige Skalen.
+
+**Fuer Konsumenten heisst das:** wer Zahlen aus beiden Quellen vergleicht (z.B. einen Export-Score gegen einen Vintage-Score), muss den Deckel kennen; oberhalb von 100 sind die Quellen nicht deckungsgleich. Betroffen sind sehr wenige Zeilen: Vintage 2026-08-29 = **2 von 8.946** (0,022 %; Maximum 101,0).
+
+**Scheiternskriterium (vorab deklariert, weiterhin gueltig):** liegen mehr als 10 Zeilen bzw. 0,1 % eines Vintages exakt auf 100,0, maskiert der Deckel echte Skaleninflation — dann geht der Fall mit Zahlen in den Gauntlet und diese Dokumentation ist ueberholt. Waechter: `tests/scoring/score-deckel.test.js` (5 Pruefungen, u.a. „Deckel verschiebt keinen Rang" und das Scheiternskriterium selbst).
+
+Beleg-Akte: `agent-reports/befund-score-ueber-100-2026-08-29.md`, Orchestrator ENTSCHIED 20 (29.08.2026) — Option A (dokumentieren) beschlossen, Engine-Rescale/Clamp ausdruecklich NICHT.
+
+---
+
+## 3b. `qSpanTage` misst eine ANDERE Menge als `qPunkte` — keine Kadenz ableitbar
+
+**Die eine Zeile, die zaehlt: `qPunkte` und `qSpanTage` sind kein Paar. Sie werden aus zwei unabhaengig gefilterten Reihen berechnet, und aus ihrem Verhaeltnis laesst sich KEINE Melde-Kadenz ableiten. Wer `qSpanTage / qPunkte` rechnet, bekommt eine Zahl, die nichts belegt.**
+
+**Was jedes Feld wirklich zaehlt** (`scripts/write-findash-export.js`, Funktion `belegPunkte()` — verlaesslicher Anker ist der Funktionsname, nicht die Zeilennummer):
+
+- `qPunkte` = Anzahl der **finiten Werte** in `snapshot.timeseries.revenueQ`.
+- `qSpanTage` = Tage zwischen aeltestem und juengstem **parsebaren Datum** in `snapshot.timeseries.revenueQEnds`.
+
+Zwei Filter, zwei Mengen, ein Paar im Export. Ein datiertes Periodenende ohne Umsatzwert zaehlt in die Spanne, aber nicht in die Punkte; ein Umsatzwert ohne lesbares Ende zaehlt in die Punkte, aber nicht in die Spanne.
+
+**Was das konkret heisst** (gemessen am Vintage 2026-08-29, 8.946 gescorte Zeilen — der Code ist seither byte-identisch): **1.609 Zeilen (18 %) tragen mehr datierte Enden als Belegpunkte.** Zwei Extremfaelle: `AVTX` steht bei `qPunkte: 1` / `qSpanTage: 546`; **`600158.SS` steht bei `qPunkte: 0` und trotzdem `qSpanTage: 455`** — eine Beleg-Spanne ueber null Belegen.
+
+**Die Zusage in §3 zu `qSpanTage` ("zwei Punkte 365 Tage auseinander sind eine Jahres-Kadenz, zwei Punkte 91 Tage auseinander echte Nachbarquartale") gilt damit NICHT.** Sie beschreibt, was das Feld leisten sollte, nicht was es misst. Die Spanne ist eine Aussage ueber die **datierten Enden** der Reihe, sonst nichts. Als solche bleibt sie brauchbar (wie weit reicht die datierte Historie zurueck), als Kadenz-Indikator ist sie es nicht.
+
+**`qPunkte` selbst ist von diesem Befund NICHT betroffen** und behaelt seine volle Aussage aus §3: es zaehlt Quartals-Umsatzpunkte, und `0` heisst "kein Quartalsbeleg", nicht "keine Daten".
+
+**Warum dokumentiert statt gefixt** (Orchestrator ENTSCHIED 52, 30.08.2026 — Option B des Memos `agent-reports/defer-queue-memos-2026-08-30.md` §H4): Der Formpruefer aus PR #96 (`checkOptionalSpanneOrNull`) faengt das nicht — `455` ist eine formgueltige Spanne. Ein Semantik-Fix (Enden indexgleich auf die finiten `revenueQ`-Slots filtern) waere die technisch schoenere Loesung, setzt aber eine ungepruefte Invariante ueber die Upstream-Serialisierung voraus (Index-Paritaet zwischen `revenueQ` und `revenueQEnds`) und wuerde bei Laengen-Drift eine **still falsche** Spanne liefern statt einer sichtbar falschen. Der Beschluss ist deshalb dieselbe Bauform wie §3a: die Wahrheit hinschreiben, statt eine Annahme einzubauen.
+
+**Konsumenten-Stand — DATIERT, weil er sich aendern kann:** Zum **30.08.2026** hat `qSpanTage` **null** Konsumenten. Geprueft: findash (`86462c8`) enthaelt repo-weit keinen Treffer fuer `qPunkte`/`qSpanTage`; gelesen wird dort ausschliesslich `coverageAxes` (`data-layer/axis-labels.js`). `web/src/lib/screener-rows.ts` mappt eine explizite Feld-Whitelist (`type Row`) und reicht unbekannte Felder nicht durch. Beide Felder sind **OPTIONAL (additiv)**, score-, rang- und gate-inert und stammen aus PR #91 (29.08.2026) — sie waren bei dieser Beschlussfassung **einen Tag alt und noch von niemandem gelesen**. Findet sich spaeter ein Leser (Dossier-Kette, Briefing-Skript, Codex-Artefakt), ist diese Notiz veraltet: dann wird der Semantik-Fix zum echten Vertragswechsel mit Migrationspflicht und gehoert unter neuem Feldnamen ausgeliefert, nicht als stille Neudefinition.
+
+**Kein Code geaendert.** `belegPunkte()` und `tests/belegpunkte.test.js` bleiben unberuehrt; dieser Abschnitt aendert nur, was der Vertrag ueber das Feld behauptet.
+
+---
+
+## 3c. `opIncSource` — Herkunft der Jahres-OpInc-Reihe: KEIN Export-Feld, aber zwei Lampen tragen es
+
+**Die eine Zeile, die zaehlt: `meta.opIncSource` steht im Snapshot, nicht in diesem Feed — und anders als `qPunkte` ist es NICHT score-inert. Der Wert `computed-margin` nimmt der Zeile ihre gesamte OpInc-HISTORIE (hartes Gate, s.u.); in den Export gelangt das Etikett ausschliesslich ueber die zwei Lampen `opIncSynthetisch`/`opIncYahooAdjusted` im `lamps`-Array.**
+
+**Warum es hier dokumentiert wird, obwohl es kein Vertragsfeld ist:** `opIncSource` traegt eine Herkunfts-Behauptung, die bis zum 29.08.2026 falsch war (s. „`'native'` ist tot"), es steuert seit demselben Tag ein Score-Gate, und seine beiden Lampen stehen ab sofort auf Board-Zeilen dieses Feeds. Ein Konsument, der `lamps` liest, braucht die Bedeutung — und dies ist die einzige feld-genaue Doku im Repo. Der Vertrag selbst aendert sich dadurch NICHT: `opIncSource` ist kein Export-Feld, steht in keinem `--check` und gehoert nicht in `docs/findash-export-v1.contract.json` (dort stuende sonst ein Feld, das der Export nie schreibt).
+
+**Die Etiketten** — definiert an genau EINER Stelle, dem Modulkopf-Block „SEMANTIK VON meta.opIncSource" in `scripts/opinc-source-migrate.js` (verlaesslicher Anker ist der Block, nicht die Zeilennummer):
+
+| Wert | Bedeutung |
+| --- | --- |
+| `'sec-gaap'` | `annual.annualOpInc` stammt aus dem eingereichten SEC-XBRL-Filing (`us-gaap`/`ifrs-full`, via `merge-sec-xbrl.js` → `external-data/*-secannual.json`). GAAP-as-filed, versioniert, reproduzierbar. Die ersetzte Yahoo-Reihe bleibt unter `annual.annualOpIncYahoo`, ihr altes Etikett unter `meta.opIncSourceYahoo` (K1.3: kein Name verliert Daten). |
+| `'yahoo-adjusted'` | Die Reihe stammt aus Yahoo (`quoteSummary` isHist bzw. `fundamentalsTimeSeries`). Yahoo bereinigt still und unversioniert (Impairments, Restrukturierung). **Ehrlich etikettierter Proxy, kein Fehler** — nur eben nicht der eingereichte Abschluss. |
+| `'computed-margin'` | Synthetisch: `annualRev x operatingMargins-TTM` (Financial-Services-Fallback, `pull-yahoo.js _deriveOpIncForFinancials` Pfad 3). EINE Marge, auf alle Jahre gestempelt. |
+| `'computed-bank'` | Synthetisch: `totalRev - totalOpEx - Kreditrisikovorsorge` (Pfad 1). |
+| `'computed-insurance'` | Synthetisch: `totalRev - costOfRev - SG&A` (Pfad 2). |
+| `null` | Keine OpInc-Reihe vorhanden — **und ausdruecklich auch dann, wenn die Reihe existiert, aber keinen einzigen finiten Wert traegt**: ueber nichts gibt es keine Herkunft zu behaupten (M5a, `yahooLabelFuer()`, Orchestrator ENTSCHIED 52). |
+
+**`'native'` ist tot** (PR #90, 29.08.2026 — Urteil `_COURT-T164-OPINC-2026-08-29.md` K1.2, ratifiziert als Orchestrator **ENTSCHIED 15**). Das alte Etikett behauptete eine ROH-Herkunft, die es bei Yahoo nicht gibt; alles, was `'native'` trug, heisst heute `'yahoo-adjusted'`. Der Bestand wurde lokal migriert (`scripts/opinc-source-migrate.js`), **kein Re-Pull**. `pull-yahoo.js` schreibt das Wort nicht mehr — `tests/opinc-source.test.js` pinnt beides: die Abwesenheit im Quelltext UND das neue Etikett am erzeugten Snapshot. Die synthetischen Etiketten blieben unangetastet, sie waren nie unehrlich (Urteil K2).
+
+**Score-Wirkung: JA — hier liegt der Unterschied zu `qPunkte`/`qSpanTage`.** `computed-margin` fabriziert per Konstruktion konstante Marge und konstantes Vorzeichen, also genau die Stabilitaet, die jede historische Achse messen will. Seit PR #93 (ENTSCHIED 15, Karl-Freigabe **ENTSCHIED 18**, versiegelter Slot `protocol/gqs-00/1.2.0-pending/`) liefert `histOpInc()` in `src/scoring/snapshot.js` fuer solche Zeilen `[]` — alle historischen Achsen, Profitphasen und longitudinalen Lampen sehen dann „keine Jahresreihe". Das AKTUELLE Vorzeichen (`norm(s,'annualOpInc')`, Track-Split) bleibt bewusst erlaubt. **Ein FEHLENDES Etikett gilt nie als synthetisch** — sonst verloere ein Alt-Snapshot ohne `meta` still seine ganze Historie.
+
+**Die beiden Lampen** (`src/scoring/lamps.js` 17/18, Auflagen K2-3 und K1-Doppelboden): `opIncSynthetisch` = die Reihe ist zurueckgerechnet; `opIncYahooAdjusted` = die Reihe ist Yahoos bereinigter Stream statt des eingereichten Abschlusses. Beide liefern `null`, solange `opIncSource` fehlt oder `null` ist (kein Urteil ohne Etikett) — und `null` wie `false` erscheinen im Export gleich, naemlich gar nicht (nur `true` landet in `lamps`). **Ausdruecklich KEINE data-suspect-Lampen** (`score.js` `DATA_SUSPECT_LAMPS`): `opIncSynthetisch` steht an 300 der 354 Zeilen des Financials-Boards, in der Exclude-Liste waere sie ein 300-Zeilen-Ausschluss durch die Hintertuer — das Gericht hat diese „Board-Ausweidung ohne Ersatz" 3:0 verboten. Wer die Lampen dort eintraegt, kippt das Urteil.
+
+**Bestandszahlen, DATIERT** (Stand der Migration vom 29.08.2026, PR #90/#93 — nachgefuehrt in den Modulkoepfen von `lamps.js` und `snapshot.js`, nicht bei jedem Lauf neu gemessen): **12.629** Snapshots `yahoo-adjusted` gegen **128** `sec-gaap`; **1.859** `computed-margin` im Hauptstore, davon 100 % Financial Services. Die Breite der Lampe `opIncYahooAdjusted` IST der K1-Befund, keine Fehlkalibrierung.
+
+**Wer es liest** (`grep` ueber den Baum, Stand 30.08.2026): Schreibseite `pull-yahoo.js` (`mapYahooToCanonical`, FTS-Merge) und `scripts/opinc-source-migrate.js` (taeglich im SCORING-Job vor `run-screener.js`, bewusst NICHT im Merge-Job — sonst verglichen `build-secannual{,-smallcap}.js` ihre `looseSanity` kuenftig SEC gegen SEC und das Tor waere still zur Tautologie geworden); Messung `scripts/ab-computed-margin.js`; Engine `src/scoring/snapshot.js` (Gate) und `src/scoring/lamps.js` (Lampen 17/18).
+
+**Konsumenten-Stand — DATIERT, weil er sich aendern kann:** Zum **30.08.2026** hat findash (`29b8727`) repo-weit **null** Treffer fuer `opIncSource`, `opIncSynthetisch` und `opIncYahooAdjusted`; `data-layer/lamp-legend.js` fuehrt Eintraege fuer andere Lampen (u.a. `shareCountDilution`, `einmalertrag`), fuer diese beiden keinen. Die Lampennamen stehen also bereits im Feed, ohne dass eine Legende sie erklaert. Wer dort eine Legende ergaenzt, sollte die Trennung mitnehmen: `opIncSynthetisch` ist ein Qualitaets-Vorbehalt MIT Score-Wirkung, `opIncYahooAdjusted` ist eine reine Herkunfts-Angabe ohne — sie als eine Warnstufe zu zeichnen, faerbte 12.629 Zeilen falsch-rot.
+
+**Waechter:** `tests/opinc-source.test.js` (Migration + toter `'native'`-Anker) und `tests/scoring/opinc-gate-computed-margin.test.js` (das Gate, inkl. byte-gleichem Zwilling, bei dem nur `meta.opIncSource` abweicht).
+
+---
+
+## 3d. `coverageAxes`/`coverageWeight` — der Coverage-Pfad IST score-wirksam und NICHT monoton
+
+**Die eine Zeile, die zaehlt: der Coverage-Pfad ist auf 89,6 % / 89,4 % der gescorten Zeilen gierig ausbeutbar — das WEGLASSEN einer Achse HEBT den Score, Median +8,17 / +8,36 Punkte, und das Rang-Tor bleibt dabei gewahrt. Eine Zeile mit weniger belegten Achsen kann dadurch HOEHER stehen als dieselbe Zeile mit mehr.**
+
+**Herkunft:** Urteil `_COURT-S1-2026-08-30.md`, Block I („Interim, sofort, unversiegelt", Auflagen S1-01 bis S1-07), ratifiziert als Orchestrator **ENTSCHIED 79**. Beweismittel: `agent-reports/s1-vintage-wiederholung-2026-08-30.md` (Stabilitaet) und `agent-reports/scoring-diff-vintagefenster-2026-08-30.md` (Fensterlage). **Kein Code geaendert** — dieser Abschnitt aendert nur, was der Vertrag ueber die zwei Felder behauptet. `src/scoring/**` ist versiegelt und bleibt unberuehrt (S1-24).
+
+### Zwei Kanaele, und nur einer bekommt spaeter eine Abhilfe
+
+1. **renorm-on-drop** (`src/scoring/engine.js`, `weightedScore()` + `coverageWeight()`): eine fehlende oder verworfene Achse wird GEDROPPT und die Gewichte werden ueber die verbleibenden Achsen renormiert — nie ein Fake-Neutralwert 50. Liegt die weggelassene Achse unter dem gewichteten Mittel der Zeile, hebt allein dieser Schritt den Score.
+2. **C4-Coverage-Shrinkage** (`src/scoring/score.js`, C4-Block; verlaesslicher Anker ist der Block, nicht die Zeilennummer): `e.score = cohMedian + cohWcov[i] * (e.score - cohMedian)`. Bei `coverageWeight === 1` bleibt der Score exakt unveraendert.
+
+**Der Shrink zieht Richtung KOHORTEN-MEDIAN — nicht Richtung 0 und nicht nach unten.** Algebraisch ist `cm + w·(s − cm)` identisch zu `w·s + (1 − w)·cm`: das fehlende Achsengewicht wird mit dem Kohorten-Median angesetzt. Fuer jede Zeile UNTER ihrem Kohorten-Median ist dieser Schritt eine Hebung, deren Obergrenze exakt der Kohorten-Median ist. Genau das ist der **Legendensatz zu `coverageWeight`** in §3.
+
+**Der Block ist mit VARIANZ begruendet** (Kommentar im C4-Block: renorm-on-drop laesst Namen mit weniger present-Achsen eine strukturell hoehere Score-Varianz behalten, `Var ~1/k`, sie ueberbevoelkern die Tails) **und transportiert daneben einen NIVEAU-Transfer, fuer den keine registrierte Begruendung existiert.** Das ist der vom Gericht benannte Defekt (Q1, 3/3).
+
+### Die Nicht-Monotonie, vollstaendig (Auflage S1-02)
+
+Median-Abstand zum eigenen Kohorten-Median, volle Population:
+
+| Coverage | S1-Akte (Basis `c9115787`) | Nachmessung 2026-08-29 |
+| :-: | ---: | ---: |
+| 7/7 | +3,90 | +3,87 |
+| 6/7 | −0,85 | −0,84 |
+| **5/7** | **−3,07** ← Minimum | **−3,05** ← Minimum |
+| 4/7 | −0,39 | −0,39 |
+| 3/7 | +0,23 | +0,27 |
+| 2/7 | ±0,00 | +0,06 |
+| 1/7 | +2,09 | +2,15 |
+
+**Die Kurve faellt bis 5/7 und steigt danach wieder** — sie ist damit als Beleglage-Signal unbrauchbar: `1/7` steht im Median hoeher als `5/7`. Bestaetigt in **13 von 13** messbaren Zustaenden, Minimum **3 von 3** Mal bei 5/7; kohorten-kontrolliert (Median-Differenz zur 7/7-Klasse DERSELBEN Kohorte) sind alle sechs Werte der Vorlage exakt reproduziert: −4,5 · −6,8 · +4,7 · −1,4 · +2,2 · +0,6.
+
+**Groessenordnung der Belohnungsflaeche:** 8.014 von 8.946 gescorten Zeilen sind gierig ausbeutbar; daraus entstehen **736 / 729** Board- und **44 / 38** globale Top-100-Einstiege. **Ausdruecklich NICHT zitiert: die 49,4 %-Zahl der Akte** — bei jedem gewichteten Mittel liegt rund die Haelfte der Komponenten unter dem eigenen Mittel, die Zahl ist nahezu tautologisch und traegt nichts (Kanzler-Korrektur K-2 des Urteils).
+
+### Die DRITTE Coverage-Ursache: die Einmalertrag-Blendung (Auflage S1-03)
+
+Neben „Daten fehlen" und „Achse nicht rechenbar" gibt es eine dritte, **methodisch gemachte** Ursache fuer eine unvollstaendige Coverage: die Konstante `EINMALERTRAG_BLIND` in `src/scoring/score.js` setzt fuer Zeilen mit brennender Lampe `einmalertrag` fuenf Achsen (`revGrowthLevel`, `revAcceleration`, `gpGrowth`, `ruleOfX`, `capitalEfficiency`) auf `null`. Diese Achsen zaehlen danach als nicht present, und beide Kanaele oben greifen.
+
+**Der Rohwert ist vorhanden und wird bewusst nicht bewertet — das ist eine Entscheidung, keine Datenluecke,** und sie stand in der `coverageAxes`-Zeile bisher nirgends. Am Vintage 2026-08-29: **46 Lampen-Zeilen** der vollen Population, davon 9 im Board-Top-100; **230 geblendete Achsen-Plaetze als Obergrenze, 192 als belegter Kern** (die Akte zaehlte nur Plaetze mit vorhandenem Rohwert; aus dem Export allein ist das nicht unterscheidbar). Unabhaengig bestaetigt: genau die fuenf Blend-Achsen verlieren zwischen Fenster A und B an present-Quote (`revGrowthLevel` 99,1 → 98,5 % = 9 von 1.478 Panel-Zeilen), keine andere Achse.
+
+**Die Blendung wirkt auch hebend:** nach der S1-Akte stehen **15 der 46 Lampen-Zeilen MIT der Blendung hoeher als ohne**, maximal **+27,4** Punkte (`IMTX` 15,1 → 42,5, Rang 276 → 184). Eine Lampe, die als Strafe gebaut wurde, belohnt einen Teil ihrer Treffer. **Welcher der beiden Kanaele diese Hebung traegt, ist heute NICHT gemessen** — die Zuordnung von `IMTX` zum Median-Sog ist im Urteil ausdruecklich als Inferenz (75 %) gekennzeichnet und wird bis zur Messauflage S1-10 nirgends als Befund zitiert.
+
+**Anker-Drift, protokolliert statt uebernommen:** die Akte nannte `score.js:367` und `:1029-1032`. Auf `origin/main` `518ccc50c6` steht die Konstante bei `:374`, ihre Anwendung bei `:1044-1050`. **Inhalt bestaetigt, Zeilennummern veraltet** — wer hier nachschlaegt, nimmt den Konstanten- und Funktionsnamen, nicht die Nummer.
+
+### Enger Vergleichs-Vorbehalt, bis die Abhilfe steht (Auflage S1-05)
+
+- **(a)** Zeilen, deren `coverageWeight` sich zwischen zwei Staenden geaendert hat, sind **keine score-vergleichbare Beobachtung**.
+- **(b)** Jede Aussage, die Zeilen **ueber Coverage-Klassen hinweg** rangvergleicht, traegt den Vorbehalt der Teil-Imputation.
+- **(c)** `coverageAxes`/`coverageWeight` gehen **NICHT als Qualitaetssignal in NEUE Gates, Selektionen, Dossiers oder Ranglisten** ein. „7/7 ist besser als 5/7" ist unbelegt und im Bereich ≤ 4/7 nach der Kurve oben schlicht falsch. Das **bestehende** Belegbarkeits-Gate auf `coverageAxes` (`tests/scoring/belegbarkeits-gate.test.js`) ist Bestand und von (c) nicht betroffen.
+
+**NICHT eingefroren:** die rankIC-Reihe auf Fenster B als solche (konstanter Code, konstanter Defekt) und bestehende, dokumentierte Auswertungen.
+
+**Kipp-Bedingung des Vorbehalts:** wechseln mehr als ~10 % der Board-Zeilen zwischen zwei Staenden ihr `coverageWeight`, ist (a) kein Vorbehalt mehr, sondern eine Stilllegung der Reihe; dann muss zeilenweise herausgerechnet werden.
+
+### Was hier ausdruecklich NICHT behauptet und NICHT geaendert wird
+
+- **Keine Monotonie.** Die angeordnete Abhilfe — ein einseitiger, globaler, parameterfreier **Coverage-Deckel**: der Coverage-Schritt darf einen Score gegenueber seinem eigenen Wert VOR dem Schritt nur senken, nie heben — schliesst allein den **Shrink**-Kanal. Der **Renorm-Kanal bleibt offen**, seine Restflaeche ist heute unbeziffert und bekommt einen eigenen, spaeteren Praeregistrierungs-Termin. Kein Fix und keine Doku behauptet Monotonie.
+- **Der Deckel ist NICHT gebaut.** Er ist aufschiebend bedingt durch das Messpaket S1-08 bis S1-13 und darf ausschliesslich ueber den formalen Re-Siegel-Pfad landen (Praeregistrierung mit geloggtem Hash → Court-Verdikt zum konkreten Entwurf → Orchestrator-Ratifikation → gebuendelter Bau).
+- **`axisBreakdown` bleibt unveraendert im Vertrag:** kein Entfernen, kein Runden von `pct`. Security-by-Obscurity braeche den Vertrag und die Transparenz-Zusage, und der Kohorten-Median ist aus dem uebrigen Output ohnehin rekonstruierbar (Median-Absolutfehler 0,031 ueber 22 Kohorten, ohne Repo-Zugriff). Waechter: `tests/scoring/score-breakdown.test.js`.
+- **Kein Zeilen-Faehnchen auf dem Board.** Eine Warnung, die auf **8.014 von 8.946 Zeilen (89,6 %)** feuert, transportiert null Information und erzieht zum Wegsehen; die Substanz steht stattdessen im Legendensatz zu `coverageWeight`, und `coverageAxes`/`coverageWeight`/`qPunkte` stehen bereits je Zeile im Export.
+- **Der eingefrorene Vintage-Bestand wird nicht angefasst.** Er traegt das Stabilitaets-Verdikt (0,81 pp Spannweite auf festem 1.478er-Panel ueber 10 Zustaende, 0,2 pp auf voller Population) und ist die einzige Vergleichsbasis fuer einen spaeteren Inertheits-Nachweis.
+
+**Datierte Zahlenbasis, weil sie sich aendert:** alle Zahlen dieses Abschnitts ruhen auf dem Vintage-Archiv bis 2026-08-29 (Akten-Basis `c9115787` plus die Nachmessung vom 29.08.). **PR #90, #92 und #93 sind in KEINEM der geernteten Zustaende** und in keiner dieser Messungen. Die Neuvermessung auf dem Post-#90/#92/#93-Stand ist als Messauflage offen; bis dahin ist jede Zahl hier „Stand des Archivs", nicht „Stand von heute".
+
+**Konsumenten-Stand — DATIERT, weil er sich aendert:** Zum **30.08.2026** liest findash (`29b8727`) `coverageAxes` an genau einer Stelle (`data-layer/axis-labels.js`) und rendert daraus die Zeile `Kennzahlen vorhanden: n/m`; `coverageWeight` hat dort **null** Treffer. Bemerkenswert und hier festgehalten: dieselbe Datei benennt die Hebung bereits ehrlich („Roh-Score X → zum Mittelfeld hochgezogen, weil zu wenige Kennzahlen vorliegen"). **Die falsche Zusage stand allein in diesem Vertrag, nicht in der Anzeige.**
+
+---
+
+## 4. `overview.json` (FLACH)
+
+Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen.
+
+**Bewusst flach** — `overviewKind/Value/Companion` einzeln statt `row.overview`-Objekt, plus `formulaId`. Das spiegelt die Engine-Form exakt; ein Umbau auf verschachtelt waere ein v2-Bruch.
+
+### OverviewRow — jedes Pflicht-Feld geprueft
+
+| Feld | Typ | Pflicht | Geprueft | Bedeutung |
+| --- | --- | --- | --- | --- |
+| `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | Abgeleitet aus der score-desc-Reihenfolge. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
+| `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
+| `rankGrundShadow` | string \| null | **OPTIONAL (additiv, SHADOW)** | Klassenkonfiguration wird beim Laden validiert | Nicht-operativer Klassengrund aus `configs/non-operating-classes.json`. Abwesenheit bedeutet null. Rein additiv und score- sowie rangneutral: `rank`, `rankGrund`, Scores und Reihenfolge bleiben unverändert. Kein Live-Gate. |
+| `ticker` | string (nichtleer) | Pflicht | ja | |
+| `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
+| `formulaId` | string (nichtleer) | Pflicht | ja | Branchen-ID (nur hier als Feld; in Boards implizit ueber Datei). |
+| `track` | `"profitable"`\|`"unprofitable"` (Enum) | Pflicht | ja (Enum) | **Meistgelesene Cross-Branch-Liste — der Enum-Bruch bei `track` wird hier erkannt.** |
+| `score` | number (round1, finite), **Spanne 0–100** | Pflicht | ja (finite) | z.B. `94.9`. Derselbe Deckel wie in §3 (`mapOverviewRow`, seit 19.08.2026) — s. §3a zu den zwei Skalen. |
+| `overviewKind` | `"gp"`\|`"revenue-badge"`\|`"ffo-badge"`\|`"runway-badge"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Wie board `overview.kind`, aber FLACH. |
+| `overviewValue` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | KANN NEGATIV. Seit 08.10.2026 (P158) auch `null`, wenn die zwei jüngsten vorhandenen Jahreswerte nicht benachbart sind (aufeinanderfolgende gespeicherte Positionen und, sofern beide gültig, Periodenenden 334 bis 397 Tage auseinander); Grund und Präsenzmarker werden nicht exportiert, das Schema bleibt `findash-export/v1`. |
+| `overviewCompanion` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | |
+| `lamps` | string[] | Pflicht | ja (Array) | Kann `[]`. |
+| `country/region/sector/marketCap/phase/mcapBand/ipoRecency/profitTier/ipoYear` | wie BoardRow §3 | Pflicht (nullable) | ja (jedes einzeln, Praesenz + Typ/Enum\|null) | Volle geo-Felder (inkl. 1.2 `profitTier`+`ipoYear`). |
+| `qPunkte` / `qSpanTage` | wie BoardRow §3 | **OPTIONAL (additiv)** | FORM ja, wenn present | Belegpunkte zur `coverageAxes`-Behauptung, identische Semantik und identische Quelle wie in §3 — derselbe Mapper-Zweig; fuer `qSpanTage` gilt hier ebenso die Einschraenkung aus §3b (keine Kadenz ableitbar). `survival.json` traegt die Felder bewusst NICHT: Survival-Zeilen sind nie gescort und tragen kein `coverageAxes`, haben also keine Beleg-Behauptung zu stuetzen. |
+| `financialDataReasons` | wie BoardRow §3 | **OPTIONAL (additiv, 30.09.2026)** | nein | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWaehrungsbeleg`). |
+| `revGrowthBasis` / `revGrowthPeriodEnd` / `revGrowthPriorPeriodEnd` | wie BoardRow §3 | **OPTIONAL (additiv, 01.10.2026)** | ja, wenn present (wie §3) | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWachstumsBasis`). |
+| `revGrowthSourcePeriodEnd` / `revGrowthSourcePriorPeriodEnd` | ISO-Tag `YYYY-MM-DD` oder null | **OPTIONAL (additiv, 06.10.2026)** | Beide zusammen oder beide abwesend; nur mit den drei Basis-/Label-Feldern; bei Basis null oder `"none"` beide null | Die Label-Felder zeigen die belegten Berichtsenden, wo die Handtabelle sie nachweist; die Source-Felder zeigen immer die rechnerischen Anbieterenden, die der Wachstumszahl und dem Abgleich von Warnungen zugrunde liegen. Fehlende Source-Felder kennzeichnen einen älteren Export. Bei Jahresbasen sind Source und Label identisch. Alle drei Zeilentypen verwenden `ergaenzeWachstumsBasis`; die Übereinstimmungsprüfung der Wachstumszahl bleibt verbindlich. |
+| `valueFlags` | as BoardRow §3 | **OPTIONAL (additive, 02.10.2026, Tag 1401)** | shape yes, when present (as §3) | As BoardRow §3, same mapper branch (`ergaenzeWaehrungsbeleg`). |
+| `dupIssuer` | `{of: string, issuer: string, basis: "hand-table:dup-issuer-shadow"}` | **OPTIONAL (additive, 06.10.2026, shadow)** | presence and exact marker checked by `tests/scoring/dup-issuer-shadow-export.test.js`; additive key accepted by `--check` | Reports a known secondary ticker from `configs/dup-issuer-shadow-table.json`. `of` is the recorded `codeKeeps`, not a primary-listing decision; `issuer` is a report label, never a name override. Absence means "not a known secondary listing"; never `null` or `false`. Also marked when `of` is absent from this board. No rank, score, name, exclusion or membership changes. Same shared applicator for BoardRow, OverviewRow and SurvivalRow, including `full/`, `quality/` and `smallcap/`. `homeListingProposal` is information only and is not emitted. |
+| `marketCapClassesShadow` | `{value: number\|null, status: "ok"\|"incomplete"\|"listed-classes-only", reason: string\|null, classes: [{ticker, class, shares, sharesField, sharesAsOf, price, currency, priceAsOf, usdPerUnit, fxSource, valueUsd}]}` | **OPTIONAL (additive, 06.10.2026, P88, SHADOW ONLY)** | shape and fail-closed rules checked by `tests/mcap-classes-shadow.test.js`; additive key accepted by `--check` | Class-wise market value of a multi-class issuer from `configs/mcap-classes-registry.json` (220 issuers with explicit listed classes from the P72 census): sum over the listed classes of class shares (`meta.sharesOutstanding` of that class's own snapshot, never `impliedSharesOutstanding`) × that class's own price × the FX the pipeline already applied to that snapshot (`meta.tradingFxRateApplied` from `fx-rates.json`, recorded as `usdPerUnit`/`fxSource`; not ECB). Computed at export time from the same snapshot generation (`SNAP_DIR`, main store). `sharesAsOf` is the fundamentals fetch time (`meta.fetchedAt`), not a share register date; `priceAsOf` is the quote time (`meta.asOf`). Any missing class input gives `value: null`, `status: "incomplete"` and a `reason` naming the class and what is missing; never the vendor value, never 0. `listed-classes-only` = the issuer has unlisted classes (e.g. Alphabet class B) that are not valued. Present only on rows whose ticker is a class ticker of a registry entry; other rows carry no key (absence). Small-cap rows (`smallcap/`) carry no key. **Nothing reads it:** `marketCap`, `mcapBand`, `mcapKlasse`, score, rank, dedup and membership are byte-identical to a build without the registry (council question 6). Source `scripts/write-findash-export.js ergaenzeMarketCapClassesShadow()` via `lib/mcap-classes-shadow.js`; registry loaded only in `build()`. |
+| `marketCapClassesDeviationPct` | number \| null | **OPTIONAL (additive, 06.10.2026, P88, SHADOW ONLY)** | checked by `tests/mcap-classes-shadow.test.js` | `100 × (marketCap / marketCapClassesShadow.value − 1)`: how far the shown vendor value lies above (+) or below (−) the class-wise value. `null` when either side is missing or not positive and when `status` is not `ok` (for `listed-classes-only` the vendor value also covers the unlisted classes). Present exactly when `marketCapClassesShadow` is present. |
+
+---
+
+## 5. `survival.json` (FLACH, Sonderform)
+
+Huelle (§2) + `rows: Array<SurvivalRow>`, 73 Zeilen, **runway-desc nulls-last**, ungekappt.
+
+**Sonderform:** Pre-Revenue-Namen laufen NIE durch Scoring — es gibt **kein `score`, kein `track` profitable/unprofitable, kein `overview.kind`**. Stattdessen `runwayQuarters`. Der Check prueft hier bewusst KEIN `score`/`track` (existieren nicht), aber `rank`, `runwayQuarters` und alle 7 geo-Felder.
+
+**P89 SHADOW:** Survival-Zeilen erhalten kein `rankGrundShadow`-Feld, auch bei Mitgliedschaft in der Klassentabelle. Abwesenheit bedeutet null; der Runway-Rang bleibt unverändert.
+
+### SurvivalRow — jedes Pflicht-Feld geprueft
+
+| Feld | Typ | Pflicht | Geprueft | Bedeutung |
+| --- | --- | --- | --- | --- |
+| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | Abgeleitet (Index+1), = Runway-Rang. **Vom Belegbarkeits-Gate ausgenommen:** pre-revenue-Zeilen werden nie gescort und tragen `coverageAxes` nie — der Runway-Rang bleibt immer ein Integer, `rankGrund` ist hier immer `null` (geprueft). |
+| `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"PAH3.DE"`. |
+| `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
+| `runwayQuarters` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | Runway in Quartalen. **`9999` = Sentinel fuer quasi-unendlichen Runway** (pre-revenue mit Cash-Ueberdeckung). Sortierschluessel. **Real nullable** (3 von 73 Rows null). |
+| `lamps` | string[] | Pflicht | ja (Array) | z.B. `unprofit/lowRoic/burning/burnAccelerating/crashRisk/shortRunway`, kann `[]`. |
+| `country/region/sector/marketCap/phase/mcapBand/ipoRecency/profitTier/ipoYear` | wie BoardRow §3 | Pflicht (nullable) | ja (jedes einzeln, Praesenz + Typ/Enum\|null) | Volle geo-Felder (inkl. 1.2 `profitTier`+`ipoYear`). Ein typ-falsches geo-Feld (z.B. `marketCap='GARBAGE'`, `phase='zombie'`) blockt jetzt den Deploy. |
+| `financialDataReasons` | wie BoardRow §3 | **OPTIONAL (additiv, 30.09.2026)** | nein | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWaehrungsbeleg`). |
+| `revGrowthBasis` / `revGrowthPeriodEnd` / `revGrowthPriorPeriodEnd` | wie BoardRow §3 | **OPTIONAL (additiv, 01.10.2026)** | ja, wenn present (wie §3) | Wie BoardRow §3, derselbe Mapper-Zweig (`ergaenzeWachstumsBasis`). Survival-Zeilen tragen nie eine Wachstumszahl und stehen deshalb auf `"none"` |
+| `revGrowthSourcePeriodEnd` / `revGrowthSourcePriorPeriodEnd` | ISO-Tag `YYYY-MM-DD` oder null | **OPTIONAL (additiv, 06.10.2026)** | Beide zusammen oder beide abwesend; nur mit den drei Basis-/Label-Feldern; bei Basis null oder `"none"` beide null | Die Label-Felder zeigen die belegten Berichtsenden, wo die Handtabelle sie nachweist; die Source-Felder zeigen immer die rechnerischen Anbieterenden, die der Wachstumszahl und dem Abgleich von Warnungen zugrunde liegen. Fehlende Source-Felder kennzeichnen einen älteren Export. Bei Jahresbasen sind Source und Label identisch. Alle drei Zeilentypen verwenden `ergaenzeWachstumsBasis`; die Übereinstimmungsprüfung der Wachstumszahl bleibt verbindlich. |
+| `valueFlags` | as BoardRow §3 | **OPTIONAL (additive, 02.10.2026, Tag 1401)** | shape yes, when present (as §3) | As BoardRow §3, same mapper branch (`ergaenzeWaehrungsbeleg`). |
+| `dupIssuer` | `{of: string, issuer: string, basis: "hand-table:dup-issuer-shadow"}` | **OPTIONAL (additive, 06.10.2026, shadow)** | presence and exact marker checked by `tests/scoring/dup-issuer-shadow-export.test.js`; additive key accepted by `--check` | Reports a known secondary ticker from `configs/dup-issuer-shadow-table.json`. `of` is the recorded `codeKeeps`, not a primary-listing decision; `issuer` is a report label, never a name override. Absence means "not a known secondary listing"; never `null` or `false`. Also marked when `of` is absent from this board. No rank, score, name, exclusion or membership changes. Same shared applicator for BoardRow, OverviewRow and SurvivalRow, including `full/`, `quality/` and `smallcap/`. `homeListingProposal` is information only and is not emitted. |
+| `marketCapClassesShadow` | `{value: number\|null, status: "ok"\|"incomplete"\|"listed-classes-only", reason: string\|null, classes: [{ticker, class, shares, sharesField, sharesAsOf, price, currency, priceAsOf, usdPerUnit, fxSource, valueUsd}]}` | **OPTIONAL (additive, 06.10.2026, P88, SHADOW ONLY)** | shape and fail-closed rules checked by `tests/mcap-classes-shadow.test.js`; additive key accepted by `--check` | Class-wise market value of a multi-class issuer from `configs/mcap-classes-registry.json` (220 issuers with explicit listed classes from the P72 census): sum over the listed classes of class shares (`meta.sharesOutstanding` of that class's own snapshot, never `impliedSharesOutstanding`) × that class's own price × the FX the pipeline already applied to that snapshot (`meta.tradingFxRateApplied` from `fx-rates.json`, recorded as `usdPerUnit`/`fxSource`; not ECB). Computed at export time from the same snapshot generation (`SNAP_DIR`, main store). `sharesAsOf` is the fundamentals fetch time (`meta.fetchedAt`), not a share register date; `priceAsOf` is the quote time (`meta.asOf`). Any missing class input gives `value: null`, `status: "incomplete"` and a `reason` naming the class and what is missing; never the vendor value, never 0. `listed-classes-only` = the issuer has unlisted classes (e.g. Alphabet class B) that are not valued. Present only on rows whose ticker is a class ticker of a registry entry; other rows carry no key (absence). Small-cap rows (`smallcap/`) carry no key. **Nothing reads it:** `marketCap`, `mcapBand`, `mcapKlasse`, score, rank, dedup and membership are byte-identical to a build without the registry (council question 6). Source `scripts/write-findash-export.js ergaenzeMarketCapClassesShadow()` via `lib/mcap-classes-shadow.js`; registry loaded only in `build()`. |
+| `marketCapClassesDeviationPct` | number \| null | **OPTIONAL (additive, 06.10.2026, P88, SHADOW ONLY)** | checked by `tests/mcap-classes-shadow.test.js` | `100 × (marketCap / marketCapClassesShadow.value − 1)`: how far the shown vendor value lies above (+) or below (−) the class-wise value. `null` when either side is missing or not positive and when `status` is not `ok` (for `listed-classes-only` the vendor value also covers the unlisted classes). Present exactly when `marketCapClassesShadow` is present. |
+
+---
+
+## 6. `index.json` (Meta)
+
+Huelle (§2) +:
+
+| Feld | Typ | Pflicht | Geprueft | Bedeutung |
+| --- | --- | --- | --- | --- |
+| `generatedFromSnapshots` | number (finite) | Pflicht | ja | z.B. `4681`. Wie viele Snapshots in den Lauf gingen. |
+| `branches` | string[] (Laenge 13) | Pflicht | ja (Array + Laenge===13) | Sortiert. **Haerte-Hinweis:** die Laenge-13-Pruefung ist an die Nebenannahme gekoppelt, dass alle 13 Branchen geroutete Zeilen haben (run-screener.js baut `branches` aus `Object.keys(ranked.branches)`). Real 13/13; faellt eine Branche komplett aus, schlaegt der Gate mit `index: branches` fehl — bewusste konservative Haerte, hier als Invariante dokumentiert. |
+| `boardStatus` | `{[branche]: 'core'\|'diagnostic'}` | Pflicht | ja (Map-Praesenz, Vollstaendigkeit gegen alle 13 Branchen UND jeder Wert Enum — BH-078) | Zentrale Court-Standing-Map aller 13 Boards (= das Board-Datei-Feld `boardStatus`, hier gebuendelt). Das Dashboard joint Overview-Zeilen per `formulaId` gegen diese Map, um `diagnostic`-Namen zu badgen. Quelle `src/scoring/board-status.js`, Ledger §2.1. |
+| `counts` | `{[branche]: {profitable:int, unprofitable:int}}` | Pflicht | ja (alle 13 Branches, beide Tracks, non-negative Integers) | **ECHTE Kohorten-Counts** (ganze Population), NICHT die topN-Anzeigeliste. T194 bindet jeden Wert an `cohortDelivery.<track>.total` der schnellen UND der vollen Board-Datei. |
+| `survivalCount` | number (finite) | Pflicht | ja | z.B. `73`. |
+| `excluded` | `{[grund]: count}` | Pflicht | ja (Objekt-Praesenz) | Ausschluss-Gruende, z.B. `{"non-us":326,"balance-sheet-bank":305,...}`. Gruende: `balance-sheet-bank, data-suspect, dup-issuer, insurer, lender-gp0, mortgage-reit, no-axes, no-sector, non-operating-rev, non-us, telecom`. |
+
+### Achsen-Perzentile — seit 2.7/2.13 IM Board-Vertrag; calib ist nur noch die Roh-Matrix
+
+> **Korrigiert (R-Gate 2.R, Fund R2.10).** Dieser Abschnitt behauptete frueher, die Achsen-Perzentile stuenden NUR im calib-Kanal und `coverageWeight` werde „gar nicht emittiert". Beides ist seit Task 2.7 (Tag 276) bzw. 2.13 #23 falsch und widersprach der Feldtabelle in §3 **derselben Datei**. Der Abschnitt beschrieb einen toten Zustand.
+
+**Ist-Zustand (je Board-/Overview-Zeile, alles OPTIONAL/additiv, kein `--check`-Pflichtfeld, kein v2-Bump):**
+
+> **Korrigiert (30.08.2026, Urteil `_COURT-S1-2026-08-30.md` S1-01).** Dieser Absatz nannte die Felder auch „score-inert". Das gilt nur fuer das AUSWEISEN — das Emittieren der Felder aendert keinen Score. Die ausgewiesene Coverage-**Groesse** ist dagegen score-wirksam und nicht monoton: **§3d**. Die Zeilennummern der beiden folgenden Punkte sind ausserdem gewandert und deshalb durch Funktions-/Namensanker ersetzt.
+
+- **`axisBreakdown`** liefert je Achse den Perzentil-Beitrag `pct` (0–100 round1, `null` = gedroppt/renorm-on-drop) **plus** `weight`. Quelle: `src/scoring/score.js`, Funktion `breakdown()`, gespeist aus `entries[i]._axes` (verlaesslicher Anker ist der Funktions- bzw. Feldname, nicht die Zeilennummer — die frueher hier genannten `:849-851`/`:644` treffen auf `origin/main` `518ccc50c6` anderen Code). Real belegt: `NVDA` traegt `[{key:'revGrowthLevel',pct:88.3,weight:1.7}, …]` ueber 7 Achsen.
+- **`coverageAxes`** + **`coverageWeight`** werden ebenfalls je Zeile emittiert: berechnet im C4-Block von `score.js` (`coverageWeight(axes)` aus `engine.js`, `round2()` fuer die Anzeige), in die Output-Zeile gespreadet von `rowMeta()` (der frueher hier genannte Durchreicher `geo()` ist heute kein Durchreicher mehr, sondern das Ergebnis von `normalizeCountry(meta)`). Real belegt: `NVDA` → `coverageAxes: "7/7"`, `coverageWeight: 1`.
+
+**Die LIVE-Achsen sind 7, nicht 8** — in allen 13 HG-Formeln (`src/scoring/formulas/*.js`):
+`revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, marginTrajectory, capitalEfficiency, dilution`.
+`marginLevel` kommt zusaetzlich in **genau einer** Formel vor (`tech-hardware`).
+
+**`revisionsMomentum` ist KEINE Live-Achse mehr** — per Karl-Direktive entfernt, in **0 von 13** Formeln. Die Funktion existiert noch (`src/scoring/axes.js:270`, exportiert `:385`), wird aber von keiner Formel referenziert; die einzigen Nennungen sind Kommentare in `src/scoring/formulas/materials.js:10-12`. Der Achsen-Satz wird in `src/scoring/calibrate.js:67` **live** aus `formula.axes` abgeleitet — auf Platte liegende calib-Dateien mit `revisionsMomentum` sind **veraltete Artefakte** eines Laufs von vor der Entfernung (`outputs/` ist gitignored).
+
+**Der calib-Kanal bleibt getrennt und NICHT im Vertrag:** `outputs/hypergrowth/calib/<branche>.json` haelt die Roh-Perzentil-Matrix ueber die **ganze Kohorte** (nicht nur topN), Form `{<track>: {formulaId, track, axisKeys, defaultWeights, alpha, rows:[{ticker, pct, lamps}]}}` — also `<track>.rows[].pct`, **nicht** `rows[].pct` auf oberster Ebene. Dump: `src/scoring/calibrate.js:172-192` (`dumpMatrix()`), Zweck: Sub-Agenten laden billig, statt das Universum neu zu parsen. Was das **Dashboard** an Achsen-Coverage braucht, steht per `axisBreakdown`/`coverageAxes`/`coverageWeight` schon in der Zeile — ein separater `axes.json`-Feed ist damit gegenstandslos.
+
+---
+
+## RESERVIERTE Felder (existieren NICHT in 1.1 — nicht faelschen)
+
+| Feld | Status 1.1 | Wann |
+| --- | --- | --- |
+| `profitTier` | ✅ **UMGESETZT in 1.2** — reales 4-Stufen-Enum-Feld, siehe §3/§4/§5. (War in 1.1 reserviert.) | erledigt (Tag 264) |
+| `currency` | ✅ **GELOEST am 16.08.2026 (Waehrungs-Chunk 4a)** — als `marketCapCurrency` + `tradingFxRateApplied`, siehe §3. `marketCap` ist immer USD; eine Zeile OHNE nachgewiesene Handelskurs-Umrechnung wird mit `marketCap: null` ausgeliefert statt mit einer falschen Groesse (Karl-Regel: eine fehlende Groesse ist harmlos, eine falsche nicht). Der Nachweis steckt in `scripts/write-findash-export.js` beurteileWaehrungsbeleg; Waechter: `tests/waehrung-ausliefer-waechter.test.js`. **Nachgezogen (Tag 941, Review-Fix):** die Abkuerzung „Handel = Bericht" gilt nur, wenn der heutige Mapper das ausdruecklich bestaetigt hat (`meta.tradingCurrencyAssumed === false`). Auf Snapshots von VOR Tag 938 fehlt dieses Feld — dort ist `tc === rc` nicht der Beleg einer Inlandsnotierung, sondern die Spur des Wurzelfehlers selbst; solche Zeilen werden jetzt genullt (Grund `herkunft-unbekannt`). Am eingefrorenen lokalen Bestand betraf das 749 von 4 476 Zeilen, die vorher faelschlich als belegt durchliefen. | erledigt (Tag 940), gehaertet (Tag 941) |
+| `ipoYear` | ✅ **UMGESETZT in 1.2** — Boersen-IPO-Jahr durchgereicht, reales `number\|null`-Feld, siehe §3. (War in 1.1 reserviert.) | erledigt (Tag 264) |
+| `axes` (pro Board-Row) | ✅ **GELIEFERT — als `axisBreakdown`** (Task 2.7, Tag 276). Jede Board-/Overview-Zeile traegt `[{key,pct,weight}]`, siehe §3/§6; Quelle `src/scoring/score.js:849-851`. (Die alte Aussage „EXISTIERT NICHT in Boards. Nur im calib-Diagnostik-Kanal." war tot und widersprach §3.) Ein Feld mit dem Namen `axes` gibt es nicht und ist nicht geplant — der erwogene `axes.json`-Zusatz-Feed ist gegenstandslos. | erledigt (Tag 276) |
+
+**Regel:** Ein reserviertes Feld wird erst emittiert, wenn die Engine es echt liefert. Bis dahin ist "abwesend" die vertragskonforme Aussage — der Consumer behandelt fehlend als "nicht verfuegbar". Ein additives OPTIONALES Feld (nur hinzufuegen, nie bestehendes brechen) ist KEIN v2-Bump. Der `--check` prueft nur die Pflicht-Felder; ein spaeter additiv hinzugefuegtes optionales Feld loest KEINEN Bruch aus.
+
+---
+
+## 7. v2-Bump-Regel (explizit)
+
+`schema` bleibt `findash-export/v1`, **solange NUR additiv geaendert wird**:
+
+- **ERLAUBT in v1 (kein Bump):** ein NEUES optionales Feld hinzufuegen (z.B. `profitTier`, `ipoYear` [1.2], `coverageAxes`/`coverageWeight` [2.13 #23], `currency` sobald verfuegbar); einen neuen Enum-Wert ergaenzen, den der Consumer als "unbekannt" tolerieren kann. **Wird ein neuer Enum-Wert erlaubt, muss die entsprechende `VALID_*`-Liste im Writer erweitert werden**, sonst blockt der Check den legitimen neuen Wert faelschlich.
+- **ERZWINGT v2-Bump (`schema: 'findash-export/v2'`):** ein Feld **umbenennen, entfernen, seinen Typ aendern** (z.B. `overview.value` von nullable-number auf number); die Verschachtelung aendern (overview.json flach → verschachtelt oder umgekehrt); die Semantik eines bestehenden Feldes aendern (z.B. `score` von round1 auf roh); den `runwayQuarters`-Sentinel `9999` neu belegen; einen Pflicht-Enum-Wert entfernen; ein bisher nullable-Pflichtfeld auf non-null verschaerfen.
+- Bei v2: neue Datei `outputs/findash-export/v2/`, der v1-Ordner bleibt eine Migrationsphase lang parallel bestehen, damit das Dashboard umstellen kann. `SCHEMA`, die `VALID_*`-Enum-Listen und `validateFile()`/`validate*Row()` im Writer werden auf v2 gepinnt, der Selftest auf v2-Cases.
+
+Faustregel: **Kann ein v1-Consumer die Datei ohne Code-Aenderung weiterlesen? → v1. Sonst → v2.**
+
+---
+
+### Shadow verification on the frozen export (06.10.2026)
+
+`node scripts/dup-issuer-shadow-diff.js` verifies every `SHA256SUMS.txt` entry in
+`outputs/findash-export/v1-frozen-20261003/`, marks copies under `os.tmpdir()`,
+and prints the after directory and every changed row. It never rebuilds from engine outputs
+or snapshots. To run the same validator used by `--check` on that temporary tree:
+
+```sh
+node -e "const e=require('./scripts/write-findash-export.js').validateExport(process.argv[1]); if(e.length){console.error(e.join('\n'));process.exit(1)} console.log('findash-export/v1 schema OK.');" "<after-directory>"
+```
+
+The CLI `--check` uses its fixed production directory; the exported `validateExport(outDir)`
+provides this existing read-only seam. The shared `.contract.json` remains unchanged because
+it lists required fields and accepts additive optional keys.
+
+---
+
+## 8. Retention Grundgesetz 7 (Aufbewahrung)
+
+**Teil a — "nur latest" (UMGESETZT in 1.1):** Der Writer schreibt ausschliesslich `outputs/findash-export/v1/` und ueberschreibt es atomar bei jedem Lauf. **Keine** datierte Historie, **kein** Anhaengen. Der Deploy-Step force-pusht denselben Pfad auf gh-pages — der Vorlauf wird ersetzt, nicht akkumuliert. Das haelt gh-pages und den Runner-Footprint konstant.
+
+**Teil b — board-history (UMGESETZT, scharf seit Tag 303, Task 2.3):** Eine datierte Board-Vintage-Historie liegt unter `board-history/` (**nicht** `findash-export/history/YYYY-MM-DD/` — frueherer Platzhalter-Pfad dieser Doku, nie real gebaut). Geschrieben von `scripts/write-board-history.js` als **eigener Schritt** in `daily-pull.yml` (NACH dem gh-pages-Deploy), getrennt vom 1.1-Export-Writer (`write-findash-export.js`) und separat nach main committet — derselbe Pfad-getrennte Mechanismus wie `picks-history/` (eigener Job, eigener Commit, nicht ueber den scoring-Loop). Retention siehe §9: der Writer selbst loescht nie.
+
+**Wert-Gate-Urteil in jeder Board-Datei (Tag 1396).** Jedes Tages-Vintage wird nach `main` committet, auch ein geflaggtes; das Urteil steht im `gate`-Block jeder Board-Datei: `suspect` und `reasons` (unveraendert), dazu additiv `structural` (Strukturbruch: `cohort-empty`, `cohort-overlap-collapse`, `nan-break`, `coverage-collapse:*`, `integritaets-verfall:*` oder p99 an einem Datenschub-Uebergang mit gerissenem Faecherungs-Deckel; Regel in `lib/board-history-flag.js`) und `priorDate` = das Datum, gegen das dieses Board tatsaechlich verglichen wurde (strukturell geflaggte Tage sind keine Vergleichsbasis, reine p99-Tage schon). Exit 2 und der rote Lauf (letzter Schritt „Value gate verdict") gibt es nur noch fuer `structural`; ein reiner p99-Tag ist gruen mit `::warning::GATE FLAG`. `scripts/rank-ic.js` laesst geflaggte Boards standardmaessig aus (`--include-flagged` behaelt sie). **Der taegliche Lauf-Check liest `suspect` je Board aus `data-health/p99-delta-history.json`; Wertspruenge je Firma und Feld (Faktor ueber 3 gegen den zuletzt angenommenen Wert) stehen seit Tag 1398 in `data-health/value-open-items.json` (`docs/value-open-items.md`).**
+
+**Teil c — XBRL/prices-max (DOKUMENTIERT, ausserhalb CI, gebunden an 4.1/2.2):** Die tiefe Roh-Historie (SEC-XBRL-Serien, `prices/`-Vollhistorie) ist die Basis fuer spaetere Deep-Work-Achsen, gehoert aber NICHT in den findash-export. Sie wird von `pull-sec-xbrl.js` / `pull-historical-prices.js` in eigene, gitignored bzw. tracked-external Pfade geschrieben. **Bindung:** XBRL-Tiefe an Task 4.1 (Buffett-Board Quant-Teil, Masterplan Phase 4), prices-max an Task 2.2 (ATH-Abstand-Spalte, `prices-max/`-Max-Batch, Masterplan Phase 2). Der 1.1-Writer liest diese Quellen NICHT und darf sie nie als Zielpfad bekommen.
+
+**Schutzliste (read-only fuer den 1.1-Writer, NIE Zielpfad):** `picks-history/`, `earnings-calendar.json`. Beide werden vom pull-Job bewirtschaftet; der scoring-Job laeuft auf frischem Runner und schreibt ausschliesslich unter `outputs/` — damit sind sie faktisch geschuetzt, aber der Writer dokumentiert sie explizit als read-only, um die Trennung zu zementieren.
+
+---
+
+## 9. Groessen-Budget (Jahres-Wachstum + Deckel)
+
+**Pro Lauf (latest-only, Teil a):** ~1,3 MB (13 Boards + overview + survival + index; calib NICHT im Export). Da nur `latest` geschrieben und force-gepusht wird, ist der **stationaere gh-pages-Footprint konstant ~1,3 MB** — kein Jahres-Wachstum. Das ist der Sinn von Grundgesetz 7a.
+
+**Jahres-Wachstum seit Teil b (board-history) live ist:** ~1,3 MB/Vintage × ~250 Handelstage = **~325 MB/Jahr** (unkomprimiert; gzip drueckt real auf ~50–80 MB/Jahr). `board-history/` wird nach **main** committet, nicht nach gh-pages gepusht — das Wachstum betrifft den Repo-Baum, nicht den gh-pages-Footprint aus Teil a.
+
+**Retention: kein automatisches Loeschen.** `write-board-history.js` kennt eine Kompaktierung (`--compact`, `RETENTION_DAYS = 180`): Vintages **aelter als 180 Tage** werden als Voll-Snapshot nach `board-history-archive/` (ausserhalb des CI-Checkouts, GG7c) kopiert und danach im committeten `board-history/`-Eintrag gestrippt (`compacted:true`) — **geloescht wird dabei nichts**. Der taegliche CI-Lauf (`daily-pull.yml`, Schritt „Write board-history vintage") ruft den Writer OHNE `--compact` auf; die Kompaktierung ist bis auf Weiteres ein manueller Schritt, kein automatischer harter 1-GB-Deckel. Der latest-only-Export (1.1) beruehrt das nie, weil er nicht akkumuliert. XBRL/prices-max (Teil c) haben eigene, groessere Budgets ausserhalb dieses Vertrags (an 4.1/2.2 gebunden).
+
+---
+
+## 10. `quality/` (QC-Board, DIAGNOSTIC) — additiver Feed (Task 3.2)
+
+Der **Quality-Compounder-Screener** (QC-Board, gebaut Tag 290) laeuft parallel zum Hypergrowth-Screener und wird **additiv** in denselben v1-Vertrag aufgenommen — als Unterordner `outputs/findash-export/v1/quality/`. Kein v2-Bump: bestehende HG-Dateien/-Felder werden **nicht** angefasst. Quelle: `outputs/quality/*` (erzeugt von `src/scoring/run-screener.js::runQualityPass`).
+
+### Dateien (unter `outputs/findash-export/v1/quality/`)
+
+| Datei | Inhalt | Herkunft |
+| --- | --- | --- |
+| `<id>.json` (dynamisch, aktuell 11) | Ein QC-Board je Branche: `{schema, generated_at, branch, boardStatus, coverage, profitable[], unprofitable[]}` | `outputs/quality/quality-<id>.json` (Prefix `quality-` fallengelassen; `branch` = Dateiname-Stamm, z.B. `semiconductors`) |
+| `overview.json` | Flaches Cross-Branch-QC-Top nach Score, `{…, rows: OverviewRow[]}` | `outputs/quality/overview.json` |
+| `index.json` | Meta/Zaehlung: `{schema, generated_at, coverage, generatedFromSnapshots, boards, boardStatus, counts, excluded}` | `outputs/quality/index.json` |
+
+**Board-Anzahl ist dynamisch** (aus den vorhandenen `quality-*.json` entdeckt, nicht hartkodiert) — heute 11 Boards (kein `survival`-Board; QC-Namen sind per Konstruktion profitabel, `unprofitable[]` meist `[]`). Der CI-Count-Check leitet die Soll-Zahl dynamisch ab (`#quality-*.json + overview + index`).
+
+### Zeilenform = HG-Board-/Overview-Zeilenform (voll wiederverwendet)
+
+`rankGrundShadow` wird auch auf allen Quality- und Smallcap-Board-/Overview-Zeilen nach §3/§4 ausgegeben, unabhängig von einem bereits bestehenden `rankGrund`. SHADOW, optional, score- und rangneutral.
+
+QC-Board-Zeilen sind **byte-fuer-byte dieselbe `BoardRow`-Form wie §3** (verschachteltes `overview`, alle geo-Felder inkl. `profitTier`/`ipoYear`/`cohortN`/`cohortFallback`, optional `scoreBase`/`scoreShrunk`/`factors`/`axisBreakdown`). QC-`overview.json`-Zeilen sind die **flache `OverviewRow`-Form wie §4** (mit `formulaId`, hier `quality-`-praefigiert). Der Writer nutzt darum `mapBoardRow`/`mapOverviewRow` und die Validatoren `validateBoardRow`/`validateOverviewRow` **unveraendert** — kein Parallel-Validator. Die QC-`index.json` ist die HG-`index.json` **ohne** `branches`/`survivalCount` (QC hat kein Survival-Board und eine dynamische Board-Menge); dafuer gibt es einen kleinen dedizierten `validateQualityIndex`.
+
+### `boardStatus`-Semantik: QC ist bis auf Weiteres IMMER `diagnostic`
+
+Jedes QC-Board traegt `boardStatus: 'diagnostic'` — **per Konstruktion**, nicht per Hardcode: `src/scoring/board-status.js` gibt fuer jeden `quality-`-praefigierten Key `'diagnostic'` zurueck und kann ihn nie auf `'core'` promoten. Das Dashboard (1.3) MUSS QC-Boards sichtbar als **unbewiesen** kennzeichnen.
+
+- **`--check`-Verhalten (BH-160/BH-078 gefixt):** `boardStatus` ist auf QC-Dateien (Board-Datei UND die QC-`index`-`boardStatus`-Map) auf den **einzigen legitimen Wert `'diagnostic'`** gepinnt — NICHT das breitere `['core','diagnostic']`-Enum, das fuer HG gilt. Ein manipuliertes `'core'` auf einer QC-Datei oder in der QC-Index-Map **trippt jetzt** (exit 1), ebenso ein **fehlendes** oder **bogus** `boardStatus`. Die QC-`index`-`boardStatus`-Map wird zusaetzlich auf Key-Vollstaendigkeit gegen `boards` geprueft (fehlender oder ueberzaehliger Eintrag trippt). Der Build-Zeit-Invariante „QC == diagnostic" wird zusaetzlich im `--selftest` asserted.
+- **Core-Promotion** ist gated auf **ρ < 0,4 + rankIC** (QC-Rangkorrelation zum HG-Board niedrig genug, dass QC eigenstaendige Information traegt) — siehe **Masterplan 3.1**. Bis dieser Nachweis vorliegt, bleibt QC diagnostic.
+
+### Optional-when-absent (kein stiller Weglass, kein Crash)
+
+Fehlt `outputs/quality/` (alte lokale Laeufe ohne QC-Pass), schreibt der Writer **keine** `quality/`-Dateien und loggt eine **deutliche Warnung** (`::warning::`) — er crasht nicht und laesst nichts still weg. Der `--check` behandelt `quality/` als **optional-wenn-abwesend**: ohne `quality/index.json` auf Platte gibt es nichts zu pruefen (kein Bruch). **Sobald `quality/index.json` existiert**, sind alle darin gelisteten QC-Boards **plus** `overview.json` **Pflicht** und werden voll validiert (Zeilen wie `validateBoardRow`/`validateOverviewRow`, `boardStatus` gegen das Enum). Alle QC-Fehlermeldungen tragen ein `quality/`-Praefix, damit der Alarm-Kanal einen QC-Bruch nie mit einem HG-Bruch verwechselt.
+
+### Bewusste Disclosure: praktisch leere Dauerhaftigkeits-Achse `roicStability`
+
+Das QC-Achsenset enthaelt eine **Dauerhaftigkeits-/Stabilitaets-Achse `roicStability` mit Gewicht `w=0`** (`src/scoring/formulas/quality/index.js:33,44`) — sie traegt **nicht** zum Score bei, ist score-inert und erscheint in `axisBreakdown` mit `weight: 0`. Das ist eine **bewusste Offenlegung**, kein Bug.
+
+> **Praezisiert (R-Gate 2.R, Fund R2.10).** Die frueher hier genannte Begruendung — „sie ist derzeit leer (keine belastbare Zeitreihen-Basis fuer ROIC-Stabilitaet)" — war schon **beim Schreiben ueberholt**: der SEC-XBRL-Tiefkanal landete mit **Tag 291 (2026-07-10)**, dieser Absatz wurde mit **Tag 293 (2026-07-13)** geschrieben. Die Basis EXISTIERT.
+
+**Was wirklich stimmt:** `roicStability` liest OpInc/Assets/CurrLiab als **Single-Source-Trio** aus `snapshot.secAnnual` (`src/scoring/axes.js:350-381`; angehaengt in `src/scoring/run-screener.js:142-145`, Tiefe ~10–15 GJ) und rechnet damit **echte** Werte — 61 der 124 Namen im committeten `external-data/sec-secannual.json` ergeben einen finiten CoV.
+
+**Der Grund fuer `w=0` ist also nicht „keine Basis", sondern DUENNE ABDECKUNG:** der Tiefkanal umfasst heute **124 von 6406** Universe-Namen (**1,9 %**). Auf den realen QC-Boards ist `roicStability.pct` folglich in nur **7 von 1033** Zeilen non-null (**0,7 %**, Lauf 2026-07-14) — sonst greift das harte Daten-Gate `ROIC_STAB_MIN_YEARS = 6` (`axes.js:335`) und liefert `null` (renorm-on-drop, kein Fake-50). Eine so null-schwere Achse wuerde bei `w>0` ueber die C4-Coverage-Shrinkage das Board Richtung Median stauchen; mit `w=0` ueberspringen die engine-Guards sie (nicht in `totalW`) — **die Praxis-Aussage „leer" bleibt damit korrekt, nur ihre Begruendung war falsch.**
+
+**Aufleuchten** (Gewicht `0` → ~`1.5`, eine Zeile) haengt damit an der **Verbreiterung des SEC-Stores**, nicht mehr am Bauen des Tiefkanals — der steht seit Tag 291.
+
+### Retention / Deploy
+
+`quality/` faellt unter dieselbe **Retention-Grundgesetz-7a**-Regel (§8): latest-only, atomar ueberschrieben, kein Anhaengen. Der Deploy-Step kopiert `outputs/findash-export/v1/.` rekursiv (`cp -r`) und nimmt den `quality/`-Unterordner damit automatisch mit — **keine** Aenderung am Deploy-Step noetig.
+
+---
+
+## 11. `full/` (Vollboards) — additiver Feed (19.08.2026)
+
+`src/scoring/run-screener.js` ruft `produceRankings(results, { topN: topN || 100 })`, und die CI ruft ohne `--topN`. Jede Board-Liste ist damit bei **100 Zeilen je Track** gekappt — die Zeilen dahinter waren im Export weder abrufbar noch erwaehnt. Gemessen am Vintage 03.08.2026: **1.512 von 3.042** gescorten Board-Zeilen erreichten die Oberflaeche, **50,3 % fehlten**. Bei `industrials` standen 100 von 516 Zeilen zur Verfuegung. Das bricht die Direktive „nichts verschwindet".
+
+Die vollen Kohorten liegen seit 2.3-A8 in `outputs/hypergrowth/full/`, wurden aber nie publiziert (der gh-pages-Deploy kopiert `hypergrowth` flach: `cp ../outputs/hypergrowth/*.json`). Sie werden jetzt **additiv** in denselben v1-Vertrag aufgenommen - als Unterordner `outputs/findash-export/v1/full/`. Kein v2-Bump: Board-Mitgliedschaft, Zeilenform, Score und Rang bleiben unveraendert. T194 ergaenzt nun lediglich das additive Huellen-Feld `cohortDelivery`, das alte v1-Leser ignorieren koennen.
+
+### Dateien (unter `outputs/findash-export/v1/full/`)
+
+T194 erweitert die nachfolgende Kurzform jeder Board-Huelle um das Pflichtfeld `cohortDelivery`.
+
+| Datei | Inhalt | Quelle |
+| --- | --- | --- |
+| `<branche>.json` (13, PFLICHT) | Dieselbe Board-Datei-Form wie §3 (`{schema, generated_at, branch, boardStatus, coverage, mcapBounds, profitable[], unprofitable[]}`), aber mit der **ganzen** Kohorte je Track | `outputs/hypergrowth/full/<branche>.json` |
+
+`survival` hat **kein** Vollboard und braucht keins: die Liste ist flach nach Runway sortiert und wird nie gekappt (§5). `overview.json` ebenfalls nicht — es ist per Definition ein Cross-Branch-Auszug, kein Board.
+
+Auch jede Vollboard-Zeile trägt das optionale, score- und rangneutrale SHADOW-Feld `rankGrundShadow` nach §3. Die Toplisten und Vollboards benutzen denselben Mapper.
+
+### Verhaeltnis zur gekappten Datei - die tragende Zusage
+
+**Die ersten `topN` Zeilen je Track sind mit `<branche>.json` TIEF gleich, inklusive `rank`.** Nicht „ungefaehr dieselben Namen" — dieselben Objekte, Feld fuer Feld. Danach laeuft die Rangfolge im Vollboard einfach weiter: Zeile 101 traegt `rank: 101`, bis zum Ende der Kohorte.
+
+Das ist **konstruktiv** garantiert, nicht gehofft. Das gekappte Board ist das byte-gleiche `topN`-Praefix der full-Liste (`tests/scoring/anchors.rank.test.js`, Pruefung A8), es laufen dieselben Mapper (`mapBoardRow`) und dieselbe Rangvergabe (`vergebeRaenge`, sequenziell-deterministisch je Zeile) darueber. Beides ist trotzdem festgenagelt statt vorausgesetzt: `tests/scoring/export-vollboard.test.js` (20 Pruefungen) vergleicht die ersten 100 Zeilen tief und pinnt den Deckel selbst.
+
+Das **Belegbarkeits-Gate** (§3, seit 18.08.) laeuft auf beiden Dateien identisch: eine Zeile mit zu duenner Achsen-Abdeckung traegt `rank: null` + `rankGrund` und **verbraucht keine Rangnummer**. Die uebrigen Raenge bleiben dadurch in beiden Dateien lueckenlos `1..k` — und deckungsgleich.
+
+Seit T194 traegt auch jede `full/<branche>.json` das Huellen-Feld `cohortDelivery`. Dort gilt zwingend `cap:null`, `fullBoard:null` und je Track `delivered===total`, `truncated:false`; die uebrige Datei- und Zeilenform bleibt identisch.
+
+**Der Deckel ist seit T194 keine Verbraucher-Heuristik mehr.** Beispiel `semiconductors.profitable`: Die schnelle Datei kann 100 Zeilen tragen, waehrend `index.json.counts` 292 meldet. Ihre Huelle sagt dann `cohortDelivery.profitable = {delivered:100,total:292,truncated:true}` und verweist mit `fullBoard:"full/semiconductors.json"` auf den Tail. Ein Track mit 78 von 78 Zeilen sagt `{delivered:78,total:78,truncated:false}`. Im Vollboard stehen `cap:null`, `fullBoard:null` und fuer jeden Track `delivered===total`, `truncated:false`. Damit bedeutet ein fehlender Ticker nicht mehr still "nicht im Board", solange der geladene Track als gekappt ausgewiesen ist.
+
+Der v1-Exportvertrag ist bewusst auf **100** festgelegt. Ein manueller Engine-Lauf mit einem anderen positiven `--topN` darf zwar intern entstehen, wird vom Export-Writer aber laut abgelehnt, statt mit einem falschen `cap:100` publiziert zu werden. Eine andere oeffentliche Kappung waere eine eigene Vertragsentscheidung.
+
+### Ladeverhalten
+
+`full/` wird **auf Anforderung** geladen, nicht im Erstaufschlag. `<branche>.json` bleibt der schnelle erste Blick; wer ueber Rang 100 hinaus will, holt die Vollliste derselben Branche nach. Eine zweite, schlanke Zeilenform im Erstladevorgang waere teurer — sie belastete **jeden** Aufruf, auch die grosse Mehrheit, die nie ueber Rang 100 hinausschaut, und braeuchte fuer die Detailzeilen trotzdem eine Nachlade-Quelle.
+
+Die Dateien sind deshalb **kompakt** geschrieben (`indent 0`, wie die Quelle in `outputs/hypergrowth/full/`) — sie sind maschinell gelesen, nicht handgelesen.
+
+### Groesse
+
+Am Vintage 03.08.2026 gemessen (Dezimal-MB, wie `du -b` zaehlt): `full/` gesamt **3,63 MB** ueber 13 Dateien, von 54 kB (`it-services`) bis 651 kB (`industrials`). Der v1-Ordner waechst dadurch von **6,11 MB auf 9,74 MB** — die Differenz ist exakt `full/`, die 42 Bestandsdateien bleiben byte-identisch (sha256-Vergleich vor/nach dem Umbau). Der **Erstaufschlag waechst um 0 Byte** — das ist der Sinn der Trennung. §9 (latest-only, kein Jahres-Wachstum) gilt unveraendert.
+
+**T194-Korrektur zur vorstehenden Groessenmessung:** Die Aussage "42 Bestandsdateien byte-identisch / Erstaufschlag +0 Byte" beschreibt ausschliesslich den historischen full/-Ausbau vom 19.08. vor T194. Heute erhalten die 13 schnellen Branchen-Dateien jeweils ein kleines `cohortDelivery`-Objekt; der Erstaufschlag waechst daher geringfuegig. Ohne materialisierten Produktions-Export wird dafuer keine Scheingenauigkeit in Byte erfunden. Zeilen, Mitgliedschaft, Scores und Raenge bleiben unveraendert; auch `full/` waechst nur um dasselbe kleine Huellen-Objekt je Datei.
+
+### Gate
+
+Anders als `quality/` ist `full/` **nicht** optional-wenn-abwesend. `run-screener.js` schreibt die Quelle bei jedem Lauf; zu jedem der 13 Branchen-Boards gehoert genau ein Vollboard. `--check` (`validateFullExport`) prueft alle 13 als **Pflicht** und validiert jede Datei mit derselben Board-Pruefung wie §3 (`branch` == Dateiname, `boardStatus`-Enum, jede Zeile, Rang- und Score-Folge). Alle Meldungen tragen ein `full/`-Praefix, damit der Alarm-Kanal ein Vollboard-Problem nie mit einem Board-Problem verwechselt.
+
+Zusaetzlich zaehlt `daily-pull.yml` nach dem Bau die Dateien: **13 oder `::error::` + Exit 1**. Grund: ein still fehlendes Vollboard sieht in findash aus wie ein Board ohne Nachruecker — stumm halb statt sichtbar rot, und das ist der teuerste Fehlerfall dieses Feeds. Fehlt das **Quell**verzeichnis `outputs/hypergrowth/full/`, bricht der Bau laut ab statt einen leeren Feed auszuliefern.
+
+T194 erweitert dieses Gate um die Liefermengen-Invariante: schnelle Datei = exakt `min(index.counts,100)`, Vollboard = exakt `index.counts`, jedes `delivered` = reale Array-Laenge und jedes `truncated` = mathematisch richtige Aussage. Ein faelschlich als vollstaendig markierter Deckel und ein gekapptes "Vollboard" werden beide rot. Der hermetische Richtungswaechter ist `tests/t194-v1-cap-contract.test.js`.
+
+### Waehrungs-Waechter: eigene Bilanz, KEINE eigene Abbruchgrenze
+
+Die Zeilen der Vollboards laufen durch denselben Waehrungs-Waechter (§3): ohne Handelskurs-Nachweis wird `marketCap` genullt — sonst waere die Zeilen-Gleichheit mit der gekappten Datei gebrochen. Sie zaehlen aber **nicht** in die 25-%-Abbruchquote, denn die wurde auf den **gekappten** Listen gemessen; ~1.500 zusaetzliche Tail-Zeilen im Nenner verschoeben eine gemessene Grenze.
+
+Damit der Tail trotzdem nicht unhoerbar wird, meldet der Bau eine **eigene** Bilanz (`::warning::Waehrungs-Waechter (Vollboards, EIGENE Bilanz, …)`). Der Tail ist nachweislich duenner belegt — am 19.08. gemessen: gekappt 61,9 %, voll 66,7 %. Eine **eigene Abbruchgrenze gibt es bewusst nicht**: jede Zahl waere auf dieser nie gemessenen Grundgesamtheit geraten, und ein geratener Abbruch kippte den ganzen Export. Erst wird gemessen, dann darf jemand eine Schwelle setzen.
+
+### Retention / Deploy
+
+`full/` faellt unter dieselbe **Retention-Grundgesetz-7a**-Regel (§8): latest-only, atomar ueberschrieben, kein Anhaengen; das Zielverzeichnis wird vor jedem Bau geleert, damit ein abgebrochener Lauf nie Vollboards zweier Vintages mischt. Der Deploy-Step kopiert `outputs/findash-export/v1/.` rekursiv (`cp -r`, `daily-pull.yml` Zeile 1757) und nimmt den `full/`-Unterordner damit automatisch mit — **keine** Aenderung am Deploy-Step noetig.
+
+---
+
+## 12. Datenkanal-Beipack (F-17a) — NICHT Teil des v1-Vertrags
+
+**Karl-Entscheid 04.08.2026, Option c.** findash las bis dahin zwei Dinge per `git pull` aus einem lokalen Checkout dieses Repos statt aus dem oeffentlichen Kanal: den Termin-Kalender und die Vintages der Bewegungs-Anzeige. Auf dem findash-Server gibt es diesen Checkout nicht — der Pull wird dort abgeschaltet, beides liegt jetzt auf `gh-pages`.
+
+**Korrektur (Tag 1396, gegen den findash-Code geprueft):** findash liest die Bewegungs-Anzeige heute aus **Kanal A**, dem committeten `board-history/` auf `main` (stuendliche Sparse-Checkout-Kopie auf dem Server), nicht aus diesem Beipack (Kanal B). Ein geflaggtes Vintage liegt seit Tag 1396 mit seinem Urteil (`gate`) in der Board-Datei auf `main`. Kanal B bleibt unveraendert (die Zeilen tragen weiter nur `rank`/`ticker`/`score`, kein `gate`).
+
+Diese Pfade sind **bewusst ausserhalb** von `outputs/findash-export/v1/`: sie folgen nicht der v1-Datei-Huelle, unterliegen nicht dem `--check`-Vertragsgate und loesen keinen v2-Bump aus. Sie sind ein Beipack zum selben Publish, kein Vertragsbestandteil.
+
+| Pfad auf `gh-pages` | Quelle | Publiziert von | Groesse |
+| ------------------- | ------ | -------------- | ------- |
+| `outputs/earnings-calendar.json` | `earnings-calendar.json` (Repo-Wurzel, aus dem prep-Job) | `daily-pull.yml`, merge-Job, Schritt „Stage earnings-calendar…" + Deploy 1/2 | ~0,54 MB, byte-genaue Kopie |
+| `outputs/board-history/index.json` | abgeleitet | `daily-pull.yml`, scoring-Job, Schritt „Publish board-history vintages…" | ~1 KB |
+| `outputs/board-history/<YYYY-MM-DD>/<board>.json` | `board-history/<datum>/` | dito | ~0,25 MB je Vintage |
+
+**`index.json`** (`schema: board-history-publish/v1`) listet `vintages: [{ date, files: [...] }]`, aelteste zuerst. Ueber HTTP gibt es kein `readdir` — ohne diese Liste findet ein Konsument die Vintages nicht.
+
+**Warum nur ein Ausschnitt** (`scripts/stage-public-data.js`): das ganze `board-history/` sind 95 MB, zwei volle Vintages 27 MB. Publiziert werden (1) nur die **2 juengsten** Vintages — findashs `computeMovement()` nimmt `vintages.slice(-2)`, aeltere liest es nie; (2) nur Dateien **mit `cohort`** — die Sidecars `calibration.json`/`regime.json` erkennt findash ohnehin inhaltsbasiert als Nicht-Board; (3) je Zeile nur **`rank`/`ticker`/`score`** — mehr liest die Bewegungs-Anzeige nicht (`score` bleibt, weil ihre Zeilen-Pruefung den anwesenden Schluessel verlangt). Ergebnis: **0,5 MB statt 27 MB**, bei unveraenderter Dateiform (`cohort.profitable` / `cohort.unprofitable`).
+
+**Frische.** Der Kalender wird im merge-Job publiziert (dort ist er frisch; der scoring-Job checkt den Trigger-Commit aus und saehe den Vortagsstand). Die Vintages werden **nach** dem Vintage-Commit publiziert — vorher existiert das Vintage von heute noch nicht, und die Anzeige vergleicht die zwei juengsten Staende. Seit Tag 1396 geht auch ein geflaggtes Vintage nach `main` und in den Kanal; nur ein Board mit 0 Zeilen (`cohort-empty`) laesst den Publish an der Kollaps-Pruefung von `stage-public-data.js` rot werden (gewollt laut).
+
+**Fail-loud.** Fehlt eine Quelle, endet der Publish mit `::error::` + Exit 1 statt sie still wegzulassen — sonst zeigte findash nach der Umstellung wortlos nichts. Waechter: `tests/stage-public-data.test.js`.
+
+---
+
+## 13. `druckenmiller/` — Marktinnereien-Modul (additiv, KEIN v2-Bump)
+
+> **Warum §13 und nicht §12.** BUILD-SPEC v1 (§2) und `laneC/architektur-spec.md` §3.1 nennen
+> „§12" — die Nummer war zu diesem Zeitpunkt schon vom Datenkanal-Beipack (F-17a) belegt. Zwei
+> Abschnitte mit derselben Nummer waeren fuer jeden Leser eine Falle; der Abschnitt bekommt
+> deshalb die naechste freie Nummer. Inhaltlich ist es der dort gemeinte Abschnitt.
+
+**Was das ist.** Ein eigenstaendiges Mess-Modul (Rekonstruktion nach oeffentlichen Aussagen +
+13F-Filings), **kein Teil des Qualitaets-Scores** und nie ein Board-Signal. Es liegt unter
+`outputs/findash-export/v1/druckenmiller/` mit **eigener Schema-Id** `findash-druckenmiller/v1`
+und **eigenem `--check`** (`scripts/write-druckenmiller-export.js --check`). Das v1-Vertragsgate
+der Boards (`scripts/write-findash-export.js --check`) fasst diesen Ordner **nicht** an; der
+gemeinsame Fixture-Stand bleibt unberuehrt. Additiv nach §7 → **kein v2-Bump**.
+
+### 13.1 Die Vierer-Regel (und warum das Modul heute absichtlich „stale" ist)
+
+Der Ordner traegt im Endzustand **genau vier** Dateien: `regime.json`, `meta.json`,
+`candidates.json`, `duquesne13f.json`. Sie tragen **denselben `generated_at`-Wert**. Der Leser auf
+findash-Seite wertet als `stale: true`, wenn (a) weniger als vier Dateien da sind, (b) ihre
+`generated_at` auseinandergehen, (c) `_FAILED.json` existiert, oder (d) die bestehenden
+Alters-Flaggen (`STALE_MS`, `DISPLAY_HINT_MS`, `DISPLAY_MAX_AGE_DAYS`) auf `generated_at`
+anschlagen bzw. `now > expectedNextRun + 6 h` ist („missed run").
+
+**Stand Chunk 1: nur `regime.json` und `meta.json` existieren.** `candidates.json` kommt mit
+Chunk 2, `duquesne13f.json` mit Chunk 3. Das Modul ist damit **bis zum Ende von Chunk 3
+stale-by-design** — gewollt: lieber ein sichtbares „noch nicht vollstaendig" als ein Tab, der
+Vollstaendigkeit vortaeuscht. Der Schreiber erzeugt **keine** Platzhalter-Dateien; eine leere
+`candidates.json` waere eine Aussage ueber Kandidaten, die es noch nicht gibt.
+
+### 13.2 `_FAILED.json` — der Fehler-Vertrag
+
+Faellt `--check`, wird der Ordner **nicht geloescht**, sondern sein Inhalt durch **eine einzige**
+Datei ersetzt (liegt bereits ein Marker, **bleibt sein `reason` woertlich stehen** — er nennt
+die Ursache, ein zweiter Lauf nur noch ihre Folge):
+
+| Feld | Typ | Bedeutung |
+| ---- | --- | --------- |
+| `schema` | string | `findash-druckenmiller/v1` |
+| `generated_at` | ISO-String | Zeitpunkt des Markers |
+| `reason` | string | der Befund im Klartext (dieselbe Zeile wie die `::error::`-Annotation) |
+| `failedAt` | string | welcher Schritt ihn geschrieben hat |
+
+**Warum kein Loeschen:** findash schreibt bei einem 404 nicht in den Cache
+(`data-layer/screener-sync.js:164-166`) und zeigte sonst den Stand von gestern als heutigen. Eine
+verschwundene Datei ist unsichtbar, ein Marker ist eine Aussage. Der Sync benennt beim Fund eines
+Markers die vier gecachten Dateien in `*.superseded` um, damit kein alter Vierer-Satz neben dem
+Marker ueberlebt. Der Marker verschwindet erst, wenn ein spaeterer Sync im selben Durchgang
+`markerAbsent` (404) meldet **und** vier Dateien mit identischem, gegenueber `failedAt` neuerem
+`generated_at` geholt hat.
+
+### 13.3 `regime.json`
+
+Rohe Legs, **kein veroeffentlichter Zustand** (Rat-Entscheid D3 vom 2026-09-14): es gibt kein
+`state`, keine RISK-ON/OFF-Ampel, keine Crash-Warnung und kein `rInt` in der Auslieferung. R-INT
+wird berechnet und geloggt, aber nicht ausgeliefert.
+
+| Feld | Typ | Einheit / Wertebereich | Bedeutung |
+| ---- | --- | ---------------------- | --------- |
+| `schema` | string | fix | `findash-druckenmiller/v1` |
+| `generated_at` | string | ISO-8601 | identisch in allen vorhandenen Dateien |
+| `asOf` | string | `YYYY-MM-DD` | letzter Publikationstag der Reihe = letzte Serien-Zeile |
+| `series` | array | max. **504** Zeilen, streng aufsteigend | die Tageszeilen, aelteste zuerst |
+| `sectorRs` | array | `[{sector: string, rs63: number, rank: int}]` | Median-63-Tage-Rendite je Sektor **minus SPY**, Rang 1 = staerkster; leer, wenn SPY fehlt |
+| `rankPersistence` | number \| null | Spearman −1…1 | Rang-Korrelation der Sektor-Tabelle gegen die Vorzeile; `null` bei < 3 gemeinsamen Sektoren |
+
+**Eine Serien-Zeile** (`series[i]`) — jedes Zahlenfeld ist `number | null`; `null` heisst
+**nicht gemessen**, nie 0:
+
+| Feld | Typ | Einheit | Bedeutung |
+| ---- | --- | ------- | --------- |
+| `date` | string | `YYYY-MM-DD` | Handelstag |
+| `backfilled` | boolean | — | rueckgerechnete Saat-Zeile; aus jedem Quantil und aus H-INT ausgeschlossen |
+| `barDateMode` | string \| null | `YYYY-MM-DD` | haeufigster letzter Balken-Tag ueber alle Kandidaten; `null` bei `backfilled` |
+| `mixedBarDateShare` | number \| null | Anteil 0…1 | Anteil der Ticker, deren letzter Balken **nicht** der modale Tag ist |
+| `freshShare` | number \| null | Anteil 0…1 | `1 − mixedBarDateShare`; `null` bei `backfilled` (der rollende Speicher kann deren Frische nicht bezeugen) |
+| `lowFreshness` | boolean \| null | — | `true` bei `freshShare < 0,95` **oder** wenn der modale Balken-Tag nicht der Zeilentag ist. Die Zeile bleibt stehen, speist aber kein Quantil. **Gelb, nie rot.** |
+| `nUniverse` | int | Stueck | Groesse von U an diesem Tag (Balken am Sitzungstag **und** ≥ 250 Balken) |
+| `nEntered` / `nLeft` | int \| null | Stueck | Ein-/Austritte gegenueber dem **unmittelbar vorigen Publikationstag**. `null` fuer die erste Zeile, fuer Tage ohne (lesbare) Roh-Datei **und fuer den Tag, dem dadurch der Vortag fehlt** — ueber ein Loch hinweg wird nie gerechnet (das Ergebnis waere ein Zwei-Tages-Vergleich unter dem Etikett eines Tages). Alle drei Faelle zaehlt `meta.churnUnavailableDays` |
+| `highChurn` | boolean \| null | — | `(nEntered + nLeft) / nUniverse > 0,05`. Wie `lowFreshness`: aus den Quantilen raus, und die Sitzung schreibt keine Scoreboard-Eintraege |
+| `l1` | number \| null | Anteil 0…1 | Breite: Anteil von U ueber der 200-Tage-Linie |
+| `l1Coverage` | number \| null | Anteil 0…1 | Anteil von U mit einer 200-Tage-Linie |
+| `l2` | number \| null | Anteil 0…1 | Breite ueber der 50-Tage-Linie |
+| `l3` | number \| null | Anteil −1…1 | Anteil innerhalb **3 %** des 252-Tage-Hochs **minus** Anteil innerhalb 3 % des Tiefs |
+| `l3Band1` / `l3Band5` | number \| null | Anteil −1…1 | dasselbe mit 1 % bzw. 5 % Band (registrierte Sensitivitaet) |
+| `l3Coverage` | number \| null | Anteil 0…1 | Anteil von U mit 252-Tage-Hoch/Tief |
+| `l4ew` | number \| null | Rendite-Differenz | 63-Tage-Rendite zyklisch **minus** defensiv, gleichgewichtet |
+| `l4cw` | number \| null | Rendite-Differenz | dasselbe kapitalgewichtet |
+| `l4Unassigned` | int | Stueck | **sichtbarer** Eimer „nicht zugeordnet" (Rat D3): Sektoren ausserhalb beider Koerbe |
+| `l4nCyclical` / `l4nDefensive` | int | Stueck | Besetzung der beiden Koerbe |
+| `l4b` | number \| null | Rendite-Differenz | sein namentlicher Branchenkorb minus dem defensiven Korb; `null`, solange der Korb < 20 Titel hat |
+| `l4bN` | int | Stueck | Groesse des namentlichen Korbs (bleibt sichtbar, auch wenn `l4b` null ist) |
+| `l4bSmall` | number \| null | Rendite-Differenz | IWM minus SPY ueber 63 Tage |
+| `l5` | number \| null | Anteil 0…1 | Revisions-Breite (+1y, 30 Tage). **Logger, keine Bewertung** — Etikett „Analysten-Konsens (Breite), keine Bewertung" |
+| `l5Coverage` | number \| null | Anteil 0…1 | Anteil von U mit Revisions-Daten |
+| `l6` | string \| null | Zustandsname | Kopie des SPY-Zustands aus `outputs/macro-regime.json` — **fremde Groesse**, keine Aussage dieses Moduls. `--check` prueft den Typ (Text oder `null`), nicht den Inhalt |
+| `l7Persistence` | number \| null | Spearman −1…1 | Persistenz der Sektor-Raenge gegen die Vorzeile |
+| `l8CapMinusEqual` | number \| null | Rendite-Differenz | kapitalgewichtet minus gleichgewichtet ueber U |
+| `l8TopDecileShare` | number \| null | Anteil 0…1 | Anteil des obersten Dezils an der Summe aller Gewinne; `null`, wenn weniger Gewinner als Dezil-Plaetze (dort saettigt das Mass konstruktionsbedingt auf 1) |
+| `l8Winners` | int | Stueck | Zahl der Titel mit positiver 63-Tage-Rendite |
+
+### 13.4 `meta.json`
+
+| Feld | Typ | Bedeutung |
+| ---- | --- | --------- |
+| `schema` | string | `findash-druckenmiller/v1` |
+| `generated_at` | string | ISO; **identisch** mit `regime.json` |
+| `mandate` | string | fix: `separate module, not quality, never in the score` |
+| `label` | string | das Etikett (Rat D7, 29 Woerter) — woertlich zu rendern, nie gekuerzt |
+| `paramsHash` | string | sha256 der Registrierungs-Datei A (`protocol/druckenmiller_loggers_registered_<datum>.json`); `--check` rechnet ihn nach |
+| `universe` | `{size: int, withBars250: int, asOf: string}` | `size` = Ticker mit einem Balken am Sitzungstag, `withBars250` = davon mit ≥ 250 Balken (= U) |
+| `coverage` | `{[achse]: number \| null}` | Abdeckung 0…1 je Achse (`l1`,`l2`,`l3`,`l4ew`,`l4cw`,`l4b`,`l5`,`l6`,`l7`,`l8`). **Unter 0,6 wird die Achse im Tab ausgegraut und hat keine Stimme** (Rat D3); `null` heisst **nie gemessen** (z. B. `l6`, wenn es an diesem Tag keinen SPY-Zustand gibt) und ist etwas anderes als eine Abdeckung von 0 — beides fuehrt zum Ausgrauen, aber die Begruendung im Tab unterscheidet sich. `l1`/`l3`/`l5` werden gegen die Ledger-Zeile gegengeprueft; **ein Widerspruch am `asOf`-Tag bricht den Schreib-Lauf ab** (eine der beiden Mess-Strecken ist dann kaputt) |
+| `cuts` | `{[achse]: {q: number, value: number \| null}}` | gelernte Quantile, die tatsaechlich benutzt werden. Chunk 1: nur die registrierten R-INT-Schnitte `rIntLow` (q 0,3) und `rIntHigh` (q 0,7), beide `value: null` — R-INT braucht 250 geloggte Live-Tage. Die Terzile kommen mit Chunk 2 |
+| `ledgerRows` | `{internals: int, candidates: int}` | Zeilenzahl der Reihen. **Schrumpft nie** — `--check` haelt sie gegen den mitcommitteten Sidecar-Zaehler |
+| `ledgerGapDays` | int | fehlende Handelstage **innerhalb** der Reihe. `> 0` ist rot |
+| `churnUnavailableDays` | int | Tage **im veroeffentlichten Fenster**, deren Churn `null` ist: keine, unlesbare oder widerspruechliche Roh-Datei — **und** der jeweilige Folgetag, dem damit der Vortag fehlt. Die erste Serien-Zeile zaehlt nicht mit (sie hat per Definition keinen Vortag) |
+| `universeHash` | string | sha256 der sortierten U-Mitgliederliste des `asOf`-Tages. Jede Umdefinition von U ist eine **neue Serien-Id** und faellt hier auf |
+| `overrideNote` | `{text, sha256, source}` | gehashter Vermerk zur gerissenen Kipp-Schwelle (Rat D1) |
+| `expectedNextRun` | string | ISO des naechsten CI-Slots (`17 2 * * 2-6`, Di–Sa 02:17 UTC). Der Leser flaggt `stale` mit Grund „missed run", sobald `now > expectedNextRun + 6 h` |
+| `duquesne13fCoverage` | number \| null | Anteil des 13F-Long-Werts mit zugeordneter CUSIP. **Chunk 3** — bis dahin `null`, nie 0 |
+| `_sidecarRows` | int \| null | interner Zeugenwert des Sidecar-Zaehlers fuer die never-shrink-Pruefung (Unterstrich = kein Anzeige-Feld) |
+
+### 13.5 Wann `--check` rot wird
+
+Exit 1 **und** `_FAILED.json` bei: fehlender Datei · **unlesbarer** Datei (auch bei
+`candidates.json`/`duquesne13f.json`, sobald es sie gibt) · fehlendem oder unbekanntem Feld
+(weisse Liste, auch je Serien-Zeile) · falschem Feld-Typ (inkl. `l6`) · nicht endlicher Zahl
+· falschem Schema · fehlendem oder nicht-ISO `generated_at` · zwei verschiedenen
+`generated_at` · nicht aufsteigender Serie · `asOf` ≠ letzte Serien-Zeile · `asOf` ≠ letzte
+Ledger-Zeile (Schlepp-Kante) · `ledgerGapDays > 0` · geschrumpfter Reihe · gebrochener
+Hash-Kette · `universeHash`-Abweichung · `paramsHash` ≠ Hash der Registrierung · bereits
+vorhandenem `_FAILED.json` · **und bei jedem Fehler in der Pruefung selbst** (eine
+Auslieferung, die ihren eigenen Pruefer wirft, gilt als ungueltig — sonst waere der
+Marker-Vertrag genau dort offen, wo eine fremd erzeugte Datei ihn braucht).
+
+**Der SCHREIB-Lauf bricht ab** (und liefert damit gar nichts aus), wenn die Roh-Datei des
+`asOf`-Tages fehlt, unlesbar ist oder eine andere U-Menge nennt als die Ledger-Zeile (Groesse
+**und** `universeHash`), oder wenn die Abdeckung aus den Roh-Zeilen der Ledger-Zeile
+widerspricht. Fuer aeltere Tage ist dieselbe Lage ein `null` plus Zaehler — deren Zahlen
+stehen laengst in der Reihe, und eine kaputte Datei von damals darf nicht jede kuenftige
+Auslieferung anhalten.
+
+**Gelb (Warnung, Lauf bleibt gruen):** `lowFreshness` oder `highChurn` auf der juengsten
+Sitzung. Beides ist ein bekannter Zustand des Tageslaufs, den die Reihe selbst korrekt behandelt
+(Flag gesetzt, kein Quantil) — den ganzen Lauf dafuer anzuhalten wuerde die Glaubwuerdigkeit des
+Waechters verbrauchen.
+## 14. `rule40/` (Rule-of-40-Brett, DIAGNOSTIC) — additiver Feed (17.09.2026)
+
+**Dateien:** `outputs/findash-export/v1/rule40/index.json` + `rule40/overview.json`, exakt die
+Huelle und Zeilenform von §10 (`quality/`). findash braucht dafuer nur zwei Registrierungen
+(`data-layer/screener-sync.js` SUB_BOARDS, `data-layer/screener.js` UNTER_BOARDS) plus die
+Oberflaeche — keinen neuen Leser.
+
+**Schreiber:** `scripts/write-rule40-export.js`, im scoring-Job NACH `write-findash-export.js`
+und VOR dem Pages-Deploy. Er rechnet **keine Achse und keinen Score** neu. `score` bleibt in
+jeder Zeile der unveraenderte Engine-Score — und ist `null` fuer Namen, die auf keinem Brett
+stehen (eine 0 waere dort eine Behauptung, die niemand aufgestellt hat).
+
+Seit 06.10.2026 traegt auch das Rule-of-40-Brett additiv denselben optionalen Schluessel `dupIssuer` mit der Semantik aus §3 und demselben Anwender `applyDupIssuerShadow` aus `lib/dup-issuer-shadow-table.js`; der Dateicheck weist fehlende oder abweichende Markierungen bekannter Zweitnotierungen zurueck.
+
+**Universum: das GEROUTETE Universum, nicht die Brett-Zeilen.** Der Schreiber laeuft ueber
+`snapshots/` und laesst jeden Namen durch `src/scoring/router.js route()` (read-only). Grund:
+die Vollboards aus §11 sind die besten 150 je Branche **nach Engine-Score** — eine
+Rule-of-40-Liste, die durch genau die Formel vorgefiltert ist, gegen die sie die Gegenprobe
+sein soll, waere keine; und reife Namen mit hoher Marge und massvollem Wachstum fehlten darin.
+Namen, die zusaetzlich auf einem Vollboard stehen, erben von dort `score`, `lamps`,
+`axisBreakdown`, Kohorte und das gepruefte `marketCap`; die uebrigen tragen `onBoard: false`,
+`score: null`, `lamps: []` und `marketCap: null` — der Beleg der Handelskurs-Umrechnung liegt
+im Haupt-Schreiber, und eine ungeprueft durchgereichte Lokalwaehrungs-Zahl saehe aus wie USD.
+
+**Die Groesse.** `r40 = revGrowthPctUsed + fcfMarginPct`, beides Prozentpunkte. Das ist
+`ruleOfX` mit alpha = 1 (`src/scoring/axes.js:257`) — der Unterschied zur Achse ist, dass hier
+die ZAHL im Brett steht und nicht ihr Kohorten-Perzentil. Deshalb `boardStatus: 'diagnostic'`:
+eine durchsichtige Arithmetik neben dem Score, nie im Score, kein Gauntlet.
+
+**Warum `revGrowthPctUsed` und nicht `revGrowthYoYPct`.** Das exportierte `revGrowthYoYPct` ist
+**nicht winsorisiert** — `score.js:1348` ruft `revGrowthLevel(snapshot)` absichtlich ohne
+`growthBounds` auf, weil ein geklemmter Wert in der ANZEIGE eine stille Verfaelschung waere. Fuer
+eine RANGLISTE ist er es nicht: am Stand 2026-08-29 fuehrte 2548.TW die Liste mit +29.049 %
+gegen ein p99 von +117,7 % an, erzeugt aus einem Basisquartal von 1,42 Mio. gegen 693 Mio. TTM.
+Das Brett klemmt den Wachstumsterm deshalb mit den p1/p99-Schranken des eigenen Kandidaten-
+Universums (`winsorTailBounds`, dieselbe Funktion wie die Achse; data-gelernt, keine gesetzte
+Zahl) und liefert BEIDE Werte: `revGrowthYoYPct` roh wie ueberall sonst im Export,
+`revGrowthPctUsed` geklemmt. Wer nachrechnet, sieht welchen. Die Schranken stehen als
+`index.rule40.growthBounds` `{p1, p99}` im Export, damit die Oberflaeche sagen kann, wo der
+Deckel sitzt, statt ihn zu verschweigen.
+
+**Zeile.** Jeder Schluessel der `quality/`-Zeile (§10/§4), dazu additiv:
+
+| Feld | Typ | Bedeutung |
+| ---- | --- | --------- |
+| `rankGrundShadow` | string \| null, OPTIONAL, SHADOW | Nicht-operativer Klassengrund wie §3/§4; Abwesenheit bedeutet null. Score, `r40`, `rank`, `rankGrund` und Reihenfolge bleiben unverändert. |
+| `r40` | number | `revGrowthPctUsed + fcfMarginPct`, auf 1 Stelle gerundet |
+| `revGrowthPctUsed` | number | der geklemmte Wachstumsterm, der in `r40` eingeht |
+| `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur durch die Datentore G0-G2 |
+| `ebitdaMarginPct` | number \| null | `metrics.ebitdaMargins` (PROZENT), null bei Bruchteil-Verdacht |
+| `r40Ebitda` | number \| null | `revGrowthPctUsed + ebitdaMarginPct`, die EBITDA-Variante |
+| `industry` | string \| null | `meta.industry` (im uebrigen Export nicht enthalten) |
+| `r40Group` | `'software'` \| `'other'` | Software/SaaS/Internet nach `industry` |
+| `onBoard` | boolean | steht der Name auch auf einem Vollboard? |
+| `quartalsEnde` | ISO \| null | Ende des Zeitraums, ueber den die Wachstumszahl spricht: bei `revGrowthBasis` `quarter` das juengste Quartal (unveraendert), bei `year`/`yearNewerRecord` das Ende des Geschaeftsjahrs, `null` wenn die Jahresreihe undatiert ist. Bis 01.10.2026 stand hier auch bei Jahreszahlen das juengste Quartalsende (58 von 472 Zeilen am Stand 01.10., davon 56 jetzt `null`, 2 mit Geschaeftsjahresende) |
+| `valueFlags` | as BoardRow §3, OPTIONAL (additive, 02.10.2026, Tag 1401) | On-board names carry the flags of their full-board row (§11, written from the same list); names without a board row get them from `data-health/value-open-items.json` (`scripts/write-rule40-export.js baueZeilen()`); no open item: no key. `--check` validates them as §3. Marks only, `r40` and every other key unchanged |
+| `marketCapClassesShadow`, `marketCapClassesDeviationPct` | as BoardRow §3, OPTIONAL (additive, 06.10.2026, P88, SHADOW ONLY) | On-board names carry the values of their full-board row (§11, same issuer value as the sector board); names without a board row get them from the same function (`scripts/write-rule40-export.js baueZeilen()`, registry loaded in `build()`). Last keys of the row; `r40` and every other key unchanged |
+| `revGrowthBasis` / `revGrowthPeriodEnd` / `revGrowthPriorPeriodEnd` | wie BoardRow §3 | Basis und Zeitraum von `revGrowthYoYPct`, fuer Brett- und Nicht-Brett-Namen aus demselben Snapshot wie die Zahl (`lib/rev-growth-basis.js`); `--check` prueft sie wie §3 und zusaetzlich, dass `quartalsEnde` bei einer Jahresbasis kein Quartal nennt |
+| `revGrowthSourcePeriodEnd` / `revGrowthSourcePriorPeriodEnd` | ISO-Tag `YYYY-MM-DD` oder null, **OPTIONAL (additiv, 07.10.2026)** | Beide zusammen oder beide abwesend wie §3, aus demselben Wachstumsbein wie die drei Basis-/Label-Felder und ohne Bein beide null; sie nennen die rechnerischen Anbieterenden fuer den Abgleich von Warnungen, waehrend die Label-Felder die belegten Berichtsenden zeigen (bei Jahresbasen identisch), und `--check` prueft das Paar wie §3 |
+
+`formulaId` traegt die Herkunfts-Branche bzw. die Router-Formel, und `index.boardStatus`
+fuehrt jeden vorkommenden `formulaId` als `diagnostic` — `shapeOverviewRow` sucht den Status
+genau darueber. `rank` ist der Rang nach `r40` INNERHALB des Bretts, `generated_at` die Kopie
+aus dem `index.json` desselben Laufs (findash prueft das, `screener.js:364`).
+
+**Auswahl.** Aufgenommen wird `r40 >= 40`. **Jede Gruppe** (`software`, `other`) hat ihre
+eigene Auswahl — nicht "Software plus Gesamtliste": Software dominiert das Mass, und eine
+Gesamt-Liste als zweites Bein liess die ganze Rest-Gruppe herausfallen (gemessen: 200
+Software- und 100 zulaessige Industrie-Zeilen ergaben 150 Zeilen, davon 0 aus der
+Rest-Gruppe).
+
+Innerhalb einer Gruppe gilt eine **ANZEIGE-Konvention**, kein Waechter: oberhalb von
+`DISPLAY_LARGE_MCAP_USD` (1 Mrd. USD, belegte USD-Marktkap) wird jede Zeile exportiert,
+unterhalb nur die besten `TOP_N` (100); oberhalb gilt `TOP_N_LARGE` (300). Grund: der Tab oeffnet mit einem sichtbaren,
+umstellbaren Vorfilter „Marktkap. >= 1 Mrd." — waere die Export-Kappe EINE Liste, fuellten
+die kleinen Werte sie auf und genau die Standard-Ansicht liefe leer. Die Grenze entscheidet
+also ueber die VOLLSTAENDIGKEIT einer Ansicht, nie ueber die Aufnahme einer einzelnen Zeile.
+Zaehler: `counts.exportedLargeCap` / `counts.exportedSmallCap`.
+
+**Marktkap ohne Vollboard-Zeile.** Namen mit Vollboard-Zeile erben deren geprueftes
+`marketCap`. Fuer die uebrigen entscheidet `beurteileWaehrungsbeleg(meta)` — dieselbe reine
+Funktion, mit der der Haupt-Schreiber entscheidet, ob eine Zeile ihre Marktkap behalten darf
+(`write-findash-export.js:209`, dort exportiert). Kein zweites FX-Regelwerk: ein zweites
+liefe frueher oder spaeter anders. Traegt der Beleg nicht, bleibt `marketCap` null und die
+Zeile faellt in die untere Gruppe — sie bleibt sichtbar, macht aber keine Groessen-Aussage.
+Zaehler: `counts.offBoardMcapUsdDirect` / `counts.offBoardMcapNull`, damit der Erklaer-Kasten
+sagen kann, was der Groessen-Filter sehen kann und was nicht.
+
+NACHGEMESSEN, weil die Zahl sonst erschreckt: der Beleg traegt auf diesem Bestand fuer ALLE
+geprueften Snapshots (4.000/4.000, darunter CNY, EUR, HKD, JPY, KRW, TWD). Das ist kein
+blinder Waechter, sondern die Arbeitsteilung: `snapshots/<T>.json` fuehrt `marketCap` bereits
+in USD — an 601 nicht in USD gehandelten Namen nachgeprueft, deren Snapshot-Wert mit dem
+(vertraglich USD-)Wert der Vollboard-Zeile uebereinstimmt. Der Beleg prueft, ob die
+Umrechnung DOKUMENTIERT ist, nicht ob sie stattgefunden hat. Eine geratene Handelswaehrung
+(`tradingCurrencyAssumed`) faellt weiterhin durch — Waechter in `tests/rule40-universe.test.js`.
+
+**Waechter** (alle als benannte Konstanten im Schreiber, jeder mit Begruendung im Quelltext):
+
+| Konstante | Wert | Warum |
+| --------- | ---- | ----- |
+| `MIN_BASE_QUARTER_SHARE` | 0,25 | Vorjahresquartal unter einem Viertel eines Durchschnittsquartals ist eine Teilmeldung, keine Vervielfachung (`revQuartalsYoY` prueft nur `b > 0`). Gesunder Koerper: p5 = 0,59, p50 = 0,92 |
+| `MIN_BASE_YEAR_SHARE` | 0,25 | Jahres-Zwilling des Tors darueber, fuer den Pfad OHNE tragendes Quartalsbein (`revAnnualYoY` prueft dort ebenfalls nur `b > 0`). Basisjahr unter einem Viertel des aktuellen Jahres ist ein Unternehmen, das gerade erst anfaengt, Umsatz zu melden — RZLV stand am 19.09.2026 mit +2.224 % im Brett (2,0 Mio. gegen 46,8 Mio.). Gemessen ueber 3.893 Zeilen im Jahres-Pfad: p5 = 0,63, p50 = 0,95, Phantomzeilen 0,0025-0,10 — dieselbe Form wie beim Quartals-Zwilling, deshalb dieselbe Schwelle. Wirkung: 57 Zeilen (1,5 %) fallen, hoechstes verbleibendes Jahres-Wachstum 289 % statt 39.183 %. Das Tor haengt am ANTEIL, nicht an der absoluten Groesse (GLXY: 1.652 Mio. Basis und trotzdem +4.979 %). Zaehler: `abgewiesen.basisJahrStub` |
+| `MAX_FCF_MARGIN_PCT` | 100 | Freier Cashflow ueber dem Umsatz ist Bilanz-/Einheiten-Artefakt; Zeile wird VERWORFEN, nicht geklemmt (in Reihe mit `OPMARGIN_CAP = 1.0`) |
+| `MAX_FISCAL_AGE_DAYS` | 550 | Abstand von `generated_at` zum juengsten Quartalsende MIT WERT (seit 19.09.2026: ein Quartalsende ohne Zahl dahinter ist ein Platzhalter fuer eine noch nicht gemeldete Periode und belegt keine Frische; 479 von 13.916 Snapshots tragen ein leeres juengstes Quartal, 112 sogar eine Periodenliste ohne jeden Wert — die enden jetzt als `abgewiesen.frischeUnbekannt`, nicht als frisch). Gesunder Koerper p50 = p95 = 151 Tage; 4,1 % liegen ueber 180, 2,4 % ueber 550, 2,2 % ueber 730 — weitgehend DIESELBEN Namen, bis hinauf zu 8.003 Tagen. 18 Monate lassen jeden Jahres- und Halbjahresmelder durch und fallen erst dort, wo keine Meldekadenz den Abstand mehr erklaert |
+| `DISPLAY_LARGE_MCAP_USD` | 1e9 | ANZEIGE-Konvention (s. Auswahl): oberhalb ungekappt, unterhalb `TOP_N` je Gruppe. Kein Scoring-Niveau, kein Waechter |
+| `TOP_N_LARGE` | 300 | Kappe je Gruppe OBERHALB der Anzeige-Grenze. Ungekappt waren es 754 grosse Werte in einem Brett, das alle 75 s geholt wird; Rang 700 einer Rule-of-40-Liste ist Fuellmaterial. Vor-Kappungs-Zahl als `counts.largeCapBeforeCap` |
+| `TOP_N` | 100 | Kappe je Gruppe UNTERHALB der Anzeige-Grenze |
+| `MIN_WINSOR_SAMPLE` | 200 | Unter so vielen Kandidaten IST die p99-Schranke die oberste Beobachtung — dann wird nicht geklemmt und `growthBounds` steht sichtbar auf `null` |
+| `SEKTOR_AUSSCHLUSS` | Financial Services, Real Estate | Eine FCF-Marge sagt dort nichts ueber das operative Geschaeft; Karls Ansage lautet "alle Branchen ohne Finanzwerte". Der Ausschluss gehoert in den SCHREIBER: sonst verbrauchen diese Zeilen die Top-150-Plaetze. Der Router nimmt nur Bilanz-Banken, Versicherer und mREITs heraus — Immobilien-REITs und Vermoegensverwalter blieben und fuehrten die Liste an |
+
+**Der Frische-Anker ist `timeseries.revenueQEnds[0]`**, nicht `meta.fundamentalsAsOf` und nicht
+`meta.mostRecentQuarter`. `fundamentalsAsOf` ist auf jedem geprueften Snapshot byte-gleich mit
+`fetchedAt`, misst also den ABRUF und nicht den Zeitraum — ein Waechter darauf feuerte nie.
+`mostRecentQuarter` widerspricht der eigenen Quartalsreihe (LTC: dort 2020-09-30, in
+`revenueQEnds[0]` 2026-03-31) und wuerde Zeilen wegwerfen, deren Zahlen stimmen.
+`revenueQEnds[0]` kann der Rechnung per Konstruktion nicht widersprechen: es IST ihr Zeitraum.
+
+**Das Margen-Tor sind G0-G2 von `fcfMarginValid`, bewusst OHNE G3.** G0 (Marge fehlt), G1
+(keine FCF-/OCF-Reihe) und G2 (Vorzeichenkonflikt mit dem juengsten FCF-Jahr) sind Aussagen
+ueber die DATEN. G3 (Summe der zwei juengsten Jahre >= 0) ist ein WIRTSCHAFTLICHES Urteil und
+wuerde wachsende Namen mit juengstem Cash-Burn herauswerfen — genau den regulaeren
+Rule-of-40-Fall, den Karl sehen will. Die Kopie im Schreiber wird von
+`tests/rule40-universe.test.js` an das Original gehalten: jede von der Engine akzeptierte
+Kombination muss auch hier akzeptiert sein, und jeder Unterschied muss G3 sein.
+
+**Datenqualitaets-Gate mit der Entscheidung der Produktion.** `scoreUniverse()` wirft Namen
+mit einer FABRIKATIONS-Lampe (erfundenes juengstes Quartal, annual-currency-Leak) oder Grade D
+aus dem Ranking. Dieses Brett ruft `scoreUniverse()` nicht auf und sah diese Signale fuer Namen
+ohne Brett-Zeile deshalb nie — ihre `lamps: []` hiessen nicht "sauber", sondern "nie geprueft".
+Die beiden Lampen sind reine Funktionen des Snapshots (`src/scoring/lamps.js`), ueber Ausschluss
+entscheidet `isDataSuspect` (`score.js`) mit allen dort ausgeurteilten Ausnahmen. 42 Namen am
+Stand 2026-08-29.
+
+**Emittenten-Dedup mit der Funktion der Produktion** (`issuerDedupGroups` /
+`issuerDedupComparator` aus `score.js`). Das geroutete Universum enthaelt jede NOTIERUNG; die
+Vollboards waren bereits dedupliziert, dieser Weg ist es nicht. Ohne den Dedup stand Palantir
+sechsmal im Brett (PLTR, PLTR.SW, PLTR.VI, PLTR.WA, PTX.DE, 1PLTR.MI) — und mit zwei
+verschiedenen r40-Werten, weil die Beine unterschiedlich gute Daten tragen.
+
+**`index.json`** traegt zusaetzlich `rule40` mit allen Konstanten, den gelernten
+`growthBounds`, `universeBasis` und einem `counts`-Block je Ausschlussgrund
+(`excludedNotRouted`, `excludedSector`, `excludedDuplicateIssuer`, `excludedStale`,
+`excludedTinyBase`, `excludedFcfAboveRevenue`, `noValidMargin`, `noGrowth`, `noRank`,
+`unreadableSnapshot`, `missingFullBoard`). Ohne diese Zaehler sieht "kleines Brett" genauso aus
+wie "Snapshots fehlen".
+
+**Kein lesbarer Zeitraum, kein Platz im Brett.** Zeilen, fuer die weder
+`timeseries.revenueQEnds[0]` noch `annual.annualRevEnds[0]` lesbar sind, werden
+ausgeschlossen (`counts.excludedNoPeriod`, 336 am Stand 2026-08-29). Das ist ausdruecklich
+eine ANZEIGE-Regel und keine Waechter-Logik: „unbekannt" bleibt fuer den Frische-Waechter
+etwas anderes als „veraltet", und er faellt hier kein Urteil. Aber eine Zahl, deren Zeitraum
+niemand benennen kann, gehoert nicht in eine Rangliste, die einem Profi vorgelegt wird — er
+kann sie nicht nachpruefen. Ergebnis: jede Zeile im Brett hat einen pruefbaren Frische-Anker.
+**Seit 01.10.2026 ist das nicht mehr dasselbe wie `quartalsEnde`:** der Anker bleibt fuer die
+Aufnahme unveraendert (keine Zeile kommt oder geht), das ausgelieferte `quartalsEnde` beschreibt
+aber das Bein, das die Zahl erzeugt hat. Traegt das Jahresbein und ist die Jahresreihe undatiert,
+ist `quartalsEnde` `null` — ein Quartalsende unter einer Jahreszahl waere eine falsche Angabe.
+
+**Ausfall.** Scheitert der Schreiber ODER faellt sein eigener `--check`, wird der Ordner geleert
+und traegt danach NUR `_failed` (dieselbe Konvention, die `screener-sync.js` probt) — findash
+ersetzt seinen Spiegel dann durch den Ausfall-Stub, statt das Brett von gestern als das von
+heute zu zeigen. Der Ordner wird nie geloescht: bei 404 schreibt findash nicht. Ein leeres
+Brett ist ebenfalls ein Ausfall, kein Ergebnis.
+
+**Fail-soft in CI.** Der Bau- und der `--check`-Schritt in `daily-pull.yml` laufen mit `|| true`:
+ein Ausfall dieses Bretts darf den Haupt-Export und den Deploy nie anhalten. Die Tests dagegen
+(`tests/rule40-*test.js`) sind hermetisch und laufen in der BLOCKIERENDEN Spur des Test-Gates.
+Sie liegen flach in `tests/` und nicht in einem eigenen Unterordner, weil der Gate-Waechter
+jede ungegatete `*test.js` abbricht und `BLOCKING_GLOBS` von
+`tests/scoring/bh-b09-dailyyml.test.js` (BH-035) auf drei Globs festgenagelt ist — in einer
+Sperrzone.
+
+### 13.4 `candidates.json` (Chunk 2, additiv)
+
+Das **Etikett** je Ticker, nie eine Rangfolge: `rows[]` mit `ticker`, `confirmation`
+(`CONFIRMS | NEUTRAL | WEAK | null`), `m1`, `m2`, `evidenceIds`, `evidenceGrade`, `duquesne13f`
+(dreiwertig `HELD | NOT_IN_MAPPED | UNMAPPED`, bis Chunk 3 `null`). Dazu im Kopf: `counts`
+(stated/confirms/neutral/weak, `armedFirstObservation`, `warmupLiveSessions`/`warmupTarget`,
+`degenerateCut`), `separation` (Anteil, `raw`, Grund), `sessionExcluded`, `scoreboard`,
+`evidence`, `scopeSentence`, `multiplicityNote`.
+
+Regeln, die der Leser voraussetzen darf:
+
+- **Sortierung ist alphabetisch.** Die Reihenfolge der Board-Zeilen kommt NICHT von hier; das
+  Etikett darf nie filtern und nie sortieren (Rat D1).
+- **Ein Ticker traegt genau einen Zustand**, und der Zustand ist `null`, solange der Ticker nicht
+  am modalen Balken-Tag haengt — `null` heisst "kein Etikett", nicht "neutral".
+- **`m1`/`m2` stehen fuer den asOf-Tag** und kommen aus derselben Roh-Zeile, aus der die
+  Zustaende gerechnet wurden.
+- **`scoreboard.frozen` traegt vor der ersten Lesung ausschliesslich `null`** (Etikett "noch
+  nicht lesbar"); `scoreboard.live` sind Zaehler und ausdruecklich als solche markiert
+  (`countersAreNotEvidence: true`). Eine Zahl auf der Tafel ohne Lesung macht `--check` rot.
+- **`asOf` ist identisch mit `regime.json`**; alle Dateien tragen EINEN `generated_at`.
+- Es gibt **keinen Platzhalter**: ohne Kandidaten-Ledger wird die Datei nicht geschrieben (und
+  findash sieht das Modul weiter als stale, weil der Vertrag vier Dateien kennt). Existiert der
+  Ledger, ist die Datei Pflicht — ein halber Ordner ist schlimmer als keiner.
+
+Zustands-Regel und Barrieren-Skalierung sind in
+`protocol/druckenmiller_scoreboard_registered_<Datum>.json` (Datei B) registriert, die
+Skalierung zusaetzlich in `protocol/BUILD-SPEC-v1-AMENDMENT-01-barrier-scaling.md`. Beide sind
+gehasht; `meta.json.paramsHash` deckt weiter Datei A (die Logger-Parameter).
+
+### 13.5 `duquesne13f.json` (Chunk 3, additiv)
+
+Der 13F-Betrachter: `quarters[]` (die letzten **acht** XML-Quartale, streng aufsteigend) mit
+`period`, `filedAt`, `acceptedAt`, `ageDays`, `units` (`thousands | dollars`, je Filing erkannt),
+`unitMode` (`band-only | price-checked`), `totalValueUSD`, `positions`, `top10Share`, `coverage`
+und `rows[]` (`cusip`, `ticker | null`, `issuer`, `valueUSD`, `shares`, `putCall | null`,
+`impliedPriceOk`), dazu `new[]`/`exited[]`. Im Kopf: `cik`, `quarantined[]`, `coverage` (des
+juengsten Quartals), `triStateRender`, `matcherCoverage`, `scopeSentence`.
+
+Regeln, die der Leser voraussetzen darf:
+
+- **`meta.json.duquesne13fCoverage` ist dieselbe Zahl wie `coverage`** hier; zwei Zahlen fuer
+  dieselbe Sache machen `--check` rot.
+- **Die Einheit wird je Filing erkannt, nicht geraten.** Passt keine oder passen beide Lesungen
+  (Dollar/Tausende) ins Plausibilitaetsband, ist das Quartal in `quarantined[]` und traegt
+  `units: null` — ein ausgeliefertes Quartal mit unerkannter Einheit macht `--check` rot.
+- **Optionen stehen getrennt:** `putCall` ist gesetzt, wenn der Tag da ist ODER die
+  CUSIP-Emissionsnummer 90/95 es sagt (Lane-B-Fall GLD `78463V907`). Optionszeilen zaehlen nicht
+  in `positions`, `totalValueUSD`, `top10Share` oder `coverage`.
+- **Die Zuordnung ist LOKAL** (Snapshot-Namenskarte, nur `meta.name`, US ohne Suffix) mit
+  Identitaets-Wache; OpenFIGI ist ausgeschlossen. `matcherCoverage` nennt die gemessene Abdeckung
+  ueber die Emittentenliste des Bestands — am 19.09.2026: **322 von 697 (46,2 %)**, wertgewichtet
+  ueber die letzten acht Quartale 55–63 %.
+- **`duquesne13f` in `candidates.json` ist dreiwertig** (`HELD | NOT_IN_MAPPED | UNMAPPED`) und
+  heisst NIE "nicht gehalten": die deutschen Texte stehen in `triStateRender`, und `--check` wird
+  rot, sobald die verbotene Wendung in der Auslieferung auftaucht ([REV4-6]).
+- **Die Schwellen dieses Betrachters sind registriert, aber nicht gehasht** (Entscheid Rat/Master 2026-09-19, Option b): sie stehen in `tests/druckenmiller/fixtures/spec-constants.json`, Sektion `thirteenF`, unter dem bestehenden Changelog-Tor, und ein Test pinnt den Code gegen die Datei (Muster R11). Begruendung: der 13F-Teil ist beschreibend - er schreibt keinen Scoreboard-Eintrag, speist keine Schaetzgroesse, aendert kein Etikett, und nichts, was bei R1-R3 gelesen wird, haengt an ihm; eine gehashte Vorregistrierung wuerde eine Behauptung nahelegen, die der Betrachter nie aufstellt. [REV6-1] (genau drei Registrierungs-Dateien) bleibt unberuehrt. Es sind Datenqualitaets-Schwellen eines beschreibenden Betrachters, keine Ergebnis-Parameter; eine Aenderung braucht eine Changelog-Zeile, niemals eine stille Bearbeitung.
+- **Der 13F-Lauf ist manuell** (`node scripts/druckenmiller-13f.js --from-dir <ordner> | --fetch`)
+  und commitet `druckenmiller-history/13f/<period>.json`; der Tageslauf hat keinen 13F-Schritt
+  (arch-spec §3.3 Punkt 4). `--fetch` verlangt `SEC_CONTACT` im User-Agent und haelt 150 ms
+  Abstand je Abruf; es gibt keinen Schluessel und keine Kosten.
+
+
+## 14. Feldherkunft P22 (additiv, findash-provenance/v1)
+
+Der Schema-String der Exporte bleibt `findash-export/v1`. Dieser Schritt ergaenzt ausschliesslich die 13 gekappten HG-Branchenboards, seit P118 (06.10.2026) auch die flache Haupt-`overview.json` (gegen dasselbe Manifest `provenance/hypergrowth.json`; gleiche Firma und gleicher Wert ergeben dieselben Beleg-IDs wie im Branchenboard), sowie `rule40/overview.json`. Die `full/`-Dateien bleiben byte-identisch zur Basis und erhalten keine Herkunftsfelder; so bleibt das taegliche Manifest auf die gekappten Boards begrenzt. survival, quality, smallcap, druckenmiller und Indexdateien erhalten ebenfalls keine Herkunftsfelder. Kein bisheriger Feldwert, Rang oder Listeneintrag wird veraendert. Der Additivitaetsvergleich prueft fuer `full/` neben allen Blattwerten auch die exakten Dateibytes.
+
+Der Geltungsbereich `revGrowthYoYPct+marketCap/v1` umfasst je Zeile genau die vorhandenen Schluessel `revGrowthYoYPct` und `marketCap`, auch wenn ihr Wert null ist. Andere Zahlen bleiben ungeprueft. `verification.reason` nennt diese Grenze ausdruecklich auf Englisch. Eine belegte Null hat `presence: present`; ein null-Wert hat `presence: missing`.
+
+### 14.1 Identitaet, Hashes und Speicherung
+
+Jeder Writer erzeugt eine eigene Laufkennung und ersetzt sein Manifest atomar unter einem festen Dateinamen: `provenance/hypergrowth.json` fuer die 13 gekappten HG-Dateien, `rule40/provenance/rule40.json` fuer R40. `provenanceManifest` bleibt relativ zur Exportwurzel `outputs/findash-export/v1/`, auch fuer R40; bei einem eigenen R40-Ausgabeordner liegt das Manifest entsprechend unter dessen `provenance/`. Es entstehen keine neuen Dateinamen je Tageslauf. `provenanceVersion` ist 1; `provenanceRunId` und `manifest.runId` bezeichnen dieselbe, bei jedem Bau neue Generation. `generatedAt` und `createdAt` sind Erstellungszeiten, keine Quellenzeiten. `creatorEngine: node`, `creatorModel: null` und eine pro Writer-Prozess erzeugte UUID als `creatorSessionId` kennzeichnen die tatsaechlich erzeugende Sitzung. Derselbe unveraenderte Beleg wird innerhalb dieser Sitzung mit seiner ersten tatsaechlichen Erstellungszeit wiederverwendet.
+
+**Werte-Hash:** `valueHash = sha256(JSON.stringify(value))`, hexadezimal, UTF-8, ohne Zeilenumbruch. Der Hash eines Belegs bindet dessen `normalizedValue` und beim direkt referenzierten Feld exakt den exportierten Wert. `verification.valueHash` hasht das Objekt der vorhandenen beiden Zielfelder in der Reihenfolge revGrowthYoYPct, marketCap. Die Beleg-ID bindet die konkrete Zelle samt Ersteller-Sitzung und Erstellungszeit. Historische Pruefakten anderer Erzeugungen werden gelesen, aber nicht als aktuelle Pruefung uebernommen; ein frueheres Eigenurteil kann durch einen neuen Lauf niemals unabhaengig werden. Generationsuebergreifende Wiederverwendung benoetigt kuenftig einen eigenen, unveraenderlichen Herkunftsnachweis.
+
+Das Manifest wird mit `lib/atomic-write.js` atomar geschrieben und anschliessend gegen die exakten erwarteten Bytes geprueft; ein vorheriger Lauf wird ersetzt, niemals mit dem neuen vermischt. `provenanceManifestSha256` hasht genau die geschriebenen Bytes, einschliesslich deren Formatierung. Die bestehenden Objekt-Pruefschnittstellen akzeptieren weiterhin alte Test-/Exportobjekte ohne diese additive Struktur; sobald Herkunftsfelder vorhanden sind, werden sie geprueft. Alte Konsumenten koennen die Zusatzfelder ignorieren.
+
+**Verdichtete Speicherung:** Der logische Vertrag mit genau den Schluesseln aus 14.4 bleibt bestehen. Auf der Leitung entfallen ausschliesslich null-Felder eines Belegs und seiner `fx`-/`derivation`-Objekte; ein vollstaendig aus null bestehendes Unterobjekt entfaellt ganz. Leere Abhaengigkeitslisten und der Vergleichsgruppenstatus bleiben erhalten. Konsumenten behandeln fehlende Schluessel als null und expandieren fehlende Unterobjekte zu deren vollstaendiger null-Struktur. Der Validator expandiert vor der Schluesselpruefung; unbekannte Schluessel bleiben verboten. Manifest-Huelle und Pruefakten werden nicht verdichtet. JSON wird ohne Einrueckung gespeichert.
+
+Die Beleg-ID ist `e-` plus `sha256(JSON.stringify(logicalRecord))`, wobei `id` fuer diese Berechnung null ist, `handTableDerivation` bei null weggelassen wird und die Schluessel des Belegs sowie von `fx` und `derivation` in der Vertragsreihenfolge aus 14.4 stehen. Der Validator rechnet diese ID ueber den expandierten Beleg nach; das Entfernen eines vorher nicht-null belegten Felds wird dadurch erkannt. Verdichtung aendert weder Beleg-ID noch `valueHash`.
+
+**Ausfall der Herkunft:** Beide Writer schreiben zuerst ihre vollstaendigen normalen Boards und ergaenzen erst nach erfolgreicher Herkunftsberechnung die Zusatzfelder. Scheitert der Helfer, bleiben alle betroffenen Boards ohne die fuenf Kopf- und drei Zeilenfelder; ein eventuell geschriebenes Manifest wird entfernt. Der Lauf meldet `::warning::provenance withheld: <message>` und schreibt atomar `provenance/_failed.json` beziehungsweise `rule40/provenance/_failed.json`. Der Fehl-Marker hat genau `schema: findash-provenance/v1`, `status: "failed"`, `generated_at`, `board: hypergrowth | rule40` und `reason`; private Fehlerdetails werden nicht veroeffentlicht. Er kennzeichnet den Herkunftsausfall, nicht einen Board-Ausfall. Weil der gh-pages-Deploy nie Dateien loescht, **ueberschreibt** der naechste erfolgreiche Bau den Marker am selben Pfad mit genau `schema`, `status: "ok"`, `board`, `provenanceRunId`, `provenanceManifestSha256` und `at` (06.10.2026, P22 Runde 3). `--check` entscheidet ueber den Status zusammen mit dem Board-Kopf, nie ueber das blosse Vorhandensein der Datei: Kopf vorhanden verlangt fehlenden Marker oder `status: "ok"` mit derselben `provenanceRunId` und demselben `provenanceManifestSha256`; Kopf fehlt verlangt `status: "failed"`.
+
+Die beiden CLI-`--check`-Wege pruefen vorhandene Herkunft weiterhin vollstaendig. Ganz fehlende Herkunft mit gueltigem Fehlmarker ergibt dieselbe Warnung und blockiert die Board-Auslieferung nicht; ganz fehlende Herkunft ohne Marker sowie teilweise vorhandene oder beschaedigte Herkunft bleiben Fehler. Alle bisherigen Board-Pruefungen bleiben aktiv. Ein Heartbeat muss den publizierten Marker zusaetzlich sichtbar rot melden; diese Workflow-Ergaenzung gehoert nicht zu den hier geaenderten Dateien.
+
+### 14.2 Belege und offene Quellenluecken
+
+Anbieterbelege nennen Yahoo Finance und `documentUrl: null`. `retrievedAt` stammt ausschliesslich aus der eigenen Quelle: dem `exchangeFill.fetchedAt`, dem Abrufstempel der Zelle (`retrievedAt`, `fetchedAt`, `asOf`), dem passenden `reloadHistoryRetained`-Eintrag oder dem nach Periodenende zugeordneten `meta.statementPeriods[field][index]`. Abrufstempel und Korrekturen (Handtabelle und exchangeFill) werden nach dem Quellenende zugeordnet; das Anzeige-Ende bleibt nur das Etikett. Ungestempelte Umsatzzellen erben niemals die Snapshot-Zeit. Der Snapshot-Schreiber verwendet `marketCap.asOf` als Abrufzeit der Zelle, nicht als Boersenzeit. Ein Kurs darf `meta.asOf` nur bei `_pullMode: price-only` und identischem `_pullModeAt` uebernehmen, weil dieser Weg den Stempel nur mit einem neu geschriebenen Kurs aktualisiert. `observedAt` des Kurses kommt aus einer gespeicherten Quote-Zeit oder bleibt null. Handtabellen verwenden ihren eigenen Abruf- beziehungsweise `verifiedAt`-Tag, sonst null; Berechnungen haben `retrievedAt: null` und verweisen auf die Zeiten ihrer Eingangsbelege. Es werden weder Anbieter-Dokumentlinks noch Originalberichte geraten. Umsatzwachstum verweist auf genau die beiden ausgewaehlten Umsatzoperanden; deren Perioden stammen aus demselben Rechenzweig wie `revGrowthBasis`, `revGrowthPeriodEnd` und `revGrowthPriorPeriodEnd`. R40 dokumentiert seine bereits bestehende Rundung auf eine Nachkommastelle. Fehlt ein nachweisbar passendes Operandenpaar, bleibt die Luecke mit `missingReason` offen.
+
+Handtabellenbelege entstehen nur fuer die verwendeten Operanden mit passendem Korrekturstempel, Tabellenfall, Periode, Notierung und Ersatzwert. Korrekturen anderer Quartale desselben Tickers zaehlen nicht. Aktienzahl-/ADS-Boersenwerte sind `calculation` mit `marketCapFromShares` beziehungsweise `marketCapFromAds`: getrennte Belege fuer den verwendeten Yahoo-Kurs, die Tabellen-Aktienzahl und den gespeicherten urspruenglichen Yahoo-Boersenwert; bei ADS kommt das Bezugsverhaeltnis als eigener Handtabellenbeleg hinzu. Die Formel bildet die Rechenreihenfolge des Anwenders ab: Aktienzahl `input[2] * (input[1] / (input[2] / input[0]))`, ADS `input[3] / input[2]`. Der Anwender wird auf einer Kopie des urspruenglichen Yahoo-Werts erneut ausgefuehrt. Herkunftsstempel allein reichen nicht: Kurs und Boersenwert muessen zum selben belegten Abruf gehoeren und Kurs mal Aktienzahl, bei ADS geteilt durch das Verhaeltnis, muss den Export bis auf Gleitkomma-Rechenfehler reproduzieren. Die 3-Prozent-Erkennungsgrenze des Anwenders ist keine Rechentoleranz. Andernfalls bleibt der exportierte Wert unveraendert, sein Beleg traegt `missingReason` und kann keine Bestaetigung erhalten. Jahresbezogene Waehrungskorrekturen gelten nicht fuer Quartale oder separat gespeicherte neuere Jahreswerte.
+
+Ein Aktienzahl-Zitat steht nur am Aktienzahlbeleg, nie am berechneten Boersenwert. Die ADS-Tabelle dokumentiert das Bezugsverhaeltnis, ihre Aktienzahl ist lediglich ein gespeicherter Yahoo-Vergleichswert ohne eigenen Originalbeleg. Deshalb stehen die dort woertlich gespeicherten Zitate nur am Verhaeltnisbeleg; der ADS-Aktienzahlbeleg hat kein solches Zitat und nennt den fehlenden Originalbeleg in `missingReason`. Auch eine exakt nachgerechnete ADS-Rechnung ist damit noch nicht bestaetigt. Die bestehenden Tabellen betreffen USD-Notierungen; andere oder ungeklaerte Kurswaehrungen erhalten keine Rechenbestaetigung.
+
+Finanz- und Q4-Tabellen liefern ihre vorhandene Fall-ID. Die schluesselbasierten Tabellen werden eindeutig als `hand-table:shares:<ticker>`, `hand-table:ads:<ticker>` bzw. `hand-table:statement-currency:<ticker>` referenziert. Der erste dokumentierte Quellenbeleg des angewendeten Falls wird mit vorhandener URL, Seite und Zitat uebernommen. Ein reiner Beschreibungstext wird als Dokumentbeschreibung bewahrt; fehlender Link ergibt `documentUrl: null` und `qualityWarnings: ["source link missing"]`. Fehlende Seiten und Zitate werden nicht erfunden.
+
+Unbekannte Quellenzeiten sind null, niemals 0 oder Exportzeit. Ein verlorener nativer Betrag wird nicht durch Rueckwaertsdivision als Original ausgegeben: `nativeValue` bleibt null. Explizit gespeicherte native Korrekturwerte und neuere Jahreswerte bleiben nutzbar. `fx` nennt nur gespeicherte angewendete Faktoren; unbekannte Kurszeit und Kursquelle bleiben null. Bei Pence-Kursnotierungen ist die native Marktkapitalisierung bereits in GBP; ihr Faktor ist deshalb der gespeicherte Preisfaktor mal 100, wie im bestehenden Umrechnungszweig. `marketCap.normalizedCurrency` ist immer USD. Unbekannte Emittenten-IDs bleiben null; `listingId` verwendet die Yahoo-Notierungskennung, keine Zusammenfuehrung anhand eines Firmennamens.
+
+`handTableDerivation` ergänzt bei Handtabellen-Zellen eine deutsche Formel und die ursprünglichen Quellwerte, wenn keine einzelne Quelle den angezeigten Wert trägt, weil er aus zwei Quellen berechnet oder von der Firma nur gerundet genannt wird. Sonst fehlt der Schlüssel und gilt als null. Das Zitat des Belegs wird wie bisher aus der ersten Quelle übernommen; die zusätzliche Herleitung ist additiv und verändert weder Boardwerte noch Prüfstatus. Belege ohne Herleitung behalten ihre bisherige Beleg-ID, ein Beleg mit Herleitung bindet sie in seine ID ein.
+
+### 14.3 Pruefstatus und Validator
+
+Pruefakten werden ausschliesslich aus einem vorhandenen `verification-records/**/*.json` gelesen. Der Writer legt diesen Ordner nicht an und schreibt niemals Pruefakten. Das Manifest enthaelt nur Akten, deren Beleg-IDs in dieser Generation vollstaendig aufloesbar sind. Ablosungen werden vor dieser Auswahl ausgewertet, damit eine alte Pruefung nicht wieder wirksam wird. Ohne solche Akten sind `reviews: []`, alle Zeilen und Felder `unchecked`, alle Pruefzeiten null und `fullyVerifiedRows: 0`. Tests enthalten ausschliesslich synthetische Pruefakten in Temp-Verzeichnissen.
+
+Zeilenstatus: `unchecked | partial | verified | withheld`. Feldpraesenz: `present | missing | withheld`. Feldpruefung: `unchecked | matched | reproduced | partial`. Pruefergebnis: `matched | reproduced | mismatch | unverifiable | superseded`. Quellenart: `filing | vendor | exchange | handTable | calculation`. Periodentyp: `quarter | year | ttm | instant | none`. Vergleichsgruppenstatus: `notApplicable | unchecked | partial | verified`.
+
+Nur ein zum Beleg, Werte-Hash, Geltungsbereich und zur Methodenversion passender aktiver Pruefdatensatz kann ein Feld bestaetigen. Seine Sitzungskennung muss von jedem Ersteller in der gesamten abhaengigen Belegkette verschieden sein. Gleichnamige Sitzungen, ueberholte Pruefungen, andere Hashes oder andere Geltungsbereiche tragen keine Bestaetigung. Fehlende Werte werden nicht als bestaetigte Zahlen gezaehlt. Eine Freigabe braucht ausserdem einen gespeicherten Zeitpunkt der erneuten Quellenoeffnung, Originalbelege mit URL und Seite, Anker oder Zitat fuer die Eingangswerte sowie vollstaendig gepruefte Vergleichsgruppen. Offene Herkunftsluecken verhindern die Freigabe. `eligibleRows` zaehlt alle Zeilen der jeweiligen Datei; die vier Statuszaehler werden rueckwaerts aus genau diesen Zeilen geprueft.
+
+Der Validator verwirft unaufloesbare oder doppelte Beleg-IDs, Zyklen und fehlende Abhaengigkeiten einschliesslich Vergleichsgruppen, unpassende Werte-Hashes, falsche Feld-/Tickerzuordnung, Nicht-USD-Marktkapitalisierung, unpassende Manifestbytes, falsche Statuszaehler und unbelegte Pruefbehauptungen. Nicht anwendbare Belegfelder sind null; `inputIds` und `cohortInputIds` sind Listen. Ohne Vergleichsrechnung sind `cohortId` und `cohortHash` null, `cohortInputIds` leer und `cohortVerificationStatus` notApplicable. Oeffentliche Zusatzfelder werden auf Kontakt-/Personenfelder und zugangsdatenartige Inhalte geprueft.
+
+### 14.4 Vollstaendige neue Feldpfade
+
+Die folgenden Pfade sind additiv. `manifest.` bezeichnet die separate Belegdatei; `[]` ein Listenelement. Logisch expandierte Beleg-, FX-, Ableitungs- und Pruefobjekte haben genau die hier aufgefuehrten Schluessel. Die Statusmarker verwenden separat die Pfade `_failed.schema`, `_failed.status`, `_failed.board` sowie bei `failed` `_failed.generated_at` und `_failed.reason`, bei `ok` `_failed.provenanceRunId`, `_failed.provenanceManifestSha256` und `_failed.at`.
+
+```text
+provenanceVersion
+provenanceRunId
+provenanceManifest
+provenanceManifestSha256
+verificationSummary
+verificationSummary.scopeId
+verificationSummary.eligibleRows
+verificationSummary.fullyVerifiedRows
+verificationSummary.partiallyVerifiedRows
+verificationSummary.uncheckedRows
+verificationSummary.withheldRows
+verificationSummary.checkedAt
+provenance
+verification
+fieldStatus
+provenance.revGrowthYoYPct[]
+fieldStatus.revGrowthYoYPct
+fieldStatus.revGrowthYoYPct.presence
+fieldStatus.revGrowthYoYPct.verification
+fieldStatus.revGrowthYoYPct.reason
+fieldStatus.revGrowthYoYPct.reviewIds
+provenance.marketCap[]
+fieldStatus.marketCap
+fieldStatus.marketCap.presence
+fieldStatus.marketCap.verification
+fieldStatus.marketCap.reason
+fieldStatus.marketCap.reviewIds
+verification.status
+verification.scopeId
+verification.requiredFields
+verification.verifiedFields
+verification.openFields
+verification.reviewIds
+verification.checkedAt
+verification.valueHash
+verification.reason
+manifest.schema
+manifest.runId
+manifest.generatedAt
+manifest.records
+manifest.reviews
+manifest.records[].id
+manifest.records[].issuerId
+manifest.records[].listingId
+manifest.records[].ticker
+manifest.records[].fieldPath
+manifest.records[].valueHash
+manifest.records[].creatorEngine
+manifest.records[].creatorModel
+manifest.records[].creatorSessionId
+manifest.records[].createdAt
+manifest.records[].sourceType
+manifest.records[].provider
+manifest.records[].retrievedAt
+manifest.records[].observedAt
+manifest.records[].publishedAt
+manifest.records[].periodStart
+manifest.records[].periodEnd
+manifest.records[].periodType
+manifest.records[].comparativeBasis
+manifest.records[].metricDefinition
+manifest.records[].nativeValue
+manifest.records[].nativeCurrency
+manifest.records[].nativeUnit
+manifest.records[].unitMultiplier
+manifest.records[].normalizedValue
+manifest.records[].normalizedCurrency
+manifest.records[].documentUrl
+manifest.records[].documentTitle
+manifest.records[].documentId
+manifest.records[].documentSha256
+manifest.records[].filingAccession
+manifest.records[].filingForm
+manifest.records[].filedAt
+manifest.records[].taxonomy
+manifest.records[].concept
+manifest.records[].contextId
+manifest.records[].page
+manifest.records[].anchor
+manifest.records[].quote
+manifest.records[].fx
+manifest.records[].derivation
+manifest.records[].correctionCaseId
+manifest.records[].correctionRevision
+manifest.records[].supersedesId
+manifest.records[].missingReason
+manifest.records[].qualityWarnings
+manifest.records[].handTableDerivation
+manifest.records[].handTableDerivation.formulaDe
+manifest.records[].handTableDerivation.inputs
+manifest.records[].fx.rate
+manifest.records[].fx.fromCurrency
+manifest.records[].fx.toCurrency
+manifest.records[].fx.asOf
+manifest.records[].fx.sourceUrl
+manifest.records[].fx.unitAdjustment
+manifest.records[].fx.adrRatio
+manifest.records[].derivation.methodId
+manifest.records[].derivation.methodVersion
+manifest.records[].derivation.expression
+manifest.records[].derivation.inputIds
+manifest.records[].derivation.rounding
+manifest.records[].derivation.parametersHash
+manifest.records[].derivation.cohortId
+manifest.records[].derivation.cohortHash
+manifest.records[].derivation.cohortInputIds
+manifest.records[].derivation.cohortVerificationStatus
+manifest.reviews[].id
+manifest.reviews[].evidenceIds
+manifest.reviews[].scopeId
+manifest.reviews[].valueHash
+manifest.reviews[].methodVersion
+manifest.reviews[].reviewerEngine
+manifest.reviews[].reviewerModel
+manifest.reviews[].reviewerSessionId
+manifest.reviews[].checkedAt
+manifest.reviews[].result
+manifest.reviews[].reason
+manifest.reviews[].sourceReopenedAt
+manifest.reviews[].supersedesReviewId
+```
+
+### 14.5 Additivitaetsnachweis
+
+`node scripts/check-export-additive.js <baseDir> <headDir>` vergleicht saemtliche JSON-Dateien und bisherigen Blattwerte ohne Ausschluss. Jeder bisherige Pfad muss denselben `JSON.stringify`-Wert behalten, einschliesslich `generated_at`; beide Laeufe brauchen deshalb dieselbe eingefrorene Uhr. Neue Schluessel sind nur die oben genannten Kopf- und Zeilenfelder an den betroffenen Boards; neue Dateien sind ausschliesslich die beiden festen Manifestpfade und ihre oben genannten Fehlmarker. Dateien, Zeilen, Blattwerte und Unterschiede werden gezaehlt, jeder Unterschied liefert Exit 1.
+
+Mit `node scripts/check-export-additive.js --provenance-content <baseDir> <headDir>` werden ausschliesslich Kopien im Speicher normalisiert: Verdichtete Belege werden expandiert und ihre IDs durch SHA256 ihres Inhalts ohne `id`, `creatorSessionId` und `createdAt` ersetzt, einschliesslich rekursiv aufgeloester Eingangsbelege und Vergleichsgruppen sowie der Verweise in Zeilen und Pruefakten. Ausgeblendet werden nur `runId` und `generatedAt` im Manifest, `creatorSessionId` und `createdAt` der Belege, `provenanceRunId` und `provenanceManifestSha256` in Dateikoepfen sowie diese beiden Felder und `at` in den beiden festen Herkunftsmarkern. Beleginhalt, Quellen, Formeln, Pruefstatus, Zeilenwerte, nicht freigegebene Schluessel, unbekannte Belegverweise und die Reihenfolge der Belege bleiben vergleichswirksam; Zyklen brechen den Vergleich ab. Ohne Schalter bleibt der bisherige Vergleich unveraendert. Die veroeffentlichten Beleg-IDs bleiben absichtlich an den erzeugenden Prozess gebunden, damit eine alte Eigenpruefung durch einen neuen Lauf niemals zur unabhaengigen Pruefung wird.
+## 15. `fcfShadow` — FCF-Schatten aus der Jahres-Kapitalflussrechnung (P87, 06.10.2026, additiv)
+
+Ratsentscheid 06.10.2026, Frage 1, Option C, Formel-Weg Schritt 1. Heute speisen Rule of 40 und die
+Rule-of-X-Achse aller 13 HyperGrowth-Formeln `metrics.fcfMarginTTM` = Yahoo
+`financialData.freeCashflow / financialData.totalRevenue`. Dieses Kennzahlfeld ist eine andere
+Groesse als die Kapitalflussrechnung im selben Snapshot (P60, P73). Bis zur Umstellung laeuft die
+Alternative nur als **Schatten**: jede Zeile traegt zusaetzlich das Objekt `fcfShadow`. **Keine
+vorhandene Zahl aendert sich** — `score`, `rank`, `r40`, `fcfMarginPct`, `axisBreakdown` und alle
+uebrigen Felder sind fuer denselben Input unveraendert. findash liest `fcfShadow` nicht
+(unbekannte Schluessel werden in `data-layer/screener.js` verworfen). Die Umstellung auf live ist
+ein eigenes Paket nach mindestens vier Wochen Parallelbetrieb und Vorher/Nachher.
+
+Zeitraum: **Geschaeftsjahr (FY)**, nie TTM. Rechnung in `lib/fcf-stmt-shadow.js`
+(`fcfMarginStmtFY`): `annual.annualFCF[0] / annual.annualRev[0] × 100`, **nur** wenn beide Eintraege
+dasselbe belegte Geschaeftsjahresende tragen (`annual.<feld>Ends[0]` oder
+`meta.statementPeriods.<feld>[0].end`). Sonst `null` mit Grund. Kein Rueckfall auf `fcfMarginTTM`,
+nie eine 0 als Ersatz; eine echte 0 bleibt 0, ein negativer FCF bleibt negativ.
+T1: belegen `meta.statementPeriods` fuer FCF und Umsatz verschiedene Waehrungen (`currency-mismatch`), meldet
+`lamps.annualCurrencyLeak` eine Fremdwaehrungs-Jahresreihe (`currency-leak`) oder ist eine belegte Dauer kein
+volles Jahr (`period-not-12m`), bleibt der Wert `null`.
+
+**Wo:** HyperGrowth-Branchenboards (`<branch>.json`, beide Tracks), Vollboards (`full/<branch>.json`),
+`overview.json` und `rule40/overview.json`. Nicht in `quality/`, `smallcap/`, `survival.json`.
+
+**Felder auf HyperGrowth-Zeilen** (`fcfShadow` ist immer ein Objekt):
+
+| Feld | Typ | Bedeutung |
+|---|---|---|
+| `fcfMarginStmtFY` | number \| null | FY-Marge in Prozent, 1 Nachkommastelle |
+| `grund` | string | `ok`, `fy-end-missing`, `fy-end-mismatch`, `currency-mismatch`, `currency-leak`, `period-not-12m`, `fcf-missing`, `revenue-missing`, `revenue-nonpositive`, `no-snapshot`, `snapshot-unreadable` |
+| `gjEnde` | string \| null | gemeinsames Geschaeftsjahresende `YYYY-MM-DD` |
+| `ruleOfXHeute` | number \| null | Rule-of-X-Rohwert mit der heutigen Marge, aus demselben Snapshot neu gerechnet |
+| `ruleOfXShadow` | number \| null | Rule-of-X-Rohwert mit der FY-Marge; ohne FY-Marge `null` |
+| `schattenFcfAktiv` | boolean | ob der Schatten-FCF-Term die Datentore G0-G3 bestanden hat |
+| `behoerdeFcfMarginFY` | number \| null | Schutzspalte: FCF/Umsatz des juengsten Behoerden-Jahres (`external-data/*-secannual.json`) |
+| `behoerdeGeschaeftsjahr` | number \| null | Geschaeftsjahr des Behoerden-Werts (Store-Feld `nfy`) |
+| `behoerdeQuelle` | string \| null | Datei des Behoerden-Werts |
+| `behoerdeAbstandPp` | number \| null | Schatten minus Behoerden-Wert in pp, nur bei gleichem Kalenderjahr des GJ-Endes |
+
+**Felder auf Rule-of-40-Zeilen** (`fcfShadow` ist ein Objekt oder `null`): `fcfMarginStmtFY`, `grund`,
+`gjEnde`, `r40Shadow` (= `revGrowthPctUsed` + FY-Marge, nur wenn die FY-Marge dieselben Tore besteht
+wie heute: Vertrauens-Tor, Einheiten-Verdacht, hoechstens 100 % des Umsatzes), `r40ShadowGrund`
+(`ok`, `fcf-invalid`, `unit-suspect`, `fcf-above-revenue` oder der `grund` der Marge), und dieselben vier `behoerde*`-Felder. Der Schatten aendert nicht, welche
+Zeilen auf dem Brett stehen.
+
+Der Behoerden-Wert ist nur eine Schutzspalte und ersetzt den Schatten nie. Die Stores fuehren das
+Geschaeftsjahr als Zahl, kein Enddatum; verglichen wird das Kalenderjahr des Schatten-GJ-Endes.
+Waechter: `tests/fcf-stmt-shadow.test.js`.
+
+## 16. `annualPairsShadow` (P115, 07.10.2026, nur Schattenrechnung)
+
+Ratsblock Frage 10, Formel-Weg, Lauf 1 von 2. Die zusätzliche Datumsprüfung ist in der
+Produktion **ausgeschaltet**. Jede HyperGrowth-Zeile auf Branchenboards, Vollboards und
+Übersicht sowie jede Rule-of-40-Zeile erhält genau einen zusätzlichen Schlüssel
+`annualPairsShadow`. Bestehende Werte, Scores, Ränge und Board-Zusammensetzungen bleiben
+unverändert. Quality, Small-Cap und Survival erhalten diesen Schlüssel nicht.
+findash verwirft unbekannte Schlüssel und verwendet die Schattenwerte nicht für die Anzeige.
+Die Jahresprüfung und ihr Datumsleser liegen in `lib/annual-pairs.js`; der Zusatz entsteht
+erst in den Board-Erzeugern, während die gemeinsamen Zeilenmapper unverändert bleiben.
+Im offenen Siegelübergang `protocol/gqs-00/1.2.0-pending/transition.json` ist unter
+`annualPairsShadow` ausschließlich der neue Fingerabdruck von `src/scoring/axes.js`
+registriert; das bestehende Siegel und `src/scoring/snapshot.js` bleiben unverändert.
+
+`windowDays` ist `[334, 397]`, einschließlich beider Grenzen. Geprüft wird der Abstand zweier
+Geschäftsjahresenden, kein Test auf eine Periodenlänge von 357 bis 378 Tagen. Messbeleg P115-M
+über 16.148 Snapshots des CI-Laufs 37439518589 vom 06.10.2026: 19.996 von 20.114 datierten
+aufeinanderfolgenden Paaren liegen genau 365 oder 366 Tage auseinander. In den Bereichen
+337 bis 364 und 367 bis 455 gab es kein Paar. Zwischen 300 und 349 lagen nur 304 (zweimal,
+echte Rumpfzeiträume), 335 (einmal) und 336 Tage (zweimal). Die lückenlosen Reihen der
+52/53-Wochen-Berichterstatter ABF.L/ASBFF und 4291.SR dürfen deshalb nicht an einer engeren
+Prüfung scheitern. Der nächste größere Abstand war 456 Tage; 77 Paare lagen bei mindestens
+700 Tagen. Das Fenster 334 bis 397 leerte in der Messung keine lückenlose Reihe fälschlich.
+
+Die drei Objekte `growth`, `grossProfit` und `acceleration` tragen jeweils:
+
+| Feld | Bedeutung |
+|---|---|
+| `code` | Ergebnis der Prüfung des tatsächlich verwendeten Jahrespaars |
+| `reason` | Deutscher Satz mit belegten Geschäftsjahren und gerundeten Monaten, soweit datiert |
+| `distanceDays` | Abstand der beiden Enden in Tagen, sonst `null` |
+| `priorLengthDays` | Abstand des älteren Endes zum folgenden gespeicherten Ende, sonst `null` |
+| `today` | Heutiger Wert, bei fehlendem Wert `null` |
+| `shadow` | Wert mit Jahresprüfung, bei verworfenem Vergleich `null`, niemals Ersatzwert 0 |
+
+`growth.today` und `growth.shadow` sind das angezeigte Umsatzwachstum in Prozent aus
+`revGrowthLeg`. Der Code prüft auch bei Quartalsanzeige das Jahresbein des Wachstumsbonus.
+Ohne Quartalsbein gilt ein gültiger neuerer Jahresvermerk mit seinen eigenen Enddaten;
+sein Vorjahreszeitraum kommt aus dem Eintrag nach `priorEnd` in der gespeicherten Reihe.
+Bei der Vorjahreslänge werden unmittelbar folgende Doppel-Einträge mit exakt gleichem endlichem normalisiertem Wert und weniger als 334 Tagen Abstand zum älteren Paarende übersprungen, bei neueren Jahresvermerken anhand des zu `priorEnd` gespeicherten Umsatzes; fehlt danach ein datiertes Ende, bleibt die Länge `null`, während ein Doppel-Eintrag im geprüften Paar selbst weiterhin `short-period` ergibt.
+Es wird nie ein anderes Paar gesucht. `grossProfit` zeigt den rohen Wert von `gpGrowth`;
+nur dessen Jahreswachstumspaar wird geprüft, die Bruttomargenentwicklung bleibt unberührt.
+`acceleration` zeigt den rohen Wert von `revAcceleration` mit `winsorBounds.qoq` aus derselben
+Kalibrierungsdatei wie `fcfShadow`. Fehlen diese Grenzen, wird ungeklemmt gerechnet und
+einmal gewarnt. Der Quartalszweig bleibt unverändert. Beim Jahreszweig müssen beide Paare
+der ersten drei positiven Jahre bestehen; angezeigt wird der erste Fehler, jüngeres Paar zuerst.
+
+| Code | Bedeutung |
+|---|---|
+| `adjacent` | 334 bis 397 Tage; das Vorjahr ist nicht als Rumpfzeitraum oder verlängerter Zeitraum belegt |
+| `undated` | Mindestens ein Ende fehlt oder ist ungültig; die heutige Rechnung bleibt bestehen |
+| `missing-year` | Paarabstand mindestens 700 Tage |
+| `long-period` | Paarabstand größer als 397 und kleiner als 700 Tage |
+| `short-period` | Paarabstand kleiner als 334 Tage |
+| `short-prior-period` | Paar selbst zulässig, aber Vorjahresabstand kleiner als 334 Tage |
+| `long-prior-period` | Paar selbst zulässig, aber Vorjahresabstand größer als 397 und kleiner als 700 Tage |
+| `zero-year` | Beschleunigung überspringt einen gemeldeten Umsatz von 0 oder darunter, ohne zugleich eine Datenlücke zu überspringen |
+| `no-annual-pair` | Die heutige Rechnung bildet für diese Achse kein Jahrespaar |
+| `no-snapshot` | Kein gespeicherter Snapshot vorhanden |
+| `snapshot-unreadable` | Gespeicherter Snapshot nicht lesbar |
+
+Ein Vorjahresabstand ab 700 Tagen sperrt das Paar nicht, die Lücke liegt hinter dem Paar.
+Bei übersprungenen fehlenden Werten entscheidet allein die Datumsprüfung. Ohne Enddaten
+bleibt deshalb auch hier die heutige Rechnung bestehen. Nur zur Wertreihe längengleiche
+Enddatumslisten werden verwendet, jeder Eintrag durchläuft die ISO-Rückprüfung von F-4.
+
+Der synchrone Schalter `withAnnualPairRule({growth, acceleration}, fn)` trennt Umsatz und
+Bruttogewinn (Teil a) von Beschleunigung (Teil b), stellt den vorherigen Zustand auch bei
+Fehlern und Verschachtelung wieder her und weist asynchrone Ergebnisse zurück. Nicht genannte
+Teile behalten ihren vorherigen Zustand. Produktionswerte werden nie unter diesem Schalter
+gerechnet; nur die zusätzliche Schattenrechnung aktiviert ihn vorübergehend.
+Wächter: `tests/scoring/annual-pairs.test.js` und `tests/annual-pairs-shadow-export.test.js`.
+`capitalEfficiency`, Rangneuberechnung und Vorher/Nachher-Messung gehören nicht zu Lauf 1.
+
+**Messung.** `scripts/p115-jahrespaare-vorher-nachher.js` vergleicht die ausgeschaltete Regel,
+den Wachstumsteil und die vollständige Jahresprüfung mit der Produktionsengine. Aufruf:
+`node scripts/p115-jahrespaare-vorher-nachher.js --snapshots <eingefrorener-ordner> --out <neuer-ausgabeordner-außerhalb-des-repos>`.
+Optional begrenzt `--limit <anzahl>` die alphabetische Stichprobe. Der Ausgabeordner enthält
+den deutschen Bericht, die JSON- und CSV-Belege sowie eine Arbeitskopie der Eingaben;
+die Quelldateien bleiben unverändert.
+
+# G31-Ergänzung P184 (11.10.2026)
+
+Jede neu erzeugte HG-, Quality-, Smallcap- und Rule40-Zeile trägt zusätzlich
+`g31Shadow: {v1}` und nur bei berechenbaren acht Quartalen zusätzlich `v2`.
+Diese Angaben ändern weder den aktuellen Score noch den Rang.
+Jede Variante enthält `pct` (ungeklemmtes Umsatzwachstum in Prozent oder `null`),
+`basis` und `periodEnd` (ISO-Tag oder `null`). Fehlend ist niemals null Prozent.
+Die kompakte Form P184b lässt ausschließlich rekonstruierbare Zeitraumangaben weg:
+
+- Ohne `priorPeriodEnd` gilt derselbe Monat/Tag im vorigen Kalenderjahr, bei
+  unbekanntem `periodEnd` ebenfalls `null`; jede Abweichung, auch `null`, steht explizit da.
+- Ohne `sourcePeriodEnd` beziehungsweise `sourcePriorPeriodEnd` gilt das zugehörige
+  Anzeigeende. Abweichende Rechenenden stehen explizit da.
+- Ohne `reason` liegt kein zusätzlicher Hinweis vor; fehlende Werte tragen einen deutschen Grund.
+- `label` wird aus Basis und Ende gebildet: `quarter` ergibt „Quartal bis 30.06.2026“,
+  `year`/`yearNewerRecord` „Geschäftsjahr bis …“, `ttm` „Vier Quartale bis …“.
+  Bei fehlendem Ende heißt es „Periodenende unbekannt“, bei `none` „Zeitraum nicht verfügbar“.
+
+Beispiel: `{"v1":{"pct":100,"basis":"quarter","periodEnd":"2026-06-30"}}`.
+Rohoperanden, Bonusbestandteile und wiederholte Etiketten werden nicht ausgeliefert.
+Die vollständige interne Diagnose mit `current`, `prior`, `bonusComponents`, `label`
+und allen Datumsfeldern bleibt in `g31Shadow(snapshot)` für Tests und Replay erhalten.
+
+V1 vergleicht das neueste gültige Quartal mit seinem Vorjahresquartal und bevorzugt
+ein validiertes Geschäftsjahr nur bei einem späteren belegten Ende. Gleiches Ende
+behält das Quartal. Bei datierten Endpunkten dürfen unbenutzte Zwischenwerte fehlen;
+undatierte Reihen behalten die bisherige Lückenprüfung. Jahrespaare bleiben an
+benachbarte Positionen gebunden. Die zusätzliche Prüfung auf 334 bis 397 Tage folgt
+dem bestehenden `annualPairRuleEnabled('growth')` und bleibt produktiv ausgeschaltet;
+P184 aktiviert diese separate P115-Regel auch im V1-Arm nicht selbst.
+Neuere Jahresdatensätze müssen weiterhin den gespeicherten Fingerabdruck treffen.
+
+V2 summiert vier Quartale bis zum neuesten Quartal und vergleicht sie mit den vier
+davor. Es müssen acht vollständige, zeitlich passende Quartale vorliegen. Fehlen sie,
+bleibt V2 intern `null` mit deutschem Grund und fehlt im Export, auch wenn ein neuerer Jahreswert vorliegt.
+V2 ist kein Halbjahresvergleich und ersetzt keine Lücke durch Jahresdaten.
+`bonusComponents` zeigt die für den Schattenbonus verwendeten Wachstumsraten als
+Bruchteile, vor der unveränderten Begrenzung und Mittelwertbildung. Das Jahresbein
+nutzt auch bei vorhandenem Quartal den validierten neueren Jahresdatensatz.
+Bei fehlendem V2 ist die Komponentenliste leer. `current` und `prior` sind die
+internen Vergleichsoperanden derselben Datenreihe, keine währungsübergreifenden Geldbeträge.
+
+Auch B4/B5 bleiben im Schatten. Die bisherige Übersicht samt `kind`, `value` und
+`companion` bleibt unverändert. Daneben steht `g31OverviewShadow: {value, period}`
+für `gp` und `revenue-badge`, sonst `null`. Der Schattenwert ist ein Bruchteil,
+keine Prozentzahl und keine zusammengesetzte Scoreachse. Die Art steht bereits in
+`overview.kind` beziehungsweise `overviewKind`; `period` nutzt dieselbe kompakte
+Zeitraumform wie V1. Das Umsatz-Badge behält P158s Abstandsprüfung auf 334 bis 397 Tage
+auch bei ausgeschalteter Jahresprüfung der Wertung, einschließlich neuerer Jahresdatensätze.
+Erst ein späteres Paket schaltet Wert und sichtbares Zeitraumetikett
+zusammen in findash um. `g31Shadow` und `g31OverviewShadow` stehen am Zeilenende;
+alle bisherigen Schlüssel behalten Reihenfolge und Werte. Survival bleibt unverändert.
+Die neuen Felder sind im v1-Vertrag additiv; ältere Exporte dürfen sie noch nicht haben.
+
+Eine Ausnahme in der Schattenrechnung lässt die bisherigen Felder unverändert und liefert
+`g31Shadow: {v1: null, reason}` sowie für GP/Umsatz `g31OverviewShadow: {value: null, reason}`.
+Der deutsche Grund lautet „G31-Schatten nicht verfügbar: Berechnung fehlgeschlagen.“
+Andere Übersichtstypen bleiben `null`. Haupt- und Smallcap-Speicher verwenden denselben,
+nach Speicher und Ticker getrennten Snapshot-Cache für Board und Übersicht.
+
+Auf dem Bestand vom 10.10.2026 fehlen die nötigen acht Quartale für V2.
+V2 ist deshalb nicht messbar; ein Rangwechsel durch entfernte Wachstumswerte ist
+kein V2-Ergebnis und wird nicht als Top-20-Umsatz ausgewiesen.
+
+Die Vergleichsrechnung wird ausschließlich durch den synchronen Messaufruf
+`withG31Variant('v1'|'v2', fn)` aktiviert. Es gibt keinen Umgebungs- oder
+Produktionsschalter. Ohne diesen Aufruf laufen die bisherigen Achsen unverändert.
+Der Formellauf beginnt mit der geprüften Auslieferung und endet nach höchstens
+vier Wochen. Eine Umschaltung benötigt die separate unabhängige Prüfung und Entscheidung.
+
+## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
+
+This is an additive feed under section 7, with no v2 bump and no change to
+existing board payloads. The preceding shadow sections retain their contracts.
+
+**File:** `outputs/findash-export/v1/filter/universum.json`, produced offline by
+`node scripts/write-filter-universe.js` after the full boards and `excluded.json`.
+It contains `{schema:"findash-export/v1", generated_at, snapshotCount, rows}`.
+`generated_at` is copied from the board index; `snapshotCount` must equal the
+number of snapshot files, excluding only recognized snapshot metadata files.
+Each snapshot has exactly one flat row, except an inconsistent old board membership rejected by the source-backed market-cap guard: that row is dropped with one `::error::` naming its ticker and reason. Optional integer `marketCapDropped` counts these drops, so `rows.length + (marketCapDropped ?? 0) === snapshotCount`. Official score/rank are copied without
+rounding or recomputation. An absent official board omits `b`, `sc` and `rk` (each means null),
+with at least one exclusion code in `aus`. This feed has no own ranking.
+
+| Keys | Type | Meaning and source |
+|---|---|---|
+| `t`, `n` | string; string or absent | Snapshot ticker and issuer name |
+| `b`, `sc`, `rk` | string or absent; number or absent; positive integer or absent | Official full-board branch, score and rank; rank is within that board's track |
+| `c`, `rg`, `s` | string or absent | Country, region and sector; off-board geography uses `normalizeCountry` |
+| `mc` | number or absent | USD market capitalization, using the existing currency-evidence guard |
+| `g` | number or absent | Revenue growth in percent, official board value or `revGrowthLevel` |
+| `g3` | number or absent | `(annualRev[0]/annualRev[3])^(1/3)-1`, times 100; both endpoints strictly positive; a known different year interval is withheld |
+| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E |
+| `peSt` | string | `vorhanden`, `verlust`, `unbekannt`, `waehrung`; loss means missing P/E with negative latest annual net income |
+| `dy`, `dySt` | number or absent; string | Dividend yield in percent; `zahlt`, `keine`, `unbekannt` |
+| `po`, `roe`, `gm` | number or absent | Payout ratio, return on equity and gross margin, already stored as percentages |
+| `fcf` | number or absent | TTM FCF margin after engine `fcfMarginValid` including G3, the pull suppression flag and the Rule40 ceiling of 100% |
+| `r40` | number or absent | `ruleOfX(snapshot,1,true,bounds)` only after valid FCF and shared Rule40 data/unit/base-period/freshness/sector gates |
+| `d52`, `ath` | number or absent | Percent distance from 52-week high and seeded ATH, negative below the high; missing price/high remains null; `d52` is clamped to at most 0 |
+| `asOf` | string or absent | UTC date (`YYYY-MM-DD`) of the oldest available metric/fundamentals/ATH source, not today's price-only refresh |
+| `aus` | string[] | Exclusion and warning codes, including `dup-issuer`, `data-suspect`, rank reasons and `mischwaehrung`; the rows remain present |
+
+Null-valued keys are omitted to reduce payload size; an absent key means null,
+never zero. `t`, `peSt`, `dySt` and `aus` are always present. Unknown keys and
+explicit null values are rejected by the writer contract. Reported zeros
+remain zero where the metric's validity gate permits them; zero P/E or dividend
+yield is withheld with a status. Numeric display fields normally use two decimals; very small nonzero
+values retain two significant digits so rounding cannot turn a payer into zero.
+The official score and rank retain their exact source values. `g10` is absent.
+
+**Currency policy:** P/S and EV/sales use the shared PIT currency predicate and
+`mischVal`. A finite `meta.mischVerhaeltnisFaktor` proves that the pull already
+corrected the stored value; the writer never multiplies it again. Without that
+evidence, different currencies (compared case-insensitively, as in PIT) withhold
+these two ratios. Unknown currencies preserve the existing PIT behavior.
+P/E and forward P/E remain deliberately strict whenever the original trading
+and reporting currencies differ (including GBP/GBp), even with an FX factor.
+`peSt:"waehrung"` and `aus:[...,"mischwaehrung"]` describe that PE restriction;
+they do not imply absent sales ratios. No external ADR/EPS verification is part
+of W6. The PIT values and gap markers remain unchanged.
+
+**Placeholder zeros:** `gm` is null (omitted) whenever gross margin is zero or
+undefined, in every sector; the validator rejects every `gm:0`. `po:0` for
+`dySt:"zahlt"` is also missing and omitted. Payout zero for a non-payer/unknown
+dividend state remains zero; other valid reported zeros are unchanged.
+
+**52-week high plausibility:** with positive finite price and high, a price/high
+ratio below 0.05 or above 1.20 withholds `d52` and adds `d52-implausible` to `aus`.
+The boundaries are inclusive: 0.05 yields -95%; ratios from 1.00 through 1.20
+yield 0%. Missing or invalid price/high leaves `d52` absent without this reason.
+The validator retains the [-100, 0] range check and rejects a present `d52`
+together with `d52-implausible`.
+
+**Dividend evidence:** positive stored yield proves `zahlt` when its status is
+absent or explicitly `zahlt`; an explicit `unbekannt` is preserved. Missing old
+yield is `unbekannt`. `keine`
+requires a valid module object with no dividend field; an absent or malformed
+module and a present but null dividend field remain `unbekannt`.
+Yield, payout and 52-week high were already extracted on this
+head; the root `pull-yahoo.js` now also stores the response-status field.
+
+**Rule40:** the eligible full snapshot universe supplies the shared
+`winsorTailBounds`, activated at the existing `MIN_WINSOR_SAMPLE`. Bounds are
+converted from percentage to fractional units at the `ruleOfX` interface.
+There is no minimum-40 cutoff or top-N cap in the filter feed. `g` is unbounded;
+`r40` uses bounded growth. `fcf` additionally requires engine G3, so some cash-burn
+rows accepted by the separate Rule40 board have null `fcf` and `r40` here.
+
+**Validation:** `node scripts/write-filter-universe.js --check` is read-only and
+exits 1 for a malformed envelope/row, a missing required status/key, duplicate ticker,
+inconsistent value/status, missing exclusion reason, invalid number/date or more
+than **6,000,000 UTF-8 bytes, uncompressed**. The target remains 4,000,000 bytes.
+The master explicitly authorized a 6 MB hard cap for the full 10 October 2026
+universe. No field was removed. `asOf` is date-only to preserve size headroom.
+The validator also rejects `d52` outside [-100, 0], FCF above 100%, the two
+placeholder-zero cases and invalid calendar dates. The build checks before atomic write. Boards and exclusions must
+share their UTC date and the current watchlist-filtered population. All saved
+snapshots remain in the filter; snapshots outside that population get
+`aus:[...,"outside-watchlist"]`, without a board, score or rank. The existing
+`filterToAuthorizedUniverse` helper defines that population. CLI input seams are
+`--snapshots <dir>`, `--v1-dir <dir>` and `--ath-file <file>`.
+
+Tests: `tests/w6-pull-extract.test.js` and `tests/w6-filter-universe.test.js`.
+Workflow wiring is supplied separately to the master; no workflow is edited here.
+
+P205: Hauptgröße (800 Mio. USD) und Small-Cap-Untergröße (300 Mio. USD) stehen gemeinsam in `configs/market-cap-floors.json`; `MIN_MCAP_USD` bleibt als ausdrückliche Hauptgrößen-Übersteuerung erhalten. Der Small-Cap-Export verwendet seine Untergröße auch beim Rückfall auf den Hauptbestand. Veraltete Boardzeilen aus belegten Korrekturfällen werden mit einer `::error::`-Zeile ausgesondert, ohne den übrigen Export anzuhalten; `mcapGenullt.verworfen` zählt sie getrennt von der Währungsprüfung. Die Haupt-Toplisten werden aus den bereinigten Vollkohorten aufgefüllt, Zählungen und Ränge folgen den verbleibenden Zeilen. `reviewBy` gilt auch für `_holds`; abgelaufene Belege melden `::warning::`.

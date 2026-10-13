@@ -1,0 +1,236 @@
+{
+  "schema": "gqs-00-transition/v1",
+  "status": "pending",
+  "from": "GQS-00@1.1.0",
+  "to": "GQS-00@1.2.0",
+  "opened": "2026-08-29",
+  "reason": "Hartes Gate gegen synthetische OpInc-Jahresreihen. pull-yahoo.js fuellt fehlende Jahres-Betriebsergebnisse von Finanzfirmen mit annualRev[jahr] x operatingMargins(TTM) und kennzeichnet das als meta.opIncSource='computed-margin' (1.859 Namen im Hauptstore, 100 % Financial Services). Eine so entstandene Reihe hat konstruktionsbedingt konstante Marge und konstantes Vorzeichen: sie fabriziert exakt die Stabilitaet, die jede historische Achse misst (GLXY stand mit capitalEfficiency-Perzentil 99,7 aus Fiktion auf Rang 1 des financials-Boards). Das Gate sperrt die Reihe fuer alle historischen Achsen, Profitphasen und longitudinalen Lampen; das aktuelle Vorzeichen des Track-Splits bleibt ausdruecklich erlaubt (K2-Auflage 1). Zusaetzlich die K3-Ausnahme: Synthetik zaehlt nicht mehr als Laengen-Konkurrent gegen eine echte SEC-Serie, und zwei nicht-excludierende Herkunfts-Lampen machen das Etikett in der Engine sichtbar.",
+  "authority": {
+    "gerichtsurteil": "T164/T165/T166 (OpInc-Herkunft), 29.08.2026 — K2 EINSTIMMIG 3:0 'zulaessig-mit-Kennzeichnung mit hartem Gate', K3 EINSTIMMIG 3:0 'behalten-mit-Ausnahme'. Akte: C:\\Users\\Anwender\\.codex\\delegation-locks\\richter-t164-opinc-20260829-akte.md; Urteil: Vault agent-reports/_COURT-T164-OPINC-2026-08-29.md. Bank vollzaehlig (R1/R2 Claude, R3 Codex CLI gpt-5.6-sol) — kein Richterausfall, volle Bindungskraft.",
+    "ratifikation": "Orchestrator ENTSCHIED 15 vom 29.08.2026 18:55 — 'RATIFIZIERT ohne Aenderung'.",
+    "formelsperre": "GQS-00 punktuell geoeffnet, nur dieser Fall (versiegelte Empfehlungen B1-B4 des Urteils, Abschnitt Abhilfen (b), gebuendelt in EINEN Karl-Freigabe-Slot).",
+    "karlFreigabe": "2026-08-29 20:10, Kreuzelrunde Frage 1 'Versiegelter Score-Slot B1-B4' -> JA, gebuendelt. Protokolliert als Orchestrator ENTSCHIED 18 vom 29.08.2026 20:07.",
+    "gqs00Bedingung": "Beide Glieder der Doppel-Autorisierung liegen vor (einstimmiges Gerichtsurteil UND Karl-Freigabe). Ohne eines von beiden ist dieser Uebergang ungueltig.",
+    "pullRequest": "Karlryl/screener-data — 'B1-B4: hard gate against synthetic operating-income series'"
+  },
+  "scope": "NUR die hier gelisteten Quelldateien duerfen zusaetzlich zum 1.1.0-Hash den pending-Hash tragen. Jede andere Datei und jeder dritte Hash-Stand bleibt rot. protocol/gqs-00/1.1.0/ und protocol/gqs-00/1.0.0/ bleiben unangetastet — beide Nachweise sind byte-identisch erhalten.",
+  "goldenFixtureImpact": {
+    "casesGeprueft": 25,
+    "syntheticCases": 1,
+    "mitComputedMargin": 3,
+    "erwarteteScoresGeaendert": 0,
+    "bemerkung": "Drei versiegelte Golden-Fixtures tragen meta.opIncSource='computed-margin' (STB.OL, GDG.AX, 001236.SZ). KEINE aendert ihren erwarteten Score: bei STB.OL und GDG.AX ist capitalEfficiency bereits im Siegel null (Rohwert null, kein Perzentil, kein Gewicht), 001236.SZ ist gar nicht geroutet (action 'survival', reason 'no-revenue'). Auch kein Endfaktor bewegt sich — beide gerouteten Zeilen tragen weder burnAccelerating noch ein Zyklus-Signal. Der volle Trace-Rebuild in gqs00-freeze.js verify() bestaetigt das maschinell (assert.deepEqual gegen score-traces.json). Es reisst ausschliesslich die Source-Hash-Schaerfe. Die beiden neuen Herkunfts-Lampen beruehren die Traces strukturell nicht: Traces fuehren keine Lampen, und die Lampen stehen NICHT in DATA_SUSPECT_LAMPS."
+  },
+  "wirkungAmEchtenBestand": {
+    "messstand": "byte-identische Kopie des Live-Stores vom 29.08.2026 (15.046 Dateien), voller lokaler Re-Score beider Staende (origin/main 66b8f78ffd gegen diesen Zweig), identisches geladenes Universum 15.044",
+    "computedMarginZeilen": 1859,
+    "dScoreBase_aktivBetroffen": {
+      "n": 160,
+      "mittel": 5.9057,
+      "median": 5.3449,
+      "max": 26.5734
+    },
+    "scoreAenderungen": {
+      "computedMargin": 297,
+      "uebrige": 54,
+      "gesamt": 354
+    },
+    "boardWirkung": {
+      "eintritte": 0,
+      "austritte": 3,
+      "rangbewegungen": 324,
+      "betroffeneBoards": [
+        "financials|profitable",
+        "financials|unprofitable"
+      ]
+    },
+    "scoreAusfaelle": [
+      "0290.HK",
+      "0622.HK",
+      "EXO.AS"
+    ],
+    "scoreAusfaelleErklaerung": "Genau die drei vom Gericht in K2.5 vorhergesagten Ausfaelle. Ihre EINZIGE getragene Achse war capitalEfficiency (coverageWeight 0,18 = 1 von 7; Perzentile 83,9 / 94,6 / 98,2 — samt und sonders aus der synthetischen Reihe). Faellt sie, bleibt keine bewertbare Achse; es greift der vorbestehende, universelle Vertrag action='exclude', reason='no-axes' — NICHT die Herkunfts-Lampe und NICHT DATA_SUSPECT_LAMPS.",
+    "k26PraemissenWiderlegung": {
+      "entscheid": "Orchestrator ENTSCHIED 24 vom 29.08.2026 20:55 — Weg (3) ratifiziert, Konfidenz ~85 % geteilt.",
+      "befund": "K2-Auflage 6 verlangt, die drei Coverage-1/7-Namen behielten ihren Restscore. Diese TATSACHEN-PRAEMISSE ist durch die Messung WIDERLEGT: es existiert kein Restscore. capitalEfficiency war bei allen dreien die einzige bewertbare Achse und vollstaendig synthetisch. K2.5 (drei Ausfaelle als akzeptierte Folge) und K2.6 (Restscore fuer dieselben drei Zeilen) sind am selben Trio unvereinbar.",
+      "begruendung": "Bei toter Praemisse regiert der KERN des einstimmigen Urteils. K2.2 verbietet Rang aus Fiktion — eine Ausnahme vom Gate fuer Ein-Achsen-Zeilen wuerde 100-%-Fiktions-Scores auf dem Board halten und K2.2 frontal brechen. Ein Routen mit coverageWeight 0 waere der vom Engine-Vertrag ausdruecklich verbotene Fake-50. R2s Sorge vor einem Lampen-Hintertuer-Massen-Exclude greift hier NICHT: der Abgang laeuft ueber den vorbestehenden universellen no-axes-Vertrag, nicht ueber die Lampe — bewiesen in Waechter G4b (die Herkunfts-Lampen aendern isDataSuspect nachweislich nicht).",
+      "klasseUrsaechlich": "Zeile mit meta.opIncSource='computed-margin', deren EINZIGE bewertbare Achse capitalEfficiency ist. Das Gate nimmt ihr diese eine Achse, damit bleibt keine bewertbare Achse uebrig.",
+      "klasseOperativ": "Zeilen, die beim Gate-Vergleich von action='route' auf action='exclude' mit reason='no-axes' wechseln UND das Etikett 'computed-margin' tragen.",
+      "anzahlAmMessstand": 3,
+      "mitglieder": [
+        "0290.HK",
+        "0622.HK",
+        "EXO.AS"
+      ],
+      "wachstumsPruefung": "Bei jedem kuenftigen Re-Run dieselben zwei Vollaeufe auf identischem Snapshot-Baum fahren und die route->exclude/no-axes-Wechsel unter computed-margin zaehlen. MEHR ALS 3 = die Klasse waechst: dann haengen mehr Namen mit ihrem GANZEN Score an einer synthetischen Achse. Das ist ein neuer Befund fuer den Orchestrator, KEINE stille Anpassung."
+    },
+    "regressionsAnker": {
+      "IREN": "K3-Anker GETROFFEN: capitalEfficiency -0,11469 -> +0,00621 (Vorzeichenwechsel wie vom Gericht angesagt), Perzentil 62,5 -> 96,7, Score 53,939 -> 59,561, roicStabilitySource yahoo -> sec. Die ECHTE 1-Jahres-SEC-Serie schlaegt jetzt die 4 synthetischen Yahoo-Jahre.",
+      "BTBT": "NICHT messbar: BTBT steht in watchlist.json, hat aber weder einen Snapshot im Store noch einen Eintrag in external-data/sec-secannual.json. Datenluecke, keine Code-Frage — ehrlich ausgewiesen statt behauptet.",
+      "GLXY": "Kernfall des Urteils: capitalEfficiency-Perzentil 99,7 faellt weg, Score 88,814 -> 80,217. Der Rang-1-Treiber aus Fiktion ist fort, die Zeile bleibt mit ihren echten Achsen geroutet und gekennzeichnet."
+    },
+    "b3Reichweite": "Genau EIN Name im ganzen Universum wechselt durch die K3-Ausnahme die ROIC-Quelle (IREN). Von 1.859 computed-margin-Namen haben nur 6 ueberhaupt eine committete SEC-OpInc-Serie; die uebrigen 5 scheitern am unveraenderten Single-Source-Trio-Guard (fehlende tiefe Bilanz bzw. Index-0-Luecke). Der Duenne-Serien-Schutz ist also nicht mitgelockert worden."
+  },
+  "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
+  "sourceFiles": {
+    "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
+    "src/scoring/axes.js": "72b1adb672e70eb305e50ee7bdad471f90b58c4ad0c8a95c99c48f066a605e04",
+    "src/scoring/score.js": "a5af5595213c0ebffda09b34864384451b399acbc79cb335d099cd0d30534c1f",
+    "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
+    "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
+    "src/scoring/lamps.js": "e6d6b62d69859a6d67cf91ffa97489f6abf17713c63ff6b63d9a10f23c7866a6",
+    "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
+    "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
+    "src/scoring/overview.js": "ce93d5fa5cf60a3b8344fdba2e7989c653c68ea6bb1ace88278f6936db557a6a",
+    "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
+    "src/scoring/profit-streak.js": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3"
+  },
+  "sourceFilesBegruendung": {
+    "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
+    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow).",
+    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair.",
+    "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
+    "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
+    "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
+    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment.",
+    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change.",
+    "src/scoring/router.js": "P160 2026-10-11: F-13 pairs annual net income and revenue at the newest jointly finite index for the asset-manager zero-gross-profit gate. P205 2026-10-12: apply the existing size floor only to source-backed market-cap hand-table cases before routing. QH and 3018.TW leave the same-day universe; no formula or weight changed. Explicit P205 fix brief; independent release review by Claude remains required. See ergebnisse/P205/vorher-nachher.md.",
+    "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak.",
+    "src/scoring/smallcap-route.js": "P205 2026-10-12: route(s, MIN_MCAP) applies the existing 300M floor to source-backed hand-table cases; no formula or weight change."
+  },
+  "nichtBeruehrt": [
+    "protocol/gqs-00/1.1.0/ und protocol/gqs-00/1.0.0/ (byte-identisch erhalten)",
+    "src/scoring/formulas/** (kein Gewicht, keine Achsenliste, kein Split geaendert)",
+    "src/scoring/engine.js, snapshot-Router, calibrate-Mechanik; router.js was unchanged by B1-B4 and is changed only by P160 F-13.",
+    "der Ledger und die committeten SEC-Schichten",
+    "DATA_SUSPECT_LAMPS selbst (Inhalt unveraendert; nur ein Anker-Kommentar davor)"
+  ],
+  "c2KnownCaseInputRepair": {
+    "date": "2026-09-28",
+    "authority": "Explicit C2 build brief, Karl wish W2, Regelblatt v4 Part 2: verified wrong values repaired by hand table plus guard; Claude commits after independent review.",
+    "scope": "Only run-screener.js source fingerprint added for the read-only cached-input overlay. Frozen GQS-00 source/trace evidence remains unchanged.",
+    "file": "src/scoring/run-screener.js",
+    "sourceSha256LF": "5baa8445eaf96997066706b91849ae1aa19064c4c21d053a982525abd15be040",
+    "evidence": "scripts/yahoo-q4-known-cases-replay.js: 16015 snapshots, exactly 27 corrected cells, 44 unchanged controls, all other input rows identical; source SHA256 unchanged.",
+    "review": "Build registration only; independent release review by Claude remains required.",
+    "revision2026-09-30": "Review round 2 finding L2: a hand-table failure (YAHOO_Q4_HAND_TABLE_FAILED) in the main or small-cap snapshot loader is rethrown instead of counted as a parse failure, so the run goes red instead of silently dropping the company. Hash updated; no formula, weight or threshold change."
+  },
+  "f2KnownCaseInputRepair": {
+    "date": "2026-09-29",
+    "authority": "Explicit F2 writer brief: proven wrong board numbers repaired by hand table plus guard, otherwise missing with visible reason.",
+    "scope": "Only score.js source fingerprint updated for exact wrong-issuer input hold. Frozen GQS-00 source and trace evidence unchanged.",
+    "file": "src/scoring/score.js",
+    "sourceSha256LF": "a5af5595213c0ebffda09b34864384451b399acbc79cb335d099cd0d30534c1f",
+    "evidence": "36 hand-table cells in 8 of 16118 snapshots; 1 exact mixed-issuer packet; all unrelated input bytes identical. See docs/financial-corrections.md.",
+    "review": "Build registration only; independent release review by Claude remains required. No merge, push or deployment by this job.",
+    "revision2026-09-30": "Review finding LOW-5: the exclusion reason stays the stable code data-suspect (bucket key); the issuer text moves to the separate field reasonText. Hash updated; no formula, weight or threshold change."
+  },
+  "annualNewerYearGrowthLeg": {
+    "date": "2026-10-01",
+    "authority": "Coordinator decision on PR #401 round 2, option (b) narrow adoption: owner rule \"no automatic rule may alter correct rows\"; Regelblatt v4 G2 (fill a gap from the same free source, same unit, currency and period). Two blind reviews of PR #401 (code and numbers lens, 2026-10-01) classify it as a data repair (no formula process) with an explicit definition amendment at the 1.2.0 seal.",
+    "scope": "Only the axes.js source fingerprint is updated. annualLegNewerYear/revAnnualLegYoY read a pull-time record of the vendor's strictly newer fiscal year (native revenues, only their ratio is used) while the stored annualRev[0] still equals the fingerprint priorStored; revGrowthLevel uses it only when revQuartalsYoY is null, revYoYComponents only without a quarterly component. No period ends are read (A10 substrate guard green). No weight or threshold change. The sealed 1.1.0 definition text of revGrowthLevel no longer describes record rows; it is amended at the 1.2.0 seal (definitionAmendmentAt120Seal). Frozen GQS-00 1.1.0 source, registry and trace evidence unchanged.",
+    "definitionAmendmentAt120Seal": {
+      "axis": "revGrowthLevel",
+      "formula": "100 * winsor(latest_quarter/prior_year_quarter - 1); if unavailable and annualLegNewerYear(s) is valid, 100 * winsor(meta.annualRevNewerYear.revenue / meta.annualRevNewerYear.priorRevenue - 1); otherwise 100 * winsor(annualRev[0]/annualRev[1] - 1)",
+      "newInputPointer": "$.meta.annualRevNewerYear",
+      "validity": "annualLegNewerYear(s): record present with a string end, stored annualRev[0] > 0 and exactly equal to priorStored, revenue > 0, priorRevenue > 0.",
+      "missing": "Quarterly leg drops as before. With a valid record the annual fallback is the record ratio (annualRev[1] is then not required); without it the annual fallback requires two adjacent finite years and a positive denominator; otherwise null.",
+      "inherits": "ruleOfX (\"same period selection as revGrowthLevel\") and the growth factor (revYoYComponents: the annual component is the record ratio only when no quarterly component exists) inherit the amendment.",
+      "traceBuilder": "scripts/gqs00-freeze.js periodSelection.annualYoYRaw uses axesFns.revAnnualLegYoY (record-aware); golden fixtures carry no record, the 1.1.0 traces rebuild byte-identically."
+    },
+    "file": "src/scoring/axes.js",
+    "sourceSha256LF": "d43eea326244576024cbceeb3464558ac3caa356a47600015009d996c5a2762a",
+    "previousPendingSha256LF": "48022620d5dc488600b6d1dec1a5e048f26d9f6832daaaf7c8646884614d5288",
+    "evidence": "verify() recomputes the 25 golden traces (none carries a record) and reproduces the sealed traces; its score/rank mismatch zeros come from the committed production-equivalence proof of the 1.1.0 seal. Universe identity comes from the separate re-score over 16,114 live-store snapshots: new code without records byte-identical to old code; records on quarter-leg rows inert. Live store with the 12 records: growth changes on 4 rows (9992.HK, SKS.AX, UEC, 6227.T); 002294.SZ changes only after its quarterly series is replaced by a full pull (pre-existing quarter-merge behaviour picks quoteSummary 2018/2019 quarters). Builder evidence: VORHER-NACHHER.md of PR #401.",
+    "review": "Build registration only; independent blind release review remains required. No merge by the builder."
+  },
+  "annualPairsShadow": {
+    "date": "2026-10-07",
+    "authority": "Ratsblock Frage 10 of 06.10.2026, option A as a shadow on the Formel-Weg; master decision 15:4x with a window of 334-397 days. Production switch off, so no formula, weight or threshold change and no production value change.",
+    "scope": "Only the axes.js fingerprint; the four annual-pair sites consult the rule controlled by withAnnualPairRule from lib/annual-pairs.js, default off. No other src/scoring file differs from cea8e79876.",
+    "file": "src/scoring/axes.js",
+    "sourceSha256LF": "5eb51891020ca59abbd6693fa57d8da493fb5acd3335f2d398744da67c709eb0",
+    "previousPendingSha256LF": "d43eea326244576024cbceeb3464558ac3caa356a47600015009d996c5a2762a",
+    "evidence": "verify() rebuilds the 25 golden traces byte-identically. Checks: tests/scoring/gqs00-freeze.test.js, tests/scoring/annual-pairs.test.js, tests/annual-pairs-shadow-export.test.js, tests/p115-jahrespaare-vorher-nachher.test.js, tests/p51-pr404.test.js, tests/scoring/dup-issuer-shadow-export.test.js, tests/yahoo-q4-known-cases.test.js; full gate node scripts/test-gate.js --mode=all.",
+    "review": "Build registration only; two independent Claude blind reviews ordered by the master; no merge by the builder"
+  },
+  "overviewAdjacentYears": {
+    "date": "2026-10-08",
+    "authority": "Master order for package P158 of the Daylauf 08.10.2026, finding F-08 of V-DL3: a display-only correction of a wrongly shown number under Regelblatt G2 and T2; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only the overview.js fingerprint; the overview growth column is not an input of any score or rank. No scoring formula, weight or threshold change. The P115 constants 334 and 397 are imported from lib/annual-pairs.js, not redefined.",
+    "file": "src/scoring/overview.js",
+    "sourceSha256LF": "a73e61a61a3047f74ebfc1e67776cfc926d893040b9ed25e14a67037eedb37d9",
+    "previousSealedSha256LF": "1b62c0ba1b5bcef666f0e91f9c7b586a0a6ea02a84f4e1a1623de264b1cb1bdd",
+    "definitionAmendmentAt120Seal": {
+      "column": "overview.value for kinds gp, revenue-badge, ffo-badge",
+      "formula": "GP keeps the unchanged aligned, gapless eight-quarter TTM ratio; its annual fallback, the revenue badge and the FFO proxy use newest / older - 1 from the two newest present finite values only at consecutive stored positions, with a positive older value and, when both ends are valid, an inclusive 334..397-day newer-minus-older distance. FFO sums NetIncome and Depreciation positionally, keeping null when either component is missing.",
+      "missing": "A non-adjacent pair gives null plus valuePresent:false and reason 'Jahreswachstum nicht belegt, Jahre liegen nicht hintereinander' on the metric object. Fewer than two present values or an older value <= 0 stays plain null without reason; reported zero growth stays 0. One missing or invalid end makes the pair undated, so only positions apply. Reason and marker are not exported; findash-export/v1 is unchanged.",
+      "newInputPointer": "$.annual.annual*Ends read through lib/annual-pairs.js annualPeriodEnds: annualGPEnds, annualRevEnds, and annualNetIncomeEnds for the FFO proxy."
+    },
+    "evidence": "Checks: tests/scoring/overview.test.js, tests/scoring/overview-adjacent-years.test.js (red on old code, green after correction), tests/scoring/jahresvergleich-datum.test.js, tests/scoring/gqs00-freeze.test.js (green baseline, red after the source edit before this transition entry, green afterwards), scripts/gqs00-freeze.js --verify, tests/financial-known-cases.test.js, tests/scoring/annual-pairs.test.js, tests/jsdoc-exports.test.js. verify() rebuilds the 25 golden traces unchanged; they carry no overview. The before/after replay on fresh snapshots is written separately by the supervisor into docs/overview-adjacent-years-vorher-nachher-2026-10-08.md; no replay numbers are registered here.",
+    "review": "Build registration only; two independent Claude blind reviews ordered by the master; no merge by the builder"
+  },
+  "p160SealedScoringRepairs": {
+    "date": "2026-10-11",
+    "authority": "Explicit P160 build brief and master resume: F-14 ABORT confirmed 2026-10-10; ten pending entries including the preserved P158 overview registration.",
+    "baseCommit": "a443bb832e0797ef34b4be640dac79b95f286511",
+    "buildCommit": null,
+    "buildState": "Uncommitted working-tree change set; master commits after review. The four source fingerprints below identify the candidate bytes.",
+    "scope": "Four minimal repairs only; no new scoring file, exports, weights, thresholds, calibration policy or archived artifact changes.",
+    "previousSourceSha256LF": {
+      "src/scoring/lamps.js": "e68ecf6ebdf1da2f18c0eece6575035a964d449020275974dbad509d6a74dd03",
+      "src/scoring/profit-tier.js": "a7af103912b2bfdec3dbe5bfa40268ec95d5fb8f12b87a0661af8f347f5c3eaf",
+      "src/scoring/router.js": "3fc110fd1096e6d4ccb5b3d79163d97f817ea599f592fd3356a50de4260fa3f8",
+      "src/scoring/run-screener.js": "5baa8445eaf96997066706b91849ae1aa19064c4c21d053a982525abd15be040"
+    },
+    "sourceSha256LF": {
+      "src/scoring/lamps.js": "e6d6b62d69859a6d67cf91ffa97489f6abf17713c63ff6b63d9a10f23c7866a6",
+      "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
+      "src/scoring/router.js": "cc6a5db58a07863e623b3cfaae70ec325a461bd978f47d57917234b8b6d8ee23",
+      "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "f14Decision": "ABORT for every non-ENOENT read/parse/root error, retaining file path and cause. ENOENT and a valid empty object remain optional. Main-load failures are fatal; failures first encountered in the smallcap-only pass retain its existing fail-soft marker. The main loader may already have written _last_good_disk.json; no daily-run transaction is claimed.",
+    "evidence": "C:/Users/Anwender/.codex/reports/warteschlange-2026-10-05/ergebnisse/P160/vorher-nachher.md; fixed-input 2026-10-10 replay, separate production-refit and fixed-calibration tables, and comparison with DL27 2026-10-08.",
+    "goldenImpact": {
+      "rebuiltCases": 25,
+      "changedTraces": 0,
+      "freezeTest": "tests/scoring/gqs00-freeze.test.js remains byte-identical; --verify checks the unchanged historical proof separately from current board effects."
+    },
+    "reviews": {
+      "codeErrorPropagationSealRollback": "pending independent Claude/Opus review",
+      "periodAlignmentMissingZeroVisibleEffects": "pending independent Claude/Opus review"
+    },
+    "rollback": "Revert all four source files AND this pending-transition registration together in one reviewed new commit."
+  },
+  "p192bProfitStreak": {
+    "date": "2026-10-11",
+    "authority": "Explicit P192b master build brief: latest documented annual value per fiscal year, no basis-change stop; Hecla 2020-2025 gives six positive operating years and last loss 2019.",
+    "baseCommit": "d0ecbf045141b339decb35a4cd645e27d190eac1",
+    "file": "src/scoring/profit-streak.js",
+    "sourceSha256LF": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "scope": "Only the display profitStreak including its optional financialCorrections sources. No score, rank, profitTierOf, SEC/Yahoo preference or stored SEC annual input change.",
+    "evidence": "tests/profit-streak-hand-table-p192.test.js; C:/Users/Anwender/.codex/reports/warteschlange-2026-10-05/ergebnisse/P192b/bericht.md",
+    "review": "Blind Opus review FREIGABE 90 % (ergebnisse/P192b/review-opus.md). No initialization or reseal.",
+    "rollback": "Revert the P192b source change and only the P192b pending hash registration together in a reviewed new commit."
+  },
+  "p184G31Recency": {
+    "date": "2026-10-11",
+    "authority": "Explicit P184 build brief, G31 11.10.2026; no production ranking switch.",
+    "scope": "B1-B5 remain shadow-only. V1/V2 and the labelled overview candidate are appended after every legacy row key. Existing live overview values, scores, ranks, formula weights and annual-pair switch defaults remain unchanged. score.js is unchanged from base.",
+    "previousSourceSha256LF": {
+      "src/scoring/axes.js": "5eb51891020ca59abbd6693fa57d8da493fb5acd3335f2d398744da67c709eb0",
+      "src/scoring/overview.js": "a73e61a61a3047f74ebfc1e67776cfc926d893040b9ed25e14a67037eedb37d9"
+    },
+    "sourceSha256LF": {
+      "src/scoring/axes.js": "72b1adb672e70eb305e50ee7bdad471f90b58c4ad0c8a95c99c48f066a605e04",
+      "src/scoring/overview.js": "ce93d5fa5cf60a3b8344fdba2e7989c653c68ea6bb1ace88278f6936db557a6a"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "evidence": "tests/g31-aktualitaet-p184.test.js; scripts/g31-replay.js; ergebnisse/P184/vorher-nachher.md and messung.csv. Frozen historical traces and gqs00-freeze.test.js unchanged.",
+    "parallelRun": "Starts on reviewed delivery; at most four weeks; current ranking remains unless the independent review and council authorize a switch.",
+    "review": "P184b: overview revenue shadows retain P158 annual adjacency even when the scoring rule is off. Compact delivery and error isolation are pinned in tests/g31-aktualitaet-p184.test.js; evidence in ergebnisse/P184b/bericht.md. Pending independent master review; builder does not commit, merge, publish or seal.",
+    "rollback": "Revert the P184 source changes and only the P184 pending hash registration together in a reviewed new commit."
+  }
+}

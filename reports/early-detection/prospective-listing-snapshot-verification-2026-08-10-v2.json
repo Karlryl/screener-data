@@ -1,0 +1,41 @@
+{
+  "schema": "early-detection-prospective-listing-snapshot-verification/v1",
+  "generatedAt": "2026-08-10T22:14:33.281Z",
+  "status": "PASS",
+  "snapshot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\early-detection-v4-gates-20260810\\reports\\early-detection\\prospective-listing-snapshot-2026-08-10-v1.json",
+  "snapshotFileSha256": "2f93dd74c4259eb87d61a3aaf1171e8be42897bf3f3a737f8d894f2e667ce2e5",
+  "snapshotReportSha256": "8c8683e09eb2745abd484a3ba430df74438cef877184e01d8803622fa030db24",
+  "storeRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\prospective-listing-panel",
+  "checks": {
+    "snapshotSignatureValid": true,
+    "sourceSetExact": true,
+    "payloadsRehashed": 3,
+    "payloadsReparsed": 3,
+    "parsedCountsReproduced": true,
+    "crossSourceDiagnosticReproduced": true,
+    "reportTamperDetected": true,
+    "payloadTamperDetected": true
+  },
+  "payloads": {
+    "nasdaqListed": {
+      "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\prospective-listing-panel\\blobs\\sha256\\2b\\2be5ef2ca035777961232008b0874764db13b84db61b4f089f5574d8574c0a88.txt",
+      "sha256": "2be5ef2ca035777961232008b0874764db13b84db61b4f089f5574d8574c0a88",
+      "bytes": 346520
+    },
+    "otherListed": {
+      "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\prospective-listing-panel\\blobs\\sha256\\db\\dba21814b836e3abbf283dae50e18de16c5000d96298fbcbfe1376bac4ed73b3.txt",
+      "sha256": "dba21814b836e3abbf283dae50e18de16c5000d96298fbcbfe1376bac4ed73b3",
+      "bytes": 534608
+    },
+    "secCompanyTickersExchange": {
+      "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\prospective-listing-panel\\blobs\\sha256\\53\\5399edec5fd0371d31c92a906b24e5144a2df224821c3961c5adab1b4f38f7c5.json",
+      "sha256": "5399edec5fd0371d31c92a906b24e5144a2df224821c3961c5adab1b4f38f7c5",
+      "bytes": 521435
+    }
+  },
+  "failures": [],
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "482f07706ad60eceab329c2b7596f1c5c9acc8dc3c94f91624aee6e1751e26fd"
+}

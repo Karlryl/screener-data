@@ -1,0 +1,171 @@
+{
+  "_comment": "GETEILTES Schema-Fixture (Task 1.3). BYTE-IDENTISCH in findash/data-layer/ und screener-data/docs/. Pin der v1-Aussenschnittstelle: bumpt der CI-Writer (screener-data) auf v2, ohne diese Datei nachzuziehen, schlaegt der Consumer-Kontrakttest sichtbar an (rotes npm test). Voller Vertrag: screener-data/docs/findash-export-v1.md.",
+  "schema": "findash-export/v1",
+  "requiredHull": ["schema", "generated_at", "coverage"],
+  "requiredBoardRow": ["rank", "ticker", "score", "track", "lamps", "overview", "country", "region", "sector", "marketCap", "phase", "mcapBand", "ipoRecency", "profitTier", "ipoYear", "cohortN", "cohortFallback"],
+  "requiredOverviewRow": ["rank", "ticker", "formulaId", "track", "score", "overviewKind", "overviewValue", "overviewCompanion", "lamps", "country", "region", "sector", "marketCap", "phase", "mcapBand", "ipoRecency", "profitTier", "ipoYear", "cohortN", "cohortFallback"],
+  "requiredSurvivalRow": ["rank", "ticker", "runwayQuarters", "lamps", "country", "region", "sector", "marketCap", "phase", "mcapBand", "ipoRecency", "profitTier", "ipoYear"],
+  "requiredIndex": ["schema", "generated_at", "coverage", "boardStatus", "branches", "counts"],
+  "validProfitTiers": ["nicht-profitabel", "kurz-vor-profitabel", "seit-kurzem-profitabel", "langfristig-profitabel"],
+  "validBoardStatus": ["core", "diagnostic"],
+  "validTracks": ["profitable", "unprofitable"],
+  "provenanceContract": {
+    "schema": "findash-provenance/v1",
+    "version": 1,
+    "scopeId": "revGrowthYoYPct+marketCap/v1",
+    "manifestPaths": {
+      "hypergrowth": "provenance/hypergrowth.json",
+      "rule40": "rule40/provenance/rule40.json"
+    },
+    "serialization": "Compact JSON; omitted record/fx/derivation keys expand to null in contract order; all-null subobjects may be omitted. Other values, envelope and reviews stay present. Evidence IDs hash the expanded record with id:null, omitting handTableDerivation when null so IDs of records without it are unchanged.",
+    "failureMarkerPaths": [
+      "provenance/_failed.json",
+      "rule40/provenance/_failed.json"
+    ],
+    "failureMarkerFields": ["schema", "generated_at", "board", "reason"],
+    "failureMarkerSchema": "findash-provenance/v1",
+    "failureMarkerBoards": ["hypergrowth", "rule40"],
+    "fieldPaths": [
+      "revGrowthYoYPct",
+      "marketCap"
+    ],
+    "scopedFiles": [
+      "<branch>.json",
+      "overview.json",
+      "rule40/overview.json"
+    ],
+    "headerFields": [
+      "provenanceVersion",
+      "provenanceRunId",
+      "provenanceManifest",
+      "provenanceManifestSha256",
+      "verificationSummary"
+    ],
+    "rowFields": [
+      "provenance",
+      "verification",
+      "fieldStatus"
+    ],
+    "verificationFields": [
+      "status",
+      "scopeId",
+      "requiredFields",
+      "verifiedFields",
+      "openFields",
+      "reviewIds",
+      "checkedAt",
+      "valueHash",
+      "reason"
+    ],
+    "summaryFields": [
+      "scopeId",
+      "eligibleRows",
+      "fullyVerifiedRows",
+      "partiallyVerifiedRows",
+      "uncheckedRows",
+      "withheldRows",
+      "checkedAt"
+    ],
+    "fieldStatusFields": [
+      "presence",
+      "verification",
+      "reason",
+      "reviewIds"
+    ],
+    "manifestFields": [
+      "schema",
+      "runId",
+      "generatedAt",
+      "records",
+      "reviews"
+    ],
+    "recordFields": [
+      "id",
+      "issuerId",
+      "listingId",
+      "ticker",
+      "fieldPath",
+      "valueHash",
+      "creatorEngine",
+      "creatorModel",
+      "creatorSessionId",
+      "createdAt",
+      "sourceType",
+      "provider",
+      "retrievedAt",
+      "observedAt",
+      "publishedAt",
+      "periodStart",
+      "periodEnd",
+      "periodType",
+      "comparativeBasis",
+      "metricDefinition",
+      "nativeValue",
+      "nativeCurrency",
+      "nativeUnit",
+      "unitMultiplier",
+      "normalizedValue",
+      "normalizedCurrency",
+      "documentUrl",
+      "documentTitle",
+      "documentId",
+      "documentSha256",
+      "filingAccession",
+      "filingForm",
+      "filedAt",
+      "taxonomy",
+      "concept",
+      "contextId",
+      "page",
+      "anchor",
+      "quote",
+      "fx",
+      "derivation",
+      "correctionCaseId",
+      "correctionRevision",
+      "supersedesId",
+      "missingReason",
+      "qualityWarnings",
+      "handTableDerivation"
+    ],
+    "handTableDerivationFields": ["formulaDe", "inputs"],
+    "handTableDerivationInputFields": ["labelDe", "value", "currency", "quote", "url", "page", "form", "filed"],
+    "handTableDerivationDescriptionDe": "Nur bei Handtabellen-Zellen, deren angezeigter Wert in keiner einzelnen Quelle steht, sondern aus zwei Quellwerten berechnet ist (zum Beispiel Viertes Quartal = Geschäftsjahr minus neun Monate) oder von der Firma nur gerundet genannt wird. Sonst fehlt der Schlüssel und gilt als null.",
+    "fxFields": [
+      "rate",
+      "fromCurrency",
+      "toCurrency",
+      "asOf",
+      "sourceUrl",
+      "unitAdjustment",
+      "adrRatio"
+    ],
+    "derivationFields": [
+      "methodId",
+      "methodVersion",
+      "expression",
+      "inputIds",
+      "rounding",
+      "parametersHash",
+      "cohortId",
+      "cohortHash",
+      "cohortInputIds",
+      "cohortVerificationStatus"
+    ],
+    "reviewFields": [
+      "id",
+      "evidenceIds",
+      "scopeId",
+      "valueHash",
+      "methodVersion",
+      "reviewerEngine",
+      "reviewerModel",
+      "reviewerSessionId",
+      "checkedAt",
+      "result",
+      "reason",
+      "sourceReopenedAt",
+      "supersedesReviewId"
+    ]
+  }
+}

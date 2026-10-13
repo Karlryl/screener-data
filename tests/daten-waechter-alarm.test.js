@@ -1,0 +1,198 @@
+'use strict';
+/**
+ * Waechter ueber die Waechter: schlagen die vier Daten-Kanarienvoegel bei Karl an?
+ *
+ * BEFUND (28.07.): Boersen-Abdeckung, nicht geroutete Namen, FX-Plausibilitaet und der
+ * Schrumpf-Waechter melden ihre Funde per ::error:: und Exit 1 — aber jeder Schritt traegt
+ * `continue-on-error`, also lief der Job weiter und endete GRUEN. Der gedachte zweite
+ * Kanal existiert nicht: DISCORD_WEBHOOK ist nicht gesetzt (der Workflow sagt es an zwei
+ * Stellen selbst), und Karl liest ohnehin kein Discord, sondern ausschliesslich das rote X.
+ * Ein stiller Einbruch der Boersen-Abdeckung kam damit bei niemandem an.
+ *
+ * `continue-on-error` bleibt bewusst stehen — die Waechter schreiben ihre Baseline VOR dem
+ * Drift-Check, und ein sofortiger Abbruch wuerde sie verlieren, womit sich der Alarm selbst
+ * blind machte. Deshalb: erst schreiben und committen, dann einsammeln.
+ *
+ * Usage:  node tests/daten-waechter-alarm.test.js   (Exit 0/1)
+ */
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
+
+// Zeilenenden vereinheitlichen: git materialisiert die Datei unter Windows mit CRLF.
+// Ohne das suchen die Proben unten nach einem Zeilenumbruch und finden nichts — ein
+// Falschalarm, den es nur auf Karls Rechner gibt, waehrend die CI (Linux) gruen bleibt.
+const WF = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8')
+  .split('\r\n').join('\n');
+
+let pass = 0, fail = 0;
+function check(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+}
+
+const WAECHTER = [
+  { id: 'w_exchange', schritt: 'Watch Exchange Coverage' },
+  { id: 'w_unrouted', schritt: 'Watch Unrouted Quote Share' },
+  { id: 'w_fx', schritt: 'Watch FX Sanity' },
+  { id: 'w_pullstats', schritt: 'Pull-Stats Check' },
+];
+
+/** Der YAML-Block eines Schritts: ab seinem Namen bis zum naechsten `- name:`. */
+function block(schrittName) {
+  const i = WF.indexOf('- name: ' + schrittName + '\n');
+  assert.ok(i > 0, 'Schritt "' + schrittName + '" nicht gefunden');
+  const bis = WF.indexOf('- name:', i + 10);
+  return WF.slice(i, bis > 0 ? bis : undefined);
+}
+
+for (const w of WAECHTER) {
+  check(w.schritt + ' hat eine ID und wird eingesammelt', () => {
+    assert.ok(block(w.schritt).includes('id: ' + w.id),
+      'ohne ID kann der Sammel-Schritt sein Ergebnis nicht lesen');
+    assert.ok(WF.includes('steps.' + w.id + '.outcome'),
+      'die ID ist vergeben, aber niemand fragt ihr Ergebnis ab — der Alarm bleibt stumm');
+  });
+}
+
+check('der Sammel-Schritt faerbt den Lauf wirklich rot', () => {
+  const b = block('Daten-Waechter einsammeln (rotes X)');
+  assert.ok(/::error::/.test(b), 'muss ::error:: schreiben, nicht ::warning::');
+  assert.ok(/exit 1/.test(b), 'muss mit exit 1 enden');
+  assert.ok(/if: always\(\)/.test(b),
+    'ohne always() wird er uebersprungen, sobald ein frueherer Schritt scheitert — genau dann wird er gebraucht');
+});
+
+check('er laeuft NACH dem Commit, damit die Baseline erhalten bleibt', () => {
+  // Die Waechter schreiben ihre Vergleichsbasis vor dem Drift-Check. Bricht der Job
+  // vorher ab, fehlt dem naechsten Lauf der Vergleichsstand — der Alarm macht sich selbst
+  // blind. Deshalb ist die Reihenfolge Teil des Entwurfs, kein Zufall.
+  assert.ok(WF.indexOf('- name: Daten-Waechter einsammeln') > WF.indexOf('- name: Commit Snapshots'),
+    'der Sammler steht vor dem Commit — dann geht die Baseline bei Alarm verloren');
+});
+
+check('kein Waechter behaelt continue-on-error OHNE eingesammelt zu werden', () => {
+  // Der eigentliche Regressions-Schutz: wer morgen einen fuenften Kanarienvogel mit
+  // continue-on-error dazustellt und das Einsammeln vergisst, baut denselben stummen
+  // Alarm noch einmal. Diese Probe faengt genau das.
+  const namen = [...WF.matchAll(/- name: (Watch [^\n]+)\n/g)].map((m) => m[1]);
+  assert.ok(namen.length >= 3, 'die Watch-Schritte wurden umbenannt — Probe anpassen');
+  for (const n of namen) {
+    const b = block(n);
+    if (!/continue-on-error:\s*true/.test(b)) continue;
+    const m = b.match(/id:\s*(\S+)/);
+    assert.ok(m, 'Schritt "' + n + '" schluckt Fehler per continue-on-error, hat aber keine ID');
+    assert.ok(WF.includes('steps.' + m[1] + '.outcome'),
+      'Schritt "' + n + '" schluckt Fehler, aber sein Ergebnis wird nirgends eingesammelt — stummer Alarm');
+  }
+});
+
+check('der Form-4-Pull wird eingesammelt — die ganze Kette, nicht nur die id (R609-1)', () => {
+  // BEFUND (Review Tag 608): der Schritt trug `continue-on-error: true` und KEINE id.
+  // Beide fail-loud-Wege des Skripts (Wurf ueber den korrupten 42-MB-Cache aus Tag 608,
+  // TOTAL-FAILURE-Exit(1) bei systemischem 403) endeten damit als gruener Lauf.
+  //
+  // Geprueft wird die SACHE, also die ganze Kette bis zum roten X — und zwar an den
+  // vier benannten Objekten, nicht an einem Textmuster irgendwo in der Datei:
+  //   Schritt -> id -> Ausgangs-Schritt -> Job-Ausgang -> einsammelnder Waechter-Schritt.
+  // Faellt irgendein Glied weg, ist der Alarm wieder stumm; jede einzelne Probe hier
+  // wird dann rot. (Beleg: mit `id: pull_form4` entfernt -> Probe 1 rot; mit dem
+  // Waechter-Schritt entfernt -> Probe 4 rot.)
+  const schritt = block('Pull Insider Form-4 (daily)');
+  assert.ok(/continue-on-error:\s*true/.test(schritt),
+    'ohne continue-on-error braucht es diese Kette nicht mehr — dann bitte diese Probe streichen');
+  assert.ok(schritt.includes('id: pull_form4'),
+    'ohne id ist steps.pull_form4.outcome nicht abfragbar — der Ausfall bleibt job-lokal und unsichtbar');
+
+  assert.ok(block('Insider-Ausgang festhalten').includes('steps.pull_form4.outcome'),
+    'der Ausgang wird nicht festgehalten — Schritt-Ergebnisse sind job-lokal, der Waechter-Job kaeme nie daran');
+
+  assert.ok(/pull_form4_outcome:\s*\$\{\{\s*steps\.form4_ausgang\.outputs\.outcome\s*\}\}/.test(WF),
+    'der prep-Job reicht den Ausgang nicht als Job-Ausgang weiter — die Kette reisst zwischen den Jobs');
+
+  const sammler = block('Insider-Kanal einsammeln (rotes X)');
+  assert.ok(sammler.includes('needs.prep.outputs.pull_form4_outcome'),
+    'niemand liest den Job-Ausgang — id vergeben, Alarm trotzdem stumm (genau der Befund)');
+  assert.ok(/failure\)/.test(sammler), 'der failure-Zweig fehlt');
+  assert.ok(/::error::/.test(sammler), 'muss ::error:: schreiben, nicht ::warning::');
+  assert.ok(/exit 1/.test(sammler), 'ohne exit 1 bleibt der Lauf gruen — Karls einziger Alarmkanal ist das rote X');
+  assert.ok(/if: always\(\)/.test(sammler),
+    'ohne always() wird der Sammler uebersprungen, sobald ein frueherer Schritt scheitert');
+});
+
+check('gueltige Form gepinnt: der Form-4-Sammler haengt an prep, nicht an merge (R609-1)', () => {
+  // Gegenprobe zur Probe darueber: die dort geforderte Form muss auch DURCHGEHEN,
+  // und zwar in dem Job, der sie tragen kann. `needs.prep.outputs.*` ist nur in einem
+  // Job lesbar, der prep in `needs` hat — steht der Sammler im falschen Job, ist der
+  // Ausdruck leer und der Waechter meldet stumm "still".
+  const i = WF.indexOf('  entdeckungs-waechter:');
+  assert.ok(i > 0, 'Job entdeckungs-waechter nicht gefunden — traegt den Sammler');
+  const job = WF.slice(i, WF.indexOf('\n  pull:', i));
+  assert.ok(/needs:\s*prep/.test(job), 'der Job holt prep nicht in needs — needs.prep.outputs.* waere leer');
+  assert.ok(job.includes('- name: Insider-Kanal einsammeln (rotes X)'),
+    'der Sammler sitzt nicht in diesem Job — dort, wo er sitzt, ist needs.prep.outputs.pull_form4_outcome moeglicherweise gar nicht aufloesbar');
+});
+
+check('der Schrumpf-Waechter meldet Drift jetzt als Fehler, nicht als Notiz', () => {
+  // ⚠ Diese Probe pruefte zuerst, ob der Satz "never fail workflow; alert is enough"
+  // im Quelltext FEHLT — und wurde sofort rot, weil der neue Kommentar den alten Satz
+  // ZITIERT, um die Aenderung zu erklaeren. Ein Waechter, der ein Schreibmuster sucht
+  // statt die Sache, faellt auf jede Erklaerung herein. Jetzt werden die Kommentare
+  // entfernt und das VERHALTEN geprueft.
+  const roh = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'check-pull-stats.js'), 'utf8');
+  const code = roh.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  // 29.07.: Der Anker war `postDiscord(msg)` — also ausgerechnet die Zeile, die mit dem
+  // Discord-Ausbau verschwunden ist. Der Anker ist jetzt die ::error::-Zeile SELBST:
+  // sie ist der Alarm, um den es geht, und sie kann nicht wegfallen, ohne dass die
+  // gepruefte Eigenschaft mit ihr wegfaellt.
+  const i = code.indexOf('::error::Pull-Stats-Drift');
+  assert.ok(i > 0, 'der Drift-Zweig schreibt kein ::error:: mehr — Alarm weg');
+  const rest = code.slice(i, i + 400);
+  assert.ok(/return\s+1\s*;/.test(rest),
+    'der Drift-Zweig gibt nicht 1 zurueck — der Lauf bliebe gruen');
+  assert.ok(/ALLOW_PULL_DRIFT/.test(code), 'das Ventil fuer bekannte, gewollte Einbrueche muss bleiben');
+  // Und der Absturzpfad darf ebenfalls nicht still gruen sein (29.07.).
+  const j = code.indexOf('require.main === module');
+  assert.ok(j > 0, 'kein Einstiegspunkt gefunden');
+  assert.ok(!/process\.exit\(\s*0\s*\)/.test(code.slice(code.indexOf('.catch(', j))),
+    'der Absturzpfad meldet Erfolg — ein toter Waechter waere fuer immer gruen');
+});
+
+check('eine KAPUTTE Eingabedatei ist von einer fehlenden unterscheidbar', () => {
+  // Tag 554: loadJson() schluckte jeden Fehler wortlos (`catch { return null; }`).
+  // Eine fehlende Datei ist der Normalfall (der erste Lauf hat keine history.json)
+  // — ein korruptes _manifest.json/fx-rates.json aber nicht: es liefert dieselbe
+  // null, die Metrik wird still zu null, und detectStatsDrift ueberspringt sie
+  // ("todayVal == null -> continue"). Der Drift-Waechter meldet dann nicht etwa
+  // einen Einbruch, sondern gar nichts. Genau der Fall braucht eine Sichtspur.
+  const { loadJson } = require(path.join(__dirname, '..', 'scripts', 'check-pull-stats.js'));
+  const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pullstats-'));
+  const kaputt = path.join(dir, 'fx-rates.json');
+  fs.writeFileSync(kaputt, '{ "rates": ');            // abgeschnitten wie ein halber Write
+  const fehlt = path.join(dir, 'gibt-es-nicht.json');
+
+  const gesagt = [];
+  const orig = console.warn;
+  console.warn = (...a) => gesagt.push(a.join(' '));
+  let ausKaputt, ausFehlt;
+  try {
+    ausKaputt = loadJson(kaputt);
+    const nachKaputt = gesagt.length;
+    ausFehlt = loadJson(fehlt);
+    assert.equal(gesagt.length, nachKaputt,
+      'die FEHLENDE Datei hat gewarnt — das ist der Normalfall und wuerde jeden Lauf zumuellen: ' + gesagt.slice(nachKaputt).join(' | '));
+  } finally {
+    console.warn = orig;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+
+  assert.equal(ausKaputt, null, 'Rueckgabe muss null bleiben — kein throw, das Skript laeuft weiter');
+  assert.equal(ausFehlt, null, 'fehlende Datei muss weiterhin still null liefern');
+  assert.equal(gesagt.length, 1,
+    'kaputte Datei wird nicht gemeldet: ein korruptes fx-rates.json ist von einem fehlenden nicht zu unterscheiden, die Metrik faellt still auf null');
+  assert.ok(gesagt[0].includes('fx-rates.json'),
+    'die Warnung nennt die Datei nicht — bei fuenf Eingabedateien unbrauchbar: ' + gesagt[0]);
+});
+
+console.log('\ndaten-waechter-alarm: ' + pass + ' ok, ' + fail + ' fail');
+process.exit(fail ? 1 : 0);

@@ -1,0 +1,732 @@
+{
+  "_doc": "M10/M1 (_COURT-M10-2026-08-30, Frist 20.09.2026) — taegliche Herkunftsreihe von meta.nameSource. REINE MESSUNG: kein Gate, keine rc-Semantik, kein Konsument im Scoring (Auflage M2). Bucket \"fehlt\" = die Zeile traegt den Schluessel nameSource gar nicht, wurde also seit PR #136 nicht neu gezogen; ohne ihn wird wachsender Deckungsgrad als schrumpfende Fehlerklasse fehlgelesen. Invariante: Summe aller Buckets === gelesen. Gemessen NACH den Umbenennungs-Stufen des Laufs (die Population, die der Dedup sieht); die Umbenennungen des Laufs stehen getrennt unter \"umbenennungen\" (Auflage M5).",
+  "byDate": {
+    "2026-09-01": {
+      "gelesen": 16070,
+      "verteilung": {
+        "longName": 323,
+        "shortName": 0,
+        "watchlist": 1,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 15746
+      },
+      "gruppen": 11332,
+      "mehrbeinGruppen": 3148,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 40,
+        "jeHerkunft": {
+          "fehlt": 39,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-02": {
+      "gelesen": 16040,
+      "verteilung": {
+        "longName": 1369,
+        "shortName": 2,
+        "watchlist": 1,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 14667
+      },
+      "gruppen": 11273,
+      "mehrbeinGruppen": 3157,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 32,
+        "jeHerkunft": {
+          "fehlt": 31,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-04": {
+      "gelesen": 16075,
+      "verteilung": {
+        "longName": 5436,
+        "shortName": 17,
+        "watchlist": 1,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 10620
+      },
+      "gruppen": 11289,
+      "mehrbeinGruppen": 3165,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 11,
+        "jeHerkunft": {
+          "fehlt": 9,
+          "longName": 2
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-05": {
+      "gelesen": 16091,
+      "verteilung": {
+        "longName": 5945,
+        "shortName": 18,
+        "watchlist": 1,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 10126
+      },
+      "gruppen": 11297,
+      "mehrbeinGruppen": 3169,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 9,
+        "jeHerkunft": {
+          "fehlt": 7,
+          "longName": 2
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-08": {
+      "gelesen": 16119,
+      "verteilung": {
+        "longName": 8039,
+        "shortName": 22,
+        "watchlist": 1,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 8056
+      },
+      "gruppen": 11224,
+      "mehrbeinGruppen": 3197,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 4,
+        "jeHerkunft": {
+          "longName": 2,
+          "fehlt": 2
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-09": {
+      "gelesen": 16104,
+      "verteilung": {
+        "longName": 8136,
+        "shortName": 25,
+        "watchlist": 1,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 7941
+      },
+      "gruppen": 11207,
+      "mehrbeinGruppen": 3197,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 5,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 2,
+          "fehlt": 2
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-10": {
+      "gelesen": 16061,
+      "verteilung": {
+        "longName": 8129,
+        "shortName": 25,
+        "watchlist": 1,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 7905
+      },
+      "gruppen": 11165,
+      "mehrbeinGruppen": 3194,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 5,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 2,
+          "fehlt": 2
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-11": {
+      "gelesen": 15983,
+      "verteilung": {
+        "longName": 8325,
+        "shortName": 28,
+        "watchlist": 2,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 7627
+      },
+      "gruppen": 11087,
+      "mehrbeinGruppen": 3189,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 4,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 2,
+          "fehlt": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-12": {
+      "gelesen": 15984,
+      "verteilung": {
+        "longName": 8521,
+        "shortName": 29,
+        "watchlist": 2,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 7431
+      },
+      "gruppen": 11087,
+      "mehrbeinGruppen": 3189,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 4,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 2,
+          "fehlt": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-15": {
+      "gelesen": 15918,
+      "verteilung": {
+        "longName": 8759,
+        "shortName": 30,
+        "watchlist": 2,
+        "ticker": 1,
+        "null": 0,
+        "fehlt": 7126
+      },
+      "gruppen": 11029,
+      "mehrbeinGruppen": 3179,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 4,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 2,
+          "fehlt": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-17": {
+      "gelesen": 15996,
+      "verteilung": {
+        "longName": 9102,
+        "shortName": 32,
+        "watchlist": 2,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 6860
+      },
+      "gruppen": 11093,
+      "mehrbeinGruppen": 3183,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 4,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 2,
+          "fehlt": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-18": {
+      "gelesen": 16027,
+      "verteilung": {
+        "longName": 9175,
+        "shortName": 33,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 6816
+      },
+      "gruppen": 11117,
+      "mehrbeinGruppen": 3188,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 3,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1,
+          "fehlt": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-19": {
+      "gelesen": 16046,
+      "verteilung": {
+        "longName": 9331,
+        "shortName": 35,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 6677
+      },
+      "gruppen": 11131,
+      "mehrbeinGruppen": 3191,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-20": {
+      "gelesen": 16047,
+      "verteilung": {
+        "longName": 9334,
+        "shortName": 35,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 6675
+      },
+      "gruppen": 11131,
+      "mehrbeinGruppen": 3191,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-22": {
+      "gelesen": 16091,
+      "verteilung": {
+        "longName": 9399,
+        "shortName": 35,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 6654
+      },
+      "gruppen": 11175,
+      "mehrbeinGruppen": 3192,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-23": {
+      "gelesen": 16103,
+      "verteilung": {
+        "longName": 9424,
+        "shortName": 35,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 6641
+      },
+      "gruppen": 11182,
+      "mehrbeinGruppen": 3193,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-24": {
+      "gelesen": 16049,
+      "verteilung": {
+        "longName": 9552,
+        "shortName": 35,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 6459
+      },
+      "gruppen": 11130,
+      "mehrbeinGruppen": 3187,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-25": {
+      "gelesen": 16022,
+      "verteilung": {
+        "longName": 13847,
+        "shortName": 35,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 2137
+      },
+      "gruppen": 11119,
+      "mehrbeinGruppen": 3175,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 3,
+        "jeHerkunft": {
+          "longName": 2,
+          "shortName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-26": {
+      "gelesen": 16015,
+      "verteilung": {
+        "longName": 13844,
+        "shortName": 36,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 2132
+      },
+      "gruppen": 11108,
+      "mehrbeinGruppen": 3174,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 3,
+        "jeHerkunft": {
+          "longName": 2,
+          "shortName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-29": {
+      "gelesen": 16118,
+      "verteilung": {
+        "longName": 16055,
+        "shortName": 42,
+        "watchlist": 2,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 19
+      },
+      "gruppen": 11179,
+      "mehrbeinGruppen": 3194,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 3,
+        "jeHerkunft": {
+          "longName": 2,
+          "shortName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-09-30": {
+      "gelesen": 16118,
+      "verteilung": {
+        "longName": 16061,
+        "shortName": 42,
+        "watchlist": 2,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 13
+      },
+      "gruppen": 11179,
+      "mehrbeinGruppen": 3193,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 3,
+        "jeHerkunft": {
+          "longName": 2,
+          "shortName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-01": {
+      "gelesen": 16108,
+      "verteilung": {
+        "longName": 16054,
+        "shortName": 43,
+        "watchlist": 2,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 9
+      },
+      "gruppen": 11165,
+      "mehrbeinGruppen": 3195,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 3,
+        "jeHerkunft": {
+          "longName": 2,
+          "shortName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-02": {
+      "gelesen": 16102,
+      "verteilung": {
+        "longName": 16049,
+        "shortName": 44,
+        "watchlist": 2,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 7
+      },
+      "gruppen": 11164,
+      "mehrbeinGruppen": 3189,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 3,
+        "jeHerkunft": {
+          "longName": 2,
+          "shortName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-03": {
+      "gelesen": 16111,
+      "verteilung": {
+        "longName": 16057,
+        "shortName": 44,
+        "watchlist": 3,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 7
+      },
+      "gruppen": 11170,
+      "mehrbeinGruppen": 3190,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-06": {
+      "gelesen": 16152,
+      "verteilung": {
+        "longName": 16096,
+        "shortName": 45,
+        "watchlist": 4,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 7
+      },
+      "gruppen": 11198,
+      "mehrbeinGruppen": 3198,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-07": {
+      "gelesen": 16149,
+      "verteilung": {
+        "longName": 16091,
+        "shortName": 47,
+        "watchlist": 4,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 7
+      },
+      "gruppen": 11195,
+      "mehrbeinGruppen": 3197,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-08": {
+      "gelesen": 16070,
+      "verteilung": {
+        "longName": 16012,
+        "shortName": 49,
+        "watchlist": 4,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 5
+      },
+      "gruppen": 11125,
+      "mehrbeinGruppen": 3188,
+      "watchlistSieger": 1,
+      "unterdrueckteBeine": 4,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-09": {
+      "gelesen": 16217,
+      "verteilung": {
+        "longName": 16158,
+        "shortName": 49,
+        "watchlist": 5,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 5
+      },
+      "gruppen": 11225,
+      "mehrbeinGruppen": 3221,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-10": {
+      "gelesen": 16233,
+      "verteilung": {
+        "longName": 16174,
+        "shortName": 49,
+        "watchlist": 5,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 5
+      },
+      "gruppen": 11239,
+      "mehrbeinGruppen": 3222,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    },
+    "2026-10-13": {
+      "gelesen": 16300,
+      "verteilung": {
+        "longName": 16242,
+        "shortName": 49,
+        "watchlist": 4,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 5
+      },
+      "gruppen": 11243,
+      "mehrbeinGruppen": 3261,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 2,
+        "jeHerkunft": {
+          "shortName": 1,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    }
+  }
+}

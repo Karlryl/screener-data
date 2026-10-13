@@ -1,0 +1,180 @@
+{
+  "schema": "early-detection-entity-bridge/v2",
+  "status": "CANDIDATE_BRIDGE_PASS_NOT_ADJUDICATED",
+  "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-nasdaq-cik-candidate-bridge-v2.sqlite",
+  "databaseBytes": 6971392,
+  "evidenceSources": {
+    "secFsd": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-fsd-compact.sqlite",
+    "secEdgarMasterIndex": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-edgar-master-index.sqlite"
+  },
+  "snapshots": 12,
+  "rows": 43068,
+  "byStatus": {
+    "AMBIGUOUS": 725,
+    "CANDIDATE_UNADJUDICATED": 22440,
+    "EXCLUDE_NON_OPERATING_SECURITY": 3821,
+    "EXCLUDE_TEST_ISSUE": 243,
+    "UNRESOLVED": 15839
+  },
+  "candidateRate": 0.5210365004179437,
+  "snapshotCoverage": [
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2009-02-19T03:44:44.000Z",
+      "rows": 3210,
+      "byStatus": {
+        "AMBIGUOUS": 10,
+        "CANDIDATE_UNADJUDICATED": 2019,
+        "EXCLUDE_TEST_ISSUE": 93,
+        "UNRESOLVED": 1088
+      },
+      "candidateRate": 0.6289719626168224
+    },
+    {
+      "dataset": "otherlisted",
+      "observedAt": "2009-03-12T04:46:44.000Z",
+      "rows": 5082,
+      "byStatus": {
+        "AMBIGUOUS": 3,
+        "CANDIDATE_UNADJUDICATED": 873,
+        "EXCLUDE_NON_OPERATING_SECURITY": 679,
+        "EXCLUDE_TEST_ISSUE": 26,
+        "UNRESOLVED": 3501
+      },
+      "candidateRate": 0.1717827626918536
+    },
+    {
+      "dataset": "otherlisted",
+      "observedAt": "2010-09-15T00:00:58.000Z",
+      "rows": 4922,
+      "byStatus": {
+        "AMBIGUOUS": 49,
+        "CANDIDATE_UNADJUDICATED": 1667,
+        "EXCLUDE_NON_OPERATING_SECURITY": 859,
+        "EXCLUDE_TEST_ISSUE": 28,
+        "UNRESOLVED": 2319
+      },
+      "candidateRate": 0.3386834620073141
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2011-01-01T15:54:20.000Z",
+      "rows": 2891,
+      "byStatus": {
+        "AMBIGUOUS": 50,
+        "CANDIDATE_UNADJUDICATED": 2172,
+        "EXCLUDE_TEST_ISSUE": 4,
+        "UNRESOLVED": 665
+      },
+      "candidateRate": 0.7512971290211
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2011-12-10T04:15:21.000Z",
+      "rows": 2789,
+      "byStatus": {
+        "AMBIGUOUS": 59,
+        "CANDIDATE_UNADJUDICATED": 2090,
+        "EXCLUDE_TEST_ISSUE": 4,
+        "UNRESOLVED": 636
+      },
+      "candidateRate": 0.7493725349587665
+    },
+    {
+      "dataset": "otherlisted",
+      "observedAt": "2011-12-25T02:39:34.000Z",
+      "rows": 5131,
+      "byStatus": {
+        "AMBIGUOUS": 69,
+        "CANDIDATE_UNADJUDICATED": 1719,
+        "EXCLUDE_NON_OPERATING_SECURITY": 1086,
+        "EXCLUDE_TEST_ISSUE": 32,
+        "UNRESOLVED": 2225
+      },
+      "candidateRate": 0.33502241278503214
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2012-06-23T14:10:57.000Z",
+      "rows": 2763,
+      "byStatus": {
+        "AMBIGUOUS": 62,
+        "CANDIDATE_UNADJUDICATED": 2045,
+        "EXCLUDE_TEST_ISSUE": 4,
+        "UNRESOLVED": 652
+      },
+      "candidateRate": 0.7401375316684763
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2013-02-20T10:38:18.000Z",
+      "rows": 2698,
+      "byStatus": {
+        "AMBIGUOUS": 64,
+        "CANDIDATE_UNADJUDICATED": 1993,
+        "EXCLUDE_TEST_ISSUE": 4,
+        "UNRESOLVED": 637
+      },
+      "candidateRate": 0.7386953298739807
+    },
+    {
+      "dataset": "otherlisted",
+      "observedAt": "2013-10-23T22:06:29.000Z",
+      "rows": 5141,
+      "byStatus": {
+        "AMBIGUOUS": 111,
+        "CANDIDATE_UNADJUDICATED": 1757,
+        "EXCLUDE_NON_OPERATING_SECURITY": 1197,
+        "EXCLUDE_TEST_ISSUE": 34,
+        "UNRESOLVED": 2042
+      },
+      "candidateRate": 0.34176230305388056
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2013-10-31T17:10:24.000Z",
+      "rows": 2753,
+      "byStatus": {
+        "AMBIGUOUS": 77,
+        "CANDIDATE_UNADJUDICATED": 2012,
+        "EXCLUDE_TEST_ISSUE": 4,
+        "UNRESOLVED": 660
+      },
+      "candidateRate": 0.7308390846349437
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2014-03-25T13:37:51.000Z",
+      "rows": 2811,
+      "byStatus": {
+        "AMBIGUOUS": 82,
+        "CANDIDATE_UNADJUDICATED": 2029,
+        "EXCLUDE_TEST_ISSUE": 5,
+        "UNRESOLVED": 695
+      },
+      "candidateRate": 0.7218071860547848
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "observedAt": "2014-07-11T23:16:43.000Z",
+      "rows": 2877,
+      "byStatus": {
+        "AMBIGUOUS": 89,
+        "CANDIDATE_UNADJUDICATED": 2064,
+        "EXCLUDE_TEST_ISSUE": 5,
+        "UNRESOLVED": 719
+      },
+      "candidateRate": 0.7174139728884255
+    }
+  ],
+  "candidateSequenceSha256": "70976af5e43ee2c80127c870845db846d30a3bf73ee225517d4b658144ba3fa9",
+  "confirmatoryEligible": false,
+  "limitations": [
+    "Name matching is a candidate generator and never establishes a permanent entity or listing identity.",
+    "Snapshots are sparse exact captures and are never forward-filled between dates.",
+    "EDGAR master indexes are filing locators; their issuer names add candidate aliases but not security identity.",
+    "Every candidate still requires filing-cover, Form 25/15 or equivalent event evidence and independent audit."
+  ],
+  "productiveGqsModified": false,
+  "reportSha256": "7d3e2f4cbb468b70dee41068aaad8f93c128727fc43d5612e614c24fc7a1f9c0"
+}

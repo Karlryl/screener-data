@@ -1,0 +1,60 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const vm = require('node:vm');
+const { spawnSync } = require('node:child_process');
+const script = path.resolve(__dirname, '../scripts/t178-reihen-zwillinge.js');
+const api = require(script), rules = api.loadRules();
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 't178-fixtures-'));
+function fixture(ticker, cik, values, name = ticker) {
+  fs.writeFileSync(path.join(dir, ticker + '.json'), JSON.stringify({ meta: { ticker, cik, name, exchangeName: 'TEST', sharesOutstanding: 100 }, annual: { annualRev: values } }));
+}
+fixture('B1', '1', [1, 2, 3]); fixture('B2', '2', [{ value: 1 }, { value: 2 }, { value: 3 }]);
+fixture('A1', '0003', [4, 5, 6]); fixture('A2', 3, [4, 5, 6]);
+fixture('C1', '4', [7, 8, 9]); fixture('C2', null, [7, 8, 9]);
+fixture('SHORT', '5', [1, 2]);
+fixture('GAP1', '6', [10, null, 11, 12]); fixture('GAP2', '7', [10, 11, null, 12]);
+fixture('NAME1', null, [13, 14, 15], 'Same Company'); fixture('NAME2', null, [13, 14, 15], 'Same Company');
+fixture('CONFLICT1', '8', [16, 17, 18], 'Same Label'); fixture('CONFLICT2', '9', [16, 17, 18], 'Same Label');
+fixture('MIX1', '10', [19, 20, 21]); fixture('MIX2', '11', [19, 20, 21]); fixture('MIX3', null, [19, 20, 21]);
+fs.writeFileSync(path.join(dir, '_manifest.json'), '{"fixture":true}');
+function check(implementation) {
+  const pop = implementation.readPopulation(dir, rules), r = implementation.measure(pop, rules);
+  assert.equal(pop.snapshots.length, 16); assert.equal(pop.files, 17);
+  assert.equal(r.unreliable, 1); assert.equal(r.reliable, 15);
+  assert.equal(r.groups.length, 6, 'gap positions must not collapse into a group');
+  const kind = ticker => r.groups.find(g => g.members.some(s => s.ticker === ticker))?.kind;
+  assert.equal(kind('B1'), 'b'); assert.equal(kind('A1'), 'a'); assert.equal(kind('C1'), 'c');
+  assert.equal(kind('GAP1'), undefined); assert.equal(kind('NAME1'), 'a');
+  assert.equal(kind('CONFLICT1'), 'b'); assert.equal(kind('MIX1'), 'b');
+  assert.deepEqual(r.pairs, { a: 2, b: 3, c: 3 });
+  const text = implementation.render(pop, r, rules);
+  assert.equal(text.match(/^## /gm).length, 5);
+  assert.match(text, /CONFLICT1/); assert.match(text, /VMRK: 0\/16/);
+  return pop;
+}
+const pop = check(api);
+assert.equal(api.canonical([-1, 0, 2, 3], rules).usable, 3);
+assert.notEqual(api.canonical([1, 2, 3.001], rules).key, api.canonical([1, 2, 3.002], rules).key);
+assert.notEqual(api.canonical([1, 2, 3], rules).key, api.canonical([1, 2, 3, null], rules).key);
+assert.equal(api.canonical([null, { value: null }, '2'], rules).usable, 0);
+let child = spawnSync(process.execPath, [script], { encoding: 'utf8' });
+assert.equal(child.status, 1); assert.match(child.stderr, /--population/);
+child = spawnSync(process.execPath, [script, '--population', dir], { encoding: 'utf8' });
+assert.equal(child.status, 1); assert.match(child.stderr, /Population SHA256 mismatch; report not written/);
+fs.writeFileSync(path.join(dir, '_manifest.json'), '{"fixture":false}');
+assert.notEqual(api.readPopulation(dir, rules).digest, pop.digest, 'manifest bytes belong to population hash');
+console.log('PASS: synthetic a/b/c, mixed groups, name reuse, CIK precedence, short series, gap positions, precision, report');
+console.log('PASS: CLI without --population exits 1; wrong population hash exits 1; manifest hash sensitivity');
+// Mutate the actual implementation in memory; run the SAME fixture assertions, no disk source change.
+const source = fs.readFileSync(script, 'utf8');
+const needle = 'key: JSON.stringify(values)';
+assert.equal(source.split(needle).length, 2);
+const mutated = source.replace(needle, 'key: JSON.stringify(values.filter(v => v !== null))');
+const sandbox = { require, module: { exports: {} }, __dirname: path.dirname(script), console };
+vm.runInNewContext(mutated, sandbox, { filename: script, timeout: 1000 });
+assert.throws(() => check(sandbox.module.exports), /gap positions must not collapse into a group/);
+console.log('PASS: automated break probe caught mutated gap removal (same fixture test turns RED)');
+console.log('PASS: all T178 checks; fixtures retained: ' + dir);

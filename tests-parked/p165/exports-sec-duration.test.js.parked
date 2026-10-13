@@ -1,0 +1,36 @@
+'use strict';
+// EXPECTED RED until DL3 merge-sec-xbrl.js PERIOD / DL8 F-02 is fixed.
+// Pins annualConcept's form/fp predicate; a quarter in a 10-K is not annual revenue.
+const assert = require('node:assert/strict');
+const { copy } = require('./dl23-exports-copy-helper');
+const M = copy('merge-sec-xbrl.js');
+const units = entries => ({ units: { USD: entries } });
+const fact = extra => ({ form: '10-K', fp: 'FY', fy: 2025, start: '2025-01-01', end: '2025-12-31', filed: '2026-02-01', accn: 'SYNTHETIC', val: 1000, ...extra });
+const control = M.extractSecSeries({ facts: { 'us-gaap': {
+  Revenues: units([fact({})]),
+  OperatingIncomeLoss: units([fact({ val: 50 })]),
+  Assets: units([fact({ start: undefined, val: 5000 })]),
+} } }, 'SYNTHETIC');
+assert.equal(control.annual.annualRev[0].value, 1000, 'valid annual duration remains');
+assert.equal(control.annual.annualAssets[0].value, 5000, 'instant Assets remain');
+assert.equal(M.annualConcept({ Revenues: units([fact({ start: '2024-12-29', end: '2026-01-03' })]) }, 'Revenues').get(2025).val, 1000, '53-week annual control remains');
+console.log('PASS annual, instant and 53-week controls');
+if (!process.argv.includes('--controls')) {
+  const failures = [];
+  const check = (name, run) => {
+    try { run(); console.log('PASS ' + name); }
+    catch (error) { failures.push(name + ': ' + error.message); }
+  };
+  const shortOnly = { Revenues: units([fact({ start: '2025-10-01', val: 200 })]) };
+  check('short-only revenue cannot become an annual entry', () => {
+    assert.equal(M.annualConcept(shortOnly, 'Revenues').has(2025), false,
+      'a quarter tagged FY in an annual filing is not an annual revenue period');
+  });
+  const tax = { Revenues: units([fact({})]), RevenueFromContractWithCustomerExcludingAssessedTax: units([fact({ start: '2025-10-01', val: 200 })]) };
+  const current = M.annualRevUnion(tax, 'SYNTHETIC');
+  check('short-period conflict cannot erase valid annual revenue', () => {
+    assert.equal(current.get(2025)?.val, 1000,
+      'a short-duration fact must not erase full annual revenue as a cross-concept conflict');
+  });
+  assert.deepEqual(failures, [], 'annual duration selection must pass both independent cases');
+}

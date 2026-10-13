@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "caseId": "hand-q",
+      "ticker": "HAND",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "currency": "USD",
+      "expectedBadValue": 100,
+      "replacementValue": 120,
+      "reason": "Verified quarterly revenue replaces the vendor value."
+    },
+    {
+      "caseId": "hold-q",
+      "ticker": "HOLD",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "currency": "USD",
+      "expectedBadValue": 100,
+      "replacementValue": null,
+      "reason": "Non-comparable quarter withheld."
+    }
+  ]
+}

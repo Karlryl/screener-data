@@ -1,0 +1,21 @@
+'use strict';
+// Regression guard: GBP reporting and GBp quotes have different per-share units.
+const assert = require('node:assert/strict');
+const Y = require('../pull-yahoo.js');
+const rate = Y._FX_TO_USD.GBP;
+const converted = (reportingCurrency, tradingCurrency) => {
+  const s = { meta: { reportingCurrency, tradingCurrency }, marketCap: { value: 1000 },
+    metrics: { enterpriseValue: { value: 1200 }, targetMeanPrice: { value: 250 }, targetMedianPrice: { value: 200 } } };
+  Y._convertSnapshotToUSD(s); return s;
+};
+const usd = converted('USD', 'GBp');
+assert.equal(usd.metrics.targetMeanPrice.value, 250 * (rate / 100));
+assert.equal(usd.marketCap.value, 1000 * rate);
+const pounds = converted('GBP', 'GBP');
+assert.equal(pounds.metrics.targetMeanPrice.value, 250 * rate);
+const s = converted('GBP', 'GBp');
+assert.equal(s.marketCap.value, 1000 * rate);
+assert.equal(s.metrics.enterpriseValue.value, 1200 * rate);
+console.log('GREEN controls: USD/GBp targets, GBP/GBP targets, aggregate marketCap and EV');
+assert.equal(s.metrics.targetMeanPrice.value, 250 * (rate / 100), 'GBP reporter still quotes per-share targets in pence');
+assert.equal(s.metrics.targetMedianPrice.value, 200 * (rate / 100));

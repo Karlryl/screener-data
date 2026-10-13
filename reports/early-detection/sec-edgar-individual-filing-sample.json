@@ -1,0 +1,49 @@
+{
+  "schema": "early-detection-sec-individual-filing-sample/v1",
+  "generatedAt": "2026-08-09T06:28:42.006Z",
+  "status": "NO_INDIVIDUAL_SAMPLE_VERIFIED",
+  "sourceCoverageReport": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-individual-filing-coverage-sample-2009-2024-rerun.json",
+  "attempts": [
+    {
+      "accession": "0001104659-11-061252",
+      "captureTimestamp": "20170227173317",
+      "status": "REJECTED_OR_UNAVAILABLE",
+      "reason": "IndividualFilingError: submission inspection failed: ACCESSION_NOT_FOUND"
+    },
+    {
+      "accession": "0001493152-21-023487",
+      "captureTimestamp": "20250208122533",
+      "status": "REJECTED_OR_UNAVAILABLE",
+      "reason": "IndividualFilingError: submission inspection failed: ACCESSION_NOT_FOUND"
+    },
+    {
+      "accession": "0001354457-23-000292",
+      "captureTimestamp": "20250508175908",
+      "status": "REJECTED_OR_UNAVAILABLE",
+      "reason": "IndividualFilingError: replay failed after 5 attempts: HTTPError: HTTP Error 404: NOT FOUND"
+    },
+    {
+      "accession": "0001104659-24-049065",
+      "captureTimestamp": "20260101080458",
+      "status": "REJECTED_OR_UNAVAILABLE",
+      "reason": "IndividualFilingError: submission inspection failed: ACCESSION_NOT_FOUND"
+    },
+    {
+      "accession": "0000876661-22-000930",
+      "captureTimestamp": "20260108191904",
+      "status": "REJECTED_OR_UNAVAILABLE",
+      "reason": "IndividualFilingError: submission inspection failed: ACCESSION_NOT_FOUND"
+    }
+  ],
+  "verified": null,
+  "interpretation": [
+    "This proves byte-level individual filing transport for one sample only.",
+    "Capture time is transport provenance, not the filing's historical availability time.",
+    "Population coverage remains governed by the separate stratified coverage report.",
+    "No event outcome or return was computed."
+  ],
+  "sampleOnly": true,
+  "confirmatoryEligible": false,
+  "productiveGqsModified": false,
+  "reportSha256": "366d279324688d2af36f62f7c23ac11f3ca3ef578dff7ba58c8f13780019f788"
+}

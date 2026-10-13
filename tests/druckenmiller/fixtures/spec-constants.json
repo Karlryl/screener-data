@@ -1,0 +1,252 @@
+{
+  "_was": "Der Vergleichsmassstab der Registrierungs-Dateien (BUILD-SPEC v1 [REV6-1](ii), [REV7-3], [REV5-6]). Jede Sektion traegt ihre Herkunft und ihr Datum. Aenderungen nur ueber tests/druckenmiller/fixtures/registration.CHANGELOG.md (Muster [REV3-5]).",
+  "_specHash": "af483fae6a1676476894fab05c1863a6a757e439c60ad8d6ccfd9bf5326a961a",
+  "_specFile": "Jarvis/Knowledge/Trading/druckenmiller/research-2026-09-13/BUILD-SPEC-v1.md",
+  "councilD3": {
+    "_origin": "Council verdict 2026-09-14 03:53, decision D3 (logger constants) and D4 (universe U) \u2014 COUNCIL-VERDICT-2026-09-14.md",
+    "_date": "2026-09-14",
+    "l3Band": 0.03,
+    "l3BandSensitivities": [
+      0.01,
+      0.05
+    ],
+    "l4": {
+      "cyclicalSectors": [
+        "Industrials",
+        "Consumer Cyclical",
+        "Energy",
+        "Financial Services",
+        "Basic Materials"
+      ],
+      "defensiveSectors": [
+        "Consumer Defensive",
+        "Healthcare",
+        "Utilities"
+      ],
+      "unassignedRule": "every other sector value, and a missing sector, goes into a VISIBLE 'unassigned' bucket (l4Unassigned) \u2014 never dropped, never reassigned",
+      "weightings": [
+        "equalWeight",
+        "capWeight"
+      ],
+      "spreadHorizonBars": 63
+    },
+    "l4bNamedIndustries": [
+      "trucking",
+      "specialty retail",
+      "department stores",
+      "residential construction"
+    ],
+    "l4bMatch": "case-insensitive substring match on the provider's industry string",
+    "l4bMinBasketN": 20,
+    "axisWindows": {
+      "smaLong": 200,
+      "smaShort": 50,
+      "highLowWindow": 252,
+      "returnHorizon": 63
+    },
+    "greyOutMinCoverage": 0.6,
+    "universe": {
+      "country": "United States",
+      "tickerMustNotContain": ".",
+      "suspectFlags": [
+        "_newestQtrSuspect",
+        "_annualCurrencyLeakSuspect"
+      ],
+      "minBars": 250,
+      "membershipHashPerSession": true,
+      "redefinition": "any redefinition is a NEW series id"
+    }
+  },
+  "courtGates": {
+    "_origin": "Court retrial conditions 2026-09-14 \u2014 freshness gate from round 1 as amended by retrial N2, churn gate from BUILD-SPEC v1 [REV6-4]/[REV10-4]",
+    "_date": "2026-09-14",
+    "_kind": "data-quality exclusions, fixed before a single scoreboard entry exists \u2014 NOT outcome parameters (BUILD-SPEC v1 [REV8-5])",
+    "freshnessMinShare": 0.95,
+    "freshnessConsequence": "freshShare < 0.95 -> lowFreshness: true, the row stays in the series but feeds no quantile window and no H-INT; guard annotation is YELLOW, never a red run; backfilled rows carry freshShare null and are exempt from the gate",
+    "churnMaxShare": 0.05,
+    "churnFormula": "(nEntered + nLeft) / nUniverse against the previous publication day",
+    "churnConsequence": "highChurn: true -> excluded from quantile windows like lowFreshness, and the session writes no scoreboard entries"
+  },
+  "overrideNoteD1": {
+    "_origin": "Council verdict 2026-09-14 03:53, decision D1 (68 %) \u2014 the hashed override note required by BUILD-SPEC v1 \u00a70.3",
+    "_date": "2026-09-14",
+    "text": "Kipp-Schwelle (< 5 Prinzipien) gerissen: strenge Zaehlung 4, nach Advocatus Diaboli 3. Die Konsequenz wurde nach der vorgegebenen Eskalation (prinzipien-katalog.md:27-28) bewusst auf \"kein eigenes Ranking\" verengt."
+  },
+  "rIntLoggedOnly": {
+    "_origin": "Council D3 plus laneC/operationalisierung.md \u00a72 \u2014 computed and logged, never published as a state",
+    "_date": "2026-09-14",
+    "legs": [
+      "l1",
+      "l2",
+      "l3",
+      "l4ew"
+    ],
+    "aggregation": "equal-weight mean of the legs' percentile ranks in the expanding window",
+    "qLow": 0.3,
+    "qHigh": 0.7,
+    "debounceSessions": 20,
+    "minLoggedLiveSessions": 250,
+    "published": false,
+    "stateMachineImplemented": false,
+    "stateMachineNote": "no state is published (Council D3), so no state machine runs; q30/q70 and the 20-session debounce are registered anyway so that a state can never be tuned into existence after the fact",
+    "quantileWindowExcludes": [
+      "backfilled",
+      "lowFreshness",
+      "highChurn"
+    ]
+  },
+  "scoreboardB": {
+    "_origin": "BUILD-SPEC v1 \u00a70.4 ([REV3-4],[REV3-6],[REV5-1],[REV5-2],[REV8-1],[REV9-1..4],[REV10-1..3]) + AMENDMENT 01 (Rat 9 Teil 2a, 2026-09-19). Nur die ZAHLEN und die geordneten Regeln - die Begruendungen stehen in Datei B.",
+    "_date": "2026-09-19",
+    "_amendment01Sha256": "61d4c8ef4d89785128db1c0115c3ad52797e347087fccad1a71054c6df9503c1",
+    "m1": {
+      "lookbackBars": 252,
+      "lagBars": 21,
+      "volWindowBars": 252
+    },
+    "m2": {
+      "windowBars": 252
+    },
+    "terciles": {
+      "quantiles": [
+        0.3333333333333333,
+        0.6666666666666666
+      ],
+      "minStatedN": 30
+    },
+    "barrier": {
+      "k": 1,
+      "sigmaWindowBars": 63,
+      "sigmaScaling": "horizon",
+      "sigmaScalingLaw": "sigma_h = sigma_daily * sqrt(h)"
+    },
+    "horizons": [
+      63,
+      126
+    ],
+    "decisiveArm": 63,
+    "coolOffBars": {
+      "63": 63,
+      "126": 126
+    },
+    "blockFloor": {
+      "63": 8,
+      "126": 6
+    },
+    "bootstrap": {
+      "B": 1000,
+      "seed": 20260919,
+      "wildBelowBlocks": 30,
+      "blockLengthBars": {
+        "63": 63,
+        "126": 126
+      }
+    },
+    "alphaRead": 0.016666666666666666,
+    "alphaStar": {
+      "twoArm": 0.0083,
+      "singleArm": 0.0167
+    },
+    "beta": 0.2,
+    "intervalDirection": "lower",
+    "labelBounds": {
+      "knowledgeBarPp": 3,
+      "tradeBarPp": 5
+    },
+    "retirement": {
+      "mdeBoundPp": 6,
+      "evaluatedAt": [
+        "R2",
+        "R3"
+      ]
+    },
+    "separationGate": {
+      "maxConfirmsShare": 0.6,
+      "minConfirmsShare": 0.1
+    },
+    "warmup": {
+      "liveSessions": 20
+    },
+    "armCollapseGuard": {
+      "ksScaledMin": 1.63,
+      "ksAlpha": 0.01,
+      "medianRatioMin": 1.25
+    },
+    "panelDisplay": {
+      "frozen": [
+        "label",
+        "L",
+        "MDE",
+        "level",
+        "readId",
+        "readDate",
+        "nextReadDate",
+        "L126",
+        "MDE126",
+        "level126"
+      ],
+      "live": [
+        "entries",
+        "resolved",
+        "blocks",
+        "lastSessionDate"
+      ]
+    },
+    "powerProjection": null
+  },
+  "alfredC": {
+    "_origin": "BUILD-SPEC v1 \u00a70.5 ([REV4-4],[REV5-5],[REV6-2],[REV6-3]) + AMENDMENT 01 fuer die SPY-Barriere",
+    "_date": "2026-09-19",
+    "spanEnd": "2026-06-30",
+    "walclFirstVintage": "2011-07-07",
+    "blockLengthWeeks": 26,
+    "B": 1000,
+    "seed": 20260919,
+    "alpha": 0.05,
+    "minBlocks": 20,
+    "outcomeBars": 63,
+    "correction": "Holm ueber {T1,T2,T3}",
+    "dgs30GapExcluded": [
+      "2002-02-19",
+      "2006-02-08"
+    ]
+  },
+  "thirteenF": {
+    "_origin": "BUILD-SPEC v1 \u00a70.6 + laneC/architektur-spec.md \u00a73.2/\u00a73.3.4 + Lane-B-Befund v2 und dessen Red Team. DATENQUALITAETS-Schwellen eines BESCHREIBENDEN Betrachters - keine Ergebnis-Parameter: der 13F-Teil schreibt keinen Scoreboard-Eintrag, speist keine Schaetzgroesse und aendert kein Etikett.",
+    "_date": "2026-09-19",
+    "quartersPublished": 8,
+    "impliedPriceBandUSD": [
+      1,
+      5000
+    ],
+    "quarantineFailShare": 0.1,
+    "priceRatioBand": [
+      0.5,
+      2.0
+    ],
+    "optionIssueNumbers": [
+      "90",
+      "95"
+    ],
+    "triState": [
+      "HELD",
+      "NOT_IN_MAPPED",
+      "UNMAPPED"
+    ],
+    "cik": "0001536411",
+    "mapping": "ausschliesslich LOKALE Namenskarte (Snapshots, nur meta.name, US-Notierungen ohne Suffix); OpenFIGI ist ausgeschlossen (neue Abhaengigkeit = Stop-Bedingung)",
+    "identityGuard": "ein Namens-Treffer wird nur uebernommen, wenn der Name in der Karte zum Filing-Namen passt (Lane-B-Red-Team: Barrick -> ABX zeigte auf Abacus)",
+    "measuredCoverage2026_09_19": {
+      "issuers": 697,
+      "matched": 308,
+      "share": 0.442,
+      "nameMapSize": 2337,
+      "ambiguous": 9,
+      "identityRejected": 0,
+      "note": "Lane B kam mit OpenFIGI auf 492 von 697 (70,6 %); ohne OpenFIGI und mit der verschaerften Praefix-Regel (Review-Fund) sind es 308 = 44,2 % (vor der Verschaerfung 322 = 46,2 %, darunter falsche Firmen wie Cabot Oil & Gas -> CBT). Wertgewichtet ueber die letzten acht Quartale: 55-63 %."
+    },
+    "noCiStep": "manueller Quartals-Lauf (arch-spec \u00a73.3 Punkt 4) - der Tageslauf bleibt unberuehrt",
+    "_kind": "Datenqualitaets-Schwellen eines beschreibenden Betrachters, keine Ergebnis-Parameter; eine Aenderung braucht eine Changelog-Zeile, niemals eine stille Bearbeitung.",
+    "_ratified": "Rat/Master 2026-09-19, Option (b): keine vierte gehashte Registrierungs-Datei. Begruendung: der 13F-Teil ist nach dem Wortlaut der Spezifikation beschreibend - er schreibt keinen Scoreboard-Eintrag, speist keine Schaetzgroesse, aendert kein Etikett, und nichts, was bei R1-R3 gelesen wird, haengt an ihm. Eine gehashte Vorregistrierung wuerde damit eine Behauptung nahelegen, die der Betrachter nie aufstellt. [REV6-1] 'genau drei Registrierungs-Dateien' bleibt unberuehrt, und [REV1-K3]s 'registrierte Konstante' ist durch diese Sektion unter dem bestehenden Changelog-Tor plus dem Code-gegen-Datei-Test (Muster R11) erfuellt: eine nachrechenbare Registrierung ohne Hash."
+  }
+}

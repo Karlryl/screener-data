@@ -1,0 +1,396 @@
+# 5.2 WEG 1b — isolierter Small-Cap-CI-Pull (Council-Entscheid Tag 432, s. protocol/
+# 5.2-weg1b-universe-registered-20260722.md Chunk 4 / Einwand 3+8). Getrennter Workflow
+# statt Erweiterung von daily-pull.yml: 3 von 4 Ratsstimmen (Mechaniker, Risiko-Ingenieur,
+# Wartbarkeits-Praktiker) sahen Option B (Zusatz-Shards in daily-pull.yml) als Gefahr fuer
+# Karls einzigen Alarm-Kanal (coverage-gate.js liest EIN n_total/Manifest — eine zweite,
+# andere Watchlist in derselben Matrix wuerde diesen Nenner verfaelschen). Dieser Workflow
+# ruehrt daily-pull.yml NICHT an: eigene Matrix (N=4, ~194 Ticker/Shard — weit unter dem in
+# daily-pull.yml bewiesenen ~1394/Shard-Limit gegen Yahoo-Cloudflare-Drosselung), eigener
+# Cron-Slot (versetzt zum Hauptlauf 02:17 UTC, NICHT parallel — sonst verdoppelt sich exakt
+# die Yahoo-Last, die Tag 430 zum 87%-Fehlschlag fuehrte), eigenes Coverage-Verstaendnis
+# (DIAGNOSTIC, kein hartes Gate).
+#
+# HANDOFF (Advocatus-Diaboli-Einwand aus dem Council, Tag 432): der urspruengliche Plan
+# ("Artefakt an den scoring-Job in daily-pull.yml reichen") waere gescheitert — GitHub-
+# Actions-Artefakte sind pro Workflow-RUN gescopt, ein fremder Workflow kann sie nicht
+# lesen. snapshots-smallcap/ wird auch NICHT committet (gleicher Grund wie snapshots/ in
+# .gitignore: taeglicher Commit von hunderten Snapshot-JSONs waere Repo-Bloat). Stattdessen:
+# GH-Actions-CACHE unter einem stabilen Key (repo-weit sichtbar, nicht run-gescopt) —
+# dieser Workflow schreibt (job "merge"), der scoring-Job in daily-pull.yml restored ihn
+# (ein einzelner zusaetzlicher, fail-soft Cache-Restore-Schritt dort, gleiche Technik wie
+# der dort bereits bestehende "Restore Coverage-Floor Baseline"-Schritt). Kein `needs:`
+# zwischen den Dateien moeglich (GHA kennt das datei-uebergreifend nicht) -> fail-soft ist
+# strukturell garantiert: fehlt der Cache, faellt loadSmallcapUniverse() (run-screener.js)
+# auf sein bestehendes Fail-soft-Verhalten zurueck (Hauptkorpus-Fallback), nichts blockt.
+#
+# Seit Tag 439 gibt es EINEN Commit-Schritt (der woechentliche Reconcile schreibt
+# watchlist-smallcap.json). Die Schreibrechte haengen deshalb NICHT mehr workflow-weit,
+# sondern nur am merge-Job — die vier Abruf-Shards laufen weiter mit Lese-Token.
+name: Small-Cap Pull (5.2, isoliert)
+
+on:
+  schedule:
+    # Versetzt zu daily-pull.yml (02:17 UTC) — dessen Pull+Merge laeuft typischerweise
+    # binnen 2-3h durch; 06:00 UTC laesst reichlich Abstand, damit beide Workflows nie
+    # gleichzeitig Yahoo belasten (Advocatus-Diaboli-Einwand).
+    - cron: '0 6 * * 2-6'
+  workflow_dispatch: {}
+
+# Karl-Entscheid 27.07.2026 (Frage 1 = A): der Reconcile darf die Small-Cap-Liste
+# woechentlich selbst aufraeumen. Er committet AUSSCHLIESSLICH watchlist-smallcap.json.
+#
+# ⚠ KORREKTUR (unabhaengige Pruefung 27.07.): hier stand contents: write auf WORKFLOW-Ebene.
+# Das gibt auch den vier Abruf-Shards einen Schreib-Token, den sie nie brauchen — die ziehen
+# nur Kursdaten. Ein Token ist genau so gefaehrlich wie die Summe der Stellen, an denen er
+# herumliegt. Standard bleibt Lesen; Schreiben haengt jetzt am merge-Job, der als Einziger
+# committet.
+permissions:
+  contents: read
+
+concurrency:
+  group: smallcap-pull
+  cancel-in-progress: false
+
+env:
+  SHARD_COUNT: '4'
+
+  # ZWEIG-WACHE (19.08.2026) — die EINZIGE Stelle, an der entschieden wird, ob ein
+  # Lauf veroeffentlichen darf. Gleiche Sache und gleiche Bauform wie in daily-pull.yml.
+  #
+  # BEFUND: dieser Workflow laesst sich per workflow_dispatch auf JEDEM Zweig starten,
+  # sein Commit-Schritt schob aber unbedingt `HEAD:main` hoch — nach einem Rebase des
+  # Zweigs auf main. Ein Handlauf von einem Feature-Zweig haette damit den GANZEN
+  # ungeprueften Zweig nach main veroeffentlicht, nicht nur die Small-Cap-Liste.
+  #
+  # WARUM KEIN `if:` AM SCHRITT (die naheliegende Loesung, bewusst verworfen): ein
+  # UEBERSPRUNGENER Schritt sieht in GitHub Actions aus wie ein erfolgreicher und
+  # schreibt keine Zeile ins Protokoll. Der Schritt laeuft darum weiter und steigt ganz
+  # vorn mit ::warning:: aus — die Nicht-Veroeffentlichung ist ein LESBARER Vorgang.
+  #
+  # KEIN `nur_rechnen`-Ventil wie in daily-pull.yml: dort deckt es einen 4-Stunden-Lauf
+  # mit sechs Publizierern ab, den man auf main einmal komplett durchrechnen lassen will.
+  # Hier ist der Trockenlauf jetzt einfach der Zweig-Lauf — genau das macht diese Wache
+  # erst gefahrlos moeglich.
+  #
+  # Bei schedule-Laeufen ist github.ref refs/heads/main -> der Cron veroeffentlicht wie
+  # bisher. Waechter: tests/zweig-wache.test.js
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+
+jobs:
+  # ============================================================================
+  # PULL (4-Shard-Matrix). Jeder Shard restored den zuletzt gemergten Small-Cap-Store
+  # aus dem Cache (Diaet-Grundlage fuer FUNDAMENTALS_MAX_AGE_DAYS in pull-yahoo.js —
+  # ohne Vorzustand waere jeder Lauf ein teurer Voll-Pull), zieht seine Ticker-Scheibe
+  # (--shard i/N slice intern per hash(ticker)%N, wie im Hauptlauf) und laedt seine
+  # neu/aktualisierten Snapshots als Artefakt hoch (gueltig, weil "merge" derselbe
+  # Workflow-RUN ist — anders als der Handoff an daily-pull.yml).
+  # ============================================================================
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify watchlist-smallcap.json sanity
+        run: |
+          if [ ! -f watchlist-smallcap.json ]; then
+            echo "::error::watchlist-smallcap.json missing"
+            exit 1
+          fi
+          size=$(node -e "console.log((JSON.parse(require('fs').readFileSync('watchlist-smallcap.json','utf8')).stocks||[]).length)")
+          echo "watchlist-smallcap size: $size"
+          # KOLLAPS-Schwelle, nicht Zielgroesse (22.09.2026). Die Liste ZIELT auf 500 Namen,
+          # und ein normaler Handelstag tauscht davon etwa 0,4 % aus (Band-Austritte; am
+          # 22.09. NRGV und NUAI von 500). Eine Schwelle GENAU auf der Zielgroesse kann
+          # Band-Austritte nicht von einem Quellen-Ausfall unterscheiden: der Reconcile wollte
+          # 500 auf 498 bringen, die Skript-Sperre verhinderte den Schreibvorgang, und haette
+          # man nur sie gelockert, stuende die Liste auf 498 und DIESE Pruefung haette den
+          # naechsten Abruf ganz verweigert. Beide Zahlen muessen zusammen sinken.
+          # 475 = 95 % der Zielgroesse, dieselbe Regel wie MIN_RETAINED_RATIO in
+          # scripts/reconcile-smallcap.js (zweite Sperre). Ein Kollaps ist um Groessenordnungen
+          # groesser als die taegliche Bandbewegung. Wer eine der beiden aendert, aendert die
+          # andere mit.
+          if [ "$size" -lt 475 ]; then
+            echo "::error::watchlist-smallcap.json has only $size entries (Zielgroesse 500, Kollaps-Schwelle 475) - refusing to pull against a possibly corrupted list"
+            exit 1
+          fi
+
+      - name: Assert shard index in range
+        run: |
+          if [ "${{ matrix.shard }}" -ge "$SHARD_COUNT" ] || [ "${{ matrix.shard }}" -lt 0 ]; then
+            echo "::error::shard index ${{ matrix.shard }} out of range for N=$SHARD_COUNT"
+            exit 1
+          fi
+
+      # Restore-only: der zuletzt gemergte Store (job "merge" unten schreibt ihn), damit
+      # die Freshness-Diaet in pull-yahoo.js greift. Restauriert in einen EIGENEN
+      # Baseline-Ordner, NICHT den --output-Pfad von pull-yahoo.js unten (NRL-SK-001-Fix,
+      # Hard Review 2026-08-02): vorher restaurierte dieser Schritt direkt nach
+      # snapshots-smallcap, denselben Ordner, den "Upload shard snapshots" komplett
+      # hochlud — jeder der 4 Shards lud damit den GESAMTEN (bis zu 24h alten) Altbestand
+      # als eigenes Artefakt hoch, nicht nur seine ~194 tatsaechlich angefassten Ticker.
+      # Beim Merge (merge-multiple) ueberschrieb dann, wer zuletzt entpackt wurde, die
+      # frischen Pulls der anderen Shards mit seiner Kopie des Altbestands. Fehlt der Cache
+      # (allererster Lauf) -> leerer Baseline-Ordner -> die Kopie im naechsten Schritt ist
+      # ein No-Op -> pull-yahoo.js macht fuer diesen Shard einen Voll-Pull (erwartet, einmalig).
+      - name: Restore merged small-cap store (diet baseline)
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap-baseline
+          key: snapshots-smallcap-store-nonexistent
+          restore-keys: |
+            snapshots-smallcap-store-
+
+      # NRL-SK-001-Fix: den Baseline-Bestand in den Arbeitsordner kopieren, den
+      # pull-yahoo.js liest UND beschreibt (--output kennt keinen getrennten
+      # Nur-Lese-Parameter). Der Baseline-Ordner selbst bleibt unveraendert liegen — er
+      # ist der Vergleichsmassstab fuer "Isolate fresh shard output" weiter unten.
+      - name: Seed working dir from baseline
+        run: |
+          mkdir -p snapshots-smallcap
+          if [ -d snapshots-smallcap-baseline ]; then
+            cp -r snapshots-smallcap-baseline/. snapshots-smallcap/
+          fi
+
+      - name: Run Yahoo Pull (small-cap shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }})
+        env:
+          PULL_CONCURRENCY: '8'
+          MIN_MCAP_USD: '300000000'
+          FUNDAMENTALS_MAX_AGE_DAYS: '7'
+          STALE_QUARTER_RELOAD: '0' # Enable only with an explicit smallcap plan.
+          MISSING_CAP_CARRIER: '1'
+        run: node pull-yahoo.js --shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }} --watchlist watchlist-smallcap.json --output snapshots-smallcap --rate-limit 2000
+        continue-on-error: true
+        timeout-minutes: 45
+
+      # NRL-SK-001-Fix: nur Dateien, die pull-yahoo.js in DIESEM Lauf neu angelegt oder
+      # inhaltlich veraendert hat, landen im separaten Ausgabeordner, den der naechste
+      # Schritt hochlaedt — per Inhaltsvergleich gegen die unveraenderte Baseline (nicht
+      # Datei-Alter/mtime: die Kopie im vorigen Schritt stempelt ohnehin neu). Der
+      # Altbestand, den dieser Shard nie angefasst hat, verlaesst diesen Job nicht mehr.
+      - name: Isolate fresh shard output
+        if: always()
+        run: |
+          mkdir -p snapshots-smallcap-fresh
+          for f in snapshots-smallcap/*.json; do
+            [ -e "$f" ] || continue
+            base="$(basename "$f")"
+            case "$base" in _manifest*|_last_good_disk.json) continue ;; esac
+            if ! cmp -s "$f" "snapshots-smallcap-baseline/$base" 2>/dev/null; then
+              cp "$f" "snapshots-smallcap-fresh/$base"
+            fi
+          done
+          echo "Frische/aktualisierte Dateien dieses Shards: $(ls snapshots-smallcap-fresh | wc -l)"
+
+      - name: Upload shard snapshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: snapshots-smallcap-shard-${{ matrix.shard }}
+          path: snapshots-smallcap-fresh/*.json
+          if-no-files-found: warn
+          retention-days: 1
+
+  # ============================================================================
+  # MERGE (once). Setzt auf dem zuletzt gemergten Store auf (Cache-Restore), ueberlagert
+  # mit den frisch hochgeladenen Shard-Snapshots (merge-multiple, disjunkte Ticker-
+  # Scheiben -> keine echte Kollision) und speichert das Ergebnis unter einem NEUEN,
+  # run-eindeutigen Key zurueck (restore-keys-Praefix im naechsten Lauf/im scoring-Job
+  # von daily-pull.yml findet dann automatisch diesen neuesten Stand — selbes Muster
+  # wie die per-Shard-Caches in daily-pull.yml).
+  # ============================================================================
+  merge:
+    needs: pull
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Nur DIESER Job committet (die aufgeraeumte Small-Cap-Liste) — nur er braucht Schreibrecht.
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Restore merged small-cap store (baseline for tickers no shard touched this run)
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-nonexistent
+          restore-keys: |
+            snapshots-smallcap-store-
+
+      - name: Download all shard snapshots (keep baseline for missing-cap observations)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: snapshots-smallcap-shard-*
+          path: snapshots-smallcap-incoming
+          merge-multiple: true
+
+      # B5: cold workers emit an explicit incomplete null-cap row. Apply its null
+      # to the restored financials instead of reviving a cap or erasing financials.
+      - name: Merge small-cap observations
+        id: merge_smallcap
+        run: node -e "console.log(require('./pull-yahoo.js').mergeSmallcapSnapshots('snapshots-smallcap-incoming', 'snapshots-smallcap'))"
+
+      # DIAGNOSTIC, non-blocking: reines Log, kein zweiter Alarm-Kanal neben Karls einzigem
+      # sanktionierten (coverage-status.json/Dashboard-Banner fuer den Hauptkorpus).
+      - name: Small-Cap Freshness (informational only)
+        continue-on-error: true
+        run: node scripts/verify-freshness.js ./snapshots-smallcap "Small-Cap"
+
+      # 5.2-Auflagen 4+5 (protocol/5.2-weg1b-universe-registered-20260722.md):
+      # Band-/Operating-Reconcile. BEWUSST --dry-run: dieser Workflow hat
+      # `permissions: contents: read` und committet nichts (Council-Entscheid Tag 432).
+      # Der Schritt MISST und berichtet also nur — inkl. der Auflage-6-Ueberschneidung
+      # mit dem Hauptuniversum. Ob der Reconcile automatisch schreiben darf, haengt an
+      # der Eigentumsgrenze (Auflage 6) und ist ein offener Karl-Entscheid.
+      # Karl-Entscheid 27.07. (Frage 1 = A): woechentlich automatisch aufraeumen.
+      # NUR SAMSTAGS scharf — der Reconcile entfernt Mitgliedschaften; das soll einmal die
+      # Woche passieren und nicht taeglich, damit ein einzelner schlechter Datentag nicht
+      # durchschlaegt. An den anderen Tagen laeuft er als reiner Bericht mit.
+      #
+      # --max-remove-pct 40 statt der Standard-25: gemessen am echten Datenstand wuerden beim
+      # ⚠ Herkunft dieser Zahl, damit sie niemand falsch nachprueft: sie stammt aus dem
+      # SNAPSHOT-BESTAND EINES CI-LAUFS (12.321 Dateien), nicht vom Entwicklungsrechner. Lokal
+      # liegen nur rund 100 der 775 Small-Cap-Snapshots vor, dort meldet derselbe Befehl
+      # entsprechend nur 9 Entfernungen — kein Widerspruch, sondern eine andere Datenbasis.
+      # Fuer die Sperre ist beides unkritisch: bei 9 wie bei 184 loest sie nicht aus.
+      # ERSTEN scharfen Lauf 184 von 775 Namen (23,7 %) entfernt — fast alles Fonds-Huellen,
+      # die seit dem Aufbau der Liste drinstehen. Das liegt so knapp unter 25 %, dass die
+      # Sperre grundlos ausloesen wuerde. Danach fallen die Zahlen auf einzelne Namen/Woche.
+      # ⚠ continue-on-error ENTFERNT (unabhaengige Pruefung 27.07.): die Ueberprune- und die
+      # Collapse-Sperre im Skript beenden mit Exit 1 und einer ::error::-Zeile — und
+      # genau das wurde hier verschluckt. Eine Sperre, die niemand sieht, ist keine Sperre,
+      # sondern eine Beruhigung. Sie feuert nur, wenn wirklich etwas nicht stimmt (ein Viertel
+      # der Liste auf einmal, oder ein Verlust von mehr als 5 % in einem Lauf) — dann gehoert der
+      # Lauf rot, auch an einem Tag, an dem nur der Bericht laeuft.
+      - name: Small-Cap Reconciliation (Auflagen 4+5)
+        run: |
+          if [ "$(date -u +%u)" = "6" ]; then
+            echo "Samstag — Reconcile schreibt."
+            node scripts/reconcile-smallcap.js --max-remove-pct 40 --report smallcap-reconcile.json
+          else
+            echo "Kein Samstag — Reconcile laeuft als reiner Bericht."
+            node scripts/reconcile-smallcap.js --dry-run --report smallcap-reconcile.json
+          fi
+
+      # Committet AUSSCHLIESSLICH die Mitgliedschaftsliste. Keine Vintages, keine Snapshots,
+      # keine Ausgaben — die bleiben wie bisher aus diesem Workflow heraus.
+      # ⚠ continue-on-error BEWUSST ENTFERNT (unabhaengige Pruefung 27.07., Schwere hoch).
+      # Vorher konnte dieser Schritt NIE rot werden: die Retry-Schleife brach bei jedem
+      # Misserfolg still ab, und continue-on-error verschluckte auch einen echten Fehler.
+      # Folge waere gewesen: der Aufraeumer entfernt Namen, der Push scheitert, der Lauf bleibt
+      # gruen — und Karl haelt die Liste fuer aufgeraeumt, obwohl nichts angekommen ist. Ein
+      # stiller Verlust in einer Mitgliedschaftsliste ist genau die Sorte Fehler, die dieses
+      # Repo nirgends haben darf. Jetzt: drei Versuche, danach rotes X.
+      - name: Commit aufgeraeumte Small-Cap-Liste
+        if: always()
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit der aufgeraeumten Small-Cap-Liste nach main. Die Entfernungen bleiben unwirksam, der naechste main-Lauf holt sie nach. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
+            exit 0
+          fi
+          git config user.name "yahoo-pull-bot"
+          git config user.email "yahoo-pull-bot@users.noreply.github.com"
+          git add watchlist-smallcap.json
+          if git diff --staged --quiet; then
+            echo "Keine Aenderung an der Small-Cap-Liste."
+          else
+            # Die Zahlen gehoeren IN die Commit-Zeile, nicht nur in ein Artefakt: Karl liest
+            # git log, keine Artefakt-Anhaenge. Ein Lauf, der wortlos ein Viertel der Liste
+            # entfernt, ist keine gute Nachricht, auch wenn er richtig liegt.
+            #
+            # ZWEI FALLEN, beide am echten Bericht gemessen (27.07.), nicht angenommen:
+            #   (a) `entfernt` ist ein ARRAY von {ticker,grund,mcap}, kein Zaehler — direkt
+            #       eingesetzt haette dort "[object Object],[object Object],…" gestanden.
+            #   (b) `gruende` zaehlt ALLE Entscheidungen, auch die Behalte-Gruende. Der
+            #       groesste Posten ist "kein-snapshot" (lokal 674) — der haette in der
+            #       Commit-Zeile wie 674 Loeschungen ausgesehen. Gezaehlt wird deshalb ueber
+            #       das `entfernt`-Array, nicht ueber `gruende`.
+            zeile=$(node -e "
+              try {
+                const r = require('./smallcap-reconcile.json');
+                const weg = Array.isArray(r.entfernt) ? r.entfernt : [];
+                const z = {};
+                for (const e of weg) z[e.grund] = (z[e.grund] || 0) + 1;
+                const g = Object.entries(z).sort((a,b) => b[1]-a[1]).map(([k,v]) => k + '=' + v).join(', ');
+                console.log(r.vorher + ' -> ' + r.nachher + ', ' + weg.length + ' entfernt' + (g ? ' (' + g + ')' : ''));
+              } catch (e) { console.log('Bericht nicht lesbar'); }
+            ")
+            git commit -m "chore: small-cap reconcile $(date -u +%F) — $zeile"
+            # erfolg bleibt 0, bis ein Push wirklich durch ist. Jeder Ausstieg ohne erfolg=1
+            # endet unten in einem roten X — kein stiller Abbruch mehr.
+            erfolg=0
+            for i in 1 2 3; do
+              git fetch origin main || { echo "fetch fehlgeschlagen (Versuch $i)"; sleep $((5 * i)); continue; }
+              if ! git rebase --autostash origin/main; then
+                git rebase --abort || true
+                echo "rebase fehlgeschlagen (Versuch $i) — vermutlich Konflikt an watchlist-smallcap.json"
+                sleep $((5 * i)); continue
+              fi
+              if git push origin HEAD:main; then erfolg=1; echo "Small-Cap-Liste committet"; break; fi
+              echo "push fehlgeschlagen (Versuch $i)"
+              sleep $((5 * i))
+            done
+            if [ "$erfolg" != "1" ]; then
+              echo "::error::Small-Cap-Reconcile: die aufgeraeumte Liste konnte nach 3 Versuchen NICHT gepusht werden. Die Entfernungen sind NICHT wirksam — der naechste Lauf wiederholt sie. Bitte nachsehen, warum der Push scheitert."
+              exit 1
+            fi
+          fi
+
+      - name: Upload reconciliation report
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: smallcap-reconcile
+          path: smallcap-reconcile.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Save merged small-cap store
+        if: always() && steps.merge_smallcap.outcome == 'success'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-${{ github.run_id }}
+
+      # T135 Option B (Afternoon-Lauf 21.09.2026, Master-Entscheid): der gemergte Store liegt sonst NUR im
+      # Actions-Cache, den nur ein Workflow wiederherstellen kann; die Shard-Artefakte leben 1 Tag und sind
+      # nicht der ganze Store. Dieses Artefakt ist dieselbe Population, die der Scoring-Job von
+      # daily-pull.yml per restore-keys 'snapshots-smallcap-store-' liest — damit laesst sich die
+      # Paritaetsluecke (scripts/t135-paritaetsluecke.js) auf der CI-Population messen.
+      # tests/smallcap-store-artifact-wiring.test.js haelt Pfad und Key-Praefix an beiden Enden fest.
+      # continue-on-error: ein fehlender Store ist eine ::error::-Zeile (if-no-files-found: error),
+      # kippt aber nicht den Pull — das Artefakt ist Messbeleg, kein Lieferweg.
+      - name: Upload merged small-cap store (T135 measurement)
+        if: always() && steps.merge_smallcap.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: smallcap-store-merged
+          path: snapshots-smallcap
+          if-no-files-found: error
+          retention-days: 3

@@ -1,0 +1,38 @@
+'use strict';
+// EXPECTED RED until DL3 pull-yahoo-09 / DL8 F-25 is fixed.
+// Pins actual main -> pullAll reset -> incremental/final destination, lines3572,3813,5645-5658,5751.
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { fixture, snapshot, source } = require('./dl23-pull-fixture.js');
+// Add an entry seam only; the copied production function bodies are unchanged.
+const pullSource = source + '\nmodule.exports.__mainForDL13 = argv => { process.argv = argv; return main(); };';
+async function runCase(subset) {
+  const f = fixture({ snapshots: [snapshot('DL13SUB')], pullSource, env: { STALE_QUARTER_RELOAD: '0' } });
+  const watchlistPath = path.join(f.out, 'input.json'), manifestPath = path.join(f.out, '_manifest.json');
+  f.io.writeFileSync(watchlistPath, JSON.stringify({ _meta: { version: 'dl13-subset' }, stocks: [{ ticker: 'DL13SUB', yahoo_symbol: 'DL13SUB' }] }));
+  const previous = JSON.stringify({ n_total: subset ? 1000 : 1, n_ok: subset ? 1000 : 1, marker: 'prior-universe' });
+  f.io.writeFileSync(manifestPath, previous);
+  const writes = [], set = f.files.set.bind(f.files);
+  f.files.set = (file, bytes) => { writes.push(file); return set(file, bytes); };
+  try { await f.Y.__mainForDL13(['node', 'pull-yahoo.js', '--watchlist', watchlistPath, '--output', f.out, '--rate-limit', '1']); }
+  catch (error) { if (error.message !== 'unexpected exit 0') throw error; }
+  if (!subset) {
+    assert(writes.includes(manifestPath), 'control: ordinary full run uses the canonical manifest');
+    assert(f.files.has(path.join(f.out, '_manifest-full.json')));
+    assert.equal(JSON.parse(f.files.get(manifestPath)).n_total, 1);
+  } else {
+    assert(f.logs.some(line => line.includes('Teilmengen-Lauf erkannt')), 'real main must detect subset first');
+    assert.equal(f.files.get(manifestPath).toString(), previous, 'subset must preserve previous full-universe manifest bytes');
+    assert.equal(writes.filter(file => file === manifestPath).length, 0, 'checkpoint must also use the subset destination');
+    assert(f.files.has(path.join(f.out, '_manifest.subset-dl13-subset.json')));
+    assert(f.files.has(path.join(f.out, '_manifest-full.subset-dl13-subset.json')));
+  }
+}
+(async () => {
+  let failed = 0;
+  for (const subset of [false, true]) {
+    try { await runCase(subset); console.log('PASS ' + (subset ? 'subset' : 'ordinary-full')); }
+    catch (error) { failed++; console.error('FAIL ' + (subset ? 'subset' : 'ordinary-full') + ': ' + error.message); }
+  }
+  process.exitCode = failed ? 1 : 0;
+})().catch(error => { console.error(error); process.exitCode = 1; });

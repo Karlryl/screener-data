@@ -1,0 +1,148 @@
+{
+  "schema": "early-detection-sec-oldloads-sample/v1",
+  "generatedAt": "2026-08-09T06:49:47.043Z",
+  "status": "SAMPLE_CONTENT_PARTIAL_OR_REJECTED",
+  "oldloadDate": "20090522",
+  "eventRows": 12,
+  "uniqueAccessions": 11,
+  "cdx": {
+    "sha256": "1f63e6d571aceb8569eed84d468bfbf4ad1b44a2bf94e7f891188958dfadd5e7",
+    "cachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-oldloads-cdx\\2009\\1f63e6d571aceb8569eed84d468bfbf4ad1b44a2bf94e7f891188958dfadd5e7.json",
+    "retrievalMode": "CONTENT_ADDRESSED_CACHE"
+  },
+  "capture": {
+    "timestamp": "20160411003953",
+    "original": "https://www.sec.gov/Archives/edgar/Oldloads/2009/QTR2/20090522.gz",
+    "replayUrl": "https://web.archive.org/web/20160411003953id_/https://www.sec.gov/Archives/edgar/Oldloads/2009/QTR2/20090522.gz",
+    "digestSha1Base32": "ASDRIDPQT73Q3VRXUU6DQR24TNTY6YQR",
+    "warcRecordBytes": 128503769
+  },
+  "payload": {
+    "sha256": "4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f",
+    "sha1Base32": "ASDRIDPQT73Q3VRXUU6DQR24TNTY6YQR",
+    "bytes": 128746816,
+    "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\blobs\\sha256\\4f\\4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f.gz",
+    "blobCreated": true
+  },
+  "observationPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\observations\\sec-edgar-oldloads\\20090522\\20160411003953-4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f-inspection-v1.json",
+  "inspection": {
+    "schema": "early-detection-sec-oldloads-inspection/v1",
+    "expandedBytes": 534538621,
+    "submissionBlocks": 1,
+    "maxHeaderBytesPerBlock": 1048576,
+    "targets": 11,
+    "statusCounts": {
+      "ACCESSION_NOT_FOUND": 11
+    },
+    "accessions": [
+      {
+        "accession": "0000950134-09-011374",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0000950157-09-000300",
+        "expectedForms": [
+          "15-12B"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001104659-09-034585",
+        "expectedForms": [
+          "15-15D"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001104659-09-034588",
+        "expectedForms": [
+          "15-12B"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001127855-09-000231",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001144204-09-029171",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001145549-09-000903",
+        "expectedForms": [
+          "15F-12G"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001157228-09-000007",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001193125-09-117454",
+        "expectedForms": [
+          "15-15D"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001341004-09-001053",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      },
+      {
+        "accession": "0001354457-09-000139",
+        "expectedForms": [
+          "25-NSE"
+        ],
+        "observedForms": [],
+        "blockNumbers": [],
+        "status": "ACCESSION_NOT_FOUND"
+      }
+    ]
+  },
+  "interpretation": [
+    "This proves official SEC Oldloads transport and parsing for one archived day.",
+    "Population coverage remains a locator claim until every selected payload is verified.",
+    "No event outcome, return or confirmatory statistic was computed."
+  ],
+  "sampleOnly": true,
+  "confirmatoryEligible": false,
+  "productiveGqsModified": false,
+  "reportSha256": "084d0ef3adc9df7ff72c6595077994b345e0fa211f065435bc1382bcf4379328"
+}

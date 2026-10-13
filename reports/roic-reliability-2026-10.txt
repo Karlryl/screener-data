@@ -1,0 +1,55 @@
+
+=== 1 · ABDECKUNG ===
+Zeilen im Extrakt:            2297
+ohne us-gaap (Auslandsfiler): 182  7.9 %
+bewertbare Firmen:            2115
+gepaarte ROIC-Jahre:          Median 10 · max 18
+durch das eigene Gate (>=6): 1395  66.0 %
+mit NULL gepaarten Jahren:    330  15.6 %
+
+--- der Engpass ---
+Bilanz da, aber KEIN Betriebsergebnis: 193  9.1 %
+  davon mit Rohertrag (waere herleitbar): 54
+
+=== 2 · VERLAESSLICHKEIT (je Haelfte mind. 4 Jahre) ===
+gerade/ungerade Jahre (Messrauschen): rho 0.78  [0.75; 0.81]  n=1239  -> TRAEGT
+    Beschreibt die Kennzahl die Vergangenheit sauber?
+alt/neu Haelfte (Bestaendigkeit)     : rho 0.46  [0.41; 0.50]  n=1239  -> TRAEGT
+    Sagt Vergangenheit etwas ueber die Zukunft?
+
+=== 3 · TRAEGT DIE ACHSE MEHR ALS DIE BRANCHE? ===
+  Industrials             rho 0.40  n=248
+  Technology              rho 0.50  n=235
+  Healthcare              rho 0.39  n=192
+  Consumer Cyclical       rho 0.30  n=162
+  Energy                  rho 0.24  n=89
+  Basic Materials         rho 0.34  n=86
+  Consumer Defensive      rho 0.39  n=84
+  Utilities               rho 0.54  n=55
+  Communication Services  rho 0.27  n=44
+  --------------------------------------------
+  INNERHALB der Branchen  rho 0.39  n=1195 (nach Groesse gewichtet)
+  Bricht dieser Wert gegenueber dem Gesamtuniversum ein, misst die Achse Branche, nicht Firma.
+
+=== 4 · IST EIN BOARD HOMOGEN GENUG? ===
+Board                     Namen   hat Achse   rho     scharfschalten?
+  Industrials              2841         9 %   0.40   nein — Abdeckung
+  Technology               2175        13 %   0.50   nein — Abdeckung
+  Consumer Cyclical        1584        11 %   0.30   nein — Abdeckung
+  Healthcare               1430        17 %   0.39   nein — Abdeckung
+  Basic Materials          1417         6 %   0.34   nein — Abdeckung
+  Consumer Defensive        806        11 %   0.39   nein — Abdeckung
+  Financial Services        671         4 %     —   nein — Abdeckung
+  Real Estate               624         3 %     —   nein — Abdeckung
+  Energy                    523        19 %   0.24   nein — Abdeckung
+  Utilities                 517        11 %   0.54   nein — Abdeckung
+  Communication Services    385        13 %   0.27   nein — Abdeckung
+  ----------------------------------------------------------------
+  reif zum Scharfschalten: 0 Boards  -> W_ROIC_STABILITY bleibt 0
+
+=== 5 · MASSSTAB (Urteils-Revision vom 28.07.) ===
+Scharfschalten von W_ROIC_STABILITY verlangt JE BOARD BEIDES:
+  (a) >= 80 % der Board-Mitglieder tragen die Achse  (Homogenitaet)
+  (b) das Board-eigene rho >= 0,35                   (Verlaesslichkeit)
+Die Verlaesslichkeit ist global belegt (rho 0,47 [0,42; 0,52]) — sie ist nicht
+mehr der Blocker. Der Blocker ist (a): kein Board kommt heute ueber ~52 %.

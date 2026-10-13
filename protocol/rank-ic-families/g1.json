@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "familyId": "rank-ic-confirmatory-g1",
+  "generation": 1,
+  "hypothesisId": "ledger-2.8-rank-ic-v1",
+  "artifactCreatedAt": "2026-07-19",
+  "provenance": {
+    "registration": {
+      "specifiedAt": "2026-07-08",
+      "confirmedAt": "2026-07-10",
+      "source": "screener-formel-ledger.md, Abschnitt 2.8 §3c"
+    },
+    "thresholdFreeze": {
+      "frozenAt": "2026-07-14",
+      "source": "rank-ic.js:4-6; Report-Spezifikation Z.596"
+    }
+  },
+  "firstEligibleVintage": "2026-07-14",
+  "methodContract": {
+    "protocolVersion": "rank-ic-confirmatory-v1",
+    "horizonsDays": [28, 84],
+    "decisionHorizonDays": 84,
+    "testDefinition": "28d=max(raw,residual)-IUT; 84d=max(raw,residual)-IUT; underpowered=1",
+    "correction": { "method": "benjamini-yekutieli", "q": 0.10 },
+    "minimumNeff": 8,
+    "ciLevel": 0.90,
+    "bootstrapIterations": 10000,
+    "bootstrapBlockLength": 2,
+    "threshold28": 0.03,
+    "threshold84": 0.05
+  },
+  "boards": [
+    "consumer-discretionary",
+    "consumer-staples",
+    "energy",
+    "financials",
+    "health-care",
+    "industrials",
+    "it-services",
+    "materials",
+    "real-estate",
+    "semiconductors",
+    "software-comm-services",
+    "survival",
+    "tech-hardware",
+    "utilities"
+  ],
+  "payloadHash": "sha256:5e8400500e6cab05a42a5a3c69175845528e03707837b0e5397ccb946d228a67"
+}

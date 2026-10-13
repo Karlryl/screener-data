@@ -1,0 +1,56 @@
+{
+  "schema": "early-detection-research-metadata-audit-summary/v1",
+  "asOf": "2026-08-08",
+  "status": "PARTIAL_ONE_HISTORICAL_SOURCE_ACCEPTED",
+  "policy": {
+    "publicationTime": "Only an explicit exact timezone-qualified publication field is promotable.",
+    "observationTime": "A Common Crawl capture timestamp proves observation but never publication.",
+    "weakMetadata": "PDF creation, modification, HTTP cache and filesystem times are not publication times.",
+    "automaticGuessing": false
+  },
+  "currentPayloadAudit": {
+    "sources": 39,
+    "localArtifacts": 6,
+    "sourcesWithAnyExactPublicationMetadata": 14,
+    "dayMatchedCandidates": 8,
+    "weakMetadataOnly": 5,
+    "noExactMetadata": 14,
+    "dayMatchedSourceIds": ["S010", "S025", "S027", "S028", "S034", "S046", "S047", "S048"],
+    "conflictingSourceIds": ["S033", "S036", "S040", "S042", "S043", "S045"]
+  },
+  "historicalArchiveTests": [
+    {
+      "sourceId": "S025",
+      "decision": "ACCEPTED_SIGNAL_ELIGIBLE",
+      "sourcePublishedAt": "2024-08-13T12:00:00.000Z",
+      "observedAt": "2024-09-14T13:32:34.000Z",
+      "payloadSha256": "fd8a5bac4938da570b9316c2360c2a42b5b62423f4de59c1c0fc74998f4e4a03",
+      "archiveRecordSha256": "5938c22d37ff65af623373cb4e3e9ac9ff3c4ee5d1a3c0157ec10ed40c167015"
+    },
+    {
+      "sourceId": "S028",
+      "decision": "CAPTURED_QUARANTINED_NO_EXACT_PUBLICATION_TIME",
+      "observedAt": "2023-06-03T21:42:32.000Z",
+      "captureDigest": "KIN2WVGMYVQYRNUQNGCGHHCIPWT452WA"
+    },
+    {
+      "sourceId": "S027",
+      "decision": "NO_CAPTURE_WITHIN_366_DAYS"
+    },
+    {
+      "sourceId": "S034",
+      "decision": "UNDECIDED_INDEX_TIMEOUT"
+    }
+  ],
+  "storeVerificationAfterArchiveTests": {
+    "status": "PASS",
+    "observations": 170,
+    "accepted": 57,
+    "quarantined": 113,
+    "distinctPayloads": 170,
+    "distinctPayloadBytes": 302004871,
+    "observationIndexSha256": "fa650da395418691ddc89631fd8061744418ea18e32d60b423eaf5aae643f26e",
+    "payloadIndexSha256": "9547f6cfa6451d0e47e1a8b0a3b92251b2a0a4b2634d754c95d1b307cccc9d9a"
+  },
+  "productiveGqsModified": false
+}

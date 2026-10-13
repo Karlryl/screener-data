@@ -1,0 +1,7216 @@
+{
+  "snapshots": 16118,
+  "authorizedSnapshots": 15986,
+  "watchlistRef": "256d26910e637142ceddedf51cf39b394be9287f",
+  "publicationRef": "d164b75262",
+  "unchangedSnapshots": 16110,
+  "changedCells": 36,
+  "staleCells": 0,
+  "quarantines": [
+    {
+      "ticker": "BANPU.BK",
+      "caseId": "banpu-mixed-issuer-packet-20260929",
+      "status": "quarantined",
+      "reason": "Score fehlt: Anbieter vermischt Banpu mit Banpu Power; Jahreszahlen, Aktienzahl und Branchenzuordnung sind nicht verlässlich zugeordnet."
+    }
+  ],
+  "changes": [
+    {
+      "ticker": "002092.SZ",
+      "caseId": "002092.sz-2014-06-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2014-06-30",
+      "index": 0,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "002092.SZ",
+      "caseId": "002092.sz-2014-03-31-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2014-03-31",
+      "index": 1,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "002092.SZ",
+      "caseId": "002092.sz-2013-12-31-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2013-12-31",
+      "index": 2,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "002092.SZ",
+      "caseId": "002092.sz-2013-09-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2013-09-30",
+      "index": 3,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "5930.T",
+      "caseId": "5930.t-2025-12-31-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "index": 0,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "5930.T",
+      "caseId": "5930.t-2025-06-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "index": 1,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "5930.T",
+      "caseId": "5930.t-2024-12-31-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2024-12-31",
+      "index": 2,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "5930.T",
+      "caseId": "5930.t-2024-06-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2024-06-30",
+      "index": 3,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "ARCC",
+      "caseId": "arcc-2026-06-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "index": 0,
+      "status": "corrected",
+      "oldValue": 219000000,
+      "newValue": 768000000
+    },
+    {
+      "ticker": "ARCC",
+      "caseId": "arcc-2026-03-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "index": 1,
+      "status": "corrected",
+      "oldValue": 151000000,
+      "newValue": 763000000
+    },
+    {
+      "ticker": "ARCC",
+      "caseId": "arcc-2025-12-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "index": 2,
+      "status": "corrected",
+      "oldValue": 344000000,
+      "newValue": 793000000
+    },
+    {
+      "ticker": "ARCC",
+      "caseId": "arcc-2025-09-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "index": 3,
+      "status": "corrected",
+      "oldValue": 460000000,
+      "newValue": 782000000
+    },
+    {
+      "ticker": "ARCC",
+      "caseId": "arcc-2025-06-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "index": 4,
+      "status": "corrected",
+      "oldValue": 407000000,
+      "newValue": 745000000
+    },
+    {
+      "ticker": "BANPU.BK",
+      "caseId": "banpu-2026-03-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "index": 0,
+      "status": "corrected",
+      "oldValue": 5092756000,
+      "newValue": 1340143000
+    },
+    {
+      "ticker": "BANPU.BK",
+      "caseId": "banpu-2025-12-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "index": 1,
+      "status": "corrected",
+      "oldValue": 6736722000,
+      "newValue": 1398885000
+    },
+    {
+      "ticker": "BANPU.BK",
+      "caseId": "banpu-2025-09-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "index": 2,
+      "status": "corrected",
+      "oldValue": 7450422000,
+      "newValue": 1358440000
+    },
+    {
+      "ticker": "BANPU.BK",
+      "caseId": "banpu-2025-06-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "index": 3,
+      "status": "corrected",
+      "oldValue": 6557265000,
+      "newValue": 1237174000
+    },
+    {
+      "ticker": "BANPU.BK",
+      "caseId": "banpu-2025-03-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "index": 4,
+      "status": "corrected",
+      "oldValue": 7105984000,
+      "newValue": 1283603000
+    },
+    {
+      "ticker": "FSK",
+      "caseId": "fsk-2026-06-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "index": 0,
+      "status": "corrected",
+      "oldValue": -32000000,
+      "newValue": 290000000
+    },
+    {
+      "ticker": "FSK",
+      "caseId": "fsk-2026-03-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "index": 1,
+      "status": "corrected",
+      "oldValue": -427000000,
+      "newValue": 304000000
+    },
+    {
+      "ticker": "FSK",
+      "caseId": "fsk-2025-12-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "index": 2,
+      "status": "corrected",
+      "oldValue": -76000000,
+      "newValue": 348000000
+    },
+    {
+      "ticker": "FSK",
+      "caseId": "fsk-2025-09-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "index": 3,
+      "status": "corrected",
+      "oldValue": 228000000,
+      "newValue": 373000000
+    },
+    {
+      "ticker": "FSK",
+      "caseId": "fsk-2025-06-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "index": 4,
+      "status": "corrected",
+      "oldValue": -184000000,
+      "newValue": 398000000
+    },
+    {
+      "ticker": "HTGC",
+      "caseId": "htgc-2026-06-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "index": 0,
+      "status": "corrected",
+      "oldValue": 158252000,
+      "newValue": 149114000
+    },
+    {
+      "ticker": "HTGC",
+      "caseId": "htgc-2026-03-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "index": 1,
+      "status": "corrected",
+      "oldValue": 67782000,
+      "newValue": 141536000
+    },
+    {
+      "ticker": "HTGC",
+      "caseId": "htgc-2025-12-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "index": 2,
+      "status": "corrected",
+      "oldValue": 115987000,
+      "newValue": 137430000
+    },
+    {
+      "ticker": "HTGC",
+      "caseId": "htgc-2025-09-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "index": 3,
+      "status": "corrected",
+      "oldValue": 145121000,
+      "newValue": 138093000
+    },
+    {
+      "ticker": "HTGC",
+      "caseId": "htgc-2025-06-30-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "index": 4,
+      "status": "corrected",
+      "oldValue": 104703000,
+      "newValue": 137459000
+    },
+    {
+      "ticker": "PDN.AX",
+      "caseId": "pdn.ax-2017-03-31-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2017-03-31",
+      "index": 1,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "PDN.AX",
+      "caseId": "pdn.ax-2016-12-31-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2016-12-31",
+      "index": 2,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "PDN.AX",
+      "caseId": "pdn.ax-2016-06-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2016-06-30",
+      "index": 3,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "PDN.AX",
+      "caseId": "pdn.ax-2016-12-31-revenueQ",
+      "container": "timeseries",
+      "field": "revenueQ",
+      "period": "2016-12-31",
+      "index": 2,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "YSN.DE",
+      "caseId": "ysn.de-2026-06-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "index": 0,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "YSN.DE",
+      "caseId": "ysn.de-2025-09-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "index": 1,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "YSN.DE",
+      "caseId": "ysn.de-2025-06-30-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "index": 2,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    },
+    {
+      "ticker": "YSN.DE",
+      "caseId": "ysn.de-2025-03-31-grossProfitQ",
+      "container": "timeseries",
+      "field": "grossProfitQ",
+      "period": "2025-03-31",
+      "index": 3,
+      "status": "missing",
+      "oldValue": 0,
+      "newValue": null
+    }
+  ],
+  "allOtherRowsByteIdentical": true,
+  "diskHashesUnchanged": 16118,
+  "aggregateSha256": "81c96b4789073dac5e6085c9fb2bfe489cd1e57629228f66ffbcbe12db3e4397",
+  "zeroRule": {
+    "candidateCells": 9900,
+    "nonzeroChanges": 0,
+    "mode": "shadow",
+    "visibleScoreChanges": 122
+  },
+  "boardChanges": [
+    {
+      "family": "growth",
+      "ticker": "HTGC",
+      "board": "financials",
+      "oldScore": 59.5,
+      "newScore": 48.3,
+      "oldGrowth": 51.14371125946726,
+      "newGrowth": 8.478891887762895
+    },
+    {
+      "family": "growth",
+      "ticker": "ARCC",
+      "board": "financials",
+      "oldScore": 32.6,
+      "newScore": 36,
+      "oldGrowth": -46.1916461916462,
+      "newGrowth": 3.087248322147662
+    },
+    {
+      "family": "growth",
+      "ticker": "BANPU.BK",
+      "board": "utilities",
+      "oldScore": 27.1,
+      "newScore": null,
+      "oldGrowth": -28.33144572236582,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "FSK",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 37.5,
+      "oldGrowth": null,
+      "newGrowth": -27.135678391959793
+    },
+    {
+      "family": "quality",
+      "ticker": "ENRIN.BO",
+      "board": "quality-utilities",
+      "oldScore": 82.5,
+      "newScore": 82.6,
+      "oldGrowth": 39.28051103888826,
+      "newGrowth": 39.28051103888826
+    },
+    {
+      "family": "quality",
+      "ticker": "600236.SS",
+      "board": "quality-utilities",
+      "oldScore": 77,
+      "newScore": 77.1,
+      "oldGrowth": 8.278051434704281,
+      "newGrowth": 8.278051434704281
+    },
+    {
+      "family": "quality",
+      "ticker": "TRN.MI",
+      "board": "quality-utilities",
+      "oldScore": 73.5,
+      "newScore": 73.6,
+      "oldGrowth": null,
+      "newGrowth": null
+    },
+    {
+      "family": "quality",
+      "ticker": "CEZ.WA",
+      "board": "quality-utilities",
+      "oldScore": 73.3,
+      "newScore": 73.4,
+      "oldGrowth": 0.8437670114316953,
+      "newGrowth": 0.8437670114316953
+    },
+    {
+      "family": "quality",
+      "ticker": "600995.SS",
+      "board": "quality-utilities",
+      "oldScore": 72.6,
+      "newScore": 72.7,
+      "oldGrowth": 30.212070430253824,
+      "newGrowth": 30.212070430253824
+    },
+    {
+      "family": "quality",
+      "ticker": "ENLT",
+      "board": "quality-utilities",
+      "oldScore": 72,
+      "newScore": 72.1,
+      "oldGrowth": 42.950644608455256,
+      "newGrowth": 42.950644608455256
+    },
+    {
+      "family": "quality",
+      "ticker": "ATO",
+      "board": "quality-utilities",
+      "oldScore": 71.2,
+      "newScore": 71.1,
+      "oldGrowth": 4.80284319733324,
+      "newGrowth": 4.80284319733324
+    },
+    {
+      "family": "quality",
+      "ticker": "RENE.LS",
+      "board": "quality-utilities",
+      "oldScore": 70.1,
+      "newScore": 70.2,
+      "oldGrowth": 23.238815686468396,
+      "newGrowth": 23.238815686468396
+    },
+    {
+      "family": "quality",
+      "ticker": "NTPCGREEN.NS",
+      "board": "quality-utilities",
+      "oldScore": 69.1,
+      "newScore": 69.2,
+      "oldGrowth": 46.661417069760724,
+      "newGrowth": 46.661417069760724
+    },
+    {
+      "family": "quality",
+      "ticker": "ALUP3.SA",
+      "board": "quality-utilities",
+      "oldScore": 69,
+      "newScore": 69.1,
+      "oldGrowth": 9.889273242274555,
+      "newGrowth": 9.889273242274555
+    },
+    {
+      "family": "quality",
+      "ticker": "BREN.JK",
+      "board": "quality-utilities",
+      "oldScore": 66.9,
+      "newScore": 67,
+      "oldGrowth": 13.152177546040967,
+      "newGrowth": 13.152177546040967
+    },
+    {
+      "family": "quality",
+      "ticker": "ACMESOLAR.BO",
+      "board": "quality-utilities",
+      "oldScore": 66,
+      "newScore": 66.1,
+      "oldGrowth": 67.80916819313325,
+      "newGrowth": 67.80916819313325
+    },
+    {
+      "family": "quality",
+      "ticker": "3868.HK",
+      "board": "quality-utilities",
+      "oldScore": 64.7,
+      "newScore": 64.6,
+      "oldGrowth": 0.5269936204310266,
+      "newGrowth": 0.5269936204310266
+    },
+    {
+      "family": "quality",
+      "ticker": "NWE",
+      "board": "quality-utilities",
+      "oldScore": 63.8,
+      "newScore": 63.7,
+      "oldGrowth": 14.556203003679457,
+      "newGrowth": 14.556203003679457
+    },
+    {
+      "family": "quality",
+      "ticker": "BLX.TO",
+      "board": "quality-utilities",
+      "oldScore": 63.5,
+      "newScore": 63.6,
+      "oldGrowth": 20.67510548523206,
+      "newGrowth": 20.67510548523206
+    },
+    {
+      "family": "quality",
+      "ticker": "8174.T",
+      "board": "quality-utilities",
+      "oldScore": 63.3,
+      "newScore": 63.2,
+      "oldGrowth": 4.21030006448162,
+      "newGrowth": 4.21030006448162
+    },
+    {
+      "family": "quality",
+      "ticker": "1SLR.MI",
+      "board": "quality-utilities",
+      "oldScore": 63.1,
+      "newScore": 63.2,
+      "oldGrowth": 45.410226934048616,
+      "newGrowth": 45.410226934048616
+    },
+    {
+      "family": "quality",
+      "ticker": "0579.HK",
+      "board": "quality-utilities",
+      "oldScore": 63,
+      "newScore": 62.9,
+      "oldGrowth": 1.533474307135485,
+      "newGrowth": 1.533474307135485
+    },
+    {
+      "family": "quality",
+      "ticker": "IG.VI",
+      "board": "quality-utilities",
+      "oldScore": 62.3,
+      "newScore": 62.4,
+      "oldGrowth": 41.541221732527966,
+      "newGrowth": 41.541221732527966
+    },
+    {
+      "family": "quality",
+      "ticker": "ETR",
+      "board": "quality-utilities",
+      "oldScore": 61,
+      "newScore": 61.1,
+      "oldGrowth": 11.96933900130459,
+      "newGrowth": 11.96933900130459
+    },
+    {
+      "family": "quality",
+      "ticker": "EOAN.VI",
+      "board": "quality-utilities",
+      "oldScore": 60.6,
+      "newScore": 60.5,
+      "oldGrowth": -0.5202595176888258,
+      "newGrowth": -0.5202595176888258
+    },
+    {
+      "family": "quality",
+      "ticker": "SO",
+      "board": "quality-utilities",
+      "oldScore": 60.6,
+      "newScore": 60.5,
+      "oldGrowth": 0.05736411874373015,
+      "newGrowth": 0.05736411874373015
+    }
+  ],
+  "zeroBoardChanges": [
+    {
+      "family": "growth",
+      "ticker": "M4I.DE",
+      "board": "financials",
+      "oldScore": 65.7,
+      "newScore": null,
+      "oldGrowth": 14.066150252059506,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "AGTF.TO",
+      "board": "consumer-staples",
+      "oldScore": 54.2,
+      "newScore": 54.7,
+      "oldGrowth": 5.390651974546579,
+      "newGrowth": 5.390651974546579
+    },
+    {
+      "family": "growth",
+      "ticker": "0291.HK",
+      "board": "consumer-staples",
+      "oldScore": 31.5,
+      "newScore": 41.6,
+      "oldGrowth": -100,
+      "newGrowth": -1.682412320434834
+    },
+    {
+      "family": "growth",
+      "ticker": "VPK.VI",
+      "board": "energy",
+      "oldScore": 46.4,
+      "newScore": 44.3,
+      "oldGrowth": 6.6026038437693835,
+      "newGrowth": -1.2693827911219313
+    },
+    {
+      "family": "growth",
+      "ticker": "601881.SS",
+      "board": "financials",
+      "oldScore": 45.9,
+      "newScore": 49.8,
+      "oldGrowth": -2.691670036870264,
+      "newGrowth": 8.081652875363709
+    },
+    {
+      "family": "growth",
+      "ticker": "IGG.L",
+      "board": "financials",
+      "oldScore": 35.7,
+      "newScore": 44.7,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "OXLC",
+      "board": "financials",
+      "oldScore": 29.2,
+      "newScore": 35,
+      "oldGrowth": -100,
+      "newGrowth": 7.786818897517089
+    },
+    {
+      "family": "growth",
+      "ticker": "MAZE",
+      "board": "health-care",
+      "oldScore": 34.8,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "PYC.AX",
+      "board": "health-care",
+      "oldScore": 26.8,
+      "newScore": 41.4,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "600582.SS",
+      "board": "industrials",
+      "oldScore": 31.7,
+      "newScore": 47,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "600525.SS",
+      "board": "industrials",
+      "oldScore": 31,
+      "newScore": 44.5,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "HMMC.TO",
+      "board": "materials",
+      "oldScore": 55.5,
+      "newScore": 63.1,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "EQR.AX",
+      "board": "materials",
+      "oldScore": 41.3,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "RML",
+      "board": "materials",
+      "oldScore": 41.3,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "603993.SS",
+      "board": "materials",
+      "oldScore": 26.1,
+      "newScore": 29.5,
+      "oldGrowth": -100,
+      "newGrowth": -3.0084623601455585
+    },
+    {
+      "family": "growth",
+      "ticker": "3888.HK",
+      "board": "software-comm-services",
+      "oldScore": 25,
+      "newScore": 16.6,
+      "oldGrowth": 8.798038668430252,
+      "newGrowth": -6.154573642088534
+    },
+    {
+      "family": "growth",
+      "ticker": "V03.SI",
+      "board": "tech-hardware",
+      "oldScore": 37.3,
+      "newScore": 38.3,
+      "oldGrowth": -100,
+      "newGrowth": -7.388974470382214
+    },
+    {
+      "family": "growth",
+      "ticker": "0285.HK",
+      "board": "tech-hardware",
+      "oldScore": 26.3,
+      "newScore": 26.1,
+      "oldGrowth": 1.8367923803554564,
+      "newGrowth": 1.2249221822155265
+    },
+    {
+      "family": "growth",
+      "ticker": "ADV.DE",
+      "board": "tech-hardware",
+      "oldScore": 62.8,
+      "newScore": 69.2,
+      "oldGrowth": -30.401290721224818,
+      "newGrowth": 9.966559001107079
+    },
+    {
+      "family": "growth",
+      "ticker": "2498.HK",
+      "board": "tech-hardware",
+      "oldScore": 43,
+      "newScore": 52.8,
+      "oldGrowth": -100,
+      "newGrowth": 17.715182588170798
+    },
+    {
+      "family": "growth",
+      "ticker": "EYDAP.AT",
+      "board": "utilities",
+      "oldScore": 21.9,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "BAJFINANCE.NS",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 57,
+      "oldGrowth": null,
+      "newGrowth": 21.20076154114581
+    },
+    {
+      "family": "growth",
+      "ticker": "MA",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 54.6,
+      "oldGrowth": null,
+      "newGrowth": 14.066150252059506
+    },
+    {
+      "family": "growth",
+      "ticker": "PAG.L",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 43.8,
+      "oldGrowth": null,
+      "newGrowth": 3.7671232876712146
+    },
+    {
+      "family": "growth",
+      "ticker": "FMCC",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 41.5,
+      "oldGrowth": null,
+      "newGrowth": 1.2677484787018356
+    },
+    {
+      "family": "growth",
+      "ticker": "8425.T",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 32.4,
+      "oldGrowth": null,
+      "newGrowth": -4.359591100420934
+    },
+    {
+      "family": "quality",
+      "ticker": "7936.T",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 80.6,
+      "newScore": 80.5,
+      "oldGrowth": 19.51141150081206,
+      "newGrowth": 19.51141150081206
+    },
+    {
+      "family": "quality",
+      "ticker": "CHALET.BO",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 77.2,
+      "newScore": 77.1,
+      "oldGrowth": -42.73406435183684,
+      "newGrowth": -42.73406435183684
+    },
+    {
+      "family": "quality",
+      "ticker": "6181.HK",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 76.2,
+      "newScore": 76.1,
+      "oldGrowth": 221.00395505998432,
+      "newGrowth": 221.00395505998432
+    },
+    {
+      "family": "quality",
+      "ticker": "SANSERA.NS",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 74.4,
+      "newScore": 74.3,
+      "oldGrowth": 27.77322900728201,
+      "newGrowth": 27.77322900728201
+    },
+    {
+      "family": "quality",
+      "ticker": "3306.HK",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 74.3,
+      "newScore": 74.2,
+      "oldGrowth": 8.9733138561942,
+      "newGrowth": 8.9733138561942
+    },
+    {
+      "family": "quality",
+      "ticker": "HEROMOTOCO.NS",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 74.1,
+      "newScore": 74,
+      "oldGrowth": 34.937164298013414,
+      "newGrowth": 34.937164298013414
+    },
+    {
+      "family": "quality",
+      "ticker": "ONON",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 74,
+      "newScore": 73.9,
+      "oldGrowth": 13.494394020288315,
+      "newGrowth": 13.494394020288315
+    },
+    {
+      "family": "quality",
+      "ticker": "PUUILO.HE",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 73.8,
+      "newScore": 73.7,
+      "oldGrowth": 15.36254564423578,
+      "newGrowth": 15.36254564423578
+    },
+    {
+      "family": "quality",
+      "ticker": "SUNDRMFAST.NS",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 72.7,
+      "newScore": 72.6,
+      "oldGrowth": 20.391420317075216,
+      "newGrowth": 20.391420317075216
+    },
+    {
+      "family": "quality",
+      "ticker": "600660.SS",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 72.3,
+      "newScore": 72.2,
+      "oldGrowth": 16.650961388819653,
+      "newGrowth": 16.650961388819653
+    },
+    {
+      "family": "quality",
+      "ticker": "MSUMI.BO",
+      "board": "quality-consumer-discretionary",
+      "oldScore": 71.7,
+      "newScore": 71.6,
+      "oldGrowth": 36.3993647313007,
+      "newGrowth": 36.3993647313007
+    },
+    {
+      "family": "quality",
+      "ticker": "PGHH.BO",
+      "board": "quality-consumer-staples",
+      "oldScore": 80.9,
+      "newScore": 80.8,
+      "oldGrowth": -4.837674836391637,
+      "newGrowth": -4.837674836391637
+    },
+    {
+      "family": "quality",
+      "ticker": "DNO.OL",
+      "board": "quality-energy",
+      "oldScore": 75.8,
+      "newScore": 75.7,
+      "oldGrowth": 194.7674418604651,
+      "newGrowth": 194.7674418604651
+    },
+    {
+      "family": "quality",
+      "ticker": "RRC",
+      "board": "quality-energy",
+      "oldScore": 72,
+      "newScore": 71.9,
+      "oldGrowth": 8.56660573117587,
+      "newGrowth": 8.56660573117587
+    },
+    {
+      "family": "quality",
+      "ticker": "COALINDIA.NS",
+      "board": "quality-energy",
+      "oldScore": 69.7,
+      "newScore": 69.8,
+      "oldGrowth": 7.771813081324908,
+      "newGrowth": 7.771813081324908
+    },
+    {
+      "family": "quality",
+      "ticker": "PSK.TO",
+      "board": "quality-energy",
+      "oldScore": 68.5,
+      "newScore": 68.4,
+      "oldGrowth": 44.012944983818784,
+      "newGrowth": 44.012944983818784
+    },
+    {
+      "family": "quality",
+      "ticker": "CHENNPETRO.NS",
+      "board": "quality-energy",
+      "oldScore": 67.9,
+      "newScore": 67.8,
+      "oldGrowth": 84.77481108516409,
+      "newGrowth": 84.77481108516409
+    },
+    {
+      "family": "quality",
+      "ticker": "PARR",
+      "board": "quality-energy",
+      "oldScore": 65.9,
+      "newScore": 65.8,
+      "oldGrowth": 56.797793220586044,
+      "newGrowth": 56.797793220586044
+    },
+    {
+      "family": "quality",
+      "ticker": "AROC",
+      "board": "quality-energy",
+      "oldScore": 65.9,
+      "newScore": 65.8,
+      "oldGrowth": -3.1094709149371513,
+      "newGrowth": -3.1094709149371513
+    },
+    {
+      "family": "quality",
+      "ticker": "PTTEP.BK",
+      "board": "quality-energy",
+      "oldScore": 65.7,
+      "newScore": 65.8,
+      "oldGrowth": 35.06490154817239,
+      "newGrowth": 35.06490154817239
+    },
+    {
+      "family": "quality",
+      "ticker": "CEU.TO",
+      "board": "quality-energy",
+      "oldScore": 63.7,
+      "newScore": 63.6,
+      "oldGrowth": 24.40682867849844,
+      "newGrowth": 24.40682867849844
+    },
+    {
+      "family": "quality",
+      "ticker": "CVI",
+      "board": "quality-energy",
+      "oldScore": 62.6,
+      "newScore": 62.5,
+      "oldGrowth": 55.47984099943215,
+      "newGrowth": 55.47984099943215
+    },
+    {
+      "family": "quality",
+      "ticker": "VLE.TO",
+      "board": "quality-energy",
+      "oldScore": 62.4,
+      "newScore": 62.5,
+      "oldGrowth": 100.95850352766433,
+      "newGrowth": 100.95850352766433
+    },
+    {
+      "family": "quality",
+      "ticker": "CNQ",
+      "board": "quality-energy",
+      "oldScore": 62.2,
+      "newScore": 62.1,
+      "oldGrowth": 77.92248062015503,
+      "newGrowth": 77.92248062015503
+    },
+    {
+      "family": "quality",
+      "ticker": "MATR.TO",
+      "board": "quality-energy",
+      "oldScore": 61.5,
+      "newScore": 61.4,
+      "oldGrowth": 23.441457889997718,
+      "newGrowth": 23.441457889997718
+    },
+    {
+      "family": "quality",
+      "ticker": "SM",
+      "board": "quality-energy",
+      "oldScore": 59.9,
+      "newScore": 59.8,
+      "oldGrowth": 174.6496815286624,
+      "newGrowth": 174.6496815286624
+    },
+    {
+      "family": "quality",
+      "ticker": "2382.SR",
+      "board": "quality-energy",
+      "oldScore": 59.7,
+      "newScore": 59.8,
+      "oldGrowth": 36.3879870232692,
+      "newGrowth": 36.3879870232692
+    },
+    {
+      "family": "quality",
+      "ticker": "BRAV3.SA",
+      "board": "quality-energy",
+      "oldScore": 59.7,
+      "newScore": 59.6,
+      "oldGrowth": 33.19401982109154,
+      "newGrowth": 33.19401982109154
+    },
+    {
+      "family": "quality",
+      "ticker": "BP",
+      "board": "quality-energy",
+      "oldScore": 58.6,
+      "newScore": 58.5,
+      "oldGrowth": 48.208119758937954,
+      "newGrowth": 48.208119758937954
+    },
+    {
+      "family": "quality",
+      "ticker": "214150.KQ",
+      "board": "quality-health-care",
+      "oldScore": 88.6,
+      "newScore": 88.5,
+      "oldGrowth": 26.693678964848022,
+      "newGrowth": 26.693678964848022
+    },
+    {
+      "family": "quality",
+      "ticker": "RUBICON.NS",
+      "board": "quality-health-care",
+      "oldScore": 79.4,
+      "newScore": 79.3,
+      "oldGrowth": 51.58782844530687,
+      "newGrowth": 51.58782844530687
+    },
+    {
+      "family": "quality",
+      "ticker": "688677.SS",
+      "board": "quality-health-care",
+      "oldScore": 79.3,
+      "newScore": 79.2,
+      "oldGrowth": 23.064510334278477,
+      "newGrowth": 23.064510334278477
+    },
+    {
+      "family": "quality",
+      "ticker": "600867.SS",
+      "board": "quality-health-care",
+      "oldScore": 79,
+      "newScore": 78.9,
+      "oldGrowth": 46.65740661910016,
+      "newGrowth": 46.65740661910016
+    },
+    {
+      "family": "quality",
+      "ticker": "7741.T",
+      "board": "quality-health-care",
+      "oldScore": 78.7,
+      "newScore": 78.8,
+      "oldGrowth": 12.421216619723086,
+      "newGrowth": 12.421216619723086
+    },
+    {
+      "family": "quality",
+      "ticker": "METROPOLIS.NS",
+      "board": "quality-health-care",
+      "oldScore": 77.8,
+      "newScore": 77.7,
+      "oldGrowth": 23.636000465143226,
+      "newGrowth": 23.636000465143226
+    },
+    {
+      "family": "quality",
+      "ticker": "3692.HK",
+      "board": "quality-health-care",
+      "oldScore": 75.9,
+      "newScore": 75.8,
+      "oldGrowth": 22.571992365270365,
+      "newGrowth": 22.571992365270365
+    },
+    {
+      "family": "quality",
+      "ticker": "THYROCARE.NS",
+      "board": "quality-health-care",
+      "oldScore": 75.2,
+      "newScore": 75.1,
+      "oldGrowth": 20.74010959145598,
+      "newGrowth": 20.74010959145598
+    },
+    {
+      "family": "quality",
+      "ticker": "MAXHEALTH.BO",
+      "board": "quality-health-care",
+      "oldScore": 73.6,
+      "newScore": 73.5,
+      "oldGrowth": 16.699793348688342,
+      "newGrowth": 16.699793348688342
+    },
+    {
+      "family": "quality",
+      "ticker": "ALK-B.CO",
+      "board": "quality-health-care",
+      "oldScore": 70,
+      "newScore": 69.9,
+      "oldGrowth": 17.550753110674535,
+      "newGrowth": 17.550753110674535
+    },
+    {
+      "family": "quality",
+      "ticker": "MANIPALHOS.NS",
+      "board": "quality-health-care",
+      "oldScore": 69.9,
+      "newScore": 69.8,
+      "oldGrowth": 18.04989358298259,
+      "newGrowth": 18.04989358298259
+    },
+    {
+      "family": "quality",
+      "ticker": "GLAXO.BO",
+      "board": "quality-health-care",
+      "oldScore": 69.7,
+      "newScore": 69.6,
+      "oldGrowth": 16.55178409528424,
+      "newGrowth": 16.55178409528424
+    },
+    {
+      "family": "quality",
+      "ticker": "DOCS",
+      "board": "quality-health-care",
+      "oldScore": 69.2,
+      "newScore": 69.1,
+      "oldGrowth": 7.336563568701893,
+      "newGrowth": 7.336563568701893
+    },
+    {
+      "family": "quality",
+      "ticker": "LKFT",
+      "board": "quality-health-care",
+      "oldScore": 68.9,
+      "newScore": 69,
+      "oldGrowth": -81.4514152677368,
+      "newGrowth": -81.4514152677368
+    },
+    {
+      "family": "quality",
+      "ticker": "ALKEM.BO",
+      "board": "quality-health-care",
+      "oldScore": 68.4,
+      "newScore": 68.3,
+      "oldGrowth": 10.946148780531217,
+      "newGrowth": 10.946148780531217
+    },
+    {
+      "family": "quality",
+      "ticker": "GLAND.NS",
+      "board": "quality-health-care",
+      "oldScore": 68.2,
+      "newScore": 68.1,
+      "oldGrowth": 19.56991861170996,
+      "newGrowth": 19.56991861170996
+    },
+    {
+      "family": "quality",
+      "ticker": "PFIZER.BO",
+      "board": "quality-health-care",
+      "oldScore": 68,
+      "newScore": 67.9,
+      "oldGrowth": 8.311085316308752,
+      "newGrowth": 8.311085316308752
+    },
+    {
+      "family": "quality",
+      "ticker": "IDXX",
+      "board": "quality-health-care",
+      "oldScore": 67.7,
+      "newScore": 67.6,
+      "oldGrowth": 9.65589473048527,
+      "newGrowth": 9.65589473048527
+    },
+    {
+      "family": "quality",
+      "ticker": "2637.HK",
+      "board": "quality-health-care",
+      "oldScore": 67.6,
+      "newScore": 67.7,
+      "oldGrowth": null,
+      "newGrowth": null
+    },
+    {
+      "family": "quality",
+      "ticker": "215A.T",
+      "board": "quality-industrials",
+      "oldScore": 90.2,
+      "newScore": 90.1,
+      "oldGrowth": 24.811760487629986,
+      "newGrowth": 24.811760487629986
+    },
+    {
+      "family": "quality",
+      "ticker": "8996.TW",
+      "board": "quality-industrials",
+      "oldScore": 78.2,
+      "newScore": 78.1,
+      "oldGrowth": 54.920672469502854,
+      "newGrowth": 54.920672469502854
+    },
+    {
+      "family": "quality",
+      "ticker": "NWG.WA",
+      "board": "quality-industrials",
+      "oldScore": 76.4,
+      "newScore": 76.3,
+      "oldGrowth": 54.473319371109994,
+      "newGrowth": 54.473319371109994
+    },
+    {
+      "family": "quality",
+      "ticker": "ALQ.AX",
+      "board": "quality-industrials",
+      "oldScore": 75.8,
+      "newScore": 75.7,
+      "oldGrowth": 10.692138427685528,
+      "newGrowth": 10.692138427685528
+    },
+    {
+      "family": "quality",
+      "ticker": "002690.SZ",
+      "board": "quality-industrials",
+      "oldScore": 75.8,
+      "newScore": 75.7,
+      "oldGrowth": 5.263371596304189,
+      "newGrowth": 5.263371596304189
+    },
+    {
+      "family": "quality",
+      "ticker": "ZEHN.SW",
+      "board": "quality-industrials",
+      "oldScore": 75.7,
+      "newScore": 75.6,
+      "oldGrowth": 7.778407480872773,
+      "newGrowth": 7.778407480872773
+    },
+    {
+      "family": "quality",
+      "ticker": "CUMMINSIND.NS",
+      "board": "quality-industrials",
+      "oldScore": 75.1,
+      "newScore": 75,
+      "oldGrowth": 18.057795299278357,
+      "newGrowth": 18.057795299278357
+    },
+    {
+      "family": "quality",
+      "ticker": "SUZLON.BO",
+      "board": "quality-industrials",
+      "oldScore": 75.1,
+      "newScore": 75,
+      "oldGrowth": 22.5202336614988,
+      "newGrowth": 22.5202336614988
+    },
+    {
+      "family": "quality",
+      "ticker": "HINDCOPPER.NS",
+      "board": "quality-materials",
+      "oldScore": 86.8,
+      "newScore": 86.7,
+      "oldGrowth": 81.36220152216436,
+      "newGrowth": 81.36220152216436
+    },
+    {
+      "family": "quality",
+      "ticker": "001337.SZ",
+      "board": "quality-materials",
+      "oldScore": 85.9,
+      "newScore": 85.8,
+      "oldGrowth": 60.37747113252119,
+      "newGrowth": 60.37747113252119
+    },
+    {
+      "family": "quality",
+      "ticker": "BHP",
+      "board": "quality-materials",
+      "oldScore": 81.3,
+      "newScore": 81.2,
+      "oldGrowth": 14.626819086262731,
+      "newGrowth": 14.626819086262731
+    },
+    {
+      "family": "quality",
+      "ticker": "ANTO.L",
+      "board": "quality-materials",
+      "oldScore": 76.7,
+      "newScore": 76.6,
+      "oldGrowth": 30.345964254392598,
+      "newGrowth": 30.345964254392598
+    },
+    {
+      "family": "quality",
+      "ticker": "ASIANPAINT.NS",
+      "board": "quality-materials",
+      "oldScore": 74.9,
+      "newScore": 74.8,
+      "oldGrowth": 17.894019714291787,
+      "newGrowth": 17.894019714291787
+    },
+    {
+      "family": "quality",
+      "ticker": "GNG.AX",
+      "board": "quality-materials",
+      "oldScore": 74.7,
+      "newScore": 74.6,
+      "oldGrowth": 2.9525457682777256,
+      "newGrowth": 2.9525457682777256
+    },
+    {
+      "family": "quality",
+      "ticker": "III.TO",
+      "board": "quality-materials",
+      "oldScore": 73.1,
+      "newScore": 73,
+      "oldGrowth": -5.254024159179749,
+      "newGrowth": -5.254024159179749
+    },
+    {
+      "family": "quality",
+      "ticker": "688093.SS",
+      "board": "quality-materials",
+      "oldScore": 71.4,
+      "newScore": 71.3,
+      "oldGrowth": -41.90842457450403,
+      "newGrowth": -41.90842457450403
+    },
+    {
+      "family": "quality",
+      "ticker": "APP",
+      "board": "quality-software-comm-services",
+      "oldScore": 86.8,
+      "newScore": 86.7,
+      "oldGrowth": 52.82461863080474,
+      "newGrowth": 52.82461863080474
+    },
+    {
+      "family": "quality",
+      "ticker": "1INN.DE",
+      "board": "quality-software-comm-services",
+      "oldScore": 81.5,
+      "newScore": 81.4,
+      "oldGrowth": 23.167980956506963,
+      "newGrowth": 23.167980956506963
+    },
+    {
+      "family": "quality",
+      "ticker": "FICO",
+      "board": "quality-software-comm-services",
+      "oldScore": 77.2,
+      "newScore": 77.1,
+      "oldGrowth": 25.6840319528723,
+      "newGrowth": 25.6840319528723
+    },
+    {
+      "family": "quality",
+      "ticker": "FTNT",
+      "board": "quality-software-comm-services",
+      "oldScore": 76.3,
+      "newScore": 76.2,
+      "oldGrowth": 25.638036809815958,
+      "newGrowth": 25.638036809815958
+    },
+    {
+      "family": "quality",
+      "ticker": "AOF.DE",
+      "board": "quality-software-comm-services",
+      "oldScore": 76.2,
+      "newScore": 76.1,
+      "oldGrowth": 12.991700211907165,
+      "newGrowth": 12.991700211907165
+    },
+    {
+      "family": "quality",
+      "ticker": "OFSS.BO",
+      "board": "quality-software-comm-services",
+      "oldScore": 75,
+      "newScore": 74.9,
+      "oldGrowth": 68.72907893316057,
+      "newGrowth": 68.72907893316057
+    },
+    {
+      "family": "quality",
+      "ticker": "PAYX",
+      "board": "quality-software-comm-services",
+      "oldScore": 75,
+      "newScore": 74.9,
+      "oldGrowth": 12.485111749457012,
+      "newGrowth": 12.485111749457012
+    },
+    {
+      "family": "quality",
+      "ticker": "5032.T",
+      "board": "quality-software-comm-services",
+      "oldScore": 74.1,
+      "newScore": 74,
+      "oldGrowth": 29.865192648567973,
+      "newGrowth": 29.865192648567973
+    },
+    {
+      "family": "quality",
+      "ticker": "9911.HK",
+      "board": "quality-software-comm-services",
+      "oldScore": 71.9,
+      "newScore": 71.8,
+      "oldGrowth": 35.302238405099295,
+      "newGrowth": 35.302238405099295
+    },
+    {
+      "family": "quality",
+      "ticker": "NFLX",
+      "board": "quality-software-comm-services",
+      "oldScore": 71.3,
+      "newScore": 71.2,
+      "oldGrowth": 13.365374252899542,
+      "newGrowth": 13.365374252899542
+    },
+    {
+      "family": "quality",
+      "ticker": "BLACKBUCK.NS",
+      "board": "quality-software-comm-services",
+      "oldScore": 70.5,
+      "newScore": 70.4,
+      "oldGrowth": 42.16837267599749,
+      "newGrowth": 42.16837267599749
+    },
+    {
+      "family": "quality",
+      "ticker": "NEM.DE",
+      "board": "quality-software-comm-services",
+      "oldScore": 69.9,
+      "newScore": 69.8,
+      "oldGrowth": 12.972016880895909,
+      "newGrowth": 12.972016880895909
+    },
+    {
+      "family": "quality",
+      "ticker": "QLYS",
+      "board": "quality-software-comm-services",
+      "oldScore": 68.7,
+      "newScore": 68.6,
+      "oldGrowth": 11.040338408650396,
+      "newGrowth": 11.040338408650396
+    },
+    {
+      "family": "quality",
+      "ticker": "HAV2.VI",
+      "board": "quality-software-comm-services",
+      "oldScore": 68.3,
+      "newScore": 68.4,
+      "oldGrowth": 1.7464198393293717,
+      "newGrowth": 1.7464198393293717
+    },
+    {
+      "family": "quality",
+      "ticker": "SGE.L",
+      "board": "quality-software-comm-services",
+      "oldScore": 68.3,
+      "newScore": 68.4,
+      "oldGrowth": 7.761578044596917,
+      "newGrowth": 7.761578044596917
+    },
+    {
+      "family": "quality",
+      "ticker": "9766.T",
+      "board": "quality-software-comm-services",
+      "oldScore": 68.2,
+      "newScore": 68.1,
+      "oldGrowth": 33.57947279402664,
+      "newGrowth": 33.57947279402664
+    },
+    {
+      "family": "quality",
+      "ticker": "GRND",
+      "board": "quality-software-comm-services",
+      "oldScore": 68.2,
+      "newScore": 68.1,
+      "oldGrowth": 32.54461715601611,
+      "newGrowth": 32.54461715601611
+    },
+    {
+      "family": "quality",
+      "ticker": "INTU",
+      "board": "quality-software-comm-services",
+      "oldScore": 67.7,
+      "newScore": 67.6,
+      "oldGrowth": 13.651788044896884,
+      "newGrowth": 13.651788044896884
+    },
+    {
+      "family": "quality",
+      "ticker": "2371.T",
+      "board": "quality-software-comm-services",
+      "oldScore": 67,
+      "newScore": 67.1,
+      "oldGrowth": 20.006374705169883,
+      "newGrowth": 20.006374705169883
+    },
+    {
+      "family": "quality",
+      "ticker": "LMN.V",
+      "board": "quality-software-comm-services",
+      "oldScore": 66.9,
+      "newScore": 66.8,
+      "oldGrowth": 27.780707238183243,
+      "newGrowth": 27.780707238183243
+    },
+    {
+      "family": "quality",
+      "ticker": "FRSH",
+      "board": "quality-software-comm-services",
+      "oldScore": 66.8,
+      "newScore": 66.7,
+      "oldGrowth": 15.975825442890779,
+      "newGrowth": 15.975825442890779
+    },
+    {
+      "family": "quality",
+      "ticker": "TOTS3.SA",
+      "board": "quality-software-comm-services",
+      "oldScore": 66.6,
+      "newScore": 66.5,
+      "oldGrowth": 17.439758343613597,
+      "newGrowth": 17.439758343613597
+    },
+    {
+      "family": "quality",
+      "ticker": "PTC",
+      "board": "quality-software-comm-services",
+      "oldScore": 66,
+      "newScore": 65.9,
+      "oldGrowth": -6.81557357319117,
+      "newGrowth": -6.81557357319117
+    },
+    {
+      "family": "quality",
+      "ticker": "NTAP",
+      "board": "quality-software-comm-services",
+      "oldScore": 65.2,
+      "newScore": 65.1,
+      "oldGrowth": 29.890955740859514,
+      "newGrowth": 29.890955740859514
+    },
+    {
+      "family": "quality",
+      "ticker": "PEXIP.OL",
+      "board": "quality-software-comm-services",
+      "oldScore": 64.6,
+      "newScore": 64.5,
+      "oldGrowth": 18.015809119519876,
+      "newGrowth": 18.015809119519876
+    },
+    {
+      "family": "quality",
+      "ticker": "PCTY",
+      "board": "quality-software-comm-services",
+      "oldScore": 64.3,
+      "newScore": 64.2,
+      "oldGrowth": 10.979021153524627,
+      "newGrowth": 10.979021153524627
+    },
+    {
+      "family": "quality",
+      "ticker": "1860.HK",
+      "board": "quality-software-comm-services",
+      "oldScore": 63.1,
+      "newScore": 63,
+      "oldGrowth": 35.744912841307716,
+      "newGrowth": 35.744912841307716
+    },
+    {
+      "family": "quality",
+      "ticker": "PEGA",
+      "board": "quality-software-comm-services",
+      "oldScore": 62.9,
+      "newScore": 62.8,
+      "oldGrowth": 9.415570905459392,
+      "newGrowth": 9.415570905459392
+    },
+    {
+      "family": "quality",
+      "ticker": "3769.T",
+      "board": "quality-software-comm-services",
+      "oldScore": 62.5,
+      "newScore": 62.4,
+      "oldGrowth": 11.810426921820415,
+      "newGrowth": 11.810426921820415
+    },
+    {
+      "family": "quality",
+      "ticker": "NTES",
+      "board": "quality-software-comm-services",
+      "oldScore": 61.6,
+      "newScore": 61.5,
+      "oldGrowth": 7.94101778940115,
+      "newGrowth": 7.94101778940115
+    },
+    {
+      "family": "quality",
+      "ticker": "002052.SZ",
+      "board": "quality-tech-hardware",
+      "oldScore": 74.6,
+      "newScore": 74.5,
+      "oldGrowth": -70.08272704302317,
+      "newGrowth": -70.08272704302317
+    },
+    {
+      "family": "quality",
+      "ticker": "ASTRAMICRO.NS",
+      "board": "quality-tech-hardware",
+      "oldScore": 72.6,
+      "newScore": 72.5,
+      "oldGrowth": -11.54727750657154,
+      "newGrowth": -11.54727750657154
+    }
+  ],
+  "directChanges": [
+    {
+      "family": "growth",
+      "ticker": "HTGC",
+      "board": "financials",
+      "oldScore": 59.5,
+      "newScore": 48.3,
+      "oldGrowth": 51.14371125946726,
+      "newGrowth": 8.478891887762895
+    },
+    {
+      "family": "growth",
+      "ticker": "ARCC",
+      "board": "financials",
+      "oldScore": 32.6,
+      "newScore": 36,
+      "oldGrowth": -46.1916461916462,
+      "newGrowth": 3.087248322147662
+    },
+    {
+      "family": "growth",
+      "ticker": "BANPU.BK",
+      "board": "utilities",
+      "oldScore": 27.1,
+      "newScore": null,
+      "oldGrowth": -28.33144572236582,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "FSK",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 37.5,
+      "oldGrowth": null,
+      "newGrowth": -27.135678391959793
+    }
+  ],
+  "directZeroChanges": [
+    {
+      "family": "growth",
+      "ticker": "M4I.DE",
+      "board": "financials",
+      "oldScore": 65.7,
+      "newScore": null,
+      "oldGrowth": 14.066150252059506,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "AGTF.TO",
+      "board": "consumer-staples",
+      "oldScore": 54.2,
+      "newScore": 54.7,
+      "oldGrowth": 5.390651974546579,
+      "newGrowth": 5.390651974546579
+    },
+    {
+      "family": "growth",
+      "ticker": "0291.HK",
+      "board": "consumer-staples",
+      "oldScore": 31.5,
+      "newScore": 41.6,
+      "oldGrowth": -100,
+      "newGrowth": -1.682412320434834
+    },
+    {
+      "family": "growth",
+      "ticker": "VPK.VI",
+      "board": "energy",
+      "oldScore": 46.4,
+      "newScore": 44.3,
+      "oldGrowth": 6.6026038437693835,
+      "newGrowth": -1.2693827911219313
+    },
+    {
+      "family": "growth",
+      "ticker": "601881.SS",
+      "board": "financials",
+      "oldScore": 45.9,
+      "newScore": 49.8,
+      "oldGrowth": -2.691670036870264,
+      "newGrowth": 8.081652875363709
+    },
+    {
+      "family": "growth",
+      "ticker": "IGG.L",
+      "board": "financials",
+      "oldScore": 35.7,
+      "newScore": 44.7,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "OXLC",
+      "board": "financials",
+      "oldScore": 29.2,
+      "newScore": 35,
+      "oldGrowth": -100,
+      "newGrowth": 7.786818897517089
+    },
+    {
+      "family": "growth",
+      "ticker": "MAZE",
+      "board": "health-care",
+      "oldScore": 34.8,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "PYC.AX",
+      "board": "health-care",
+      "oldScore": 26.8,
+      "newScore": 41.4,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "600582.SS",
+      "board": "industrials",
+      "oldScore": 31.7,
+      "newScore": 47,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "600525.SS",
+      "board": "industrials",
+      "oldScore": 31,
+      "newScore": 44.5,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "HMMC.TO",
+      "board": "materials",
+      "oldScore": 55.5,
+      "newScore": 63.1,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "EQR.AX",
+      "board": "materials",
+      "oldScore": 41.3,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "RML",
+      "board": "materials",
+      "oldScore": 41.3,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "603993.SS",
+      "board": "materials",
+      "oldScore": 26.1,
+      "newScore": 29.5,
+      "oldGrowth": -100,
+      "newGrowth": -3.0084623601455585
+    },
+    {
+      "family": "growth",
+      "ticker": "3888.HK",
+      "board": "software-comm-services",
+      "oldScore": 25,
+      "newScore": 16.6,
+      "oldGrowth": 8.798038668430252,
+      "newGrowth": -6.154573642088534
+    },
+    {
+      "family": "growth",
+      "ticker": "V03.SI",
+      "board": "tech-hardware",
+      "oldScore": 37.3,
+      "newScore": 38.3,
+      "oldGrowth": -100,
+      "newGrowth": -7.388974470382214
+    },
+    {
+      "family": "growth",
+      "ticker": "0285.HK",
+      "board": "tech-hardware",
+      "oldScore": 26.3,
+      "newScore": 26.1,
+      "oldGrowth": 1.8367923803554564,
+      "newGrowth": 1.2249221822155265
+    },
+    {
+      "family": "growth",
+      "ticker": "ADV.DE",
+      "board": "tech-hardware",
+      "oldScore": 62.8,
+      "newScore": 69.2,
+      "oldGrowth": -30.401290721224818,
+      "newGrowth": 9.966559001107079
+    },
+    {
+      "family": "growth",
+      "ticker": "2498.HK",
+      "board": "tech-hardware",
+      "oldScore": 43,
+      "newScore": 52.8,
+      "oldGrowth": -100,
+      "newGrowth": 17.715182588170798
+    },
+    {
+      "family": "growth",
+      "ticker": "EYDAP.AT",
+      "board": "utilities",
+      "oldScore": 21.9,
+      "newScore": null,
+      "oldGrowth": -100,
+      "newGrowth": null
+    },
+    {
+      "family": "growth",
+      "ticker": "BAJFINANCE.NS",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 57,
+      "oldGrowth": null,
+      "newGrowth": 21.20076154114581
+    },
+    {
+      "family": "growth",
+      "ticker": "MA",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 54.6,
+      "oldGrowth": null,
+      "newGrowth": 14.066150252059506
+    },
+    {
+      "family": "growth",
+      "ticker": "PAG.L",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 43.8,
+      "oldGrowth": null,
+      "newGrowth": 3.7671232876712146
+    },
+    {
+      "family": "growth",
+      "ticker": "FMCC",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 41.5,
+      "oldGrowth": null,
+      "newGrowth": 1.2677484787018356
+    },
+    {
+      "family": "growth",
+      "ticker": "8425.T",
+      "board": "financials",
+      "oldScore": null,
+      "newScore": 32.4,
+      "oldGrowth": null,
+      "newGrowth": -4.359591100420934
+    }
+  ],
+  "requested": [
+    {
+      "family": "growth",
+      "ticker": "BANPU.BK",
+      "before": {
+        "ticker": "BANPU.BK",
+        "board": "utilities",
+        "track": "profitable",
+        "score": 27.1,
+        "growth": -28.33144572236582
+      },
+      "after": null,
+      "afterReason": "data-suspect"
+    },
+    {
+      "family": "growth",
+      "ticker": "HTGC",
+      "before": {
+        "ticker": "HTGC",
+        "board": "financials",
+        "track": "profitable",
+        "score": 59.5,
+        "growth": 51.14371125946726
+      },
+      "after": {
+        "ticker": "HTGC",
+        "board": "financials",
+        "track": "profitable",
+        "score": 48.3,
+        "growth": 8.478891887762895
+      },
+      "afterReason": null
+    },
+    {
+      "family": "growth",
+      "ticker": "ARCC",
+      "before": {
+        "ticker": "ARCC",
+        "board": "financials",
+        "track": "profitable",
+        "score": 32.6,
+        "growth": -46.1916461916462
+      },
+      "after": {
+        "ticker": "ARCC",
+        "board": "financials",
+        "track": "profitable",
+        "score": 36,
+        "growth": 3.087248322147662
+      },
+      "afterReason": null
+    },
+    {
+      "family": "growth",
+      "ticker": "FSK",
+      "before": null,
+      "after": {
+        "ticker": "FSK",
+        "board": "financials",
+        "track": "profitable",
+        "score": 37.5,
+        "growth": -27.135678391959793
+      },
+      "afterReason": null
+    },
+    {
+      "family": "growth",
+      "ticker": "YSN.DE",
+      "before": {
+        "ticker": "YSN.DE",
+        "board": "software-comm-services",
+        "track": "profitable",
+        "score": 73,
+        "growth": 31.584582441113508
+      },
+      "after": {
+        "ticker": "YSN.DE",
+        "board": "software-comm-services",
+        "track": "profitable",
+        "score": 73,
+        "growth": 31.584582441113508
+      },
+      "afterReason": null
+    },
+    {
+      "family": "growth",
+      "ticker": "5930.T",
+      "before": {
+        "ticker": "5930.T",
+        "board": "industrials",
+        "track": "profitable",
+        "score": 41.7,
+        "growth": 2.673258738832507
+      },
+      "after": {
+        "ticker": "5930.T",
+        "board": "industrials",
+        "track": "profitable",
+        "score": 41.7,
+        "growth": 2.673258738832507
+      },
+      "afterReason": null
+    },
+    {
+      "family": "growth",
+      "ticker": "002092.SZ",
+      "before": {
+        "ticker": "002092.SZ",
+        "board": "materials",
+        "track": "profitable",
+        "score": 44.1,
+        "growth": -4.738709999225598
+      },
+      "after": {
+        "ticker": "002092.SZ",
+        "board": "materials",
+        "track": "profitable",
+        "score": 44.1,
+        "growth": -4.738709999225598
+      },
+      "afterReason": null
+    },
+    {
+      "family": "growth",
+      "ticker": "PDN.AX",
+      "before": {
+        "ticker": "PDN.AX",
+        "board": "energy",
+        "track": "profitable",
+        "score": 60.9,
+        "growth": 71.2668002431392
+      },
+      "after": {
+        "ticker": "PDN.AX",
+        "board": "energy",
+        "track": "profitable",
+        "score": 60.9,
+        "growth": 71.2668002431392
+      },
+      "afterReason": null
+    },
+    {
+      "family": "quality",
+      "ticker": "BANPU.BK",
+      "before": {
+        "ticker": "BANPU.BK",
+        "board": "quality-utilities",
+        "track": "profitable",
+        "score": 46,
+        "growth": -28.33144572236582
+      },
+      "after": null,
+      "afterReason": "data-suspect"
+    },
+    {
+      "family": "quality",
+      "ticker": "HTGC",
+      "before": null,
+      "after": null,
+      "afterReason": "qc-sector-unsupported"
+    },
+    {
+      "family": "quality",
+      "ticker": "ARCC",
+      "before": null,
+      "after": null,
+      "afterReason": "qc-sector-unsupported"
+    },
+    {
+      "family": "quality",
+      "ticker": "FSK",
+      "before": null,
+      "after": null,
+      "afterReason": "qc-sector-unsupported"
+    },
+    {
+      "family": "quality",
+      "ticker": "YSN.DE",
+      "before": {
+        "ticker": "YSN.DE",
+        "board": "quality-software-comm-services",
+        "track": "profitable",
+        "score": 51.3,
+        "growth": 31.584582441113508
+      },
+      "after": {
+        "ticker": "YSN.DE",
+        "board": "quality-software-comm-services",
+        "track": "profitable",
+        "score": 51.3,
+        "growth": 31.584582441113508
+      },
+      "afterReason": null
+    },
+    {
+      "family": "quality",
+      "ticker": "5930.T",
+      "before": {
+        "ticker": "5930.T",
+        "board": "quality-industrials",
+        "track": "profitable",
+        "score": 51.8,
+        "growth": 2.673258738832507
+      },
+      "after": {
+        "ticker": "5930.T",
+        "board": "quality-industrials",
+        "track": "profitable",
+        "score": 51.8,
+        "growth": 2.673258738832507
+      },
+      "afterReason": null
+    },
+    {
+      "family": "quality",
+      "ticker": "002092.SZ",
+      "before": null,
+      "after": null,
+      "afterReason": "qc-not-compounder"
+    },
+    {
+      "family": "quality",
+      "ticker": "PDN.AX",
+      "before": {
+        "ticker": "PDN.AX",
+        "board": "quality-energy",
+        "track": "profitable",
+        "score": 41.8,
+        "growth": 71.2668002431392
+      },
+      "after": {
+        "ticker": "PDN.AX",
+        "board": "quality-energy",
+        "track": "profitable",
+        "score": 41.8,
+        "growth": 71.2668002431392
+      },
+      "afterReason": null
+    },
+    {
+      "family": "smallcap",
+      "ticker": "BANPU.BK",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-non-us"
+    },
+    {
+      "family": "smallcap",
+      "ticker": "HTGC",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-mcap-out-of-band"
+    },
+    {
+      "family": "smallcap",
+      "ticker": "ARCC",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-mcap-out-of-band"
+    },
+    {
+      "family": "smallcap",
+      "ticker": "FSK",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-mcap-out-of-band"
+    },
+    {
+      "family": "smallcap",
+      "ticker": "YSN.DE",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-non-us"
+    },
+    {
+      "family": "smallcap",
+      "ticker": "5930.T",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-non-us"
+    },
+    {
+      "family": "smallcap",
+      "ticker": "002092.SZ",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-non-us"
+    },
+    {
+      "family": "smallcap",
+      "ticker": "PDN.AX",
+      "before": null,
+      "after": null,
+      "afterReason": "smallcap-non-us"
+    }
+  ],
+  "rule40": {
+    "baselineRows": 469,
+    "knownRows": 469,
+    "shadowRows": 469,
+    "read": 16118,
+    "baselineCandidates": 5221,
+    "baselineDiscrepancies": [],
+    "activeChanges": [],
+    "shadowChanges": [
+      {
+        "ticker": "ORLA",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 70.6,
+          "r40": 200.2,
+          "r40Ebitda": 220.1,
+          "rank": 1,
+          "revGrowthYoYPct": 169.3
+        },
+        "after": {
+          "score": 70.6,
+          "r40": 200.3,
+          "r40Ebitda": 220.1,
+          "rank": 1,
+          "revGrowthYoYPct": 169.3
+        }
+      },
+      {
+        "ticker": "3006.TW",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 56.6,
+          "r40": 188.8,
+          "r40Ebitda": 194.1,
+          "rank": 6,
+          "revGrowthYoYPct": 324.1
+        },
+        "after": {
+          "score": 56.6,
+          "r40": 188.9,
+          "r40Ebitda": 194.1,
+          "rank": 6,
+          "revGrowthYoYPct": 324.1
+        }
+      },
+      {
+        "ticker": "SM",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 68.3,
+          "r40": 187.6,
+          "r40Ebitda": 222.5,
+          "rank": 7,
+          "revGrowthYoYPct": 174.6
+        },
+        "after": {
+          "score": 68.3,
+          "r40": 187.7,
+          "r40Ebitda": 222.6,
+          "rank": 7,
+          "revGrowthYoYPct": 174.6
+        }
+      },
+      {
+        "ticker": "SKHY",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 45.6,
+          "r40": 187.4,
+          "r40Ebitda": 233.9,
+          "rank": 8,
+          "revGrowthYoYPct": 256.8
+        },
+        "after": {
+          "score": 45.6,
+          "r40": 187.5,
+          "r40Ebitda": 233.9,
+          "rank": 8,
+          "revGrowthYoYPct": 256.8
+        }
+      },
+      {
+        "ticker": "263750.KQ",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 67.9,
+          "r40": 185.7,
+          "r40Ebitda": 194,
+          "rank": 10,
+          "revGrowthYoYPct": 247.8
+        },
+        "after": {
+          "score": 67.9,
+          "r40": 185.8,
+          "r40Ebitda": 194.1,
+          "rank": 10,
+          "revGrowthYoYPct": 247.8
+        }
+      },
+      {
+        "ticker": "BYLOT.AT",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 71,
+          "r40": 183.6,
+          "r40Ebitda": 187.3,
+          "rank": 11,
+          "revGrowthYoYPct": 246.9
+        },
+        "after": {
+          "score": 71,
+          "r40": 183.6,
+          "r40Ebitda": 187.4,
+          "rank": 11,
+          "revGrowthYoYPct": 246.9
+        }
+      },
+      {
+        "ticker": "BE",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 81,
+          "r40": 175,
+          "r40Ebitda": 171.4,
+          "rank": 14,
+          "revGrowthYoYPct": 165.5
+        },
+        "after": {
+          "score": 81,
+          "r40": 175.1,
+          "r40Ebitda": 171.4,
+          "rank": 14,
+          "revGrowthYoYPct": 165.5
+        }
+      },
+      {
+        "ticker": "300757.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 81.1,
+          "r40": 169.5,
+          "r40Ebitda": 163.3,
+          "rank": 16,
+          "revGrowthYoYPct": 192.9
+        },
+        "after": {
+          "score": 81.1,
+          "r40": 169.6,
+          "r40Ebitda": 163.4,
+          "rank": 16,
+          "revGrowthYoYPct": 192.9
+        }
+      },
+      {
+        "ticker": "000688.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 75.8,
+          "r40": 169.1,
+          "r40Ebitda": 202.8,
+          "rank": 17,
+          "revGrowthYoYPct": 200.1
+        },
+        "after": {
+          "score": 75.8,
+          "r40": 169.2,
+          "r40Ebitda": 202.9,
+          "rank": 17,
+          "revGrowthYoYPct": 200.1
+        }
+      },
+      {
+        "ticker": "688416.SS",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 76.6,
+          "r40": 168,
+          "r40Ebitda": 171.5,
+          "rank": 18,
+          "revGrowthYoYPct": 211.6
+        },
+        "after": {
+          "score": 76.6,
+          "r40": 168.1,
+          "r40Ebitda": 171.5,
+          "rank": 18,
+          "revGrowthYoYPct": 211.6
+        }
+      },
+      {
+        "ticker": "EQX",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 78.4,
+          "r40": 167.9,
+          "r40Ebitda": 216.3,
+          "rank": 19,
+          "revGrowthYoYPct": 169.3
+        },
+        "after": {
+          "score": 78.4,
+          "r40": 168,
+          "r40Ebitda": 216.3,
+          "rank": 19,
+          "revGrowthYoYPct": 169.3
+        }
+      },
+      {
+        "ticker": "MU",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 29.2,
+          "r40": 166.4,
+          "r40Ebitda": 233.5,
+          "rank": 20,
+          "revGrowthYoYPct": 345.7
+        },
+        "after": {
+          "score": 29.2,
+          "r40": 166.5,
+          "r40Ebitda": 233.6,
+          "rank": 20,
+          "revGrowthYoYPct": 345.7
+        }
+      },
+      {
+        "ticker": "2344.TW",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 56.3,
+          "r40": 164.1,
+          "r40Ebitda": 199.7,
+          "rank": 21,
+          "revGrowthYoYPct": 184.7
+        },
+        "after": {
+          "score": 56.3,
+          "r40": 164.2,
+          "r40Ebitda": 199.7,
+          "rank": 21,
+          "revGrowthYoYPct": 184.7
+        }
+      },
+      {
+        "ticker": "300227.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 80.4,
+          "r40": 158.8,
+          "r40Ebitda": 152.4,
+          "rank": 24,
+          "revGrowthYoYPct": 189.5
+        },
+        "after": {
+          "score": 80.4,
+          "r40": 158.9,
+          "r40Ebitda": 152.4,
+          "rank": 24,
+          "revGrowthYoYPct": 189.5
+        }
+      },
+      {
+        "ticker": "301358.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 96.6,
+          "r40": 157.6,
+          "r40Ebitda": 172.5,
+          "rank": 25,
+          "revGrowthYoYPct": 162.1
+        },
+        "after": {
+          "score": 96.6,
+          "r40": 157.7,
+          "r40Ebitda": 172.5,
+          "rank": 25,
+          "revGrowthYoYPct": 162.1
+        }
+      },
+      {
+        "ticker": "688275.SS",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 87.8,
+          "r40": 156.6,
+          "r40Ebitda": 167.5,
+          "rank": 26,
+          "revGrowthYoYPct": 226.6
+        },
+        "after": {
+          "score": 87.8,
+          "r40": 156.7,
+          "r40Ebitda": 167.5,
+          "rank": 26,
+          "revGrowthYoYPct": 226.6
+        }
+      },
+      {
+        "ticker": "5289.TWO",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 80.9,
+          "r40": 148.5,
+          "r40Ebitda": 207.3,
+          "rank": 32,
+          "revGrowthYoYPct": 641.1
+        },
+        "after": {
+          "score": 80.9,
+          "r40": 148.6,
+          "r40Ebitda": 207.4,
+          "rank": 32,
+          "revGrowthYoYPct": 641.1
+        }
+      },
+      {
+        "ticker": "301155.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 47,
+          "r40": 143.2,
+          "r40Ebitda": 164.4,
+          "rank": 41,
+          "revGrowthYoYPct": 242.7
+        },
+        "after": {
+          "score": 47,
+          "r40": 143.3,
+          "r40Ebitda": 164.5,
+          "rank": 41,
+          "revGrowthYoYPct": 242.7
+        }
+      },
+      {
+        "ticker": "001287.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 54.6,
+          "r40": 143.2,
+          "r40Ebitda": 159.7,
+          "rank": 42,
+          "revGrowthYoYPct": 179.7
+        },
+        "after": {
+          "score": 54.6,
+          "r40": 143.2,
+          "r40Ebitda": 159.8,
+          "rank": 42,
+          "revGrowthYoYPct": 179.7
+        }
+      },
+      {
+        "ticker": "8271.TW",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 77.1,
+          "r40": 142.2,
+          "r40Ebitda": 186.8,
+          "rank": 44,
+          "revGrowthYoYPct": 256.7
+        },
+        "after": {
+          "score": 77.1,
+          "r40": 142.3,
+          "r40Ebitda": 186.8,
+          "rank": 44,
+          "revGrowthYoYPct": 256.7
+        }
+      },
+      {
+        "ticker": "LUNR",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 58.9,
+          "r40": 141.6,
+          "r40Ebitda": 142.8,
+          "rank": 46,
+          "revGrowthYoYPct": 304.3
+        },
+        "after": {
+          "score": 58.9,
+          "r40": 141.7,
+          "r40Ebitda": 142.8,
+          "rank": 46,
+          "revGrowthYoYPct": 304.3
+        }
+      },
+      {
+        "ticker": "000155.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 72,
+          "r40": 140.4,
+          "r40Ebitda": 209.5,
+          "rank": 47,
+          "revGrowthYoYPct": 226.2
+        },
+        "after": {
+          "score": 72,
+          "r40": 140.4,
+          "r40Ebitda": 209.6,
+          "rank": 47,
+          "revGrowthYoYPct": 226.2
+        }
+      },
+      {
+        "ticker": "8112.TW",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 47,
+          "r40": 137,
+          "r40Ebitda": 161,
+          "rank": 54,
+          "revGrowthYoYPct": 167.2
+        },
+        "after": {
+          "score": 47,
+          "r40": 137,
+          "r40Ebitda": 161.1,
+          "rank": 54,
+          "revGrowthYoYPct": 167.2
+        }
+      },
+      {
+        "ticker": "301297.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 72.9,
+          "r40": 132.2,
+          "r40Ebitda": 175.5,
+          "rank": 57,
+          "revGrowthYoYPct": 265
+        },
+        "after": {
+          "score": 72.9,
+          "r40": 132.2,
+          "r40Ebitda": 175.6,
+          "rank": 57,
+          "revGrowthYoYPct": 265
+        }
+      },
+      {
+        "ticker": "7610.TW",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 55,
+          "r40": 126.5,
+          "r40Ebitda": 216.1,
+          "rank": 70,
+          "revGrowthYoYPct": 450.8
+        },
+        "after": {
+          "score": 55,
+          "r40": 126.5,
+          "r40Ebitda": 216.2,
+          "rank": 70,
+          "revGrowthYoYPct": 450.8
+        }
+      },
+      {
+        "ticker": "IONQ",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 49.5,
+          "r40": 122.3,
+          "r40Ebitda": 158,
+          "rank": 76,
+          "revGrowthYoYPct": 286.8
+        },
+        "after": {
+          "score": 49.5,
+          "r40": 122.4,
+          "r40Ebitda": 158,
+          "rank": 76,
+          "revGrowthYoYPct": 286.8
+        }
+      },
+      {
+        "ticker": "000973.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 54.7,
+          "r40": 117.7,
+          "r40Ebitda": 183.3,
+          "rank": 88,
+          "revGrowthYoYPct": 349.4
+        },
+        "after": {
+          "score": 54.7,
+          "r40": 117.8,
+          "r40Ebitda": 183.3,
+          "rank": 88,
+          "revGrowthYoYPct": 349.4
+        }
+      },
+      {
+        "ticker": "001309.SZ",
+        "board": "rule40",
+        "changes": [
+          "r40",
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 77.8,
+          "r40": 110.8,
+          "r40Ebitda": 193.1,
+          "rank": 101,
+          "revGrowthYoYPct": 228
+        },
+        "after": {
+          "score": 77.8,
+          "r40": 110.9,
+          "r40Ebitda": 193.2,
+          "rank": 101,
+          "revGrowthYoYPct": 228
+        }
+      },
+      {
+        "ticker": "454910.KS",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 53.5,
+          "r40": 108,
+          "r40Ebitda": 73.1,
+          "rank": 111,
+          "revGrowthYoYPct": 290
+        },
+        "after": {
+          "score": 53.5,
+          "r40": 108,
+          "r40Ebitda": 73.2,
+          "rank": 111,
+          "revGrowthYoYPct": 290
+        }
+      },
+      {
+        "ticker": "ELE",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda"
+        ],
+        "before": {
+          "score": 72.7,
+          "r40": 104.7,
+          "r40Ebitda": 212.7,
+          "rank": 118,
+          "revGrowthYoYPct": 161.6
+        },
+        "after": {
+          "score": 72.7,
+          "r40": 104.7,
+          "r40Ebitda": 212.8,
+          "rank": 118,
+          "revGrowthYoYPct": 161.6
+        }
+      },
+      {
+        "ticker": "SATL",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 75.9,
+          "r40": 98.9,
+          "r40Ebitda": 109.2,
+          "rank": 141,
+          "revGrowthYoYPct": 258.5
+        },
+        "after": {
+          "score": 75.9,
+          "r40": 99,
+          "r40Ebitda": 109.2,
+          "rank": 141,
+          "revGrowthYoYPct": 258.5
+        }
+      },
+      {
+        "ticker": "TNZ.TO",
+        "board": "rule40",
+        "changes": [
+          "r40"
+        ],
+        "before": {
+          "score": 79.1,
+          "r40": 88.9,
+          "r40Ebitda": 198.1,
+          "rank": 174,
+          "revGrowthYoYPct": 166.1
+        },
+        "after": {
+          "score": 79.1,
+          "r40": 89,
+          "r40Ebitda": 198.1,
+          "rank": 174,
+          "revGrowthYoYPct": 166.1
+        }
+      },
+      {
+        "ticker": "HCC",
+        "board": "rule40",
+        "changes": [
+          "rank"
+        ],
+        "before": {
+          "score": 37.3,
+          "r40": 68.1,
+          "r40Ebitda": 97.7,
+          "rank": 305,
+          "revGrowthYoYPct": 71.3
+        },
+        "after": {
+          "score": 37.3,
+          "r40": 68.1,
+          "r40Ebitda": 97.7,
+          "rank": 306,
+          "revGrowthYoYPct": 71.3
+        }
+      },
+      {
+        "ticker": "688062.SS",
+        "board": "rule40",
+        "changes": [
+          "r40Ebitda",
+          "rank"
+        ],
+        "before": {
+          "score": 81.7,
+          "r40": 68.1,
+          "r40Ebitda": 85,
+          "rank": 306,
+          "revGrowthYoYPct": 228.2
+        },
+        "after": {
+          "score": 81.7,
+          "r40": 68.1,
+          "r40Ebitda": 85.1,
+          "rank": 305,
+          "revGrowthYoYPct": 228.2
+        }
+      }
+    ]
+  },
+  "publishedFeedRows": 13549,
+  "publicationDiscrepancies": [
+    {
+      "family": "growth",
+      "file": "outputs/findash-export/v1/full/consumer-discretionary.json",
+      "ticker": "CHWY",
+      "score": 42.4,
+      "growth": 7.280458733329032,
+      "replayScore": 42.5
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "RCKY",
+      "score": 73.5,
+      "growth": 12.04104233911043,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "CTRN",
+      "score": 67.2,
+      "growth": 10.94731323722149,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "ZUMZ",
+      "score": 61.5,
+      "growth": 4.884915619253238,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "BBW",
+      "score": 59.5,
+      "growth": -7.208222331323899,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "DIN",
+      "score": 59.3,
+      "growth": 4.376083188908142,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "WEYS",
+      "score": 56.7,
+      "growth": 6.861785266484599,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "NATH",
+      "score": 56,
+      "growth": 15.030426826673482,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "ELA",
+      "score": 51.5,
+      "growth": 3.458304527158118,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "MBUU",
+      "score": 51.5,
+      "growth": 42.744603673703985,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "GCO",
+      "score": 50.3,
+      "growth": -2.950189114686841,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "LE",
+      "score": 49,
+      "growth": 2.706415623012859,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "MNRO",
+      "score": 48.3,
+      "growth": -4.619396415699173,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "CDRO",
+      "score": 48.2,
+      "growth": 4.834482621173475,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "LOCO",
+      "score": 46.6,
+      "growth": 2.97058028831636,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "FLXS",
+      "score": 44.5,
+      "growth": 0.6578775161197425,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "STRT",
+      "score": 41.3,
+      "growth": -0.12235795622742573,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "ETD",
+      "score": 41.2,
+      "growth": -8.484194640707921,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "PTLO",
+      "score": 40.5,
+      "growth": 5.570531052341132,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "LEGH",
+      "score": 39.1,
+      "growth": 32.270090309204356,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "MVST",
+      "score": 33.1,
+      "growth": -47.96851258895537,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "XPOF",
+      "score": 32.8,
+      "growth": -21.030656972282557,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "SHOE",
+      "score": 22.4,
+      "growth": -7.206222175803234,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "UXIN",
+      "score": 76.1,
+      "growth": 112.92983941820087,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "JOUT",
+      "score": 61.9,
+      "growth": 5.023940660374748,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "PACK",
+      "score": 59.9,
+      "growth": 13.976164680390024,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "ZKH",
+      "score": 57.9,
+      "growth": 12.782874448373494,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "ECX",
+      "score": 55.5,
+      "growth": 44.73007712082262,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "KRUS",
+      "score": 49.4,
+      "growth": 16.165754072872307,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "SFIX",
+      "score": 49.3,
+      "growth": 4.695461146528168,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "MCFT",
+      "score": 47.4,
+      "growth": 63.408622164092755,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "BALY",
+      "score": 47.1,
+      "growth": 20.485632682112254,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "OXM",
+      "score": 45.6,
+      "growth": -2.1746625887092197,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "KLC",
+      "score": 39.5,
+      "growth": -0.36965619688335005,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "FNKO",
+      "score": 36.3,
+      "growth": 7.365521091234251,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "SLDP",
+      "score": 23.2,
+      "growth": -115.68234387047032,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "FWDI",
+      "score": 14.6,
+      "growth": 332.0925504525669,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-discretionary.json",
+      "ticker": "AIIO",
+      "score": 7.6,
+      "growth": -92.08003334722801,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "YSG",
+      "score": 71.9,
+      "growth": 22.488971642394496,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "LWAY",
+      "score": 67.9,
+      "growth": 24.10344891560454,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "SUJA",
+      "score": 67.5,
+      "growth": 11.562716193922618,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "PRE",
+      "score": 64.7,
+      "growth": 288.5656970912738,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "AGCC",
+      "score": 62.9,
+      "growth": 144.55502389327842,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "NGVC",
+      "score": 61.2,
+      "growth": 1.8356885353128183,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "VLGEA",
+      "score": 60.9,
+      "growth": 1.5821341957780177,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "HELE",
+      "score": 59.3,
+      "growth": 8.195772961483105,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "NATR",
+      "score": 58.4,
+      "growth": 8.515823679005363,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "USNA",
+      "score": 52.5,
+      "growth": 0.27210175563738837,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "WILC",
+      "score": 50.5,
+      "growth": 0.03427282414301125,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "LND",
+      "score": 49.4,
+      "growth": -9.170038530475555,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "MAGN",
+      "score": 43.5,
+      "growth": -7.09502818297274,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "SNDL",
+      "score": 42.3,
+      "growth": -3.6781618587321097,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "VITL",
+      "score": 36.9,
+      "growth": -10.141421357709978,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "DNUT",
+      "score": 36.4,
+      "growth": -12.842611390668491,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "HNST",
+      "score": 31.1,
+      "growth": -10.866797205191581,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "MGPI",
+      "score": 13.7,
+      "growth": -14.5277468486673,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/consumer-staples.json",
+      "ticker": "BYND",
+      "score": 10,
+      "growth": -15.313322954707488,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "FTW",
+      "score": 70.6,
+      "growth": 62.69385073786453,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "SGU",
+      "score": 65,
+      "growth": 17.162928885078756,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "SMC",
+      "score": 62,
+      "growth": 10.552215494554872,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "KNOP",
+      "score": 58.8,
+      "growth": 11.160119457845163,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "WHK",
+      "score": 56,
+      "growth": 74.12183620440767,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "NOA",
+      "score": 54.5,
+      "growth": 25.053175895257507,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "VTS",
+      "score": 52.2,
+      "growth": 11.313069537031373,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "RNGR",
+      "score": 46.1,
+      "growth": 25.533428165007123,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "NGS",
+      "score": 28.9,
+      "growth": 24.21100961770819,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "PNRG",
+      "score": 27.6,
+      "growth": -3.738071891516992,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "SD",
+      "score": 15.4,
+      "growth": 48.03220294807564,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "EGY",
+      "score": 50.7,
+      "growth": 83.61904368736649,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "REI",
+      "score": 46.9,
+      "growth": 26.72880454271509,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "CLNE",
+      "score": 35.7,
+      "growth": 3.6506095718866094,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "URG",
+      "score": 30.6,
+      "growth": 37.73838045040729,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "WTI",
+      "score": 28.5,
+      "growth": 32.894489527405256,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/energy.json",
+      "ticker": "OIS",
+      "score": 23.7,
+      "growth": -5.28819994437929,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "VINP",
+      "score": 74.9,
+      "growth": 16.052265892357156,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "NOAH",
+      "score": 61.2,
+      "growth": -1.5253351464096232,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "TREE",
+      "score": 60.4,
+      "growth": 25.310655855682974,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "RM",
+      "score": 58.6,
+      "growth": 5.836544637122665,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "GDOT",
+      "score": 55.7,
+      "growth": 18.189481450921896,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "BRBI",
+      "score": 52.3,
+      "growth": 46.784910887792485,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "CSHR",
+      "score": 49.8,
+      "growth": 7.248100733419216,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "VALU",
+      "score": 40.5,
+      "growth": -6.448989077387868,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "VEL",
+      "score": 39.2,
+      "growth": 1.0802844877298545,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "BETR",
+      "score": 60.9,
+      "growth": 72.33638476339617,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "ALTI",
+      "score": 55.7,
+      "growth": 10.781655720177174,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "PRAA",
+      "score": 55.4,
+      "growth": 29.140726574807218,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "TMS",
+      "score": 54,
+      "growth": 20.30119604447538,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "CNCK",
+      "score": 44,
+      "growth": 36.127350010120374,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "AXG",
+      "score": 38.5,
+      "growth": 879.2321116928447,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "GEMI",
+      "score": 33,
+      "growth": 36.60668689356845,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "MTC",
+      "score": 12,
+      "growth": -56.77965330591495,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/financials.json",
+      "ticker": "BTBT",
+      "score": 6.9,
+      "growth": 25.152967769593502,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CRMD",
+      "score": 69.9,
+      "growth": 149.91695188242397,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "ELMD",
+      "score": 65,
+      "growth": 18.432797755674567,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "BWAY",
+      "score": 60.6,
+      "growth": 35.42590246991766,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "KMDA",
+      "score": 60.6,
+      "growth": 22.71752245609331,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "TCMD",
+      "score": 58.5,
+      "growth": 8.609086876623785,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "VREX",
+      "score": 58.1,
+      "growth": 3.6945812807881673,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "VMD",
+      "score": 56.4,
+      "growth": 23.85340015224562,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "PBYI",
+      "score": 54.7,
+      "growth": 7.754214661682823,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "AKBA",
+      "score": 51.9,
+      "growth": -6.6136458769359585,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "DCTH",
+      "score": 49.5,
+      "growth": 20.603576751117725,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "ANGO",
+      "score": 48.8,
+      "growth": 8.045360413183955,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "NRC",
+      "score": 47.5,
+      "growth": 3.977907045067286,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "WEAV",
+      "score": 45.2,
+      "growth": 15.515649050795277,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "EVH",
+      "score": 43.6,
+      "growth": 46.8554761347473,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "MDXG",
+      "score": 43.3,
+      "growth": -34.727447898179605,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "PHR",
+      "score": 39.5,
+      "growth": 10.407232100976493,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "SLP",
+      "score": 38,
+      "growth": 7.479251583754842,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CERS",
+      "score": 36.9,
+      "growth": 9.526170273619993,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CUVL",
+      "score": 34.5,
+      "growth": -1.0452508941241168,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "EBS",
+      "score": 34.3,
+      "growth": 74.05986185725249,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "IRWD",
+      "score": 28.8,
+      "growth": 32.616525299452135,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "AIRS",
+      "score": 28.6,
+      "growth": 0.045718930177041095,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "ZVRA",
+      "score": 82.6,
+      "growth": 53.25141996058884,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "SCYX",
+      "score": 79.2,
+      "growth": 449.94660971703155,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "IPSC",
+      "score": 77.7,
+      "growth": 1556.761268781302,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "FHTX",
+      "score": 74.7,
+      "growth": 112.67698822283974,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "SRTA",
+      "score": 73.7,
+      "growth": 60.738671632526376,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "OVID",
+      "score": 72.4,
+      "growth": 1181.2720848056538,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "ALT",
+      "score": 68.9,
+      "growth": 104.99999999999999,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "OCS",
+      "score": 66.3,
+      "growth": 74.78134110787171,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "TOI",
+      "score": 64.5,
+      "growth": 41.21889546577784,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "TLRY",
+      "score": 61.7,
+      "growth": 25.465517625314547,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "SOPH",
+      "score": 61.4,
+      "growth": 27.217158762211426,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "MASS",
+      "score": 59.6,
+      "growth": 23.314154200230153,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "NPCE",
+      "score": 58.3,
+      "growth": 17.05040767140147,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "FATE",
+      "score": 55.4,
+      "growth": 9.17671735710539,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "VSTM",
+      "score": 54.4,
+      "growth": 1775.4328497894246,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "PACB",
+      "score": 53,
+      "growth": -1.9086656943117286,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "OABI",
+      "score": 51.2,
+      "growth": 244.23915832691816,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CARL",
+      "score": 50.3,
+      "growth": 56.749151700736576,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "AUTL",
+      "score": 48.8,
+      "growth": 118.36734693877551,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "GYRE",
+      "score": 48.2,
+      "growth": -2.1154234209995293,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CGC",
+      "score": 47.8,
+      "growth": 12.519754900601665,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "VCRE",
+      "score": 47.2,
+      "growth": -96.50924588005049,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "SSII",
+      "score": 47.2,
+      "growth": 39.39283851842519,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "NNNN",
+      "score": 46.2,
+      "growth": 5.640681302447148,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "KIDS",
+      "score": 46.1,
+      "growth": 15.431714744114466,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "EOLS",
+      "score": 45.3,
+      "growth": 21.18120108954127,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "STRO",
+      "score": 45.2,
+      "growth": -84.56506392658247,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "MOBI",
+      "score": 43,
+      "growth": 102.35241234641892,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "OFIX",
+      "score": 42.1,
+      "growth": 3.8459834285967442,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "ENTA",
+      "score": 41.1,
+      "growth": -21.595500709839467,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "LAB",
+      "score": 40.5,
+      "growth": -7.618785038139874,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "ORGO",
+      "score": 40.1,
+      "growth": -58.18578201238854,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "OCGN",
+      "score": 38.9,
+      "growth": 8.375819373634386,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "MYGN",
+      "score": 36.5,
+      "growth": -10.511496949788835,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CV",
+      "score": 35.5,
+      "growth": 9.894419306184021,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "EVO",
+      "score": 34.8,
+      "growth": -16.209303004642738,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CCCC",
+      "score": 34.4,
+      "growth": 2.7541389447624853,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CTKB",
+      "score": 33.4,
+      "growth": 5.56554537081706,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "VNDA",
+      "score": 29.8,
+      "growth": -3.91899600684541,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "CLPT",
+      "score": 28.7,
+      "growth": 18.06836679327184,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "AQST",
+      "score": 26.3,
+      "growth": 38.14855543336999,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "UPB",
+      "score": 25.8,
+      "growth": -17.50266808964781,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "VALN",
+      "score": 25.5,
+      "growth": -27.709497206703904,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "ALLO",
+      "score": 24.9,
+      "growth": -100,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "FENC",
+      "score": 21.7,
+      "growth": 85.18441773725654,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "SPRY",
+      "score": 18.9,
+      "growth": 114.1502831329134,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "STTK",
+      "score": 18.2,
+      "growth": -82.52053836741828,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "MCTA",
+      "score": 18.1,
+      "growth": -22.727331903832216,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "DNA",
+      "score": 17.7,
+      "growth": -48.49491490775285,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/health-care.json",
+      "ticker": "FLGT",
+      "score": 16.6,
+      "growth": 4.383702309206261,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "PANL",
+      "score": 65.1,
+      "growth": 19.419873635841476,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "FIP",
+      "score": 65.1,
+      "growth": 52.730484274569456,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "TWIN",
+      "score": 57,
+      "growth": 18.33095430190943,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ELVA",
+      "score": 56,
+      "growth": 3.3969532481176623,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "EBF",
+      "score": 56,
+      "growth": 1.4588927641799643,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "KE",
+      "score": 55.3,
+      "growth": -2.3389368994301774,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "BWMN",
+      "score": 55,
+      "growth": 19.6862969940208,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "CASS",
+      "score": 53.7,
+      "growth": 13.621322288003967,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ESEA",
+      "score": 52.1,
+      "growth": -1.2752989195058295,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "SWBI",
+      "score": 51.4,
+      "growth": 32.335413801615,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "TATT",
+      "score": 50.8,
+      "growth": 22.814587973273937,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "CEPL",
+      "score": 50.6,
+      "growth": -15.027170899412223,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "RLGT",
+      "score": 50.1,
+      "growth": 18.522078157584552,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "PKOH",
+      "score": 49.4,
+      "growth": 9.997500624843791,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "OFLX",
+      "score": 48.1,
+      "growth": -1.01585940848693,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "LXFR",
+      "score": 47.8,
+      "growth": -10.22514071294559,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ORN",
+      "score": 46.3,
+      "growth": 8.082382627164053,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "TWI",
+      "score": 44.2,
+      "growth": 5.194106286483091,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ONT",
+      "score": 44,
+      "growth": -20.41501984710693,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "BBCP",
+      "score": 43.9,
+      "growth": 12.62587291176358,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "OPAL",
+      "score": 43.5,
+      "growth": 3.657899970170031,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ASC",
+      "score": 43.2,
+      "growth": 61.30527718402132,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "FSTR",
+      "score": 43.1,
+      "growth": -3.488485490185156,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "JBI",
+      "score": 40.8,
+      "growth": 2.3673827268741787,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "SBC",
+      "score": 38.4,
+      "growth": 13.444132866355973,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "WNC",
+      "score": 34.4,
+      "growth": -9.06136664806807,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "FWRD",
+      "score": 32.4,
+      "growth": 8.756972678090126,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ACCO",
+      "score": 29.1,
+      "growth": 8.286074354127294,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ISSC",
+      "score": 29.1,
+      "growth": 10.715125290579785,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "GASS",
+      "score": 26.9,
+      "growth": -9.157360657565016,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ACTG",
+      "score": 24.3,
+      "growth": 123.59232585826648,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "SHIP",
+      "score": 18.4,
+      "growth": 48.581872515275215,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "QUAD",
+      "score": 14.8,
+      "growth": 0.9791921664626724,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "FBYD",
+      "score": 81.7,
+      "growth": 120.40015692428403,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "TRC",
+      "score": 81.6,
+      "growth": 71.65041531238714,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "XRX",
+      "score": 69.3,
+      "growth": 21.954314720812174,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "KRNT",
+      "score": 64.5,
+      "growth": 11.185030349318659,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ELMT",
+      "score": 64.1,
+      "growth": 35.15367392631794,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "PESI",
+      "score": 63.9,
+      "growth": -11.661867544220483,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "RGR",
+      "score": 60.8,
+      "growth": 19.297159807081243,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "CMCO",
+      "score": 60.6,
+      "growth": 125.27170227195658,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "KELYA",
+      "score": 59.7,
+      "growth": -5.7723724813940835,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ABAT",
+      "score": 59.1,
+      "growth": 196.59693059451763,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "TITN",
+      "score": 52.1,
+      "growth": -9.158056168630335,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ULH",
+      "score": 48.9,
+      "growth": -3.674763962884142,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "OIO",
+      "score": 44.1,
+      "growth": -4.395685284888284,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "PAMT",
+      "score": 42.9,
+      "growth": -8.666040092183703,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ADUR",
+      "score": 37,
+      "growth": -27.682819230835765,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "NVRI",
+      "score": 32.6,
+      "growth": -40.70930335599356,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "MTRX",
+      "score": 32.2,
+      "growth": 13.011549286661705,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "AIAI",
+      "score": 31.5,
+      "growth": -98.8482749275927,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "SERV",
+      "score": 29,
+      "growth": 404.3613707165109,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "RR",
+      "score": 24,
+      "growth": 16.652506372132535,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "SPIR",
+      "score": 22.5,
+      "growth": -35.2174267322161,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "EFTY",
+      "score": 21.9,
+      "growth": 27.57165836140574,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "ROMA",
+      "score": 21.6,
+      "growth": -22.193445580266737,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "SPCE",
+      "score": 20.8,
+      "growth": -66.99507389162562,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "PHOE",
+      "score": 20.6,
+      "growth": -2.2358726525650408,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "MRLN",
+      "score": 18.8,
+      "growth": -29.385259092372063,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/industrials.json",
+      "ticker": "EH",
+      "score": 14.1,
+      "growth": -31.268696887602477,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/it-services.json",
+      "ticker": "IBEX",
+      "score": 58.4,
+      "growth": 11.642811510282858,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/it-services.json",
+      "ticker": "TASK",
+      "score": 51.4,
+      "growth": 5.022000367239521,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/it-services.json",
+      "ticker": "GDYN",
+      "score": 47.9,
+      "growth": 6.992432860181008,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/it-services.json",
+      "ticker": "VRRM",
+      "score": 42.3,
+      "growth": 11.679271263637325,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "GAU",
+      "score": 73.1,
+      "growth": 60.9060264737318,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "WLKP",
+      "score": 67.2,
+      "growth": -0.006394744193405355,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "ALTO",
+      "score": 59.5,
+      "growth": 12.480543500155662,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "OEC",
+      "score": 58.7,
+      "growth": 7.397084048027436,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "IPI",
+      "score": 53.6,
+      "growth": -1.2600687040985603,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "VHI",
+      "score": 52.7,
+      "growth": 12.157660991857888,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "ASIX",
+      "score": 52.6,
+      "growth": 2.7466818853622454,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "RYAM",
+      "score": 49.9,
+      "growth": 10.614383851691533,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "GEVO",
+      "score": 48.9,
+      "growth": 7.113076728168988,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "ASTL",
+      "score": 31.3,
+      "growth": -54.637951500763094,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "ASPN",
+      "score": 20.9,
+      "growth": -36.110683892135754,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/materials.json",
+      "ticker": "METCB",
+      "score": 20.5,
+      "growth": -5.334762910322377,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ZVRA",
+      "score": 82.6,
+      "growth": 53.25141996058884,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FBYD",
+      "score": 81.7,
+      "growth": 120.40015692428403,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TRC",
+      "score": 81.6,
+      "growth": 71.65041531238714,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FVR",
+      "score": 80.1,
+      "growth": 2.569214993733615,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SCYX",
+      "score": 79.2,
+      "growth": 449.94660971703155,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "IPSC",
+      "score": 77.7,
+      "growth": 1556.761268781302,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "UXIN",
+      "score": 76.1,
+      "growth": 112.92983941820087,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PAYS",
+      "score": 76.1,
+      "growth": 48.08443370347535,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TRVG",
+      "score": 75.8,
+      "growth": 20.922968664732757,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VINP",
+      "score": 74.9,
+      "growth": 16.052265892357156,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FHTX",
+      "score": 74.7,
+      "growth": 112.67698822283974,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SRTA",
+      "score": 73.7,
+      "growth": 60.738671632526376,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RCKY",
+      "score": 73.5,
+      "growth": 12.04104233911043,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GAU",
+      "score": 73.1,
+      "growth": 60.9060264737318,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "XNET",
+      "score": 72.6,
+      "growth": 38.72939961686343,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OVID",
+      "score": 72.4,
+      "growth": 1181.2720848056538,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PINE",
+      "score": 72,
+      "growth": 34.57579223575322,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "YSG",
+      "score": 71.9,
+      "growth": 22.488971642394496,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "YORW",
+      "score": 71.7,
+      "growth": 22.48033751757903,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "API",
+      "score": 71.2,
+      "growth": 17.983595551533902,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FTW",
+      "score": 70.6,
+      "growth": 62.69385073786453,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CRMD",
+      "score": 69.9,
+      "growth": 149.91695188242397,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "XRX",
+      "score": 69.3,
+      "growth": 21.954314720812174,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ALT",
+      "score": 68.9,
+      "growth": 104.99999999999999,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "LWAY",
+      "score": 67.9,
+      "growth": 24.10344891560454,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NRDS",
+      "score": 67.9,
+      "growth": 5.564472980203328,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SUJA",
+      "score": 67.5,
+      "growth": 11.562716193922618,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "WLKP",
+      "score": 67.2,
+      "growth": -0.006394744193405355,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CTRN",
+      "score": 67.2,
+      "growth": 10.94731323722149,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OCS",
+      "score": 66.3,
+      "growth": 74.78134110787171,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RSVR",
+      "score": 65.8,
+      "growth": 11.618033470998634,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PANL",
+      "score": 65.1,
+      "growth": 19.419873635841476,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FIP",
+      "score": 65.1,
+      "growth": 52.730484274569456,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ELMD",
+      "score": 65,
+      "growth": 18.432797755674567,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SGU",
+      "score": 65,
+      "growth": 17.162928885078756,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PRE",
+      "score": 64.7,
+      "growth": 288.5656970912738,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TOI",
+      "score": 64.5,
+      "growth": 41.21889546577784,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "KRNT",
+      "score": 64.5,
+      "growth": 11.185030349318659,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OLP",
+      "score": 64.4,
+      "growth": 10.00203707476064,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ELMT",
+      "score": 64.1,
+      "growth": 35.15367392631794,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PESI",
+      "score": 63.9,
+      "growth": -11.661867544220483,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CGNT",
+      "score": 63.9,
+      "growth": 12.023012316306536,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "AHRT",
+      "score": 62.9,
+      "growth": 3.604100946372246,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "AGCC",
+      "score": 62.9,
+      "growth": 144.55502389327842,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ALLT",
+      "score": 62.4,
+      "growth": 15.32576608041245,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SMC",
+      "score": 62,
+      "growth": 10.552215494554872,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "JOUT",
+      "score": 61.9,
+      "growth": 5.023940660374748,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TLRY",
+      "score": 61.7,
+      "growth": 25.465517625314547,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ZUMZ",
+      "score": 61.5,
+      "growth": 4.884915619253238,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SOPH",
+      "score": 61.4,
+      "growth": 27.217158762211426,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NGVC",
+      "score": 61.2,
+      "growth": 1.8356885353128183,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NOAH",
+      "score": 61.2,
+      "growth": -1.5253351464096232,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "BETR",
+      "score": 60.9,
+      "growth": 72.33638476339617,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VLGEA",
+      "score": 60.9,
+      "growth": 1.5821341957780177,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RGR",
+      "score": 60.8,
+      "growth": 19.297159807081243,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "BWAY",
+      "score": 60.6,
+      "growth": 35.42590246991766,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "DDI",
+      "score": 60.6,
+      "growth": 11.171636423661457,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CMCO",
+      "score": 60.6,
+      "growth": 125.27170227195658,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "KMDA",
+      "score": 60.6,
+      "growth": 22.71752245609331,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TREE",
+      "score": 60.4,
+      "growth": 25.310655855682974,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GOOD",
+      "score": 60.1,
+      "growth": 11.271595881921437,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "UHT",
+      "score": 60,
+      "growth": 0.4946115489786074,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GRRR",
+      "score": 59.9,
+      "growth": 137.9626132822958,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PACK",
+      "score": 59.9,
+      "growth": 13.976164680390024,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "KELYA",
+      "score": 59.7,
+      "growth": -5.7723724813940835,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MASS",
+      "score": 59.6,
+      "growth": 23.314154200230153,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ALTO",
+      "score": 59.5,
+      "growth": 12.480543500155662,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "BBW",
+      "score": 59.5,
+      "growth": -7.208222331323899,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "DIN",
+      "score": 59.3,
+      "growth": 4.376083188908142,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "HELE",
+      "score": 59.3,
+      "growth": 8.195772961483105,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ABAT",
+      "score": 59.1,
+      "growth": 196.59693059451763,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "KNOP",
+      "score": 58.8,
+      "growth": 11.160119457845163,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OEC",
+      "score": 58.7,
+      "growth": 7.397084048027436,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RM",
+      "score": 58.6,
+      "growth": 5.836544637122665,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TCMD",
+      "score": 58.5,
+      "growth": 8.609086876623785,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "IBEX",
+      "score": 58.4,
+      "growth": 11.642811510282858,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NATR",
+      "score": 58.4,
+      "growth": 8.515823679005363,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NPCE",
+      "score": 58.3,
+      "growth": 17.05040767140147,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VREX",
+      "score": 58.1,
+      "growth": 3.6945812807881673,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ZKH",
+      "score": 57.9,
+      "growth": 12.782874448373494,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TWIN",
+      "score": 57,
+      "growth": 18.33095430190943,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "WEYS",
+      "score": 56.7,
+      "growth": 6.861785266484599,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VMD",
+      "score": 56.4,
+      "growth": 23.85340015224562,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MOVE",
+      "score": 56.1,
+      "growth": 3590.291262135922,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ELVA",
+      "score": 56,
+      "growth": 3.3969532481176623,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NATH",
+      "score": 56,
+      "growth": 15.030426826673482,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "WHK",
+      "score": 56,
+      "growth": 74.12183620440767,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "EBF",
+      "score": 56,
+      "growth": 1.4588927641799643,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ARTNA",
+      "score": 55.9,
+      "growth": 7.293517731592369,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "AIOT",
+      "score": 55.8,
+      "growth": 6.407929236177146,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GDOT",
+      "score": 55.7,
+      "growth": 18.189481450921896,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ALTI",
+      "score": 55.7,
+      "growth": 10.781655720177174,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ECX",
+      "score": 55.5,
+      "growth": 44.73007712082262,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VTEX",
+      "score": 55.5,
+      "growth": 9.5237285252594,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FATE",
+      "score": 55.4,
+      "growth": 9.17671735710539,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PRAA",
+      "score": 55.4,
+      "growth": 29.140726574807218,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "KE",
+      "score": 55.3,
+      "growth": -2.3389368994301774,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CCSI",
+      "score": 55.3,
+      "growth": 4.149519499321719,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "BWMN",
+      "score": 55,
+      "growth": 19.6862969940208,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GRVY",
+      "score": 54.9,
+      "growth": -5.186833782359146,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PBYI",
+      "score": 54.7,
+      "growth": 7.754214661682823,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "REAX",
+      "score": 54.7,
+      "growth": 29.55689074557972,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "XRN",
+      "score": 54.6,
+      "growth": 2.6953537486800405,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NOA",
+      "score": 54.5,
+      "growth": 25.053175895257507,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VSTM",
+      "score": 54.4,
+      "growth": 1775.4328497894246,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TMS",
+      "score": 54,
+      "growth": 20.30119604447538,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RMNI",
+      "score": 53.7,
+      "growth": 6.6859404114720355,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CASS",
+      "score": 53.7,
+      "growth": 13.621322288003967,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "IPI",
+      "score": 53.6,
+      "growth": -1.2600687040985603,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PLAY",
+      "score": 53,
+      "growth": -1.4972696846926148,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PACB",
+      "score": 53,
+      "growth": -1.9086656943117286,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "YB",
+      "score": 52.9,
+      "growth": 30.119559670481856,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "DCBO",
+      "score": 52.8,
+      "growth": 13.037607850885857,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VHI",
+      "score": 52.7,
+      "growth": 12.157660991857888,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "IIIV",
+      "score": 52.7,
+      "growth": 2.2465848442226655,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ASIX",
+      "score": 52.6,
+      "growth": 2.7466818853622454,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "USNA",
+      "score": 52.5,
+      "growth": 0.27210175563738837,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "BRBI",
+      "score": 52.3,
+      "growth": 46.784910887792485,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VTS",
+      "score": 52.2,
+      "growth": 11.313069537031373,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MFI",
+      "score": 52.1,
+      "growth": 29.66365217399307,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TITN",
+      "score": 52.1,
+      "growth": -9.158056168630335,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ESEA",
+      "score": 52.1,
+      "growth": -1.2752989195058295,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "AKBA",
+      "score": 51.9,
+      "growth": -6.6136458769359585,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ELA",
+      "score": 51.5,
+      "growth": 3.458304527158118,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MBUU",
+      "score": 51.5,
+      "growth": 42.744603673703985,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CWCO",
+      "score": 51.4,
+      "growth": -2.1455607305737368,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SWBI",
+      "score": 51.4,
+      "growth": 32.335413801615,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TASK",
+      "score": 51.4,
+      "growth": 5.022000367239521,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OABI",
+      "score": 51.2,
+      "growth": 244.23915832691816,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ILPT",
+      "score": 51.2,
+      "growth": 1.8073632657430672,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NVEC",
+      "score": 50.9,
+      "growth": 80.74857436404154,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TATT",
+      "score": 50.8,
+      "growth": 22.814587973273937,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "EGY",
+      "score": 50.7,
+      "growth": 83.61904368736649,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CEPL",
+      "score": 50.6,
+      "growth": -15.027170899412223,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "WILC",
+      "score": 50.5,
+      "growth": 0.03427282414301125,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CARL",
+      "score": 50.3,
+      "growth": 56.749151700736576,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GCO",
+      "score": 50.3,
+      "growth": -2.950189114686841,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RPAY",
+      "score": 50.1,
+      "growth": 33.16187554544734,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OOMA",
+      "score": 50.1,
+      "growth": 25.4113676089446,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RLGT",
+      "score": 50.1,
+      "growth": 18.522078157584552,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RYAM",
+      "score": 49.9,
+      "growth": 10.614383851691533,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CSHR",
+      "score": 49.8,
+      "growth": 7.248100733419216,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "AGNT",
+      "score": 49.5,
+      "growth": 10.74745755330715,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MTLS",
+      "score": 49.5,
+      "growth": 8.08718051549413,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "DCTH",
+      "score": 49.5,
+      "growth": 20.603576751117725,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "KRUS",
+      "score": 49.4,
+      "growth": 16.165754072872307,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PKOH",
+      "score": 49.4,
+      "growth": 9.997500624843791,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "LND",
+      "score": 49.4,
+      "growth": -9.170038530475555,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SFIX",
+      "score": 49.3,
+      "growth": 4.695461146528168,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ADV",
+      "score": 49.3,
+      "growth": 1.8018626381613112,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "AMCX",
+      "score": 49.2,
+      "growth": -8.754483154007175,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "YEXT",
+      "score": 49.1,
+      "growth": -1.7604824305445077,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "LE",
+      "score": 49,
+      "growth": 2.706415623012859,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NEXN",
+      "score": 49,
+      "growth": 10.52249637155298,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GEVO",
+      "score": 48.9,
+      "growth": 7.113076728168988,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ULH",
+      "score": 48.9,
+      "growth": -3.674763962884142,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ANGO",
+      "score": 48.8,
+      "growth": 8.045360413183955,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "AUTL",
+      "score": 48.8,
+      "growth": 118.36734693877551,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MNRO",
+      "score": 48.3,
+      "growth": -4.619396415699173,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CDRO",
+      "score": 48.2,
+      "growth": 4.834482621173475,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GYRE",
+      "score": 48.2,
+      "growth": -2.1154234209995293,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OFLX",
+      "score": 48.1,
+      "growth": -1.01585940848693,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "GDYN",
+      "score": 47.9,
+      "growth": 6.992432860181008,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CGC",
+      "score": 47.8,
+      "growth": 12.519754900601665,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "LXFR",
+      "score": 47.8,
+      "growth": -10.22514071294559,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NRC",
+      "score": 47.5,
+      "growth": 3.977907045067286,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MCFT",
+      "score": 47.4,
+      "growth": 63.408622164092755,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "VCRE",
+      "score": 47.2,
+      "growth": -96.50924588005049,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "SSII",
+      "score": 47.2,
+      "growth": 39.39283851842519,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "BALY",
+      "score": 47.1,
+      "growth": 20.485632682112254,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "REI",
+      "score": 46.9,
+      "growth": 26.72880454271509,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "LOCO",
+      "score": 46.6,
+      "growth": 2.97058028831636,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ORN",
+      "score": 46.3,
+      "growth": 8.082382627164053,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "NNNN",
+      "score": 46.2,
+      "growth": 5.640681302447148,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "KIDS",
+      "score": 46.1,
+      "growth": 15.431714744114466,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "RNGR",
+      "score": 46.1,
+      "growth": 25.533428165007123,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "HNRG",
+      "score": 46,
+      "growth": -1.2837345003646972,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FVRR",
+      "score": 45.6,
+      "growth": -10.00018408070098,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OXM",
+      "score": 45.6,
+      "growth": -2.1746625887092197,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ALMU",
+      "score": 45.6,
+      "growth": -2.6294820717131517,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "EOLS",
+      "score": 45.3,
+      "growth": 21.18120108954127,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "WEAV",
+      "score": 45.2,
+      "growth": 15.515649050795277,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "STRO",
+      "score": 45.2,
+      "growth": -84.56506392658247,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FLXS",
+      "score": 44.5,
+      "growth": 0.6578775161197425,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MRAM",
+      "score": 44.3,
+      "growth": 41.9286417695629,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "TWI",
+      "score": 44.2,
+      "growth": 5.194106286483091,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OIO",
+      "score": 44.1,
+      "growth": -4.395685284888284,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "PRTH",
+      "score": 44.1,
+      "growth": 9.35899788167398,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ONT",
+      "score": 44,
+      "growth": -20.41501984710693,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "CNCK",
+      "score": 44,
+      "growth": 36.127350010120374,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "BBCP",
+      "score": 43.9,
+      "growth": 12.62587291176358,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "LAND",
+      "score": 43.8,
+      "growth": 3.2205595315549784,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "EVH",
+      "score": 43.6,
+      "growth": 46.8554761347473,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FRPH",
+      "score": 43.5,
+      "growth": 2.14746543778801,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "OPAL",
+      "score": 43.5,
+      "growth": 3.657899970170031,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MAGN",
+      "score": 43.5,
+      "growth": -7.09502818297274,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MDXG",
+      "score": 43.3,
+      "growth": -34.727447898179605,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "ASC",
+      "score": 43.2,
+      "growth": 61.30527718402132,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "FSTR",
+      "score": 43.1,
+      "growth": -3.488485490185156,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/overview.json",
+      "ticker": "MOBI",
+      "score": 43,
+      "growth": 102.35241234641892,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "FVR",
+      "score": 80.1,
+      "growth": 2.569214993733615,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "PINE",
+      "score": 72,
+      "growth": 34.57579223575322,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "OLP",
+      "score": 64.4,
+      "growth": 10.00203707476064,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "AHRT",
+      "score": 62.9,
+      "growth": 3.604100946372246,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "GOOD",
+      "score": 60.1,
+      "growth": 11.271595881921437,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "UHT",
+      "score": 60,
+      "growth": 0.4946115489786074,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "REAX",
+      "score": 54.7,
+      "growth": 29.55689074557972,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "XRN",
+      "score": 54.6,
+      "growth": 2.6953537486800405,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "ILPT",
+      "score": 51.2,
+      "growth": 1.8073632657430672,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "AGNT",
+      "score": 49.5,
+      "growth": 10.74745755330715,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "LAND",
+      "score": 43.8,
+      "growth": 3.2205595315549784,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "FRPH",
+      "score": 43.5,
+      "growth": 2.14746543778801,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "FPI",
+      "score": 42.2,
+      "growth": -5.65261044176707,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "RMR",
+      "score": 37.8,
+      "growth": -0.7846026575668241,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "RMAX",
+      "score": 28.4,
+      "growth": -5.828178694158071,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "AIV",
+      "score": 25.4,
+      "growth": -36.05619242768271,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "SEG",
+      "score": 24.4,
+      "growth": -13.846385769201774,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/real-estate.json",
+      "ticker": "TCI",
+      "score": 17.7,
+      "growth": 6.307558644656819,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/semiconductors.json",
+      "ticker": "NVEC",
+      "score": 50.9,
+      "growth": 80.74857436404154,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/semiconductors.json",
+      "ticker": "ALMU",
+      "score": 45.6,
+      "growth": -2.6294820717131517,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/semiconductors.json",
+      "ticker": "MRAM",
+      "score": 44.3,
+      "growth": 41.9286417695629,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/semiconductors.json",
+      "ticker": "LAES",
+      "score": 34.4,
+      "growth": 66.21437027593116,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "PAYS",
+      "score": 76.1,
+      "growth": 48.08443370347535,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "TRVG",
+      "score": 75.8,
+      "growth": 20.922968664732757,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "XNET",
+      "score": 72.6,
+      "growth": 38.72939961686343,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "NRDS",
+      "score": 67.9,
+      "growth": 5.564472980203328,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "CGNT",
+      "score": 63.9,
+      "growth": 12.023012316306536,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "ALLT",
+      "score": 62.4,
+      "growth": 15.32576608041245,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "DDI",
+      "score": 60.6,
+      "growth": 11.171636423661457,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "VTEX",
+      "score": 55.5,
+      "growth": 9.5237285252594,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "CCSI",
+      "score": 55.3,
+      "growth": 4.149519499321719,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "GRVY",
+      "score": 54.9,
+      "growth": -5.186833782359146,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "RMNI",
+      "score": 53.7,
+      "growth": 6.6859404114720355,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "YB",
+      "score": 52.9,
+      "growth": 30.119559670481856,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "DCBO",
+      "score": 52.8,
+      "growth": 13.037607850885857,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "RPAY",
+      "score": 50.1,
+      "growth": 33.16187554544734,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "OOMA",
+      "score": 50.1,
+      "growth": 25.4113676089446,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "MTLS",
+      "score": 49.5,
+      "growth": 8.08718051549413,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "ADV",
+      "score": 49.3,
+      "growth": 1.8018626381613112,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "AMCX",
+      "score": 49.2,
+      "growth": -8.754483154007175,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "YEXT",
+      "score": 49.1,
+      "growth": -1.7604824305445077,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "NEXN",
+      "score": 49,
+      "growth": 10.52249637155298,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "FVRR",
+      "score": 45.6,
+      "growth": -10.00018408070098,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "PRTH",
+      "score": 44.1,
+      "growth": 9.35899788167398,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "PSFE",
+      "score": 42.3,
+      "growth": 4.4897692296914204,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "OSPN",
+      "score": 38.7,
+      "growth": 1.0410574336179756,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "SPT",
+      "score": 38.3,
+      "growth": 10.797294637585209,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "PERI",
+      "score": 38,
+      "growth": -4.6037618589837015,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "TLS",
+      "score": 37.4,
+      "growth": 32.74299377224199,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "CURR",
+      "score": 36.8,
+      "growth": -21.814295987431976,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "ZIP",
+      "score": 35.4,
+      "growth": 5.193705894931933,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "RBBN",
+      "score": 34.9,
+      "growth": -12.803797210120448,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "IMXI",
+      "score": 33.1,
+      "growth": -18.60016259859867,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "CRNC",
+      "score": 26.2,
+      "growth": 11.811491741114466,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "IHRT",
+      "score": 23.8,
+      "growth": 4.668329668517113,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "BMBL",
+      "score": 23.8,
+      "growth": -15.188797441072555,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "LSAK",
+      "score": 22.3,
+      "growth": -18.710827563582367,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "NCMI",
+      "score": 13.7,
+      "growth": -2.5787965616045794,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "API",
+      "score": 71.2,
+      "growth": 17.983595551533902,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "RSVR",
+      "score": 65.8,
+      "growth": 11.618033470998634,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "GRRR",
+      "score": 59.9,
+      "growth": 137.9626132822958,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "MOVE",
+      "score": 56.1,
+      "growth": 3590.291262135922,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "AIOT",
+      "score": 55.8,
+      "growth": 6.407929236177146,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "PLAY",
+      "score": 53,
+      "growth": -1.4972696846926148,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "IIIV",
+      "score": 52.7,
+      "growth": 2.2465848442226655,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "MFI",
+      "score": 52.1,
+      "growth": 29.66365217399307,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "XPER",
+      "score": 40.8,
+      "growth": 8.079635241142991,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "SOHU",
+      "score": 39,
+      "growth": 7.343961605169991,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "SWMR",
+      "score": 32.4,
+      "growth": 56.58726828068246,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "BTQ",
+      "score": 23.3,
+      "growth": -52.67547366226317,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "STRZ",
+      "score": 23.2,
+      "growth": -1.637460499856358,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "OWLS",
+      "score": 20.9,
+      "growth": 3.8503995571778304,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/software-comm-services.json",
+      "ticker": "PLTS",
+      "score": 12.7,
+      "growth": -24.327001649210157,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/utilities.json",
+      "ticker": "YORW",
+      "score": 71.7,
+      "growth": 22.48033751757903,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/utilities.json",
+      "ticker": "ARTNA",
+      "score": 55.9,
+      "growth": 7.293517731592369,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/utilities.json",
+      "ticker": "CWCO",
+      "score": 51.4,
+      "growth": -2.1455607305737368,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/utilities.json",
+      "ticker": "HNRG",
+      "score": 46,
+      "growth": -1.2837345003646972,
+      "replayScore": null
+    },
+    {
+      "family": "smallcap",
+      "file": "outputs/findash-export/v1/smallcap/utilities.json",
+      "ticker": "DGXX",
+      "score": 30.1,
+      "growth": -18.280872312487617,
+      "replayScore": null
+    }
+  ],
+  "limits": [
+    "Smallcap uses supplied main-store fallback, not a separate Smallcap artifact.",
+    "Quality baseline matches the published feed using the historical production watchlist; Smallcap historical input is unavailable.",
+    "No historical evidence files are rewritten. Scores shown are capped as in the real export."
+  ]
+}

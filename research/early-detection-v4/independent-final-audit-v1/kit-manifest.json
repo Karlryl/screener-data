@@ -1,0 +1,60 @@
+{
+  "schema": "early-detection-independent-final-audit-kit/v1",
+  "generatedAt": "2026-08-10T19:57:30.282Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "checklist": {
+    "path": "audit-checklist-template.csv",
+    "count": 22,
+    "coreRowsSha256": "babd8f8199fa1b07f54353684ea79381468103338ff6fea9869e409ce10d70b9",
+    "decisionFields": [
+      "auditorDecision",
+      "findingIds",
+      "evidenceCitation",
+      "auditorComment"
+    ]
+  },
+  "findings": {
+    "path": "findings-template.csv",
+    "fields": [
+      "findingId",
+      "checklistItemId",
+      "severity",
+      "status",
+      "summary",
+      "evidenceCitation",
+      "resolution",
+      "resolvedAt"
+    ]
+  },
+  "attestationTemplate": "attestation-template.json",
+  "runBindingTemplate": "run-binding-template.json",
+  "readme": "README.md",
+  "requiredGateArtifacts": [
+    "entityListingLedger",
+    "appendOnlySecStore",
+    "historicalUniverse",
+    "asOfLeakageGate",
+    "adjustedOhlcv",
+    "corporateActionsDelistings",
+    "historicalGqsAdapter",
+    "conceptMapFrozen",
+    "independentAuditPassed",
+    "blindCodingAgreementPassed",
+    "researchCorpusSealed"
+  ],
+  "requiredInputComponents": [
+    "entityListingLedger",
+    "historicalUniverse",
+    "femSignals",
+    "femControlPool",
+    "technicalOnlySignals",
+    "technicalOnlyControlPool",
+    "hLatePopulation",
+    "conceptMap"
+  ],
+  "humanReviewPresent": false,
+  "independentAuditPassed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "73033bcdfaa2db6811cc1a869aa48e62b6a25cb552df7ab9a4bda5ecbd20ff86"
+}

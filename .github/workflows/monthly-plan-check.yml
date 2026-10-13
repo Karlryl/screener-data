@@ -1,0 +1,106 @@
+name: Monthly Plan Check
+
+# Masterplan Task 0.10 — MONATLICHER "Stimmt der Plan noch?"-Check.
+# Prueft maschinell das Vendor-/Quellen-Register (Abschnitt 4): Endpoint-Reachability + Detektor-
+# Existenz + Universe-/Cache-Plausibilitaet (scripts/plan-check.js). Wird ROT (rotes X) NUR bei
+# struktureller Register-Luege (ein deklarierter Detektor wurde geloescht). Vendor-4xx/5xx/timeout
+# = nur Bericht (transient/key-gated). Erzeugt reports/plan-check-<YYYY-MM>.md (committet auf main →
+# der taegliche screener-briefing-Report referenziert neue Automatik-Reports = Karls Sicht-Kanal) mit
+# der Urteils-Checkliste (der nicht-automatisierbare "Ist-Zustand-Block noch aktuell?"-Teil).
+# Stempelt am Ende state/cadence-heartbeat.json (last_monthly_run) = 0.10-Dead-Man-Marker (heartbeat
+# liest ihn, >38d ueberfaellig -> rotes X).
+
+on:
+  schedule:
+    - cron: '41 6 3 * *'   # 3. des Monats 06:41 UTC (meidet den 1./monthly-sec-xbrl 08:00; krumme Minute)
+  workflow_dispatch:
+    inputs:
+      force_alarm:
+        description: 'Rotes X erzwingen (Test der Meldekette)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+# ZWEIG-WACHE (19.08.2026) — die EINZIGE Stelle, an der entschieden wird, ob ein
+# Lauf veroeffentlichen darf. Gleiche Sache und gleiche Bauform wie in daily-pull.yml.
+#
+# BEFUND: dieser Workflow laesst sich per workflow_dispatch auf JEDEM Zweig starten,
+# sein Push-Schritt schob aber unbedingt `HEAD:main` hoch — nach einem Rebase des
+# Zweigs auf main. Ein Handlauf von einem Feature-Zweig haette damit den GANZEN
+# ungeprueften Zweig nach main veroeffentlicht, nicht nur den Report.
+#
+# WARUM KEIN `if:` AM SCHRITT (die naheliegende Loesung, bewusst verworfen): ein
+# UEBERSPRUNGENER Schritt sieht in GitHub Actions aus wie ein erfolgreicher und
+# schreibt keine Zeile ins Protokoll. Der Schritt laeuft darum weiter und steigt ganz
+# vorn mit ::warning:: aus — die Nicht-Veroeffentlichung ist ein LESBARER Vorgang.
+#
+# KEIN `nur_rechnen`-Ventil wie in daily-pull.yml: dort deckt es einen 4-Stunden-Lauf
+# mit sechs Publizierern ab, den man auf main einmal komplett durchrechnen lassen will.
+# Hier ist der Trockenlauf jetzt einfach der Zweig-Lauf — genau das macht diese Wache
+# erst gefahrlos moeglich.
+#
+# Bei schedule-Laeufen ist github.ref refs/heads/main -> der Cron veroeffentlicht wie
+# bisher. Waechter: tests/zweig-wache.test.js
+env:
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+
+jobs:
+  monthly-plan-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'  # BH-134: package.json engines requires >=22
+
+      - name: Vendor-Register + Detektor-Check
+        id: plancheck
+        continue-on-error: true    # Report + Marker sollen auch bei rotem Befund geschrieben werden
+        run: node scripts/plan-check.js
+
+      - name: force_alarm (Test der Meldekette)
+        if: ${{ github.event.inputs.force_alarm == 'true' }}
+        run: echo "::error::force_alarm — Monats-Plan-Check rotes X erzwungen (Meldekette-Test)."; exit 1
+
+      - name: Commit Report + Marker + push (Dead-Man)
+        if: ${{ always() && github.event.inputs.force_alarm != 'true' }}
+        run: |
+          node scripts/cadence-marker.js --field monthly
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit von Plan-Check-Report und Kadenz-Marker nach main. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/ state/cadence-heartbeat.json
+          if git diff --cached --quiet; then echo "kein Delta"; else
+            git commit -m "chore: monthly plan-check report + cadence heartbeat [skip ci]"
+            pushed=0
+            for i in 1 2 3; do
+              # BH-131: abort any rebase left hanging by a prior failed attempt, else every
+              # subsequent retry fails immediately with "rebase in progress".
+              git rebase --abort >/dev/null 2>&1 || true
+              if git pull --rebase --autostash origin main && git push origin HEAD:main; then echo "gepusht (Versuch $i)"; pushed=1; break; fi
+              echo "Push-Versuch $i fehlgeschlagen, retry..."; sleep 5
+            done
+            # BH-131: the old code always ended with `echo`/loop-end (exit 0) here, so the step
+            # (and workflow) went green even after 3 failed pushes. exit 1 so a hanging push
+            # surfaces as a red X instead of only relying on the delayed heartbeat dead-man.
+            if [ "$pushed" != "1" ]; then
+              echo "::error::Report/Marker-Push haengt nach 3 Versuchen — main-push-Konflikt pruefen."
+              exit 1
+            fi
+          fi
+
+      - name: Surface red X bei Register-Luege (fehlender Detektor)
+        if: ${{ steps.plancheck.outcome == 'failure' && github.event.inputs.force_alarm != 'true' }}
+        run: |
+          echo "::error::Monats-Plan-Check ROT — plan-check.js meldete entweder struktureller Register-Drift (deklarierter Detektor fehlt) ODER einen Lesefehler an vorhandener Grundlage (seit Tag 618: Manifest-/Snapshot-Lesen mit Parse-Fehler/EACCES = konnte nicht messen, obwohl Daten da waren; blosses Fehlen/ENOENT bleibt nur Warnung). Welche der beiden Ursachen: ::error::-Zeile des plan-check-Schritts oben. Siehe reports/plan-check-*.md."
+          exit 1

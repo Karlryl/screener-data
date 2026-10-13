@@ -1,0 +1,2303 @@
+#!/usr/bin/env node
+'use strict';
+/**
+ * findash-export v1 writer (task 1.1).
+ *
+ *   node scripts/write-findash-export.js           # build the export
+ *   node scripts/write-findash-export.js --check    # validate an already-built export, exit 1 on breach
+ *   node scripts/write-findash-export.js --selftest  # runnable self-check (assert-based)
+ *
+ * READS  (read-only inputs, never a write target):
+ *   outputs/hypergrowth/<branch>.json  (13 boards, {profitable[],unprofitable[]})
+ *   outputs/hypergrowth/full/<branch>.json  (19.08.: dieselben 13 Boards UNGEKAPPT)
+ *   outputs/hypergrowth/overview.json  (flat cross-branch top-200)
+ *   outputs/hypergrowth/survival.json  (flat pre-revenue, runway-desc)
+ *   outputs/hypergrowth/index.json     (meta: counts/branches/excluded)
+ *   outputs/coverage-status.json       (degradation banner marker, optional)
+ * NEVER touches picks-history/ or earnings-calendar.json (Retention Grundgesetz 7a).
+ *
+ * WRITES (atomic tmp+rename, assertFinite -> fail-loud on NaN/Inf, never silent-null):
+ *   outputs/findash-export/v1/<branch>.json
+ *   outputs/findash-export/v1/full/<branch>.json  (19.08.: die VOLLE Kohorte, on-demand)
+ *   outputs/findash-export/v1/overview.json
+ *   outputs/findash-export/v1/survival.json
+ *   outputs/findash-export/v1/index.json
+ *   outputs/findash-export/v1/quality/<id>.json  (3.2: QC-Board, DIAGNOSTIC — additive subdir)
+ *   outputs/findash-export/v1/quality/overview.json
+ *   outputs/findash-export/v1/quality/index.json
+ * The quality/ subdir mirrors outputs/quality/ (produced by run-screener runQualityPass).
+ * Optional-when-absent: an old local run without outputs/quality/ writes NO quality files
+ * (loud warning, no crash); but once quality/index.json exists it is fully --check-validated.
+ *
+ * Contract: docs/findash-export-v1.md. Every file carries schema:'findash-export/v1'.
+ * A v2 bump is the ONLY sanctioned way to rename/remove/retype a field.
+ *
+ * THE GATE IS THE PRODUCT: --check is Karl's only alarm channel (red X). It MUST catch
+ * a missing field, a wrong type, or a bad enum on ANY Pflicht field of ANY of the 15
+ * files. Every validate*Row() below checks BOTH presence AND type/enum for every field
+ * the schema-doc marks Pflicht. Proven against real outputs/hypergrowth: 22 tamper
+ * variants (incl. 4 simultaneous breaches on energy.json) all exit 1.
+ */
+const fs = require('fs');
+const path = require('path');
+const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { overviewGrowthHold } = require('../lib/overview-known-cases.js');
+const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
+const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
+const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
+// P89 SHADOW (master decision on review finding 2): the class table is validated strictly
+// (lib throws, the PR check tests this exact file), but a shadow table must never abort the
+// live daily export. On a load/validation error every row gets rankGrundShadow = null and the
+// run log carries ONE loud warning naming the error. write-rule40-export.js reuses this lookup.
+let rankGrundShadowFor;
+try {
+  ({ rankGrundShadowFor } = require('../lib/non-operating-classes.js'));
+} catch (err) {
+  rankGrundShadowFor = () => null;
+  console.warn('::warning::[non-operating-shadow] Klassentabelle ungueltig, rankGrundShadow = null fuer alle Zeilen: ' + err.message);
+}
+
+const ROOT = path.join(__dirname, '..');
+const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
+const QUALITY_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.2: QC-Board source (runQualityPass)
+const SMALLCAP_DIR = path.join(ROOT, 'outputs', 'smallcap'); // 5.2: Small-Cap-Board source (runSmallcapPass)
+const COVERAGE = path.join(ROOT, 'outputs', 'coverage-status.json');
+// Court-Auflage 27.07.2026 (Antrag 1 DENIED, rettende Auflage): Die Groessenklasse allein
+// ('mega') ist eine Aussage ueber die LISTE, nicht ueber die Firma — sie sagt nur 'oberstes
+// Fuenftel dieses Universums'. Das Gericht hat den Umbau der Klassifikation und den
+// Board-Umzug abgelehnt, aber genau EINE Massnahme freigegeben: die absoluten Grenzen
+// mitliefern, damit die Klasse lesbar wird ('Mega (ab 27,8 Mrd.)'). Voller Informationswert,
+// kein neuer Zustand, kein neuer Widerspruch. Quelle sind die data-learned Quintil-Grenzen
+// aus outputs/calibration.json (score.js mcapBounds) — es wird NICHTS neu gerechnet.
+const CALIBRATION_FILE = path.join(ROOT, 'outputs', 'calibration.json');
+// [p20, p40, p60, p80] in USD | null, wenn die Datei fehlt oder das Feld unbrauchbar ist.
+// Fehlt sie, entfaellt die Spanne in der Anzeige — kein Abbruch, keine geratenen Grenzen.
+function readMcapBounds() {
+  try {
+    const c = JSON.parse(fs.readFileSync(CALIBRATION_FILE, 'utf8'));
+    const b = c && c.mcapBounds;
+    if (!Array.isArray(b) || b.length !== 4 || !b.every((x) => Number.isFinite(x) && x > 0)) return null;
+    // Monoton steigend — sonst waere die Zuordnung Klasse->Spanne sinnlos.
+    for (let i = 1; i < b.length; i++) if (!(b[i] > b[i - 1])) return null;
+    return b;
+  } catch (_) { return null; }
+}
+// ---- P87 (06.10.2026): FCF-Schatten aus der Jahres-Kapitalflussrechnung, NUR additiv ----
+// Ratsentscheid Frage 1, Option C, Formel-Weg Schritt 1: jede HyperGrowth-Zeile (Branchen-
+// boards, Vollboards, Uebersicht) traegt zusaetzlich das Objekt fcfShadow. Es aendert KEINE
+// vorhandene Zahl; findash verwirft unbekannte Schluessel (data-layer/screener.js), die Anzeige
+// sieht den Schatten also nicht. Quality und Small-Cap bleiben ohne Schatten (Quality hat keine
+// Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
+// nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
+const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
+const { annualPairsShadow } = require('../lib/annual-pairs.js');
+const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
+let _wachstumsSchranken;
+let _annualPairsBounds = null;
+let _annualPairsBoundsWarned = false;
+function wachstumsSchranken() {
+  if (_wachstumsSchranken !== undefined) return _wachstumsSchranken;
+  try {
+    const c = JSON.parse(fs.readFileSync(CALIBRATION_FILE, 'utf8'));
+    _wachstumsSchranken = Array.isArray(c && c.growthBounds) ? c.growthBounds : null;
+    const qoq = c && c.winsorBounds && c.winsorBounds.qoq;
+    _annualPairsBounds = Array.isArray(qoq) && qoq.length === 2 && qoq.every(Number.isFinite) && qoq[0] <= qoq[1] ? qoq : null;
+  } catch (_) { _wachstumsSchranken = null; }
+  return _wachstumsSchranken;
+}
+/**
+ * Computes the annual-pair shadow from a prepared snapshot and the existing calibration source.
+ * @param {object|null} snapshot Already prepared snapshot; no second file read or overlay.
+ * @param {string} [missingCode] Missing/unreadable snapshot reason.
+ * @returns {object} Additive shadow with acceleration clamped as in score.rawAxisValue.
+ */
+function annualPairsShadowForSnapshot(snapshot, missingCode) {
+  if (snapshot) {
+    wachstumsSchranken();
+    if (_annualPairsBounds === null && !_annualPairsBoundsWarned) {
+      _annualPairsBoundsWarned = true;
+      console.warn('::warning::[annual-pairs-shadow] Keine Beschleunigungsgrenzen in outputs/calibration.json vorhanden, die Schattenrechnung bleibt ungeklemmt.');
+    }
+  }
+  return annualPairsShadow(snapshot, _annualPairsBounds, missingCode || 'no-snapshot');
+}
+let _behoerde;
+let _schrankenGewarnt = false;
+// Alle vorkommenden Wachstumsgewichte; der Schatten wird beim EINEN Snapshot-Lesevorgang je Ticker
+// (snapAbleitungenFuer) fuer jedes Gewicht gerechnet. Ein zweites Lesen wuerde die Handtabellen-
+// Zaehler im Lauf-Protokoll doppelt zaehlen (lib/yahoo-q4-known-cases.js runtimeCounters).
+const SCHATTEN_ALPHAS = Array.from(new Set(FORMEL_ALPHA.values()));
+function fcfSchattenJeAlpha(snap, ticker) {
+  if (_behoerde === undefined) _behoerde = ladeBehoerdenJahre();
+  const schranken = wachstumsSchranken();
+  if (schranken === null && !_schrankenGewarnt) {
+    _schrankenGewarnt = true;
+    console.warn('::warning::[fcf-shadow] keine growthBounds in outputs/calibration.json — ruleOfXHeute/ruleOfXShadow ungeklemmt, nicht gleich dem gescorten Wert');
+  }
+  const m = new Map();
+  for (const a of SCHATTEN_ALPHAS.concat([null])) m.set(a, boardSchatten(snap, a, schranken, _behoerde.get(ticker)));
+  return m;
+}
+const LEERER_SCHATTEN = (grund) => ({ fcfMarginStmtFY: null, grund, gjEnde: null, ruleOfXHeute: null, ruleOfXShadow: null,
+  schattenFcfAktiv: false, behoerdeFcfMarginFY: null, behoerdeGeschaeftsjahr: null, behoerdeQuelle: null, behoerdeAbstandPp: null });
+function fcfSchattenFuer(ticker, formulaId) {
+  const abl = snapAbleitungenFuer(ticker);
+  if (!abl.fcfSchatten) return LEERER_SCHATTEN(abl.snapFehler || 'no-snapshot');
+  const alpha = FORMEL_ALPHA.has(formulaId) ? FORMEL_ALPHA.get(formulaId) : null;
+  return abl.fcfSchatten.get(alpha);
+}
+function mitFcfSchatten(formulaId) {
+  return (row) => g31Last(Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) }));
+}
+
+function mitAnnualPairsSchatten(row) {
+  return Object.assign(row, { annualPairsShadow: snapAbleitungenFuer(row.ticker).annualPairsShadow });
+}
+
+const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
+const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
+const SCOUT_DIR = path.join(OUT_DIR, 'smallcap'); // 5.2: Small-Cap-Board export subdir
+// ---- Vollboards (19.08.2026) ----------------------------------------------------------
+// BEFUND: run-screener.js ruft produceRankings(results, {topN: topN || 100}) und die CI ruft
+// ohne --topN. Von 8.908 bewerteten Firmen erreichten damit 1.940 die Oberflaeche — 6.968
+// waren weder abrufbar noch erwaehnt. Das bricht die Direktive "nichts verschwindet":
+// Rang 101 existierte fuer Karl schlicht nicht.
+// Die vollen Kohorten liegen seit 2.3-A8 in outputs/hypergrowth/full/, wurden aber nie
+// publiziert (der gh-pages-Deploy kopiert hypergrowth flach: `cp ../outputs/hypergrowth/*.json`).
+// WEG: derselbe Schreiber, dieselben Mapper, dieselbe Rangvergabe -> v1/full/<branch>.json,
+// von findash on demand nachgeladen. KEIN --topN-Flag (jedes N unter dem Kohortenmaximum
+// verletzt die Direktive weiter und flutete den Newcomer-Log), KEIN zweites Format (dem
+// rohen hypergrowth/full/ fehlen rank/rankGrund, ath, Waehrungsbeleg, Namens-Normalisierung
+// und die Schema-Huelle), KEINE zweite Detailtiefe im Erstload (+1,3 MB in JEDEM Aufruf).
+const HG_FULL_DIR = path.join(HG_DIR, 'full');
+const FULL_OUT_DIR = path.join(OUT_DIR, 'full');
+
+const SCHEMA = 'findash-export/v1';
+// T194: the fast HG board is a top-100 view per track. Keep that delivery limit
+// explicit in the payload and cross-check it against index.json's full-cohort counts.
+const BOARD_TRACK_CAP = 100;
+const COHORT_TRACKS = Object.freeze(['profitable', 'unprofitable']);
+const BRANCHES = [
+  'consumer-discretionary', 'consumer-staples', 'energy', 'financials',
+  'health-care', 'industrials', 'it-services', 'materials', 'real-estate',
+  'semiconductors', 'software-comm-services', 'tech-hardware', 'utilities',
+];
+// The exact descriptive fields the engine writes on every board+overview+survival row.
+// Task 1.2: profitTier (4-Stufen-Enum) + ipoYear (durchgereicht) sind seit 1.2 real (vorher RESERVIERT).
+// Task 2.13 #23: coverageAxes ("n/m" present-Achsen) + coverageWeight (C4-Gewicht) — additiv OPTIONAL,
+// ausweisen statt verrechnen (score-inert); nicht in den Pflicht-Feld-Check (Auflage B1).
+// Task 2.10: cohortN (Kohortengroesse je Zeile) + cohortFallback (Eltern-Kohorten-Basis aktiv) — PFLICHT
+// (Tamper -> exit 1), anders als die optionalen coverage-Felder. Auf routed Board/Overview-Zeilen finite
+// Zahl bzw. boolean; auf pre-revenue survival-Zeilen null (nie gescort).
+// Task 2.11 Stufe A: scoreBase + scoreShrunk (number|null) + factors ({burn,growth,cycle}|null) — additiv OPTIONAL
+// (Score-Transparenz, wie coverageAxes NICHT im --check, damit legitime Abwesenheit/alte Consumer nicht brechen).
+// F-5 (Karl 26.07.): revGrowthYoYPct = Umsatzwachstum als ANZEIGE-Spalte in findash.
+// Reine Anzeige, kein Score-Input. Quelle ist derselbe selbst gerechnete Wert, den auch die
+// Achse revGrowthLevel sieht (score.js) — NICHT Yahoos metrics.revenueGrowthYoY, das wegen
+// belegter Defekte am 14.07. aus der Achse entfernt wurde. Additiv OPTIONAL wie die
+// coverage-Felder: alte Consumer und legitime Abwesenheit brechen nicht.
+// K-3 (Karl 27.07., Sichtabnahme): mcapKlasse = ABSOLUTE Groessenklasse (micro/small/mid/
+// large/mega) nach Marktstandard. Neben dem bestehenden mcapBand, das aus dem Universum
+// GELERNT wird und deshalb mit ihm wandert — am 27.07. fielen CRDO (39,8 Mrd.) und NVIDIA
+// (5.010 Mrd.) in dieselbe gelernte Klasse. findash filtert nach mcapKlasse, die Kohorten
+// und das Scoring nutzen weiter mcapBand. Additiv OPTIONAL wie die coverage-Felder.
+// F-2 Stufe 1 (Karl-Mandat, 03.08.): einmalertragPrognose = Prognose-Zustand zur Lampe
+// 'einmalertrag' (string|null), erzeugt in src/scoring/lamps.js einmalertragPrognose().
+// Additiv OPTIONAL wie revGrowthYoYPct. NUR Zeilen, die die Lampe tragen, duerfen einen
+// Zustand fuehren — das prueft checkEinmalertragPrognose in BEIDE Richtungen.
+// Urteil 16.08. (Sichtbarkeits-Stufe): einmalertragBewertbarkeit = 'zuWenigQuartale' |
+// 'ungleicheKadenz' | null. null heisst "die Lampe konnte urteilen" (an ODER sauber); ein
+// Grund heisst "nicht bewertbar" — der dritte Zustand, der bisher als stummes null ankam und
+// von "sauber" ununterscheidbar war. Additiv OPTIONAL wie einmalertragPrognose. NUR Zeilen
+// OHNE die Lampe duerfen einen Grund fuehren (traegt die Zeile die Lampe, WAR sie bewertbar)
+// — checkEinmalertragBewertbarkeit prueft Wertemenge und diese Richtung.
+// 03.08.: shareDilution = {ratePct, pctl} | null — der BETRAG zur Lampe 'shareCountDilution'
+// (Jahres-Verwaesserungsrate in Prozent + Kohorten-Perzentil), erzeugt in
+// src/scoring/run-screener.js lampeBNachruesten(). Additiv OPTIONAL wie revGrowthYoYPct.
+// Die Lampe sagte nur an/aus: ein Kohorten-Spitzenreiter mit +1 % Aktienzahl im Jahr sah aus
+// wie einer mit +66 %. NUR Zeilen mit der Lampe duerfen einen Betrag fuehren — und sie
+// MUESSEN einen fuehren; checkShareDilution prueft beide Richtungen.
+// P22/P118: the files that carry provenance against provenance/hypergrowth.json.
+const PROVENANCE_FILES = () => [...BRANCHES.map(id => id + '.json'), 'overview.json'];
+const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct', 'profitStreak', 'einmalertragPrognose', 'einmalertragBewertbarkeit', 'shareDilution'];
+// Task 4.5: profitStreak = {jahre, basis, tiefe, mindestens, letzterVerlust} | null.
+// Additiv OPTIONAL wie revGrowthYoYPct. Belegte Laenge der ununterbrochenen Gewinnserie
+// aus der SEC-Langhistorie — NEBEN profitTier, nicht statt dessen. Grund: profitTier sieht
+// nur Yahoos ~4 Jahre, und in vier sauberen Jahren ist jede Firma 'langfristig profitabel'
+// (gemessen 28.07.: 380 von 1.353 tragen das Etikett trotz Serienabriss binnen 8 Jahren,
+// darunter American Airlines und Autodesk). REINE ANZEIGE, kein Score-Input.
+
+// Task 2.2: ATH-Anzeige (Karl-A6-Lösung) — additiv OPTIONAL je Zeile: ath = {distancePct,
+// athDate, monthsAgo} | null. Quelle = external-data/ath-state.json (committeter Vertrag,
+// geseedet vom lokalen Max-Batch, täglich billig fortgeschrieben; Split-Wächter -> null).
+// Reine ANZEIGE, nie Score-Input (Grundgesetz 1). --check validiert die FORM wenn present
+// (nicht Pflicht — Abwesenheit ist legitim, Präzedenz coverageAxes/B1).
+const { displayFor } = require('./update-ath-state.js');
+let _athEntries = null;
+function athFor(ticker) {
+  if (_athEntries === null) {
+    const st = readJSONOrNull(path.join(__dirname, '..', 'external-data', 'ath-state.json'));
+    _athEntries = (st && st.entries) || {};
+  }
+  return displayFor(_athEntries[ticker]);
+}
+
+function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
+
+// ---- Waehrungs-Waechter (Waehrungs-Chunk 4a, 16.08.2026, Karl-Freigabe) -----------
+// WARUM HIER: das ist die Engstelle, durch die JEDE Zeile muss, bevor Karl sie sieht.
+// Die Groesse einer Firma ist im Board eine USD-Aussage — sie steuert Groessenklassen,
+// Reiter und Karls Bauchgefuehl. Yahoo liefert marketCap aber in der HANDELS-Waehrung;
+// ob die Umrechnung stattgefunden hat, stand bisher nirgends in der Auslieferung.
+// Belegt am 08.06.-Bestand: 124 .HK-Zeilen trugen eine mit dem CNY-Berichtskurs statt
+// dem HKD-Handelskurs skalierte Groesse, +16,6 %, ohne jede Spur.
+// REGEL (Karl): eine Zeile OHNE nachgewiesene Handelskurs-Umrechnung wird auf null
+// gesetzt statt ausgeliefert — eine fehlende Groesse ist harmlos, eine falsche nicht.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
+const { financialReasons } = require('../lib/financial-known-cases.js');
+const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
+const { readValueFlags, valueFlagProblems } = require('../lib/value-open-items.js');
+const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
+const { loadRegistry, computeClassesShadow, deviationPct } = require('../lib/mcap-classes-shadow.js');
+// Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
+// Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
+// Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
+// snapshots/ ab — aus dem run-screener.js sein Universum baut (M9).
+const SNAP_DIR = process.env.FINDASH_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots');
+let _mcapClassesByTicker = null;
+let _mcapClassesDir = SNAP_DIR;
+const _mcapClassesCache = new Map();
+
+/** Loads the shadow registry and resets its generation cache. @param {string} [file] Registry path. @param {string} [snapshotsDir] Merged generation directory. */
+function ladeMcapClassesRegistry(file, snapshotsDir = SNAP_DIR) {
+  const entries = Object.values(loadRegistry(file));
+  _mcapClassesByTicker = new Map(entries.flatMap((entry) => entry.classes.map((leg) => [leg.ticker, entry])));
+  _mcapClassesDir = snapshotsDir;
+  _mcapClassesCache.clear();
+  return entries.length;
+}
+
+/** Appends diagnostic fields after all existing row fields. @param {object} out Completed export row. @param {string} [snapshotStore] 'main' or 'smallcap'; small-cap rows get no shadow. @returns {object} The same row, with no existing field changed. */
+function ergaenzeMarketCapClassesShadow(out, snapshotStore = 'main') {
+  // Small-cap rows come from snapshots-smallcap/, a different generation than the class registry's
+  // main snapshots; P88 covers the main store only, so they get no key (absence, not null).
+  if (snapshotStore === 'smallcap') return out;
+  // Loaded only by build() (and explicitly by tests): a mapper without a loaded registry adds no key,
+  // exactly like before P88, instead of opening files from inside a pure mapper.
+  if (_mcapClassesByTicker === null) return out;
+  const entry = _mcapClassesByTicker.get(out.ticker);
+  if (!entry) return out;
+  if (!_mcapClassesCache.has(entry)) {
+    const snapshots = Object.fromEntries(entry.classes.map(({ ticker }) =>
+      [ticker, readJSONOrNull(path.join(_mcapClassesDir, safeSnapshotFilename(ticker)))]));
+    _mcapClassesCache.set(entry, computeClassesShadow(entry, snapshots));
+  }
+  out.marketCapClassesShadow = _mcapClassesCache.get(entry);
+  // listed-classes-only (e.g. Alphabet, unlisted class B): the vendor value covers more than the shadow, so no deviation.
+  out.marketCapClassesDeviationPct = out.marketCapClassesShadow.status === 'ok'
+    ? deviationPct(out.marketCap, out.marketCapClassesShadow.value) : null;
+  return out;
+}
+// Anteil genullter Zeilen, ab dem der Writer NICHT mehr ausliefert, sondern abbricht.
+// Grund: bei einem Schema-Bruch (z. B. der Snapshot-Bestand ist aelter als der Stempel)
+// wuerde der Waechter der halben Rangliste die Groesse nehmen und das Board damit
+// stumm entwerten. Ein rotes X ist Karls einziger Alarmkanal — ein halbblindes Board
+// waere die stille Variante desselben Schadens.
+const NULL_ANTEIL_STOPP = 0.25;
+let _mcapGenullt = 0, _mcapGeprueft = 0, _mcapVerworfen = 0;
+// EIN Snapshot-Lesevorgang je Ticker, zwei Ableitungen daraus (Waehrungsbeleg + Belegpunkte).
+// Zwei getrennte Caches hiessen zwei Lesevorgaenge ueber ~9.000 Ticker fuer dieselbe Datei.
+const _snapCache = new Map();
+const marketCapGuard = require('../lib/market-cap-guard.js');
+const { g31Export, g31Variant = () => null, g31Last = row => row } = require('../lib/g31-recency.js');
+function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
+  const snapshotDir = snapshotStore === 'smallcap' ? SMALLCAP_SNAP_DIR : SNAP_DIR;
+  const cacheKey = `${snapshotDir}:${ticker}`;
+  if (_snapCache.has(cacheKey)) return _snapCache.get(cacheKey);
+  let snap = null, snapFehler = null;
+  try {
+    if (snapshotStore === 'smallcap') {
+      snap = prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SMALLCAP_SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')));
+    } else {
+      snap = prepareYahooQ4Snapshot(JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')));
+    }
+  }
+  catch (e) { snap = null; snapFehler = e && e.code === 'ENOENT' ? 'no-snapshot' : 'snapshot-unreadable'; } // P87: Grund nur fuer fcfShadow
+  const abl = {
+    beleg: beurteileWaehrungsbeleg(snap && snap.meta),
+    punkte: belegPunkte(snap && snap.timeseries),
+    financialReasons: financialReasons(snap),
+    marketCapGuard: snap && (snap.meta?.marketCapReason || marketCapGuard.table[ticker]) ? snap.marketCap : null,
+    marketCapRejected: !snap && (marketCapGuard.table[ticker] || marketCapGuard.holds[ticker])
+      ? 'Börsenwert nach Größenabgang ohne aktuellen Snapshot.'
+      : snap?.meta?.marketCapReason && !Number.isFinite(snap.marketCap?.value) ? snap.meta.marketCapReason : null,
+    correctedMarketCap: marketCapGuard.table[ticker] ? snap?.marketCap?.value : null,
+    overviewHold: overviewGrowthHold(ticker, snap),
+    wachstum: snap ? revGrowthLeg(snap) : null,
+    ...(typeof g31Export === 'function' ? g31Export(snap) : { g31Shadow: null, g31Overview: {} }),
+    fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
+    // Shared mappers only read existing derivations; HG builders request this once.
+    get annualPairsShadow() {
+      const value = annualPairsShadowForSnapshot(snap, snapFehler);
+      Object.defineProperty(this, 'annualPairsShadow', { value, enumerable: true });
+      return value;
+    },
+    snapFehler,
+  };
+  // Retain evidence from the very snapshot used above. Defer helper failures,
+  // not source reads, until the isolated provenance step.
+  try { abl.provenanceInputs = captureSnapshot(snap); }
+  catch (error) { abl.provenanceError = error; }
+  _snapCache.set(cacheKey, abl);
+  return abl;
+}
+
+// ---- Basis und Zeitraum des Umsatzwachstums (01.10.2026, Lueckenregel-Vorlage Option c) ----
+// revGrowthYoYPct ist entweder das juengste Quartal gegen das Vorjahresquartal oder, als
+// Rueckfall, ein Geschaeftsjahr gegen das Vorjahr. Der Export sagte nicht, welches: 625
+// Brettzeilen zeigten einen Jahreswert unter einem Text, der "Quartal" verspricht.
+// lib/rev-growth-basis.js geht denselben Zweig wie revGrowthLevel (axes.js) und liefert die
+// Zahl, die es dabei bekommt. Das Etikett wird nur gesetzt, wenn diese Zahl EXAKT die
+// exportierte ist; sonst bleiben die drei Felder null (unbeschriftet, gezaehlt, gemeldet) statt
+// eine Behauptung ueber eine Zahl zu machen, die ein anderer Snapshot erzeugt hat.
+// Small-Cap-Zeilen sind aus snapshots-smallcap/ gerechnet (run-screener.js SMALLCAP_SNAP_DIR).
+const SMALLCAP_SNAP_DIR = process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots-smallcap');
+let _wachstumOhneEtikett = 0;
+function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
+  let derivations = snapAbleitungenFuer(out.ticker, snapshotStore);
+  const wert = out.revGrowthYoYPct;
+  let leg = wert === null ? { basis: 'none', pct: null, periodEnd: null, priorPeriodEnd: null }
+    : derivations.wachstum;
+  if (snapshotStore === 'auto' && wert !== null && (!leg || leg.pct !== wert)) {
+    derivations = snapAbleitungenFuer(out.ticker, 'smallcap');
+    leg = derivations.wachstum;
+  }
+  if (!Object.hasOwn(out, 'runwayQuarters')) {
+    out.g31Shadow = derivations.g31Shadow;
+    out.g31OverviewShadow = derivations.g31Overview[out.overview?.kind || out.overviewKind] ?? null;
+  }
+  const passt = leg && leg.pct === wert;
+  if (!passt) _wachstumOhneEtikett++;
+  out.revGrowthBasis = passt ? leg.basis : null;
+  out.revGrowthPeriodEnd = passt ? leg.periodEnd : null;
+  out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
+  out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
+  out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
+  return out;
+}
+function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
+
+// Beweis-Frage, bewusst eng: wurde die marketCap dieser Zeile von der HANDELS-Waehrung
+// nach USD gebracht? Vier Wege zaehlen als Beleg, alles andere ist unbelegt.
+function waehrungsbelegFuer(ticker, snapshotStore = 'main') { return snapAbleitungenFuer(ticker, snapshotStore).beleg; }
+
+// Reine Entscheidung, exportiert — der Waechter tests/waehrung-ausliefer-waechter.test.js
+// FUEHRT sie aus, statt den Quelltext nach Schreibmustern abzusuchen.
+function isUsableFxRate(rate) {
+  return typeof rate === 'number' && Number.isFinite(rate) && rate > 0;
+}
+
+function beurteileWaehrungsbeleg(meta) {
+  if (!meta || typeof meta !== 'object') return { ok: false, grund: 'kein-snapshot', rate: null };
+  const rc = meta.reportingCurrencyOriginal || meta.reportingCurrency;
+  const tc = meta.tradingCurrencyOriginal || meta.tradingCurrency;
+  const rate = isUsableFxRate(meta.tradingFxRateApplied) ? meta.tradingFxRateApplied : null;
+  // Die Handelswaehrung ist geraten (pull-yahoo Mapper: Yahoos price.currency fehlte und
+  // wurde still durch die Berichtswaehrung ersetzt). Damit ist JEDER Handelskurs-Bezug
+  // auf dieser Zeile unbelegt — auch wenn danach sauber gerechnet wurde.
+  if (meta.tradingCurrencyAssumed === true) return { ok: false, grund: 'handelswaehrung-geraten', rate };
+  if (!tc) return { ok: false, grund: 'handelswaehrung-unbekannt', rate };
+  // In USD gehandelt: es gibt nichts umzurechnen, die Zahl IST USD.
+  if (String(tc).toUpperCase() === 'USD') return { ok: true, grund: 'usd-gehandelt', rate };
+  // Handelskurs nachweislich angewandt (Voll-Pull-Divergenz-Zweig oder price-only-Lauf).
+  // Ein Stempel entsteht nur, wo Handel und Bericht SICHTBAR auseinanderfielen — genau der
+  // Fall, den der Wurzelfehler nicht erzeugen kann (er setzt sie gleich).
+  if (rate !== null) return { ok: true, grund: 'handelskurs-gestempelt', rate };
+  // Handels- und Berichtswaehrung sind dieselbe -> der Berichtskurs IST der Handelskurs.
+  // ABER (Review-Fix 16.08., KRITISCH): tc === rc ist genau das SYMPTOM des Wurzelfehlers.
+  // Vor Tag 938 setzte der Mapper bei fehlendem Yahoo-price.currency die Handelswaehrung
+  // still gleich der Berichtswaehrung — ohne das Feld tradingCurrencyAssumed, das es damals
+  // noch nicht gab. Auf diesen Alt-Snapshots ist die Gleichheit kein Beleg fuer eine
+  // Inlandsnotierung, sondern die Spur der Verwechslung: die 124 .HK-Zeilen vom 08.06. mit
+  // +16,6 % zu grosser Marktkapitalisierung tragen exakt dieses Meta-Profil. Der Beweis
+  // zaehlt deshalb nur, wenn der heutige Mapper die Gleichheit ausdruecklich BESTAETIGT
+  // hat (Feld vorhanden und false). Ein fehlendes Feld ist eine Datenluecke, kein Beleg —
+  // fail-closed.
+  const identisch = !!rc && String(tc).toUpperCase() === String(rc).toUpperCase();
+  if (identisch && meta.tradingCurrencyAssumed === undefined) {
+    return { ok: false, grund: 'herkunft-unbekannt', rate };
+  }
+  if (identisch && meta.fxConverted === true && isUsableFxRate(meta.fxRateApplied)) {
+    return { ok: true, grund: 'identitaet', rate: meta.fxRateApplied };
+  }
+  return { ok: false, grund: 'kein-handelskurs-nachweis', rate };
+}
+
+// ---- Belegpunkte (29.08.2026, Abhilfe A der Coverage-Akte) ---------------------------
+// BEFUND (agent-reports/befund-coverage-luege-2026-08-29.md, Orchestrator ENTSCHIED 20):
+// coverageAxes (src/scoring/score.js:1098, versiegelt) zaehlt "die Achsenfunktion hat eine
+// Zahl zurueckgegeben" — NICHT "wie viele Rohdatenpunkte standen dahinter". Die meisten
+// Achsen liefern schon ab ZWEI Punkten einen Wert. Gemessen am Vintage 2026-08-29: 295
+// Zeilen tragen n>=6 belegte Achsen bei real <3 Quartalspunkten; 7666.HK steht mit
+// coverageAxes "7/7" und exakt zwei Umsatzquartalen auf Rang 7 des health-care-Boards.
+// Das Belegbarkeits-Gate oben (RANK_MIN_AXES) prueft gegen genau diesen Zaehler und laesst
+// sie deshalb durch — es misst Rechenbarkeit und nennt sie Beleg.
+//
+// WAS HIER GEBAUT WIRD UND WAS NICHT: der Zaehler selbst bleibt unangetastet (score.js ist
+// GQS-00-versiegelt; die Wurzel-Umstellung "rechenbar -> belegt" ist S1 und braucht einen
+// eigenen Gerichtstermin). Was hier entsteht, ist die MESSEBENE dafuer: zwei rein additive
+// Anzeige-Felder, die die Beleglage neben der Coverage-Behauptung sichtbar machen. Kein
+// Score-, kein Rang-, kein Gate-Einfluss — die Zeile wird nicht anders behandelt, sie ist
+// nur nicht mehr unwiderlegbar.
+//   qPunkte   — Anzahl der Quartale mit einem echten Umsatzwert (Quelle: dieselbe
+//               timeseries.revenueQ, aus der write-board-history.js pit.revenueQ baut).
+//   qSpanTage — Tage zwischen aeltestem und juengstem DATIERTEN Quartalsende. Ohne gueltige
+//               Enden null (betrifft ~6,6 % der Zeilen; A10-Nachzuegler).
+// null heisst "nicht gemessen" (kein Snapshot / kein Feld), NICHT "null Punkte" — eine
+// erfundene 0 waere genau die Sorte Behauptung, die dieser Befund abschafft.
+//
+// WAS qPunkte NICHT MISST (gemessen am Vintage 2026-08-29, 8.946 gescorte Zeilen): es
+// zaehlt QUARTALS-Umsatzpunkte, sonst nichts. 592 Zeilen stehen bei qPunkte 0 und haben
+// trotzdem einen Score — mehrere Achsen (revGrowthLevel, revAcceleration) haben einen
+// JAHRES-Fallback, und HK/UK/SG-Halbjahres- und Jahresmelder scoren genau darueber.
+// qPunkte 0 heisst deshalb "kein Quartalsbeleg", NICHT "keine Daten". Wer das Feld als
+// Datenluecken-Alarm liest, faerbt eine ganze legitime Melde-Klasse falsch-rot — und ein
+// Beleg-Feld, das selbst zur Fehlbehauptung wird, waere der Befund von vorne.
+function belegPunkte(timeseries) {
+  if (!timeseries || typeof timeseries !== 'object') return { qPunkte: null, qSpanTage: null };
+  // revenueQ ist [{value}] (pull-yahoo-Serialisierung), historisch auch mal blanke Zahlen.
+  const roh = Array.isArray(timeseries.revenueQ) ? timeseries.revenueQ : null;
+  const wert = (x) => (x && typeof x === 'object' && 'value' in x ? x.value : x);
+  const qPunkte = roh === null ? null : roh.filter((x) => Number.isFinite(wert(x))).length;
+  const ends = Array.isArray(timeseries.revenueQEnds)
+    ? timeseries.revenueQEnds.map((d) => Date.parse(d)).filter((t) => Number.isFinite(t))
+    : [];
+  const qSpanTage = ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
+  return { qPunkte, qSpanTage };
+}
+
+// Anwender fuer die zwei GESCORTEN Mapper. survival-Zeilen bekommen die Felder bewusst
+// nicht: sie tragen nie ein coverageAxes, haben also keine Beleg-Behauptung zu stuetzen.
+function ergaenzeBelegpunkte(out, snapshotStore = 'main') {
+  const p = snapAbleitungenFuer(out.ticker, snapshotStore).punkte;
+  out.qPunkte = p.qPunkte;
+  out.qSpanTage = p.qSpanTage;
+  return out;
+}
+
+// ---- valueFlags (Tag 1401, value-gate PR3) ------------------------------------------
+// A row whose ticker has an OPEN item in data-health/value-open-items.json (written earlier in
+// the same run by the step "Value open-items (factor 3, sticky)") carries valueFlags, one entry per
+// open cell. It only MARKS the row: no value is blanked or changed (owner decision 01.10.2026), a
+// row without an open item carries no key. Loaded once by build(); a missing or unreadable file
+// means no flags and a ::warning:: line, never a failed export (lib/value-open-items.js).
+// Mappers called directly (tests, other scripts) see no flags until ladeValueFlags() ran.
+const VALUE_OPEN_ITEMS_FILE = path.join(ROOT, 'data-health', 'value-open-items.json');
+let _valueFlags = new Map();
+// day: the run day (UTC, as the open-items step stamps updatedFor); a list for another day warns.
+function ladeValueFlags(file = VALUE_OPEN_ITEMS_FILE, warn = console.warn, day = null) {
+  _valueFlags = readValueFlags(file, warn, day);
+  return _valueFlags.size;
+}
+
+// Shadow reports are repository inputs: missing or malformed tables must throw.
+let _dupIssuerShadow = null;
+function ladeDupIssuerShadowTable(file) {
+  _dupIssuerShadow = secondaryIndex(loadDupIssuerShadowTable(file));
+  return _dupIssuerShadow.size;
+}
+
+// Ein Anwender fuer alle drei Zeilen-Mapper — drei Kopien derselben Regel laufen auseinander.
+function verwerfeMarketCap(row, snapshotStore = 'main', floor) {
+  const evidence = snapAbleitungenFuer(row.ticker, snapshotStore);
+  const minimum = floor ?? (snapshotStore === 'smallcap' ? require('../configs/market-cap-floors.json').smallcapUsd : marketCapGuard.marketCapFloor());
+  const reason = evidence.marketCapRejected || (Number.isFinite(evidence.correctedMarketCap) && evidence.correctedMarketCap < minimum
+    ? `Belegter Börsenwert ${evidence.correctedMarketCap} USD liegt unter der Mindestgröße ${minimum} USD.` : null);
+  if (!reason) return false;
+  _mcapVerworfen++;
+  console.error(`::error::${row.ticker}: Exportzeile verworfen. ${reason}`);
+  return true;
+}
+
+function ergaenzeWaehrungsbeleg(out, snapshotStore = 'main') {
+  // Direct mapper callers share the same cached table as the production build.
+  if (_dupIssuerShadow === null) ladeDupIssuerShadowTable();
+  applyDupIssuerShadow(out, _dupIssuerShadow);
+  // Additive, optional field (docs/findash-export-v1.md); lamps stay closed keys the consumer knows.
+  const reasons = snapAbleitungenFuer(out.ticker, snapshotStore).financialReasons;
+  if (reasons.length) out.financialDataReasons = reasons;
+  const checkedCap = snapAbleitungenFuer(out.ticker, snapshotStore).marketCapGuard;
+  if (checkedCap && out.marketCap !== checkedCap.value) {
+    out.marketCap = Number.isFinite(checkedCap.value) ? checkedCap.value : null;
+    // An old pre-scoring file must not retain its false size classification.
+    out.mcapBand = null;
+    out.mcapKlasse = null;
+  }
+  const flags = _valueFlags.get(out.ticker);
+  if (flags) out.valueFlags = flags.map((f) => ({ ...f, labels: f.labels.slice() }));
+  const beleg = waehrungsbelegFuer(out.ticker, snapshotStore);
+  // Die Einheit des Feldes, nicht die Einheit des Werts: marketCap ist im v1-Vertrag
+  // IMMER USD. Bisher stand das nur in der Doku und war fuer den Konsumenten nicht lesbar.
+  out.marketCapCurrency = 'USD';
+  out.tradingFxRateApplied = beleg.rate;
+  if (out.marketCap !== null && out.marketCap !== undefined) {
+    _mcapGeprueft++;
+    if (!beleg.ok) {
+      _mcapGenullt++;
+      out.marketCap = null;
+    }
+  }
+  return out;
+}
+
+function waehrungsWaechterBilanz() {
+  return { geprueft: _mcapGeprueft, genullt: _mcapGenullt, verworfen: _mcapVerworfen };
+}
+// 19.08.: einziger Aufrufer ist buildFullBoards — die Vollkohorten-Zeilen werden normal
+// geprueft und genullt, zaehlen aber NICHT in die 25-%-Abbruchquote (die auf den gekappten
+// Listen gemessen wurde). Kein allgemeiner Setter-Missbrauch: wer die Bilanz sonst
+// zuruecksetzt, blendet den Waechter.
+function setzeWaehrungsWaechterBilanz(b) {
+  _mcapGeprueft = b.geprueft;
+  _mcapGenullt = b.genullt;
+}
+// Nach dem Bau: melden und bei Massen-Nullung abbrechen statt ein halbblindes Board
+// auszuliefern.
+// Reine Schwellen-Entscheidung (exportiert, damit der Waechter sie AUSFUEHREN kann).
+function waehrungsWaechterUrteil(geprueft, genullt, stopp = NULL_ANTEIL_STOPP) {
+  if (!geprueft) return { anteil: 0, abbruch: false };
+  const anteil = genullt / geprueft;
+  return { anteil, abbruch: anteil > stopp };
+}
+function waehrungsWaechterAbschluss(log = console.warn, stopp = NULL_ANTEIL_STOPP) {
+  const u = waehrungsWaechterUrteil(_mcapGeprueft, _mcapGenullt, stopp);
+  if (_mcapGenullt > 0) {
+    log('::warning::Waehrungs-Waechter: ' + _mcapGenullt + ' von ' + _mcapGeprueft +
+      ' Zeilen ohne nachgewiesene Handelskurs-Umrechnung — marketCap auf null gesetzt (' +
+      (u.anteil * 100).toFixed(1) + ' %)');
+  }
+  return { ...u, verworfen: _mcapVerworfen };
+}
+
+function normalizeName(value) {
+  if (typeof value !== 'string') return null;
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  return normalized || null;
+}
+
+// ---- Belegbarkeits-Gate (18.08.2026) -------------------------------------
+// BEFUND (_BEFUND-BOARDQUALITAET-2026-08-18.md, Vintage 2026-08-16): 21 von ~40 Top-20-Zeilen
+// des Finanzwerte-Boards ruhen auf 3-4 von 7 Messachsen — darunter geschlossene Fonds (GGN
+// Rang 6; NXP = Nuveen Rang 7, Kuerzel-Kollision mit NXP Semiconductors), ein Hedgefonds
+// (BHMU.L Rang 14) und Holdings. Fehlt eine Achse, wird ueber die verbleibenden renormiert;
+// auf 3 Achsen genuegt zufaelliges Gutaussehen fuer Rohwerte um 97-99. Die halbe Rangliste
+// ist dann keine Firmenrangliste mehr.
+//
+// KEIN Typ-Filter (Entscheid 18.08.): jedes Fonds-Erkennungsmerkmal hat GEMESSENE
+// Kollateralschaeden — quoteType ist blind (Yahoo fuehrt CEFs als EQUITY), Branche
+// "Asset Management" traefe BlackRock/Blackstone/KKR, Mitarbeiterzahl killt MCX.BO (Rang 1)
+// und Rasan/8313.SR (Rang 2).
+//
+// STATTDESSEN das Belegbarkeits-Gate: wer weniger als RANK_MIN_AXES belegte Achsen hat,
+// bekommt KEINEN Rang — bleibt aber sichtbar, mit Score und mit dem Grund (Feld rankGrund).
+// Es wird nichts geloescht und nichts umsortiert; nur die Rangnummer entfaellt.
+//
+// WARUM 4 UND NICHT 5: gemessen an board-history/2026-08-16 (8.989 gescorte Zeilen) trifft
+// die 4er-Schwelle 253 Zeilen (2,8 %) — alle acht Problemfaelle und die komplette Fonds-
+// Schicht, waehrend die Schutznamen QXO 7/7, LQDA 7/7, ONDS 8/8, NBIS 7/7 sowie MCX.BO 5/7
+// und Rasan 7/7 ihren Rang behalten. Eine 5er-Schwelle wuerde zusaetzlich Schwab, Nomura
+// (NMR), FRVO (Rang 3), IDYA (Rang 13) und 127 weitere ECHTE Firmen den Rang kosten;
+// financials verloere 53 % seiner gerankten Zeilen. Die 4 ist der Punkt, an dem das Gate
+// noch fast nur Nicht-Firmen trifft.
+//
+// DEKLARIERTES, BEKANNTES LOCH: CBDG.PA (Compagnie du Cambodge, Holding) hat exakt 4 Achsen
+// und behaelt seinen Rang. Das ist GEWOLLT, kein Versehen. Wer das spaeter "repariert",
+// zahlt dafuer die 127 Fehlschuesse der 5er-Schwelle — die Entscheidung ist gemessen, nicht
+// vergessen.
+const RANK_MIN_AXES = 4;
+// Das Gate wurde auf den BRANCHEN-Formeln gemessen (7 bzw. 8 gewichtete Achsen). QC-Boards
+// (src/scoring/formulas/quality) fuehren nur 5 gewichtete Achsen — dieselbe ABSOLUTE Schwelle
+// waere dort eine andere, nie gemessene Regel (4 von 5 = 80 % statt 4 von 7 = 57 %). Deshalb
+// greift das Gate erst ab dieser Achsenzahl im NENNER. QC bleibt unberuehrt, bis jemand die
+// Wirkung dort misst; waechst eine QC-Formel je auf 7 Achsen, greift es automatisch mit.
+const RANK_GATE_MIN_NENNER = 7;
+// Anteil entrangter Zeilen je Liste, ab dem der Bau laut meldet — das vorab deklarierte
+// Scheiternskriterium ("ein Board ueber 40 % heisst: zu scharf") als laufender Waechter.
+// Gemessenes Maximum am 16.08.: financials/profitable 36,4 %. Ohne diese Meldung waere ein
+// flaechiger Coverage-Einbruch ein STILLER Total-Entrangungs-Unfall.
+const RANK_GATE_WARN_ANTEIL = 0.4;
+
+// "n/m" -> {n, m}; alles andere -> null. Konsumiert nur, rechnet nichts nach: coverageAxes
+// entsteht in src/scoring/score.js (versiegelt, GQS-00/F-16) und wird hier gelesen.
+function belegteAchsen(coverageAxes) {
+  const m = typeof coverageAxes === 'string' && coverageAxes.match(/^(\d+)\/(\d+)$/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  const nenner = Number(m[2]);
+  // HAERTUNG (Reviewer-Befund 18.08., MITTEL): die Regex allein laesst inhaltlichen Unsinn
+  // durch. "0/0" und "9/7" sind regex-gueltig, ergaben aber { n:0, m:0 } bzw. { n:9, m:7 } —
+  // und liefen damit in rangGrund() auf den QC-Zweig (m < RANK_GATE_MIN_NENNER) bzw. auf
+  // "n >= RANK_MIN_AXES", also beide Male auf **null = 'Rang steht ihr zu'**. Eine Zeile mit
+  // kaputter Abdeckungsangabe haette so still einen Rang bekommen statt 'coverageUnbekannt'.
+  //
+  // Heute kann das nicht entstehen: der Nenner ist die feste Achsenzahl der Formel (7, bei
+  // tech-hardware 8, bei QC 5) — nachgesehen in allen 14 Branchen-Formeln plus quality/ und
+  // smallcap/. Der Pfad ist tot, NICHT ausnutzbar.
+  //
+  // Gehaertet wird er trotzdem, und zwar aus einem Grund, der nichts mit heute zu tun hat:
+  // coverageAxes ueberquert eine Serialisierungsgrenze (JSON) zwischen dem VERSIEGELTEN
+  // src/scoring/ und diesem Skript. Ein kuenftiger Fehler dort, ein Hand-Edit oder eine
+  // Migration wuerde hier ueber Rang-Vergabe entscheiden, ohne dass irgendetwas auffaellt.
+  // Genau diese Klasse — stille Fehlklassifikation an einer Wertgrenze statt sichtbarem
+  // Fehlschlag — ist die teuerste in diesem Projekt.
+  return (nenner > 0 && n <= nenner) ? { n, m: nenner } : null;
+}
+// Grund, warum eine GESCORTE Zeile keinen Rang traegt — null heisst "Rang steht ihr zu".
+// FEHLENDES/unlesbares coverageAxes ist bewusst KEIN Freifahrtschein: ohne Beleg kein Rang
+// ('coverageUnbekannt'). Durchwinken hiesse, genau die Zeilen zu ranken, ueber deren
+// Datenlage nichts bekannt ist — das Gegenteil des Zwecks. Still verworfen wird sie ebenso
+// wenig: sie bleibt mit Score in der Liste, traegt ihren eigenen, von 'zuWenigBelegteAchsen'
+// UNTERSCHEIDBAREN Grund und zaehlt in die Melde-Quote (RANK_GATE_WARN_ANTEIL).
+// Survival-Zeilen sind nie gescort und tragen coverageAxes nie — sie laufen NICHT durch
+// dieses Gate (s. buildSurvival/validateSurvivalRow), sonst haetten sie geschlossen alle 101
+// ihren Runway-Rang verloren.
+function rangGrund(row) {
+  const a = belegteAchsen(row && row.coverageAxes);
+  if (!a) return 'coverageUnbekannt';
+  if (a.m < RANK_GATE_MIN_NENNER) return null;   // QC-Formel: nie gemessen, nie gegated
+  return a.n < RANK_MIN_AXES ? 'zuWenigBelegteAchsen' : null;
+}
+// Vergibt die Raenge EINER score-desc-Liste: eine gegatete Zeile bekommt rank:null + Grund
+// und verbraucht KEINE Rangnummer — die uebrigen bleiben dadurch luecken- und sprungfrei
+// 1..k. Sie behaelt ihre Array-Position (Score-Ordnung bleibt lesbar) und ihren Score.
+// opts.warn === false schaltet NUR die Melde-Quote ab, nie die Rangvergabe. Gebraucht von
+// den Vollboards (19.08.): die 40-%-Schwelle wurde auf den GEKAPPTEN Listen gemessen
+// (Maximum 16.08.: financials/profitable 36,4 %). Im Tail einer Vollkohorte ist duenne
+// Abdeckung der Normalfall, nicht der Alarm — dort gerechnet, feuerte die Warnung ab der
+// ersten Nacht auf fast jedem Board und niemand laese sie mehr. Alarm-Ermuedung ist ein
+// echter Schaden, und eine Schwelle auf einer nie gemessenen Grundgesamtheit ist keine
+// Schwelle. Die gekappten Listen behalten sie unveraendert (Pruefung 7b im Waechter).
+function vergebeRaenge(rows, wo, opts = {}) {
+  let rang = 0, entrangt = 0;
+  for (const row of rows) {
+    const grund = rangGrund(row);
+    if (grund) { row.rank = null; row.rankGrund = grund; entrangt++; }
+    else { row.rank = ++rang; row.rankGrund = null; }
+  }
+  if (opts.warn !== false && rows.length && entrangt / rows.length > RANK_GATE_WARN_ANTEIL) {
+    console.warn('::warning::Belegbarkeits-Gate: ' + wo + ' verliert ' + entrangt + ' von ' +
+      rows.length + ' Raengen (' + (100 * entrangt / rows.length).toFixed(1) + ' %) — ueber ' +
+      (RANK_GATE_WARN_ANTEIL * 100) + ' %. Entweder ist die Datenlage eingebrochen oder die ' +
+      'Schwelle (' + RANK_MIN_AXES + ' Achsen) ist fuer dieses Board zu scharf.');
+  }
+  return rows;
+}
+
+// ---- row mappers ---------------------------------------------------------
+// Copy ONLY real engine fields. `rank` is derived = 1-based array index (score-desc;
+// survival runway-desc). currency/profitTier/ipoYear are RESERVED (1.2) — NOT
+// fabricated; consumers treat absent as "not available".
+
+// ---- Skalen-Deckel (19.08.2026) --------------------------------------------------------
+// BEFUND (_BEFUND-BOARDQUALITAET-2026-08-18.md, Vintage 2026-08-16): drei Zeilen tragen einen
+// Score ueber 100 (278470.KS 101,0 · CUPID.NS 100,6 · ZEAL.CO 100,1). Der Score ist als
+// 0-100-Skala gemeint; der Wachstums-Bonus in src/scoring/score.js hebt strukturell bis
+// Faktor 1,05 (96,2 x 1,05 = 101,0). Karl liest '101' auf Platz 1 und 2 seines Boards.
+//
+// WARUM DER DECKEL HIER STEHT UND NICHT IN score.js — das ist die eigentliche Entscheidung:
+// Math.min(100, ...) VOR der Sortierung macht aus 101,0 und 100,6 zwei exakte Gleichstaende.
+// Dann entschiede der Ticker-Tie-Break ueber Platz 1 und 2 — der Deckel wuerde Raenge
+// verschieben. Hier ist der Rang bereits vergeben und POSITIONAL (rank: i + 1), also kann er
+// per Konstruktion keinen Rang aendern. Der versiegelte Ort waere auch der schlechtere.
+//
+// Deshalb ist das KEIN F-16-Fall: src/scoring/ bleibt unberuehrt, gedeckelt wird die AUSGABE.
+// Nach dem Fall der Formel-Sperre ausdruecklich NICHT nachziehen: kein zweiter Deckel in
+// score.js. Der Bonus ist gerichtlich bestaetigt, der Skalenbruch ist ein Ausgabe-Problem.
+//
+// SCHEITERNSKRITERIUM (vorab deklariert): liegen mehr als 10 Zeilen (0,1 %) eines Vintages
+// exakt auf 100,0, maskiert der Deckel echte Skaleninflation — dann geht der Fall mit Zahlen
+// in den Gauntlet. Stand 19.08.: 2 Zeilen = 0,02 %.
+const SCORE_MAX = 100;
+function gedeckelt(score) {
+  return typeof score === 'number' && Number.isFinite(score) ? Math.min(SCORE_MAX, score) : score;
+}
+
+function applyOverviewHold(out, snapshotStore) {
+  const flat = Object.hasOwn(out, 'overviewKind');
+  if ((flat ? out.overviewKind : out.overview?.kind) !== 'gp') return out;
+  // P159b made the snapshot cache store-aware, so the hold reads the row's own store.
+  const hold = snapAbleitungenFuer(out.ticker, snapshotStore === 'smallcap' ? 'smallcap' : 'main').overviewHold;
+  const value = flat ? out.overviewValue : out.overview.value;
+  // A newer snapshot must not release an older, mismatching engine row.
+  if (!hold || (Number.isFinite(hold.expectedValue) && value === hold.expectedValue)) return out;
+  if (flat) out.overviewValue = null;
+  else out.overview.value = null;
+  out.financialDataReasons = [...new Set([...(out.financialDataReasons || []), hold.reason])];
+  return out;
+}
+
+function mapBoardRow(r, i, snapshotStore, marketCapFloor) {
+  if (verwerfeMarketCap(r, snapshotStore, marketCapFloor)) return null;
+  const out = {
+    rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
+    rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
+    rankGrundShadow: rankGrundShadowFor(r.ticker), // SHADOW only; never used by the ranking gate.
+    ticker: r.ticker,
+    score: gedeckelt(r.score),        // round1 display score (sort determinism was internal _raw)
+    track: r.track,        // 'profitable' | 'unprofitable'
+    lamps: r.lamps || [],
+    overview: r.overview == null ? null : {
+      kind: r.overview.kind,           // 'gp'|'revenue-badge'|'ffo-badge'|'runway-badge'
+      value: r.overview.value,         // number|null, CAN be negative (YoY shrink)
+      companion: r.overview.companion, // number|null (Rule-of-X companion)
+    },
+  };
+  for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
+  out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
+  ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: Belegpunkte neben der Coverage-Behauptung
+  const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
+  return typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
+}
+
+function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
+  if (verwerfeMarketCap(r, snapshotStore, marketCapFloor)) return null;
+  const out = {
+    rank: i + 1,
+    rankGrund: null,            // 18.08.: gesetzt von vergebeRaenge(), s. Belegbarkeits-Gate
+    rankGrundShadow: rankGrundShadowFor(r.ticker), // SHADOW only; scores and ranks stay unchanged.
+    ticker: r.ticker,
+    formulaId: r.formulaId,     // branch id — only present in the flat overview feed
+    track: r.track,
+    score: gedeckelt(r.score),
+    overviewKind: r.overviewKind,           // FLAT here, NOT nested (mirrors engine)
+    overviewValue: r.overviewValue,         // number|null, CAN be negative
+    overviewCompanion: r.overviewCompanion, // number|null
+    lamps: r.lamps || [],
+  };
+  for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
+  out.ath = athFor(r.ticker); // 2.2
+  ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: s. mapBoardRow
+  const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
+  return typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
+}
+
+function mapSurvivalRow(r, i) {
+  if (verwerfeMarketCap(r)) return null;
+  // pre-revenue names never scored: no score/track/overview.kind. runwayQuarters
+  // (9999 sentinel = quasi-infinite runway) is the sort key, runway-desc nulls-last.
+  const out = {
+    rank: i + 1,
+    rankGrund: null,   // survival laeuft NIE durch das Belegbarkeits-Gate (nie gescort)
+    ticker: r.ticker,
+    runwayQuarters: r.runwayQuarters,  // number|null, 9999 = inf-runway sentinel
+    lamps: r.lamps || [],
+  };
+  for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
+  out.ath = athFor(r.ticker); // 2.2
+  return ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out), 'main')); // P88 additive shadow, last keys.
+}
+
+// ---- build ---------------------------------------------------------------
+// opts.srcDir  — Quellverzeichnis (Default outputs/hypergrowth/; die Vollboards reichen
+//                outputs/hypergrowth/full/ herein). Sonst ist alles identisch: dieselben
+//                Mapper, dieselbe Rangvergabe, dieselbe Schema-Huelle.
+// opts.rangOpts — an vergebeRaenge durchgereicht ({warn:false} fuer die Vollboards).
+// opts.deliveryMode / cohortCounts - T194 delivery disclosure for production HG boards.
+//                Generic callers can omit both and retain the legacy reusable seam.
+function isNonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0;
+}
+
+function cohortDeliveryFor(id, board, mode, counts) {
+  if (!['topN', 'full'].includes(mode)) {
+    throw new Error(`[findash-export] ${id}: unsupported cohort delivery mode ${JSON.stringify(mode)}`);
+  }
+  const isFull = mode === 'full';
+  const delivery = {
+    cap: isFull ? null : BOARD_TRACK_CAP,
+    fullBoard: isFull ? null : `full/${id}.json`,
+  };
+  for (const track of COHORT_TRACKS) {
+    if (!Array.isArray(board && board[track])) {
+      throw new Error(`[findash-export] ${id}.${track}: board track is not an array`);
+    }
+    const delivered = board[track].length;
+    const suppliedTotal = counts && counts[track];
+    // The production build always supplies index.json counts. The fallback exists only
+    // for the established hermetic buildFullBoards seam, whose input is already the
+    // complete full/ source; it derives the descriptor from that complete fixture array.
+    const total = suppliedTotal === undefined && isFull ? delivered : suppliedTotal;
+    if (!isNonNegativeInteger(total)) {
+      throw new Error(`[findash-export] ${id}.${track}: invalid full-cohort count ${JSON.stringify(total)}`);
+    }
+    if (total < delivered) {
+      throw new Error(`[findash-export] ${id}.${track}: delivered ${delivered} exceeds full-cohort count ${total}`);
+    }
+    const expectedDelivered = isFull ? total : Math.min(total, BOARD_TRACK_CAP);
+    if (delivered !== expectedDelivered) {
+      throw new Error(`[findash-export] ${id}.${track}: delivered ${delivered}, expected ${expectedDelivered} for ${mode}`);
+    }
+    delivery[track] = { delivered, total, truncated: total > delivered };
+  }
+  return delivery;
+}
+
+function buildBoard(id, coverage, opts = {}) {
+  const srcDir = opts.srcDir || HG_DIR;
+  const rangOpts = opts.rangOpts;
+  const b = opts.sourceBoard || readJSON(path.join(srcDir, id + '.json'));
+  const board = {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    branch: id,
+    boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
+    coverage,                                       // {status,degraded,blocked,coverage_pct} | null
+    mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow).filter(Boolean).map(mitAnnualPairsSchatten).map(mitFcfSchatten(id)), id + '.profitable', rangOpts),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow).filter(Boolean).map(mitAnnualPairsSchatten).map(mitFcfSchatten(id)), id + '.unprofitable', rangOpts),
+  };
+  if (opts.deliveryMode) {
+    board.cohortDelivery = cohortDeliveryFor(id, board, opts.deliveryMode, opts.cohortCounts);
+  }
+  return board;
+}
+
+// ---- Vollboards (19.08.2026) ---------------------------------------------------------
+// Schreibt je Branche die UNGEKAPPTE Kohorte nach <OUT_DIR>/full/<id>.json, indent 0
+// (maschinell nachgeladen, ~5x groesser als das gekappte Board — genau wie die Quelle in
+// outputs/hypergrowth/full/, die run-screener.js ebenfalls kompakt schreibt).
+//
+// Rang-Paritaet ist KONSTRUKTIV garantiert, nicht gehofft: das gekappte Board ist das
+// byte-gleiche topN-Praefix der full-Liste (bewiesen in tests/scoring/anchors.rank.test.js
+// A8), und vergebeRaenge laeuft je Zeile sequenziell-deterministisch. Die ersten topN
+// Zeilen beider Dateien sind deshalb tief gleich, inklusive rank — festgenagelt in
+// tests/scoring/export-vollboard.test.js (Pruefung 3), nicht bloss angenommen.
+//
+// FEHLENDES full/-QUELLVERZEICHNIS IST EIN ABBRUCH, kein Optional-Zweig: der versiegelte
+// run-screener.js legt es bei JEDEM Lauf an (mkdirSync + 13 writeJsonAtomic). Ist es weg,
+// ist die Engine anomal gelaufen — und ein still leeres Vollboard sieht in findash exakt
+// aus wie ein Board ohne Nachruecker. Das ist der teuerste Fehlerfall dieses Feeds.
+//
+// survival braucht kein full/: die Liste wird nie gekappt (flach, runway-desc).
+function buildFullBoards(coverage, opts = {}) {
+  const hgFullDir = opts.hgFullDir || HG_FULL_DIR;
+  const outFullDir = opts.outFullDir || FULL_OUT_DIR;
+  const cohortCounts = opts.cohortCounts;
+  if (!fs.existsSync(hgFullDir)) {
+    throw new Error('[findash-export] Vollkohorten-Quelle fehlt: ' + hgFullDir +
+      ' — run-screener.js schreibt sie bei jedem Lauf (2.3-A8). Fehlt sie, ist der Scoring-Lauf ' +
+      'anomal gelaufen; ein stumm leeres Vollboard waere von einem Board ohne Nachruecker nicht zu unterscheiden.');
+  }
+  // Reviewer-Befund 19.08. (MITTEL, reproduziert: 12 von 13 Dateien lagen nach einem Abbruch
+  // im 13. Branch auf der Platte): Ziel-Verzeichnis VOR dem Schreiben leeren — dasselbe Muster,
+  // das buildQuality/buildSmallcap seit Tag 348 fahren. Ohne das mischt ein abgebrochener Lauf
+  // frische und stehen gebliebene Vollboards des Vorlaufs, und der naechste Blick sieht 13
+  // Dateien, von denen einige aus einem anderen Vintage stammen. Ein Teil-Export nach einem
+  // Wurf bleibt moeglich — er ist aber immer NUR aus diesem Lauf, und der Wurf macht die CI rot,
+  // bevor irgendetwas deployt wird.
+  fs.rmSync(outFullDir, { recursive: true, force: true });
+  fs.mkdirSync(outFullDir, { recursive: true });
+  const woptsRang = { warn: false }; // s. vergebeRaenge: Schwelle gilt fuer die gekappten Listen
+  // Die Bilanz des Waehrungs-Waechters (Abbruch ab 25 % genullter Groessen) wurde ebenfalls
+  // auf den gekappten Listen gemessen. Die ~7.000 zusaetzlichen Tail-Zeilen gehoeren NICHT
+  // in denselben Nenner — sonst entschiede ein Zusatz-Feed ueber eine gemessene Abbruch-
+  // grenze und koennte den ganzen Export kippen. GENULLT wird auf den Vollzeilen trotzdem
+  // (ergaenzeWaehrungsbeleg laeuft normal), sonst waere die Zeilen-Paritaet gebrochen.
+  const bilanzVorher = waehrungsWaechterBilanz();
+  let eigen = { geprueft: 0, genullt: 0 };
+  try {
+    for (const id of BRANCHES) {
+      if (cohortCounts !== undefined && (!cohortCounts || typeof cohortCounts !== 'object' ||
+          !Object.prototype.hasOwnProperty.call(cohortCounts, id))) {
+        throw new Error(`[findash-export] full/${id}: index.json cohort count missing`);
+      }
+      writeJsonAtomic(path.join(outFullDir, id + '.json'),
+        buildBoard(id, coverage, {
+          srcDir: hgFullDir,
+          sourceBoard: opts.sourceBoards?.[id],
+          rangOpts: woptsRang,
+          deliveryMode: 'full',
+          cohortCounts: cohortCounts === undefined ? undefined : cohortCounts[id],
+        }),
+        { assertFinite: true, indent: 0 });
+    }
+  } finally {
+    const nachher = waehrungsWaechterBilanz();
+    eigen = { geprueft: nachher.geprueft - bilanzVorher.geprueft, genullt: nachher.genullt - bilanzVorher.genullt };
+    setzeWaehrungsWaechterBilanz(bilanzVorher);
+  }
+  // Reviewer-Befund 19.08. (HOCH): die Zaehler herausrechnen und dann NICHTS melden hiesse,
+  // dass ein Ausfall des Waehrungsbelegs, der nur den Tail trifft, voellig unhoerbar bliebe —
+  // und der Tail ist nachweislich duenner belegt (gemessen 19.08.: gekappt 61,9 %, voll 66,7 %).
+  // Gemeldet wird deshalb eine EIGENE Bilanz. KEINE eigene Abbruchgrenze: jede Zahl waere auf
+  // dieser nie gemessenen Grundgesamtheit geraten, und ein geratener Abbruch kippte den ganzen
+  // Export. Erst wird gemessen, dann darf jemand eine Schwelle setzen — die Zahl steht ab jetzt
+  // im Lauf. Der Kopf der Liste bleibt unabhaengig davon geschuetzt: die ersten topN Zeilen sind
+  // tief gleich mit der gekappten Datei, die ihre gemessene 25-%-Grenze weiter traegt.
+  if (eigen.genullt > 0) {
+    console.warn('::warning::Waehrungs-Waechter (Vollboards, EIGENE Bilanz, nicht in der 25-%-Grenze): ' +
+      eigen.genullt + ' von ' + eigen.geprueft + ' Zeilen ohne nachgewiesene Handelskurs-Umrechnung (' +
+      (100 * eigen.genullt / Math.max(1, eigen.geprueft)).toFixed(1) + ' %)');
+  }
+  return { out: outFullDir, boards: BRANCHES.length, mcapGenullt: eigen };
+}
+
+function buildOverview(coverage) {
+  const o = readJSON(path.join(HG_DIR, 'overview.json'));
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: vergebeRaenge(o.map(mapOverviewRow).filter(Boolean).map(mitAnnualPairsSchatten).map(mitFcfSchatten(null)), 'overview') };
+}
+
+function buildSurvival(coverage) {
+  const s = readJSON(path.join(HG_DIR, 'survival.json'));
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: s.map(mapSurvivalRow).filter(Boolean).map((row, i) => ({ ...row, rank: i + 1 })) };
+}
+
+function buildIndex(coverage, sourceIndex) {
+  const idx = sourceIndex || readJSON(path.join(HG_DIR, 'index.json'));
+  return {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    coverage,                                        // banner marker for the dashboard
+    generatedFromSnapshots: idx.generatedFromSnapshots,
+    branches: idx.branches,
+    boardStatus: Object.fromEntries(BRANCHES.map((id) => [id, boardStatusOf(id)])), // 2.1: core|diagnostic je Board
+    counts: idx.counts,                              // true cohort counts, not topN
+    survivalCount: idx.survivalCount,
+    excluded: idx.excluded,
+  };
+}
+
+// ---- QC-Board (quality/) — 3.2 ------------------------------------------
+// QC rows are the SAME shape as HG board/overview rows (verified against outputs/quality/*):
+// board files carry {profitable[],unprofitable[]} of BoardRow, overview.json is a flat
+// OverviewRow[] array, index.json is {schema,generatedFromSnapshots,boards,boardStatus,
+// counts,excluded}. So mapBoardRow/mapOverviewRow are reused verbatim; no new mapper.
+// Board files are named quality-<stem>.json; the export drops the prefix (quality/<stem>.json,
+// branch=<stem>). Board count is discovered, never hardcoded (11 today, may drift).
+// FIX 3 (Karl-Audit wfe-orphan-source): the board LIST is index-authoritative (buildQuality
+// export branch below reads qualityDir/index.json), not directory-listing-authoritative —
+// a stray quality-*.json in qualityDir that isn't in index.boards must never surface.
+function qualityStem(file) { return file.replace(/^quality-/, '').replace(/\.json$/, ''); }
+
+function buildQualityBoard(file, coverage, qualityDir) {
+  const stem = qualityStem(file);
+  const b = readJSON(path.join(qualityDir || QUALITY_DIR, file));
+  return {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    branch: stem,                                   // = filename stem (prefix dropped)
+    boardStatus: boardStatusOf('quality-' + stem),  // always 'diagnostic' by construction (board-status.js)
+    coverage,
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow).filter(Boolean), 'quality/' + qualityStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow).filter(Boolean), 'quality/' + qualityStem(file) + '.unprofitable'),
+  };
+}
+
+function buildQualityOverview(coverage, qualityDir) {
+  const o = readJSON(path.join(qualityDir || QUALITY_DIR, 'overview.json'));
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow).filter(Boolean), 'quality/overview') };
+}
+
+function buildQualityIndex(coverage, qualityDir) {
+  const idx = readJSON(path.join(qualityDir || QUALITY_DIR, 'index.json'));
+  return {
+    schema: SCHEMA,                                  // pinned to the export contract, not quality/diagnostic-v1
+    generated_at: new Date().toISOString(),
+    coverage,
+    generatedFromSnapshots: idx.generatedFromSnapshots,
+    boards: idx.boards,                              // 'quality-'-prefixed ids, mirrored as-is
+    boardStatus: idx.boardStatus,                    // {[quality-id]: 'diagnostic'}
+    counts: idx.counts,
+    excluded: idx.excluded,
+  };
+}
+
+// F11: QC-Export-Entscheidung aus dem Quell-Zustand (rein, testbar). 'export' = gueltiges
+// Board-Set (quality/index.json da, QC-Pass lief durch); 'failed' = QC-Fehl-Marker (_failed,
+// von run-screener im catch); 'absent' = weder noch (alter Lokallauf ohne QC).
+//
+// P1-Welle 1 / F-CGPT-024: liegen BEIDE da, entscheidet die FRISCHE, nicht der Dateityp.
+// Vorher gewann der index bedingungslos. Das trug, solange clearStaleQualityIndex den alten
+// index vor dem Pass sicher entfernt — der Guard ist aber ausdruecklich best-effort und
+// schluckt jeden Windows-Handle-/ACL-Fall (run-screener.js). Schlaegt er fehl, koexistieren
+// der Alt-Index und der FRISCHE _failed dieses Laufs, und der Export servierte das Board des
+// Vorlaufs, waehrend der QC-Ausfall unsichtbar blieb (still, Exit 0 — im Sweep reproduziert).
+// Die naheliegende Umkehrung (Marker zuerst) waere die naechste Ganztags-Ausfallklasse: ein
+// stehen gebliebenes _failed wuerde jeden spaeteren Erfolgslauf blenden (Tag-343-Semantik).
+// mtime beantwortet beide Richtungen mit derselben Regel: der zuletzt geschriebene Zustand
+// ist der wahre.
+//
+// GLEICHSTAND -> 'export' (STRIKT groesser noetig, damit der Marker gewinnt). Die Aenderung
+// ist damit rein additiv: sie kippt das Urteil NUR, wenn der Marker nachweislich juenger ist,
+// und verhaelt sich sonst byte-gleich zur Vorgaengerversion. Betrieblich ist der Gleichstand
+// unerreichbar — die beiden Zustaende stammen aus VERSCHIEDENEN Laeufen (Minuten bis Stunden
+// auseinander); ins selbe Millisekunden-Fenster fallen sie nur, wenn ein Test beide direkt
+// hintereinander schreibt (dort real beobachtet: Node liefert auf NTFS fuer zwei aufeinander
+// folgende Writes denselben mtimeMs). Der Gleichstand darf deshalb kein Muenzwurf sein.
+function mtimeOrNull(p) {
+  try { return fs.statSync(p).mtimeMs; } catch (_) { return null; }
+}
+
+function exportModeOf(dir) {
+  const iM = mtimeOrNull(path.join(dir, 'index.json'));
+  const fM = mtimeOrNull(path.join(dir, '_failed'));
+  if (iM === null && fM === null) return 'absent';
+  if (fM === null) return 'export';
+  if (iM === null) return 'failed';
+  return fM > iM ? 'failed' : 'export';
+}
+
+function qualityExportMode(qualityDir) { return exportModeOf(qualityDir); }
+
+// Optional-when-absent -> explizites Fehlsignal (F11). Drei Zustaende statt "Datei da/nicht da":
+//   export  -> QC-Boards spiegeln (wie bisher);
+//   failed  -> NUR den _failed-Marker in den Export durchreichen (KEIN evtl. stales Board),
+//              damit der Deploy den QC-Ausfall sichtbar macht statt still das Alt-Board weiter
+//              zu servieren. HG liefert unveraendert weiter (fail-soft);
+//   absent  -> nichts schreiben, laut warnen (alter Lokallauf ohne QC-Ordner).
+// Einmal geschrieben, ist jede quality/index.json voll --check-validiert (validateQualityExport).
+function buildQuality(coverage, opts = {}) {
+  const qualityDir = opts.qualityDir || QUALITY_DIR;
+  const qoutDir = opts.qoutDir || QOUT_DIR;
+  const mode = qualityExportMode(qualityDir);
+  if (mode === 'failed') {
+    const failed = readJSONOrNull(path.join(qualityDir, '_failed')) || {};
+    // T2: symmetrisch zum export-Zweig (X4/Tag 349) — qoutDir ERST leeren, DANN neu schreiben.
+    // Sonst blieben Board-Dateien + index.json eines FRUEHEREN erfolgreichen Laufs liegen,
+    // validateQualityExport/Deploy haetten sie stillschweigend als gueltig weiterserviert.
+    fs.rmSync(qoutDir, { recursive: true, force: true });
+    fs.mkdirSync(qoutDir, { recursive: true });
+    writeJsonAtomic(path.join(qoutDir, '_failed'), { schema: SCHEMA, generated_at: new Date().toISOString(), ...failed });
+    console.warn('::warning::findash-export: QC-Pass FAILED (quality/_failed) — quality/ nur als _failed-Marker exportiert, KEINE (evtl. stale) QC-Boards.');
+    return { boards: 0, failed: true };
+  }
+  if (mode === 'absent') {
+    // Karl-Entscheid: absent raeumt wie failed (T2/Tag 349-Muster) — sonst blieb ein
+    // QC-Board-Stand eines FRUEHEREN erfolgreichen Laufs im qoutDir liegen, obwohl
+    // dieser Lauf gar kein quality/ hat. validateQualityExport haette das stale
+    // index.json weiter als gueltig gelesen (derselbe Stale-QC-Feed-Klasse wie X4/T2).
+    fs.rmSync(qoutDir, { recursive: true, force: true });
+    fs.mkdirSync(qoutDir, { recursive: true });
+    console.warn('::warning::findash-export: outputs/quality/index.json absent — QC board (quality/) NOT exported (optional feed, older local run).');
+    return { boards: 0 };
+  }
+  // mode === 'export': gueltiges QC-Board-Set spiegeln.
+  // X4 (Tag 348): qoutDir ERST leeren, DANN neu schreiben. Vorher blieb eine Board-Datei
+  // eines seither entfernten/umbenannten QC-Boards aus einem frueheren Lauf liegen —
+  // validateQualityExport iteriert nur idx.boards (das FRISCHE index.json), sieht die
+  // Karteileiche also nie und der Deploy haette sie stillschweigend mitpubliziert.
+  // FIX 3 (Karl-Audit wfe-orphan-source, 2026-07-18): die Board-Liste kam bisher aus einem
+  // Verzeichnis-Listing (qualityBoardFiles/readdirSync) statt aus dem Quell-Index. Ein
+  // Folgepass mit WENIGER Boards laesst eine alte quality-*.json im Quellordner liegen
+  // (clearStaleQualityIndex, run-screener.js, entfernt nur index.json) — das Listing nahm sie
+  // wieder auf und kopierte sie in den Export, obwohl validateQualityExport nur idx.boards
+  // sieht (stiller Re-Publish einer Board-Leiche). Index-autoritativ statt Verzeichnis-autoritativ:
+  // idx.boards traegt bereits die 'quality-'-praefixten IDs ohne .json (verifiziert gegen
+  // buildQualityIndex + eine echte outputs/quality/index.json).
+  const idx = readJSONOrNull(path.join(qualityDir, 'index.json'));
+  const files = (idx && Array.isArray(idx.boards) ? idx.boards : []).map((id) => id + '.json');
+  fs.rmSync(qoutDir, { recursive: true, force: true });
+  fs.mkdirSync(qoutDir, { recursive: true });
+  const wo = { assertFinite: true };
+  const index = buildQualityIndex(coverage, qualityDir);
+  for (const f of files) {
+    const source = readJSON(path.join(qualityDir, f)), board = buildQualityBoard(f, coverage, qualityDir);
+    for (const track of COHORT_TRACKS) {
+      const count = index.counts?.[f.slice(0, -5)]?.[track];
+      if (Number.isFinite(count)) index.counts[f.slice(0, -5)][track] = count - (source[track].length - board[track].length);
+    }
+    writeJsonAtomic(path.join(qoutDir, qualityStem(f) + '.json'), board, wo);
+  }
+  writeJsonAtomic(path.join(qoutDir, 'overview.json'), buildQualityOverview(coverage, qualityDir), wo);
+  writeJsonAtomic(path.join(qoutDir, 'index.json'), index, wo);
+  return { boards: files.length };
+}
+
+// ---- 5.2 Small-Cap-Board (smallcap/) -------------------------------------
+// Byte-fuer-Byte dasselbe Muster wie QC (quality/) oben — bewusst dupliziert statt
+// parametrisiert (buildQualityBoard haengt intern boardStatusOf('quality-'+stem) fest an
+// das QC-Praefix; ein gemeinsamer Helper braeuchte den Praefix als weiteren Parameter durch
+// alle vier Funktionen, fuer zwei Nutzer kein Gewinn). runSmallcapPass schreibt
+// outputs/smallcap/{smallcap-<sektor>,overview,index}.json; boardStatus ist IMMER
+// 'diagnostic' (board-status.js: 'smallcap-'-Praefix), Praereg-DIAGNOSTIC-Start.
+function smallcapStem(file) { return file.replace(/^smallcap-/, '').replace(/\.json$/, ''); }
+
+let _smallcapGrowthSource;
+function smallcapGrowthSource() {
+  if (_smallcapGrowthSource !== undefined) return _smallcapGrowthSource;
+  let files;
+  try { files = fs.readdirSync(SMALLCAP_SNAP_DIR); } catch (_) { return (_smallcapGrowthSource = 'main'); }
+  const usable = files.filter(f => f.endsWith('.json') && !f.startsWith('_manifest') && f !== '_last_good_disk.json')
+    .some(f => {
+      try { return !!prepareYahooQ4Snapshot(readJSON(path.join(SMALLCAP_SNAP_DIR, f)))?.meta?.ticker; }
+      catch (e) { if (e.code === 'YAHOO_Q4_HAND_TABLE_FAILED') throw e; return false; }
+    });
+  return (_smallcapGrowthSource = usable ? 'smallcap' : 'main');
+}
+
+function buildSmallcapBoard(file, coverage, smallcapDir) {
+  const stem = smallcapStem(file);
+  const b = readJSON(path.join(smallcapDir || SMALLCAP_DIR, file));
+  return {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    branch: stem,
+    boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
+    coverage,
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
+  };
+}
+
+function buildSmallcapOverview(coverage, smallcapDir) {
+  const o = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'overview.json'));
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/overview') };
+}
+
+function buildSmallcapIndex(coverage, smallcapDir) {
+  const idx = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'index.json'));
+  return {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    coverage,
+    generatedFromSnapshots: idx.generatedFromSnapshots,
+    boards: idx.boards,
+    boardStatus: idx.boardStatus,
+    counts: idx.counts,
+    excluded: idx.excluded,
+    coverageFloor: idx.coverageFloor ?? null, // 5.2 Auflage 3: Coverage-Gate-Beleg durchreichen
+  };
+}
+
+// Identische Frische-Regel wie qualityExportMode (F-CGPT-024) — der Small-Cap-Pass
+// schreibt seinen _failed-Marker ueber denselben Weg und hat dieselbe Luecke.
+function smallcapExportMode(smallcapDir) { return exportModeOf(smallcapDir); }
+
+// Optional-when-absent, identisches 3-Zustands-Muster wie buildQuality (F11).
+function buildSmallcap(coverage, opts = {}) {
+  const smallcapDir = opts.smallcapDir || SMALLCAP_DIR;
+  const scoutDir = opts.scoutDir || SCOUT_DIR;
+  const mode = smallcapExportMode(smallcapDir);
+  if (mode === 'failed') {
+    const failed = readJSONOrNull(path.join(smallcapDir, '_failed')) || {};
+    fs.rmSync(scoutDir, { recursive: true, force: true });
+    fs.mkdirSync(scoutDir, { recursive: true });
+    writeJsonAtomic(path.join(scoutDir, '_failed'), { schema: SCHEMA, generated_at: new Date().toISOString(), ...failed });
+    console.warn('::warning::findash-export: Small-Cap-Pass FAILED (smallcap/_failed) — smallcap/ nur als _failed-Marker exportiert, KEINE (evtl. stale) Boards.');
+    return { boards: 0, failed: true };
+  }
+  if (mode === 'absent') {
+    fs.rmSync(scoutDir, { recursive: true, force: true });
+    fs.mkdirSync(scoutDir, { recursive: true });
+    console.warn('::warning::findash-export: outputs/smallcap/index.json absent — Small-Cap-Board (smallcap/) NOT exported (optional feed, older local run).');
+    return { boards: 0 };
+  }
+  const idx = readJSONOrNull(path.join(smallcapDir, 'index.json'));
+  const files = (idx && Array.isArray(idx.boards) ? idx.boards : []).map((id) => id + '.json');
+  fs.rmSync(scoutDir, { recursive: true, force: true });
+  fs.mkdirSync(scoutDir, { recursive: true });
+  const wo = { assertFinite: true };
+  const index = buildSmallcapIndex(coverage, smallcapDir);
+  for (const f of files) {
+    const source = readJSON(path.join(smallcapDir, f)), board = buildSmallcapBoard(f, coverage, smallcapDir);
+    for (const track of COHORT_TRACKS) {
+      const count = index.counts?.[f.slice(0, -5)]?.[track];
+      if (Number.isFinite(count)) index.counts[f.slice(0, -5)][track] = count - (source[track].length - board[track].length);
+    }
+    writeJsonAtomic(path.join(scoutDir, smallcapStem(f) + '.json'), board, wo);
+  }
+  writeJsonAtomic(path.join(scoutDir, 'overview.json'), buildSmallcapOverview(coverage, smallcapDir), wo);
+  writeJsonAtomic(path.join(scoutDir, 'index.json'), index, wo);
+  return { boards: files.length };
+}
+
+// coverage marker is a diagnostic passenger, not a hard input. Absent (fresh runner,
+// marker not yet written) -> export still builds; consumers read coverage:null as "unknown".
+//
+// Rat Q2-2 (2026-09-02): generated_at is carried through as well. The marker and the
+// index are written by two different CI jobs, so the marker's own timestamp is the only
+// way a consumer can tell a marker from an EARLIER run apart from this run's marker.
+// findash already does that comparison on the standalone coverage-status.json
+// (data-layer/screener.js, COVERAGE_STALE_MS); until now the copy embedded in the export
+// silently lost the field, so the fallback path (env.coverage = index.coverage) had no
+// timestamp at all. Additive, optional, no schema bump (docs/findash-export-v1.md §5).
+// The file argument is a test seam (tests/coverage-gate-truth-table.test.js EXECUTES this
+// against a fixture instead of grepping the source for the key).
+function loadCoverage(file = COVERAGE) {
+  const m = readJSONOrNull(file);
+  if (!m) return null;
+  return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct,
+    generated_at: m.generated_at };
+}
+
+// seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI
+// passes none. tests/value-flags.test.js points sourceIndexFile at a missing file, so build() stops
+// right after loading the list and before anything is written.
+function build(seam = {}) {
+  ladeDupIssuerShadowTable();
+  ladeMcapClassesRegistry();
+  const day = (seam.now || new Date()).toISOString().slice(0, 10);
+  const nFlagged = ladeValueFlags(seam.valueOpenItemsFile || VALUE_OPEN_ITEMS_FILE, console.warn, day); // Tag 1401: before the first mapper runs
+  console.log('valueFlags: ' + nFlagged + ' ticker(s) with an open value item are marked (data-health/value-open-items.json)');
+  const coverage = loadCoverage();
+  const sourceIndex = readJSON(seam.sourceIndexFile || path.join(HG_DIR, 'index.json'));
+  const cohortCounts = structuredClone(sourceIndex.counts), sourceBoards = {};
+  for (const id of BRANCHES) {
+    const full = readJSON(path.join(HG_FULL_DIR, id + '.json'));
+    // Validate the source before dropping a row; unrelated incomplete cohorts stay fatal.
+    cohortDeliveryFor(id, full, 'full', sourceIndex.counts?.[id]);
+    cohortDeliveryFor(id, readJSON(path.join(HG_DIR, id + '.json')), 'topN', sourceIndex.counts?.[id]);
+    sourceBoards[id] = {};
+    for (const track of COHORT_TRACKS) {
+      sourceBoards[id][track] = full[track].filter(row => !verwerfeMarketCap(row));
+      cohortCounts[id][track] = sourceBoards[id][track].length;
+    }
+  }
+  fs.mkdirSync(OUT_DIR, { recursive: true }); // writeJsonAtomic does NOT create the dir
+  const opts = { assertFinite: true };         // fail loud on a NaN/Inf, never silent-null (A-lib-08)
+  for (const id of BRANCHES) {
+    writeJsonAtomic(path.join(OUT_DIR, id + '.json'), buildBoard(id, coverage, {
+      sourceBoard: Object.fromEntries(COHORT_TRACKS.map(track => [track, sourceBoards[id][track].slice(0, BOARD_TRACK_CAP)])),
+      deliveryMode: 'topN',
+      cohortCounts: cohortCounts && cohortCounts[id],
+    }), opts);
+  }
+  writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), buildOverview(coverage), opts);
+  const survival = buildSurvival(coverage);
+  writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), survival, opts);
+  writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage, { ...sourceIndex, counts: cohortCounts, survivalCount: survival.rows.length }), opts);
+  const voll = buildFullBoards(coverage, { cohortCounts, sourceBoards }); // 19.08.: v1/full/ — die Kohorte hinter Rang 100
+  const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
+  const sc = buildSmallcap(coverage); // 5.2: Small-Cap-Board subdir (optional-when-absent)
+  // Chunk 4a: Bilanz des Waehrungs-Waechters. Einzelne genullte Groessen sind der
+  // gewollte Betrieb; nullt er ueber einem Viertel, stimmt nicht die Datenlage, sondern
+  // die Annahme des Waechters — dann ist Abbruch (rotes X) richtiger als ein Board, dem
+  // stumm die halbe Groessenspalte fehlt.
+  const bilanz = waehrungsWaechterAbschluss();
+  if (_wachstumOhneEtikett > 0) {
+    console.warn('::warning::Wachstums-Etikett: ' + _wachstumOhneEtikett + ' Zeilen ohne revGrowthBasis — '
+      + 'ihr revGrowthYoYPct liess sich aus keinem Snapshot nachrechnen, die Felder bleiben null statt zu raten.');
+  }
+  if (bilanz.abbruch) {
+    throw new Error('Waehrungs-Waechter: ' + (bilanz.anteil * 100).toFixed(1) +
+      ' % der Zeilen ohne Handelskurs-Nachweis (Grenze ' + (NULL_ANTEIL_STOPP * 100) +
+      ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
+      'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
+  }
+  // P118: overview.json (the flat cross-branch feed findash's HyperGrowth tab reads) is annotated against
+  // the SAME manifest as the branch boards; same ticker and value give the same evidence ids.
+  const provenancePaths = PROVENANCE_FILES();
+  let provenanceFiles;
+  try {
+    // Baseline boards are complete. Only detached objects receive annotations.
+    provenanceFiles = provenancePaths.map(file => readJSON(path.join(OUT_DIR, file)));
+    (seam.writeProvenance || writeProvenance)(provenanceFiles, { outDir: OUT_DIR, reviewRoot: path.join(ROOT, 'verification-records'),
+      snapshotFor: ticker => {
+        const cached = snapAbleitungenFuer(ticker);
+        if (cached.provenanceError) throw cached.provenanceError;
+        return cached.provenanceInputs;
+      } });
+  } catch (error) {
+    provenanceFiles = null;
+    writeProvenanceFailure(OUT_DIR, 'hypergrowth', error);
+  }
+  if (provenanceFiles) provenancePaths.forEach((file, i) => {
+    const board = provenanceFiles[i];
+    for (const rows of [board.rows, board.profitable, board.unprofitable]) if (Array.isArray(rows)) rows.forEach(g31Last);
+    writeJsonAtomic(path.join(OUT_DIR, file), board, { assertFinite: true, indent: 2 });
+  });
+  return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
+    mcapGenullt: bilanz };
+}
+
+// ---- validate (schema-check gate) ---------------------------------------
+// Pure per-object checks; validateExport() reads the ON-DISK export and returns a
+// list of contract violations (empty = ok). Mirrors coverage-gate.js validateMarker:
+// a nonempty list makes the CI --check step exit 1 and block the if:success() deploy.
+//
+// Every field the schema-doc marks "Pflicht" is checked for BOTH presence AND type/enum.
+// "Pflicht (nullable)" = key present AND (null OR correct type). Absence of the key = breach.
+const VALID_TRACK = ['profitable', 'unprofitable'];
+const VALID_PHASE = ['inflected', 'established', 'unprofitable'];
+const VALID_MCAP = ['micro', 'small', 'mid', 'large', 'mega'];
+const VALID_IPO = ['recent', 'growth', 'seasoned', 'veteran', 'mature'];
+const VALID_OVKIND = ['gp', 'revenue-badge', 'ffo-badge', 'runway-badge'];
+const VALID_COVERAGE_STATUS = ['ok', 'degradiert', 'katastrophal'];
+const VALID_BOARDSTATUS = ['core', 'diagnostic'];
+const VALID_PROFITTIER = TIERS; // 1.2: nicht/kurz-vor/seit-kurzem/langfristig-profitabel
+
+// string|null field must be PRESENT (key exists) and either null or string.
+function checkStrOrNull(r, key, where, errs) {
+  if (!(key in r)) errs.push(`${where}: ${key} missing`);
+  else if (r[key] !== null && typeof r[key] !== 'string') errs.push(`${where}: ${key} not string|null`);
+}
+// Der neue Producer emittiert name immer. Der geteilte v1-Consumer-Vertrag bleibt
+// dagegen additiv/optional, damit bereits gespeicherte v1-Dateien ohne name lesbar bleiben.
+function checkProducerName(r, where, errs) {
+  if (!('name' in r)) errs.push(`${where}: name missing`);
+  else if (r.name !== null && typeof r.name !== 'string') errs.push(`${where}: name not string|null`);
+  else if (r.name !== null && normalizeName(r.name) !== r.name) errs.push(`${where}: name not normalized`);
+}
+// number|null field must be PRESENT and either null or finite number.
+function checkNumOrNull(r, key, where, errs) {
+  if (!(key in r)) errs.push(`${where}: ${key} missing`);
+  else if (r[key] !== null && !Number.isFinite(r[key])) errs.push(`${where}: ${key} not finite|null`);
+}
+// ADDITIV OPTIONAL: Abwesenheit ist legitim (alter Export, Altbestands-Consumer) und darf
+// den --check NICHT rot faerben — Karls einziger Alarmkanal haengt daran. Ist das Feld da,
+// wird es voll geprueft (null oder endliche Zahl). Praezedenz: coverageAxes/scoreBase.
+function checkOptionalNumOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && !Number.isFinite(r[key])) errs.push(where + ": " + key + " not finite|null");
+}
+// FX evidence is multiplicative. Zero or a negative finite number has the right
+// JavaScript type but cannot prove a conversion and must never survive into Findash.
+function checkOptionalPositiveNumOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && !isUsableFxRate(r[key])) {
+    errs.push(where + ": " + key + " not positive-finite|null");
+  }
+}
+// 29.08.: dasselbe Muster fuer einen ZAEHLER (qPunkte). Eine gebrochene Zahl oder ein
+// negativer Wert ist keine Anzahl von Datenpunkten, sondern ein kaputter Erzeuger — und
+// ein Beleg-Feld, das selbst Unsinn traegt, waere schlimmer als keins.
+function checkOptionalZaehlerOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && (!Number.isInteger(r[key]) || r[key] < 0)) {
+    errs.push(where + ": " + key + " = " + JSON.stringify(r[key]) + " ist keine Anzahl (ganzzahlig >= 0 | null)");
+  }
+}
+// N7 (Nacht-Sweep 29.08.): eine SPANNE (qSpanTage). Wie der Zaehler oben, nur ohne
+// Ganzzahl-Zwang — der Vertrag sagt `number >= 0 | null`, nicht `int`. Negative Tage
+// zwischen aeltestem und juengstem Quartalsende sind per Konstruktion unerreichbar;
+// genau deshalb darf der Pruefer sie benennen, statt sie durchzulassen.
+function checkOptionalSpanneOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && (!Number.isFinite(r[key]) || r[key] < 0)) {
+    errs.push(where + ": " + key + " = " + JSON.stringify(r[key]) + " ist keine Spanne (finite >= 0 | null)");
+  }
+}
+// Chunk 4a: dasselbe additiv-optionale Muster fuer ein Enum (marketCapCurrency).
+function checkOptionalEnumOrNull(r, key, allowed, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && !allowed.includes(r[key])) errs.push(`${where}: ${key}=${JSON.stringify(r[key])}`);
+}
+// 4.5: profitStreak additiv OPTIONAL — Abwesenheit/null legitim; WENN present, muss die
+// Form stimmen. Wie bei revGrowthYoYPct bewusst nicht Pflicht: Karls einziger Alarmkanal
+// (das rote X) darf nicht an einem additiven Anzeigefeld haengen.
+function checkOptionalProfitStreak(r, where, errs) {
+  if (!('profitStreak' in r) || r.profitStreak === null) return;
+  const p = r.profitStreak;
+  if (typeof p !== 'object') { errs.push(where + ': profitStreak not object|null'); return; }
+  if (!Number.isInteger(p.jahre) || p.jahre < 0) errs.push(where + ': profitStreak.jahre not a non-negative integer');
+  if (!Number.isInteger(p.tiefe) || p.tiefe < 1) errs.push(where + ': profitStreak.tiefe not a positive integer');
+  if (Number.isInteger(p.jahre) && Number.isInteger(p.tiefe) && p.jahre > p.tiefe) {
+    errs.push(where + ': profitStreak.jahre > tiefe (Serie laenger als die Reihe)');
+  }
+  if (p.basis !== 'opInc' && p.basis !== 'netIncome') errs.push(where + ': profitStreak.basis bad enum');
+  if (typeof p.mindestens !== 'boolean') errs.push(where + ': profitStreak.mindestens not boolean');
+  if (p.letzterVerlust !== null && !Number.isInteger(p.letzterVerlust)) errs.push(where + ': profitStreak.letzterVerlust not int|null');
+  // Innere Widerspruchsfreiheit: laeuft die Serie bis zum Reihenanfang, KANN es kein
+  // sichtbares Verlustjahr geben — und umgekehrt.
+  if (p.mindestens === true && p.letzterVerlust !== null) errs.push(where + ': profitStreak mindestens=true, aber letzterVerlust gesetzt');
+}
+// F-2 Stufe 1: einmalertragPrognose — additiv OPTIONAL, aber in BEIDE Richtungen gepruefte
+// WERTE (nicht Anwesenheit): (1) nur die vier gepflegten Zustaende sind erlaubt, sonst faellt
+// findash still auf 'nichtPruefbar' zurueck und ein Tippfehler im Erzeuger bliebe unsichtbar;
+// (2) ein Zustand auf einer Zeile OHNE die Lampe ist eine Aussage ueber eine Firma, ueber die
+// nichts auszusagen war — der Konsument (lamp-legend.js einmalertragZustand) wuerde ihn nie
+// zeigen, und genau deshalb faellt so ein Fehler sonst niemandem auf.
+// Die Wertemenge traegt bereits 'bestaetigt'/'eingebrochen' fuer Stufe 2; heute emittiert der
+// Erzeuger sie nie (Sperre + Waechter in tests/einmalertrag-prognose.test.js).
+const EINMALERTRAG_LAMPE = 'einmalertrag';
+const VALID_EINMALERTRAG_PROGNOSE = ['bestaetigt', 'eingebrochen', 'nichtAnwendbar', 'nichtPruefbar'];
+// ⚠ WARUM HIER KEIN "Lampe ⟹ non-null" STEHT (Review-Befund 2, 03.08.2026): null IST auf
+// einer Lampen-Zeile der SOLL-Zustand, sobald die Prognose vollstaendig und vergleichbar
+// ist (lamps.js einmalertragPrognose, letzte Zeile; docs/findash-export-v1.md). Eine solche
+// Regel wuerde also genau die am besten belegten Zeilen falsch-rot faerben.
+// WO DIE VERDRAHTUNG STATTDESSEN HAENGT: tests/einmalertrag-prognose.test.js, Block "KETTE"
+// — er faehrt ein Fixture MIT unvollstaendiger Prognose durch scoreUniverse ->
+// produceRankings -> mapBoardRow und verlangt am ENDE 'nichtPruefbar', einen Wert, der nie
+// null sein darf. Gegengeprobt am 03.08. durch Ausbau JEDER der drei Stationen:
+// ROW_FIELDS -> 3 fail, score.js rowMeta -> 1 fail, lamps.js Erzeuger -> 5 fail.
+// Was eine EINZELNE Zeile strukturell nicht sehen kann, prueft checkPrognoseFeldHomogen.
+function checkEinmalertragPrognose(r, where, errs) {
+  if (!('einmalertragPrognose' in r)) return;   // Abwesenheit legitim (Altbestand)
+  const v = r.einmalertragPrognose;
+  if (v === null) return;
+  if (typeof v !== 'string' || !VALID_EINMALERTRAG_PROGNOSE.includes(v)) {
+    errs.push(`${where}: einmalertragPrognose=${JSON.stringify(v)} unbekannter Zustand`);
+    return;
+  }
+  if (!Array.isArray(r.lamps) || !r.lamps.includes(EINMALERTRAG_LAMPE)) {
+    errs.push(`${where}: einmalertragPrognose=${JSON.stringify(v)} auf Zeile OHNE Lampe '${EINMALERTRAG_LAMPE}'`);
+  }
+}
+const VALID_EINMALERTRAG_BEWERTBARKEIT = ['zuWenigQuartale', 'ungleicheKadenz'];
+function checkEinmalertragBewertbarkeit(r, where, errs) {
+  if (!('einmalertragBewertbarkeit' in r)) return;   // Abwesenheit legitim (Altbestand)
+  const v = r.einmalertragBewertbarkeit;
+  if (v === null) return;
+  if (typeof v !== 'string' || !VALID_EINMALERTRAG_BEWERTBARKEIT.includes(v)) {
+    errs.push(`${where}: einmalertragBewertbarkeit=${JSON.stringify(v)} unbekannter Grund`);
+    return;
+  }
+  // Die Gegenrichtung: brennt die Lampe, hat sie geurteilt — dann KANN die Zeile nicht
+  // gleichzeitig "nicht bewertbar" sein. Beides zusammen heisst: Erzeuger und Lampe sind
+  // auseinandergelaufen, und findash zeigte grau UND markiert.
+  if (Array.isArray(r.lamps) && r.lamps.includes(EINMALERTRAG_LAMPE)) {
+    errs.push(`${where}: einmalertragBewertbarkeit=${JSON.stringify(v)} auf Zeile MIT Lampe '${EINMALERTRAG_LAMPE}'`);
+  }
+}
+// 03.08.: shareDilution = {ratePct, pctl} | null — der Betrag zur Lampe 'shareCountDilution'.
+// BEIDE Richtungen, und anders als bei einmalertragPrognose ist hier AUCH "Lampe ⟹ Betrag"
+// wahr: die Lampe feuert ausschliesslich, wenn Rate UND Kohorten-Perzentil vorliegen
+// (lamps.js shareDilutionDetail — ein Rechenweg fuer beide). Ein leeres Feld auf einer
+// Lampen-Zeile heisst also nicht "nichts zu sagen", sondern: die Kette zwischen Erzeuger und
+// Writer ist gerissen. Genau diese Panne hielt die Lampe von Tag 421 bis zum 03.08. stumm,
+// ohne dass irgendwo etwas rot wurde — "keine Lampe" sieht aus wie "keine Verwaesserung".
+const SHARE_DILUTION_LAMPE = 'shareCountDilution';
+function checkShareDilution(r, where, errs) {
+  if (!('shareDilution' in r)) return;   // Abwesenheit legitim (Altbestand)
+  const hatLampe = Array.isArray(r.lamps) && r.lamps.includes(SHARE_DILUTION_LAMPE);
+  const v = r.shareDilution;
+  if (v === null) {
+    if (hatLampe) errs.push(`${where}: Lampe '${SHARE_DILUTION_LAMPE}' ohne shareDilution — die Lampe feuert nur mit Rate UND Perzentil, das Feld kann also nicht leer sein (gerissene Erzeuger-Kette)`);
+    return;
+  }
+  if (typeof v !== 'object' || Array.isArray(v) || !Number.isFinite(v.ratePct) || !Number.isFinite(v.pctl)) {
+    errs.push(`${where}: shareDilution=${JSON.stringify(v)} nicht {ratePct:number, pctl:number}`);
+    return;
+  }
+  // pctl ist ein Kohorten-RANG (Anteil strikt kleinerer Werte, buildShareGrowthPctlFn) und liegt
+  // deshalb zwingend in [0,1] — dieselbe Skala wie TH.SHARE_DILUTION_PCTL. Ein Wert daneben
+  // heisst: hier steht eine Prozentzahl oder ein anderer Begriff. Die SCHWELLE wird bewusst
+  // NICHT geprueft: der Writer soll bei einer legitimen Schwellen-Aenderung nicht falsch-rot
+  // werden, er prueft den Wertebereich, nicht die Methodik.
+  if (v.pctl < 0 || v.pctl > 1) errs.push(`${where}: shareDilution.pctl=${v.pctl} ausserhalb [0,1] (Kohorten-Rang, keine Prozentzahl)`);
+  if (!hatLampe) errs.push(`${where}: shareDilution gesetzt auf Zeile OHNE Lampe '${SHARE_DILUTION_LAMPE}'`);
+}
+// 01.10.: Basis und Zeitraum von revGrowthYoYPct. Abwesenheit legitim (Altbestand); sind die
+// Felder da, dann alle drei, mit bekannter Basis, ISO-Tagen und in BEIDEN Richtungen passend
+// zur Zahl: 'none' genau dann, wenn revGrowthYoYPct null ist. null-Basis = unbeschriftet
+// (Zahl liess sich nicht nachrechnen); dann darf auch kein Zeitraum dastehen.
+const REV_GROWTH_FELDER = ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd'];
+const REV_GROWTH_SOURCE_FELDER = ['revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd'];
+function checkRevGrowthBasis(r, where, errs) {
+  const da = REV_GROWTH_FELDER.filter((k) => k in r).length;
+  const quellenDa = REV_GROWTH_SOURCE_FELDER.filter((k) => k in r).length;
+  if (da === 0 && quellenDa === 0) return;
+  if (da !== REV_GROWTH_FELDER.length) { errs.push(`${where}: revGrowthBasis/PeriodEnd/PriorPeriodEnd nur teilweise vorhanden`); return; }
+  if (quellenDa !== 0 && quellenDa !== REV_GROWTH_SOURCE_FELDER.length) errs.push(`${where}: revGrowthSourcePeriodEnd/SourcePriorPeriodEnd nur teilweise vorhanden`);
+  const b = r.revGrowthBasis;
+  if (b !== null && !REV_GROWTH_BASES.includes(b) && !(g31Variant() && b === 'ttm')) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)}`);
+  for (const k of [...REV_GROWTH_FELDER.slice(1), ...REV_GROWTH_SOURCE_FELDER.filter(k => k in r)]) {
+    if (r[k] !== null && isoTag(r[k]) !== r[k]) errs.push(`${where}: ${k}=${JSON.stringify(r[k])} kein ISO-Tag|null`);
+    if (r[k] !== null && (b === null || b === 'none')) errs.push(`${where}: ${k} gesetzt bei revGrowthBasis=${JSON.stringify(b)}`);
+  }
+  const ohneZahl = (r.revGrowthYoYPct ?? null) === null;
+  if (b === 'none' && !ohneZahl) errs.push(`${where}: revGrowthBasis 'none' trotz revGrowthYoYPct=${r.revGrowthYoYPct}`);
+  if (b !== null && b !== 'none' && ohneZahl) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)} ohne revGrowthYoYPct`);
+}
+// Tag 1401: valueFlags. Absence is the normal state (no open value item). When present: a
+// non-empty list, each entry one open cell of data-health/value-open-items.json with the shape
+// lib/value-open-items.js valueFlagsByTicker() writes. Quarterly fields carry their period end,
+// marketCap none; factor is null exactly when the new value is 0.
+// The per-flag rule lives in lib/value-open-items.js valueFlagProblems() (the reader drops a
+// flag that breaks it, so a schema-valid list with one bad cell cannot turn this gate red).
+function checkValueFlags(r, where, errs) {
+  if (!('valueFlags' in r)) return;
+  const vf = r.valueFlags;
+  if (!Array.isArray(vf) || !vf.length) { errs.push(`${where}: valueFlags not a non-empty array`); return; }
+  vf.forEach((f, i) => { for (const p of valueFlagProblems(f)) errs.push(`${where}: valueFlags[${i}].${p}`); });
+}
+// Datei-Ebene: das Feld ist entweder auf ALLEN Zeilen da oder auf KEINER. Die Zeilen-Pruefung
+// oben laesst Abwesenheit durch (Altbestand trug das Feld nie) und kann deshalb einen halb
+// verdrahteten Erzeuger nicht sehen. Der Writer fuehrt die Felder in ROW_FIELDS und
+// setzt sie auf JEDER Zeile (undefined -> null) — Uneinheitlichkeit innerhalb einer Datei ist
+// damit kein legitimer Zustand, sondern ein kaputter Producer. Kein Falsch-Rot-Risiko: alte
+// Dateien haben es auf keiner Zeile, neue auf jeder.
+// 03.08. verallgemeinert (war auf einmalertragPrognose gepinnt): shareDilution braucht exakt
+// dieselbe Pruefung, und zwei Kopien derselben Regel laufen irgendwann auseinander.
+function checkFeldHomogen(rows, feld, where, errs) {
+  if (!Array.isArray(rows) || rows.length < 2) return;
+  const mit = rows.filter((r) => r && typeof r === 'object' && feld in r).length;
+  if (mit !== 0 && mit !== rows.length) {
+    errs.push(`${where}: ${feld} nur auf ${mit} von ${rows.length} Zeilen vorhanden — halb verdrahteter Producer (das Feld steht in ROW_FIELDS und muss auf jeder Zeile stehen)`);
+  }
+}
+// enum|null field must be PRESENT and either null or one of the allowed values.
+function checkEnumOrNull(r, key, allowed, where, errs) {
+  if (!(key in r)) errs.push(`${where}: ${key} missing`);
+  else if (r[key] !== null && !allowed.includes(r[key])) errs.push(`${where}: ${key}=${JSON.stringify(r[key])}`);
+}
+// boolean|null field must be PRESENT and either null or a boolean (2.10 cohortFallback on survival rows).
+function checkBoolOrNull(r, key, where, errs) {
+  if (!(key in r)) errs.push(`${where}: ${key} missing`);
+  else if (r[key] !== null && typeof r[key] !== 'boolean') errs.push(`${where}: ${key} not boolean|null`);
+}
+// Task 2.10: cohortN/cohortFallback on a SCORED row (board/overview) are Pflicht + NON-null: cohortN a
+// finite number, cohortFallback a boolean. Field removal or type corruption -> violation (exit 1).
+function checkCohortScored(r, where, errs) {
+  if (!('cohortN' in r)) errs.push(`${where}: cohortN missing`);
+  else if (!Number.isFinite(r.cohortN)) errs.push(`${where}: cohortN not finite`);
+  if (!('cohortFallback' in r)) errs.push(`${where}: cohortFallback missing`);
+  else if (typeof r.cohortFallback !== 'boolean') errs.push(`${where}: cohortFallback not boolean`);
+}
+
+// Pflicht-Metadaten carried by board + overview + survival rows.
+// All are "Pflicht (nullable)" per schema-doc 3/4/5.
+function validateGeo(r, where, errs) {
+  checkProducerName(r, where, errs);
+  checkStrOrNull(r, 'country', where, errs);
+  checkStrOrNull(r, 'region', where, errs);
+  checkStrOrNull(r, 'sector', where, errs);
+  checkNumOrNull(r, 'marketCap', where, errs);
+  // Chunk 4a (16.08.): die Einheit der Groesse und der Nachweis ihrer Umrechnung.
+  // Additiv OPTIONAL wie revGrowthYoYPct — bereits gespeicherte v1-Dateien tragen die
+  // Felder nicht und duerfen Karls rotes X nicht ausloesen. Sind sie da, werden sie voll
+  // geprueft: marketCap ist im v1-Vertrag IMMER USD, ein anderer Wert waere ein Bruch.
+  checkOptionalEnumOrNull(r, 'marketCapCurrency', ['USD'], where, errs);
+  checkOptionalPositiveNumOrNull(r, 'tradingFxRateApplied', where, errs);
+  // 29.08. (Abhilfe A, Coverage-Akte): Belegpunkte neben coverageAxes. Additiv OPTIONAL —
+  // bereits ausgelieferte v1-Dateien tragen sie nicht und duerfen nicht rot werden.
+  checkOptionalZaehlerOrNull(r, 'qPunkte', where, errs);
+  // N7: der Vertrag sagt `number >= 0 | null` (Doku Zeile 101) — eine negative Spanne
+  // ist keine Spanne. Bisher stand hier der vorzeichenblinde Pruefer, waehrend qPunkte
+  // eine Zeile hoeher voll geprueft wird; die Asymmetrie war unbegruendet.
+  checkOptionalSpanneOrNull(r, 'qSpanTage', where, errs);
+  checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
+  checkRevGrowthBasis(r, where, errs);                              // 01.10. additiv OPTIONAL
+  checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
+  checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
+  checkEinmalertragBewertbarkeit(r, where, errs);                   // Urteil 16.08. additiv OPTIONAL
+  checkShareDilution(r, where, errs);                              // 03.08. Betrag zur Verwaesserungs-Lampe
+  checkValueFlags(r, where, errs);                                 // Tag 1401 additiv OPTIONAL
+  checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
+  checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
+  checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
+  checkEnumOrNull(r, 'profitTier', VALID_PROFITTIER, where, errs); // 1.2
+  checkNumOrNull(r, 'ipoYear', where, errs);                       // 1.2 (durchgereicht)
+  // 2.2: ath additiv OPTIONAL — Abwesenheit/null legitim; WENN present, muss die Form stimmen.
+  if ('ath' in r && r.ath !== null) {
+    if (typeof r.ath !== 'object') errs.push(`${where}: ath not object|null`);
+    else {
+      if (!Number.isFinite(r.ath.distancePct)) errs.push(`${where}: ath.distancePct not finite`);
+      if (typeof r.ath.athDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.ath.athDate)) errs.push(`${where}: ath.athDate`);
+      if (!Number.isFinite(r.ath.monthsAgo) || r.ath.monthsAgo < 0) errs.push(`${where}: ath.monthsAgo`);
+    }
+  }
+}
+
+// Belegbarkeits-Gate, BEIDE Richtungen — der eigentliche Waechter der Regel:
+//   (a) eine gegatete Zeile darf KEINEN Rang tragen und MUSS ihren Grund tragen;
+//   (b) eine belegte Zeile MUSS einen Rang tragen und darf KEINEN Grund tragen.
+// Ohne (a) koennte eine Liste, die vergebeRaenge() nie gesehen hat, mit rank=i+1 stumm
+// durchrutschen; ohne (b) koennte ein zu scharfes Gate stumm halbe Boards entrangen.
+// Die Zeile bleibt in beiden Faellen sichtbar — score/ticker/Felder werden hier NICHT
+// gelockert, nur die Rangnummer haengt am Gate.
+function checkRangGate(r, where, errs) {
+  const grund = rangGrund(r);
+  if (grund) {
+    if (r.rank !== null) errs.push(`${where}: rank=${JSON.stringify(r.rank)} trotz ${grund} — Belegbarkeits-Gate nicht angewandt`);
+  } else if (!Number.isInteger(r.rank) || r.rank < 1) {
+    errs.push(`${where}: rank`);
+  }
+  // Abwesend == null (additiv-optionales Feld, Praezedenz coverageAxes/B1): eine GERANKTE
+  // Zeile darf das Feld weglassen. Eine ENTRANGTE nicht — ohne Grund waere sie stumm
+  // verschwunden, und genau das soll nie wieder passieren.
+  if ((r.rankGrund ?? null) !== grund) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)}, erwartet ${JSON.stringify(grund)}`);
+}
+
+function validateBoardRow(r, where, errs) {
+  if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
+  if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
+  if (!Number.isFinite(r.score)) errs.push(`${where}: score not finite`);
+  checkRangGate(r, where, errs); // 18.08.: rank ist gate-abhaengig (int>=1 ODER null+Grund)
+  if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
+  if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
+  // overview: Pflicht (nullable). Key must be present. If object, kind/value/companion checked.
+  if (!('overview' in r)) errs.push(`${where}: overview missing`);
+  else if (r.overview !== null) {
+    if (typeof r.overview !== 'object') errs.push(`${where}: overview not object|null`);
+    else {
+      if (!VALID_OVKIND.includes(r.overview.kind)) errs.push(`${where}: overview.kind=${JSON.stringify(r.overview.kind)}`);
+      if (!('value' in r.overview)) errs.push(`${where}: overview.value missing`);
+      else if (r.overview.value !== null && !Number.isFinite(r.overview.value)) errs.push(`${where}: overview.value not finite|null`);
+      if (!('companion' in r.overview)) errs.push(`${where}: overview.companion missing`);
+      else if (r.overview.companion !== null && !Number.isFinite(r.overview.companion)) errs.push(`${where}: overview.companion not finite|null`);
+    }
+  }
+  validateGeo(r, where, errs);
+  checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
+}
+
+function validateOverviewRow(r, where, errs) {
+  if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
+  checkRangGate(r, where, errs); // 18.08.: Belegbarkeits-Gate, s. checkRangGate
+  if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
+  if (typeof r.formulaId !== 'string' || !r.formulaId) errs.push(`${where}: formulaId`);
+  if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
+  if (!Number.isFinite(r.score)) errs.push(`${where}: score not finite`);
+  // FLAT overview badge fields (Pflicht nullable): kind enum, value/companion number|null.
+  checkEnumOrNull(r, 'overviewKind', VALID_OVKIND, where, errs);
+  checkNumOrNull(r, 'overviewValue', where, errs);
+  checkNumOrNull(r, 'overviewCompanion', where, errs);
+  if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
+  validateGeo(r, where, errs);
+  checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
+}
+
+function validateSurvivalRow(r, where, errs) {
+  if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
+  // Survival ist von Belegbarkeits-Gate AUSGENOMMEN (nie gescort, traegt coverageAxes nie):
+  // rank bleibt Pflicht-Integer, rankGrund muss null sein. Die Ausnahme steht hier als
+  // Waechter, nicht nur als Kommentar — ein versehentlich gegatetes survival.json faellt auf.
+  if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
+  if ((r.rankGrund ?? null) !== null) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)} auf survival-Zeile (dort greift kein Gate)`);
+  // Dieselbe Ausnahme, dieselbe Bauart (Vertrag docs/findash-export-v1.md §4):
+  // survival-Zeilen sind nie gescort, tragen kein coverageAxes und haben deshalb keine
+  // Beleg-Behauptung zu stuetzen. Ein qPunkte/qSpanTage hier waere ein Beleg fuer eine
+  // Behauptung, die es nicht gibt — und passierte den --check bisher sauber.
+  for (const key of ['qPunkte', 'qSpanTage']) {
+    if (key in r) errs.push(`${where}: ${key} auf survival-Zeile (dort gibt es keine coverageAxes-Behauptung zu belegen)`);
+  }
+  if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
+  if (!('runwayQuarters' in r)) errs.push(`${where}: runwayQuarters missing`);
+  else if (r.runwayQuarters !== null && !Number.isFinite(r.runwayQuarters)) errs.push(`${where}: runwayQuarters not finite|null`);
+  if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
+  validateGeo(r, where, errs);
+  // 2.10: survival-Zeilen sind NIE gescort -> cohortN/cohortFallback nullable (present + null|Typ).
+  checkNumOrNull(r, 'cohortN', where, errs);
+  checkBoolOrNull(r, 'cohortFallback', where, errs);
+}
+
+// Hull-level coverage marker: Pflicht (value nullable). Key must be present; if
+// present-and-nonnull it must be a well-typed object (schema-doc 2).
+function validateCoverage(mk, kind, errs) {
+  if (!('coverage' in mk)) { errs.push(`${kind}: coverage missing`); return; }
+  const c = mk.coverage;
+  if (c === null) return;
+  if (typeof c !== 'object') { errs.push(`${kind}: coverage not object|null`); return; }
+  if (!VALID_COVERAGE_STATUS.includes(c.status)) errs.push(`${kind}: coverage.status=${JSON.stringify(c.status)}`);
+  if (typeof c.degraded !== 'boolean') errs.push(`${kind}: coverage.degraded not boolean`);
+  if (typeof c.blocked !== 'boolean') errs.push(`${kind}: coverage.blocked not boolean`);
+  if (!Number.isFinite(c.coverage_pct)) errs.push(`${kind}: coverage.coverage_pct not finite`);
+}
+
+// R2.18: rank is Number.isInteger(>=1)-checked above but that alone is tautological — rank
+// is derived as i+1 from array position (mapBoardRow/mapOverviewRow/mapSurvivalRow), so a
+// type check can never contradict a broken sort. Two INDEPENDENT value checks close that gap:
+//   checkRankSequence  — rank must equal 1-based index within ITS list (pins the derivation
+//                         promise; catches rank getting decoupled from array position).
+//   checkScoreDescending — score must be non-increasing (score.js produceRankings' byScore
+//                         sort). Independent of rank: a broken upstream sort leaves rank=i+1
+//                         internally consistent but scores out of order, so this is the check
+//                         that actually catches a broken sort. Only wired where score.js
+//                         GUARANTEES score-desc order (board tracks + overview.json) — survival
+//                         is runway-desc and its rows carry no .score field at all.
+// 18.08.: nicht mehr "rank === index+1" — eine vom Belegbarkeits-Gate entrangte Zeile bleibt
+// an ihrer Array-Position stehen (rank:null) und verbraucht KEINE Rangnummer. Geprueft wird
+// deshalb: die Raenge der uebrigen Zeilen sind in Array-Reihenfolge lueckenlos 1,2,3,… —
+// genau die Zusage "kein Loch, wo eine Zeile herausfiel". Ohne Gate ist das identisch zum
+// alten Check (jede Zeile gerankt -> Sollrang == index+1).
+function checkRankSequence(rows, where, errs) {
+  let soll = 0;
+  (rows || []).forEach((r, i) => {
+    if (!r) return;
+    if (r.rank === null) return;   // entrangt: haelt keinen Platz in der Rangfolge
+    soll++;
+    if (r.rank !== soll) errs.push(`${where}[${i}]: rank!=Sollrang (rank=${JSON.stringify(r.rank)}, erwartet ${soll})`);
+  });
+}
+function checkScoreDescending(rows, where, errs) {
+  for (let i = 1; i < (rows || []).length; i++) {
+    const prev = rows[i - 1], cur = rows[i];
+    if (prev && cur && Number.isFinite(cur.score) && Number.isFinite(prev.score) && cur.score > prev.score + 1e-9) {
+      errs.push(`${where}[${i}]: score-Ordnung gebrochen (${cur.score} > ${prev.score})`);
+    }
+  }
+}
+
+function validateCohortCounts(counts, kind, errs) {
+  if (!counts || typeof counts !== 'object' || Array.isArray(counts)) {
+    errs.push(`${kind}: counts not an object`);
+    return;
+  }
+  const keys = new Set(Object.keys(counts));
+  for (const id of BRANCHES) {
+    const perBoard = counts[id];
+    if (!perBoard || typeof perBoard !== 'object' || Array.isArray(perBoard)) {
+      errs.push(`${kind}: counts.${id} missing/not object`);
+      continue;
+    }
+    for (const track of COHORT_TRACKS) {
+      if (!isNonNegativeInteger(perBoard[track])) {
+        errs.push(`${kind}: counts.${id}.${track}=${JSON.stringify(perBoard[track])}`);
+      }
+    }
+  }
+  for (const key of keys) {
+    if (!BRANCHES.includes(key)) errs.push(`${kind}: counts unexpected key ${key}`);
+  }
+}
+
+function cohortCountsForValidation(counts, id) {
+  if (counts === undefined) return undefined;
+  return counts && Object.prototype.hasOwnProperty.call(counts, id) ? counts[id] : null;
+}
+
+// T194: a consumer must be able to distinguish a complete track from a capped
+// delivery without inferring it from array length. The validator ties that statement
+// to both the actual arrays and index.json's full-cohort counts.
+function validateCohortDelivery(mk, kind, errs, opts = {}) {
+  const mode = opts.mode;
+  const counts = opts.counts;
+  const delivery = mk && mk.cohortDelivery;
+  if (!delivery || typeof delivery !== 'object' || Array.isArray(delivery)) {
+    errs.push(`${kind}: cohortDelivery missing/not object`);
+    return;
+  }
+  const expectedCap = mode === 'full' ? null : BOARD_TRACK_CAP;
+  const expectedFullBoard = mode === 'full' ? null : `full/${kind}.json`;
+  if (delivery.cap !== expectedCap) {
+    errs.push(`${kind}: cohortDelivery.cap=${JSON.stringify(delivery.cap)}, expected ${JSON.stringify(expectedCap)}`);
+  }
+  if (delivery.fullBoard !== expectedFullBoard) {
+    errs.push(`${kind}: cohortDelivery.fullBoard=${JSON.stringify(delivery.fullBoard)}, expected ${JSON.stringify(expectedFullBoard)}`);
+  }
+  for (const track of COHORT_TRACKS) {
+    const descriptor = delivery[track];
+    const where = `${kind}: cohortDelivery.${track}`;
+    if (!descriptor || typeof descriptor !== 'object' || Array.isArray(descriptor)) {
+      errs.push(`${where} missing/not object`);
+      continue;
+    }
+    const delivered = descriptor.delivered;
+    const total = descriptor.total;
+    if (!isNonNegativeInteger(delivered)) errs.push(`${where}.delivered=${JSON.stringify(delivered)}`);
+    if (!isNonNegativeInteger(total)) errs.push(`${where}.total=${JSON.stringify(total)}`);
+    if (typeof descriptor.truncated !== 'boolean') errs.push(`${where}.truncated=${JSON.stringify(descriptor.truncated)}`);
+
+    if (Array.isArray(mk[track]) && isNonNegativeInteger(delivered) && delivered !== mk[track].length) {
+      errs.push(`${where}.delivered=${delivered}, array length=${mk[track].length}`);
+    }
+    if (counts !== undefined) {
+      const expectedTotal = counts && counts[track];
+      if (!isNonNegativeInteger(expectedTotal)) {
+        errs.push(`${where}: index count missing/invalid`);
+      } else if (isNonNegativeInteger(total) && total !== expectedTotal) {
+        errs.push(`${where}.total=${total}, index count=${expectedTotal}`);
+      }
+    }
+    if (isNonNegativeInteger(delivered) && isNonNegativeInteger(total)) {
+      const expectedTruncated = total > delivered;
+      if (descriptor.truncated !== expectedTruncated) {
+        errs.push(`${where}.truncated=${JSON.stringify(descriptor.truncated)}, expected ${expectedTruncated}`);
+      }
+      const expectedDelivered = mode === 'full' ? total : Math.min(total, BOARD_TRACK_CAP);
+      if (delivered !== expectedDelivered) {
+        errs.push(`${where}.delivered=${delivered}, expected ${expectedDelivered} for ${mode}`);
+      }
+    }
+  }
+}
+
+// opts.forceDiagnostic (BH-160): true when the caller KNOWS mk is a QC board (quality/*, only
+// reachable via validateQualityExport, which reads the file list off the QC index). QC boards
+// are 'diagnostic' by construction (board-status.js) and can never legitimately be 'core' — a
+// plain enum check lets a tampered 'core' slip through silently. validateFile stays reusable
+// for HG boards (where 'core' is legitimate) by defaulting the flag off.
+function validateFile(mk, kind, errs, opts = {}) {
+  if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
+  if (mk.schema !== SCHEMA) errs.push(`${kind}: schema=${JSON.stringify(mk.schema)}`);
+  if (typeof mk.generated_at !== 'string') errs.push(`${kind}: generated_at`);
+  validateCoverage(mk, kind, errs);
+  if (kind === 'index') {
+    if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push('index: generatedFromSnapshots');
+    if (!Array.isArray(mk.branches) || mk.branches.length !== BRANCHES.length) errs.push('index: branches');
+    if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push('index: boardStatus map missing');
+    else {
+      for (const [k, v] of Object.entries(mk.boardStatus)) {
+        if (!VALID_BOARDSTATUS.includes(v)) errs.push(`index: boardStatus.${k}=${JSON.stringify(v)}`);
+      }
+      // BH-078: the loop above only checks PRESENT entries' enum value, never completeness —
+      // a boardStatus map missing a branch (or carrying a stray extra key) slipped through with
+      // zero violations. Pin exact key-set equality against BRANCHES.
+      const bsKeys = new Set(Object.keys(mk.boardStatus));
+      for (const b of BRANCHES) if (!bsKeys.has(b)) errs.push(`index: boardStatus missing key ${b}`);
+      for (const k of bsKeys) if (!BRANCHES.includes(k)) errs.push(`index: boardStatus unexpected key ${k}`);
+    }
+    if (!mk.counts || typeof mk.counts !== 'object') errs.push('index: counts');
+    else if (opts.requireCohortCounts) validateCohortCounts(mk.counts, 'index', errs);
+    if (!Number.isFinite(mk.survivalCount)) errs.push('index: survivalCount');
+    if (!mk.excluded || typeof mk.excluded !== 'object') errs.push('index: excluded');
+    return;
+  }
+  if (kind === 'survival') {
+    if (!Array.isArray(mk.rows)) { errs.push('survival: rows not array'); return; }
+    mk.rows.forEach((r, i) => validateSurvivalRow(r, `survival[${i}]`, errs));
+    checkRankSequence(mk.rows, 'survival.rows', errs); // R2.18 (a) — runway-desc, no .score -> no (b) here
+    return;
+  }
+  if (kind === 'overview') {
+    if (!Array.isArray(mk.rows)) { errs.push('overview: rows not array'); return; }
+    mk.rows.forEach((r, i) => validateOverviewRow(r, `overview[${i}]`, errs));
+    checkRankSequence(mk.rows, 'overview.rows', errs);     // R2.18 (a)
+    checkScoreDescending(mk.rows, 'overview.rows', errs);  // R2.18 (b) — overview.json is globally score-desc
+    return;
+  }
+  // board file: branch (Pflicht, = filename) + profitable/unprofitable arrays of BoardRow.
+  if (typeof mk.branch !== 'string' || mk.branch !== kind) errs.push(`${kind}: branch=${JSON.stringify(mk.branch)}`);
+  // BH-160: QC boards (opts.forceDiagnostic) are pinned to 'diagnostic' only — 'core' is
+  // enum-legal for HG but a QC board can never be core (board-status.js:42).
+  const allowedBoardStatus = opts.forceDiagnostic ? ['diagnostic'] : VALID_BOARDSTATUS;
+  if (!allowedBoardStatus.includes(mk.boardStatus)) errs.push(`${kind}: boardStatus=${JSON.stringify(mk.boardStatus)}`);
+  if (!Array.isArray(mk.profitable)) errs.push(`${kind}: profitable not array`);
+  if (!Array.isArray(mk.unprofitable)) errs.push(`${kind}: unprofitable not array`);
+  if (opts.deliveryMode) {
+    validateCohortDelivery(mk, kind, errs, { mode: opts.deliveryMode, counts: opts.cohortCounts });
+  }
+  (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs));
+  (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs));
+  const alleZeilen = [].concat(mk.profitable || [], mk.unprofitable || []);
+  checkFeldHomogen(alleZeilen, 'einmalertragPrognose', kind, errs);
+  checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
+  checkFeldHomogen(alleZeilen, 'shareDilution', kind, errs);
+  checkFeldHomogen(alleZeilen, 'revGrowthBasis', kind, errs);
+  // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
+  // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
+  checkRankSequence(mk.profitable, `${kind}.profitable`, errs);
+  checkScoreDescending(mk.profitable, `${kind}.profitable`, errs);
+  checkRankSequence(mk.unprofitable, `${kind}.unprofitable`, errs);
+  checkScoreDescending(mk.unprofitable, `${kind}.unprofitable`, errs);
+}
+
+// Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
+function validateExport(outDir = OUT_DIR, opts = {}) {
+  const errs = [];
+  const indexPath = path.join(outDir, 'index.json');
+  const index = readJSONOrNull(indexPath);
+  if (!index) errs.push('index: missing/unreadable');
+  else validateFile(index, 'index', errs, { requireCohortCounts: true });
+  const counts = index && index.counts && typeof index.counts === 'object' ? index.counts : undefined;
+  for (const id of BRANCHES) {
+    const mk = readJSONOrNull(path.join(outDir, id + '.json'));
+    if (!mk) { errs.push(`${id}: missing/unreadable`); continue; }
+    validateFile(mk, id, errs, {
+      deliveryMode: 'topN',
+      cohortCounts: cohortCountsForValidation(counts, id),
+    });
+  }
+  for (const [name, kind] of [['overview.json', 'overview'], ['survival.json', 'survival']]) {
+    const mk = readJSONOrNull(path.join(outDir, name));
+    if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
+    validateFile(mk, kind, errs);
+  }
+  return errs.concat(provenanceErrors(outDir, PROVENANCE_FILES(), opts.requireProvenance))
+             .concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
+             .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
+             .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
+}
+
+// ---- Vollboard-Validierung (19.08.2026) ---------------------------------------------
+// ANDERS ALS quality/ und smallcap/ ist full/ NICHT optional: run-screener.js schreibt die
+// Quelle bei jedem Lauf, also gehoert zu jedem der 13 Branchen-Boards ein Vollboard. Fehlt
+// eines, hat Karl fuer diese Branche wieder nur die ersten 100 Zeilen — und zwar OHNE dass
+// irgendetwas es sagt. Genau diese Klasse (stumm halber Feed statt sichtbarem Ausfall) ist
+// die teuerste in diesem Projekt, deshalb ein harter Verstoss statt eines Optional-Zweigs.
+// Labels tragen ein 'full/'-Praefix, damit der Alarmkanal ein Vollboard-Problem von einem
+// Board-Problem unterscheiden kann (dasselbe Muster wie quality/ und smallcap/).
+function validateFullExport(fullDir = FULL_OUT_DIR, countsByBoard) {
+  const raw = [];
+  for (const id of BRANCHES) {
+    const mk = readJSONOrNull(path.join(fullDir, id + '.json'));
+    if (!mk) { raw.push(`${id}: missing/unreadable`); continue; }
+    validateFile(mk, id, raw, {
+      deliveryMode: 'full',
+      cohortCounts: cohortCountsForValidation(countsByBoard, id),
+    }); // dieselbe Board-Datei-Pruefung + T194 Vollstaendigkeitsbeleg gegen index.counts
+  }
+  return raw.map((e) => (e.startsWith('full/') ? e : 'full/' + e));
+}
+
+// ---- QC-Board validation (3.2) ------------------------------------------
+// QC index is the HG index MINUS branches/survivalCount (QC has no survival board and a
+// dynamic board set). Small dedicated check; the board+overview ROWS reuse validateFile /
+// validateBoardRow / validateOverviewRow verbatim (no parallel row-validator).
+function validateQualityIndex(mk, errs) {
+  const kind = 'quality/index';
+  if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
+  if (mk.schema !== SCHEMA) errs.push(`${kind}: schema=${JSON.stringify(mk.schema)}`);
+  if (typeof mk.generated_at !== 'string') errs.push(`${kind}: generated_at`);
+  validateCoverage(mk, kind, errs);
+  if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push(`${kind}: generatedFromSnapshots`);
+  if (!Array.isArray(mk.boards) || !mk.boards.length) errs.push(`${kind}: boards`);
+  if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push(`${kind}: boardStatus map missing`);
+  else {
+    // BH-078: QC boardStatus values are restricted to 'diagnostic' only (not the shared
+    // VALID_BOARDSTATUS enum) — a manipulated 'core' in the QC index is a real breach, unlike
+    // on an HG index where 'core' is legitimate.
+    for (const [k, v] of Object.entries(mk.boardStatus)) {
+      if (v !== 'diagnostic') errs.push(`${kind}: boardStatus.${k}=${JSON.stringify(v)}`);
+    }
+    // BH-078: exact key-set match against mk.boards — completeness, not just per-entry enum
+    // (a missing or stray extra key previously produced zero violations).
+    if (Array.isArray(mk.boards)) {
+      const bsKeys = new Set(Object.keys(mk.boardStatus));
+      for (const b of mk.boards) if (!bsKeys.has(b)) errs.push(`${kind}: boardStatus missing key ${b}`);
+      for (const k of bsKeys) if (!mk.boards.includes(k)) errs.push(`${kind}: boardStatus unexpected key ${k}`);
+    }
+  }
+  if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
+  if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
+}
+
+// Optional-when-absent: no quality/index.json on disk -> nothing to validate ([]). Once it
+// exists, every board it lists + overview become Pflicht and are fully validated. All labels
+// carry a 'quality/' prefix so the alarm channel never confuses a QC breach with an HG one.
+// P1-Welle 1 / F-CGPT-040: readJSONOrNull liefert fuer "nicht da" und "da, aber unlesbar"
+// dasselbe null — der Optional-Zweig machte daraus in BEIDEN Faellen "kein Verstoss", und
+// --check bescheinigte einem vorhandenen, korrupten Index Schema-Konformitaet. existsSync
+// trennt die Faelle (dasselbe Muster wie BH-137 in update-ath-state.js): abwesend bleibt
+// optional, vorhanden-aber-unlesbar ist ein Verstoss.
+function validateQualityExport(qoutDir = QOUT_DIR) {
+  const raw = [];
+  const idxPath = path.join(qoutDir, 'index.json');
+  const idx = readJSONOrNull(idxPath);
+  if (!idx) {
+    if (fs.existsSync(idxPath)) raw.push('quality/index: present but unreadable/not JSON');
+    return raw; // quality/ absent -> optional, no breach
+  }
+  validateQualityIndex(idx, raw);
+  const boards = Array.isArray(idx.boards) ? idx.boards : [];
+  for (const id of boards) {
+    const stem = String(id).replace(/^quality-/, '');
+    const mk = readJSONOrNull(path.join(qoutDir, stem + '.json'));
+    if (!mk) { raw.push(`quality/${stem}: missing/unreadable`); continue; }
+    // BH-160: forceDiagnostic — this file is KNOWN to be a QC board (came off idx.boards), so
+    // boardStatus is pinned to 'diagnostic' here, unlike the HG board-file call below.
+    validateFile(mk, stem, raw, { forceDiagnostic: true }); // reuses board-file check: branch===stem, boardStatus enum, every BoardRow
+  }
+  const ov = readJSONOrNull(path.join(qoutDir, 'overview.json'));
+  if (!ov) raw.push('quality/overview: missing/unreadable');
+  else validateFile(ov, 'overview', raw); // reuses OverviewRow check
+  return raw.map((e) => (e.startsWith('quality/') ? e : 'quality/' + e));
+}
+
+// ---- Small-Cap-Board validation (5.2) -----------------------------------
+// Identisches Muster wie validateQualityIndex/validateQualityExport (dupliziert statt
+// parametrisiert, s. Kommentar bei buildSmallcap). 'smallcap-'-Praefix statt 'quality-'.
+function validateSmallcapIndex(mk, errs) {
+  const kind = 'smallcap/index';
+  if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
+  if (mk.schema !== SCHEMA) errs.push(`${kind}: schema=${JSON.stringify(mk.schema)}`);
+  if (typeof mk.generated_at !== 'string') errs.push(`${kind}: generated_at`);
+  validateCoverage(mk, kind, errs);
+  if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push(`${kind}: generatedFromSnapshots`);
+  if (!Array.isArray(mk.boards) || !mk.boards.length) errs.push(`${kind}: boards`);
+  if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push(`${kind}: boardStatus map missing`);
+  else {
+    for (const [k, v] of Object.entries(mk.boardStatus)) {
+      if (v !== 'diagnostic') errs.push(`${kind}: boardStatus.${k}=${JSON.stringify(v)}`);
+    }
+    if (Array.isArray(mk.boards)) {
+      const bsKeys = new Set(Object.keys(mk.boardStatus));
+      for (const b of mk.boards) if (!bsKeys.has(b)) errs.push(`${kind}: boardStatus missing key ${b}`);
+      for (const k of bsKeys) if (!mk.boards.includes(k)) errs.push(`${kind}: boardStatus unexpected key ${k}`);
+    }
+  }
+  if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
+  if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
+  // 5.2 Auflage 3: coverageFloor ist Pflicht (nullable) — der Beleg-Wert des data-abgeleiteten
+  // Coverage-Gates dieses Laufs muss im Export ankommen, sonst ist Auflage 3 nicht nachpruefbar.
+  if (!('coverageFloor' in mk)) errs.push(`${kind}: coverageFloor missing`);
+  else if (mk.coverageFloor !== null && !Number.isFinite(mk.coverageFloor)) errs.push(`${kind}: coverageFloor not finite|null`);
+}
+
+// F-CGPT-040, identisch zu validateQualityExport.
+function validateSmallcapExport(scoutDir = SCOUT_DIR) {
+  const raw = [];
+  const idxPath = path.join(scoutDir, 'index.json');
+  const idx = readJSONOrNull(idxPath);
+  if (!idx) {
+    if (fs.existsSync(idxPath)) raw.push('smallcap/index: present but unreadable/not JSON');
+    return raw; // smallcap/ absent -> optional, no breach
+  }
+  validateSmallcapIndex(idx, raw);
+  const boards = Array.isArray(idx.boards) ? idx.boards : [];
+  for (const id of boards) {
+    const stem = String(id).replace(/^smallcap-/, '');
+    const mk = readJSONOrNull(path.join(scoutDir, stem + '.json'));
+    if (!mk) { raw.push(`smallcap/${stem}: missing/unreadable`); continue; }
+    validateFile(mk, stem, raw, { forceDiagnostic: true });
+  }
+  const ov = readJSONOrNull(path.join(scoutDir, 'overview.json'));
+  if (!ov) raw.push('smallcap/overview: missing/unreadable');
+  else validateFile(ov, 'overview', raw);
+  return raw.map((e) => (e.startsWith('smallcap/') ? e : 'smallcap/' + e));
+}
+
+// ---- runnable self-check: node scripts/write-findash-export.js --selftest ----
+// Exercises the ACTUAL gate blind spots the Court proved (not just trivial cases):
+// every Pflicht field on every row shape must trip a violation when tampered.
+function selftest() {
+  const assert = require('assert');
+  const cleanBoard = {
+    ticker: 'NVDA', name: 'NVIDIA Corporation', score: 88.2, track: 'profitable', lamps: ['peakMargin'],
+    overview: { kind: 'gp', value: -0.055, companion: 89.1 },
+    country: 'United States', region: 'North America', sector: 'Technology',
+    marketCap: 5457368842240, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
+    profitTier: 'langfristig-profitabel', ipoYear: 1999,
+    cohortN: 90, cohortFallback: false, // 2.10
+    coverageAxes: '7/7', // 18.08.: eine gerankte Zeile MUSS ihre Belegbarkeit ausweisen (Gate)
+  };
+  const cleanOv = {
+    ticker: 'NVDA', name: 'NVIDIA Corporation', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
+    overviewKind: 'gp', overviewValue: -1.17, overviewCompanion: 195.3, lamps: [],
+    country: 'United States', region: 'North America', sector: 'Technology',
+    marketCap: 33018304599.802, phase: 'inflected', mcapBand: 'large', ipoRecency: 'growth',
+    cohortN: 90, cohortFallback: false, // 2.10
+    coverageAxes: '7/7', // 18.08.: s. cleanBoard
+  };
+  const cleanSv = {
+    ticker: 'PAH3.DE', name: 'Porsche Automobil Holding SE', runwayQuarters: 9999, lamps: ['burning'],
+    country: 'Germany', region: 'Europe', sector: 'Consumer Cyclical',
+    marketCap: null, phase: null, mcapBand: 'small', ipoRecency: null,
+    cohortN: null, cohortFallback: null, // 2.10: survival nie gescort -> nullable
+  };
+  const cleanErrs = (fn, mapped) => { const e = []; fn(mapped, 'r', e); return e; };
+  assert.strictEqual(cleanErrs(validateBoardRow, mapBoardRow(cleanBoard, 0)).length, 0, 'clean board must validate');
+  assert.strictEqual(cleanErrs(validateOverviewRow, mapOverviewRow(cleanOv, 0)).length, 0, 'clean overview must validate');
+  assert.strictEqual(cleanErrs(validateSurvivalRow, mapSurvivalRow(cleanSv, 0)).length, 0, 'clean survival must validate');
+  // negative overview.value + null companion round-trip
+  assert.strictEqual(mapBoardRow({ ...cleanBoard, overview: { kind: 'gp', value: -1.17, companion: null } }, 5).overview.value, -1.17);
+
+  // tamper matrix — each MUST produce >=1 violation. If any slips through with 0, the gate is blind.
+  const trip = (fn, row, label) => { const e = []; fn(row, 't', e); assert.ok(e.length > 0, `TAMPER SLIPPED: ${label}`); };
+  // Gegenstueck zu trip(): ein additiv-OPTIONALES Feld muss in seiner gueltigen Form
+  // DURCHGEHEN. Ohne diese Richtung wuerde ein zu strenger Waechter unbemerkt Karls
+  // einzigen Alarmkanal rot faerben, sobald das Feld einmal wirklich gefuellt ist.
+  const pass_ = (fn, row, label) => { const e = []; fn(row, 't', e); assert.equal(e.length, 0, `FALSCH-ROT: ${label} -> ${e.join('; ')}`); };
+  const b0 = mapBoardRow(cleanBoard, 0);
+  trip(validateBoardRow, { ...b0, score: NaN }, 'board score NaN');
+  trip(validateBoardRow, { ...b0, track: 'ghost' }, 'board track bad enum');
+  trip(validateBoardRow, { ...b0, rank: undefined }, 'board rank removed');
+  const bNoCountry = { ...b0 }; delete bNoCountry.country; trip(validateBoardRow, bNoCountry, 'board country missing');
+  const bNoName = { ...b0 }; delete bNoName.name; trip(validateBoardRow, bNoName, 'board name missing');
+  trip(validateBoardRow, { ...b0, name: 12345 }, 'board name number');
+  trip(validateBoardRow, { ...b0, sector: 12345 }, 'board sector number');
+  const bNoRegion = { ...b0 }; delete bNoRegion.region; trip(validateBoardRow, bNoRegion, 'board region missing');
+  trip(validateBoardRow, { ...b0, marketCap: 'GARBAGE' }, 'board marketCap string');
+  trip(validateBoardRow, { ...b0, phase: 'zombie' }, 'board phase bad enum');
+  trip(validateBoardRow, { ...b0, mcapBand: 'huge' }, 'board mcapBand bad enum');
+  trip(validateBoardRow, { ...b0, ipoRecency: 'ancient' }, 'board ipoRecency bad enum');
+  trip(validateBoardRow, { ...b0, overview: { kind: 'TOTALLY-BOGUS', value: 1, companion: 1 } }, 'board overview.kind garbage');
+  trip(validateBoardRow, { ...b0, overview: { kind: 'gp', value: NaN, companion: 1 } }, 'board overview.value NaN');
+  trip(validateBoardRow, { ...b0, overview: { kind: 'gp', value: 1, companion: 'X' } }, 'board overview.companion garbage');
+  trip(validateBoardRow, { ...b0, overview: { value: 1, companion: 1 } }, 'board overview.kind removed');
+  trip(validateBoardRow, { ...b0, profitTier: 'zombie-tier' }, 'board profitTier bad enum');     // 1.2
+  trip(validateBoardRow, { ...b0, ipoYear: 'GARBAGE' }, 'board ipoYear string');                 // 1.2
+  const bNoTier = { ...b0 }; delete bNoTier.profitTier; trip(validateBoardRow, bNoTier, 'board profitTier missing'); // 1.2
+  // 2.10: cohortN/cohortFallback Pflicht auf gescorten Zeilen (Tamper -> exit 1).
+  trip(validateBoardRow, { ...b0, cohortN: 'GARBAGE' }, 'board cohortN string');
+  const bNoN = { ...b0 }; delete bNoN.cohortN; trip(validateBoardRow, bNoN, 'board cohortN missing');
+  trip(validateBoardRow, { ...b0, cohortFallback: 'yes' }, 'board cohortFallback non-boolean');
+  const bNoFb = { ...b0 }; delete bNoFb.cohortFallback; trip(validateBoardRow, bNoFb, 'board cohortFallback missing');
+
+  // 4.5 profitStreak — additiv OPTIONAL: Abwesenheit und null muessen DURCHGEHEN,
+  // eine kaputte Form nicht. Beide Richtungen, sonst prueft der Waechter nur die haelfte.
+  const bStreakOk = { ...b0, profitStreak: { jahre: 9, basis: 'opInc', tiefe: 16, mindestens: false, letzterVerlust: 2016 } };
+  pass_(validateBoardRow, bStreakOk, 'board profitStreak valide Form geht durch');
+  pass_(validateBoardRow, { ...b0, profitStreak: null }, 'board profitStreak null geht durch');
+  pass_(validateBoardRow, b0, 'board ohne profitStreak geht durch');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, jahre: -1 } }, 'board profitStreak jahre negativ');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, basis: 'ebitda' } }, 'board profitStreak basis bad enum');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, mindestens: 'ja' } }, 'board profitStreak mindestens non-boolean');
+  // Die beiden inneren Widersprueche: eine Serie kann nicht laenger sein als die Reihe,
+  // und wer bis zum Reihenanfang durchlaeuft, kann kein Verlustjahr in Sicht haben.
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, jahre: 20 } }, 'board profitStreak jahre > tiefe');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, mindestens: true } }, 'board profitStreak mindestens+letzterVerlust');
+
+  // F-2 Stufe 1 einmalertragPrognose — beide Richtungen. cleanBoard traegt lamps:['peakMargin'],
+  // also KEINE Einmalertrags-Lampe: dort muss jeder Zustand auffliegen. Mit Lampe muss jeder der
+  // vier gepflegten Zustaende durchgehen, ein unbekannter nicht.
+  const bLampe = mapBoardRow({ ...cleanBoard, lamps: ['einmalertrag'] }, 0);
+  for (const z of VALID_EINMALERTRAG_PROGNOSE) {
+    pass_(validateBoardRow, { ...bLampe, einmalertragPrognose: z }, 'board einmalertragPrognose ' + z + ' mit Lampe geht durch');
+    trip(validateBoardRow, { ...b0, einmalertragPrognose: z }, 'board einmalertragPrognose ' + z + ' OHNE Lampe');
+  }
+  pass_(validateBoardRow, { ...bLampe, einmalertragPrognose: null }, 'board einmalertragPrognose null geht durch');
+  pass_(validateBoardRow, b0, 'board ohne einmalertragPrognose geht durch');
+  trip(validateBoardRow, { ...bLampe, einmalertragPrognose: 'bestätigt' }, 'board einmalertragPrognose Umlaut-Variante');
+  trip(validateBoardRow, { ...bLampe, einmalertragPrognose: 'toString' }, 'board einmalertragPrognose Prototyp-Name');
+  trip(validateBoardRow, { ...bLampe, einmalertragPrognose: 1 }, 'board einmalertragPrognose Zahl');
+
+  const o0 = mapOverviewRow(cleanOv, 0);
+  trip(validateOverviewRow, { ...o0, track: 'ghost' }, 'overview track bad enum');
+  trip(validateOverviewRow, { ...o0, overviewKind: 999 }, 'overview overviewKind number');
+  trip(validateOverviewRow, { ...o0, overviewCompanion: 'GARBAGE' }, 'overview companion garbage');
+  trip(validateOverviewRow, { ...o0, phase: 'zombie' }, 'overview phase bad enum');
+  const oNoRank = { ...o0 }; delete oNoRank.rank; trip(validateOverviewRow, oNoRank, 'overview rank removed');
+  const oNoN = { ...o0 }; delete oNoN.cohortN; trip(validateOverviewRow, oNoN, 'overview cohortN missing'); // 2.10
+  trip(validateOverviewRow, { ...o0, cohortN: null }, 'overview cohortN null (scored row)');                 // 2.10
+
+  const s0 = mapSurvivalRow(cleanSv, 0);
+  const sNoRank = { ...s0 }; delete sNoRank.rank; trip(validateSurvivalRow, sNoRank, 'survival rank removed');
+  trip(validateSurvivalRow, { ...s0, marketCap: 'GARBAGE' }, 'survival marketCap garbage');
+  trip(validateSurvivalRow, { ...s0, phase: 'zombie' }, 'survival phase bad enum');
+  // M8 (Nacht-Sweep 29.08.): eine survival-Zeile MIT Belegpunkten passierte den --check
+  // sauber, obwohl der Vertrag (§4) sie dort ausdruecklich ausschliesst. Beide
+  // Richtungen: die saubere Zeile OHNE die Felder muss weiterhin durchgehen (die Pruefung
+  // darf kein Pflichtfeld daraus machen), die Zeile MIT ihnen muss stolpern.
+  assert.strictEqual(cleanErrs(validateSurvivalRow, s0).length, 0, 'survival ohne Belegpunkte muss sauber bleiben');
+  trip(validateSurvivalRow, { ...s0, qPunkte: 4 }, 'survival qPunkte');
+  trip(validateSurvivalRow, { ...s0, qPunkte: null }, 'survival qPunkte null');
+  trip(validateSurvivalRow, { ...s0, qSpanTage: 546 }, 'survival qSpanTage');
+
+  // N7: qSpanTage gegen den eigenen Vertrag (number >= 0 | null). Beide Richtungen —
+  // die legitimen Werte (0, echte Spanne, null, Feld ganz abwesend) muessen sauber
+  // durchgehen, sonst faerbt die Wache die 6,6 % A10-Nachzuegler falsch-rot.
+  for (const gut of [0, 91, 546, null]) {
+    assert.strictEqual(cleanErrs(validateBoardRow, { ...b0, qSpanTage: gut }).length, 0,
+      `qSpanTage=${JSON.stringify(gut)} ist vertragsgemaess und darf nicht stolpern`);
+  }
+  trip(validateBoardRow, { ...b0, qSpanTage: -1 }, 'board qSpanTage negativ');
+  trip(validateBoardRow, { ...b0, qSpanTage: NaN }, 'board qSpanTage NaN');
+
+  // hull-level: coverage key missing / bad status, branch mismatch, boardStatus (2.1).
+  const mkHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'core', coverage: null, branch: 'energy', profitable: [], unprofitable: [], ...over });
+  const mkIdx = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', coverage: null, generatedFromSnapshots: 1, branches: BRANCHES, boardStatus: Object.fromEntries(BRANCHES.map(b => [b, 'core'])), counts: {}, survivalCount: 0, excluded: {}, ...over });
+  let e, m;
+  e = []; validateFile(mkHull(), 'energy', e); assert.strictEqual(e.length, 0, 'clean board hull must validate');
+  m = mkHull(); delete m.coverage; e = []; validateFile(m, 'energy', e);
+  assert.ok(e.some(x => /coverage missing/.test(x)), 'coverage key missing must trip');
+  e = []; validateFile(mkHull({ branch: 'WRONG' }), 'energy', e);
+  assert.ok(e.some(x => /branch=/.test(x)), 'branch mismatch must trip');
+  e = []; validateFile(mkHull({ coverage: { status: 'bogus', degraded: true, blocked: false, coverage_pct: 20 } }), 'energy', e);
+  assert.ok(e.some(x => /coverage\.status/.test(x)), 'bad coverage.status must trip');
+  // 2.1 boardStatus gate: missing / bad enum on a board file must trip.
+  m = mkHull(); delete m.boardStatus; e = []; validateFile(m, 'energy', e);
+  assert.ok(e.some(x => /boardStatus/.test(x)), 'board boardStatus missing must trip');
+  e = []; validateFile(mkHull({ boardStatus: 'bogus' }), 'energy', e);
+  assert.ok(e.some(x => /boardStatus=/.test(x)), 'board boardStatus bad enum must trip');
+  // index boardStatus map: clean passes, missing map / bad value trip.
+  e = []; validateFile(mkIdx(), 'index', e); assert.strictEqual(e.length, 0, 'clean index must validate');
+  e = []; validateFile(mkIdx({ boardStatus: { energy: 'bogus' } }), 'index', e);
+  assert.ok(e.some(x => /boardStatus\.energy/.test(x)), 'index boardStatus bad enum must trip');
+  m = mkIdx(); delete m.boardStatus; e = []; validateFile(m, 'index', e);
+  assert.ok(e.some(x => /boardStatus map missing/.test(x)), 'index boardStatus map missing must trip');
+  // BH-078: boardStatus map completeness — a missing key (branch dropped from the map, values
+  // otherwise all valid) or an unexpected extra key must trip, not just a bad per-entry enum.
+  e = []; validateFile(mkIdx({ boardStatus: Object.fromEntries(BRANCHES.slice(1).map(b => [b, 'core'])) }), 'index', e);
+  assert.ok(e.some(x => /boardStatus missing key/.test(x)), 'index boardStatus missing key must trip');
+  e = []; validateFile(mkIdx({ boardStatus: { ...Object.fromEntries(BRANCHES.map(b => [b, 'core'])), ghost: 'core' } }), 'index', e);
+  assert.ok(e.some(x => /boardStatus unexpected key/.test(x)), 'index boardStatus extra key must trip');
+
+  // ---- 3.2 QC-Board (quality/) ------------------------------------------------
+  // QC rows are the SAME shape as HG board/overview rows -> row validators reused; only the
+  // QC-specific invariants are asserted here.
+  assert.strictEqual(boardStatusOf('quality-semiconductors'), 'diagnostic', 'QC board must be diagnostic by construction');
+  assert.strictEqual(boardStatusOf('quality-anything'), 'diagnostic', 'every quality-* id is diagnostic');
+  // QC board hull: validateQualityExport calls validateFile with forceDiagnostic:true (BH-160)
+  // — simulate that here. Plain validateFile (no opts) stays enum-permissive since it is reused
+  // for HG boards too, where 'core' is legitimate (see mkHull tests above).
+  const mkQHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'diagnostic', coverage: null, branch: 'semiconductors', profitable: [mapBoardRow(cleanBoard, 0)], unprofitable: [], ...over });
+  e = []; validateFile(mkQHull(), 'semiconductors', e, { forceDiagnostic: true }); assert.strictEqual(e.length, 0, 'clean QC board hull must validate');
+  // BH-160: 'core' is enum-legal HG-wide but QC boards are always diagnostic (board-status.js:42)
+  // — under forceDiagnostic it now MUST trip (previously slipped through silently).
+  e = []; validateFile(mkQHull({ boardStatus: 'core' }), 'semiconductors', e, { forceDiagnostic: true });
+  assert.ok(e.some(x => /boardStatus=/.test(x)), "BH-160: QC boardStatus 'core' must trip under forceDiagnostic");
+  m = mkQHull(); delete m.boardStatus; e = []; validateFile(m, 'semiconductors', e, { forceDiagnostic: true });
+  assert.ok(e.some(x => /boardStatus/.test(x)), 'QC boardStatus missing must trip');
+  e = []; validateFile(mkQHull({ boardStatus: 'bogus' }), 'semiconductors', e, { forceDiagnostic: true });
+  assert.ok(e.some(x => /boardStatus=/.test(x)), 'QC boardStatus bogus must trip');
+  // cohortN tamper on a QC row trips (row validator reused).
+  trip(validateBoardRow, { ...b0, cohortN: 'GARBAGE' }, 'QC board cohortN string');
+  // QC index validator: clean passes; boardStatus bogus / map removed trip.
+  const mkQIdx = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', coverage: null, generatedFromSnapshots: 1, boards: ['quality-semiconductors'], boardStatus: { 'quality-semiconductors': 'diagnostic' }, counts: {}, excluded: {}, ...over });
+  e = []; validateQualityIndex(mkQIdx(), e); assert.strictEqual(e.length, 0, 'clean QC index must validate');
+  e = []; validateQualityIndex(mkQIdx({ boardStatus: { 'quality-semiconductors': 'bogus' } }), e);
+  assert.ok(e.some(x => /boardStatus\.quality-semiconductors/.test(x)), 'QC index boardStatus bogus must trip');
+  m = mkQIdx(); delete m.boardStatus; e = []; validateQualityIndex(m, e);
+  assert.ok(e.some(x => /boardStatus map missing/.test(x)), 'QC index boardStatus map missing must trip');
+  // BH-078: QC boardStatus map values are restricted to 'diagnostic' only — 'core' is enum-legal
+  // on the shared VALID_BOARDSTATUS list but must trip here (QC can never be core).
+  e = []; validateQualityIndex(mkQIdx({ boardStatus: { 'quality-semiconductors': 'core' } }), e);
+  assert.ok(e.some(x => /boardStatus\.quality-semiconductors/.test(x)), 'QC index boardStatus core must trip (QC-only-diagnostic)');
+  // BH-078: key-set completeness against mk.boards — a board present in `boards` but missing
+  // from the boardStatus map (or a stray extra key) must trip.
+  e = []; validateQualityIndex(mkQIdx({ boards: ['quality-semiconductors', 'quality-energy'] }), e);
+  assert.ok(e.some(x => /boardStatus missing key quality-energy/.test(x)), 'QC index boardStatus missing key must trip');
+  e = []; validateQualityIndex(mkQIdx({ boardStatus: { 'quality-semiconductors': 'diagnostic', 'quality-ghost': 'diagnostic' } }), e);
+  assert.ok(e.some(x => /boardStatus unexpected key/.test(x)), 'QC index boardStatus extra key must trip');
+
+  // ---- 5.2 Small-Cap-Board (smallcap/) — identisches Muster wie QC, lean (Row-Validatoren
+  // sind bereits gegen jeden Tamper bewiesen; hier nur die smallcap-spezifischen Invarianten:
+  // boardStatus-Praefix, coverageFloor-Pflichtfeld).
+  assert.strictEqual(boardStatusOf('smallcap-semiconductors'), 'diagnostic', 'Small-Cap-Board muss diagnostic sein');
+  const mkScIdx = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', coverage: null, generatedFromSnapshots: 1, boards: ['smallcap-semiconductors'], boardStatus: { 'smallcap-semiconductors': 'diagnostic' }, counts: {}, excluded: {}, coverageFloor: 0.42, ...over });
+  e = []; validateSmallcapIndex(mkScIdx(), e); assert.strictEqual(e.length, 0, 'clean Small-Cap-index must validate');
+  m = mkScIdx(); delete m.coverageFloor; e = []; validateSmallcapIndex(m, e);
+  assert.ok(e.some(x => /coverageFloor missing/.test(x)), 'Small-Cap coverageFloor missing must trip (Auflage 3 Beleg-Pflicht)');
+  e = []; validateSmallcapIndex(mkScIdx({ coverageFloor: 'GARBAGE' }), e);
+  assert.ok(e.some(x => /coverageFloor not finite/.test(x)), 'Small-Cap coverageFloor garbage must trip');
+  e = []; validateSmallcapIndex(mkScIdx({ coverageFloor: null }), e);
+  assert.strictEqual(e.length, 0, 'Small-Cap coverageFloor null is legit (Degenerations-Guard, quantile() liefert null)');
+  e = []; validateSmallcapIndex(mkScIdx({ boardStatus: { 'smallcap-semiconductors': 'core' } }), e);
+  assert.ok(e.some(x => /boardStatus\.smallcap-semiconductors/.test(x)), 'Small-Cap boardStatus core must trip (nur-diagnostic)');
+
+  console.log('selftest OK');
+}
+
+if (require.main === module) {
+  if (process.argv.includes('--selftest')) { selftest(); process.exit(0); }
+  if (process.argv.includes('--check')) {
+    const errs = validateExport(OUT_DIR, { requireProvenance: true });
+    if (errs.length) {
+      console.error(`::error::findash-export/v1 schema contract violation (${errs.length}): ${errs.slice(0, 20).join('; ')}`);
+      process.exit(1);
+    }
+    console.log('findash-export/v1 schema OK.');
+    process.exit(0);
+  }
+  const r = build();
+  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.fullBoards} Vollboards (full/) + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
+}
+
+module.exports = {
+  annualPairsShadowForSnapshot,
+  rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
+  // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
+  // RUNS it against a fixture marker instead of searching the source for generated_at.
+  loadCoverage,
+  build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
+  // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
+  // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  buildFullBoards, validateFullExport, buildBoard,
+  // T194: machine-readable top/full delivery contract and its two-way guard.
+  cohortDeliveryFor, validateCohortDelivery, BOARD_TRACK_CAP,
+  validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
+  validateSmallcapExport, validateSmallcapIndex, buildSmallcap, smallcapExportMode,
+  mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
+  // Belegbarkeits-Gate (18.08.) als Seam: tests/scoring/belegbarkeits-gate.test.js FUEHRT die
+  // Rangvergabe aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  vergebeRaenge, rangGrund, RANK_MIN_AXES,
+  // Skalen-Deckel (19.08.) als Seam: tests/scoring/score-deckel.test.js FUEHRT die
+  // Deckelung aus, statt den Quelltext nach Math.min abzusuchen.
+  gedeckelt, SCORE_MAX,
+  // Chunk 4a (16.08.): der Waehrungs-Waechter als Seam — tests/waehrung-ausliefer-waechter.js
+  // FUEHRT die Entscheidung aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  beurteileWaehrungsbeleg, waehrungsWaechterUrteil, waehrungsWaechterAbschluss,
+  waehrungsWaechterBilanz, NULL_ANTEIL_STOPP,
+  // 29.08. (Abhilfe A, Coverage-Akte): die Belegpunkt-Ableitung als Seam —
+  // tests/belegpunkte.test.js FUEHRT sie aus, statt den Quelltext nach Mustern abzusuchen.
+  belegPunkte,
+  // 01.10.: Basis/Zeitraum des Umsatzwachstums (tests/rev-growth-basis.test.js FUEHRT es aus).
+  ergaenzeWachstumsBasis, checkRevGrowthBasis, wachstumOhneEtikett,
+  // Tag 1401: valueFlags loader seam (tests/value-flags.test.js runs the mappers with a fixture list).
+  ladeValueFlags, checkValueFlags,
+  ladeMcapClassesRegistry, ergaenzeMarketCapClassesShadow,
+};

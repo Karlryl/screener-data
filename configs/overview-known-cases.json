@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-10-11-p186",
+  "cases": [
+    {
+      "caseId": "PGHL-BO-undated-gp-p186",
+      "ticker": "PGHL.BO",
+      "field": "overview.gpGrowth",
+      "expectedBadValue": 0.282,
+      "replacementValue": null,
+      "releaseWhen": "dated-annual-gp-pair-matches-export",
+      "reason": "Vergleich über nicht benachbarte Geschäftsjahre, Jahresenden fehlen im Abruf",
+      "sources": [
+        {
+          "ref": "P169/boards-befunde.md",
+          "page": "Prüfpunkt 4, Datenstand 10.10.2026",
+          "quote": "PGHL.BO steht an beiden Tagen unter outputs/findash-export/v1/full/health-care.json in profitable mit rank=31, overview.kind=gp, overview.value=0.282"
+        },
+        {
+          "ref": "P180/pruefung.md",
+          "page": "Unabhängige Datenmessung, 11.10.2026",
+          "quote": "Beide Tagesstände von PGHL.BO haben nur null als Jahresenden; PGHL.NS bleibt bei 639 Tagen Abstand leer."
+        }
+      ]
+    }
+  ]
+}

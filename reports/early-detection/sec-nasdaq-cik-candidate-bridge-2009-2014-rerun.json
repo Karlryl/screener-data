@@ -1,0 +1,87 @@
+{
+  "schema": "early-detection-entity-bridge/v1",
+  "status": "CANDIDATE_BRIDGE_PASS_NOT_ADJUDICATED",
+  "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-nasdaq-cik-candidate-bridge.sqlite",
+  "databaseBytes": 6635520,
+  "imports": [
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 3210
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 2891
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 2789
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 2763
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 2698
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 2753
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 2811
+    },
+    {
+      "dataset": "nasdaqlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 2877
+    },
+    {
+      "dataset": "otherlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 5082
+    },
+    {
+      "dataset": "otherlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 4922
+    },
+    {
+      "dataset": "otherlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 5131
+    },
+    {
+      "dataset": "otherlisted",
+      "status": "ALREADY_IMPORTED",
+      "rows": 5141
+    }
+  ],
+  "snapshots": 12,
+  "rows": 43068,
+  "byStatus": {
+    "AMBIGUOUS": 139,
+    "CANDIDATE_UNADJUDICATED": 15888,
+    "EXCLUDE_NON_OPERATING_SECURITY": 3821,
+    "EXCLUDE_TEST_ISSUE": 243,
+    "UNRESOLVED": 22977
+  },
+  "candidateRate": 0.3689049874616885,
+  "candidateSequenceSha256": "dd598689c7684cf36163c22e8c4bfa96152c600545256a2b9db4cf10bb4328a2",
+  "confirmatoryEligible": false,
+  "limitations": [
+    "Name matching is a candidate generator and never establishes a permanent entity or listing identity.",
+    "Snapshots are sparse exact captures and are never forward-filled between dates.",
+    "Every candidate still requires filing-cover, Form 25/15 or equivalent event evidence and independent audit."
+  ],
+  "productiveGqsModified": false,
+  "reportSha256": "1133023d6ddf15e60e813efddd1fddd2e550730f88cffbae64d3000af9510dcb"
+}

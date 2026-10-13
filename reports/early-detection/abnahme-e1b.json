@@ -1,0 +1,221 @@
+{
+ "schema": "early-detection-e1b-acceptance/v1",
+ "erzeugtAm": "2026-08-16T17:40:36.250Z",
+ "conceptMap": "FEM-SEC-CONCEPT-MAP@1.1.0",
+ "mapSha256": "933934db813b5fedfa1a56bc9050ca9c2906d31810774c14940f0da343bc697f",
+ "regelEingefrorenAm": "2026-08-16T17:14:21.655Z",
+ "reihenfolge": "Regel VOR der Messung eingefroren; diese Zaehlung kann die Regel nicht mehr beeinflussen.",
+ "r15bZaehlprobe": "Pruef- und Endtestfenster nur als Anzahl/Existenz beruehrt, keine Werte gelesen.",
+ "gate": {
+  "population": "Firmen im Universum mit mindestens einem Umsatztraeger nach dieser Landkarte.",
+  "schwelle": 0.9,
+  "maxFensterDifferenzPunkte": 10,
+  "maxRestSprung2017_2018Punkte": 5,
+  "pflichtfeldDeckungsgrad": "Je Fenster ausweisen, wie viele Firmen und Einreichungen ausserhalb des Definitionsbereichs bleiben und warum: Finanzsektor, Vor-Umsatz, 20-F.",
+  "unveraendert": "Schwelle und Differenz sind gegenueber R9 NICHT gesenkt."
+ },
+ "minTraegerFuerDefinitionsmenge": 1,
+ "jeFenster": [
+  {
+   "fenster": "endtest",
+   "einreichungen": 139073,
+   "mitUmsatz": 127775,
+   "quote": 0.9188
+  },
+  {
+   "fenster": "entdeckung",
+   "einreichungen": 229099,
+   "mitUmsatz": 205494,
+   "quote": 0.897
+  },
+  {
+   "fenster": "pruefung",
+   "einreichungen": 138323,
+   "mitUmsatz": 125763,
+   "quote": 0.9092
+  }
+ ],
+ "jeJahr": [
+  {
+   "jahr": 2009,
+   "einreichungen": 1501,
+   "mitUmsatz": 1409,
+   "quote": 0.9387
+  },
+  {
+   "jahr": 2010,
+   "einreichungen": 5839,
+   "mitUmsatz": 5582,
+   "quote": 0.956
+  },
+  {
+   "jahr": 2011,
+   "einreichungen": 24521,
+   "mitUmsatz": 22417,
+   "quote": 0.9142
+  },
+  {
+   "jahr": 2012,
+   "einreichungen": 42867,
+   "mitUmsatz": 38191,
+   "quote": 0.8909
+  },
+  {
+   "jahr": 2013,
+   "einreichungen": 41823,
+   "mitUmsatz": 37028,
+   "quote": 0.8854
+  },
+  {
+   "jahr": 2014,
+   "einreichungen": 41425,
+   "mitUmsatz": 36771,
+   "quote": 0.8877
+  },
+  {
+   "jahr": 2015,
+   "einreichungen": 34898,
+   "mitUmsatz": 31248,
+   "quote": 0.8954
+  },
+  {
+   "jahr": 2016,
+   "einreichungen": 36225,
+   "mitUmsatz": 32848,
+   "quote": 0.9068
+  },
+  {
+   "jahr": 2017,
+   "einreichungen": 36205,
+   "mitUmsatz": 31843,
+   "quote": 0.8795
+  },
+  {
+   "jahr": 2018,
+   "einreichungen": 35368,
+   "mitUmsatz": 31952,
+   "quote": 0.9034
+  },
+  {
+   "jahr": 2019,
+   "einreichungen": 34177,
+   "mitUmsatz": 31584,
+   "quote": 0.9241
+  },
+  {
+   "jahr": 2020,
+   "einreichungen": 32573,
+   "mitUmsatz": 30384,
+   "quote": 0.9328
+  },
+  {
+   "jahr": 2021,
+   "einreichungen": 35413,
+   "mitUmsatz": 32132,
+   "quote": 0.9074
+  },
+  {
+   "jahr": 2022,
+   "einreichungen": 36180,
+   "mitUmsatz": 33122,
+   "quote": 0.9155
+  },
+  {
+   "jahr": 2023,
+   "einreichungen": 34839,
+   "mitUmsatz": 32068,
+   "quote": 0.9205
+  },
+  {
+   "jahr": 2024,
+   "einreichungen": 32641,
+   "mitUmsatz": 30453,
+   "quote": 0.933
+  }
+ ],
+ "deckungsgrad": [
+  {
+   "fenster": "endtest",
+   "firmenGesamt": 9129,
+   "einreichungenGesamt": 215123,
+   "ausserhalb": {
+    "finanzsektor": {
+     "firmen": 2674,
+     "einreichungen": 55854,
+     "anteilEinreichungen": 0.2596
+    },
+    "form20F": {
+     "firmen": 1202,
+     "einreichungen": 7878,
+     "anteilEinreichungen": 0.0366
+    },
+    "vorUmsatz": {
+     "firmen": 711,
+     "anteilFirmen": 0.0779
+    }
+   }
+  },
+  {
+   "fenster": "entdeckung",
+   "firmenGesamt": 11132,
+   "einreichungenGesamt": 332657,
+   "ausserhalb": {
+    "finanzsektor": {
+     "firmen": 2758,
+     "einreichungen": 79333,
+     "anteilEinreichungen": 0.2385
+    },
+    "form20F": {
+     "firmen": 459,
+     "einreichungen": 3470,
+     "anteilEinreichungen": 0.0104
+    },
+    "vorUmsatz": {
+     "firmen": 941,
+     "anteilFirmen": 0.0845
+    }
+   }
+  },
+  {
+   "fenster": "pruefung",
+   "firmenGesamt": 8650,
+   "einreichungenGesamt": 198456,
+   "ausserhalb": {
+    "finanzsektor": {
+     "firmen": 2193,
+     "einreichungen": 47210,
+     "anteilEinreichungen": 0.2379
+    },
+    "form20F": {
+     "firmen": 857,
+     "einreichungen": 4795,
+     "anteilEinreichungen": 0.0242
+    },
+    "vorUmsatz": {
+     "firmen": 571,
+     "anteilFirmen": 0.066
+    }
+   }
+  }
+ ],
+ "abnahme": {
+  "k1_alleFensterUeber90": {
+   "erfuellt": false,
+   "quoten": {
+    "endtest": 0.9188,
+    "entdeckung": 0.897,
+    "pruefung": 0.9092
+   }
+  },
+  "k2_fensterDifferenzMax10Punkte": {
+   "erfuellt": true,
+   "differenzPunkte": 2.2
+  },
+  "k3_restSprung2017_2018Max5Punkte": {
+   "erfuellt": true,
+   "sprungPunkte": 2.4
+  },
+  "verdikt": "INCONCLUSIVE_DATA"
+ },
+ "status": "FAIL"
+}

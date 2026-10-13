@@ -1,0 +1,117 @@
+{
+  "schema": "early-detection-gate-decision/v6",
+  "generatedAt": "2026-08-10T21:05:29.577Z",
+  "gate": "entityListingLedger",
+  "status": "RED_SEC_FINRA_AND_ARCHIVED_NASDAQ_DIRECTORY_STATES_ADDED_PERMANENT_IDENTITY_INTERVALS_UNPROVEN",
+  "verdict": "Complete SEC event populations, FINRA identity candidates and archived Nasdaq Trader directory states now provide substantially broader symbol, name and exchange-state evidence. No archive row is promoted to permanent security identity, and exchange-effective listing intervals remain unproven.",
+  "verifiedBaseEvidence": {
+    "status": "RED_COMPLETE_SEC_EVENT_POPULATIONS_FINRA_CANDIDATES_ADDED_EXCHANGE_INTERVALS_UNPROVEN",
+    "finraCandidateEvidence": {
+      "presenceRows": 220435,
+      "uniqueTradeDateSymbols": 176024,
+      "pitDirectUniqueCandidateRows": 56419,
+      "retrospectiveNameUniqueCandidateRows": 50056,
+      "noSourceMatchRows": 62341,
+      "identityResolvedRows": 0,
+      "futureSnapshotsUsed": false,
+      "outcomeFieldsAccessed": false
+    }
+  },
+  "newNasdaqDirectoryEvidence": {
+    "snapshots": 103,
+    "observations": 434214,
+    "distinctSymbols": 24672,
+    "distinctSymbolNamePairs": 35340,
+    "symbolsWithMultipleObservedNames": 7549,
+    "observationsWithExchangeCode": 203823,
+    "nonTestPositivePresenceObservations": 432800,
+    "coveredCaptureYears": [
+      "2009",
+      "2010",
+      "2011",
+      "2012",
+      "2013",
+      "2014",
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022",
+      "2023",
+      "2024"
+    ],
+    "missingCaptureYears": [],
+    "identityResolvedRows": 0,
+    "pitDirectUniqueCandidateRows": 186044,
+    "pitDirectUniqueCandidateCiks": 8954,
+    "retrospectiveUniqueCandidateRows": 127863,
+    "retrospectiveAmbiguousCandidateRows": 8650,
+    "noSecTickerMatchRows": 111657
+  },
+  "allowedInference": "Positive symbol/name/source-exchange-code presence at a captured directory state and candidate dossier prioritization only.",
+  "forbiddenInference": "No symbol row may establish permanent identity, CIK linkage, absence, listing continuity, first/final session or any return.",
+  "blockingReasons": [
+    "Direct official CIK-ticker-exchange mapping snapshots begin in 2017, leaving no complete direct mapping history for 2009-2016.",
+    "Snapshot presence is not an effective-date interval and cannot establish continuous listing between observation times.",
+    "Form 8-A and EFFECT do not establish the first exchange-trading session.",
+    "Form 25/15 does not establish the final exchange-trading session, successor identity or delisting return.",
+    "Ticker reuse, share-class changes, reorganizations and exchange transfers require permanent security identity beyond issuer CIK.",
+    "No cost-free, lawful, survivorship-safe market panel has been proven to close these interval and terminal-return gaps.",
+    "A genuinely independent final-input audit has not occurred.",
+    "An exact ticker candidate is not a permanent security identifier and may fail across share-class, ticker or reorganization changes.",
+    "Retrospective name candidates are explicitly ineligible as point-in-time identity proof.",
+    "Sparse positive FINRA activity cannot prove absence or continuity between observed dates.",
+    "Archived symbol-directory rows have no stable security identifier or verified CIK linkage.",
+    "Sparse positive states cannot prove exchange-effective intervals or absence between captures.",
+    "Observed symbol/name variation requires explicit ticker-reuse, share-class and reorganization adjudication."
+  ],
+  "freeFallback": "Use archived directory states to prioritize and cross-check source dossiers; require security-level primary evidence before identity or interval promotion and preserve unresolved transitions.",
+  "exitCriteria": [
+    "Obtain a lawful security-level 2009-2024 listing history with stable identifiers and effective dates.",
+    "Independently reconcile ticker reuse, share classes, transfers, reorganizations, successors and terminal sessions.",
+    "Bind the exact final ledger to an authorized immutable checkpoint and pass external audit."
+  ],
+  "whatWouldChangeDecision": "A lawful zero-cost security-level 2009-2024 master with stable identity, exchange-effective listing intervals, corporate actions, terminal sessions and delisting returns must pass independent audit.",
+  "artifacts": {
+    "baseEntityDecision": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-ledger-gate-decision-2026-08-10-v5-partial.json",
+      "fileSha256": "47344632161438ee28efa91d4c7c95f0b889621281ad1a3e7f15a328c808dcb1",
+      "reportSha256": "e09998dd23ee86ca2346ea6b95b0e689a760af2aab5683e5f87a6d4bb36d1df2"
+    },
+    "baseEntityVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-ledger-gate-decision-2026-08-10-v5-partial-verification.json",
+      "fileSha256": "6b262293757542fd74be5b6dfccd4bc54b0a340fae618d226fcf26a8e0691801",
+      "reportSha256": "39dd648a31126bc4fca283f66bcd03ca56e78d96e5471b5844385e5d0d4e7bfb"
+    },
+    "nasdaqDirectoryAddendum": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-evidence-addendum-2026-08-10-v1.json",
+      "fileSha256": "e64f06d8565a736d24716a55239ea76461a2eef0f6928648644e861a5cd91767",
+      "reportSha256": "a5fd937ad68f446282514f91fd067693111040d2a1b572a93cb37cb037a5efbf"
+    },
+    "nasdaqDirectoryVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-evidence-addendum-2026-08-10-v1-verification.json",
+      "fileSha256": "68f5b4c718b920529439772597e6be2fd6660a1c4e52bad8f75b6ff38de03928",
+      "reportSha256": "c60a8c891408688b5c274457518bec3b3079b1f4dd087db32b87de1f474da38a"
+    },
+    "nasdaqSecCandidateCrosswalk": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-archive-sec-entity-candidate-crosswalk-2009-2024-v1.json",
+      "fileSha256": "4a9ab5504cd5275662d3af2f9cab0798c937ff6fc9217ea8b8609ba6f93c8258",
+      "reportSha256": "c02bf0d8a6af47b2ce3733f861f3be8b4626a18af5c883d495131d3d66c553e4"
+    },
+    "nasdaqSecCandidateCrosswalkVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-archive-sec-entity-candidate-crosswalk-2009-2024-v1-verification.json",
+      "fileSha256": "dbade87de292eac1f50326b27419ebe74d99cb5b8ee43deb311fd323ec5a4c39",
+      "reportSha256": "12b1d0ca1df25cf6707350fd9196d8da95c1481c5fbc45ff178fe48fd8142dad"
+    }
+  },
+  "decisionBuilder": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\build_entity_listing_ledger_gate_decision_v6.py",
+  "decisionBuilderSha256": "261ba40db98795fb9640092232c5a1943280e68fa429e5ae181fae25b642a5f3",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "8b0901d27778b51d2c23604aa38e6277d06f9128e47ad4e121860287ded5b5e7"
+}

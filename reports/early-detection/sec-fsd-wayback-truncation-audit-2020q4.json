@@ -1,0 +1,42 @@
+{
+  "schema": "early-detection-sec-wayback-truncation-audit/v1",
+  "generatedAt": "2026-08-10T18:55:38.101Z",
+  "status": "PASS_TRUNCATED_ARCHIVE_DUPLICATE_NOT_DISTINCT_REVISION",
+  "quarter": "2020q4",
+  "cdxCache": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-fsd-cdx\\2a831623802c5c2898ffb465c242dbce2c0ddcc5b6ca30e0fdc40898f2084315.json",
+  "cdxCacheSha256": "2a831623802c5c2898ffb465c242dbce2c0ddcc5b6ca30e0fdc40898f2084315",
+  "cdxRow": {
+    "timestamp": "20250329221644",
+    "original": "https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2020q4-archive.zip",
+    "mimetype": "application/octet-stream",
+    "statuscode": "200",
+    "digest": "3TP45IUUW5FNEIPMYIJW7RLTGWJTIRVE",
+    "length": 9031929
+  },
+  "replayUrl": "https://web.archive.org/web/20250329221644id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2020q4-archive.zip",
+  "partialBytes": 9029465,
+  "partialSha1Base32": "3TP45IUUW5FNEIPMYIJW7RLTGWJTIRVE",
+  "declaredFullPayloadBytes": 42197929,
+  "archiveRecordOverheadBytes": 2464,
+  "completePayloadMatch": {
+    "observationPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\observations\\sec-fsd\\2020q4\\20210320T170140000Z-4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61.json",
+    "payloadPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\blobs\\sha256\\49\\4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61.zip",
+    "payloadBytes": 42197929,
+    "payloadSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+    "observedAt": "2021-03-20T17:01:40.000Z",
+    "datasetVariant": "legacy_earliest_archived",
+    "requiredMembersPresent": [
+      "num.txt",
+      "pre.txt",
+      "sub.txt",
+      "tag.txt"
+    ],
+    "zipIntegrity": "PASS",
+    "partialIsExactPrefix": true
+  },
+  "decision": "The CDX record is a truncated prefix of an already captured complete SEC ZIP with the same declared full length; it is not counted as a distinct valid source revision.",
+  "confirmatoryEligible": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "d0c3f771284f880f7b17668b2b21731bf71ec3fbbb68f51eb3be66825fee5be0"
+}

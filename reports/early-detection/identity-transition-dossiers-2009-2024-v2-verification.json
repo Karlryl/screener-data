@@ -1,0 +1,48 @@
+{
+  "schema": "early-detection-identity-transition-dossiers-verification/v2",
+  "generatedAt": "2026-08-10T21:24:46.340Z",
+  "status": "PASS",
+  "verifierScript": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\verify_identity_transition_dossiers_v1.py",
+  "verifierScriptSha256": "b9930e0582f3f1529720a6bd23fdd56309ae0e7cf403756e1ebad6e418f81b2a",
+  "sourceReport": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\identity-transition-dossiers-2009-2024-v2.json",
+  "sourceReportFileSha256": "238a5c0a384cd500f3f0715469d78012d8812e2333bbbd5fca719055d8711d23",
+  "sourceReportSha256": "ee17e4f47ed47adce1048dd9336733b6637f594470b753cbdc320539c2448a45",
+  "checks": {
+    "signedSourceAndInputsRehashed": true,
+    "threeSourceDatabasesIntegrityChecked": true,
+    "fiveOutputTablesIndependentlyRecomputed": true,
+    "rowsIndependentlyRecomputed": 92855,
+    "tableSequencesReproduced": {
+      "snapshot_deltas": {
+        "rows": 101,
+        "sequenceSha256": "baacd0eaa183652431c7f39971be361005d2f83086197191f33d4b20b87e22e8"
+      },
+      "observed_transitions": {
+        "rows": 42319,
+        "sequenceSha256": "696e7ae2964ed5a8033b949248607080b582a2b60a87a445d3c8694a7a07d70a"
+      },
+      "symbol_profiles": {
+        "rows": 25403,
+        "sequenceSha256": "05afefc9facfdc06495360d9c046a7d914a92a9e0875d7046734a10791ec46b5"
+      },
+      "cik_symbol_profiles": {
+        "rows": 8954,
+        "sequenceSha256": "381dfc9df520fb84e05c3a6fea764ce8d92f3694105633ed00e824fd6528ca7e"
+      },
+      "corporate_event_candidate_links": {
+        "rows": 16078,
+        "sequenceSha256": "e250d9f71de6c282784d7ba29c09548cbb38f30eeb6cd9773ceb8724c1169c8b"
+      }
+    },
+    "summaryCountsReproduced": true,
+    "identityResolvedRows": 0,
+    "forbiddenOutcomeColumnsAbsent": true,
+    "mutationRejected": true
+  },
+  "interpretation": "PASS authenticates the complete source-bound transition and corporate-event dossier ledger. It does not establish permanent identity, exact listing intervals, terminal sessions or returns.",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "53ad18d54054e4ea92e7fde96dc672a2cd1630ebfed298359a9d004f3d602381"
+}

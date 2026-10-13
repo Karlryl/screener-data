@@ -1,0 +1,329 @@
+{
+ "schema": "early-detection-sec-concept-map/v1",
+ "version": "FEM-SEC-CONCEPT-MAP@1.1.0",
+ "status": "FROZEN_BEFORE_E1B_ACCEPTANCE_RUN",
+ "frozenAt": "2026-08-16T17:14:21.655Z",
+ "protocol": "FEM-SEC-US@2.0.0",
+ "scope": "SEC FSD as-filed facts used by the historical GQS shadow adapter",
+ "forms": [
+  "10-K",
+  "10-K/A",
+  "10-Q",
+  "10-Q/A"
+ ],
+ "unit": "USD",
+ "selection": {
+  "availability": "submission accepted_at_epoch must be less than or equal to evaluation_at",
+  "payloadPolicy": "earliest archived SEC FSD payload per source quarter",
+  "factIdentity": [
+   "cik",
+   "tag",
+   "qtrs",
+   "ddate"
+  ],
+  "revisionRule": "latest accepted accession available at evaluation_at; ties by accession and source row",
+  "missingRule": "missing remains missing; no interpolation or backfill from future filings"
+ },
+ "roles": {
+  "revenue": {
+   "destinationFields": [
+    "annual.annualRev",
+    "timeseries.revenueQ"
+   ],
+   "conceptPriority": [
+    "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "RevenueFromContractWithCustomerIncludingAssessedTax",
+    "Revenues",
+    "RevenueFromContractsWithCustomers",
+    "Revenue",
+    "SalesRevenueNet",
+    "SalesRevenueGoodsNet",
+    "SalesRevenueServicesNet",
+    "SalesRevenueEnergyServices",
+    "SalesRevenueFromEnergyCommoditiesAndServices",
+    "RegulatedAndUnregulatedOperatingRevenue",
+    "RevenueFromSaleOfGoods",
+    "RevenueFromRenderingOfServices",
+    "RevenuesFromExternalCustomers",
+    "SalesRevenueGoodsGross",
+    "SalesRevenueServicesGross"
+   ],
+   "requiredQtrs": [
+    1,
+    3,
+    4
+   ],
+   "derivations": [
+    "direct_qtrs1",
+    "qtrs4_minus_qtrs3_same_concept"
+   ],
+   "conceptRationale": {
+    "RevenueFromContractWithCustomerExcludingAssessedTax": "ASC-606-Hauptzeile, Erloes aus Kundenvertraegen ohne durchlaufende Steuern. Ab 2018.",
+    "RevenueFromContractWithCustomerIncludingAssessedTax": "ASC-606-Hauptzeile inkl. durchlaufender Steuern. Ab 2018.",
+    "Revenues": "Allgemeine Gesamterloes-Zeile der us-gaap-Taxonomie, epochenuebergreifend gueltig.",
+    "RevenueFromContractsWithCustomers": "Aeltere Schreibweise der 606-Gesamtzeile, gleiche Bedeutung.",
+    "Revenue": "Generische Gesamterloes-Zeile.",
+    "SalesRevenueNet": "PRAE-606-Gesamtzeile 'Net Sales'. Traegt 2009-2017 die Rolle, die spaeter 606 uebernimmt.",
+    "SalesRevenueGoodsNet": "PRAE-606-Hauptzeile fuer Warenverkauf; bei Warenhaendlern der Entitaets-Gesamterloes.",
+    "SalesRevenueServicesNet": "PRAE-606-Hauptzeile fuer Dienstleistung; bei Dienstleistern der Entitaets-Gesamterloes.",
+    "SalesRevenueEnergyServices": "PRAE-606-Gesamterloes-Zeile der Energieversorger.",
+    "SalesRevenueFromEnergyCommoditiesAndServices": "PRAE-606-Gesamterloes-Zeile Energiehandel und -dienstleistung.",
+    "RegulatedAndUnregulatedOperatingRevenue": "Ausdrueckliche SUMME beider Sparten eines Versorgers, also die Gesamtzeile.",
+    "RevenueFromSaleOfGoods": "IFRS-naher Hauptposten Warenerloes; bei reinen Warenverkaeufern die Gesamtzeile.",
+    "RevenueFromRenderingOfServices": "IFRS-naher Hauptposten Dienstleistungserloes; bei reinen Dienstleistern die Gesamtzeile.",
+    "RevenuesFromExternalCustomers": "Erloes mit Konzernfremden; bei unsegmentierten Filern identisch mit dem Gesamterloes.",
+    "SalesRevenueGoodsGross": "Brutto-Warenerloes. Nur wenn keine Netto-Zeile vorliegt.",
+    "SalesRevenueServicesGross": "Brutto-Dienstleistungserloes. Nur wenn keine Netto-Zeile vorliegt."
+   },
+   "rejected": {
+    "RevenuesNetOfInterestExpense": "Finanzsektor-Darstellung; Universum schliesst SIC 6000-6799 aus.",
+    "RevenuesExcludingInterestAndDividends": "Finanzsektor-Darstellung; siehe oben.",
+    "RevenueFromInterest": "Zinsertrag, kein Erloes aus Lieferung/Leistung.",
+    "RevenueFromDividends": "Beteiligungsertrag, kein Erloes aus Lieferung/Leistung.",
+    "RevenueFromGrants": "Zuwendung, keine Gegenleistung an einen Kunden.",
+    "RevenueFromGovernmentGrants": "Zuwendung, keine Gegenleistung an einen Kunden.",
+    "RevenueNotFromContractWithCustomer": "Per Konstruktion Teilgroesse (Komplement der Hauptzeile).",
+    "RevenueNotFromContractWithCustomerExcludingInterestIncome": "Teilgroesse.",
+    "RevenueNotFromContractWithCustomerOther": "Teilgroesse.",
+    "RevenueFromCollaborativeArrangementExcludingRevenueFromContractWithCustomer": "Per Namen ausdrueckliche Teilgroesse neben der Hauptzeile. Folge: Biotechs, die NUR Kooperationsertrag zeigen, bleiben ausserhalb des Definitionsbereichs und erscheinen im Deckungsgrad als Vor-Umsatz. Bewusst so, semantisch begruendet.",
+    "RegulatedOperatingRevenue": "Sparten-Komponente, nicht die Gesamtzeile.",
+    "UnregulatedOperatingRevenue": "Sparten-Komponente, nicht die Gesamtzeile.",
+    "RevenueFromRoyalties": "Lizenz-Teilposten, in der Praxis Komponente neben der Hauptzeile.",
+    "RevenueFromLeaseOrRentalOfPropertyOrEquipment": "Miet-/Leasing-Komponente.",
+    "RevenueFromRelatedParties": "Verbundene-Parteien-Teilmenge, nicht die Gesamtzeile.",
+    "RelatedPartyTransactionRevenuesFromTransactionsWithRelatedParty": "Anhangangabe, Teilmenge.",
+    "RevenuesFromTransactionsWithOtherOperatingSegmentsOfSameEntity": "Innenumsatz, kein Aussenerloes.",
+    "SalesRevenueServicesNetMember": "XBRL-Member, kein Wert.",
+    "SalesAllowancesGoods": "Kontra-Erloes (crdr=D).",
+    "SalesDiscountsGoods": "Kontra-Erloes (crdr=D).",
+    "SalesReturnsGoods": "Kontra-Erloes (crdr=D).",
+    "SalesAndMarketingExpense": "Aufwand, kein Erloes.",
+    "SalesCommissionsAndFees": "Aufwand, kein Erloes.",
+    "OtherCostOfOperatingRevenue": "Aufwand, kein Erloes.",
+    "RevenueRemainingPerformanceObligation": "Bestandsgroesse (iord=I), kein Periodenerloes.",
+    "RevenueRecognitionMilestoneMethodRevenueRecognized": "Anhang-Fragment zur Bilanzierungsmethode.",
+    "BusinessCombinationSeparatelyRecognizedTransactionsRevenuesAndGainsRecognized": "Anhangangabe zum Unternehmenszusammenschluss.",
+    "EquityMethodInvestmentSummarizedFinancialInformationNetSalesOrGrossRevenue": "Kennzahl einer Beteiligung, nicht der berichtenden Entitaet.",
+    "SalesOfRealEstate": "Branchen-Komponente; Immobilienvehikel liegen ohnehin in SIC 6500-6799.",
+    "RevenueMineralSales": "Branchen-Komponente neben der Gesamtzeile.",
+    "RevenueOilAndGasServices": "Branchen-Komponente neben der Gesamtzeile."
+   },
+   "limitation": "Prioritaetsliste, keine Summierung. Meldet eine Firma Waren- und Dienstleistungserloes getrennt OHNE Gesamtzeile, wird nur der hoeherpriorisierte Teil gelesen. Fuer die Beschleunigungsmessung bleibt die Reihe konsistent, das NIVEAU ist dann untererfasst. Als Deckungsgrenze auszuweisen; eine Summierungs-Ableitung waere eine zweite Revision und ist ausgeschlossen."
+  },
+  "grossProfit": {
+   "destinationFields": [
+    "annual.annualGP",
+    "metrics.grossMargin"
+   ],
+   "conceptPriority": [
+    "GrossProfit"
+   ],
+   "requiredQtrs": [
+    4
+   ],
+   "derivations": [
+    "direct_qtrs4"
+   ]
+  },
+  "operatingIncome": {
+   "destinationFields": [
+    "annual.annualOpInc",
+    "timeseries.opIncQ",
+    "secAnnual.annualOpInc"
+   ],
+   "conceptPriority": [
+    "OperatingIncomeLoss"
+   ],
+   "requiredQtrs": [
+    1,
+    3,
+    4
+   ],
+   "derivations": [
+    "direct_qtrs1",
+    "qtrs4_minus_qtrs3_same_concept"
+   ]
+  },
+  "netIncome": {
+   "destinationFields": [
+    "annual.annualNetIncome"
+   ],
+   "conceptPriority": [
+    "ProfitLoss",
+    "NetIncomeLoss"
+   ],
+   "requiredQtrs": [
+    4
+   ],
+   "derivations": [
+    "direct_qtrs4"
+   ]
+  },
+  "assets": {
+   "destinationFields": [
+    "annual.annualBalance.totalAssets",
+    "secAnnual.annualAssets"
+   ],
+   "conceptPriority": [
+    "Assets"
+   ],
+   "requiredQtrs": [
+    0
+   ],
+   "derivations": [
+    "direct_instant"
+   ]
+  },
+  "currentLiabilities": {
+   "destinationFields": [
+    "annual.annualBalance.currentLiabilities",
+    "secAnnual.annualCurrentLiabilities"
+   ],
+   "conceptPriority": [
+    "LiabilitiesCurrent"
+   ],
+   "requiredQtrs": [
+    0
+   ],
+   "derivations": [
+    "direct_instant"
+   ]
+  },
+  "shareBasedCompensation": {
+   "destinationFields": [
+    "annual.annualSBC"
+   ],
+   "conceptPriority": [
+    "ShareBasedCompensation"
+   ],
+   "requiredQtrs": [
+    4
+   ],
+   "derivations": [
+    "direct_qtrs4"
+   ]
+  },
+  "operatingCashFlow": {
+   "destinationFields": [
+    "annual.annualOCF",
+    "annual.annualFCF",
+    "metrics.fcfMarginTTM"
+   ],
+   "conceptPriority": [
+    "NetCashProvidedByUsedInOperatingActivities",
+    "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"
+   ],
+   "requiredQtrs": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "derivations": [
+    "direct_qtrs1",
+    "qtrsN_minus_qtrsN-1_same_concept"
+   ]
+  },
+  "capitalExpenditure": {
+   "destinationFields": [
+    "annual.annualCapex",
+    "annual.annualFCF",
+    "metrics.fcfMarginTTM"
+   ],
+   "conceptPriority": [
+    "PaymentsToAcquirePropertyPlantAndEquipment",
+    "PaymentsForAdditionsToPropertyPlantAndEquipment",
+    "PaymentsToAcquireProductiveAssets"
+   ],
+   "requiredQtrs": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "derivations": [
+    "direct_qtrs1",
+    "qtrsN_minus_qtrsN-1_same_concept",
+    "absolute_value_before_fcf_deduction"
+   ]
+  },
+  "dilutedShares": {
+   "destinationFields": [
+    "metrics.revenuePerShare"
+   ],
+   "conceptPriority": [
+    "WeightedAverageNumberOfDilutedSharesOutstanding",
+    "WeightedAverageNumberOfDilutedSharesOutstandingIncludingConvertible",
+    "WeightedAverageNumberOfSharesOutstandingBasic",
+    "WeightedAverageNumberOfSharesOutstanding",
+    "EntityCommonStockSharesOutstanding"
+   ],
+   "conceptRationale": {
+    "WeightedAverageNumberOfDilutedSharesOutstanding": "Gewichteter Durchschnitt verwaesserter Aktien - die von R10 verlangte Groesse.",
+    "WeightedAverageNumberOfDilutedSharesOutstandingIncludingConvertible": "Gleiche Groesse inklusive Wandelrechten.",
+    "WeightedAverageNumberOfSharesOutstandingBasic": "Unverwaesserter Durchschnitt. Ersatz, wenn keine verwaesserte Zahl gemeldet ist - unterschaetzt die Verwaesserung, faengt den Kapitalerhoehungs-Effekt aber weiterhin.",
+    "WeightedAverageNumberOfSharesOutstanding": "Aeltere Schreibweise der unverwaesserten Groesse.",
+    "EntityCommonStockSharesOutstanding": "Deckblatt-Stichtagszahl. Letzter Rueckfall; Stichtag statt Durchschnitt, deshalb niedrigste Prioritaet und im Report als solcher auszuweisen."
+   },
+   "requiredQtrs": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "derivations": [
+    "direct_qtrs1",
+    "direct_instant"
+   ],
+   "missingRule": "NICHT BERECHENBAR - nie 0, nie geschaetzt, nie aus einer Nachbarperiode uebernommen (R5).",
+   "zweck": "R10-Waechter gegen Kapitalerhoehungs-Scheinwachstum: Pflicht-Nebenrechnung Umsatz je Aktie."
+  }
+ },
+ "forbidden": [
+  "cross-concept subtraction",
+  "cross-unit subtraction",
+  "future accession use",
+  "substitution from a lower-priority concept when a higher-priority fact exists for the same identity",
+  "invented filing or acceptance timestamps",
+  "using amended values before the amendment acceptance time"
+ ],
+ "changeControl": "Any semantic change requires a new map version and a new protocol seal before growth outcomes are opened.",
+ "parentVersion": "FEM-SEC-CONCEPT-MAP@1.0.0",
+ "parentSha256": "a60f936ecf32c2bc00dd1787e11cab78e014237cf82ced47d673f98c986103a9",
+ "revisionGrundlage": "_BESCHLUSS-AUFFINDBARKEIT-2026-08-16.md",
+ "revisionRegel": "GENAU EINE Revision. Auswahlkriterium ist Taxonomie-Semantik, je Tag dokumentiert; die Wirkung auf die Auffindbarkeitsquote wurde bei der Auswahl nicht betrachtet. Besteht der E1b-Abnahmelauf nicht, endet Strang B als INCONCLUSIVE_DATA - eine zweite Revision ist ausgeschlossen.",
+ "formsDecision": {
+  "aufgenommen": [
+   "10-K",
+   "10-K/A",
+   "10-Q",
+   "10-Q/A"
+  ],
+  "abgelehnt": [
+   "20-F",
+   "20-F/A"
+  ],
+  "grund": "Gemessen im Entdeckungsfenster: 98,7 % der 20-F-Firmenjahre haben genau EIN Perioden-Ende, 1,3 % haben zwei, KEIN einziger Filer erreicht drei oder mehr (459 Filer, Median 1,0; fp-Feld 3 460-mal 'FY'). 20-F-Filer berichten jaehrlich und koennen strukturell kein Quartalssignal tragen.",
+  "folge": "Dokumentierte Deckungsgrenze, nicht stilles Verschlucken. 16 143 20-F-Einreichungen bleiben ausserhalb; namentlich betroffen ist NBIS (Vorgaenger Yandex). Der Deckungsgrad-Pflichtsatz weist den Anteil je Fenster aus."
+ },
+ "universe": {
+  "kategorieAusschluss": {
+   "sicVon": 6000,
+   "sicBis": 6799,
+   "grund": "Finanzintermediaere und Kapitalvehikel berichten Zins-, Gebuehren- und Anlageertrag, keinen Leistungsumsatz."
+  },
+  "keinWeitererSektorAusschluss": "Biotech, Bergbau und SPACs bleiben im Universum. Vor-Umsatz ist eine Firmen-Eigenschaft, keine Sektor-Eigenschaft (Beleg: LQDA laeuft unter SIC 2834 und hat durchgehend Umsatz).",
+  "eintrittskriterium": ">=8 Quartale Umsatzreihe im Signalteil des Fensters (bestehend, unveraendert)."
+ },
+ "gateMetric": {
+  "population": "Firmen im Universum mit mindestens einem Umsatztraeger nach dieser Landkarte.",
+  "schwelle": 0.9,
+  "maxFensterDifferenzPunkte": 10,
+  "maxRestSprung2017_2018Punkte": 5,
+  "pflichtfeldDeckungsgrad": "Je Fenster ausweisen, wie viele Firmen und Einreichungen ausserhalb des Definitionsbereichs bleiben und warum: Finanzsektor, Vor-Umsatz, 20-F.",
+  "unveraendert": "Schwelle und Differenz sind gegenueber R9 NICHT gesenkt."
+ },
+ "frozenAtHerkunft": "Dateisystem-Zeitstempel der Einfrierung, nicht handgesetzt (ein handgesetzter Wert lag in der Zukunft).",
+ "mapSha256": "933934db813b5fedfa1a56bc9050ca9c2906d31810774c14940f0da343bc697f"
+}

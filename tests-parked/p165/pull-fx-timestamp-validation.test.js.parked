@@ -1,0 +1,30 @@
+'use strict';
+// EXPECTED RED until DL8 F-03-pull-yahoo / DL3 pull-yahoo-02-1 is fixed.
+// Branch: loadFx ageDays/perCurAgeDays > FX_STALE_DAYS must not accept NaN ages.
+const assert = require('node:assert/strict');
+const { fixture, NOW } = require('./dl23-pull-fixture.js');
+const fresh = new Date(NOW - 86400000).toISOString();
+const stale = new Date(NOW - 15 * 86400000).toISOString();
+const run = (fetchedAt, lastSuccessAt) => fixture({ snapshots: [], fxRates: {
+  fetchedAt, rates: { XDL: 0.25 }, currencyMeta: { XDL: { lastSuccessAt } }, failed: []
+} }).Y;
+const controls = run(fresh, fresh);
+assert.equal(controls._fxFactorFor('XDL').factor, 0.25);
+assert.equal(controls._fxFactorFor('XDL').provenance, 'live');
+assert.equal(run(stale, stale)._fxFactorFor('XDL'), null);
+assert.equal(run(fresh, stale)._fxFactorFor('XDL'), null);
+console.log('GREEN controls: fresh accepted, stale top-level and per-currency rejected');
+const failures = [];
+for (const [name, fetchedAt, lastSuccessAt] of [
+  ['malformed fetchedAt', 'not-a-date', fresh],
+  ['malformed lastSuccessAt', fresh, 'not-a-date']
+]) {
+  const Y = run(fetchedAt, lastSuccessAt);
+  const snap = { meta: { reportingCurrency: 'XDL', tradingCurrency: 'USD' }, metrics: { revenueTTM: { value: 100 } } };
+  Y._convertSnapshotToUSD(snap);
+  if (Y._fxFactorFor('XDL') !== null || snap.meta.fxConversionFailed !== true) {
+    failures.push({ name, factor: Y._fxFactorFor('XDL'), convertedRevenue: snap.metrics.revenueTTM.value,
+      conversionFailed: snap.meta.fxConversionFailed || false, provenance: snap.meta.fxRateSourceReporting });
+  }
+}
+assert.deepEqual(failures, [], 'Invalid date cannot establish live conversion provenance');

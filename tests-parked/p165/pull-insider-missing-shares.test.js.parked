@@ -1,0 +1,18 @@
+'use strict';
+// EXPECTED RED until DL8 F-24-pull-yahoo / DL3 pull-yahoo-06-1 is fixed.
+// Branch: counted open-market transactions must not turn absent shares into zero.
+const assert = require('node:assert/strict');
+const { fixture } = require('./dl23-pull-fixture.js');
+const Y = fixture({ snapshots: [] }).Y;
+const asOf = '2026-09-29T02:17:00Z';
+const tx = extra => ({ startDate: '2026-09-20', transactionText: 'Purchase', filerName: 'Synthetic Filer', ...extra });
+const activity = transactions => Y.mapYahooToCanonical({ price: { currency: 'USD' },
+  insiderTransactions: { transactions } }, { ticker: 'SYN', name: 'Synthetic company' }, asOf).insiderActivity;
+assert.equal(activity([tx({ shares: 0 })]).netShares90d, 0);
+assert.equal(activity([tx({ shares: 7 })]).netShares90d, 7);
+assert.equal(activity([tx({ shares: { raw: 7 } }), tx({ shares: 2, transactionText: 'Sale' })]).netShares90d, 5);
+assert.equal(activity([tx({ shares: 7 }), tx({ transactionText: 'Option grant' })]).netShares90d, 7);
+console.log('GREEN controls: actual zero, raw numeric shares, wrapped shares and excluded grant');
+const missing = activity([tx({}), tx({ shares: 7 })]);
+assert.equal(missing.buyCount90d, 2);
+assert.equal(missing.netShares90d, null, 'One missing counted share quantity makes the net share sum unknown');

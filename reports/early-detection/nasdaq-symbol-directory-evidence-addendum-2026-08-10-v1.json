@@ -1,0 +1,122 @@
+{
+  "schema": "early-detection-nasdaq-symbol-directory-evidence-addendum/v1",
+  "generatedAt": "2026-08-10T21:04:19.754Z",
+  "gates": [
+    "entityListingLedger",
+    "historicalUniverse"
+  ],
+  "status": "PARTIAL_FREE_ARCHIVED_NASDAQ_DIRECTORY_STATES_GATE_REMAINS_RED",
+  "verdict": "Archived Nasdaq Trader symbol-directory files add independently verified positive security states for the observed 2009-2024 capture timestamps. Their sparse Internet Archive availability cannot prove continuous listing intervals, permanent identity, exact first or final sessions, adjusted OHLCV or delisting returns.",
+  "period": {
+    "startYear": 2009,
+    "endYear": 2024
+  },
+  "evidence": {
+    "snapshots": 103,
+    "observations": 434214,
+    "captureTimestampRange": {
+      "first": "20090202084820",
+      "last": "20241108211654"
+    },
+    "coveredCaptureYears": [
+      "2009",
+      "2010",
+      "2011",
+      "2012",
+      "2013",
+      "2014",
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022",
+      "2023",
+      "2024"
+    ],
+    "missingCaptureYears": [],
+    "snapshotsByKind": {
+      "NASDAQ": 65,
+      "OTHER_LISTED": 38
+    },
+    "snapshotsByCaptureYear": {
+      "2009": 3,
+      "2010": 1,
+      "2011": 7,
+      "2012": 1,
+      "2013": 3,
+      "2014": 2,
+      "2015": 5,
+      "2016": 8,
+      "2017": 10,
+      "2018": 23,
+      "2019": 14,
+      "2020": 11,
+      "2021": 4,
+      "2022": 5,
+      "2023": 1,
+      "2024": 5
+    },
+    "observationsByKind": {
+      "NASDAQ": 230391,
+      "OTHER_LISTED": 203823
+    },
+    "observationsByExchangeCode": {
+      "A": 14487,
+      "N": 120611,
+      "P": 58429,
+      "V": 96,
+      "Z": 10200
+    },
+    "distinctSymbols": 24672,
+    "distinctSymbolNamePairs": 35340,
+    "symbolsWithMultipleObservedNames": 7549,
+    "observationsWithExchangeCode": 203823,
+    "observationsWithoutExchangeCode": 230391,
+    "testIssueObservations": 1414,
+    "nonTestPositivePresenceObservations": 432800,
+    "snapshotsWithEmbeddedFileCreationTime": 103,
+    "headerVariantsByKind": {
+      "NASDAQ": 2,
+      "OTHER_LISTED": 2
+    },
+    "identityResolvedRows": 0
+  },
+  "sourceQualification": "Nasdaq Trader Symbol Directory content replayed through Internet Archive; original URL, archive capture timestamp, embedded file-creation time, payload hash and raw bytes remain bound per snapshot.",
+  "acceptedUses": [
+    "Positive as-of security presence at each observed archived directory state.",
+    "Observed symbol, security-name and source exchange-code cross-checks.",
+    "Survivorship and ticker-reuse diagnostics without identity promotion."
+  ],
+  "forbiddenUses": [
+    "Inferring absence or continuous listing between sparse archive states.",
+    "Treating a symbol or symbol-name pair as a permanent security identifier.",
+    "Inferring exact first or final trading sessions, adjusted OHLCV, returns or delisting returns.",
+    "Backfilling dates without a captured source state."
+  ],
+  "whatWouldChangeDecision": "A lawful zero-cost security-level 2009-2024 master with stable identity, exchange-effective listing intervals, corporate actions, terminal sessions and delisting returns must pass independent audit.",
+  "inputs": {
+    "captureReport": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.json",
+      "fileSha256": "fe23c5129d96271b482477171ae52ebc04c61324b814e6c93eac3e4354e2e8f4",
+      "reportSha256": "34584a6206d7b2035dd463692ba605dd7d6e7dd4ce8c6f44850bcf7bad2dfb23"
+    },
+    "captureVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2-verification.json",
+      "fileSha256": "5520260e082718fd14d5716f39f6f0c8112cfaa8561ebf5f78f0ed042d65177d",
+      "reportSha256": "c56175ec2ca62fc1583e3db21023386ae6d3ebb9b4e3c20c1407e85ec2c11e5c"
+    },
+    "database": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.sqlite",
+      "fileSha256": "ee8eff30112fe629699b76fc419ec9224a67a02fcbe63a5b247fb1b65f4df333",
+      "bytes": 144506880
+    }
+  },
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "a5fd937ad68f446282514f91fd067693111040d2a1b572a93cb37cb037a5efbf"
+}

@@ -1,0 +1,381 @@
+{
+  "schema": "ges-sec-us-preregistration/v1",
+  "identity": {
+    "protocolId": "GES-SEC-US-PILOT",
+    "version": "1.0.0",
+    "status": "preregistered_not_executed",
+    "frozenAt": "2026-08-08T00:00:00+02:00",
+    "baseline": "GQS-00@1.0.0",
+    "sourceProtocol": "backtest_protocol_v1.json@1.0 frozen 2026-08-07"
+  },
+  "researchQuestion": "Can strictly point-in-time SEC filing data identify an operational growth-emergence signal before GQS-00 confirmation, and does that signal add out-of-sample information beyond unchanged GQS-00?",
+  "directedHypotheses": [
+    {
+      "id": "H1",
+      "direction": "positive",
+      "claim": "Higher fundamental GES ranks predict higher subsequent revenue and gross-profit growth."
+    },
+    {
+      "id": "H2",
+      "direction": "positive",
+      "claim": "GES retains positive incremental rank information after controlling for contemporaneous GQS-00, sector, size and market regime."
+    },
+    {
+      "id": "H3",
+      "direction": "positive",
+      "claim": "The GES top decile has higher subsequent sector-and-size-matched total return than the investable universe after the fixed transaction-cost assumption."
+    },
+    {
+      "id": "H4",
+      "direction": "non_negative",
+      "claim": "Adding the secondary market-recognition factor improves or preserves validation-window rank IC without increasing test-window maximum drawdown by more than 20 percent relative."
+    }
+  ],
+  "universe": {
+    "region": "US exchange-listed domestic SEC filers",
+    "startDate": "2010-01-01",
+    "securityTypes": [
+      "operating-company common stock"
+    ],
+    "exclusionsPrimary": [
+      "ETF, fund, preferred, warrant, unit or debt security",
+      "OTC listing",
+      "foreign private issuer or ADR in the primary analysis",
+      "blank-check/SPAC before an operating-company merger",
+      "bank, insurer, REIT or pre-revenue biotechnology company"
+    ],
+    "excludedGroupHandling": "Banks, insurers, REITs and pre-revenue biotechnology are retained only as separately reported secondary strata and never pooled into the primary cohort.",
+    "marketCapUsd": {
+      "primaryMinimum": 500000000,
+      "reportingBuckets": [
+        [
+          500000000,
+          2000000000
+        ],
+        [
+          2000000000,
+          10000000000
+        ],
+        [
+          10000000000,
+          50000000000
+        ],
+        [
+          50000000000,
+          200000000000
+        ],
+        [
+          200000000000,
+          null
+        ]
+      ],
+      "timestamp": "last fully known close before signal availability"
+    },
+    "liquidity": {
+      "measure": "median daily dollar volume over the 60 completed trading sessions before availability",
+      "primaryMinimumUsd": 5000000,
+      "sensitivityMinimumsUsd": [
+        1000000,
+        20000000
+      ],
+      "minimumPriceUsd": 3
+    },
+    "deduplication": "One historical entity_id per economic entity. At each signal date select the eligible US primary listing with the highest prior-60-session median dollar volume; ties use listing_id ascending. No current ticker mapping may be projected backward.",
+    "sectorHandling": "Primary percentiles are computed within historical GICS-like sector and size bucket. If fewer than 30 eligible entities are present, fall back to sector, then the full eligible universe; the fallback level is recorded."
+  },
+  "informationTiming": {
+    "factAvailability": "known_at = max(observed_at, source_published_at, filed_at/SEC acceptance timestamp); known_at must be <= evaluation timestamp",
+    "secCutoff": "Use the SEC acceptance timestamp. If an issuer release with an independently captured publication timestamp is used, availability is the later timestamp.",
+    "restatements": "Use the original as-filed revision known at the timestamp. Later amendments and restatements are separate source_revision rows and cannot overwrite the original.",
+    "signalEvents": "10-Q and 10-K filing events; amended filings create a new event only when they change at least one eligible input fact.",
+    "execution": "First regular-session open strictly after availability. If availability precedes that day's open, that open is eligible; otherwise use the next trading-session open.",
+    "portfolioSnapshots": "At each calendar month-end use the most recent eligible filing signal known before the next execution open; signals older than 180 calendar days are stale and excluded.",
+    "prohibitedLookahead": [
+      "facts filed or released after the evaluation timestamp",
+      "current ticker/entity maps without effective dates",
+      "later-restated values substituted for original filings",
+      "final delisting status as a feature",
+      "future adjusted-price factors in features",
+      "consensus or estimate histories not captured point in time"
+    ]
+  },
+  "factorPreprocessing": {
+    "quarterConstruction": "Derive stand-alone quarters from as-filed quarterly values; for cumulative YTD cash-flow facts subtract the immediately prior cumulative fact from the same accession/fiscal year. Ambiguous duration/context rows are quarantined.",
+    "scaling": "Per factor and event date, winsorize finite raw values at the training-window p1/p99 learned without validation/test rows, then convert to cohort midrank percentiles on [0,100].",
+    "percentile": "100 * (count(x < v) + 0.5 * count(x = v)) / n",
+    "missingness": "No imputation. A composite requires at least 4 of 5 primary factors. Present weights are renormalized; coverage count and weight are reported and used as a control variable.",
+    "minimumHistory": "Eight stand-alone fiscal quarters for acceleration factors; otherwise the affected factor is missing. No annual fallback is introduced into GES v1.0.0."
+  },
+  "factors": {
+    "primary": [
+      {
+        "id": "revenue_acceleration",
+        "weight": 0.2,
+        "formula": "median(rev_q0/rev_q4-1, rev_q1/rev_q5-1) - median(rev_q2/rev_q6-1, rev_q3/rev_q7-1)",
+        "inputs": [
+          "SEC as-filed quarterly revenue q0..q7"
+        ],
+        "direction": "higher_is_better"
+      },
+      {
+        "id": "gross_profit_acceleration",
+        "weight": 0.2,
+        "formula": "median(gp_q0/gp_q4-1, gp_q1/gp_q5-1) - median(gp_q2/gp_q6-1, gp_q3/gp_q7-1)",
+        "inputs": [
+          "SEC as-filed quarterly revenue q0..q7",
+          "SEC as-filed quarterly cost of revenue q0..q7",
+          "gp_q = revenue_q - cost_of_revenue_q"
+        ],
+        "direction": "higher_is_better"
+      },
+      {
+        "id": "gross_margin_inflection",
+        "weight": 0.2,
+        "formula": "mean(gp_q0/rev_q0, gp_q1/rev_q1) - mean(gp_q2/rev_q2, gp_q3/rev_q3, gp_q4/rev_q4, gp_q5/rev_q5)",
+        "inputs": [
+          "SEC as-filed quarterly revenue q0..q5",
+          "SEC as-filed quarterly gross profit q0..q5"
+        ],
+        "direction": "higher_is_better"
+      },
+      {
+        "id": "operating_leverage_inflection",
+        "weight": 0.2,
+        "formula": "mean(opinc_q0/rev_q0, opinc_q1/rev_q1) - mean(opinc_q2/rev_q2, opinc_q3/rev_q3, opinc_q4/rev_q4, opinc_q5/rev_q5)",
+        "inputs": [
+          "SEC as-filed quarterly revenue q0..q5",
+          "SEC as-filed quarterly operating income q0..q5"
+        ],
+        "direction": "higher_is_better"
+      },
+      {
+        "id": "dilution_discipline",
+        "weight": 0.2,
+        "formula": "-(shares_outstanding_at_q0_end / shares_outstanding_at_q4_end - 1)",
+        "inputs": [
+          "SEC as-filed entity common shares outstanding at q0 and q4 period ends"
+        ],
+        "direction": "higher_is_better"
+      }
+    ],
+    "primaryComposite": "GES_F = weighted mean of available primary factor percentiles; require >=4 factors; renormalize the fixed equal weights over present factors.",
+    "secondary": [
+      {
+        "id": "market_recognition",
+        "formula": "0.5 * percentile(log(adj_close_t-21/adj_close_t-126)) + 0.5 * percentile(log(adj_close_t/adj_close_t-21))",
+        "inputs": [
+          "point-in-time adjusted closes through the last completed session before availability"
+        ],
+        "direction": "higher_is_better",
+        "note": "The 6-to-1-month term measures established recognition; the 1-month term measures recent confirmation. Both stop before the filing becomes available."
+      },
+      {
+        "id": "expectation_gap",
+        "status": "NOT_READY",
+        "formula": null,
+        "reason": "No licensed point-in-time consensus snapshot store exists. It is excluded from v1.0.0 and may only enter a new preregistered protocol version."
+      }
+    ],
+    "secondaryComposite": "GES_FM = 0.8 * GES_F + 0.2 * market_recognition_percentile. Missing market recognition makes GES_FM missing; it never changes GES_F.",
+    "baseline": "GQS-00@1.0.0 is executed unchanged on the same as-of event snapshots. No GQS weight, axis, track, filter, factor or ranking rule may be retuned."
+  },
+  "targets": {
+    "fundamentalQuarters": [
+      4,
+      8,
+      12,
+      20
+    ],
+    "equityMonths": [
+      3,
+      6,
+      12,
+      24,
+      36,
+      60
+    ],
+    "primaryFundamental": "8-quarter forward revenue CAGR rank",
+    "primaryEquity": "24-month sector-and-size-matched total return rank",
+    "secondary": [
+      "forward gross-profit CAGR",
+      "margin non-deterioration",
+      "per-share/dilution-adjusted growth",
+      "absolute total return",
+      "maximum drawdown",
+      "time to +50% and +100%"
+    ],
+    "maturityRule": "A row/horizon is not evaluated until the complete horizon and any delisting outcome are observable. Immature rows are reported only as counts, never as successes or failures."
+  },
+  "validation": {
+    "scheme": "nested expanding walk-forward; never random shuffle",
+    "windows": [
+      {
+        "train": [
+          "2010-01-01",
+          "2016-12-31"
+        ],
+        "validate": [
+          "2017-01-01",
+          "2018-12-31"
+        ],
+        "test": [
+          "2019-01-01",
+          "2020-12-31"
+        ]
+      },
+      {
+        "train": [
+          "2010-01-01",
+          "2018-12-31"
+        ],
+        "validate": [
+          "2019-01-01",
+          "2020-12-31"
+        ],
+        "test": [
+          "2021-01-01",
+          "2022-12-31"
+        ]
+      },
+      {
+        "train": [
+          "2010-01-01",
+          "2020-12-31"
+        ],
+        "validate": [
+          "2021-01-01",
+          "2022-12-31"
+        ],
+        "test": [
+          "2023-01-01",
+          "2025-12-31"
+        ]
+      }
+    ],
+    "selectionRule": "Only factor availability mappings, concept aliases and data-quality rules may be selected in train/validation. The formulas and weights in this protocol are fixed. Test windows are opened once per protocol version after all readiness gates pass.",
+    "embargo": "A filing event for an entity cannot occur in both sides of a split boundary; assign by availability date. Overlapping forward outcomes use entity-clustered, calendar-block inference.",
+    "ablations": [
+      "each primary factor removed once",
+      "GES_F without dilution",
+      "GES_F versus market_recognition alone",
+      "GES_FM versus GES_F",
+      "GQS-00 alone versus GQS-00 plus GES_F"
+    ],
+    "stressPeriods": [
+      "2008-style stress unavailable before 2010 and therefore not claimed",
+      "COVID 2020",
+      "2022 high-rate/down market",
+      "2023-2025 AI boom",
+      "exclude COVID",
+      "exclude AI boom"
+    ],
+    "neutralityStress": [
+      "sector-neutral",
+      "sector-and-size-neutral",
+      "exclude companies below USD 2bn",
+      "ADV >= USD 20m"
+    ]
+  },
+  "metrics": {
+    "primary": [
+      "Spearman rank IC",
+      "top-decile minus universe median outcome",
+      "top-decile hit rate"
+    ],
+    "incremental": [
+      "partial rank IC controlling for GQS-00, sector, size and regime",
+      "nested-model likelihood or out-of-sample loss improvement where applicable"
+    ],
+    "portfolio": [
+      "absolute and benchmark-relative total return",
+      "median return",
+      "maximum drawdown",
+      "turnover",
+      "tail loss",
+      "hit rate"
+    ],
+    "stability": [
+      "rank turnover",
+      "signal persistence",
+      "missingness sensitivity",
+      "cohort fallback rate"
+    ],
+    "inference": "Entity-clustered calendar-block bootstrap with 10,000 resamples; report point estimate, 95% interval and effective sample size."
+  },
+  "benchmarks": [
+    "GQS-00@1.0.0",
+    "sector-and-size matched equal-weight control",
+    "eligible equal-weight universe",
+    "market_recognition alone",
+    "revenue-growth-level alone"
+  ],
+  "costsAndOutcomes": {
+    "primaryRoundTripCostBps": 50,
+    "sensitivityRoundTripCostBps": [
+      20,
+      100
+    ],
+    "prices": "Only subsequent split/dividend-adjusted prices may define outcomes; no outcome price enters a feature.",
+    "delisting": "Use the documented cash/stock consideration when available. Otherwise a terminal disappearance after verified delisting is -100%; unresolved series endings are quarantined and reported, not silently dropped.",
+    "corporateActions": "Map outcomes through effective-dated listing/entity events; mergers roll into documented consideration, never today's surviving ticker by assumption."
+  },
+  "multipleTesting": {
+    "family": "All stated horizons, composites, liquidity variants, subgroup strata and ablations within this protocol version",
+    "control": "Benjamini-Hochberg FDR q=0.05",
+    "modelSelectionChecks": [
+      "White Reality Check",
+      "Hansen SPA",
+      "PBO/CSCV",
+      "Deflated Sharpe Ratio where applicable"
+    ],
+    "reporting": "All registered tests are reported, including null and adverse results."
+  },
+  "decisionRules": {
+    "success": [
+      "H1: GES_F has positive primary fundamental rank IC in at least two of three test windows and the pooled block-bootstrap 95% interval excludes zero after FDR control.",
+      "H2: incremental partial rank IC over GQS-00 is positive in at least two test windows and pooled adjusted q <= 0.05.",
+      "H3: the GES_F top decile has positive after-cost matched excess return in at least two mature test windows and no test window has a statistically significant negative spread after FDR control."
+    ],
+    "falsification": [
+      "Pooled primary fundamental rank IC <= 0.",
+      "Incremental rank IC over GQS-00 <= 0 or reverses sign in two test windows.",
+      "Top-decile after-cost matched excess return <= 0 in two mature test windows.",
+      "Results disappear when entities below USD 2bn or COVID/AI-boom periods are excluded."
+    ],
+    "abort": [
+      "Any point-in-time leakage or inability to reconstruct original as-filed revisions.",
+      "Historical entity/listing linkage precision below 99.5% on the adjudicated audit sample.",
+      "More than 5% unresolved delisting outcomes in an evaluated test window.",
+      "Primary factor coverage below 60% of otherwise eligible entity-events in two consecutive calendar years.",
+      "Any modification to formulas, weights or success rules after test outcomes are viewed; such a change requires a new protocol version and a fresh unopened test window."
+    ]
+  },
+  "readinessGate": {
+    "status": "NOT_READY_TO_EXECUTE",
+    "requiredBeforeRun": [
+      "effective-dated entity/listing ledger",
+      "append-only original-as-filed SEC fact store with acceptance timestamps",
+      "as-of query with leakage tests",
+      "historical universe membership",
+      "adjusted prices plus delisting/corporate-action outcomes",
+      "historical GQS-00 snapshot adapter",
+      "frozen concept map and coverage report",
+      "independent audit sample passing all exit criteria"
+    ],
+    "prohibitedNow": "Do not compute pilot outcomes, inspect test-window performance, choose weights from results, or publish a winner."
+  },
+  "changeLog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-08-08",
+      "change": "Initial preregistration. Narrows the source protocol to domestic SEC filers, fixes five equal-weight fundamental factors, excludes unavailable consensus history, and freezes exact execution and decision rules before outcome access."
+    }
+  ],
+  "integrity": {
+    "canonicalization": "Recursively sort object keys; preserve array order; JSON.stringify without whitespace; UTF-8.",
+    "hashAlgorithm": "SHA-256",
+    "hashScope": "This JSON after replacing integrity.canonicalSha256 with null.",
+    "canonicalSha256": "df8d9094c38bea05d90f4e5076a11da3bfa77acaea1ac7eb40a42742bcc20a76",
+    "artifactHashManifest": "hash-manifest.json"
+  }
+}

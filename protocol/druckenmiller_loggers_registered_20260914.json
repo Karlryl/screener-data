@@ -1,0 +1,89 @@
+{
+  "schema": "druckenmiller-loggers-registered/1",
+  "file": "A",
+  "registeredOn": "2026-09-14",
+  "hashedInChunk": 1,
+  "governs": "L1-L8 · U · 60 % grey-out · 95 % freshness gate · 5 % churn gate · R-INT (logged only)",
+  "notGoverned": "M1/M2, the state rule, terciles, k, entry rule, cool-off, horizons, censoring, bootstrap, block floor, families, alpha, label boundaries, retirement, read schedule — File B (hashed at the end of chunk 2); the top-down test design — File C (hashed at the end of chunk 2)",
+  "preRegistration": true,
+  "preRegistrationRows": {
+    "count": 87,
+    "throughDate": "2026-09-11",
+    "why": "Chunk 0's seed backfill (Council D2: every day expires) ran under exactly these values BEFORE any output was inspected. BUILD-SPEC v1 [REV7-3] therefore scopes the registration test for File A: instead of 'hash commit precedes the first row it governs' it asserts that File A equals the Council-D3 constants byte-for-byte and that no row after the hash commit uses different constants."
+  },
+  "verifiedPostHashRows": [
+    {
+      "date": "2026-09-18",
+      "producingCommit": "6469832823b37981ec5b30ca6cb301baf082cee1",
+      "fileADigestAtCommit": "316e73c85f9727e1a9c26801054966648fd1ad2a9a324ce29ed71ad20a50bb06",
+      "proof": {
+        "i": "Der Logger liest Datei A zur Laufzeit ueber registration.js (fail-closed, genau eine Registrierungsdatei) fuer das Churn-Tor (courtGates.churnMaxShare) und den paramsHash; die L1-L8-Konstanten sind Modulkonstanten in lib/druckenmiller/internals.js und wurden vor der Reproduktion 15/15 gegen die Werte der gehashten Datei A geprueft (identisch; Bericht reports/t-r6-reproduktion-20260918-2026-09-20.md). Die Gleichheit Code<->Datei A prueft heute kein Tageslauf-Waechter (offener Punkt).",
+        "ii": "Der sha256 der Datei A am Erzeuger-Commit ist identisch mit dem registrierten Sidecar-Digest, und der Lauf hat ihn selbst ausgewiesen: die CI-Zeile des Exports lautet woertlich 'paramsHash=316e73c85f97...'.",
+        "iii": "Numerische Reproduktion der Zeile 2026-09-18 auf dem gemergten Snapshot-Stand des Laufs 35500025507 (16.048 Dateien) unter genau dieser Datei A: Gueltigkeits-Tor universeHash gleich (nCandidates 2310 = 2310), Vergleich rekursiv exakt ohne jede Toleranz, einzige benannte Ausnahme generatedAt; erzeugte Zeile sha256 91384df6aae5a4b14d164c8cf8a0d56c6446b9c8ef01c052bd08b7c0703da6ae; Bericht reports/t-r6-reproduktion-20260918-2026-09-20.md, Commit e462a149a8. Der vorher versuchte Konstruktionsbeweis war NICHT tragfaehig (6 von 21 Hunks beruehren einen Konstanten-Pfad, darunter der Datei-A-Leser selbst, Bericht reports/t-r6-konstanten-pfad-messung-2026-09-20.md) - er wurde durch diesen numerischen Beweis ersetzt, nicht ergaenzt."
+      },
+      "verifiedOn": "2026-09-20",
+      "verifiedBy": "Lane A measurement + master review"
+    }
+  ],
+  "changelogGate": "tests/druckenmiller/fixtures/registration.CHANGELOG.md — a change to this file without a changelog line fails tests/druckenmiller/registration.test.js (BUILD-SPEC v1 residual 4, pattern [REV3-5])",
+  "councilD3": {
+    "_origin": "Council verdict 2026-09-14 03:53, decision D3 (logger constants) and D4 (universe U) — COUNCIL-VERDICT-2026-09-14.md",
+    "_date": "2026-09-14",
+    "l3Band": 0.03,
+    "l3BandSensitivities": [0.01, 0.05],
+    "l4": {
+      "cyclicalSectors": ["Industrials", "Consumer Cyclical", "Energy", "Financial Services", "Basic Materials"],
+      "defensiveSectors": ["Consumer Defensive", "Healthcare", "Utilities"],
+      "unassignedRule": "every other sector value, and a missing sector, goes into a VISIBLE 'unassigned' bucket (l4Unassigned) — never dropped, never reassigned",
+      "weightings": ["equalWeight", "capWeight"],
+      "spreadHorizonBars": 63
+    },
+    "l4bNamedIndustries": ["trucking", "specialty retail", "department stores", "residential construction"],
+    "l4bMatch": "case-insensitive substring match on the provider's industry string",
+    "l4bMinBasketN": 20,
+    "axisWindows": {
+      "smaLong": 200,
+      "smaShort": 50,
+      "highLowWindow": 252,
+      "returnHorizon": 63
+    },
+    "greyOutMinCoverage": 0.6,
+    "universe": {
+      "country": "United States",
+      "tickerMustNotContain": ".",
+      "suspectFlags": ["_newestQtrSuspect", "_annualCurrencyLeakSuspect"],
+      "minBars": 250,
+      "membershipHashPerSession": true,
+      "redefinition": "any redefinition is a NEW series id"
+    }
+  },
+  "courtGates": {
+    "_origin": "Court retrial conditions 2026-09-14 — freshness gate from round 1 as amended by retrial N2, churn gate from BUILD-SPEC v1 [REV6-4]/[REV10-4]",
+    "_date": "2026-09-14",
+    "_kind": "data-quality exclusions, fixed before a single scoreboard entry exists — NOT outcome parameters (BUILD-SPEC v1 [REV8-5])",
+    "freshnessMinShare": 0.95,
+    "freshnessConsequence": "freshShare < 0.95 -> lowFreshness: true, the row stays in the series but feeds no quantile window and no H-INT; guard annotation is YELLOW, never a red run; backfilled rows carry freshShare null and are exempt from the gate",
+    "churnMaxShare": 0.05,
+    "churnFormula": "(nEntered + nLeft) / nUniverse against the previous publication day",
+    "churnConsequence": "highChurn: true -> excluded from quantile windows like lowFreshness, and the session writes no scoreboard entries"
+  },
+  "overrideNoteD1": {
+    "_origin": "Council verdict 2026-09-14 03:53, decision D1 (68 %) — the hashed override note required by BUILD-SPEC v1 §0.3",
+    "_date": "2026-09-14",
+    "text": "Kipp-Schwelle (< 5 Prinzipien) gerissen: strenge Zaehlung 4, nach Advocatus Diaboli 3. Die Konsequenz wurde nach der vorgegebenen Eskalation (prinzipien-katalog.md:27-28) bewusst auf \"kein eigenes Ranking\" verengt."
+  },
+  "rIntLoggedOnly": {
+    "_origin": "Council D3 plus laneC/operationalisierung.md §2 — computed and logged, never published as a state",
+    "_date": "2026-09-14",
+    "legs": ["l1", "l2", "l3", "l4ew"],
+    "aggregation": "equal-weight mean of the legs' percentile ranks in the expanding window",
+    "qLow": 0.3,
+    "qHigh": 0.7,
+    "debounceSessions": 20,
+    "minLoggedLiveSessions": 250,
+    "published": false,
+    "stateMachineImplemented": false,
+    "stateMachineNote": "no state is published (Council D3), so no state machine runs; q30/q70 and the 20-session debounce are registered anyway so that a state can never be tuned into existence after the fact",
+    "quantileWindowExcludes": ["backfilled", "lowFreshness", "highChurn"]
+  }
+}

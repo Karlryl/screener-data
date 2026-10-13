@@ -1,0 +1,2220 @@
+{
+  "schema": "early-detection-commoncrawl-sec-filing-coverage/v1",
+  "generatedAt": "2026-08-09T06:33:08.238Z",
+  "status": "COMMONCRAWL_STRATIFIED_FILING_ARCHIVE_COVERAGE",
+  "eventsDatabase": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-corporate-action-candidates-2009-2024.sqlite",
+  "dataRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4",
+  "fromYear": 2009,
+  "toYear": 2024,
+  "populationAccessions": 27427,
+  "sampling": {
+    "method": "SAME_SHA256_YEAR_EVENT_CLASS_SAMPLE_AS_WAYBACK",
+    "seed": "FEM-SEC-US@1.2.0-individual-archive-v1",
+    "perStratum": 1,
+    "sampledAccessions": 32
+  },
+  "collectionPolicy": "NEAREST_LATER_AND_LATEST",
+  "availableCollections": 126,
+  "collinfo": {
+    "sourceUrl": "https://index.commoncrawl.org/collinfo.json",
+    "sha256": "eac053eb9d810c1ca519c99e7fdcf3c24a8042809becbbf6c6854a5795c1d52a",
+    "cachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\commoncrawl-collinfo\\eac053eb9d810c1ca519c99e7fdcf3c24a8042809becbbf6c6854a5795c1d52a.json",
+    "retrievalMode": "LIVE_AND_CONTENT_ADDRESSED_CACHE"
+  },
+  "captureFound": 0,
+  "noCapture": 0,
+  "queryIncomplete": 32,
+  "captureRateAmongCompleteQueries": null,
+  "accessions": [
+    {
+      "accession": "0001354457-09-000141",
+      "year": 2009,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-09-000141.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2009-2010",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2009-2010-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2009-2010",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-09-000141.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2009-2010-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-09-000141.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-09-000141.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-09-000141.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2009-2010",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445709000141/0001354457-09-000141.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2009-2010-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445709000141%2F0001354457-09-000141.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445709000141/0001354457-09-000141.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445709000141%2F0001354457-09-000141.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-09-117454",
+      "year": 2009,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-15D"
+      ],
+      "primaryPath": "edgar/data/1266700/0001193125-09-117454.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2009-2010",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2009-2010-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2009-2010",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1266700/0001193125-09-117454.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2009-2010-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1266700%2F0001193125-09-117454.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1266700/0001193125-09-117454.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1266700%2F0001193125-09-117454.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2009-2010",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1266700/000119312509117454/0001193125-09-117454.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2009-2010-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1266700%2F000119312509117454%2F0001193125-09-117454.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1266700/000119312509117454/0001193125-09-117454.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1266700%2F000119312509117454%2F0001193125-09-117454.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-10-000208",
+      "year": 2010,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-10-000208.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2012",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2012-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-10-000208.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-10-000208.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-10-000208.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-10-000208.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445710000208/0001354457-10-000208.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445710000208%2F0001354457-10-000208.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445710000208/0001354457-10-000208.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445710000208%2F0001354457-10-000208.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-10-005097",
+      "year": 2010,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-15D"
+      ],
+      "primaryPath": "edgar/data/927314/0001104659-10-005097.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2012",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2012-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/927314/0001104659-10-005097.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F927314%2F0001104659-10-005097.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/927314/0001104659-10-005097.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F927314%2F0001104659-10-005097.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/927314/000110465910005097/0001104659-10-005097.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F927314%2F000110465910005097%2F0001104659-10-005097.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/927314/000110465910005097/0001104659-10-005097.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F927314%2F000110465910005097%2F0001104659-10-005097.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-11-061252",
+      "year": 2011,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25"
+      ],
+      "primaryPath": "edgar/data/1510593/0001104659-11-061252.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2012",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2012-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1510593/0001104659-11-061252.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1510593%2F0001104659-11-061252.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1510593/0001104659-11-061252.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1510593%2F0001104659-11-061252.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1510593/000110465911061252/0001104659-11-061252.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1510593%2F000110465911061252%2F0001104659-11-061252.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1510593/000110465911061252/0001104659-11-061252.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1510593%2F000110465911061252%2F0001104659-11-061252.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001437749-11-007630",
+      "year": 2011,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/216593/0001437749-11-007630.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2012",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2012-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/216593/0001437749-11-007630.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F216593%2F0001437749-11-007630.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/216593/0001437749-11-007630.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F216593%2F0001437749-11-007630.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2012",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/216593/000143774911007630/0001437749-11-007630.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2012-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F216593%2F000143774911007630%2F0001437749-11-007630.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/216593/000143774911007630/0001437749-11-007630.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F216593%2F000143774911007630%2F0001437749-11-007630.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001143313-12-000068",
+      "year": 2012,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1143313/0001143313-12-000068.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2013-20",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2013-20-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2013-20",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143313/0001143313-12-000068.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2013-20-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143313%2F0001143313-12-000068.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143313/0001143313-12-000068.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143313%2F0001143313-12-000068.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2013-20",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143313/000114331312000068/0001143313-12-000068.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2013-20-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143313%2F000114331312000068%2F0001143313-12-000068.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143313/000114331312000068/0001143313-12-000068.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143313%2F000114331312000068%2F0001143313-12-000068.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-12-149578",
+      "year": 2012,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/948703/0001193125-12-149578.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2013-20",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2013-20-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2013-20",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/948703/0001193125-12-149578.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2013-20-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F948703%2F0001193125-12-149578.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/948703/0001193125-12-149578.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F948703%2F0001193125-12-149578.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2013-20",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/948703/000119312512149578/0001193125-12-149578.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2013-20-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F948703%2F000119312512149578%2F0001193125-12-149578.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/948703/000119312512149578/0001193125-12-149578.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F948703%2F000119312512149578%2F0001193125-12-149578.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-13-000091",
+      "year": 2013,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-13-000091.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2014-10",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2014-10-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2014-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-13-000091.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2014-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-13-000091.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-13-000091.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-13-000091.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2014-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445713000091/0001354457-13-000091.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2014-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445713000091%2F0001354457-13-000091.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445713000091/0001354457-13-000091.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445713000091%2F0001354457-13-000091.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000903423-13-000214",
+      "year": 2013,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12B"
+      ],
+      "primaryPath": "edgar/data/1314270/0000903423-13-000214.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2014-10",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2014-10-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2014-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1314270/0000903423-13-000214.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2014-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1314270%2F0000903423-13-000214.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1314270/0000903423-13-000214.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1314270%2F0000903423-13-000214.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2014-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1314270/000090342313000214/0000903423-13-000214.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2014-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1314270%2F000090342313000214%2F0000903423-13-000214.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1314270/000090342313000214/0000903423-13-000214.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1314270%2F000090342313000214%2F0000903423-13-000214.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001143362-14-000027",
+      "year": 2014,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1143362/0001143362-14-000027.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2015-06",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2015-06-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2015-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/0001143362-14-000027.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2015-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F0001143362-14-000027.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/0001143362-14-000027.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F0001143362-14-000027.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2015-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/000114336214000027/0001143362-14-000027.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2015-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F000114336214000027%2F0001143362-14-000027.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/000114336214000027/0001143362-14-000027.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F000114336214000027%2F0001143362-14-000027.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-14-027864",
+      "year": 2014,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12B"
+      ],
+      "primaryPath": "edgar/data/1075415/0001104659-14-027864.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2015-06",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2015-06-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2015-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1075415/0001104659-14-027864.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2015-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1075415%2F0001104659-14-027864.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1075415/0001104659-14-027864.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1075415%2F0001104659-14-027864.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2015-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1075415/000110465914027864/0001104659-14-027864.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2015-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1075415%2F000110465914027864%2F0001104659-14-027864.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1075415/000110465914027864/0001104659-14-027864.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1075415%2F000110465914027864%2F0001104659-14-027864.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-15-000101",
+      "year": 2015,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-15-000101.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2016-07",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2016-07-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2016-07",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-15-000101.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2016-07-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-15-000101.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-15-000101.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-15-000101.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2016-07",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666115000101/0000876661-15-000101.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2016-07-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666115000101%2F0000876661-15-000101.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666115000101/0000876661-15-000101.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666115000101%2F0000876661-15-000101.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001010412-15-000038",
+      "year": 2015,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1095146/0001010412-15-000038.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2016-07",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2016-07-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2016-07",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1095146/0001010412-15-000038.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2016-07-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1095146%2F0001010412-15-000038.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1095146/0001010412-15-000038.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1095146%2F0001010412-15-000038.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2016-07",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1095146/000101041215000038/0001010412-15-000038.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2016-07-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1095146%2F000101041215000038%2F0001010412-15-000038.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1095146/000101041215000038/0001010412-15-000038.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1095146%2F000101041215000038%2F0001010412-15-000038.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-16-001353",
+      "year": 2016,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-16-001353.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2017-04",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2017-04-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2017-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-16-001353.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2017-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-16-001353.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-16-001353.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-16-001353.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2017-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666116001353/0000876661-16-001353.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2017-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666116001353%2F0000876661-16-001353.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666116001353/0000876661-16-001353.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666116001353%2F0000876661-16-001353.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-16-157678",
+      "year": 2016,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1019361/0001104659-16-157678.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2017-04",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2017-04-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2017-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1019361/0001104659-16-157678.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2017-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1019361%2F0001104659-16-157678.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1019361/0001104659-16-157678.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1019361%2F0001104659-16-157678.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2017-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1019361/000110465916157678/0001104659-16-157678.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2017-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1019361%2F000110465916157678%2F0001104659-16-157678.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1019361/000110465916157678/0001104659-16-157678.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1019361%2F000110465916157678%2F0001104659-16-157678.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-17-000079",
+      "year": 2017,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-17-000079.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2018-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2018-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2018-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-17-000079.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2018-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-17-000079.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-17-000079.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-17-000079.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2018-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445717000079/0001354457-17-000079.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2018-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445717000079%2F0001354457-17-000079.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445717000079/0001354457-17-000079.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445717000079%2F0001354457-17-000079.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001079973-17-000080",
+      "year": 2017,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12B/A"
+      ],
+      "primaryPath": "edgar/data/1015383/0001079973-17-000080.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2018-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2018-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2018-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1015383/0001079973-17-000080.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2018-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1015383%2F0001079973-17-000080.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1015383/0001079973-17-000080.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1015383%2F0001079973-17-000080.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2018-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1015383/000107997317000080/0001079973-17-000080.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2018-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1015383%2F000107997317000080%2F0001079973-17-000080.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1015383/000107997317000080/0001079973-17-000080.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1015383%2F000107997317000080%2F0001079973-17-000080.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-18-000699",
+      "year": 2018,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-18-000699.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2019-04",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2019-04-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2019-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-18-000699.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2019-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-18-000699.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-18-000699.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-18-000699.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2019-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666118000699/0000876661-18-000699.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2019-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666118000699%2F0000876661-18-000699.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666118000699/0000876661-18-000699.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666118000699%2F0000876661-18-000699.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-18-338226",
+      "year": 2018,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1103601/0001193125-18-338226.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2019-04",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2019-04-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2019-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1103601/0001193125-18-338226.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2019-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1103601%2F0001193125-18-338226.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1103601/0001193125-18-338226.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1103601%2F0001193125-18-338226.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2019-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1103601/000119312518338226/0001193125-18-338226.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2019-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1103601%2F000119312518338226%2F0001193125-18-338226.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1103601/000119312518338226/0001193125-18-338226.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1103601%2F000119312518338226%2F0001193125-18-338226.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-19-001107",
+      "year": 2019,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-19-001107.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2020-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2020-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2020-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-19-001107.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2020-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-19-001107.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-19-001107.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-19-001107.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2020-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666119001107/0000876661-19-001107.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2020-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666119001107%2F0000876661-19-001107.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666119001107/0000876661-19-001107.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666119001107%2F0000876661-19-001107.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001515971-19-000035",
+      "year": 2019,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G/A"
+      ],
+      "primaryPath": "edgar/data/1137855/0001515971-19-000035.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2020-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2020-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2020-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1137855/0001515971-19-000035.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2020-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1137855%2F0001515971-19-000035.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1137855/0001515971-19-000035.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1137855%2F0001515971-19-000035.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2020-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1137855/000151597119000035/0001515971-19-000035.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2020-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1137855%2F000151597119000035%2F0001515971-19-000035.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1137855/000151597119000035/0001515971-19-000035.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1137855%2F000151597119000035%2F0001515971-19-000035.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001143362-20-000562",
+      "year": 2020,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1143362/0001143362-20-000562.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2021-04",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2021-04-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2021-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/0001143362-20-000562.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2021-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F0001143362-20-000562.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/0001143362-20-000562.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F0001143362-20-000562.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2021-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/000114336220000562/0001143362-20-000562.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2021-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F000114336220000562%2F0001143362-20-000562.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/000114336220000562/0001143362-20-000562.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F000114336220000562%2F0001143362-20-000562.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-20-048511",
+      "year": 2020,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1394922/0001104659-20-048511.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2021-04",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2021-04-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2021-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1394922/0001104659-20-048511.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2021-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1394922%2F0001104659-20-048511.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1394922/0001104659-20-048511.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1394922%2F0001104659-20-048511.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2021-04",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1394922/000110465920048511/0001104659-20-048511.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2021-04-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1394922%2F000110465920048511%2F0001104659-20-048511.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1394922/000110465920048511/0001104659-20-048511.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1394922%2F000110465920048511%2F0001104659-20-048511.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-21-000280",
+      "year": 2021,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-21-000280.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2022-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2022-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2022-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-21-000280.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2022-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-21-000280.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-21-000280.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-21-000280.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2022-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445721000280/0001354457-21-000280.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2022-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445721000280%2F0001354457-21-000280.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445721000280/0001354457-21-000280.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445721000280%2F0001354457-21-000280.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001493152-21-023487",
+      "year": 2021,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1634413/0001493152-21-023487.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2022-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2022-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2022-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1634413/0001493152-21-023487.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2022-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1634413%2F0001493152-21-023487.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1634413/0001493152-21-023487.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1634413%2F0001493152-21-023487.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2022-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1634413/000149315221023487/0001493152-21-023487.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2022-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1634413%2F000149315221023487%2F0001493152-21-023487.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1634413/000149315221023487/0001493152-21-023487.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1634413%2F000149315221023487%2F0001493152-21-023487.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-22-000930",
+      "year": 2022,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-22-000930.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2023-06",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2023-06-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2023-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-22-000930.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2023-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-22-000930.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-22-000930.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-22-000930.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2023-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666122000930/0000876661-22-000930.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2023-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666122000930%2F0000876661-22-000930.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666122000930/0000876661-22-000930.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666122000930%2F0000876661-22-000930.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-22-170225",
+      "year": 2022,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-15D"
+      ],
+      "primaryPath": "edgar/data/1730276/0001193125-22-170225.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2023-06",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2023-06-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2023-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1730276/0001193125-22-170225.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2023-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1730276%2F0001193125-22-170225.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1730276/0001193125-22-170225.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1730276%2F0001193125-22-170225.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2023-06",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1730276/000119312522170225/0001193125-22-170225.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2023-06-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1730276%2F000119312522170225%2F0001193125-22-170225.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1730276/000119312522170225/0001193125-22-170225.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1730276%2F000119312522170225%2F0001193125-22-170225.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-23-000292",
+      "year": 2023,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-23-000292.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2024-10",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2024-10-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2024-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-23-000292.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2024-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-23-000292.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-23-000292.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-23-000292.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2024-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445723000292/0001354457-23-000292.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2024-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445723000292%2F0001354457-23-000292.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445723000292/0001354457-23-000292.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445723000292%2F0001354457-23-000292.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-23-263467",
+      "year": 2023,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1844280/0001193125-23-263467.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2024-10",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2024-10-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2024-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1844280/0001193125-23-263467.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2024-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1844280%2F0001193125-23-263467.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1844280/0001193125-23-263467.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1844280%2F0001193125-23-263467.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2024-10",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1844280/000119312523263467/0001193125-23-263467.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2024-10-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1844280%2F000119312523263467%2F0001193125-23-263467.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1844280/000119312523263467/0001193125-23-263467.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1844280%2F000119312523263467%2F0001193125-23-263467.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-24-049065",
+      "year": 2024,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25"
+      ],
+      "primaryPath": "edgar/data/1769116/0001104659-24-049065.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2025-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2025-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2025-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1769116/0001104659-24-049065.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2025-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1769116%2F0001104659-24-049065.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1769116/0001104659-24-049065.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1769116%2F0001104659-24-049065.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2025-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1769116/000110465924049065/0001104659-24-049065.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2025-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1769116%2F000110465924049065%2F0001104659-24-049065.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1769116/000110465924049065/0001104659-24-049065.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1769116%2F000110465924049065%2F0001104659-24-049065.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001214659-24-021150",
+      "year": 2024,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/65759/0001214659-24-021150.txt",
+      "status": "QUERY_INCOMPLETE",
+      "collections": [
+        {
+          "id": "CC-MAIN-2025-05",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2025-05-index",
+          "role": "NEAREST_LATER_COLLECTION"
+        },
+        {
+          "id": "CC-MAIN-2026-30",
+          "cdxApi": "https://index.commoncrawl.org/CC-MAIN-2026-30-index",
+          "role": "LATEST_COLLECTION"
+        }
+      ],
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2025-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/65759/0001214659-24-021150.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2025-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F65759%2F0001214659-24-021150.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/65759/0001214659-24-021150.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F65759%2F0001214659-24-021150.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2025-05",
+          "collectionRole": "NEAREST_LATER_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/65759/000121465924021150/0001214659-24-021150.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2025-05-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F65759%2F000121465924021150%2F0001214659-24-021150.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "collectionId": "CC-MAIN-2026-30",
+          "collectionRole": "LATEST_COLLECTION",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/65759/000121465924021150/0001214659-24-021150.txt",
+          "queryUrl": "https://index.commoncrawl.org/CC-MAIN-2026-30-index?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F65759%2F000121465924021150%2F0001214659-24-021150.txt&output=json&filter=status%3A200",
+          "error": "CommonCrawlFilingError: request failed after 5 attempts: URLError: <urlopen error [WinError 10060] Ein Verbindungsversuch ist fehlgeschlagen, da die Gegenstelle nach einer bestimmten Zeitspanne nicht richtig reagiert hat, oder die hergestellte Verbindung war fehlerhaft, da der verbundene Host nicht reagiert hat>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    }
+  ],
+  "officialMethodSources": [
+    "https://commoncrawl.org/cdxj-index",
+    "https://index.commoncrawl.org/"
+  ],
+  "interpretation": [
+    "Common Crawl WARC filename, offset and length enable byte-range retrieval of a single record.",
+    "Index presence is not content acceptance; SEC accession and form validation remain mandatory.",
+    "Two selected collections do not prove absence from all Common Crawl collections.",
+    "Query failures remain unknown and are excluded from the capture-rate denominator.",
+    "No outcome or return was computed."
+  ],
+  "confirmatoryEligible": false,
+  "productiveGqsModified": false,
+  "reportSha256": "88a509a1791dd11071ab7ead6ea220779d2a231b3e100cd8401730380fd9df72"
+}

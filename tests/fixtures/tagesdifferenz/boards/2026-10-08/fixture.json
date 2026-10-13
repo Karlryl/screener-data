@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-08",
+  "board": "fixture",
+  "formulaCommit": "synthetic",
+  "cohortCount": {
+    "profitable": 5
+  },
+  "cohort": {
+    "profitable": [
+      {
+        "ticker": "NEW",
+        "rank": 5,
+        "score": 51,
+        "pit": {
+          "revenueQ": [
+            125,
+            100
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1
+        }
+      },
+      {
+        "ticker": "HAND",
+        "rank": 4,
+        "score": 52,
+        "pit": {
+          "revenueQ": [
+            120,
+            90
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1
+        }
+      },
+      {
+        "ticker": "HOLD",
+        "rank": 3,
+        "score": 53,
+        "pit": {
+          "revenueQ": [
+            null,
+            90
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1
+        }
+      },
+      {
+        "ticker": "PRICE",
+        "rank": 2,
+        "score": 54,
+        "pit": {
+          "revenueQ": [
+            100,
+            90
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1
+        }
+      },
+      {
+        "ticker": "SAME",
+        "rank": 1,
+        "score": 55,
+        "pit": {
+          "revenueQ": [
+            100,
+            90
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1
+        }
+      }
+    ]
+  }
+}

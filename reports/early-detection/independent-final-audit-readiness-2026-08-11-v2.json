@@ -1,0 +1,51 @@
+{
+  "schema": "early-detection-independent-final-audit-decision/v2",
+  "generatedAt": "2026-08-11T11:25:52.569Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "status": "RED_EXACT_INPUT_REMOTE_EVIDENCE_OR_HUMAN_AUDIT_INCOMPLETE",
+  "independentAuditPassed": false,
+  "humanReviewPresent": false,
+  "kitManifestReportSha256": "a7e0ec5bb513befe7844bcd59600c2d7def1aa233a89e6ddb1dcbfbe204a9ca6",
+  "checklistFileSha256": "7a9c8784b313c813e31f6d681ee51a5b2ba5debcd873aa70fd8f8eea0994aba0",
+  "findingsFileSha256": "5b95f5c31174918f1910571015216a1eb6b64259d3b117c1ceaf44ec1f535885",
+  "attestationFileSha256": "5f0b2cb385bb272a0eaf31dd237064fb77a6b15fb25ab6f7de582defac7e5597",
+  "runBindingFileSha256": "886992c1bb12f15b76086326ffe80089fd19995f347ad21fab7e98950ea97625",
+  "prerequisiteGateEvidenceFileSha256": null,
+  "humanChecks": {
+    "decisionsValid": true,
+    "evidenceComplete": false,
+    "linkedFindingsValid": true,
+    "findingsValid": true,
+    "allChecklistItemsPassed": false,
+    "attestationPassed": false,
+    "attestationTimestampValid": false,
+    "attestationBindsRunPackage": false,
+    "pendingChecklistItems": 22,
+    "findingCount": 0,
+    "unresolvedP0P1P2": 0,
+    "humanAuditPassed": false
+  },
+  "mechanicalChecks": {
+    "passed": false,
+    "checks": {
+      "runBindingComplete": false,
+      "candidateRemoteCommitReachable": false,
+      "protocolManifestMatches": false,
+      "exactInputRehashed": false,
+      "componentManifestRecomputed": false,
+      "prerequisiteGateEvidenceRehashed": false,
+      "independentAuditBootstrapStateVerified": false,
+      "allTenPrerequisiteGateArtifactsRehashed": false,
+      "allRemoteEvidenceRehashed": false
+    },
+    "errors": [
+      "run binding is incomplete"
+    ]
+  },
+  "officialGatePassed": false,
+  "officialGateNote": "A PASS decision must still be committed and packaged as the run-bound independentAuditPassed execution-gate artifact; only then may the final eleven-gate evidence and authorization ledger event be created before outcome access.",
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "e18b3dd5f95d1f91222d1c95e5f71148b3ccbcd7656ddba6765de9da08084007"
+}

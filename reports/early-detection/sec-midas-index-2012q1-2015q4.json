@@ -1,0 +1,118 @@
+{
+  "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-midas-individual-security.sqlite",
+  "databaseBytes": 742445056,
+  "dates": 1005,
+  "firstDate": 20120103,
+  "integrity": "quick_check:ok",
+  "lastDate": 20151231,
+  "limitations": [
+    "Ticker presence is not yet linked to CIK or corporate-action identity.",
+    "The SEC archive contains ranks and market-activity metrics, not raw OHLCV or total returns.",
+    "Archive capture time is provenance; retrospective MIDAS rows are not treated as contemporaneously published signals."
+  ],
+  "logicalManifestSha256": "b08b81ce9df1c91c829ceeb83f845986c781e16d691d35d63f76f55b890755ad",
+  "payloadManifest": [
+    {
+      "csvSha256": "b2d51582d6e41f1d03e4bf014affefe4b460662293078bc3c444ab79afcf3d04",
+      "payloadSha256": "280b50fb3296d514f87d9c9935ef63bb9946fd5b8e9c73d4bc7666331bbcc9ed",
+      "quarter": "2012q1",
+      "rows": 306238
+    },
+    {
+      "csvSha256": "098b70ebd5a4cf68da955473b0b5fd143585c27e4eb499e6ce3811b61362053f",
+      "payloadSha256": "a4612e11ac4c50ef6686e81ce63685261b667e3ca026964b24f0c5cf2a37a914",
+      "quarter": "2012q2",
+      "rows": 311851
+    },
+    {
+      "csvSha256": "2e116968ef4486d4e1bce9856e573851222158890dbcb1ae8b2ae52d982a0390",
+      "payloadSha256": "15e33438344cdc1c0330d42d4a65f477feef61f6cd0cf380fe98d7f1c9739ecd",
+      "quarter": "2012q3",
+      "rows": 305258
+    },
+    {
+      "csvSha256": "7ec20c616f8098dc639c447fd5aaf275ca212a3bf8e3f9383bd19020eaa126a6",
+      "payloadSha256": "3254e166874bc6a88a85ea20b31f7b0a094ade71ac6ea819f6e64ed166b01785",
+      "quarter": "2012q4",
+      "rows": 302242
+    },
+    {
+      "csvSha256": "3e25a0c97424472a2db2792b7111877257e2f7b285f10b1f789907337d126d1f",
+      "payloadSha256": "2828074410acc9be54c5377722b14ab1d2804642a0ecf3ef37b7f93e8f66d600",
+      "quarter": "2013q1",
+      "rows": 290399
+    },
+    {
+      "csvSha256": "ecc74ce3793b6a5b7cd7fe508f298732c2cdb26358124cda04b631ce8e02e22b",
+      "payloadSha256": "8242ffd29e477369d82d539b348d3f52fb38a35296ecc40986e05d1060bd7d93",
+      "quarter": "2013q2",
+      "rows": 309699
+    },
+    {
+      "csvSha256": "51f83d32ecd2542885a8224f905a2096d4d94696c236f7c4899a158f6db8f5a2",
+      "payloadSha256": "d440be2772b84b30563dc9c3d9c134612be197d23e4962bac8b9fa1ecd0cc75f",
+      "quarter": "2013q3",
+      "rows": 312702
+    },
+    {
+      "csvSha256": "043e36d3a1aa0d420e675d67210df1d2f68d1e78bc0c68838af726a01181a823",
+      "payloadSha256": "4196afa951031df1cd07ae0844dfbb62420f0d50b9074deda086fb0159135b33",
+      "quarter": "2013q4",
+      "rows": 315679
+    },
+    {
+      "csvSha256": "250fdb90752a030265409b829bd9ffbaa4490245df06bc9fef93884b54806fd1",
+      "payloadSha256": "94b6469957c0874e84fba935c867ae0ab3c25cfe610084c152e0f15affd72efc",
+      "quarter": "2014q1",
+      "rows": 304084
+    },
+    {
+      "csvSha256": "b9b308a84e7bf9ddfa441e871e91e0b9de08974258f603df19cbbb0615064375",
+      "payloadSha256": "55b5d81438cca01f0451d6e4fcc3cad6efc4a345f4784e423ba2803403adc883",
+      "quarter": "2014q2",
+      "rows": 318489
+    },
+    {
+      "csvSha256": "32d3e81c648f0716c16b7642893d6b03e332fcaa992bf378a13a82bec9e34480",
+      "payloadSha256": "6bac53efd25a74dcd95c20cee74d62c3963fb22372ddcd22c46675c140f69840",
+      "quarter": "2014q3",
+      "rows": 328457
+    },
+    {
+      "csvSha256": "5338b6eb625894774679f505a51c7e27a67625684e55f15c16a7e2fc0373ead5",
+      "payloadSha256": "74422952bcf42fc41d4158768af5190aefa4bbe5607df1466ecf4b09e889d768",
+      "quarter": "2014q4",
+      "rows": 330816
+    },
+    {
+      "csvSha256": "8a7ebc6c15ecdcf520174b72f8e8e817513ae4f42c8394a38fd5dd1763070a74",
+      "payloadSha256": "2af047c2899de43dd5d614897e03baef452d9045b4d9989c7d3171610da3b848",
+      "quarter": "2015q1",
+      "rows": 315396
+    },
+    {
+      "csvSha256": "aecd52309d09d719e34fe7cb37f0bdb65dbd98e616a679f6ce27a824387b0df9",
+      "payloadSha256": "6627b83dd5e0760276aa55e3b5d2fdcc631837a0681778927819dfebc6c42d23",
+      "quarter": "2015q2",
+      "rows": 328166
+    },
+    {
+      "csvSha256": "117006a916b351ef9fade127bb114596de85c87de83078681158b8282bed3eb9",
+      "payloadSha256": "99cac410b04766262acc94ed463c9301e5a5085aa36ed65a1c334f91c1c09601",
+      "quarter": "2015q3",
+      "rows": 339383
+    },
+    {
+      "csvSha256": "82607987b6834a4c320eaadd2cf41db4da77b72545247b63cf4f28a8f8a79f8f",
+      "payloadSha256": "8f5b790cd6dee0c5fee239ee6c9585fec813947f063b2b5d465c3876e9b59d4e",
+      "quarter": "2015q4",
+      "rows": 340925
+    }
+  ],
+  "payloads": 16,
+  "reportSha256": "19251ea8b5ddee419e03e81b46f902f90f784afcf77f90ffcc8b7cd9e48a379e",
+  "rows": 5059784,
+  "schema": "early-detection-sec-midas-sqlite/v1",
+  "securities": 6803,
+  "status": "PASS"
+}

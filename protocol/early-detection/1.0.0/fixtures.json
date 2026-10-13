@@ -1,0 +1,53 @@
+{
+  "schema": "early-detection-fixtures/v1",
+  "protocol": "FEM-SEC-US@1.0.0",
+  "outcomeFree": true,
+  "fixtures": [
+    {
+      "id": "PIT-LATEST-AVAILABLE",
+      "function": "knownAt",
+      "input": {
+        "observed_at": "2024-01-02T00:00:00Z",
+        "source_published_at": "2024-01-03T00:00:00Z",
+        "filed_at": "2024-01-01T00:00:00Z"
+      },
+      "expected": "2024-01-03T00:00:00.000Z"
+    },
+    {
+      "id": "MATRIX-RESEARCH-WATCH",
+      "function": "classifyCandidate",
+      "input": { "T": 2, "E": 2, "L": 1, "M": 0, "G": 0, "dataQuality": "accepted" },
+      "expected": { "state": "RESEARCH_WATCH", "elliottReview": false }
+    },
+    {
+      "id": "MATRIX-PRE-GROWTH",
+      "function": "classifyCandidate",
+      "input": { "T": 2, "E": 2, "L": 2, "M": 0, "G": 0, "dataQuality": "verified", "growthVisible": false },
+      "expected": { "state": "PRE_GROWTH_CANDIDATE", "elliottReview": true }
+    },
+    {
+      "id": "MATRIX-MANAGEMENT-CAP",
+      "function": "classifyCandidate",
+      "input": { "T": 3, "E": 3, "L": 2, "M": 0, "G": 0, "dataQuality": "accepted", "managementOnly": true },
+      "expected": { "state": "REJECTED_HOLD", "elliottReview": false }
+    },
+    {
+      "id": "AI-FAIL-CLOSED",
+      "function": "aiRemoval",
+      "minimumEvidenceCoverage": 0.95,
+      "expectedBelowMinimum": "NOT_READY"
+    },
+    {
+      "id": "OHLCV-CAPABILITY-GATE",
+      "function": "technicalSnapshot",
+      "inputCapability": "adjusted_close_only",
+      "expectedSqueezeStatus": "NOT_COMPUTABLE_OHLC_REQUIRED"
+    },
+    {
+      "id": "CONFIRMATORY-READINESS-GATE",
+      "function": "evaluateReadiness",
+      "allRequired": true,
+      "expectedWhenAnyMissing": "NOT_READY_TO_EXECUTE"
+    }
+  ]
+}

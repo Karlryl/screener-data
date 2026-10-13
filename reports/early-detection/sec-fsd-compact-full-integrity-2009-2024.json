@@ -1,0 +1,2820 @@
+{
+  "schema": "early-detection-pit-compact-integrity/v1",
+  "status": "PASS_FULL_INTEGRITY",
+  "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-fsd-compact.sqlite",
+  "databaseBytes": 41141956608,
+  "dataRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4",
+  "fullRowDigests": true,
+  "sqliteIntegrity": [
+    "ok"
+  ],
+  "foreignKeyViolations": 0,
+  "tableCounts": {
+    "source_payloads": 127,
+    "submissions": 1097249,
+    "facts": 308848369,
+    "presentations": 102628203,
+    "payload_tags": 9709074,
+    "orphan_rows": 1953
+  },
+  "payloads": [
+    {
+      "payloadId": 1,
+      "quarter": "2009q1",
+      "payloadSha256": "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83",
+      "payloadBytes": 13655,
+      "observationPath": "observations/sec-fsd/2009q1/20180328T074126000Z-bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83.json",
+      "counts": {
+        "submissions": 0,
+        "facts": 0,
+        "presentations": 0,
+        "tags": 0,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "facts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "presentations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 2,
+      "quarter": "2009q1",
+      "payloadSha256": "181327faaa37c2a3b47cb6727004960b762954d908697b252d12bea245b9d26e",
+      "payloadBytes": 13540,
+      "observationPath": "observations/sec-fsd/2009q1/20250201T041105000Z-181327faaa37c2a3b47cb6727004960b762954d908697b252d12bea245b9d26e.json",
+      "counts": {
+        "submissions": 0,
+        "facts": 0,
+        "presentations": 0,
+        "tags": 0,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "facts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "presentations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 3,
+      "quarter": "2009q2",
+      "payloadSha256": "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28",
+      "payloadBytes": 166277,
+      "observationPath": "observations/sec-fsd/2009q2/20180328T074125000Z-96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28.json",
+      "counts": {
+        "submissions": 26,
+        "facts": 4930,
+        "presentations": 3178,
+        "tags": 919,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "89fec8a5cac87af2fc517813d5e56884aa8f4f4033ab26ac3108dd41dd19d38a",
+        "facts": "aaefa40c3281b3e00ea100ef70eca1bcf569d1ffab949643acf9b64e6770cbd7",
+        "presentations": "d8ebdad8b53d3ab47a282bceb0bfba34a7f8878da18df8df976e8693aed808dc",
+        "tags": "8d726838f19d6f87661c6333edd30ac485600d58b3ebec3b4a4edca0a94471c4",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 4,
+      "quarter": "2009q2",
+      "payloadSha256": "09d38a3fdea044be2728488ecb000fef8b5220fda805c601d2337afd1da333a8",
+      "payloadBytes": 144894,
+      "observationPath": "observations/sec-fsd/2009q2/20250131T231559000Z-09d38a3fdea044be2728488ecb000fef8b5220fda805c601d2337afd1da333a8.json",
+      "counts": {
+        "submissions": 22,
+        "facts": 3999,
+        "presentations": 1928,
+        "tags": 649,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "abe59a02a610f06d028f7d545fc3c22228a9cb463d7f7d505bd1d2217fc13dae",
+        "facts": "cc78b9ec8d0d14e06eaf31bfe81619225cfeac19813cb82fbf453612ca0a895c",
+        "presentations": "421332622fc76468962311a547e8a8711886b5b2a3f0f0acfeb4720de4b439f1",
+        "tags": "ff2bd0106629531bc989b309d5e4f0d89e7121c1089e4afcf2840711065f2054",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 5,
+      "quarter": "2009q3",
+      "payloadSha256": "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd",
+      "payloadBytes": 2595267,
+      "observationPath": "observations/sec-fsd/2009q3/20180328T074121000Z-f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd.json",
+      "counts": {
+        "submissions": 439,
+        "facts": 116671,
+        "presentations": 71726,
+        "tags": 9709,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "d2f9f1f75a389b5d9004ef550b1085e7d536a78265314cd8cb5f83a46ef1ddb6",
+        "facts": "b44a0a3293a6bd02f9f3accd69d783c23c9762a411b090e231ef841a6c9e777f",
+        "presentations": "cc84aca805f040120a641cf97154ba9c6d0a55f23c12112f0376f55527a81aac",
+        "tags": "63b28e9131c48b3bbe6ec359a595114924be4ab0c7a244296d9a33f55f7a1f4e",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 6,
+      "quarter": "2009q3",
+      "payloadSha256": "dca07de82a7c40d28108cd3ba4fbce4225a9c5bd2bd9deea7167ff4992c8ddfa",
+      "payloadBytes": 3544077,
+      "observationPath": "observations/sec-fsd/2009q3/20250131T233514000Z-dca07de82a7c40d28108cd3ba4fbce4225a9c5bd2bd9deea7167ff4992c8ddfa.json",
+      "counts": {
+        "submissions": 435,
+        "facts": 126650,
+        "presentations": 47958,
+        "tags": 8820,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "38ee87653a3e856165ee62204df0190b177a2c58a89309e09de5680b5025086f",
+        "facts": "f95d4f1fc81a208ef1da812221f27f13e196f3c639c0e6fe366c5c5193a86095",
+        "presentations": "47676c94aedf3c248d739ecfb4a069abdd468de64b4f983238e3b4a9c4d5a9f8",
+        "tags": "79bb6633110f2246cbdad2e8705969b52611218a3ea936739086e8de5dc3e2d4",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 7,
+      "quarter": "2009q4",
+      "payloadSha256": "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef",
+      "payloadBytes": 2869843,
+      "observationPath": "observations/sec-fsd/2009q4/20180328T074117000Z-8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef.json",
+      "counts": {
+        "submissions": 486,
+        "facts": 131984,
+        "presentations": 77739,
+        "tags": 9519,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "d97a8503c820ba0d65a6d60248330c817cca46f0cca2e914acebd759237863c2",
+        "facts": "10cbcac60460c43a79baff5f88780e64993afbe127b7f1cd8d5b10d185217b0a",
+        "presentations": "5c42d4e1d8c67554d61cf6adcc3e258169e0327e53e99f180d93f62bfee0ce59",
+        "tags": "d3b47e9b71d2b677cf352fed0bdd1bd8e069591b074a6420e79e8e2ef2f73b0c",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 8,
+      "quarter": "2009q4",
+      "payloadSha256": "ad23b114ecb430c3a05ee2f2be799e966a67591ef098c44311b2f1f632d3ea82",
+      "payloadBytes": 4050938,
+      "observationPath": "observations/sec-fsd/2009q4/20250201T190148000Z-ad23b114ecb430c3a05ee2f2be799e966a67591ef098c44311b2f1f632d3ea82.json",
+      "counts": {
+        "submissions": 484,
+        "facts": 146335,
+        "presentations": 53673,
+        "tags": 7944,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "18837055c6f4cde5c1a1b32c57c5cff2c59fbea817b1698d6487a0a1ff683765",
+        "facts": "927e2cf1020a44ca9a878c5161cbaf49771929494e7db678def9abbf1f49b173",
+        "presentations": "30f5bfbf51df6e0b8253769c6eedae3e00ef09ea0805b8a79477dff898c7fc16",
+        "tags": "735b8ac4b119f99ddb78ab0e58c55aa19b2f1c1baa08d79d304d6ffb68fe67a9",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 9,
+      "quarter": "2010q1",
+      "payloadSha256": "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3",
+      "payloadBytes": 3314621,
+      "observationPath": "observations/sec-fsd/2010q1/20180328T074110000Z-8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3.json",
+      "counts": {
+        "submissions": 495,
+        "facts": 151692,
+        "presentations": 88378,
+        "tags": 11153,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "6a7e3df6346cc5abee2672ea0a42485d4297c1e3bec257e7f26d403312aa496e",
+        "facts": "35927d99175390452ed21db9dbdbe536fc13ebae49dd02c55cd7df35e0579a20",
+        "presentations": "3e7a6fe4d4f695194da04d88eb90096ea654eba6566f89d3bc10e587470ab07d",
+        "tags": "ccdd1f70b40789ae0428adc2f8376e945d9023b0ea4633fbd6d1d148a4cc9ba9",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 10,
+      "quarter": "2010q1",
+      "payloadSha256": "2a4db2340ab1662d5135d7e17be1a58352c5959017350f0ef2174135f9996125",
+      "payloadBytes": 5311282,
+      "observationPath": "observations/sec-fsd/2010q1/20250201T021604000Z-2a4db2340ab1662d5135d7e17be1a58352c5959017350f0ef2174135f9996125.json",
+      "counts": {
+        "submissions": 495,
+        "facts": 194741,
+        "presentations": 64151,
+        "tags": 9699,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "06147d5317526d334d4e391d80e5cc7658132eb2d90aa71277a3df8220ea7243",
+        "facts": "a3be1d1f5b2ffb4c342a868f938950bd53961b4d5812814907acacfb07379412",
+        "presentations": "76df6975abc5815dca0277df65b72e5e29376032d6fbe628570688d9c81e6f15",
+        "tags": "ab3b201a92d55087208ce976825ee6c079d016b8d502f7b3cec596ce73b62628",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 11,
+      "quarter": "2010q2",
+      "payloadSha256": "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4",
+      "payloadBytes": 2875882,
+      "observationPath": "observations/sec-fsd/2010q2/20180328T074106000Z-3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4.json",
+      "counts": {
+        "submissions": 522,
+        "facts": 118947,
+        "presentations": 81340,
+        "tags": 9961,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "3c71a68b52917a058a57b735189185b5d509869653a30505f534d101798350b7",
+        "facts": "2c6d587849dea1151fab0a9503649c96569ad3c98ba624d419508b43432397bc",
+        "presentations": "2382daa6900b8887248a5b79d24e8ccb8c26b2f7a2bdba7dbcb2ba372d18da79",
+        "tags": "1b304bdb0201b221b06443941d11d14b39e47c65e46b695281ee2e1d02e7ee7f",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 12,
+      "quarter": "2010q2",
+      "payloadSha256": "25f416b020fd3e62a67dbf8c6522c9f239e716099b61cf5d05a59a91ffdef1f1",
+      "payloadBytes": 3994236,
+      "observationPath": "observations/sec-fsd/2010q2/20250201T012244000Z-25f416b020fd3e62a67dbf8c6522c9f239e716099b61cf5d05a59a91ffdef1f1.json",
+      "counts": {
+        "submissions": 522,
+        "facts": 136044,
+        "presentations": 57596,
+        "tags": 8477,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "54ee532e70a06db58a699303b0608280ca11ae93d8abb1ef3e4b0efbfbde11dc",
+        "facts": "72faea009f6b7678b574ab14419b479c7d56a585e89701615671dd1d18167e90",
+        "presentations": "abb3c79fd6a7dc98e707b75cb440a10acad40d1d2c72c18d11846e9a5285eb8b",
+        "tags": "ff9d985e2dcafb1c4b4da638afbfa71d77545c4e7744d9d6e2de6319778197ad",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 13,
+      "quarter": "2010q3",
+      "payloadSha256": "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757",
+      "payloadBytes": 8806748,
+      "observationPath": "observations/sec-fsd/2010q3/20180328T074057000Z-24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757.json",
+      "counts": {
+        "submissions": 1413,
+        "facts": 476310,
+        "presentations": 217867,
+        "tags": 20896,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "a6cdff131d504686930072edb605065707bbf9829c16634e8364f61072135e04",
+        "facts": "16e32cf32e62a41f6296a7971aed2393ddde9c7562b3e87718ce9f5ec0cef6dc",
+        "presentations": "3f8cedc84f083cef5179073e80fc0ea7ce126e9194c5ad6165b8b9f0f0b9e804",
+        "tags": "4ab8744ebe893440f36ce5d1d96efed4d7dd8ed9b937abdcc528a642138ba089",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 14,
+      "quarter": "2010q3",
+      "payloadSha256": "52014faf614ca0d7b8040e364f5b3e99f28d5e96b711aa922b490056e2c1d7b5",
+      "payloadBytes": 13745950,
+      "observationPath": "observations/sec-fsd/2010q3/20250201T052628000Z-52014faf614ca0d7b8040e364f5b3e99f28d5e96b711aa922b490056e2c1d7b5.json",
+      "counts": {
+        "submissions": 1412,
+        "facts": 480612,
+        "presentations": 155604,
+        "tags": 18988,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "0dc6df0077d0c33ccac76aa21285607447be38e1fa5663f3b3ca52c08d446ade",
+        "facts": "5236d7aa73309458e1e9baf54c8527eeb4b33fafdfb0a11f755b9581bcf55f44",
+        "presentations": "4c5a1b0edbdc614924cab1654a8b8d29189ed45dfa86dbfe07ac6044f7ca8557",
+        "tags": "b23acbe5ceadbbf5e9d9a035a788a09d916ee05913f89a88fc7a2cea6319cea3",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 15,
+      "quarter": "2010q4",
+      "payloadSha256": "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979",
+      "payloadBytes": 9357932,
+      "observationPath": "observations/sec-fsd/2010q4/20180328T074047000Z-d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979.json",
+      "counts": {
+        "submissions": 1474,
+        "facts": 505411,
+        "presentations": 224196,
+        "tags": 21658,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "10789377d536abfeaf51b66b9e4d395bc08d59d2e9937c214a9e304b981407a2",
+        "facts": "283838f63183fcff142883a10d3c03daca0c554e09b77e34326d84060998efea",
+        "presentations": "9cdd1194f9dcf0b583216bac58cdaba314e83ab6f1206e24ba481bbcf6de080b",
+        "tags": "f3035645641c885f83b32e69cc0d3f19668720ff45d4c949ccbde63706c23810",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 16,
+      "quarter": "2010q4",
+      "payloadSha256": "3dc43a8559cba9e1a9bb5a283a99e1fdfd2b0eaa7a9460887d5b4c70d69cef63",
+      "payloadBytes": 14679781,
+      "observationPath": "observations/sec-fsd/2010q4/20250203T040922000Z-3dc43a8559cba9e1a9bb5a283a99e1fdfd2b0eaa7a9460887d5b4c70d69cef63.json",
+      "counts": {
+        "submissions": 1474,
+        "facts": 511508,
+        "presentations": 164326,
+        "tags": 19806,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "f1257aa3233ce546fabf5b11250f85dfe86bb5fa134802b852b38dde5788a1e9",
+        "facts": "3c1d5a544200f7aeb610c50360445a8eb83da917c305cef6370d4b724abea242",
+        "presentations": "d64c4016e5a7257ff513f94426bafd98c5823c461d6c311622a3a9414838231d",
+        "tags": "200f90176659a7e1edb66528fe764088d936234dc238b0ee7b32a55200138dc2",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 17,
+      "quarter": "2011q1",
+      "payloadSha256": "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695",
+      "payloadBytes": 11796366,
+      "observationPath": "observations/sec-fsd/2011q1/20180328T074037000Z-b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695.json",
+      "counts": {
+        "submissions": 1500,
+        "facts": 663971,
+        "presentations": 261988,
+        "tags": 27712,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "ffe9398bf55f465dc3840639c7f88d41196fb29190c094e0171f60cfd1d7b324",
+        "facts": "d0f642e5463c75ce17dda395b9609d7f5f938c6f67ff7842d6b2921564031d38",
+        "presentations": "7b97a903759532d073ade6dd3c03d1c9b2e0b0b5dd2c07a920aec7c5d01ef8d9",
+        "tags": "fbf807fe515801f5afab1a0165b7b70fba7ecaa9eb50a1aa6cabc9855580de2f",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 18,
+      "quarter": "2011q1",
+      "payloadSha256": "e63b781a5e57e55d68e110a06d3f697e942a60e17f093bbdc1a16ac7152a7df5",
+      "payloadBytes": 19615544,
+      "observationPath": "observations/sec-fsd/2011q1/20250201T012102000Z-e63b781a5e57e55d68e110a06d3f697e942a60e17f093bbdc1a16ac7152a7df5.json",
+      "counts": {
+        "submissions": 1499,
+        "facts": 690483,
+        "presentations": 189098,
+        "tags": 24300,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "1d573231da9d17a54b3ef3b2c7a7db570b6fbd812fccb22f45a0ba0dc0e7d6c3",
+        "facts": "e1f0e8759183186e32b9bc03e3805ec11e6cfe7bc12a83d1ced1392e23ecf457",
+        "presentations": "555fc7f906d363862a9ec5beaa9cd93fc289fc4b4b0c8a8b2e415021330f9827",
+        "tags": "6a637178edcb67ce533f25ea2886f93ee5e5d7935eb4fa1378750e775e157fb2",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 19,
+      "quarter": "2011q2",
+      "payloadSha256": "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367",
+      "payloadBytes": 9738877,
+      "observationPath": "observations/sec-fsd/2011q2/20180328T074027000Z-24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367.json",
+      "counts": {
+        "submissions": 1705,
+        "facts": 483670,
+        "presentations": 252074,
+        "tags": 25796,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "af434a4b4add55c8c2f0acba7cddf3348772d354214c5337bc10c3efda5f336b",
+        "facts": "50b10d7ea32ca13dc71af27945f563e417ce0fb8b15f26fde79c82ebfc0a43ab",
+        "presentations": "b6314f51aff56e9e8df1ccbbe9afe79fb997bfbb3c0e9eb0d6d3298987aff15e",
+        "tags": "84c45b80c4d2339b8ee88e7e1abd133425c21649921af8cf0500118013ba317b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 20,
+      "quarter": "2011q2",
+      "payloadSha256": "10a6f98f14d2a341e938a379ea32beb4857b01d59facf04e6e7b3c68558a95d1",
+      "payloadBytes": 15001310,
+      "observationPath": "observations/sec-fsd/2011q2/20250201T004541000Z-10a6f98f14d2a341e938a379ea32beb4857b01d59facf04e6e7b3c68558a95d1.json",
+      "counts": {
+        "submissions": 1705,
+        "facts": 498885,
+        "presentations": 182980,
+        "tags": 22299,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "9189803a40fef1840a0f343c581e39c2a4199a3fa3b9808517fdf4b15ca178f4",
+        "facts": "cff4075340f3149501b1c773596b7e305e69e7d0813d7164bb4493214dc246e9",
+        "presentations": "d357a7d0c7eba27c705240265ca045a9ce62d581e239ab892b9ccc2a676b88b8",
+        "tags": "54761d6f524d7b91483712e5312c9c488649ebad8caeef0463cb767f0a72ecd8",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 21,
+      "quarter": "2011q3",
+      "payloadSha256": "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2",
+      "payloadBytes": 32852470,
+      "observationPath": "observations/sec-fsd/2011q3/20180328T074007000Z-a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2.json",
+      "counts": {
+        "submissions": 7104,
+        "facts": 1903993,
+        "presentations": 952057,
+        "tags": 79398,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "ca3694bffdad3fd7bff1f9abc370bccb452f7528a63c66398af346bfa79b62b4",
+        "facts": "7e55aedf59a80c90697fc97777253749de51116afc9773e56a5c923e47c74d0b",
+        "presentations": "d97a885ffa59638463d846994a90e2c85ed639eca49bf690684606a40bf5328f",
+        "tags": "496d1dc3610578da2bc601655a33648373b012a5a60d0ab2e7ead53f8b7eaae7",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 22,
+      "quarter": "2011q3",
+      "payloadSha256": "43b9beb243c6686a29df5cf817ed2cb3a7c86a7398bbc56e2fb4d0cf4784ac28",
+      "payloadBytes": 57941919,
+      "observationPath": "observations/sec-fsd/2011q3/20250201T012801000Z-43b9beb243c6686a29df5cf817ed2cb3a7c86a7398bbc56e2fb4d0cf4784ac28.json",
+      "counts": {
+        "submissions": 7102,
+        "facts": 2025154,
+        "presentations": 668542,
+        "tags": 64597,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "f509bc4ed6fc0bc466f0cc46908dc43d13e25647439898906ca9f1f41583e0fe",
+        "facts": "32bae76e879c22a4ea6f5a96a4b24f4cbad33be997459dbbcfb44cf48f69811a",
+        "presentations": "16fc98ffc5416fdc5bba47915e54a8c24b61c64717bbbf2f780abd78da90bd6b",
+        "tags": "dab31bebc7208e74aede7504c7fe78a475a56ec83289583f38b4f95bb3f9d026",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 23,
+      "quarter": "2011q4",
+      "payloadSha256": "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1",
+      "payloadBytes": 37472659,
+      "observationPath": "observations/sec-fsd/2011q4/20180328T073945000Z-f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1.json",
+      "counts": {
+        "submissions": 8015,
+        "facts": 2150890,
+        "presentations": 1089746,
+        "tags": 93126,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "319ca9d728d12cd2a77d8cd0d2385860b73a8c97f1e95419558e381407e44ad5",
+        "facts": "6fe2b1dd24bf259d686b0e1c2d245c1ee9c0d868e0d77e9eae0cda2a7f5fc62e",
+        "presentations": "f59a3d04f8f10d9571b0225d624b66cd6d4f4c7bd7127d385995f3c3eaf1f8b3",
+        "tags": "8bcfb7fb580190da85749280bbe2afbfa976cf1626e3a1096e7c7dc5f1cc2a3e",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 24,
+      "quarter": "2011q4",
+      "payloadSha256": "0f674f68094cc65c83da3c142775dcfd091250e293783c3e8211ee4e97bc083f",
+      "payloadBytes": 64306658,
+      "observationPath": "observations/sec-fsd/2011q4/20250201T015059000Z-0f674f68094cc65c83da3c142775dcfd091250e293783c3e8211ee4e97bc083f.json",
+      "counts": {
+        "submissions": 7585,
+        "facts": 2227859,
+        "presentations": 729250,
+        "tags": 72262,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "2801031e1c54ca4e4a2f98665d8821c63c8c6ca43cb9e721d0dac62a5b255230",
+        "facts": "0323de54af63d4069475cb8db363650a2b97ac04e4649aaf7c57425c31ef9ebc",
+        "presentations": "e14ad057cfa99a042e4f8017b120321e7b1146083f341763c95c301b61718f7e",
+        "tags": "078e3e2b8d5e29aedada361a81e579b761a31011a2d48e625db0adc833f1b82c",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 25,
+      "quarter": "2012q1",
+      "payloadSha256": "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f",
+      "payloadBytes": 42174490,
+      "observationPath": "observations/sec-fsd/2012q1/20180328T073921000Z-03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f.json",
+      "counts": {
+        "submissions": 7417,
+        "facts": 2439119,
+        "presentations": 1139348,
+        "tags": 108958,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "1dab1ffae2c83d7afc94dc1f1ae0e26566e6751fde84125d2b3c328ddacf7cf0",
+        "facts": "6f6d94566d5b0755f33e60de59a2f84c8e77067bbf0db93df684a56174e02f93",
+        "presentations": "98bb4a7ff3c0be34813789378dcf5901c6b9d60e28036763ef9036fdef9e78a0",
+        "tags": "8780809e62331eddca4fe4c41f855bceec336fd4423020ca2636a82491babcc3",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 26,
+      "quarter": "2012q1",
+      "payloadSha256": "42ed1a5ecac978d4338bd51cd4bc15bf60cc821291eea492f8172fc4e803d5f6",
+      "payloadBytes": 85474601,
+      "observationPath": "observations/sec-fsd/2012q1/20250201T020403000Z-42ed1a5ecac978d4338bd51cd4bc15bf60cc821291eea492f8172fc4e803d5f6.json",
+      "counts": {
+        "submissions": 7418,
+        "facts": 2699630,
+        "presentations": 792720,
+        "tags": 88829,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "4bcba651677c87356b09bf6c77f568c4fa75723b61e996538ec4c0860d47413b",
+        "facts": "def75fd0566238a7b7998d9dbaa9c190b5b27dc65dbc54c313422548241f61df",
+        "presentations": "a31f9cca9bbe8012e83319265e6da78b7aa16923d5b7e67487a8ef2f5995c7cb",
+        "tags": "413f6d9314d79e4bcb89578e6f363403fe3cd72e4a745852d56883839938ab1a",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 27,
+      "quarter": "2012q2",
+      "payloadSha256": "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f",
+      "payloadBytes": 40089136,
+      "observationPath": "observations/sec-fsd/2012q2/20180328T073858000Z-c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f.json",
+      "counts": {
+        "submissions": 9193,
+        "facts": 2122165,
+        "presentations": 1254946,
+        "tags": 115549,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "3af1cb0bfc904ac9dc3f3bd7997989d099a5107a57e1220fad58084db41cb564",
+        "facts": "7d38de3405fcce1ec31e325ee8c82eda5dad175fc08081ff09e9c8c83e0678c7",
+        "presentations": "ced97b3514f688c8d055dab3ed162cad249181c70895efc77246d06f3549dacb",
+        "tags": "0da3472152f3cb689b9ab6871fbcd5024513fad561e649ee259cb2e3e0ef0d50",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 28,
+      "quarter": "2012q2",
+      "payloadSha256": "0dbb10aa316c674f07849a28e67a25a0a59bd6ef2bc214cd1800c8a2d2a05df6",
+      "payloadBytes": 80075771,
+      "observationPath": "observations/sec-fsd/2012q2/20250201T010118000Z-0dbb10aa316c674f07849a28e67a25a0a59bd6ef2bc214cd1800c8a2d2a05df6.json",
+      "counts": {
+        "submissions": 9193,
+        "facts": 2407915,
+        "presentations": 875259,
+        "tags": 93938,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "00889562d2c296871ce9f60c8158dbcd8d618dca4fa1fdccea6023c6cef313dc",
+        "facts": "3e8b18cdb011c442787a0b8f23b672ea7c31589972d834e8c9ed5923d6a4ac44",
+        "presentations": "6346a42c6dad01462d64701e38ac2dbc1f2f6371ab3d49dd5b55f5c03d11bf93",
+        "tags": "3082d626496a7685d797b6833281b3117aef5bb061c80c17988e80150062f480",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 29,
+      "quarter": "2012q3",
+      "payloadSha256": "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a",
+      "payloadBytes": 45918533,
+      "observationPath": "observations/sec-fsd/2012q3/20180328T073809000Z-6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a.json",
+      "counts": {
+        "submissions": 8005,
+        "facts": 2881650,
+        "presentations": 1106813,
+        "tags": 97107,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "583e570eb3d6cc3f3d410d61ed52cbe0a6d189e21820db71cce35858561c744f",
+        "facts": "a70e66e88756a82da793487db50a6d879c7c027fca8333b3e5188634a12af2a9",
+        "presentations": "771e328eb557129658659e0fd3ec81eb37c06498c648859cdf233fd648d7033d",
+        "tags": "6ad4f7d8a6441402b925ee49aae3fcb804618bcc0776a01c21b37f49eadeb030",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 30,
+      "quarter": "2012q3",
+      "payloadSha256": "a5b705fab7948837fc890d820c2b809d4afdb0ff1836129ad5a16127275f0ebf",
+      "payloadBytes": 89608234,
+      "observationPath": "observations/sec-fsd/2012q3/20250201T015154000Z-a5b705fab7948837fc890d820c2b809d4afdb0ff1836129ad5a16127275f0ebf.json",
+      "counts": {
+        "submissions": 8002,
+        "facts": 2816079,
+        "presentations": 768770,
+        "tags": 77881,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "e81192b2d1d35867f65280808a687a9060bb027c61405ff2078bd020abb7265c",
+        "facts": "384a369610fedeb1ed498c028c7bfe7e201d8d734b937cc7e9f422d2638f32eb",
+        "presentations": "0cae743b3ef4279d55fcaa3d51a526d5e57ee3455701f349b8b83fa67863ea62",
+        "tags": "457081c04c948b683ecbb22f1561a794dc6a41f55d39736bbdb58cee2eb8a5e0",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 31,
+      "quarter": "2012q4",
+      "payloadSha256": "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026",
+      "payloadBytes": 48815717,
+      "observationPath": "observations/sec-fsd/2012q4/20180328T073646000Z-af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026.json",
+      "counts": {
+        "submissions": 8117,
+        "facts": 3057717,
+        "presentations": 1150366,
+        "tags": 105601,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "a73f3da6ce150ebb5851526f41433af48e449ed9ba79f044dd6300351a6f8170",
+        "facts": "3867a37f5ff5b057f111ac0252466aa8186df04d7898673056a8b216fed6bdb7",
+        "presentations": "e7fa476c9aaaa6ca8b39ed17dc6e11932da0a255b8918d4ec1b2e0c8ecbc663b",
+        "tags": "172c139ab5cb59815edcc04f4244d60ef3f123614b5c29c63b2e8300ac825011",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 32,
+      "quarter": "2012q4",
+      "payloadSha256": "af6629de7547f5d75c85abf170550b9466768071fcd419d5fdf1a1d026436e98",
+      "payloadBytes": 95805256,
+      "observationPath": "observations/sec-fsd/2012q4/20250201T015525000Z-af6629de7547f5d75c85abf170550b9466768071fcd419d5fdf1a1d026436e98.json",
+      "counts": {
+        "submissions": 8115,
+        "facts": 2999818,
+        "presentations": 799495,
+        "tags": 83990,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c5081ab339d62596e46ed8d04d99e801586b11dfe0f2d46c4ad3d4d5c787c117",
+        "facts": "fa948a98bd09cfcf59de3851632bc56adfa6a6e70c0517008289db9a5277d1ca",
+        "presentations": "1f53de9a66c1450b3c5b979bf85383afe9a12d7110de5aced8863b7235ea72e6",
+        "tags": "6c576666c453905a617dfa6d5ec34ac192f9176b7208b34f92ff7eaf14cbd2a0",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 33,
+      "quarter": "2013q1",
+      "payloadSha256": "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011",
+      "payloadBytes": 51769634,
+      "observationPath": "observations/sec-fsd/2013q1/20180328T073427000Z-77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011.json",
+      "counts": {
+        "submissions": 6794,
+        "facts": 3415076,
+        "presentations": 972229,
+        "tags": 100324,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "bb8c5861de0d56fa782d184930bd7117d26aeabda8c4c0979db43d782f5da71f",
+        "facts": "8f16742f32fe09b1cb190f82a7ba2dda6796dbb21ceeb995367aaa0b69e71602",
+        "presentations": "764c870ca550c6c9aab934f0a753707898b9bdbb1d57f4366ab700d0fc14595e",
+        "tags": "3b37571cec90ecf28117bbec5fb60c8fb27853f6e180250852b4a6965cf5b1a2",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 34,
+      "quarter": "2013q1",
+      "payloadSha256": "329f4e3e40c0351001037ad1dea3fd28c07100f6f6d6d64d5998ea01b060a790",
+      "payloadBytes": 99173442,
+      "observationPath": "observations/sec-fsd/2013q1/20250201T042855000Z-329f4e3e40c0351001037ad1dea3fd28c07100f6f6d6d64d5998ea01b060a790.json",
+      "counts": {
+        "submissions": 6788,
+        "facts": 3154213,
+        "presentations": 741403,
+        "tags": 80116,
+        "orphans": 1953
+      },
+      "rowDigests": {
+        "submissions": "2b74d48812767fb86f6f0d01629d2146df917d10fc53f78f8eab7c717ef4fb6f",
+        "facts": "03560078e313b5e11d35e677556b2aa7534dafc0568dcee062aa1b8d0b7a94f1",
+        "presentations": "5e12f949d6fdfbc5f06519a1b6b2b3a5dc6deda8d564f0a23ff3e5ba91526c79",
+        "tags": "92a104efad1bf1d7a643ab2b55e23b24ef1bd48d9bacc53f653eb0ad349e7978",
+        "orphans": "cccf0356297ac113e24415540a8199cf7a338c7da0a9b816133b513be69d138f"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 35,
+      "quarter": "2013q2",
+      "payloadSha256": "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419",
+      "payloadBytes": 51392320,
+      "observationPath": "observations/sec-fsd/2013q2/20180328T073357000Z-cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419.json",
+      "counts": {
+        "submissions": 9114,
+        "facts": 3061520,
+        "presentations": 1281173,
+        "tags": 120254,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "714214d5aed458ce948c54f3cbc699586a1ee401a01fe3cebb3999b5edc41c3a",
+        "facts": "1e2a9615b9802e41d6daf1a58c85a588aac38d6885fec0a7b12d1a83cee9db4f",
+        "presentations": "fe24355a20ffa96162d708ad4c362e09d6146103931caf80b1e773a07617c9e0",
+        "tags": "17f142b178c7dc2920f820734b3e3c77580a762b18cfc82714d5fe4f18977113",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 36,
+      "quarter": "2013q2",
+      "payloadSha256": "7cc764386ea9cb01d62e1a9f4fac38dc9c741e96886a953ddaad2def4eb489c7",
+      "payloadBytes": 96917655,
+      "observationPath": "observations/sec-fsd/2013q2/20250201T010125000Z-7cc764386ea9cb01d62e1a9f4fac38dc9c741e96886a953ddaad2def4eb489c7.json",
+      "counts": {
+        "submissions": 8954,
+        "facts": 2943353,
+        "presentations": 878874,
+        "tags": 95265,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "357a265dbc5c3d01a08d6cae352453d09ea929a9519506e7461b930be9adc594",
+        "facts": "b7cdfcf05d3d2cd9700137baf0bc2aa22f5829f9d89897eaa3b627e610adbf41",
+        "presentations": "2503607f73c2693a9a446b1bd25f85e0737320934e012c656ff5c0dd8734d774",
+        "tags": "b764829bbf7078ae404a549d4066ec72b4b5bb58dd399f35d62c03ec1681ac51",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 37,
+      "quarter": "2013q3",
+      "payloadSha256": "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11",
+      "payloadBytes": 48787736,
+      "observationPath": "observations/sec-fsd/2013q3/20180328T073330000Z-580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11.json",
+      "counts": {
+        "submissions": 8043,
+        "facts": 3105541,
+        "presentations": 1120707,
+        "tags": 96685,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "96ce02d4ea947cf5b97d5e6e01e768494e5b2da28fc6a16d0ddf712c97034d93",
+        "facts": "f1a97420557124436666b844c3ff439e5864407a27ad302ba474dfce9448a770",
+        "presentations": "17320626e66fad197daa7d3e473a03d604fbe5f9ed4ba1497a84ccca4c17f524",
+        "tags": "f7f2cc2ee990871afe4059f56b9a867a18649e39b971c7fe0d2c1bf99a5e3508",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 38,
+      "quarter": "2013q3",
+      "payloadSha256": "c9134387b650a9194f14b3f832f16aa1a72255c20a0e0b954001a643933cc849",
+      "payloadBytes": 98355005,
+      "observationPath": "observations/sec-fsd/2013q3/20250201T034728000Z-c9134387b650a9194f14b3f832f16aa1a72255c20a0e0b954001a643933cc849.json",
+      "counts": {
+        "submissions": 8038,
+        "facts": 3081119,
+        "presentations": 787177,
+        "tags": 80291,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "dc935dd24a2da5b7a24cac0a43a1faf36a3459ea9f00116051424e483ed6f8c1",
+        "facts": "1cd518a9432c78ad6b35d1ea12c253505c4aab5ace1011c4d9860439d7615c09",
+        "presentations": "b24d407954c4c5e888f5d4219f78feb249483e34ed9a91692b189059372a1d8a",
+        "tags": "f25da2566a68c7137c3820b1693639162d6846dc24b676745402f8a08dc58c94",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 39,
+      "quarter": "2013q4",
+      "payloadSha256": "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193",
+      "payloadBytes": 48746269,
+      "observationPath": "observations/sec-fsd/2013q4/20180328T073304000Z-929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193.json",
+      "counts": {
+        "submissions": 7844,
+        "facts": 3059380,
+        "presentations": 1118839,
+        "tags": 100532,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "4023ddd9a5b165ee9e037f667a9233828c3d640fd159c0ff2afde7b3d6e2f13e",
+        "facts": "2d809de9632c9b95c102cb23b6b200732166eaa60ff904741a4bd6632c950425",
+        "presentations": "8d34e9ee4991e6efc889523bcb5f8c9b4931f96a89c6978e98178a55ad0ed945",
+        "tags": "dfdd17c9138d0edd915d0ea5f4e928fc0c8d46026b9b5eef119439f729e9c5b1",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 40,
+      "quarter": "2013q4",
+      "payloadSha256": "7781ac25ddbd4f6eb8eb85e838656181fb06e8bc16b1dd5efccb9e21f8f5baa7",
+      "payloadBytes": 92335773,
+      "observationPath": "observations/sec-fsd/2013q4/20250201T052325000Z-7781ac25ddbd4f6eb8eb85e838656181fb06e8bc16b1dd5efccb9e21f8f5baa7.json",
+      "counts": {
+        "submissions": 7846,
+        "facts": 3097400,
+        "presentations": 787103,
+        "tags": 80058,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "1aec7ef122325808ce5df398ffc4923c2dd2da3800b14de44a0f0bbe90fd3f1b",
+        "facts": "b6f879b74c318756eb8ee2ee53642aa959975aaf506b918bc58a00939b9b7f8c",
+        "presentations": "ac3c1732ea4ddea97dc9aaced74f80bebc6531c26ceb772e5dcbaf05315867c2",
+        "tags": "b3631d50d9c9d84164255b4019f448b77c56480d71965d051eb5c444b993f3ec",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 41,
+      "quarter": "2014q1",
+      "payloadSha256": "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1",
+      "payloadBytes": 54719572,
+      "observationPath": "observations/sec-fsd/2014q1/20180328T073219000Z-33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1.json",
+      "counts": {
+        "submissions": 7161,
+        "facts": 3591652,
+        "presentations": 1107114,
+        "tags": 107588,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "59bfb9ffe4ffcc6ea601dcf57850c630e6d8005ece0a2e9c726da77c2f4dfba7",
+        "facts": "32d8bcae9aa51e5a3a1a6f813e6cf951364425376f624e37c174291aa1ffef28",
+        "presentations": "bf3cf32cd2bbfb9812eea6b517181dbefc848a32598c5dad65164100abb667a2",
+        "tags": "4fe0f5398537fa0f3b410c845050dc3b0b609d1922bfd91100de9437bf52e024",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 42,
+      "quarter": "2014q1",
+      "payloadSha256": "bf55481c6e0088fb45e8efeb2d8de6912a9c3533da918376a24ca5f84144680f",
+      "payloadBytes": 102843522,
+      "observationPath": "observations/sec-fsd/2014q1/20250201T022211000Z-bf55481c6e0088fb45e8efeb2d8de6912a9c3533da918376a24ca5f84144680f.json",
+      "counts": {
+        "submissions": 7158,
+        "facts": 3483361,
+        "presentations": 792750,
+        "tags": 85090,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "e50ddd6304afcd110466ab3ca3e6fbc3c753e0736a3b76f2693f21216099583a",
+        "facts": "861cdc23f7b1b9af28f73676a81d9466a35626435864fb1d8f460b4a2f84e206",
+        "presentations": "a862cf80f296c08403fff38f5539b46ac5bce7163cad4bf3049fed27be1fcf0a",
+        "tags": "e425df9041ad55cf5f2fd1398e4bf6b0520c0a365c69e770633652db403caa28",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 43,
+      "quarter": "2014q2",
+      "payloadSha256": "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506",
+      "payloadBytes": 47810422,
+      "observationPath": "observations/sec-fsd/2014q2/20180328T073157000Z-eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506.json",
+      "counts": {
+        "submissions": 8553,
+        "facts": 2804902,
+        "presentations": 1202828,
+        "tags": 109517,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c241041571a2e198e01b2845a548045b1772bbb9787de48c087b2a2582a2cd6c",
+        "facts": "4d2b3300efe310667c960f767bb24888e7d99051be26037c146533eccf538b9d",
+        "presentations": "897a552db1b81747232873bd7d860a9534e231071ae3d45f93481997d7cd0633",
+        "tags": "5eca3788b4b27ed03b2f4bef4bb6aeb4f56f79ca06858a8009a5382bed975670",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 44,
+      "quarter": "2014q2",
+      "payloadSha256": "ab03600231a08369a980a31dde8bb78b6cd49f56d39ab7b90ca5bc0cfd52aa7f",
+      "payloadBytes": 85032839,
+      "observationPath": "observations/sec-fsd/2014q2/20250201T013339000Z-ab03600231a08369a980a31dde8bb78b6cd49f56d39ab7b90ca5bc0cfd52aa7f.json",
+      "counts": {
+        "submissions": 8550,
+        "facts": 2814446,
+        "presentations": 840870,
+        "tags": 87743,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "1df27b9747d8693b62012c4838fc9c67e3698956628518e5337b4573f169bf6c",
+        "facts": "bd8a4bdbed407ffd6582826ed53e39005c2c40981b1673718edcdd30b012f14a",
+        "presentations": "c64ca64dd2d000b7146a848c6dfcece3402f523adb6e165df3a99aa5d4c5f7f9",
+        "tags": "97b3c0fbb049345097909ee7ecdc09ed655e6563d69a1d681d33540c315fd239",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 45,
+      "quarter": "2014q3",
+      "payloadSha256": "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92",
+      "payloadBytes": 46502775,
+      "observationPath": "observations/sec-fsd/2014q3/20180328T073135000Z-af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92.json",
+      "counts": {
+        "submissions": 7790,
+        "facts": 2906042,
+        "presentations": 1090684,
+        "tags": 91423,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "14309db43e4de7afa989340ff3ad5903208f129f1d4e980c4ae976cf6f184688",
+        "facts": "24b158c1ec131b3f425cdaf04cd22cf49c6b832776cf55e06175c19ad60d625e",
+        "presentations": "91465f67267f20102e02a8fa5ade927d49113c1192bbc4159e630d64bdb7da1a",
+        "tags": "8452aed4fd5d9fbab552c8876e1276a9376f9f5bee7c5e36459cabf3b614147c",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 46,
+      "quarter": "2014q3",
+      "payloadSha256": "4d10510a2f17a6da8012d83f66bed7fbb434bca2529f7b2a92043c522d2c52b1",
+      "payloadBytes": 87408142,
+      "observationPath": "observations/sec-fsd/2014q3/20250201T012334000Z-4d10510a2f17a6da8012d83f66bed7fbb434bca2529f7b2a92043c522d2c52b1.json",
+      "counts": {
+        "submissions": 7790,
+        "facts": 2936590,
+        "presentations": 765062,
+        "tags": 71828,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "0533ba076c4408e7e2b597333aae46b8904ed7ef646e9037c91acaed29bf4008",
+        "facts": "3b7922e45d8fde4961dca894c7ef30c08d097f905fdbdc9a3cd0373ffc8ff3aa",
+        "presentations": "e75aea1233ff7152ebff557e5949c063548ac686e363f6e3275173a56d93a159",
+        "tags": "1cf9d3f43785b68b87d5a51d7c33388079ff281ac2d6991889d441bcd71682e8",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 47,
+      "quarter": "2014q4",
+      "payloadSha256": "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523",
+      "payloadBytes": 46145074,
+      "observationPath": "observations/sec-fsd/2014q4/20180328T073113000Z-8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523.json",
+      "counts": {
+        "submissions": 7715,
+        "facts": 2877905,
+        "presentations": 1053929,
+        "tags": 85673,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c7a8c4c56edd25abfc87d2a94a4ea96572fadd0c83f7a1538d1d0787d57a85c9",
+        "facts": "feb31c60618fb94c30b9a27058f8b9d563a33121790fd1a996f11998053f5ae1",
+        "presentations": "25b4e5811325e15433e0e272f936e2ce1bd40c3a54ccc4f11f56e197b27ed516",
+        "tags": "c55ac03cab2576e5da565d7f98ac36d77d540146705b8c0570ffaf3bc6ba9181",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 48,
+      "quarter": "2014q4",
+      "payloadSha256": "c82395b7df380a95b30d652784372a5439dea9ed750d89784822bb643cbc4930",
+      "payloadBytes": 87639973,
+      "observationPath": "observations/sec-fsd/2014q4/20250201T013424000Z-c82395b7df380a95b30d652784372a5439dea9ed750d89784822bb643cbc4930.json",
+      "counts": {
+        "submissions": 7713,
+        "facts": 2940236,
+        "presentations": 764687,
+        "tags": 68464,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "efa6ad544281cdf9dd6a47809048f9e9844c44bdde5592eadc2274ae4b9153eb",
+        "facts": "6a0e7f385f8c4404a788a5f76f81e70e21f0027ad9a718cc6239292b764c81db",
+        "presentations": "bb355cf9be3853b1717b6ef935b0928d31cb7614b9047505f3af449dc78ebf3a",
+        "tags": "77f265aac7fddbde69dd36a7767c654dae64392a828ef5e20d9ed7451ed7cddc",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 49,
+      "quarter": "2015q1",
+      "payloadSha256": "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866",
+      "payloadBytes": 52551202,
+      "observationPath": "observations/sec-fsd/2015q1/20180328T073049000Z-e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866.json",
+      "counts": {
+        "submissions": 6996,
+        "facts": 3449733,
+        "presentations": 1115451,
+        "tags": 94503,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "5314094f27d9bd8751ba3ae1503eafa354cd0638630898cf6f4845486f978ca0",
+        "facts": "e988897c443886dc8a6bd8c61954f667a60def60d7776a4c58c7462fcde12210",
+        "presentations": "461c93fc2540d025df2a471e73a830355d01c6f2d52e95679e6ba9e4685b568c",
+        "tags": "7134dc8a93c243166e5437b5a7b3fe9d9e4c464d49dc9c1c55f55e3d3cb08d2e",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 50,
+      "quarter": "2015q1",
+      "payloadSha256": "baa9e434480b8299593b781e8156f855e0c4548677329f166f495cbae287e52e",
+      "payloadBytes": 98944359,
+      "observationPath": "observations/sec-fsd/2015q1/20250201T001438000Z-baa9e434480b8299593b781e8156f855e0c4548677329f166f495cbae287e52e.json",
+      "counts": {
+        "submissions": 6995,
+        "facts": 3322479,
+        "presentations": 773246,
+        "tags": 75372,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "ca85bb0ae4bc95bcb79b315a330264c51d87d4fd6e71e1b148a6233f373eee2e",
+        "facts": "4933ed940c9f2d9303a750c7e5247ffd9467042e6e65f5dafd60e2a4a082650b",
+        "presentations": "f40fd38010d4ba6284b8022eca0f1784486d42fbbba377051348a2d4b3fc112a",
+        "tags": "460882917ad4f7b7f38c6ec021b14157be3cfa596a47d5443b92b5e92403adb6",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 51,
+      "quarter": "2015q2",
+      "payloadSha256": "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643",
+      "payloadBytes": 44539126,
+      "observationPath": "observations/sec-fsd/2015q2/20180328T073028000Z-487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643.json",
+      "counts": {
+        "submissions": 8213,
+        "facts": 2602230,
+        "presentations": 1047211,
+        "tags": 87641,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "07c3bae1bc737459f4928f2f53f3b2b2f3585b4cfa36ba24dabffe67cb4c32f6",
+        "facts": "53c2c321db73cb8628dfb794b67edd4d2df2c3ec8ede0c007d9c1f43e1c1625d",
+        "presentations": "fb790bf0c1b49b64202f722a788236390e8865075ca69bd4dc760fa627688967",
+        "tags": "ac43a2a229a23131a8fed77d6e55ac69593155d1019d0accf632dd5907af74b7",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 52,
+      "quarter": "2015q2",
+      "payloadSha256": "d3cac325930af6ef145d26fb7e035d7933e900ce174a11adaabb33abd87fbfa1",
+      "payloadBytes": 78908272,
+      "observationPath": "observations/sec-fsd/2015q2/20250201T010951000Z-d3cac325930af6ef145d26fb7e035d7933e900ce174a11adaabb33abd87fbfa1.json",
+      "counts": {
+        "submissions": 8212,
+        "facts": 2588598,
+        "presentations": 791305,
+        "tags": 70490,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "1efc2abd9c42c573f3cdad24a9e5b635ab159fd24c3c5afc4c2603f6a3bf3a99",
+        "facts": "14414d864f9dc742c59288294bc2c8f2c7ddff14ab1cefeb210fc2ec61870d36",
+        "presentations": "0c44c2de2a2bdc4f4799cc5643f600786a0d51f1dcd157018114dbb0bd39eae2",
+        "tags": "e7b7067b8d88cf2574251ec0f3818720e865b37c6655aa63975282417cb8c64c",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 53,
+      "quarter": "2015q3",
+      "payloadSha256": "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a",
+      "payloadBytes": 43066583,
+      "observationPath": "observations/sec-fsd/2015q3/20180328T073007000Z-26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a.json",
+      "counts": {
+        "submissions": 7456,
+        "facts": 2763374,
+        "presentations": 1033091,
+        "tags": 76104,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "493cb709e7bd5ae7572f0a37aa97c538685d783ddfffe0d5255a15003495b5d1",
+        "facts": "23e64f771e8066d239ca6bf0d7fd7974e1f9a9dfea8a49ea610d957bd4e58f87",
+        "presentations": "d60a19aa2c359d0f86b2ae76db514f5c56fb054ebe8b8d81083297803fe40a2c",
+        "tags": "4f12c2469c3396104d43e7c036de4bd4a3b15ab37b724f62f09f98e31cdc79fd",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 54,
+      "quarter": "2015q3",
+      "payloadSha256": "9301fa2e346aa6b3a48a36cafab80d1aab5d7970e60bfd168d53ba852a4deca9",
+      "payloadBytes": 82751989,
+      "observationPath": "observations/sec-fsd/2015q3/20250201T190317000Z-9301fa2e346aa6b3a48a36cafab80d1aab5d7970e60bfd168d53ba852a4deca9.json",
+      "counts": {
+        "submissions": 7455,
+        "facts": 2780346,
+        "presentations": 727470,
+        "tags": 61559,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "9266d0e1f44c04de5459b7a783c0c843477389ccc3e45a84c6d2aec9ad41a8b5",
+        "facts": "fd718be046b84dccb093f516bdd62c304e0f38090ad38d6c081b8f8c0d3da1fa",
+        "presentations": "f09d549e08c61bee391ece0a7c9cab643c2188b7339aadc86214751ec0f25064",
+        "tags": "af715562582af53ab02748600af096f7462971fc429adcd2a8c7ce1dbb881e83",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 55,
+      "quarter": "2015q4",
+      "payloadSha256": "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d",
+      "payloadBytes": 42899659,
+      "observationPath": "observations/sec-fsd/2015q4/20180328T072945000Z-2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d.json",
+      "counts": {
+        "submissions": 7234,
+        "facts": 2738754,
+        "presentations": 1022465,
+        "tags": 75567,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "3b1b0c8d8ac42648e8b08748b35792e1b759623add6a0ffda819e8ebdc95541f",
+        "facts": "5c4472edd31b87132c0e2357f3710bc444c1ab9b798c553f9089f8bb420e72a8",
+        "presentations": "659f39828126de34770a528eaae89a8c132635eb94c9924bfdd3b50fa715f8ac",
+        "tags": "267d57e58cc933bd9987a4a3f2ed89aa4c1f1d9304d8ec2ba223b115f1f6a6f3",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 56,
+      "quarter": "2016q1",
+      "payloadSha256": "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169",
+      "payloadBytes": 51405855,
+      "observationPath": "observations/sec-fsd/2016q1/20180328T072922000Z-71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169.json",
+      "counts": {
+        "submissions": 6535,
+        "facts": 3485997,
+        "presentations": 1051814,
+        "tags": 85458,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "1f93ddf03beee36a6b2991c2fc211d125d7c12ea3a118f3831f84195f41ebb63",
+        "facts": "6938c075865fda624e0464cdd866d08e614b738f76bd2cf6a80a4f0ad74caa5c",
+        "presentations": "636b5bae5833cbd06bcef981fbeb4b4b25d6019fba745ccaa6edac257858e712",
+        "tags": "e75e5f50deba140a5d6f013cafee596dea4b4819bd7b64805dba61006f6964a5",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 57,
+      "quarter": "2016q1",
+      "payloadSha256": "5c89a6badede1b47ab540913c7484795c7fc4c2a4672ac601b34b8c0afe5a698",
+      "payloadBytes": 95470843,
+      "observationPath": "observations/sec-fsd/2016q1/20250201T014842000Z-5c89a6badede1b47ab540913c7484795c7fc4c2a4672ac601b34b8c0afe5a698.json",
+      "counts": {
+        "submissions": 6532,
+        "facts": 3174261,
+        "presentations": 729483,
+        "tags": 69297,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "89e9f956f1932d30fa7b44493885a59e004e970889f4af1f8d82a97524876c39",
+        "facts": "61ab94acad56a20d71bb399088253e1b374a1f5f389e1b52879f8183c2e7a64e",
+        "presentations": "5a6bdaa4858b84393655c390e6d24bdb603f1ec3a76a857ff7d8953499195ac0",
+        "tags": "39359954ac2f31e15bd299560f52ec114bde390bc3b4206433495ca3b737a23b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 58,
+      "quarter": "2016q2",
+      "payloadSha256": "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232",
+      "payloadBytes": 40776109,
+      "observationPath": "observations/sec-fsd/2016q2/20180328T072903000Z-27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232.json",
+      "counts": {
+        "submissions": 7523,
+        "facts": 2384035,
+        "presentations": 979624,
+        "tags": 77436,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "20d4284a1709196a65b72e046ad9fbe56d362de3bcf12e02040bc6c342c3f9e0",
+        "facts": "38ff77908ac8ed515a21133c418d0af303156be5fb23fa3df92080ef69571830",
+        "presentations": "7d7eabe9bb69aa0369e2ed5ef0a912890bae6323a518448c43e8eee26bbe2446",
+        "tags": "05dd574fd79f914337fd2cc039b29c103c83ed63efcdfea5edda6848f2260e0b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 59,
+      "quarter": "2016q2",
+      "payloadSha256": "e91daef1f83ab3a6a7a25425f1f09ac6c100be8e42ac7a54e539e1b0c303449c",
+      "payloadBytes": 73848835,
+      "observationPath": "observations/sec-fsd/2016q2/20250201T045327000Z-e91daef1f83ab3a6a7a25425f1f09ac6c100be8e42ac7a54e539e1b0c303449c.json",
+      "counts": {
+        "submissions": 7518,
+        "facts": 2394508,
+        "presentations": 727031,
+        "tags": 63956,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "26fcc14aff9ba131218e9347489b7b2965ba458b3874e23a89decf5f9ebe0f5c",
+        "facts": "ec98832fc9d9f5641b3cdcb2508f866baa01129185d8025b1e506c229debd54f",
+        "presentations": "83d2e43b8221ef6f5d166ff669abcfe93bc95a7ba4b67932d6dcdb7402da94d1",
+        "tags": "194617109ac980567f96308437ecb7e3cc311c67c51036ca91869f35ed6fc15d",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 60,
+      "quarter": "2016q3",
+      "payloadSha256": "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3",
+      "payloadBytes": 39833077,
+      "observationPath": "observations/sec-fsd/2016q3/20180328T072844000Z-f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3.json",
+      "counts": {
+        "submissions": 6865,
+        "facts": 2489104,
+        "presentations": 956206,
+        "tags": 66947,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "7cfa1805be75dbaec922d0cead970dc61b937fd67e8412f660dfedb8bb9cec72",
+        "facts": "5c43554ab4b2f942f331494c03796d262cb5c2bb8425b34da76a25c949d3db0b",
+        "presentations": "f8d8e3a6236d0da53b02552fb7642eb7a5838f995eed8d48288a93cfc4dd5bb6",
+        "tags": "d84ff44ce5363ac948bbca2a429720a93b5ffc3b1a2c21cb2532c678d8142c56",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 61,
+      "quarter": "2016q3",
+      "payloadSha256": "4d014b8ee4476887aba067c59bfef967d4b12c905d4b1b3f89e8ff7ff7310156",
+      "payloadBytes": 71116399,
+      "observationPath": "observations/sec-fsd/2016q3/20250201T071438000Z-4d014b8ee4476887aba067c59bfef967d4b12c905d4b1b3f89e8ff7ff7310156.json",
+      "counts": {
+        "submissions": 6139,
+        "facts": 2370332,
+        "presentations": 605143,
+        "tags": 50277,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "856d9355c5fb6620a7febcf7f74105dfad50941b69550e9e121e19d3f6fd8efa",
+        "facts": "612462ae13101ef48d98d1aab1b479075c4783a43a11bd4af2aa6aa3124ff5ce",
+        "presentations": "3f86954d817e9ce20dcb566ad6151bb9c880666d224b3b9856de45dbc7b57d02",
+        "tags": "4d051dea9ed58fb3d4226dbce046b4902ce2c8934841af76c7acde7cbd027e88",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 62,
+      "quarter": "2016q4",
+      "payloadSha256": "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b",
+      "payloadBytes": 40239885,
+      "observationPath": "observations/sec-fsd/2016q4/20180328T072824000Z-af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b.json",
+      "counts": {
+        "submissions": 6754,
+        "facts": 2502865,
+        "presentations": 953277,
+        "tags": 68530,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "a2926c2a1a3d665fb4e1db28eb0ff65f99819b986569a635f8e2d31f2fd0f11d",
+        "facts": "bedbb18dfcb98b899552172065448688be432dd183000aac835c10921d0ec81b",
+        "presentations": "85d66d8f65953c8733793af8c1f44e06dad45f234d348b5117e077ed82a2ed9f",
+        "tags": "a3e9b743cf66aafa1d2d17496f3e4a450dfa9e7d2bea8e57e8f782f9e863f38e",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 63,
+      "quarter": "2016q4",
+      "payloadSha256": "b8a9550c386ea95eefcc95fc3b3c19f2b1428c0a7f46d5d547a671c3f9284e26",
+      "payloadBytes": 79400707,
+      "observationPath": "observations/sec-fsd/2016q4/20250202T180707000Z-b8a9550c386ea95eefcc95fc3b3c19f2b1428c0a7f46d5d547a671c3f9284e26.json",
+      "counts": {
+        "submissions": 6752,
+        "facts": 2627253,
+        "presentations": 673588,
+        "tags": 56690,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c446b4d4bbc7c32bc8c94bc1165eaaca9e18562486d3f60ba3bb45ea3c47d94f",
+        "facts": "3d4d0aefb208793cb62b5e58ec8f930bf165ede12eee07c40f3f40157fb971ca",
+        "presentations": "1ed4b216e7c2abda05bbdaf30072d4a3afc871912f2af5050bfe4374ea9de64f",
+        "tags": "ee1e2db5a0063707367f4146a1650b6cef99599746ed5fe06eb752447c5ef475",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 64,
+      "quarter": "2017q1",
+      "payloadSha256": "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1",
+      "payloadBytes": 49383264,
+      "observationPath": "observations/sec-fsd/2017q1/20180328T072800000Z-808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1.json",
+      "counts": {
+        "submissions": 6272,
+        "facts": 3313595,
+        "presentations": 1009876,
+        "tags": 81580,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "eed5572d3d467aa271ad93d4bb5b4e05960b610386890d759da674c79484591e",
+        "facts": "7b7e434c1d92ba1fa5e336009a26fe0a3b511e735e5c91ca7b9a7ff9424fc481",
+        "presentations": "0d25dd0e47faccb9c8314907646155cd101334edde4ad02750d8f55fa516941f",
+        "tags": "ac6c1ebf7ef62d88712a2c4bde8932b6f486740d672596fd874edd22596f910b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 65,
+      "quarter": "2017q1",
+      "payloadSha256": "ffb6989983c4c9f87e2f39166b20e4a21f024f0fe1adccc199e08da5fc94a915",
+      "payloadBytes": 92433981,
+      "observationPath": "observations/sec-fsd/2017q1/20250201T184519000Z-ffb6989983c4c9f87e2f39166b20e4a21f024f0fe1adccc199e08da5fc94a915.json",
+      "counts": {
+        "submissions": 6270,
+        "facts": 3095513,
+        "presentations": 701916,
+        "tags": 66761,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "1568384cf8aaad4f9fc8028ce2dc4c650ca90d3f28cec816294e5853f558ee27",
+        "facts": "c2075caf171fa8b79a9020d7327269fd2a90e1fe5ffae100eccba870c95faa00",
+        "presentations": "8941c107465afdf7631bed2561a1422e2160af153c8215449a0eaf6511ec84f9",
+        "tags": "ebaa99a712c722ec681b11839aed1ead2df5a681a62da42794987614f74eff39",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 66,
+      "quarter": "2017q2",
+      "payloadSha256": "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a",
+      "payloadBytes": 38562434,
+      "observationPath": "observations/sec-fsd/2017q2/20180328T072741000Z-a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a.json",
+      "counts": {
+        "submissions": 7228,
+        "facts": 2235130,
+        "presentations": 998354,
+        "tags": 73537,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "252e3e0d3e9978d5b2577dbc0db80a92a6f481c4dbb174ce853038e74c46761a",
+        "facts": "c73d045db1590a5fee4be141e9f0ff2204fe1e73459ee69457d56d9a8c3336cf",
+        "presentations": "ab56b443c8b59f632505a1ebffe86feec6081fc14f5b4faaed44c65af8d080fd",
+        "tags": "25e7f97f241f547ba502412d8823e8469bdd4eb05bb7662e8da376a0e99788da",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 67,
+      "quarter": "2017q2",
+      "payloadSha256": "63a590d7deaac8f82d22f08cb2ada46f199341ecc7e7a8a0a7d6a181cec1d53b",
+      "payloadBytes": 71429748,
+      "observationPath": "observations/sec-fsd/2017q2/20250201T045500000Z-63a590d7deaac8f82d22f08cb2ada46f199341ecc7e7a8a0a7d6a181cec1d53b.json",
+      "counts": {
+        "submissions": 7226,
+        "facts": 2321869,
+        "presentations": 697887,
+        "tags": 60851,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "b56533fbf6944abbd4c8c47a9bcebe4199fc4e1ee68e6410747bb80c2239c7e6",
+        "facts": "7cb40109a089576fa0cc69e88d1d3894a22a767604141c3a34c6f43bedef3c35",
+        "presentations": "8a6c4acbec53184bebb800973fead989277c60c69f129392950a9fe0ccbeaed1",
+        "tags": "3e3d34faef51262110548f92770b73c89ab878e6c35ee87960b5986dcb3d17a9",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 68,
+      "quarter": "2017q3",
+      "payloadSha256": "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4",
+      "payloadBytes": 37209786,
+      "observationPath": "observations/sec-fsd/2017q3/20180328T072720000Z-c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4.json",
+      "counts": {
+        "submissions": 6506,
+        "facts": 2255775,
+        "presentations": 909035,
+        "tags": 65079,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c1264af2cc75f5172a9577c3b29ecf63a66d75434fe230f79380c6f2cb875147",
+        "facts": "3077cec606638cbaafea3c1240c111f9ad0bd7d31c4c3cd1c7943e498e7ec926",
+        "presentations": "319e4117f02d73b06ed2251b176a742fd0c30b4877be89dd297844fb695c2360",
+        "tags": "37ad590199b3a392a8ad7cf5cc6fd902b21f47593c4ed1530c320dc39d8cd958",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 69,
+      "quarter": "2017q3",
+      "payloadSha256": "5aa58d799c4fb3f5f98974eb713696d1aebe747a01a794e7ac58517631b5735d",
+      "payloadBytes": 74356472,
+      "observationPath": "observations/sec-fsd/2017q3/20250201T012236000Z-5aa58d799c4fb3f5f98974eb713696d1aebe747a01a794e7ac58517631b5735d.json",
+      "counts": {
+        "submissions": 6508,
+        "facts": 2475254,
+        "presentations": 639840,
+        "tags": 53250,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "11ef6d7d5f02378b16d480312f9ee91a8e0d9176b8aeb0ae4ac697457bb8b4f6",
+        "facts": "647f93695cf5f92f6730dfb8459e312e1a5ea8d21a62c7f42fc3af8bb467ec3b",
+        "presentations": "a027401960b52136f3674f6c6060f125f7e4bb4e2cb7832629588100fdf1e3c3",
+        "tags": "dfb8f3ebfe5da992aef400a74c6123fd9441a44ebcf18d4ef8390aab45409a54",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 70,
+      "quarter": "2017q4",
+      "payloadSha256": "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9",
+      "payloadBytes": 41119222,
+      "observationPath": "observations/sec-fsd/2017q4/20180328T072709000Z-0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9.json",
+      "counts": {
+        "submissions": 6550,
+        "facts": 2281152,
+        "presentations": 927058,
+        "tags": 67190,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "e084a9a8088cee5f315a6f216af551de4c35aa980ebf665148bc869da9020307",
+        "facts": "2dac2da95c617daeea1a4e05b2d29727fb686296832816fd29979dda6ef9b996",
+        "presentations": "46bda72cd7c203ba0647db2e6960d06c135efc9984d98ac44a1dffbd3b137f0d",
+        "tags": "5a5335fc1172949a50cc60c1f3a26d83a2d30c06da1fe98a1edd1fb599ed7c1f",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 71,
+      "quarter": "2017q4",
+      "payloadSha256": "be03bfd71f356a7f53d82a40ee907bb51aec4f61d6ce97f059f2df785bc37658",
+      "payloadBytes": 76051784,
+      "observationPath": "observations/sec-fsd/2017q4/20250201T003841000Z-be03bfd71f356a7f53d82a40ee907bb51aec4f61d6ce97f059f2df785bc37658.json",
+      "counts": {
+        "submissions": 6549,
+        "facts": 2518948,
+        "presentations": 654255,
+        "tags": 54860,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "613386c02602cc3ed43d4af4051075ed5433bc9f88c34c8ef73130777391842d",
+        "facts": "16ecd83908dfa753c43eb1816f50f9b2d9537aafd097cd48e2a60dac88600dcd",
+        "presentations": "74de1f75eed429d6414fc27ada1bc19fee71a3d265af93832b93c4f85a9d7d71",
+        "tags": "6836c2a87f091b44f6ff7faab28dfc3940e7e9f8d0c11a1907876f324420973a",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 72,
+      "quarter": "2018q1",
+      "payloadSha256": "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4",
+      "payloadBytes": 46207283,
+      "observationPath": "observations/sec-fsd/2018q1/20180919T112832000Z-1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4.json",
+      "counts": {
+        "submissions": 5992,
+        "facts": 3030131,
+        "presentations": 966065,
+        "tags": 80291,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "21d7e0b30ce8e660cfc78d198b1d82639beb5bec6a3d3acbb08b2435bb1fa29f",
+        "facts": "4198335e9b5eeed4b099683a53ab1eea4ef645ecaed2eda683d55bc9d1844fab",
+        "presentations": "2623e3d950251879a1dba4f3ab070ad791e060d6276db5cbbe18c50366d10b15",
+        "tags": "d7c544be6c1199b9e5003cc0edbb73b477d10a106a3b3357a0405c94004bc13a",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 73,
+      "quarter": "2018q1",
+      "payloadSha256": "f7f0083d28779ff373cd097ded88d5408eae9cc178f89014ca3ed8b24dc84185",
+      "payloadBytes": 93176693,
+      "observationPath": "observations/sec-fsd/2018q1/20250201T045358000Z-f7f0083d28779ff373cd097ded88d5408eae9cc178f89014ca3ed8b24dc84185.json",
+      "counts": {
+        "submissions": 5984,
+        "facts": 3033024,
+        "presentations": 671539,
+        "tags": 65339,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "a92d8dffdafbefbcb4ac96c184b8586b4225b8555832d29afb7f98ee40bfd415",
+        "facts": "80d5a059a84fa51233b6680de5ba8feead30b1693cb55a6c8403fc25fe62389b",
+        "presentations": "18877cc5aad441bf0762f6e5ca130966ad604de3f0e0b3f3489ea66c4f33a05c",
+        "tags": "fa1bfca888bd7ea4d42d1a314340d75f62f40a2ea88067480746795f9452ea5a",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 74,
+      "quarter": "2018q2",
+      "payloadSha256": "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6",
+      "payloadBytes": 41249036,
+      "observationPath": "observations/sec-fsd/2018q2/20180919T112823000Z-9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6.json",
+      "counts": {
+        "submissions": 7490,
+        "facts": 2345136,
+        "presentations": 1058168,
+        "tags": 84605,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c9ab2531bcf2c930e91a821ce1f7a2e6fe5a519007421f6c8979268f07f90bb6",
+        "facts": "199bb4879c97f9b18d6bcbd5e5d286950abf647a6bf387ece148e42042a9e54d",
+        "presentations": "dcdc921df4892b35a5092c8340eaf3bcdba5db02c8f463007100474730cf44b3",
+        "tags": "05156a0316de7646ab2b26a2891907bff946241749b3a39954e2f9a9e85816f2",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 75,
+      "quarter": "2018q2",
+      "payloadSha256": "99daaf8af1fb1ba94b100613536d9dbee5e9a356f0736190963a3a68af623d54",
+      "payloadBytes": 91972487,
+      "observationPath": "observations/sec-fsd/2018q2/20250201T040030000Z-99daaf8af1fb1ba94b100613536d9dbee5e9a356f0736190963a3a68af623d54.json",
+      "counts": {
+        "submissions": 7484,
+        "facts": 2663988,
+        "presentations": 739060,
+        "tags": 69307,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "5dc0e4b9de3e07e176bfc39f8ca9c4e72f2bf529eccc19e1bb6c1922aa6f05b0",
+        "facts": "b3e572aba4c25f824b1767e171a73be586e3f3d35c8a7e0c8e8fb18ed859a6ff",
+        "presentations": "167186da370103754cdf2a30098e85017141e231d0b8a53b32abdd97511d4c05",
+        "tags": "fff2492a31cfc4be7e82d5b57357b91557d9ed43d90c5ae23954643c7d3c6bc5",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 76,
+      "quarter": "2018q3",
+      "payloadSha256": "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720",
+      "payloadBytes": 37243604,
+      "observationPath": "observations/sec-fsd/2018q3/20190327T023232000Z-a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720.json",
+      "counts": {
+        "submissions": 6492,
+        "facts": 2229050,
+        "presentations": 921248,
+        "tags": 71116,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "55024829063f07fcb93f16d69977bf06cf59c62fcfb56becb3c3f12a6f2eca98",
+        "facts": "9b91a2fe88007c6c14eb1e2cf3ee7bee066943b1ffceb4c7512085f5691c473e",
+        "presentations": "551f309cf4f56876107fcdf08412070c5a1e34c791c0fbc55e47d04496b8778f",
+        "tags": "9865f079351633eda24d19c54413402b6c4590ce005c7a676c5d8ab3c06c2fa2",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 77,
+      "quarter": "2018q3",
+      "payloadSha256": "30030056223c456d5cb7a42722ffa990345fda12deb5cfff723b1ae47dc9bf8d",
+      "payloadBytes": 87202498,
+      "observationPath": "observations/sec-fsd/2018q3/20250201T014809000Z-30030056223c456d5cb7a42722ffa990345fda12deb5cfff723b1ae47dc9bf8d.json",
+      "counts": {
+        "submissions": 6493,
+        "facts": 2629893,
+        "presentations": 643844,
+        "tags": 57615,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "98f728ee14d386097b454203c40dff1328f86c8cd3fe69f23deb13b93fb69d94",
+        "facts": "e80ba8da36c64bba61a7eae8bd43103c16069eace23fea65fa712fe2de11537c",
+        "presentations": "0539fa5e3d46027d59220b81875f06b725af456cb701d6777e1847642622e23e",
+        "tags": "674bb1eb503b5e02e16a81b55af729243f5e57653550816792cb6ffe2bfabf88",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 78,
+      "quarter": "2018q4",
+      "payloadSha256": "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894",
+      "payloadBytes": 37661326,
+      "observationPath": "observations/sec-fsd/2018q4/20190327T023221000Z-c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894.json",
+      "counts": {
+        "submissions": 6421,
+        "facts": 2247296,
+        "presentations": 939174,
+        "tags": 73636,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "3ae244bfddd370be43f4897d7bffab999bde050e60ef4c8214dbff57af1c8263",
+        "facts": "a6617b7b2d479080c3308d31ffbd6cf7ca158ab3c597a785942c7abb3316caa6",
+        "presentations": "5e502e656ddf2546194140cb9599980bf7e60069b397c0aaced9c2bfe6b7dd61",
+        "tags": "2302bac64ae93c443db657ba976b3709284dbb96228f2e68cf807476015d331b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 79,
+      "quarter": "2018q4",
+      "payloadSha256": "ecc103d0979dacdf6cfcc7f0b2273f7b6046c41a3aa7f2e2aacfb8ccd45bc122",
+      "payloadBytes": 62895777,
+      "observationPath": "observations/sec-fsd/2018q4/20250201T022451000Z-ecc103d0979dacdf6cfcc7f0b2273f7b6046c41a3aa7f2e2aacfb8ccd45bc122.json",
+      "counts": {
+        "submissions": 6418,
+        "facts": 2681097,
+        "presentations": 647003,
+        "tags": 59120,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "2fed698c7ae909ecfa47bdc04343dbfee168b4daf9f525bb5b669cffe7b507e5",
+        "facts": "2d3d18d8feb387735894c9c6edf7cbc6f54236957b539b3847ff76a80109d138",
+        "presentations": "41e6a75f26c1f0134e68ffa1eb387c3f6ce43e38a7ae3e784c56140c5f744d73",
+        "tags": "927c96c2a1d89f33144db93e92a685ecc46d6d05a2a1bee54870b8d65effb09b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 80,
+      "quarter": "2019q1",
+      "payloadSha256": "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0",
+      "payloadBytes": 44918911,
+      "observationPath": "observations/sec-fsd/2019q1/20190912T022656000Z-e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0.json",
+      "counts": {
+        "submissions": 5724,
+        "facts": 2890146,
+        "presentations": 962200,
+        "tags": 83522,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "721a68f18e546442c96c723c5a81126db466ab8f5a69108c72687ac60ca36b92",
+        "facts": "67d7453862641dc7d6574fc349fde2951ed61a6a9effc27107e4d7f4e7751fa6",
+        "presentations": "6c955af7f79ce36fa52632cfd1f55e7b856c4ba3282e7b09f8853fb09caf3499",
+        "tags": "bbd8a4d8c9e8b0c2ee9cd7da727b1f73821c007c8ad22ba8805f58c02b426c6c",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 81,
+      "quarter": "2019q1",
+      "payloadSha256": "49f6f0a00b6f1792d22893a3e261f7a329377048eb826079f1a16c7895b76d9d",
+      "payloadBytes": 95895180,
+      "observationPath": "observations/sec-fsd/2019q1/20250326T184230000Z-49f6f0a00b6f1792d22893a3e261f7a329377048eb826079f1a16c7895b76d9d.json",
+      "counts": {
+        "submissions": 5708,
+        "facts": 3072555,
+        "presentations": 649728,
+        "tags": 66441,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "f1cd419643ee0eca3f3ab8addd8f1afc043c4bf72f193f77b74ed088ab544c02",
+        "facts": "d12486692b285915b67449b6a3d0d7b1f8e997b4a72ffdabf1178cc64bf1c1fc",
+        "presentations": "09c9e74feb984acfcbcc917811f6b3860a535c84e81b5dbc32a72c339613e136",
+        "tags": "73f89d1941068de9be727229d8511e8cf785c25b2cf8c9836bc9017cd1bb0c86",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 82,
+      "quarter": "2019q2",
+      "payloadSha256": "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c",
+      "payloadBytes": 42243142,
+      "observationPath": "observations/sec-fsd/2019q2/20190912T022646000Z-cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c.json",
+      "counts": {
+        "submissions": 7300,
+        "facts": 2368057,
+        "presentations": 1118423,
+        "tags": 95324,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c84c771ae8d1a17c24331485ffe9a57a43bbd219b6611fdd51cfd9b8f7ed5783",
+        "facts": "c99653eb79f6211da2fb5365c267a7848270cd021e14163afe39e0ac410a7c08",
+        "presentations": "3f2f9575718793dce3b1955b116a7f78a6d4af2c32d2c0e828b4a313dd7646e1",
+        "tags": "56eeedd030e10af90e6aea63ec3094b49fbd24fc4bef67f7a2a3c7d5a10d1403",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 83,
+      "quarter": "2019q2",
+      "payloadSha256": "765e42efd43687b4ac4ea59c83213857a52dca0a4bd5c490034bd5bea2b6fac3",
+      "payloadBytes": 90155728,
+      "observationPath": "observations/sec-fsd/2019q2/20250201T044431000Z-765e42efd43687b4ac4ea59c83213857a52dca0a4bd5c490034bd5bea2b6fac3.json",
+      "counts": {
+        "submissions": 7232,
+        "facts": 2816279,
+        "presentations": 753522,
+        "tags": 76812,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "780bd74b671d67425830f3499bae8f0d6d66d299a3edc43e171b787a9299f65b",
+        "facts": "6482397b315e354f105972f2a9a95a5843fd69852059f2e4ef05d358c0f0ef61",
+        "presentations": "cf6a28ab7d4acdd4d7526f2d7742a2d1fbc170e15ed445582b8b037231ba82aa",
+        "tags": "f20003202dd98e4e1da1ad1eccde3b8ce91f9effaed78a862ff67a2f3be537f2",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 84,
+      "quarter": "2019q3",
+      "payloadSha256": "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31",
+      "payloadBytes": 39306600,
+      "observationPath": "observations/sec-fsd/2019q3/20201017T014756000Z-dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31.json",
+      "counts": {
+        "submissions": 9353,
+        "facts": 2325267,
+        "presentations": 987725,
+        "tags": 80773,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "7785c090f7c51dd3c29c96ebb6af28d906bd0126c5b26aff49a45a2e9a758351",
+        "facts": "46ece0f84e5088d882628252627c854aaf80200c2e79fa3edc133bcad0b186ff",
+        "presentations": "ecfc6a80277543c70508083a016bde26d91108c64997842a28eb5db50897e3ce",
+        "tags": "e72ac2a791a82f96b7d662723b67c4520cde71db97926d872bda61eee11bbfdb",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 85,
+      "quarter": "2019q3",
+      "payloadSha256": "4c57e36f04b54a2b9917537e12974cba68353f765affbf168bd506478780e13e",
+      "payloadBytes": 89829588,
+      "observationPath": "observations/sec-fsd/2019q3/20250201T010550000Z-4c57e36f04b54a2b9917537e12974cba68353f765affbf168bd506478780e13e.json",
+      "counts": {
+        "submissions": 6274,
+        "facts": 2957329,
+        "presentations": 664035,
+        "tags": 64951,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "e7cd6bae768c76ab89927f413cc8bffc3c4f1c9c78f7ddbb89f1b4499dfb3951",
+        "facts": "6a2092c87349d8fce4745c37f7af9028cb7b2589b61cb059b8a9b8d933cce137",
+        "presentations": "d78629525a2fdaf44fb1264b6c664dc518036ccbaf23cf8bfcea7111b7802425",
+        "tags": "e8548b7467c8f7d9aaeeebe62c7e05bbd4153d389bb48eed9b4267cc0d383df5",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 86,
+      "quarter": "2019q4",
+      "payloadSha256": "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32",
+      "payloadBytes": 40686794,
+      "observationPath": "observations/sec-fsd/2019q4/20201017T010241000Z-f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32.json",
+      "counts": {
+        "submissions": 12664,
+        "facts": 2402955,
+        "presentations": 1042999,
+        "tags": 85619,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "a8aa4fb64796da5d51ac163c0ce628b32f8858612412d335d74021f6d3e80d1d",
+        "facts": "68e973ba946a266eaf3fb9a3e974fd5196dc0ec34edc2f6494eacfbed4d4ddac",
+        "presentations": "d168beeb919f13d91b8eff9cd34110b7c8d38fbe68df5efdaf05b1336c20c425",
+        "tags": "3a4fddc67fff2e904246b0fbd5faea1af33d7fb5307c82448fa75b5cd9e08f3b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 87,
+      "quarter": "2019q4",
+      "payloadSha256": "1f997c123b6d2fe892eeca0a5f12687e718ab5ae031f148b4a5d82f2689daec3",
+      "payloadBytes": 98753299,
+      "observationPath": "observations/sec-fsd/2019q4/20250201T014904000Z-1f997c123b6d2fe892eeca0a5f12687e718ab5ae031f148b4a5d82f2689daec3.json",
+      "counts": {
+        "submissions": 6211,
+        "facts": 3094866,
+        "presentations": 676021,
+        "tags": 69127,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "b0445c6d3ff5aaff0f2411d0d1ff22f1f37a20765458c7d875ef9b56553db894",
+        "facts": "61cf3a791a1cb24bf9ba8ede6d0a4e9422da49909a80a2bea22db1cda22dad50",
+        "presentations": "6aa30bbb9e2d1744a9f66e0c20218b169f9163b02b232d3acda6e61a8d460d78",
+        "tags": "f4ff21f6b6cac0c251ba5db7759190737a00ca927f1f9d566962acee8ada07cd",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 88,
+      "quarter": "2020q1",
+      "payloadSha256": "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781",
+      "payloadBytes": 47769589,
+      "observationPath": "observations/sec-fsd/2020q1/20210320T013602000Z-287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781.json",
+      "counts": {
+        "submissions": 13561,
+        "facts": 3005393,
+        "presentations": 1054473,
+        "tags": 92751,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "317371f3d8b8e624a6fabff6dc3a124339f407b5cae1009ed893ba313bca475b",
+        "facts": "2cbf70f3a716e00c98b1ff2f27449327b768e74a6d58fa5baa946012572f5f47",
+        "presentations": "7cd7069e0791b7293f8099e9939571a7d492f27d77e35a311a079b4a8b0a9644",
+        "tags": "dee13dedf7b95c267e8e7454b2a158faa501e88fb91ae4545eea3b63171a855f",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 89,
+      "quarter": "2020q1",
+      "payloadSha256": "48ed9834c66d565c21130d087eae941b25770e2d7cc8351d17652612289fcd67",
+      "payloadBytes": 96584608,
+      "observationPath": "observations/sec-fsd/2020q1/20250201T034838000Z-48ed9834c66d565c21130d087eae941b25770e2d7cc8351d17652612289fcd67.json",
+      "counts": {
+        "submissions": 5816,
+        "facts": 3099352,
+        "presentations": 675166,
+        "tags": 75203,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c897726749321bbd3c100e12345d639ac5e49c0207a5f46a7b6a8d94d9e0d145",
+        "facts": "4c3802d1bf19ee773779823d9c016a28581e669b6bcd8bbb8f4191f8d7060efd",
+        "presentations": "d25ddf699d968517e0602238e4c11a56df291cbf3457508c7bab33afc58c64c2",
+        "tags": "107679a941f6e33d7f00e7dcade19d89a392bb7a19386af69f37f63f80f25f82",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 90,
+      "quarter": "2020q2",
+      "payloadSha256": "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925",
+      "payloadBytes": 40883740,
+      "observationPath": "observations/sec-fsd/2020q2/20201017T030334000Z-07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925.json",
+      "counts": {
+        "submissions": 16411,
+        "facts": 2197732,
+        "presentations": 1096604,
+        "tags": 93539,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "282007e4ecb2a5ab0166b23f03c8c0247e8aa0402fdf79e80262f57f2d661f90",
+        "facts": "8985b8a5ee3204120fec05426c0e391c65ba13701cf047fda39e60ae3e6025bd",
+        "presentations": "7fb212bd7f11f88de2f040fabd66ee4f4a78e2316d77eac3634d64362f388b1c",
+        "tags": "406c19ffa24270477e7fed2cfd39b78df9655d1a3b1514866a7f37e528b768ee",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 91,
+      "quarter": "2020q2",
+      "payloadSha256": "bd796ea10c88e21205da013f9c3f6a20b2b14d3de94f0075e9f529e0ef9a3543",
+      "payloadBytes": 82008710,
+      "observationPath": "observations/sec-fsd/2020q2/20250201T001007000Z-bd796ea10c88e21205da013f9c3f6a20b2b14d3de94f0075e9f529e0ef9a3543.json",
+      "counts": {
+        "submissions": 6561,
+        "facts": 2562710,
+        "presentations": 702372,
+        "tags": 75421,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "31cb0919eb3ec49f06eee31549fed4c296fc3b4395bd88d67cff60df86a859dc",
+        "facts": "f371cf859a27c2356737fc441e842b7307e46c5a6eaa6e5ced955d3ac94df7f5",
+        "presentations": "a14989b7ddb9356ca4da4ffbc8009d3e692a521a253ba08113bc723aec936d93",
+        "tags": "1655762c6cc6da491b5589c8b45820a5c00ae989c71a696bfb097931ba352765",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 92,
+      "quarter": "2020q3",
+      "payloadSha256": "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d",
+      "payloadBytes": 41569023,
+      "observationPath": "observations/sec-fsd/2020q3/20210320T170148000Z-739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d.json",
+      "counts": {
+        "submissions": 14832,
+        "facts": 2351640,
+        "presentations": 1067883,
+        "tags": 88783,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "16ef02883bf9b08282d144ed0cce2b16cd489414c550f75f210fd6c99d229618",
+        "facts": "480b7fbf4e76ed83409de468a3088ce53bdbb7d06c6bc4749f1c7209a224c05c",
+        "presentations": "fe1b8114ef0d7f2e0a96b5d7f44d320824f999a903644012a4571b0266e5746d",
+        "tags": "80c2385028de5aaa86c2d260d473346c87ff27d2b25e1e458ae13370a734f133",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 93,
+      "quarter": "2020q3",
+      "payloadSha256": "6a402070d4b1f12db0d2256533b38705735684ecb58bc12ce53a61dd12abe26e",
+      "payloadBytes": 87582976,
+      "observationPath": "observations/sec-fsd/2020q3/20250131T235528000Z-6a402070d4b1f12db0d2256533b38705735684ecb58bc12ce53a61dd12abe26e.json",
+      "counts": {
+        "submissions": 6302,
+        "facts": 2868109,
+        "presentations": 680436,
+        "tags": 71580,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "38c9d4f6301f447bc5ac4d93654e3ea06d7bdda41a04aa7dc1a56fa28da58ff8",
+        "facts": "914e2fd21aeca88b0ddbdcb7d9e6ddabef884731e1a7499d7f2f18c6dcd49a75",
+        "presentations": "3fa019e35eb2004d07fada1fd455654a466622b7db3d7d461bdfebdbccb11439",
+        "tags": "4423e85b67d10419642329f26183b3c10331a84b61116d10d1d9a15c3e1240d5",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 94,
+      "quarter": "2020q4",
+      "payloadSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+      "payloadBytes": 42197929,
+      "observationPath": "observations/sec-fsd/2020q4/20210320T170140000Z-4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61.json",
+      "counts": {
+        "submissions": 16113,
+        "facts": 2373224,
+        "presentations": 1082048,
+        "tags": 92610,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "481ed75feb554e0ad311d9839b3e054cccba9f48aceb4b44edfc44d99839d25f",
+        "facts": "8abbb4899d2a6b669ac736f726cab26a742c0a4565a4789f7028f624b10072ee",
+        "presentations": "bab7fc6d9588451f741b343219140dd35063eef20bdffb6f888daa732e9cfe8f",
+        "tags": "3afec56ae15f12d5bdd00c20fc21490c674f14183524fd55455e12df05b3fd84",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 95,
+      "quarter": "2020q4",
+      "payloadSha256": "7cabec2c9b90511983623e6db3869b24c7a894466bd409f060a8da32790ae68e",
+      "payloadBytes": 89811373,
+      "observationPath": "observations/sec-fsd/2020q4/20250201T015155000Z-7cabec2c9b90511983623e6db3869b24c7a894466bd409f060a8da32790ae68e.json",
+      "counts": {
+        "submissions": 6260,
+        "facts": 2963091,
+        "presentations": 688335,
+        "tags": 76598,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "480ea6400ee4110207bbd8213f1f10efcd972c645daf3e7664be44d04726b113",
+        "facts": "b4897ca67daf1d92695e4ad95dc2b546ae8a32b13bc947a658ad29df513cb82b",
+        "presentations": "bd3b41acdc01d636fc0165094c4729a561cc226492eba9c33e0a89034210ebb6",
+        "tags": "eb528165aa438cacaa59b39565ea7463e4d7d0c585f3bba12d5a97b534a04c1a",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 96,
+      "quarter": "2021q1",
+      "payloadSha256": "877c6b0019d5476c79b08e870fbcafe94bcab887cf845ba80b87fac77e4acde8",
+      "payloadBytes": 51269988,
+      "observationPath": "observations/sec-fsd/2021q1/20210724T123022000Z-877c6b0019d5476c79b08e870fbcafe94bcab887cf845ba80b87fac77e4acde8.json",
+      "counts": {
+        "submissions": 17292,
+        "facts": 3070341,
+        "presentations": 1165493,
+        "tags": 107961,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "eb4a5bd1648af4dd0c3b421b3a2357b0d1d99a363aa3aa36b5ea8204b05957ba",
+        "facts": "43b11ad8b646c1dae78d70db2fe97a433622601124cd6fb9c0f6bb04bccd52a1",
+        "presentations": "5ca472c24a694b5c9ca799b0999fbfd79e6e38c3feb34f5c7d282047b3c28624",
+        "tags": "71a7292ffb5da7f1f500d917e6badaf509147319d048a2f2d5cf0b3585580c82",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 97,
+      "quarter": "2021q1",
+      "payloadSha256": "6a776a9fa3d974476101efa9a4bfc531b7cdc2763abd45a6f70dd240a223843b",
+      "payloadBytes": 97900752,
+      "observationPath": "observations/sec-fsd/2021q1/20250201T192653000Z-6a776a9fa3d974476101efa9a4bfc531b7cdc2763abd45a6f70dd240a223843b.json",
+      "counts": {
+        "submissions": 6316,
+        "facts": 3072093,
+        "presentations": 731431,
+        "tags": 88054,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "ca68ffc062a48f8cac707306975ac78c9652e202118a1990f8c916d3403498d2",
+        "facts": "2c1d3da3fdd21f118e2d6a5a3cc7950b8b24b59a3d9dd425f83c499e52aec4f2",
+        "presentations": "9f93dbdeb61cc75c47c0cb9542d19694202d29e523498ace7c9d2a2cfdeb4fc3",
+        "tags": "4690aff12b076ae96f59b68c9fd6312f1da3806694e5760434e04cc9aaee646a",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 98,
+      "quarter": "2021q2",
+      "payloadSha256": "78ad598ef8d820585d27659307b7ff6057cc4cb27c570fa964508262adea3ae4",
+      "payloadBytes": 47243247,
+      "observationPath": "observations/sec-fsd/2021q2/20210724T123003000Z-78ad598ef8d820585d27659307b7ff6057cc4cb27c570fa964508262adea3ae4.json",
+      "counts": {
+        "submissions": 20694,
+        "facts": 2441790,
+        "presentations": 1311077,
+        "tags": 118128,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "68cb42473f19c1c869a28b40339c9d261fa57d1dc6cc01006483b37df73afbe0",
+        "facts": "343c41b8c6c0a8214d97eaffef69ddb79f4527cda5eb43074a7bdffb09c0c9c9",
+        "presentations": "eb121888993c1127f8d9a87a20089691dd94a346ef2eda107231d022e4318a90",
+        "tags": "896bbe3addce94c1a46f6b53d0c9814ffdd30abf9ff877a504a050892807c051",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 99,
+      "quarter": "2021q2",
+      "payloadSha256": "528b91432896eba74661c20481edb327809f3a0bf00e01d81821fe8e6078bc33",
+      "payloadBytes": 90864175,
+      "observationPath": "observations/sec-fsd/2021q2/20250201T023051000Z-528b91432896eba74661c20481edb327809f3a0bf00e01d81821fe8e6078bc33.json",
+      "counts": {
+        "submissions": 7810,
+        "facts": 2833915,
+        "presentations": 815048,
+        "tags": 97000,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "7560ea33d2144b57bb6bc96cd33607476be19e62454adae5e3ece2ec08b6f9c0",
+        "facts": "24c056624c0c75dc0acd9fbc2f2dd06f26ee4e0caeb046462556fb25d810e34d",
+        "presentations": "9510be25f1f66d7cac02151c72a859e1e411f6e9b617bc73404b16479c988e3b",
+        "tags": "3191f2aaca1fbefccaffecd86fd64ab4b9d0d67388cf07b9477bb4ed6bb25d00",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 100,
+      "quarter": "2021q3",
+      "payloadSha256": "d65db22bd5b9f546bb7dc86de8918d7f7dcc011a1b5a0f6234665c107f2b3a2b",
+      "payloadBytes": 47321383,
+      "observationPath": "observations/sec-fsd/2021q3/20220227T051941000Z-d65db22bd5b9f546bb7dc86de8918d7f7dcc011a1b5a0f6234665c107f2b3a2b.json",
+      "counts": {
+        "submissions": 20652,
+        "facts": 2603323,
+        "presentations": 1282189,
+        "tags": 111617,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "984375db46b78543554e077dacfdb92ecd6552f3c82d6d0c29f9863cff1192e0",
+        "facts": "22cdc2a02940e29d665cba1667c32a204b784f6c67dde943a8033eed3261caa2",
+        "presentations": "b1a09e1a7952027bd4161b43130be8057937acd3a3dd0e80d8418ec7de4e0c2c",
+        "tags": "75e5836243752914efa86463d45f02274d737e74f371c8764d00465f498aa549",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 101,
+      "quarter": "2021q3",
+      "payloadSha256": "0fae2ceb149c0fe7e83b35b19157f910c864dee7e25d5ecf8b93dc42ee261b99",
+      "payloadBytes": 97252395,
+      "observationPath": "observations/sec-fsd/2021q3/20250201T192822000Z-0fae2ceb149c0fe7e83b35b19157f910c864dee7e25d5ecf8b93dc42ee261b99.json",
+      "counts": {
+        "submissions": 7499,
+        "facts": 3172372,
+        "presentations": 790997,
+        "tags": 92636,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "484fa8ccbe06c419bbf7175de9611710a96881ee1c2694973f8348faabb0a9c1",
+        "facts": "df00ad9ffad877ffa1762cba571a9cb40dc6b60b0a964dee3fd85a4f17af71ec",
+        "presentations": "65f11eb72147f1d54ed2b77b7ec50b5aa05f201b4989d9b29444ab956d125fea",
+        "tags": "906eff1a1a35e902dade588b973cab46cdaf9073b37e7ca2a0c670f5d809f776",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 102,
+      "quarter": "2021q4",
+      "payloadSha256": "f0df629157513a6ef515aa4e0cf11400b5cd617410777b26948196049ffeeaaf",
+      "payloadBytes": 48706721,
+      "observationPath": "observations/sec-fsd/2021q4/20220227T051921000Z-f0df629157513a6ef515aa4e0cf11400b5cd617410777b26948196049ffeeaaf.json",
+      "counts": {
+        "submissions": 24092,
+        "facts": 2698033,
+        "presentations": 1331187,
+        "tags": 120421,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "db330152097661285b941ffa7541263a6dce14ce0eb8a59b2333d5c5a6c505be",
+        "facts": "c1f1823f0715a58627a4192fb7c43200dd326e0ee235e18ff61c9c30d78aa62c",
+        "presentations": "b43e0f17cbeab780f3596e7536543f5027caf42e6079a05ba6bfa1bc2a9c2918",
+        "tags": "a1f0e6b5af23f076200197b4b62cb12cb37f7a31b35aa442b2a532545305f9dd",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 103,
+      "quarter": "2021q4",
+      "payloadSha256": "30d21449c0488e71dfb88ba8f85644a0e72194864e95111b3c1c120b3514c594",
+      "payloadBytes": 102642081,
+      "observationPath": "observations/sec-fsd/2021q4/20250320T083137000Z-30d21449c0488e71dfb88ba8f85644a0e72194864e95111b3c1c120b3514c594.json",
+      "counts": {
+        "submissions": 7556,
+        "facts": 3389370,
+        "presentations": 815303,
+        "tags": 99012,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "7741ab585f9693143e0106715e673bb22516d51e88311fe94fc8ffdd13d72840",
+        "facts": "b908346745d0908ecee999b4888211fff40cad3f376ca084abcafd4408eccdce",
+        "presentations": "3438763e6232e2265c33fa40f5bde4f47652a76446acaa915da84485fc613fbe",
+        "tags": "586183b07d053ef977da37d8547a341e686c08f28a92430aed45cb5fdc2ce91b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 104,
+      "quarter": "2022q1",
+      "payloadSha256": "8653f6e4198872c98b0e09adc4f2facf90bd178ea69a89525b1c17c6db4ef0e3",
+      "payloadBytes": 55264583,
+      "observationPath": "observations/sec-fsd/2022q1/20220409T195534000Z-8653f6e4198872c98b0e09adc4f2facf90bd178ea69a89525b1c17c6db4ef0e3.json",
+      "counts": {
+        "submissions": 23656,
+        "facts": 3277028,
+        "presentations": 1372819,
+        "tags": 128806,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "d12e89a335cb28356158e4cf820f7698df97c38f7056f3efae2db54c1357a8ab",
+        "facts": "aa2e86a9964a1565c61937172d4555681447bf19a6a5094f64fdc78ad3e2523d",
+        "presentations": "595b42672a56ad1fbe33795ae95e6b6a9bc3654501c8bc1fe0b435013d9bb0c7",
+        "tags": "eab420d3e8da691b3aab747ee7531051b5ad7361ba317746616639002f0bd98d",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 105,
+      "quarter": "2022q1",
+      "payloadSha256": "2ebeef77727a383f878bc28ff22498fd292a8dbab04216877b4b130ca00c1520",
+      "payloadBytes": 103669919,
+      "observationPath": "observations/sec-fsd/2022q1/20250131T204829000Z-2ebeef77727a383f878bc28ff22498fd292a8dbab04216877b4b130ca00c1520.json",
+      "counts": {
+        "submissions": 7237,
+        "facts": 3264632,
+        "presentations": 832867,
+        "tags": 105253,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "3c192def0133cccad7cf27b65ca5933fe82a5e89c7108a12110fe8dbea4b5b15",
+        "facts": "54d3958564f7b2e36464c0b58c654762ed7eee91b55b51c646fa74c1a660d2b7",
+        "presentations": "9fcb4a51052cb1f559219463443b3c2273432cb2a314038d4e0c33329395f458",
+        "tags": "9be46cc6699ec1549c0bee8069327526a96569b0d71f77f8b2b03335ec1818a7",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 106,
+      "quarter": "2022q2",
+      "payloadSha256": "f42188c48188669ede9e9156f17f96f179eaccbf1bc6557ab515b6befa8fcef4",
+      "payloadBytes": 51156907,
+      "observationPath": "observations/sec-fsd/2022q2/20220722T231127000Z-f42188c48188669ede9e9156f17f96f179eaccbf1bc6557ab515b6befa8fcef4.json",
+      "counts": {
+        "submissions": 27262,
+        "facts": 2705510,
+        "presentations": 1472613,
+        "tags": 132901,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "f4fcc75b27862a67be4345f67ef242e99a22887f315ac96c49e2932bd87841f4",
+        "facts": "f75b1152bc21c7bd9d06f94c978e4418e22adefa99c50919079ae6fda5626344",
+        "presentations": "7d429174ed6c57ab6e28ea75273364ad6aff49297b24788dd56cd31cc305ed6b",
+        "tags": "0181e97f953416c388dfd3e03a7abe04b777933d8e8b0f376c239eb508e2a606",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 107,
+      "quarter": "2022q2",
+      "payloadSha256": "8939a4cafeabf7c94bde48be0e8c444f6332e4a9663698a89242eddd1036d27e",
+      "payloadBytes": 97089251,
+      "observationPath": "observations/sec-fsd/2022q2/20250201T134934000Z-8939a4cafeabf7c94bde48be0e8c444f6332e4a9663698a89242eddd1036d27e.json",
+      "counts": {
+        "submissions": 8509,
+        "facts": 3047158,
+        "presentations": 893960,
+        "tags": 109154,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "44a0cd48f587a968643c0a43cfc590d61984ee50106812cf8f09e124a47da7b8",
+        "facts": "9710e4d3b8d96ba13289c68e7ad8559b7a02686b8948d2dbac385b7b5f4e7c54",
+        "presentations": "b223735b9f31bde9274544f891fdea2d063aed38426956b8e3d3b0ed36928e6f",
+        "tags": "5eea4220287d4ce31d74230e474f123ebc837e0356dd1e1f923188925c2fb28c",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 108,
+      "quarter": "2022q3",
+      "payloadSha256": "d421b324acdaa1b4091ba62f5152e9a52b5502102471075fbcfbcaf2451355fb",
+      "payloadBytes": 47352425,
+      "observationPath": "observations/sec-fsd/2022q3/20230614T094437000Z-d421b324acdaa1b4091ba62f5152e9a52b5502102471075fbcfbcaf2451355fb.json",
+      "counts": {
+        "submissions": 22951,
+        "facts": 2691248,
+        "presentations": 1309072,
+        "tags": 114599,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "cdba53b453d1f39fb91cc183a41aacb68b108d0fe09fd071d1b40128b3920d2b",
+        "facts": "d91d536a0108a0489f024079d6faefa14c4c31bbbe33129e0d2c06070d15a0a5",
+        "presentations": "7ebe1c59cc59e027612a0400075d0bf200bbf4e77770e2f84e13ea13b11489ff",
+        "tags": "ee4a6aef0c0f117a90e838feedbec2289b6311ad2d8b3543135d301eceaa8b79",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 109,
+      "quarter": "2022q3",
+      "payloadSha256": "4bbfdc953177acf1a430a9f0a624dd8244bc81292d42872107d0446d06167c26",
+      "payloadBytes": 97589396,
+      "observationPath": "observations/sec-fsd/2022q3/20250201T100028000Z-4bbfdc953177acf1a430a9f0a624dd8244bc81292d42872107d0446d06167c26.json",
+      "counts": {
+        "submissions": 7474,
+        "facts": 3229151,
+        "presentations": 807465,
+        "tags": 93528,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "e2ec8c4150cad9b8ac8255e584d957ba7658c307512862f76df993dc9018f353",
+        "facts": "04146fe124145931e14331f1681f83e911fd54c747eb8c4f1a8c6204ea27861c",
+        "presentations": "78474754b069e5eaee04b008ee83c3e65ff3f14296523cc1cea729a5bd7fc6d8",
+        "tags": "59959a597cbca27a188f6474f8232300ccb7e1a9bd3ae8fa8713467c256e1972",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 110,
+      "quarter": "2022q4",
+      "payloadSha256": "2b67ec9f4c0800eae1344f062e65b395b616819737d159e5562cc074dd80d64b",
+      "payloadBytes": 48137152,
+      "observationPath": "observations/sec-fsd/2022q4/20230614T094354000Z-2b67ec9f4c0800eae1344f062e65b395b616819737d159e5562cc074dd80d64b.json",
+      "counts": {
+        "submissions": 23943,
+        "facts": 2701629,
+        "presentations": 1315392,
+        "tags": 125270,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "9deb8b4b315fabe3486104053c262126aec1bb6d88d9501300e5af6cd20714a6",
+        "facts": "3dc0cd7fbc2db05b07e1c2dbb4cdf5517e74899306e03b358ecf13399ceaeaa1",
+        "presentations": "38ecb8b72b0f52f442458b2cb2dddc364b7ff74235eaf0979d6f956cb0cb1d6c",
+        "tags": "d49d3a52beb14db07cc3705547709a4d342d6978005b8900276b6996f184a3ac",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 111,
+      "quarter": "2022q4",
+      "payloadSha256": "83bdc7a9545479eb64d118688c888ba8e7554ebc774f3ab8a8b0cc1decb87f28",
+      "payloadBytes": 111091525,
+      "observationPath": "observations/sec-fsd/2022q4/20250201T045658000Z-83bdc7a9545479eb64d118688c888ba8e7554ebc774f3ab8a8b0cc1decb87f28.json",
+      "counts": {
+        "submissions": 7280,
+        "facts": 3543392,
+        "presentations": 806371,
+        "tags": 95778,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "bd15b1019939651ea5bf5072f7468226e88f14204db001c1a7fcc701725a8965",
+        "facts": "ccd04adbbc372bca61017d7ba70240e863ca2ff3b0cf3f13454f81da6ed0a148",
+        "presentations": "57a7c1c3ee5462e693a244eae5b1dc266373706f8359721f0f05c2ea965779ca",
+        "tags": "a7dd172e9689145935d71ac687324a6ca12878a1e53ee3975ba0f96012cfdbc0",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 112,
+      "quarter": "2023q1",
+      "payloadSha256": "5e1f00b79f50a72ef4fe07c28202c61ad5010c846040f86e4becb09555b7a627",
+      "payloadBytes": 55689246,
+      "observationPath": "observations/sec-fsd/2023q1/20230614T094308000Z-5e1f00b79f50a72ef4fe07c28202c61ad5010c846040f86e4becb09555b7a627.json",
+      "counts": {
+        "submissions": 25942,
+        "facts": 3293693,
+        "presentations": 1323127,
+        "tags": 136548,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "a8c68f0b8b5b7930b9c9def539712cc3b6889a93ba5192bf0c5ddf0a437d0e2b",
+        "facts": "24c648eb0ca477bf9c604d70325d14ea579b2fe3f37848faee1645637662d881",
+        "presentations": "cf53b6009f16ccbafebf9a203d72a572171c5f8bc43cc48f06f13f191e8adaa0",
+        "tags": "49f56b1f6b93bde781fe05dcbaa57bdcadb39f60e6b629c3a9727521c5d0df51",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 113,
+      "quarter": "2023q1",
+      "payloadSha256": "479638c1be4088fa2ae42d2947468913eaff5ad0f093c412ba4340af8a8f791e",
+      "payloadBytes": 113974946,
+      "observationPath": "observations/sec-fsd/2023q1/20250201T014545000Z-479638c1be4088fa2ae42d2947468913eaff5ad0f093c412ba4340af8a8f791e.json",
+      "counts": {
+        "submissions": 6754,
+        "facts": 3428670,
+        "presentations": 804536,
+        "tags": 103115,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "4ec8dbe3ad0606f3162d4bac4b5080bc76032ebfcf804a4d955675d844b9dc5c",
+        "facts": "72a2b67e2b607217511f127f4a9f7376ef1608078e8ef8ebaa2e5b194c18ee32",
+        "presentations": "d62ae6f81f74a841b9222aec96f9f1af8d74a529b88783348198e775ddaa054b",
+        "tags": "00c426436f1dc2b0d93e320261002828214a26b9e402300f0535e3e44b5e63af",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 114,
+      "quarter": "2023q2",
+      "payloadSha256": "d81320fc0360448ce4d2d14935e554cbe5840fafbbb5054340675ebe6c5cfc65",
+      "payloadBytes": 51895784,
+      "observationPath": "observations/sec-fsd/2023q2/20230925T181554000Z-d81320fc0360448ce4d2d14935e554cbe5840fafbbb5054340675ebe6c5cfc65.json",
+      "counts": {
+        "submissions": 30209,
+        "facts": 2719392,
+        "presentations": 1431392,
+        "tags": 138196,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "d2bfef1b8c990c59123045365890d7abe93c6a1241ee93429548544206271e72",
+        "facts": "688fbfd6580e64f55818925c19d9499541ed4347cf8c1b8010a8890f3b1c39d2",
+        "presentations": "bec0a29431739a1fc9b89aab6502e982b4d90b617a883fa2fce73ec58dbac5a4",
+        "tags": "874af3259c120a2f1920ffb2046878e6b66daa26a1b19602ba4071d52e4ed3d6",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 115,
+      "quarter": "2023q2",
+      "payloadSha256": "f028f1e8d24313e7619aa87c7c683a459452e7e81a8e5ba72d7ce39ddf62bda9",
+      "payloadBytes": 116914392,
+      "observationPath": "observations/sec-fsd/2023q2/20250314T173026000Z-f028f1e8d24313e7619aa87c7c683a459452e7e81a8e5ba72d7ce39ddf62bda9.json",
+      "counts": {
+        "submissions": 8039,
+        "facts": 3393990,
+        "presentations": 867701,
+        "tags": 106511,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "8f20bfad43b6f809e64758ab61b3234dfd60a6031ee7f92cb4c1bf60e2a7db2f",
+        "facts": "db3269a8da4a580889ef14f9ee4a60b4f7cdd6154c138bac6db8ac3460ad9e0d",
+        "presentations": "511d076e5cb5c5f4b0aa7e7718e8e17a876e503c38b57fd7e1f320f624d07f07",
+        "tags": "b4b12d548a23193c7882559df28145dcdc1f248e70b6f147bcac11f9a2778d50",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 116,
+      "quarter": "2023q3",
+      "payloadSha256": "3fb0d7a2d334ed2274806eac138bad87819387f8961780816e640b3ccdf80c34",
+      "payloadBytes": 46984682,
+      "observationPath": "observations/sec-fsd/2023q3/20231124T103607000Z-3fb0d7a2d334ed2274806eac138bad87819387f8961780816e640b3ccdf80c34.json",
+      "counts": {
+        "submissions": 23751,
+        "facts": 2648179,
+        "presentations": 1262640,
+        "tags": 118153,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "d102cfaaa147938dbe64409fbe173d46318f89894073764cfda988edba1b2355",
+        "facts": "6032ec3252029c7d3a18cfb43127e9334162323b77b50d8ec1c794d2bfaa2e00",
+        "presentations": "5b07e4b80b4402021442db0c29e8066881060cc5767921bf43c5f17799b33aa2",
+        "tags": "74d6fbde7e02866c7f4ab553e9f838c38d10743e89aaee1250555c5c9381faea",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 117,
+      "quarter": "2023q3",
+      "payloadSha256": "f075d721dde4393dabd49c1746578294ada4665ec29c85c2b3184f44f6f09187",
+      "payloadBytes": 117776944,
+      "observationPath": "observations/sec-fsd/2023q3/20250201T035907000Z-f075d721dde4393dabd49c1746578294ada4665ec29c85c2b3184f44f6f09187.json",
+      "counts": {
+        "submissions": 7067,
+        "facts": 3572434,
+        "presentations": 774797,
+        "tags": 89580,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "7f21d7253a6f20fa0cc3d1f4fe2417a22a52d950d7f3f45c7abbe24bd3aca495",
+        "facts": "f09b144cb965e454c9a5064b42cbcf31da0d002a4acba84ad2cf6118330d6787",
+        "presentations": "5dab9e22b6be2529dca21ac839a309e7c66088f4a90040aa657089afc50cce66",
+        "tags": "bd82e0d373113ef9a2dd96b4edb20607fe79521cb9192378a947bd75449eb4de",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 118,
+      "quarter": "2023q4",
+      "payloadSha256": "49df6a086e435a99cd2096db92a2442cf2b70d0bdee64cf31bcb963f348854eb",
+      "payloadBytes": 51901666,
+      "observationPath": "observations/sec-fsd/2023q4/20240927T064542000Z-49df6a086e435a99cd2096db92a2442cf2b70d0bdee64cf31bcb963f348854eb.json",
+      "counts": {
+        "submissions": 24097,
+        "facts": 2639066,
+        "presentations": 1253590,
+        "tags": 115523,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "fca4832c062f26d82823e8853a4362ffb3c14a05cec0c526956d8cfcf0ecd7d0",
+        "facts": "e27387c5496acb78c2e4c0d611c3ea60caeed293351e1e6b1157a01122e5a8c6",
+        "presentations": "7e17258764707ef1309f0fccfb156999c01b9b557deca5172098697a30a8b9f9",
+        "tags": "b85d761ce6303397c3052d3c8bc47f272301868e8261f02f0ba603160fe480f9",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 119,
+      "quarter": "2023q4",
+      "payloadSha256": "ad23c5505e59b7305e16bfebb8bb839476689330b85a3e1ce216f809b18d1521",
+      "payloadBytes": 120272357,
+      "observationPath": "observations/sec-fsd/2023q4/20250131T132831000Z-ad23c5505e59b7305e16bfebb8bb839476689330b85a3e1ce216f809b18d1521.json",
+      "counts": {
+        "submissions": 6882,
+        "facts": 3699124,
+        "presentations": 769208,
+        "tags": 88228,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "fd7985a5a0ca4a86bb4c9703d851c7aec58a60b6f216dfed0e801378f1aa4bea",
+        "facts": "09c018036dee59a194484a0487b0f31a78791c8e9c88dcc2646cb5efa5d0399c",
+        "presentations": "37ad7a476e17db6d8c403155ac15be269518303fe46994b5d8d796dcc65ee15d",
+        "tags": "eb309bac88ef68aa3a044f99619175af43082fbf6301225ad260cd14466859dc",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 120,
+      "quarter": "2024q1",
+      "payloadSha256": "8b0a6d1603967bfc6e96928e759de9796508351aef6f5442248a61d95ff5952b",
+      "payloadBytes": 56204702,
+      "observationPath": "observations/sec-fsd/2024q1/20240525T215014000Z-8b0a6d1603967bfc6e96928e759de9796508351aef6f5442248a61d95ff5952b.json",
+      "counts": {
+        "submissions": 24336,
+        "facts": 3054006,
+        "presentations": 1197745,
+        "tags": 116782,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "c456945ee80022103d9b9cb9f023f1fb57213dcbedadb82de4bc622527c89fe8",
+        "facts": "bac21dd0a22d6ecbd0e051abd7c79f451fa5e9c74cd0d331c29c2c431cdb9972",
+        "presentations": "e27f9a2e528294b131b94500c4ab83d609207330cb89407b3eaf0bbab06a33a9",
+        "tags": "1beb1d3e4cd1217545d8eaeb88d51a49022c3d19b517347f39bdbd03f43614f3",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 121,
+      "quarter": "2024q1",
+      "payloadSha256": "94c7894b00903f8ff7186c4250ba1c1daa1bde8b3a0b26fae68f72608b2ffc9b",
+      "payloadBytes": 124336804,
+      "observationPath": "observations/sec-fsd/2024q1/20250201T045146000Z-94c7894b00903f8ff7186c4250ba1c1daa1bde8b3a0b26fae68f72608b2ffc9b.json",
+      "counts": {
+        "submissions": 6028,
+        "facts": 3428694,
+        "presentations": 726155,
+        "tags": 86529,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "bc27cd52209c9a895839b9b88e05e7f9d917309d30e7a9b686c7989550549b5c",
+        "facts": "7e137ea009bfbfffe37087789503593394b92402bac7bc13a45ce083f37b6417",
+        "presentations": "4580d2e9fa53c577ef91220b26aba58fcef26ec1dd40b00d214bad3f772ebc73",
+        "tags": "901cb34fd9465d3fbc4949e2bf96f71c470eebbffb7c3a0f901d8dc126bb8f2c",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 122,
+      "quarter": "2024q2",
+      "payloadSha256": "4d96a8c441edbfe6907ea4338e1fc2266b11688e1a9df5baf10e93befc5e02b3",
+      "payloadBytes": 53821685,
+      "observationPath": "observations/sec-fsd/2024q2/20250115T205824000Z-4d96a8c441edbfe6907ea4338e1fc2266b11688e1a9df5baf10e93befc5e02b3.json",
+      "counts": {
+        "submissions": 29399,
+        "facts": 2655470,
+        "presentations": 1391887,
+        "tags": 128561,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "5e14e137f58bffe26c5183383f87afd702c93f4608fe410865853041a38a64a2",
+        "facts": "85ca5f454101e0871e04294737ac3e8b73279afe530eed0126b390b2831b26e4",
+        "presentations": "d572c324c0f044830acf9925ca8cc0021bd5389459d0749a7f6022a5daf82423",
+        "tags": "350e181aa8c012b6e06c1786433834ca9c92638ea2077c505c64b37d3831aca6",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 123,
+      "quarter": "2024q2",
+      "payloadSha256": "698796e9f0946501d3dc74e7696a6c8c71cf32b66026e053722a784236b37761",
+      "payloadBytes": 119119954,
+      "observationPath": "observations/sec-fsd/2024q2/20250201T014716000Z-698796e9f0946501d3dc74e7696a6c8c71cf32b66026e053722a784236b37761.json",
+      "counts": {
+        "submissions": 7675,
+        "facts": 3426170,
+        "presentations": 838475,
+        "tags": 97771,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "b606fa87b282f11c083ebdc75e42302b3757b3fa52e885e6bb77f0c3fba262c8",
+        "facts": "5dea067924c0dbe200501957b6267c4ac000fd01198e5a5402b1801d0c7d876d",
+        "presentations": "4f1c6396bb82ed14a29e5ec2be89dfe1a59f51ce14bc03c1b15651966768852b",
+        "tags": "d5f4bbdc114367edd623437156fe000938fc98dd9fee65a092178b360ef1e5c1",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 124,
+      "quarter": "2024q3",
+      "payloadSha256": "e1d2bca0f656bef924848cacd44b4704ba2d84ff6411e220d44851985de21b5e",
+      "payloadBytes": 47755547,
+      "observationPath": "observations/sec-fsd/2024q3/20250112T202633000Z-e1d2bca0f656bef924848cacd44b4704ba2d84ff6411e220d44851985de21b5e.json",
+      "counts": {
+        "submissions": 23952,
+        "facts": 2532517,
+        "presentations": 1212941,
+        "tags": 110711,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "09a9f96f3f3bb7040bb7386927e9a19ba2f88d0fb845cd2316931144daad13a9",
+        "facts": "e1d65e3d6e127247d2be28d9fc1adcd3f32d2d18159a2271c7ff7980b604c9de",
+        "presentations": "6fb8f68f635f5c0c2a27ce29c60406c6208211798ee12a8b9c5429f9ee22c5ef",
+        "tags": "e6affa8f01a3e77c71c51d1d9b90aa189ff0d37024704b06a18d5c3cbc49cb7a",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 125,
+      "quarter": "2024q3",
+      "payloadSha256": "b1823f2d65189f0d5ecbb1968d683c59df762129ae1b23bda0394093a69e0da9",
+      "payloadBytes": 118280418,
+      "observationPath": "observations/sec-fsd/2024q3/20250201T035917000Z-b1823f2d65189f0d5ecbb1968d683c59df762129ae1b23bda0394093a69e0da9.json",
+      "counts": {
+        "submissions": 6699,
+        "facts": 3521878,
+        "presentations": 741760,
+        "tags": 83106,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "29ffb162f8f7e3db86f647f16ca73005a7e4d45ffb3cabea9e99b45d19476f0e",
+        "facts": "c22dbe0eb4a6cda23dccc989ca6d180f58a31bb085a485d8d2b8aacb68c09c67",
+        "presentations": "d7b9ddff4982cd97cbac7dbe8b13777d8b074226c0ea6defe57b713c63ae8535",
+        "tags": "4053b296f2baf4457e838399ea48b19418fd1fb247966f49ed5448f1307f058e",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 126,
+      "quarter": "2024q4",
+      "payloadSha256": "7b3718c9edff3f678dbdebb65e904801d7909ca0ffa3b6fdddd6932e2787fc38",
+      "payloadBytes": 45810323,
+      "observationPath": "observations/sec-fsd/2024q4/20250201T001450000Z-7b3718c9edff3f678dbdebb65e904801d7909ca0ffa3b6fdddd6932e2787fc38.json",
+      "counts": {
+        "submissions": 23096,
+        "facts": 2562030,
+        "presentations": 1200223,
+        "tags": 111867,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "742669017f366a04481b668af091345e90fff1a3c29d5681dd7084a6f2b143b2",
+        "facts": "9101bcc811e4534ae0314f451953e22297502c6fb7d1dd02e1dbf8554b1e1fbb",
+        "presentations": "c0db7f9996bcc8232c1ea2effc67417d9c49551a70354da71c34cd924b928fd5",
+        "tags": "89a748cbb33b3ed39e2104164b52d5e238827b9611631b7c359cf3c5905edcc6",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    },
+    {
+      "payloadId": 127,
+      "quarter": "2024q4",
+      "payloadSha256": "9a2cbbaf39c94aa642b33d512f4def92b198d3bfd12d2267bcd27abe55b9902d",
+      "payloadBytes": 122932548,
+      "observationPath": "observations/sec-fsd/2024q4/20250201T020151000Z-9a2cbbaf39c94aa642b33d512f4def92b198d3bfd12d2267bcd27abe55b9902d.json",
+      "counts": {
+        "submissions": 6491,
+        "facts": 3705078,
+        "presentations": 737504,
+        "tags": 84365,
+        "orphans": 0
+      },
+      "rowDigests": {
+        "submissions": "0b6f24d26fe2bb619dc0800b759736e9d656f43754aed5f4424d5fb13299c0fc",
+        "facts": "ad7276cff4773a6098a610804851cc8d91eebfcfc7b2c78c0e056f6771bce119",
+        "presentations": "43d2e71873442ace37fa053ddb5bbeb80998a70597d6bf567f0cf02d9c2cbf19",
+        "tags": "fc5a32bd9a333a179f6a1f46073fa114857211b850a61cd844278fb82853359b",
+        "orphans": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "issues": []
+    }
+  ],
+  "issues": [],
+  "productiveGqsModified": false,
+  "logicalEvidenceSha256": "69bc58ee84bf936e25a5d0d56699dff6d588b34500a5d51ef68aba2bf9c937de",
+  "reportSha256": "9b2b660bd0d5cc65b49618a2e4a119359e33c07891d045817e2d41a000a1885f"
+}

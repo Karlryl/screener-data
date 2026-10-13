@@ -1,0 +1,69 @@
+{
+  "rgate": "20260708",
+  "instance": "erstes R-Gate (Integrations-Revisions-Schranke, Grundgesetz 8)",
+  "baseline": "143620b0a0",
+  "baseline_tag": "Tag 272 (2.9 Slice 2 Referenz-Scoring-Modus)",
+  "scope_range": "143620b0a0..HEAD (HEAD=c97987af3f Tag 283)",
+  "faelligkeit": "erfuellt: nicht-leerer Scope + >=3 score-veraendernde Commits seit B (2.10 Tag273, 2.11 A/B Tags274/275/277/278, 2.7 Tag276)",
+  "scope_commits": [
+    "Tag 273 (ec6241e66b) 2.10 n-bewusste Scores: EB-Shrinkage + Mindest-n-Fallback + cohortN",
+    "Tag 274 (bed23f1831) 2.11 Stufe A Score-Breakdown-Export",
+    "Tag 275 (5256030964) 2.11 Stufe A calibrate-Paritaet",
+    "Tag 276 (7cf082690e) 2.7 axisBreakdown je Zeile",
+    "Tag 277 (50be0fd960) 2.11 Stufe B growthBoost kohorten-relativ",
+    "Tag 278 (ed789909eb) 2.11 Stufe B T2-Fix pre-v4-Lineal + gDistByCohort-Drift-Waechter",
+    "Tag 279-281 0.2/0.9 CI-Sharding (pull-yahoo --shard, daily-pull-Matrix, merge-shard-manifests)",
+    "Tag 282 (ef87f10703) 0.11 Stille-Fehler-Haertung (pull-yahoo runLamp/_silentErrors)",
+    "Tag 283 (c97987af3f) 0.10 Schutz-Kadenzen (workflows + scripts)"
+  ],
+  "scope_files_suspects": [
+    "src/scoring/score.js", "src/scoring/calibrate.js", "src/scoring/run-screener.js",
+    "pull-yahoo.js", ".github/workflows/{daily-pull,heartbeat,weekly-guard,monthly-plan-check}.yml",
+    "scripts/{merge-shard-manifests,write-findash-export,value-spot-check,plan-check,cadence-marker}.js",
+    "docs/findash-export-v1.md", "data-health/*.json",
+    "tests/scoring/{anchors.rank,calib-parity,calibration-ref,calibration,cohort-shrinkage,score-breakdown}.test.js"
+  ],
+  "method": "Ultracode-Workflow: 7 Finder (F1-F7, Opus/high, read-only, parallel) -> DEDUP (finding_id=file+function+bug_class, Severity-max, repro-Pflicht) -> adversarialer VERIFY (1 je Fund, Standard REJECTED bis Beweis zwingt). Orchestrator zaehlt Runden + entscheidet Termination. 13 Agenten, ~1,0 Mio Tokens.",
+  "rounds": [
+    {
+      "round": 1,
+      "finders_reported": "7/7",
+      "finder_summaries": {
+        "F1-integrations-drift": "0 Funde. Pipeline end-to-end gegen eingefrorenes 2.9-Lineal (SCORING_REF_CALIB): calibration-ref 7/7, Score-Identitaet 3354/3354 byte-identisch im Ref-Modus, Anker-Board 8/8, Integration 25/25, Sharding djb2 stabil (~1393/Shard, 17/17 gemergt). Live-Learning IST universums-abhaengig (50% Schrumpf -> 98,8% Drift) — aber dokumentiert/getestet/gewollt (Tag 272/278), kein Bug.",
+        "F2-wucherung": "1 Fund (rejected). 3 multiplikative Post-Faktoren auf 2 affinen Shrinks; calibrate spiegelt sie nicht — aber = dokumentiertes Coarse-Design.",
+        "F3-calibrate-vs-prod": "0 Funde. productionCohortRanking() nutzt echte scoreUniverse-Engine, rang-identisch (deepEqual-Test).",
+        "F4-doku-code-test": "2 Funde (rejected). Survival/OverviewRow-Doku listet optionale Breakdown-Felder nicht in eigener Tabelle — aber via Header + '§3'-Verweis dokumentiert, optional-additiv.",
+        "F5-mess-fundament": "1 Fund (rejected). Behauptete C4-Median-Doppelschrumpfung — mathematisch widerlegt + ausserhalb Scope (Tag-272-Code).",
+        "F6-stille-regression": "1 Fund (rejected). Behaupteter Fallback-Test-Gap — empirisch falsch (37 Fallback-Kohorten IN der Assertion abgedeckt).",
+        "F7-contract-crossrepo": "1 Fund (rejected). Fixture listet cohortN/cohortFallback nicht — aber Vertrags-BODEN, additive Felder = kein Bruch, kein Konsument."
+      },
+      "counts": { "raw": 6, "deduped": 6, "toVerify_T1T2": 6, "confirmed": 0, "plausible": 0, "rejected": 6 },
+      "verdict": "DRY ROUND / CLEAN — 0 neue CONFIRMED-T1/T2"
+    }
+  ],
+  "findings_confirmed": [],
+  "findings_rejected": [
+    { "id": "score.js::scoreUniverse::calibrate-blindheit", "sev": "T2", "why_rejected": "dokumentiertes Coarse-Vorfilter-Design; calib-parity.test.js erzwingt diffs>0 als Wucher-Waechter; productionCohortRanking() byte-identisch zur Produktion; kein Coarse-Matrix-Konsument (grep leer)." },
+    { "id": "findash-export-v1.md::SurvivalRow::doku-luecke", "sev": "T2->T3", "why_rejected": "Felder dokumentiert (Header + BoardRow-§3-Verweis), optional-additiv/check-ausgeschlossen, auf survival null; Repro-Keyzahl falsch (21!=17). Max kosmetisch." },
+    { "id": "findash-export-v1.md::OverviewRow::doku-luecke", "sev": "T2->T3", "why_rejected": "wie Survival: via Header + '§3'-Verweismuster dokumentiert, optional-additiv; Repro-Keyzahl falsch (26!=24). Max kosmetisch." },
+    { "id": "score.js::scoreUniverse::c4-median-doppelschrumpf", "sev": "T2", "why_rejected": "mathematisch widerlegt: nCohort je Kohorte konstant -> shrinkToNeutral EINE affine Abbildung -> median(shrunk)==shrink(median(base)) exakt (<1e-9); der Fix waere der Bug (Skalen-Mismatch); Repro misst Post-Faktor-Drift (disjunkt); Zeilen von Tag 272 authored = AUSSERHALB Scope." },
+    { "id": "calibration-ref.test.js::grown-universe::fallback-test-gap", "sev": "T2", "why_rejected": "empirisch falsch: der 50/50-Split erzeugt 37 Fallback-Kohorten, ALLE in der Grown-Universe-Assertion (mism===0) -> Fallback-Pfad abgedeckt; Fund-Repro selbst fehlerhaft (r.results existiert nicht)." },
+    { "id": "findash-export-v1.contract.json::fixture::missing-cohortN", "sev": "T2->T3", "why_rejected": "Fakten real, aber Fixture = Vertrags-BODEN (Consumer bekommt mehr Garantien, nie weniger); v1-Semantik §6/§7: additives Feld = kein v2-Bump, Fixture nicht nachzuziehen; kein Konsument im Repo (grep leer)." }
+  ],
+  "t3_backlog_optional_nicht_terminierend": [
+    "F4: §4 OverviewRow / §5 SurvivalRow koennten die optionalen Breakdown-Felder wie §3 BoardRow explizit auflisten (rein kosmetisch, Verweismuster funktioniert).",
+    "F7: contract.json requiredBoardRow/requiredOverviewRow koennten cohortN/cohortFallback der Vollstaendigkeit halber ergaenzen (jetzt writer-garantiert; kein Bruch).",
+    "F2: Coarse-Ranking-API-Namensschutz gegen Missbrauch als Ground-Truth (optional)."
+  ],
+  "fixes_applied": [],
+  "fixture_blesses": [],
+  "carry_tasks": [],
+  "termination": "DRY_ROUND_CLEAN in Runde 1 (0 CONFIRMED T1/T2; 7/7 Finder gemeldet; alle 6 Roh-Funde adversarial rejected mit reproduziertem Beleg; Anti-Rubber-Stamp erfuellt). Kein Fixer, kein Re-Scan noetig.",
+  "acceptance": {
+    "anchors_rank_test": "8/8 ok",
+    "anchors_fixture_test": "9/9 ok",
+    "tests_scoring_suite": "25/25 pass, 0 fail",
+    "kein_fix_relaxt_test": "n/a (0 Fixes)",
+    "offene_confirmed_ohne_folgetask": 0
+  }
+}

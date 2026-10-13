@@ -1,0 +1,33 @@
+'use strict';
+// F-21 / lib/sec-pit.js:371-377. Synthetic facts only; no SEC store or research data.
+// EXPECTED RED until F-21 is fixed: three period ends alone do not establish three consecutive FY quarters.
+const assert = require('node:assert/strict');
+const { pitQuarterlyWithDerivedQ4 } = require('../lib/sec-pit.js');
+const controlsOnly = process.argv.includes('--controls-only');
+function check(name, fn, expectedRed = false) {
+  if (controlsOnly && expectedRed) return;
+  try { fn(); console.log('PASS ' + name); } catch (e) { console.error('FAIL ' + name + ': ' + e.message); process.exitCode = 1; }
+}
+const fact = (start, end, val) => ({ start, end, val, filed: '2026-02-20', form: '10-K', fy: 2025 });
+function derive(quarters, annual = fact('2025-01-01', '2025-12-31', 400)) {
+  const company = { facts: { 'us-gaap': { Revenues: { units: { USD: [...quarters, annual] } } } } };
+  return pitQuarterlyWithDerivedQ4(company, ['Revenues'], { asOf: '2026-03-01' }).series.filter(p => p.derived);
+}
+const regular = [fact('2025-01-01', '2025-03-31', 100), fact('2025-04-01', '2025-06-30', 100), fact('2025-07-01', '2025-09-30', 100)];
+check('control complete calendar-year triple derives one Q4 with its known value', () => {
+  const q4 = derive(regular); assert.equal(q4.length, 1); assert.equal(q4[0].val, 100); assert.equal(q4[0].filed, '2026-02-20');
+});
+for (const end of ['2025-12-27', '2026-01-03']) check('control complete 52/53-week triple derives Q4 ending ' + end, () => {
+  const quarters = [fact('2024-12-29', '2025-03-29', 100), fact('2025-03-30', '2025-06-28', 100), fact('2025-06-29', '2025-09-27', 100)];
+  const q4 = derive(quarters, fact('2024-12-29', end, 400)); assert.equal(q4.length, 1); assert.equal(q4[0].val, 100);
+});
+check('control a missing Q3 alone does not derive Q4', () => assert.deepEqual(derive(regular.slice(0, 2)), []));
+check('F-21 crossing-FY-start quarter cannot replace missing Q3 or create a 184-day Q4', () => {
+  assert.deepEqual(derive([fact('2024-12-01', '2025-02-28', 100), ...regular.slice(0, 2)]), []);
+}, true);
+check('F-21 overlapping Q2 cannot form a complete fiscal-year partition', () => {
+  assert.deepEqual(derive([regular[0], fact('2025-03-15', '2025-06-15', 100), regular[2]]), []);
+}, true);
+check('F-21 residual longer than a quarter must not be labelled Q4', () => {
+  assert.deepEqual(derive([fact('2025-01-01', '2025-03-22', 100), fact('2025-03-23', '2025-06-11', 100), fact('2025-06-12', '2025-08-31', 100)]), []);
+}, true);

@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Yahoo Pull (normal)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "pull"],
+      "port": null
+    },
+    {
+      "name": "Yahoo Pull (fast)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "pull:fast"],
+      "port": null
+    },
+    {
+      "name": "Yahoo Pull (FULL universe @ 100ms rate-limit, misnamed pull:single in package.json)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "pull:single"],
+      "port": null
+    }
+  ]
+}

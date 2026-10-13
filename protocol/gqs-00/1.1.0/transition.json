@@ -1,0 +1,35 @@
+{
+  "schema": "gqs-00-transition/v1",
+  "status": "completed",
+  "from": "GQS-00@1.0.0",
+  "to": "GQS-00@1.1.0",
+  "opened": "2026-08-16",
+  "reason": "Einmalertrag-Lampe wird folgenreich: bei brennender Lampe droppen fuenf Wachstums-Achsen der Zeile (EINMALERTRAG_BLIND), renorm-on-drop + C4-Shrinkage ziehen den Score zum Kohorten-Median.",
+  "authority": {
+    "gerichtsurteil": "Einmalertrag-Konsequenz, 16.08.2026 — GO mit Auflagen (F-16-Einzelfreigabe)",
+    "formelsperre": "F-16 punktuell geoeffnet, nur dieser Fall",
+    "karlFreigabe": "2026-08-16, woertlich \"Ja, so machen\"",
+    "pullRequest": "Karlryl/screener-data#45"
+  },
+  "scope": "NUR die hier gelisteten Quelldateien duerfen zusaetzlich zum 1.0.0-Hash den pending-Hash tragen. Jede andere Datei und jeder dritte Hash-Stand bleibt rot. protocol/gqs-00/1.0.0/ bleibt unangetastet — der 07.08.-Nachweis ist byte-identisch erhalten.",
+  "goldenFixtureImpact": {
+    "casesGeprueft": 25,
+    "syntheticCases": 1,
+    "mitLampeEinmalertrag": 0,
+    "bemerkung": "Keine versiegelte Golden-Fixture traegt die Lampe (13x false, 12x null) -> kein erwarteter Score aendert sich. Es reisst ausschliesslich die Source-Hash-Schaerfe."
+  },
+  "aufloesung": "Nach dem ersten gruenen Automatik-Lauf mit neuem Code (Di 18.08., ~02:17 UTC) wird GQS-00@1.1.0 mit eigener Baseline vollversiegelt und dieses Verzeichnis entfaellt. KORRIGIERT Tag 953: hier stand 'Mi 19.08.' — ein Rest aus dem Plan VOR Karls Entscheid vom 16.08., heute statt nach Dienstag zu mergen. Der Cron ist '17 2 * * 2-6' (Di-Sa) und der 18.08.2026 ist ein Dienstag, also ist der Dienstag-Lauf bereits der erste mit neuem Code — so steht es auch in board-history/_excluded.json (_bindung_doc). Mechanisch folgenlos (die Gate-Ausnahme bindet an den exakten Vorgaenger-Vintage 2026-08-16, nicht an einen Wochentag; gqs00-freeze.js liest aus dieser Datei nur status + sourceFiles), aber dieses Feld steuert den Zeitpunkt der Vollversiegelung und muss vorher stimmen.",
+  "sourceFiles": {
+    "src/scoring/lamps.js": "7b0e479958131e69f4de1bd4cfafd2160bf611c8ef5f84340e8caad27a06df34",
+    "src/scoring/score.js": "c50adde4b2e3c2cb7cd15d4988f83f264f4d792674f1272d4d75c3094dd5ccfc",
+    "src/scoring/calibrate.js": "ef184861c2d5ea1755d74d8f1785d1797809e8a8ece44154aeb73c302f1bee69"
+  },
+  "abschluss": {
+    "completedAt": "2026-08-19",
+    "workflowRun": 32211143015,
+    "sealedAs": "GQS-00@1.1.0",
+    "bedingung": "Erster GRUENER PLANMAESSIGER daily-pull mit dem neuen Code. Nicht der Dienstag 18.08. wie im Feld aufloesung erwartet: der geplante 18.08.-Lauf (32094300602) ist rot gelaufen, der gruene 18.08.-Lauf war ein manueller workflow_dispatch. Erst der geplante Lauf vom 19.08. (event=schedule, conclusion=success, headSha 9e2d183178a93d010e977e6c8e4b7aea42c0fef2) erfuellt die Bedingung.",
+    "wirkung": "Das Uebergangs-Fenster ist geschlossen: dieses Dokument liegt nicht mehr unter einem *-pending-Verzeichnis UND traegt nicht mehr status \"pending\". Die drei Quelldateien src/scoring/{lamps,score,calibrate}.js sind ab jetzt auf den 1.1.0-Siegelhash festgenagelt, ein zweiter erlaubter Stand existiert nicht mehr.",
+    "vorgaenger": "protocol/gqs-00/1.0.0/ bleibt byte-identisch erhalten."
+  }
+}

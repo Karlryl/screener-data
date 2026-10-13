@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "description": "ARCHIVED/legacy — from the removed generate-screener.js generation. No current production code reads this file (grep for require/readFileSync of filter-config.* across the active tree is empty; verified 2026-07-19). R40/RX tuning today lives in findash, not screener-data. Editing values below has no effect.",
+    "schema": "filter-config-v1"
+  },
+  "rule_of_40": {
+    "threshold": 40,
+    "note": "R40 = revenueGrowthYoY + fcfMarginTTM >= threshold"
+  },
+  "rule_of_x": {
+    "threshold": 58,
+    "multiplier": 2.0,
+    "note": "RX = 2.0 * revenueGrowthYoY + fcfMarginTTM >= 58 (Bessemer Rule-of-X multiplier 2.0-2.3x; growth weighted ~2x FCF margin)"
+  },
+  "ui": {
+    "defaultTab": "R40",
+    "hiddenTabs": ["HG", "QC"],
+    "note": "Set hiddenTabs to [] to restore HG/QC to default view"
+  }
+}

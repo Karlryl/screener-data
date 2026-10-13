@@ -1,0 +1,354 @@
+name: Monthly SEC XBRL Pull
+
+# Tag 133k: SEC company-facts pull. Runs monthly because 10-Q/K filings are quarterly.
+# Cache is git-ignored (lives on runner); _manifest.json AND the derived external-data/
+# sec-secannual.json (scored deep-XBRL layer, build-secannual.js) are committed.
+
+on:
+  schedule:
+    # F-CI-003: moved from 04:00 to 08:00 UTC to avoid overlapping the daily pull
+    # (daily pull starts at 02:17 UTC with 240-min timeout — could still be running at 04:00).
+    - cron: '0 8 1 * *'  # 08:00 UTC on the 1st of each month
+  workflow_dispatch:
+    inputs:
+      max:
+        description: 'Max tickers to pull (test runs)'
+        required: false
+        default: '0'
+
+permissions:
+  contents: write
+  actions: read  # BH-004 fix: needed to list/download the daily-pull "snapshots" artifact below
+
+# AS-SK-001 (Hard Review 2026-07-31): pull-sec-xbrl.js/discovery/sec-tickers.js read
+# process.env.SEC_CONTACT at request time — SEC silently 403s a contactless
+# User-Agent. The repo secret SEC_CONTACT exists but was never wired into this
+# workflow's env: Production run 30694660128 (01.08.2026) confirmed the "Guard SEC
+# User-Agent" step green (it only greps source text) while the Pull step's own env
+# carried nothing but MAX_INPUT, got HTTP 403 on company_tickers.json, and aborted
+# before a single ticker. Top-level env applies to every step below.
+env:
+  SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+
+  # ZWEIG-WACHE (19.08.2026) — die EINZIGE Stelle, an der entschieden wird, ob ein
+  # Lauf veroeffentlichen darf. Gleiche Sache und gleiche Bauform wie in daily-pull.yml.
+  #
+  # BEFUND: dieser Workflow laesst sich per workflow_dispatch auf JEDEM Zweig starten,
+  # sein Commit-Schritt pushte aber unbedingt. Ein Handlauf von einem Feature-Zweig
+  # haette das monatliche SEC-Manifest samt sec-secannual.json aus ungepruefter
+  # Zweig-Rechnung in den Repo-Baum geschrieben.
+  #
+  # WARUM KEIN `if:` AM SCHRITT (die naheliegende Loesung, bewusst verworfen): ein
+  # UEBERSPRUNGENER Schritt sieht in GitHub Actions aus wie ein erfolgreicher und
+  # schreibt keine Zeile ins Protokoll. Der Schritt laeuft darum weiter und steigt ganz
+  # vorn mit ::warning:: aus — die Nicht-Veroeffentlichung ist ein LESBARER Vorgang.
+  #
+  # KEIN `nur_rechnen`-Ventil wie in daily-pull.yml: dort deckt es einen 4-Stunden-Lauf
+  # mit sechs Publizierern ab, den man auf main einmal komplett durchrechnen lassen will.
+  # Hier ist der Trockenlauf jetzt einfach der Zweig-Lauf — genau das macht diese Wache
+  # erst gefahrlos moeglich.
+  #
+  # Bei schedule-Laeufen ist github.ref refs/heads/main -> der Cron veroeffentlicht wie
+  # bisher. Waechter: tests/zweig-wache.test.js
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 210  # BH-004: +60min for "Build sec-secannual"; Tag 432: +60min for the small-cap variant
+    steps:
+      # Tag 232c-24 (audit F-CI-006 MEDIUM): drift correction from daily-pull.
+      # monthly-sec-xbrl was missing three hardenings present in daily-pull:
+      # (1) fetch-depth: 0 so git log + reliable rebase work (cherry-pick-back
+      # logic in the Commit manifest step needed full history), (2) cache:'npm'
+      # which saves ~30-90s per run on the package install, (3) per-step
+      # timeouts that prevent the SEC pull from eating the whole 90-min budget.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # F-CI-006 / F-CI-004: full history for reliable rebase
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'  # F-CI-006 / F-CI-011: cache npm deps
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+        timeout-minutes: 5
+
+      # Fail fast (ms) if any SEC puller regresses to a contactless User-Agent,
+      # which SEC silently 403s. This is the static guard for the 2026-06
+      # pull-sec-xbrl.js fix; without it the regression only surfaces as an
+      # err=N/pulled=0 storm mid-pull.
+      - name: Guard SEC User-Agent
+        run: node tests/sec-user-agent-test.js
+
+      - name: Pull SEC XBRL
+        timeout-minutes: 70  # F-CI-006: bounded so it can't eat the whole 90-min job budget
+        env:
+          MAX_INPUT: ${{ inputs.max }}
+        run: |
+          # F-CI-001: validate user-supplied max input before passing to shell to prevent injection
+          max="${MAX_INPUT:-0}"; if ! [[ "$max" =~ ^[0-9]+$ ]]; then echo "Invalid max input"; exit 1; fi
+          # A full pull of ~9,900 tickers is infeasible: companyfacts averages
+          # ~4 MB/ticker → ~41 GB download and ~115 min at the 8 req/s SEC limit,
+          # blowing BOTH the 70-min step timeout and the runner disk. The cache
+          # is git-ignored (ephemeral per runner) so coverage cannot accumulate
+          # across runs anyway. Bound each scheduled run to a disk/time-safe
+          # slice; request a larger run manually via the workflow_dispatch `max`
+          # input. 1500 tickers ≈ 6 GB transient / ~18 min.
+          if [ "$max" = "0" ] || [ "$max" = "" ]; then max=1500; fi
+          node pull-sec-xbrl.js --max "$max"
+
+      # F-CI-010: Verify SEC XBRL coverage before committing manifest.
+      # Rewritten (2026-06): the previous version was guaranteed to fail every
+      # run for two independent reasons —
+      #   (1) it read m.n_ok / m.n_total, keys pull-sec-xbrl.js never writes
+      #       (the manifest carries m.summary.{pulled,skipped304,skippedFresh,
+      #       notFound,errors,totalKnown}), so coverage was always "0 / 0";
+      #   (2) the hard-fail checked `! -f external-data/sec-xbrl-manifest.json`
+      #       (top-level, hyphenated) which is never created — the real manifest
+      #       is external-data/sec-xbrl/_manifest.json (subdir, underscore).
+      # Both are fixed here. The gate now keys off the ERROR RATE rather than a
+      # fixed full-universe coverage target (the pull is bounded per run), so it
+      # still catches the all-403 collapse (err=51/pulled=0) that the contactless
+      # User-Agent used to produce, while passing a healthy bounded pull.
+      - name: Verify SEC Coverage
+        run: |
+          node -e "
+            const fs = require('fs');
+            let m = null;
+            try { m = JSON.parse(fs.readFileSync('./external-data/sec-xbrl/_manifest.json','utf8')); } catch (e) {}
+            if (!m || !m.summary) {
+              console.log('::error::SEC XBRL manifest missing or has no summary — pull failed');
+              process.exit(1);
+            }
+            const s = m.summary;
+            const pulled = s.pulled||0, c304 = s.skipped304||0, fresh = s.skippedFresh||0;
+            const nf = s.notFound||0, err = s.errors||0, total = s.totalKnown||0;
+            const ok = pulled + c304 + fresh;          // successfully covered
+            const attempted = ok + nf + err;           // real fetch attempts
+            console.log('SEC XBRL: pulled=' + pulled + ' 304=' + c304 + ' fresh=' + fresh +
+                        ' 404=' + nf + ' err=' + err + ' / totalKnown=' + total);
+            console.log('coverage: ok=' + ok + ' attempted=' + attempted);
+            if (attempted > 0 && err / attempted > 0.5) {
+              console.log('::error::error rate ' + err + '/' + attempted +
+                          ' >50% — pull is failing (check User-Agent / SEC 403)');
+              process.exit(1);
+            }
+            if (ok < 50) {
+              console.log('::warning::only ' + ok + ' tickers covered this run');
+            }
+          "
+
+      # BH-004 fix (round 2): build-secannual.js's loadUniverse() reads snapshots/*.json to
+      # pick candidates and score the p75 drawdown threshold — but snapshots/ is git-ignored
+      # (only _manifest.json is committed) and this job never runs pull-yahoo itself (a full
+      # pull is ~90min sharded 17-way in daily-pull, far past this job's budget). Without a
+      # real universe the build crashed (empty dds[] -> p75 undefined -> .toFixed() throws),
+      # so the round-1 fix never actually refreshed anything. Restore the most recent
+      # daily-pull's merged "snapshots" artifact instead — same data the live scorer runs on,
+      # at most ~1 day old, which is fine for a monthly refresh cadence.
+      - name: Find latest daily-pull run
+        id: find_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=$(gh run list --repo "${{ github.repository }}" --workflow daily-pull.yml \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          if [ -z "$RUN_ID" ]; then
+            echo "::warning::No successful daily-pull run found — sec-secannual build will be skipped this month"
+          else
+            echo "Restoring snapshots from daily-pull run $RUN_ID"
+          fi
+
+      - name: Restore Snapshots (from daily-pull artifact)
+        if: steps.find_run.outputs.run_id != ''
+        continue-on-error: true  # network flake here must not block the raw-XBRL manifest commit below
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: snapshots
+          path: snapshots
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_run.outputs.run_id }}
+
+      # ── FAIL-LOUD statt Warnung (28.07.) ────────────────────────────────────────
+      # BEFUND: sec-secannual.json wurde seit Bestehen dieses Workflows NIE von einem
+      # Bot-Lauf geaendert — alle drei Aenderungen (03.07./10.07./21.07.) stammen von Hand.
+      # Die Laeufe meldeten trotzdem gruen. Die Kette dahinter, Glied fuer Glied belegt:
+      #   daily-pull laeuft Di-Sa, sein snapshots-Artefakt lebte EINEN Tag. Dieser
+      #   Workflow startet am 1. jedes Monats, egal welcher Wochentag. Faellt der Erste
+      #   auf Sonntag oder Montag, war das Artefakt des letzten Laufs (Samstag) bereits
+      #   geloescht. `find_run` findet die run_id trotzdem — sie prueft nur, ob ein LAUF
+      #   existierte, nicht ob sein Artefakt noch da ist. Der Download scheiterte unter
+      #   continue-on-error, snapshots/ blieb leer, der Empty-Universe-Guard in
+      #   build-secannual.js machte einen "lauten No-Op" als ::warning:: — und der Job
+      #   endete mit 0. Betroffen waren rund 2 von 7 Monaten dauerhaft.
+      # Ein ::warning:: ist KEIN rotes X und damit ausserhalb des einzigen Alarmkanals,
+      # den Karl liest.
+      #
+      # ✅ DIE URSACHE IST SEIT DEM 28.07. AN DER WURZEL BEHOBEN: die Lebensdauer des
+      # snapshots-Artefakts steht in daily-pull.yml jetzt auf 7 Tagen und ueberbrueckt
+      # damit jedes Wochenende. Dieser Schritt bleibt trotzdem — als NETZ, nicht als
+      # Erklaerung des Ist-Zustands. Denn er faengt mehr als den einen Fall: einen
+      # abgebrochenen daily-pull, ein geleertes Artefakt, einen Runner ohne Platz. Ohne
+      # ihn waere jeder dieser Faelle wieder ein stiller Gruen-Lauf.
+      # Der Waechter tests/monthly-sec-failloud.test.js prueft die 7 Tage mit.
+      #
+      # Dieser Schritt laeuft BEWUSST OHNE `if:` — auch ein leeres run_id (gar kein Lauf
+      # gefunden) muss rot werden, nicht still uebersprungen.
+      # Die STRUKTURELLE Loesung (Abkopplung vom daily-pull-Artefakt) haengt an der
+      # 4.1-Architekturentscheidung; bis dahin macht dieser Schritt den Ausfall wenigstens
+      # sichtbar, statt ihn zu verstecken.
+      - name: Verify snapshots restored (fail-loud)
+        run: |
+          N=$(ls snapshots/*.json 2>/dev/null | wc -l)
+          echo "snapshots/: $N Dateien"
+          # Untergrenze bewusst grosszuegig: das Universum hat rund 12.500 Snapshots.
+          # Unter 1.000 ist der Restore kaputt, nicht bloss duenn — ein Teil-Pull faengt
+          # der Coverage-Gate an anderer Stelle ab.
+          if [ "$N" -lt 1000 ]; then
+            echo "::error::snapshots-Restore fehlgeschlagen ($N Dateien, erwartet >1000). Ohne Universum baut sec-secannual.json NICHTS und der Lauf waere frueher still gruen gewesen. Wahrscheinlichste Ursache: das daily-pull-Artefakt ist abgelaufen (retention-days: 1) — pruefen, ob der Monatserste auf einen Sonntag oder Montag fiel."
+            exit 1
+          fi
+
+      # run-screener.js (mergeSecIntoUniverse) reads EXCLUSIVELY external-data/sec-secannual.json,
+      # so without this step the "monthly maintenance" was green while the scored SEC series
+      # silently never refreshed. build-secannual.js reads the just-pulled per-CIK companyfacts
+      # straight from the runner-local cache (same dir the pull step above just populated),
+      # scores candidates against the restored snapshots/ universe, and merges the result into
+      # the committed, small output file. Guarded here (real universe unavailable this run) AND
+      # inside build-secannual.js itself (empty-universe guard, so a bare `node
+      # scripts/build-secannual.js` stays crash-safe outside CI too).
+      - name: Build sec-secannual (scored deep-XBRL layer)
+        if: steps.find_run.outputs.run_id != ''
+        timeout-minutes: 60
+        env:
+          SEC_XBRL_CACHE_DIR: external-data/sec-xbrl
+        run: node scripts/build-secannual.js
+
+      # 5.2 WEG 1b (Tag 432, Chunk 2): getrennter Small-Cap-Datenpfad — restored aus dem
+      # Cache, den .github/workflows/smallcap-pull.yml schreibt (gleiche Technik wie der
+      # Restore-Schritt im scoring-Job von daily-pull.yml). continue-on-error: fehlt der
+      # Cache (smallcap-pull.yml lief noch nie / evicted), bleibt snapshots-smallcap/ leer
+      # -> build-secannual-smallcap.js's eigener Empty-Universe-Guard laesst den Step rot
+      # werden und bewahrt den Altbestand, statt den No-Op als erfolgreichen Build zu tarnen.
+      - name: Restore Small-Cap Store (5.2 WEG 1b)
+        continue-on-error: true
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-nonexistent
+          restore-keys: |
+            snapshots-smallcap-store-
+
+      - name: Build sec-secannual-smallcap (5.2 WEG 1b, isoliert)
+        timeout-minutes: 60
+        env:
+          SEC_XBRL_CACHE_DIR: external-data/sec-xbrl
+        run: node scripts/build-secannual-smallcap.js
+
+      # PHASE 4.1 (Tags 480-482): die Langhistorie fuer ALLE US-Namen, aus dem Bulk-Archiv.
+      # Bewusst NEBEN build-secannual.js statt darin: sec-secannual.json fuettert das Scoring,
+      # sec-annual-bulk.jsonl NICHT — es ist die Basis des Verlaesslichkeits-Berichts, solange
+      # W_ROIC_STABILITY bei 0 steht (Urteils-Revision 28.07.). Ein Test haelt die Trennung fest.
+      # Kein continue-on-error: schlaegt der Abruf fehl, soll der Lauf rot werden statt still
+      # mit der Datei vom Vormonat weiterzulaufen — genau der Fehler, den Tag 479 geheilt hat.
+      - name: Fetch SEC bulk long history (4.1)
+        if: steps.find_run.outputs.run_id != ''
+        timeout-minutes: 60
+        run: node scripts/fetch-secbulk.js
+
+      # Der Bericht laeuft bei JEDEM Datenlauf mit, damit die Frage "darf die Achse scharf?"
+      # beim naechsten Mal nicht wieder bei null beginnt. Er entscheidet nichts, er misst nur;
+      # das Gate (>=80 % Board-Abdeckung UND board-eigenes rho >=0,35) steht in seiner Ausgabe.
+      - name: ROIC reliability report (4.1)
+        if: steps.find_run.outputs.run_id != ''
+        run: |
+          mkdir -p reports
+          # ohne pipefail wuerde der Exit-Code von tee gewinnen und ein Absturz des Berichts
+          # als gruen durchgehen
+          set -o pipefail
+          node scripts/roic-reliability.js | tee "reports/roic-reliability-$(date -u +%Y-%m).txt"
+
+      # U3-Milan (Urteil _COURT-MILAN-U3-2026-08-29 §6.5, ratifiziert ENTSCHIED 31) — die
+      # DRIFT-SPUR. Der Milan-Zweig in filter-snapshot-merge.js benutzt den Fundamental-
+      # Fingerabdruck als Identitaets-Gegenprobe, aber nur auf einer eingefrorenen Liste; das
+      # allgemeine Tor ueber alle Suffixe ist 2:1 gesperrt und braucht genau diese Messung als
+      # Vorbedingung. Der Zensus laeuft HIER, weil dieser Job als einziger monatlicher Lauf den
+      # vollen Snapshot-Bestand ohnehin schon wiederhergestellt hat (Schritt oben).
+      # Er entscheidet nichts (Exit immer 0) und darf den Monatslauf deshalb nie faerben —
+      # meldepflichtig ist seine Ausgabe, nicht sein Exit-Code.
+      - name: Fingerprint census / drift track (U3-Milan §6.5)
+        if: steps.find_run.outputs.run_id != ''
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          # 2>&1: der "Bestand nicht lesbar"-Befund geht auf stderr. Ohne die Umleitung
+          # bekaeme der committete Monatsbericht eine leere Datei OHNE Grund — die Erklaerung
+          # lebte nur im fluechtigen Actions-Log, genau ausserhalb der Drift-Spur, die hier
+          # ueber Monate aufgebaut werden soll.
+          node scripts/probe-fingerprint-zensus.js 2>&1 | tee "reports/fingerprint-zensus-$(date -u +%Y-%m).txt"
+
+      - name: Commit manifest
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit von SEC-Manifest, sec-secannual(-smallcap).json, ROIC-Bericht und Fingerabdruck-Zensus. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
+            exit 0
+          fi
+          git config user.name "sec-xbrl-bot"
+          git config user.email "sec-xbrl-bot@users.noreply.github.com"
+          mkdir -p reports
+          git add external-data/sec-xbrl/_manifest.json external-data/sec-secannual.json external-data/sec-secannual-smallcap.json
+          if [ -f external-data/sec-annual-bulk.jsonl ]; then git add external-data/sec-annual-bulk.jsonl; fi
+          if ls reports/roic-reliability-*.txt >/dev/null 2>&1; then git add reports/roic-reliability-*.txt; fi
+          if ls reports/fingerprint-zensus-*.txt >/dev/null 2>&1; then git add reports/fingerprint-zensus-*.txt; fi
+          if git diff --staged --quiet; then
+            echo "No manifest changes to commit."
+          else
+            git commit -m "chore: sec-xbrl manifest $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            # Tag 218 (audit F-218c-02 HIGH fix): der frueher hier stehende Fallback
+            # `git rebase --abort; git reset --hard origin/main` VERWARF den gerade
+            # gemachten Commit (das SEC-XBRL-Manifest) still; danach lief `git push`
+            # als No-Op durch und der Workflow meldete GRUEN, waehrend das monatliche
+            # XBRL-Update verschwunden war. Seitdem: nur --abort, der Commit bleibt.
+            COMMIT_SHA=$(git rev-parse HEAD)
+            for i in 1 2 3; do
+              git fetch origin main
+              # Tag 232c-7 (audit F-CI-002 HIGH): same fix as daily-pull.yml —
+              # plain rebase (drop --strategy-option theirs which silently
+              # accepts upstream's bytes on conflict).
+              if ! git rebase --autostash origin/main; then
+                # Tag 544, gleiche Sache wie in daily-pull.yml: bei Konflikt bewusst rot,
+                # --abort haelt unseren Commit. Der tote cherry-pick-Fallback ist raus —
+                # nach --abort steht HEAD wieder auf $COMMIT_SHA und der Baum-Vergleich
+                # las den Baum eben dieses unveraenderlichen Commits, die Bedingung war
+                # also immer falsch; gefeuert haette sie nach `reset --hard origin/main`
+                # nur denselben Konflikt wiederholt.
+                echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
+                git rebase --abort || true
+              else
+                # F-CI-002: update SHA after successful rebase so subsequent iterations use the rewritten commit
+                COMMIT_SHA=$(git rev-parse HEAD)
+              fi
+              if git push; then
+                echo "Pushed on attempt $i (commit $(git rev-parse HEAD))"
+                exit 0
+              fi
+              sleep $((5 * i))
+            done
+            echo "::error::Push failed after 3 attempts"
+            exit 1
+          fi
+
+      # 29.07.: Discord-Benachrichtigung entfernt (Karl-Freigabe). DISCORD_WEBHOOK war nie
+      # gesetzt, der Schritt also immer ein No-Op — er sah aus wie ein zweiter Alarmkanal
+      # und war keiner. Ein fehlgeschlagener Lauf ist das rote X in Actions; das ist
+      # Karls einziger Kanal und er reicht.

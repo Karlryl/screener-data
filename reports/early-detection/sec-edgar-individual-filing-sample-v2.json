@@ -1,0 +1,61 @@
+{
+  "schema": "early-detection-sec-individual-filing-sample/v2",
+  "generatedAt": "2026-08-09T06:29:52.854Z",
+  "status": "INDIVIDUAL_FILING_SAMPLE_VERIFIED",
+  "sourceCoverageReport": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-individual-filing-coverage-sample-2009-2024-rerun.json",
+  "attempts": [
+    {
+      "accession": "0001104659-11-061252",
+      "captureTimestamp": "20170227173317",
+      "status": "VERIFIED"
+    }
+  ],
+  "verified": {
+    "accession": "0001104659-11-061252",
+    "expectedForms": [
+      "25"
+    ],
+    "variant": "MASTER_INDEX_PATH",
+    "capture": {
+      "timestamp": "20170227173317",
+      "original": "https://www.sec.gov/Archives/edgar/data/1510593/0001104659-11-061252.txt",
+      "mimetype": "text/plain",
+      "digest": "NUGNXJXX52HHWOQ3NUI5KF7T3EPR3ZVP",
+      "warcRecordBytes": 2944
+    },
+    "replayUrl": "https://web.archive.org/web/20170227173317id_/https://www.sec.gov/Archives/edgar/data/1510593/0001104659-11-061252.txt",
+    "payloadSha256": "b6e62f71108e14887158dd9f14a34de2786b5f3d00f9e5ac02cd52a44ffedfc4",
+    "payloadSha1Base32": "NUGNXJXX52HHWOQ3NUI5KF7T3EPR3ZVP",
+    "payloadBytes": 16734,
+    "payloadPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\blobs\\sha256\\b6\\b6e62f71108e14887158dd9f14a34de2786b5f3d00f9e5ac02cd52a44ffedfc4.txt",
+    "blobCreated": true,
+    "observationPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\observations\\sec-individual-filings\\0001104659-11-061252\\20170227173317-b6e62f71108e14887158dd9f14a34de2786b5f3d00f9e5ac02cd52a44ffedfc4-inspection-v2.json",
+    "inspection": {
+      "schema": "early-detection-sec-individual-submission-inspection/v2",
+      "accession": "0001104659-11-061252",
+      "expectedForms": [
+        "25"
+      ],
+      "observedAccessions": [
+        "0001104659-11-061252"
+      ],
+      "observedForms": [
+        "25"
+      ],
+      "matchingForms": [
+        "25"
+      ],
+      "status": "MATCHED_ACCESSION_AND_FORM"
+    }
+  },
+  "interpretation": [
+    "This proves byte-level individual filing transport for one sample only.",
+    "Capture time is transport provenance, not the filing's historical availability time.",
+    "Population coverage remains governed by the separate stratified coverage report.",
+    "No event outcome or return was computed."
+  ],
+  "sampleOnly": true,
+  "confirmatoryEligible": false,
+  "productiveGqsModified": false,
+  "reportSha256": "20350241240da15247069f3c515079b4dac8d5f6070e9bb914a9345038350bf3"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "early-detection-execution-gate-evidence/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "researchCorpusSha256": null,
+  "gates": {
+    "entityListingLedger": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "appendOnlySecStore": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "historicalUniverse": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "asOfLeakageGate": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "adjustedOhlcv": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "corporateActionsDelistings": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "historicalGqsAdapter": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "conceptMapFrozen": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "independentAuditPassed": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "blindCodingAgreementPassed": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null },
+    "researchCorpusSealed": { "status": "RED", "artifactPath": null, "artifactSha256": null, "remoteCommit": null }
+  },
+  "rule": "Every RED must become PASS with an exact artifact path, SHA-256 and commit already reachable from fetched origin/main. Each artifact must use execution-gate-artifact-template.json, attest the exact full input hash and carry the complete gate-specific componentSha256 set required by the sealed runner. The researchCorpusSealed artifact must attest the separate external researchCorpusSha256 in both its researchCorpusSha256 field and component map; its own artifactSha256 remains a separate authenticity hash. Do not edit this sealed template; create run-specific evidence and artifacts outside the immutable protocol directory."
+}

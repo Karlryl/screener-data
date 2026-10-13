@@ -1,0 +1,128 @@
+{
+  "_doku": [
+    "SHADOW mode: detection and reporting only; no merging, exclusion, rank, score, name or membership change.",
+    "Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt.",
+    "Entries are reports, never merge decisions; this is separate from the empty identity register (M16, M18, M19).",
+    "codeKeeps records R11's re-enactment of the current production selection rule, not a decision about the true primary listing. Every other listed ticker is marked, even when codeKeeps is absent from the board.",
+    "homeListingProposal is R11 information only, with no effect on the flag; unresolved proposals are null.",
+    "Sources and verbatim quotes are supplied by R11-FINAL (2026-09-30); no network re-check was performed in this task.",
+    "RBI (QSR / QSP.TO) and Molson Coors (TAP-A / TPX.TO) are deliberately absent: economically equivalent exchangeable shares, not secondary listings; TPX.TO class attribution is unproven."
+  ],
+  "aerovironment": {
+    "issuer": "AeroVironment",
+    "tickers": ["AVAV", "AVAV.SW"],
+    "codeKeeps": "AVAV",
+    "homeListingProposal": "AVAV",
+    "source": {
+      "url": "https://www.six-group.com/en/market-data/shares/sponsored-foreign-shares.html",
+      "quote": "AEROVIRONMENT DL -,0001"
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11 home-listing proposal: AVAV, US ISIN US0080731088."
+  },
+  "ge-aerospace": {
+    "issuer": "GE Aerospace",
+    "tickers": ["GE", "GCP.DE", "GE.VI"],
+    "codeKeeps": "GE",
+    "homeListingProposal": "GE",
+    "source": {
+      "url": "https://www.wienerborse.at/aktien-global-market/general-electric-co-US3696043013/",
+      "quote": "GENERAL ELECTRIC CO"
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "US ISIN US3696043013. GE.VI has been excluded by production as dup-issuer since 2026-09-30; retained here in case it returns."
+  },
+  "galaxy-digital": {
+    "issuer": "Galaxy Digital",
+    "tickers": ["GLXY", "1GLXY.MI"],
+    "codeKeeps": "GLXY",
+    "homeListingProposal": "GLXY",
+    "source": {
+      "url": "https://www.borsaitaliana.it/borsa/azioni/global-equity-market/scheda/US36317J2096-BGEM.html?lang=it",
+      "quote": "Galaxy Digital Inc-A"
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11 home-listing proposal: GLXY."
+  },
+  "ascentage-pharma": {
+    "issuer": "Ascentage Pharma",
+    "tickers": ["AAPG", "6855.HK"],
+    "codeKeeps": "AAPG",
+    "homeListingProposal": null,
+    "source": {
+      "url": "https://www.sec.gov/Archives/edgar/data/2023311/000121390026088773/ea030195101ex99-1.htm",
+      "quote": "NASDAQ: AAPG; HKEX: 6855"
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11 home-listing proposal remains unresolved (offen)."
+  },
+  "grupo-aeromexico": {
+    "issuer": "Grupo Aeroméxico",
+    "tickers": ["AERO", "AERO.MX"],
+    "codeKeeps": "AERO",
+    "homeListingProposal": null,
+    "source": {
+      "url": "https://ir.aeromexico.com/ir-resources/investor-faqs",
+      "quote": "Mexican Stock Exchange (BMV) under the ticker \"AERO\""
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11 home-listing proposal remains unresolved (offen)."
+  },
+  "amrize": {
+    "issuer": "Amrize",
+    "tickers": ["AMRZ", "AMRZ.SW"],
+    "codeKeeps": "AMRZ",
+    "homeListingProposal": null,
+    "source": {
+      "url": "https://investors.amrize.com/resources/faq",
+      "quote": "Amrize shares currently trade on the NYSE and the SIX under the ticker symbol AMRZ."
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11 home-listing proposal remains unresolved (offen)."
+  },
+  "axia-energia": {
+    "issuer": "AXIA Energia",
+    "tickers": ["AXIA", "AXIA3.SA"],
+    "codeKeeps": "AXIA",
+    "homeListingProposal": "AXIA3.SA",
+    "source": {
+      "url": "https://ri.axia.com.br/servicos-de-ri/perguntas-frequentes/",
+      "quote": "AXIA3"
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11 home-listing proposal: AXIA3.SA (90% confidence); the flag still references AXIA."
+  },
+  "copel": {
+    "issuer": "Copel",
+    "tickers": ["ELPC", "CPLE3.SA"],
+    "codeKeeps": "ELPC",
+    "homeListingProposal": "CPLE3.SA",
+    "source": {
+      "url": "https://www.sec.gov/Archives/edgar/data/1041792/000207097926000155/elpc-20251231.htm",
+      "quote": "CPLE3"
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11: ELPC is an ADS per the 20-F; home-listing proposal CPLE3.SA. The flag still references ELPC."
+  },
+  "kloeckner-co": {
+    "issuer": "Klöckner & Co",
+    "tickers": ["KCO.VI", "KCO.DE"],
+    "codeKeeps": "KCO.VI",
+    "homeListingProposal": "KCO.DE",
+    "source": {
+      "url": "https://www.wienerborse.at/aktien-global-market/kloeckner-co-se-DE000KC01000/",
+      "quote": "KLOECKNER + CO SE"
+    },
+    "sourceCheckedOn": "2026-09-30",
+    "enteredOn": "2026-10-06",
+    "note": "R11 home-listing proposal: KCO.DE (95% confidence); the flag still references KCO.VI."
+  }
+}

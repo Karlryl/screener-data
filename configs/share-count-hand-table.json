@@ -1,0 +1,114 @@
+{
+  "_doku": [
+    "Share-count hand table (Tag 1397, W2 2026-10-02). Read by lib/ads-hand-table.js at both marketCap write sites of pull-yahoo.js, after the ADS table.",
+    "Row = a USD line whose Yahoo marketCap uses a wrong share count. implied = Yahoo marketCap / quote price.",
+    "implied within 3 % of shares: confirmed, untouched. Within 3 % of a wrongShares entry: marketCap = price x shares, stamped 'hand-table:shares', derived Yahoo fields blanked.",
+    "Anything else: Yahoo value kept, meta._shareCountHandTableStale stamped, ::warning:: in the pull log, price-only refused - re-verify, then fix or remove the row.",
+    "Admission: issuer filing quote for the count (url, quote, unit shares) and the wrong count read from a stored vendor snapshot. Corrected values below the pull's MIN_MCAP floor leave the universe like any other small line.",
+    "reviewBy: latest due date of the next periodic filing (10-Q for the quarter ended 2026-09-30: 45 days, next business day). A row cannot see new issuance by itself: once the marketCap data day is past reviewBy, the pull raises ::warning:: every run and still applies the row, until the count is re-verified and reviewBy moved.",
+    "P205: withholdUnverified rows require validFrom, a German reason and proven USD quotes. Unknown or overdue values are withheld with a warning on expiry. _holds contains source-backed cases without a reproducible replacement; it also requires reviewBy. lib/market-cap-guard.js applies only these explicitly marked rows before the legacy share-count applier."
+  ],
+  "ABTC": {
+    "shares": 72819713,
+    "sharesAsOf": "2026-07-30",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      121819713
+    ],
+    "wrongSharesSeen": "Yahoo impliedSharesOutstanding and marketCap / price in the snapshot of run 36839128456 (2026-10-01): 1,033,031,104 USD at 8.48 USD",
+    "source": {
+      "url": "https://www.sec.gov/Archives/edgar/data/1755953/000119312526329472/abtc-20260630.htm",
+      "form": "Das Deckblatt des Formulars 10-Q für die Periode bis 2026-06-30 mit der Zugangsnummer 0001193125-26-329472 nennt die Aktienzahl nach der Zusammenlegung von 15 Aktien zu einer Aktie am 2026-07-02.",
+      "quote": "As of July 30, 2026, the registrant had 24,004,726 shares of Class A common stock, 48,814,987 shares of Class B common stock, and no shares of Class C common stock outstanding",
+      "unit": "shares (Class A + Class B)"
+    },
+    "verifiedAt": "2026-10-02"
+  },
+  "ANDG": {
+    "shares": 112887382,
+    "sharesAsOf": "2026-08-20",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      18540410
+    ],
+    "wrongSharesSeen": "Yahoo sharesOutstanding = impliedSharesOutstanding = Class A only in the snapshot of run 36839128456 (2026-10-01): 1,008,598,336 USD at 54.40 USD",
+    "source": {
+      "url": "https://www.sec.gov/Archives/edgar/data/2065708/000119312526359181/d132575d424b4.htm",
+      "form": "Der Prospekt im Formular 424B4 vom 2026-08-20 mit der Zugangsnummer 0001193125-26-359181 beschreibt das Angebot im Abschnitt „The offering“.",
+      "quote": "Total Class A common stock and Class B common stock to be outstanding immediately after this offering 112,887,382 shares",
+      "unit": "shares (Class A + Class B; each Class B share is paired with a Class X Umbrella Unit redeemable for one Class A share)",
+      "crossCheck": "10-Q Q2 2026 (accession 0001193125-26-346921) cover: 13,613,285 Class A + 99,375,168 Class B = 112,988,453 as of August 5, 2026 (0.09 % apart)"
+    },
+    "verifiedAt": "2026-10-02"
+  },
+  "JBS": {
+    "shares": 1070929187,
+    "sharesAsOf": "2026-06-30",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      3289363700
+    ],
+    "wrongSharesSeen": "board-history pit.marketCap / close on 2026-09-17 (39,669,727,232 / 12.06) and 2026-09-22 (39,571,046,400 / 12.03); on the other days the vendor implies 1,070,910,8xx (confirmed)",
+    "source": {
+      "url": "https://www.sec.gov/Archives/edgar/data/1791942/000179194226000004/jbsay-20260630.htm",
+      "form": "Das Deckblatt des Formulars 10-Q für die Periode bis 2026-06-30 mit der Zugangsnummer 0001791942-26-000004 nennt die Aktienzahl.",
+      "quote": "As of June 30, 2026, there were 776,086,920 Class A common shares, par value of €0.01 per share, and 294,842,267 Class B common shares, par value of €0.10 per share, outstanding.",
+      "unit": "shares (Class A + Class B)"
+    },
+    "verifiedAt": "2026-10-02"
+  },
+  "QH": {
+    "shares": 2750893,
+    "sharesAsOf": "2026-07-17",
+    "validFrom": "2026-07-17",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      88028561135
+    ],
+    "reason": "Börsenwert aus 2.750.893 Aktien nach der Zusammenlegung berechnet; Yahoo verwendet noch die Aktienzahl vor der Zusammenlegung von 32.000 zu 1.",
+    "source": {
+      "url": "https://www.sec.gov/Archives/edgar/data/1781193/000121390026067833/ea029393101ex99-1.htm",
+      "quote": "2,747,571 New Class A Ordinary Shares, 197 New Class B Ordinary Shares, and 3,125 New Class C Ordinary Shares",
+      "page": "Proposal 4, page 8",
+      "unit": "shares (Class A + Class B + Class C)",
+      "approval": "https://www.sec.gov/Archives/edgar/data/1781193/000121390026075953/ea0297151-6k_quhuo.htm",
+      "effectiveDateSource": "https://www.nasdaqtrader.com/TraderNews.aspx?id=eca2026-501",
+      "form": "Einladung zur Hauptversammlung, Vorschlag 4 zur Aktienzusammenlegung"
+    },
+    "verifiedAt": "2026-10-12",
+    "withholdUnverified": true
+  },
+  "3018.TW": {
+    "shares": 75377715,
+    "sharesAsOf": "2026-10-11",
+    "validFrom": "2026-10-10",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      75377715000
+    ],
+    "reason": "Börsenwert aus 75.377.715 Aktien laut Börsenregister berechnet; die Anbieter-Aktienzahl war tausendfach zu groß.",
+    "source": {
+      "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
+      "quote": "已發行普通股數或TDR原股發行股數",
+      "page": "Company 3018, date 1151011",
+      "unit": "shares",
+      "value": 75377715,
+      "form": "Börsenregister der TWSE mit ausgegebenen Stammaktien"
+    },
+    "verifiedAt": "2026-10-12",
+    "withholdUnverified": true
+  },
+  "_holds": {
+    "ISBTR.IS": {
+      "validFrom": "2026-10-10",
+      "reason": "Yahoo bewertet das gesamte Nominalkapital mit dem Kurs der seltenen B-Aktien. Die drei Aktienklassen haben unterschiedliche Kurse und Rechte; ein taggleicher Gesamtwert ist nicht belegt.",
+      "source": {
+        "url": "https://www.isbank.com.tr/en/about-us/shareholder-information",
+        "quote": "Market Value = (Nominal Value*Number of Shares*Price)/1000",
+        "page": "Shareholder Information, June 30, 2026"
+      },
+      "verifiedAt": "2026-10-12",
+      "reviewBy": "2026-11-16"
+    }
+  }
+}

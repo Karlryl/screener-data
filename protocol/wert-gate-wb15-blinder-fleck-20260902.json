@@ -1,0 +1,102 @@
+{
+  "schema": "wert-gate-blind-spot-scoreboard/v1",
+  "recordId": "wb15-blinder-fleck-datenschub-zuschlag-2026-09-02",
+  "mode": "ADDENDUM_NO_BASE_RECORD_EDIT",
+  "status": "BINDING",
+  "recordedAt": "2026-09-02",
+  "chainSeparation": "Not part of the Studie-2.0 / early-detection chain; deliberately outside protocol/early-detection/. Only the ADDENDUM_NO_BASE_RECORD_EDIT form is borrowed. No study ledger, seal or manifest is touched.",
+
+  "authority": {
+    "source": "_COURT-WERTGATE-BEWEGUNG-2026-09-02.md",
+    "ratifiedAt": "2026-09-02T13:23:01Z",
+    "auflage": "WB-15 - Der benannte blinde Fleck kommt ins Scoreboard, nicht in einen Kommentar",
+    "mechanicsLandedAs": "PR #269, commit f24243537054b6c8acd07cd0e307c35992360b34"
+  },
+
+  "warumDieseDatei": {
+    "befund": "PR #269 hat die WB-15-Zeile in den Dateikopf des Waechters gesetzt (tests/board-history-datenschub-zuschlag.test.js, sha256 06df5710983736ee0ddf02822de023879ea6acb5bb8d3406a50ef86172707d97, git blob 3e1778728e2355a17f01f39e65fa4510501aac7f). Das ist inhaltlich richtig und gut lesbar - aber es ist ein KOMMENTAR, und die Auflage schliesst genau diese Form aus ('kommt ins Scoreboard, nicht in einen Kommentar').",
+    "folge": "Diese Datei ist der dauerhafte, leserseitige Eintrag, der WB-15 erfuellt. Die Zeile im Waechter-Kopf bleibt stehen - sie erklaert den Waechter an Ort und Stelle und wird von dieser Datei nicht ersetzt, sondern gedeckt.",
+    "keinCodeVerhalten": "Dieser Eintrag aendert kein Verhalten. Er wird von write-board-history.js nicht gelesen."
+  },
+
+  "derBlindeFleck": {
+    "inEinerZeile": "Verborgen bleibt EIN einzelner echter Wertfehler zwischen der normalen Tagesschwelle und der um den Zuschlag erhoehten Schwelle, auf den namentlich registrierten Boards, in einer registrierten Nacht, solange die Bewegung schmal bleibt (hoechstens 8 % der gemessenen Zeilen ueber der normalen Schwelle) und die Integritaet der Zeile nicht abbaut.",
+    "amplitudeDesFlecks": {
+      "hoehe": 11.5,
+      "hoeheHerkunft": "bruchGrenze.allowance = deckel - basisSchwelle = THRESHOLD_MULTIPLIER * 11,5 - 11,5. Der Zuschlag ist immer genau diese eine Amplitude, unabhaengig vom Tagesabstand: die Allowance wird bewusst NICHT mit gapDays skaliert.",
+      "lageIstNichtFix": "Die ABSOLUTE Lage des Bandes wandert mit dem Tagesabstand, weil wirksameSchwelle = basisSchwelle * gapDays + allowance gilt.",
+      "beiGapDays1": "verborgenes Band 11,50 bis 23,00 - so steht es im Urteilstext",
+      "beiGapDays2": "verborgenes Band 23,00 bis 34,50",
+      "warumDasHierSteht": "Die erste Live-Anwendung faellt gerade NICHT auf gapDays 1: das Vintage 2026-09-02 fehlt (WB-12), der Uebergang 2026-09-03 gegen 2026-09-01 hat gapDays 2. Der Urteilstext nennt die Zahlen fuer den Normalfall; wer sie am ersten Ausnahmetag woertlich liest, unterschaetzt das Band um 11,50 Punkte. Gemessen an write-board-history.js, nicht behauptet.",
+      "obergrenze": "GATE_MAX_ABSTAND_TAGE = 7. Darueber urteilt die Wert-Achse ohnehin nicht mehr aus dem Delta (abstandZuGross) - dann ist der blinde Fleck nicht mehr der Zuschlag, sondern der Abstand selbst."
+    },
+    "geltungsbereich": {
+      "nurAufBoards": "die im Registereintrag NAMENTLICH stehen - die Ausnahme faerbt nicht ab (BP-6)",
+      "nurAnNaechten": "fuer die ein gueltiger Eintrag mit typ 'daten-schub' auf den EXAKTEN Vorgaenger gebunden ist",
+      "nurImDatenschubArm": "der Schrumpfungs-Arm ist unveraendert; der Integritaets-Vorrang haengt ebenfalls nur am Datenschub-Arm"
+    },
+    "zweiterResidualbefund": {
+      "quelle": "Verbergungs-Anklaeger, Dissent §9.2, woertlich uebernommen als benannter Rest",
+      "inhalt": "Eine Anbieter- oder Scoring-Regression, die Werte INNERHALB der frisch gezogenen Kohorte verfaelscht, ohne Coverage zu verlieren, ohne eine Lampe zu verlieren und ohne die Deckel-Amplitude zu ueberschreiten, wird von Kanal A unter diesem Beschluss nicht gefasst. Integritaets-Veto und Deckel verengen das Waschfenster auf 'plausibel grosse falsche Werte auf Zeilen, die legitim aufgefrischt haben' - sie beseitigen es nicht."
+    },
+    "dritterResidualbefund": {
+      "titel": "Der Integritaets-Vorrang fasst auch DATENVERBESSERUNGEN",
+      "inhalt": "integritaetsVerfall wertet JEDE zuvor getragene und jetzt fehlende Lampe als Verfall - ausdruecklich strenger als 'nur Quell-Lampen'. Verliert eine Zeile die Warnlampe opIncSynthetisch, weil ihre OpInc-Reihe von zurueckgerechnet auf gemeldet wechselt (meta.opIncSource 'computed-margin' -> 'yahoo-adjusted', genau was PR #268 Fix 1 auf 133 Sonden bewirkt), macht das ihr Board SUSPECT, obwohl die Daten besser geworden sind.",
+      "richtung": "Dieser Rest kostet Strenge NICHT, er kostet Vintages. Er gehoert trotzdem hierher, weil ein Leser, der ein SUSPECT sieht, sonst einen Datenschaden vermutet, wo eine Reparatur stattgefunden hat.",
+      "status": "BENANNT, NICHT ENTSCHIEDEN. Eine Lockerung waere eine Aenderung an WB-4 und gehoert vor das Wert-Gate-Gericht, nicht auf die Ausfuehrungsebene (K5: WB-4 streichen loescht den Beschluss)."
+    }
+  },
+
+  "wasNICHTverborgenBleibt": [
+    "jede Bewegung ueber dem Deckel (Tag-938-Klasse: 28-37 Punkte) - der Zuschlag deckt sie nicht",
+    "jede BREITE Bewegung: reisst der Faecherungs-Anteil das Tor GATE_FANOUT_CAP = 0,08, gilt unveraendert die normale Schwelle und das Board faellt",
+    "jede Integritaets-Verschlechterung auf einer gematchten Zeile: coverageAxes-Zaehler faellt, eine gefuellte PIT-Quellreihe (revenueQ, revenueQEnds, grossProfitQ, grossProfitQEnds) wird leer oder komplett null, oder eine zuvor getragene Lampe geht verloren - ungeachtet des Eintrags und ungeachtet des Deckels",
+    "saemtliche unbedingten Pruefungen: cohort-empty, cohort-overlap-collapse (MIN_COHORT_OVERLAP 0,5), nan-break, coverage-collapse",
+    "jedes Board, das NICHT namentlich im Eintrag steht - dort gilt die normale Schwelle unveraendert",
+    "die Ausnahme selbst: sie hinterlaesst eine zaehlbare, namentliche Spur in Kanal B (data-health/p99-delta-history.json) und eine eigene, unverwechselbare Zeile im Alarmkanal"
+  ],
+
+  "warumDerFleckKleinerIstAlsDieAlternative": "Die verworfene Alternative ACCEPT-THE-GAP gewaehrt ueber den gapDays-Faktor 23,00 / 34,50 / 57,50 ohne Board-Nennung, ohne Log und ohne Ablauf - und schaltet die Wert-Achse ab GATE_MAX_ABSTAND_TAGE ganz ab. Die verworfene Ausschluss-Form (erklaerende_bewegung) haette Zeilen aus dem p99 entfernt. Der Zuschlag entfernt keine einzige Zeile. Das macht den Fleck nicht zu null - es macht ihn zum kleinsten der vorgelegten.",
+
+  "ausnahmetagZaehler": {
+    "gezaehlteAusnahmetage": 0,
+    "definition": "Ein Tag, an dem mindestens ein Board den Zuschlag TATSAECHLICH gewaehrt bekam (bruchGrenze.typ === 'daten-schub' und allowance > 0). Eine blosse Bindung ohne Wirkung zaehlt nicht.",
+    "protokoll": [],
+    "quelle": "data-health/p99-delta-history.json, byDate[<datum>][<board>].datenSchub",
+    "hinweis": "Der Lauf 33623850297 vom 2026-09-02 zaehlt NICHT: dort war der Eintrag mechanisch wirkungslos, 0 Boards mit erhoehter Tagesschwelle, alle drei SUSPECT. Der Zaehler beginnt beim ersten Lauf unter #269."
+  },
+
+  "ueberpruefungsAusloeser": [
+    {
+      "id": "WB-14",
+      "wann": "nach DREI protokollierten Ausnahmetagen",
+      "was": "Deckel (THRESHOLD_MULTIPLIER, heute 2 -> 23,00) und Faecherungs-Cap (GATE_FANOUT_CAP, heute 0,08) werden gegen das Kanal-B-Log aus WB-5 ueberprueft. Beide sind an Messungen verankert, aber Setzungen.",
+      "nichtMitteln": "Ausloesungen (eine spuerbare Welle etwa alle drei Wochen, ~17/Jahr) und Beruehrungen (Ablauf-Klumpen, 4-5 Tage je Board und Monat) sind VERSCHIEDENE Groessen und werden getrennt gefuehrt. Nur Ausloesungen brauchen einen Eintrag."
+    },
+    {
+      "id": "K4",
+      "wann": "sobald Ausnahmetage ueber ~1 je Board und Monat hinausgehen",
+      "was": "Die Klasse ist dann ein Dauerritual statt einer Reparatur. WB-13 wird vorrangig; bis zur Kalibrier-Entscheidung wird keine weitere Ausnahme gewaehrt."
+    },
+    {
+      "id": "WB-13",
+      "wann": "VOR dem Einfrieren der board-eigenen Schwelle des ersten dieser drei Boards",
+      "was": "Die Kalibrierung friert projiziert UNTER dem heutigen Boden 11,50 ein (10,90 / 9,48 / 2,40 bzw. nahe 3-6), waehrend reale Wellen 12,50-28,10 liefern. Zwei unabhaengige Methoden, eine Richtung. BEFUNDET, NICHT ENTSCHIEDEN - eigene Instanz.",
+      "warumHier": "Ohne Antwort darauf loest nach dem Einfrieren jede Welle HAERTER aus, und die dritte Bruch-Klasse kauft nur Zeit. Das ist der groesste strukturelle blinde Fleck der Akte und gehoert neben den kleinen."
+    },
+    {
+      "id": "K2",
+      "wann": "falls die Integritaets-Felder am Vergleichspunkt fuer beide Staende nicht erreichbar sind",
+      "was": "WB-4 waere dann nicht baubar, der Zuschlag verloere seinen FTI-Schutz - zurueck ans Gericht, nicht Auflage streichen. Stand 2026-09-02 erreichbar: coverageAxes, lamps und die PIT-Quellreihen stehen an der Vintage-Zeile. NICHT erreichbar sind meta.opIncSource und die Jahresreihen annualOpInc/annualGP - sie stehen im Snapshot, nicht in der Vintage-Zeile."
+    }
+  ],
+
+  "verwandteOffenePunkte": {
+    "hinweis": "Nur als Wegweiser gefuehrt, nicht als Zustaendigkeit dieses Eintrags.",
+    "punkte": [
+      "marginLevel-Fehlwert-Kontrakt (FTI-Beschluss Q4 / FN-14): vorgelegt, NICHT entschieden - src/scoring ist Sperrzone beider Gerichte.",
+      "GP-Rueckfall auf das Schwester-Buendel (FTI-Beschluss §2.8 / FN-13): 106 Zeilen tragen GP=null, obwohl der Wert im Haus liegt. Eigener Punkt in der Master-Task-Inbox.",
+      "Das Loch vom 2026-09-02 (WB-12): bleibt ein dokumentiertes Loch, kein geheilter Tag. Kein Re-Dispatch."
+    ]
+  }
+}

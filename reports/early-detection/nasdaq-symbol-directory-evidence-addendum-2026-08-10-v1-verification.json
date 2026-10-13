@@ -1,0 +1,30 @@
+{
+  "schema": "early-detection-nasdaq-symbol-directory-evidence-addendum-verification/v1",
+  "generatedAt": "2026-08-10T21:04:21.515Z",
+  "status": "PASS",
+  "verifierScript": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\verify_nasdaq_symbol_directory_addendum_v1.py",
+  "verifierScriptSha256": "ce0b464c3e9cf8884182af365d620ebe2adde2f944cb82d8a14b3772e8d49b91",
+  "sourceDecision": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-evidence-addendum-2026-08-10-v1.json",
+  "sourceDecisionFileSha256": "e64f06d8565a736d24716a55239ea76461a2eef0f6928648644e861a5cd91767",
+  "sourceDecisionReportSha256": "a5fd937ad68f446282514f91fd067693111040d2a1b572a93cb37cb037a5efbf",
+  "checks": {
+    "signedDecision": true,
+    "boundReportsRehashed": 2,
+    "upstreamFullReparseVerificationPassed": true,
+    "databaseIntegrity": true,
+    "evidenceIndependentlyRecounted": true,
+    "snapshots": 103,
+    "observations": 434214,
+    "distinctSymbols": 24672,
+    "identityResolvedRows": 0,
+    "forbiddenOutcomeColumnsAbsent": true,
+    "redGateBoundaryPreserved": true,
+    "mutationRejected": true
+  },
+  "interpretation": "PASS verifies the archive addendum and its positive-state counts. It does not prove continuous listings, permanent identity, prices, returns or either affected gate.",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "c60a8c891408688b5c274457518bec3b3079b1f4dd087db32b87de1f474da38a"
+}

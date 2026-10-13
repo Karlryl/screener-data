@@ -1,0 +1,334 @@
+#!/usr/bin/env node
+/**
+ * Tag 142: Watchlist Auto-Prune
+ * ==============================
+ * Removes delisted or permanently invalid tickers from watchlist.json.
+ *
+ * A ticker is pruned when its snapshot exists AND:
+ *   - meta.delisted === true, OR
+ *   - snapshot has no financial data at all (no revenue, no market cap, no sector)
+ *     AND snapshot is older than --max-age-days (default: 60 days)
+ *
+ * Tickers WITHOUT a snapshot are KEPT (newly added, awaiting first pull).
+ *
+ * Run:
+ *   node scripts/prune-watchlist.js [--watchlist watchlist.json] [--snapshots ./snapshots]
+ *                                   [--max-age-days 60] [--prune-no-data-days 30]
+ *                                   [--prune-orphans] [--force] [--dry-run]
+ */
+'use strict';
+const fs   = require('fs');
+const path = require('path');
+// Tag 189: F-SM-021 — atomic watchlist write (other writer is refresh-universe.js).
+const { writeFileAtomic } = require('../lib/atomic-write.js');
+// Tag 219a (audit F-218b-01): shared safeSnapshotFilename — used to live here as
+// a private copy; lifted to lib/snapshot-fs.js so all callers (prune,
+// elliott-export, regional-oos-test, pull-yahoo) share one source of truth.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+
+class CliArgumentError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'CliArgumentError';
+  }
+}
+
+function optionValue(argv, index, flag) {
+  const value = argv[index + 1];
+  if (typeof value !== 'string' || value.trim().length === 0 || value.startsWith('--')) {
+    throw new CliArgumentError(`${flag} requires a value`);
+  }
+  return value;
+}
+
+function nonNegativeSafeInteger(raw, flag) {
+  if (!/^(?:0|[1-9]\d*)$/.test(raw)) {
+    throw new CliArgumentError(`${flag} requires a canonical non-negative integer`);
+  }
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value)) {
+    throw new CliArgumentError(`${flag} exceeds the safe integer range`);
+  }
+  return value;
+}
+
+function parseArgs(argv) {
+  const args = {
+    watchlist:      path.join(__dirname, '..', 'watchlist.json'),
+    snapshots:      path.join(__dirname, '..', 'snapshots'),
+    maxAgeDays:     60,
+    // F-DP-022: tickers with no snapshot after this many days are flagged/removed
+    pruneNoDataDays: 30,
+    // Tag 222b (audit Tag 221a C2): when true, also drop any entry whose
+    // snapshot file is missing — even if added_at is recent/absent. Off by
+    // default to prevent accidental mass-deletion (audit found 12 207 orphans).
+    pruneOrphans: false,
+    // audit/fix: over-prune floor — a mis-pathed --snapshots could atomically wipe the watchlist
+    force: false,
+    dryRun: false
+  };
+  const seen = new Set();
+  const markSeen = (flag) => {
+    if (seen.has(flag)) throw new CliArgumentError(`${flag} must not be repeated`);
+    seen.add(flag);
+  };
+  for (let i = 2; i < argv.length; i++) {
+    const flag = argv[i];
+    markSeen(flag);
+    if (flag === '--watchlist') {
+      args.watchlist = optionValue(argv, i, flag);
+      i++;
+    } else if (flag === '--snapshots') {
+      args.snapshots = optionValue(argv, i, flag);
+      i++;
+    } else if (flag === '--max-age-days') {
+      args.maxAgeDays = nonNegativeSafeInteger(optionValue(argv, i, flag), flag);
+      i++;
+    // F-DP-022: new flag to control how long no-snapshot tickers are tolerated
+    } else if (flag === '--prune-no-data-days') {
+      args.pruneNoDataDays = nonNegativeSafeInteger(optionValue(argv, i, flag), flag);
+      i++;
+    // Tag 222b: hard-prune all orphans (tickers without a snapshot file).
+    } else if (flag === '--prune-orphans') {
+      args.pruneOrphans = true;
+    // audit/fix: over-prune floor - a mis-pathed --snapshots could atomically wipe the watchlist
+    } else if (flag === '--force') {
+      args.force = true;
+    } else if (flag === '--dry-run') {
+      args.dryRun = true;
+    } else {
+      throw new CliArgumentError(`unknown argument: ${flag}`);
+    }
+  }
+  return args;
+}
+
+// Tag 222b (audit Tag 221a C2 fix): Yahoo uses the dash-format `ABR-PD` for
+// NYSE preferred-share series; the `$`-form (`ABR$D`) returns a 404 and wastes
+// API budget. Tag 221 added a discovery-stage filter in refresh-universe.js,
+// but 376 dollar-tickers already in watchlist.json need to be evicted on the
+// next prune run. Also drops the literal company-name entry case
+// `STMicroelectronics` (no symbol = clearly invalid) flagged in the same audit.
+function isInvalidSymbol(ticker) {
+  if (!ticker || typeof ticker !== 'string') return 'empty-symbol';
+  if (ticker.includes('$')) return 'preferred-share-dollar-form';
+  // Heuristic: a real symbol is short (≤10 chars excl. dot/dash) and has no spaces.
+  // Names like "STMicroelectronics" (15 chars, no separators) match.
+  // audit F-A-2026-06-21: require a lowercase letter (real symbols are all-caps) and
+  // treat space as a separator, so the rule only catches mixed-case company-name
+  // entries like "STMicroelectronics" and spares legitimate long all-caps symbols
+  // from destructive (writeFileAtomic) eviction.
+  if (ticker.length > 12 && /[a-z]/.test(ticker) && !/[.\-:^ ]/.test(ticker)) return 'looks-like-company-name';
+  return null;
+}
+
+// audit T2 (silent data loss): a snapshot file that EXISTS but fails to parse
+// (e.g. OneDrive post-write corruption) must never be treated the same as
+// "no snapshot ever pulled" — the caller in main() prunes the latter after
+// pruneNoDataDays. Return a distinguishable sentinel + warn, so a corrupt
+// (but present) snapshot can never cause a silent eviction.
+function loadSnapshot(snapshotsDir, ticker) {
+  const fp = path.join(snapshotsDir, safeSnapshotFilename(ticker));
+  if (!fs.existsSync(fp)) return null;
+  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); }
+  catch (e) {
+    console.warn('[prune-watchlist] snapshot for ' + ticker + ' exists but failed to parse: ' + e.message + ' — NOT treating as no-data');
+    return { __corrupt: true };
+  }
+}
+
+// F-DP-023: Returns a specific reason string rather than a boolean, so callers can use
+// accurate labels. Returns null when the ticker should be kept.
+function deadReason(snap, maxAgeDays) {
+  if (!snap) return null; // no snapshot = handled separately by no-data grace period logic
+
+  // F-DP-023: Explicit delisted flag — label accurately
+  if (snap.meta && snap.meta.delisted === true) return 'delisted';
+
+  // B5: an explicit missing-cap observation must not turn an old sparse but
+  // present snapshot into "no financial data" merely by clearing its last cap.
+  if (snap.marketCap && snap.marketCap.missing === true &&
+      !Number.isFinite(snap.marketCap.value)) return null;
+
+  // No active quote: has a snapshot but no market cap and no recent price
+  const hasMcap   = snap.marketCap && snap.marketCap.value != null && snap.marketCap.value > 0;
+  const hasRev    = snap.annual && snap.annual.annualRev && snap.annual.annualRev.length > 0;
+  const hasSector = snap.meta && snap.meta.sector;
+  const hasPrice  = snap.meta && snap.meta.regularMarketPrice != null;
+
+  // Check if snapshot is completely empty AND stale
+  const fetchedAt = snap.meta && snap.meta.fetchedAt;
+  if (fetchedAt) {
+    const ageMs = Date.now() - new Date(fetchedAt).getTime();
+    const ageDays = ageMs / 86400000;
+    if (ageDays > maxAgeDays) {
+      if (!hasMcap && !hasRev && !hasSector) {
+        // F-DP-023: distinguish between no-financial-data and no-active-quote
+        return hasPrice ? 'no-financial-data' : 'no-active-quote';
+      }
+    }
+  }
+
+  return null;
+}
+
+// Kept for backward compatibility — wraps deadReason
+function isDeadSnapshot(snap, maxAgeDays) {
+  return deadReason(snap, maxAgeDays) !== null;
+}
+
+function main(argv = process.argv) {
+  const args = parseArgs(argv);
+  console.log('Watchlist Auto-Prune (Tag 142)');
+  console.log('  watchlist:          ' + args.watchlist);
+  console.log('  snapshots:          ' + args.snapshots);
+  console.log('  max-age-days:       ' + args.maxAgeDays);
+  // F-DP-022: show new threshold
+  console.log('  prune-no-data-days: ' + args.pruneNoDataDays);
+  console.log('  prune-orphans:      ' + args.pruneOrphans);
+  console.log('  dry-run:            ' + args.dryRun);
+
+  // Tag 219a (audit F-218b-05): schema-aware watchlist loader. The daily-pull
+  // workflow's "Verify Watchlist Sanity" gate (daily-pull.yml line ~100, Tag 207a)
+  // already handles three historical shapes — Array, { stocks: [...] }, and
+  // bare-object. Prior to this fix prune-watchlist.js trusted only the middle
+  // shape and crashed (TypeError on undefined.length) on the others. The step
+  // is `continue-on-error: true` in the workflow so the prune was silently
+  // skipped — recoverable, but inconsistent with the rest of the pipeline.
+  let wl;
+  try { wl = JSON.parse(fs.readFileSync(args.watchlist, 'utf8')); }
+  catch (e) {
+    console.error('::error::watchlist parse failed: ' + e.message + ' — refusing to prune.');
+    process.exit(1);
+  }
+  let stocksArr;
+  let wrapped; // true when wl is the { stocks: [...] } object shape we can mutate in place
+  if (Array.isArray(wl)) { stocksArr = wl; wrapped = false; }
+  else if (wl && Array.isArray(wl.stocks)) { stocksArr = wl.stocks; wrapped = true; }
+  else {
+    console.error('::error::watchlist shape unrecognised (neither array nor { stocks: [...] }) — refusing to prune.');
+    process.exit(1);
+  }
+  const before = stocksArr.length;
+  console.log('\nTotal before: ' + before);
+
+  const kept = [];
+  const pruned = [];
+  const now = Date.now();
+  let absenceClockChanged = false;
+
+  for (const entry of stocksArr) {
+    // Tag 222b: invalid-symbol filter — runs before snapshot lookup since
+    // these tickers will never produce a snapshot. Catches $-tickers and
+    // literal company-name entries (376 + 1 flagged by Tag 221a audit).
+    const invalidReason = isInvalidSymbol(entry.ticker);
+    if (invalidReason !== null) {
+      pruned.push({ ticker: entry.ticker, reason: invalidReason });
+      console.log('  PRUNE ' + String(entry.ticker).padEnd(10) + ' (' + invalidReason + ')');
+      continue;
+    }
+
+    const snap = loadSnapshot(args.snapshots, entry.ticker);
+    // A return (including a present but corrupt file) breaks continuous absence.
+    if (snap && Object.hasOwn(entry, 'missingSnapshotSince')) {
+      delete entry.missingSnapshotSince;
+      absenceClockChanged = true;
+    }
+
+    // audit T2: snapshot exists on disk but failed to parse — never evict. A
+    // corrupt file is not the same signal as "never pulled"; keep and move on.
+    if (snap && snap.__corrupt) {
+      kept.push(entry);
+      continue;
+    }
+
+    // B5: measure actual continuous absence, never age since watchlist admission.
+    if (!snap) {
+      let missingSince = typeof entry.missingSnapshotSince === 'string' ? Date.parse(entry.missingSnapshotSince) : NaN;
+      if (!Number.isFinite(missingSince) || missingSince > now) {
+        entry.missingSnapshotSince = new Date(now).toISOString();
+        missingSince = now;
+        absenceClockChanged = true;
+      }
+      const absenceDays = (now - missingSince) / 86400000;
+      // Preserve the legacy/manual-entry exemption; the clock alone is diagnostic.
+      if ((entry.added_at || entry.addedAt) && absenceDays > args.pruneNoDataDays) {
+        const reason = 'no-snapshot-after-' + args.pruneNoDataDays + 'd';
+        pruned.push({ ticker: entry.ticker, reason });
+        console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
+        continue;
+      }
+      // Tag 222b: --prune-orphans hard-mode — drop every entry without a
+      // snapshot regardless of added_at. Use cautiously (audit found 12 207
+      // orphans; mass-deletion is irreversible from the committed history).
+      if (args.pruneOrphans) {
+        pruned.push({ ticker: entry.ticker, reason: 'orphan-no-snapshot' });
+        console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (orphan-no-snapshot)');
+        continue;
+      }
+      kept.push(entry);
+      continue;
+    }
+
+    // F-DP-023: use deadReason() for accurate labels instead of hardcoded 'stale+no-data'
+    const reason = deadReason(snap, args.maxAgeDays);
+    if (reason !== null) {
+      pruned.push({ ticker: entry.ticker, reason });
+      console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
+    } else {
+      kept.push(entry);
+    }
+  }
+
+  console.log('\nPruned: ' + pruned.length + ' tickers');
+  console.log('Kept:   ' + kept.length + ' tickers');
+
+  if (pruned.length === 0 && !absenceClockChanged) {
+    console.log('Nothing to prune.');
+    return;
+  }
+
+  if (args.dryRun) {
+    console.log('\n[dry-run] No changes written.');
+    return;
+  }
+
+  // Tag 219a: preserve original shape on write — wrapped objects keep their
+  // sidecar fields (_meta, lastUniverseRefresh, etc.); bare arrays stay arrays.
+  if (wrapped) {
+    wl.stocks = kept;
+    if (pruned.length) {
+      wl.lastAutoPrune = new Date().toISOString();
+      wl.lastAutoPruneRemoved = pruned;
+    }
+  } else {
+    wl = kept; // legacy array shape — drop the prune-metadata fields (no place to put them)
+  }
+  // audit/fix: over-prune floor — a mis-pathed --snapshots could atomically wipe the watchlist
+  // A bad `--snapshots ./wrong` + `--prune-orphans` classifies every ticker as an orphan,
+  // leaving kept=[] and atomically (durably) wiping the watchlist. Refuse to write when the
+  // survivors fall below max(200, 50% of the prior count) unless --force is given.
+  const floor = Math.max(200, Math.floor(before * 0.5));
+  if (pruned.length && !args.force && kept.length < floor) {
+    console.error('::error::over-prune guard: would keep only ' + kept.length + ' of ' + before +
+      ' tickers (floor ' + floor + '). Refusing to write — check --snapshots path. Pass --force to override.');
+    process.exit(1);
+  }
+  // F-SM-021 (Tag 189): same atomic-write rationale as refresh-universe.js.
+  writeFileAtomic(args.watchlist, JSON.stringify(wl, null, 2));
+  console.log('\nWritten: ' + args.watchlist);
+}
+
+function runCli(argv = process.argv, run = main) {
+  try {
+    run(argv);
+  } catch (e) {
+    if (!(e instanceof CliArgumentError)) throw e;
+    console.error('::error::prune-watchlist CLI: ' + e.message);
+    process.exitCode = 1;
+  }
+}
+
+module.exports = { parseArgs, main, runCli };
+
+if (require.main === module) runCli();

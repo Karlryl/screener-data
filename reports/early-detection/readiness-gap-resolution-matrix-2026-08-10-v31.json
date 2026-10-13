@@ -1,0 +1,179 @@
+{
+  "schema": "early-detection-readiness-gap-resolution/v1",
+  "generatedAt": "2026-08-10T21:31:03.788Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "officialStatus": "NOT_READY_TO_EXECUTE",
+  "officialGreenGates": 2,
+  "officialRedGates": 11,
+  "resolutionClassCounts": {
+    "FREE_HISTORICAL_DATA_CONTRACT_UNPROVEN": 4,
+    "LOCAL_TECHNICAL_CHECKPOINT_COMPLETE_RUN_BOUND_INPUT_REQUIRED": 1,
+    "DEPENDENT_ON_UNRESOLVED_INPUT_CONTRACTS": 1,
+    "LOCAL_EVIDENCE_COMPLETE_EXTERNAL_BINDING_REQUIRED": 2,
+    "LOCAL_TECHNICAL_CHECKPOINT_COMPLETE_EXACT_INPUT_AND_HUMAN_REVIEW_REQUIRED": 1,
+    "INDEPENDENT_HUMAN_REQUIRED": 1,
+    "TWO_INDEPENDENT_HUMANS_REQUIRED": 1
+  },
+  "judgment": "The remaining work is not a single engineering queue: some local evidence can be completed autonomously, several historical market-data contracts are not proven at zero cost, and three gates require genuine independent human judgment or identity.",
+  "globalConstraint": "No confirmatory outcome, full-universe return, pre-breakout performance or automated handoff-rate result may be computed until every official gate passes.",
+  "gates": [
+    {
+      "gate": "entityListingLedger",
+      "officialReady": false,
+      "evidenceStatus": "RED_TRANSITIONS_QUANTIFIED_PERMANENT_IDENTITY_INTERVALS_UNPROVEN",
+      "resolutionClass": "FREE_HISTORICAL_DATA_CONTRACT_UNPROVEN",
+      "autonomousNext": "Keep all 25,403 kind-specific symbol profiles, 8,954 CIK profiles and 42,319 observed transitions immutable; adjudicate only with an independently verified permanent-identity source.",
+      "externalExit": "A lawful security-level 2009-2024 listing history with stable identifiers, exchange-effective dates, ticker-reuse adjudication and independent reconciliation.",
+      "freeFallback": "Positive as-of source states and candidate dossiers only; no symbol row becomes permanent identity or continuous listing evidence.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-ledger-gate-decision-2026-08-10-v7-partial.json",
+        "fileSha256": "a05ca44b123bb300a8b3ccb3f7dcff256ee521012889e7608106c9c1cccf14ba",
+        "reportSha256": "d39860a2d4189938d4ed1970121e29e8b71135294c09db2656edd0c6a3aecb12"
+      }
+    },
+    {
+      "gate": "appendOnlySecStore",
+      "officialReady": false,
+      "evidenceStatus": "TECHNICAL_CHECKPOINT_PASS_OFFICIAL_GATE_RED_UNTIL_EXACT_INPUT_BINDING",
+      "resolutionClass": "LOCAL_TECHNICAL_CHECKPOINT_COMPLETE_RUN_BOUND_INPUT_REQUIRED",
+      "autonomousNext": "Keep the complete remote-bound checkpoint immutable and bind its exact component hash into the final authorized full-input manifest and run-specific execution-gate artifact.",
+      "externalExit": "A PASS artifact on authorized origin/main that attests the exact authorized full-input SHA-256 and the run-bound append-only SEC-store component hashes required by the sealed gateEvidenceRule.",
+      "freeFallback": "Use the technically complete store for outcome-blind engineering only; do not promote the official gate or compute outcomes before exact-input binding.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\early-detection-v4-gates-20260810\\reports\\early-detection\\append-only-sec-store-gate-decision-2026-08-10-v6.json",
+        "fileSha256": "88f1fc1da5bb18fe7ea1e1e975b3a661e89269a1cfdad5e2c0a0ddc96452c4a2",
+        "reportSha256": "7666f4e26d97febf7b0c402776df94d7ec5e3261fd6592a21dbdff733691dd6f"
+      }
+    },
+    {
+      "gate": "historicalUniverse",
+      "officialReady": false,
+      "evidenceStatus": "RED_TRANSITIONS_QUANTIFIED_SECURITY_UNIVERSE_AND_ABSENCE_UNPROVEN",
+      "resolutionClass": "FREE_HISTORICAL_DATA_CONTRACT_UNPROVEN",
+      "autonomousNext": "Preserve all 101 consecutive-snapshot deltas, including 18,093 observed appearances and 15,314 disappearances; never infer effective listing dates or a full-market denominator from sparse states.",
+      "externalExit": "A lawful zero-cost security master with stable identity, exchange-effective intervals, actions, terminal sessions and delisting returns that passes independent audit.",
+      "freeFallback": "Restrict claims to explicitly observed positive populations; no full-market denominator, absence or survivorship-safe return claim.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\historical-universe-gate-decision-2026-08-10-v7-partial.json",
+        "fileSha256": "b877fb0330ded9b1eee35767459150e6bb77a7e4e826d548a0478fd3aaa5023c",
+        "reportSha256": "0c85848db2d399a7787f9bdabb4f02e654f7cca96a3cc684b957b7ac16cfe471"
+      }
+    },
+    {
+      "gate": "asOfLeakageGate",
+      "officialReady": false,
+      "evidenceStatus": "RED_RESEARCH_CORPUS_AND_CONTRACT_PATHS_PASS_EXACT_FULL_INPUT_AND_MARKET_BRANCH_MISSING",
+      "resolutionClass": "DEPENDENT_ON_UNRESOLVED_INPUT_CONTRACTS",
+      "autonomousNext": "Run the mutation battery on every completed exact input branch and keep the absent market branch non-computable.",
+      "externalExit": "Exact authorized full input after entity, universe, market and audit requirements are closed.",
+      "freeFallback": "PIT SEC and immutable historical research branches only; no sealed price-confirmatory result.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\as-of-leakage-gate-decision-2026-08-09-v2.json",
+        "fileSha256": "904af69484bd8f3dc6c6ffaa36601cb3926306bd120b153eaf9c8a354c908698",
+        "reportSha256": "17a38814c368d4b9b580454b62d86ecff31be5f65ff2d77acbe0a7f574b79b7a"
+      }
+    },
+    {
+      "gate": "adjustedOhlcv",
+      "officialReady": false,
+      "evidenceStatus": "RED_RECONFIRMED_OFFICIAL_FREE_ROUTES_COMPLEMENTARY_NOT_CONFIRMATORY",
+      "resolutionClass": "FREE_HISTORICAL_DATA_CONTRACT_UNPROVEN",
+      "autonomousNext": "Continue lawful free source audits and the prospective append-only collector; FINRA presence rows remain facility-specific, volume-quarantined observations and never substitute for OHLCV or terminal returns.",
+      "externalExit": "A lawful free 2009-2024 then-listed panel with stable identity, raw OHLCV, actions, timestamps and terminal returns.",
+      "freeFallback": "Bounded non-confirmatory indicator appendix with denominators; omit volume/Squeeze where inputs are absent; manual case studies only.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\adjusted-ohlcv-free-source-addendum-2026-08-10-v3.json",
+        "fileSha256": "f75b4eae6be9740729e5ef4617ac01f6c366b856074ba0924ec94dca98862584",
+        "reportSha256": "1830a7eb6a220248546fadf51a442adde98411ecef7f43f658e2cf9773786c7f"
+      }
+    },
+    {
+      "gate": "corporateActionsDelistings",
+      "officialReady": false,
+      "evidenceStatus": "RED_COMPLETE_FORMS_DOSSIERS_QUANTIFIED_TERMINAL_MARKET_AND_SUCCESSOR_PROOF_MISSING",
+      "resolutionClass": "FREE_HISTORICAL_DATA_CONTRACT_UNPROVEN",
+      "autonomousNext": "Keep all 16,078 common-equity filing dossiers and candidate links immutable; add only independently verified terminal sessions and successor identities, never synthesized dates or returns.",
+      "externalExit": "Independently audited final-trading dates, successor identity and delisting-return treatment for the exact security universe.",
+      "freeFallback": "Use complete registration/removal filing evidence and observed directory states for manual dossiers only; never synthesize final sessions or returns.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\corporate-actions-delistings-gate-decision-2026-08-10-v7.json",
+        "fileSha256": "c19c8f64ffdb80e17b6f23005e165861fd41a2b7dfae1f04d8607cbd2a61ccda",
+        "reportSha256": "104a284b30420cb1b2347a8a5e33f2925b008bacac9c0f3aa60d555ea163a8d1"
+      }
+    },
+    {
+      "gate": "historicalGqsAdapter",
+      "officialReady": false,
+      "evidenceStatus": "LOCAL_TECHNICAL_EVIDENCE_PASS_REMOTE_GATE_RED",
+      "resolutionClass": "LOCAL_EVIDENCE_COMPLETE_EXTERNAL_BINDING_REQUIRED",
+      "autonomousNext": "Keep the verified SEC-only shadow calendar immutable and rebind it only after the exact final input exists.",
+      "externalExit": "Protected remote attestation and independent run-bound input audit.",
+      "freeFallback": "Use locally for outcome-blind engineering checks, not confirmatory results.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\historical-gqs-adapter-gate-decision-2026-08-09.json",
+        "fileSha256": "059e4d0df6b0abe053e6f2c66da0eba6c402fee69cc07f3492b488f4fee5e306",
+        "reportSha256": "254a69163c6be0af94d10a6cad39d7284deb36a974e4a3dae8a4de685597dfea"
+      }
+    },
+    {
+      "gate": "conceptMapFrozen",
+      "officialReady": false,
+      "evidenceStatus": "TECHNICAL_CHECKPOINT_PASS_OFFICIAL_GATE_RED_UNTIL_EXACT_INPUT_AND_SEMANTIC_AUDIT",
+      "resolutionClass": "LOCAL_TECHNICAL_CHECKPOINT_COMPLETE_EXACT_INPUT_AND_HUMAN_REVIEW_REQUIRED",
+      "autonomousNext": "Keep the remote-bound map, seal, 64-quarter coverage and 50-item human-audit kit immutable; integrate only a genuine independent review and the later exact-input component binding.",
+      "externalExit": "A genuinely independent human semantic audit approves all frozen choices and a PASS artifact on authorized origin/main attests the exact authorized full-input and conceptMap component hashes.",
+      "freeFallback": "Use the mechanically reproduced map for outcome-blind engineering only; neither the software self-test nor an LLM may substitute for the human semantic reviewer.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\early-detection-v4-gates-20260810\\reports\\early-detection\\concept-map-gate-decision-2026-08-10-v3.json",
+        "fileSha256": "4d26562024979e4fa423fae27df27813b49f8b4015fe221b8239f8b4c5a96ef7",
+        "reportSha256": "66352d5229369445b24447337f9367e5f1f2824d0357c9046bcc99449d47e4cc"
+      }
+    },
+    {
+      "gate": "independentAuditPassed",
+      "officialReady": false,
+      "evidenceStatus": "RED_EXACT_INPUT_REMOTE_EVIDENCE_OR_HUMAN_AUDIT_INCOMPLETE",
+      "resolutionClass": "INDEPENDENT_HUMAN_REQUIRED",
+      "autonomousNext": "Keep the remote-bound 22-item checklist, findings register, attestation, run binding and fail-closed verifier immutable; populate them only after the other prerequisite gates and exact authorized input exist.",
+      "externalExit": "A genuinely independent qualified human signs the full audit with no unresolved P0/P1/P2; the verifier then rehashes exact input, corpus, authorized remote state and all eleven gate artifacts before authorization.",
+      "freeFallback": "Mechanical checks and synthetic evaluator fixtures may test the audit machinery, but cannot create human independence or turn this gate green.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\early-detection-v4-gates-20260810\\reports\\early-detection\\independent-final-audit-readiness-2026-08-10-v1.json",
+        "fileSha256": "e4879b7d08ce91fd84a3083b1a0243663b05b92e9e51bd3ddaa2ce6337c8097c",
+        "reportSha256": "285869a04648ee06205482c93206fc9c61f04077191ce5bc563fc3c75aae7fd2"
+      }
+    },
+    {
+      "gate": "blindCodingAgreementPassed",
+      "officialReady": false,
+      "evidenceStatus": "RED_TWO_INDEPENDENT_HUMAN_CODERS_MISSING_SIGNED_LOCAL_KIT_READY",
+      "resolutionClass": "TWO_INDEPENDENT_HUMANS_REQUIRED",
+      "autonomousNext": "Keep the signed three-file kit and its passing synthetic evaluator self-test immutable; do not generate, simulate or substitute either required independent human coding file.",
+      "externalExit": "Two independent human coders submit frozen blinded files and both agreement schemes pass the preregistered threshold.",
+      "freeFallback": "If no humans are available, keep retrospective T/E/L labels outside confirmatory analysis and operate prospectively.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\blind-coding-gate-decision-2026-08-10-v2.json",
+        "fileSha256": "e122f92f127acd1a1225973e2f6e3ab2a0a0cbf60b100e1ce92c25096da5373e",
+        "reportSha256": "f6f798594be0168312b07e61ddaa1e3cf86fe94126837033f47231bad339b8be"
+      }
+    },
+    {
+      "gate": "researchCorpusSealed",
+      "officialReady": false,
+      "evidenceStatus": "LOCAL_EXIT_EVIDENCE_PASS_OFFICIAL_GATE_RED_UNTIL_AUTHORIZED_BINDING",
+      "resolutionClass": "LOCAL_EVIDENCE_COMPLETE_EXTERNAL_BINDING_REQUIRED",
+      "autonomousNext": "Keep the V48 registry, 296 selected evidence items, 188 control files, manifest and independent byte verification immutable; additions require another corpus version.",
+      "externalExit": "Authorize this exact seal, bind it to the run and include it in independent audit before outcome access.",
+      "freeFallback": "Use immutable historical items only at or after knownAt; current-only captures never backdate.",
+      "evidence": {
+        "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\research-corpus-gate-decision-2026-08-10-v40.json",
+        "fileSha256": "27680fbbfc22ae0d215a3a0eaa77b13951f10403a2d4c22dd85a0681a3407db4",
+        "reportSha256": "87d5e3d496fecf46331017ecebdfef7b478a40f5b6f22bce39e31c0f8d99fd7a"
+      }
+    }
+  ],
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "eec5de99e3113700f67d3f78ad1bd7f23d9179297238db6e95ff6d5578865358"
+}

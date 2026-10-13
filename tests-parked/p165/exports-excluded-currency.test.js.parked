@@ -1,0 +1,19 @@
+'use strict';
+// EXPECTED RED until DL3 write-excluded-list.js T1 / DL8 F-10 is fixed.
+// Exact zeile/grundVon bodies, isolated from scoring/grouping; financialReasons is irrelevant here.
+const assert = require('node:assert/strict');
+const { copy } = require('./dl23-exports-copy-helper');
+const M = copy('scripts/write-excluded-list.js', ['grundVon', 'zeile'], 'const financialReasons = () => [];');
+const base = { ticker: 'SYNTHETIC', name: 'Synthetic', reason: 'balance-sheet-bank', action: 'exclude', marketCap: 1000, revGrowthYoYPct: 10, sector: 'Financials' };
+const proved = M.zeile({ ...base, marketCap: 0, snapshot: { meta: { tradingCurrencyOriginal: 'USD', tradingCurrencyAssumed: false } } });
+assert.equal(proved.marketCap, 0, 'proved explicit zero survives');
+const quarantined = M.zeile({ ...base, snapshot: { meta: { financialDataIssue: true } } });
+assert.equal(quarantined.marketCap, null);
+assert.equal(quarantined.reason, 'balance-sheet-bank');
+assert.equal(M.zeile({ ...base, marketCap: Infinity }).marketCap, null);
+console.log('PASS zero, quarantine and nonfinite controls');
+if (!process.argv.includes('--controls')) {
+  const guessed = M.zeile({ ...base, snapshot: { meta: { tradingCurrencyOriginal: 'JPY', reportingCurrencyOriginal: 'USD', tradingCurrencyAssumed: true } } });
+  assert.equal(guessed.reason, base.reason);
+  assert.equal(guessed.marketCap, null, 'unproved trading conversion must withhold the value while preserving the row');
+}

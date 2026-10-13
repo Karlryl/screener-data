@@ -1,0 +1,1142 @@
+# Finanzdatenkorrektur F2 — 29.09.2026
+
+> **Auf einen Blick:** Die Handtabelle korrigiert 20 Umsatzwerte und kennzeichnet 16 belegte falsche Nullen als fehlend; dieselben 12 Nullzellen tragen drei Zweitnotierungen derselben Firmen (YSNG.VI, PDN.TO, PALAF) und werden ebenso leer. Banpu erhält wegen vermischter Gesellschaftsdaten keinen Score.
+> - 16118 Unternehmensstände geprüft; 16107 bleiben vollständig unverändert (vor den Zweitnotierungen: 16110).
+> - Mit der Live-Kalibrierung des Produktionslaufs bewegen sich 434 Growth-Scores sichtbar (4 direkt, 430 indirekt um 0,1 oder 0,2), nicht nur 4 (Abschnitt „Growth mit Live-Kalibrierung“).
+> - Breite Nullwertregel: 9900 Kandidaten, 122 Scoreänderungen im gepaarten Hauptbestandstest; deshalb ausschließlich Schattenbetrieb.
+> - Noch keine Veröffentlichung. Der genaue historische Smallcap-Eingabestand fehlt; sämtliche 1.100 Quality-Ausgangsscores stimmen mit der Veröffentlichung überein.
+> - Nachtrag 01.10.2026: 62 weitere geprüfte Umsatzzellen für 13 BDCs/Fonds; fünf bisher ausgeschlossene Fonds kommen auf das Financials-Board, OTF und KBDC sind wegen falscher Anbieter-Jahresumsätze gesperrt (Grund sichtbar); über die Live-Kalibrierung bewegen sich 320 weitere Growth-Scores (Abschnitt „BDC-Handtabelle“).
+> - Zweite Tabelle 01.10.2026: HOS, TYG und Olaplex sind gesperrt (Grund sichtbar); 23 Quartalszellen von CARG, PLUS, DCO, INFQ und SLC Agrícola ersetzt, 29 bestätigte Zellen, zwei falsche Einzelwerte (VCTR, Celesc) leer; bestätigte Zellen ersetzen das Kennzeichen `singleFalseValue`, OXLC hat jetzt `coversThrough` (Abschnitt „Zweite Tabelle vom 01.10.2026“).
+> - Jahreszellen 01.10.2026: Die Handtabelle kann einzelne falsche Jahreswerte (Umsatz, Bruttogewinn) leer setzen. INFQ (alle vier), CARG (2022) und OTF (alle vier Jahresumsätze) sind leer mit sichtbarem Grund; OTF ist dafür nicht mehr gesperrt und steht wieder auf dem Financials-Board (Rang 389, +5,8 % aus geprüften Quartalen). INFQ 81,0 (Rang 3) → 68,2 (Rang 14), CARG 65,2 (Rang 99) → 61,5 (Rang 124); KBDC bleibt gesperrt (Abschnitt „Jahreszellen vom 01.10.2026“).
+
+## Ursache und begrenzte Reparatur
+
+BANPU.BK: Der aktuelle Yahoo-Abruf nennt Banpu PCL und USD, liefert aber die THB-Quartalsumsätze von Banpu Power. Der echte Mapper liefert 5.092.756.000; die ursprüngliche USD-Konvertierung übernimmt ihn mit Faktor 1. Der 2025-Jahresumsatz 27.850.393.000, Bruttogewinn 4.540.955.000 und die Aktienzahl 3.047.731.700 identifizieren zusätzlich das Tochter-Datenpaket. Andere Felder, etwa TTM-Umsatz, stammen aus der Mutter. Deshalb werden fünf Umsätze ersetzt und genau dieses gemischte Paket vom Scoring ausgeschlossen; der Grund erscheint sichtbar. Die am selben Jahresindex zusammengehörigen Fingerabdrücke gelten auch nach einem Jahreswechsel. Weicht später auch nur ein Anker ab (etwa die Aktienzahl um 0,1 %), wird die Sperre nicht still aufgehoben: sie bleibt bestehen, bis ein Mensch das Paket neu geprüft hat, und der Lauf zählt das als „stale“ (Code `quarantine-fingerprint-changed`, mit Fall-ID); die Tageszusammenfassung trägt dann `::warning::`. Eine Verhältnis-Heuristik ändert keine Daten. In der Ausschlussliste zeigt die Banpu-Zeile weder Sektor, Branche, Marktkapitalisierung noch Wachstum, weil der Grund-Text genau diese Werte als unzuverlässig bezeichnet; Grund-Code und Text bleiben.
+
+HTGC: Alle fünf Yahoo-Umsätze sind rechnerisch „investment income + realized/unrealized gains − interest expense − gain/loss on debt extinguishment“. Q2 2026 beispielsweise: 149,114 + 37,266 − 28,130 − (−0,002) = 158,252 Mio. USD. Das ist nicht „Total investment income“. Die Reihe ist mit echten Unternehmens-/SEC-Daten nachgestellt; der interne Yahoo-Algorithmus ist nicht einsehbar. ARCC und FSK liefern ebenfalls andere Ergebnisgrößen als den belegten Investmentertrag; nur diese drei nachgeprüften BDCs werden korrigiert.
+
+Die Nullfälle sind genau **15 Bruttogewinne plus ein Umsatz**, insgesamt 16 Zellen. Sie werden leer, nie durch geschätzte Werte ersetzt. Die allgemeine Regel prüft exakte Null, datengleich zugeordnete Gegenfelder oder direkte nicht-null Nachbarperioden; belegte echte Null bleibt erhalten. Weil die breitere Regel die 50-Grenze überschreitet, protokolliert sie nur. Nicht-null Werte verändert sie in keinem der 16118 Stände.
+
+## Neue Quartale und veränderte Anbieterwerte (Nachtrag 30.09.2026)
+
+Bei HTGC, ARCC, FSK und BANPU.BK ist die Umsatzreihe des Anbieters in ihrer Basis falsch, nicht nur in einzelnen Werten. Die Handtabelle trägt deshalb je Reihe ein `coversThrough` (letztes gegen die Primärquelle geprüfte Quartal: 30.06.2026, bei Banpu 31.03.2026). Jedes neuere Quartal wird leer gesetzt (Code `period-after-coverage`), ebenso eine nicht gelistete ältere oder undatierte Periode (`period-not-verified`). Ein Tabellenfall, dessen Anbieterwert sich seit der Prüfung geändert hat, wird ebenfalls leer (`vendor-value-changed`, bei geänderter Währung, Quelle, Einheit oder doppeltem Datum `context-changed`), statt den Anbieterwert stehen zu lassen. Jede solche Zelle zählt als „stale"; die Tageszusammenfassung trägt dann `::warning::`. Wachstum und Scores sehen „fehlt": das Quartalsbein fällt weg, es trägt das Jahreswachstum (kein Ersatzwert 0). Der Text erscheint im Export im zusätzlichen Feld `financialDataReasons`, nicht in `lamps`.
+
+Nachtrag Prüfrunde 2: Jede Reihe mit ersetzten Werten muss genau einen `coversThrough`-Eintrag haben, sonst lehnt die Prüfung die ganze Handtabelle ab (fehlender Eintrag, fehlender Schlüssel, Doppeleintrag, doppelte Fall-ID). Die Nullfälle (Ersatz „leer“) brauchen keinen. In jeder Reihe mit Handtabellen-Einträgen wird ein Wert ohne brauchbares Periodendatum (Datumsliste fehlt, ist kürzer als die Werte oder enthält kein Datum) leer gesetzt (`period-not-verified`, stale). Scheitert die Handtabelle selbst beim Einlesen im Scoring, bricht der Hauptlauf rot ab (der Smallcap-Durchgang meldet einen Fehler und setzt seine Fehlermarke), statt die Firma still als defekte Datei zu überspringen.
+
+Nachtrag Prüfrunde 3: Die tägliche Nachlade-Logik (`lib/reload-history.js`) füllt eine Zelle, die die Handtabelle leer gesetzt oder als falsche Null belegt hat, nie aus dem gespeicherten Vortagsstand auf. Ändert der Anbieter einen geprüften Wert, bleibt die Zelle auch auf der Platte und beim Scoring leer (`vendor-value-changed`) statt der alten Korrektur; die alte Korrekturmarke wird dabei entfernt, damit kein veralteter Text erscheint. In einer Reihe, die nur einzelne belegte falsche Nullen hat (keine falsche Basis), heißt ein Wert ohne Datum jetzt `period-undated` mit eigenem Text statt „falsche Basis“.
+
+## Jede aktive Zelländerung
+
+Beträge in Originalwährung; FX-umgerechnete Eingaben erhalten denselben gespeicherten Kursfaktor. URL, Originalzitat und PDF-Seite bzw. HTML/XBRL-Fundstelle stehen je Zelle in der Handtabelle.
+
+| Ticker | Periode | Feld | Währung | Alt | Neu |
+| --- | --- | --- | --- | --- | --- |
+| HTGC | 2026-06-30 | revenueQ | USD | 158252000 | 149114000 |
+| HTGC | 2026-03-31 | revenueQ | USD | 67782000 | 141536000 |
+| HTGC | 2025-12-31 | revenueQ | USD | 115987000 | 137430000 |
+| HTGC | 2025-09-30 | revenueQ | USD | 145121000 | 138093000 |
+| HTGC | 2025-06-30 | revenueQ | USD | 104703000 | 137459000 |
+| YSN.DE | 2026-06-30 | grossProfitQ | EUR | 0 | fehlt |
+| YSN.DE | 2025-09-30 | grossProfitQ | EUR | 0 | fehlt |
+| YSN.DE | 2025-06-30 | grossProfitQ | EUR | 0 | fehlt |
+| YSN.DE | 2025-03-31 | grossProfitQ | EUR | 0 | fehlt |
+| 5930.T | 2025-12-31 | grossProfitQ | JPY | 0 | fehlt |
+| 5930.T | 2025-06-30 | grossProfitQ | JPY | 0 | fehlt |
+| 5930.T | 2024-12-31 | grossProfitQ | JPY | 0 | fehlt |
+| 5930.T | 2024-06-30 | grossProfitQ | JPY | 0 | fehlt |
+| 002092.SZ | 2014-06-30 | grossProfitQ | CNY | 0 | fehlt |
+| 002092.SZ | 2014-03-31 | grossProfitQ | CNY | 0 | fehlt |
+| 002092.SZ | 2013-12-31 | grossProfitQ | CNY | 0 | fehlt |
+| 002092.SZ | 2013-09-30 | grossProfitQ | CNY | 0 | fehlt |
+| PDN.AX | 2017-03-31 | grossProfitQ | USD | 0 | fehlt |
+| PDN.AX | 2016-12-31 | grossProfitQ | USD | 0 | fehlt |
+| PDN.AX | 2016-06-30 | grossProfitQ | USD | 0 | fehlt |
+| PDN.AX | 2016-12-31 | revenueQ | USD | 0 | fehlt |
+| BANPU.BK | 2026-03-31 | revenueQ | USD | 5092756000 | 1340143000 |
+| BANPU.BK | 2025-12-31 | revenueQ | USD | 6736722000 | 1398885000 |
+| BANPU.BK | 2025-09-30 | revenueQ | USD | 7450422000 | 1358440000 |
+| BANPU.BK | 2025-06-30 | revenueQ | USD | 6557265000 | 1237174000 |
+| BANPU.BK | 2025-03-31 | revenueQ | USD | 7105984000 | 1283603000 |
+| ARCC | 2026-06-30 | revenueQ | USD | 219000000 | 768000000 |
+| ARCC | 2026-03-31 | revenueQ | USD | 151000000 | 763000000 |
+| ARCC | 2025-12-31 | revenueQ | USD | 344000000 | 793000000 |
+| ARCC | 2025-09-30 | revenueQ | USD | 460000000 | 782000000 |
+| ARCC | 2025-06-30 | revenueQ | USD | 407000000 | 745000000 |
+| FSK | 2026-06-30 | revenueQ | USD | -32000000 | 290000000 |
+| FSK | 2026-03-31 | revenueQ | USD | -427000000 | 304000000 |
+| FSK | 2025-12-31 | revenueQ | USD | -76000000 | 348000000 |
+| FSK | 2025-09-30 | revenueQ | USD | 228000000 | 373000000 |
+| FSK | 2025-06-30 | revenueQ | USD | -184000000 | 398000000 |
+
+## Jede sichtbare Scoreänderung im gepaarten Test
+
+Growth verwendet hier die gespeicherte Kalibrierung vom 29.09.2026; das untertreibt die Wirkung, weil der Produktionslauf live kalibriert (siehe nächster Abschnitt). Quality und Smallcap werden einmal mit der Ausgangskalibrierung festgehalten (direkte Wirkung), zusätzlich mit regulär neu berechneter Kalibrierung (einschließlich Verschiebungen anderer Rangwerte). Die historische Unternehmensliste des wirklichen Scoring-Laufs (256d26910e637142ceddedf51cf39b394be9287f) liefert genau 15.986 zugelassene Stände. Die folgende Tabelle enthält alle 26 aktiven Änderungen dieses Vergleichs. Davon sind vier direkte Growth-Wirkungen; 22 Quality-Werte bewegen sich um 0,1 durch Banpus Ausscheiden aus dem Vergleichskollektiv. Diese 22 Unternehmen erhalten keine Datenkorrektur.
+
+| Ticker | Familie / Board | Score alt | Score neu |
+| --- | --- | --- | --- |
+| HTGC | growth / financials | 59.5 | 48.3 |
+| ARCC | growth / financials | 32.6 | 36 |
+| BANPU.BK | growth / utilities | 27.1 | fehlt |
+| FSK | growth / financials | fehlt | 37.5 |
+| ENRIN.BO | quality / quality-utilities | 82.5 | 82.6 |
+| 600236.SS | quality / quality-utilities | 77 | 77.1 |
+| TRN.MI | quality / quality-utilities | 73.5 | 73.6 |
+| CEZ.WA | quality / quality-utilities | 73.3 | 73.4 |
+| 600995.SS | quality / quality-utilities | 72.6 | 72.7 |
+| ENLT | quality / quality-utilities | 72 | 72.1 |
+| ATO | quality / quality-utilities | 71.2 | 71.1 |
+| RENE.LS | quality / quality-utilities | 70.1 | 70.2 |
+| NTPCGREEN.NS | quality / quality-utilities | 69.1 | 69.2 |
+| ALUP3.SA | quality / quality-utilities | 69 | 69.1 |
+| BREN.JK | quality / quality-utilities | 66.9 | 67 |
+| ACMESOLAR.BO | quality / quality-utilities | 66 | 66.1 |
+| 3868.HK | quality / quality-utilities | 64.7 | 64.6 |
+| NWE | quality / quality-utilities | 63.8 | 63.7 |
+| BLX.TO | quality / quality-utilities | 63.5 | 63.6 |
+| 8174.T | quality / quality-utilities | 63.3 | 63.2 |
+| 1SLR.MI | quality / quality-utilities | 63.1 | 63.2 |
+| 0579.HK | quality / quality-utilities | 63 | 62.9 |
+| IG.VI | quality / quality-utilities | 62.3 | 62.4 |
+| ETR | quality / quality-utilities | 61 | 61.1 |
+| EOAN.VI | quality / quality-utilities | 60.6 | 60.5 |
+| SO | quality / quality-utilities | 60.6 | 60.5 |
+
+Die vier Unternehmen mit belegten falschen Nullen behalten ihre Growth-Scores: secunet 73,0; Bunka Shutter 41,7; Zhongtai 44,1; Paladin 60,9. Ihre betroffenen Felder fehlen nun mit Begründung. HTGC-Umsatzwachstum: 51,143711 % → 8,478892 %.
+
+## Growth mit Live-Kalibrierung (Nachtrag Prüfrunde 3, 30.09.2026)
+
+Der Produktionslauf (`src/scoring/run-screener.js`) rechnet Growth mit live neu berechneter Kalibrierung. Dann verschieben die korrigierten Firmen die Vergleichswerte ihrer Branchen mit. Gleicher Datenstand (16.118 Stände, Unternehmensliste 256d26910e), Scores auf eine Nachkommastelle wie auf dem Board:
+
+- 434 Growth-Scores ändern sich: 4 direkt (HTGC, ARCC, FSK, Banpu), 430 indirekt ohne eigene Datenänderung; davon 399 um ±0,1 und 31 um ±0,2.
+- Nach Sektor (einschließlich der direkten): Financial Services 215, Utilities 216, Technology 3. In den Top 100 eines Haupt-Boards stehen 78 der 434 Zeilen.
+- Die Zweitnotierungen YSNG.VI, PDN.TO und PALAF ändern keinen Score (ihre korrigierten Felder gehen wie bei der Hauptnotierung nicht in den Score ein).
+- FSK kommt neu auf das Financials-Board (37,5). Vorher schloss die Heuristik für Nicht-Betriebsvehikel in `src/scoring/router.js` (Zweig „negative Quartalsumsätze bei Asset Management“, etwa Zeile 199–201) FSK wegen der negativen Anbieter-Umsätze aus. Die korrigierten Umsätze sind positiv, die Heuristik greift nicht mehr. Das ist gewollt und gleich behandelt wie HTGC und ARCC.
+
+Alle Zeilen, die sich um mehr als 0,1 bewegen:
+
+| Ticker | Sektor | Score alt | Score neu |
+| --- | --- | --- | --- |
+| HTGC | Financial Services | 59,5 | 48,3 |
+| ARCC | Financial Services | 32,6 | 36,0 |
+| FSK | Financial Services | fehlt | 37,5 |
+| BANPU.BK | Utilities | 27,1 | fehlt |
+| BEN | Financial Services | 36,6 | 36,8 |
+| HDFCAMC.BO | Financial Services | 55,7 | 55,9 |
+| SPGI | Financial Services | 48,7 | 48,9 |
+| VIRT | Financial Services | 53,7 | 53,9 |
+| 000037.SZ | Utilities | 24,9 | 24,7 |
+| 000685.SZ | Utilities | 18,4 | 18,2 |
+| 001289.SZ | Utilities | 11,3 | 11,1 |
+| 2380.HK | Utilities | 22,7 | 22,5 |
+| 3633.HK | Utilities | 23,7 | 23,5 |
+| 600021.SS | Utilities | 14,0 | 13,8 |
+| 600131.SS | Utilities | 45,5 | 45,3 |
+| 600292.SS | Utilities | 25,2 | 25,0 |
+| 600886.SS | Utilities | 17,5 | 17,3 |
+| 600905.SS | Utilities | 12,5 | 12,3 |
+| 9501.T | Utilities | 26,4 | 26,2 |
+| 9502.T | Utilities | 29,6 | 29,4 |
+| 9509.T | Utilities | 26,6 | 26,4 |
+| 9513.T | Utilities | 14,9 | 14,7 |
+| 9532.T | Utilities | 36,0 | 35,8 |
+| APA.AX | Utilities | 28,2 | 28,0 |
+| ARN.MI | Utilities | 20,5 | 20,3 |
+| AVA | Utilities | 26,6 | 26,4 |
+| CKI.L | Utilities | 16,8 | 16,6 |
+| EGCO.BK | Utilities | 18,1 | 17,9 |
+| ENIC | Utilities | 39,0 | 38,8 |
+| MEZ.AX | Utilities | 10,9 | 10,7 |
+| PEG | Utilities | 29,1 | 28,9 |
+| PEP.WA | Utilities | 16,6 | 16,4 |
+| TAEE3.SA | Utilities | 27,9 | 27,7 |
+| U96.SI | Utilities | 17,4 | 17,2 |
+| VST | Utilities | 24,9 | 24,7 |
+
+Reproduzierbar mit dem Prüfer-Skript `board-diff-live.js` (live kalibriert, ohne gespeicherte Kalibrierung); die Zählung pro Zeile stammt aus demselben Aufbau mit `scoreUniverse` ohne `refCalibration`.
+
+## Zweitnotierungen (Nachtrag Prüfrunde 3)
+
+Die Handtabelle kennt je Fall eine Liste `listingAliases`. YSNG.VI (secunet, Wien) trägt im Archiv vom 29.09. dieselben vier falschen Bruttogewinn-Nullen wie YSN.DE, PDN.TO und PALAF dieselben vier Nullzellen wie PDN.AX, jeweils in gleicher Berichtswährung (EUR bzw. USD), gleichem Kursfaktor und gleichen Perioden; die Datenpakete sind in diesen Reihen bytegleich. Ohne Alias konnte die Doppelnotierungs-Bereinigung (größere Marktkapitalisierung gewinnt, YSN.DE und YSNG.VI liegen 0,8 % auseinander) die unkorrigierte Notierung auf das Board bringen. Ein Alias, der zugleich Hauptticker eines anderen Falls ist, lässt die Prüfung der Handtabelle scheitern. Der Nachlauf ergibt damit 48 statt 36 Zellen: die 36 Zellen der acht Hauptticker unverändert, dazu 12 Aliaszellen (YSNG.VI 4, PDN.TO 4, PALAF 4); die Board-Wirkung bleibt gleich.
+
+## BDC-Handtabelle: 13 Fonds (Nachtrag 01.10.2026, Prüfrunde 2)
+
+Bei Business Development Companies und dem geschlossenen Fonds OXLC ist die Quartalsumsatzreihe des Anbieters falsch; das Board zeigte deshalb falsches Umsatzwachstum. Die Handtabelle enthält 62 weitere Zellen: zwölf Fonds mit je fünf Quartalen und zwei OXLC-Zellen. Jeder SEC-Wert ist gegen die wörtliche Zeile „Total investment income“ der zitierten Einreichung geprüft (KBDC, OBDC, OTF, TSLX und PSEC schreiben „Total Investment Income“); Quartale ohne eigenen Dreimonatswert sind Jahreswert minus neun Monate, beide Operanden mit eigener Periode in der Quelle. OXLC: Mitteilungen des Fonds, gegen die N-CSR- und N-CSRS-Summen gegengerechnet. Für die zwölf SEC-Fonds gilt `coversThrough` 30.06.2026; jedes neuere Anbieterquartal bleibt leer, bis es geprüft ist. Zweitnotierungen derselben Emittenten gibt es im Universum nicht (gesucht über Namen und identische Quartalswerte in allen 16.118 Ständen; die Anleihe-Ticker OXLCG, OXLCI, OXLCL und OXLCZ stehen nur in der Watchlist, ohne Datenstand), deshalb keine `listingAliases`.
+
+Abgleich mit dem gespeicherten Stand: Alle 62 `expectedBadValue` sind gleich dem Anbieterwert im CI-Artefakt `snapshots` von Lauf 36690140002 (30.09.2026, Eingang der Boards vom 30.09.). Ändert der Anbieter später einen Wert, greift die bestehende Regel `vendor-value-changed` (Zelle leer, Warnung); es wird nichts geschätzt.
+
+OTF und KBDC gesperrt (Prüfrunde 2): Bei beiden ist zusätzlich die Jahresumsatzreihe des Anbieters falsch, und die Handtabelle kann Jahreswerte nicht korrigieren. OTF: Jahresumsatz laut SEC 2025 1.145,4 Mio. USD, 2024 684,0 Mio.; der Anbieter führt 779,3 / 353,5 / 391,9 / 50,0 Mio. ohne Datum, das passt zu keinem Geschäftsjahr. Die Kennzahl der Board-Zeile (Umsatzwachstum aus der Jahresreihe) hätte +120,5 % statt +67,5 % gezeigt. KBDC: laut SEC 2025 235,8 Mio. USD, 2024 213,1 Mio.; beim Anbieter 102,1 und 123,8 Mio. (das Anbieterpaket führt die SEC-Werte selbst als Konflikt in `annualIncomeConflicts`). Die Beschleunigungsachse fällt bei fünf Quartalen auf die Jahresreihe zurück und trägt 61 % des KBDC-Scores (Gewicht 2,7 von 4,4). Beide Fonds stehen deshalb in `quarantines` mit sichtbarem Grund („Score fehlt: …“), Fingerabdruck auf Jahresumsatz und Jahresüberschuss desselben Jahres. Weicht ein Wert ab, bleibt die Sperre bestehen und der Lauf warnt (`quarantine-fingerprint-changed`), bis ein Mensch neu geprüft hat. Die geprüften Quartalszellen bleiben in der Tabelle und werden weiter korrigiert, für den Tag, an dem die Jahresreihe stimmt. Wie bei Banpu zeigt die Ausschlussliste für gesperrte Zeilen weder Sektor, Branche, Marktwert noch Wachstum. KBDC verlässt damit das Board (bisher 27,6 bei −51,2 %), OTF kommt nicht darauf.
+
+Währungsregel (für KBDC, wirksam sobald die Sperre fällt): Der Anbieter liefert für KBDC keine Berichtswährung (`ccyAmbiguous`); der Abruf setzt dann die Handelswährung USD ein. Bisher galt jede solche Zeile als „Kontext geändert“, alle fünf geprüften Zellen wären leer geblieben. Neu wird eine solche Zeile als USD behandelt, wenn der Anbieter die Firma in den USA führt (`country`), sie an einer US-Börse (NYSE, NYSE American, NYSE Arca, Nasdaq GS/GM/CM, Cboe US) in USD gehandelt wird und die Handelswährung ausdrücklich nicht geraten ist. Das beweist keine USD-Abschlüsse; deshalb greift ein Fall dort nur mit eigener geprüfter Währung USD und nur in einer Reihe mit `coversThrough`. Dann ist jedes gezeigte Quartal dieser Reihe ein Emittentenwert (andere Reihen wie der Jahresumsatz bleiben Anbieterdaten). Eine Firma außerhalb der USA, eine USD-Notierung an der LSE, OTC, eine geratene oder fehlende Angabe zur Handelswährung, jede andere Währung und jede Reihe ohne `coversThrough` bleiben leer (`context-changed`). Mit der bisherigen Tabelle ändert diese Regel auf allen 16.118 Ständen keine Zelle.
+
+OXLC (Oxford Lane Capital): Der jüngste Anbieterwert (Quartal bis 31.03.2026) ist 0, das Board zeigte −100 %. Die Quartalsmitteilung des Fonds nennt „approximately $94.0 million“, also auf 0,1 Mio. gerundet (rechnerisch aus N-CSR minus N-CSRS minus Vorquartal: 93,95 bis 93,98 Mio.); Wachstum −22,4 %, das wegen der Rundung in der letzten Stelle um 0,1 Punkte abweichen kann. Die Quartale bis 30.06.2025 und 31.03.2025 stimmen mit dem Fonds überein (124,0 und 121,2 Mio.) und bleiben stehen. Die gespeicherte Null zum 30.09.2024 ist ebenfalls falsch: die Mitteilung vom 01.11.2024 nennt „approximately $105.1 million“, der Halbjahresbericht (N-CSRS, sechs Monate bis 30.09.2024) 194,9 Mio. Sie wird leer gesetzt, nicht geschätzt. Stand zweite Tabelle (01.10.2026, Abschnitt „Zweite Tabelle vom 01.10.2026“): OXLC hat jetzt `coversThrough` 31.03.2026; die Quartale bis 30.06.2025 und 31.03.2025 stehen als bestätigte Zellen in der Tabelle (Anbieterwert gleich Ersatzwert, belegt durch die Mitteilungen des Fonds), das frühere Kennzeichen `singleFalseValue` ist samt Prüfregel und Tests entfernt. Ein neues Anbieterquartal wird damit leer gesetzt (`period-after-coverage`), auch eine erneute falsche Null; ebenso eine verschobene Periode (`period-not-verified`). Das Wachstum fällt dann auf den Jahresumsatz des Anbieters zurück (464,1 Mio., gleich dem N-CSR-Wert 464.064.404).
+
+Fünf Fonds kommen neu auf das Financials-Board: OBDC, GBDC, TSLX, MSDL und PSEC waren mit „non-operating-rev“ ausgeschlossen, weil die Regel für Nicht-Betriebsvehikel in `src/scoring/router.js` (Asset Management mit negativem Quartalsumsatz) die negativen Anbieterquartale sah. Mit den SEC-Werten sind alle Quartale positiv. Das ist gewollt und gleich behandelt wie FSK am 29.09.; ihre Kennzahl aus der Jahresreihe stimmt mit der SEC überein (Zahlen-Prüfbericht 01.10.). OTF wäre der sechste, ist aber gesperrt. In der Quality-Familie bleiben alle 13 ausgeschlossen; bei OBDC, OTF, GBDC, TSLX, MSDL und PSEC lautet der Grund jetzt „qc-sector-unsupported“ wie bei den übrigen BDCs. PSEC zeigte bisher ein richtiges Jahreswachstum (−11,1 %, weil das Vorjahresquartal beim Anbieter −179,9 Mio. war); jetzt ist das Quartalsbein bildbar und zeigt −6,7 % (April bis Juni 2026 gegen Vorjahr).
+
+Wachstum / Score / Rang im vollen Financials-Board, Spur profitabel (veröffentlicht 427 Zeilen, nach #398 428, mit dieser Tabelle 432). Gleicher Datenstand (Lauf 36690140002, Watchlist 8bbe9d9133, 16.097 zugelassene Stände), Live-Kalibrierung wie im Produktionslauf:
+
+| Ticker | veröffentlicht 30.09. | main mit #398 | mit BDC-Tabelle |
+| --- | --- | --- | --- |
+| BXSL | −84,3 % / 34,2 / 374 | −84,3 % / 34,1 / 378 | −7,1 % / 35,6 / 367 |
+| MAIN | 22,8 % / 49,7 / 222 | 22,8 % / 49,6 / 221 | 3,9 % / 42,6 / 308 |
+| TRIN | 4,8 % / 40,1 / 322 | 4,8 % / 39,9 / 324 | 25,5 % / 48,6 / 238 |
+| CSWC | −14,9 % / 41,6 / 310 | −14,9 % / 41,5 / 310 | 9,1 % / 46,5 / 261 |
+| BBDC | −8,0 % / 44,4 / 290 | −8,0 % / 44,3 / 290 | −12,4 % / 43,7 / 298 |
+| OXLC | −100,0 % / 29,3 / 402 | −100,0 % / 29,2 / 403 | −22,4 % / 29,7 / 404 |
+| OBDC | ausgeschlossen (non-operating-rev), −43,9 % | ausgeschlossen (non-operating-rev), −43,9 % | −17,4 % / 50,3 / 211 |
+| GBDC | ausgeschlossen (non-operating-rev), −31,9 % | ausgeschlossen (non-operating-rev), −31,9 % | −14,0 % / 42,8 / 304 |
+| TSLX | ausgeschlossen (non-operating-rev), −27,8 % | ausgeschlossen (non-operating-rev), −27,8 % | −14,9 % / 32,9 / 384 |
+| MSDL | ausgeschlossen (non-operating-rev), −71,8 % | ausgeschlossen (non-operating-rev), −71,8 % | −10,8 % / 32,2 / 390 |
+| PSEC | ausgeschlossen (non-operating-rev), −11,1 % | ausgeschlossen (non-operating-rev), −11,1 % | −6,7 % / 49,2 / 228 |
+| KBDC | −51,2 % / 27,7 / 406 | −51,2 % / 27,6 / 407 | gesperrt (data-suspect), Grund sichtbar |
+| OTF | ausgeschlossen (non-operating-rev), −21,4 % | ausgeschlossen (non-operating-rev), −21,4 % | gesperrt (data-suspect), Grund sichtbar |
+
+Keine der 13 Zeilen steht vorher oder nachher in den Top 100.
+
+Indirekte Wirkung über die Live-Kalibrierung (Growth): 320 Scores ohne eigene Datenänderung bewegen sich, 270 um ±0,1, 46 um ±0,2, zwei um ±0,3, einer um +0,4 und einer um −1,2. Nach Board: Financials 280, Health Care 12, Industrials 6, Materials 5, Real Estate 5, Consumer Discretionary 4, Tech Hardware 4, Semiconductors 2, IT Services 1, Energy 1. 79 dieser Zeilen stehen vor oder nach der Änderung in den Top 100 eines Boards; keine Zeile wechselt in die Top 100 hinein oder heraus (HKB.SI rückt im Financials-Board von Rang 99 auf 100). Ursache: Die falschen Extremwerte der BDCs (bis −100 %) fallen aus den universumsweit gelernten Grenzen; die untere Wachstumsgrenze (p1) steigt von −49,2 % auf −48,5 %, dazu verschieben sich die Quartalsgrenzen und die Kohortenbasen. Der größte Ausschlag, 300723.SZ (Health Care, 12,8 → 11,6), hat −48,6 % Wachstum und liegt genau zwischen alter und neuer Grenze; er wird jetzt auf die Grenze gekappt und steht dort mit 21 anderen Werten gleichauf (nachgestellt im Zahlen-Prüfbericht vom 01.10.). Quality: keine Änderung. Smallcap: keiner der 13 steht in der Smallcap-Watchlist.
+
+Nächstes Anbieterquartal: Sobald der Anbieter das Quartal bis 30.09.2026 führt, setzt die Tabelle es in jeder Reihe mit `coversThrough` leer (`period-after-coverage`, zählt als stale, `::warning::`), und das Wachstum fällt auf das Jahresbein des Anbieters zurück. Nachgestellt auf den Ständen vom 30.09. (Fenster um ein Quartal verschoben), heute → danach: HTGC 8,5 → 7,9 %, ARCC 3,1 → 2,1 %, FSK −27,1 → −11,7 %, BXSL −7,1 → 6,9 %, MAIN 3,9 → 4,7 %, TRIN 25,5 → 23,5 %, CSWC 9,1 → 13,5 %, BBDC −12,4 → −2,4 %, OBDC −17,4 → 15,9 %, GBDC −14,0 → 20,2 %, TSLX −14,9 → −6,9 %, MSDL −10,8 → −4,5 %, PSEC −6,7 → −11,1 %. Für diese Fonds stimmt die Jahresreihe des Anbieters mit der SEC überein (geprüft für die neuen Fonds außer KBDC und OTF sowie für FSK im Zahlen-Prüfbericht vom 01.10., für ARCC über die Quelle des Falls 31.12.2025; HTGC ist nicht gegen einen SEC-Jahreswert geprüft). Es ist dann ein richtiger Jahreswert, nur eine andere Größe als das Quartalswachstum. KBDC (−17,5 %) und OTF (+120,5 %) hätten falsche Werte gezeigt; beide sind gesperrt.
+
+Folgeauftrag, datiert 27.10.2026, zuständig: der tägliche Lauf. Ab der ersten Einreichung (ARCC 27.10.2026) sind die Quartalszellen bis 30.09.2026 für alle 15 Reihen mit `coversThrough` gegen die SEC zu prüfen und einzutragen, bevor der Anbieter das Quartal führt. Weitere Termine laut `earnings-calendar.json`: HTGC 29.10., FSK, OBDC und OTF 04.11., MAIN, BBDC, MSDL und PSEC 05.11., GBDC 17.11.; für BXSL, KBDC, TSLX, CSWC und TRIN steht dort kein neuer Termin. Solange eine dieser Zellen fehlt und der Lauf `period-after-coverage` meldet, ist das eine Rotstelle im Tagesstatus.
+
+Nachlauf mit `scripts/financial-corrections-replay.js` auf denselben 16.118 Ständen (gespeicherte Kalibrierung 30.09., Watchlist 8bbe9d9133, Veröffentlichung 485d17ca38): 110 Zellen (die 48 bisherigen und 62 neue), 0 stale, drei Sperren (Banpu, OTF, KBDC); alle Dateihashes vorher und nachher gleich. Ausgangsabgleich zur Veröffentlichung: Growth 2 Abweichungen um 0,1 (CHWY, NEXA), Quality 0, Rule of 40 0; Smallcap ist wie unten beschrieben nicht nachbaubar. Die Prüfsuite `tests/financial-known-cases.test.js` hat jetzt 117 Prüfblöcke und 123 absichtliche Fehler; neu sind die Wächter für die Währungsregel (Anwesenheit nach Umrechnung und zum Abrufzeitpunkt, zwölf Abwesenheitsfälle einschließlich Abdeckung je Feld), für `singleFalseValue` (nur mit Ersatzwert, genau einmal je Reihe) und für die Sperren von OTF und KBDC (Anwesenheit, Fingerabdruck-Drift, Jahreswechsel, Abwesenheit unter anderem Ticker).
+
+| Ticker | Periode | Feld | Währung | Alt | Neu |
+| --- | --- | --- | --- | --- | --- |
+| BXSL | 2026-06-30 | revenueQ | USD | 26707000 | 320469000 |
+| BXSL | 2026-03-31 | revenueQ | USD | 40519000 | 325471000 |
+| BXSL | 2025-12-31 | revenueQ | USD | 126133000 | 357829000 |
+| BXSL | 2025-09-30 | revenueQ | USD | 148049000 | 358557000 |
+| BXSL | 2025-06-30 | revenueQ | USD | 170052000 | 344803000 |
+| MAIN | 2026-06-30 | revenueQ | USD | 177983000 | 149572000 |
+| MAIN | 2026-03-31 | revenueQ | USD | 73437000 | 140106000 |
+| MAIN | 2025-12-31 | revenueQ | USD | 156172000 | 145541000 |
+| MAIN | 2025-09-30 | revenueQ | USD | 151233000 | 139831000 |
+| MAIN | 2025-06-30 | revenueQ | USD | 144923000 | 143973000 |
+| TRIN | 2026-06-30 | revenueQ | USD | 60812000 | 87170000 |
+| TRIN | 2026-03-31 | revenueQ | USD | 51369000 | 90129000 |
+| TRIN | 2025-12-31 | revenueQ | USD | 58885000 | 83235000 |
+| TRIN | 2025-09-30 | revenueQ | USD | 45248000 | 75550000 |
+| TRIN | 2025-06-30 | revenueQ | USD | 58049000 | 69483000 |
+| CSWC | 2026-06-30 | revenueQ | USD | 32691000 | 61048000 |
+| CSWC | 2026-03-31 | revenueQ | USD | 32639000 | 57766000 |
+| CSWC | 2025-12-31 | revenueQ | USD | 43887000 | 61447000 |
+| CSWC | 2025-09-30 | revenueQ | USD | 36379000 | 56945000 |
+| CSWC | 2025-06-30 | revenueQ | USD | 38436000 | 55947000 |
+| BBDC | 2026-06-30 | revenueQ | USD | 21762000 | 65202000 |
+| BBDC | 2026-03-31 | revenueQ | USD | 22706000 | 60566000 |
+| BBDC | 2025-12-31 | revenueQ | USD | 28503000 | 67969000 |
+| BBDC | 2025-09-30 | revenueQ | USD | 26784000 | 72404000 |
+| BBDC | 2025-06-30 | revenueQ | USD | 23661000 | 74398000 |
+| OXLC | 2026-03-31 | revenueQ | USD | 0 | 94000000 |
+| OXLC | 2024-09-30 | revenueQ | USD | 0 | fehlt |
+| KBDC | 2026-06-30 | revenueQ | USD | 12933000 | 55703000 |
+| KBDC | 2026-03-31 | revenueQ | USD | 19789000 | 57325000 |
+| KBDC | 2025-12-31 | revenueQ | USD | 25028000 | 61903000 |
+| KBDC | 2025-09-30 | revenueQ | USD | 27139000 | 61373000 |
+| KBDC | 2025-06-30 | revenueQ | USD | 26503000 | 57298000 |
+| OBDC | 2026-06-30 | revenueQ | USD | 89075000 | 401342000 |
+| OBDC | 2026-03-31 | revenueQ | USD | -2098000 | 396774000 |
+| OBDC | 2025-12-31 | revenueQ | USD | 136215000 | 447750000 |
+| OBDC | 2025-09-30 | revenueQ | USD | 151611000 | 453065000 |
+| OBDC | 2025-06-30 | revenueQ | USD | 158831000 | 485843000 |
+| OTF | 2026-06-30 | revenueQ | USD | 169321000 | 338032000 |
+| OTF | 2026-03-31 | revenueQ | USD | -204389000 | 325940000 |
+| OTF | 2025-12-31 | revenueQ | USD | 223752000 | 320575000 |
+| OTF | 2025-06-30 | revenueQ | USD | 215435000 | 319467000 |
+| OTF | 2025-03-31 | revenueQ | USD | 90923000 | 182817000 |
+| GBDC | 2026-06-30 | revenueQ | USD | 65103000 | 187730000 |
+| GBDC | 2026-03-31 | revenueQ | USD | -39283000 | 188134000 |
+| GBDC | 2025-12-31 | revenueQ | USD | 73216000 | 207007000 |
+| GBDC | 2025-09-30 | revenueQ | USD | 104356000 | 217841000 |
+| GBDC | 2025-06-30 | revenueQ | USD | 95606000 | 218344000 |
+| TSLX | 2026-06-30 | revenueQ | USD | 51447000 | 97844000 |
+| TSLX | 2026-03-31 | revenueQ | USD | -17408000 | 93397000 |
+| TSLX | 2025-12-31 | revenueQ | USD | 40847000 | 108247000 |
+| TSLX | 2025-09-30 | revenueQ | USD | 57258000 | 109444000 |
+| TSLX | 2025-06-30 | revenueQ | USD | 71228000 | 115015000 |
+| MSDL | 2026-06-30 | revenueQ | USD | 10824000 | 88774000 |
+| MSDL | 2026-03-31 | revenueQ | USD | -1851000 | 89064000 |
+| MSDL | 2025-12-31 | revenueQ | USD | 32692000 | 96597000 |
+| MSDL | 2025-09-30 | revenueQ | USD | 30781000 | 99722000 |
+| MSDL | 2025-06-30 | revenueQ | USD | 38337000 | 99508000 |
+| PSEC | 2026-06-30 | revenueQ | USD | 5946000 | 155761000 |
+| PSEC | 2026-03-31 | revenueQ | USD | 66680000 | 150067000 |
+| PSEC | 2025-12-31 | revenueQ | USD | 28921000 | 176002000 |
+| PSEC | 2025-09-30 | revenueQ | USD | 91943000 | 157624000 |
+| PSEC | 2025-06-30 | revenueQ | USD | -179931000 | 166946000 |
+
+## Zweite Tabelle vom 01.10.2026: Sperren, bestätigte Zellen, Firmenreihen
+
+Anlass: Die SEC-Doppelprüfung von 34 Firmen (01.10.) und die Einordnung der Wert-Tor-Meldungen fanden falsche Zahlen auf oder hinter den Boards. Jeder neu eingetragene Wert ist vom Erbauer am 01.10. selbst an der Primärquelle nachgelesen (wörtliche Zeile, Einheit, Währung, Periodenende); jeder `expectedBadValue` ist gleich dem Anbieterwert im CI-Artefakt `snapshots` von Lauf 36690140002 (30.09.2026). Datenstand aller Zahlen dieses Abschnitts: dieser Lauf, Watchlist 8bbe9d9133, Live-Kalibrierung wie im Produktionslauf, Code origin/main d90e04b259 gegen diesen Stand.
+
+**Sperren (`quarantines`, Grund sichtbar, Fingerabdruck wie bei Banpu, OTF und KBDC):**
+
+| Ticker | Grund | Fingerabdruck | Board vorher (origin/main) |
+| --- | --- | --- | --- |
+| HOS | Der Ticker gehört seit 01.09.2026 zur umbenannten Helix Energy Solutions (SEC-Nr. 866829, 8-K vom 04.09.2026); der Anbieter liefert noch die Zahlen der früheren Hornbeck Offshore (SEC-Nr. 1131227) von 2018/2019: Jahresumsatz 212.404 / 191.412 / 224.299 / 476.070 Tsd. USD wörtlich wie im 10-K 2018 („Revenues $ 212,404 $ 191,412 $ 224,299 $ 476,070 $ 634,793“). | Jahresumsatz 2018 212.404.000 und Jahresüberschuss −119.123.000 (gleicher Jahresindex, Jahresende 31.12.2018) | Industrie, unprofitabel, Rang 54, Score 59,2, Wachstum 11,0 % |
+| TYG | Die Abschlusszahlen des Anbieters enden mit dem Geschäftsjahr bis 30.11.2017 (Gesamtanlageertrag laut N-CSR 2017 1.956.784 USD, Anbieter 1.956.780); das Wachstum −98,9 % ist kein aktueller Wert. Jüngster Abschluss (bis 30.11.2025): 24.889.525 USD. | Jahresumsatz 1.956.780 und Jahresergebnis −113.427.640 (Jahresende 30.11.2017) | Financials, profitabel, Rang 409, Score 28,0, Wachstum −98,9 % |
+| OLPX | Seit 07.07.2026 nach einer Übernahme nicht mehr börsennotiert (8-K vom 07.07.2026, Item 3.01; Formular 25-NSE am selben Tag, 15-12G am 17.07.); alle Quartals-Bruttogewinne stehen beim Anbieter auf 0 (10-Q Q1 2026: „Gross profit 71,660 67,356“ Tsd. USD). | Quartalsumsatz 31.03.2026 99.369.000 und Bruttogewinn desselben Quartals 0 | Zykl. Konsum, unprofitabel, Rang 47, Score 49,9 |
+
+Weicht ein Anker ab (etwa nach dem nächsten vollen Abruf von HOS, für den der Anbieter einen Umsatz 2025 von 0 meldet), bleibt die Sperre bestehen, und der Lauf warnt (`quarantine-fingerprint-changed`), bis ein Mensch neu prüft. Alle drei verlassen jedes Growth-Board; in der Ausschlussliste stehen sie mit `data-suspect`, sichtbarem Grund und ohne Sektor, Branche, Marktwert und Wachstum; das Rule-of-40-Board schließt sie über dieselbe Prüfung aus. In der Quality-Familie waren alle drei schon vorher ausgeschlossen (`qc-not-compounder` bzw. `qc-sector-unsupported`). Zweitnotierungen gibt es im Universum nicht (gesucht über identische Quartals- und Jahresumsätze und den Namen in allen 16.114 Ständen; einziger Treffer ist ein zufällig gleicher Jahresumsatz von INFQ und Almonty, kein Alias).
+
+**Bestätigte Zellen statt `singleFalseValue`:** Ein Fall mit `expectedBadValue` gleich `replacementValue` ist eine bestätigte Zelle: Der Anbieterwert stimmt mit der Primärquelle überein und bleibt Byte für Byte stehen (kein Korrekturvermerk, kein sichtbarer Grund); weicht der Anbieter später ab, wird die Zelle leer (`vendor-value-changed`). Wie jeder Fall mit einem Wert gibt sie der Tabelle die Hoheit über die ganze Reihe und verlangt deshalb `coversThrough`. Ihr Grund beginnt mit „… bestätigt:“; sind beide Werte gleich, der Grund aber „korrigiert“ (etwa ein versehentlich kopierter Anbieterwert), oder umgekehrt, lehnt die Prüfung die ganze Tabelle ab. Das frühere Kennzeichen `singleFalseValue` ist mit seiner Prüfregel und seinen Tests entfernt (weniger Code, gleicher Schutz): OXLC hat jetzt `coversThrough` 31.03.2026 und die bestätigten Zellen 30.06.2025 (124.000.000; Mitteilung vom 23.07.2025 „approximately $124.0 million“) und 31.03.2025 (121.161.000; Mitteilung vom 19.05.2025 „approximately $121.2 million“, gegengerechnet mit N-CSR 430.539.101 minus N-CSRS 194.878.203). Nachweis am echten OXLC-Paket: heute unverändert (94,0 / 124,0 / 121,161 Mio. / leer, Wachstum −22,4 %, 0 stale); die alte Tabelle mit nur dieser OXLC-Umstellung ergibt unter dem neuen Lader auf allen 16.114 Ständen 0 abweichende Ergebnisse. Ein nachgestelltes nächstes Anbieterquartal 30.06.2026 = 0 zeigte bisher −100,0 %, jetzt bleibt es leer (`period-after-coverage`, Warnung) und das Wachstum fällt auf den Jahresumsatz zurück (+7,8 %, gleich dem N-CSR-Wert).
+
+**Firmenreihen mit `coversThrough` 30.06.2026 (Umsatz und Bruttogewinn je Firma):** CARG, PLUS, DCO, INFQ (SEC) und SLC Agrícola (SLCE3.SA, BRL). Jedes gespeicherte Quartal ist ein Emittentenwert: ersetzt, wo der Anbieter abweicht, sonst bestätigte Zelle (von beiden Prüfern der Doppelprüfung oder dem Schiedsprüfer bestätigt und vom Erbauer nachgelesen). Ursachen: CARG hat 2025 nach dem Verkauf von CarOffer rückwirkend umgestellt (10-K 2025, Note 16), DCO hat das Jahr 2025 neu ausgewiesen (10-K/A vom 08.05.2026, Note 18), INFQ hat frühere Perioden berichtigt (10-Q Q2 2026, „Correction of Immaterial Errors“; die Quartale 31.03.2025 und 30.09.2025 sind Differenzen zweier dort ausgewiesener Werte), bei PLUS ist das vierte Geschäftsquartal (bis 31.03.2026) laut Ergebnismitteilung 576.174 statt Jahreswert minus erstmals berichteter neun Monate. SLC: Der Anbieter zählt in drei Quartalen die Neubewertung der Ernte („Var. do Valor Justo dos Ativos Biológicos“) zum Umsatz und führt für die Quartale 30.06.2026 und 30.06.2025 Umsatz- und Bruttogewinnwerte, die zu keiner Zeile passen; eingetragen sind „Receita Operacional Líquida“ und „Resultado Bruto“ der Ergebnismitteilungen (Anhang 3). Damit gilt die Marge der Firma selbst (2T26: 43,3 %).
+
+**Einzelne falsche Werte, leer gesetzt (keine Schätzung, keine `coversThrough`):** VCTR Bruttogewinn 31.12.2025 (Anbieter 43,9 Mio. USD; die Firma weist keinen Bruttogewinn aus, und der Wert liegt unter dem Betriebsergebnis des Quartals von 153,2 Mio. = 478.423 − 325.248 Tsd.). Celesc (CLSC3.SA) Bruttogewinn 30.06.2025 (Anbieter 152,1 Mio. BRL; ITR 2T25 Seite 23 „Lucro Bruto 513.396“). Für VCTR wäre ein abgeleiteter Wert keine eingereichte Zahl; deshalb leer.
+
+Jede aktive Zelländerung dieser Tabelle (25 Zellen: 23 ersetzt, 2 leer gesetzt; Beträge in Originalwährung, volle Einheiten; die übrigen 29 neuen Fälle sind bestätigte Zellen ohne Änderung):
+
+| Ticker | Periode | Feld | Währung | Alt | Neu |
+| --- | --- | --- | --- | --- | --- |
+| CARG | 2025-12-31 | revenueQ | USD | 209093000 | 241094000 |
+| CARG | 2025-09-30 | revenueQ | USD | 238696000 | 231653000 |
+| CARG | 2025-12-31 | grossProfitQ | USD | 223892000 | 222593000 |
+| CARG | 2025-09-30 | grossProfitQ | USD | 213532000 | 214707000 |
+| PLUS | 2026-03-31 | revenueQ | USD | 581634000 | 576174000 |
+| PLUS | 2026-03-31 | grossProfitQ | USD | 147087000 | 141627000 |
+| DCO | 2025-12-31 | revenueQ | USD | 215798000 | 217133000 |
+| DCO | 2025-09-30 | revenueQ | USD | 212558000 | 214422000 |
+| DCO | 2025-12-31 | grossProfitQ | USD | 59805000 | 59238000 |
+| DCO | 2025-09-30 | grossProfitQ | USD | 56475000 | 58950000 |
+| INFQ | 2026-03-31 | revenueQ | USD | 9461000 | 9907000 |
+| INFQ | 2025-09-30 | revenueQ | USD | 8202000 | 7311000 |
+| INFQ | 2025-03-31 | revenueQ | USD | 8303000 | 8195000 |
+| INFQ | 2026-03-31 | grossProfitQ | USD | 1991000 | 2535000 |
+| INFQ | 2025-09-30 | grossProfitQ | USD | 3863000 | 3700000 |
+| INFQ | 2025-03-31 | grossProfitQ | USD | 3377000 | 3543000 |
+| SLCE3.SA | 2026-06-30 | revenueQ | BRL | 4703662000 | 2175612000 |
+| SLCE3.SA | 2026-03-31 | revenueQ | BRL | 2665069000 | 2267501000 |
+| SLCE3.SA | 2025-12-31 | revenueQ | BRL | 2290647000 | 2272265000 |
+| SLCE3.SA | 2025-09-30 | revenueQ | BRL | 2379036000 | 2087705000 |
+| SLCE3.SA | 2025-06-30 | revenueQ | BRL | 4043394000 | 1862135000 |
+| SLCE3.SA | 2026-06-30 | grossProfitQ | BRL | 2879220000 | 941202000 |
+| SLCE3.SA | 2025-06-30 | grossProfitQ | BRL | 2444562000 | 656027000 |
+| VCTR | 2025-12-31 | grossProfitQ | USD | 43903000 | fehlt |
+| CLSC3.SA | 2025-06-30 | grossProfitQ | BRL | 152109000 | fehlt |
+
+Wachstum, Bruttomarge, Score und Rang (Growth-Board, origin/main → diese Tabelle). Das Wachstumspaar (jüngstes Quartal gegen Vorjahresquartal) bleibt bei allen Firmen bildbar und besteht jetzt aus Emittentenwerten:
+
+| Ticker | Board (Spur) | Wachstum | Bruttomarge jüngstes Quartal | Bruttomarge vier Quartale | Score | Rang |
+| --- | --- | --- | --- | --- | --- | --- |
+| CARG | Software/Komm. (profitabel) | 13,1 % → 13,1 % | 92,1 % → 92,1 % | 94,8 % → 92,3 % | 65,1 → 65,1 | 99 → 99 |
+| PLUS | Software/Komm. (unprofitabel) | 1,0 % → 1,0 % | 23,3 % → 23,3 % | 25,2 % → 25,1 % | 63,6 → 63,6 | 25 → 25 |
+| DCO | Industrie (unprofitabel) | 11,8 % → 11,8 % | 28,0 % → 28,0 % | 27,3 % → 27,4 % | 55,5 → 55,5 | 68 → 67 |
+| INFQ | Software/Komm. (unprofitabel) | 156,5 % → 156,5 % | 16,0 % → 16,0 % | 23,8 % → 25,2 % | 81,0 → 81,0 | 3 → 3 |
+| SLCE3.SA | Basiskonsum (profitabel) | 16,3 % → 16,8 % | 61,2 % → 43,3 % | 41,7 % → 35,0 % | 81,6 → 82,0 | 27 → 25 |
+| VCTR | Financials (profitabel) | 24,0 % → 24,0 % | 75,2 % → 75,2 % | 58,4 % → fehlt | 67,5 → 67,5 | 58 → 58 |
+| CLSC3.SA | Versorger (profitabel) | 2,6 % → 2,6 % | 7,7 % → 7,7 % | 9,2 % → 9,2 % | 53,6 → 53,6 | 161 → 161 |
+| OXLC | Financials (profitabel) | −22,4 % → −22,4 % | – | – | 29,7 → 29,6 | 404 → 404 |
+| HOS, TYG, OLPX | siehe Sperren | – | – | – | gesperrt | – |
+
+SLC Agrícola: Der Sprung von rund 50 auf 81,6 Punkte am 29.09. kommt nicht von den falschen Zellen: Mit den Werten der Firma bleibt der Score bei 82,0 (Wachstum +16,8 %, so auch die Firma: „crescimento de 16,8%“). Im Stand davor war 1T26 das jüngste Quartal (−6,0 % gegen 1T25 auf Anbieterbasis); am 29.09. kam 2T26 hinzu.
+
+Indirekte Wirkung über die Live-Kalibrierung (Growth): 512 Scores ohne eigene Datenänderung bewegen sich (358 um −0,1, 99 um +0,1, 32 um −0,2, 20 um +0,2, zwei um −0,3, einer um −0,4); nach Board: Financials 304 (profitabel, ohne TYG), Industrie 116 (fast alle unprofitabel, ohne HOS), zykl. Konsum 76 (fast alle unprofitabel, ohne OLPX), Basiskonsum 7, Health Care 3, Materials 2, Tech Hardware 2, Halbleiter 2. 182 dieser Zeilen stehen vor oder nach der Änderung in den Top 100. HOS (Industrie, Rang 54) und OLPX (zykl. Konsum, Rang 47) verlassen ihre Top 100; dafür rücken 600153.SS (Industrie, unprofitabel, Rang 101 → 98) und 601718.SS (zykl. Konsum, Rang 101 → 100) hinein. 134 weitere Zeilen ändern nur den Rang. Quality: eine Zeile (DAR −0,1), Rule of 40 und Smallcap nicht gesondert nachgerechnet.
+
+Nachlauf mit `scripts/financial-corrections-replay.js --live` (neue Option: Growth live kalibriert) auf den 16.118 Ständen von Lauf 36690140002: 135 Zellen (110 bisherige, 25 neue), 0 stale, sechs Sperren, alle Dateihashes vorher und nachher gleich, alle übrigen Zeilen bytegleich.
+
+Nächste Quartale: In jeder Reihe mit `coversThrough` bleibt ein neues Anbieterquartal leer, bis es geprüft und eingetragen ist (Warnung im Tageslauf). Zu prüfen, sobald die Firmen berichten: das Quartal bis 30.09.2026 für CARG, PLUS (10-Q laut Kalender am 09.11.2026), DCO, INFQ und SLC; für OXLC das Quartal bis 30.06.2026 (Fondsmitteilung liegt seit Juli 2026 vor, der Anbieter kann es jederzeit nachladen).
+
+Nicht in dieser Tabelle (Folgeaufträge, je eine Zeile):
+- Betriebsergebnis je Quartal (opIncQ): HIVE fünf Quartale, CARG zwei, PLUS eins, DCO zwei, INFQ drei. Die Handtabelle kennt nur Umsatz und Bruttogewinn; der vorhandene Mechanismus trägt es mit einer Erweiterung der Feldliste (`opIncQ`) samt `coversThrough` je Feld. (Nachtrag 02.10.: erledigt für CARG, PLUS, DCO und INFQ, dazu SLC Agrícola; HIVE nicht eingetragen, weil die Firma kein Betriebsergebnis ausweist; Abschnitt „Betriebsergebnis je Quartal in der Handtabelle“.)
+- Jahresumsatz: HL drei Jahre (Neuausweis nach dem Verkauf von Casa Berardi), INFQ Jahr 2025, SLC (Anbieterbasis inklusive Neubewertung der Ernte, 2025: 9.759,2 statt 8.553,1 Mio. BRL). Die Handtabelle kann keine Jahreszellen korrigieren; heute bleibt nur eine Sperre wie bei OTF und KBDC oder eine Erweiterung um Jahreszellen. (Nachtrag: INFQ ist mit leeren Jahreszellen erledigt, Abschnitt „Jahreszellen vom 01.10.2026“; HL und SLC bleiben offen. Nachtrag 02.10.: bei HL ist der Jahres-Bruttogewinn leer, der Umsatz bleibt; Abschnitt „HL: Jahres-Bruttogewinn leer“.)
+- Börsenwert: ABTC (nach der Zusammenlegung 1:15: 1,06 statt 0,63 Mrd. USD), Andersen (nur Klasse A gezählt: 1,0 statt rund 6 Mrd.), Energisa (8,2 statt 4,5 bis 4,9 Mrd.), Yunji (nach der Teilung 1:10: 8,6 statt rund 0,7 Mrd.). Tragbar über die vorhandene Aktienzahl-Handtabelle (ADS/Aktienzahl, PR #379). (Nachtrag 02.10.: ABTC und Andersen erledigt, Energisa und Yunji offen; Abschnitt „Börsenwert-Handtabelle vom 02.10.2026“.)
+- JBS: Börsenwert springt zwischen zwei Aktienzahlen; eine Zeile in derselben Aktienzahl-Handtabelle (776.086.920 Klasse A plus 294.842.267 Klasse B laut 10-Q-Deckblatt). (Nachtrag 02.10.: erledigt.)
+- Gespeicherte SEC-Dateien (`external-data/sec-*`): COP (Umsatz-Tag 2025), DCO (10-K/A wird absichtlich übersprungen), INFQ (Betriebsergebnis 2025), HL (Neuausweis 2025), HOS (Helix). (Berichtigt 02.10.: Diese fünf Firmen stehen nicht in `sec-secannual.json` oder `sec-secannual-smallcap.json`, ihre gespeicherten SEC-Werte speisen also keine Score-Achse, weder Zyklus-Dämpfer noch `roicStability` (Gewicht 0). Gelesen wird für das Board nur `sec-annual-bulk.jsonl`, und zwar allein von der Kachel „Ununterbrochen profitabel“ (`src/scoring/profit-streak.js`, nach dem Scoring angehängt); bei COP, DCO und INFQ ändert sich dort nichts, bei HL zeigt sie „2 Jahre“ auf altem Stand. Eine Korrektur in `merge-sec-xbrl.js` wäre eine Methodenfrage.)
+- Dian Tou (002128.SZ), Quartal 31.12.2025: Umsatz −914,6 Mio. CNY und Bruttogewinn 562,0 Mio. CNY (laut Firma 3,13 Mrd.). Nicht eingetragen: Die gespeicherten Werte sind nach der Umrechnung keine exakten Vielfachen eines ganzzahligen CNY-Betrags (der Abgleich `expectedBadValue` verlangt exakte Gleichheit), und zwei leere Zellen würden das Quartalswachstum abschalten; braucht alle fünf Quartale aus den Berichten auf cninfo. (Nachtrag 02.10.: die Werte sind auf zwei Nachkommastellen exakt; acht Zellen leer, Abschnitt „Dian Tou: Quartale mit zwei Basen …“.)
+- Wisdom Marine (2637.TW): Die ganze Reihe steht in Taiwan-Dollar unter dem Kennzeichen USD (Q4 2025 5,42 Mrd. statt 163,8 Mio. USD); kein Einzelzellenfehler, gehört zur Währungskorrektur wie bei YPF und Vale. (Nachtrag 02.10.: bis dahin gesperrt; Abschnitt „Wisdom Marine gesperrt“.)
+- Bullish (BLSH), Bruttogewinn 30.06.2025: Die Firma weist keinen Bruttogewinn aus, alle Anbieterwerte sind Konstrukte (wie bei VCTR); Methodenfrage für Firmen ohne Bruttogewinn-Zeile.
+- Celesc Umsatzbasis: Anbieter 2T25 2.715,9 Mio. BRL, Firma („Receita Operacional Líquida“) 2.899,5 Mio.; ungeklärt, ob der Anbieter die Bauerlöse herausrechnet; nicht geprüft.
+- Offene Prüfnotiz aus PR #400 (Low 2): Ersatzwerte werden nicht maschinell gegen den `value` ihrer Quelle geprüft. (Nachtrag 02.10.: erledigt, die Prüfung lehnt einen Ersatzwert ab, der zu keinem Quellwert passt.)
+- Nachtragen eines Quartals: Eine Zelle, die beim Abruf schon leer gesetzt wurde (etwa `period-after-coverage`), bleibt nach dem Eintragen ihres geprüften Werts leer und meldet `vendor-value-changed`, bis der nächste volle Abruf den Anbieterwert neu liefert (keine falsche Zahl, nur zu lange leer). Abhilfe im Lader: bei einer fremden Leer-Markierung mit dem gespeicherten ursprünglichen Anbieterwert vergleichen; eigener Auftrag.
+
+## Jahreszellen vom 01.10.2026 (INFQ, CARG, OTF)
+
+Problem: Die Handtabelle kannte nur Quartalswerte. Bei INFQ, CARG und OTF ist die Jahresreihe des Anbieters falsch und speist sichtbare Zahlen (Kennzahl der Zeile, Bruttogewinn-Wachstum, Rückfall des Wachstums, wenn ein Quartal leer ist).
+
+Mechanismus (`lib/financial-known-cases.js`): Ein Fall mit `field` `annualRev` oder `annualGP`, `periodType` `12M`, `index` und `replacementValue: null` setzt genau eine Jahreszelle leer (Wert `null`, Kennzeichen `financialCorrection` mit Grund, nie 0). Ist die gespeicherte Reihe datiert, zählt das Geschäftsjahresende (`period`); ist sie undatiert, die Position (`index`) zusammen mit dem exakten Anbieterwert. Die Jahreszellen versagen geschlossen, wie die Quartale: Passt auch nur ein Fall einer Reihe (Ticker und Feld) nicht mehr, weil der Anbieter ein neues Jahr vorn einfügt, einen Wert neu ausweist oder umsortiert, weil die Währung nicht die geprüfte ist oder weil der Stand keine verlässliche Währungsangabe hat, werden alle vorhandenen Zellen dieser Reihe leer (Kennzeichen `financialMissing`, Code `annual-value-changed`, Grund im Klartext) und der Lauf warnt (stale, `::warning::`), bis ein Mensch die Reihe neu prüft. Eine falsche Zahl kommt so nie zurück, es bleibt höchstens eine leere Stelle mit Hinweis. Außerdem gibt es keine Lücken: Wird ein Jahr leer gesetzt, werden alle älteren vorhandenen Jahre derselben Reihe mit demselben Grund ebenfalls leer (Code `annual-older-than-withheld`, ohne Warnung). Ein Leser, der Lücken überspringt, kann so nie zwei nicht benachbarte Jahre vergleichen oder ein älteres Jahr als das aktuelle zeigen. Heute greift diese Regel nicht: INFQ und OTF sind ganz leer, bei CARG ist nur das älteste Jahr leer. Kein Ersatzwert, kein Einfügen von Jahren, kein `coversThrough` für Jahresreihen; die Prüfung lehnt das als Eingabefehler ab. Die Tabelle wirkt beim Abruf und bei jedem Einlesen (Scoring, Export, Rule of 40); ein Anbieterwert, der auf der Platte steht (etwa aus einem älteren Abruf), wird beim Einlesen wieder leer. Die Nachladeprüfung (`lib/reload-history.js`) behandelt Handtabellen-Lücken jetzt auch in datierten Jahresreihen als maßgeblich, sodass ein Nachladen diese Lücken weder als verlorene Werte ablehnt noch mit älteren Werten auffüllt.
+
+| Firma | Jahr (Position) | Feld | Anbieter | Primärquelle | Warum leer |
+|---|---|---|---|---|---|
+| INFQ | 2024 (0) | Umsatz | 28.836.000 | Erstmeldung; berichtigt 28.094.000 (10-Q Q2 2026, „Correction of Immaterial Errors“) | Reihe endet ein Jahr zu früh, 2025 fehlt (berichtigt 31.108.000) |
+| INFQ | 2023 (1) | Umsatz | 10.950.000 | 10.950.000 (Prospekt 424B3 vom 23.01.2026) | sonst Wachstum 2024/2023 (+163,3 %) als aktuelles Jahr |
+| INFQ | 2024 (0) | Bruttogewinn | 9.064.000 | berichtigt 7.086.000; 2025: 11.380.000 | wie oben |
+| INFQ | 2023 (1) | Bruttogewinn | 4.436.000 | 4.436.000 (Prospekt) | wie oben |
+| CARG | 2022 (3) | Umsatz | 1.655.035.000 | 10-K 2022 mit CarOffer; 2023–2025 im 10-K 2025 ohne CarOffer | zwei Basen in einer Reihe |
+| CARG | 2022 (3) | Bruttogewinn | 657.553.000 | wie oben (Marge 2022 39,7 % gegen 92,8 % 2025) | wie oben |
+| OTF | 2025–2022 (0–3) | Umsatz | 779,3 / 353,5 / 391,9 / 50,0 Mio. | SEC 1.145,4 / 684,0 / 683,8 / 494,8 Mio. USD | passt zu keinem Geschäftsjahr |
+
+Was jeder Leser der Jahresreihe zeigt (echter Code, Stände von Lauf 36839128456), vorher → nachher:
+- INFQ: Jahresbein des Wachstums +163,3 % → leer; Quartalswachstum +156,5 % unverändert; Kennzahl (Bruttogewinn-Wachstum) +104,3 % → leer mit Grund; Achse Bruttogewinn-Wachstum 0,952 → leer; Verwässerung (SBC je Umsatz) → leer; Kapitaleffizienz unverändert; Rule of 40 nicht betroffen (Quartalsbein trägt). Kommt das nächste Quartal und bleibt es leer, zeigt die Wachstumsspalte nichts statt +163,3 %.
+- CARG: Jahresbein +13,65 % und Kennzahl +15,6 % unverändert (2025/2024); Bruttogewinn-Wachstum 0,687 → 0,173 (Margenpfad 2023→2025 statt 2022→2025: +1,6 statt +53,1 Punkte); Kapitaleffizienz 0,174 → 0,206 (Zyklus-Abschlag ohne 2022); Verwässerung −0,078 → −0,020; Beschleunigung unverändert.
+- OTF: Jahresbein +120,5 % → leer; Umsatz-Kennzahl +120,5 % → leer mit Grund; Quartalswachstum +5,8 % und Beschleunigung aus geprüften Quartalen unverändert; im Export steht der Grund in `financialDataReasons`. Kommt das nächste Quartal und bleibt leer: Wachstum leer statt +120,5 %.
+
+Wirkung auf die Boards (Live-Kalibrierung, Watchlist d90e04b259, 16.108 Stände): INFQ Software/unprofitabel 81,0 Rang 3 → 68,2 Rang 14; CARG Software/profitabel 65,2 Rang 99 → 61,5 Rang 124 (verlässt die Top 100, NTES rückt von 101 auf 100); Quality CARG 77,4 → 77,5 (Rang 23); OTF ausgeschlossen → auf dem Financials-Board (profitabel) mit 32,1 Punkten, aber ohne Rang, weil zu wenige Achsen belegt sind (3 von 7; Export: `"rank": null`, `"rankGrund": "zuWenigBelegteAchsen"`; intern Position 389). Indirekt: Growth 375 Zeilen (328 um +0,1, 16 um −0,1, 26 um +0,2, 5 um +0,3), Quality 96 Zeilen (höchstens 0,2), Smallcap 0; Rule of 40: 31 Zeilen nur im Score um 0,1, keine Rang- oder R40-Änderung, keine der Firmen steht darauf. Die alte Tabelle unter dem neuen Lader verändert 0 der 16.108 Stände. Nachlauf `financial-corrections-replay.js --live`: 145 Zellen (135 bisherige, 10 neue), 0 stale, fünf Sperren, alle Dateihashes vorher und nachher gleich.
+
+KBDC bleibt gesperrt: Mit leeren Jahreszellen käme KBDC zurück, zeigte aber „0 Jahre profitabel, letzter Verlust 2025“. Die Gewinnserie liest das SEC-Betriebsergebnis −118,2 Mio. USD; das ist der negierte Nettoaufwand (10-K 2025: „118,207 83,834 76,187 Net Investment Income (Loss) 117,612“), KBDC war 2025 profitabel. Außerdem stünde der Score (42,6, Rang 307) auf 2 von 7 Achsen statt etwa 32,4 mit den SEC-Jahreswerten (Prüfbericht zu PR #400).
+
+Grenzen: Rückt der Anbieter in einer undatierten Reihe ein neues Jahr nach vorn, passen Position und Wert nicht mehr; die Zellen bleiben dann unverändert und der Lauf warnt, bis neu geprüft ist (INFQ mit 2025 vorn zeigte 31,1/28,8 Mio. = +7,9 % statt berichtigt +10,7 %). Ein leer gesetztes mittleres Jahr würde Leser, die Lücken überspringen (Kennzahl, Beschleunigungs-Rückfall), nicht benachbarte Jahre paaren lassen; keiner der heutigen Fälle setzt ein mittleres Jahr leer.
+
+## Börsenwert-Handtabelle vom 02.10.2026 (Aktienzahl)
+
+Problem: Der Anbieter rechnet bei einigen US-Notierungen den Börsenwert mit einer falschen Aktienzahl. Der Börsenwert geht nicht in den Score ein, steht aber auf dem Board, bestimmt Größenband und Größenklasse und entscheidet über die Untergrenze des Tageslaufs (800 Mio. USD).
+
+Mechanismus (`lib/ads-hand-table.js`, Tabelle `configs/share-count-hand-table.json`, an denselben zwei Schreibstellen in `pull-yahoo.js` wie die ADS-Tabelle, nach ihr): Jede Zeile trägt die Aktienzahl laut Emittent (`shares`, mit Quelle, wörtlichem Zitat und Stichtag) und die bekannten falschen Zahlen des Anbieters (`wrongShares`). Verglichen wird die Zahl, die der Anbieterwert selbst ergibt (Börsenwert geteilt durch Kurs), mit 3 % Toleranz:
+- gleich der Emittentenzahl: bestätigt, der Stand bleibt Byte für Byte;
+- gleich einer bekannten falschen Zahl: Börsenwert = Kurs × Emittentenzahl, Herkunft `hand-table:shares`, der Anbieterwert bleibt in `yahooValue`, die aus ihm abgeleiteten Anbieterfelder (Kurs-Umsatz-Verhältnis, Unternehmenswert und dessen Verhältnisse) werden leer, nie 0;
+- alles andere: Anbieterwert bleibt, der Stand trägt `_shareCountHandTableStale` mit Grund, der Abruf warnt, der Schnellweg (nur Kurs) verweigert und überlässt den vollen Abruf der Prüfung. Eine falsche Korrektur entsteht so nie stillschweigend.
+Nicht-USD-Notierungen passen nie (Kurs und Börsenwert stehen dort in verschiedenen Währungen) und bleiben unverändert mit Warnung.
+Eine veraltete Zeile erscheint als `::warning::` in der Zusammenfassung des Tageslaufs, nicht nur im Protokoll. Neue Aktien sieht eine Zeile nicht von selbst; deshalb trägt jede Zeile `reviewBy`, den spätesten Termin der nächsten Quartalsmeldung (hier 16.11.2026). Liegt der Datentag des Börsenwerts danach, wird die Zeile weiter angewandt, der Lauf warnt aber jeden Tag mit `::warning::`, bis die Aktienzahl neu geprüft und `reviewBy` versetzt ist.
+
+| Ticker | Emittentenzahl | Quelle (wörtlich) | Anbieter falsch | Board 01.10. vorher → nachher (fester Datentag, Lauf 36839128456) |
+| --- | --- | --- | --- | --- |
+| ABTC | 72.819.713 (Klasse A + B, 30.07.2026, nach der Zusammenlegung 1:15) | 10-Q Q2 2026: „As of July 30, 2026, the registrant had 24,004,726 shares of Class A common stock, 48,814,987 shares of Class B common stock, and no shares of Class C common stock outstanding“ | 121.819.713 | 1,033 → 0,618 Mrd. USD; liegt unter der Untergrenze von 800 Mio., der Abruf entfernt den Stand: ABTC verlässt das Financials-Board (unprofitabel, Score 53,0, Rang 12) und das Universum |
+| ANDG | 112.887.382 (Klasse A + B; jede B-Aktie ist an eine in eine A-Aktie tauschbare Einheit gekoppelt) | 424B4 vom 20.08.2026: „Total Class A common stock and Class B common stock to be outstanding immediately after this offering 112,887,382 shares“ (10-Q-Deckblatt 05.08.: 13.613.285 + 99.375.168 = 112.988.453, 0,09 % Abstand) | 18.540.410 (nur Klasse A) | 1,009 → 6,141 Mrd. USD; Größenband micro → large, Klasse small → mid; Score 62,7 und Position 19 (ohne Rang, zu wenige Achsen) unverändert |
+| JBS | 1.070.929.187 (Klasse A + B, 30.06.2026) | 10-Q Q2 2026: „As of June 30, 2026, there were 776,086,920 Class A common shares, par value of €0.01 per share, and 294,842,267 Class B common shares, par value of €0.10 per share, outstanding.“ | 3.289.363.700 (17.09. und 22.09.; an den übrigen Tagen richtig) | am festen Tag richtig (12,09 Mrd.): bestätigt, unverändert; ein Stand wie am 22.09. (39,57 Mrd.) wird zu 12,88 Mrd. |
+
+HLX: Der alte Helix-Ticker wird seit dem Zusammenschluss mit Hornbeck Offshore nicht mehr gehandelt (8-K vom 04.09.2026: „Helix was renamed“, Handelssymbol HOS); Kurs und Börsenwert (1,56 Mrd.) stehen beim Anbieter seit 01.09. still. HLX ist deshalb wie HOS, TYG und OLPX gesperrt (`quarantines`, Fingerabdruck Jahresumsatz 2025 1.291.474.000 und Jahresüberschuss 30.827.000): verlässt das Energie-Board (profitabel, Score 34,0, Rang 281) und steht mit Grund und ohne Börsenwert in der Ausschlussliste. HOS steht dort schon seit #402 ohne Börsenwert.
+
+Gesperrt statt berichtigt (Prüfrunde 2, 02.10.): Drei falsche Börsenwerte kann die Aktienzahl-Tabelle nicht tragen. Sie stehen wie HLX in `quarantines` (Fingerabdruck: die beiden Aktienzahlen des Anbieters `meta.sharesOutstanding` und `meta.impliedSharesOutstanding`; ändert der Anbieter sie, bleibt die Sperre und der Lauf warnt). Aufgehoben wird eine Sperre erst, wenn der Abruf den richtigen Wert selbst bilden kann (Yunji: Kurs nach der Teilung; Energisa: Kurs der Vorzugsaktie; Z98.DE: Aktienzahl-Abgleich auf Nicht-USD-Notierungen).
+- Yunji (2670.HK): Der Kurs im Anbieter-Quote steht seit 22.09. auf dem Wert vor der Teilung 1:10 (97 HKD; Tagesschlusskurse danach 9,50 bis 6,01 HKD); die Aktienzahl des Anbieters (693.459.820) ist richtig (HKEX FF305 vom 23.09.2026: „into 10 Subdivided Shares“, Schlussbestand 693,459,820 H-Aktien). Gezeigt werden 8,57 statt rund 0,53 Mrd. USD (6,01 HKD × 693.459.820 × 0,12745 USD/HKD), also unter der Untergrenze. Fester Tag: Industrials unprofitabel, Score 48,3, Position 99 von 100 ohne Rang (zu wenige Achsen), Band large/mid → gesperrt, steht mit Grund und ohne Börsenwert in der Ausschlussliste. 600153.SS (48,1, Rang 97) rückt dadurch auf Platz 100 der Liste.
+- Energisa (ENGI3.SA): Der Anbieter multipliziert 3.777.747.805 Aktien mit dem Kurs der Stammaktie. Laut Energisa (Aktionärsstruktur, „OWNERSHIP STRUCTURE ON 08/31/2026“, Zeile „Total capital stock“) sind es 975.954.372 Stamm- und 1.542.412.758 Vorzugsaktien; mit den Schlusskursen vom 30.09. (12,49 und 10,15 BRL) und dem Kurs des Standes (0,19263 USD/BRL) rund 5,36 statt 9,14 Mrd. USD. Fester Tag: volles Utilities-Board profitabel, Score 52,2, Rang 171, Band mega/mid → gesperrt, Ausschlussliste ohne Börsenwert. Bleibt über der Untergrenze; zurück aufs Board, sobald der Abruf beide Kurse kennt.
+- Z98.DE (JBS in Frankfurt): dieselbe falsche Aktienzahl wie JBS an den schlechten Tagen (3.289.961.848), aber auf einer Nicht-USD-Notierung, die die Tabelle nicht berichtigt. Stand nur in der Ausschlussliste (Zweitnotierung, 37,4 statt rund 12,2 Mrd. USD); dort jetzt „data-suspect“ mit Grund und ohne Börsenwert. JBS selbst steht unverändert auf dem Board.
+
+Indirekte Wirkung am festen Tag, alles zusammen gegen origin/main (Live-Kalibrierung, alle übrigen Stände bytegleich, kein anderer Börsenwert ändert sich): 451 Firmen ändern einen Score (Growth, Quality oder Rule of 40), höchstens um 1,2 (BURE.ST +1,2), 403 davon um 0,1; 502 Rangzeilen verschieben sich, höchstens um 4 Plätze. Board-Ein- und Austritte außer den genannten Firmen: 600153.SS rückt auf Platz 100 der Industrials-Liste (unprofitabel), weil Yunji sie verlässt; auf Platz 100 der Quality-Liste Utilities tauschen zwei Firmen mit gleichem Score 60,3 (MGL.NS heraus, 600674.SS herein; beobachtet, Ursache vermutlich die kleinere Utilities-Kohorte ohne Energisa, nicht nachgewiesen). Das globale Größenband verschiebt sich minimal; drei Firmen wechseln das Band (1114.HK small → micro, SHOT.ST mid → small, MIR large → mid).
+
+Nicht in dieser Tabelle:
+- PSEC: Anbieter 1,110 Mrd. (533,8 Mio. Aktien) gegen 524.832.496 Aktien laut 10-K („As of August 19, 2026, there were 524,832,496 shares of the Registrant's common stock outstanding“), also 1,7 % zu hoch. Unter der Wesentlichkeit: kein Band- oder Klassenwechsel, weit über der Untergrenze, kleiner als eine normale Tagesbewegung des Kurses.
+- Realord (1196.HK): erledigt; 5.769.239.520 Aktien = 1.442.309.880 × 4 nach der Teilung, Börsenwert 2,19 Mrd. stimmt.
+
+## Betriebsergebnis je Quartal in der Handtabelle (02.10.2026)
+
+Problem: Die SEC-Doppelprüfung vom 01.10. fand falsche Quartals-Betriebsergebnisse (`opIncQ`) bei CARG, PLUS, DCO und INFQ; bei SLC Agrícola passt keiner der fünf Anbieterwerte zum Abschluss. Bei HIVE wich der Anbieter von der Zeile „(Loss) income from operations“ ab; diese Zeile ist aber kein Betriebsergebnis (unten). Die Handtabelle kannte nur Umsatz und Bruttogewinn.
+
+Mechanismus (`lib/financial-known-cases.js`): `opIncQ` ist ein drittes Quartalsfeld mit genau derselben Wirkung wie Umsatz und Bruttogewinn: Fall je Ticker (samt Zweitnotierung), Feld und Periode mit dem exakten Anbieterwert; weicht der Anbieter ab, wird die Zelle leer (`vendor-value-changed`, nie ersetzt, nie 0); `coversThrough` je Feld, ein neues Anbieterquartal bleibt leer, bis es geprüft und eingetragen ist. Neu für alle Fälle: Ein Ersatzwert muss zu seinen Quellen passen, nämlich gleich einem `value` einer Quelle sein, gleich der Differenz zweier Quellwerte (der längere Zeitraum minus der kürzere, den er enthält, etwa Jahr minus neun Monate; nie 0 und nie eine Quelle minus sich selbst) oder bei einer vom Emittenten gerundeten Quelle innerhalb ihrer ausdrücklich eingetragenen Rundung (`roundingStep`) liegen; sonst lehnt die Prüfung die ganze Tabelle ab. Fälle ohne Quellwert (HTGC, Banpu, aus der ersten Tabelle) sind ausgenommen. Am Stand 2026-10-01c bestehen alle 162 Fälle: 106 über einen Quellwert, 16 abgeleitete Quartale über die Differenz, OXLC 31.03.2025 über die Rundung („approximately $121.2 million“ gegen 121.161.000, `roundingStep` 100.000), 10 ohne Quellwert, 29 leer gesetzt. Damit ist die offene Prüfnotiz aus PR #400 (Low 2) erledigt.
+
+Eingetragen sind 25 Zellen (fünf Firmen mal fünf Quartale, je `coversThrough` 30.06.2026): 13 ersetzt, 12 bestätigt. Jeder Wert ist am 02.10. vom Erbauer selbst im Bericht nachgelesen (SEC-Filings, CVM-Daten). Jeder `expectedBadValue` ist gleich dem Anbieterwert im Artefakt `snapshots` von Lauf 36839128456 (01.10.2026); kein gespeichertes Quartal der fünf Reihen bleibt ungeprüft (0 Zellen `period-not-verified`).
+
+| Ticker | Periode | Anbieter | Firma | Quelle (wörtlich) |
+| --- | --- | --- | --- | --- |
+| CARG | 31.12.2025 | 119.172.000 | 69.127.000 | 10-K 2025, Note 16: „Income from continuing operations 69,127 64,115 60,549 50,654“ |
+| CARG | 30.09.2025 | 54.674.000 | 64.115.000 | wie oben |
+| PLUS | 31.03.2026 | 37.644.000 | 30.904.000 | Ergebnismitteilung (8-K vom 28.05.2026): „Operating income 30,904 18,766 166,145 99,686“ |
+| DCO | 31.12.2025 | 13.998.000 | 16.882.000 | 10-K/A 2025: „Operating Income 13,998 2,884 16,882“ |
+| DCO | 30.09.2025 | −80.050.000 | −75.317.000 | 10-K/A 2025: „Operating Loss (80,050) 4,733 (75,317)“ |
+| INFQ | 31.03.2026 | −33.575.000 | −33.031.000 | 10-Q Q2 2026, Berichtigung: „Loss from operations $ (33,575) $ 544 $ (33,031)“ |
+| INFQ | 30.09.2025 | −6.536.000 | −6.699.000 | neun Monate 2025 berichtigt (23.895) minus sechs Monate (17.196), beide im 10-Q Q2 2026 |
+| INFQ | 31.03.2025 | −6.950.000 | −6.784.000 | sechs Monate 2025 (17.196) minus zweites Quartal (10.412), 10-Q Q2 2026 |
+| SLCE3.SA | 30.06.2026 | 2.619.662.000 BRL | 677.429.000 BRL | CVM ITR 2026, Konto 3.05 „Resultado Antes do Resultado Financeiro e dos Tributos“ |
+| SLCE3.SA | 31.03.2026 | 624.874.000 | 624.406.000 | CVM ITR 2026, 3.05 |
+| SLCE3.SA | 31.12.2025 | 222.439.000 | 209.162.000 | CVM DFP 2025 3.05 (1.812.542) minus ITR 3T25 neun Monate (1.603.380) |
+| SLCE3.SA | 30.09.2025 | 284.041.000 | 284.046.000 | CVM ITR 2025, 3.05 |
+| SLCE3.SA | 30.06.2025 | 2.242.857.000 | 453.286.000 | CVM ITR 2026, Vorjahresspalte, 3.05 |
+
+Bestätigt (Anbieter gleich Firma, Zeile bleibt Byte für Byte): CARG 30.06.2026, 31.03.2026, 30.06.2025; PLUS 30.06.2026, 31.12.2025, 30.09.2025, 30.06.2025; DCO 30.06.2026, 31.03.2026, 30.06.2025; INFQ 30.06.2026, 30.06.2025. CARG: „Income from continuing operations“ ist die Betriebsergebniszeile (Konzern-GuV des 10-K: Umsatz minus betriebliche Aufwendungen, vor „Other income, net“ und vor Steuern; „Income from continuing operations 244,445 157,147 120,329“), nicht das Ergebnis nach Steuern.
+
+HIVE (auch HIVE.TO), nicht eingetragen (Prüfrunde 2, 02.10.): Die Zeile „(Loss) income from operations“ steht in allen vier Berichten (10-Q Q1 FY2027, 10-K FY2026, 6-K Q2 und Q3 FY2026) nach den Bewertungsgewinnen aus Beteiligungen und Derivaten, der Rückstellung für Regulierungsverbindlichkeiten, dem Ergebnis aus Anlagenverkäufen, „Other income“ und „Finance expense“, direkt vor „Tax expense“; sie ist das Ergebnis vor Steuern. In den XBRL-Daten der Firma (companyfacts, CIK 1720424) trägt sie das Kennzeichen `IncomeLossFromContinuingOperationsBeforeInterestExpenseInterestIncomeIncomeTaxesExtraordinaryItemsNoncontrollingInterestsNet`; ein Kennzeichen `OperatingIncomeLoss` gibt es nicht, „Finance expense“ ist als `InterestExpenseNonoperating` markiert. Ein Betriebsergebnis weist HIVE also nicht aus, und ein selbst gebildeter Zwischenwert wäre geraten. Der Anbieterwert bleibt deshalb unverändert wie auf main (er ist selbst eine Summe aus Bruttoergebnis, Verwaltungskosten, aktienbasierter Vergütung, Rückstellung und Ergebnis aus Kryptowährungen, aber nicht als falsch belegt). Mit dem eingetragenen Vorsteuerergebnis wäre die Marge im Quartal bis 30.06.2025 wegen Bewertungsgewinnen von 24,6 Mio. USD auf +78 % gesprungen.
+
+SLC Agrícola, Basis: Das Betriebsergebnis (CVM 3.05) steht wie der Bruttogewinn aus #402 (3.03, 941.202) auf der Umsatzbasis 3.01 (2T26: 2.765.644, mit Neubewertung der Ernte); der Umsatz der Handtabelle ist die „Receita Operacional Líquida“ der Ergebnismitteilung (2.175.612, ohne sie). Die Margenreihe mischt damit zwei Basen; auf einer Basis wäre die Margenbewegung kleiner (Rohwert +0,044 statt +0,068). Das ist keine wahre Margenbewegung, sondern eine geerbte Basisfrage aus #402 (Folgeauftrag).
+
+Wirkung am festen Tag (Lauf 36839128456, 16.108 Stände, Watchlist d90e04b259, Growth live kalibriert; origin/main 347aaffb4e gegen diesen Stand): SLC Basiskonsum profitabel 81,8 Rang 25 → 82,7 Rang 22 (roh 0 → +0,068, Perzentil 53,7 → 89,8, Gewicht 0,3); INFQ 68,2 Rang 14 unverändert (roh −1,357 → −1,378); CARG, PLUS, DCO unverändert (korrigiert sind nur mittlere Quartale; Trajektorie, Gewinnstufe und Lampe lesen sie heute nicht). HIVE Financials unprofitabel 63,9 Rang 6 unverändert. Gewinnstufe und Lampen aller fünf unverändert. Indirekt: 14 Scores um höchstens 0,1, 15 Zeilen nur im Rang um höchstens 2 Plätze; Quality und Smallcap unverändert; keine Board-Ein- oder Austritte. Die alte Tabelle unter dem neuen Lader verändert 0 der 16.108 Stände (mit dem neu eingetragenen `roundingStep` bei OXLC; ohne ihn lehnt der neue Lader die alte Tabelle ab).
+
+Grenzen: Solange ein neues Quartal leer ist, ist die Margen-Trajektorie leer (`axes.js` verlangt das jüngste Quartal) und die Gewinnstufe rechnet bei Verlustfirmen mit dem Vorquartal. Die Lückenprüfung des Board-Verlaufs (`scripts/write-board-history.js`, opSlot) erkennt eine leer gesetzte Zelle der Handtabelle nicht als leeren Kopf; sie wirkt nur an angemeldeten Datensprung-Tagen (Folgeauftrag, die Datei ist in offenen PRs in Arbeit).
+
+Eintragen der nächsten Quartale (bis 30.09.2026), Betriebsergebnis zusammen mit Umsatz und Bruttogewinn, sobald die Firma berichtet:
+- CARG: 10-Q Q3 2026, Termin nicht geprüft (Vorjahr Anfang November).
+- PLUS: 10-Q Q2 FY2027, laut Anbieterkalender 09.11.2026 (nicht geprüft).
+- DCO: 10-Q Q3 2026, Termin nicht geprüft.
+- INFQ: 10-Q Q3 2026, Termin nicht geprüft.
+- SLC Agrícola: ITR 3T26, gesetzliche Frist 14.11.2026 (45 Tage nach Quartalsende).
+
+## HL: Jahres-Bruttogewinn leer (02.10.2026)
+
+Problem: Hecla (HL, auch HL.SW) hat die Jahre 2023 bis 2025 nach dem Verkauf der Mine Casa Berardi neu ausgewiesen (8-K vom 28.08.2026, Exhibit 99.1: „as a discontinued operation for all periods presented“). Der Anbieter führt den alten Stand. Sichtbar falsch ist vor allem der Bruttogewinn: Kennzahl der Zeile +213,9 % (neu ausgewiesen +178,3 %), Achse Bruttogewinn-Wachstum im 98. Perzentil.
+
+Lösung: drei Jahreszellen `annualGP` (Position 0 bis 2, undatierte Reihe, Alias HL.SW) leer mit Grund; 2022 folgt nach der Regel ohne Lücken (`annual-older-than-withheld`). Der Jahresumsatz bleibt: Der Fehler im Wachstum ist 0,24 Punkte (alt 1.423,0/929,9 = +53,0 %, neu 1.103,9/720,2 = +53,3 %), und leere Umsatzjahre würden drei Achsen löschen und den Abschlag für Vermögenswachstum in der Kapitaleffizienz stillschweigend entfernen.
+
+| Jahr (Position) | Anbieter | Neu ausgewiesen (Exhibit 99.1, Segmentnote, Spalte gesamt) |
+| --- | --- | --- |
+| 2025 (0) | 622.203.000 | 509.805.000: „Gross profit 322,646 132,950 53,665 509,261 544 509,805“ |
+| 2024 (1) | 198.210.000 | 183.184.000: „Gross profit/(loss) (a) 153,447 56,462 (26,754) 183,155 29 183,184“ |
+| 2023 (2) | 112.949.000 | 101.271.000: „Gross profit (loss) (a) 124,609 6,552 (29,793) 101,368 (97) 101,271“ |
+| 2022 (3) | 116.156.000 | nicht neu ausgewiesen; leer nach der Regel ohne Lücken |
+
+Wirkung am festen Tag (wie oben), jede Achse vorher → nachher:
+- Growth, Materials profitabel: 79,3 Rang 39 → 73,5 Rang 93. Bruttogewinn-Wachstum Perzentil 98,1 → leer (Gewicht 0,8); unverändert: Wachstumsniveau 89,3 (0,5), Beschleunigung 85,9 (1,9), Rule of X 90,8 (0,6), Margen-Trajektorie 90,3 (0,4), Kapitaleffizienz 64,3 (2,0), Verwässerung 34,4 (0,8). Wachstum +52,45 % (Quartalsbein) unverändert. Kennzahl +213,9 % → leer mit Grund.
+- Quality, Materials profitabel: 70,2 Rang 111 → 53,8 Rang 366. Bruttogewinn-Wachstum 98,4 → leer (Gewicht 1,5) und Margenniveau 77,7 → leer (Gewicht 2,2; `marginLevel` liest den Jahres-Bruttogewinn); unverändert: Kapitaleffizienz 59,9 (2,6), Verwässerung 31,1 (1,2), Wachstumsniveau 89,4 (0,8).
+- Indirekt (zusammen mit dem Betriebsergebnis oben): Growth 82 Scores um höchstens 0,3, Quality 192 um höchstens 0,1, Ränge um höchstens 2 Plätze; keine Board-Ein- oder Austritte.
+
+Offen: Das Margenniveau liegt neu ausgewiesen bei 46,2 % (509,8/1.103,9) statt 43,7 % beim Anbieter; die leere Zelle kostet HL in Quality mehr als der Fehler. Jahresersatzwerte schließt die Tabelle bewusst aus (#403); ob HL dafür eine Ausnahme bekommt, ist eine Methodenfrage. Ebenfalls offen: Betriebsergebnis 2023 bis 2025 auf altem Stand (514,8 / 106,3 / −44,7 Mio. statt 396,4 / 123,8 / 12,0 Mio. laut 8-K, „Income from operations / 396,409 / 123,762 / 12,009“); die Tabelle trägt `annualOpInc` nicht.
+
+## Wisdom Marine gesperrt (02.10.2026)
+
+Problem: Wisdom Marine (2637.TW) berichtet in US-Dollar (Konzernabschluss 2025, Seite 17: „statements are presented in US Dollar, which is the Company's functional currency“; Umsatz 2025 Seite 10: „$541,957,260“). Der Anbieter führt alle Abschlusszahlen in Taiwan-Dollar unter dem Kennzeichen USD: Umsatz 2025 16.948.954.566 (31,27 × 541.957.260), 2024 20.862.634.594 (32,88 × 634.431.170). Verhältnisse stimmen, Beträge und das Wachstum (+40,3 %, Taiwan-Dollar-Wachstum) nicht. Die Währungstabelle (`lib/statement-currency-hand-table.js`) trägt nur den umgekehrten Fall (Abschluss in USD, Anbieter in Fremdwährung mit USD-Notierung).
+
+Lösung: Sperre wie HLX (`quarantines`), Fingerabdruck auf die exakt gespeicherten Jahreswerte, unabhängig von der Position: Jahresumsatz 16.948.954.566,336 und Jahresergebnis 3.948.354.422,1056 (gerundete Werte würden vom ersten Lauf an warnen). Ein neues Quartal oder ein neues Jahr vorn ändert den Fingerabdruck nicht; ändert der Anbieter die Werte, bleibt die Sperre und der Lauf warnt (`quarantine-fingerprint-changed`), bis ein Mensch neu prüft. Am festen Tag: keine Warnung.
+
+Wirkung am festen Tag: verlässt die volle Industrials-Liste (profitabel, 43,5, Position 1.274, nicht im gezeigten Board) und die volle Quality-Liste (35,4, Position 1.584); steht mit `data-suspect`, Grund und ohne Börsenwert und Wachstum in der Ausschlussliste. Aufgehoben wird die Sperre, wenn die Währungstabelle auch Fremdwährungsbeträge unter USD-Kennzeichen umrechnen kann (Folgeauftrag, zusammen mit HCLTECH.NS).
+
+## Dian Tou: Quartale mit zwei Basen und falsch verteilte Quartale leer (02.10.2026)
+
+Problem: Inner Mongolia Dian Tou Energy (002128.SZ, CNY, Umrechnung 0,14917135) zeigte Wachstum +123,93 % (Energie, profitabel, Rang 89). Der Halbjahresbericht 2026 (cninfo, Seite 10) weist das Vorjahr nach einem Kauf unter gleicher Konzernmutter neu aus („同一控制下企业合并“): Umsatz Halbjahr 2025 neu 19.942.313.524,35 statt bisher 14.463.566.927,57 CNY. Das erste Quartal 2026 ist nicht neu ausgewiesen (Quartalsbericht Q1 2026, Seite 2: 8.413.266.224,26). Der Anbieterwert für das zweite Quartal 2026 (15.509.637.777,88) ist das Halbjahr 2026 (23.922.904.002,14) minus dieses erste Quartal, also zwei Basen; der Vorjahreswert (6.926.120.179,88) steht auf der alten Basis. Außerdem verteilt der Anbieter Umsatz, Bruttogewinn und Betriebsergebnis falsch auf das dritte und vierte Quartal 2025 (Summe gleich):
+
+| Feld | Quartal | Anbieter (CNY) | Firma (CNY) | Quelle |
+| --- | --- | --- | --- | --- |
+| Umsatz | Q3 2025 | 16.566.018.093,99 | 7.939.331.625,29 | Q3-Bericht 2025 S. 2; Jahresbericht 2025 S. 10 (Quartalstabelle) |
+| Umsatz | Q4 2025 | −914.626.694,25 | 7.712.059.774,45 | Jahresbericht 2025 S. 10 |
+| Bruttogewinn | Q3 2025 | 5.401.617.860,04 | 2.836.303.431,84 | neun Monate (Q3-Bericht S. 9) minus Halbjahr (Halbjahresbericht 2025 S. 163), je Umsatz minus 营业成本 |
+| Bruttogewinn | Q4 2025 | 562.003.443,40 | 3.127.317.871,60 | Jahr (Jahresbericht S. 167) minus neun Monate |
+| Betriebsergebnis | Q3 2025 | 3.850.177.471,91 | 2.113.857.499,63 | 营业利润 neun Monate (S. 10) minus Halbjahr (S. 163) |
+| Betriebsergebnis | Q4 2025 | 279.178.135,34 | 2.015.498.107,62 | Jahr (S. 167) minus neun Monate |
+
+Lösung: acht leer gesetzte Zellen ohne `coversThrough` und ohne Sperre (eine Sperre würde die Zeile vom Board nehmen, statt sie mit leeren Feldern zu zeigen): Umsatz 30.06.2026 und 30.06.2025 (zwei Basen), Umsatz, Bruttogewinn und Betriebsergebnis 30.09.2025 und 31.12.2025 (falsch verteilt). Kein Ersatzwert: Für das zweite Quartal 2026 und das Vorjahresquartal gibt es noch keine Quartalszahlen der Firma auf einer Basis. Die Anbieterwerte sind nach der Umrechnung exakt (CNY mit zwei Nachkommastellen, Abgleich `expectedBadValue × Kurs` gleich dem gespeicherten Wert); die frühere Notiz, es gebe keine exakten Werte, galt nur für ganze CNY. Damit schließt auch der offene Wert-Tor-Posten „002128.SZ Bruttogewinn 31.12.2025“.
+
+Wirkung am festen Tag: Das Quartalsbein des Wachstums braucht jedes Quartal zwischen dem jüngsten und dem Vorjahresquartal (`src/scoring/axes.js:100`) und fällt weg; das Wachstum kommt aus dem Jahresbein (+0,86 %, beide Jahre auf alter Basis, Etikett „year“). Growth, Energie profitabel: 60,5 Rang 89 → 42,9 Rang 215 (verlässt die Top 100, PTBA.JK rückt auf Platz 100); Wachstumsniveau Perzentil 98,1 → 27,7 (Gewicht 0,8), Rule of X 98,4 → 34,6 (1,5), Margen-Trajektorie 61,4 → leer (0,4); unverändert Beschleunigung 24,8 (3,0), Bruttogewinn-Wachstum 68,7 (1,8), Kapitaleffizienz 54,0 (2,4). Quality, Energie: 64,1 Rang 58 → 57,4 Rang 101 (ODL.OL rückt auf Platz 100); nur das Wachstumsniveau ändert sich (98,1 → 27,7). Kennzahl der Zeile (Bruttogewinn-Wachstum aus Jahreswerten, +9,1 %) unverändert.
+
+Offen: Bruttogewinn und Betriebsergebnis des zweiten Quartals 2026 stehen ebenfalls auf zwei Basen (Halbjahr neu minus Q1 alt); heute liest sie kein Leser des Quartalspaars, weil das Umsatzpaar leer ist (Folgeauftrag). Eintragen der Quartale auf einer Basis, sobald die Firma sie veröffentlicht (Q3-Bericht 2026 mit neu ausgewiesenem Vorjahr; Termin nicht geprüft, Vorjahr 23.10.).
+
+## Offene Posten aus der Triage: SK Square, Kanematsu, Cemig, MODEC (02.10.2026)
+
+Datenstand aller Zahlen dieses Abschnitts: Artefakt `snapshots` des Tageslaufs 36984285974 (02.10.2026, 16.102 Stände), Watchlist 57c56346d1, Growth live kalibriert wie im Produktionslauf, Code origin/main f1049b2b58 gegen diesen Stand. Jeder `expectedBadValue` ist gleich dem Anbieterwert dieses Artefakts (in Originalwährung, Abgleich `expectedBadValue × Kurs` exakt gleich dem gespeicherten Wert); jeder neue Wert ist am 02.10. an der Primärquelle nachgelesen (DART, TDnet, CVM, Berichte der Firmen).
+
+### SK Square (402340.KS): gesperrt, Bruttogewinn leer
+
+Problem: Der Anbieter zählt bei SK Square in jedem gespeicherten Quartal die Gewinne aus Beteiligungen zum Umsatz. Halbjahresbericht 2026 (DART, Konzern-Gewinn- und Verlustrechnung, Millionen KRW): „매출액 328,549 628,898 355,695 701,640“ und „지분법이익 19,281,225 27,612,290 1,481,739 3,196,768“; der Anbieterwert für das zweite Quartal 2026 ist 19.609.774 = 328.549 + 19.281.225, der für das zweite Quartal 2025 1.837.434 = 355.695 + 1.481.739. Gezeigt wurden +967,2 % Wachstum (Halbleiter, profitabel, Rang 151; Quality Halbleiter Rang 83). Auf einer Basis (beide Werte aus dem Halbjahresbericht 2026) sind es −7,6 % (328.549 / 355.695).
+
+Warum keine Korrektur, sondern eine Sperre: Nach dem Verkauf von Dreamus (Beschluss 29.10.2025) weist die Firma deren Ergebnis als aufgegebenen Geschäftsbereich aus und hat die Vorjahreswerte neu ausgewiesen (Halbjahresbericht 2026, Anhang 4: „(주)드림어스컴퍼니 지분 매각으로 인하여 관련손익을 중단영업으로 분류함에 따라 비교표시된 전기 부문정보를 재작성하였습니다“). Auf der neuen Basis gibt es heute das zweite Quartal 2026, das erste Quartal 2026 (300.349), das zweite Quartal 2025 (355.695) und das Jahr 2025 (1.411.521), aber nicht das dritte und vierte Quartal 2025: Der Bericht zum dritten Quartal 2025 (407.889) steht noch auf der alten Basis mit Dreamus, und neun Monate 2025 auf der neuen Basis erscheinen erst im Bericht zum dritten Quartal 2026. Eine Reihe aus beiden Basen wäre gemischt. Auch der Jahresumsatz des Anbieters enthält die Beteiligungsgewinne (2025: 10.455.553 statt 1.411.521 Mio. KRW), ein Rückfall auf das Jahresbein wäre ebenso falsch. Deshalb steht SK Square in `quarantines` (Fingerabdruck: das Periodenende des jüngsten gespeicherten Umsatzquartals, 30.06.2026; keine Beträge, weil der Abruf die Tabelle auf die KRW-Werte vor der Umrechnung anwendet und der Bruttogewinn dieses Quartals selbst leer gesetzt wird, sodass ein Betrag beim Abruf und bei jedem erneuten Lesen abwiche) und verlässt die Boards mit sichtbarem Grund. Kommt das nächste Quartal, warnt der Lauf (`quarantine-fingerprint-changed`), die Sperre bleibt, und die Reihe kann auf einer Basis eingetragen werden.
+
+Bruttogewinn: Die Firma gliedert nach Kostenarten und weist keinen Bruttogewinn aus (auf „매출액“ folgt „영업비용“). Alle fünf gespeicherten Quartale sind leer gesetzt (Fälle ohne Ersatzwert, keine `coversThrough`); der Anbieterwert lag ein Vielfaches über dem Umsatz (zweites Quartal 2026: 19.522.537 Mio. KRW). Solange die Sperre gilt, liest kein Board diese Zellen.
+
+Wirkung am festen Tag: SK Square verlässt das volle Halbleiter-Board (Growth profitabel, 48,1, Rang 151, Wachstum +967,2 %) und die Quality-Liste Halbleiter (59,9, Rang 83, in den Top 100); dort rückt 3443.TW von Platz 101 auf 100. Indirekt über die Live-Kalibrierung: Growth 197 Scores, Quality 285 Scores (höchstens 0,3), Smallcap keine. Ausreißer Growth: 002739.SZ (Software/Komm., profitabel) 59,9 Rang 146 → 29,9 Rang 451. Ursache ist der Zyklus-Dämpfer: Seine Schwelle ist das 75. Perzentil der Umsatz-Rückgänge aller gerouteten Firmen (`src/scoring/score.js` Zeilen 1025 bis 1027), und der Faktor halbiert den Score, sobald eine Firma mit schwankendem Betriebsergebnis die Schwelle erreicht (Zeilen 691 und 696, `CYCLE_DAMPER_KD` 0,5). Ohne SK Square sinkt die Schwelle minimal, und 002739.SZ liegt danach darauf. Das ist keine Änderung an den Zahlen von 002739.SZ, sondern eine Kante der Live-Kalibrierung, die jede Änderung des Universums auslösen kann. Übrige Growth-Scores höchstens 0,2; 416 Growth-Zeilen ändern nur den Rang (um höchstens 3 Plätze), 36 Quality-Zeilen um höchstens 4 Plätze.
+
+### Kanematsu (8020.T): vier Umsatzquartale aus den Quartalsberichten
+
+Problem: Der Anbieter führt seit 05.09. für das Quartal April bis Juni 2026 den Umsatz 0, ebenso für Juli bis September 2025; seine beiden übrigen Quartale weichen um je 36 Mio. JPY von den Werten der Firma ab (Summe gleich). Die Firma berichtet nach IFRS, Geschäftsjahr bis März, Beträge in Millionen JPY auf ganze Millionen abgeschnitten („百万円未満切捨て“).
+
+Lösung: alle vier gespeicherten Quartale aus den 決算短信 der Firma (TDnet über eir-parts), `coversThrough` 30.06.2026; kein Quartal bleibt ungeprüft (0 Zellen `period-not-verified`). Zwei Quartale sind Differenzen zweier Werte desselben Geschäftsjahres; durch das Abschneiden kann ein abgeleitetes Quartal um höchstens 1 Mio. JPY vom genauen Wert abweichen.
+
+| Quartal | Anbieter (Mio. JPY) | Firma (Mio. JPY) | Quelle (wörtlich, Seite 8 bzw. 9, Zeile „収益“) |
+| --- | --- | --- | --- |
+| Apr bis Jun 2026 | 0 | 272.167 | 1. Quartal 2027/3: „収益 251,116 272,167“ |
+| Jan bis Mrz 2026 | 279.965 | 280.001 | Jahr 2026/3 „収益 1,050,936 1,067,665“ minus neun Monate „収益 781,744 787,664“ |
+| Okt bis Dez 2025 | 274.205 | 274.169 | neun Monate 787.664 minus Halbjahr „収益 518,573 513,495“ |
+| Jul bis Sep 2025 | 0 | 262.379 | Halbjahr 513.495 minus 1. Quartal 2026/3 „収益 251,011 251,116“ |
+
+Wirkung am festen Tag: Score und Rang unverändert (Industrials profitabel 41,4, Rang 1.369; Quality Industrials 45,6, Rang 1.186), Wachstum +1,59 % unverändert. Die gespeicherte Reihe hat kein Vorjahresquartal (April bis Juni 2025 fehlt beim Anbieter), deshalb liest kein Wachstumsbein die korrigierten Quartale; sie stehen jetzt richtig im Datenstand und in den Gründen der Exportzeile. Indirekt: keine Bewegung (alle anderen Zeilen gleich).
+
+Offen: Der Bruttogewinn steht beim Anbieter in allen vier Quartalen auf 0, obwohl die Firma ihn ausweist („売上総利益“, zum Beispiel April bis Juni 2026 46.926 Mio. JPY); nicht Teil dieses Auftrags. Nächstes Quartal (Juli bis September 2026, Halbjahresbericht Anfang November, Termin nicht geprüft) bleibt leer, bis es eingetragen ist.
+
+### Cemig (CIG-C): Bruttogewinn auf der neu ausgewiesenen Basis
+
+Problem: Der Bruttogewinn des Anbieters ist sein Umsatz minus die Kosten laut Abschluss; sein Umsatz lässt aber eine Zeile der Firma weg (Anpassung des zu entschädigenden Finanzvermögens, im ersten Quartal 2026 120,6 Mio. BRL). Dadurch liegt jeder gespeicherte Bruttogewinn 5 bis 8 % neben dem der Firma (erstes Quartal 2026: 1.591,9 statt 1.712,5 Mio. BRL laut Quartalsbericht, „LUCRO BRUTO 1.712.453 1.840.666“).
+
+Basis: Im Bericht zum zweiten Quartal 2026 hat Cemig Kosten neu gegliedert (Nota 2.4 „Reapresentação de saldos comparativos“: die Geldwertanpassung von Rückstellungen steht jetzt im Finanzergebnis) und das Vorjahresquartal neu ausgewiesen („LUCRO BRUTO 2.150.133 49.627 2.199.760“, Spalten bisher, Anpassung, neu). Auf dieser Basis gibt es heute das zweite Quartal 2026, das erste Quartal 2026 (Halbjahr minus zweites Quartal; der Bericht zum ersten Quartal zeigte vor der Umgliederung 1.712.453) und das zweite Quartal 2025. Das dritte und vierte Quartal 2025 gibt es nur auf der alten Basis; der Anbieterwert passt auch dazu nicht. Diese beiden Zellen sind leer gesetzt, statt zwei Basen zu mischen. Die Spezifikation nannte für das erste Quartal 2026 den Wert 1.712.453; eingetragen ist 1.768.103, weil nur dieser zur Basis der übrigen Quartale passt.
+
+| Quartal | Anbieter (Tsd. BRL) | Neu (Tsd. BRL) | Quelle (CVM ITR/DFP, Konto 3.03 „Resultado Bruto“) |
+| --- | --- | --- | --- |
+| Apr bis Jun 2026 | 1.804.157 | 1.952.136 | ITR 30.06.2026, Abr a Jun/2026 |
+| Jan bis Mrz 2026 | 1.591.911 | 1.768.103 | ITR 30.06.2026: Halbjahr 3.720.239 minus Abr a Jun 1.952.136 |
+| Okt bis Dez 2025 | 1.737.632 | leer | alte Basis: DFP 2025 7.237.316 minus ITR neun Monate 5.591.424 = 1.645.892 |
+| Jul bis Sep 2025 | 1.508.569 | leer | alte Basis: ITR 30.09.2025, Jul a Set/2025 1.600.625 |
+| Apr bis Jun 2025 | 2.080.901 | 2.199.760 | ITR 30.06.2026, Vorjahresspalte (neu ausgewiesen) |
+
+`coversThrough` 30.06.2026 für den Bruttogewinn von CIG-C; 0 Zellen `period-not-verified`. Der Umsatz bleibt beim Anbieter (1,2 % unter dem der Firma, nicht Teil dieses Auftrags); die Quartalsmarge mischt deshalb leicht zwei Basen. Diese Marge liest heute nur die Lampe für ein auffälliges jüngstes Quartal (Schwelle 55 % Bruttomarge), sie bleibt aus.
+
+Wirkung am festen Tag: Score, Rang und Achsen unverändert (Versorger profitabel 46,8, Rang 204; Quality Versorger 48,5, Rang 195). Den Quartals-Bruttogewinn liest bei fünf gespeicherten Quartalen kein Score-Bein (die Kennzahl der Zeile braucht acht Quartale und nimmt sonst den Jahreswert). Indirekt: keine Bewegung.
+
+Zweitnotierungen: CMIG3.SA und CIG sind keine Aliasse. CMIG3.SA trägt ein anderes Anbieterpaket (Bruttogewinn 30.06.2026 1.804.259 und 30.06.2025 2.081.436 statt 1.804.157 und 2.080.901), CIG ein älteres Paket ohne das Quartal bis 30.06.2026 und mit tausendfach zu großen Werten (31.03.2026 Bruttogewinn 10.333.161 Mio. BRL). Beide stehen als Doppelnotierung (`dup-issuer`) auf keinem Board, vorher wie nachher.
+
+### MODEC (6269.T): nicht eingetragen
+
+MODEC berichtet in US-Dollar; die Quartale des Anbieters sind Yen-Umrechnungen zu wechselnden Stichtagskursen („June 30, 2026 at US$1.00 = 162.39 Japanese yen“) und liegen nach der Umrechnung +4,4 %, +1,6 %, +12,8 % und −1,7 % neben den Dollarwerten der Firma (Halbjahr 2026 „Revenue 2,074,296 2,447,050“, erstes Quartal „Revenue 873,038 1,077,078“, Tsd. USD). „Nativ“ ist im Stand Yen (`meta.reportingCurrencyOriginal` JPY, `fxRateApplied` 0,006352635; 225.152 Mio. JPY × Kurs = gespeicherte 1.430.308.475,52). Die Währungstabelle setzt bei MODEC nur die Jahresreihe auf US-Dollar (`series: annual`).
+
+Nicht eingetragen, weil ein bestehender Wächter genau diese Zellen festhält: `tests/statement-currency-waechter.test.js` (Block „MODEC corrects annual USD statements and retains quarterly JPY conversion“) prüft mit den echten Anbieterwerten 225.152 und 172.224 Mio. JPY, dass der Umrechner die Quartale mit dem Yen-Kurs führt und dass eine zweite Umrechnung nichts mehr ändert. Der Umrechner (`pull-yahoo.js`) wendet die Handtabelle vor der Umrechnung an; ein Dollar-Ersatzwert kann dort noch nicht stehen und käme erst beim nächsten Einlesen, eine leere Zelle widerspräche dem Wächter ebenso. Jede Lösung ändert also das, was dieser Wächter festhält; das ist eine Methodenentscheidung zu #398 und nicht Teil dieser Änderung. Score und Rang sind davon heute nicht berührt (Wachstum +9,43 % aus der Dollar-Jahresreihe; die gespeicherte Reihe hat kein Vorjahresquartal).
+
+### HL: Jahres-Bruttogewinn bleibt leer (keine Jahres-Ersatzwerte)
+
+Geprüft wurde, ob die neu ausgewiesenen Bruttogewinne 2023 bis 2025 eingetragen werden können. Die neu ausgewiesene Ergebnisrechnung im 8-K vom 28.08.2026 (Exhibit 99.1) hat keine Zeile Bruttogewinn („Sales $ 1,103,902 $ 720,246 $ 542,549“, danach „COSTS AND EXPENSES“ bis „Income from operations 396,409 123,762 12,009“); der Bruttogewinn steht nur in der Segmentnote, dort aber als Summe der Firma („Gross profit $ 322,646 $ 132,950 $ 53,665 $ 509,261 $ 544 $ 509,805“, Spalte gesamt). Das wären Werte der Firma auf einer Basis.
+
+Eingetragen ist trotzdem nichts, und die Erweiterung für Jahres-Ersatzwerte ist nicht gebaut: Der Score liest den Jahres-Bruttogewinn nur zusammen mit dem Jahresumsatz (Margenniveau und Margenpfad, `src/scoring/axes.js` Zeilen 255 und 492). Umsatz, Bruttogewinn und Betriebsergebnis des Anbieters sind die Werte des ursprünglichen 10-K 2025 mit Casa Berardi (SEC-Daten der Firma, Einreichung 0001193125-26-055059: Umsatz 1.423.019, Bruttogewinn 622.203 und 198.210, Betriebsergebnis 514.795 Tsd. USD); die Anbieterreihe ist also in sich auf einer Basis, nur nicht auf der neuen. Der neu ausgewiesene Bruttogewinn allein ergäbe eine Marge von 35,8 % (509,8 / 1.423,0), die zu keiner Basis passt (alt 43,7 %, neu 46,2 %). Eine Basis entstünde erst, wenn auch Jahresumsatz und Jahres-Betriebsergebnis ersetzt würden; dann stünden aber die aktienbasierte Vergütung (Verwässerung = Vergütung je Umsatz, Zeile 466) und die Kapitalflüsse weiter auf dem Konzernstand mit Casa Berardi. Das ist mehr als die kleinste Erweiterung und eine Methodenfrage (alte Basis, die in sich stimmt, gegen neue Basis für alle Jahresfelder). HL bleibt wie seit #409: Jahres-Bruttogewinn leer mit Grund, Growth Materials 73,5 Rang 93, Quality Materials 53,9 Rang 370 (fester Tag 02.10., unverändert).
+
+### Prüfregel: Ersatzwert gehört zum eigenen Quartal (Runde 2, 02.10.2026)
+
+Die Prüfung beim Laden der Tabelle verlangt jetzt zusätzlich, dass der Quellwert, auf den ein Ersatzwert zurückgeht, für das Quartal des Falls gilt: Das Ende des Quellzeitraums (bei einer Differenz das Ende des abgeleiteten Zeitraums, also bei gleichem Beginn das Ende des längeren Zeitraums, bei gleichem Ende der Tag vor Beginn des kürzeren) liegt höchstens sieben Tage neben der Periode des Falls. Die sieben Tage braucht DCO, dessen Quartale nach 52/53 Wochen bis zu vier Tage neben dem Kalenderquartal enden. Vertauscht jemand die Perioden zweier Fälle derselben Firma und lässt Werte und Quellen stehen, lehnt die Prüfung die ganze Tabelle ab. Alle 212 Fälle bestehen; die Regel ändert keinen Wert.
+
+## Wachstum über zwei Geschäftsjahre: Ora Banda, Capricorn, Tsuruha leer (06.10.2026)
+
+Problem: Der Anbieter liefert bei drei Firmen das mittlere Geschäftsjahr nicht. Die Jahresreihe springt dadurch von 2026 direkt auf 2024, und das angezeigte Umsatzwachstum lief über zwei Jahre (veröffentlicht am 06.10.: Ora Banda Mining OBM.AX 276,9 %, Rule of 40 Platz 16; Capricorn Metals CMM.AX 97,8 %, Rule of 40 Platz 134; Tsuruha 3391.T 41,2 % über 21 Monate, Gesundheit Platz 78; in der lokalen Nachrechnung derselben Rohstände Platz 13, 150 und 75).
+
+- Ora Banda: Geschäftsjahr bis 30.06.2025 fehlt; Geschäftsbericht 2025, PDF-Seite 69: „Revenue 2 404,292 214,236“ (Tsd. AUD).
+- Capricorn: Geschäftsjahr bis 30.06.2025 fehlt; Mitteilung vom 29.08.2025, PDF-Seite 31: „Revenue 2 505,892 359,727“ (Tsd. AUD).
+- Tsuruha: Umstellung des Geschäftsjahres auf Ende Februar; das Rumpfjahr bis 28.02.2025 (9,5 Monate) fehlt, und die Firma nennt selbst keine Veränderungsrate (Ergebnisbericht 2026年2月期, Anmerkung zum 決算期変更).
+
+Regel: Gesperrt wird das falsche Vorjahr (Position 1) samt älteren Jahren, das neueste Jahr bleibt. Der Grundtext („Ältere Jahresumsätze zurückgehalten …") stimmt auch nach einer Reparatur durch den Anbieter. Liefert der Anbieter bei Ora Banda oder Capricorn das fehlende Jahr nach, ergibt sich wieder ein Paar benachbarter Jahre, ohne dass die Tabelle geändert werden muss; 2024 und älter bleiben dann weiter gesperrt (Folgepaket P111: Ersatzwerte statt Sperre). Bei Tsuruha sperrt eine vorsorgliche zweite Zeile das Rumpfjahr bis 28.02.2025 (845,6 Mrd. JPY), falls der Anbieter es liefert; sonst zeigte das Board +71,5 % aus 12 gegen 9,5 Monate (Prüfbefund D15). Test `tests/p106-nonadjacent-annual-withhold.test.js`. Keine Formeländerung; die allgemeine Regel „Jahrespaare nur 11 bis 13 Monate auseinander" liegt beim Rat (Frage 10).
+
+Wirkung auf den eingefrorenen Rohständen vom 06.10.: Die drei Zeilen verlieren ihr Wachstum und stehen auf den HyperGrowth-Boards ohne Rang („zu wenig belegte Achsen") mit dem Sperrgrund. In den Top 20 ändert sich nur Rule of 40 (Ora Banda heraus, SQM rückt auf Platz 20). Die Perzentile der Vergleichsgruppen Rohstoffe und Gesundheit verschieben sich leicht (Ränge höchstens 13 Plätze). Ora Banda und Capricorn erscheinen neu auf der nicht angezeigten Quality-Liste. Auf den angezeigten Boards verschwinden die drei Firmen ganz; ihr Grund steht nur in den Volllisten (Hinweis D15, Frage an findash).
+
+## Breite Nullregel: ausschließlich Schattenrechnung
+
+Alle 122 gemessenen Scoreänderungen stehen in der folgenden Tabelle und in financial-corrections-board-changes.csv. Alle 9900 Zellen stehen in financial-corrections-shadow-cells.csv. 26 sichtbare Auswirkungen bleiben auch bei festgehaltener Vergleichskalibrierung; die übrigen entstehen bei der regulären Neukalibrierung. Keine dieser breiten Änderungen ist aktiviert.
+
+| Ticker | Familie / Board | Score alt | Score Schatten |
+| --- | --- | --- | --- |
+| M4I.DE | growth / financials | 65.7 | fehlt |
+| AGTF.TO | growth / consumer-staples | 54.2 | 54.7 |
+| 0291.HK | growth / consumer-staples | 31.5 | 41.6 |
+| VPK.VI | growth / energy | 46.4 | 44.3 |
+| 601881.SS | growth / financials | 45.9 | 49.8 |
+| IGG.L | growth / financials | 35.7 | 44.7 |
+| OXLC | growth / financials | 29.2 | 35 |
+| MAZE | growth / health-care | 34.8 | fehlt |
+| PYC.AX | growth / health-care | 26.8 | 41.4 |
+| 600582.SS | growth / industrials | 31.7 | 47 |
+| 600525.SS | growth / industrials | 31 | 44.5 |
+| HMMC.TO | growth / materials | 55.5 | 63.1 |
+| EQR.AX | growth / materials | 41.3 | fehlt |
+| RML | growth / materials | 41.3 | fehlt |
+| 603993.SS | growth / materials | 26.1 | 29.5 |
+| 3888.HK | growth / software-comm-services | 25 | 16.6 |
+| V03.SI | growth / tech-hardware | 37.3 | 38.3 |
+| 0285.HK | growth / tech-hardware | 26.3 | 26.1 |
+| ADV.DE | growth / tech-hardware | 62.8 | 69.2 |
+| 2498.HK | growth / tech-hardware | 43 | 52.8 |
+| EYDAP.AT | growth / utilities | 21.9 | fehlt |
+| BAJFINANCE.NS | growth / financials | fehlt | 57 |
+| MA | growth / financials | fehlt | 54.6 |
+| PAG.L | growth / financials | fehlt | 43.8 |
+| FMCC | growth / financials | fehlt | 41.5 |
+| 8425.T | growth / financials | fehlt | 32.4 |
+| 7936.T | quality / quality-consumer-discretionary | 80.6 | 80.5 |
+| CHALET.BO | quality / quality-consumer-discretionary | 77.2 | 77.1 |
+| 6181.HK | quality / quality-consumer-discretionary | 76.2 | 76.1 |
+| SANSERA.NS | quality / quality-consumer-discretionary | 74.4 | 74.3 |
+| 3306.HK | quality / quality-consumer-discretionary | 74.3 | 74.2 |
+| HEROMOTOCO.NS | quality / quality-consumer-discretionary | 74.1 | 74 |
+| ONON | quality / quality-consumer-discretionary | 74 | 73.9 |
+| PUUILO.HE | quality / quality-consumer-discretionary | 73.8 | 73.7 |
+| SUNDRMFAST.NS | quality / quality-consumer-discretionary | 72.7 | 72.6 |
+| 600660.SS | quality / quality-consumer-discretionary | 72.3 | 72.2 |
+| MSUMI.BO | quality / quality-consumer-discretionary | 71.7 | 71.6 |
+| PGHH.BO | quality / quality-consumer-staples | 80.9 | 80.8 |
+| DNO.OL | quality / quality-energy | 75.8 | 75.7 |
+| RRC | quality / quality-energy | 72 | 71.9 |
+| COALINDIA.NS | quality / quality-energy | 69.7 | 69.8 |
+| PSK.TO | quality / quality-energy | 68.5 | 68.4 |
+| CHENNPETRO.NS | quality / quality-energy | 67.9 | 67.8 |
+| PARR | quality / quality-energy | 65.9 | 65.8 |
+| AROC | quality / quality-energy | 65.9 | 65.8 |
+| PTTEP.BK | quality / quality-energy | 65.7 | 65.8 |
+| CEU.TO | quality / quality-energy | 63.7 | 63.6 |
+| CVI | quality / quality-energy | 62.6 | 62.5 |
+| VLE.TO | quality / quality-energy | 62.4 | 62.5 |
+| CNQ | quality / quality-energy | 62.2 | 62.1 |
+| MATR.TO | quality / quality-energy | 61.5 | 61.4 |
+| SM | quality / quality-energy | 59.9 | 59.8 |
+| 2382.SR | quality / quality-energy | 59.7 | 59.8 |
+| BRAV3.SA | quality / quality-energy | 59.7 | 59.6 |
+| BP | quality / quality-energy | 58.6 | 58.5 |
+| 214150.KQ | quality / quality-health-care | 88.6 | 88.5 |
+| RUBICON.NS | quality / quality-health-care | 79.4 | 79.3 |
+| 688677.SS | quality / quality-health-care | 79.3 | 79.2 |
+| 600867.SS | quality / quality-health-care | 79 | 78.9 |
+| 7741.T | quality / quality-health-care | 78.7 | 78.8 |
+| METROPOLIS.NS | quality / quality-health-care | 77.8 | 77.7 |
+| 3692.HK | quality / quality-health-care | 75.9 | 75.8 |
+| THYROCARE.NS | quality / quality-health-care | 75.2 | 75.1 |
+| MAXHEALTH.BO | quality / quality-health-care | 73.6 | 73.5 |
+| ALK-B.CO | quality / quality-health-care | 70 | 69.9 |
+| MANIPALHOS.NS | quality / quality-health-care | 69.9 | 69.8 |
+| GLAXO.BO | quality / quality-health-care | 69.7 | 69.6 |
+| DOCS | quality / quality-health-care | 69.2 | 69.1 |
+| LKFT | quality / quality-health-care | 68.9 | 69 |
+| ALKEM.BO | quality / quality-health-care | 68.4 | 68.3 |
+| GLAND.NS | quality / quality-health-care | 68.2 | 68.1 |
+| PFIZER.BO | quality / quality-health-care | 68 | 67.9 |
+| IDXX | quality / quality-health-care | 67.7 | 67.6 |
+| 2637.HK | quality / quality-health-care | 67.6 | 67.7 |
+| 215A.T | quality / quality-industrials | 90.2 | 90.1 |
+| 8996.TW | quality / quality-industrials | 78.2 | 78.1 |
+| NWG.WA | quality / quality-industrials | 76.4 | 76.3 |
+| ALQ.AX | quality / quality-industrials | 75.8 | 75.7 |
+| 002690.SZ | quality / quality-industrials | 75.8 | 75.7 |
+| ZEHN.SW | quality / quality-industrials | 75.7 | 75.6 |
+| CUMMINSIND.NS | quality / quality-industrials | 75.1 | 75 |
+| SUZLON.BO | quality / quality-industrials | 75.1 | 75 |
+| HINDCOPPER.NS | quality / quality-materials | 86.8 | 86.7 |
+| 001337.SZ | quality / quality-materials | 85.9 | 85.8 |
+| BHP | quality / quality-materials | 81.3 | 81.2 |
+| ANTO.L | quality / quality-materials | 76.7 | 76.6 |
+| ASIANPAINT.NS | quality / quality-materials | 74.9 | 74.8 |
+| GNG.AX | quality / quality-materials | 74.7 | 74.6 |
+| III.TO | quality / quality-materials | 73.1 | 73 |
+| 688093.SS | quality / quality-materials | 71.4 | 71.3 |
+| APP | quality / quality-software-comm-services | 86.8 | 86.7 |
+| 1INN.DE | quality / quality-software-comm-services | 81.5 | 81.4 |
+| FICO | quality / quality-software-comm-services | 77.2 | 77.1 |
+| FTNT | quality / quality-software-comm-services | 76.3 | 76.2 |
+| AOF.DE | quality / quality-software-comm-services | 76.2 | 76.1 |
+| OFSS.BO | quality / quality-software-comm-services | 75 | 74.9 |
+| PAYX | quality / quality-software-comm-services | 75 | 74.9 |
+| 5032.T | quality / quality-software-comm-services | 74.1 | 74 |
+| 9911.HK | quality / quality-software-comm-services | 71.9 | 71.8 |
+| NFLX | quality / quality-software-comm-services | 71.3 | 71.2 |
+| BLACKBUCK.NS | quality / quality-software-comm-services | 70.5 | 70.4 |
+| NEM.DE | quality / quality-software-comm-services | 69.9 | 69.8 |
+| QLYS | quality / quality-software-comm-services | 68.7 | 68.6 |
+| HAV2.VI | quality / quality-software-comm-services | 68.3 | 68.4 |
+| SGE.L | quality / quality-software-comm-services | 68.3 | 68.4 |
+| 9766.T | quality / quality-software-comm-services | 68.2 | 68.1 |
+| GRND | quality / quality-software-comm-services | 68.2 | 68.1 |
+| INTU | quality / quality-software-comm-services | 67.7 | 67.6 |
+| 2371.T | quality / quality-software-comm-services | 67 | 67.1 |
+| LMN.V | quality / quality-software-comm-services | 66.9 | 66.8 |
+| FRSH | quality / quality-software-comm-services | 66.8 | 66.7 |
+| TOTS3.SA | quality / quality-software-comm-services | 66.6 | 66.5 |
+| PTC | quality / quality-software-comm-services | 66 | 65.9 |
+| NTAP | quality / quality-software-comm-services | 65.2 | 65.1 |
+| PEXIP.OL | quality / quality-software-comm-services | 64.6 | 64.5 |
+| PCTY | quality / quality-software-comm-services | 64.3 | 64.2 |
+| 1860.HK | quality / quality-software-comm-services | 63.1 | 63 |
+| PEGA | quality / quality-software-comm-services | 62.9 | 62.8 |
+| 3769.T | quality / quality-software-comm-services | 62.5 | 62.4 |
+| NTES | quality / quality-software-comm-services | 61.6 | 61.5 |
+| 002052.SZ | quality / quality-tech-hardware | 74.6 | 74.5 |
+| ASTRAMICRO.NS | quality / quality-tech-hardware | 72.6 | 72.5 |
+
+## Verdachtsliste mit Gegenprüfung
+
+39 Kandidaten erfüllen USD-Berichtswährung bei anderer Handelswährung und Jahresumsatz/Marktkapitalisierung >5 oder starkem Quartalssprung (>3 bzw. <1/3). Das sind Suchsignale, kein Fehlerbeweis: kleine Marktkapitalisierung, Saisonalität und fehlende Quartalswerte können dieselben Verhältnisse erzeugen. Alle Eingangsbeträge, Aktienzahlen und Vorquartale stehen in financial-corrections-suspects.json. Nur BANPU ist als Fremdgesellschaft/Währung belegt. Keine der übrigen 38 Zeilen wird aufgrund dieser Liste verändert. Sicherheitsurteil für einen tatsächlichen Fehler dort: offen, unter 60 %.
+
+| Ticker | Handelswährung | Jahresumsatz / Marktkap. | Quartal / Vorquartal | Befund |
+| --- | --- | --- | --- | --- |
+| 1199.HK | HKD | 0.548 | fehlt | ungeklärt; unverändert |
+| 1860.HK | HKD | 0.768 | fehlt | ungeklärt; unverändert |
+| 1AAL.MI | EUR | 6.123 | 1.203 | ungeklärt; unverändert |
+| 1CNC.MI | EUR | 6.376 | 1.073 | ungeklärt; unverändert |
+| 1COR.MI | EUR | 5.242 | 1.082 | ungeklärt; unverändert |
+| 1DINO.MI | EUR | fehlt | 1.102 | ungeklärt; unverändert |
+| 1GLXY.MI | EUR | 6.123 | 0.854 | ungeklärt; unverändert |
+| 1GT.MI | EUR | 12.563 | 1.095 | ungeklärt; unverändert |
+| 1JAM.MI | EUR | 5.786 | 1.204 | ungeklärt; unverändert |
+| 2343.HK | HKD | 0.819 | 0.000 | ungeklärt; unverändert |
+| 2637.TW | TWD | 7.614 | 1.231 | ungeklärt; unverändert |
+| 4335.HK | HKD | fehlt | 1.188 | ungeklärt; unverändert |
+| A1G.DE | EUR | 6.137 | 1.203 | ungeklärt; unverändert |
+| AAL.SW | CHF | 7.717 | 1.203 | ungeklärt; unverändert |
+| AAL.VI | EUR | 6.097 | 1.203 | ungeklärt; unverändert |
+| ABC.VI | EUR | 5.554 | 1.082 | ungeklärt; unverändert |
+| ANTARCHILE.SN | CLP | 8.489 | 1.178 | ungeklärt; unverändert |
+| BANPU.BK | THB | 20.868 | 0.756 | belegt; Handtabelle |
+| BBUC.TO | CAD | 5.300 | 1.009 | ungeklärt; unverändert |
+| CAPT.OL | NOK | 0.017 | 4.256 | ungeklärt; unverändert |
+| CEF.TO | CAD | 0.600 | -2.473 | ungeklärt; unverändert |
+| CGG.TO | CAD | fehlt | 1.017 | ungeklärt; unverändert |
+| DEC.L | GBp | 1.740 | 19.189 | ungeklärt; unverändert |
+| EMAS.JK | IDR | 0.000 | 10.668 | ungeklärt; unverändert |
+| ENOG.L | GBp | 1.004 | 0.329 | ungeklärt; unverändert |
+| EXM.BR | EUR | fehlt | 0.317 | ungeklärt; unverändert |
+| G92.SI | SGD | 18.516 | fehlt | ungeklärt; unverändert |
+| GYT.VI | EUR | 12.474 | 1.095 | ungeklärt; unverändert |
+| HCLTECH.NS | INR | 37.495 | 1.018 | ungeklärt; unverändert |
+| KD.VI | EUR | 6.183 | 0.960 | ungeklärt; unverändert |
+| MSB.AX | AUD | 0.063 | 8.223 | ungeklärt; unverändert |
+| OCI.AS | EUR | fehlt | 0.989 | ungeklärt; unverändert |
+| PDN.AX | AUD | 0.102 | 0.000 | ungeklärt; unverändert |
+| PDN.TO | CAD | fehlt | 0.000 | ungeklärt; unverändert |
+| PTTEP.BK | THB | 16.245 | 1.264 | ungeklärt; unverändert |
+| QBE.AX | AUD | fehlt | fehlt | ungeklärt; unverändert |
+| RRC.RO | RON | 6.702 | 1.307 | ungeklärt; unverändert |
+| SFC.TO | CAD | 0.000 | 3.573 | ungeklärt; unverändert |
+| STO.AX | AUD | fehlt | 1.061 | ungeklärt; unverändert |
+
+BDC-Prüfumfang: ARCC, BBDC, BXSL, CSWC, FSK, GBDC, HTGC, MAIN, OBDC, OCSL, PSEC, TRIN, TSLX. Belegt: HTGC, ARCC, FSK. Die zehn übrigen sind in diesem Durchgang nicht durch Primärquellen entschieden; ihre ursprünglichen fünf Quartale bleiben erhalten. (Nachtrag 01.10.: neun davon sind jetzt belegt und korrigiert, dazu KBDC, OTF, MSDL und OXLC (OTF und KBDC wegen falscher Anbieter-Jahresumsätze gesperrt); OCSL bleibt ungeprüft. Abschnitt „BDC-Handtabelle“.) 2155 Gruppen identischer Jahresumsätze wurden erfasst (häufig Zweitnotierungen); kein weiterer Fremdgesellschaftsfehler allein aus diesem Vergleich bewiesen.
+
+## Belege, Unverändertheit und Grenzen
+
+SHA-256 der sortierten Liste aller Quelldatei-Hashes: `81c96b4789073dac5e6085c9fb2bfe489cd1e57629228f66ffbcbe12db3e4397`. Vor und nach dem Lauf bleiben alle 16118 Dateihashes identisch. Jede bearbeitete Zeile wird für den Vergleich auf ihre exakt gespeicherte Originalzeile zurückgesetzt; einschließlich der ausdrücklich erlaubten Banpu-Metadaten ergibt sich derselbe JSON-Byte-String. Alle anderen Eingabezellen sind damit identisch. Scoregleichheit aller übrigen Unternehmen wird wegen Neukalibrierung ausdrücklich nicht behauptet.
+
+Reproduzierbar: `node scripts/financial-corrections-replay.js <read-only-snapshot-directory> [veröffentlichungs-ref]` (Nachlauf 30.09. mit Ref d164b75262 = Veröffentlichung vom 29.09.: dieselben 36 Zellen der Hauptticker plus 12 Aliaszellen, 0 stale, identische Board-Wirkung). Die 16.118 Originale kommen aus dem r1-Archiv snapshots-20260929 im freigegebenen sd-ro-Arbeitsbaum. Es wird keine Historie geschrieben und kein loadUniverse-Aufruf verwendet, der eine Baseline-Datei anlegen könnte. Die vorhandene Q4-Reparatur bildet den Ausgangsstand beider Arme.
+
+Die Quality-Ausgangsscores stimmen vollständig mit allen 1.100 veröffentlichten Zeilen überein. Growth hat genau eine Abweichung: CHWY 42,4 veröffentlicht, 42,5 im Replay; CHWY wird durch F2 nicht verändert. Smallcap ist nur eine Diagnose mit dem Hauptbestand (517 Feed-Abweichungen), kein gültiger historischer Nachbau. Der wirkliche Smallcap-Lauf verwendete den Cache snapshots-smallcap-store-36236295562 vom 26.09. mit 769 Dateien und 490 zugelassenen Firmen. Das vorhandene Archiv des gescheiterten späteren 29.09.-Laufs enthält 418 neuere Stände und wäre eine falsche Grundlage. Das passende ältere Artefakt ist lokal und über die geprüfte GitHub-Artefaktliste nicht erreichbar. Zusätzlich braucht Smallcap seine eigene historische Unternehmensliste und die Produktions-Abdeckungsgrenze. Vollständige Smallcap-Board-Parität bleibt deshalb offen.
+
+Rule of 40: 16118 Originaldateien, 5221 Kandidaten, 469 sichtbare Zeilen. Ausgangsabweichungen zur Veröffentlichung: 0. Aktive Änderungen: 0. Im Schatten ändern sich 34 Zeilen bei R40/R40-EBITDA oder Rang; kein übernommener Engine-Score ändert sich. Alle Alt/Neu-Werte stehen unter rule40 in financial-corrections-replay.json. Der echte Produktions-Sammler läuft mit ausschließlich lesendem Speicheradapter; Originaldateinamen, Währungsbelege und Veröffentlichungsdatum bleiben erhalten.
+
+Druckenmiller wurde unabhängig mit dem echten loadCandidates und denselben drei Armen geprüft: 2.277 Kandidaten in jedem Arm; vollständige Kandidaten-Inhalte bytegleich, keine unlesbaren Dateien. Es gibt damit keine geänderten Eingaben für dieses separate Modul (Prüferbeleg, Sicherheit 99 %).
+
+Primärquelle Banpu: [Quartalsabschluss](https://www.banpu.com/wp-content/uploads/2026/03/Banpu-PLC_Mar26Q1-EN.pdf), PDF8 (gedruckt7), „Sales and service income“. Primärquelle Tochter: [Banpu Power](https://www.banpupower.com/wp-content/uploads/2026/05/BPP-Q1Mar69-EN-Signed.pdf), PDF6, „Sales“. HTGC: [10-Q](https://investor.htgc.com/sec-filings/all-sec-filings/content/0001280784-26-000042/0001280784-26-000042.pdf), PDF82, „Total investment income“. Vollständige USD-Quartale, SEC-Fundstellen, Ableitungen und Abrufstand in financial-corrections-source-evidence.json; Yahoo-Wiederholung in financial-corrections-yahoo-evidence.json.
+
+## Prüfung und Übergabe
+
+Unabhängiger Astra-ultra-Prüfer: 16.118 Stände, genau acht Änderungen/36 Zellen, Eingaben unverändert, Wiederholung idempotent, Schattenbetrieb ohne Mutation; alle 15 BDC-Umsätze gegen SEC bestätigt. Sein nachgestellter Banpu-Jahreswechsel-Fund ist repariert und mit einer absichtlich roten In-Memory-Gegenprobe abgesichert. Die neue Suite bestand damals mit 42 Prüfblöcken und 41 absichtlichen Fehlern (Stand Prüfrunde 3: 52 Prüfblöcke, 50 absichtliche Fehler); SHA-256 des echten Codes davor/danach unverändert. GQS besteht unabhängig mit 25 Referenzfällen/13 Branchen und keiner Score-/Rangabweichung. Der Prüfer meldet keine offenen Blocker (97 % Sicherheit). Veröffentlichung und Claude-Freigabe sind nicht Bestandteil dieses Auftrags.
+
+Gesamtprüfung `node scripts/test-gate.js --mode=all`: 580 echte Testdateien, 499 PASS, 74 FAIL, 7 ohne ausgeführte Prüfung. Alle 74 fehlgeschlagenen Dateien sind gegenüber HEAD unverändert; Python-Start wird mit EPERM verweigert, in einem Test scheitern zusätzlich Windows-Benutzerabfragen mit ENOMEM. Beide Umgebungsfehler wurden unabhängig nachgestellt. Die Gesamtprüfung ist rot; fehlende Archivdaten sind nicht als Ursache behauptet. Gezielte F2-, Q4-, FX- und GQS-Suiten laufen nach dem letzten Code-Stand erfolgreich. Der separate alte Q4-Bestandsreplay hat einen festen Vortags-Sollwert von 27 und schlägt am neuen Tagesbestand mit 19 neuen Treffern fehl: acht weitere Zellen sind bereits korrekt (27 = 19 neu + 8 bereits korrigiert), anhand aller ursprünglichen Fallzeilen nachgeprüft. Seine Vorgabe wurde nicht gelockert.
+
+Befehle und Ausgaben liegen unter _scratch/f2: targeted-financial-final.log (42/41), targeted-q4-final.log, targeted-gqs-final.log, targeted-fx-final.log sowie full-test-gate-final.log. Reproduzierbare Belege sind die beiden echten Module mapFTSToQuarterly/_convertSnapshotToUSD, die Quellen-Handtabelle und financial-corrections-replay.js. Keine Datenhistorie, Formel, Achsengewichtung oder eingefrorene GQS-Referenz wurde verändert.
+
+Git-Abschluss (Stand 30.09.): Der ursprüngliche Lauf konnte wegen index.lock nicht committen. Inzwischen liegen alle Änderungen als Commits „Tag 1389“, „Tag 1389b“ und „Tag 1389c“ auf fix/banpu-htgc-and-false-zeros-20260929 und sind gepusht (PR #398); kein Merge. Sitzungs-ID und vorgesehene Trailer stehen in financial-corrections-validation.json.
+
+## Jahresersatzwerte mit Quelle (Mechanismus, P50)
+
+Numerische Jahreskorrekturen nutzen denselben Zellpfad wie Quartalskorrekturen: exakter Anbieterwert, belegtes Jahresende, passende Berichts- und Speicherwährung, Einheit, Faktor und Quelle. Die Quellen müssen den Ersatzbetrag belegen, eine nichtleere Jahresperiode innerhalb des Falljahres mit gleichem Ende sowie Währung und Basiseinheit angeben. Ein Ersatzwert 0 wird abgewiesen. Bereits richtige Zellen bleiben unverändert; eine wiederholte Anwendung ist wirkungslos. Fehlende oder abweichende Belege ergeben einen fehlenden Wert mit Hinweis. Die jährlichen Nullfälle behalten ihre Regel zum Leeren älterer Jahre. Seit der Bedingung aus P99 gilt dieselbe Lückensperre auch für numerische Jahresfälle; sie läuft als letzter Schritt nach allen Ersatz- und Rückhalteschritten, und ein numerischer Fall füllt keine Zelle wieder auf, die ein früherer Jahresschritt zurückgehalten hat. Numerische Einzelkorrekturen begründen keine quartalsweite Abdeckung.
+
+Die vier INDO-MIM-Umsatzfälle werden gemeinsam mit der Maßstabsregel angewandt. Register, Belege und Wirkung stehen im Abschnitt „Ganze Jahresrechnung von INDO-MIM“.
+
+## Handtabelle P129 vom 07.10.2026
+
+> **Auf einen Blick**
+>
+> Neun neue Tabellenfälle ohne neue Abdeckung ändern neun Quellzellen bei fünf beauftragten Tickern; es gibt **0 andere Quellwerte**.
+> * 123 fachliche JSON-Ergebnisse der Vorher-Wiederholung sind bitidentisch; alle 16.924 Rohdateien bleiben unverändert.
+> * MAD.AX wechselt auf den richtigen Jahresvergleich mit 14,78 %, AIAI wird leer und MODEC erhält vier leere Quartale gemäß F5.
+> * Die fünf Quartalspaare sind vollständig aus dem Kandidaten entfernt und bleiben OPEN. AJBU.SI und 1ANE.MI verwenden gegen die vollständigen Emittentenabschlüsse bestätigte Jahrespaare.
+
+Alle Fingerabdrücke und Ersatzbeträge stehen in ganzen Einheiten der ursprünglichen Zellwährung, nicht in den bereits auf USD umgerechneten Snapshot-Beträgen. Gegenprobe an bestehenden Fällen und deren Fixtures: HTGC 158.252.000 USD × 1 = 158.252.000 gespeicherte USD; CIG-C 1.804.157.000 BRL × 0,19479507 = 351.440.889,10599 gespeicherte USD. Für jeden neuen Fall gilt der im jeweiligen Rohpaket gespeicherte Währungsfaktor. Die Tabellen unten runden nur zur lesbaren Darstellung auf Cent; JSON und CSV bewahren die gespeicherten Zahlen. Ein leeres Feld ist null, niemals ein Ersatzbetrag von 0.
+
+### Jede geänderte Quellzelle
+
+| Ticker | Periode | Feld | Währung | Vorher | Nachher | Auslöser |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1ANE.MI | 2022-09-30 | timeseries.revenueQ[0] | EUR | 1.133.660.000 | leer | 1ane.mi-2022-09-30-revenueQ-p129 |
+| 6269.T | 2026-06-30 | timeseries.revenueQ[0] | JPY | 225.152.000.000 | leer | 6269.t-2026-06-30-revenueQ-p129 |
+| 6269.T | 2026-03-31 | timeseries.revenueQ[1] | JPY | 172.224.000.000 | leer | 6269.t-2026-03-31-revenueQ-p129 |
+| 6269.T | 2025-12-31 | timeseries.revenueQ[2] | JPY | 218.333.000.000 | leer | 6269.t-2025-12-31-revenueQ-p129 |
+| 6269.T | 2025-09-30 | timeseries.revenueQ[3] | JPY | 197.686.707.200 | leer | 6269.t-2025-09-30-revenueQ-p129 |
+| AJBU.SI | 2021-03-31 | timeseries.revenueQ[0] | SGD | 67.570.000 | leer | ajbu.si-2021-03-31-revenueQ-p129 |
+| MAD.AX | 2023-06-30 | timeseries.revenueQ[0] | AUD | 172.844.000 | leer | mad.ax-2023-06-30-revenueQ-p129 |
+| AIAI | null | annual.annualRev[0] | USD | 271.996.000 | leer | aiai-2025-12-31-annualRev-p129 |
+| AIAI | null | annual.annualRev[1] | USD | 23.616.400.000 | leer | aiai-2024-12-31-annualRev-p129 |
+
+Zehn Quartalsersatz- und Bestätigungsfälle sowie fünf Abdeckungseinträge wurden nach Claudes Prüfung vollständig aus dem Kandidaten entfernt. Die 15 zuvor ausgeblendeten realen Zwischenquartale bleiben unverändert. Die alten 216 Fälle und sämtliche alten Abdeckungs-, Quarantäne- und Periodenetiketten-Zeilen bleiben erhalten. AJBU.SI und 1ANE.MI behalten ihre belegten Jahreswerte; die genaue Quellenprüfung steht unten.
+
+### Board-Wirkung aus dem eingefrorenen Replay
+
+| Ticker | Wachstum vorher | Wachstum nachher | P69-Ziel | Tatsächliche Wirkung |
+| --- | --- | --- | --- | --- |
+| CDR.WA | 12,67 % (Quartal) | 12,67 % (Quartal) | 39,6 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| 000552.SZ | 22,2 % (Quartal) | 22,2 % (Quartal) | 21,2 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| BYLOT.AT | 246,89 % (Quartal) | 246,89 % (Quartal) | 219,2 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| 000688.SZ | 200,07 % (Quartal) | 200,07 % (Quartal) | 55,3 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| GRANULES.NS | 21,19 % (Quartal) | 21,19 % (Quartal) | 22,04 % | OPEN; kein Eintrag; ursprüngliches Quartal unverändert |
+| MAGN | -7,1 % (Jahr) | -7,1 % (Jahr) | 2,15 % | Offen; Perioden fehlen |
+| AJBU.SI | 12,11 % (Quartal) | 42,24 % (Jahr) | 10,96 % | Altes Quartal zurückgehalten; Jahrespaar durch Emittentenabschluss bestätigt; neues Quartalspaar fehlt |
+| MAD.AX | 59,38 % (Quartal) | 14,78 % (Jahr) | 14,78 % | Ziel erreicht; im Vollboard sichtbar, aus Industrials-Top100 ausgeschieden |
+| 1ANE.MI | 49,28 % (Quartal) | -4,04 % (Jahr) | Alter Quartalsvergleich zurückhalten; Ersatzperiode offen | Alter Vergleich beendet; bestätigtes Jahrespaar im Vollboard; aus Utilities-Top100 ausgeschieden |
+| AIAI | -98,85 % (Jahr) | leer (keine Basis) | Nicht vergleichbares Wachstum leer | Wachstum leer; gesamte Smallcap-Industrials-Zeile entfällt |
+| 6269.T | 9,43 % (Jahr) | 9,43 % (Jahr) | Vier Quartale leer gemäß F5 | Vier Quartale leer; Jahreswert unverändert |
+| GRGD.TO | 29,78 % (Quartal) | 29,78 % (Quartal) | Perioden 2026-08-01 / 2025-08-02 | Offen; Währungsprüfung verhindert Periodenetikett |
+| HMSO.IR | 78,49 % (Jahr) | 78,49 % (Jahr) | 74,57 % | wartet auf #431 |
+| SLX.AX | 95,56 % (Jahr) | 95,56 % (Jahr) | 88,62 % | wartet auf #431 |
+| CPPLUS.NS | 89,51 % (Quartal) | 89,51 % (Quartal) | 81,33 % Bruttogewinn | wartet auf #431; Umsatzwachstum nur Diagnose, exakter Ticker nicht im Export |
+| ARGX | 59,82 % (Quartal) | 59,82 % (Quartal) | Börsenwert 57,70 Mrd. USD, datiert | Offen; Aktienzahlbereiche überlappen |
+| LLY | 47,67 % (Quartal) | 47,67 % (Quartal) | Börsenwert 1.075,8 Mrd. USD, datiert | Offen; Aktienzahlbereiche überlappen |
+| 688428.SS | 135,27 % (Jahr) | 135,27 % (Jahr) | Börsenwert 3,78 Mrd. USD, datiert | Offen; zwei Klassen und Nicht-USD |
+| 301200.SZ | 72,68 % (Jahr) | 72,68 % (Jahr) | Börsenwert 15,15 Mrd. USD, datiert | Offen; zwei Klassen und Nicht-USD |
+| 0622.HK | 33,97 % (Jahr) | 33,97 % (Jahr) | Börsengang 1991 | Offen; keine IPO-Handkorrektur |
+
+AIAI entfällt als ganze Smallcap-Zeile. 1ANE.MI und MAD.AX stehen nachher mit dem genannten Jahresvergleich im Vollboard, aber nicht mehr in den betreffenden Top 100. CPPLUS.NS fehlt im Export; sein hier genanntes Umsatzwachstum ist nur eine Rohpaketdiagnose. Vergleich, jede Quellzelle, abgeleitete Feldzählungen und sämtliche Top-20-/Top-100-Wechsel stehen in outputs/p129-replay/vorher-nachher.md und .csv. Nachweis: neun Quellzellen bei fünf beauftragten Tickern, 0 andere Quellwerte, 123 bitidentische Wiederholungsergebnisse, alle 16.924 Rohdateien unverändert. Tatsächliche Schreibziele außerhalb outputs/p129-replay: keine.
+
+### Prüfungen und Quellen
+
+Der vorgegebene Testbefehl besteht mit Exit 0, 32 Tests, 32 bestanden und 0 fehlgeschlagen. Darunter bestehen die 13 P129-Prüfblöcke und die Einzelentnahme aller neun neuen Tabellenzeilen. Die alten Prüfsummen bleiben unverändert; insbesondere sind alle 216 alten Fälle, 34 alten Abdeckungen, 11 Quarantänen, 16 Periodenetiketten und 45 bisherigen Fixtures erhalten. 15 echte Rohpakete wurden als Fixtures ergänzt. Alle neun Einzelentnahmen wurden außerdem als echte CLI-Aufrufe mit erwarteter Exit-Nummer 1 wiederholt; red-once-proofs.json enthält jede Ausgabe. Es wurden keine neuen Modul-Exporte angelegt; der JSDoc-Test besteht.
+
+Die MODEC-Prüfung erwartet nun gemäß RATSBLOCK-2026-10-06 F5 leere Quartalsumsätze mit Begründung. Nur MODEC-bezogene Quartalsaussagen wurden angepasst; Prüfungen zu Jahreswerten, Cashflow, Währungsfaktoren und allen anderen Firmen bleiben erhalten. ARGX und LLY wurden zusätzlich mit den echten 06.10.-Snapshots gegen den vorhandenen Aktienzahltabellen-Lader geprüft; beide Kandidaten scheitern an dessen unverändertem Schutz vor überlappenden Aktienzahlbereichen.
+
+Echte rote Gegenprobe, nur durch Entnahme einer Zeile aus einer Speicherkopie, Exit 1:
+
+```text
+P129_RED_CASE=mad.ax-2023-06-30-revenueQ-p129
+AssertionError [ERR_ASSERTION]: mad.ax-2023-06-30-revenueQ-p129: corrected cell
++ actual - expected
++ 120507567.93011999
+- null
+```
+
+Die Hash-Prüfung der echten Eingaben lief auch beim absichtlichen Fehler; es wurde keine Live-Zeile beschädigt. Vollständige Ausgaben: tests-final.log, red-once.log und share-count-probe.log.
+
+| Ticker | Quelle | Seite | Wörtliches Zitat | Berichtseinheit |
+| --- | --- | --- | --- | --- |
+| MAD.AX | [Quelle](https://clients3.weblink.com.au/pdf/MAD/03125319.pdf) | PDF S. 63 | „Total operating revenue 1,001,140 872,202“ | AUD thousands |
+| AJBU.SI | [Quelle](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcr-1h-2026-unaudited-results.pdf) | PDF S. 4 | „Gross Revenue 242,048 211,309“ | SGD thousands |
+| AJBU.SI | [Quelle](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcreit-1q-2026-operational-updates.pdf) | PDF S. 6 | „Gross Revenue 120,956 102,179“ | SGD thousands |
+| 1ANE.MI | [Quelle](https://www.cnmv.es/webservices/verdocumento/ver?t=%7B4c831015-242a-423a-9a67-ddcc2bc17119%7D) | PDF S. 11, printed page 10 | „TOTAL Revenues 1,288 1,469“ | EUR millions |
+| AIAI | [Quelle](https://www.sec.gov/Archives/edgar/data/2096362/000149315226022855/form424b4.htm) | Printed page 110, explanation page 111 and pro forma page 92 | „Total revenue — —“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2026_2Q_results_en.pdf) | PDF S. 9 | „Revenue 2,074,296 2,447,050“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2026_1Q_results_en.pdf) | PDF S. 9 | „Revenue 873,038 1,077,078“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2025_YE_results_en.pdf) | PDF S. 13 | „Revenue 4,186,461 4,581,232“ | USD thousands |
+| 6269.T | [Quelle](https://www.modec.com/ir/library/result/assets/pdf/2025_3Q_results_en.pdf) | PDF S. 9 | „Revenue 2,994,718 3,351,705“ | USD thousands |
+
+### Quartalspaare: vollständig OPEN und aus dem Kandidaten entfernt
+
+Die folgende Messung unterscheidet ausdrücklich den verworfenen ersten Kandidaten vom endgültigen Stand. Kein verworfener Jahreswert ist eine Wirkung des endgültigen Kandidaten.
+
+| Ticker | Ursprüngliches Quartalswachstum | Verworfener Kandidat: Jahreswachstum | Endgültig: unverändertes Quartalswachstum | P69-Quartalsziel |
+|---|---:|---:|---:|---:|
+| CDR.WA | 12,673139 % | 8,594615 % | 12,673139 % | 39,599268 % |
+| 000552.SZ | 22,20494 % | -19,130828 % | 22,20494 % | 21,195349 % |
+| BYLOT.AT | 246,891413 % | 34,794544 % | 246,891413 % | 219,201064 % |
+| 000688.SZ | 200,065764 % | 17,130394 % | 200,065764 % | 55,297842 % |
+| GRANULES.NS | 21,193142 % | 19,814869 % | 21,193142 % | 22,036747 % |
+
+Alle zehn Ersatz- und Bestätigungsfälle, die fünf Abdeckungseinträge und die fünf nur hierfür ergänzten Fixtures sind aus dem aktiven Kandidaten entfernt. Die 15 realen Zwischenquartale bleiben deshalb unverändert. Offen sind quellengeprüfte Bestätigungszellen für eine vollständig passende Quartalsreihe, insbesondere 2026-03-31, 2025-12-31 und 2025-09-30. Bei den beiden chinesischen Reihen fehlt 2025-09-30 im Rohbestand; dort wurde zuvor zusätzlich die vorhandene Periode 2025-03-31 ausgeblendet. Fehlende Zellen kann die Handtabelle nicht ergänzen. Alternativ wäre eine Änderung von `lib/financial-known-cases.js::applyFinancialCases`, `lib/rev-growth-basis.js::revGrowthLeg` oder `src/scoring/axes.js::revQuartalsYoY` nötig. Das ist eine Methodenfrage für den Master und wird hier nicht umgesetzt.
+
+Die Fehlwirkung des verworfenen Kandidaten und der ursprüngliche Datenstand sind unter rejected-candidate-before-claude-review archiviert. Die neue Vergleichsrechnung prüft für alle fünf Ticker zusätzlich die vollständige Gleichheit der Wachstumsbasis und 0 geänderte Quellzellen.
+
+Die Paarrechnungen lauten jeweils `(aktuell / Vorjahr − 1) × 100`. Quellen und Ableitung:
+
+* CDR.WA: [H1-Bericht](https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf), PDF S. 7, „Sales revenue 435 308 355 021“, minus [Q1-Bericht](https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf), PDF S. 7, „Sales revenue 191 107 180 091“. Jeweils Tausend PLN; nur fortgeführte Tätigkeiten nach dem GOG-Abgang. Beide Quellen neu geöffnet.
+* 000552.SZ: [H1](https://static.cninfo.com.cn/finalpage/2026-08-25/1225495701.PDF), PDF S. 2, und [Q1](https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF), PDF S. 2, „营业收入（元）“, Vergleichsspalte „调整后“. H1 4.697.622.710,99 / 3.767.757.991,30 minus Q1 2.495.330.187,99 / 1.950.615.225,65 CNY. Beide Quellen neu geöffnet.
+* BYLOT.AT: [H1](https://ballysintralot.com/wp-content/uploads/2026/09/Report_IFRS_1%CE%97_2026_EN_final.pdf), PDF S. 42, gedruckt S. 41, und [Q1](https://ballysintralot.com/wp-content/uploads/2026/08/Report_IFRS_Q12026_EN.pdf), PDF S. 5, gedruckt S. 4, jeweils „Revenue“. Tausend EUR: H1 544.161 / 182.047 minus Q1 268.084 / 95.557. Vorjahr reklassifiziert; der veränderte Konzernkreis ist kein organisches Wachstum. Beide Quellen nicht neu geöffnet; Beträge und Zitate aus P69 und dem dort genannten P06-Bericht.
+* 000688.SZ: [H1](https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-27/63fc6eef-28b1-4473-9984-2d6c192c4f87.PDF), PDF S. 8, und [Q1](https://static.cninfo.com.cn/finalpage/2026-04-23/1225144333.PDF), PDF S. 2, „营业收入（元）“, „调整后“. H1 3.362.995.987,59 / 2.159.670.362,38 minus Q1 1.696.217.709,13 / 1.086.391.910,94 CNY. Beide Quellen neu geöffnet.
+* GRANULES.NS: [Konzernrechnung](https://www.bseindia.com/xml-data/corpfiling/AttachHis/e573b415-05b3-456d-97f7-b731a64f118b.pdf), PDF S. 7, „Total revenue from operations“, „Rs in millions“: 14.767,74 / 12.101,06 Mio. INR. Produktumsatz allein lässt sonstige Betriebserlöse aus. Exaktes PDF nicht neu geöffnet; die [Ergebnismeldung](https://nsearchives.nseindia.com/corporate/GRANULES_21072026123641_NSEBSEPR.pdf), PDF S. 2, „Revenue from Operations“, wurde neu geöffnet und bestätigt gerundet 14.768 Mio. INR und 22 %.
+
+### Fehlende Perioden und Zeitangaben
+
+| Ticker | Bestätigtes Ziel und Stand des Kandidaten | Konkrete Lücke |
+|---|---|---|
+| MAGN | Quartal 27.06.2026 / 28.06.2025 mit 857.000.000 / 839.000.000 USD, 2,145411 %. Kein Eintrag. | In der eingefrorenen Reihe stehen Kalenderenden 30.06.2026, 31.03.2026, 31.12.2025 und 30.09.2025; das Vorjahresquartal und die beiden exakten Geschäftsquartalsenden fehlen. `lib/financial-known-cases.js::applyFinancialCases` kann keine Zellen anlegen. Auch eine reine Datumsumbenennung würde den fehlenden Nenner nicht liefern. |
+| AJBU.SI | Gewünschtes Quartal 30.06.2026 / 30.06.2025 mit 121.092.000 / 109.130.000 SGD, 10,961239 %. Das veraltete aktuelle Quartal wird zurückgehalten; gegen den vollständigen Emittentenjahresabschluss bestätigter Jahresvergleich nun 42,243149 %. | In der Rohreihe fehlen beide neuen Quartale; vorhanden sind nur alte Perioden aus 2021/2020. `applyFinancialCases` kann sie nicht ergänzen. Der Jahresrückfall ist keine Umsetzung des gewünschten Quartalsvergleichs. |
+| 1ANE.MI | Veralteter Vergleich mit aktuellem Ende 30.09.2022 wird durch gezieltes Zurückhalten des aktuellen Quartals beendet. Der gegen den vollständigen Emittentenjahresabschluss bestätigte Jahreszweig zeigt −4,035433 % statt des alten Quartalswerts 49,277748 %. | Der neuere Beleg enthält nur H1 2026/2025, kein eigenständiges vergleichbares Q2-Paar. `applyFinancialCases` kann weder fehlende Quartale ergänzen noch eine neue Halbjahresbasis schaffen; `revGrowthLeg` kennt hier den bestehenden Jahresrückfall. |
+| GRGD.TO | Nur Periodenetiketten sollen 01.08.2026 / 02.08.2025 lauten; 423.638.000 / 326.425.000 CAD und 29,781114 % bleiben richtig. Kein Eintrag. | Der Periodenetikettenpfad in `lib/financial-known-cases.js::applyFinancialCases` verlangt `env.factor === 1`. Im echten Snapshot liegt CAD mit Faktor 0,72103256 vor. Ein Eintrag würde dort nicht angewandt; eine Erweiterung muss die vorhandene Währungsprüfung erhalten. |
+| 0622.HK | Börsengangsjahr 1991 statt Rohwert 2000. Kein Eintrag. | `pull-yahoo.js::pullAll` leitet `ipoYear` ab; eine Handkorrektur für dieses Feld besteht nicht. Sie müsste dort samt Übernahme in den Snapshot ergänzt werden. |
+
+Belege:
+
+* MAGN: [10-Q](https://www.sec.gov/Archives/edgar/data/41719/000004171926000049/form10q.htm), gedruckte S. 4, „Net sales“, 857 / 839 Mio. USD und die ausdrücklich genannten Geschäftsquartalsenden. Neu geöffnet.
+* AJBU.SI: [H1](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcr-1h-2026-unaudited-results.pdf), PDF S. 4, „Gross Revenue 242,048 211,309“, minus [Q1](https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcreit-1q-2026-operational-updates.pdf), PDF S. 6, „Gross Revenue 120,956 102,179“. Tausend SGD; beide neu geöffnet.
+* 1ANE.MI: [H1-Ergebnisbericht](https://www.cnmv.es/webservices/verdocumento/ver?t=%7B4c831015-242a-423a-9a67-ddcc2bc17119%7D), PDF S. 11, gedruckt S. 10, „TOTAL Revenues 1,288 1,469“. Halbjahr, Mio. EUR. [FY2025](https://www.acciona-energia.com/content/dam/energiacom/accionistas-e-inversores/informacion-financiera/informes-trimestrales/2025/acciona-energia-results-report-2025.pdf), PDF S. 10, gedruckt S. 9, „TOTAL Revenues“: gerundet 2.925 / 3.048 Mio. EUR ergeben −4,035433 %; die Meldung nennt −4,1 %. Beide Quellen neu geöffnet.
+* GRGD.TO: [Q2-Abschluss](https://investisseurs.groupedynamite.com/image/GDI-Q2-2026-Financial-Statements-FR_FINAL.pdf), PDF S. 2, „1er août 2026“ / „2 août 2025“, jeweils 13 Wochen. Nicht neu geöffnet; P69 und P05 enthalten die Bestätigung.
+* 0622.HK: [HKEX Fact Book 2019](https://www.hkex.com.hk/-/media/HKEX-Market/Market-Data/Statistics/Consolidated-Reports/HKEX-Fact-Book/HKEX-Fact-Book-2019/FB_2019.pdf), PDF S. 232, gedruckt S. 230, „00622 Oshidori International Holdings Ltd. Bermuda 1991/09/16“. Im selben Lauf vom Mechanismenhelfer neu geöffnet und bestätigt.
+
+### Börsenwerte: bestehende Aktienzahltabelle passt nicht
+
+| Ticker | P69-Vergleichsrechnung, kein heutiger Festwert | Konkrete Lücke |
+|---|---|---|
+| ARGX | 62.767.243 Aktien vom 20.08.2026 × 919,21 USD vom 02.10.2026 = 57.696.277.438,03 USD, rund 57,70 Mrd. USD. | Rohstand 06.10.: 56.769.351.680 USD / 912,87 USD = 62.187.772,2786 implizite Aktien. Das liegt schon innerhalb der bestehenden 3-%-Bestätigungstoleranz zur Emittentenanzahl. `lib/ads-hand-table.js::applyShareCountTable` stuft diesen Kandidaten als bestätigt ein; `loadShareCountTable` weist die überlappenden richtigen/falschen Aktienzahlbereiche zurück. Eine andere Toleranz oder ein datierter Bestandsmechanismus wäre eine gesonderte Codeänderung. |
+| LLY | 941.357.065 Aktien vom 03.08.2026 × 1.142,85 USD vom 02.10.2026 = 1.075.829.921.735,25 USD, rund 1.075,8 Mrd. USD. | Rohstand 06.10.: 1.019.367.391.232 USD / 1.143,12 USD = 891.741.366,8136 implizite Aktien. Die Abstände der Bestätigungs- und Fehlwertbereiche sind unter 6 %; `loadShareCountTable` weist deren Überlappung zurück. Keine Lockerung des Schutzes in diesem Paket. |
+| 688428.SS | 273.403.904 CNY-Aktien × 29,11 CNY × (1,1225 / 7,5259) plus 1.493.798.235 Hongkong-Aktien × 13,63 HKD × (1,1225 / 8,8084) = 3.781.705.944,1626244 USD, rund 3,78 Mrd. USD. | CNY-Notierung; `lib/ads-hand-table.js::applyShareCountTable` erlaubt nur USD-Kurszeilen. Zwei Klassen brauchen eigene Kurse und datierte Devisenfaktoren; `pull-yahoo.js::_applyAdsHandTable` übergibt hierfür kein solches Paket. |
+| 301200.SZ | 430.988.241 A-Aktien × 224,79 CNY × (1,1225 / 7,5259) plus 58.019.500 H-Aktien × 94 HKD × (1,1225 / 8,8084) = 15.145.092.270,638153 USD, rund 15,15 Mrd. USD. | Gleiche fehlende Mehrklassen- und Nicht-USD-Verarbeitung wie bei 688428.SS; eine gewöhnliche Aktienzahlzeile darf nicht alle Klassen mit einem einzigen Kurs bewerten. |
+
+Bei allen vier Vergleichen unterscheiden sich Aktienzahl- und Kursstichtag. Bestätigt ist die datierte P69-Rechenkette; ein centgenauer Wert zum 06.10.2026 ist damit nicht behauptet. Die Funktion wird beim Datenabruf aufgerufen, nicht durch den eingefrorenen Scoring-Lauf. Es gibt deshalb keine Marktwertzeile in diesem Kandidaten und keine behauptete Marktwertänderung durch den Replay.
+
+* ARGX: [EGM-Aktienzahl](https://argenx.com/content/dam/argenx-corp/media-documents/Voting-results-argenx-SE-2026-SEPTEMBER-EGM(10940312.1).pdf), PDF S. 1, „Total number of outstanding shares at the record date.“ 62,767,243; [Einladung](https://argenx.com/content/dam/argenx-corp/media-documents/2026_SEPTEMBER_EGM-Convocation_Notice.pdf), PDF S. 1, „August 20, 2026“; [ADS-Verhältnis](https://reports.argenx.com/2025/share-capital/share-capital.html), „Each ADS represents one share“. Alle drei Quellen im selben Lauf vom Mechanismenhelfer neu geöffnet. [Kurstag](https://stockanalysis.com/stocks/argx/history/), 02.10.2026, „919.21“, nur aus P69 übernommen und nicht erneut abgerufen.
+* LLY: [10-Q](https://www.sec.gov/Archives/edgar/data/59478/000005947826000081/lly-20260630.htm), Deckblatt, „Common 941,357,065“, Stand 03.08.2026, vom Mechanismenhelfer neu geöffnet und bestätigt. [Kurs-JSON](https://query1.finance.yahoo.com/v8/finance/chart/LLY?period1=1790553600&period2=1791072000&interval=1d), Tageszeile 02.10.2026, „close“, Rohkurs 1142.8499755859375, nur aus P69 übernommen und nicht erneut abgerufen.
+* 688428.SS: [Aktienzahlmeldung](https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0917/2026091700793.pdf), PDF S. 2, „Closing balance as at“, und S. 1, „Number of issued shares (excluding treasury shares)“. Der Mechanismenhelfer hat die URL versucht; sie wurde wegen eines Werkzeugfehlers nicht neu geöffnet. Angaben aus P69/P08; 2.486.000 eigene Hongkong-Aktien sind ausgeschlossen. [A-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/688428.SS?period1=1790553600&period2=1791072000&interval=1d), 29,11 CNY am 30.09.2026, und [Hongkong-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/9969.HK?period1=1790553600&period2=1791072000&interval=1d), 13,63 HKD am 02.10.2026, wurden nur aus P69 übernommen und nicht erneut abgerufen.
+* 301200.SZ: [Halbjahresbericht](https://disc.static.szse.cn/disc/disk03/finalpage/2026-08-21/d0e5db05-96ad-4d6e-a5b6-663fd0f3a83c.PDF), PDF S. 42, „430,988,241 股“ und „58,019,500“, Aktienstand 30.06.2026; vom Mechanismenhelfer neu geöffnet. [A-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/301200.SZ?period1=1790553600&period2=1791072000&interval=1d), 224,79 CNY vom 30.09.2026, und [H-Kursreihe](https://query1.finance.yahoo.com/v8/finance/chart/3200.HK?period1=1790553600&period2=1791072000&interval=1d), 94 HKD vom 02.10.2026, wurden nur aus P69 übernommen und nicht erneut abgerufen.
+* Devisen für beide Klassenrechnungen: [EZB](https://www.ecb.europa.eu/stats/exchange/eurofxref/shared/pdf/2026/10/20261002.pdf), PDF S. 1, „02 October 2026“, USD 1,1225, CNY 7,5259 und HKD 8,8084 je EUR. Nur aus P69 übernommen und nicht erneut abgerufen.
+
+Die Quellenstatus gelten gemeinsam für alle Helfer dieses Laufs. Insgesamt wurden 34 verschiedene Original- und Emittenten-URLs versucht: 24 wurden neu geöffnet, zehn konnten mit dem Webwerkzeug nicht neu geöffnet werden. Nicht erneut abgerufene Kurs- und EZB-Quellen sind darin nicht als fehlgeschlagene Versuche gezählt.
+
+### wartet auf #431
+
+`lib/financial-known-cases.js::validateTable` erlaubt auf diesem Stand für `annualRev` und `annualGP` nur `replacementValue: null`. Jahresersatzwerte werden ausdrücklich nicht eingetragen. Ein Merge von #431 allein bestätigt weder neue Fingerabdrücke noch den anschließend tatsächlich gewählten Wachstumszweig.
+
+| Ticker und Feld | Bestätigte Werte in ganzen Währungseinheiten | Zielwachstum | Quelle und genaue Abgrenzung |
+|---|---|---:|---|
+| HMSO.IR, annualRev | 31.12.2025: 211.400.000 GBP; 31.12.2024: 121.100.000 GBP | 74,5664739884 % | [FY2025](https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf), PDF S. 19 und Note 4 S. 31, „Revenue 2A,4 211.4 121.1“. Mio. GBP, IFRS-Konzern ohne proportionale JV-Erweiterung. Neu geöffnet. |
+| SLX.AX, annualRev | 30.06.2026: 13.708.525 AUD; 30.06.2025: 7.267.654 AUD | 88,6237979959 % | [Annual Report](https://clients3.weblink.com.au/pdf/SLX/03126941.pdf), PDF S. 52, gedruckt S. 50, „Revenue from contracts with customers 13,708,525 7,267,654“. Volle AUD, Konzernkundenumsatz ohne Zinsertrag; einschließlich Zinsen wäre es ein anderer Vergleich mit 76,869910 %. Nicht neu geöffnet. |
+| CPPLUS.NS, annualGP | 31.03.2026: 12.139.000.000 INR; 31.03.2025: 6.694.280.000 INR | 81,3339149244 % | [Konzernjahresabschluss](https://adityagroup.com//uploads/investor/resultandreport/financialresult/Financial_Results_for_quarter_and_financial_year_ended_March_31_2026.pdf), PDF S. 6, „Revenue from operations“, „Cost of materials consumed“, „Purchases of stock-in-trade“. GP aus berichteten Operanden abgeleitet, nicht als exakt so gedruckte Zwischensumme ausgegeben. Nicht neu geöffnet. |
+
+CPPLUS-Rechnung in Mio. INR: FY2026 `42.208,12 − (20.312,79 + 6.925,12 + 2.831,21) = 12.139,00`; FY2025 `31.118,72 − (7.038,30 + 18.031,57 − 645,43) = 6.694,28`. Die [Präsentation](https://adityagroup.com//uploads/investor/statutorycommunications/earninginvestorcall/Investor_Presentation_for_quarter_and_financial_year_ended_March_31_2026.pdf), PDF S. 17, „Gross Profit“, bestätigt laut P69 die gerundeten Crore-Beträge 1.213,9 / 669,4 und 81,3 %; in diesem Lauf nicht erneut geöffnet.
+
+MAD.AX gehört zum angefragten Jahrespaket, benötigt im eingefrorenen Stand aber keinen Jahresersatz: Die vorhandenen Werte zum 30.06.2026 / 30.06.2025 sind bereits 1.001.140.000 / 872.202.000 AUD und ergeben 14,7830433776 %. Das Zurückhalten des veralteten aktuellen Quartals schaltet auf diesen vorhandenen Jahresvergleich um. [Jahresbericht](https://clients3.weblink.com.au/pdf/MAD/03125319.pdf), PDF S. 63, „Total operating revenue 1,001,140 872,202“, Tausend AUD; nicht neu geöffnet. Kein MAD-Jahreseintrag wartet hier auf #431.
+
+### Absichtlich leere Werte ohne Ersatzbehauptung
+
+MODEC 6269.T: vier Quartalsumsätze bleiben gemäß RATSBLOCK-2026-10-06 F5 leer, bis Berichtswährungsquartale verarbeitet werden können. `applyFinancialCases` nimmt keine vom Zellanker abweichende Ersatzwährung an. Die [H1-Ergebnisse](https://www.modec.com/ir/library/result/assets/pdf/2026_2Q_results_en.pdf), PDF S. 9, „Revenue 2,074,296 2,447,050“, stehen in Tausend USD; die Anbieterquartale entstanden aus JPY-Umrechnungen. Die weiteren drei Quellen wurden ebenfalls geöffnet: [Q1](https://www.modec.com/ir/library/result/assets/pdf/2026_1Q_results_en.pdf), PDF S. 9; [FY2025](https://www.modec.com/ir/library/result/assets/pdf/2025_YE_results_en.pdf), PDF S. 13; [9M2025](https://www.modec.com/ir/library/result/assets/pdf/2025_3Q_results_en.pdf), PDF S. 9. Der Jahresvergleich bleibt bei 9,429707 %; die Originalquartalsrate 14,044776 % ist kein gegenwärtiger Ersatzwert.
+
+AIAI: Die beiden unvereinbaren Jahresumsätze 2025/2024 werden zurückgehalten; das Wachstum bleibt leer. [Prospekt](https://www.sec.gov/Archives/edgar/data/2096362/000149315226022855/form424b4.htm), gedruckte S. 110, „Total revenue — —“, und Erläuterung S. 111; neu geöffnet. FY2025, das Rumpfjahr ab 19.07.2024, CCCI und Pro-forma-Konzern sind keine beliebig austauschbaren Berichtsreihen. Der [spätere 10-Q](https://www.sec.gov/Archives/edgar/data/2096362/000119312526352653/aiai-20260630.htm) wurde versucht, aber nicht neu geöffnet. Eine vergleichbare neue Wachstumsbasis bleibt offen.
+
+### Bestätigung der beibehaltenen Jahresvergleiche
+
+> **Auf einen Blick**
+>
+> Beide vorhandenen Jahrespaare stimmen mit beiden Operanden und beiden Geschäftsjahren im vollständigen Emittenten-Jahresabschluss überein; Sicherheit 100 % für den Abgleich in der veröffentlichten Genauigkeit.
+> * AJBU.SI: 441.362.000 / 310.287.000 SGD, Geschäftsjahre 2025/2024, daraus 42,243149 %.
+> * 1ANE.MI: 2.925.000.000 / 3.048.000.000 EUR, Geschäftsjahre 2025/2024, daraus −4,035433 % aus gerundeten Millionenbeträgen.
+
+Die Nachprüfung liefert keinen belegten Grund für eine zusätzliche Sperre der Jahreszellen. Die weiterhin fehlenden aktuellen Quartalspaare bleiben offen. Produktionsdateien und eingefrorene Rohdaten wurden nicht verändert.
+
+### AJBU.SI
+
+Im echten Snapshot stehen `annual.annualRev[0/1]` mit 345.118.752,34308 / 242.625.922,27758 USD. Division durch den dort dokumentierten Berichtswährungsfaktor 0,78194034 ergibt exakt 441.362.000 / 310.287.000 SGD; Periodenenden 31.12.2025 / 31.12.2024, jeweils zwölf Monate.
+
+[Annual Report 2025](https://www.keppeldcreit.com/en/file/investor-relations/publications/annual-report/kdcr-ar2025.pdf), **PDF-Seite 103, gedruckte Seite 108**: Konzern-Gewinnrechnung, Suchzitat „Gross revenue“, Spalten 2025/2024, Einheit „$'000“, 441.362 / 310.287. Die Währungsnote auf PDF-Seite 113, gedruckt 118, bestätigt „Singapore dollars“ und Tausenderrundung. Note 20 auf PDF-Seite 141, gedruckt 146, bestätigt unabhängig die Summen 435.168 + 6.194 = 441.362 und 305.696 + 4.591 = 310.287.
+
+Stärkster Gegencheck: Mieteinnahmen allein wären eine engere Kennzahl. Der Abschluss zählt die übrigen Erlöse ausdrücklich zum ausgewiesenen Gesamtumsatz. Beide gespeicherten Werte passen zur selben Definition. Die Rate ist keine Behauptung organischen Wachstums.
+
+Das Webwerkzeug lehnte das 18-MB-PDF wegen seiner Größenbegrenzung ab. Anschließend wurde genau diese Emittentendatei direkt mit HTTP 200 abgerufen und mit dem vorhandenen `pdftotext` gelesen. Der ungewöhnliche Seitenversatz wurde zusätzlich durch ausdrücklich auf PDF-Seite 103 begrenzte Extraktion überprüft, nicht geschätzt.
+
+### 1ANE.MI
+
+Im echten Snapshot stehen 3.321.976.027,5 / 3.461.669.378,4 USD. Division durch den dokumentierten Berichtswährungsfaktor 1,1357183 ergibt exakt 2.925.000.000 / 3.048.000.000 EUR; Periodenenden 31.12.2025 / 31.12.2024, jeweils zwölf Monate.
+
+[Konzernjahresabschluss 2025 mit Prüfungsvermerk](https://www.acciona-energia.com/content/dam/energiacom/accionistas-e-inversores/informacion-bursatil/annual-accounts/consolidated-annual-accounts-2025-ane.pdf), **PDF-Seite 12, gedruckte Seite 5**: „Net revenue“, Einheit „millions of euros“, 2025/2024 mit 2.925 / 3.048. Note 24 auf PDF-Seite 99, gedruckt 92, bestätigt „Total revenue 2,925 3,048“. Geprüft ist Acciona Energía samt Tochtergesellschaften, nicht der Mutterkonzern Acciona.
+
+Stärkster Gegenbeleg: Die Erläuterung auf PDF-Seite 161 nennt −4,1 %, eine Tabelle auf PDF-Seite 162 hingegen −4,0 %. Die Millionenbeträge stimmen in der Konzernrechnung überein. Daher ist −4,035433 % ausschließlich der Quotient aus veröffentlichten gerundeten Operanden; ungerundete Eurobeträge oder eine genauere Emittentenrate sind damit nicht bestätigt. Das ist kein Nachweis einer falschen gespeicherten Jahreszelle.
+
+Das vollständige Original wurde über das Webwerkzeug und zusätzlich direkt mit HTTP 200 geöffnet. Die Seiten 12 und 99 wurden lokal gezielt extrahiert. Die englische Emittentenfassung ist eine Übersetzung; bei einem Widerspruch gilt das spanische Original.
+
+### Nachweisdateien
+
+Die JSON-Datei enthält beide Rohdatei-Hashes, USD- und native Werte, Perioden, Quellen und Einzelurteile. Die beiden heruntergeladenen Originale liegen ausschließlich unter `correction-annual-evidence/`:
+
+* `AJBU.SI-annual-report-2025.pdf`, SHA256 `445a8e655891d458559a6f4d91e6d3c9828d58c7d83ef9050468608fcd6ec7e3`.
+* `1ANE.MI-consolidated-annual-accounts-2025.pdf`, SHA256 `31cc65b7254a41086d02539493099a95f801cf264948bcced583d82aadebc0f5`.
+
+## Handtabelle P138 vom 07.10.2026
+
+> **Auf einen Blick**
+> Die belegten Umsatzreihen ergeben 55,30 % für 000688.SZ und 22,04 % für GRANULES.NS.
+> Zehn Quartalszellen sind abgedeckt, davon sieben korrigiert und drei bestätigt.
+> Der Vergleich auf dem Rohstand vom 06.10. weist 0 andere geänderte Quellwerte aus.
+
+Die folgenden Zellen wurden mit `-p138` an die bestehende Tabelle angehängt. Beide Reihen haben `coversThrough: 2026-06-30`; kein gespeichertes Umsatzquartal wird geleert. Die 225 Fälle bis P129 (216 ältere und die neun von P129), 34 Abdeckungen, 11 Sperren und 16 Periodenetiketten bleiben unverändert; die ersten 216 Fälle sind zusätzlich durch ihre bisherigen Prüfsummen festgehalten. Die acht Fälle von P47 (AEON und Okasan) stehen in der Tabelle vor den zehn neuen und sind nicht berührt. Alle zehn Fingerabdrücke multiplizieren sich in JavaScript exakt mit dem gespeicherten Währungsfaktor zum vorhandenen USD-Wert.
+
+| Ticker | Periode | Feld | Währung | Alt | Neu | Status |
+|---|---|---|---|---:|---:|---|
+| 000688.SZ | 2026-06-30 | revenueQ | CNY | 1666778278.46 | 1666778278.46 | bestätigt |
+| 000688.SZ | 2026-03-31 | revenueQ | CNY | 1696217709.13 | 1696217709.13 | bestätigt |
+| 000688.SZ | 2025-12-31 | revenueQ | CNY | 3087702614.19 | 1428454750.76 | korrigiert |
+| 000688.SZ | 2025-06-30 | revenueQ | CNY | 555470993.66 | 1073278451.44 | korrigiert |
+| 000688.SZ | 2025-03-31 | revenueQ | CNY | 1086391910.94 | 1086391910.94 | bestätigt |
+| GRANULES.NS | 2026-06-30 | revenueQ | INR | 14649730000 | 14767740000 | korrigiert |
+| GRANULES.NS | 2026-03-31 | revenueQ | INR | 14574310000 | 14706080000 | korrigiert |
+| GRANULES.NS | 2025-12-31 | revenueQ | INR | 13780200000 | 13879400000 | korrigiert |
+| GRANULES.NS | 2025-09-30 | revenueQ | INR | 12946740000 | 12969880000 | korrigiert |
+| GRANULES.NS | 2025-06-30 | revenueQ | INR | 12087920000 | 12101060000 | korrigiert |
+
+Bei 000688.SZ wurden die Vorjahreszahlen wegen eines Zusammenschlusses unter gemeinsamer Kontrolle angepasst. Die beiden zweiten Quartale sind jeweils Halbjahr minus erstes Quartal, mit beiden Operanden samt eigenen Seiten und Zitaten. Das vierte Quartal 2025 steht direkt im [Jahresbericht, PDF-Seite 10, gedruckt 9](https://static.cninfo.com.cn/finalpage/2026-03-24/1225025043.PDF), „第四季度“ und „1,428,454,750.76“. Der Anbieterwert entspricht rechnerisch dem neuen Jahresumsatz abzüglich der alten Neunmonatszahl; der interne Verarbeitungsschritt des Anbieters ist nicht nachgewiesen. Der nicht gespeicherte September 2025 wird nicht ergänzt.
+
+Bei GRANULES.NS führt der Anbieter nur „Sale of products“. Maßgeblich ist „Total revenue from operations“, einschließlich sonstiger betrieblicher Umsätze. Die Werte aus „Rs in millions“ werden mit 1.000.000 in volle INR umgerechnet. Das [BSE-Dokument vom 21.07.2026, PDF-Seite 7](https://www.bseindia.com/xml-data/corpfiling/AttachHis/e573b415-05b3-456d-97f7-b731a64f118b.pdf) zeigt unter anderem „Total revenue from operations 14,767.74“. Wegen der beschädigten Textebene wurden die vorhandenen Seitenbilder geprüft. Das Märzquartal ist eine direkt veröffentlichte Quartalsspalte. Alle weiteren Quellen, Seiten, Originalzitate, Perioden und Einheiten stehen an den einzelnen Fällen.
+
+**Boardwirkung auf dem eingefrorenen Stand:** 000688.SZ wächst vorher um 200,065764 %, nachher um 55,297842 %; auf dem profitablen Rohstoffboard bewegt sich der Rang von 73 auf 329 und der Score von 75,8 auf 57,0. GRANULES.NS wächst vorher um 21,193142 %, nachher um 22,036747 %; auf dem profitablen Gesundheitsboard bleibt Rang 16, der Score steigt von 85,7 auf 85,9. Zwei Quellzellen ändern sich bei 000688.SZ und fünf bei GRANULES.NS, 0 bei anderen Tickern. Die vollständigen Feldzählungen und Einzelzellen stehen unter `outputs/p138-replay/vorher-nachher.md` und `.csv`. Über die gemeinsame Kalibrierung und neue Rangfolge ändern sich 4.288 Exportzellen bei 1.265 Tickern; darin sind Aufnahme und Wegfall von Zeilen in Kurzlisten als Zellen mitgezählt.
+
+**Toplisten:** Im profitablen Rohstoffboard tritt SBSW in die Top 100 ein und 000688.SZ aus. Bei Rule of 40 tritt 2344.TW in die Top 20 ein und 000688.SZ aus; in die Top 100 treten VLE.TO und 600012.SS ein, 000688.SZ und 001309.SZ aus. Alle übrigen Top-20-/Top-100-Mitgliedschaften bleiben gleich. 122 JSON-Ausgabedateien des Ausgangslaufs sind bei Wiederholung bytegleich. Alle 16.924 Rohdateien bleiben unverändert; 16.152 Hauptbestandsdateien stimmen mit der gelieferten Artefaktprüfsumme überein. Die versionierte `snapshots/_manifest.json` bleibt wie beauftragt auf HEAD statt auf der Artefaktfassung. Die Uhr steht in allen Läufen auf 06.10.2026, 20:00 UTC. Es entstehen keine Replay-Dateien außerhalb von `outputs/p138-replay`.
+
+**Deutsche Quellentitel, P142 Teil 2:** Die drei beanstandeten Fassungen zu Petrobras, dessen Geschwisternotierungen und dem 424B4-Prospekt stehen deutsch an der Quelle. Auch die neun gleichartigen zusätzlichen Felder in denselben Dateien sind übersetzt: EMBJ, EMBJ3.SA, VALE3.SA, XVALO.MC, YPF, YPFD.BA, 6269.T sowie die 10-Q-Titel von ABTC und JBS. Insgesamt sind es 14 Textfelder. Zahlen, URLs, Zugangsnummern und Originalzitate bleiben gleich. Die Parsernotation `p.`/`pp.` bleibt erhalten, damit der Export die Seiten weiter ausliest; dies ist mit dem echten Manifestbau abgesichert. Der eingefrorene HG-Lauf enthält die Titelfassungen für PBR-A und ANDG; die Geschwisterfassung wird zusätzlich im Manifesttest erzeugt und geprüft. Kein alter englischer Text war durch einen bisherigen Test wörtlich festgeschrieben, deshalb wurde keine alte Titelassertion ersetzt.
+
+**Weitere englische Titel:** Außerhalb der beiden Textdateien bleiben die zwei ADS-Quellenbeschreibungen von HSAI (SEC 6-K Juli 2026, Zugangsnummer 0001104659-26-082432) und BSBR (SEC 20-F vom 27.02.2026, Anlage 2.5) unverändert. `configs/yahoo-q4-known-cases.json` enthält 33 Titelvorkommen und bleibt vollständig unverändert. Andere gefundene `source`-Felder aus Kalender, Klassenregister und Firmenklassifikation speisen keinen `documentTitle` des Manifests.
+
+**Offene Paare, unverändert:**
+
+- CDR.WA benötigt die vom Emittenten veröffentlichten Umsätze des dritten und vierten Quartals 2025 aus fortgeführten Aktivitäten oder dazu passende neu ausgewiesene Neunmonatszahlen mit abgestimmter Darstellungsänderung. Die 349.072.000 PLN des alten dritten Quartals enthalten GOG. Der Anbieterwert des vierten Quartals von 74.877.000 PLN entspricht dem Jahresumsatz aus fortgeführten Aktivitäten von 866.989.000 PLN minus den alten neun Monaten von 792.112.000 PLN. Das belegt kein vergleichbares Quartal.
+- 000552.SZ benötigt konsistent neu ausgewiesene konsolidierte Neunmonatszahlen oder eine ausdrücklich angepasste Quartalsübersicht für Q3/Q4. Angepasstes Halbjahr plus alte Q3/Q4 übersteigt den Jahresumsatz um 50.056.182,60 CNY; das angepasste vierte Quartal ist nicht belegt.
+- BYLOT.AT benötigt ausdrücklich veröffentlichte Q3-/Neunmonatsumsätze 2025 in der späteren Darstellung oder eine exakte Überleitung zu dieser Basis, abgestimmt mit Jahr/Q4 und überarbeitetem Halbjahr/Q1. Auf alter Basis sind für Q3 74.461.000 EUR „Sale Proceeds“ belegt; der spätere Vergleichswert fehlt. **Masterentscheidung offen:** Ob Q3 auf dieser ursprünglichen Basis bestehen bleiben darf, ist nicht durch das Recherchepaket genehmigt. Die verfügbaren Quartale lassen 7.429.000 EUR zum Jahr offen; der direkt veröffentlichte Q4-Wert 254.100.000 EUR ist nur auf 0,1 Mio. EUR genau.
+
+**Prüfung und Übergabe:** Der vorgeschriebene Testbefehl besteht mit Exit 0, 32 bestandenen Testeinheiten und 0 Fehlern. Der neue Einzeltest enthält zwölf Testfälle und zehn unabhängige Rotproben durch Entfernen je eines Falls aus einer Speicherkopie. Ein echter CLI-Rotlauf liefert Exit 1 mit `actual: null`, `expected: 248635565.94855413` für die bestätigte Juni-Zelle von 000688.SZ; die Live-Prüfsummen bleiben gleich. Keine neuen Exporte und keine Änderungen in lib/, src/, scripts/ oder pull-yahoo.js. Nach dem Zusammenführen mit main (Tag 1435 mit P129 und Tag 1436 mit dem Jahreswert-Mechanismus) stehen die neun P129-Fälle vor den zehn P138-Fällen (233 und dann 243 Fälle); die Zählprüfungen führen drei Pakete (P129, P47, P138). Der Vergleich auf dem eingefrorenen Rohstand (Zeilen oben) wurde vor dieser Zusammenführung auf dem Stand f33c6ec5f9 gerechnet; P129 berührt andere Firmen (MAD.AX, AJBU.SI, 1ANE.MI, AIAI, MODEC).
+
+Bei 000688.SZ zum 30.06.2025 steht nun die direkt veröffentlichte Zeile des zweiten Quartals an erster Quellenposition. Abgeleitete Umsatzzellen, etwa das vierte Quartal als Geschäftsjahr minus neun Monate, exportieren ihre beiden Quellwerte als `handTableDerivation`.
+
+## Ganze Jahresrechnung von INDO-MIM: Maßstabsregel (P140, 08.10.2026)
+
+> **Auf einen Blick**
+>
+> Die Jahresrechnung wird bei INDOMIM.BO und INDOMIM.NS einheitlich mit dem Faktor 10 korrigiert.
+> * Vier Umsatzfälle und 79 weitere Geldzellen ergeben 83 Korrekturen im Stand vom 06.10.2026.
+> * Alle sieben geprüften Achsen bleiben bis auf Rechenrundung gleich. Der Umsatz 2026 steigt von 4,141056 auf 41,41056 Milliarden INR.
+> * Bei verändertem Fingerabdruck werden die betroffenen Geldzellen zurückgehalten und der Tageslauf warnt.
+
+### Register der Jahreszeilen
+
+Die ausdrücklichen Listen heißen `scale`, `balance.keys` und `exempt`. Der Umsatz steht im Geldregister, wird aber ausschließlich durch seine vier numerischen P50-Fälle geschrieben. Es gibt keinen numerischen Bruttogewinnfall. Die übrigen Geldzeilen erhalten den Faktor 10 nur bei passendem Fingerabdruck. Skalare Reihen bleiben Zahlen, Objektzeilen behalten ihre Form. Fehlende Zellen und null bleiben leer, echte Nullen bleiben unverändert.
+
+| Feld | Klasse | Umrechnung | Begründung |
+| --- | --- | --- | --- |
+| `annualRev` | Geldbetrag | Ja, über P50. | Vier einzeln belegte Umsatzfälle. |
+| `annualOpInc` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualNetIncome` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualGP` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualFCF` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualOCF` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualCostOfRevenue` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualSBC` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualRnD` | Geldbetrag | Ja. | Nur gelieferte Werte; im eingefrorenen Stand fehlen sie. |
+| `annualCapex` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualSGA` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualDepreciation` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualDividendsPaid` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualRepurchase` | Geldbetrag | Ja. | Nur gelieferte Werte; im eingefrorenen Stand fehlen sie. |
+| `annualNetCommonStockIssuance` | Geldbetrag | Ja. | Die Anbieterdefinition und das Vorzeichen bleiben erhalten. |
+| `annualBalance` mit `totalCash`, `totalDebt`, `totalAssets`, `accountsReceivable`, `netPPE`, `currentAssets`, `currentLiabilities`, `totalLiabilities`, `totalEquity` | Geldbetrag | Ja, je Schlüssel. | Bilanzbeträge bleiben Stichtagswerte. |
+| `annualShares`, `annualSharesBasic` | Aktienzahl | Nein. | Stückzahlen sind keine Geldbeträge. |
+| `annualEPS`, `annualEPSBasic`, `annualEPSDiluted`, `annualEarningsPerShare`, `annualDividendPerShare` | Betrag je Aktie | Nein. | Diese Werte sind ausdrücklich ausgenommen. |
+| `annualGrossMargin`, `annualOperatingMargin`, `annualNetMargin`, `annualROE`, `annualROA` | Verhältnis | Nein. | Diese Größen haben keinen Währungsmaßstab. |
+| Jede `<field>Ends`-Reihe | Datum | Nein. | Perioden bleiben unverändert. |
+| `annualBalance._debtPartial`, `annualBalance._debtPartialReason` | Kennzeichen | Nein. | Vollständigkeitsangaben bleiben erhalten. |
+| `timeseries.*`, `metrics.*`, `marketCap`, `price`, `external.*`, `meta.sharesOutstanding` | Außerhalb der Jahresregel | Nein. | Nur der registrierte Jahresblock wird umgerechnet. |
+
+Ein Test gleicht das Register mit jedem Jahresfeld in `src/scoring/snapshot.js::FIELD_REGISTRY` ab. Neue, nicht eingeordnete Jahresreihen werden mit deutschem Grund zurückgehalten. Die Umsatzkosten besitzen im echten Snapshot keine eigene Datumsliste. Sie verwenden wie im bestehenden Mapper und Nachladeleser die Umsatzjahre, sofern beide Reihen gleich lang sind. Eine ausdrücklich vorhandene leere oder ungültige Datumsliste wird nicht ersetzt.
+
+### Fünf unabhängig belegte Zeilen
+
+Die 18 Ankerzellen umfassen alle gelieferten Jahre von Umsatz, Jahresüberschuss, Gesamtvermögen, SBC und operativem Cashflow. SBC ist nur für 2026 und 2025 vorhanden. Die Umsatzanker verweisen auf `indomim-<Jahresende>-annualRev`; die übrigen Anker tragen eigene Quellen mit Betrag, Jahresgrenzen, Währung und Einheit. Bilanzanker sind Stichtagswerte und keine Zahlungsströme. Alle Seiten sind PDF-Seitenpositionen.
+
+| Zeile | Geschäftsjahr | Anbieterwert INR | Gedruckter Wert Millionen INR | Dokument | PDF-Seite | Wörtliches Zitat |
+| --- | --- | --- | --- | --- | --- | --- |
+| `annualRev` | 2026 | 4.141.056.000 | 41.410,56 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf#page=253) | 253 | „Contract Price 41,410.56 32,784.69“ |
+| `annualRev` | 2025 | 3.278.469.000 | 32.784,69 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf#page=253) | 253 | „Contract Price 41,410.56 32,784.69“ |
+| `annualRev` | 2024 | 2.840.491.000 | 28.404,91 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf#page=284) | 284 | „Total revenue from contracts with customers 32,784.69 28,404.91 26,653.21“ |
+| `annualRev` | 2023 | 2.665.321.000 | 26.653,21 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf#page=284) | 284 | „Total revenue from contracts with customers 32,784.69 28,404.91 26,653.21“ |
+| `annualNetIncome` | 2026 | 533.543.000 | 5.335,43 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 224 | „Profit for the year 5,335.43 4,237.34“ |
+| `annualNetIncome` | 2025 | 423.734.000 | 4.237,34 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 224 | „Profit for the year 5,335.43 4,237.34“ |
+| `annualNetIncome` | 2024 | 283.734.000 | 2.837,34 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 256 | „Restated Profit for the year (VII = V - VI) 4,237.34 2,837.34 4,626.93“ |
+| `annualNetIncome` | 2023 | 462.693.000 | 4.626,93 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 256 | „Restated Profit for the year (VII = V - VI) 4,237.34 2,837.34 4,626.93“ |
+| `annualOCF` | 2026 | 1.077.241.000 | 10.772,41 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Net Cash from / (used in) Operating Activities 10,772.41 5,062.71“ |
+| `annualOCF` | 2025 | 506.271.000 | 5.062,71 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Net Cash from / (used in) Operating Activities 10,772.41 5,062.71“ |
+| `annualOCF` | 2024 | 458.334.000 | 4.583,34 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 258 | „Net cash generated from operating activities (I) 5,062.71 4,583.34 6,057.15“ |
+| `annualOCF` | 2023 | 605.715.000 | 6.057,15 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 258 | „Net cash generated from operating activities (I) 5,062.71 4,583.34 6,057.15“ |
+| `annualBalance.totalAssets` | 2026 | 4.897.333.000 | 48.973,33 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 222 | „TOTAL ASSETS 48,973.33 41,408.41“ |
+| `annualBalance.totalAssets` | 2025 | 4.140.841.000 | 41.408,41 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 222 | „TOTAL ASSETS 48,973.33 41,408.41“ |
+| `annualBalance.totalAssets` | 2024 | 3.757.513.000 | 37.575,13 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 255 | „Total assets 41,408.41 37,575.13 33,804.46“ |
+| `annualBalance.totalAssets` | 2023 | 3.380.446.000 | 33.804,46 | [Prospekt](https://www.indo-mim.com/wp-content/uploads/2025/09/INDO-MIM-Limited-DRHP.pdf) | 255 | „Total assets 41,408.41 37,575.13 33,804.46“ |
+| `annualSBC` | 2026 | 14.515.000 | 145,15 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Employee stock compensation expenses 145.15 57.59“ |
+| `annualSBC` | 2025 | 5.759.000 | 57,59 | [Geschäftsbericht FY2026](https://www.indo-mim.com/wp-content/uploads/2026/08/Annual-Report-FY26.pdf) | 226 | „Employee stock compensation expenses 145.15 57.59“ |
+
+Der Geschäftsbericht nennt „(Amounts in INR million, unless otherwise stated)“, der Prospekt „(All amounts in Rs. million, except as otherwise stated)“. Die Quellenobjekte führen ganze INR und jeweils das Geschäftsjahr vom 1. April bis 31. März. Die lokalen Belegdateien sind `vendor-lines.csv`, `anker-final.json`, `anker-final.md` und `anker-final-gp-sga.md` aus dem P140-Paket. Die Seitenbilder der fünf Ankerzeilen wurden erneut gelesen.
+
+### Gedruckte Summen und Anbieteraggregate
+
+| Zeilen | Befund | Belegumfang |
+| --- | --- | --- |
+| Umsatz, Jahresüberschuss, operativer Cashflow, SBC, Investitionsauszahlungen, Abschreibungen, gelieferte Dividendenzahlungen und Nettoaktienemissionen | MATCH, gedruckte Beträge. | Betrag, Vorzeichen und Periode stimmen bei Faktor 10 unmittelbar überein. |
+| Alle gelieferten Bilanzschlüssel außer `netPPE` | MATCH, gedruckte Beträge. | Die jeweiligen Bilanzwerte stimmen unmittelbar überein. |
+| `annualGP`, `annualCostOfRevenue`, `annualOpInc`, `annualSGA`, `annualFCF` | Exakt rekonstruierte Anbieteraggregate, keine gedruckten Summen. | Die Komponenten ergeben den zehnfachen Anbieterwert. Die Anbieterklassifikation ist dadurch nicht vom Emittenten bestätigt. |
+| `annualBalance.netPPE` | Abweichend abgegrenztes, exakt rekonstruiertes Anbieteraggregat. | Sachanlagen, Anlagen im Bau, Nutzungsrechte und Kapitalvorschüsse ergeben die Anbieterzeile. Sie ist nicht mit gewöhnlichen Sachanlagen gleichzusetzen. |
+
+Die Belegdatei zählt 59 unmittelbar passende Werte, 20 nicht gedruckte Summen und 4 Werte mit abweichender Definition. Das begründet den Verzicht auf einen numerischen Bruttogewinnfall. Die Maßstabsregel bewahrt die Anbieterdefinitionen.
+
+### Veränderte Anbieterstände und Wiederholung
+
+Die Prüfung liest den Eingang vor den Umsatzersatzwerten. Alle vorhandenen Anker müssen exakt den kleinen Anbieterwerten mit dem gespeicherten Währungsfaktor entsprechen; jede der fünf Zeilen muss als brauchbarer Anker vorhanden sein. Gemischte Maßstäbe, abweichende Anker, fehlende Ankerzeilen, falsche Währung oder unbrauchbare Währungsangaben führen zum Rückhalt. Anker, die schon den Berichtswert tragen, werden nur zusammen mit dem gespeicherten Fallkennzeichen und derselben Fallrevision als bereits korrigiert akzeptiert. Ohne Kennzeichen werden sie nicht nochmals verzehnfacht.
+
+Nur die vier belegten Geschäftsjahre sind freigegeben. Ein neues Jahr vor der Reihe hält den gesamten durch die Regel bearbeiteten Geldbestand zurück. Ältere, undatierte oder doppelt datierte Zellen werden einzeln zurückgehalten. Jede umgerechnete Zelle erhält ein Ereignis mit Jahresfeld, gegebenenfalls Bilanzschlüssel, Periode und altem sowie neuem Wert. Ein Rückhalt trägt den ursprünglichen Anbieterwert, Fallrevision und `statement-scale-changed` beziehungsweise `statement-scale-unclassified`; der Tageslauf zählt ihn als `stale` und warnt. Die Umsatzfälle behalten ihre eigene Prüfung und die letzte Jahressperre.
+
+Die Gesamtmarke `meta.financialStatementScale` hält Fall, Revision, Faktor, Grundlage, deutschen Grund, Zeilen und Perioden fest. Sie dient auch den skalaren Reihen als dauerhafter Nachweis und überlebt den Währungsdurchlauf. Der Grund wird einmal in die exportierten Finanzdatenhinweise aufgenommen. Bei späterem Rückhalt wegen geändertem Fingerabdruck entfällt die veraltete Gesamtmarke. Der Fingerabdruck umfasst genau die fünf beauftragten Ankerzeilen; eine isolierte Änderung anderer Anbieterzeilen bei unveränderten Ankern ist damit nicht erkennbar.
+
+Der Test führt die echte Währungsfunktion des Abrufprogramms aus. Native Korrektur, anschließende Währungsumrechnung und erneutes Lesen ergeben dieselben Geldwerte bis auf eine ULP und dieselbe Gesamtmarke wie die direkte Korrektur des USD-Stands. Vollständige Objektgleichheit ist mit dem bestehenden P50-Nachweis nicht möglich, weil `originalVendorRow` die tatsächliche Eingangswährung bewahrt, einmal INR und einmal USD. Im synthetischen nativen Test werden nur die 18 unabhängig belegten Anker nach der Rückdivision exakt wiederhergestellt; produktiv wird kein Fingerabdruck gerundet.
+
+Diese Dokumentation enthält keine allgemeine Revisionsrichtlinie; die Tabellenrevision bleibt bei `2026-10-02i`, damit gespeicherte Rückhalte anderer Firmen ihren Revisionsstempel behalten, und nur die fünf neuen Einträge tragen `2026-10-08-p140`.
+
+### Härtung nach der Prüfung (P155)
+
+Die Tabellenprüfung lehnt Jahresfälle mit `replacementValue: null` und Quarantänen für eine Firma mit Maßstabsregel ab. Das gilt für die Hauptnotierung und ihre Aliasnotierungen. Die Regel liest den Eingang und könnte deshalb einen zuvor zurückgehaltenen Wert wieder auffüllen. Numerische Jahresfälle bleiben erlaubt.
+
+Echte Nullen bekommen weder ein Ereignis noch eine Korrekturmarke. Das ist jetzt für skalare Nullen und Objektzeilen mit `value: 0` durch Tests belegt, die auch die unveränderte Zeilenform prüfen.
+
+### Vollständig fehlendes Anbieterjahr nach V-B1c-1
+
+Die letzte Sperre erkennt nun auch eine ganz ausgelassene Jahreszeile. Liegen aufeinanderfolgende datierte Jahre nicht 365 oder 366 Tage mit höchstens 14 Tagen Abweichung auseinander, oder fehlt ein Falljahr zwischen dem jüngsten vorhandenen Jahr und dem ältesten Falljahr, bleiben die neueren Jahre erhalten und ältere vorhandene Werte werden mit `annual-older-than-withheld` zurückgehalten. Damit vergleicht `revAcceleration` nicht über eine Lücke hinweg. Der Test entfernt ein ganzes Jahr und wird ohne die Erweiterung rot.
+
+Die allgemeine Erweiterung bleibt aktiv. Gegen `cf75d29997` unterscheiden sich im Hauptbestand 2 von 16.152 Firmenständen, ausschließlich INDOMIM.BO und INDOMIM.NS; im Smallcap-Bestand unterscheiden sich 0 von 770. Je Ordner wurde eine JSON-Datei ohne nutzbaren Firmenstand nicht eingelesen. Der Vergleich umfasst Snapshots und Ereignisse. AEON, Okasan und sämtliche anderen Tabellenfälle bleiben identisch.
+
+### Sichtbare Beträge 2026 vor und nach der Korrektur
+
+| Zeile | Vorher INR | Nachher INR | Gedruckt Millionen INR |
+| --- | --- | --- | --- |
+| `annualRev` | 4.141.056.000 | 41.410.560.000 | 41.410,56 |
+| `annualNetIncome` | 533.543.000 | 5.335.430.000 | 5.335,43 |
+| `annualOCF` | 1.077.241.000 | 10.772.410.000 | 10.772,41 |
+| `annualBalance.totalAssets` | 4.897.333.000 | 48.973.330.000 | 48.973,33 |
+| `annualSBC` | 14.515.000 | 145.150.000 | 145,15 |
+
+Fixture-SHA256 ist `3a83255930cf2c69433602ffbf83925194ab7b917a26bc2b15e2b61b3056a7cc`. Der gespeicherte INR-USD-Faktor beträgt `0.010384216`. Alle sieben Achsen sind an dieser echten Datei mit relativer Toleranz `1e-9` unverändert. Absichtliche Brüche laufen nur an Modulkopien und Tabellen im Speicher; die Prüfsummen der echten Dateien bleiben gleich.

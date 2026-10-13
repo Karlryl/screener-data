@@ -1,0 +1,466 @@
+'use strict';
+/**
+ * BH-003/035/113/114/118/121/136/143/156 regression (batch b09-dailyyml,
+ * .github/workflows/daily-pull.yml). CI-orchestration fixes — the "logic" lives
+ * in the workflow text + embedded bash, so this suite is mostly text-anchored
+ * regression checks against the fixed patterns (proving the old broken pattern
+ * is gone and the new one is present), plus a couple of isolated pure-function
+ * re-implementations of embedded one-liners where real logic exists (BH-121).
+ *
+ * (BH-027, BH-073, BH-115, BH-152, BH-153 are skipped as decisions — no code
+ * change, nothing to regression-test here.)
+ *
+ * Standalone runner (node <datei>, exit 0/1) — no network, only local git
+ * metadata (git ls-files) and the checked-out workflow file itself.
+ *
+ * Run: node tests/scoring/bh-b09-dailyyml.test.js
+ */
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+
+const ROOT = path.join(__dirname, '..', '..');
+const YML_PATH = path.join(ROOT, '.github', 'workflows', 'daily-pull.yml');
+const yml = fs.readFileSync(YML_PATH, 'utf8');
+
+let pass = 0, fail = 0;
+function test(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+}
+
+function section(startMarker, endMarker) {
+  const s = yml.indexOf(startMarker);
+  assert.ok(s >= 0, 'Marker nicht gefunden: ' + startMarker);
+  const eSearchFrom = s + startMarker.length;
+  const e = endMarker ? yml.indexOf(endMarker, eSearchFrom) : yml.length;
+  assert.ok(!endMarker || e > s, 'End-Marker nicht gefunden: ' + endMarker);
+  return yml.slice(s, e < 0 ? yml.length : e);
+}
+
+// Der Workflow wird bis zur Job-/Step-Ebene als Objekt gelesen. Damit zaehlt ein
+// gleichnamiger, aber per `if: false` deaktivierter Step nicht als Schutzbeleg.
+function workflowStepObjects(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const steps = [];
+  let inJobs = false;
+  let job = null;
+  let step = null;
+  let runIndent = null;
+  for (const raw of lines) {
+    const indent = raw.match(/^ */)[0].length;
+    const trimmed = raw.trim();
+    if (runIndent !== null && step) {
+      if (indent > runIndent) {
+        step.run += raw.slice(runIndent + 2) + '\n';
+        continue;
+      }
+      runIndent = null;
+    }
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (indent === 0) {
+      inJobs = trimmed === 'jobs:';
+      job = null;
+    }
+    if (!inJobs) continue;
+    const jobMatch = indent === 2 && trimmed.match(/^([A-Za-z0-9_-]+):$/);
+    if (jobMatch) { job = jobMatch[1]; step = null; continue; }
+    const stepMatch = indent === 6 && trimmed.match(/^- name:\s*(.+)$/);
+    if (job && stepMatch) {
+      step = { job, name: stepMatch[1].trim(), id: null, if: null, run: '' };
+      steps.push(step);
+      continue;
+    }
+    if (!step || indent !== 8) continue;
+    const field = trimmed.match(/^(id|if|run):\s*(.*)$/);
+    if (!field) continue;
+    if (field[1] === 'id') step.id = field[2].trim();
+    if (field[1] === 'if') step.if = field[2].trim();
+    if (field[1] === 'run') {
+      if (['|', '|-', '|+', '>', '>-'].includes(field[2].trim())) runIndent = indent;
+      else step.run = field[2].trim() + '\n';
+    }
+  }
+  return steps;
+}
+
+const workflowSteps = workflowStepObjects(yml);
+function workflowStep(job, name) {
+  const found = workflowSteps.filter((s) => s.job === job && (s.name === name || s.name.startsWith(name + ' ')));
+  assert.equal(found.length, 1, `Step ${job}/${name} muss genau einmal aktiv verankert sein; gefunden: ${found.length}`);
+  return found[0];
+}
+
+test('geschuetzte Daily-Steps sind echte, nicht per if:false deaktivierte Workflow-Objekte', () => {
+  const protectedSteps = [
+    ['scoring', 'Live-Universum-Gate'],
+    ['prep', 'Verify FX-Rates Freshness'],
+    ['merge', 'Download all shard snapshots'],
+    ['merge', 'Prune Watchlist (post-snapshot)'],
+    ['merge', 'Merge shard manifests (recount n_total to full universe)'],
+    ['merge', 'Restore last-good macro-regime.json from gh-pages'],
+    ['merge', 'Compute Macro Regime'],
+    ['merge', 'Deploy to GitHub Pages'],
+    ['scoring', 'Restore Coverage-Floor Baseline (_last_good_disk.json)'],
+    ['scoring', 'Run Hypergrowth Screener'],
+    ['scoring', 'Save Coverage-Floor Baseline (_last_good_disk.json)'],
+    ['scoring', 'Deploy Scoring Output to GitHub Pages'],
+    ['scoring', 'Write board-history vintage (2.3)'],
+    ['scoring', 'Commit board-history vintage to main'],
+  ];
+  for (const [job, name] of protectedSteps) {
+    const step = workflowStep(job, name);
+    assert.ok(!/^\$\{\{\s*false\s*\}\}$|^false$/i.test(step.if || ''), `${job}/${name} ist deaktiviert`);
+  }
+});
+
+// Fuehrt den Node-Einzeiler aus dem echten FX-Step aus. Die Fixtures pruefen damit
+// nicht mehr nur den lokalen Nachbau `fxFetchedEpochSec` weiter unten.
+const fxStep = workflowStep('prep', 'Verify FX-Rates Freshness');
+const fxProgramMatch = fxStep.run.match(/fx_state=\$\(node -e "([\s\S]*?)"\)/);
+assert.ok(fxProgramMatch, 'Node-Einzeiler aus Verify FX-Rates Freshness nicht extrahierbar');
+function actualFxState(jsonText) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'workflow-fx-state-'));
+  try {
+    fs.writeFileSync(path.join(dir, 'fx-rates.json'), jsonText);
+    return execFileSync(process.execPath, ['-e', fxProgramMatch[1]], { cwd: dir, encoding: 'utf8' }).trim();
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('BH-121: echter Workflow-Einzeiler liefert Epoch fuer frisches und altes fetchedAt', () => {
+  const fresh = '2026-08-05T12:00:00.000Z';
+  const old = '2026-06-26T12:00:00.000Z';
+  assert.equal(actualFxState(JSON.stringify({ fetchedAt: fresh })), String(Date.parse(fresh) / 1000));
+  assert.equal(actualFxState(JSON.stringify({ fetchedAt: old })), String(Date.parse(old) / 1000));
+});
+test('BH-121: echter Workflow-Einzeiler meldet fehlenden/kaputten Stempel und fetchedAt:null explizit', () => {
+  assert.equal(actualFxState(JSON.stringify({ rates: {} })), 'KEIN_STEMPEL');
+  assert.equal(actualFxState('not json'), 'KEIN_STEMPEL');
+  assert.equal(actualFxState(JSON.stringify({ fetchedAt: null })), 'NULL');
+});
+
+// ── BH-035: Waechter/Gate-Glob faengt jetzt auch die '-test.js'-Schreibweise ─
+// Tag 653: Gate-Quelle ist von den env-Bloecken im Workflow nach scripts/test-gate.js
+// gewandert (zwei Spuren, zwei Workflows, EINE Quelle). Dieselbe Sache, neuer Ort.
+const gateModule = require(path.join(ROOT, 'scripts', 'test-gate.js'));
+const gateSrc = fs.readFileSync(path.join(ROOT, 'scripts', 'test-gate.js'), 'utf8');
+test('BH-035: blockierende Globs nutzen *test.js (faengt .test.js UND -test.js)', () => {
+  // 14.09.2026: tests/druckenmiller/ dazu (Druckenmiller-Modul, Chunk 0). Die Liste bleibt
+  // gepinnt — ein neuer Testordner soll bewusst hier nachgezogen werden, nicht still
+  // dazukommen; genau das ist der Zweck dieses Ankers.
+  assert.deepEqual(gateModule.BLOCKING_GLOBS, ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js',
+    'tests/druckenmiller/*test.js']);
+});
+test('BH-035: Waechter-Enumeration nutzt dasselbe erweiterte Pattern', () => {
+  assert.match(gateSrc, /'ls-files', '\*test\.js'/);
+  assert.match(gateSrc, /includes\('\/fixtures\/'\)/);
+});
+test('BH-035: git ls-files \'*test.js\' faengt die drei SEC-Smokes, das alte \'*.test.js\' nicht (Regressionsbeweis)', () => {
+  const newOut = execFileSync('git', ['ls-files', '*test.js'], { cwd: ROOT, encoding: 'utf8' }).split('\n');
+  const oldOut = execFileSync('git', ['ls-files', '*.test.js'], { cwd: ROOT, encoding: 'utf8' }).split('\n');
+  for (const f of ['tests/13f-test.js', 'tests/sec-form4-test.js', 'tests/sec-user-agent-test.js']) {
+    assert.ok(newOut.includes(f), f + ' fehlt im neuen Pattern');
+    assert.ok(!oldOut.includes(f), f + ' waere schon vom alten Pattern gefangen worden — Praemisse von BH-035 stimmt nicht mehr');
+  }
+});
+
+// ── BH-003: Live-Universum-Gate im scoring-Job, direkt nach dem Snapshot-Download
+test('BH-003: Reihenfolge Download-Snapshots -> Live-Universum-Gate -> Run Hypergrowth Screener', () => {
+  const iDl = yml.indexOf('name: Download Snapshots Artifact');
+  const iGate = yml.indexOf('name: Live-Universum-Gate');
+  const iRun = yml.indexOf('name: Run Hypergrowth Screener');
+  assert.ok(iDl > 0 && iGate > iDl && iRun > iGate, 'Schritt-Reihenfolge im scoring-Job verletzt');
+});
+// Tag 952: die Liste stand auf vier Namen, waehrend der Step laengst fuenf fuhr —
+// acceleration-invariance.test.js war ungepinnt und haette still herausfallen koennen.
+// anchors.rank.test.js kommt neu dazu: er ist der DURABLE Direktive-4-Waechter
+// (CRDO/ALAB/BE oben in IHREM Board) und lief bis Tag 952 in KEINEM Job mit echtem
+// Universum — snapshots/ ist gitignored, also skippte er ueberall und zaehlte trotzdem
+// als PASS. Faellt er aus dieser Liste, ist Direktive 4 wieder unbelegt.
+test('BH-003: alle sechs Live-Universum-Suiten werden im Gate-Step aufgerufen', () => {
+  const s = section('name: Live-Universum-Gate', 'name: Download merge');
+  for (const t of ['score.integration.test.js', 'quality-board.test.js', 'phase.test.js',
+    'score-breakdown.test.js', 'acceleration-invariance.test.js', 'anchors.rank.test.js']) {
+    assert.ok(s.includes('tests/scoring/' + t), t + ' fehlt im Live-Universum-Gate-Step');
+  }
+});
+test('BH-003: ein echter No-Universe-Skip (pre-pull-Gate-Sentinel) wird im scoring-Job als Fehler behandelt', () => {
+  const s = section('name: Live-Universum-Gate', 'name: Download merge');
+  assert.match(s, /grep -q 'pre-pull-Gate'/);
+  assert.match(s, /fail=1/);
+});
+test('BH-003: das Gate matcht NICHT auf den blossen "kein Universum"-String (faelscht sonst bei Teil-Skips falsch-rot)', () => {
+  const s = section('name: Live-Universum-Gate', 'name: Download merge');
+  assert.ok(!/grep -q 'kein Universum'/.test(s), 'alter Falsch-Rot-Sentinel noch vorhanden');
+});
+
+// ── BH-121: FX-Freshness liest fetchedAt aus fx-rates.json statt Datei-Mtime ─
+test('BH-121: Verify FX-Rates Freshness liest fetchedAt statt stat -c %Y', () => {
+  const s = section('name: Verify FX-Rates Freshness', 'name: Pull Insider Form-4');
+  assert.ok(!s.includes('stat -c %Y'), 'alte Datei-Mtime-Messung noch vorhanden');
+  assert.match(s, /d\.fetchedAt\s*\?\s*Date\.parse\(d\.fetchedAt\)/);
+});
+// Isolierte Nachbildung des eingebetteten node-Einzeilers (identische Fail-open-
+// Semantik) — Fresh/Stale/Missing/Corrupt an vier Fixtures durchgespielt.
+function fxFetchedEpochSec(fxJsonText, nowSec) {
+  try {
+    const d = JSON.parse(fxJsonText);
+    const t = d.fetchedAt ? Date.parse(d.fetchedAt) : NaN;
+    return Number.isFinite(t) ? Math.floor(t / 1000) : nowSec;
+  } catch (e) { return nowSec; }
+}
+test('BH-121: fxFetchedEpochSec — frisches fetchedAt -> Alter 0 Tage', () => {
+  const now = Math.floor(Date.now() / 1000);
+  const fetched = fxFetchedEpochSec(JSON.stringify({ fetchedAt: new Date().toISOString() }), now);
+  assert.equal(Math.floor((now - fetched) / 86400), 0);
+});
+test('BH-121: fxFetchedEpochSec — 40 Tage altes fetchedAt -> Alter 40 (> 30d Hard-Fail-Schwelle)', () => {
+  const now = Math.floor(Date.now() / 1000);
+  const old = new Date(Date.now() - 40 * 86400000).toISOString();
+  const fetched = fxFetchedEpochSec(JSON.stringify({ fetchedAt: old }), now);
+  assert.equal(Math.floor((now - fetched) / 86400), 40);
+});
+test('BH-121: fxFetchedEpochSec — fehlendes fetchedAt faellt fail-open auf NOW zurueck', () => {
+  const now = Math.floor(Date.now() / 1000);
+  assert.equal(fxFetchedEpochSec(JSON.stringify({ rates: {} }), now), now);
+});
+test('BH-121: fxFetchedEpochSec — kaputtes JSON faellt fail-open auf NOW zurueck', () => {
+  const now = Math.floor(Date.now() / 1000);
+  assert.equal(fxFetchedEpochSec('not json', now), now);
+});
+
+// ── BH-143: Prune laeuft jetzt NACH dem echten Snapshot-Download im merge-Job ─
+test('BH-143: prep-Job ruft "Prune Watchlist" nicht mehr vor dem Fan-out auf', () => {
+  const prepBlock = yml.slice(0, yml.indexOf('# PULL (matrix'));
+  assert.ok(!/name:\s*Prune Watchlist\b/.test(prepBlock), 'prep-Job pruned noch vor dem Fan-out (altes Verhalten)');
+});
+test('BH-143: Reihenfolge Download-Snapshots -> Prune (post-snapshot) -> Merge-Manifests', () => {
+  const iDl = yml.indexOf('name: Download all shard snapshots');
+  const iPrune = yml.indexOf('name: Prune Watchlist (post-snapshot)');
+  const iMerge = yml.indexOf('name: Merge shard manifests (recount');
+  assert.ok(iDl > 0 && iPrune > iDl && iMerge > iPrune, 'Reihenfolge im merge-Job verletzt');
+});
+
+// ── BH-113 / BH-114: beide gh-pages-Deploys pruefen Branch-Existenz vor jedem
+//    destruktiven git-init-Fallback (statt jeden Clone-Fehler pauschal so zu lesen)
+test('BH-113: Deploy 1 (merge-Job) klont bestehenden gh-pages statt git init -b (voller Re-Init)', () => {
+  // 29.07.: Endmarke war `name: Notify on failure` — der Discord-Schritt, der mit dem
+  // Discord-Ausbau verschwunden ist. Der Deploy ist jetzt der LETZTE Schritt des
+  // merge-Jobs; die Endmarke ist deshalb der naechste Job. Der haelt laenger als ein
+  // beliebiger Nachbarschritt.
+  const s = section('name: Deploy to GitHub Pages', '\n  scoring:');
+  assert.match(s, /git ls-remote --exit-code/);
+  assert.match(s, /git clone --depth 1 --branch gh-pages/);
+});
+test('BH-114: Deploy 2 (scoring-Job) prueft Branch-Existenz vor dem Fallback, alter blinder ||-Fallback ist weg', () => {
+  const s = section('name: Deploy Scoring Output to GitHub Pages', 'name: Write board-history vintage');
+  assert.match(s, /git ls-remote --exit-code/);
+  assert.ok(!/\|\|\s*\{\s*mkdir -p _ghp;\s*cd _ghp;\s*git init -b gh-pages;\s*cd \.\.;\s*\}/.test(s),
+    'alter destruktiver ||-Fallback (jeder Clone-Fehler -> git init) noch vorhanden');
+});
+
+// ── BH-118: coverage-status.json faehrt im merge->scoring-Handoff-Artefakt mit
+test('BH-118: outputs/coverage-status.json im merge->scoring-Handoff-Artefakt-Pfad', () => {
+  const s = section('name: Upload merge', 'name: Pipeline Health Check');
+  assert.match(s, /outputs\/coverage-status\.json/);
+});
+
+// ── BH-136: Actions auf volle Commit-SHAs gepinnt, kein beweglicher @v4-Tag mehr
+test('BH-136: keine beweglichen actions/*@v4-Referenzen mehr', () => {
+  assert.ok(!/uses:\s*actions\/[a-zA-Z0-9._-]+(\/[a-zA-Z0-9._-]+)?@v4\b/.test(yml),
+    'noch mindestens eine actions/*@v4-Referenz gefunden');
+});
+test('BH-136: actions/checkout ist auf einen vollen 40-Zeichen-SHA gepinnt, Version im Kommentar', () => {
+  assert.match(yml, /uses: actions\/checkout@[0-9a-f]{40} # v4\.\d+\.\d+/);
+});
+test('BH-136: jede uses:-Zeile fuer actions/* ist SHA-gepinnt (kein Tag mehr)', () => {
+  const usesLines = yml.split('\n').filter((l) => /uses:\s*actions\//.test(l));
+  assert.ok(usesLines.length > 0, 'keine actions/*-uses-Zeilen gefunden — Test-Anker falsch?');
+  for (const l of usesLines) {
+    assert.match(l, /@[0-9a-f]{40}\b/, 'Zeile nicht auf vollen SHA gepinnt: ' + l.trim());
+  }
+});
+
+// ── BH-156 -> Tag 1396: every vintage is committed with its verdict; a structural flag
+//    (rc=2) turns the job red in the LAST step "Value gate verdict", after commit,
+//    rank-ic and publish ran. Rewritten from the old pin (day directory excluded on rc=2).
+test('BH-156: Write-Step stempelt das tatsaechliche Vintage-Datum als Output (fuer den Exclude-Pfad unten)', () => {
+  const s = section('name: Write board-history vintage', 'name: Commit board-history vintage');
+  assert.match(s, /echo "date=\$\(date -u \+%F\)" >> "\$GITHUB_OUTPUT"/);
+});
+test('Tag 1396: no `:(exclude)board-history/` pathspec anywhere in daily-pull.yml (code lines)', () => {
+  const codeLines = yml.split('\n').filter((l) => !/^\s*#/.test(l));
+  assert.ok(!codeLines.some((l) => l.includes(':(exclude)board-history/')),
+    'the day directory is excluded from the commit again — one flagged board would lose the whole day');
+});
+test('Tag 1396: commit step adds board-history/ unconditionally on the publishing path, no rc branch around it, no exit 2', () => {
+  const step = workflowStep('scoring', 'Commit board-history vintage to main');
+  const lines = step.run.split('\n');
+  // Publishing path = everything after the Zweig-Wache block (its `fi` at column 0 of the run block).
+  const gStart = lines.findIndex((l) => l.includes('"$VEROEFFENTLICHEN" != "true"'));
+  assert.ok(gStart >= 0, 'Zweig-Wache not found');
+  const gEnd = lines.findIndex((l, i) => i > gStart && l === 'fi');
+  assert.ok(gEnd > gStart, 'end of the Zweig-Wache block not found');
+  const pub = lines.slice(gEnd + 1).filter((l) => !/^\s*#/.test(l));
+  const add = pub.findIndex((l) => /^git add board-history\/\s*$/.test(l));
+  assert.ok(add >= 0, 'no unconditional top-level `git add board-history/` on the publishing path');
+  assert.ok(!pub.slice(0, add).some((l) => /^\s*if\b.*VINTAGE_RC|^\s*if\b.*steps\.vintage\.outputs\.rc/.test(l)),
+    'an rc branch sits before the git add');
+  assert.ok(!pub.some((l) => /VINTAGE_RC" = "2"/.test(l)), 'the publishing path still branches on rc=2');
+  assert.ok(!pub.some((l) => /^\s*exit 2\b/.test(l)), 'the publishing path still ends with exit 2');
+});
+test('Tag 1396: "Value gate verdict" is the last step of job scoring, !cancelled(), rc from steps.vintage.outputs.rc', () => {
+  const scoring = workflowSteps.filter((s) => s.job === 'scoring');
+  const last = scoring[scoring.length - 1];
+  assert.equal(last.name, 'Value gate verdict (structural checks stay loud)');
+  assert.match(last.if || '', /^\$\{\{\s*!cancelled\(\)\s*\}\}$/);
+  assert.match(last.run, /VINTAGE_RC="\$\{\{\s*steps\.vintage\.outputs\.rc\s*\}\}"/);
+  assert.equal(workflowSteps.filter((s) => s.name.startsWith('Value gate verdict')).length, 1, 'exactly once');
+});
+// Round 3 (Codex P2): the verdict claims storage only when the commit step really succeeded.
+// The step's shell block is executed with the commit step's outcome substituted, for the four
+// states GitHub Actions can hand it: success, skipped (an earlier step failed), failure (commit
+// or push failed) and a non-publishing run (whose commit step itself exits 2 on rc=2).
+const COMMIT_OUTCOME_EXPR = '${{ steps.commit_vintage.outcome }}';
+function verdictLauf(rc, veroeffentlichen = 'true', commitOutcome = 'success') {
+  const step = workflowStep('scoring', 'Value gate verdict (structural checks stay loud)');
+  assert.ok(step.run.includes(COMMIT_OUTCOME_EXPR), 'verdict step does not read the commit step outcome');
+  const script = step.run.replace('${{ steps.vintage.outputs.rc }}', rc).replace('${{ steps.vintage.outputs.date }}', '2026-10-02')
+    .replace(COMMIT_OUTCOME_EXPR, commitOutcome);
+  const env = Object.assign({}, process.env, { VEROEFFENTLICHEN: veroeffentlichen });
+  const r = require('node:child_process').spawnSync('bash', ['-c', script], { encoding: 'utf8', env });
+  assert.ok(!r.error, 'bash not runnable: ' + (r.error && r.error.message));
+  return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
+}
+test('Round 3: the commit step carries id commit_vintage (the id the verdict step reads)', () => {
+  assert.equal(workflowStep('scoring', 'Commit board-history vintage to main').id, 'commit_vintage');
+  assert.equal(workflowSteps.filter((s) => s.job === 'scoring' && s.id === 'commit_vintage').length, 1);
+});
+test('Tag 1396: verdict step executed: rc=2, commit step succeeded -> "committed WITH structural flag" + exit 2', () => {
+  const r = verdictLauf('2', 'true', 'success');
+  assert.equal(r.code, 2, r.out);
+  assert.match(r.out, /::error::board-history vintage 2026-10-02 committed WITH structural flag/);
+  assert.doesNotMatch(r.out, /NOT stored|NOT committed/);
+});
+for (const outcome of ['skipped', 'failure']) {
+  test('Round 3: verdict step executed: rc=2, commit step ' + outcome + ' -> says NOT stored, never "committed", exit 2', () => {
+    const r = verdictLauf('2', 'true', outcome);
+    assert.equal(r.code, 2, r.out);
+    assert.match(r.out, /::error::board-history vintage 2026-10-02 structurally flagged and NOT stored on main/);
+    assert.match(r.out, new RegExp("outcome '" + outcome + "'"));
+    assert.doesNotMatch(r.out, /committed WITH/, 'a lost day must not be reported as stored');
+  });
+}
+test('Round 3: verdict step executed: rc=2, empty outcome (step id renamed/unknown) -> NOT stored (fail closed), exit 2', () => {
+  const r = verdictLauf('2', 'true', '');
+  assert.equal(r.code, 2, r.out);
+  assert.match(r.out, /NOT stored on main/);
+  assert.doesNotMatch(r.out, /committed WITH/);
+});
+test('Tag 1396: verdict step executed on a non-publishing run: rc=2 -> exit 2, does not claim a commit', () => {
+  const r = verdictLauf('2', 'false', 'failure');
+  assert.equal(r.code, 2, r.out);
+  assert.match(r.out, /::error::board-history vintage 2026-10-02 /);
+  assert.doesNotMatch(r.out, /committed WITH/, 'nothing was committed on this run');
+  assert.match(r.out, /NOT committed \(this run does not publish\)/);
+});
+test('Tag 1396: verdict step executed: rc=0 -> exit 0, no ::error::', () => {
+  const r = verdictLauf('0');
+  assert.equal(r.code, 0, r.out);
+  assert.doesNotMatch(r.out, /::error::/);
+});
+
+// ── AE-CI-001 (Hard Review 2026-07-31): beide gh-pages-Deploys unterscheiden jetzt
+//    "Ref fehlt wirklich" (git ls-remote --exit-code == 2) von jedem anderen Nonzero-
+//    Exit (transientes DNS/Auth/Transport, typ. 128). Vorher behandelte `if git
+//    ls-remote --exit-code ...; then ... else ...` JEDEN Nonzero-Exit identisch als
+//    "Branch fehlt" -> frischer leerer Branch -> Force-Push loeschte den kompletten
+//    bestehenden gh-pages-Baum bei einem rein transienten Netzfehler.
+test('AE-CI-001: Deploy 1 (merge-Job) wertet ls-remote-Exit-Code explizit aus (0/2/sonst)', () => {
+  const s = section('name: Deploy to GitHub Pages', '\n  scoring:');
+  assert.match(s, /ls_remote_rc=\$\?/);
+  assert.match(s, /if \[ "\$ls_remote_rc" -eq 0 \]/);
+  assert.match(s, /elif \[ "\$ls_remote_rc" -eq 2 \]/);
+  assert.match(s, /echo "::error::git ls-remote failed with exit \$ls_remote_rc/);
+});
+test('AE-CI-001: Deploy 2 (scoring-Job) wertet ls-remote-Exit-Code ebenso explizit aus', () => {
+  const s = section('name: Deploy Scoring Output to GitHub Pages', 'name: Write board-history vintage');
+  assert.match(s, /ls_remote_rc=\$\?/);
+  assert.match(s, /if \[ "\$ls_remote_rc" -eq 0 \]/);
+  assert.match(s, /elif \[ "\$ls_remote_rc" -eq 2 \]/);
+  assert.match(s, /echo "::error::git ls-remote failed with exit \$ls_remote_rc/);
+});
+test('AE-CI-001: alter blinder truthy-if ("if git ls-remote ...; then") ist aus beiden Deploys weg', () => {
+  const codeLines = yml.split('\n').filter((l) => !/^\s*#/.test(l));
+  const stillBlind = codeLines.some((l) => /if git ls-remote --exit-code[^\n]*; then/.test(l));
+  assert.ok(!stillBlind, 'jeder Nonzero-Exit wuerde damit wieder als "Branch fehlt" gelesen (Kommentarzeilen ausgenommen)');
+});
+// (Kein separater Bash-Ausfuehrungstest: `bash` loest lokal auf Windows nicht
+// zuverlaessig auf dieselbe Shell auf wie unter ubuntu-latest in CI — die drei
+// Text-Pins oben decken alle drei Zweige (0/2/sonst) bereits eindeutig ab.)
+
+// ── R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's BH-138 "leave an
+//    existing last-good file untouched" fallback can only work if that file
+//    already exists when the merge job's fresh runner starts. Ohne Restore-Schritt
+//    ist outputs/macro-regime.json auf jedem Lauf neu leer -> BH-138 no-opt sich
+//    selbst, ein schlechter SPY-Tag ueberschreibt den letzten guten Stand via
+//    Deploy 1. Der Restore-Schritt muss VOR "Compute Macro Regime" laufen.
+test('R5-SK-001: ein Restore-Schritt fuer macro-regime.json aus gh-pages laeuft VOR "Compute Macro Regime"', () => {
+  const iRestore = yml.indexOf('name: Restore last-good macro-regime.json from gh-pages');
+  const iCompute = yml.indexOf('name: Compute Macro Regime');
+  assert.ok(iRestore > 0, 'Restore-Schritt fehlt');
+  assert.ok(iCompute > iRestore, 'Compute Macro Regime muss NACH dem Restore laufen, sonst bleibt outputs/macro-regime.json leer');
+});
+// Tag 955: dieser Waechter war GRUEN, waehrend der Schritt vollstaendig wirkungslos war.
+// Er pinnte das Schreibmuster des Klon-Rezepts (`--branch gh-pages`, der Dateiname, die
+// Floskel "proceeding without") — alles drei blieb wahr, obwohl `git sparse-checkout set`
+// im Cone-Modus (Default seit Git 2.37) einen DATEIpfad ablehnt, das `2>/dev/null || true`
+// den fatal verschluckte und der Schritt "first run?" meldete, obwohl die Datei auf
+// gh-pages lag. Jetzt wird die SACHE gepinnt statt der Schreibweise:
+//   (a) die bewiesen kaputte Form darf NICHT wiederkommen (Abwesenheit),
+//   (b) der Schritt muss den letzten guten Stand tatsaechlich nach outputs/macro-regime.json
+//       legen (Anwesenheit),
+//   (c) ein Transportfehler darf NICHT mit "erster Deploy" verschmelzen — genau diese
+//       Verschmelzung war der Schaden: sie las sich beruhigend und war es nicht.
+test('R5-SK-001: der Restore-Schritt legt den letzten guten Stand wirklich ab (kein Cone-Modus-Blindgaenger)', () => {
+  const s = section('name: Restore last-good macro-regime.json from gh-pages', 'name: Compute Macro Regime');
+  // (a) Abwesenheit der kaputten Form: sparse-checkout auf einem DATEIpfad.
+  assert.ok(!/sparse-checkout\s+set\s+\S*macro-regime\.json/.test(s),
+    'sparse-checkout auf den Dateipfad ist zurueck — im Cone-Modus checkt das NICHTS aus und der Restore ist wieder ein Blindgaenger');
+  // (b) Anwesenheit des Ergebnisses: der Stand landet am Leseort von macro-regime.js.
+  assert.match(s, /(mv|cp)\s+\S+\s+outputs\/macro-regime\.json/,
+    'der Schritt legt nichts nach outputs/macro-regime.json ab — BH-138 haette wieder nichts zu bewahren');
+  // (c) drei unterscheidbare Ausgaenge: erster Deploy (404) vs. Transportfehler (laut).
+  assert.match(s, /404/, 'der "wirklich erster Deploy"-Fall ist nicht mehr eigens erkannt');
+  assert.match(s, /::warning::/,
+    'ein Transportfehler meldet nichts — er verschmilzt wieder mit dem harmlosen Erst-Deploy-Fall');
+});
+
+// ── Review-Nachzug P0-Haertung (2026-08-09): das Staging des Shard-Manifests darf
+//    nicht allein an der DATEI haengen. Seit Tag 602 bricht pull-yahoo.js fail-loud
+//    ab, wenn ein stale _manifest.json nicht loeschbar ist — dann liegt genau dieses
+//    ALTE Manifest noch auf Platte und wurde vom `-f`-Test als frisches Shard-Ergebnis
+//    gestaged. Der Fix ist damit neutralisiert. Geprueft wird die SACHE: der cp-Zweig
+//    muss am outcome des Pull-Steps haengen (ueber dessen id), der else-Zweig (= "Shard
+//    fehlt", merge zaehlt partial) bleibt der Ausweg.
+test('P0-Review: Manifest-Staging gatet am Ergebnis des Pull-Steps, nicht nur an der Datei', () => {
+  const pull = workflowStep('pull', 'Run Yahoo Pull');
+  assert.ok(pull.id, 'Run Yahoo Pull braucht eine id, sonst ist sein outcome nicht referenzierbar');
+  const stage = workflowStep('pull', 'Stage shard manifest for merge');
+  const ref = new RegExp('steps\\.\\s*' + pull.id + '\\s*\\.outcome');
+  const zweig = stage.run.match(/\n?\s*if (.+); then\n([\s\S]*?)\n\s*else\b/);
+  assert.ok(zweig, 'keine if/else-Verzweigung im Staging-Step gefunden');
+  assert.match(zweig[1], ref,
+    'die Staging-Bedingung liest das Pull-Outcome nicht: ' + zweig[1]);
+  assert.match(zweig[2], /cp snapshots\/_manifest\.json/,
+    'der outcome-gegatete Zweig ist nicht der, der das Manifest stageed');
+  assert.match(zweig[1], /-f snapshots\/_manifest\.json/,
+    'die Datei-Existenz muss weiterhin mitgeprueft werden (Timeout vor dem ersten Flush)');
+});
+
+console.log('\nbh-b09-dailyyml.test.js: ' + pass + ' ok, ' + fail + ' fail');
+process.exit(fail ? 1 : 0);

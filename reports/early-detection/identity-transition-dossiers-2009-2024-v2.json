@@ -1,0 +1,204 @@
+{
+  "schema": "early-detection-identity-transition-dossiers/v2",
+  "generatedAt": "2026-08-10T21:24:39.241Z",
+  "status": "PASS_OUTCOME_BLIND_IDENTITY_TRANSITIONS_QUANTIFIED_GATES_REMAIN_RED",
+  "gates": [
+    "entityListingLedger",
+    "historicalUniverse",
+    "corporateActionsDelistings"
+  ],
+  "producerScript": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\build_identity_transition_dossiers_v1.py",
+  "producerScriptSha256": "b868068e92704e5557b1528d8d01d29f748abafe21a0e0c7517f6627c1703809",
+  "database": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\identity-transition-dossiers-2009-2024-v2.sqlite",
+  "databaseBytes": 16617472,
+  "databaseSha256": "e0589e57ef77bb9c5b9a56cfb81bd19f156921926b47003aab6e79da601ab365",
+  "counts": {
+    "archiveSnapshots": 103,
+    "nonTestPositiveObservationRows": 432800,
+    "snapshotPairs": 101,
+    "observedAppearances": 18093,
+    "observedDisappearances": 15314,
+    "observedNameChanges": 8912,
+    "symbolProfiles": 25403,
+    "cikProfiles": 8954,
+    "commonEquityCorporateEvents": 16078
+  },
+  "symbolProfileStatusCounts": {
+    "MULTIPLE_PIT_DIRECT_CIKS_CONFLICT_NOT_RESOLVED": 393,
+    "NO_PIT_DIRECT_CIK_CANDIDATE": 13065,
+    "ONE_PIT_DIRECT_CIK_CANDIDATE_NOT_IDENTITY": 11945
+  },
+  "cikProfileStatusCounts": {
+    "MULTIPLE_SYMBOLS_FOR_CIK_CANDIDATE_NOT_TICKER_CHANGE": 1906,
+    "ONE_SYMBOL_FOR_CIK_CANDIDATE_NOT_IDENTITY": 7048
+  },
+  "corporateEventLinkStatusCounts": {
+    "BOTH_SIDES_SAME_SYMBOL_SET_CANDIDATE_NOT_IDENTITY": 362,
+    "BOTH_SIDES_SYMBOL_SET_CHANGED_CANDIDATE_NOT_SUCCESSOR_PROOF": 96,
+    "NO_PIT_DIRECT_DIRECTORY_CANDIDATE": 10215,
+    "POST_EVENT_ONLY_DIRECTORY_CANDIDATE": 836,
+    "PRE_EVENT_ONLY_DIRECTORY_CANDIDATE": 4569
+  },
+  "tableSequences": {
+    "snapshot_deltas": {
+      "rows": 101,
+      "sequenceSha256": "baacd0eaa183652431c7f39971be361005d2f83086197191f33d4b20b87e22e8"
+    },
+    "observed_transitions": {
+      "rows": 42319,
+      "sequenceSha256": "696e7ae2964ed5a8033b949248607080b582a2b60a87a445d3c8694a7a07d70a"
+    },
+    "symbol_profiles": {
+      "rows": 25403,
+      "sequenceSha256": "05afefc9facfdc06495360d9c046a7d914a92a9e0875d7046734a10791ec46b5"
+    },
+    "cik_symbol_profiles": {
+      "rows": 8954,
+      "sequenceSha256": "381dfc9df520fb84e05c3a6fea764ce8d92f3694105633ed00e824fd6528ca7e"
+    },
+    "corporate_event_candidate_links": {
+      "rows": 16078,
+      "sequenceSha256": "e250d9f71de6c282784d7ba29c09548cbb38f30eeb6cd9773ceb8724c1169c8b"
+    }
+  },
+  "interpretation": "Every appearance, disappearance, name change, multi-CIK symbol and multi-symbol CIK is now quantified between observed archive states. SEC Form 25/15 common-equity events are linked only to preceding/following point-in-time CIK candidates. No row proves an effective listing interval, ticker succession, permanent identity, terminal session or delisting return.",
+  "limitations": [
+    "Archive absence is unknown between sparse snapshots; observed transitions are not listing events.",
+    "An SEC ticker-to-CIK match is a candidate and cannot adjudicate ticker reuse or share classes.",
+    "A common-equity Form 25/15 event does not identify a terminal market session or successor security.",
+    "No prices, returns, volumes or outcome labels are stored or accessed."
+  ],
+  "inputs": {
+    "archiveReport": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.json",
+      "fileSha256": "fe23c5129d96271b482477171ae52ebc04c61324b814e6c93eac3e4354e2e8f4",
+      "reportSha256": "34584a6206d7b2035dd463692ba605dd7d6e7dd4ce8c6f44850bcf7bad2dfb23"
+    },
+    "archiveVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2-verification.json",
+      "fileSha256": "5520260e082718fd14d5716f39f6f0c8112cfaa8561ebf5f78f0ed042d65177d",
+      "reportSha256": "c56175ec2ca62fc1583e3db21023386ae6d3ebb9b4e3c20c1407e85ec2c11e5c"
+    },
+    "crosswalkReport": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-archive-sec-entity-candidate-crosswalk-2009-2024-v1.json",
+      "fileSha256": "4a9ab5504cd5275662d3af2f9cab0798c937ff6fc9217ea8b8609ba6f93c8258",
+      "reportSha256": "c02bf0d8a6af47b2ce3733f861f3be8b4626a18af5c883d495131d3d66c553e4"
+    },
+    "crosswalkVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-archive-sec-entity-candidate-crosswalk-2009-2024-v1-verification.json",
+      "fileSha256": "dbade87de292eac1f50326b27419ebe74d99cb5b8ee43deb311fd323ec5a4c39",
+      "reportSha256": "12b1d0ca1df25cf6707350fd9196d8da95c1481c5fbc45ff178fe48fd8142dad"
+    },
+    "corporateGate": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\corporate-actions-delistings-gate-decision-2026-08-10-v5.json",
+      "fileSha256": "ad42c4c92d5568d18fd6dce8c1cf493e89fba67e7b90c67a63b9b8481fc67afe",
+      "reportSha256": "482d6980a8eb2297b227bb905f8f7d3e53913f89abd9a8bf9fd29e3934500e18"
+    },
+    "corporateVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\corporate-actions-delistings-gate-decision-2026-08-10-v5-independent-verification.json",
+      "fileSha256": "640cc5459eb99e633c54bee0d57c3738f9e9c74ffa0af06c695391ffac84e86b",
+      "reportSha256": "a4532e3fdaae203d8ac0f5665b27cecd60c66d714a786f1fc4f7605ff7a59d88"
+    },
+    "archiveDatabase": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.sqlite",
+      "fileSha256": "ee8eff30112fe629699b76fc419ec9224a67a02fcbe63a5b247fb1b65f4df333"
+    },
+    "crosswalkDatabase": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-archive-sec-entity-candidate-crosswalk-2009-2024-v1.sqlite",
+      "fileSha256": "2da600dd7b8d4e06b7257fda81f43ced947ffff83e1ef090483cc25800bead34"
+    },
+    "corporateRanges": [
+      {
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-0001-5000-v11.json",
+          "fileSha256": "c694c640887a31d2ed03b809c88b770ca322531dc03dc0b45f4c593c8c2bd44e",
+          "reportSha256": "67a85f50314829ea95b52c22462cf3bfde1b1d87e63f828a97f8878766cecd44"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-0001-5000-v11-independent-verification-v3.json",
+          "fileSha256": "0613622d1ac0dfd9c4b27e2b49b0ce97596a469a40a5eebf53dc248599d0d855",
+          "reportSha256": "35855c43468bee731b5fce82b29b2464f65f891544bb744683d20f641fe7bd9d"
+        },
+        "database": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-0001-5000-v11.sqlite",
+          "fileSha256": "6b1ac68eb2cbc8374a76a63b871924e60e47cb946c142d0d9dace6b1151fa170",
+          "bytes": 4976640
+        }
+      },
+      {
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-5001-15000-v12.json",
+          "fileSha256": "3beacd707e5f0bff92aef7953d568631ad613c3b7ae97998ed1962f319f69f2e",
+          "reportSha256": "5ff24720e5beea3dcba368efdb9fbe461528ffefae48437eb00e63554690a29a"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-5001-15000-v12-independent-verification-v3.json",
+          "fileSha256": "13f298f5712b96153fb2e85ecfd7276fa43c05bb3540e4176ef71b61a1780c1f",
+          "reportSha256": "9b7bd88d258c77c429290262f98e9e7c5c16dc55dc009ad7b9fa776cc05b5936"
+        },
+        "database": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-5001-15000-v12.sqlite",
+          "fileSha256": "3633b8ef9649b14fa283ce1a5277c917831a83e222ef6e7db1ba1687428cd656",
+          "bytes": 12374016
+        }
+      },
+      {
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-15001-25000-v13.json",
+          "fileSha256": "850c419917354a10dfaf65d092072c23a40d184dab8a6e3524d06e04a2504a8f",
+          "reportSha256": "b1f8c4c4ae5b8ec33a09bf65fd950d06542665b620a456ad0fd0586f2dce414a"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-15001-25000-v13-independent-verification-v3.json",
+          "fileSha256": "c52d6476ec22c8e39064caeda8790d0b797422f4ea67728763db40a9e6942934",
+          "reportSha256": "54868a74f9117efe7f50b8e88ea0ebd58587b6b78aabe233fde0c9a43147b8b1"
+        },
+        "database": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-15001-25000-v13.sqlite",
+          "fileSha256": "19c3621552c52ba647b351fb31b5d2b293b7ad1cdac65caf5892bdc5fffbf870",
+          "bytes": 10911744
+        }
+      },
+      {
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-25001-35000-v14.json",
+          "fileSha256": "a7a5ccb441205376a36e6ddbc90bd0d694bf20908697dd91bb936a576f2cdfe6",
+          "reportSha256": "a1181031d89cca931e962d4ef955a0af7e9b4e93ff8e464005e8463d7badd8ac"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-25001-35000-v14-independent-verification-v3.json",
+          "fileSha256": "631bb28590358e09836d6986c3ae3a9bd806eeeccdc4ec680d60b432ce7b65d2",
+          "reportSha256": "128249aa51b87e9502758ccb931b3d5720a91eebc1ad860356cae5db48f296ed"
+        },
+        "database": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-25001-35000-v14.sqlite",
+          "fileSha256": "9b45119f73173e69cced6d7ecc5b8bedc76a63c246b032c14bc0b85a21db149c",
+          "bytes": 10444800
+        }
+      },
+      {
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-35001-44352-v15.json",
+          "fileSha256": "820bad2cb4e2496d09b69d96583ae8522329e67622bd331471b6724c66a92716",
+          "reportSha256": "9af645612198da83bc8d3f00b8be7873c3edfa145a52a39a2b08dab0d8df76dd"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-35001-44352-v15-independent-verification-v3.json",
+          "fileSha256": "7616988a3da0816c0b581b3e464d92a87251f2d5edf073aceb96f6d86b186d1c",
+          "reportSha256": "bffa4be7aa36e124764d4e904c3f8cb43d5af4200e872d44a22d44ddaa97e522"
+        },
+        "database": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-35001-44352-v15.sqlite",
+          "fileSha256": "7bfcb2c59041e31b7313de20589b3ee267af711c237e1d5fe7a3ab09a333f3a8",
+          "bytes": 11554816
+        }
+      }
+    ]
+  },
+  "identityResolvedRows": 0,
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "ee17e4f47ed47adce1048dd9336733b6637f594470b753cbdc320539c2448a45"
+}

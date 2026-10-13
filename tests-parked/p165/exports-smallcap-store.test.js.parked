@@ -1,0 +1,46 @@
+'use strict';
+// EXPECTED RED until DL3 write-findash-export.js GUARD-GAP / DL8 F-01 is fixed.
+// Runs exact mapper/cache/currency/quarter bodies. Unrelated shadow, growth and ATH seams are inert.
+const assert = require('node:assert/strict');
+const { copy } = require('./dl23-exports-copy-helper');
+const prelude = `
+const path = require('node:path');
+const SNAP_DIR = 'main', SMALLCAP_SNAP_DIR = 'smallcap';
+const samples = {
+  'main/CONTROL.json': {meta:{tradingCurrency:'USD'},timeseries:{revenueQ:[1,2]}},
+  'main/BOTH.json': {meta:{tradingCurrency:'JPY',tradingCurrencyAssumed:true},timeseries:{revenueQ:[1,2]}},
+  'smallcap/BOTH.json': {meta:{tradingCurrency:'USD'},timeseries:{revenueQ:[1,2,3,4]}},
+  'smallcap/ONLY.json': {meta:{tradingCurrency:'USD'},timeseries:{revenueQ:[1,2,3,4]}}
+};
+const fs = {readFileSync(p){const s=samples[p.replace(/\\\\/g,'/')]; if(!s){const e=Error('missing synthetic snapshot');e.code='ENOENT';throw e;}return JSON.stringify(s);}};
+const safeSnapshotFilename = t => t + '.json';
+const prepareYahooQ4Snapshot = s => s;
+const financialReasons = () => [];
+const revGrowthLeg = () => ({basis:'none',pct:null});
+const fcfSchattenJeAlpha = () => null, captureSnapshot = () => null, annualPairsShadowForSnapshot = () => null;
+const _snapCache = new Map(), _valueFlags = new Map(), _dupIssuerShadow = new Map();
+const applyDupIssuerShadow = () => {}, rankGrundShadowFor = () => null, athFor = () => null;
+const ergaenzeWachstumsBasis = r => r, ergaenzeMarketCapClassesShadow = r => r;
+const ROW_FIELDS = ['name','marketCap','revGrowthYoYPct'], SCORE_MAX = 100;
+let _mcapGeprueft = 0, _mcapGenullt = 0;
+`;
+const M = copy('scripts/write-findash-export.js', ['snapAbleitungenFuer', 'waehrungsbelegFuer', 'isUsableFxRate', 'beurteileWaehrungsbeleg', 'belegPunkte', 'ergaenzeBelegpunkte', 'ergaenzeWaehrungsbeleg', 'normalizeName', 'gedeckelt', 'mapBoardRow', 'mapOverviewRow'], prelude);
+for (const mapper of [M.mapBoardRow, M.mapOverviewRow]) {
+  const control = mapper({ ticker: 'CONTROL', marketCap: 1000 }, 0, 'main');
+  assert.equal(control.marketCap, 1000);
+  assert.equal(control.qPunkte, 2);
+}
+console.log('PASS main-store currency and quarter controls');
+if (!process.argv.includes('--controls')) {
+  const failures = [];
+  for (const [name, mapper] of [['board', M.mapBoardRow], ['overview', M.mapOverviewRow]]) {
+    for (const ticker of ['ONLY', 'BOTH']) {
+      const row = mapper({ ticker, marketCap: 2000 }, 0, 'smallcap');
+      for (const [field, expected] of [['marketCap', 2000], ['qPunkte', 4]]) {
+        try { assert.equal(row[field], expected, name + ' ' + ticker + ' ' + field); }
+        catch (e) { failures.push(e.message); }
+      }
+    }
+  }
+  assert.deepEqual(failures, [], 'small-cap evidence must come from its selected store, including duplicate ticker isolation');
+}

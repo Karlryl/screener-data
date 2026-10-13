@@ -1,0 +1,835 @@
+[
+ {
+  "id": "A-methods-forensic-03",
+  "file": "methods/piotroski-f-score.js",
+  "line": "33-37, 93-106",
+  "category": "bug",
+  "severity": "high",
+  "title": "Piotroski uses `!= null` (not isFinite) for balance fields, so a NaN balance value adds a phantom always-failing signal that corrupts both the F-score and the scaled threshold (0.15-weight TURNAROUND input)",
+  "evidence": "`_balanceVal` (lines 33-37) returns `arr[idx] && arr[idx][field]` (raw, no finite guard). Signal guards use `!= null`, e.g. line 93: `if (debt0 != null && debt1 != null && ...)`. Since `NaN != null` is true, a NaN debt0 enters the signal: `lev0 = debt0/assets0 = NaN`, then line 96 `pass: lev0 < lev1` -> `NaN < x` -> false. Reproduced with `totalDebt:NaN`: delta_leverage AND delta_liquidity both INCLUDED and scored 0; F-score 5/8 instead of 5/6 (the two NaN signals should have been excluded), threshold still scaled against 8.",
+  "why_it_matters": "Two effects compound: (1) phantom signals are counted as failed (depressing score), and (2) `signals.length` is inflated, so `scaledThreshold = round(6*length/8)` (line 130) demands more passes than the data supports — a stock with genuinely 6 computable signals can be judged against an 8-signal denominator. piotroski-f-score is 0.15 weight in TURNAROUND. NaN balance fields are plausible from partial Yahoo parses (pull-yahoo trims trailing nulls but mid-array bad values survive).",
+  "fix": "Make `_balanceVal` finite-guarded (`Number.isFinite(v) ? v : null`) exactly like beneish/ohlson, and/or change every signal guard from `x != null` to `Number.isFinite(x)`. This both excludes non-finite inputs from `signals.length` and prevents the NaN-comparison-false trap. Comment: 'prevents failure mode: NaN balance field added as phantom failed signal, corrupting score and scaled threshold'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "high",
+   "note": "CONFIRMED by reproduction in C:/Users/Karlr/screener-wt/audit-hardening/methods/piotroski-f-score.js. _balanceVal (lines 33-37) returns `arr[idx] && arr[idx][field]` with NO finite guard, unlike the sibling forensic methods beneish-m-score.js (line 97: `return Number.isFinite(v) ? v : null;`) and ohlson-o-score.js (line 98: same). The signal guards use `!= null` (e.g. line 93 delta_leverage, line 100 delta_liquidity), and since `NaN != null` is true, a NaN balance field enters the signal. Reproduced exactly as claimed with totalDebt:NaN at idx 0: both delta_leverage and delta_liquidity were INCLUDED and scored 0 (NaN<x and NaN>x both false), giving F-score 5/8 with maxPossible:8 / scaledThreshold:6 / pass:false. The correct missing-data path (totalDebt absent rather than NaN) excludes both signals, giving 5/6 / scaledThreshold:5 / pass:true. So one phantom NaN field flips the verdict from PASS to FAIL — it corrupts both the numerator (extra always-failing signals) and the scaled-threshold denominator (signals.length stays 8 instead of 6). Severity high is justified: piotroski feeds the 0.15-weight TURNAROUND composite input, and NaN propagation from upstream parsing is exactly the failure mode the sibling methods already defend against."
+  }
+ },
+ {
+  "id": "A-methods-guards-quality-01",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/methods/metric-divergence-guard.js",
+  "line": "57-72",
+  "category": "data-integrity",
+  "severity": "high",
+  "title": "Metric-divergence-guard is structurally blind on 'computed-margin' snapshots (annual margin is tautologically equal to TTM margin)",
+  "evidence": "Guard: `const ttmMargin = H.metricValue(stock,'operatingMargin'); ... const annualMargin = oi0/rev0*100; const divergence = Math.abs(ttmMargin-annualMargin);` (lines 57,71-72). But pull-yahoo.js _deriveOpIncForFinancials() path 3 sets `annualOpInc[y] = annualRev[y] * operatingMargins_TTM` (pull-yahoo.js:589-596) and stamps `meta.opIncSource='computed-margin'` (pull-yahoo.js:848). For any such snapshot oi0/rev0 == operatingMargins_TTM, so annualMargin == ttmMargin and divergence == 0 ALWAYS. metricValue returns pp (pull-yahoo.js:895 multiplies by 100; header line 14 confirms 'pp'), oi0/rev0*100 is also pp — units match, so the cancellation is exact. The method never reads meta.opIncSource.",
+  "why_it_matters": "This guard's whole purpose (header lines 4-9) is to catch financial/treasury entities like MSTR where TTM diverges from annual op income. Those are exactly the snapshots most likely to hit the Financial-Services-gated 'computed-margin' fallback, where annualOpInc is synthesized FROM the TTM margin — so the very names the guard targets get a guaranteed divergence of 0 and silently PASS. It is a DATAGUARD (method-types.js:74), so a false pass lets a data-anomalous stock into picks.",
+  "fix": "Read `stock.meta.opIncSource`; when it is 'computed-margin' the annual-vs-TTM comparison is non-independent — return computable:false with reason 'annualOpInc derived from TTM margin (opIncSource=computed-margin) — divergence undefined'. Add comment: 'prevents tautological pass when annual op-income was back-derived from the TTM operating margin'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "high",
+   "note": "CONFIRMED real with full source evidence. Tautology chain verified: (1) guard computes annualMargin = oi0/rev0*100 (metric-divergence-guard.js:71) and ttmMargin = H.metricValue(stock,'operatingMargin') (line 57); (2) metricValue returns metrics.operatingMargin.value which is set to _y(fd,'operatingMargins')*100 in pp (pull-yahoo.js:895, _helpers.js metricValue:23-29); (3) for opIncSource=='computed-margin' snapshots, annualOpInc[y]=annualRev[y]*operatingMargins (pull-yahoo.js:589-596, and the post-FTS retry at 1973-1976 which uses _opMargFrac = operatingMargin.value/100 = same operatingMargins fraction). So annualMargin = (rev*operatingMargins)/rev*100 = operatingMargins*100 = ttmMargin EXACTLY -> divergence==0 -> always passes the <=1000pp gate. Units are both pp so cancellation is exact; FX conversion (pull-yahoo.js:1985) multiplies oi and rev by the same rate and cancels in the ratio, so it does not break the tautology. grep confirms NO method in methods/ reads meta.opIncSource — the guard (and siblings) are blind to the provenance flag that pull-yahoo.js:848/1976 deliberately stamps; the code's own comment (pull-yahoo.js:520-523) acknowledges path 3 'folds year-by-year volatility into a single TTM margin. Methods can flag this as derived via meta.opIncSource' — i.e. the hazard is documented but never wired up. NUANCE on the 'ALWAYS' wording: computed-margin is sector-gated (pull-yahoo.js:639, 1971-1972) — fires only for Financial Services tickers whose Yahoo native operatingIncome is null and the bank/insurance line-item paths failed. Within that subset the guard is structurally blind and rubber-stamps every value (pass, divergence=0). This is a real false-negative in a data-integrity DataGuard exactly for the anomaly class it exists to catch, so high is warranted. fix_safe=true: reading stock.meta.opIncSource and returning computable:false for 'computed-margin' is behavior-preserving for all other snapshots, only converts the meaningless tautological pass into computable:false, and matches the existing computable:false / H.buildResult pattern already used at lines 52 and 64. Low risk to auto-apply."
+  }
+ },
+ {
+  "id": "A-pull-yahoo-01",
+  "file": "pull-yahoo.js",
+  "line": "1836-1837",
+  "category": "bug",
+  "severity": "high",
+  "title": "Quarterly net-income FTS extraction uses raw r.netIncome — misses NetIncome / netIncomeContinuousOperations casing, unlike the annual path",
+  "evidence": "ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse().map(r => r && r.netIncome != null ? r.netIncome : null);  // vs annual path line 1102: const ni = _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations');",
+  "why_it_matters": "Yahoo FTS rows for many tickers emit PascalCase ('NetIncome') or the GAAP-continuous variant ('netIncomeContinuousOperations') instead of camelCase 'netIncome' (the file itself documents this drift at lines 1054-1064 and 1099-1102). This map() bypasses the _ftsValue helper, so for every such ticker the entire quarterly-NI series reads all-null. That silently disables the 8-quarter earnings-stability method (Tag-90) — exactly the kind of method that should separate the screener's '20% of potential' from its full power. The bug is masked because nulls look like 'Yahoo didn't provide it' rather than 'we read the wrong key'.",
+  "fix": "Route through the existing helper: `.map(r => { const v = (r != null) ? _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations') : null; return v != null ? v : null; });`. No FTS_CACHE_VERSION bump needed (read-shape change only; affects freshly-parsed rows). Comment the failure mode: 'prevents all-null quarterly-NI when Yahoo FTS emits PascalCase/continuous-ops netIncome key'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed real inconsistency. pull-yahoo.js:1836-1837 extracts quarterly NI with raw `r.netIncome` only (single camelCase key, no fallback), while the annual path at line 1102 uses `_ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations')`. Both consume the SAME raw FTS rows: `fts.quarterlyFin` is also fed to mapFTSToQuarterly (line 1810), which at lines 1216-1220 uses `_ftsValue(r, 'totalRevenue', 'TotalRevenue')` etc. — proving the codebase itself treats quarterly FTS rows as PascalCase-prone. So the quarterly NI path uniquely fails to handle PascalCase/continuous-ops casing AND skips the snake_case fallback `_ftsValue` provides (line 1062). Downstream impact: canonical.timeseries.netIncomeQ (line 1931) → quarterly-earnings-stability.js and earnings-surprise-momentum, plus the data-quality gate `timeseries.netIncomeQ>=4` (data-quality.js:73). Severity downgraded to medium: this only bites when Yahoo emits the non-camelCase key for quarterly rows (an edge case, not the dominant path — camelCase `netIncome` is the normal emission, same as `totalRevenue` being the primary tried key). When it does bite, it degrades gracefully to all-null (no corruption, no positional misalignment), costing only a 0.5-weight data-quality point and disabling two quarterly methods for that ticker."
+  }
+ },
+ {
+  "id": "A-methods-ev-ebitda-valuation-02",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/methods/ev-ebitda.js",
+  "line": "27",
+  "category": "bug",
+  "severity": "high",
+  "title": "EV/EBITDA accepts Yahoo's enterpriseToEbitda whenever it is >0, silently ignoring negative-EBITDA firms that Yahoo encodes as a negative ratio",
+  "evidence": "Line 27: `if (yahooRatio != null && yahooRatio > 0) { ... pass: yahooRatio <= THRESHOLD ... }`. When a firm has negative EBITDA, Yahoo's enterpriseToEbitda comes back NEGATIVE (EV>0 / EBITDA<0). The `> 0` filter drops straight through to the manual fallback — but the fallback's own EBITDA guard is `opInc*1.2` and `if (ebitda <= 0) return computable:false`. So negative-EBITDA names end up non-computable, which is correct ONLY by luck of the fallback. The real defect: a firm with a tiny POSITIVE EBITDA and huge EV yields a Yahoo ratio like 850 — that is correctly failed. But a firm whose Yahoo ratio is a small negative number (e.g. -2, near-zero negative EBITDA) is treated as 'use fallback', and if the fallback's opInc happens to be positive it can PASS at a low EV/EBITDA while the company is actually unprofitable on an EBITDA basis.",
+  "why_it_matters": "EV/EBITDA is a `lte` valuation gate; the whole point is to reject expensive names. A near-breakeven company can flip between 'Yahoo negative ratio → ignored' and 'fallback opInc*1.2 positive → cheap PASS', producing a valuation verdict that contradicts the native ratio. The branch silently prefers the heuristic over Yahoo's own (more accurate) number for exactly the marginal-profitability names where the answer matters most.",
+  "fix": "Treat a non-null Yahoo ratio as authoritative regardless of sign: when `yahooRatio != null` and `yahooRatio <= 0`, return computable:false with reason 'negative/zero EBITDA per Yahoo native ratio — EV/EBITDA not meaningful' instead of falling through to the heuristic. Only fall back when `yahooRatio == null`. Add comment naming the failure mode: 'prevents heuristic opInc*1.2 PASS overriding Yahoo's negative-EBITDA signal'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed against source. methods/ev-ebitda.js:27 is exactly `if (yahooRatio != null && yahooRatio > 0)`, so a NEGATIVE Yahoo enterpriseToEbitda falls through to the manual fallback. pull-yahoo.js:910 passes Yahoo's `enterpriseToEbitda` through raw (`_metric(_y(ks,'enterpriseToEbitda'),...)`) with no sign filtering, so a negative ratio (EV>0 / negative TTM-EBITDA) is real input. The key point: the fallback uses a DIFFERENT metric and period than Yahoo's ratio — `opInc = latestAnnual('annualOpInc')` (most recent full fiscal-year operating income, pull-yahoo.js:1100/1106), while Yahoo's ratio uses TTM EBITDA from financialData. So a name that has slipped to negative TTM EBITDA but still had a positive last-FY operating income passes the fallback's `ebitda = opInc*1.2 > 0` guard (line 67) and can emit a PASS at a low EV/EBITDA. The auditor's evidence is self-contradictory in spots (it concedes the clean co-negative case IS caught by the fallback \"by luck\") — but the divergence case is genuine and not caught. Downstream this matters: generate-methods-report.js:246 only excludes a stock when `computable===true && pass===false`; a false PASS keeps the stock with a valuation endorsement, whereas computable:false would be neutral. So the bug turns a should-be-neutral, EBITDA-negative name into a passing valuation gate. NOT high though — it is a narrow TTM-vs-annual divergence window on one of many gates, neutral-vs-pass (not a hard wrong-exclusion or broad silent corruption); revised to medium. The proposed fix (treat non-null yahooRatio <= 0 as computable:false) is consistent with the file's own existing `ev <= 0` (line 59) and `ebitda <= 0` (line 67) non-computable guards and with the Tag 219 \"Yahoo native ratio is authoritative\" design intent."
+  }
+ },
+ {
+  "id": "A-methods-owner-earnings-valuation-05",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/methods/owner-earnings.js",
+  "line": "43, 137-138, 311, 349",
+  "category": "bug",
+  "severity": "medium",
+  "title": "Owner-earnings pass-gate uses MIN_YEARS=4 but the spec, JSDoc and module description all claim '>=5y' — and the description still advertises '+ SBC' that the code removed",
+  "evidence": "Line 43 `const MIN_YEARS = 4;`. JSDoc line 137-138: `Pass = (OE_latest/Rev_latest >= threshold) AND (yearsWithData >= 5) AND ...`. Pass code line 311-313: `const c2_years = yearsWithData >= MIN_YEARS;` (i.e. >=4), `pass = c1_margin && c2_years && c3_quality`. Failure reason at 245 also says 'expects >=5y'. Separately, module description line 349: `Owner Earnings = NI + D&A + SBC - MaintCapex - DeltaWC ... >=5y` — but the header (lines 20-23) explicitly states SBC was REMOVED in the 2026-05 audit and line 232 computes `oe = ni + dna - mCap - deltaWC` with no SBC term. rawSBC is read (line 156) but never used.",
+  "why_it_matters": "Two correctness-of-record problems on a BUFFETT-weighted method (0.20). (1) The 4-vs-5 year gate: a stock with exactly 4 computable OE years PASSES the quality gate while every human-facing string says it needs 5 — so the verdict disagrees with its own stated rule, and downstream DCF (which requires MIN_OE_YEARS=4, line 56) is consistent with 4 but inconsistent with the prose. (2) The description shipped in module.exports advertises a '+ SBC' formula the code deliberately does NOT compute, so any report/UI surfacing `description` tells users the opposite of what the method does. rawSBC (line 156) is dead-read.",
+  "fix": "Pick the intended gate and make it singular: if 5y is intended, set the comparison to a named MIN_YEARS_FOR_PASS=5 (keeping MIN_OE_YEARS=4 alignment for DCF separately) ; if 4y is intended, fix JSDoc (137-138), the 245 reason string, and the 349 description to say 4y. Remove '+ SBC' from the line-349 description string to match the SBC-less formula. Delete the unused rawSBC read at line 156 (or comment why it is retained). Each change carries a comment: 'prevents pass-gate/description disagreement on a BUFFETT-scored method'. No SCORE_WEIGHTS / fixture change (description/string + gate constant only).",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "CONFIRMED (doc/comment drift, no compute bug). Verified in C:/Users/Karlr/screener-wt/audit-hardening/methods/owner-earnings.js:\n\n1. Gate vs JSDoc/description year mismatch — REAL. Line 43 `MIN_YEARS = 4`; the pass-gate (line 311 `c2_years = yearsWithData >= MIN_YEARS`) and the computability gate (line 242 `yearsWithData < MIN_YEARS`) both enforce 4. But JSDoc line 137 says `yearsWithData >= 5` and the exported description (line 349) says `≥5y`. The 4-year gate is the deliberate intended behavior: line 43's own comment says \"Yahoo FTS provides max 4y of NI\", and the sibling methods/buffett-criteria.js:38 independently sets `MIN_YEARS_REQUIRED = 4` with the same rationale. So the JSDoc/description \"≥5y\" is the stale/wrong side; the runtime gate is correct.\n\n2. Description advertises removed \"+ SBC\" — REAL. Line 349 description: `Owner Earnings = NI + D&A + SBC − MaintCapex − ΔWC`. But header lines 20-23 explicitly state SBC was removed in the 2026-05 audit, and the formula at line 232 is `oe = ni + dna - mCap - deltaWC` (no SBC). The description misrepresents the actual formula.\n\n3. Dead read — REAL. `rawSBC` is read at line 156 and never used in evaluate(); the only other `annualSBC` occurrence (line 388) is smoke-test fixture data. Confirmed via grep: just lines 156 and 388.\n\n4. User-facing impact: the description IS surfaced to the user — rendered as the column-header tooltip in generate-methods-report.js:194 (`title=\"${escHtml(m.description)}\"`), printed by methods-cli.js:46, and exported via runner.js:74. So both the wrong formula (\"+ SBC\") and the wrong year-threshold (\"≥5y\") are shown to the user.\n\nONE INACCURACY in the finding's evidence (does not change the verdict): it claims line 245's reason string \"also says 'expects ≥5y'\". It does NOT — line 245 interpolates `${MIN_YEARS}`, so it renders \"expects ≥4y\" and is self-consistent with the gate. The real discrepancies are the JSDoc (137-138) and the description (349), which are independent of line 245.\n\nSeverity: medium is at the upper edge — no computation is wrong (pure doc/string drift + one dead variable), but because it is a user-facing methodology description that materially misstates the formula and year count on a Buffett-scored method, medium is defensible. Could reasonably be low.\n\nfix_safe=true: the correct resolution (corroborated by buffett-criteria.js) is to make the docs match the 4y gate — change JSDoc line 137 and description line 349 to \"≥4y\", remove \"+ SBC\" from line 349 to match the SBC-less formula, and delete the unused rawSBC read at line 156. All changes are doc/string/dead-code only, behavior-preserving, with no SCORE_WEIGHTS or fixture impact. The finding's proposed_fix offers a \"if 5y intended\" branch (rename MIN_YEARS_FOR_PASS=5) — that branch would change behavior and should NOT be taken; the evidence shows 4y is intended. As long as the fix aligns docs to 4y (not the code to 5y), it is low-risk to auto-apply."
+  }
+ },
+ {
+  "id": "A-tag28-tests-02",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/tag28-tests.js",
+  "line": "64-68, 84-88, 121-125, 133-137, 149-156",
+  "category": "bug",
+  "severity": "high",
+  "title": "Vacuous-pass: five 'fail-case' tests assert only !r.pass without guarding r.computable",
+  "evidence": "ROIC fail (64-68): `const r = ...['roic']; if (r.pass) throw new Error('should fail (10% < 15%)');` — no `r.computable` check, no value check. Same shape at Net-Debt/EBITDA fail (84-88: `if (r.pass) throw new Error('should fail');`), Revenue-Growth-3Y fail (121-125), FCF-Yield fail (133-137), GM-Stability fail (149-156). Contrast the Rule-of-40 fail case (43-48) which is safe because line 47 also asserts `approx(r.value, 25)`, and every PASS-case which asserts `r.computable`.",
+  "why_it_matters": "A result with computable:false carries pass:false (verified across the suite's contract). If a refactor accidentally makes any of these methods return incomputable for valid input (a missing-field guard regressing, an envelope-unwrap break, a thrown error swallowed to a default), the method is silently broken but these tests stay GREEN — they cannot distinguish 'correctly failed the gate' from 'never evaluated'. This is exactly the silent-method-drop failure class the suite elsewhere (line 160) tries to defend against.",
+  "fix": "Add `if (!r.computable) throw new Error('should be computable')` before the `if (r.pass)` line in each of the five fail-case tests, OR add a positive value assertion (e.g. ROIC fail should also assert `approx(r.value, 0.10)`). Cheapest: insert the computable guard. This pins the fail-case to a real computed FAIL, not a vacuous incomputable.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed the structural weakness, but the \"vacuous-pass\" label overstates it. buildResult() in methods/_helpers.js (lines 58-68) forces pass:!!pass, and wrapEvaluate (lines 310-319) turns any thrown error into computable:false with pass:false — so a test that only asserts `if (r.pass) throw` does NOT fire when a method regresses to incomputable. That is a genuine missing-guard gap in all five cited fail-cases (tag28-tests.js: ROIC 64-68, Net-Debt/EBITDA 84-88, Revenue-Growth-3Y 121-125, FCF-Yield 133-137, GM-Stability 149-156). The contrast is also accurate: Rule-of-40 fail (line 47) additionally asserts approx(r.value,25), so it is regression-safe; every PASS-case asserts r.computable.\n\nHOWEVER, none of the five tests is actually vacuous TODAY. I traced each input through its method and all five currently produce computable:true, pass:false (genuine computed FAILs): ROIC value=0.10 (10/100); Net-Debt/EBITDA value=50/12=4.17 (EBITDA=opInc*1.2=12); Rev-Growth-3Y CAGR≈9.1% (130 vs 100); FCF-Yield 0.02 (2e9/100e9, floored threshold 0.05); GM-Stability CoV≈0.29 (mean .45/sample-std .129). So the tests pass for the right reason now; the risk is a FUTURE silent regression to incomputable going uncaught — exactly the silent-method-drop class the suite guards elsewhere (line 160 test). That makes this a legitimate test-hardening item, but it is a latent test-robustness gap with zero current production or test-pass impact — medium, not high.\n\nFix is safe to auto-apply: inserting `if (!r.computable) throw new Error('should be computable')` before each `if (r.pass)` line is behavior-preserving (all five inputs compute today, so the new assertion passes immediately) and matches the existing idiom used throughout the file."
+  }
+ },
+ {
+  "id": "A-methods-composite-scores-10",
+  "file": "methods/buffett-criteria.js",
+  "line": "423, 755",
+  "category": "bug",
+  "severity": "medium",
+  "title": "parseFloat(...) || DEFAULT pattern for treasury yield and pass threshold: a legitimate env value of '0' silently falls back to the default (falsy-zero bug)",
+  "evidence": "`const treasuryYield = parseFloat(process.env.BUFFETT_TREASURY_YIELD_10Y) || TREASURY_YIELD_DEFAULT;` (line 423) and `const threshold = parseFloat(process.env.BUFFETT_PASS_THRESHOLD) || PASS_THRESHOLD_DEFAULT;` (line 755). If an operator sets BUFFETT_TREASURY_YIELD_10Y=0 (zero-rate scenario / test) or BUFFETT_PASS_THRESHOLD=0 (accept-all), parseFloat returns 0 which is falsy, so the default (0.045 / 0.85) is used instead.",
+  "why_it_matters": "This is the '|| 0'-class falsy bug inverted: 0 is a legitimately valid configured value that gets discarded. For the threshold, an intended 0 (diagnostic / let-everything-through run) silently becomes 0.85. NaN from a malformed env string also falls back (acceptable) but masks misconfiguration without warning.",
+  "fix": "Parse then explicitly check Number.isFinite: `const t = parseFloat(env); treasuryYield = Number.isFinite(t) ? t : DEFAULT;`. Add comment: `// prevents env value 0 from being discarded by falsy || default`.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed against source in C:/Users/Karlr/screener-wt/audit-hardening/methods/buffett-criteria.js. Both cited lines match exactly: line 423 `const treasuryYield = parseFloat(process.env.BUFFETT_TREASURY_YIELD_10Y) || TREASURY_YIELD_DEFAULT;` and line 755 `const threshold = parseFloat(process.env.BUFFETT_PASS_THRESHOLD) || PASS_THRESHOLD_DEFAULT;`. Defaults are nonzero (line 35 PASS_THRESHOLD_DEFAULT=0.85, line 36 TREASURY_YIELD_DEFAULT=0.045), so a legitimate env value of exactly '0' yields parseFloat('0')===0 (falsy) and is silently discarded in favor of the default — a genuine falsy-zero bug. Behavioral impact verified: treasuryYield feeds the T8 earnings-yield-vs-Treasury comparison (line 447 `pass = pretaxEY > treasuryYield`), and threshold gates the overall pass at line 760 (`passRate >= threshold`). Setting BUFFETT_PASS_THRESHOLD=0 (intended accept-all) would silently re-impose the 85% gate; BUFFETT_TREASURY_YIELD_10Y=0 (zero-rate test) would silently use 4.5%. These are the only two references to these env vars in the worktree (grep-confirmed), so no other parse layer mitigates it. Real but edge-triggered: it only manifests when an operator explicitly sets the var to 0; normal unset/valid use is unaffected. Severity medium is reasonable (accept-all=0 misconfig is a plausible operator footgun, no silent corruption in default operation)."
+  }
+ },
+ {
+  "id": "A-scripts-form4-prices-pull-01",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/enrich-q-revenue.js",
+  "line": "180",
+  "category": "data-integrity",
+  "severity": "high",
+  "title": "Non-atomic fs.writeFileSync into fundamentals-cache bypasses the repo's writeFileAtomic — SIGKILL/CI-timeout mid-write truncates a court-screen input file",
+  "evidence": "Line 175 `const j = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));` then line 180 `fs.writeFileSync(cacheFile, JSON.stringify(j));`. This is a read-modify-write on a committed-state file with a plain writeFileSync. The other three scripts in this batch all import and use `const { writeFileAtomic } = require('../lib/atomic-write.js')` precisely because (per lib/atomic-write.js header) plain writeFileSync left ≥9 state files truncatable: 'A SIGKILL / CI timeout mid-write truncated the file; downstream ... then aborted on parse-error or worse, silently loaded a {} shape and regenerated everything from scratch'. enrich-q-revenue.js does NOT import atomic-write at all.",
+  "why_it_matters": "fundamentals-cache/{TICKER}.json is consumed by court-screen.js (durability v3, confirmed: grep revQYoYsec → court-screen.js). A crash between the open-for-write truncation and full flush leaves the WHOLE fundamentals payload (not just revQYoYsec) as a half-written/zero-byte file. The next court-screen run then JSON.parse-throws or silently loses every fundamental for that ticker. Worse than the form4 scripts because here the truncation destroys pre-existing data the script only meant to augment.",
+  "fix": "Import writeFileAtomic from ../lib/atomic-write.js (same one-line require the sibling scripts use) and replace `fs.writeFileSync(cacheFile, JSON.stringify(j))` with `writeFileAtomic(cacheFile, JSON.stringify(j))`. No FTS_CACHE_VERSION touched; this is a scripts/ file, not methods/index.js.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed at scripts/enrich-q-revenue.js:175-180: a read-modify-write (read line 175, mutate j.payload.ftsQuarterly lines 177-179, write line 180) uses plain fs.writeFileSync(cacheFile, JSON.stringify(j)), and the script never imports lib/atomic-write.js. The sibling-convention claim holds: ~25 scripts under scripts/ import { writeFileAtomic } from ../lib/atomic-write.js, and the lib header (lines 2-23) documents exactly the SIGKILL/CI-timeout mid-write truncation hazard. The downstream-consumer claim also holds: court-screen.js:134 reads payload.ftsQuarterly.revQYoYsec to compute the durability metric, so a truncated/empty file would silently degrade that input. So the defect is genuine and matches a real, repo-recognized pattern. BUT the finding's framing overstates the blast radius: it calls the target a 'committed-state file', whereas fundamentals-cache/ is gitignored (.gitignore:16-18 — '28-day local cache; not needed in git history, rebuilt on each runner'). The file is a rebuildable local cache, not committed state; the script is deterministic and idempotent (re-run rebuilds from SEC companyfacts.zip), and the cache regenerates on each runner. A mid-write truncation is recoverable by re-running, unlike the truly-committed state files atomic-write was built for. That justifies downgrading high -> medium."
+  }
+ },
+ {
+  "id": "A-scripts-form4-prices-pull-04",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/pull-insider-form4-daily.js",
+  "line": "229",
+  "category": "data-integrity",
+  "severity": "medium",
+  "title": "txnKey omits price/owner → two real same-day same-share buys at different prices (multi-lot) collapse to one; identical key in backfill-form345 means the bug is repo-wide",
+  "evidence": "Line 229 `return [t.accessionNumber, t.transactionDate, t.transactionCode, t.transactionShares].join('|');` (identical in backfill-form345.js line 169). Verified by execution: two txns {acc:X, date, code:P, shares:100} priced 10 vs 12 both yield key `X|...|P|100` (collision=true). Also a single Form 4 can carry multiple reporting owners or multiple non-deriv lines; this key has no owner/price/line discriminator.",
+  "why_it_matters": "Insiders routinely split one filing into several transaction lines at different prices on the same day. The dedupe in mergeTransactions (line 251-259) and backfill-form345 (line 307-311) drops every line after the first with the same share count, understating aggBuyValue (Σ shares*price) in insider-conviction-score.js line 257. Conviction/value gates (MIN_BUY_VALUE) and the topBuy selection are computed on incomplete data.",
+  "fix": "Add the price (and for the history cache, rptOwnerCik) to the key: `[t.accessionNumber, t.transactionDate, t.transactionCode, t.transactionShares, t.transactionPricePerShare].join('|')`. Apply in both files so daily and history dedupe identically. Comment: 'prevents collapsing distinct same-day multi-lot insider buys (understated aggregate buy value)'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "CONFIRMED. txnKey at pull-insider-form4-daily.js:229 and backfill-form345.js:169 are byte-identical and omit price/owner/line discriminators. Collision reproduced by execution: two txns {acc:X, date:2026-05-01, code:P, shares:100} at price 10 vs 12 both yield key \"X|2026-05-01|P|100\" (collision=true). Multiple non-derivative lines per filing are real — parseForm4Xml (pull-insider-form4.js:250) loops over _extractAll(xml,'nonDerivativeTransaction'), so one accession legitimately produces many txns; backfill iterates all NONDERIV_TRANS rows. Downstream impact is concrete and not theoretical: mergeTransactions (lines 251-260) does `if (seen.has(k)) continue;` and silently drops the second colliding lot — it is never pushed. The deduped cache feeds methods/insider-conviction-score.js, which at lines 255-258 computes aggBuyValue += shares*price against a HARD GATE of Σ(shares*price) >= $25,000 (documented line 36) and also picks the top buyer by $ value. So collapsing two distinct same-day same-share buys at different prices into one understates aggregate buy value and can flip both the $25k gate and the conviction score. One correction to the auditor: in the DAILY path the proposed rptOwnerCik addition is a no-op — daily txn objects never carry rptOwnerCik (parseForm4Xml attaches only the first reportingOwner's NAME, not CIK); only backfill txns have rptOwnerCik. The price field is the load-bearing discriminator and applies symmetrically to both files."
+  }
+ },
+ {
+  "id": "A-scripts-history-snapshots-01",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/snapshot-r40rx-history.js",
+  "line": "60-62, 123",
+  "category": "data-integrity",
+  "severity": "high",
+  "title": "snapshot-r40rx-history + backfill use raw `ticker + '.json'` while the READER uses safeSnapshotFilename() — write/read filename divergence for Windows-reserved & special-char tickers",
+  "evidence": "snapshot-r40rx-history.js:61 `const file = path.join(outDir, ticker + '.json');` and :123 `writeFileAtomic(path.join(args.out, ticker + '.json'), ...)`. backfill-r40rx-history.js:59 same raw join. BUT the consumer generate-screener.js:184 reads via `path.join(R40RX_HISTORY_DIR, safeSnapshotFilename(ticker))`. snapshot-score-history.js already fixed this (lines 32,104,199 use safeSnapshotFilename). lib/snapshot-fs.js maps e.g. ticker `CON` -> `_CON.json`, and sanitises `[^A-Z0-9.-]` -> `_`.",
+  "why_it_matters": "For any ticker whose safe filename differs from raw (Windows-reserved stems CON/PRN/AUX/NUL/COM1-9/LPT1-9, or tickers with characters outside [A-Z0-9.-]), the r40rx history is WRITTEN to one path and READ from another. The writer never updates the file the reader opens, so generate-screener silently gets stale/empty r40rx history for those tickers -> the multi-quarter R40 durability gate (generate-screener.js:721 `hist.slice(-4)`) sees <4 entries and routes the row through the weaker TTM-only fallback (r40InsufficientHistory). The audit note F-SM-004 / F-218b-01 documents this exact drift class as P1; score-history was fixed but the two r40rx writers were missed.",
+  "fix": "Import `const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');` in both snapshot-r40rx-history.js and backfill-r40rx-history.js and replace every `ticker + '.json'` (read in readHistoryFile, write in main) with `safeSnapshotFilename(ticker)`, exactly as snapshot-score-history.js does. No method/ files touched; FTS_CACHE_VERSION untouched.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "CONFIRMED real write/read divergence. Verified against C:/Users/Karlr/screener-wt/audit-hardening:\n\nWRITERS use raw `ticker + '.json'`:\n- scripts/snapshot-r40rx-history.js:61 (read in readHistoryFile) and :123 (write in main) — `path.join(..., ticker + '.json')`.\n- scripts/backfill-r40rx-history.js:59 (read) and :193 (write) — same raw join.\n\nREADER uses the safe helper:\n- generate-screener.js:33 imports safeSnapshotFilename; readR40rxHistory at :184 reads `path.join(R40RX_HISTORY_DIR, safeSnapshotFilename(ticker))`.\n\nlib/snapshot-fs.js:32-37 prefixes `_` when the pre-dot stem matches CON/PRN/AUX/NUL/COM[1-9]/LPT[1-9] and sanitises `[^A-Z0-9.-]`→`_`. So for a reserved/special ticker the writer's raw name and the reader's safe name diverge.\n\nBlast radius measured against the ACTUAL universe (universe-list.txt + universe-candidates.txt, 1645 tickers): exactly ONE diverging ticker today — `CON.DE` (stem `CON` is reserved). Writer produces r40rx-history/CON.DE.json; reader looks for _CON.DE.json → silent miss, no R40/RX history shown for CON.DE. Confirmed Windows happily writes `CON.DE.json` (the device-name rule does not block it), so the file IS created under the wrong name rather than failing loudly — a true silent divergence, not a crash. The same was true for the snapshot producer side: pull-yahoo.js writes snapshots via safeSnapshotFilename (so CON.DE snapshot is _CON.DE.json) but keeps meta.ticker='CON.DE', which is what the history scripts key on — confirming the raw key flows through.\n\nPrecedent: scripts/snapshot-score-history.js already fixed this exact pattern (lines 32, 104, 199 route through safeSnapshotFilename, with comment F-SM-004). The proposed fix mirrors that.\n\nSeverity revised high→medium: impact is limited to the R40/RX history sub-table for the affected ticker(s) (a dashboard feature, not core screener filter results or data corruption), and only 1 ticker is currently affected. Real but narrow."
+  }
+ },
+ {
+  "id": "A-root-dashboard-diff-03",
+  "file": "generate-diff-report.js",
+  "line": "41-42",
+  "category": "data-integrity",
+  "severity": "medium",
+  "title": "Unguarded JSON.parse + latest.stocks access can throw on truncated/old-schema snapshot; workflow swallows it (continue-on-error) → stale diff-report.html silently deployed",
+  "evidence": "Lines 41-42 do raw `JSON.parse(fs.readFileSync(...))` with no try/catch (unlike the dashboard's `safeJSON`). Line 47 then does `Object.entries(latest.stocks)` with no guard that `stocks` exists. The workflow step is `continue-on-error: true` (daily-pull.yml:534-535), and the previous diff-report.html is committed and served by Pages.",
+  "why_it_matters": "methods-history files are large (~14 MB per the workflow comments). A truncated file (CI cancellation mid-write of the upstream snapshot-methods-history.js) or a schema change where `stocks` is renamed/absent throws either a SyntaxError or `Cannot read properties of undefined (reading 'stocks')`. Because the step continues-on-error, the run goes green and GitHub Pages keeps serving the previous day's diff-report.html with no signal that the diff silently stopped updating — exactly the 'silently swallowed error' class in the audit scope.",
+  "fix": "Wrap both parses in try/catch (reuse a safeJSON helper), and after parsing assert `latest && latest.stocks && previous && previous.stocks` are objects; if not, write the same 'need ≥2 snapshots' placeholder and `console.error` a distinct message so the failure is visible in logs rather than masked by continue-on-error.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed against source in C:/Users/Karlr/screener-wt/audit-hardening. generate-diff-report.js lines 41-42 do raw JSON.parse(fs.readFileSync(...)) for both `latest` and `previous` with no try/catch. Line 47 `Object.entries(latest.stocks)` throws TypeError if `stocks` is missing/undefined, and line 48 `previous.stocks[ticker]` likewise. This is asymmetric vs generate-dashboard.js, which uses a safeJSON helper (line 58) AND guards `if (!methodsHistory || !methodsHistory.stocks) return []` (line 116) — the diff-report script has neither. The workflow step is confirmed continue-on-error:true (daily-pull.yml:534-535), so a thrown error is swallowed; the deploy step (line 667 `cp diff-report.html _site/`, gated `if: success()` which still passes because the diff step soft-fails) then ships the previously committed diff-report.html (present in the worktree). Net effect: a malformed/old-schema snapshot silently deploys a stale report with no visible failure signal. Severity tempered to medium (not high): the normal producer snapshot-methods-history.js:160 uses writeFileAtomic and always emits a {date,stocks:{}} shape, so a self-inflicted truncation in the current code path is unlikely — realistic triggers are pre-Tag-189 truncated files, legacy-schema snapshots, or external corruption (OneDrive/AV mid-write). Plausible but not a routine daily event."
+  }
+ },
+ {
+  "id": "A-discovery-01",
+  "file": "discovery/nasdaq-api.js",
+  "line": "173, 175-185",
+  "category": "data-integrity",
+  "severity": "high",
+  "title": "NASDAQ-API marketCap hint is silently discarded for any ticker already discovered by an earlier source",
+  "evidence": "nasdaq-api.js sets `marketCap: mcap` (line 181). But in refresh-universe.js the merge is `if (!allTickers.has(sym)) {...set marketCap...} else { /* only updates existing.source */ }` (lines 340-366). fetchNasdaqApiList() is index 5 (LAST) in `Promise.allSettled([fetchNasdaqAll, fetchSecTickers, fetchFinnhubUniverse, fetchWikipediaIndices, fetchOTCMarkets, fetchNasdaqApiList])` (refresh-universe.js:328-335). nasdaq-all (index 0) and sec (index 1) carry NO marketCap, so they populate the symbol first; when nasdaq-api reaches the same symbol the `else` branch runs and `existing.marketCap` stays null.",
+  "why_it_matters": "marketCap is the SOLE ranking key for the universe hard-cap (refresh-universe.js:386-396: withMcap sorted desc, withoutMcap capped at 20% of MAX_UNIVERSE). The one source that provides a free mcap hint is the last to run, so virtually every US large-cap (already in nasdaq-all/sec) is treated as null-mcap and competes only for the 20% 'null bucket' instead of being ranked by its true size. This directly caps screener breadth — exactly the 'survivorship attrition' / silent-shrink failure mode. It also defeats the stated rationale of the module ('Provides company name, sector, and market cap hints').",
+  "fix": "In the merge `else` branch of refresh-universe.js, backfill empty fields from the incoming source: `if (info.marketCap != null && (existing.marketCap == null)) existing.marketCap = info.marketCap;` and likewise for empty `name`/`sector`. (Do NOT edit nasdaq-api.js for this; the bug is in the aggregator contract, not the puller. Carry a comment naming the failure mode: 'prevents last-source mcap/sector hints being dropped for already-seen tickers'.) Reordering nasdaq-api earlier is NOT sufficient because nasdaq-all/sec would then overwrite-skip it later anyway given first-writer-wins semantics.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed real by source reading. nasdaq-api.js:181 sets marketCap; nasdaq-all.js (records at lines 71/103) and sec-tickers.js (line 104) carry NO marketCap field. In refresh-universe.js the discovery merge (lines 336-368) processes Promise.allSettled in input order, and fetchNasdaqApiList is index 5/last (line 334). When nasdaq-all (idx0) or sec (idx1) first inserts a US symbol via the `if (!allTickers.has(sym))` branch, marketCap is set to `info.marketCap || null` = null (line 344). When nasdaq-api later hits the same symbol, the `else` branch (351-366) runs and ONLY updates existing.source — existing.marketCap/name/sector are never backfilled. Refutation checks all fail to clear it: (1) the Yahoo screener phase (lines 211-303) only retains tickers with mcap in [1e9,500e9], so any nasdaq-all/sec-discovered ticker NOT surfaced by a Yahoo bucket enters allTickers with null mcap first — exactly the population the bug drops; (2) fetchWithMcap (line 192) is defined but never called in main(), so there is no later enrichment that would backfill the lost mcap. Concrete downstream impact: the universe-cap logic (lines 382-402) segregates null-mcap tickers into a pool capped at 20% of MAX_UNIVERSE (line 393), so a ticker whose mcap WAS available from nasdaq-api is mis-bucketed as null-mcap and can be dropped; name/sector hints (written as sector_hint/name at lines 443-446) are also silently lost. The proposed_fix correctly locates the bug in the aggregator, not the puller, and correctly notes reordering would not help under first-writer-wins."
+  }
+ },
+ {
+  "id": "A-discovery-05",
+  "file": "discovery/finnhub.js",
+  "line": "27",
+  "category": "bug",
+  "severity": "medium",
+  "title": "Singapore exchange code mapped wrong: EXCHANGES key 'SP' with Yahoo suffix .SI, but Finnhub's Singapore code is 'SI' — the API call requests a non-existent exchange",
+  "evidence": "Line 27: `'SP': '.SI',  // Singapore (Yahoo uses .SI)`. The key 'SP' is used as the Finnhub query param at line 74 `exchange=${exchange}` → `exchange=SP`. Finnhub's exchange code for Singapore (SGX) is 'SI', not 'SP'. 'SP' is not a valid Finnhub exchange and returns an empty/!Array response (handled at line 77-80 as 'unexpected response').",
+  "why_it_matters": "The entire Singapore exchange yields zero tickers every run — a whole market silently missing from the global universe, masked as a benign 'unexpected response' log line. The comment confuses the Finnhub request code (left side, must be Finnhub's code) with the Yahoo suffix (right side).",
+  "fix": "Change the key to Finnhub's real code: `'SI': '.SI'`. Verify each other key against Finnhub's /stock/symbol exchange list (several others — e.g. 'F' Frankfurt vs Finnhub 'F', 'SW' SIX) should be spot-checked the same way. Comment: 'Finnhub exchange code, not Yahoo suffix — prevents whole-exchange silent miss'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed real. In C:/Users/Karlr/screener-wt/audit-hardening/discovery/finnhub.js the EXCHANGES map key (not the value) is used as the Finnhub API query param: line 72 iterates Object.entries(EXCHANGES) destructuring the key into `exchange`, and line 74 builds `...stock/symbol?exchange=${exchange}...`. So the key 'SP' (line 27) is sent as `exchange=SP`. The authoritative Finnhub exchange-codes list gives Singapore (SGX) the code 'SI' (symbols formatted like 500.SI), and 'SP' is not a valid Finnhub exchange — it returns a non-array/empty body that is caught at lines 77-80 as 'unexpected response', silently dropping the entire Singapore exchange whenever FINNHUB_API_KEY is set. I verified the auditor's spot-check candidates: 'F' (Frankfurt) and 'SW' (Switzerland) match Finnhub's real codes already, so this is isolated to the SP key, not a systemic mismapping. medium is the right severity: SGX is a smaller market, all other exchanges work, and the source is optional (skipped entirely without the API key), so impact is a bounded coverage gap, not pipeline corruption."
+  }
+ },
+ {
+  "id": "A-generate-modes-report-01",
+  "file": "generate-modes-report.js",
+  "line": "54",
+  "category": "bug",
+  "severity": "high",
+  "title": "--top arg parsed with parseInt and no NaN/radix guard -> bad arg silently empties the entire report",
+  "evidence": "Line 54: `else if (argv[i] === '--top' && argv[i+1]) args.topN = parseInt(argv[++i]);`  topN then flows to every `valid.slice(0, topN)` (topByScore l.169, blockedByOneMust l.185) and `Math.min(st.allMustPass, args.topN)` (l.1291). Verified in node: `parseInt('abc')` -> NaN, and `[1,2,3].slice(0, NaN)` -> `[]`.",
+  "why_it_matters": "A typo or non-numeric --top value (e.g. `--top all`, `--top 200px`, or an env-substituted empty/garbled value in CI) makes topN=NaN. Every picks/near-miss list becomes empty, the report renders with zero cards, yet the script exits 0 and the workflow treats it as success. The pipeline-health failure-rate gate (l.1309) only counts per-stock evaluation throws, not an empty output, so a silently empty user-facing artifact ships. parseInt also lacks a radix (a leading-zero value like `--top 010` would historically be misread; minor vs the NaN issue).",
+  "fix": "Parse defensively: `const n = Number.parseInt(argv[++i], 10); if (Number.isInteger(n) && n > 0) args.topN = n; else { console.error('invalid --top'); process.exit(1); }`. Add a comment naming the failure mode: 'prevents NaN topN -> slice(0,NaN) -> silently empty report'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed by source + runtime. Line 54: `else if (argv[i] === '--top' && argv[i+1]) args.topN = parseInt(argv[++i]);` — no radix, no NaN/validity guard, no default fallback on parse failure. There is NO validation anywhere between parse and use (grep for isNaN/isFinite/Number.isInteger on topN: none). args.topN flows unguarded into valid.slice(0, topN) at topByScore L169, topByMethod L263, topAllMust L285; items.slice(0, topN) at blockedByOneMust L185; and Math.min(st.allMustPass, args.topN) at L1291. Runtime confirmed in node: parseInt('abc')->NaN, [1,2,3].slice(0,NaN)->[], Math.min(5,NaN)->NaN. So `--top abc` (or empty/typo) silently yields an empty report (every mode's pick + near-miss lists empty) and NaN all-MUST-pass counts in the console log, with no error and exit 0 — silent data loss. Real defect. Severity downgraded high->medium: the CI daily-pull.yml (L383) invokes the script WITHOUT --top, so the production pipeline always uses the safe default topN:200 and never triggers this. Trigger is confined to manual operator invocation with a malformed --top value; serious effect but narrow likelihood and zero production-path exposure = medium."
+  }
+ },
+ {
+  "id": "A-cli-watchlist-02",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/watchlist-cli.js",
+  "line": "50-57",
+  "category": "bug",
+  "severity": "high",
+  "title": "cmdAdd never writes added_at → prune-watchlist's no-snapshot grace period can never fire",
+  "evidence": "The stock object created in cmdAdd has only {isin, ticker, yahoo_symbol, name, track_hint} (lines 50-56) — no added_at/addedAt. cmdImport (lines 93-99) is the same. Cross-file: scripts/prune-watchlist.js:164-184 only prunes a no-snapshot ticker when `const addedAt = entry.added_at || entry.addedAt || null; if (addedAt) { ... ageDays > pruneNoDataDays ... }`. With addedAt null it falls straight through to `kept.push(entry)`. Live data confirms the blast radius: 4017 of 23748 watchlist entries currently have no added_at.",
+  "why_it_matters": "F-DP-022 (the 'no-snapshot-after-Nd' prune rule) is dead for every ticker this CLI adds, because the timestamp it keys on is never set. Tickers that never produce a snapshot (bad symbol, delisted-on-arrival, Yahoo never returns data) accumulate forever unless --prune-orphans is run (which the workflow never passes, and which the code itself warns is irreversible mass-deletion). This is the upstream root cause of the orphan buildup the prune script's own comments lament ('audit found 12 207 orphans').",
+  "fix": "In cmdAdd and cmdImport set `added_at: new Date().toISOString()` on the new stock object. This is the guard-side fix prune already expects — no hardcoded exclusions needed.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed by source. watchlist-cli.js cmdAdd (lines 50-56) builds {isin, ticker, yahoo_symbol, name, track_hint} and cmdImport (lines 93-99) builds {isin, ticker, yahoo_symbol, name, track_hint} — neither sets added_at/addedAt. In prune-watchlist.js the no-snapshot branch (lines 164-184) reads `const addedAt = entry.added_at || entry.addedAt || null; if (addedAt) {... ageDays > pruneNoDataDays ...}`; with addedAt null the F-DP-022 grace-period prune is skipped and, with pruneOrphans off (the default), the entry falls through to kept.push(entry). So a CLI-added no-snapshot ticker can never be pruned by the no-data grace period — exactly as claimed. Live data reproduced precisely: 4017 of 23748 watchlist entries currently lack added_at.\n\nThe design intent is corroborated: the OTHER watchlist writer, refresh-universe.js:446, already sets `added_at: new Date().toISOString()` on every auto-added ticker, and prune reads that field — so the CLI is the inconsistent path, not prune. This strengthens (does not refute) the finding.\n\nSeverity revised high -> medium: the effect is conservative — affected entries are KEPT forever rather than wrongly deleted (no data corruption, no crash, no wrong screener output). It is guard erosion / watchlist bloat, and only the no-snapshot+aged subset of the 4017 is actually affected (entries that later get a snapshot are handled by the deadReason path regardless of added_at). pruneOrphans (--prune-orphans) can still evict them in hard mode, so it is not strictly unremovable.\n\nfix_safe true: setting `added_at: new Date().toISOString()` on the two new-stock object literals is purely additive and behavior-preserving — cmdExport ignores unknown fields, the field name matches what refresh-universe writes and prune reads, and no existing consumer breaks. Caveat (does not block auto-apply): the fix is forward-only; the 4017 pre-existing entries without added_at would still need a one-time backfill, which is out of scope for this guard-side change."
+  }
+ },
+ {
+  "id": "A-cleanup-watchlist-03",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-cleanup.js",
+  "line": "33-39",
+  "category": "data-integrity",
+  "severity": "medium",
+  "title": "One corrupt/truncated methods-history file aborts the entire cleanup run (no per-file guard)",
+  "evidence": "`for (const f of recent) { const data = JSON.parse(fs.readFileSync(path.join(histDir, f), 'utf8')); for (const [ticker, info] of Object.entries(data.stocks)) {...} }` — JSON.parse is unguarded and `data.stocks` is dereferenced without checking it exists. snapshot-methods-history.js writes these files via writeFileAtomic now, but older committed vintages and any partially-archived file can be truncated, and data.stocks can be absent on a malformed file.",
+  "why_it_matters": "A single bad file in the trailing min-runs window throws SyntaxError (or TypeError on Object.entries(undefined)) and kills the whole suggestion run with a cryptic stack trace — inconsistent with the rest of the pipeline, which the prune/refresh scripts deliberately made resilient (prune-watchlist.js:130-134 wraps the watchlist parse; refresh-fx.js:74-94 backs up corrupt input and continues). Karl loses cleanup suggestions entirely instead of degrading to 'skipped 1 corrupt vintage'.",
+  "fix": "Wrap the read in try/catch, `continue` on parse failure with a console.warn naming the file, and skip files where `!data || typeof data.stocks !== 'object'`. Add a comment: 'prevents one truncated history vintage from aborting the whole cleanup scan'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed real. In C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-cleanup.js lines 33-40, the loop does `const data = JSON.parse(fs.readFileSync(...))` and then `Object.entries(data.stocks)` with no try/catch and no existence check. main() has no surrounding catch, so one corrupt/truncated vintage throws SyntaxError (parse) or TypeError (Object.entries on undefined when `stocks` is absent) and aborts the entire cleanup scan. The truncation hazard is concrete, not hypothetical: snapshot-methods-history.js documents (Tag 217e, and Tag 232c-5 / F-SM-002) that pre-atomic-write a SIGKILL mid-write left truncated files; writeFileAtomic only protects FUTURE writes, not the older committed vintages already in methods-history/. The two on-disk formats confirm format drift over time (2026-05-10.json is pretty-printed; 2026-06-12.json is the compact F-PF-005 form). Notably the sibling writer already uses exactly the defensive pattern proposed: loadFilesAsync in snapshot-methods-history.js wraps each JSON.parse in try/catch returning {data:null,error} and skips null entries — so per-file resilience is an established codebase convention that this script diverges from."
+  }
+ },
+ {
+  "id": "A-add-watchlist-05",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-additions.js",
+  "line": "19-27, 23",
+  "category": "bug",
+  "severity": "medium",
+  "title": "--threshold parses with no isFinite guard → bad input silently yields zero suggestions",
+  "evidence": "`else if (argv[i] === '--threshold' && argv[i+1]) args.threshold = parseInt(argv[++i], 10);` (line 23). parseInt('abc',10) → NaN. Downstream `results.filter(r => r.pass >= args.threshold)` (line 124) is always false for NaN (verified: [{pass:12}].filter(r=>r.pass>=NaN) → []). The header even advertises `--threshold 10`.",
+  "why_it_matters": "A typo'd threshold (e.g. `--threshold 1O` with a letter O, or a stray flag) produces a clean 'Keine Kandidaten erfüllen die Schwelle' run with exit 0 — indistinguishable from a legitimately empty result. No error, no signal. NaN-propagation with no isFinite guard is exactly the class flagged in the brief.",
+  "fix": "After parsing: `args.threshold = parseInt(...); if (!Number.isFinite(args.threshold)) { console.error('--threshold must be a number'); process.exit(1); }`. Apply the same guard in suggest-watchlist-cleanup.js parseArgs for --threshold-pct/--min-runs (line 15-16).",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "medium",
+   "note": "Confirmed real. In C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-additions.js line 23, `--threshold` is parsed via `parseInt(argv[++i], 10)` with no validation. parseInt('abc',10) -> NaN (verified in node). At line 124 `results.filter(r => r.pass >= args.threshold)` evaluates `12 >= NaN` as false for every row (verified: [{pass:12}].filter(r=>r.pass>=NaN) -> []), so bad input silently yields zero suggestions, prints 'Keine Kandidaten erfüllen die Schwelle.', and writes suggested-additions.json with threshold:null — no error raised. Header line 6 does advertise `--threshold 10`. The same class of bug exists in suggest-watchlist-cleanup.js (lines 15-16): `--min-runs abc`/`--threshold-pct abc` -> NaN poisons the `files.length < NaN` (false), `slice(-NaN)` (returns full array), and `ratio*100 < NaN` (false) checks, also silently producing zero candidates. Severity medium is fair: these are interactive CLI dev tools (Tag 62/74 watchlist helpers), not the core scoring pipeline, so blast radius is limited, but the silent-wrong-result failure mode on a plausible typo is genuinely misleading."
+  }
+ },
+ {
+  "id": "A-generate-screener-07",
+  "file": "generate-screener.js",
+  "line": "2543, 2544-2545, 2555-2557, 2620-2634",
+  "category": "dead-code",
+  "severity": "low",
+  "title": "Dead helper and unused locals in the modal: yoyDelta() and revPrev are computed but never rendered",
+  "evidence": "`const yoyDelta = (a, b) => (a!=null && b!=null && b!==0) ? (((a/b)-1)*100).toFixed(1)+'%' : '—';` (L2543) and `const revPrev = an.rev[1];` (L2544) are declared in renderModal but neither `yoyDelta` nor `revPrev` is referenced anywhere afterward — the Revenue TTM card (L2545) uses `r.growth`, not yoyDelta/revPrev, and the annual table (L2620-2634) computes its own grRow inline.",
+  "why_it_matters": "Dead locals that look load-bearing (a YoY-delta helper next to a revenue card) invite a future maintainer to 'fix' the card to use them, or mask the fact that the card's sub-line is hard-wired. Minor, but it is confirmed dead code in a god-file that is already hard to reason about.",
+  "fix": "Delete `yoyDelta` (L2543) and `revPrev` (L2544). If a per-card YoY delta is actually wanted, wire it explicitly; otherwise remove to reduce noise.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real dead code. In renderModal at C:/Users/Karlr/screener-wt/audit-hardening/generate-screener.js, `yoyDelta` (L2543) and `revPrev` (L2544) are each declared exactly once and referenced nowhere else — a full-file grep for `yoyDelta|revPrev` returns only the two declaration lines. The Revenue TTM card (L2545) and Rev Growth YoY card (L2546) both render `r.growth` directly, not yoyDelta/revPrev. The annual table (L2620-2634) computes its own `grRow` inline from `an.rev[i]`/`an.rev[i+1]`. This code builds an HTML string via `html += ...`; there is no eval/dynamic code-build that could consume these locals late. So both are genuinely unused. Severity low is appropriate — pure cosmetic noise, no functional impact. Note: the evidence's claim that L2545 'uses r.growth, not yoyDelta/revPrev' is exactly correct."
+  }
+ },
+ {
+  "id": "A-pull-yahoo-03",
+  "file": "pull-yahoo.js",
+  "line": "1241-1247",
+  "category": "dead-code",
+  "severity": "low",
+  "title": "_withTimeout is dead — fully superseded by _withAbortTimeout (F-PY-102)",
+  "evidence": "function _withTimeout(promise, ms, label) { ... return Promise.race([promise, timeout]).finally(...); }  // grep shows the only occurrence of '_withTimeout' in the file is this definition; every call site (quoteSummaryWithRetry 1343, quote 1536/1687, FTS 1800) uses _withAbortTimeout.",
+  "why_it_matters": "The non-aborting variant is exactly the zombie-queue-slot mechanism F-PY-102 was written to eliminate (documented at lines 1249-1258). Leaving it in the file invites a future edit to reintroduce the throughput-collapse bug by grabbing the wrong helper. It is also misleading documentation about the live behaviour.",
+  "fix": "Delete the _withTimeout function (lines 1241-1247). Keep only _withAbortTimeout. Pure removal; no behaviour change.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real dead code. In C:/Users/Karlr/screener-wt/audit-hardening/pull-yahoo.js, function _withTimeout is defined at lines 1241-1247 and has zero call sites. grep for the exact token \\\"_withTimeout\\\" (leading underscore, no trailing word chars) returns only the definition line; the only other repo hits are in audit-reports/*.md and findings/*.json documentation, not code. Every real timeout call site uses _withAbortTimeout instead: quoteSummaryWithRetry (1343), quote-only path (1536), quote path (1687), and FTS (1800). The header comment at 1249-1258 explicitly documents that F-PY-102 superseded the plain Promise.race wrapper with the AbortController-driven _withAbortTimeout because the old one left zombie queue slots. The function is also not in module.exports (line 2269 exports only mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename), so no external caller exists. The cited line range (1241-1247) is exact."
+  }
+ },
+ {
+  "id": "A-methods-dcf-valuation-04",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/methods/dcf-intrinsic-value.js",
+  "line": "23-26, 53-54, 257-264",
+  "category": "other",
+  "severity": "low",
+  "title": "Stale DCF doc comments: header & inline say growth clamp [-5%, 25%] over a '10-year' projection; code uses GROWTH1_CLAMP_MAX=0.15 and S1_YEARS=7",
+  "evidence": "Header line 23-26 and inline 257-264 both state the clamp is `[-0.05, 0.25]` and reference a '10-year forward projection'. Code: line 54 `GROWTH1_CLAMP_MAX = 0.15 // growth cap (was 0.25 ...)`, line 51 `DEFAULT_S1_YEARS = 7 // (was 10 ...)`. The inline comment at 257-260 still reads 'clamp cagrOE5y to [-5%, 25%]' directly above the line that clamps to GROWTH1_CLAMP_MAX (0.15).",
+  "why_it_matters": "The comments describe the OLD (pre-tightening) model. Anyone reasoning about IV magnitude or reviewing a regression will trust the 25%/10y prose and mis-predict outputs. Given DCF feeds the BUFFETT score (finding 01), stale documented assumptions on the growth cap are a real review hazard.",
+  "fix": "Update header (lines 23-26) and inline (lines 257-264) to state the actual clamp [-5%, 15%] and the 7+5 = 12y explicit horizon. Comment-only; no behavior, no SCORE_WEIGHTS, no fixture change.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real doc-vs-code drift in C:/Users/Karlr/screener-wt/audit-hardening/methods/dcf-intrinsic-value.js. Header lines 23-26 state growth is \"clamped to [-0.05, 0.25]\" but the actual cap is GROWTH1_CLAMP_MAX = 0.15 (line 54, which itself carries the annotation \"was 0.25\"). Inline comment line 257 reads \"clamp cagrOE5y to [-5%, 25%]\" directly above line 263, which clamps to GROWTH1_CLAMP_MAX (0.15) — so the inline comment's 25% is stale. Lines 259-260 also reference a \"10-year forward projection\", but the configured horizon is DEFAULT_S1_YEARS=7 (line 51, \"was 10\") + DEFAULT_S2_YEARS=5 (line 52) = 12 explicit years plus perpetuity, not 10. The code constants explicitly document the old values via inline \"(was …)\" notes while the prose comments were never updated to match. Pure documentation inaccuracy with no runtime effect."
+  }
+ },
+ {
+  "id": "A-tag28-tests-07",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/tag28-tests.js",
+  "line": "1986-1994",
+  "category": "other",
+  "severity": "low",
+  "title": "SGA-Revenue-Trend test carries a self-contradictory comment that misdescribes its own fixture",
+  "evidence": "The comment reasons over values that are NOT the ones used: 'SGA/Rev = 10%, 10%, 9% ... latest=0.10, mid=0.10, oldest=0.09. Chrono=[0.09,0.10,0.10] → slope is positive...' then pivots 'Wait... To make it cleanly pass, use 10%, 10.4%, 10%'. The actual fixture is `annualSGA: [{value:10},{value:10.4},{value:10}]` (1992). The first three comment lines describe a different (rejected) dataset, leaving a stale, contradictory narrative in the committed test. Verified the test passes (slope ≈ 0 ≤ 0.005).",
+  "why_it_matters": "The next maintainer who edits this fixture will trust the wrong half of the comment and likely break the boundary (THRESHOLD=0.005 in sga-revenue-trend.js:52 is exactly at the +0.5pp/yr edge). A test asserting behavior at a threshold boundary needs an accurate comment, because the margin is one rounding error wide.",
+  "fix": "Delete the rejected-dataset reasoning (the 'Wait,...' block) and keep only the description of the committed fixture: chrono [10, 10.4, 10] → least-squares slope ≈ 0 ≤ 0.005 → PASS. No code change; comment-only correctness fix.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed with source evidence. tag28-tests.js lines 1986-1990 carry a \"thinking out loud\" comment. Lines 1986-1989 reason over a DIFFERENT dataset (SGA = 10%,10%,9% → chrono [9,10,10] → slope \"+0.5pp/yr ... at exactly the boundary\"), then line 1990 pivots (\"To make it cleanly pass, use 10%, 10.4%, 10% ...\") to the dataset actually committed at line 1992: annualSGA [{value:10},{value:10.4},{value:10}], annualRev all 100. So the first three comment lines describe a rejected fixture, contradicting the committed one — exactly as the auditor states. I ran methods/sga-revenue-trend.js evaluate() on the committed fixture: ratios latest-first [0.10, 0.104, 0.10], reversed to chrono [0.10, 0.104, 0.10], least-squares slope = 0 (exactly), pass = true (0 ≤ THRESHOLD 0.005), yearsUsed = 3. Test passes. The test routes through Runner.evaluateStock(s)['sga-revenue-trend'] (require at line 7), same path as my direct call. This is a genuine but purely cosmetic defect: a stale/contradictory comment in a test fixture. No runtime impact, code is correct. 'low' (bordering on info) is appropriate. Cited file: C:/Users/Karlr/screener-wt/audit-hardening/tag28-tests.js (lines 1985-1999); detector: C:/Users/Karlr/screener-wt/audit-hardening/methods/sga-revenue-trend.js."
+  }
+ },
+ {
+  "id": "A-methods-profitability-roic-04",
+  "file": "methods/roic.js",
+  "line": "10-12, 22, 30",
+  "category": "data-integrity",
+  "severity": "medium",
+  "title": "roic.js trusts H.latestBalance without a finite guard; a non-finite balance field yields computable:true with value:null instead of computable:false",
+  "evidence": "Lines 11-12 `H.latestBalance(stock,'totalAssets')` / `'totalCash'`. helpers `latestBalance` (lines 41-47) returns the raw field with only a null check, NO `Number.isFinite`. Line 22 `investedCapital = totalAssets - (totalCash||0)`; if totalAssets is NaN/Infinity (from a corrupt or schema-drifted snapshot), `investedCapital<=0` (line 23) is false (NaN<=0 is false), execution proceeds, line 30 `value = netIncome/NaN = NaN`. buildResult (helpers line 60) nulls non-finite value but still returns `computable:true` and `pass = NaN>=eff.threshold = false`.",
+  "why_it_matters": "A degenerate ROIC silently presents as a computable FAIL (value null, pass false) rather than an honest computable:false. For a CORE/aggregator-weighted method this contaminates the score and the dashboard with a phantom hard-fail. Same latent issue in quality-compounder-roic.js and sector-relative-roic.js, which also read totalAssets/totalCash via H.latestBalance without finite guards.",
+  "fix": "Add `Number.isFinite` guards after reading totalAssets/totalCash (or harden `latestBalance` centrally — but that is a helpers change). At method level: `if (!Number.isFinite(totalAssets)) return computable:false`. Comment: '// prevents: NaN/Infinity balance field producing a phantom computable FAIL instead of computable:false'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Mechanically confirmed against source. latestBalance (_helpers.js:41-47) returns raw arr[0][field] with only a != null check, NO Number.isFinite. roic.js line 15 guard (totalAssets == null) does NOT catch NaN/Infinity; line 23 (investedCapital <= 0) does NOT catch them either (NaN<=0 and Infinity<=0 are both false). So NaN totalAssets -> value=NaN -> buildResult nulls value but returns computable:true,pass:false; Infinity totalAssets is even cleaner: value=netIncome/Infinity=0 -> computable:true,value:0,pass:false. The phantom-computable-FAIL path is therefore reachable in principle, exactly as claimed.\n\nReachability is weak/largely theoretical, which is why this is low-end medium, not higher: snapshots are persisted as JSON and re-read via JSON.parse, which cannot represent NaN/Infinity (JSON.stringify emits null) -> a round-tripped corrupt field arrives as null and IS caught by line 15. The producer (pull-yahoo.js _metric/conversion lines 379/385) also finite-guards on write. A non-finite balance would only survive on an in-memory stock mutated pre-serialization.\n\nIt IS a genuine consistency/hardening gap: the rest of the codebase uniformly finite-guards balance reads — gross-profitability.js:94, asset-growth-anomaly.js:94-95, buffett-criteria.js:124/239, beneish-m-score.js:172, ohlson-o-score.js:137, penman-nissim:161 all do Number.isFinite(totalAssets) and bail to null/computable:false. roic.js and its sibling ev-ebitda.js (methods/ev-ebitda.js:46-49, same latestBalance + ==null pattern, same exposure) are the outliers. The auditor itself notes the cleaner central fix is hardening latestBalance in _helpers.js, which would also cover ev-ebitda.js.\n\nFiles: methods/roic.js (lines 11-12,15,22-23,30), methods/_helpers.js (latestBalance 41-47, buildResult 58-68), sibling methods/ev-ebitda.js:46-49."
+  }
+ },
+ {
+  "id": "A-methods-insider-institutional-05",
+  "file": "methods/insider-conviction-score.js",
+  "line": "285-291",
+  "category": "bug",
+  "severity": "low",
+  "title": "Filing-lag gate (gate4) has no lower bound — a filingDate before the transactionDate passes via negative lag",
+  "evidence": "`const lagDays = (filingMs - mostRecentBuy.tMs) / DAY_MS; gate4 = lagDays <= MAX_FILING_LAG_DAYS;` There is an upper bound (<=90d) but no `lagDays >= 0` check. A corrupt or mis-parsed filingDate earlier than transactionDate yields a negative lagDays, which satisfies `<= 90` and passes the gate.",
+  "why_it_matters": "SEC Form 4 must be filed AFTER the transaction (2-business-day rule); a filing-before-transaction is a data error, yet it silently satisfies the timeliness gate, letting a malformed record contribute to a pass on the load-bearing INSIDER_BUYING hard gate. Low severity because it requires bad cache data, but the gate exists precisely to validate data sanity.",
+  "fix": "Require `lagDays >= 0 && lagDays <= MAX_FILING_LAG_DAYS`. Add comment: '// prevents filing-before-transaction (negative lag) data errors from clearing the timeliness gate.'",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed against source at methods/insider-conviction-score.js:285-291. The gate is exactly `gate4 = lagDays <= MAX_FILING_LAG_DAYS` (90) with no lower bound, where `lagDays = (filingMs - mostRecentBuy.tMs) / DAY_MS`. A filingDate earlier than the transactionDate yields negative lagDays, which satisfies `<= 90` and passes the timeliness gate. `_parseDate` (lines 111-115) does no ordering validation, and the txn partitioning (lines 237-246) filters only on transactionDate within the 90d window — nothing upstream enforces filingDate >= transactionDate, so the negative-lag path is reachable and not handled elsewhere. The bug is genuine but only triggers on corrupt/mis-parsed data: a real SEC Form 4 cannot be filed before the transaction occurs, so under valid data the gate behaves correctly. Failure mode is permissive (a garbage record clears the gate) rather than a crash, and the other three gates (buys exist, min buy value, net positive) still apply, so blast radius is small. Low severity is appropriate."
+  }
+ },
+ {
+  "id": "A-methods-composite-scores-09",
+  "file": "methods/buffett-criteria.js",
+  "line": "544-545, 560",
+  "category": "bug",
+  "severity": "low",
+  "title": "Q1 moat returns inconsistent component key: 'industryMedianPlus5pp' on the insufficient-data path vs 'industryMedianPlus10pp' on the computed path",
+  "evidence": "Insufficient-data return: `return { pass: false, avgROIC: null, industryMedianPlus5pp: null, reason: ... }` (line 544-545). Computed return: `return { pass, avgROIC, industryMedianPlus10pp, reason }` (line 560). The variable is named industryMedianPlus10pp and set to 0.20 (line 553).",
+  "why_it_matters": "Any consumer (report generator, dashboard, downstream aggregator) that reads `q1.industryMedianPlus10pp` gets undefined when the test was insufficient-data, and one reading the legacy `industryMedianPlus5pp` key gets a value only on the failure path. Inconsistent component schemas across return paths are a quiet source of undefined/NaN in reports.",
+  "fix": "Use the same key on both paths (industryMedianPlus10pp). Add comment: `// prevents component-key drift across return paths (undefined in downstream report)`.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real key-drift in methods/buffett-criteria.js _testQ1_Moat. Insufficient-data path (line 544-545) returns `industryMedianPlus5pp: null`, while the computed path (line 560) returns `industryMedianPlus10pp` (the variable declared at line 553 = 0.20). Same function, two return paths, different component key name — an inconsistency. The finding's factual evidence is accurate. However, its \"undefined in downstream report\" impact is overstated: the whole q1 object is spread into components.q1_moat (line 802), and a repo-wide grep shows NO consumer reads either key anywhere — aggregation at line 738-740 reads only `.pass`, and the reason string reads only `.reason`. So no logic breaks; the only real effect is an inconsistent serialized JSON shape between the two branches. Severity \"low\" is correct (cosmetic/report-shape, not a logic bug)."
+  }
+ },
+ {
+  "id": "A-methods-composite-scores-13",
+  "file": "methods/buffett-criteria.js",
+  "line": "107-137, 187-215, 538-561",
+  "category": "performance",
+  "severity": "low",
+  "title": "_computeAnnualROIC recomputed twice per stock (T2 and Q1) — full balance-row iteration done redundantly across the whole universe",
+  "evidence": "T2: `const roics = _computeAnnualROIC(stock);` (line 188). Q1: `const roics = _computeAnnualROIC(stock);` (line 539). _computeAnnualROIC (lines 109-137) re-reads annual.annualOpInc and annual.annualBalance and loops up to 10 rows recomputing equity/IC each call. Both calls happen unconditionally inside the same evaluate(stock).",
+  "why_it_matters": "Per the brief, per-method re-classify / wasted recompute over the universe is a named performance dimension. Across ~19k stocks every Buffett evaluation does the ROIC array build twice. Minor per call, but it is pure duplicated work on the hot path and the kind of redundancy that compounds across 36+ methods × universe × the multi-hour pull.",
+  "fix": "Compute the ROIC array once at the top of evaluate() and pass it into both _testT2_ROIC and _testQ1_Moat. Add comment: `// prevents double ROIC recompute per stock (T2 + Q1 shared input)`.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "CONFIRMED. In C:/Users/Karlr/screener-wt/audit-hardening/methods/buffett-criteria.js, evaluate(stock) calls both t2=_testT2_ROIC(stock) (line 724) and q1=_testQ1_Moat(stock) (line 733) unconditionally. _testT2_ROIC calls _computeAnnualROIC(stock) at line 188 and _testQ1_Moat calls it again at line 539. _computeAnnualROIC (lines 109-137) re-reads annual.annualOpInc and annual.annualBalance and loops up to min(10, rows) iterations recomputing equity/debt/cash/IC each call. So per stock the identical ROIC array is built twice. The diagnosis is accurate.\n\nSeverity correctly 'low' (bordering trivial): the work is pure in-memory arithmetic over <=10 rows with two field reads — no I/O, no allocation beyond a 10-element array. Across the universe this is tens of thousands of cheap ops total, negligible vs network/parse cost. Real waste, but micro-optimization.\n\nfix_safe=true. Verified the shared-array fix is behavior-preserving: T2 uses roics.filter(v => Number.isFinite(v)) (line 189) and Q1 uses _finite(roics) (line 540); _finite is defined (lines 61-63) as exactly arr.filter(v => Number.isFinite(v)), so a single hoisted array fed to both yields identical downstream results. Confirmed _computeAnnualROIC, _testT2_ROIC and _testQ1_Moat are all private and have NO callers outside this file (grep across the worktree shows only the in-file references), so changing the two test signatures to accept a precomputed array is contained. Caveat for the human: the fix is 3 coordinated edits (hoist the call in evaluate at ~line 722, change _testT2_ROIC/_testQ1_Moat to take the array instead of calling _computeAnnualROIC themselves), not a true one-liner — mechanical and low-risk, but the signature change should land as one atomic edit."
+  }
+ },
+ {
+  "id": "A-methods-misc-03",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/methods/premium-compounder-proof.js",
+  "line": "21-25",
+  "category": "dead-code",
+  "severity": "low",
+  "title": "_arrVals() is defined but never called in premium-compounder-proof.js (only _rawVals is used)",
+  "evidence": "Lines 21-25 define `function _arrVals(stock, path) { const arr = H.val(stock, path); if (!Array.isArray(arr)) return []; return arr.map(...).filter(v => Number.isFinite(v)); }`. A repo-wide grep for `_arrVals` shows the in-file copies in reinvestment-rate.js / earnings-stability.js etc., but inside premium-compounder-proof.js the only array reader actually invoked is `_rawVals` (lines 48-53). `_arrVals` here has zero call sites.",
+  "why_it_matters": "Dead helper invites accidental use: a future edit might call _arrVals (null-collapsing/filtered) where the file deliberately needs _rawVals for positional alignment (see the explicit 'use raw positionally aligned arrays' comment on line 46 and Bug #10 note on line 69). Filtered arrays would silently reintroduce the index-misalignment bug the file was hardened against.",
+  "fix": "Delete lines 21-25 (`function _arrVals`). It is purely local (not exported), so removal is safe and cannot affect any caller. No methods/index.js touch needed; no fixture-hash impact (function is unreferenced).",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real. In C:/Users/Karlr/screener-wt/audit-hardening/methods/premium-compounder-proof.js, `_arrVals` is defined at lines 21-25 and a file-wide grep for `arrVals` returns exactly one occurrence — the definition itself, with zero call sites. evaluate() uses only `_rawVals` (lines 47-53) plus its own filtered locals (lines 55-61). The function is a local declaration, not attached to any object, and module.exports (lines 193-198) exports only id/label/description/threshold/thresholdOp/unit/evaluate — `_arrVals` is not exported and cannot be reached dynamically. So it is genuinely unreachable dead code. Removing lines 21-25 is purely subtractive on an unreferenced function: behavior-preserving, no fixture-hash impact (it never executes). One caution for the auto-fixer: lines 26-30 define the structurally near-identical `_rawVals`, which IS used — the deletion must hit only 21-25 and leave _rawVals intact. Severity correctly low: dead code, no runtime effect."
+  }
+ },
+ {
+  "id": "A-methods-misc-04",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/methods/premium-compounder-proof.js",
+  "line": "37-40, 72-74",
+  "category": "bug",
+  "severity": "low",
+  "title": "Local _cagr() lacks the latest<=0 guard that _helpers.cagr3y() has — NaN possible if latest revenue is non-positive",
+  "evidence": "Line 37-40: `function _cagr(latest, oldest, years){ if (oldest == null || oldest <= 0 || latest == null) return null; return Math.pow(latest / oldest, 1/years) - 1; }`. It guards `oldest <= 0` and the two nulls but NOT `latest <= 0`. Compare _helpers.js:54 `if (latest == null || oldest == null || latest <= 0 || oldest <= 0) return null;`. Caller guards only finiteness (line 72: `Number.isFinite(rawRevs[0]) && Number.isFinite(rawRevs[4])`), not sign.",
+  "why_it_matters": "If a snapshot carries a negative latest 'revenue' (data-quality artifact: sign-flipped FTS row, or a non-revenue row mis-mapped to annualRev — the file's own comments warn FTS mapping has had alignment issues), `Math.pow(negative, 0.25)` = NaN. rev5yCagr becomes NaN; `NaN >= 0.15` is false so the check fails closed rather than throwing, but NaN then lands in components.checks[].val and the report. Low severity because revenue is rarely negative, but it is an unguarded NaN-propagation path inconsistent with the shared helper.",
+  "fix": "Add the sign guard to match _helpers: `if (oldest == null || oldest <= 0 || latest == null || latest <= 0) return null;`. Comment: '// prevents: NaN from fractional power of non-positive latest revenue (sign-flipped/mis-mapped FTS row)'. Pure internal helper, no index.js/fixture-hash concern unless a fixture currently relies on negative-revenue behavior (none do).",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Code discrepancy confirmed. premium-compounder-proof.js:37-40 `_cagr()` guards `oldest<=0` + nulls but NOT `latest<=0`, whereas _helpers.js:54 `cagr3y()` guards both. Caller (line 72-73) passes `_cagr(rawRevs[0], rawRevs[4], 4)` checking only Number.isFinite, not sign. Verified in node: with the caller's years=4, a negative latest yields NaN (fractional power 1/4 of a negative base); latest=0 yields -1. So the missing guard does produce NaN for sign-flipped/mis-mapped revenue. HOWEVER the realistic impact is near-zero, justifying the LOW severity (I'd even argue cosmetic): downstream at line 75, NaN flows to `computable: rev5yCagr != null` => TRUE and `pass: NaN >= 0.15` => FALSE. So the stock is not crashed and not spuriously passed — check #1 just fails instead of being marked N/A. A company with negative latest revenue can never be a premium compounder either way, so screening correctness is unaffected; the only difference is N/A (guarded) vs failed-check (current). `val:NaN` also serializes to null in JSON, so no output corruption. Requires abnormal/sign-flipped source data to trigger at all — no fixture in engine-fixtures.js uses negative revenue. Real defensive-consistency gap, negligible practical effect."
+  }
+ },
+ {
+  "id": "A-scripts-reports-diag-02",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/pipeline-health-check.js",
+  "line": "65",
+  "category": "bug",
+  "severity": "medium",
+  "title": "Malformed health report with missing/non-numeric failure_rate passes the gate (undefined > 0.05 === false)",
+  "evidence": "`const breached = reports.filter(r => r.failure_rate > THRESHOLD);` — a report that parsed as JSON but lacks `failure_rate` (or has it as a string / NaN) yields `undefined > 0.05` => false, so it is treated as OK. The console loop at line 67-70 also prints `NaN%` via `(r.failure_rate*100).toFixed(2)` for such a report without flagging it.",
+  "why_it_matters": "A script that writes a partial/corrupt health report (e.g. crashed after opening the file, or a schema drift that renames failure_rate) is scored as healthy. The gate that exists specifically to hard-fail on systemic problems silently green-lights the run.",
+  "fix": "Treat a report whose failure_rate is not a finite number as a breach: `const breached = reports.filter(r => !Number.isFinite(r.failure_rate) || r.failure_rate > THRESHOLD);` and surface the malformed entry distinctly in the summary.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real but defense-in-depth, severity overstated. At scripts/pipeline-health-check.js:65, `reports.filter(r => r.failure_rate > THRESHOLD)` evaluates `undefined/string/NaN > 0.05` as false, so a report that parses as JSON but lacks a numeric failure_rate passes the gate, and the line 67-69 summary loop prints `NaN%` without flagging it. The F-CI-002 safety net (lines 50-62) does NOT cover this: it only synthesizes a 100%-failure entry for EXPECTED_SCRIPTS whose report is entirely ABSENT; a present-but-malformed report has its `script` field in `presentScripts`, so no synthetic entry fires. The auditor's mechanism is accurate. HOWEVER no current code path produces such a report: all four writers (snapshot-picks.js:308, snapshot-methods-history.js:168, generate-modes-report.js:1299, scripts/snapshot-score-history.js:224) unconditionally compute `failure_rate = n_total > 0 ? n_failed/n_total : 0` — always finite — and set `script`. Truncated writes are already mitigated via atomic writes (Tag 217e) and would fail JSON.parse anyway (caught at line 44, not pushed). So the realistic trigger is a future schema change, a writer bug, or a hand-edited/externally-injected report file — hardening, not an active bug with a live trigger. Reasonable as low severity rather than medium."
+  }
+ },
+ {
+  "id": "A-scripts-reports-diag-05",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/picks-regression-check.js",
+  "line": "5, 39-44, 109-118",
+  "category": "bug",
+  "severity": "low",
+  "title": "Doc/behavior mismatch: header says 'median of previous 4 runs', code uses an 8-vintage window and median() of it",
+  "evidence": "Header comment line 5: 'Vergleicht ... mit dem Median der vorherigen 4 Runs'. Code: `.slice(-8)` (line 111, commented '~1.5 weeks at daily cadence') feeds priorCountsList into detectDrift, which takes median() of up to 8 priors. MIN_HISTORY_RUNS is 4 (a floor), not the window size.",
+  "why_it_matters": "The drift band's statistical meaning (median over 8 daily vintages vs the documented 4) changes the sensitivity of a guard that gates production picks. The 232c-21 comment already patched the pick-diff window label but the top-of-file docstring here still claims '4 runs', so an operator tuning the band reasons from the wrong baseline.",
+  "fix": "Align the header docstring with the actual 8-vintage window (or introduce a named PRIOR_WINDOW constant used by both the slice and the docstring) so the documented and effective windows cannot drift apart again.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real doc/behavior mismatch, cosmetic only. Header docstring at C:/Users/Karlr/screener-wt/audit-hardening/scripts/picks-regression-check.js line 5-6 says \"Vergleicht ... mit dem Median der vorherigen 4 Runs\". Actual code uses an up-to-8-vintage window: line 109-113 builds `priors` via `.slice(-8)`, line 116 maps to `priorCountsList`, and detectDrift (line 69) takes median() over all of those (up to 8) values. MIN_HISTORY_RUNS=4 (lines 30/68/154) is a floor for statistical validity, NOT the window size — so \"4 Runs\" in the header is wrong; the effective window is up to 8 runs. Auditor's line citations and reasoning are accurate. Note: a prior audit fix (Tag 232c-21 / F-BT-009, lines 102-111) already corrected the *inline* comment (\"8 weeks\" -> \"~1.5 weeks at daily cadence\") but never touched the header docstring on line 5, so the staleness the auditor flags is exactly the leftover from that earlier partial fix. No runtime impact — pure documentation drift. Severity low is correct."
+  }
+ },
+ {
+  "id": "A-scripts-reports-diag-11",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/pick-diff.js",
+  "line": "185, 192, 96 (compute-method-drift.js)",
+  "category": "bug",
+  "severity": "low",
+  "title": "Ticker / method-id values interpolated into HTML without escaping (stored-XSS / markup-corruption if a symbol contains < & \")",
+  "evidence": "pick-diff.js line 185 `m.added.map(t => '<span class=\"added\">' + t + '</span>')` and line 192 `'<td class=\"mono removed\">' + r.ticker + '</td>'` inject ticker strings raw; whyDropped strings (method ids) at line 192 likewise. compute-method-drift.js line 96 `<td class=\"m\">${methodId}</td>` injects method ids raw. The HTML is deployed to GitHub Pages (daily-pull.yml line 660-697).",
+  "why_it_matters": "Yahoo/exchange symbols and OTC tickers can contain characters like '&' or '^' (e.g. preferred-share or warrant suffixes) that break the rendered table; a fully attacker-controlled symbol would be stored-XSS on the public gh-pages site. Low severity because the symbol universe is curated, but it is a latent correctness/security gap on a public artifact.",
+  "fix": "Add a small escapeHtml(s) helper (& < > \") and wrap every interpolated ticker/method-id/reason before concatenation in both files.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "CONFIRMED real, low severity. Both raw interpolations exist as cited: pick-diff.js line 185 (`m.added.map(t => '<span class=\"added\">' + t + '</span>')`) and line 192 (`'<td class=\"mono removed\">' + r.ticker + '</td>'`), plus compute-method-drift.js line 96 (`<td class=\"m\">${methodId}</td>`). Both HTML files land in outputs/*.html which daily-pull.yml lines 660-697 deploy to public GitHub Pages. Reachability of the TICKER vector is real, not purely operator-curated: refresh-universe.js (lines 218-229 and 277-283) ingests symbols from Yahoo's screener/exchange API and filters only `$`, `/`, `\\`, whitespace, and length>12 — it does NOT strip `<`, `>`, `&`, `\"`. A corrupt/crafted Yahoo symbol containing those chars (<=12, no $/slash/space) survives, enters the watchlist -> picks-history, and reaches pick-diff.html unescaped (added or removed table). So markup-corruption / reflected-from-data XSS is technically possible. Two mitigants keeping severity at low: (1) the symbol must survive the mcap filter ($1B-$500B) and actually become/leave a pick; (2) the methodId path in compute-method-drift.js line 96 is NOT externally controllable — method IDs are internal code-defined slugs (above-200d-ma, fcf-yield, etc.), so that part is defense-in-depth only, not a live vector. Strong corroboration that this is a genuine project concern and the fix is the house idiom: the main report generators ALL already escape exactly these values — generate-screener.js (esc at lines 70/1410/3344, with a comment at line 3008 that unescaped ticker-like strings 'could enable injection'), generate-modes-report.js:60, generate-diff-report.js:25, generate-methods-report.js:36, generate-dashboard.js:161/464. These two audit scripts are the outliers that omit it. fix_safe=true: adding escapeHtml(`String(s).replace(/[&<>\\\"']/g,...)`) around the interpolated ticker/methodId is behavior-preserving for all real data (real tickers/ids contain none of these chars, so output is byte-identical) and matches existing code. Minor care needed when applying: wrap ONLY the value (t, r.ticker, methodId) — do NOT wrap the surrounding markup or the `<i>...</i>` 'no method-flip detected' fallback string at line 191, and the whyDropped entries are pre-formatted text (e.g. 'mid (was pass, now fail)') so escaping the joined reason string is fine but should target the dynamic methodId, not the literal suffix. A blind 'wrap every interpolation' per the proposed_fix could double-escape intended HTML if applied carelessly, but the corrective change itself is standard and low-risk."
+  }
+ },
+ {
+  "id": "A-scripts-reports-diag-12",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/pick-diff.js",
+  "line": "41-49",
+  "category": "other",
+  "severity": "low",
+  "title": "jaccard() doc-comment says 'Jaccard distance' but the function returns Jaccard SIMILARITY (intersection/union)",
+  "evidence": "Line 41 comment: 'Jaccard distance = |A ∩ B| / |A ∪ B|. 1.0 = identical, 0.0 = no overlap.' That formula and the 1.0=identical semantics are the Jaccard *index/similarity*; Jaccard *distance* = 1 - that. The code (line 48 `inter / union`) correctly computes similarity, matching how it is consumed (line 172 `m.jaccard >= 0.7 ? 'jac-good'`), so behavior is fine — only the term 'distance' is wrong.",
+  "why_it_matters": "Mislabeled metric in an audit doc invites a future 'fix' that inverts it (1 - x) to match the word 'distance', which would silently flip every stability threshold (0.7 good becomes 0.3 good). Terminology bugs in shared diagnostics are how downstream regressions get introduced.",
+  "fix": "Change the comment to 'Jaccard similarity (index)' and keep the formula/behavior.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed by source. scripts/pick-diff.js line 41 comment reads \"Jaccard distance = |A ∩ B| / |A ∪ B|. 1.0 = identical, 0.0 = no overlap.\" The formula intersection/union and the \"1.0=identical\" semantics are the Jaccard similarity/index, NOT distance (distance = 1 - similarity, where 1.0 would mean no overlap). Code at line 48 returns inter/union (similarity) and line 44 returns 1.0 for empty/empty (identical) — both similarity semantics. Consumers agree: line 172 treats jaccard>=0.7 as 'jac-good' and line 167 documents \"Jaccard ≥ 0.7 = healthy stability\" (higher = more overlap = healthier). So behavior is correct; only the word \"distance\" in the doc-comment is wrong. Cosmetic doc inaccuracy, no functional impact. Severity low is correct."
+  }
+ },
+ {
+  "id": "A-methods-betting-against-beta-06",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/methods/betting-against-beta.js",
+  "line": "135, 149-151",
+  "category": "bug",
+  "severity": "medium",
+  "title": "BORDERLINE flag is buried in components.flag and never reaches result.flags, so the soft-fail signal is invisible downstream",
+  "evidence": "`flag: borderline ? 'BORDERLINE' : null` is placed inside `components`. _helpers.wrapEvaluate (line 324) builds flags via `_autoFlags(raw,ageDays).concat(Array.isArray(raw.flags)?raw.flags:[])` — it reads raw.flags (a top-level array), not raw.components.flag. grep for 'BORDERLINE' in score-aggregator.js and generate-dashboard.js returns zero hits.",
+  "why_it_matters": "The method's header makes the (1.0,1.5] BORDERLINE band a core feature ('prevents the operator from mis-reading this as a strong negative'). Because the flag never surfaces in the standard flags channel, the dashboard/detail-modal cannot distinguish a 1.1-beta soft-fail from a 2.2-beta hard-fail — the documented operator value is silently lost.",
+  "fix": "Return a top-level `flags: borderline ? ['BORDERLINE'] : []` on the result (keep the components copy for debugging). Comment: // prevents: BORDERLINE soft-fail being invisible because it lived only in components, not the wrapEvaluate flags channel.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "CONFIRMED at source level. betting-against-beta.js:150 places `flag: borderline ? 'BORDERLINE' : null` inside `components`. _helpers.js:324 (wrapEvaluate) builds the canonical flags array via `_autoFlags(raw,ageDays).concat(Array.isArray(raw.flags)?raw.flags:[])` — it reads top-level `raw.flags`, never `raw.components.flag`. buildResult (_helpers.js:58-68) does not pass a top-level `flags` through at all, so the established convention is to attach `result.flags` AFTER buildResult returns — exactly what rule-of-40-sbc-adjusted.js:131 does (`if (flags.length) result.flags = flags;`). betting-against-beta never does this, so 'BORDERLINE' never reaches result.flags. Grep confirms no consumer reads components.flag==='BORDERLINE'; score-aggregator.js does not exist by that name; generate-dashboard.js has zero flag references. The repo's own prior audit (audit-reports/2026-05-18.md:406, F-ME-007) already documents this identical issue with the identical fix, so it is a known/duplicate finding.\n\nTwo corrections to the auditor's framing that lower severity from medium to low: (1) it is NOT fully invisible — the reason string (line 139) contains '(BORDERLINE — soft fail)' and reason IS surfaced in report tooltips (generate-methods-report.js:796 title=res.reason), so an operator reading the reason still sees it; only the structured/machine-readable flags channel misses it. (2) The method is a DIAGNOSTIC explicitly NOT in SCORE_WEIGHTS (header lines 35-37), so there is zero scoring/ranking/pass-count impact — purely a soft-signal visibility gap, and BAB flags are not even among the methods surfaced as badges in the report (line 770 only renders roic/forward-pe/sloan/ev-ebitda).\n\nfix_safe=true: the change is additive (new top-level flags entry), leaves `pass`/`value` untouched, and does NOT perturb the fixture-hash invariant (documented: only SCORE_WEIGHTS methods feed the hash; BAB is DIAGNOSTIC — tag28-tests.js lines 968/1026 etc). Caveat for whoever applies it: implement like rule-of-40-sbc-adjusted.js — attach `result.flags` AFTER buildResult; do NOT pass `flags` INTO buildResult, since buildResult's destructured signature would silently strip it (the proposed_fix wording 'Return a top-level flags on the result' is correct only if done post-buildResult)."
+  }
+ },
+ {
+  "id": "A-tag229b-exit0-03",
+  "file": "scripts/tag229b-new-method-backtest.js",
+  "line": "122",
+  "category": "data-integrity",
+  "severity": "low",
+  "title": "FATAL missing-prices path exits 0 (success), masking a failed run",
+  "evidence": "`if (!history) { console.error('FATAL: no prices/history.json'); process.exit(0); }` — error message says FATAL but exit code is 0.",
+  "why_it_matters": "If a caller or future CI step ever gates on this script's exit code, a missing price file would be reported as success and the empty/absent JSON output would be silently trusted. Same silent-success anti-pattern the codebase explicitly closed elsewhere (F-SC-007).",
+  "fix": "Use `process.exit(1)` for the genuinely fatal missing-input case. This is a manual analysis tool (not in workflows), so failing loudly is safe.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed at scripts/tag229b-new-method-backtest.js:122: `if (!history) { console.error('FATAL: no prices/history.json'); process.exit(0); }`. The message says FATAL but the process exits 0 (success), so any caller inspecting the exit code would treat a missing critical input (prices/history.json) as a successful run. Verified the \"manual analysis tool\" claim: grep across the worktree shows the script is referenced only by itself and its own audit-report markdown (audit-reports/2026-05-17-tag229b-new-method-backtest.md) — no workflow YAML, CI config, or npm script invokes it, so nothing in-repo currently depends on this exit code. Real but low impact: on the early-return path no output JSON is written (fs.writeFileSync at line 244 is skipped) and the stderr message is loud, so a human sees the failure immediately. The exit-0 only becomes harmful if the tool is later wired into a script using && chaining or `set -e`. Finding is technically correct; proposed process.exit(1) is the right fix."
+  }
+ },
+ {
+  "id": "A-extract-marpo-deadcode-06",
+  "file": "scripts/extract-ma-rpo.js",
+  "line": "227-230",
+  "category": "dead-code",
+  "severity": "low",
+  "title": "Function safe() is dead — defined, never called; duplicate of pct()",
+  "evidence": "`function safe(n, denom) { if (n == null || denom == null || denom === 0) return null; return Math.round((n / denom) * 10000) / 10000; }` (line 227-230) is byte-for-byte identical to `pct` (line 232-235). grep for `safe(` shows only the definition; every call site uses `pct(...)` (line 328, 346, 431).",
+  "why_it_matters": "Dead duplicate invites the classic divergence trap: a future edit fixes one twin and not the other. Minor, but it is genuinely unreferenced.",
+  "fix": "Delete `safe()`. Keep `pct()` (the live one).",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed. scripts/extract-ma-rpo.js lines 227-230 define safe(n, denom), byte-for-byte identical to pct(n, denom) at lines 232-235 (same guard `if (n == null || denom == null || denom === 0) return null;` and same `Math.round((n/denom)*10000)/10000`). Grep for `\\bsafe\\s*\\(` returns only the definition (line 227) — zero call sites. The three live call sites at lines 328, 346, 431 all use pct(...). File has no module.exports, so safe() is not exported either; it is a truly dead, script-scope function. Fix (delete safe, keep pct) is behavior-preserving."
+  }
+ },
+ {
+  "id": "A-extract-marpo-cikslice-07",
+  "file": "scripts/extract-ma-rpo.js",
+  "line": "278",
+  "category": "bug",
+  "severity": "low",
+  "title": "Debug nearby-key search uses cik.slice(4) on a 10-digit zero-padded CIK, matching the wrong substring",
+  "evidence": "CIK is `String(cikRaw).padStart(10,'0')` per discovery/sec-tickers.js:94. Here: `const nearby = [...cdIndex.keys()].filter(k => k.includes(cik.slice(4))).slice(0,3);`. For CIK '0001234567', `cik.slice(4)` = '234567' — drops the first two significant digits, so the 'nearby keys' hint matches on a truncated, often-wrong fragment.",
+  "why_it_matters": "Diagnostic-only (runs only when a CIK is not in the zip), so no data corruption — but the hint it prints is misleading when debugging coverage gaps, which is exactly when you rely on it. Zip keys are `CIK<10digits>.json` (line 273), so the search target should be the full padded CIK.",
+  "fix": "Use the full CIK: `k.includes(cik)` or `k.includes(cik.replace(/^0+/,''))` to match the un-padded numeric form actually present in some archives.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed the factual claim. extract-ma-rpo.js:247 calls fetchSecTickers() from discovery/sec-tickers.js, which builds each entry's cik as String(cikRaw).padStart(10,'0') (line 94) and returns that map (line 110). At extract-ma-rpo.js:272, `const cik = entry.cik` is the 10-digit zero-padded form (the inline comment even says so). So at line 278, `cik.slice(4)` on '0001234567' yields '234567' — it drops '0001', i.e. the two leading zeros PLUS the first two significant digits — and the .filter(k => k.includes(cik.slice(4))) \"nearby keys\" hint matches on that truncated, often-wrong fragment. The evidence is accurate.\n\nHowever, impact is minimal and severity 'low' is appropriate (arguably it could even be cosmetic/info). This code lives entirely inside the `if (!zipEntry)` branch — it runs ONLY when the exact key `CIK${cik}.json` was already not found in the zip's central directory. It is a pure debug `console.warn('nearby keys:', ...)` diagnostic hint for a human; it does not feed into extraction, return values, control flow, or any data-correctness path. The result pushed (line 280) uses the full correct `cik`, not the sliced fragment. So the bug only degrades the quality of a troubleshooting log line — it never corrupts output.\n\nfix_safe assessment: The proposed change only alters the content of a console.warn diagnostic, so it cannot break extraction — low risk. But it is not strictly behavior-preserving (it changes what gets logged) and the two proposed variants have real tradeoffs: `k.includes(cik)` with the full padded CIK will likely match nothing (since the exact `CIK<cik>.json` was already shown absent), making the hint useless; `cik.replace(/^0+/,'')` (un-padded numeric) is the more sensible fuzzy match but is a semantic choice worth a human glance. Because it touches only a debug log and can't affect results, it's reasonable to auto-apply, but the 'best variant' is debatable — I mark fix_safe=true given the blast radius is confined to logging, with the note that the replace-leading-zeros variant is the better of the two."
+  }
+ },
+ {
+  "id": "A-macro-regime-throw-09",
+  "file": "scripts/macro-regime.js",
+  "line": "69",
+  "category": "data-integrity",
+  "severity": "medium",
+  "title": "Unguarded JSON.parse of prices/history.json in a live workflow step throws and fails the daily-pull job",
+  "evidence": "`const history = JSON.parse(fs.readFileSync(args.history, 'utf8'));` (line 69) with no try/catch, and `main();` is called bare at line 114 (no .catch, no process.exit(0)). This script IS a workflow entrypoint: .github/workflows/daily-pull.yml:482 `run: node scripts/macro-regime.js`.",
+  "why_it_matters": "A truncated/half-written prices/history.json (e.g. interrupted upstream write) makes macro-regime.js throw an uncaught exception → non-zero exit → the daily-pull workflow step fails. By contrast elliott-export.js (line 138-140) and check-pull-stats.js (line 158-161) wrap main and exit 0 on error precisely to avoid breaking the pipeline. macro-regime is the asymmetric outlier. Note it DOES gracefully handle the empty-series case (line 72-85) — only the parse itself is unguarded.",
+  "fix": "Wrap the read+parse in try/catch (reuse the `loadJson` pattern used in the other scripts) and on parse failure write the same `error: 'no_price_data'` fallback the empty-series branch already produces, then exit 0 — keeping the regime output present-but-empty rather than crashing the job.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Partially confirmed but severity-inflated. The unguarded parse IS real: scripts/macro-regime.js:69 `JSON.parse(fs.readFileSync(args.history,'utf8'))` has no try/catch, and main() is called bare at line 114 (no .catch). On a CORRUPT prices/history.json it throws and exits non-zero. BUT the title's central claim (\"throws and fails the daily-pull job\") is FALSE: the auditor's evidence quoted daily-pull.yml:482 yet omitted the very next line — :484 `continue-on-error: true`. The step is non-blocking, so a crash does not fail the job. Also note the empty/missing-ticker case is ALREADY handled (lines 72-85: writes `error:'no_price_data'` fallback + process.exit(0)); only the malformed-JSON path is unguarded. Downstream consumer scripts/walk-forward-perf.js degrades gracefully on a missing/stale outputs/macro-regime.json (loadMacroRegimes()->loadJson() returns null on bad file; getRegimeAt() falls back to UNKNOWN/null, lines 388-409, 599-605), so even a skipped regime step does not corrupt or crash the pipeline. Since prices/history.json is produced by an atomic-write pipeline, corruption is a low-probability edge, not routine. Net: legitimate hardening gap, not a job-failing data-integrity bug — downgrade medium->low. fix_safe=true: the proposed fix mirrors the existing empty-series fallback branch and the project-wide loadJson try/catch idiom (check-pull-stats.js:43, method-effectiveness.js:60, etc.), is behavior-preserving on the happy and already-handled paths, and only alters the currently-crashing corrupt-file path. Minor caveat for a human: it would silently relabel a genuinely corrupt price file as 'no_price_data', masking corruption — acceptable given the codebase's established convention, but worth a glance."
+  }
+ },
+ {
+  "id": "A-regional-oos-median-11",
+  "file": "scripts/regional-oos-test.js",
+  "line": "80",
+  "category": "bug",
+  "severity": "low",
+  "title": "'Median-R40' picks middle of a descending-sorted list with no even-length handling",
+  "evidence": "List is sorted descending by r40 (evaluateAll line 55 `out.sort((a,b)=>(b.r40||0)-(a.r40||0))`). Then `const med = list[Math.floor(list.length/2)].r40;` (line 80). For length 2 -> index 1 (the smaller of two), for length 4 -> index 2 (the lower-middle).",
+  "why_it_matters": "Reported 'Median-R40' is the upper-middle element's value (because list is descending, index floor(n/2) is below center) and never averages the two middle values for even n. It is a single-element proxy, not a true median, biasing the regional comparison that the whole report exists to make. Low severity because it is a reporting stat, not a screener gate.",
+  "fix": "Reuse the proper `median()` helper already written in check-pull-stats.js (line 44-49) / tag229b (line 47-52): `median(list.map(p=>p.r40))`. Consider extracting median to lib/ to stop re-implementing it.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed by source. scripts/regional-oos-test.js line 55 sorts the result list descending by r40 (`out.sort((a,b)=>(b.r40||0)-(a.r40||0))`); byRegion grouping (line 67) preserves that order. Line 80 then does `list[Math.floor(list.length/2)].r40` and labels the column \"Median-R40\" (line 76/81). For even-length lists this is wrong: length 2 -> index 1 = the smaller value; length 4 -> index 2 = lower-middle (3rd largest), not the average of the two middle elements. A statistically correct median should average the two middle values on even length. The verifier's two concrete examples are accurate. The repo already has correct median() helpers (e.g. check-pull-stats.js:44-49, tag229b-new-method-backtest.js:47) that filter non-finite and average the two middle values on even length. Severity is genuinely low: the value feeds only a diagnostic markdown report cell (no pick selection, no thresholds, no pipeline decision), and on odd-length lists the result is already correct. No test asserts this behavior."
+  }
+ },
+ {
+  "id": "A-scripts-history-snapshots-05",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/tag228a-cleanup-phantom-vintages.js",
+  "line": "30, 35-36, 94",
+  "category": "data-integrity",
+  "severity": "medium",
+  "title": "Phantom-vintage cleanup has NO atomic/try-catch around the per-file parse and writes — one corrupt vintage aborts the whole batch mid-rewrite, and `main()` runs unguarded",
+  "evidence": "Line 35-36 `const raw = fs.readFileSync(fp,'utf8'); const j = JSON.parse(raw);` with no try/catch; the loop iterates `files.sort()` (line 30). A single unparseable vintage throws and the bare `main();` at line 94 (no require.main guard, no catch) crashes the process with a stack trace AFTER having already rewritten earlier files in the sorted order.",
+  "why_it_matters": "This is a one-shot destructive migration that mutates committed methods-history vintages (subtracts summary.totalStocks/anyComputable/allPass and deletes stocks._* rows). If it dies halfway, the operator sees a Node stack trace and an inconsistent on-disk state: some vintages cleaned, some not, no summary of what completed. There's no idempotency hazard (re-run skips already-clean files), but the abort hides which file is corrupt and leaves the batch half-applied. Also `main()` is called unconditionally even though the file is require()-able, so importing it for a test would execute the mutation.",
+  "fix": "Wrap the per-file body in try/catch (log `f` + error, continue) so one bad vintage doesn't abort the batch; guard the entry point with `if (require.main === module) { try { main(); } catch(e){ console.error(e); process.exit(1);} }`. writeFileAtomic is already used (line 81) so torn writes are covered; the gap is batch-abort + unguarded import.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed against source. scripts/tag228a-cleanup-phantom-vintages.js: the per-file loop body (line 33 `for (const f of files)`, lines 35-36 `fs.readFileSync`+`JSON.parse`) has NO try/catch, and the entry point is a bare `main();` at line 94 with no `require.main === module` guard and no surrounding catch. One unparseable vintage in the alphabetically-sorted batch (line 30 `.sort()`) throws, propagates through the unguarded `main()`, and crashes the process with a stack trace AFTER earlier files were already rewritten — a genuine partial-batch abort. Both deviate from clear repo conventions: 21 scripts use `require.main === module`, and the closest siblings guard + try/catch the entry (`archive-old-snapshots.js`: `try { main(); } catch ... process.exit`; `backfill-r40rx-history.js`: `.catch(... process.exit(1))`), and `backfill-r40rx-history.js` wraps its per-ticker body in `try/catch (failed++, continue)`. The evidence's atomic-write claim is accurate: `lib/atomic-write.js writeFileAtomic` (used line 81) does tmp+fsync+rename+retry, so individual files are never torn — the gap is batch-abort + unguarded import only, exactly as scoped.\\n\\nSeverity downgraded medium->low: this is a one-shot, MANUAL, IDEMPOTENT migration script (header line 21: vintages without `_*` keys skip silently). Because each write is atomic and the op is idempotent, an abort is fully recoverable — operator removes/fixes the bad vintage and re-runs; already-cleaned files skip, partial batch resumes with no data corruption and no silent wrong results. Real cost is operator friction (cryptic crash, manual restart) on a hand-run script, not a pipeline data-integrity hazard."
+  }
+ },
+ {
+  "id": "A-scripts-history-snapshots-10",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/snapshot-r40rx-history.js",
+  "line": "35-39 (isoToQuarter)",
+  "category": "bug",
+  "severity": "low",
+  "title": "isoToQuarter has no validation of the input ISO date — a malformed RUN_DATE_UTC yields a NaN quarter ('YYYY-QNaN') that poisons every history key for the day",
+  "evidence": "Line 36 `const month = parseInt(iso.slice(5,7), 10); const q = Math.ceil(month/3); return iso.slice(0,4) + '-Q' + q;`. today comes from `process.env.RUN_DATE_UTC || new Date().toISOString().slice(0,10)` (line 107). If RUN_DATE_UTC is set to a non-ISO string (operator override, malformed workflow var), slice(5,7) may be non-numeric -> month NaN -> q NaN -> quarter 'XXXX-QNaN'.",
+  "why_it_matters": "appendAndPrune keys entries by quarter and de-dupes by it (line 75 `e.quarter !== entry.quarter`). A 'QNaN' quarter would never match a real quarter, so it appends a junk entry every run that uses the bad date and never overwrites it — corrupting the durability-gate input (finding 02) and the chart. The workflow currently sets RUN_DATE_UTC via `date -u +%Y-%m-%d` (daily-pull.yml:53) so it's safe in CI, but the script accepts arbitrary env with zero guard.",
+  "fix": "Validate `today` against `/^\\d{4}-\\d{2}-\\d{2}$/` at the top of main() (same regex build-r40-latest.js:45 already uses for asOf) and exit 1 with a clear message if it fails. Comment: 'prevents a malformed RUN_DATE_UTC from minting a QNaN quarter key that never de-dupes'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed against source. isoToQuarter (snapshot-r40rx-history.js:35-39) has no input validation: a non-ISO `iso` makes iso.slice(5,7) non-numeric -> parseInt = NaN -> Math.ceil(NaN/3) = NaN -> returns a 'XXXX-QNaN' quarter. `today` (line 107) feeds it directly via `process.env.RUN_DATE_UTC || new Date().toISOString().slice(0,10)` (line 108). The corruption mechanism is real: appendAndPrune (line 75) de-dupes on `e.quarter !== entry.quarter`, so a QNaN key never matches a real YYYY-Qn entry and never de-dupes — each re-run within the day appends a fresh poison entry, and the pipeline-health stamp (line 135) records quarter:'XXXX-QNaN'. HOWEVER the trigger is not reachable on the automated path: the workflow sets RUN_DATE_UTC via `date -u +%Y-%m-%d` (daily-pull.yml:53), always well-formed, and the wall-clock fallback is always valid ISO. It only fires on operator misconfiguration — a hand-typed RUN_DATE_UTC via workflow_dispatch or a bad local env var. So this is a genuine defense-in-depth/hardening gap, correctly scoped and correctly rated 'low', not a live bug. The proposed fix's precedent is real: build-r40-latest.js:45 already uses the identical `/^\\d{4}-\\d{2}-\\d{2}$/` guard (F-04) against the same class of silent date-corruption, and sister script snapshot-score-history.js:180 uses the same unvalidated `today` pattern (so the gap is shared, not unique)."
+  }
+ },
+ {
+  "id": "A-root-dashboard-diff-02",
+  "file": "generate-diff-report.js",
+  "line": "34, 41-42",
+  "category": "bug",
+  "severity": "high",
+  "title": "Diff-report picks the two lexicographically-last *.json files, not the two most recent by date — also matches non-dated JSON in the dir",
+  "evidence": "Line 34: `const files = fs.readdirSync(args.history).filter(f => f.endsWith('.json')).sort();` then line 41-42 take `files[length-1]` (latest) and `files[length-2]` (previous). The dashboard's sibling helper deliberately uses a strict pattern `/^\\d{4}-\\d{2}-\\d{2}\\.json$/` (generate-dashboard.js:62), but here the filter is only `.endsWith('.json')`.",
+  "why_it_matters": "Any non-dated JSON dropped into methods-history/ (e.g. a `latest.json`, `index.json`, `backup.json`, or a `.tmp.<pid>` leftover that ends in .json) sorts by string and can become `files[length-1]`/`[length-2]`. `latest.json` sorts AFTER `2026-06-12.json` (lowercase 'l' > digit), so the diff would compare `latest.json` against the newest dated file — comparing a file to itself or to the wrong vintage, producing a silently wrong or empty diff. Because the workflow step runs with `continue-on-error: true` (daily-pull.yml:535), a crash or wrong output is never surfaced. The date-format guard the dashboard already uses is the correct contract.",
+  "fix": "Use the same strict regex as generate-dashboard.js:62: `.filter(f => /^\\d{4}-\\d{2}-\\d{2}\\.json$/.test(f))` before `.sort()`. ISO date filenames then sort correctly and stray JSON is excluded. // failure mode: wrong-vintage / self-comparison diff from non-dated JSON files in history dir",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Citation is accurate. generate-diff-report.js:34 filters `.endsWith('.json')` then `.sort()` and takes files[len-1]/files[len-2] (lines 41-42), while the sibling helper generate-dashboard.js:62 (latestMethodsHistoryFile) deliberately uses the strict `/^\\d{4}-\\d{2}-\\d{2}\\.json$/`. Both read the same ./methods-history dir. The asymmetry is real.\n\nBUT severity is overstated. Two sub-claims:\n1) \"picks lexicographically-last, not most-recent by date\" — practically a non-issue: the only writer into methods-history/ is snapshot-methods-history.js, which writes strictly `${today}.json` ISO names (line 54). For ISO YYYY-MM-DD names, lexicographic sort == chronological sort, so latest/previous are correctly identified. No vintage mis-selection occurs on real data.\n2) \"matches non-dated JSON in the dir\" — a latent robustness gap, not an active bug. I verified: the dir contains only ISO-dated files (git ls-files + ls confirm); the health report goes to a separate pipeline-health/ dir, not here; the atomic-write temp file is named `<path>.tmp.<pid>.<n>` (lib/atomic-write.js:32) so it does NOT end in `.json` and cannot create a false match; tag228a-cleanup uses the same loose filter but only rewrites existing dated files in place. No current code path drops a stray non-dated *.json into methods-history/. The risk only materializes if a future change adds e.g. a summary.json or someone manually drops a file — then it could sort last and cause a wrong-vintage/self-compare diff.\n\nVerdict: real consistency/hardening defect, correctly diagnosed, but no demonstrable present-day corruption. Realistic severity is low (defensive alignment with the sibling's stricter filter)."
+  }
+ },
+ {
+  "id": "A-root-dashboard-diff-06",
+  "file": "generate-dashboard.js",
+  "line": "187",
+  "category": "bug",
+  "severity": "low",
+  "title": "universeSize falsy-fallback via ternary: a legitimate 0 universe falls through to methods totalStocks instead of showing 0",
+  "evidence": "Line 187: `const universeSize = picks && picks.universeSize ? picks.universeSize : (methodsHistory && methodsHistory.summary && methodsHistory.summary.totalStocks) || 0;`. `picks.universeSize ? ... : ...` treats `0` as absent. Confirmed picks.universeSize is a number in live data (4737).",
+  "why_it_matters": "This is the classic '|| 0 / falsy-truthy' class from the audit scope. A genuinely empty universe (universeSize === 0) would silently display methodsHistory.summary.totalStocks instead of the true 0, masking a pipeline collapse (Yahoo pull returned nothing) behind a stale-looking count. Low severity because 0-universe is rare and the page still renders, but it hides exactly the failure you'd most want to see on the dashboard header.",
+  "fix": "Use explicit null/undefined checks: `const universeSize = (picks && picks.universeSize != null) ? picks.universeSize : ((methodsHistory && methodsHistory.summary && methodsHistory.summary.totalStocks) || 0);`.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real. generate-dashboard.js:187 uses `picks && picks.universeSize ? picks.universeSize : (...totalStocks) || 0`, and the ternary truthy-check coerces a legitimate `0` to the fallback path. Source is snapshot-picks.js:221 `universeSize: stocks.length`, so universeSize === 0 occurs only for a completely empty universe (a fully failed run). In that degenerate case the dashboard would show methodsHistory.summary.totalStocks (a different, possibly non-zero number) instead of the true 0. Live data confirms universeSize is always a healthy positive int (latest.json=4737), so the bug never fires in normal operation. Impact is purely cosmetic: universeSize is only interpolated into the dashboard header text (lines 317, 339) via toLocaleString — it feeds no computation, screening, or data-integrity logic. Severity low is correct. Proposed fix (`picks.universeSize != null` instead of truthy) is behavior-preserving for all realistic positive values and for legacy vintages lacking the field (undefined != null is false, so it still falls through), and only changes the intended 0 edge case. The `.toLocaleString` call on the result is safe since 0 is a number. Minimal, localized, low-risk to auto-apply."
+  }
+ },
+ {
+  "id": "A-root-dashboard-diff-08",
+  "file": "generate-dashboard.js",
+  "line": "153, 197",
+  "category": "performance",
+  "severity": "low",
+  "title": "buildDetailIndex re-reads + re-parses one snapshot JSON per detailed ticker (readQuarterly + readSnapshotMeta), O(tickers) synchronous file reads on top of the methods-history load",
+  "evidence": "Line 153 `quarterly: readQuarterly(ticker)` and line 154 `meta: ... readSnapshotMeta(ticker)` are called for every ticker in the detail set (all mode picks ∪ all metric-leaderboard entries). Each of readQuarterly (85) and readSnapshotMeta (73) independently calls `safeJSON(tickerToSnapshotPath(ticker))` — i.e. the SAME snapshot file is read from disk and JSON.parsed up to twice per ticker. Snapshots can be large per-ticker JSON.",
+  "why_it_matters": "For a few hundred detailed tickers this is several hundred synchronous readFileSync + JSON.parse calls, and each ticker that needs both quarterly and meta parses its snapshot twice. On the 14.6h-pull-scale universe this is wasted recompute exactly in the 'O(n) re-parse of large JSON' class. Low severity because the detail set is bounded (top-30 modes + top-25 metrics) but it doubles the per-ticker IO needlessly.",
+  "fix": "In buildDetailIndex read each ticker's snapshot once into a local `const snap = safeJSON(tickerToSnapshotPath(ticker))` and derive both quarterly and meta from it (refactor readQuarterly/readSnapshotMeta to accept an already-parsed snapshot object). Eliminates the double parse and is a pure speedup with no behavior change.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed at generate-dashboard.js:136-158. buildDetailIndex loops over the union of all picks.modes entries plus all metric-leaderboard entries and, for each ticker with methods-history, calls readQuarterly(ticker) (line 153) and readSnapshotMeta(ticker) (line 154). Both helpers (lines 73-99) independently call safeJSON(tickerToSnapshotPath(ticker)), and safeRead/safeJSON (lines 57-58) do an uncached fs.readFileSync + JSON.parse every call — so there is no memoization. The O(tickers) synchronous-read claim is real.\n\nCORRECTION to the evidence: the \"SAME snapshot file read up to twice per ticker\" is overstated. Line 154 is `meta: nameMap[ticker] || readSnapshotMeta(ticker)`, so JS short-circuit means readSnapshotMeta only runs when nameMap[ticker] is falsy. nameMap is built by buildTickerNameMap (line 102) from every picks.modes entry, so for mode-pick tickers readSnapshotMeta is SKIPPED (1 read via readQuarterly). The double read only occurs for tickers that appear solely in metric leaderboards (not in any mode pick). So it is \"1 read per mode-pick ticker, 2 reads per leaderboard-only ticker\", not \"2 per ticker\".\n\nSeverity low is appropriate: this is a one-shot build script (not a request hot path), the ticker set is bounded (all mode entries + 7 boards x <=25), and there is zero behavior impact — purely build-time speed."
+  }
+ },
+ {
+  "id": "A-root-dashboard-diff-11",
+  "file": "generate-diff-report.js",
+  "line": "111",
+  "category": "performance",
+  "severity": "low",
+  "title": "methodValueDiffs is re-sorted inside the template render after passCountDiffs already sorted — redundant, and the .slice(0,50) sort mutates the source array",
+  "evidence": "Line 74 sorts passCountDiffs. Line 111: `for (const d of methodValueDiffs.sort((a,b)=>Math.abs(b.deltaPct)-Math.abs(a.deltaPct)).slice(0,50))` sorts methodValueDiffs in place during the for-of header. The count rendered in the heading (line 106, `methodValueDiffs.length`) is computed before the slice, so the heading says e.g. '312' while only 50 rows render — heading/row mismatch.",
+  "why_it_matters": "Minor, but the heading count (full length) disagrees with the visible table (capped at 50) with no '(showing top 50 of N)' note, which is misleading. The in-line sort-then-slice is also slightly wasteful style; harmless functionally since it runs once.",
+  "fix": "Sort + slice into a named const before building the heading, and render the heading as `top ${Math.min(50, methodValueDiffs.length)} of ${methodValueDiffs.length}` so the count matches what is shown.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Partially confirmed, but the finding's framing is mostly wrong. VERIFIED at C:/Users/Karlr/screener-wt/audit-hardening/generate-diff-report.js. (1) \"redundant / re-sorted after passCountDiffs already sorted\" is FALSE: line 74 sorts passCountDiffs, line 111 sorts methodValueDiffs — two distinct arrays. The methodValueDiffs sort is the only sort on that array, not redundant. (2) \"sort mutates the source array\" is technically true (Array.sort is in-place) but HARMLESS: after line 111, methodValueDiffs is only read again at line 122 via .length, which is order-independent. No observable bug from the mutation. (3) The ONLY genuine issue is the heading/row mismatch: line 106 renders the full `methodValueDiffs.length` in the <h2>, while line 111 caps the table at .slice(0,50). When >50 value-diffs exist, the heading says e.g. \"312\" but only 50 rows render with no \"showing top 50\" indicator — a real but cosmetic UX inconsistency in an internal HTML report. Note the category is mislabeled: this is a display/UX inconsistency, not performance (one sort of a bounded array is trivial). Downgrading framing accordingly; keeping is_real=true on the strength of the heading/row mismatch alone."
+  }
+ },
+ {
+  "id": "A-add-watchlist-06",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-additions.js",
+  "line": "34-36",
+  "category": "performance",
+  "severity": "medium",
+  "title": "quoteSummary requests 4 heavy modules (income/balance/cashflow history) that are never read",
+  "evidence": "quoteSummary modules array includes `'incomeStatementHistory','balanceSheetHistory','cashflowStatementHistory'` (line 35), but the function builds all annual series from the separate fundamentalsTimeSeries calls (annualFin/annualCash/annualBs, lines 40-64). ks.incomeStatementHistory / ks.balanceSheetHistory / ks.cashflowStatementHistory are never referenced anywhere after the call.",
+  "why_it_matters": "Every candidate pull fetches three large statement-history payloads that are immediately discarded, on top of the three fundamentalsTimeSeries calls that actually feed the data. Over a real universe scan (hundreds–thousands of candidates at rateLimit 1500ms each) this inflates payload size, parse time, and Yahoo throttle exposure for zero benefit — the same wasted-recompute/over-fetch class that caps the pull.",
+  "fix": "Drop the three unused *History modules from the quoteSummary call (keep price, summaryDetail, defaultKeyStatistics, financialData, assetProfile). Comment: 'statement history comes from fundamentalsTimeSeries below; do not double-fetch via quoteSummary'.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real. In C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-additions.js the quoteSummary call (line 35) requests incomeStatementHistory/balanceSheetHistory/cashflowStatementHistory, but the returned `ks` object is only read for financialData, summaryDetail, defaultKeyStatistics, assetProfile, price (lines 66-70). Grep over the file shows the three *History tokens appear ONLY on line 35, never read. All annual series (annualFin/annualCash/annualBs -> rev/opInc/ni/gp/fcf/sbc/capex/annualBalance) come from the separate fundamentalsTimeSeries calls (lines 40-64). Grep over methods/ confirms the runner/scoring code never consumes any statement-history fields either. So the three modules are pure dead payload per ticker. Could not refute on any angle: `ks` is local, not passed elsewhere; no dynamic ks[] access; no spread. Bonus: dropping them slightly REDUCES failure surface, since the whole quoteSummary is in a try/catch that returns null on any module error. The proposed fix is a 1-line array edit; quoteSummary modules are independent so removing unread ones does not alter the values of the kept ones -> behavior-preserving. Severity nuance: it is wasted bandwidth, not a correctness bug, on a manual ad-hoc utility script whose dominant cost is the 3 separate FTS calls plus the 1.5s rateLimit sleep per ticker, not the quoteSummary payload; medium is a touch generous, low is more accurate."
+  }
+ },
+ {
+  "id": "A-add-watchlist-07",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-additions.js",
+  "line": "20-26",
+  "category": "bug",
+  "severity": "low",
+  "title": "--rate-limit default is unreachable — defined but parseArgs has no branch for it",
+  "evidence": "Defaults set `rateLimit: 1500` (line 20) and the sleep uses it (`await sleep(args.rateLimit)`, line 115), but the parseArgs loop (lines 21-25) only handles --universe / --threshold / --watchlist. There is no `--rate-limit` branch, so the value is permanently 1500 and the flag is silently ignored if passed.",
+  "why_it_matters": "Operator cannot slow down/speed up the scan to dodge Yahoo throttling without editing source. Given the repo's hard-won PULL_CONCURRENCY/rate-limit tuning (daily-pull.yml Tag 215f), a hidden fixed 1.5s with no override is a foot-gun for large scans. Low severity because a fixed value still works.",
+  "fix": "Add `else if (argv[i] === '--rate-limit' && argv[i+1]) args.rateLimit = parseInt(argv[++i], 10);` with an isFinite guard, and document the flag in the usage header.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed by source reading of C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-additions.js. Line 20 sets default `rateLimit: 1500` in parseArgs; the loop at lines 21-25 only matches `--universe` (22), `--threshold` (23), `--watchlist` (24) — there is no `--rate-limit` branch. The value is consumed at line 115 (`await sleep(args.rateLimit)`). The script is a standalone CLI (`main()` at line 139 parses process.argv directly; no other caller overrides args), so passing `--rate-limit` does nothing and the value is permanently 1500. The usage header (line 6) also omits the flag, so it is undocumented either way. Real but minor: the script still works at the 1500ms default; the only impact is the rate limit cannot be tuned from the CLI. Low severity is correct."
+  }
+ },
+ {
+  "id": "A-add-watchlist-08",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/suggest-watchlist-additions.js",
+  "line": "10, 47",
+  "category": "dead-code",
+  "severity": "low",
+  "title": "Unused `path` require and unused `_val` helper",
+  "evidence": "`const path = require('path');` (line 10) — `path` is never referenced anywhere in the file (verified by grep; only suggest-watchlist-cleanup.js actually uses path). `const _val = (v) => v != null ? { value: v } : null;` (line 47) is defined inside pullStock but never called (the inline `.map(v => ({ value: v }))` forms are used instead).",
+  "why_it_matters": "Dead imports/helpers are noise that suggest a refactor was abandoned mid-way (the divergent puller in A-add-watchlist-01 is the larger symptom). Harmless at runtime but they mislead future readers about what the field-mapping contract is.",
+  "fix": "Delete the unused `path` require and the `_val` arrow. If _val was the intended uniform wrapper, use it consistently instead of the ad-hoc `{ value: v }` literals.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed against source. Line 10 `const path = require('path');` — `path` appears only here and in a comment on line 6 (\"path/to/tickers.txt\"); zero functional references in the file (grep verified). Line 47 `const _val = (v) => v != null ? { value: v } : null;` is defined inside pullStock but never invoked — all value wrapping is done via inline `.map(v => ({ value: v }))` / `{ value: ... }` literals (lines 49-83). Both are genuine dead code. Severity low is correct: purely cosmetic, no behavioral effect. Note: the deletion is the safe fix. The auditor's *alternative* suggestion (use _val consistently in place of `{ value: v }`) is NOT behavior-preserving in general — _val maps null/undefined to `null` rather than `{ value: null }`; it happens to coincide here only because ftsArr already strips null/undefined on line 45."
+  }
+ },
+ {
+  "id": "A-prune-watchlist-10",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/scripts/prune-watchlist.js",
+  "line": "60-67",
+  "category": "data-integrity",
+  "severity": "low",
+  "title": "isInvalidSymbol length>12 heuristic can false-positive-prune legitimate long symbols",
+  "evidence": "`if (ticker.length > 12 && !/[.\\-:^]/.test(ticker)) return 'looks-like-company-name';` (line 65). The rationale targets literal company-name entries like 'STMicroelectronics' (15 chars). But the rule prunes ANY separator-free symbol over 12 chars, with no requirement that it be alphabetic — and prune is destructive (rewrites watchlist.json via writeFileAtomic).",
+  "why_it_matters": "Some legitimate Yahoo symbols (certain mutual-fund classes, structured products, and crypto pairs) exceed 12 chars without dot/dash/caret. Such an entry would be silently evicted as 'looks-like-company-name' and, once removed from the committed watchlist, only recoverable from git history. Currently 0 live entries trip it, so it's latent — but it's a hardcoded-shape heuristic doing irreversible deletion.",
+  "fix": "Tighten the guard so it only matches the actual failure mode: require it to be all-alpha AND mixed-case (real symbols are upper-case), e.g. `ticker.length > 12 && /[a-z]/.test(ticker) && !/[.\\-:^ ]/.test(ticker)`. This still catches 'STMicroelectronics' but spares all-caps long symbols. Comment the precise failure mode it prevents.",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed real (low severity), with the caveat that no current data triggers it. Code at C:/Users/Karlr/screener-wt/audit-hardening/scripts/prune-watchlist.js:65 reads `if (ticker.length > 12 && !/[.\\-:^]/.test(ticker)) return 'looks-like-company-name';`. This is a destructive prune: main() pushes the entry to `pruned` (line 156) and the result is written via writeFileAtomic at line 220, and the script runs unconditionally in production (.github/workflows/daily-pull.yml:126 `node scripts/prune-watchlist.js`, no --dry-run). The guard is genuinely broader than its stated intent (catching literal company-name entries like 'STMicroelectronics'): it matches ANY separator-free string >12 chars with no alpha/case requirement, so a hypothetical long all-caps or all-digit symbol would be silently dropped. The $-preferred-share case is already handled separately at line 62, so this length rule is purely the company-name backstop.\n\nPractical likelihood is very low, which justifies 'low' severity. I scanned the live watchlist.json (23,748 entries): ZERO entries are flagged by this heuristic. Longest no-separator ticker is 'YASKAWA' (7 chars); no-separator length histogram tops out at 7 with only 3 entries >5 chars. All long real symbols (ESSITY-B.ST, MAERSK-B.CO, 005930.KS) contain '.'/'-' and are exempt. So the false-positive is currently latent, not active.\n\nfix_safe=true: the proposed change adds `/[a-z]/.test(ticker)` (require mixed-case) plus a space in the negated class. This strictly NARROWS a destructive operation (fewer deletions), still catches the one documented target 'STMicroelectronics' (has lowercase), and is behavior-identical on all current data (0 entries affected either way) — it only diverges in the safer direction on hypothetical edge cases. Low risk to auto-apply."
+  }
+ },
+ {
+  "id": "A-root-snapshots-picks-01",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/snapshot-picks.js",
+  "line": "102-104",
+  "category": "dead-code",
+  "severity": "medium",
+  "title": "normScore fallback in pickStockForMode is dead code — ev.normScore never exists",
+  "evidence": "score: (ev.score != null) ? Math.round(ev.score * 10) / 10 : (ev.normScore != null) ? Math.round(ev.normScore * 1000) / 10 : null,  // ev = SM.evaluateMode(...). In methods/strategy-modes.js evaluateMode's return object (lines 279-300) emits `score: scoreResult ? scoreResult.score : null` but NEVER a `normScore` key. Confirmed: `grep normScore methods/strategy-modes.js methods/runner.js` returns nothing.",
+  "why_it_matters": "The middle ternary branch can never be taken, so the elaborate Tag 232c-22 fix (multiply normScore*100 to align 0-1 vs 0-100 scales) protects against an input that cannot occur. The real consequence is silent: whenever the score-aggregator is unavailable (methods/strategy-modes.js line 5 wraps `require('./score-aggregator.js')` in try/catch, so scoreResult can be null → ev.score === null), the pick is written with score:null and falls to the bottom of the sort (lines 250-260) and into the primaryMetric tiebreak. There is no normScore safety net at all — the comment claims one exists. picks-history is the walk-forward backtest's source of truth, so a missing aggregator silently nulls every pick.score for that vintage rather than degrading gracefully.",
+  "fix": "Either (a) delete the dead normScore branch and the misleading Tag 232c-22 comment, or (b) if a normalized fallback is actually wanted, have evaluateMode return normScore and source it. Do NOT leave a comment asserting a fallback that the data path never produces. (Does not touch methods/index.js.)",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Confirmed dead code via full data-path trace. (1) methods/score-aggregator.js computeScore() returns keys score/baseScore/tier/redFlags/softGuardPenalty/breakdown/mode/dataQualityGrade/dataQualityCapped (lines 446-456) — NO normScore key; normScore at line 296 is only an internal local var. (2) methods/strategy-modes.js evaluateMode() return object (lines 278-298) emits `score: scoreResult ? scoreResult.score : null` and never a normScore key; all early-return failure objects (lines 179-211) also lack it. (3) In snapshot-picks.js pickStockForMode, ev is always evaluateMode's full return object (guarded by `if (!ev || !ev.passed) return null;` at line 89), so ev.normScore is always undefined. The middle ternary branch (line 103 `ev.normScore != null`) is therefore unreachable dead code, and the multi-line Tag 232c-22 / F-BT-009 / F-BT-010 comments (lines 81, 97-101) assert a normalized-fallback scale-alignment behavior the data path can never trigger. Auditor's grep claim holds: only normScore hits are the dead reference here plus the unrelated internal local in score-aggregator. Severity medium is slightly high for pure dead code with a misleading comment — it produces no wrong output, only maintenance/comprehension hazard — but the misleading comment that documents non-existent behavior justifies keeping it at low-to-medium; setting medium->low."
+  }
+ },
+ {
+  "id": "A-root-snapshots-picks-05",
+  "file": "C:/Users/Karlr/screener-wt/audit-hardening/snapshot-picks.js",
+  "line": "61-66",
+  "category": "data-integrity",
+  "severity": "low",
+  "title": "getMcap lacks the Number.isFinite guard that strategy-modes uses — NaN marketCap propagates into pick output",
+  "evidence": "function getMcap(stock){ const m = stock.marketCap || (stock.meta && stock.meta.marketCap); if (typeof m === 'number') return m; if (m && typeof m === 'object' && 'value' in m) return m.value; return null; }  — contrast methods/strategy-modes.js line 192-194 which does `if (mcUnwrapped == null || !Number.isFinite(mcUnwrapped)) return mcap_missing`.",
+  "why_it_matters": "If marketCap.value is NaN or Infinity, getMcap returns it verbatim into the pick. JSON.stringify(NaN) serializes as null so the on-disk vintage is not corrupted, but the value flows through in-memory consumers and the asymmetry with strategy-modes (which treats NaN mcap as 'missing') means the same stock can be mcap_missing for gating yet carry a non-null in-memory mcap here. Minor NaN-propagation / no-isFinite-guard instance the audit asks for.",
+  "fix": "Mirror strategy-modes: `const v = (typeof m === 'number') ? m : (m && typeof m === 'object' && 'value' in m ? m.value : null); return Number.isFinite(v) ? v : null;`",
+  "_verdict": {
+   "is_real": true,
+   "fix_safe": true,
+   "sev": "low",
+   "note": "Verified the behavioral difference is real. snapshot-picks.js:61-66 getMcap unwraps {value} and returns it with no finiteness check, while methods/strategy-modes.js:191-194 guards `if (mcUnwrapped == null || !Number.isFinite(mcUnwrapped))`. So a NaN marketCap.value would be returned by getMcap unguarded. The title's claim of a real inconsistency is accurate.\n\nHOWEVER the impact is overstated and the severity is correctly LOW (arguably borderline cosmetic):\n- getMcap has exactly ONE caller (snapshot-picks.js:105) and its return value goes only into the `marketCap` OUTPUT field of a pick. It is NOT used for sorting (picks.sort uses score/primaryMetric.value, lines 250-260), filtering, the mcap floor, or any selection logic. So a NaN cannot change which stocks are picked or their order.\n- The pick object is written via JSON.stringify (lines 283/285). JSON.stringify(NaN) === \"null\", so even an unguarded NaN serializes to `\"marketCap\": null` in the output file — identical to what the proposed fix emits explicitly. The observable JSON is the same with or without the guard.\n- NaN reaching the snapshot at all is a narrow edge case: pull-yahoo.js wraps marketCap via _metric() and applies a floor filter (lines 2007-2018) that skips null/out-of-range mcap. NaN would slip past the floor (NaN comparisons are false, and NaN != null) only in the rare event Yahoo returns NaN or the price-only path computes q.marketCap*tradingFactor === NaN.\n\nNet: genuine defensive-consistency gap worth closing to match the sibling function, but no functional corruption of picks and no different output bytes in practice. LOW is right.\n\nRelevant files: C:/Users/Karlr/screener-wt/audit-hardening/snapshot-picks.js (getMcap 61-66, sole caller 105); C:/Users/Karlr/screener-wt/audit-hardening/methods/strategy-modes.js (contrast guard 191-194); C:/Users/Karlr/screener-wt/audit-hardening/pull-yahoo.js (upstream wrap/filter 890, 1592-1594, 2007-2018)."
+  }
+ }
+]

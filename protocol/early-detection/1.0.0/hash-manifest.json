@@ -1,0 +1,15 @@
+{
+  "schema": "early-detection-hash-manifest/v1",
+  "protocol": "FEM-SEC-US@1.0.0",
+  "sealedAt": "2026-08-08T00:00:00+02:00",
+  "algorithm": "SHA-256 over exact file bytes; manifest excludes itself",
+  "files": {
+    "lib/early-detection.js": "ba8476539a8b88f4f10230bc00ab4ba081bae59c9149097377e8a7bb9b832ef4",
+    "protocol/early-detection/1.0.0/README.md": "7df11305856a2c832a77779da97cc29adc5f27dd670600e7b2bfc8a8ec09ec57",
+    "protocol/early-detection/1.0.0/fixtures.json": "98bcd8f2e2c00e392a33fa6e0b918b9406b75b2118f941d4d395357cfc37e711",
+    "protocol/early-detection/1.0.0/preregistration.json": "69a25d4652d876e3a5a56ab35bb9ea2bb2dacb0c799a725c6f590df0140f74d7",
+    "protocol/early-detection/1.0.0/readiness-and-blockers.md": "f9b2fc0585dd42089a3725d5c69a8879d8edf906029e9efe54e8e5bce47ec5a5",
+    "scripts/early-detection-audit.js": "63212957230a7905c4c8c5603c51e8fd88232ae08524a055a366b661846b90e5",
+    "tests/early-detection.test.js": "7c799c8855baa381e90bc85df3a480ff740e596b81d9122b6a483da8d8bf00b0"
+  }
+}

@@ -1,0 +1,323 @@
+{
+  "_was": "Datei B - die Scoreboard-Registrierung (BUILD-SPEC v1 \u00a70.4, [REV6-1] File B) plus AMENDMENT 01 (Barrieren-Skalierung, Rat 9 Teil 2a vom 2026-09-19). GEHASHT am Ende von Chunk 2 (2026-09-19), vor dem ersten gewerteten Eintrag.",
+  "_specHash": "af483fae6a1676476894fab05c1863a6a757e439c60ad8d6ccfd9bf5326a961a",
+  "_specFile": "Jarvis/Knowledge/Trading/druckenmiller/research-2026-09-13/BUILD-SPEC-v1.md",
+  "_origin": "BUILD-SPEC v1 \u00a70.4 (frozen 2026-09-14, Court PASSED 2:0 retrial 10), Council verdict 2026-09-14 (D1/D3/D4), RESIDUALS 1/2/3/5/8",
+  "_date": "2026-09-19",
+  "T0": "2026-09-19",
+  "T0Rule": "T0 = das Datum, an dem DIESE Datei gehasht wird (Commit-Datum des Sidecars). Vor dem Hash gibt es kein T0 und keinen Lese-Plan.",
+  "m1": {
+    "definition": "log-Rendite von t-252 bis t-21, geteilt durch die Tagesrendite-Volatilitaet der letzten 252 Balken",
+    "lookbackBars": 252,
+    "lagBars": 21,
+    "volWindowBars": 252,
+    "volEstimator": "Stichproben-Standardabweichung (n-1) der Tages-Log-Renditen, NICHT annualisiert",
+    "note": "Die Skalierung der Vol ist fuer die Terzile monoton irrelevant; sie ist registriert, damit der Code nicht nachtraeglich eine andere waehlt."
+  },
+  "m2": {
+    "definition": "Schlusskurs geteilt durch das hoechste Schlusskurs-Hoch der letzten 252 Balken",
+    "windowBars": 252
+  },
+  "terciles": {
+    "learnedPerSession": true,
+    "quantiles": [
+      0.3333333333333333,
+      0.6666666666666666
+    ],
+    "estimator": "Typ-7 (lineare Interpolation zwischen Ordnungsstatistiken), wie percentileRank in internals.js",
+    "cutEdge": "INKLUSIV: oberes Terzil = v >= q67, unteres = v <= q33",
+    "cutEdgeReason": "M2 hat eine echte Punktmasse bei genau 1,0 (Ticker AM 252-Tage-Hoch). Mit einem strikten '>' faellt genau der Fall aus dem oberen Terzil, den die Achse messen soll, sobald mehr als ein Drittel von U am Hoch steht.",
+    "degenerateRule": "Liegen oberes UND unteres Praedikat an (q33 == q67), gibt es KEINEN Zustand-CONFIRMS: die Zeile wird NEUTRAL und in nDegenerateCut gezaehlt.",
+    "minStatedN": 30,
+    "minStatedNNote": "Sicherheitsboden gegen entartete Sitzungen, kein Stellknopf: auf dem echten Universum liegt N bei ~1.400-2.200 (gemessen 2026-09-11: 2.197 Zustaende), die Schranke bindet dort nie."
+  },
+  "stateRule": {
+    "CONFIRMS": "M1 UND M2 im oberen Terzil",
+    "WEAK": "M1 ODER M2 im unteren Terzil",
+    "NEUTRAL": "sonst",
+    "null": "keine Kennzahl, keine Schnitte, oder der Ticker haengt nicht am modalen Balken-Tag ([REV3-3])",
+    "order": "CONFIRMS wird zuerst geprueft, dann WEAK; die entartete Ueberlappung ist per degenerateRule ausgeschlossen"
+  },
+  "scoredStates": [
+    "CONFIRMS",
+    "WEAK"
+  ],
+  "entryRule": {
+    "unit": "ein Eintrag je Ticker je Zustandswechsel je Arm",
+    "firstObservationIsNoTransition": true,
+    "firstObservationReason": "Gemessen 2026-09-19 am echten Lauf: ohne diese Regel schreibt die erste Sitzung 2.794 Eintraege (1.397 Ticker x 2 Arme) in EINEN Block, und die Abkuehlzeit sperrt danach 63 bzw. 126 Sitzungen lang fast alles. Die Spezifikation spricht von einem ZUSTANDSWECHSEL; ein Ticker ohne Vorzustand bewaffnet sich.",
+    "comparedAgainst": "den LETZTEN BEOBACHTETEN Zustand des Tickers, nicht den Vortag (Wieder-Bewaffnung, kein Nachdatieren, kein Nachholeintrag)",
+    "coolOffBars": {
+      "63": 63,
+      "126": 126
+    },
+    "coolOffClock": "Sitzungen der Messreihe, nicht Kalendertage",
+    "excludedSessions": [
+      "backfilled",
+      "lowFreshness",
+      "highChurn",
+      "separationGateRaw"
+    ],
+    "highChurnSource": "regime.json-Regel, gerechnet mit der GETEILTEN Regel lib/druckenmiller/churn.js (membershipDelta + highChurnFlag) im merge-Job. Grund: zum Logging-Zeitpunkt existiert die regime.json des Tages noch nicht (sie entsteht im scoring-Job). Gleiche Regel, gleiche Eingaben (Roh-Zeilen heute vs. unmittelbarer Vortag), gleiche Zahl \u2014 und LEDGER_ROW_FIELDS bleibt eingefroren, keine historische Zeile wird nachtraeglich vertragswidrig. Waechter R8 aus Chunk 1 bleibt in Kraft.",
+    "statesPublishedOnBackfilledSessions": false,
+    "statesPublishedReason": "[REV2-3]/[REV5-2]: rueckgerechnete Zeilen tragen barDateMode/freshShare null und liefern state null. Gemessen 2026-09-19: ohne diese Sperre gab die Saat Vorzustaende und die erste LIVE-Sitzung schrieb 116 Eintraege gegen einen Zustand, den die Registrierung nicht kennt."
+  },
+  "barrier": {
+    "k": 1,
+    "kFixed": true,
+    "sigmaWindowBars": 63,
+    "sigmaEstimator": "Stichproben-Standardabweichung (n-1) der Tages-Log-Renditen der letzten 63 Balken bei Eintritt",
+    "sigmaScaling": "horizon",
+    "sigmaScalingAllowed": [
+      "daily",
+      "horizon"
+    ],
+    "barrierForm": "entryClose * exp(+/- k * sigma * scaling(arm))",
+    "sigmaScalingLaw": "sigma_h = sigma_daily * sqrt(h)",
+    "sigmaEstimationWindowDays": 63,
+    "horizons_bars": [
+      63,
+      126
+    ],
+    "scalingCheck": {
+      "_was": "realisierte SD der h-Balken-Log-Rendite gegen den vorhergesagten sigma_daily*sqrt(h) - Dokumentation, kein Tor (Rat 9 Teil 2a, Bedingung 3)",
+      "measuredOn": "prices Shards 0-3, Eintritt alle 21 Balken, 2026-09-19",
+      "h63": {
+        "n": 26281,
+        "realisedSD": 0.4878,
+        "predictedMean": 0.4485,
+        "ratio": 1.088
+      },
+      "h126": {
+        "n": 17585,
+        "realisedSD": 0.6694,
+        "predictedMean": 0.611,
+        "ratio": 1.095
+      },
+      "tippingCondition": "Abweichung > ~30 % bei h = 126 -> K (gelernte Breite) statt H, neues Amendment vor dem Hash",
+      "tippingConditionMet": false
+    },
+    "passageRules": {
+      "priceSource": "Schlusskurse aus dem screener-data prices-Store (dieselbe Quelle wie L1-L8)",
+      "entryBar": "der Balken des Sitzungstags; sein Schluss ist entryClose",
+      "firstCheckableBar": "der Balken NACH dem Eintritt (der Eintrittsbalken selbst kann nicht ausloesen)",
+      "touch": "Schluss >= entryClose*exp(+breite) = UP, Schluss <= entryClose*exp(-breite) = DOWN",
+      "bothSidesSameBar": "Mit Schlusskursen kann ein Balken nur eine Seite beruehren. Sollten je Intraday-Daten benutzt werden, gilt die KONSERVATIVE Seite: fuer einen CONFIRMS-Eintrag DOWN, fuer einen WEAK-Eintrag UP.",
+      "barsCounted": "Balken der Ticker-Serie, nicht Kalendertage"
+    },
+    "censoring": {
+      "atHorizon": "Arm-Balken vorhanden und keine Barriere beruehrt -> CENSORED, zaehlt als Nicht-Ereignis, wird getrennt berichtet",
+      "dataEnd": "Reihe endet vor dem Horizont -> der Eintrag bleibt OFFEN (outcome null) und wird NIE als zensiert gezaehlt; er wird in einer spaeteren Sitzung aufgeloest",
+      "neverDropped": true
+    }
+  },
+  "horizons": [
+    63,
+    126
+  ],
+  "decisiveArm": 63,
+  "decisiveArmRule": "Der 63-Balken-Arm allein bestimmt Etikett und Stilllegung ([REV9-1]); der 126-Arm wird mit eigenem (L, MDE) darunter berichtet und aendert nie Etikett oder Stilllegung.",
+  "censoring": "Ein Eintrag, der am Horizont keine Barriere beruehrt hat, zaehlt als NICHT-Ereignis (nicht UP) und wird getrennt berichtet \u2014 nie weggeworfen.",
+  "estimand": "Differenz der Anteile 'obere Barriere zuerst' (CONFIRMS minus WEAK), je Arm, in Prozentpunkten; Nenner = aufgeloeste Eintraege je Zustand",
+  "bootstrap": {
+    "scheme": "wild-cluster ueber Datums-Bloecke mit Webb-Sechspunkt-Gewichten, solange die Blockzahl k < 30 ist; darueber gewoehnlicher Cluster-Bootstrap",
+    "webbWeights": [
+      "-sqrt(1.5)",
+      "-1",
+      "-sqrt(0.5)",
+      "+sqrt(0.5)",
+      "+1",
+      "+sqrt(1.5)"
+    ],
+    "B": 1000,
+    "seed": 20260919,
+    "wildBelowBlocks": 30,
+    "blockLengthBars": {
+      "63": 63,
+      "126": 126
+    },
+    "pFloor": "1/B = 0,001",
+    "clusterUnit": "Datums-Block",
+    "firmClusteringNote": "Die Firmen-Clusterung ist in der Block-Clusterung enthalten, weil Abkuehlzeit = Blocklaenge = Horizont ist: je Firma, Arm und Block gibt es hoechstens einen Eintritt. Das wird gemessen (assertFirmNesting), nicht behauptet, und der Befund reist im Lesungs-Datensatz mit.",
+    "blockNote": "Kalender-Bloecke, keine unabhaengigen Bloecke."
+  },
+  "blockFloor": {
+    "63": 8,
+    "126": 6
+  },
+  "families": {
+    "scoreboard": [
+      "63",
+      "126"
+    ],
+    "correctionWithinRead": "BH-FDR ueber die Arme",
+    "correctionAcrossReads": "Bonferroni ueber R1/R2/R3"
+  },
+  "alphaRead": 0.016666666666666666,
+  "alphaStar": {
+    "twoArm": 0.0083,
+    "singleArm": 0.0167
+  },
+  "alphaStarNote": "Residuum 1: BEIDE Literale sind registriert; der Satz aus [REV2-2] 'BH-FDR q = 0,05 fuer die Scoreboard-Familie' ist durch [REV9-4] ueberholt.",
+  "beta": 0.2,
+  "intervalDirection": "lower",
+  "L": "theta - z_(1-alpha*) * SD_boot (einseitige Untergrenze, [REV8-1]); alpha* wird neben L gedruckt",
+  "MDE": "(z_(1-alpha*) + z_(1-beta)) * SD_boot ([REV9-2]) \u2014 ein LESE-Ergebnis, nie eine Tageszahl",
+  "labelBounds": {
+    "knowledgeBarPp": 3,
+    "tradeBarPp": 5
+  },
+  "labels": [
+    {
+      "id": 1,
+      "rule": "L <= 0",
+      "text": "nicht belegt"
+    },
+    {
+      "id": 2,
+      "rule": "0 < L < 3 pp",
+      "text": "Effekt belegt, unter Wissenslatte (3 pp)"
+    },
+    {
+      "id": 3,
+      "rule": "3 pp <= L < 5 pp",
+      "text": "belegt, Wissenslatte erreicht, unter Handelsschwelle (5 pp)"
+    },
+    {
+      "id": 4,
+      "rule": "L >= 5 pp",
+      "text": "belegt, Handelsschwelle (5 pp) erreicht"
+    }
+  ],
+  "labelNotReadable": "noch nicht lesbar",
+  "multiplicityNote": "Ein Etikett kann zwischen zwei Lesungen bei UNVERAENDERTER Evidenz zurueckfallen, weil alpha* strenger wird, sobald der zweite Arm mitgelesen wird \u2014 das ist ein Artefakt der Mehrfachtestung, keine neue Messung.",
+  "retirement": {
+    "evaluatedAt": [
+      "R2",
+      "R3"
+    ],
+    "neverAt": [
+      "R1",
+      "zwischen Lesungen"
+    ],
+    "mdeBoundPp": 6,
+    "branches": {
+      "i": "Blockuntergrenze nicht erreicht -> Etikett 'noch nicht lesbar', keine MDE, naechste Pruefung bei der folgenden Lesung; bei R3 = Sunset, Stilllegung wegen fehlendem Evidenzpfad ([REV9-3])",
+      "ii": "L <= 0 UND MDE <= 6 pp -> stilllegen (gut gepowertes Null-Ergebnis)",
+      "iii": "L < 3 pp UND MDE > 6 pp -> stilllegen (unentscheidbar bei doppelter Wissenslatte)",
+      "iv": "sonst -> das Etikett bleibt"
+    },
+    "terminalAtR3": "R3 ist die letzte Lesung: danach entweder stillgelegt oder EINGEFROREN mit Praefix 'abgeschlossen (R3, <Datum>)' \u2014 keine weitere Lesung, keine Neu-Registrierung unter anderem Namen."
+  },
+  "readSchedule": {
+    "R1": "erstes Monatsende, an dem BEIDE Bedingungen halten: 12 Monate aufgeloeste Eintraege seit T0 UND Blockuntergrenze des 63-Arms; liegt R1 hinter R2, entfaellt R1",
+    "R2": "Monatsende 24 Monate nach T0",
+    "R3": "Monatsende 36 Monate nach T0 (Sunset)",
+    "betweenReads": "keine Lesung, kein Etikett, keine Stilllegungs-Pruefung; die Tafel zeigt das eingefrorene Tupel mit Lesestempel und naechstem Lesedatum, dazu die Zaehler ausdruecklich als Zaehler"
+  },
+  "panelDisplay": {
+    "frozen": [
+      "label",
+      "L",
+      "MDE",
+      "level",
+      "readId",
+      "readDate",
+      "nextReadDate",
+      "L126",
+      "MDE126",
+      "level126"
+    ],
+    "live": [
+      "entries",
+      "resolved",
+      "blocks",
+      "lastSessionDate"
+    ],
+    "frozenNote": "Residuum 3: der 126-Arm friert mit demselben Stempel. Residuum 8: nach R3 ist nextReadDate null.",
+    "callPathRule": "Der Tageslauf importiert kein Bootstrap-Modul; L und MDE entstehen ausschliesslich im Lese-Job (Waechter G8/G9 in tests/druckenmiller/import-graph.test.js)."
+  },
+  "separationGate": {
+    "maxConfirmsShare": 0.6,
+    "minConfirmsShare": 0.1,
+    "consequence": "RAW-Sitzung: Zustaende werden geloggt und angezeigt, aber es wird KEIN Scoreboard-Eintrag geschrieben \u2014 wie bei lowFreshness und highChurn (Residuum 5)."
+  },
+  "warmup": {
+    "liveSessions": 20,
+    "countedSessions": "NUR Live-Sitzungen der Messreihe (backfilled zaehlt nicht). Ein Hand-Lauf an einem Nicht-Handelstag erzeugt keine Sitzung und zaehlt nicht mit.",
+    "entriesFlagged": "warmup: true \u2014 nie gewertet",
+    "addendum": "Nach 20 Live-Sitzungen wird das Addendum gehasht und aendert AUSSCHLIESSLICH powerProjection (Diff-Test)."
+  },
+  "powerProjection": null,
+  "powerProjectionNote": "[REV7-2]: das Addendum haelt die beobachtete Eintrittsrate und das projizierte Kalenderdatum der Blockuntergrenze. KEINE projizierte MDE \u2014 vor aufgeloesten Eintraegen gibt es kein registriertes Varianzmodell.",
+  "_amendment01": {
+    "file": "Jarvis/Knowledge/Trading/druckenmiller/research-2026-09-13/BUILD-SPEC-v1-AMENDMENT-01-barrier-scaling.md",
+    "sha256": "61d4c8ef4d89785128db1c0115c3ad52797e347087fccad1a71054c6df9503c1",
+    "ratifiedBy": "Rat 9 Teil 2a, 2026-09-19 (Vorsitz ~65 %, Rat 2:2 + Codex fuer L)",
+    "text": "Barrier width per arm h in {63,126} bars: sigma_h = sigma_daily * sqrt(h), where sigma_daily is the 63-day trailing daily vol at entry and k = 1 is unchanged. Only the horizon-scaling law of the barrier is added; the sigma estimation window is untouched.",
+    "specFileUntouched": true,
+    "datedBeforeFirstScoredEntry": true
+  },
+  "priorAccess": {
+    "date": "2026-09-19",
+    "dataTouched": "screener-data/prices shard 0 (687 Ticker mit >= 270 Balken) fuer den Erstpassage-Vergleich; Shards 0-3 (3.234 Ticker) fuer den scalingCheck; Shard 0 fuer die Arm-Kollaps-Stichprobe - ausschliesslich HISTORISCHE Balken",
+    "evaluationsSeen": [
+      "Aufloesungsquote und Median-Aufloesungszeit unter L (sigma taeglich)",
+      "dieselben Groessen unter H (sigma_daily*sqrt(Arm))",
+      "realisierte SD_63/SD_126 gegen sigma_daily*sqrt(h)",
+      "Aufloesungszeit-Verteilungen beider Arme (KS, Median) auf der festen Stichprobe"
+    ],
+    "neverSeen": [
+      "Schaetzgroesse CONFIRMS minus WEAK",
+      "L",
+      "MDE",
+      "irgendein Vorwaerts-Eintrag des Scoreboards"
+    ],
+    "claim": "KEINE Behauptung zugriffsfreier Methodenwahl: die Lesart H wurde NACH diesen Messungen gewaehlt und ist deshalb als Amendment mit Offenlegung registriert."
+  },
+  "armCollapseGuard": {
+    "_was": "Rat 9 Teil 2a, Bedingung 4: unterscheiden sich die Aufloesungszeiten der beiden Arme auf der festen Stichprobe nicht, wird NICHT gewertet",
+    "fixedSample": "screener-data/tests/druckenmiller/fixtures/arm-collapse-sample.json (Shard 0, Eintritt alle 63 Balken, Aufloesung unter H)",
+    "ksScaledMin": 1.63,
+    "ksAlpha": 0.01,
+    "medianRatioMin": 1.25,
+    "measured_2026_09_19": {
+      "median63": 31,
+      "median126": 58,
+      "medianRatio": 1.87,
+      "ksD": 0.45,
+      "ksDscaled": 10.28,
+      "resolved": {
+        "63": 1172,
+        "126": 942
+      },
+      "censored": {
+        "63": 1265,
+        "126": 784
+      }
+    },
+    "consequenceIfFires": "kein Scoring; Design zurueck an den Rat"
+  },
+  "armsAlphaStarRule": "Die Anzahl formal getrennter Arme IST das N der alpha*-Korrektur (2 Arme -> 0,0083, 1 Arm -> 0,0167). Ein Arm mehr oder weniger aendert alpha* - nie stillschweigend (Waechter armsMatchAlphaStar).",
+  "scopeSentence": "Unter H variieren Barrieren-BREITE und Beobachtungs-DAUER gemeinsam; ein Unterschied zwischen den beiden Armen ist nicht allein dem Horizont zuzuschreiben. (Rat 9 Teil 2a, Bedingung 5 - steht auch auf der Tafel.)",
+  "evaluationEligibility": {
+    "scored": "ein Eintrag wird nur gewertet, wenn (i) warmup false, (ii) die Sitzung nicht backfilled/lowFreshness/highChurn/RAW war, (iii) er aufgeloest ODER am Horizont zensiert ist, (iv) er der Abkuehlzeit seines Arms entspricht",
+    "notScored": [
+      "warmup: true",
+      "offene Eintraege (outcome null)",
+      "Eintraege aus ausgeschlossenen Sitzungen"
+    ],
+    "readsOnly": "gewertet wird ausschliesslich im Lese-Job bei R1/R2/R3"
+  },
+  "testingRefs": {
+    "bhWithinRead": "BH-FDR ueber die zwei Arme innerhalb einer Lesung",
+    "bonferroniAcrossReads": "alpha_read = 0,05/3 ueber R1/R2/R3",
+    "alphaStar": {
+      "twoArm": 0.0083,
+      "singleArm": 0.0167
+    },
+    "decisiveArm": 63,
+    "firstRead": "erste Lesung nur wenn 12 Monate aufgeloeste Eintraege UND 8 Bloecke (63er-Arm) halten",
+    "pFloor": "1/B = 0,001"
+  }
+}
