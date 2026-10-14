@@ -373,9 +373,19 @@ const MILAN_SHARES_BAND = 0.20;
  * HERKUNFT DER 17 EINTRAEGE: `befund-doppelgaenger-2026-08-29.md` §5, Zeilen 132-181 — genau die
  * Gruppen, die am 29.08. mit beiden Beinen im SELBEN Board standen. Der Board-Rang steht als
  * Beleg dabei; die vier Top-100-Faelle sind markiert.
+ *
+ * WIEDERVORLAGE 14.10.2026 (A7): `1ANE.MI`/`ANE.MC` (Acciona Energias Renovables, utilities
+ * 9+10) ist gestrichen, 16 Eintraege. Die Anbieterreihe ist seit 2022 tot (neuestes Quartal
+ * 2022-09-30), und die belegte Handtabellen-Sperre `1ane.mi-2022-09-30-revenueQ-p129` (seit
+ * 14.10. mit Alias ANE.MC) laesst auf BEIDEN Beinen nur 3 endliche Umsatzquartale stehen, weniger
+ * als MILAN_MIN_QUARTALE. Die Klasse kann A1 damit nie wieder bestehen; der Tageslauf vom
+ * 14.10.2026 (38529502608) brach an ihr ab. Beide Beine tragen denselben `issuerKeyLoose`
+ * (Urteil am Bestand vom 14.10. ohne Sperre: 'schon-vereint'), der Dedup fuehrt sie also ohne
+ * diese Vorstufe zusammen; es wird kein Board-Wert verschoben. Messbeleg vor der Streichung:
+ * `node scripts/probe-fingerprint-zensus.js` ueber die 16.170 Snapshots des Laufs (884 Klassen mit
+ * Mailaender Bein, davon 6 divergent, 3 meldepflichtig ohne Mailaender Bein), Zahlen im PR.
  */
 const MILAN_KANDIDATEN = [
-  { anker: '1ANE.MI',  partner: ['ANE.MC'],           beleg: 'utilities 9+10 (Top 100)' },
   { anker: '1CRCL.MI', partner: ['CRCL'],             beleg: 'financials/unprofitable 12+13 (Top 100)' },
   { anker: '1FWON.MI', partner: ['FWONK'],            beleg: 'software-comm-services 12+13 (Top 100)' },
   { anker: '1NLOK.MI', partner: ['GEN'],              beleg: 'software-comm-services 19+20 (Top 100)' },
