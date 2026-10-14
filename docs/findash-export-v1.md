@@ -1425,3 +1425,87 @@ Tests: `tests/w6-pull-extract.test.js` and `tests/w6-filter-universe.test.js`.
 Workflow wiring is supplied separately to the master; no workflow is edited here.
 
 P205: Hauptgröße (800 Mio. USD) und Small-Cap-Untergröße (300 Mio. USD) stehen gemeinsam in `configs/market-cap-floors.json`; `MIN_MCAP_USD` bleibt als ausdrückliche Hauptgrößen-Übersteuerung erhalten. Der Small-Cap-Export verwendet seine Untergröße auch beim Rückfall auf den Hauptbestand. Veraltete Boardzeilen aus belegten Korrekturfällen werden mit einer `::error::`-Zeile ausgesondert, ohne den übrigen Export anzuhalten; `mcapGenullt.verworfen` zählt sie getrennt von der Währungsprüfung. Die Haupt-Toplisten werden aus den bereinigten Vollkohorten aufgefüllt, Zählungen und Ränge folgen den verbleibenden Zeilen. `reviewBy` gilt auch für `_holds`; abgelaufene Belege melden `::warning::`.
+
+### 17.1 `filter/bewertung.json` — display-only valuation ratios (A5 package S2, 14.10.2026)
+
+An additive file next to `universum.json`, no v2 bump. `universum.json` and its contract above stay unchanged.
+
+**File:** `outputs/findash-export/v1/filter/bewertung.json`, written by `node scripts/write-bewertung-export.js`
+in the scoring job right after the filter step and deployed by the existing Pages copy. It reads only the saved
+snapshots (prepared exactly like the filter writer: hand tables, market-cap guard) and the board index; it has no
+new source. Envelope `{schema:"findash-export/v1", generated_at, snapshotCount, rows}`: `generated_at` is copied
+character for character from `index.json` of the same export (no reformatting, no own timestamp), because the private
+raw copy keeps this file only when the two strings are equal; `--check` enforces the same equality. `snapshotCount` counts
+all snapshot files, rows exist only for snapshots with at least one of `ep`, `cp`, `bp`, `nd`, `q4` and for withheld
+snapshots (`ohne`, below). The build refuses a snapshot set that is not the generation the boards were built from
+(`index.generatedFromSnapshots`, same guard as the filter feed) and refuses to run when the `filter/` folder does not
+exist: the filter step removes its folder when it fails, and this file must not bring the folder back on its own. There
+is no rank, percentile, score, signal or fund name in this file; the validator rejects every key outside the table below.
+
+| Key | Type | Meaning and source |
+|---|---|---|
+| `t` | string | Snapshot ticker; always present, unique |
+| `ep` | number or absent | Earnings yield in percent: `annualNetIncome[0]` ÷ `marketCap.value` × 100. Negative means a loss |
+| `cp` | number or absent | Cash-flow yield in percent: `annualOCF[0]` ÷ market cap × 100 |
+| `bp` | number or absent | Book yield in percent: `annualBalance[0].totalEquity` ÷ market cap × 100 |
+| `nd` | number or absent | Net debt over operating cash flow: (`totalDebt` − `totalCash`) ÷ `annualOCF[0]`; negative means net cash |
+| `ndSt` | `geprueft` or `nicht-geprueft`, or absent | `geprueft` exactly when `nd` is present; `nicht-geprueft` when operating cash flow exists but `nd` is withheld; absent without operating cash flow data |
+| `gj` | `YYYY-MM-DD` or absent | `annual.annualNetIncomeEnds[0]`: the fiscal-year end behind `ep` (period label, G31). No age limit is applied: the consumer filters on `gj` |
+| `q4` | array (1 to 4) or absent | Up to four `{q, eps}`, newest first: the four newest dated quarters of `external.earningsHistory`, keeping those with a nonzero `epsActual` (rounded to two decimals). A zero or missing EPS leaves a gap that the dates show; no older quarter moves in. Present only when listing and reporting currency are equal. No age limit: the consumer filters on `q` |
+| `asOf` | `YYYY-MM-DD` or absent | Oldest of `meta.fundamentalsAsOf` (else `meta.asOf`) and the metric dates, as in `universum.json` but without the ATH date |
+| `ohne` | string or absent | Withheld row: the only key besides `t`, and no value (`ep`, `cp`, `bp`, `nd`, `ndSt`, `gj`, `q4`, `asOf`) is shown. One of `datenpaket-gesperrt`, `waehrung-unplausibel`, `waehrung-ungeprueft` |
+
+Absent means unknown, never zero. Ratios are rounded to two decimals; very small nonzero values keep two significant
+digits (as in `universum.json`).
+
+**Withheld instead of wrong:**
+- `datenpaket-gesperrt`: a snapshot with `meta.financialDataIssue` (quarantined packet from the financial hand table)
+  shows no value at all, the same rule as `write-excluded-list.js`. 10 snapshots on 14.10.2026.
+- `ep`, `cp`, `bp` need `beurteileWaehrungsbeleg(meta).ok` and a finite market cap above zero; without the currency
+  proof none of the three exists. `nd` and `gj` do not use the market cap and are not affected.
+- An exact zero for net income, operating cash flow, equity or a quarter EPS is a placeholder value (T2) and is withheld,
+  never shown as 0; 42 snapshots had a net income of exactly zero on 14.10.2026.
+- One period label (`gj`) serves `ep`, `cp` and `bp`: `cp` (or `bp`) is withheld when its own period end is known and
+  differs from `gj`. `nd` is withheld when the balance sheet and the cash flow period ends are known and differ.
+  Unknown period ends cannot prove a clash and do not withhold. On 14.10.2026 this removed `cp` for 222, `bp` for 93 and `nd` for 55 snapshots.
+- `nd` is withheld for a balance row with `_debtPartial` (one debt leg missing upstream, so net debt would be understated); 2,388 snapshots on 14.10.2026.
+- `nd` needs a positive operating cash flow; otherwise `ndSt` is `nicht-geprueft`.
+
+**Mislabelled reporting currency (`waehrung-unplausibel`, `waehrung-ungeprueft`):** the pull converts the statements
+with the reporting rate and the market cap with the listing rate, and `beurteileWaehrungsbeleg` proves only the second.
+When the vendor labels a statement kept in the listing currency as USD (HCLTECH.NS: net income 166.42 billion INR labelled USD,
+`ep` 440.97 instead of about 4.6; PTTEP.BK 327.66 instead of about 9.8; 9911.HK 57.41), every ratio on the market cap is inflated
+by the cross rate. The only independent number is the vendor's trailing PE (computed from the listing price in one currency),
+so r = `ep` × PE ÷ 100 (annual over trailing earnings, normally near 1) is compared with the cross rate
+(`meta.fxRateApplied` ÷ `meta.tradingFxRateApplied`, the latter times 100 for the pence-like units GBp, GBX, ZAc, ILA).
+- `waehrung-unplausibel`: cross rate at least 3, r above 3 and within a factor 2.5 of the cross rate, and the PE-implied
+  yield 100 ÷ PE between 1.5 and 50 % (a plausible PE). All ratios of the row are withheld. The yield bound separates the
+  mislabel (plausible PE, absurd `ep`) from its look-alike, a genuine USD reporter listed in a weak currency whose vendor PE is
+  garbage (same r, absurd PE, plausible `ep`), which stays. Band measured on the 14.10.2026 snapshots: it hits exactly
+  HCLTECH.NS, PTTEP.BK and 9911.HK (3 rows).
+- `waehrung-ungeprueft`: listing and reporting currency are not provably the same (different codes, GBp is not GBP, unknown, or
+  a guessed listing currency) and nothing can be cross-checked (`ep` not positive or no positive trailing PE). 736 rows on
+  14.10.2026, 604 of them with a loss or zero net income and 132 without a trailing PE. With equal currencies a missing check
+  changes nothing.
+- Limits: the check has no power below a cross rate of 3 (a euro listing of a USD reporter), and it does not test the
+  opposite direction (a USD statement labelled with a weak currency), because the vendor PE of USD-listed foreign
+  companies is itself off by that rate.
+
+**`q4` currency:** `external.*` is not touched by the USD conversion of the pull, so the EPS values are per-share figures in
+the reporting currency. The writer shows `q4` only when listing and reporting currency are equal, so the unit is the listing
+currency, which the daily price file carries (`prices/<day>.json`, field `currency`); no currency key is needed. For differing
+currencies the EPS unit is often the other one (SMFG shows 0.50 per ADS where the Tokyo line shows 65.81 JPY; INFY.NS 19.17 is
+INR, not USD), so `q4` is omitted there. Ratios between quarters of one company are scale-free.
+
+**Validation:** `node scripts/write-bewertung-export.js --check` is read-only and exits 1 for a wrong schema, a
+`generated_at` that is not equal to the one in the `index.json` next to the file (or a missing `index.json`), a missing or
+duplicate ticker, a row without any value or `ohne`, an unknown key, a null, a non-finite number, an `ndSt` that disagrees
+with `nd`, an invalid date, a `q4` longer than four, unsorted, with a zero EPS or otherwise malformed, an `ohne` row with
+anything besides `t` and an allowed reason, more rows than snapshots, or more than **4,000,000 UTF-8 bytes**. `--selftest`
+runs a hand fixture (net income 100, market cap 1000 gives `ep` 10). Measured on the 14.10.2026 snapshots: 16,096 rows of
+16,172 snapshots, `ep` on 15,283 rows, 749 withheld rows, 2,454,530 bytes.
+
+**Fail-soft:** the workflow step "Build and check bewertung" removes only `bewertung.json` (and a leftover temp file)
+when build, check or the snapshot count fails; `universum.json`, the boards and the deploy never depend on it.
+
+Tests: `tests/bewertung-export.test.js` with `tests/fixtures/bewertung/snapshot-full.json` and the W6 fixtures.
