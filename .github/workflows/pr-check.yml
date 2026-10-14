@@ -32,6 +32,8 @@ env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
   # Terms of the PII guard (tests/kein-kontakt-im-repo.test.js); the terms live only in this secret.
   PII_GUARD_TERMS: ${{ secrets.PII_GUARD_TERMS }}
+  # Fund names for the public-tree guard (tests/kein-signal-im-oeffentlichen-baum.test.js); same format as PII_GUARD_TERMS, read via lib/guard-terms.js.
+  FONDS_GUARD_TERMS: ${{ secrets.FONDS_GUARD_TERMS }}
 
 concurrency:
   # Auf push hat das Event keine PR-Nummer; ohne den sha-Zweig teilten sich ALLE
