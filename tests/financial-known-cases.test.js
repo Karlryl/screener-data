@@ -629,10 +629,10 @@ test('excluded list: a quarantined packet has null sector, industry, market cap 
 });
 
 // R2: other listings of the same issuer carry the identical false cells (checked in the 29.09. archive).
-test('listing aliases: YSNG.VI, PDN.TO, PALAF and MFSL.NS are corrected like their primary; unrelated ticker untouched', () => {
+test('listing aliases: YSNG.VI, PDN.TO, PALAF, MFSL.NS and ANE.MC are corrected like their primary; unrelated ticker untouched', () => {
   // P177 makes HL numeric; its full alias result is checked in the dedicated HL test below.
   const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases && (c.periodType !== '12M' || c.replacementValue === null)).map(c => [c.ticker, c.listingAliases]));
-  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'] }); // P168d adds the MFSL listing; numeric P177/P168e aliases have dedicated tests.
+  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'], '1ANE.MI': ['ANE.MC'] }); // P168d adds the MFSL listing, 14.10.2026 the ANE.MC listing; numeric P177/P168e aliases have dedicated tests.
   const leg = (primary, alias) => { const s = clone(annualFixture[primary]); s.meta.ticker = alias; return s; };
   for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
     const input = leg(primary, alias), original = serial(input), r = applyFinancialCases(input);
@@ -659,6 +659,27 @@ test('listing aliases: YSNG.VI, PDN.TO, PALAF and MFSL.NS are corrected like the
     'const listed = (x, ticker) => listings(x).includes(ticker);', 'const listed = (x, ticker) => x.ticker === ticker;'));
   const guard = fn => assert.equal(norm(fn(leg('YSN.DE', 'YSNG.VI')).snapshot, 'grossProfitQ')[0], null);
   assert.throws(() => guard(broken.applyFinancialCases), assert.AssertionError); guard(applyFinancialCases); breaks++;
+});
+
+// 14.10.2026: ANE.MC (Madrid home listing of Acciona Energias Renovables) carried the identical vendor packet as
+// 1ANE.MI in the daily run 38529502608 (all timeseries/annual fields equal once the hold is unwrapped), but not the
+// p129 hold, so the two legs differed at 2022-09-30 and the U3-Milan fingerprint failed.
+test('listing alias ANE.MC withholds the stale 2022-09-30 quarter exactly like 1ANE.MI; red once without the alias', () => {
+  const c = table.cases.find(x => x.caseId === '1ane.mi-2022-09-30-revenueQ-p129');
+  assert.deepEqual(c.listingAliases, ['ANE.MC']);
+  const alias = clone(fixture['1ANE.MI']); alias.meta.ticker = 'ANE.MC';
+  const i = alias.timeseries.revenueQEnds.indexOf(c.period), original = serial(alias);
+  assert.equal(value(alias.timeseries.revenueQ[i]), c.expectedBadValue * alias.meta.fxRateApplied, 'stale vendor value present before');
+  const r = applyFinancialCases(alias), primaryOut = applyFinancialCases(clone(fixture['1ANE.MI'])).snapshot;
+  assert.equal(value(r.snapshot.timeseries.revenueQ[i]), null);
+  assert.equal(r.snapshot.timeseries.revenueQ[i].financialCorrection.caseId, c.caseId);
+  assert.ok(r.events.some(e => e.ticker === 'ANE.MC' && e.caseId === c.caseId && e.status === 'missing'));
+  assert.equal(serial(r.snapshot.timeseries), serial(primaryOut.timeseries), 'both legs identical after the hold');
+  assert.equal(serial(alias), original, 'input not mutated');
+  // Break-once in memory: the same table without the alias leaves ANE.MC with the stale vendor value.
+  const noAlias = clone(table); delete noAlias.cases.find(x => x.caseId === c.caseId).listingAliases;
+  const guard = config => assert.equal(value(applyFinancialCases(clone(alias), { table: config }).snapshot.timeseries.revenueQ[i]), null);
+  assert.throws(() => guard(noAlias), assert.AssertionError); guard(table); breaks++;
 });
 
 // R5: a corrected cell that later becomes withheld drops its old correction marker and reason.
