@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-13T10:52:16.076Z",
+  "generated_at": "2026-10-14T12:55:07.328Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 72.7,
-    "generated_at": "2026-10-13T10:44:00.703Z"
+    "coverage_pct": 70.8,
+    "generated_at": "2026-10-14T12:48:42.081Z"
   },
-  "generatedFromSnapshots": 489,
+  "generatedFromSnapshots": 394,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -39,11 +39,11 @@
   },
   "counts": {
     "smallcap-consumer-discretionary": {
-      "profitable": 22,
-      "unprofitable": 15
+      "profitable": 17,
+      "unprofitable": 12
     },
     "smallcap-consumer-staples": {
-      "profitable": 18,
+      "profitable": 12,
       "unprofitable": 0
     },
     "smallcap-energy": {
@@ -51,36 +51,36 @@
       "unprofitable": 6
     },
     "smallcap-financials": {
-      "profitable": 9,
-      "unprofitable": 10
+      "profitable": 7,
+      "unprofitable": 6
     },
     "smallcap-health-care": {
-      "profitable": 22,
-      "unprofitable": 50
+      "profitable": 18,
+      "unprofitable": 34
     },
     "smallcap-industrials": {
-      "profitable": 33,
-      "unprofitable": 26
+      "profitable": 26,
+      "unprofitable": 19
     },
     "smallcap-it-services": {
       "profitable": 4,
       "unprofitable": 0
     },
     "smallcap-materials": {
-      "profitable": 13,
+      "profitable": 11,
       "unprofitable": 0
     },
     "smallcap-real-estate": {
-      "profitable": 18,
+      "profitable": 16,
       "unprofitable": 0
     },
     "smallcap-semiconductors": {
       "profitable": 1,
-      "unprofitable": 4
+      "unprofitable": 2
     },
     "smallcap-software-comm-services": {
-      "profitable": 35,
-      "unprofitable": 15
+      "profitable": 30,
+      "unprofitable": 9
     },
     "smallcap-utilities": {
       "profitable": 4,
@@ -88,17 +88,16 @@
     }
   },
   "excluded": {
-    "balance-sheet-bank": 63,
-    "data-suspect": 8,
+    "balance-sheet-bank": 61,
+    "data-suspect": 5,
     "insurer": 8,
-    "lender-gp0": 2,
     "mortgage-reit": 5,
-    "no-revenue": 34,
+    "no-revenue": 25,
     "no-sector": 2,
-    "smallcap-mcap-missing": 2,
-    "smallcap-thin-coverage": 33,
-    "telecom": 5,
-    "unrouted": 10
+    "smallcap-mcap-out-of-band": 2,
+    "smallcap-thin-coverage": 28,
+    "telecom": 4,
+    "unrouted": 8
   },
-  "coverageFloor": 0.51
+  "coverageFloor": 0.598
 }
