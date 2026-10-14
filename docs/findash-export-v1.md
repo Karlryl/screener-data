@@ -1425,3 +1425,61 @@ Tests: `tests/w6-pull-extract.test.js` and `tests/w6-filter-universe.test.js`.
 Workflow wiring is supplied separately to the master; no workflow is edited here.
 
 P205: Hauptgröße (800 Mio. USD) und Small-Cap-Untergröße (300 Mio. USD) stehen gemeinsam in `configs/market-cap-floors.json`; `MIN_MCAP_USD` bleibt als ausdrückliche Hauptgrößen-Übersteuerung erhalten. Der Small-Cap-Export verwendet seine Untergröße auch beim Rückfall auf den Hauptbestand. Veraltete Boardzeilen aus belegten Korrekturfällen werden mit einer `::error::`-Zeile ausgesondert, ohne den übrigen Export anzuhalten; `mcapGenullt.verworfen` zählt sie getrennt von der Währungsprüfung. Die Haupt-Toplisten werden aus den bereinigten Vollkohorten aufgefüllt, Zählungen und Ränge folgen den verbleibenden Zeilen. `reviewBy` gilt auch für `_holds`; abgelaufene Belege melden `::warning::`.
+
+### 17.1 `filter/bewertung.json` — display-only valuation ratios (A5 package S2, 14.10.2026)
+
+An additive file next to `universum.json`, no v2 bump. `universum.json` and its contract above stay unchanged.
+
+**File:** `outputs/findash-export/v1/filter/bewertung.json`, written by `node scripts/write-bewertung-export.js`
+in the scoring job right after the filter step and deployed by the existing Pages copy. It reads only the saved
+snapshots (prepared exactly like the filter writer: hand tables, market-cap guard) and the board index; it has no
+new source. Envelope `{schema:"findash-export/v1", generated_at, snapshotCount, rows}`: `generated_at` is copied
+from the board index, `snapshotCount` counts all snapshot files, rows exist only for snapshots with at least one of
+`ep`, `cp`, `bp`, `nd`, `q4`. The build refuses a snapshot set that is not the generation the boards were built from
+(`index.generatedFromSnapshots`, same guard as the filter feed). There is no rank, percentile, score, signal or fund
+name in this file; the validator rejects every key outside the table below.
+
+| Key | Type | Meaning and source |
+|---|---|---|
+| `t` | string | Snapshot ticker; always present, unique |
+| `ep` | number or absent | Earnings yield in percent: `annualNetIncome[0]` ÷ `marketCap.value` × 100. Negative means a loss |
+| `cp` | number or absent | Cash-flow yield in percent: `annualOCF[0]` ÷ market cap × 100 |
+| `bp` | number or absent | Book yield in percent: `annualBalance[0].totalEquity` ÷ market cap × 100 |
+| `nd` | number or absent | Net debt over operating cash flow: (`totalDebt` − `totalCash`) ÷ `annualOCF[0]`; negative means net cash |
+| `ndSt` | `geprueft` or `nicht-geprueft`, or absent | `geprueft` exactly when `nd` is present; `nicht-geprueft` when operating cash flow exists but `nd` is withheld; absent without operating cash flow data |
+| `gj` | `YYYY-MM-DD` or absent | `annual.annualNetIncomeEnds[0]`: the fiscal-year end behind `ep` (period label, G31) |
+| `q4` | array (1 to 4) or absent | Up to four `{q, eps}`, newest first: `external.earningsHistory` quarter day and `epsActual`, rounded to two decimals; an exact EPS zero is a statement and stays |
+| `qc` | 3-letter code or absent | Currency of the `q4` EPS values; present exactly when `q4` is |
+| `asOf` | `YYYY-MM-DD` or absent | Oldest of `meta.fundamentalsAsOf` (else `meta.asOf`) and the metric dates, as in `universum.json` but without the ATH date |
+
+Absent means unknown, never zero. Ratios are rounded to two decimals; very small nonzero values keep two significant
+digits (as in `universum.json`).
+
+**Withheld instead of wrong:**
+- `ep`, `cp`, `bp` need `beurteileWaehrungsbeleg(meta).ok` and a finite market cap above zero; without the currency
+  proof none of the three exists. `nd`, `gj`, `q4` do not use the market cap and are not affected.
+- An exact zero for net income, operating cash flow or equity is a placeholder value (T2) and is withheld, never shown as 0 %; 42 snapshots had a net income of exactly zero on 14.10.2026.
+- One period label (`gj`) serves `ep`, `cp` and `bp`: `cp` (or `bp`) is withheld when its own period end is known and
+  differs from `gj`. `nd` is withheld when the balance sheet and the cash flow period ends are known and differ.
+  Unknown period ends cannot prove a clash and do not withhold. On 14.10.2026 this removed `cp` for 222, `bp` for 93 and `nd` for 55 snapshots.
+- `nd` is withheld for a balance row with `_debtPartial` (one debt leg missing upstream, so net debt would be understated); 2,388 snapshots on 14.10.2026.
+- `nd` needs a positive operating cash flow; otherwise `ndSt` is `nicht-geprueft`.
+
+**`q4` currency:** `external.*` is not touched by the USD conversion of the pull, so the EPS values are per-share figures
+in the reporting currency named by `qc` (`meta.reportingCurrencyOriginal`, else `meta.reportingCurrency`), not USD.
+Measured on the 14.10.2026 snapshots: (sum of the four EPS × `sharesOutstanding`) ÷ (net income in the reporting currency)
+has a median between 0.84 and 1.17 for every currency with at least 30 snapshots (e.g. JPY 1.06, EUR 1.03, INR 1.06); a USD
+figure would give the exchange rate instead. Ratios between quarters of one company are scale-free; absolute values must be
+shown with `qc`. A snapshot without a usable `qc` gets no `q4`.
+
+**Validation:** `node scripts/write-bewertung-export.js --check` is read-only and exits 1 for a wrong schema or
+generation, a missing or duplicate ticker, a row without any value, an unknown key, a null, a non-finite number, an
+`ndSt` that disagrees with `nd`, an invalid date, a `q4` longer than four, unsorted or malformed, a `q4` without `qc`
+(or the reverse), more rows than snapshots, or more than **4,000,000 UTF-8 bytes**. `--selftest` runs a hand fixture
+(net income 100, market cap 1000 gives `ep` 10). Measured on the 14.10.2026 snapshots: 16,096 rows of 16,172
+snapshots, `ep` on 16,021 rows, 2,649,397 bytes.
+
+**Fail-soft:** the workflow step "Build and check bewertung" removes only `bewertung.json` (and a leftover temp file)
+when build, check or the snapshot count fails; `universum.json`, the boards and the deploy never depend on it.
+
+Tests: `tests/bewertung-export.test.js` with `tests/fixtures/bewertung/snapshot-full.json` and the W6 fixtures.
