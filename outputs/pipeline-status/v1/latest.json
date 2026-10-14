@@ -2,11 +2,11 @@
   "schema": "screener-pipeline-status/v1",
   "status": "failure",
   "attempt_run_id": "38529502608",
-  "run_attempt": 1,
+  "run_attempt": 2,
   "head_sha": "f78765c8f772652b02340ff59ff996bb462b52ac",
   "started_at": "2026-10-14T07:37:15Z",
-  "completed_at": "2026-10-14T09:53:00Z",
-  "failed_job": "pull",
-  "reason": "prep=success,quarter-candidates=success,quarter-selection=success,pull=failure,prices=success,merge=failure,scoring=skipped,entdeckungs-waechter=success,earnings-transport-waechter=success,jahres-ausreisser-waechter=skipped,druckenmiller-guard=skipped",
+  "completed_at": "2026-10-14T10:58:32Z",
+  "failed_job": "merge",
+  "reason": "prep=success,quarter-candidates=success,quarter-selection=success,pull=success,prices=success,merge=failure,scoring=skipped,entdeckungs-waechter=success,earnings-transport-waechter=success,jahres-ausreisser-waechter=skipped,druckenmiller-guard=skipped",
   "last_success_at": "2026-10-09T10:38:39Z"
 }
