@@ -2210,7 +2210,8 @@ jobs:
       # A5/S2 (private research tab): raw valuation ratios per ticker next to filter/universum.json.
       # Display only, no rank, percentile, score or signal. FAIL-SOFT like the filter step: on any
       # failure only this file (and a leftover .tmp of it) is removed; universum.json, the boards and
-      # the deploy never depend on it, and findash then shows "no valuation data today".
+      # the deploy never depend on it, and findash then shows "no valuation data today". When the filter
+      # step failed and removed its folder, the writer refuses to recreate it (nothing is written).
       - name: Build and check bewertung (additive, fail-soft)
         run: |
           set -o pipefail
