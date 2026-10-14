@@ -87,6 +87,8 @@ env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
   # Terms of the PII guard (tests/kein-kontakt-im-repo.test.js); the terms live only in this secret.
   PII_GUARD_TERMS: ${{ secrets.PII_GUARD_TERMS }}
+  # Fund names for the public-tree guard (tests/kein-signal-im-oeffentlichen-baum.test.js); same format as PII_GUARD_TERMS, read via lib/guard-terms.js.
+  FONDS_GUARD_TERMS: ${{ secrets.FONDS_GUARD_TERMS }}
 
   # ZWEIG-WACHE — die EINZIGE Stelle, an der "darf dieser Lauf veroeffentlichen?"
   # entschieden wird. Die sechs gefaehrlichen Schritte lesen nur noch diese Variable.
@@ -2264,6 +2266,16 @@ jobs:
           path: outputs/findash-export/v1/druckenmiller
           if-no-files-found: error
           retention-days: 7
+
+      # A0/S1 (14.10.2026): Waechter fuer den OEFFENTLICHEN Baum, scharf direkt vor dem Pages-Deploy.
+      # Faellt rot, wenn ein getrackter Pfad contrarian-history/antizyklisch enthaelt, wenn unter
+      # outputs/findash-export/v1 ein Signal-/Urteilsschluessel steht oder wenn ein Begriff aus
+      # PII_GUARD_TERMS / FONDS_GUARD_TERMS in einer getrackten Datei oder im Exportbaum vorkommt.
+      # BEWUSST HART (kein continue-on-error, kein `|| true`): der Deploy darunter traegt
+      # `if: success()`, ein Befund haelt also die Veroeffentlichung an, statt Privates auf die
+      # oeffentliche Seite zu kopieren. Ausgegeben werden nur Pfade und Schluesselnamen.
+      - name: Oeffentlicher-Baum-Waechter
+        run: node tests/kein-signal-im-oeffentlichen-baum.test.js
 
       # audit BH-114: frueher fing `|| { git init -b gh-pages }` JEDEN Clone-Fehler ab
       # — auch transiente DNS/Auth/Netz-Aussetzer, nicht nur einen tatsaechlich
