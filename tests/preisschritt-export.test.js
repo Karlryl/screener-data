@@ -6,19 +6,21 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
-const { stepFor, buildFeed, validate, build, ROW_KEYS, SKIP_REASONS, MAX_BYTES } = require('../scripts/write-preisschritt-export.js');
+const { cutoffOf, tailOf, stepFor, buildFeed, validate, build, ROW_KEYS, SKIP_REASONS, MAX_BYTES } = require('../scripts/write-preisschritt-export.js');
 const store = require('../lib/price-history-store.js');
 const mini = require('./fixtures/preisschritt/store-mini.json');
 const generatedAt = '2026-10-15T08:43:25.693Z';
 const stamp = '2026-10-15T08:37:04.076Z';
-const make = (tickers = mini.universe, bars = mini.history) => buildFeed({ tickers, bars, generatedAt, priceStoreUpdatedAt: stamp });
+const entriesOf = (history, stampAt = stamp) => Object.fromEntries(Object.entries(history).map(([t, bars]) => [t, tailOf(bars, cutoffOf(stampAt))]));
+const make = (tickers = mini.universe, history = mini.history, stampAt = stamp) =>
+  buildFeed({ tickers, entries: entriesOf(history, stampAt), generatedAt, priceStoreUpdatedAt: stampAt });
 const bytesOf = feed => Buffer.byteLength(JSON.stringify(feed));
 const row = (feed, ticker) => feed.rows.find(r => r.t === ticker);
 const script = path.resolve(__dirname, '../scripts/write-preisschritt-export.js');
 const workflowFile = path.resolve(__dirname, '../.github/workflows/daily-pull.yml');
 const sha = file => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
-test('hand fixture is exact: adjusted closes 100 then 102 give a step of 1.02, and only the last two bars count', () => {
+test('hand fixture is exact: adjusted closes 100 then 102 give a step of 1.02, and only the last two finished bars count', () => {
   const before = JSON.stringify(mini), feed = make();
   assert.equal(JSON.stringify(mini), before);
   // HAND has three stored bars (90, 100, 102): the older one is ignored.
@@ -27,46 +29,84 @@ test('hand fixture is exact: adjusted closes 100 then 102 give a step of 1.02, a
   assert.deepEqual(row(feed, 'SPLT'), { t: 'SPLT', d0: '2026-10-13', c0: 50.5, d1: '2026-10-14', c1: 51 });
   // Non-consecutive bars (Friday 09.10. then Wednesday 14.10.) are kept as stored: the dates state the gap, findash judges it.
   assert.deepEqual(row(feed, 'GAPPY'), { t: 'GAPPY', d0: '2026-10-09', c0: 20, d1: '2026-10-14', c1: 21 });
-  assert.deepEqual(feed.rows.map(r => r.t), ['GAPPY', 'HAND', 'SPLT']);
+  // Rows come out sorted although the fixture universe is not.
+  assert.deepEqual(feed.rows.map(r => r.t), ['GAPPY', 'HAND', 'INTRA', 'SPLT', 'VANISH']);
+  assert.notDeepEqual(mini.universe.filter(t => feed.rows.some(r => r.t === t)), feed.rows.map(r => r.t));
   // A ticker stored but outside the universe never appears.
   assert.equal(row(feed, 'OUTSIDE'), undefined);
   assert.deepEqual(validate(feed, bytesOf(feed)), []);
   for (const r of feed.rows) assert.deepEqual(Object.keys(r), ROW_KEYS);
-  assert.deepEqual(Object.keys(feed), ['schema', 'generated_at', 'priceStoreUpdatedAt', 'universeCount', 'skipped', 'rows']);
+  assert.deepEqual(Object.keys(feed), ['schema', 'generated_at', 'priceStoreUpdatedAt', 'cutoffDay', 'universeCount', 'skipped', 'rows']);
+  assert.equal(feed.cutoffDay, '2026-10-15');
+});
+
+test('only finished bars count: a bar of the stamp day is intraday and excluded (P2-1)', () => {
+  const feed = make();
+  // INTRA: the last stored bar is dated the stamp day (999 would be an intraday value): the step is 13.10. to 14.10.
+  assert.deepEqual(row(feed, 'INTRA'), { t: 'INTRA', d0: '2026-10-13', c0: 100, d1: '2026-10-14', c1: 101 });
+  // VANISH: the previous-day bar (14.10.) vanished at a later pull; the stamp-day bar is not used to bridge the gap.
+  assert.deepEqual(row(feed, 'VANISH'), { t: 'VANISH', d0: '2026-10-12', c0: 50, d1: '2026-10-13', c1: 51 });
+  // EQSTAMP: the last stored bar date equals the stamp day and only one older bar exists: no finished pair, own reason.
+  assert.equal(row(feed, 'EQSTAMP'), undefined);
+  assert.deepEqual(stepFor('EQSTAMP', tailOf(mini.history.EQSTAMP, '2026-10-15')), { skip: 'fewer-than-two-finished-bars' });
+  // Every row ends strictly before the cutoff day.
+  for (const r of feed.rows) assert.ok(r.d1 < feed.cutoffDay, r.t);
+  // The cutoff is the UTC day of the stamp, not the local one and not the day of generation.
+  assert.equal(cutoffOf('2026-10-15T08:37:04.076Z'), '2026-10-15');
+  assert.equal(cutoffOf('2026-10-15T00:00:00.000Z'), '2026-10-15');
+  assert.equal(cutoffOf('2026-10-15T23:59:59.999Z'), '2026-10-15');
+  assert.equal(cutoffOf('2026-10-15T01:30:00+02:00'), '2026-10-14');
+  // The same store stamped before midnight UTC of the next day: the 15.10. bar is still not finished, stamped after it is.
+  const history = { X: [{ date: '2026-10-13', close: 1 }, { date: '2026-10-14', close: 2 }, { date: '2026-10-15', close: 3 }] };
+  assert.deepEqual(row(make(['X'], history, '2026-10-15T23:00:00Z'), 'X'), { t: 'X', d0: '2026-10-13', c0: 1, d1: '2026-10-14', c1: 2 });
+  assert.deepEqual(row(make(['X'], history, '2026-10-16T01:00:00Z'), 'X'), { t: 'X', d0: '2026-10-14', c0: 2, d1: '2026-10-15', c1: 3 });
+  // Bars after the stamp day (clock skew, bad data) are not finished either, and a bar before the cutoff that is not a real day still gets named.
+  const odd = { Y: [{ date: '2026-10-13', close: 1 }, { date: '2026-10-14', close: 2 }, { date: '2026-10-17', close: 9 }], Z: [{ date: '2026-02-30', close: 1 }, { date: '2026-10-14', close: 2 }] };
+  assert.deepEqual(row(make(['Y', 'Z'], odd), 'Y'), { t: 'Y', d0: '2026-10-13', c0: 1, d1: '2026-10-14', c1: 2 });
+  assert.equal(make(['Y', 'Z'], odd).skipped['invalid-date'], 1);
 });
 
 test('rows without two usable bars are left out and counted by reason, never filled', () => {
   const feed = make();
   assert.deepEqual(feed.skipped, {
-    'not-in-store': 1,           // NOSTORE: listed in the universe, no series
-    'fewer-than-two-bars': 2,    // SOLO (one bar), EMPTY (none)
-    'invalid-date': 1,           // BADD: 2026-02-30
-    'invalid-close': 2,          // ZERO (0), NEGC (negative)
-    'dates-not-increasing': 2,   // SAME (equal), BACK (reversed)
+    'not-in-store': 1,                // NOSTORE: listed in the universe, no series
+    'fewer-than-two-bars': 2,         // SOLO (one bar), EMPTY (none)
+    'fewer-than-two-finished-bars': 1, // EQSTAMP: two bars, one of them dated the stamp day
+    'invalid-date': 1,                // BADD: 2026-02-30
+    'invalid-close': 2,               // ZERO (0), NEGC (negative)
+    'dates-not-increasing': 2,        // SAME (equal), BACK (reversed)
   });
   assert.deepEqual(Object.keys(feed.skipped), SKIP_REASONS);
   assert.equal(feed.universeCount, mini.universe.length);
   assert.equal(feed.rows.length + Object.values(feed.skipped).reduce((a, b) => a + b, 0), feed.universeCount);
-  for (const t of ['SOLO', 'EMPTY', 'ZERO', 'NEGC', 'SAME', 'BACK', 'BADD', 'NOSTORE']) assert.equal(row(feed, t), undefined, t);
-  // The older valid bar is never promoted when the newest one is bad (no filling).
-  assert.deepEqual(stepFor('X', [{ date: '2026-10-12', close: 3 }, { date: '2026-10-13', close: 4 }, { date: '2026-10-14', close: 0 }]), { skip: 'invalid-close' });
+  for (const t of ['SOLO', 'EMPTY', 'EQSTAMP', 'ZERO', 'NEGC', 'SAME', 'BACK', 'BADD', 'NOSTORE']) assert.equal(row(feed, t), undefined, t);
+  const step = bars => stepFor('X', tailOf(bars, '2026-10-15'));
+  // The older valid bar is never promoted when the newest finished one is bad (no filling).
+  assert.deepEqual(step([{ date: '2026-10-12', close: 3 }, { date: '2026-10-13', close: 4 }, { date: '2026-10-14', close: 0 }]), { skip: 'invalid-close' });
   // Non-number closes are glitches, not prices.
   for (const close of ['5', null, NaN, Infinity, undefined, -1, 0]) {
-    assert.deepEqual(stepFor('X', [{ date: '2026-10-13', close: 5 }, { date: '2026-10-14', close }]), { skip: 'invalid-close' }, String(close));
-    assert.deepEqual(stepFor('X', [{ date: '2026-10-13', close }, { date: '2026-10-14', close: 5 }]), { skip: 'invalid-close' }, String(close));
+    assert.deepEqual(step([{ date: '2026-10-13', close: 5 }, { date: '2026-10-14', close }]), { skip: 'invalid-close' }, String(close));
+    assert.deepEqual(step([{ date: '2026-10-13', close }, { date: '2026-10-14', close: 5 }]), { skip: 'invalid-close' }, String(close));
   }
   // A full timestamp is not a day.
-  assert.deepEqual(stepFor('X', [{ date: '2026-10-13T00:00:00Z', close: 5 }, { date: '2026-10-14', close: 5 }]), { skip: 'invalid-date' });
-  assert.deepEqual(stepFor('X', [null, { date: '2026-10-14', close: 5 }]), { skip: 'invalid-date' });
+  assert.deepEqual(step([{ date: '2026-10-13T00:00:00Z', close: 5 }, { date: '2026-10-14', close: 5 }]), { skip: 'invalid-date' });
+  assert.deepEqual(step([null, { date: '2026-10-14', close: 5 }]), { skip: 'invalid-date' });
   assert.deepEqual(stepFor('X', undefined), { skip: 'not-in-store' });
-  assert.deepEqual(stepFor('X', 'not an array'), { skip: 'not-in-store' });
+  assert.deepEqual(stepFor('X', 'not an entry'), { skip: 'not-in-store' });
 });
 
 test('buildFeed refuses a broken generation or store stamp', () => {
   for (const bad of [undefined, '', 'yesterday']) {
-    assert.throws(() => buildFeed({ tickers: ['HAND'], bars: mini.history, generatedAt: bad, priceStoreUpdatedAt: stamp }), /Invalid generation/);
-    assert.throws(() => buildFeed({ tickers: ['HAND'], bars: mini.history, generatedAt, priceStoreUpdatedAt: bad }), /Invalid price store stamp/);
+    assert.throws(() => buildFeed({ tickers: ['HAND'], entries: {}, generatedAt: bad, priceStoreUpdatedAt: stamp }), /Invalid generation/);
+    assert.throws(() => buildFeed({ tickers: ['HAND'], entries: {}, generatedAt, priceStoreUpdatedAt: bad }), /Invalid price store stamp/);
   }
+});
+
+test('rows are sorted by code point, not by locale', () => {
+  const history = Object.fromEntries(['b.L', 'A', 'a', 'B', '7203.T', 'AB'].map(t => [t, [{ date: '2026-10-13', close: 1 }, { date: '2026-10-14', close: 2 }]]));
+  const tickers = Object.keys(history);
+  assert.deepEqual(make(tickers, history).rows.map(r => r.t), ['7203.T', 'A', 'AB', 'B', 'a', 'b.L']);
+  assert.deepEqual(make(tickers.slice().reverse(), history).rows.map(r => r.t), ['7203.T', 'A', 'AB', 'B', 'a', 'b.L']);
 });
 
 test('no rank, percentile, score or judgement wording can appear in keys or file name', () => {
@@ -75,40 +115,48 @@ test('no rank, percentile, score or judgement wording can appear in keys or file
   for (const key of [...keys, path.basename(script), 'preisschritt.json']) assert.doesNotMatch(key, /rank|rk|perc|pct|score|sc$|signal|sig|fond|fund|contrarian|antizykl|kandidat|urteil|verdict/i);
 });
 
-test('validator goes red on every tamper variant and stays green on the control', () => {
+test('validator goes red on every tamper variant (with the specific error) and stays green on the control', () => {
   const control = make();
   assert.deepEqual(validate(control, bytesOf(control)), []);
   const tampers = {
-    'unknown key (rank)': f => { row(f, 'HAND').rank = 1; },
-    'missing key': f => { delete row(f, 'HAND').c0; },
-    'null value': f => { row(f, 'HAND').c1 = null; },
-    'key order changed': f => { f.rows[0] = { t: 'GAPPY', c0: 20, d0: '2026-10-09', d1: '2026-10-14', c1: 21 }; },
-    'close as string': f => { row(f, 'HAND').c0 = '100'; },
-    'close NaN': f => { row(f, 'HAND').c1 = NaN; },
-    'close zero': f => { row(f, 'HAND').c0 = 0; },
-    'close negative': f => { row(f, 'HAND').c1 = -102; },
-    'equal dates': f => { row(f, 'HAND').d1 = row(f, 'HAND').d0; },
-    'reversed dates': f => { const r = row(f, 'HAND'); [r.d0, r.d1] = [r.d1, r.d0]; },
-    'date with time': f => { row(f, 'HAND').d1 = '2026-10-14T00:00:00Z'; },
-    'impossible day': f => { row(f, 'HAND').d0 = '2026-02-30'; },
-    'missing ticker': f => { delete row(f, 'HAND').t; },
-    'duplicate ticker': f => { f.rows.push(structuredClone(row(f, 'HAND'))); f.universeCount++; },
-    'row count off (row removed)': f => { f.rows.pop(); },
-    'universeCount off': f => { f.universeCount += 1; },
-    'skipped count off': f => { f.skipped['invalid-close']++; },
-    'skipped reason unknown': f => { f.skipped.misc = 1; },
-    'skipped reason missing': f => { delete f.skipped['invalid-date']; },
-    'skipped negative': f => { f.skipped['invalid-close'] = -2; f.skipped['not-in-store'] += 4; },
-    'skipped missing': f => { delete f.skipped; },
-    'priceStoreUpdatedAt missing': f => { delete f.priceStoreUpdatedAt; },
-    'priceStoreUpdatedAt unparsable': f => { f.priceStoreUpdatedAt = 'recently'; },
-    'wrong schema': f => { f.schema = 'findash-export/v2'; },
-    'generated_at unparsable': f => { f.generated_at = 'yesterday'; },
-    'rows missing': f => { delete f.rows; },
+    'unknown key (rank)': [f => { row(f, 'HAND').rank = 1; }, /row shape/],
+    'missing key': [f => { delete row(f, 'HAND').c0; }, /row shape/],
+    'null value': [f => { row(f, 'HAND').c1 = null; }, /c1 not a positive finite/],
+    'key order changed': [f => { f.rows[0] = { t: 'GAPPY', c0: 20, d0: '2026-10-09', d1: '2026-10-14', c1: 21 }; }, /row shape/],
+    'close as string': [f => { row(f, 'HAND').c0 = '100'; }, /c0 not a positive finite/],
+    'close NaN': [f => { row(f, 'HAND').c1 = NaN; }, /c1 not a positive finite/],
+    'close zero': [f => { row(f, 'HAND').c0 = 0; }, /c0 not a positive finite/],
+    'close negative': [f => { row(f, 'HAND').c1 = -102; }, /c1 not a positive finite/],
+    'equal dates': [f => { row(f, 'HAND').d1 = row(f, 'HAND').d0; }, /dates not increasing/],
+    'reversed dates': [f => { const r = row(f, 'HAND'); [r.d0, r.d1] = [r.d1, r.d0]; }, /dates not increasing/],
+    'date with time': [f => { row(f, 'HAND').d1 = '2026-10-14T00:00:00Z'; }, /invalid d1/],
+    'impossible day': [f => { row(f, 'HAND').d0 = '2026-02-30'; }, /invalid d0/],
+    'last bar on the stamp day (intraday)': [f => { row(f, 'HAND').d1 = '2026-10-15'; }, /unfinished bar/],
+    'last bar after the stamp day': [f => { row(f, 'HAND').d1 = '2026-10-16'; }, /unfinished bar/],
+    'cutoffDay missing': [f => { delete f.cutoffDay; }, /Invalid cutoffDay/],
+    'cutoffDay not the stamp day': [f => { f.cutoffDay = '2026-10-16'; }, /Invalid cutoffDay/],
+    'cutoffDay not a day': [f => { f.cutoffDay = '2026-10-15T00:00:00Z'; }, /Invalid cutoffDay/],
+    'rows not sorted': [f => { f.rows.reverse(); }, /not sorted/],
+    'rows sorted by locale only': [f => { f.rows.push({ t: 'a', d0: '2026-10-13', c0: 1, d1: '2026-10-14', c1: 1 }, { t: 'B', d0: '2026-10-13', c0: 1, d1: '2026-10-14', c1: 1 }); f.universeCount += 2; }, /not sorted/],
+    'missing ticker': [f => { delete row(f, 'HAND').t; }, /missing\/duplicate ticker/],
+    'duplicate ticker': [f => { f.rows.splice(2, 0, structuredClone(row(f, 'HAND'))); f.universeCount++; }, /duplicate ticker/],
+    'row count off (row removed)': [f => { f.rows.pop(); }, /Universe count mismatch/],
+    'universeCount off': [f => { f.universeCount += 1; }, /Universe count mismatch/],
+    'skipped count off': [f => { f.skipped['invalid-close']++; }, /Universe count mismatch/],
+    'skipped reason unknown': [f => { f.skipped.misc = 1; }, /Invalid skipped counts/],
+    'skipped reason missing': [f => { delete f.skipped['fewer-than-two-finished-bars']; }, /Invalid skipped counts/],
+    'skipped negative': [f => { f.skipped['invalid-close'] = -2; f.skipped['not-in-store'] += 4; }, /Invalid skipped counts/],
+    'skipped missing': [f => { delete f.skipped; }, /Invalid skipped counts/],
+    'priceStoreUpdatedAt missing': [f => { delete f.priceStoreUpdatedAt; }, /Invalid priceStoreUpdatedAt/],
+    'priceStoreUpdatedAt unparsable': [f => { f.priceStoreUpdatedAt = 'recently'; }, /Invalid priceStoreUpdatedAt/],
+    'wrong schema': [f => { f.schema = 'findash-export/v2'; }, /Invalid envelope/],
+    'generated_at unparsable': [f => { f.generated_at = 'yesterday'; }, /Invalid envelope/],
+    'rows missing': [f => { delete f.rows; }, /Missing rows/],
   };
-  for (const [name, mutate] of Object.entries(tampers)) {
+  for (const [name, [mutate, expected]] of Object.entries(tampers)) {
     const feed = make(); mutate(feed);
-    assert.ok(validate(feed, 1000).length > 0, name);
+    const errors = validate(feed, 1000);
+    assert.ok(errors.some(e => expected.test(e)), name + ' -> ' + JSON.stringify(errors));
   }
   // The generation of the board index next to the file must match exactly.
   assert.deepEqual(validate(control, bytesOf(control), generatedAt), []);
@@ -153,7 +201,11 @@ test('build reads the sharded store, is idempotent (byte-equal second run), leav
   assert.deepEqual(fs.readdirSync(path.join(t.v1Dir, 'filter')).sort(), ['preisschritt.json', 'universum.json']);
   assert.deepEqual(JSON.parse(fs.readFileSync(t.target, 'utf8')), first.feed);
   assert.deepEqual(row(first.feed, 'HAND'), { t: 'HAND', d0: '2026-10-13', c0: 100, d1: '2026-10-14', c1: 102 });
-  assert.equal(first.feed.rows.length, 3);
+  assert.equal(first.feed.rows.length, 5);
+  // The cutoff comes from the store stamp: the stamp-day bar of INTRA (999) is not used, the real store layout gives the same row.
+  assert.equal(first.feed.cutoffDay, '2026-10-15');
+  assert.deepEqual(row(first.feed, 'INTRA'), { t: 'INTRA', d0: '2026-10-13', c0: 100, d1: '2026-10-14', c1: 101 });
+  assert.equal(first.feed.skipped['fewer-than-two-finished-bars'], 1);
   assert.equal(first.feed.universeCount, mini.universe.length);
   // The stamp comes from the store's _meta.json.
   assert.equal(first.feed.priceStoreUpdatedAt, store.loadMeta(t.pricesDir).updatedAt);
@@ -187,6 +239,11 @@ test('without the filter folder, with a partial store or without a store stamp n
   fs.rmSync(store.shardPath(partial.pricesDir, 7));
   assert.throws(() => build({ pricesDir: partial.pricesDir, v1Dir: partial.v1Dir }), /partial/);
   assert.equal(fs.existsSync(partial.target), false);
+  // A shard replaced by an empty one (truncated copy): its tickers would silently count as not-in-store, so the count against _meta.json stops it.
+  const truncated = fixtureTree();
+  fs.writeFileSync(store.shardPath(truncated.pricesDir, store.shardOf('HAND')), '{}');
+  assert.throws(() => build({ pricesDir: truncated.pricesDir, v1Dir: truncated.v1Dir }), /truncated shard/);
+  assert.equal(fs.existsSync(truncated.target), false);
   const unstamped = fixtureTree();
   fs.rmSync(store.metaPath(unstamped.pricesDir));
   assert.throws(() => build({ pricesDir: unstamped.pricesDir, v1Dir: unstamped.v1Dir }), /no _meta\.json/);
@@ -225,7 +282,7 @@ test('CLI checks a real file, rejects a corrupted copy, a foreign generation, a 
   assert.match(wrongUniverse.stderr, /Universe count differs/);
   const big = fixtureTree(), source = row(make(), 'HAND');
   const rows = Array.from({ length: 60000 }, (_, i) => ({ ...source, t: 'T' + String(i).padStart(6, '0') }));
-  fs.writeFileSync(big.target, JSON.stringify({ schema: 'findash-export/v1', generated_at: generatedAt, priceStoreUpdatedAt: stamp, universeCount: rows.length,
+  fs.writeFileSync(big.target, JSON.stringify({ schema: 'findash-export/v1', generated_at: generatedAt, priceStoreUpdatedAt: stamp, cutoffDay: '2026-10-15', universeCount: rows.length,
     skipped: Object.fromEntries(SKIP_REASONS.map(r => [r, 0])), rows }));
   assert.ok(fs.statSync(big.target).size > MAX_BYTES);
   const oversized = run('--check', '--v1-dir', big.v1Dir);
@@ -252,7 +309,8 @@ function workflowErrors(yaml) {
   if (!(step[0].at < guard[0].at && guard[0].at < deploy[0].at)) errors.push('must run before the public-tree guard and the deploy');
   const next = names.find(n => n.at > step[0].at), body = text.slice(step[0].at, next ? next.at : undefined);
   const run = body.split('\n').filter(l => !l.trim().startsWith('#'));
-  if (!/write-preisschritt-export\.js --prices-dir /.test(body) || !/write-preisschritt-export\.js --check/.test(body)) errors.push('must build and then check');
+  // The build must read the archive of the main tip, not the (older) trigger checkout in ./prices.
+  if (!/write-preisschritt-export\.js --prices-dir "\$store\/prices"/.test(body) || !/write-preisschritt-export\.js --check/.test(body)) errors.push('must build and then check');
   if (body.indexOf('write-preisschritt-export.js --prices-dir') > body.indexOf('write-preisschritt-export.js --check')) errors.push('check must follow the build');
   if (!/git archive FETCH_HEAD prices\/history/.test(body) || !/git fetch --no-tags origin main/.test(body)) errors.push('must read the store of the main tip, not the stale trigger checkout');
   if (/git (checkout|reset|pull|rebase|merge)/.test(run.join('\n'))) errors.push('must not touch the working tree');
@@ -281,6 +339,7 @@ test('workflow: the step runs after bewertung, before the public-tree guard and 
     'cleanup widens to the filter folder': y => y.replace('rm -rf outputs/findash-export/v1/filter/preisschritt.json*;', 'rm -rf outputs/findash-export/v1/filter;'),
     'stale trigger checkout read instead of main tip': y => y.replace('git archive FETCH_HEAD prices/history', 'git archive HEAD prices/history'),
     'working tree touched': y => y.replace('git fetch --no-tags origin main &&', 'git fetch --no-tags origin main && git checkout FETCH_HEAD -- prices/history &&'),
+    'build reads the old trigger checkout': y => y.replace('--prices-dir "$store/prices"', '--prices-dir prices'),
     'check dropped': y => y.replace(/ &&\r?\n\s*node scripts\/write-preisschritt-export\.js --check/, ''),
   };
   for (const [name, mutate] of Object.entries(sabotage)) {
