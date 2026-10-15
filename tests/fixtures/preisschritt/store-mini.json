@@ -1,0 +1,24 @@
+{
+  "note": "Hand fixture for the price-step writer. Closes are the adjusted closes of the store (field close). The test stamps the store 2026-10-15T08:37:04.076Z, so the cutoff day is 2026-10-15 and only bars dated before it are finished. The universe is deliberately NOT sorted and lists NOSTORE, which has no series; OUTSIDE is stored but not in the universe. INTRA ends with an intraday bar of the stamp day, VANISH lost its previous-day bar at a later pull, EQSTAMP has nothing finished but its stamp-day bar.",
+  "universe": ["SPLT", "ZERO", "HAND", "NOSTORE", "BADD", "INTRA", "SAME", "GAPPY", "VANISH", "EMPTY", "EQSTAMP", "BACK", "SOLO", "NEGC"],
+  "history": {
+    "HAND": [
+      { "date": "2026-10-12", "close": 90 },
+      { "date": "2026-10-13", "close": 100 },
+      { "date": "2026-10-14", "close": 102 }
+    ],
+    "SOLO": [{ "date": "2026-10-14", "close": 5 }],
+    "EMPTY": [],
+    "ZERO": [{ "date": "2026-10-13", "close": 5 }, { "date": "2026-10-14", "close": 0 }],
+    "NEGC": [{ "date": "2026-10-13", "close": -5 }, { "date": "2026-10-14", "close": 5 }],
+    "SAME": [{ "date": "2026-10-14", "close": 5 }, { "date": "2026-10-14", "close": 6 }],
+    "BACK": [{ "date": "2026-10-14", "close": 5 }, { "date": "2026-10-13", "close": 6 }],
+    "BADD": [{ "date": "2026-02-30", "close": 5 }, { "date": "2026-10-14", "close": 6 }],
+    "GAPPY": [{ "date": "2026-10-09", "close": 20 }, { "date": "2026-10-14", "close": 21 }],
+    "SPLT": [{ "date": "2026-10-12", "close": 50 }, { "date": "2026-10-13", "close": 50.5 }, { "date": "2026-10-14", "close": 51 }],
+    "INTRA": [{ "date": "2026-10-13", "close": 100 }, { "date": "2026-10-14", "close": 101 }, { "date": "2026-10-15", "close": 999 }],
+    "VANISH": [{ "date": "2026-10-12", "close": 50 }, { "date": "2026-10-13", "close": 51 }, { "date": "2026-10-15", "close": 70 }],
+    "EQSTAMP": [{ "date": "2026-10-14", "close": 20 }, { "date": "2026-10-15", "close": 21 }],
+    "OUTSIDE": [{ "date": "2026-10-13", "close": 1 }, { "date": "2026-10-14", "close": 2 }]
+  }
+}
