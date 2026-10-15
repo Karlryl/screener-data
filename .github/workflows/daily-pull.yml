@@ -2223,6 +2223,26 @@ jobs:
             node -e "const fs=require('node:fs'); const {isMetadataSnapshot}=require('./lib/snapshot-fs.js'); const n=fs.readdirSync(process.env.FINDASH_SNAPSHOTS_DIR||'snapshots').filter(f=>f.endsWith('.json')&&!isMetadataSnapshot(f)).length; const f=JSON.parse(fs.readFileSync('outputs/findash-export/v1/filter/bewertung.json','utf8')); if(n<1||f.snapshotCount!==n||f.rows.length>n) throw new Error('Bewertung snapshot count mismatch'); console.log('[bewertung] snapshot count OK: '+n);"
           } || { rm -rf outputs/findash-export/v1/filter/bewertung.json*; echo "::warning::bewertung.json could not be built or checked; the daily boards are deployed anyway."; false; } || true
 
+      # A5/P240 (private research tab): the last two adjusted closes per filter-universe ticker, so that findash can
+      # book a daily total return (dividends included) instead of a market-cap step. Display only: no rank,
+      # percentile, score or judgement. FAIL-SOFT like the bewertung step: on any failure only this file (and a
+      # leftover .tmp of it) is removed; universum.json, bewertung.json, the boards and the deploy never depend on it.
+      # The checkout of this job is the trigger commit, i.e. the price store of the PREVIOUS pull (the merge job
+      # pushes today's store after the trigger). The step therefore reads prices/history from the tip of main via
+      # git archive into a temp folder; the working tree stays untouched (the board-history step rebases onto main
+      # later and must not meet modified tracked files). When the fetch fails the file is simply not written.
+      - name: Build and check preisschritt (additive, fail-soft)
+        run: |
+          set -o pipefail
+          {
+            store="$RUNNER_TEMP/preisschritt-store" &&
+            rm -rf "$store" && mkdir -p "$store" &&
+            git fetch --no-tags origin main &&
+            git archive FETCH_HEAD prices/history | tar -x -C "$store" &&
+            node scripts/write-preisschritt-export.js --prices-dir "$store/prices" &&
+            node scripts/write-preisschritt-export.js --check
+          } || { rm -rf outputs/findash-export/v1/filter/preisschritt.json*; echo "::warning::preisschritt.json could not be built or checked; the daily boards are deployed anyway."; false; } || true
+
       # ------------------------------------------------------------------
       # Druckenmiller Chunk 1: Auslieferung schreiben und pruefen.
       #

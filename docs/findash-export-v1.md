@@ -1509,3 +1509,75 @@ runs a hand fixture (net income 100, market cap 1000 gives `ep` 10). Measured on
 when build, check or the snapshot count fails; `universum.json`, the boards and the deploy never depend on it.
 
 Tests: `tests/bewertung-export.test.js` with `tests/fixtures/bewertung/snapshot-full.json` and the W6 fixtures.
+
+### 17.2 `filter/preisschritt.json` — last two adjusted closes per ticker (A5 package P240, 15.10.2026)
+
+An additive file next to `universum.json` and `bewertung.json`, no v2 bump. Both existing files and their contracts stay unchanged.
+
+**File:** `outputs/findash-export/v1/filter/preisschritt.json`, written by `node scripts/write-preisschritt-export.js` in the
+scoring job right after the bewertung step and deployed by the existing Pages copy. It exists so that the consumer can book a
+daily return from adjusted closes (dividends included) instead of a step in the vendor market cap. It reads only the committed
+sharded price store (`prices/history/`, 32 shards plus `_meta.json`) and the filter universe; there is no new fetch and no new
+source. Nothing is ranked, scored or judged in this file; the validator rejects every key outside the table below.
+
+Envelope `{schema:"findash-export/v1", generated_at, priceStoreUpdatedAt, universeCount, skipped, rows}`:
+- `generated_at` is copied character for character from `index.json` of the same export (no reformatting, no own timestamp), so
+  the consumer can bind the file to the same generation; `--check` enforces the equality. The build also refuses a
+  `universum.json` of another generation than the index.
+- `priceStoreUpdatedAt` is `updatedAt` of `prices/history/_meta.json`: the moment the store was last written.
+- `universeCount` is the number of tickers in `filter/universum.json`; `rows.length` plus the sum of `skipped` equals it.
+- `skipped` always carries all five reasons as integers (zero allowed): `not-in-store`, `fewer-than-two-bars`, `invalid-date`,
+  `invalid-close`, `dates-not-increasing`.
+
+| Key | Type | Meaning and source |
+|---|---|---|
+| `t` | string | Universe ticker, unique, rows sorted by ticker |
+| `d0` | `YYYY-MM-DD` | Date of the second-to-last stored bar |
+| `c0` | number > 0 | Its stored close (the adjusted close), exactly as stored, not rounded |
+| `d1` | `YYYY-MM-DD`, later than `d0` | Date of the last stored bar |
+| `c1` | number > 0 | Its stored close, exactly as stored |
+
+`c1 / c0` is the total return of the step from `d0` to `d1`. A row is exactly the last two bars of the stored series; if they
+are unusable (fewer than two bars, a date that is not a real day, a close that is not a positive finite number, equal or
+reversed dates) the ticker has no row and is counted under its reason in `skipped`. An older bar never takes the place of a bad
+newer one, nothing is filled.
+
+**Price basis.** The store field `close` is the split- and dividend-adjusted close (`adjclose`, one basis per series; see the
+header of `pull-historical-prices.js`). Every pull rebuilds the whole fetched window of a ticker authoritatively, so the last two
+bars of a series come from one fetch and share one basis: `c1 / c0` is a clean total return. The absolute `c0`/`c1` are
+re-based by the next dividend or split and must not be compared with the values of another day's file; only the ratio inside
+one row is meaningful.
+
+**Decision 1, bars that are not consecutive trading days.** They are kept as stored. The row states both dates, and the
+consumer judges the gap (weekend, holiday, a ticker that missed a pull, a stale ticker). Measured on 15.10.2026: gaps of 1 day
+13,107 rows, 2 days 2,649, 3 to 6 days 203, longer 11 rows. Replacing the pair by an older "consecutive" one would hide
+exactly the staleness the dates show. `d1` is the freshness field: on 15.10.2026 `d1` was the 15.10. for 10,033 rows and older
+than a week for 73 rows.
+
+**Decision 2, a split inside the pair.** Nothing is added to the row: the stored series is split-adjusted as a whole, so `c1 / c0`
+shows no jump. Checked on a real split in the store: NFLX (10 for 1, effective 17.11.2025) stores 111.217 on 14.11.2025 and
+110.290 on 17.11.2025, a step of 0.9917, and its largest single-day move in the whole stored series is 1.1377 (26.02.2026).
+Outliers that come from the vendor and not from corporate actions are possible (on 15.10.2026 four rows had a step beyond
+plus 50 % or minus 33 %: AVB, AVBC.VI, BBZA.DE, CHFLF); the file does not judge them.
+
+**Which store.** The scoring job checks out the trigger commit, whose price store is the one of the previous pull (the merge job
+pushes today's store after the trigger). The workflow step therefore reads `prices/history` from the tip of `main` with
+`git fetch` and `git archive` into a temp folder and passes it with `--prices-dir`; the working tree stays untouched because the
+board-history step rebases onto `main` later. When the fetch fails the step fails and the file is not written.
+
+**Validation:** `node scripts/write-preisschritt-export.js --check` is read-only and exits 1 for a wrong schema or generation
+(`generated_at` unequal to `index.json`), an unparsable `priceStoreUpdatedAt`, a key outside the table (or in another order),
+a missing or null value, a close that is not a positive finite number, a date that is not a real day, equal or reversed dates,
+a duplicate ticker, a count that does not add up (`rows` plus `skipped` against `universeCount`, and `universeCount` against
+`universum.json`), a row ticker outside `universum.json`, or a file above **4,000,000 UTF-8 bytes**. `--selftest` runs a hand
+fixture (100 then 102 gives 1.02). The build refuses to run when the `filter/` folder does not exist (the filter step removes its
+folder when it fails; this file must not bring it back), when `_meta.json` is missing or a shard file is missing (partial store).
+
+**Measured on 15.10.2026** (price store stamped 15.10.2026 08:37 UTC, universe of the 15.10.2026 08:43 export): 15,970 rows of
+16,068 universe tickers (99.39 %), 98 skipped with `fewer-than-two-bars`, none for the other reasons, 1,472,227 bytes.
+
+**Fail-soft:** the workflow step "Build and check preisschritt" removes only `preisschritt.json` (and a leftover temp file) when
+fetch, build or check fails; `universum.json`, `bewertung.json`, the boards and the deploy never depend on it.
+
+Tests: `tests/preisschritt-export.test.js` with `tests/fixtures/preisschritt/store-mini.json` (hand fixture, tamper variants, size
+cap, idempotence, workflow step order and fail-soft shape).

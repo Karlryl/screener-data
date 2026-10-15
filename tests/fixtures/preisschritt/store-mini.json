@@ -1,0 +1,21 @@
+{
+  "note": "Hand fixture for the price-step writer. Closes are the adjusted closes of the store (field close). The universe lists NOSTORE, which has no series; OUTSIDE is stored but not in the universe.",
+  "universe": ["BADD", "BACK", "EMPTY", "GAPPY", "HAND", "NEGC", "NOSTORE", "SAME", "SOLO", "SPLT", "ZERO"],
+  "history": {
+    "HAND": [
+      { "date": "2026-10-12", "close": 90 },
+      { "date": "2026-10-13", "close": 100 },
+      { "date": "2026-10-14", "close": 102 }
+    ],
+    "SOLO": [{ "date": "2026-10-14", "close": 5 }],
+    "EMPTY": [],
+    "ZERO": [{ "date": "2026-10-13", "close": 5 }, { "date": "2026-10-14", "close": 0 }],
+    "NEGC": [{ "date": "2026-10-13", "close": -5 }, { "date": "2026-10-14", "close": 5 }],
+    "SAME": [{ "date": "2026-10-14", "close": 5 }, { "date": "2026-10-14", "close": 6 }],
+    "BACK": [{ "date": "2026-10-14", "close": 5 }, { "date": "2026-10-13", "close": 6 }],
+    "BADD": [{ "date": "2026-02-30", "close": 5 }, { "date": "2026-10-14", "close": 6 }],
+    "GAPPY": [{ "date": "2026-10-09", "close": 20 }, { "date": "2026-10-14", "close": 21 }],
+    "SPLT": [{ "date": "2026-10-12", "close": 50 }, { "date": "2026-10-13", "close": 50.5 }, { "date": "2026-10-14", "close": 51 }],
+    "OUTSIDE": [{ "date": "2026-10-13", "close": 1 }, { "date": "2026-10-14", "close": 2 }]
+  }
+}
