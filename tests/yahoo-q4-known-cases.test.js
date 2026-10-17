@@ -10,6 +10,11 @@ const { spawnSync } = require('child_process');
 const { Module, createRequire } = require('module');
 const { applyKnownCases, validateTable } = require('../lib/yahoo-q4-known-cases.js');
 const { mapFTSToQuarterly, _convertSnapshotToUSD } = require('../pull-yahoo.js');
+// P251: convert with the pinned rates of tests/fixtures/fx/, not with whatever the live fx-rates.json says
+// (a stale or missing file drops NZD and falls back to the hard-coded table; the daily pull that refreshes
+// the file runs after this blocking test).
+const { pinFx, PINNED_RATES } = require('./fixtures/fx/pin-fx.js');
+pinFx();
 const { readScoringSnapshot, loadUniverse, loadSmallcapUniverse } = require('../src/scoring/run-screener.js');
 const { norm } = require('../src/scoring/snapshot.js');
 const evidence = require('./fixtures/yahoo-q4-known-cases.json');
@@ -122,6 +127,7 @@ for (const c of evidence.cells) test(`${c.verdict}: ${c.ticker} ${c.field}`, () 
   else assert.equal(out.timeseries[c.field][i].yahooQ4Correction.originalVendorNativeValue, c.vendorNative);
   const converted = clone(original);
   _convertSnapshotToUSD(converted); // The actual production pre-FX hook, not a helper simulation.
+  assert.equal(converted.meta.fxRateApplied, PINNED_RATES[c.currency], 'Converted with exactly the pinned rate');
   const expectedUSD = c.expectedNative === null ? null : c.expectedNative * converted.meta.fxRateApplied;
   assert.equal(norm(converted, c.field)[i], expectedUSD, 'Applied before existing FX exactly once');
   if (c.verdict === 'WRONG') {
