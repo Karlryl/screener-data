@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 494,
+    "count": 493,
     "partial": false
   },
   "stocks": [
@@ -2277,14 +2277,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "BMBL",
-      "yahoo_symbol": "BMBL",
-      "name": "Bumble Inc. - common stock",
-      "marketCapUsd": 435320480,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "CLFD",
       "yahoo_symbol": "CLFD",
       "name": "Clearfield, Inc. - Common Stock",
@@ -3965,17 +3957,12 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-10-03T11:03:59.414Z",
+  "lastReconcile": "2026-10-17T10:27:41.693Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "DNA",
+      "ticker": "BMBL",
       "grund": "band-austritt-oben",
-      "mcap": 831652480
-    },
-    {
-      "ticker": "PAYS",
-      "grund": "band-austritt-oben",
-      "mcap": 803456448
+      "mcap": 910107584
     }
   ]
 }
