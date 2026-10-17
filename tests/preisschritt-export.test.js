@@ -184,6 +184,9 @@ function fixtureTree({ generated = generatedAt, universeGenerated = generated, u
   write(path.join(v1Dir, 'index.json'), { schema: 'findash-export/v1', generated_at: generated, generatedFromSnapshots: universe.length, branches: ['x'] });
   write(path.join(v1Dir, 'filter', 'universum.json'), { schema: 'findash-export/v1', generated_at: universeGenerated, snapshotCount: universe.length, rows: universe.map(t => ({ t, n: 'Name ' + t })) });
   store.saveAll(pricesDir, structuredClone(mini.history));
+  // saveAll stamps _meta.json with the wall clock; the fixtures assume the stamp day of `stamp`, so pin it (red from 16.10. on otherwise).
+  const metaFile = store.metaPath(pricesDir);
+  write(metaFile, { ...JSON.parse(fs.readFileSync(metaFile, 'utf8')), updatedAt: stamp });
   return { dir, v1Dir, pricesDir, target: path.join(v1Dir, 'filter', 'preisschritt.json') };
 }
 
