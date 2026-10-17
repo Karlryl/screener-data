@@ -84,6 +84,18 @@ jobs:
       - name: Test-Gate (beide Spuren)
         run: node scripts/test-gate.js --mode=all
 
+      # P250: das Tor oben laeuft nur mit der echten Uhr. Zweimal ist ein Test erst Tage nach dem
+      # Merge rot geworden (19.09. absolutes Fixture-Datum gegen ein 30-Tage-Alterstor; 16./17.10.
+      # ein mit new Date() gestempelter Preis-Store, behoben in #7) und hat das blockierende
+      # Pre-Pull-Gate des Tageslaufs angehalten. Jede im PR neue oder geaenderte Testdatei laeuft
+      # hier darum nochmal bei +3 und +40 Tagen (Verschiebung: tests/helpers/clock-shift-preload.cjs,
+      # Ausnahmen mit Begruendung: config/clock-shift-exempt.json). Auf einem Push ohne PR gibt es
+      # keine Basis; der Schritt sagt das und tut nichts.
+      - name: Uhr-Verschiebung der neuen und geaenderten Tests (P250)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node scripts/clock-shift-gate.js
+
 
       # ── A2 (Ratsbrief 06.09., Master ~75 %): Live-Universum-Gate im PR-Check ─────────────────
       # Sieben tests/scoring-Suiten skippen im Test-Gate oben BEWUSST (kein Universum; test-gate.js
