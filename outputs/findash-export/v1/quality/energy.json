@@ -1,22 +1,22 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-15T08:43:28.500Z",
+  "generated_at": "2026-10-17T14:49:13.497Z",
   "branch": "energy",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 69.1,
-    "generated_at": "2026-10-15T08:36:55.515Z"
+    "coverage_pct": 68.1,
+    "generated_at": "2026-10-17T14:42:37.342Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "GTT.PA",
-      "score": 86.4,
+      "ticker": "GTT.VI",
+      "score": 86.3,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -30,7 +30,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 8819129690.052607,
+      "marketCap": 8878658892.133888,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -39,10 +39,10 @@
       "ipoYear": 2014,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 86.6,
-      "scoreShrunk": 86.4,
+      "scoreBase": 86.5,
+      "scoreShrunk": 86.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -61,17 +61,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 80.9,
+          "pct": 80.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 62.9,
+          "pct": 62.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 57.3,
+          "pct": 57.5,
           "weight": 0.8
         },
         {
@@ -85,16 +85,11 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": {
-        "distancePct": -6.4,
-        "athDate": "2026-09-17",
-        "monthsAgo": 1,
-        "lastDate": "2026-10-15"
-      },
+      "ath": null,
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1219567,
+      "tradingFxRateApplied": 1.124227,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -120,7 +115,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ARX.TO",
-      "score": 83.7,
+      "score": 83.6,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -134,7 +129,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 13507428652.1856,
+      "marketCap": 13573450936.641024,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -143,10 +138,10 @@
       "ipoYear": null,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 83.9,
-      "scoreShrunk": 83.7,
+      "scoreBase": 83.8,
+      "scoreShrunk": 83.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -155,7 +150,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 91.6,
+          "pct": 91.5,
           "weight": 2.6
         },
         {
@@ -165,17 +160,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 70.4,
+          "pct": 70,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 84.2,
+          "pct": 84.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 84.3,
+          "pct": 84.6,
           "weight": 0.8
         },
         {
@@ -184,7 +179,7 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 56.95782348346785,
+      "revGrowthYoYPct": 56.95782348346783,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
@@ -198,7 +193,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -206,7 +201,7 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
       "g31Shadow": {
         "v1": {
-          "pct": 56.95782348346785,
+          "pct": 56.95782348346783,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
@@ -241,7 +236,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 6475205120,
+      "marketCap": 6389819392,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -250,7 +245,7 @@
       "ipoYear": 2024,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 82.5,
       "scoreShrunk": 82.3,
@@ -262,7 +257,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 57,
+          "pct": 56.8,
           "weight": 2.6
         },
         {
@@ -282,7 +277,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 71.4,
+          "pct": 71.6,
           "weight": 0.8
         },
         {
@@ -303,10 +298,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -7.9,
+        "distancePct": -9.1,
         "athDate": "2026-08-21",
         "monthsAgo": 2,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -353,7 +348,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 33176233984,
+      "marketCap": 31801182208,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -362,7 +357,7 @@
       "ipoYear": 2025,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 80.8,
       "scoreShrunk": 80.6,
@@ -374,7 +369,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 78.6,
+          "pct": 78.5,
           "weight": 2.6
         },
         {
@@ -389,12 +384,12 @@
         },
         {
           "key": "dilution",
-          "pct": 68.1,
+          "pct": 67.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 77,
+          "pct": 77.2,
           "weight": 0.8
         },
         {
@@ -415,10 +410,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -44.2,
+        "distancePct": -46.5,
         "athDate": "2025-01-24",
         "monthsAgo": 21,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -463,7 +458,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 6319366656,
+      "marketCap": 6321428480,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -472,7 +467,7 @@
       "ipoYear": 2017,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 80.5,
       "scoreShrunk": 80.3,
@@ -494,17 +489,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 62,
+          "pct": 61.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 79,
+          "pct": 78.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 18,
+          "pct": 18.1,
           "weight": 0.8
         },
         {
@@ -568,7 +563,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 2050116710.252544,
+      "marketCap": 2059699521.564672,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -577,9 +572,9 @@
       "ipoYear": 2002,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 79.9,
+      "scoreBase": 79.8,
       "scoreShrunk": 79.7,
       "factors": {
         "burn": 1,
@@ -594,22 +589,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 76.1,
+          "pct": 76,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 59,
+          "pct": 58.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 88.1,
+          "pct": 88,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 57,
+          "pct": 57.2,
           "weight": 0.8
         },
         {
@@ -667,7 +662,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 5738835358.672793,
+      "marketCap": 5848264788.712857,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -676,9 +671,9 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 79.1,
+      "scoreBase": 79,
       "scoreShrunk": 78.9,
       "factors": {
         "burn": 1,
@@ -688,12 +683,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 82.7,
+          "pct": 82.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 76.4,
+          "pct": 76.3,
           "weight": 2.2
         },
         {
@@ -703,7 +698,7 @@
         },
         {
           "key": "dilution",
-          "pct": 54.5,
+          "pct": 54.2,
           "weight": 1.2
         },
         {
@@ -726,7 +721,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.013252054,
+      "tradingFxRateApplied": 0.013329956999999998,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -767,7 +762,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 57765539840,
+      "marketCap": 59777179648,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -776,7 +771,7 @@
       "ipoYear": 1994,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 78.6,
       "scoreShrunk": 78.4,
@@ -793,7 +788,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 80.3,
+          "pct": 80.2,
           "weight": 2.2
         },
         {
@@ -803,12 +798,12 @@
         },
         {
           "key": "dilution",
-          "pct": 40.3,
+          "pct": 40.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 54.1,
+          "pct": 54.3,
           "weight": 0.8
         },
         {
@@ -829,10 +824,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -5.6,
+        "distancePct": -2.3,
         "athDate": "2026-03-27",
         "monthsAgo": 7,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -863,7 +858,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ITH.L",
-      "score": 76.1,
+      "score": 76,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -877,7 +872,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 6448407239.453491,
+      "marketCap": 6561123418.697472,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -886,10 +881,10 @@
       "ipoYear": 2022,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 76.3,
-      "scoreShrunk": 76.1,
+      "scoreBase": 76.2,
+      "scoreShrunk": 76,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -898,27 +893,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 83.6,
+          "pct": 83.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 72.3,
+          "pct": 72.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 84.2,
+          "pct": 83.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 85.5,
+          "pct": 85.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 35,
+          "pct": 35.1,
           "weight": 0.8
         },
         {
@@ -936,7 +931,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.013252054,
+      "tradingFxRateApplied": 0.013329956999999998,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -962,7 +957,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LPG",
-      "score": 75.6,
+      "score": 75.5,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -976,7 +971,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 2361604096,
+      "marketCap": 2293151488,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -985,10 +980,10 @@
       "ipoYear": 2014,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 75.7,
-      "scoreShrunk": 75.6,
+      "scoreBase": 75.6,
+      "scoreShrunk": 75.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1007,12 +1002,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 90.5,
+          "pct": 90.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 8.7,
+          "pct": 8.8,
           "weight": 1.2
         },
         {
@@ -1038,10 +1033,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -5.3,
+        "distancePct": -8.1,
         "athDate": "2026-09-17",
         "monthsAgo": 1,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -1083,13 +1078,13 @@
       "overview": {
         "kind": "gp",
         "value": 1.304,
-        "companion": 348.3
+        "companion": 351.4
       },
       "name": "DNO ASA",
       "country": "Norway",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 2197851025.11548,
+      "marketCap": 2278642442.542479,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1098,9 +1093,9 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 79.6,
+      "scoreBase": 79.5,
       "scoreShrunk": 75.3,
       "factors": {
         "burn": 1,
@@ -1115,7 +1110,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 71.1,
+          "pct": 71,
           "weight": 2.2
         },
         {
@@ -1148,7 +1143,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.105042234,
+      "tradingFxRateApplied": 0.106230415,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -1174,7 +1169,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "FTK",
-      "score": 75,
+      "score": 74.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -1189,7 +1184,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 899353216,
+      "marketCap": 871463488,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1198,10 +1193,10 @@
       "ipoYear": 2005,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 75.2,
-      "scoreShrunk": 75,
+      "scoreBase": 75,
+      "scoreShrunk": 74.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1210,22 +1205,22 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 83.3,
+          "pct": 83.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 42.6,
+          "pct": 42.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 89.6,
+          "pct": 89.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 89.4,
+          "pct": 89.3,
           "weight": 1.2
         },
         {
@@ -1251,10 +1246,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -92.3,
+        "distancePct": -92.5,
         "athDate": "2007-10-29",
-        "monthsAgo": 227,
-        "lastDate": "2026-10-14"
+        "monthsAgo": 228,
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -1284,8 +1279,107 @@
       "rank": 13,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "NHC.AX",
+      "score": 74.7,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.134,
+        "companion": 13.3
+      },
+      "name": "New Hope Corporation Limited",
+      "country": "Australia",
+      "region": "Oceania",
+      "sector": "Energy",
+      "marketCap": 3426020817.2767644,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2003,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 78.9,
+      "scoreShrunk": 74.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 92.7,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 91.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 65.8,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 22.8,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": -0.16284877397891862,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 0,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.69492704,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2026-07-31",
+      "revGrowthPriorPeriodEnd": "2025-07-31",
+      "revGrowthSourcePeriodEnd": "2026-07-31",
+      "revGrowthSourcePriorPeriodEnd": "2025-07-31",
+      "g31Shadow": {
+        "v1": {
+          "pct": -0.16284877397891862,
+          "basis": "year",
+          "periodEnd": "2026-07-31"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.13380371269236835,
+        "period": {
+          "basis": "year",
+          "periodEnd": "2026-07-31"
+        }
+      }
+    },
+    {
+      "rank": 14,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "CQP",
-      "score": 74.8,
+      "score": 74.7,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -1299,7 +1393,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 30137432064,
+      "marketCap": 30771548160,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1308,10 +1402,10 @@
       "ipoYear": 2007,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 79,
-      "scoreShrunk": 74.8,
+      "scoreBase": 78.9,
+      "scoreShrunk": 74.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1325,12 +1419,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 76.7,
+          "pct": 76.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 79.4,
+          "pct": 79.1,
           "weight": 1.5
         },
         {
@@ -1340,7 +1434,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 30.1,
+          "pct": 29.9,
           "weight": 0.8
         },
         {
@@ -1361,10 +1455,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -12.6,
+        "distancePct": -10.7,
         "athDate": "2026-09-02",
         "monthsAgo": 1,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -1391,105 +1485,6 @@
       }
     },
     {
-      "rank": 14,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "NHC.AX",
-      "score": 74.8,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.134,
-        "companion": 13.3
-      },
-      "name": "New Hope Corporation Limited",
-      "country": "Australia",
-      "region": "Oceania",
-      "sector": "Energy",
-      "marketCap": 3345794274.7580414,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2003,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 79,
-      "scoreShrunk": 74.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 92.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 91.8,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 66.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 22.7,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": -0.16284877397891862,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 0,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.6944444,
-      "revGrowthBasis": "year",
-      "revGrowthPeriodEnd": "2026-07-31",
-      "revGrowthPriorPeriodEnd": "2025-07-31",
-      "revGrowthSourcePeriodEnd": "2026-07-31",
-      "revGrowthSourcePriorPeriodEnd": "2025-07-31",
-      "g31Shadow": {
-        "v1": {
-          "pct": -0.16284877397891862,
-          "basis": "year",
-          "periodEnd": "2026-07-31"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.13380371269236835,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2026-07-31"
-        }
-      }
-    },
-    {
       "rank": 15,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -1509,7 +1504,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 24456353792,
+      "marketCap": 24204595200,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1518,7 +1513,7 @@
       "ipoYear": 1980,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 72.9,
       "scoreShrunk": 72.7,
@@ -1540,17 +1535,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 46.7,
+          "pct": 46.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 13.9,
+          "pct": 14,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 62.9,
+          "pct": 63.1,
           "weight": 0.8
         },
         {
@@ -1600,7 +1595,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "RRC",
-      "score": 71.4,
+      "score": 71.3,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -1614,19 +1609,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 9777150976,
+      "marketCap": 10099629056,
       "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 1980,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 71.5,
-      "scoreShrunk": 71.4,
+      "scoreBase": 71.4,
+      "scoreShrunk": 71.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1635,27 +1630,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 92.5,
+          "pct": 92.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 67.2,
+          "pct": 67.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 91.1,
+          "pct": 90.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 33.9,
+          "pct": 34.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 34.8,
+          "pct": 34.9,
           "weight": 0.8
         },
         {
@@ -1676,10 +1671,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -52,
+        "distancePct": -50.4,
         "athDate": "2014-06-05",
         "monthsAgo": 148,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -1710,7 +1705,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SOFF.OL",
-      "score": 70.7,
+      "score": 70.6,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -1724,7 +1719,7 @@
       "country": "Norway",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 814539203.5306691,
+      "marketCap": 851442004.4611046,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1733,10 +1728,10 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 74.1,
-      "scoreShrunk": 70.7,
+      "scoreBase": 74,
+      "scoreShrunk": 70.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1745,17 +1740,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 77.7,
+          "pct": 77.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 72.6,
+          "pct": 72.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 87.2,
+          "pct": 86.9,
           "weight": 1.5
         },
         {
@@ -1765,7 +1760,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 42.4,
+          "pct": 42.5,
           "weight": 0.8
         },
         {
@@ -1783,7 +1778,7 @@
       "qPunkte": 4,
       "qSpanTage": 274,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.105042234,
+      "tradingFxRateApplied": 0.106230415,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -1823,7 +1818,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 3603291648,
+      "marketCap": 3698954240,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1832,7 +1827,7 @@
       "ipoYear": 2026,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 70.6,
       "scoreShrunk": 70.5,
@@ -1844,17 +1839,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 68.5,
+          "pct": 68.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 69,
+          "pct": 68.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 59.9,
+          "pct": 59.8,
           "weight": 1.5
         },
         {
@@ -1864,7 +1859,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 68.5,
+          "pct": 68.7,
           "weight": 0.8
         },
         {
@@ -1885,10 +1880,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -18,
+        "distancePct": -15.8,
         "athDate": "2026-05-19",
         "monthsAgo": 5,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -1934,7 +1929,7 @@
       "country": "Nigeria",
       "region": "Africa",
       "sector": "Energy",
-      "marketCap": 6559160994.514125,
+      "marketCap": 6621710440.662835,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1943,7 +1938,7 @@
       "ipoYear": 2014,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 69.8,
       "scoreShrunk": 69.7,
@@ -1955,12 +1950,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 72.9,
+          "pct": 72.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 58.6,
+          "pct": 58.5,
           "weight": 2.2
         },
         {
@@ -1970,7 +1965,7 @@
         },
         {
           "key": "dilution",
-          "pct": 37.7,
+          "pct": 38,
           "weight": 1.2
         },
         {
@@ -1993,7 +1988,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.013252054,
+      "tradingFxRateApplied": 0.013329956999999998,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2033,7 +2028,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Energy",
-      "marketCap": 1629257829222.187,
+      "marketCap": 1629692024005.853,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mega",
@@ -2042,9 +2037,9 @@
       "ipoYear": 2019,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 72.7,
+      "scoreBase": 72.8,
       "scoreShrunk": 69.5,
       "factors": {
         "burn": 1,
@@ -2074,7 +2069,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 61.1,
+          "pct": 61.3,
           "weight": 0.8
         },
         {
@@ -2089,7 +2084,7 @@
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": {
-        "distancePct": -19,
+        "distancePct": -18.8,
         "athDate": "2022-05-16",
         "monthsAgo": 53,
         "lastDate": "2026-10-15"
@@ -2097,7 +2092,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.266418,
+      "tradingFxRateApplied": 0.266489,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2137,7 +2132,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 27263713618.231297,
+      "marketCap": 27075508798.29197,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -2146,9 +2141,9 @@
       "ipoYear": 2010,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 72.7,
+      "scoreBase": 72.6,
       "scoreShrunk": 69.4,
       "factors": {
         "burn": 1,
@@ -2158,7 +2153,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 73.2,
+          "pct": 73.1,
           "weight": 2.6
         },
         {
@@ -2168,7 +2163,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 54.5,
+          "pct": 54.4,
           "weight": 1.5
         },
         {
@@ -2178,7 +2173,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 33.3,
+          "pct": 33.4,
           "weight": 0.8
         },
         {
@@ -2237,7 +2232,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1070312576,
+      "marketCap": 1077613312,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2246,9 +2241,9 @@
       "ipoYear": 1996,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 69.1,
+      "scoreBase": 69,
       "scoreShrunk": 68.9,
       "factors": {
         "burn": 1,
@@ -2258,7 +2253,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 56.1,
+          "pct": 55.9,
           "weight": 2.6
         },
         {
@@ -2268,17 +2263,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 44.3,
+          "pct": 44.1,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 95.2,
+          "pct": 95.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 41.2,
+          "pct": 41.3,
           "weight": 0.8
         },
         {
@@ -2293,10 +2288,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -84.1,
+        "distancePct": -84,
         "athDate": "2006-08-29",
-        "monthsAgo": 241,
-        "lastDate": "2026-10-14"
+        "monthsAgo": 242,
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -2327,7 +2322,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "PEY.TO",
-      "score": 68.7,
+      "score": 68.6,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -2341,7 +2336,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 3621006582.234624,
+      "marketCap": 3725999764.319539,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2350,10 +2345,10 @@
       "ipoYear": 1997,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 68.8,
-      "scoreShrunk": 68.7,
+      "scoreBase": 68.7,
+      "scoreShrunk": 68.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2362,27 +2357,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 70.3,
+          "pct": 70.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 88.9,
+          "pct": 88.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 85.1,
+          "pct": 84.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 19.7,
+          "pct": 19.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 52.1,
+          "pct": 52.2,
           "weight": 0.8
         },
         {
@@ -2397,15 +2392,15 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -12.6,
+        "distancePct": -10.5,
         "athDate": "2026-03-13",
         "monthsAgo": 7,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2430,8 +2425,8 @@
       "rank": 24,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "SBMO.VI",
-      "score": 68.6,
+      "ticker": "SBMO.AS",
+      "score": 68.5,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2447,7 +2442,7 @@
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 6525804527.12709,
+      "marketCap": 6553853869.841409,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2456,10 +2451,10 @@
       "ipoYear": 1998,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 68.7,
-      "scoreShrunk": 68.6,
+      "scoreBase": 68.6,
+      "scoreShrunk": 68.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2468,12 +2463,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 68.8,
+          "pct": 68.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 61.9,
+          "pct": 61.8,
           "weight": 2.2
         },
         {
@@ -2483,12 +2478,12 @@
         },
         {
           "key": "dilution",
-          "pct": 60.3,
+          "pct": 60.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 53.5,
+          "pct": 53.7,
           "weight": 0.8
         },
         {
@@ -2506,7 +2501,7 @@
       "qPunkte": 4,
       "qSpanTage": 638,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1219567,
+      "tradingFxRateApplied": 1.124227,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -2546,7 +2541,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 2393344687.3543677,
+      "marketCap": 2467271442.8328347,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2555,7 +2550,7 @@
       "ipoYear": 1997,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 68.5,
       "scoreShrunk": 68.4,
@@ -2577,7 +2572,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 40.4,
+          "pct": 40.5,
           "weight": 1.5
         },
         {
@@ -2605,7 +2600,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2646,7 +2641,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Energy",
-      "marketCap": 157880614912,
+      "marketCap": 159523782656,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -2655,7 +2650,7 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 71.3,
       "scoreShrunk": 68.3,
@@ -2672,12 +2667,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 80,
+          "pct": 79.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 32.9,
+          "pct": 33,
           "weight": 1.5
         },
         {
@@ -2687,7 +2682,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 86.4,
+          "pct": 86.3,
           "weight": 0.8
         },
         {
@@ -2751,7 +2746,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 5759493751.199232,
+      "marketCap": 5937269028.939755,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2760,7 +2755,7 @@
       "ipoYear": 2014,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 68.4,
       "scoreShrunk": 68.3,
@@ -2772,7 +2767,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 54.9,
+          "pct": 54.7,
           "weight": 2.6
         },
         {
@@ -2782,7 +2777,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 28.4,
+          "pct": 28.5,
           "weight": 1.5
         },
         {
@@ -2792,7 +2787,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 74,
+          "pct": 74.3,
           "weight": 0.8
         },
         {
@@ -2810,7 +2805,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -2836,7 +2831,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "WMB",
-      "score": 68.3,
+      "score": 68.2,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2851,7 +2846,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 89046597632,
+      "marketCap": 87187374080,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -2860,10 +2855,10 @@
       "ipoYear": 1981,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 68.4,
-      "scoreShrunk": 68.3,
+      "scoreBase": 68.3,
+      "scoreShrunk": 68.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2872,7 +2867,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 63.5,
+          "pct": 63.4,
           "weight": 2.6
         },
         {
@@ -2882,17 +2877,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 80.3,
+          "pct": 80,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 42.3,
+          "pct": 42.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 38.3,
+          "pct": 38.4,
           "weight": 0.8
         },
         {
@@ -2956,7 +2951,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 3145989376,
+      "marketCap": 3197039872,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2965,7 +2960,7 @@
       "ipoYear": 2015,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 68.1,
       "scoreShrunk": 68,
@@ -2987,17 +2982,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 45.2,
+          "pct": 45,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 15.2,
+          "pct": 15.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 45,
+          "pct": 45.1,
           "weight": 0.8
         },
         {
@@ -3018,10 +3013,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -2.5,
+        "distancePct": -0.9,
         "athDate": "2026-09-15",
         "monthsAgo": 1,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -3066,7 +3061,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1472742272,
+      "marketCap": 1493851520,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3075,9 +3070,9 @@
       "ipoYear": 2003,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 70.8,
+      "scoreBase": 70.7,
       "scoreShrunk": 67.8,
       "factors": {
         "burn": 1,
@@ -3092,7 +3087,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 78.2,
+          "pct": 78.1,
           "weight": 2.2
         },
         {
@@ -3107,7 +3102,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 90.5,
+          "pct": 90.4,
           "weight": 0.8
         },
         {
@@ -3155,110 +3150,6 @@
     {
       "rank": 31,
       "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "SU",
-      "score": 67.8,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.031,
-        "companion": 129.2
-      },
-      "name": "Suncor Energy Inc.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 89606750208,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 67.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 65.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 72,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 44,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 88.7,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 78.4,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 49.10189034434074,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": 0,
-        "athDate": "2026-10-14",
-        "monthsAgo": 0,
-        "lastDate": "2026-10-14"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 49.10189034434074,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.8149005983400888,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 32,
-      "rankGrund": null,
       "rankGrundShadow": "nichtOperativRoyaltyTrust",
       "ticker": "PBT",
       "score": 67.8,
@@ -3275,7 +3166,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1612664320,
+      "marketCap": 1544615424,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3284,9 +3175,9 @@
       "ipoYear": 1980,
       "coverageAxes": "2/5",
       "coverageWeight": 0.41,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 91.8,
+      "scoreBase": 91.9,
       "scoreShrunk": 67.8,
       "factors": {
         "burn": 1,
@@ -3316,7 +3207,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 65.8,
+          "pct": 66,
           "weight": 0.8
         },
         {
@@ -3357,7 +3248,7 @@
       }
     },
     {
-      "rank": 33,
+      "rank": 32,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SOIL.TO",
@@ -3375,7 +3266,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 987444803.562624,
+      "marketCap": 1009900553.8319693,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3384,7 +3275,7 @@
       "ipoYear": 2004,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 67.9,
       "scoreShrunk": 67.8,
@@ -3401,22 +3292,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 88,
+          "pct": 87.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 30.2,
+          "pct": 30.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 22.9,
+          "pct": 23.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 79.3,
+          "pct": 79.6,
           "weight": 0.8
         },
         {
@@ -3434,7 +3325,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -3449,6 +3340,110 @@
       },
       "g31OverviewShadow": {
         "value": 0.7383170209566903,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 33,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "SU",
+      "score": 67.8,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.031,
+        "companion": 129.2
+      },
+      "name": "Suncor Energy Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 92157165568,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 67.9,
+      "scoreShrunk": 67.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 65.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 71.9,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 43.8,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 88.6,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 78.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 49.10189034434074,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": 0,
+        "athDate": "2026-10-16",
+        "monthsAgo": 0,
+        "lastDate": "2026-10-16"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 49.10189034434074,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.8149005983400888,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -3474,7 +3469,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 5151397376,
+      "marketCap": 5312655872,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3483,7 +3478,7 @@
       "ipoYear": 1999,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 67.8,
       "scoreShrunk": 67.7,
@@ -3495,12 +3490,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 82.1,
+          "pct": 82,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 79.1,
+          "pct": 79,
           "weight": 2.2
         },
         {
@@ -3510,7 +3505,7 @@
         },
         {
           "key": "dilution",
-          "pct": 24.2,
+          "pct": 24.4,
           "weight": 1.2
         },
         {
@@ -3536,10 +3531,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -61.5,
+        "distancePct": -60.3,
         "athDate": "2008-06-18",
         "monthsAgo": 220,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -3569,109 +3564,8 @@
       "rank": 35,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "SDE.TO",
-      "score": 67.6,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.288,
-        "companion": 41.2
-      },
-      "name": "Spartan Delta Corp.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 1993117451.060736,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 67.7,
-      "scoreShrunk": 67.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 96.3,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 81.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 51.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 4.2,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 63.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 31.473248991740356,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
-      "revGrowthBasis": "year",
-      "revGrowthPeriodEnd": "2025-12-31",
-      "revGrowthPriorPeriodEnd": "2024-12-31",
-      "revGrowthSourcePeriodEnd": "2025-12-31",
-      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
-      "g31Shadow": {
-        "v1": {
-          "pct": 113.19721835883172,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 1.4876320241415573,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 36,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "CHENNPETRO.NS",
-      "score": 67.6,
+      "score": 67.7,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -3686,7 +3580,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 2292633387.04896,
+      "marketCap": 2205757811.933184,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -3695,10 +3589,10 @@
       "ipoYear": 2002,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 70.5,
-      "scoreShrunk": 67.6,
+      "scoreBase": 70.6,
+      "scoreShrunk": 67.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3712,7 +3606,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 13.2,
+          "pct": 13.5,
           "weight": 2.2
         },
         {
@@ -3767,11 +3661,112 @@
       }
     },
     {
+      "rank": 36,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "SDE.TO",
+      "score": 67.6,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.288,
+        "companion": 41.2
+      },
+      "name": "Spartan Delta Corp.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 2030435149.048151,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 67.7,
+      "scoreShrunk": 67.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 96.3,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 81.4,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 51.1,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 4.2,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 63.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 31.473248991740356,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 456,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.70736367,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2025-12-31",
+      "revGrowthPriorPeriodEnd": "2024-12-31",
+      "revGrowthSourcePeriodEnd": "2025-12-31",
+      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
+      "g31Shadow": {
+        "v1": {
+          "pct": 113.19721835883172,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 1.4876320241415573,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
       "rank": 37,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "AAV.TO",
-      "score": 67.1,
+      "score": 67,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3788,19 +3783,19 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1226941798.545408,
+      "marketCap": 1255442170.1857152,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2009,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 67.2,
-      "scoreShrunk": 67.1,
+      "scoreBase": 67.1,
+      "scoreShrunk": 67,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3809,27 +3804,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 66.4,
+          "pct": 66.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 89.5,
+          "pct": 89.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 76.1,
+          "pct": 75.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 24.8,
+          "pct": 25,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 55.3,
+          "pct": 55.4,
           "weight": 0.8
         },
         {
@@ -3847,7 +3842,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -3873,7 +3868,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "GLNG",
-      "score": 66.7,
+      "score": 66.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3889,7 +3884,7 @@
       "country": "Bermuda",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 4699524608,
+      "marketCap": 4620910080,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3898,10 +3893,10 @@
       "ipoYear": 2003,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 69.4,
-      "scoreShrunk": 66.7,
+      "scoreBase": 69.5,
+      "scoreShrunk": 66.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3910,12 +3905,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 43.6,
+          "pct": 43.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 78.8,
+          "pct": 78.7,
           "weight": 2.2
         },
         {
@@ -3930,7 +3925,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 79.6,
+          "pct": 79.9,
           "weight": 0.8
         },
         {
@@ -3951,10 +3946,10 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -20.5,
+        "distancePct": -21.8,
         "athDate": "2014-09-19",
         "monthsAgo": 145,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 456,
@@ -3999,7 +3994,7 @@
       "country": "Cyprus",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 12526990336,
+      "marketCap": 11685476352,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4008,7 +4003,7 @@
       "ipoYear": 2001,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 66.7,
       "scoreShrunk": 66.6,
@@ -4025,17 +4020,17 @@
         },
         {
           "key": "marginLevel",
-          "pct": 57.7,
+          "pct": 57.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 37.1,
+          "pct": 37.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 69.4,
+          "pct": 69.2,
           "weight": 1.2
         },
         {
@@ -4104,16 +4099,16 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1902359936,
+      "marketCap": 2016960000,
       "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 1996,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 66.6,
       "scoreShrunk": 66.5,
@@ -4125,7 +4120,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 76.8,
+          "pct": 76.7,
           "weight": 2.6
         },
         {
@@ -4135,17 +4130,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 45.5,
+          "pct": 45.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 46.8,
+          "pct": 47.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 48.5,
+          "pct": 48.7,
           "weight": 0.8
         },
         {
@@ -4203,7 +4198,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 4798938624,
+      "marketCap": 4825585152,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4212,7 +4207,7 @@
       "ipoYear": 2020,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 68.7,
       "scoreShrunk": 66.1,
@@ -4234,7 +4229,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 31.1,
+          "pct": 31.2,
           "weight": 1.5
         },
         {
@@ -4244,7 +4239,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 64.4,
+          "pct": 64.6,
           "weight": 0.8
         },
         {
@@ -4265,10 +4260,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -22.4,
+        "distancePct": -22,
         "athDate": "2026-05-05",
         "monthsAgo": 5,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -4297,120 +4292,9 @@
     {
       "rank": 42,
       "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "NFG",
-      "score": 65.9,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.284,
-        "companion": 2.5
-      },
-      "name": "National Fuel Gas Company",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 7527571456,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 66,
-      "scoreShrunk": 65.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 69.4,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 77.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 81.5,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 45.5,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 24.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 1.0655660643438702,
-      "profitStreak": {
-        "jahre": 9,
-        "basis": "opInc",
-        "tiefe": 16,
-        "mindestens": false,
-        "letzterVerlust": 2016
-      },
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -16.9,
-        "athDate": "2026-04-07",
-        "monthsAgo": 6,
-        "lastDate": "2026-10-14"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 1.0655660643438702,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.09043673751729342,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 43,
-      "rankGrund": null,
       "rankGrundShadow": "nichtOperativRoyaltyTrust",
       "ticker": "SBR",
-      "score": 65.8,
+      "score": 65.9,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -4424,7 +4308,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1055981952,
+      "marketCap": 1056710976,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4433,10 +4317,10 @@
       "ipoYear": 1983,
       "coverageAxes": "2/5",
       "coverageWeight": 0.41,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 87.1,
-      "scoreShrunk": 65.8,
+      "scoreShrunk": 65.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4465,7 +4349,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 46.5,
+          "pct": 46.6,
           "weight": 0.8
         },
         {
@@ -4506,11 +4390,122 @@
       }
     },
     {
+      "rank": 43,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "NFG",
+      "score": 65.8,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.284,
+        "companion": 2.5
+      },
+      "name": "National Fuel Gas Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 7596003840,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 65.9,
+      "scoreShrunk": 65.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 69.3,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 77.5,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 81.2,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 45.8,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 24.6,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 1.0655660643438702,
+      "profitStreak": {
+        "jahre": 9,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": false,
+        "letzterVerlust": 2016
+      },
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -16.1,
+        "athDate": "2026-04-07",
+        "monthsAgo": 6,
+        "lastDate": "2026-10-16"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 1.0655660643438702,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.09043673751729342,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
       "rank": 44,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ENOG.L",
-      "score": 65.8,
+      "score": 65.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -4525,7 +4520,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 1776917499.4449408,
+      "marketCap": 1827985076.5669246,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4534,10 +4529,10 @@
       "ipoYear": 2018,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 65.9,
-      "scoreShrunk": 65.8,
+      "scoreBase": 65.8,
+      "scoreShrunk": 65.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4546,12 +4541,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 51.9,
+          "pct": 51.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 75.8,
+          "pct": 75.7,
           "weight": 2.2
         },
         {
@@ -4561,7 +4556,7 @@
         },
         {
           "key": "dilution",
-          "pct": 87.4,
+          "pct": 87.3,
           "weight": 1.2
         },
         {
@@ -4584,7 +4579,7 @@
       "qPunkte": 3,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.013252054,
+      "tradingFxRateApplied": 0.013329956999999998,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-03-31",
       "revGrowthPriorPeriodEnd": "2025-03-31",
@@ -4624,16 +4619,16 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1986299782.232832,
+      "marketCap": 2037761308.9194317,
       "phase": "established",
       "mcapBand": "mid",
-      "mcapKlasse": "small",
+      "mcapKlasse": "mid",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2003,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 65.7,
       "scoreShrunk": 65.6,
@@ -4650,22 +4645,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 90.7,
+          "pct": 90.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 32.3,
+          "pct": 32.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 16.5,
+          "pct": 16.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 60.9,
+          "pct": 61,
           "weight": 0.8
         },
         {
@@ -4683,7 +4678,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -4724,7 +4719,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 4442333696,
+      "marketCap": 4179310848,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4733,7 +4728,7 @@
       "ipoYear": 2012,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 65.6,
       "scoreShrunk": 65.5,
@@ -4745,27 +4740,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 78,
+          "pct": 77.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 26.3,
+          "pct": 26.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 90.8,
+          "pct": 90.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 66.8,
+          "pct": 66.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 84,
+          "pct": 84.3,
           "weight": 0.8
         },
         {
@@ -4829,7 +4824,7 @@
       "country": "Thailand",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 18201694656.69255,
+      "marketCap": 18412559891.958595,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4838,7 +4833,7 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 67.9,
       "scoreShrunk": 65.4,
@@ -4860,7 +4855,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 27.2,
+          "pct": 27.3,
           "weight": 1.5
         },
         {
@@ -4870,7 +4865,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 66.1,
+          "pct": 66.3,
           "weight": 0.8
         },
         {
@@ -4888,7 +4883,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.029868579,
+      "tradingFxRateApplied": 0.029922204,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -4929,7 +4924,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 5223324672,
+      "marketCap": 5182996992,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4938,9 +4933,9 @@
       "ipoYear": 2007,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 65.3,
+      "scoreBase": 65.2,
       "scoreShrunk": 65.2,
       "factors": {
         "burn": 1,
@@ -4950,27 +4945,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 67,
+          "pct": 66.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 80.9,
+          "pct": 80.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 88.7,
+          "pct": 88.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 35.2,
+          "pct": 35.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 18.3,
+          "pct": 18.4,
           "weight": 0.8
         },
         {
@@ -5020,7 +5015,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "600938.SS",
-      "score": 65.1,
+      "score": 65,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -5034,7 +5029,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 247061981341.89062,
+      "marketCap": 246955033999.84564,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mega",
@@ -5043,10 +5038,10 @@
       "ipoYear": 2004,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 67.5,
-      "scoreShrunk": 65.1,
+      "scoreShrunk": 65,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5055,7 +5050,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 74.1,
+          "pct": 74,
           "weight": 2.6
         },
         {
@@ -5065,7 +5060,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 46.1,
+          "pct": 45.9,
           "weight": 1.5
         },
         {
@@ -5093,14 +5088,14 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14945449,
+      "tradingFxRateApplied": 0.14956178,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
       "revGrowthSourcePeriodEnd": "2025-12-31",
       "revGrowthSourcePriorPeriodEnd": "2024-12-31",
       "marketCapClassesShadow": {
-        "value": 151996049097.54697,
+        "value": 151517908867.4454,
         "status": "ok",
         "reason": null,
         "classes": [
@@ -5110,12 +5105,12 @@
             "shares": 2990000000,
             "sharesField": "meta.sharesOutstanding",
             "sharesAsOf": "2026-10-14T08:16:53.584Z",
-            "price": 34.78,
+            "price": 34.74,
             "currency": "CNY",
-            "priceAsOf": "2026-10-15T07:59:26.446Z",
-            "usdPerUnit": 0.14945449,
-            "fxSource": "fx-rates.json @ 2026-10-15T07:38:10.246Z",
-            "valueUsd": 15542101214.977999
+            "priceAsOf": "2026-10-17T14:03:31.693Z",
+            "usdPerUnit": 0.14956178,
+            "fxSource": "fx-rates.json @ 2026-10-17T13:41:07.519Z",
+            "valueUsd": 15535370949.228
           },
           {
             "ticker": "0883.HK",
@@ -5123,16 +5118,16 @@
             "shares": 44539953984,
             "sharesField": "meta.sharesOutstanding",
             "sharesAsOf": "2026-10-14T08:09:46.045Z",
-            "price": 24.04,
+            "price": 23.96,
             "currency": "HKD",
-            "priceAsOf": "2026-10-15T07:58:34.661Z",
-            "usdPerUnit": 0.12743886,
-            "fxSource": "fx-rates.json @ 2026-10-15T07:38:10.246Z",
-            "valueUsd": 136453947882.56895
+            "priceAsOf": "2026-10-17T14:02:29.085Z",
+            "usdPerUnit": 0.12742263,
+            "fxSource": "fx-rates.json @ 2026-10-17T13:41:07.519Z",
+            "valueUsd": 135982537918.21739
           }
         ]
       },
-      "marketCapClassesDeviationPct": 62.54500219498003,
+      "marketCapClassesDeviationPct": 62.98735631039687,
       "g31Shadow": {
         "v1": {
           "pct": -5.299805472454611,
@@ -5153,7 +5148,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "EQT",
-      "score": 65,
+      "score": 64.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -5169,7 +5164,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 32995971072,
+      "marketCap": 33965520896,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -5178,10 +5173,10 @@
       "ipoYear": 1980,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 65,
-      "scoreShrunk": 65,
+      "scoreShrunk": 64.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5190,12 +5185,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 63.2,
+          "pct": 63.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 77.3,
+          "pct": 77.2,
           "weight": 2.2
         },
         {
@@ -5205,12 +5200,12 @@
         },
         {
           "key": "dilution",
-          "pct": 37.1,
+          "pct": 37.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 17.4,
+          "pct": 17.5,
           "weight": 0.8
         },
         {
@@ -5231,10 +5226,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -22.1,
+        "distancePct": -19.8,
         "athDate": "2026-03-25",
         "monthsAgo": 7,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -5265,7 +5260,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MTDR",
-      "score": 64.9,
+      "score": 64.8,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -5279,7 +5274,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 6829995008,
+      "marketCap": 7118342656,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5288,10 +5283,10 @@
       "ipoYear": 2012,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 65,
-      "scoreShrunk": 64.9,
+      "scoreBase": 64.9,
+      "scoreShrunk": 64.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5300,12 +5295,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 85.7,
+          "pct": 85.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 77,
+          "pct": 76.9,
           "weight": 2.2
         },
         {
@@ -5315,12 +5310,12 @@
         },
         {
           "key": "dilution",
-          "pct": 55.8,
+          "pct": 55.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 59.4,
+          "pct": 59.6,
           "weight": 0.8
         },
         {
@@ -5384,7 +5379,7 @@
       "country": "Norway",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 106330176965.56941,
+      "marketCap": 108841237672.66737,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -5393,7 +5388,7 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 67.2,
       "scoreShrunk": 64.8,
@@ -5410,7 +5405,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 65.4,
+          "pct": 65.3,
           "weight": 2.2
         },
         {
@@ -5425,7 +5420,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 69.4,
+          "pct": 69.6,
           "weight": 0.8
         },
         {
@@ -5443,7 +5438,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.105042234,
+      "tradingFxRateApplied": 0.106230415,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5469,7 +5464,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LIPIGAS.SN",
-      "score": 64.8,
+      "score": 64.6,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -5484,7 +5479,7 @@
       "country": "Chile",
       "region": "South America",
       "sector": "Energy",
-      "marketCap": 1154737116.93921,
+      "marketCap": 1152613188.1302295,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5493,10 +5488,10 @@
       "ipoYear": 2016,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 67.2,
-      "scoreShrunk": 64.8,
+      "scoreBase": 67,
+      "scoreShrunk": 64.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5510,12 +5505,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 61,
+          "pct": 60.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 73.4,
+          "pct": 73,
           "weight": 1.5
         },
         {
@@ -5525,7 +5520,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 30.6,
+          "pct": 30.4,
           "weight": 0.8
         },
         {
@@ -5543,7 +5538,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0010153006,
+      "tradingFxRateApplied": 0.0010158678,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5569,7 +5564,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "AM",
-      "score": 64.3,
+      "score": 64.2,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -5583,7 +5578,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 9854231552,
+      "marketCap": 9797270528,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5592,10 +5587,10 @@
       "ipoYear": 2017,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 64.4,
-      "scoreShrunk": 64.3,
+      "scoreBase": 64.3,
+      "scoreShrunk": 64.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5604,7 +5599,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 75.6,
+          "pct": 75.5,
           "weight": 2.6
         },
         {
@@ -5614,17 +5609,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 67.1,
+          "pct": 66.7,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 4.8,
+          "pct": 4.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 34.5,
+          "pct": 34.6,
           "weight": 0.8
         },
         {
@@ -5645,10 +5640,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -11.1,
+        "distancePct": -11.6,
         "athDate": "2026-03-25",
         "monthsAgo": 7,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -5678,31 +5673,35 @@
       "rank": 55,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "WES",
+      "ticker": "TNZ.TO",
       "score": 64.2,
       "track": "profitable",
       "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "arDivergence",
         "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.051,
-        "companion": 88.9
+        "value": 3.682,
+        "companion": 282.4
       },
-      "name": "Western Midstream Partners, LP",
-      "country": "United States",
+      "name": "Tenaz Energy Corp.",
+      "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 18518484992,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
+      "marketCap": 1659665218.6319463,
+      "phase": "inflected",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
       "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2018,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 64.3,
       "scoreShrunk": 64.2,
@@ -5714,27 +5713,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 56.7,
+          "pct": 0.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 95.7,
+          "pct": 89.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 65.6,
+          "pct": 97.7,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 23.5,
+          "pct": 90.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 61.7,
+          "pct": 99.4,
           "weight": 0.8
         },
         {
@@ -5743,27 +5742,16 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 29.968206197032444,
-      "profitStreak": {
-        "jahre": 13,
-        "basis": "opInc",
-        "tiefe": 13,
-        "mindestens": true,
-        "letzterVerlust": null
-      },
+      "revGrowthYoYPct": 166.13928262460905,
+      "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": {
-        "distancePct": -10,
-        "athDate": "2026-08-18",
-        "monthsAgo": 2,
-        "lastDate": "2026-10-14"
-      },
+      "ath": null,
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5771,13 +5759,13 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
       "g31Shadow": {
         "v1": {
-          "pct": 29.968206197032444,
+          "pct": 166.13928262460905,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.2388993963118946,
+        "value": 1.8485659655831737,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -5804,7 +5792,7 @@
       "country": "Bermuda",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1603298048,
+      "marketCap": 1527027712,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5813,7 +5801,7 @@
       "ipoYear": 2019,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 64.3,
       "scoreShrunk": 64.2,
@@ -5825,7 +5813,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 59.9,
+          "pct": 59.8,
           "weight": 2.6
         },
         {
@@ -5835,17 +5823,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 27.8,
+          "pct": 27.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 86.1,
+          "pct": 86,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 55.6,
+          "pct": 55.7,
           "weight": 0.8
         },
         {
@@ -5894,37 +5882,33 @@
       "rank": 57,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "TNZ.TO",
+      "ticker": "WES",
       "score": 64.2,
       "track": "profitable",
       "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "arDivergence",
         "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
-        "value": 3.682,
-        "companion": 279.3
+        "value": 0.051,
+        "companion": 88.9
       },
-      "name": "Tenaz Energy Corp.",
-      "country": "Canada",
+      "name": "Western Midstream Partners, LP",
+      "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1677467835.909888,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
+      "marketCap": 18435850240,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
       "ipoRecency": "growth",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2018,
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 64.3,
+      "scoreBase": 64.2,
       "scoreShrunk": 64.2,
       "factors": {
         "burn": 1,
@@ -5934,27 +5918,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 0.4,
+          "pct": 56.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 89.8,
+          "pct": 95.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 97.7,
+          "pct": 65.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 90.6,
+          "pct": 23.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 99.4,
+          "pct": 61.9,
           "weight": 0.8
         },
         {
@@ -5963,16 +5947,27 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 166.13928262460905,
-      "profitStreak": null,
+      "revGrowthYoYPct": 29.968206197032444,
+      "profitStreak": {
+        "jahre": 13,
+        "basis": "opInc",
+        "tiefe": 13,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": null,
+      "ath": {
+        "distancePct": -10.4,
+        "athDate": "2026-08-18",
+        "monthsAgo": 2,
+        "lastDate": "2026-10-16"
+      },
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 1,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -5980,13 +5975,13 @@
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
       "g31Shadow": {
         "v1": {
-          "pct": 166.13928262460905,
+          "pct": 29.968206197032444,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 1.8485659655831737,
+        "value": 0.2388993963118946,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -5998,7 +5993,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "EXX.JO",
-      "score": 64.1,
+      "score": 63.9,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -6012,7 +6007,7 @@
       "country": "South Africa",
       "region": "Africa",
       "sector": "Energy",
-      "marketCap": 2454479551.6588035,
+      "marketCap": 2543940467.587973,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -6021,10 +6016,10 @@
       "ipoYear": 2001,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 64.1,
-      "scoreShrunk": 64.1,
+      "scoreBase": 64,
+      "scoreShrunk": 63.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6033,7 +6028,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 48.7,
+          "pct": 48.5,
           "weight": 2.6
         },
         {
@@ -6043,17 +6038,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 64.7,
+          "pct": 64.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 59.7,
+          "pct": 59.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 26,
+          "pct": 25.7,
           "weight": 0.8
         },
         {
@@ -6071,7 +6066,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0006043355000000001,
+      "tradingFxRateApplied": 0.0006069766,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -6111,7 +6106,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Energy",
-      "marketCap": 5400963565.449421,
+      "marketCap": 5459773789.413377,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6120,7 +6115,7 @@
       "ipoYear": 2012,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 66.1,
       "scoreShrunk": 63.9,
@@ -6152,7 +6147,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 4.8,
+          "pct": 4.9,
           "weight": 0.8
         },
         {
@@ -6170,7 +6165,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.6944444,
+      "tradingFxRateApplied": 0.69492704,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -6196,7 +6191,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "KMI",
-      "score": 63.8,
+      "score": 63.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -6211,7 +6206,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 74263846912,
+      "marketCap": 76156633088,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6220,10 +6215,10 @@
       "ipoYear": 2011,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 66,
-      "scoreShrunk": 63.8,
+      "scoreBase": 65.9,
+      "scoreShrunk": 63.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6232,7 +6227,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 54.3,
+          "pct": 54.2,
           "weight": 2.6
         },
         {
@@ -6242,7 +6237,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 71.3,
+          "pct": 70.9,
           "weight": 1.5
         },
         {
@@ -6252,7 +6247,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 39.4,
+          "pct": 39.6,
           "weight": 0.8
         },
         {
@@ -6273,10 +6268,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -2.8,
+        "distancePct": -0.3,
         "athDate": "2026-05-19",
         "monthsAgo": 5,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -6307,7 +6302,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BIR.TO",
-      "score": 63.7,
+      "score": 63.6,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -6323,7 +6318,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1273150142.482944,
+      "marketCap": 1320142155.9357657,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -6332,10 +6327,10 @@
       "ipoYear": 1996,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 65.9,
-      "scoreShrunk": 63.7,
+      "scoreBase": 65.8,
+      "scoreShrunk": 63.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6344,7 +6339,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 60.5,
+          "pct": 60.4,
           "weight": 2.6
         },
         {
@@ -6354,7 +6349,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 81.8,
+          "pct": 81.5,
           "weight": 1.5
         },
         {
@@ -6364,7 +6359,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 28.9,
+          "pct": 28.7,
           "weight": 0.8
         },
         {
@@ -6379,15 +6374,15 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -33.1,
+        "distancePct": -31,
         "athDate": "2008-06-30",
-        "monthsAgo": 219,
-        "lastDate": "2026-10-14"
+        "monthsAgo": 220,
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -6413,7 +6408,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "OKE",
-      "score": 63.5,
+      "score": 63.4,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -6427,7 +6422,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 57978736640,
+      "marketCap": 58823483392,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6436,10 +6431,10 @@
       "ipoYear": 1980,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 65.7,
-      "scoreShrunk": 63.5,
+      "scoreBase": 65.6,
+      "scoreShrunk": 63.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6453,12 +6448,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 44.7,
+          "pct": 44.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 78.5,
+          "pct": 78.2,
           "weight": 1.5
         },
         {
@@ -6468,7 +6463,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 80.8,
+          "pct": 81,
           "weight": 0.8
         },
         {
@@ -6489,10 +6484,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -15.2,
+        "distancePct": -13.9,
         "athDate": "2024-11-22",
         "monthsAgo": 23,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -6522,105 +6517,6 @@
       "rank": 63,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "CEU.TO",
-      "score": 63.3,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.017,
-        "companion": 61.1
-      },
-      "name": "CES Energy Solutions Corp.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 2917329020.4748797,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 63.4,
-      "scoreShrunk": 63.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 91,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 40.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 55.1,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 61,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 56.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 24.40682867849844,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 24.40682867849844,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.2890483271375466,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 64,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "IOC.BO",
       "score": 63.3,
       "track": "profitable",
@@ -6637,7 +6533,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 19153492666.810368,
+      "marketCap": 19369116877.357056,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6646,7 +6542,7 @@
       "ipoYear": 1995,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 65.4,
       "scoreShrunk": 63.3,
@@ -6663,12 +6559,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 21.5,
+          "pct": 21.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 91.4,
+          "pct": 91.1,
           "weight": 1.5
         },
         {
@@ -6678,7 +6574,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 70.2,
+          "pct": 70.4,
           "weight": 0.8
         },
         {
@@ -6718,6 +6614,105 @@
       }
     },
     {
+      "rank": 64,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "CEU.TO",
+      "score": 63.2,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.017,
+        "companion": 61.1
+      },
+      "name": "CES Energy Solutions Corp.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 2996866949.0807424,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 63.3,
+      "scoreShrunk": 63.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 90.9,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 40.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 55,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 60.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 56.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 24.40682867849844,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.70736367,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 24.40682867849844,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.2890483271375466,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
       "rank": 65,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -6736,7 +6731,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 16596151296,
+      "marketCap": 17219778560,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6745,7 +6740,7 @@
       "ipoYear": 1979,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 65.2,
       "scoreShrunk": 63.1,
@@ -6762,7 +6757,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 70.8,
+          "pct": 70.7,
           "weight": 2.2
         },
         {
@@ -6777,7 +6772,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 35.6,
+          "pct": 35.7,
           "weight": 0.8
         },
         {
@@ -6798,10 +6793,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -55,
+        "distancePct": -53.3,
         "athDate": "2008-05-20",
         "monthsAgo": 221,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -6846,7 +6841,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 18463049728,
+      "marketCap": 19176679424,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6855,7 +6850,7 @@
       "ipoYear": 2001,
       "coverageAxes": "3/5",
       "coverageWeight": 0.59,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 70.9,
       "scoreShrunk": 62.8,
@@ -6877,7 +6872,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 48.5,
+          "pct": 48.3,
           "weight": 1.5
         },
         {
@@ -6887,7 +6882,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 62,
+          "pct": 62.2,
           "weight": 0.8
         },
         {
@@ -6937,7 +6932,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "EE",
-      "score": 62.7,
+      "score": 62.6,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -6952,7 +6947,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 3758145536,
+      "marketCap": 3764950016,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6961,10 +6956,10 @@
       "ipoYear": 2022,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 64.7,
-      "scoreShrunk": 62.7,
+      "scoreBase": 64.6,
+      "scoreShrunk": 62.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6973,17 +6968,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 53.1,
+          "pct": 53,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 55.9,
+          "pct": 55.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 85.7,
+          "pct": 85.4,
           "weight": 1.5
         },
         {
@@ -7014,10 +7009,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -22.4,
+        "distancePct": -22.2,
         "athDate": "2026-02-25",
         "monthsAgo": 8,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -7048,7 +7043,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ESENTIA/II.MX",
-      "score": 62.7,
+      "score": 62.6,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -7057,13 +7052,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.075,
-        "companion": -72.7
+        "companion": -73.1
       },
       "name": "Esentia Energy Development, S. de R. L. de C. V.",
       "country": "Mexico",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1474057662.697636,
+      "marketCap": 1444640227.5321445,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -7072,10 +7067,10 @@
       "ipoYear": 2026,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 64.7,
-      "scoreShrunk": 62.7,
+      "scoreBase": 64.6,
+      "scoreShrunk": 62.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7084,17 +7079,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 54.6,
+          "pct": 54.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 89.2,
+          "pct": 89.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 80.6,
+          "pct": 80.3,
           "weight": 1.5
         },
         {
@@ -7122,7 +7117,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.05412392,
+      "tradingFxRateApplied": 0.05411548,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -7162,7 +7157,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 6823425536,
+      "marketCap": 6963520000,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7171,9 +7166,9 @@
       "ipoYear": 2017,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 62.5,
+      "scoreBase": 62.6,
       "scoreShrunk": 62.5,
       "factors": {
         "burn": 1,
@@ -7188,7 +7183,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 79.4,
+          "pct": 79.3,
           "weight": 2.2
         },
         {
@@ -7198,12 +7193,12 @@
         },
         {
           "key": "dilution",
-          "pct": 10,
+          "pct": 10.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 79,
+          "pct": 79.3,
           "weight": 0.8
         },
         {
@@ -7269,7 +7264,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 6228875776,
+      "marketCap": 6174589440,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7278,7 +7273,7 @@
       "ipoYear": 2007,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 62.4,
       "scoreShrunk": 62.3,
@@ -7295,22 +7290,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 3.1,
+          "pct": 3.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 89.9,
+          "pct": 89.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 56.5,
+          "pct": 56.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 83.1,
+          "pct": 83.4,
           "weight": 0.8
         },
         {
@@ -7331,10 +7326,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -1.8,
+        "distancePct": -2.7,
         "athDate": "2026-10-13",
         "monthsAgo": 0,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -7364,218 +7359,6 @@
       "rank": 71,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "002353.SZ",
-      "score": 62.3,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.142,
-        "companion": 7.7
-      },
-      "name": "Yantai Jereh Oilfield Services Group Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Energy",
-      "marketCap": 13658551739.770552,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 64.3,
-      "scoreShrunk": 62.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 82.4,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 55.3,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 65.9,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 26.8,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 3.3630464278204153,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 6,
-      "qSpanTage": 456,
-      "financialDataReasons": [
-        "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 24.10.2025)."
-      ],
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14945449,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 3.3630464278204153,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.0833101170005801,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 72,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "FLOC",
-      "score": 62.2,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.491,
-        "companion": 57
-      },
-      "name": "Flowco Holdings Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 2010545024,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 62.3,
-      "scoreShrunk": 62.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 73.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 64.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 84.8,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 13.2,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 51.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 22.07075020055378,
-      "profitStreak": {
-        "jahre": 1,
-        "basis": "opInc",
-        "tiefe": 1,
-        "mindestens": true,
-        "letzterVerlust": null
-      },
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -37.6,
-        "athDate": "2025-01-21",
-        "monthsAgo": 21,
-        "lastDate": "2026-10-14"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 22.07075020055378,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.10287824357010988,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 73,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "CNQ",
       "score": 62.2,
       "track": "profitable",
@@ -7591,7 +7374,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 106826932224,
+      "marketCap": 110908702720,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7600,7 +7383,7 @@
       "ipoYear": 1995,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 62.3,
       "scoreShrunk": 62.2,
@@ -7612,12 +7395,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 84.2,
+          "pct": 84.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 35.5,
+          "pct": 35.6,
           "weight": 2.2
         },
         {
@@ -7627,7 +7410,7 @@
         },
         {
           "key": "dilution",
-          "pct": 92.6,
+          "pct": 92.5,
           "weight": 1.2
         },
         {
@@ -7672,6 +7455,218 @@
       }
     },
     {
+      "rank": 72,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "002353.SZ",
+      "score": 62.2,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.142,
+        "companion": 7.7
+      },
+      "name": "Yantai Jereh Oilfield Services Group Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Energy",
+      "marketCap": 13061963669.65326,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2010,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 64.1,
+      "scoreShrunk": 62.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 82.3,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 55.2,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 65.5,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 26.6,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 3.3630464278204153,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 6,
+      "qSpanTage": 456,
+      "financialDataReasons": [
+        "Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 24.10.2025)."
+      ],
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.14956178,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 3.3630464278204153,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.0833101170005801,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 73,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "FLOC",
+      "score": 62.2,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.491,
+        "companion": 57
+      },
+      "name": "Flowco Holdings Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 2046447616,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 62.2,
+      "scoreShrunk": 62.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 73.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 64.4,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 84.5,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 13.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 51.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 22.07075020055378,
+      "profitStreak": {
+        "jahre": 1,
+        "basis": "opInc",
+        "tiefe": 1,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -36.5,
+        "athDate": "2025-01-21",
+        "monthsAgo": 21,
+        "lastDate": "2026-10-16"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 22.07075020055378,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.10287824357010988,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
       "rank": 74,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -7688,7 +7683,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 1246353134.142336,
+      "marketCap": 1265968828.1059122,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -7697,7 +7692,7 @@
       "ipoYear": 2007,
       "coverageAxes": "2/5",
       "coverageWeight": 0.24,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 96.5,
       "scoreShrunk": 62.1,
@@ -7724,7 +7719,7 @@
         },
         {
           "key": "dilution",
-          "pct": 96.5,
+          "pct": 96.4,
           "weight": 1.2
         },
         {
@@ -7747,7 +7742,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -7791,7 +7786,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 7736581632,
+      "marketCap": 7958922240,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7800,7 +7795,7 @@
       "ipoYear": 2017,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 61.9,
       "scoreShrunk": 61.8,
@@ -7812,22 +7807,22 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 47.8,
+          "pct": 47.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 79.7,
+          "pct": 79.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 82.7,
+          "pct": 82.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 10.6,
+          "pct": 10.7,
           "weight": 1.2
         },
         {
@@ -7882,7 +7877,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "TVE.TO",
-      "score": 61.8,
+      "score": 61.7,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -7896,7 +7891,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 4717237560.887808,
+      "marketCap": 4860896300.031283,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7905,10 +7900,10 @@
       "ipoYear": 2008,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 61.8,
-      "scoreShrunk": 61.8,
+      "scoreShrunk": 61.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7922,22 +7917,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 65.1,
+          "pct": 65,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 43.4,
+          "pct": 43.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 33.2,
+          "pct": 33.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 74.9,
+          "pct": 75.1,
           "weight": 0.8
         },
         {
@@ -7955,7 +7950,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -7980,6 +7975,105 @@
       "rank": 77,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "VAR.OL",
+      "score": 61.3,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.023,
+        "companion": 65
+      },
+      "name": "Vår Energi ASA",
+      "country": "Norway",
+      "region": "Europe",
+      "sector": "Energy",
+      "marketCap": 14786306496.729416,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2022,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 63,
+      "scoreShrunk": 61.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 79.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 81.7,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 22.7,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 34.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 8.04769203640654,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 456,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.106230415,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2025-12-31",
+      "revGrowthPriorPeriodEnd": "2024-12-31",
+      "revGrowthSourcePeriodEnd": "2025-12-31",
+      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
+      "g31Shadow": {
+        "v1": {
+          "pct": 102.71394178157145,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 1.8076422571867976,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 78,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "DTM",
       "score": 61.3,
       "track": "profitable",
@@ -7996,7 +8090,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 12581547008,
+      "marketCap": 12616231936,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8005,9 +8099,9 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 61.4,
+      "scoreBase": 61.3,
       "scoreShrunk": 61.3,
       "factors": {
         "burn": 1,
@@ -8017,7 +8111,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 50.4,
+          "pct": 50.3,
           "weight": 2.6
         },
         {
@@ -8027,17 +8121,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 76.7,
+          "pct": 76.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 15.8,
+          "pct": 15.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 40,
+          "pct": 40.1,
           "weight": 0.8
         },
         {
@@ -8083,205 +8177,7 @@
       }
     },
     {
-      "rank": 78,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "VAR.OL",
-      "score": 61.3,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.023,
-        "companion": 65
-      },
-      "name": "Vår Energi ASA",
-      "country": "Norway",
-      "region": "Europe",
-      "sector": "Energy",
-      "marketCap": 14206627613.354507,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 63.1,
-      "scoreShrunk": 61.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 79.4,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 81.8,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 22.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 34.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 8.04769203640654,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.105042234,
-      "revGrowthBasis": "year",
-      "revGrowthPeriodEnd": "2025-12-31",
-      "revGrowthPriorPeriodEnd": "2024-12-31",
-      "revGrowthSourcePeriodEnd": "2025-12-31",
-      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
-      "g31Shadow": {
-        "v1": {
-          "pct": 102.71394178157145,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 1.8076422571867976,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
       "rank": 79,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "PBA",
-      "score": 61.3,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.037,
-        "companion": 64.5
-      },
-      "name": "Pembina Pipeline Corporation",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 28217049088,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2003,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 61.3,
-      "scoreShrunk": 61.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 70,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 71.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 62.9,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 30,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 49.7,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 20.089285714285698,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 20.089285714285698,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.19615384615384635,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 80,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "DVN",
@@ -8299,7 +8195,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 54912000000,
+      "marketCap": 55802998784,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8308,7 +8204,7 @@
       "ipoYear": 1985,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 61.3,
       "scoreShrunk": 61.2,
@@ -8325,7 +8221,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 43.2,
+          "pct": 43,
           "weight": 2.2
         },
         {
@@ -8335,12 +8231,12 @@
         },
         {
           "key": "dilution",
-          "pct": 50,
+          "pct": 50.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 90.8,
+          "pct": 90.7,
           "weight": 0.8
         },
         {
@@ -8386,11 +8282,110 @@
       }
     },
     {
+      "rank": 80,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "PBA",
+      "score": 61.2,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.037,
+        "companion": 64.5
+      },
+      "name": "Pembina Pipeline Corporation",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 29135904768,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2003,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 61.3,
+      "scoreShrunk": 61.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 69.9,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 71.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 62.8,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 30.2,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 49.9,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 20.089285714285698,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 20.089285714285698,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.19615384615384635,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
       "rank": 81,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BNOR.OL",
-      "score": 61,
+      "score": 60.9,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -8405,7 +8400,7 @@
       "country": "Norway",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 1595267836.3117056,
+      "marketCap": 1656768818.0753715,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -8414,10 +8409,10 @@
       "ipoYear": 2007,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 61,
-      "scoreShrunk": 61,
+      "scoreBase": 60.9,
+      "scoreShrunk": 60.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -8426,22 +8421,22 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 76.2,
+          "pct": 76.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 53.6,
+          "pct": 53.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 51.8,
+          "pct": 51.7,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 80.3,
+          "pct": 80.2,
           "weight": 1.2
         },
         {
@@ -8464,7 +8459,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.105042234,
+      "tradingFxRateApplied": 0.106230415,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -8490,7 +8485,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MATR.TO",
-      "score": 60.9,
+      "score": 60.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -8505,7 +8500,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 952519500.6074879,
+      "marketCap": 943730609.7865651,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -8514,10 +8509,10 @@
       "ipoYear": 1995,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 60.9,
-      "scoreShrunk": 60.9,
+      "scoreBase": 60.8,
+      "scoreShrunk": 60.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -8526,17 +8521,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 52.8,
+          "pct": 52.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 42,
+          "pct": 41.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 77.6,
+          "pct": 77.3,
           "weight": 1.5
         },
         {
@@ -8546,7 +8541,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 53.8,
+          "pct": 54,
           "weight": 0.8
         },
         {
@@ -8564,7 +8559,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -8604,7 +8599,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 82125996032,
+      "marketCap": 84160634880,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8613,7 +8608,7 @@
       "ipoYear": 1989,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 60.7,
       "scoreShrunk": 60.6,
@@ -8625,7 +8620,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 62.9,
+          "pct": 62.8,
           "weight": 2.6
         },
         {
@@ -8640,12 +8635,12 @@
         },
         {
           "key": "dilution",
-          "pct": 29.4,
+          "pct": 29.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 85.2,
+          "pct": 85.4,
           "weight": 0.8
         },
         {
@@ -8695,7 +8690,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "TRP",
-      "score": 60.4,
+      "score": 60.2,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -8710,7 +8705,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 63693627392,
+      "marketCap": 64318689280,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8719,10 +8714,10 @@
       "ipoYear": 1982,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 62,
-      "scoreShrunk": 60.4,
+      "scoreBase": 61.8,
+      "scoreShrunk": 60.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -8731,7 +8726,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 49.3,
+          "pct": 49.1,
           "weight": 2.6
         },
         {
@@ -8741,7 +8736,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 71,
+          "pct": 70.6,
           "weight": 1.5
         },
         {
@@ -8751,7 +8746,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 31.2,
+          "pct": 31,
           "weight": 0.8
         },
         {
@@ -8809,7 +8804,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 20348999909.50276,
+      "marketCap": 20648148647.460743,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8818,7 +8813,7 @@
       "ipoYear": 2008,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 61.8,
       "scoreShrunk": 60.2,
@@ -8835,7 +8830,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 56.5,
+          "pct": 56.4,
           "weight": 2.2
         },
         {
@@ -8850,7 +8845,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 57.6,
+          "pct": 57.8,
           "weight": 0.8
         },
         {
@@ -8868,7 +8863,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.000055750683,
+      "tradingFxRateApplied": 0.000055555556,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -8911,7 +8906,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 7686818078.588928,
+      "marketCap": 7646564094.296064,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -8920,7 +8915,7 @@
       "ipoYear": 2009,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 61.5,
       "scoreShrunk": 60,
@@ -8942,7 +8937,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 58.4,
+          "pct": 58.3,
           "weight": 1.5
         },
         {
@@ -8952,7 +8947,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 84.6,
+          "pct": 84.9,
           "weight": 0.8
         },
         {
@@ -9004,13 +8999,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.146,
-        "companion": 378
+        "companion": 381.1
       },
       "name": "SM Energy Company",
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 9090782208,
+      "marketCap": 9395235840,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -9019,7 +9014,7 @@
       "ipoYear": 1992,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 59.7,
       "scoreShrunk": 59.6,
@@ -9036,7 +9031,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 58.9,
+          "pct": 58.8,
           "weight": 2.2
         },
         {
@@ -9046,7 +9041,7 @@
         },
         {
           "key": "dilution",
-          "pct": 30.6,
+          "pct": 30.8,
           "weight": 1.2
         },
         {
@@ -9100,6 +9095,105 @@
       "rank": 88,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "2382.SR",
+      "score": 59.3,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 96.1
+      },
+      "name": "ADES Holding Company",
+      "country": "Saudi Arabia",
+      "region": "Middle East",
+      "sector": "Energy",
+      "marketCap": 4840308832.114688,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "2/5",
+      "coverageWeight": 0.24,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 84.7,
+      "scoreShrunk": 59.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": null,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 95.8,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 68.1,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 36.387987023269176,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 456,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.266489,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 36.387987023269176,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.22783313344567535,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 89,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "TS",
       "score": 59.3,
       "track": "profitable",
@@ -9115,7 +9209,7 @@
       "country": "Luxembourg",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 29365370880,
+      "marketCap": 29981251584,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -9124,7 +9218,7 @@
       "ipoYear": 2002,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 60.7,
       "scoreShrunk": 59.3,
@@ -9141,12 +9235,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 62.5,
+          "pct": 62.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 34.7,
+          "pct": 34.8,
           "weight": 1.5
         },
         {
@@ -9156,7 +9250,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 17.7,
+          "pct": 17.8,
           "weight": 0.8
         },
         {
@@ -9202,105 +9296,6 @@
       }
     },
     {
-      "rank": 89,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "2382.SR",
-      "score": 59.3,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 96.1
-      },
-      "name": "ADES Holding Company",
-      "country": "Saudi Arabia",
-      "region": "Middle East",
-      "sector": "Energy",
-      "marketCap": 4721352683.175936,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "2/5",
-      "coverageWeight": 0.24,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 84.6,
-      "scoreShrunk": 59.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": null,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 95.8,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 67.9,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 36.387987023269176,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.266418,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 36.387987023269176,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.22783313344567535,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
       "rank": 90,
       "rankGrund": null,
       "rankGrundShadow": null,
@@ -9322,7 +9317,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 3236017060.1256957,
+      "marketCap": 3330852882.14635,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -9331,7 +9326,7 @@
       "ipoYear": 2020,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 59.2,
       "scoreShrunk": 59.2,
@@ -9343,17 +9338,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 45.4,
+          "pct": 45.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 88.3,
+          "pct": 88.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 76.4,
+          "pct": 76.1,
           "weight": 1.5
         },
         {
@@ -9363,7 +9358,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 70.8,
+          "pct": 71,
           "weight": 0.8
         },
         {
@@ -9381,7 +9376,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.703923,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -9407,7 +9402,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "KGS",
-      "score": 59.1,
+      "score": 59,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -9422,7 +9417,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 5062278656,
+      "marketCap": 4773121024,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -9431,10 +9426,10 @@
       "ipoYear": 2023,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 59.2,
-      "scoreShrunk": 59.1,
+      "scoreBase": 59.1,
+      "scoreShrunk": 59,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -9443,7 +9438,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 62.6,
+          "pct": 62.5,
           "weight": 2.6
         },
         {
@@ -9453,17 +9448,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 78.8,
+          "pct": 78.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 7.4,
+          "pct": 7.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 50.6,
+          "pct": 50.7,
           "weight": 0.8
         },
         {
@@ -9513,7 +9508,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BRAV3.SA",
-      "score": 59.1,
+      "score": 59,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -9528,7 +9523,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Energy",
-      "marketCap": 1896527583.7620633,
+      "marketCap": 1924408808.7364607,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -9537,10 +9532,10 @@
       "ipoYear": 2020,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 59.2,
-      "scoreShrunk": 59.1,
+      "scoreBase": 59.1,
+      "scoreShrunk": 59,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -9549,17 +9544,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 51.6,
+          "pct": 51.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 46.4,
+          "pct": 46.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 59.6,
+          "pct": 59.5,
           "weight": 1.5
         },
         {
@@ -9569,7 +9564,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 64.7,
+          "pct": 64.9,
           "weight": 0.8
         },
         {
@@ -9587,7 +9582,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.19866498,
+      "tradingFxRateApplied": 0.1972659,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2025-12-31",
       "revGrowthPriorPeriodEnd": "2024-12-31",
@@ -9613,7 +9608,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "INVX",
-      "score": 58.9,
+      "score": 58.8,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -9627,7 +9622,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1945196160,
+      "marketCap": 1957065600,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -9636,10 +9631,10 @@
       "ipoYear": 1997,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 59,
-      "scoreShrunk": 58.9,
+      "scoreBase": 58.9,
+      "scoreShrunk": 58.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -9653,22 +9648,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 53.9,
+          "pct": 53.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 77.9,
+          "pct": 77.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 12.6,
+          "pct": 12.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 36.5,
+          "pct": 36.6,
           "weight": 0.8
         },
         {
@@ -9717,105 +9712,6 @@
       "rank": 94,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "OMV.DE",
-      "score": 58.8,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.072,
-        "companion": 119.4
-      },
-      "name": "OMV Aktiengesellschaft",
-      "country": "Austria",
-      "region": "Europe",
-      "sector": "Energy",
-      "marketCap": 26876830410.34465,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 342,
-      "cohortFallback": false,
-      "scoreBase": 60.1,
-      "scoreShrunk": 58.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 84.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 39.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 41.3,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 70.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 39.23635107118175,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1219567,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "g31Shadow": {
-        "v1": {
-          "pct": 39.23635107118175,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.5916317991631801,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 95,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "AKRA.JK",
       "score": 58.7,
       "track": "profitable",
@@ -9831,7 +9727,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 1622660400.5453308,
+      "marketCap": 1374983971.8034272,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -9840,7 +9736,7 @@
       "ipoYear": 2005,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 60.1,
       "scoreShrunk": 58.7,
@@ -9857,12 +9753,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 9.6,
+          "pct": 10,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 69.8,
+          "pct": 69.4,
           "weight": 1.5
         },
         {
@@ -9872,7 +9768,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 86.7,
+          "pct": 86.6,
           "weight": 0.8
         },
         {
@@ -9890,7 +9786,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.000055750683,
+      "tradingFxRateApplied": 0.000055555556,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -9905,6 +9801,105 @@
       },
       "g31OverviewShadow": {
         "value": 0.14738704470416142,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 95,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "OMV.DE",
+      "score": 58.7,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.072,
+        "companion": 119.4
+      },
+      "name": "OMV Aktiengesellschaft",
+      "country": "Austria",
+      "region": "Europe",
+      "sector": "Energy",
+      "marketCap": 27151214407.409668,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "scoreBase": 60.1,
+      "scoreShrunk": 58.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 84.7,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 39.7,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 41.4,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 70.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 39.23635107118175,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 456,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1.124227,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "g31Shadow": {
+        "v1": {
+          "pct": 39.23635107118175,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.5916317991631801,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -9930,7 +9925,7 @@
       "country": "Malaysia",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 4675078038.489661,
+      "marketCap": 4782800469.194261,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -9939,7 +9934,7 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 59.9,
       "scoreShrunk": 58.6,
@@ -9956,12 +9951,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 15.9,
+          "pct": 16.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 48.2,
+          "pct": 48,
           "weight": 1.5
         },
         {
@@ -9989,7 +9984,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.24509804,
+      "tradingFxRateApplied": 0.24512807,
       "revGrowthBasis": "quarter",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -10014,8 +10009,8 @@
       "rank": 97,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "PDN.AX",
-      "score": 58.6,
+      "ticker": "PDN.TO",
+      "score": 58.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -10032,7 +10027,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Energy",
-      "marketCap": 2156296217.5525885,
+      "marketCap": 2385771558.602465,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -10041,10 +10036,10 @@
       "ipoYear": 1994,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 59.8,
-      "scoreShrunk": 58.6,
+      "scoreShrunk": 58.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -10053,12 +10048,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 29.7,
+          "pct": 29.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 57.1,
+          "pct": 57,
           "weight": 2.2
         },
         {
@@ -10073,7 +10068,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 90.2,
+          "pct": 90.1,
           "weight": 0.8
         },
         {
@@ -10095,7 +10090,7 @@
         "Bruttogewinn fehlt: gespeicherte Null widerspricht dem Geschäftsbericht."
       ],
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.6944444,
+      "tradingFxRateApplied": 0.70736367,
       "revGrowthBasis": "year",
       "revGrowthPeriodEnd": "2026-06-30",
       "revGrowthPriorPeriodEnd": "2025-06-30",
@@ -10121,7 +10116,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SEI",
-      "score": 58.4,
+      "score": 58.3,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -10139,7 +10134,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 6980450816,
+      "marketCap": 6313297920,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -10148,10 +10143,10 @@
       "ipoYear": 2017,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
       "scoreBase": 58.4,
-      "scoreShrunk": 58.4,
+      "scoreShrunk": 58.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -10160,12 +10155,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 57.8,
+          "pct": 57.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 56.8,
+          "pct": 56.7,
           "weight": 2.2
         },
         {
@@ -10175,12 +10170,12 @@
         },
         {
           "key": "dilution",
-          "pct": 3.5,
+          "pct": 3.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 76.1,
+          "pct": 76.3,
           "weight": 0.8
         },
         {
@@ -10201,10 +10196,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -16.3,
+        "distancePct": -24.3,
         "athDate": "2026-06-18",
         "monthsAgo": 4,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -10235,7 +10230,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BP",
-      "score": 57.9,
+      "score": 58,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -10250,7 +10245,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 125714620416,
+      "marketCap": 129320443904,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -10259,10 +10254,10 @@
       "ipoYear": 1962,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 58,
-      "scoreShrunk": 57.9,
+      "scoreBase": 58.1,
+      "scoreShrunk": 58,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -10271,27 +10266,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 83,
+          "pct": 82.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 28.9,
+          "pct": 29.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 56,
+          "pct": 55.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 46.1,
+          "pct": 46.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 77.9,
+          "pct": 78.1,
           "weight": 0.8
         },
         {
@@ -10313,9 +10308,9 @@
       "shareDilution": null,
       "ath": {
         "distancePct": 0,
-        "athDate": "2026-10-14",
+        "athDate": "2026-10-16",
         "monthsAgo": 0,
-        "lastDate": "2026-10-14"
+        "lastDate": "2026-10-16"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -10361,7 +10356,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 20151621632,
+      "marketCap": 20595527680,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -10370,9 +10365,9 @@
       "ipoYear": 2016,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 342,
+      "cohortN": 341,
       "cohortFallback": false,
-      "scoreBase": 57.8,
+      "scoreBase": 57.9,
       "scoreShrunk": 57.8,
       "factors": {
         "burn": 1,
@@ -10382,12 +10377,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 47.5,
+          "pct": 47.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 71.7,
+          "pct": 71.6,
           "weight": 2.2
         },
         {
@@ -10397,12 +10392,12 @@
         },
         {
           "key": "dilution",
-          "pct": 93.9,
+          "pct": 93.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 82.6,
+          "pct": 82.8,
           "weight": 0.8
         },
         {
