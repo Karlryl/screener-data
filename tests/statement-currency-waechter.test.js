@@ -15,6 +15,11 @@ const assert = require('assert');
 const fs = require('fs');
 const { _convertSnapshotToUSD } = require('../pull-yahoo.js');
 const { loadStatementCurrencyTable, statementFactor, statementRowPending, PROVENANCE, TABLE_PATH } = require('../lib/statement-currency-hand-table.js');
+// P251: convert with the pinned rates of tests/fixtures/fx/, not with whatever the live fx-rates.json says
+// (a stale or missing file drops ARS and falls back to the hard-coded table; the daily pull that refreshes
+// the file runs after this blocking test).
+const { pinFx, PINNED_RATES } = require('./fixtures/fx/pin-fx.js');
+pinFx();
 
 let ok = 0, fail = 0;
 function pruefe(name, fn) {
@@ -54,6 +59,18 @@ pruefe('absence: BRL reporter without a row converts every series with the BRL f
   assert.ok(close(s.annual.annualRev[0].value, 7577.5e6 * f));
   assert.strictEqual(s.meta.statementCurrencySource, undefined);
 });
+
+// The pinned table makes the factor exact; without this the checks above only compare the converter
+// with its own fxRateApplied, so a wrong factor that is recorded consistently would stay green.
+for (const currency of ['BRL', 'ARS', 'JPY', 'EUR']) {
+  pruefe('pinned rate: a ' + currency + ' reporter without a row converts with exactly the pinned ' + currency + ' rate', () => {
+    const s = _convertSnapshotToUSD(snap('NOROW-' + currency, currency, currency, 7577.5e6, 44128e6));
+    assert.strictEqual(s.meta.fxRateApplied, PINNED_RATES[currency]);
+    assert.ok(close(s.annual.annualRev[0].value, 7577.5e6 * PINNED_RATES[currency]));
+    assert.ok(close(s.timeseries.revenueQ[0].value, 1446.7e6 * PINNED_RATES[currency]));
+    assert.ok(close(s.metrics.revenueTTM.value, 44128e6 * PINNED_RATES[currency]));
+  });
+}
 
 // Raw values recovered from CI run 36227380588, checked against issuer filings in D3.
 for (const [ticker, currency, listing, annual, ttm, quarter] of [
