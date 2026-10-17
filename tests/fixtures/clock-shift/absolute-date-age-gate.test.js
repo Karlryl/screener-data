@@ -8,7 +8,9 @@ const assert = require('node:assert/strict');
 
 const DAY_MS = 864e5;
 const AGE_GATE_DAYS = 30;
-const FIXTURE_DATE = new Date(performance.timeOrigin - 5 * DAY_MS).toISOString().slice(0, 10); // "absolute" once written down
+// Full timestamp, not the calendar day: a day cut would add the UTC time of day to the age and flip
+// the asserted "45.x days" to "46.0" after 22:48 UTC (review of #8).
+const FIXTURE_DATE = new Date(performance.timeOrigin - 5 * DAY_MS).toISOString(); // "absolute" once written down
 
 test('fixture bar passes the 30-day age gate', () => {
   const ageDays = (new Date() - Date.parse(FIXTURE_DATE)) / DAY_MS;

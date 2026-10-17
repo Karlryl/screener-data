@@ -88,7 +88,8 @@ test('fixture: new Date() stamp compared with real-clock data goes red at +3 day
   const r = gate.checkFile(FIX + 'stamp-new-date.test.js');
   assert.equal(r.status, 'uhrabhaengig');
   assert.equal(r.shift, 3);
-  assert.match(r.failure, /store stamp is the day of the stored data.*3 days away/);
+  // 3 days, or 4 when the mtime and the stamp straddle midnight UTC.
+  assert.match(r.failure, /store stamp is the day of the stored data.*[34] days away/);
 });
 
 test('fixture: absolute date against a 30-day age gate is green at +3 and red at +40 days', () => {

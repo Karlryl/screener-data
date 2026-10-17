@@ -1,1 +1,6 @@
-[]
+[
+  {
+    "file": "tests/m10-persistenz-wache.test.js",
+    "grund": "B8 vergleicht das Commit-Datum aus git (echte Uhr, nicht verschiebbar) mit new Date(); bei verschobener Uhr rot, ohne dass der Test an einem echten spaeteren Tag kippt (Pruefung #8)."
+  }
+]

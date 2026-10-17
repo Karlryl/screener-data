@@ -90,7 +90,7 @@ const git = (args, cwd) => execFileSync('git', args, { cwd, encoding: 'utf8', st
  * @returns {string[]} sorted repo-relative paths that exist and are guarded
  */
 function changedTestFiles(baseRef, cwd, log = () => {}) {
-  const diff = () => git(['diff', '--name-only', '--diff-filter=ACMR', `origin/${baseRef}...HEAD`, '--', 'tests'], cwd);
+  const diff = () => git(['-c', 'core.quotePath=false', 'diff', '--name-only', '--diff-filter=ACMR', `origin/${baseRef}...HEAD`, '--', 'tests'], cwd);
   let out;
   try {
     out = diff();
@@ -225,7 +225,7 @@ function main(argv, env = process.env, cwd = ROOT) {
   try {
     exempt = loadExemptions(arg('exempt') || EXEMPT_FILE);
     if (arg('files')) {
-      files = arg('files').split(',').map(s => s.trim()).filter(Boolean);
+      files = arg('files').split(',').map(s => s.trim().replace(/\\/g, '/')).filter(Boolean);
     } else {
       const base = arg('base') || env.BASE_REF || '';
       if (!base) {
@@ -253,7 +253,7 @@ function main(argv, env = process.env, cwd = ROOT) {
     const r = checkFile(file, { cwd, exempt });
     if (r.status === 'exempt') console.log(`Uhr-Verschiebung: ${file} ausgenommen (Grund: ${r.grund}).`);
     else if (r.status === 'rot-bei-echter-uhr') console.log(`Uhr-Verschiebung: ${file} ist schon bei echter Uhr rot - das meldet das Test-Gate, hier uebersprungen.`);
-    else if (r.status === 'nichts-geprueft') console.log(`Uhr-Verschiebung: ${file} hat bei verschobener Uhr keine Pruefung ausgefuehrt (alle uebersprungen) - nicht belegt, zaehlt NICHT als gruen.`);
+    else if (r.status === 'nichts-geprueft') console.log(`::warning::Uhr-Verschiebung: ${file} hat bei verschobener Uhr keine Pruefung ausgefuehrt (alle uebersprungen) - nicht belegt, zaehlt NICHT als gruen.`);
     else if (r.status === 'ok') console.log(`Uhr-Verschiebung: ${file} gruen bei ${SHIFT_DAYS.map(d => '+' + d).join(' und ')} Tagen.`);
     else {
       flagged.push(r);
