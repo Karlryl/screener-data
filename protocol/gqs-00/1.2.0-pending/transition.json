@@ -281,15 +281,17 @@
         "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
       },
       "dependencyFiles": {
-        "lib/g31-recency.js": "8afeced40223ecec162c2431277cecbc9c01224e94490e6a475c37489f2adc7e"
+        "lib/g31-recency.js": "8afeced40223ecec162c2431277cecbc9c01224e94490e6a475c37489f2adc7e",
+        "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
       },
-      "dependencyRule": "scripts/gqs00-freeze.js verify(): while this transition is open, every path in REQUIRED_DEPENDENCIES must be registered under dependencyFiles and match its hash; historical source hashes stay untouched.",
+      "dependencyRule": "scripts/gqs00-freeze.js verify(): while this transition is open, every path in REQUIRED_DEPENDENCIES must be registered under dependencyFiles and match its hash; historical source hashes stay untouched. P267 round 2: lib/annual-pairs.js (dated fiscal-year ends and pair checks read by the selection) is a required dependency too.",
       "goldenImpact": "verify() rebuilds the 25 golden traces; GQS00-023 and GQS00-024 keep exactly their registered second-variant traces, the other 23 are byte-identical. A registered second trace passes only as strict JSON (NaN, Infinity and undefined cannot hide behind the canonical hash).",
       "evidence": "tests/g31-p267.test.js, tests/scoring/gqs00-freeze.test.js, tests/g31-umschaltung.test.js, tests/g31-aktualitaet-p184.test.js; Vorher/Nachher docs/g31-umschaltung-vorher-nachher-2026-10-17.md (recomputed on the same 17.10.2026 replay).",
       "review": "Build registration only; the independent Codex re-review decides the merge."
     }
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "8afeced40223ecec162c2431277cecbc9c01224e94490e6a475c37489f2adc7e"
+    "lib/g31-recency.js": "8afeced40223ecec162c2431277cecbc9c01224e94490e6a475c37489f2adc7e",
+    "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
 }

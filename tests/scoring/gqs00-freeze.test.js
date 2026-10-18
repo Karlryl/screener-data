@@ -80,3 +80,28 @@ test('productive dependency: unregistered or changed lib/g31-recency.js turns ve
   assert.throws(() => load((d) => d, (s) => s.replace(anchor, '    && false;')).verify(), /lib\/g31-recency\.js differs from its registered dependency hash/);
   assert.deepEqual([sha(tfile), sha(lfile)], before);
 });
+
+// P267 round 2: lib/annual-pairs.js supplies the dated fiscal-year ends the G31 selection reads; changing them
+// (here: every end returned as null, which flips a 150/100 fiscal year against a 120/100 quarter from 50 % to 20 %)
+// must turn verify() red although no golden case moves. Library bytes are swapped in memory only.
+test('productive dependency: a changed lib/annual-pairs.js turns verify() red', () => {
+  const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+  const { Module, createRequire } = require('node:module');
+  const file = path.resolve(__dirname, '../../scripts/gqs00-freeze.js'), source = fs.readFileSync(file, 'utf8');
+  const afile = path.resolve(__dirname, '../../lib/annual-pairs.js');
+  const sha = () => crypto.createHash('sha256').update(fs.readFileSync(afile)).digest('hex'), before = sha();
+  const load = (libEdit) => {
+    const m = new Module(file, module), real = createRequire(file); m.filename = file; m.paths = module.paths;
+    const swapped = { ...fs, readFileSync: (p, o) => {
+      if (path.resolve(String(p)) === afile) { const s = libEdit(fs.readFileSync(p, 'utf8')); return o ? s : Buffer.from(s); }
+      return fs.readFileSync(p, o);
+    } };
+    m.require = (id) => (id === 'node:fs' ? swapped : real(id)); m._compile(source, file); return m.exports;
+  };
+  assert.equal(load((s) => s).verify().canonicalId, 'GQS-00@1.1.0');
+  const anchor = 'function annualPeriodEnds(';
+  assert.equal(fs.readFileSync(afile, 'utf8').split(anchor).length, 2, 'exact unique anchor');
+  assert.throws(() => load((s) => s.replace(anchor, 'function annualPeriodEndsOriginal(') + '\nfunction annualPeriodEnds(s, f) { return annualPeriodEndsOriginal(s, f).map(() => null); }\n').verify(),
+    /lib\/annual-pairs\.js differs from its registered dependency hash/);
+  assert.equal(sha(), before);
+});

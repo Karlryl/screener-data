@@ -839,7 +839,9 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
         zeile.marketCapClassesDeviationPct = row.marketCapClassesDeviationPct;
       }
       zeile.g31Shadow = k.g31Shadow || g31Export(null).g31Shadow;
-      zeile.g31OverviewShadow = k.g31Overview?.[ov.kind] ?? null;
+      // P267-r2: a board name keeps the board row's shadow exactly (a held value stays held there); only an
+      // off-board name, which carries no overview kind, falls back to the own derivation.
+      zeile.g31OverviewShadow = k.onBoard && 'g31OverviewShadow' in row ? row.g31OverviewShadow : k.g31Overview?.[ov.kind] ?? null;
       return zeile;
     }),
   };

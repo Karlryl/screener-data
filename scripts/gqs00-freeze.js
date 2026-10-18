@@ -241,7 +241,8 @@ function acceptsPendingTrace(trace, hash) {
 }
 
 // P267: productive libraries outside src/scoring that the open transition must register by hash.
-const REQUIRED_DEPENDENCIES = Object.freeze(['lib/g31-recency.js']);
+// P267-r2: annual-pairs.js supplies the dated fiscal-year ends and pair checks the selection reads.
+const REQUIRED_DEPENDENCIES = Object.freeze(['lib/g31-recency.js', 'lib/annual-pairs.js']);
 
 function walkFiles(dir) {
   const out = [];

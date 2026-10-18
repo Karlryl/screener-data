@@ -344,6 +344,9 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
       const pick = m => ({ value: m.value, period: m.period ?? null });
       return { gp: pick(overviewMetric(snap)), 'revenue-badge': pick(overviewMetric(snap, { gpClass: 'degenerate' })) };
     }) : null,
+    // P267-r2: the live overview value and its period re-derived in the ACTIVE arm (v1 in production, the old
+    // calculation inside withG31Variant('legacy')); the label check compares against exactly this candidate.
+    overviewLive: snap ? { gp: overviewMetric(snap), 'revenue-badge': overviewMetric(snap, { gpClass: 'degenerate' }) } : null,
     ...(typeof g31Export === 'function' ? g31Export(snap) : { g31Shadow: null, g31Overview: {} }),
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
     // Shared mappers only read existing derivations; HG builders request this once.
@@ -407,7 +410,8 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   if (flat || Object.hasOwn(out, 'overview')) { // board and overview rows; survival rows carry no overview
     const kind = flat ? out.overviewKind : out.overview?.kind;
     const shown = flat ? out.overviewValue : out.overview?.value ?? null;
-    const neu = derivations.g31Overview?.[kind]?.value;
+    const again = derivations.overviewLive?.[kind];
+    const neu = again?.value;
     const gleich = neu !== undefined && (neu === null ? shown === null : round3(neu) === shown);
     const alt = gleich && derivations.overviewLegacy ? derivations.overviewLegacy[kind] : null;
     out.overviewValueLegacy = alt ? round3(alt.value) : null;
@@ -417,9 +421,9 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     // label is emptied with its reason instead of pairing a value with another number's period.
     if (Object.hasOwn(out, 'overviewPeriod')) {
       let label = overviewPeriodFor(kind, out.overviewPeriod);
-      const again = derivations.g31Overview?.[kind];
       if (label && label.basis !== 'none' && derivations.wachstum && again?.period
-          && (!gleich || again.period.basis !== label.basis || (again.period.periodEnd ?? null) !== label.periodEnd)) {
+          && (!gleich || again.period.basis !== label.basis || (again.period.periodEnd ?? null) !== label.periodEnd
+            || (again.period.priorPeriodEnd ?? null) !== label.priorPeriodEnd)) {
         label = { basis: 'none', periodEnd: null, priorPeriodEnd: null, reason: OVERVIEW_PERIOD_UNCONFIRMED };
       }
       out.overviewPeriod = label;

@@ -256,4 +256,56 @@ test('000599.SZ guard absent: another listing or a changed vendor value is not h
   assert.deepEqual(liveHashes(), before);
 });
 
+// ---- P267 round 2 ----
+test('r2 P2-1: Rule of 40 keeps a held GP value held, including its shadow (main writer and Rule40 row builder)', () => {
+  const s = real('DAVE'); s.meta.ticker = 'PGHL.BO';
+  s.annual.annualGPEnds = s.annual.annualGPEnds.map(() => null);
+  s.timeseries.grossProfitQEnds = s.timeseries.grossProfitQEnds.map(() => null);
+  writeSnap(s);
+  const ranked = produceRankings([{ ticker: 'PGHL.BO', action: 'route', formulaId: 'health-care', track: 'profitable', score: 70,
+    revGrowthYoYPct: axes.revGrowthLevel(s), overview: { ...overviewMetric(s), value: 0.282 } }]).branches['health-care'].profitable[0];
+  const row = W.mapBoardRow(ranked, 0, 'main');
+  assert.equal(row.g31OverviewShadow.value, null);
+  const unheld = G.g31Export(s);
+  assert.ok(Number.isFinite(unheld.g31Overview.gp.value), 'the own derivation alone would show a value');
+  const { baueZeilen } = require('../scripts/write-rule40-export.js');
+  const out = baueZeilen([{ ticker: 'PGHL.BO', row, onBoard: true, branch: 'health-care', wachstumRoh: 30, fcfMarginPct: 30,
+    ebitdaMarginPct: null, marketCap: 1e10, industry: 'Biotechnology', ...unheld }]).rows[0];
+  assert.equal(out.overviewValue, null);
+  assert.equal(out.overviewPeriod.basis, 'none'); assert.equal(out.overviewValueLegacy, null); assert.equal(out.overviewPeriodLegacy, null);
+  assert.equal(out.g31OverviewShadow.value, null, 'the held shadow is not refilled');
+  // Break-once in memory: the old assignment re-inserts the held shadow value.
+  const rfile = path.join(ROOT, 'scripts/write-rule40-export.js'), rs = fs.readFileSync(rfile, 'utf8');
+  const anchor = "k.onBoard && 'g31OverviewShadow' in row ? row.g31OverviewShadow : k.g31Overview?.[ov.kind] ?? null;";
+  assert.equal(rs.split(anchor).length, 2, 'exact unique anchor');
+  const broken = compile(rfile, rs.replace(anchor, 'k.g31Overview?.[ov.kind] ?? null;'));
+  const bad = broken.baueZeilen([{ ticker: 'PGHL.BO', row, onBoard: true, branch: 'health-care', wachstumRoh: 30, fcfMarginPct: 30,
+    ebitdaMarginPct: null, marketCap: 1e10, industry: 'Biotechnology', ...unheld }]).rows[0];
+  assert.throws(() => assert.equal(bad.g31OverviewShadow.value, null), assert.AssertionError);
+});
+
+test('r2 P2-2: a wrong prior-year end alone empties the label (and the validator accepts the emptied label)', () => {
+  const p = overviewMetric(dave).period;
+  const row = W.mapBoardRow(engineRow({ kind: 'gp', value: 0.299, companion: 1, period: { ...p, priorPeriodEnd: '2024-06-30' } }), 0, 'main');
+  assert.equal(row.overviewPeriod.basis, 'none'); assert.equal(row.overviewPeriod.priorPeriodEnd, null);
+  assert.match(row.overviewPeriod.reason, UNCONFIRMED);
+  const errs = []; W.checkOverviewPeriods(row, 'row', errs); assert.deepEqual(errs, []);
+  assert.deepEqual(W.mapBoardRow(engineRow({ kind: 'gp', value: 0.299, companion: 1, period: p }), 0, 'main').overviewPeriod, p, 'control');
+});
+
+test('r2 P2-3: in the legacy arm the label is checked against the legacy candidate (DAVE year 0.704 kept)', () => {
+  const s = real('DAVE'); s.meta.ticker = '_P267_DAVE_LEG'; writeSnap(s);
+  const row = legacy(() => {
+    const metric = overviewMetric(s);
+    assert.equal(metric.value, s.annual.annualGP.map(v)[0] / s.annual.annualGP.map(v)[1] - 1);
+    const ranked = produceRankings([{ ticker: s.meta.ticker, action: 'route', formulaId: 'software-comm-services', track: 'profitable',
+      score: 70, revGrowthYoYPct: axes.revGrowthLevel(s), overview: metric }]).branches['software-comm-services'].profitable[0];
+    return W.mapBoardRow(ranked, 0, 'main');
+  });
+  assert.equal(row.overview.value, 0.704);
+  assert.deepEqual([row.overviewPeriod.basis, row.overviewPeriod.periodEnd, row.overviewPeriod.reason], ['year', s.annual.annualGPEnds[0], null]);
+  // v1 arm on the same data keeps its quarter label (first test); both correct labels survive.
+  assert.equal(W.mapBoardRow(engineRow(overviewMetric(dave)), 0, 'main').overviewPeriod.basis, 'quarter');
+});
+
 test.after(() => { assert.deepEqual(liveHashes(), before); fs.rmSync(tmp, { recursive: true, force: true }); });

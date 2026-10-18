@@ -350,15 +350,16 @@ test('shadow failures leave every legacy mapper field intact; smallcap hand-tabl
   });
   const row = { ticker: s.meta.ticker, score: 75, revGrowthYoYPct: 50, overview: overviewMetric(s), overviewKind: 'gp',
     overviewValue: overviewMetric(s).value }; // the flat overview mapper reads overviewValue
-  // overviewValueLegacy (G31 switch) is verified against the shadow candidate; a failed shadow
-  // cannot verify it, so it must fall back to null instead of an unverified pre-G31 number.
+  // P267-r2: overviewValueLegacy and the overview label are verified against the live candidate re-derived in
+  // the active arm, no longer against the shadow, so a shadow failure does not decide them. They stay outside
+  // this comparison because the in-memory library copy below does not share its arm switch with the real
+  // overview module (its legacy scope cannot reach overviewMetric).
   const legacy = row => Object.fromEntries(Object.entries(row).filter(([key]) => !['g31Shadow', 'g31OverviewShadow', 'overviewValueLegacy', 'overviewPeriodLegacy'].includes(key)));
   for (const store of ['main', 'smallcap']) for (const mapper of ['mapBoardRow', 'mapOverviewRow']) {
     const expected = writer(G)[mapper](row, 0, store);
     close(expected.overviewValueLegacy, 0.2);
     for (const lib of [brokenGrowth, brokenOverview]) {
       const actual = writer(lib)[mapper](row, 0, store);
-      assert.equal(actual.overviewValueLegacy, null);
       assert.equal(JSON.stringify(legacy(actual)), JSON.stringify(legacy(expected)));
       assert.equal(actual.g31Shadow.v1, null); assert.match(actual.g31Shadow.reason, /Berechnung fehlgeschlagen/);
       assert.equal(actual.g31OverviewShadow.value, null); assert.match(actual.g31OverviewShadow.reason, /Berechnung fehlgeschlagen/);
