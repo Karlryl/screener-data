@@ -15,6 +15,8 @@ Die Heimatnotierung kommt allein aus der Handtabelle `configs/dup-issuer-shadow-
 
 Grundlage ist die Nachstellung des Bewertungslaufs vom 17.10.2026 aus PR #10 (Code und Daten des Auslösecommits `df47be8`, Snapshot-Artefakt des Laufs 39036704898, Uhr fest auf 2026-10-17T14:47:00Z). Für die Exportskripte ist `df47be8` mit der Basis `b59a1d1` identisch; dazwischen kam nur `scripts/clock-shift-gate.js` hinzu. Die Bewertung selbst ändert sich durch diesen Zweig nicht, deshalb laufen in beiden Armen nur die Exportschritte des Bewertungsjobs neu, in derselben Kopie und mit denselben Eingaben: findash-Export, Ausschlussliste, Rule of 40, Filter-Universum, Bewertungs-Feed. Der einzige Unterschied sind fünf Dateien dieses Zweigs (`scripts/write-findash-export.js`, `scripts/write-rule40-export.js`, `lib/dup-issuer-shadow-table.js`, `configs/dup-issuer-shadow-table.json`, `configs/non-operating-classes.json`).
 
+**Auf dem Stand nach PR #10:** Seit PR #10 (Handtabelle 18.10., `14a0c80`) auf main ist, rechnen beide Arme auf dem Nachher-Arm von PR #10 (dessen Handtabelle ist byte-gleich mit main). Der Vorher-Arm trifft diesen Export bei jedem Rang und Score. Gegenüber der Rechnung ohne PR #10 ändert sich nur die Finanzen-Liste: Victory Capital (VCTR) steht dort jetzt auf Rang 76 statt 38, deshalb rückt 1GLXY.MI von 74 auf 73 vor und verliert dort seinen Rang, und im Vollboard verschieben sich 220 statt 219 Zeilen. Alle anderen Listen und alle übrigen Zahlen unten sind unverändert.
+
 **Nachstellung geprüft:** Der Vorher-Arm trifft den veröffentlichten Export vom 17.10. (gh-pages) bei jedem Rang und jedem Score in allen Listen außerhalb des Small-Cap-Bestands; abweichend sind nur Laufkennung und Zeit. Der Small-Cap-Bestand ist wie in PR #10 nicht abrufbar und fehlt in beiden Armen gleich; der Dateicheck meldet deshalb in beiden Armen dieselbe eine Small-Cap-Zeile und sonst nichts.
 
 **Was sich ändert:** Nur acht Dateien unterscheiden sich inhaltlich (ohne Laufstempel): `industrials.json`, `utilities.json`, `financials.json`, `full/industrials.json`, `full/utilities.json`, `full/financials.json`, `quality/utilities.json` und `filter/universum.json`. Kein Score, keine Reihenfolge und keine Listenmitgliedschaft ändert sich; Rule of 40, beide Überblicke und alle anderen Branchen bleiben gleich.
@@ -26,7 +28,7 @@ Grundlage ist die Nachstellung des Bewertungslaufs vom 17.10.2026 aus PR #10 (Co
 | Industrie, unprofitabel (Kurzliste) | AVAV.SW | 38 → ohne Rang | AVAV (nicht in der Kurzliste; Vollboard 140 → 139) |
 | Industrie, unprofitabel (Vollboard) | AVAV.SW | 38 → ohne Rang | AVAV, 140 → 139 |
 | Industrie, profitabel (Vollboard) | GE.VI | 243 → ohne Rang | GE, 242 → 242 |
-| Finanzen, profitabel (Vollboard) | 1GLXY.MI | 74 → ohne Rang | GLXY, 75 → 74 |
+| Finanzen, profitabel (Vollboard) | 1GLXY.MI | 73 → ohne Rang | GLXY, 74 → 73 |
 | Versorger, profitabel (Kurzliste) | ELPC | 56 → ohne Rang | CPLE3.SA, 55 → 55 |
 | Versorger, profitabel (Vollboard) | ELPC | 56 → ohne Rang | CPLE3.SA, 55 → 55 |
 | Versorger, profitabel (Kurzliste) | AXIA | 90 → ohne Rang | AXIA3.SA (nicht in der Kurzliste; Vollboard 105 → 103) |
@@ -44,7 +46,7 @@ Jede andere Zeile rückt um genau so viele Plätze auf, wie über ihr Zeilen ent
 | Industrie, unprofitabel (Kurzliste) | 58 | 39–96 → 38–95 (je 1) |
 | Industrie, unprofitabel (Vollboard) | 134 | 39–172 → 38–171 (je 1) |
 | Industrie, profitabel (Vollboard) | 1.666 | 244–1.909 → 243–1.908 (je 1) |
-| Finanzen, profitabel (Vollboard) | 219 | 75–293 → 74–292 (je 1) |
+| Finanzen, profitabel (Vollboard) | 220 | 74–293 → 73–292 (je 1) |
 | Versorger, profitabel (Kurzliste) | 43 | 57–89 → 56–88 (je 1), 91–100 → 89–98 (je 2) |
 | Versorger, profitabel (Vollboard) | 286 | 57–89 → 56–88 (je 1, 33 Zeilen), 91–343 → 89–341 (je 2, 253 Zeilen) |
 | Qualität Versorger, profitabel | 43 | 58–100 → 57–99 (je 1) |
@@ -55,9 +57,9 @@ Sichtbar in der Kurzliste Versorger, profitabel: CDIA.JK 57 → 56, CEG 58 → 5
 
 Sichtbar in Qualität Versorger, profitabel: AXIA3.SA 58 → 57, CEGR3.SA 59 → 58, VER.VI 60 → 59, ACO.TO 61 → 60, 3868.HK 62 → 61, D 63 → 62, ENEV3.SA 64 → 63, PGEO.JK 65 → 64, TXNM 66 → 65, 600025.SS 67 → 66, WTRG 68 → 67, DUK 69 → 68, EMA 70 → 69, EIX 71 → 70, AEP 72 → 71, ENELGXCH.SN 73 → 72, IRE.MI 74 → 73, AEE 75 → 74, NWE 76 → 75, 8174.T 77 → 76, ATGL.BO 78 → 77, CEPU 79 → 78, ERG.MI 80 → 79, 0579.HK 81 → 80, CNP 82 → 81, NI 83 → 82, IG.VI 84 → 83, ELI.BR 85 → 84, LNT 86 → 85, CPFE3.SA 87 → 86, WEC 88 → 87, TEP.L 89 → 88, ETR 90 → 89, 1SLR.MI 91 → 90, DTE 92 → 91, 000993.SZ 93 → 92, 002256.SZ 94 → 93, NGG 95 → 94, EOAN.DE 96 → 95, MGL.NS 97 → 96, ACE.MI 98 → 97, VEDPOWER.BO 99 → 98, REE.VI 100 → 99.
 
-Das Filter-Universum übernimmt die Vollboard-Ränge: 2.310 Zeilen ändern `rk` genau wie ihre Vollboard-Zeile (fünf davon auf leer). Die fünf entrangten Notierungen tragen dort zusätzlich den Grund `dupIssuer`. findash blendet im Filter standardmäßig `dup-issuer` aus, also die markierten Zeilen. Copel und AXIA im Filter-Reiter: vorher CPLE3.SA (Rang 55) und AXIA3.SA (Rang 105) ausgeblendet, ELPC (56) und AXIA (90) sichtbar; nachher CPLE3.SA (55) und AXIA3.SA (103) sichtbar ohne Ausschlussgrund, ELPC und AXIA ohne Rang und ausgeblendet. KCO.VI bleibt sichtbar mit Rang 908.
+Das Filter-Universum übernimmt die Vollboard-Ränge: 2.311 Zeilen ändern `rk` genau wie ihre Vollboard-Zeile (fünf davon auf leer). Die fünf entrangten Notierungen tragen dort zusätzlich den Grund `dupIssuer`. findash blendet im Filter standardmäßig `dup-issuer` aus, also die markierten Zeilen. Copel und AXIA im Filter-Reiter: vorher CPLE3.SA (Rang 55) und AXIA3.SA (Rang 105) ausgeblendet, ELPC (56) und AXIA (90) sichtbar; nachher CPLE3.SA (55) und AXIA3.SA (103) sichtbar ohne Ausschlussgrund, ELPC und AXIA ohne Rang und ausgeblendet. KCO.VI bleibt sichtbar mit Rang 908.
 
-Die Datei `dup-issuer-rang-vorher-nachher-2026-10-17.csv` daneben enthält alle 2.464 geänderten Brettzeilen (9 entrangte, 2.449 verschobene, 2 nur mit entfernter Markierung (CPLE3.SA), 4 Zeilen mit neuem Klassengrund), mit Rang, Grund, Klassengrund und Markierung vorher und nachher.
+Die Datei `dup-issuer-rang-vorher-nachher-2026-10-17.csv` daneben enthält alle 2.465 geänderten Brettzeilen auf dem Stand nach PR #10 (9 entrangte, 2.450 verschobene, 2 nur mit entfernter Markierung (CPLE3.SA), 4 Zeilen mit neuem Klassengrund), mit Rang, Grund, Klassengrund und Markierung vorher und nachher.
 
 ## Unverändert
 
