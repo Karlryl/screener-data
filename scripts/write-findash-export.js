@@ -316,7 +316,8 @@ const { overviewMetric } = require('../src/scoring/overview.js');
 const round3 = (x) => (Number.isFinite(x) ? Math.round(x * 1000) / 1000 : null); // = score.js round3 of overview values
 function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
   const snapshotDir = snapshotStore === 'smallcap' ? SMALLCAP_SNAP_DIR : SNAP_DIR;
-  const cacheKey = `${snapshotDir}:${ticker}`;
+  // P267-r3: the derivations depend on the active G31 arm (overviewLive, wachstum), so the arm is part of the key.
+  const cacheKey = `${snapshotDir}:${ticker}:${g31Variant() ?? 'legacy'}`;
   if (_snapCache.has(cacheKey)) return _snapCache.get(cacheKey);
   let snap = null, snapFehler = null;
   try {

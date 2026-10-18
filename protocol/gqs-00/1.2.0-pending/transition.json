@@ -269,7 +269,7 @@
     "p267Amendment": {
       "date": "2026-10-18",
       "authority": "Codex review P267 of PR #12 (NOT APPROVED 97 %, P2 findings) and the master decision of 18.10.2026 (no blanket size filter; a Prüfhinweis shown with the value; 000599.SZ held through the hand table on the P268 primary-source evidence).",
-      "scope": "overview.js: gp and revenue-badge carry the period of exactly their value (overviewPeriodExport) in both arms; the GP quarter fraction is computed from its operands. score.js: produceRankings passes overview.period next to the rounded value (board and overview rows); no score, weight, threshold or rank input changes. axes.js: comment wording only (the switch is active from its reviewed delivery). lib/g31-recency.js: explicit statement durations (6M/6M = halfYear, 6M/3M no pair, unassignable metadata ignored) and the diagnostic g31Hinweis; registered below as a productive dependency outside src/scoring.",
+      "scope": "overview.js: gp and revenue-badge carry the period of exactly their value (overviewPeriodExport) in both arms; the GP quarter fraction is computed from its operands. score.js: produceRankings passes overview.period next to the rounded value (board and overview rows); no score, weight, threshold or rank input changes. axes.js: comment wording only (the switch is active from its reviewed delivery). lib/g31-recency.js: explicit statement durations (6M/6M = halfYear, 6M/3M no pair, unassignable metadata ignored) and the diagnostic g31Hinweis; registered below as a productive dependency outside src/scoring. P267 round 3: a half-year pair needs both ends stored as 6M; one 6M next to an unknown duration forms no interim pair (no effect on the 17.10.2026 data, where no 6M pair exists).",
       "previousSourceSha256LF": {
         "src/scoring/axes.js": "5e95b563e21c43fcaa48495b5057c5b179c9f43a0b59d8cd1bb3b06b5bbf7350",
         "src/scoring/overview.js": "f5aa134320e9297a68de744b84997ea6a5c70ee57a1bc5f2d6f7f7eb9b268127",
@@ -281,7 +281,7 @@
         "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
       },
       "dependencyFiles": {
-        "lib/g31-recency.js": "8afeced40223ecec162c2431277cecbc9c01224e94490e6a475c37489f2adc7e",
+        "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
         "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
       },
       "dependencyRule": "scripts/gqs00-freeze.js verify(): while this transition is open, every path in REQUIRED_DEPENDENCIES must be registered under dependencyFiles and match its hash; historical source hashes stay untouched. P267 round 2: lib/annual-pairs.js (dated fiscal-year ends and pair checks read by the selection) is a required dependency too.",
@@ -291,7 +291,7 @@
     }
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "8afeced40223ecec162c2431277cecbc9c01224e94490e6a475c37489f2adc7e",
+    "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
 }

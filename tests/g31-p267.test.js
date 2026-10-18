@@ -152,7 +152,12 @@ test('durations: 3M/3M quarter, 6M/6M half year, 6M/3M no pair, unassignable met
     assert.match(G.quarterCandidate(mixed, field).reason, /unterschiedlich lange Zeiträume/, field);
     assert.equal(legOf(field, mixed).basis, 'year', field);
     // Unknown duration on one side is no proven conflict and is never invented.
-    assert.equal(legOf(field, durationSnap(field, ['6M', null, null, null, null])).basis, 'halfYear', field);
+    // P267-r3: one 6M next to an unknown duration is no proven half-year pair, in either direction; the year carries.
+    for (const d of [['6M', null, null, null, null], [null, null, null, null, '6M']]) {
+      assert.match(G.quarterCandidate(durationSnap(field, d), field).reason, /Halbjahresvergleich ist nicht belegt/, field);
+      assert.equal(legOf(field, durationSnap(field, d)).basis, 'year', field + ' ' + JSON.stringify(d));
+    }
+    assert.equal(legOf(field, durationSnap(field, ['3M', null, null, null, null])).basis, 'quarter', field + ': 3M next to unknown stays a quarter');
     assert.equal(legOf(field, durationSnap(field, [null, null, null, null, null])).basis, 'quarter', field);
     // Metadata of another length or with another end cannot be assigned: ignored, quarter as before.
     const short = durationSnap(field, ['6M', '3M', '3M', '3M']);
@@ -168,12 +173,18 @@ test('durations: 3M/3M quarter, 6M/6M half year, 6M/3M no pair, unassignable met
   assert.equal(revGrowthLeg(h).basis, 'halfYear'); assert.equal(axes.revGrowthLevel(h), revGrowthLeg(h).pct); assert.ok(Math.abs(revGrowthLeg(h).pct - 20) < 1e-9);
   const errs = []; W.checkRevGrowthBasis({ revGrowthYoYPct: 20, revGrowthBasis: 'halfYear', revGrowthPeriodEnd: '2026-06-30', revGrowthPriorPeriodEnd: '2025-06-30' }, 'row', errs);
   assert.deepEqual(errs, []);
-  // Break-once in memory: without the duration conflict line 6M/3M is a quarter again.
+  // Break-once in memory: without the duration conflict line a 3M quarter against a 12M year-ago cell is a quarter again.
   const gfile = path.join(ROOT, 'lib/g31-recency.js'), gs = fs.readFileSync(gfile, 'utf8');
   const anchor = "  if (durations[0] && durations[1] && durations[0] !== durations[1]) return missing('Die beiden Werte umfassen unterschiedlich lange Zeiträume.');";
   assert.equal(gs.split(anchor).length, 2, 'exact unique anchor');
+  assert.equal(G.quarterCandidate(durationSnap('revenueQ', ['3M', '3M', '3M', '3M', '12M'])).pct, null);
   const broken = compile(gfile, gs.replace(anchor, ''));
-  assert.throws(() => assert.equal(broken.quarterCandidate(durationSnap('revenueQ', ['6M', '3M', '3M', '3M', '3M'])).pct, null), assert.AssertionError);
+  assert.throws(() => assert.equal(broken.quarterCandidate(durationSnap('revenueQ', ['3M', '3M', '3M', '3M', '12M'])).pct, null), assert.AssertionError);
+  // Break-once (P267-r3): without the half-year line one 6M next to an unknown duration is labelled a half year again.
+  const half = "  if ((durations[0] === '6M') !== (durations[1] === '6M')) return missing('Die Dauer eines der beiden Werte ist nicht gespeichert; ein Halbjahresvergleich ist nicht belegt.');";
+  assert.equal(gs.split(half).length, 2, 'exact unique anchor');
+  const brokenHalf = compile(gfile, gs.replace(half, ''));
+  assert.throws(() => assert.equal(brokenHalf.quarterCandidate(durationSnap('revenueQ', ['6M', null, null, null, null])).pct, null), assert.AssertionError);
 });
 
 // ---- Prüfhinweis (master decision 18.10.2026: no blanket size filter, a hint shown with the value) ----
@@ -306,6 +317,33 @@ test('r2 P2-3: in the legacy arm the label is checked against the legacy candida
   assert.deepEqual([row.overviewPeriod.basis, row.overviewPeriod.periodEnd, row.overviewPeriod.reason], ['year', s.annual.annualGPEnds[0], null]);
   // v1 arm on the same data keeps its quarter label (first test); both correct labels survive.
   assert.equal(W.mapBoardRow(engineRow(overviewMetric(dave)), 0, 'main').overviewPeriod.basis, 'quarter');
+});
+
+// ---- P267 round 3: the writer's derivation cache follows the active arm ----
+test('r3 P2-3: one writer instance switching arms keeps both labels and comparisons (v1-legacy-v1, legacy-v1-legacy)', () => {
+  const ends = dave.annual.annualGPEnds;
+  const expect = {
+    v1: { value: 0.299, period: { basis: 'quarter', periodEnd: '2026-06-30', priorPeriodEnd: '2025-06-30', reason: null } },
+    legacy: { value: 0.704, period: { basis: 'year', periodEnd: ends[0], priorPeriodEnd: ends[1], reason: null } },
+  };
+  const step = (writer, arm) => {
+    const run = () => writer.mapBoardRow(engineRow(overviewMetric(dave)), 0, 'main');
+    const row = arm === 'v1' ? run() : legacy(run);
+    assert.equal(row.overview.value, expect[arm].value, arm);
+    assert.deepEqual(row.overviewPeriod, expect[arm].period, arm + ': label of exactly this value');
+    assert.equal(row.overviewValueLegacy, 0.704, arm + ': comparison value kept');
+    assert.deepEqual([row.overviewPeriodLegacy?.basis, row.overviewPeriodLegacy?.periodEnd], ['year', ends[0]], arm);
+  };
+  const wfile = path.join(ROOT, 'scripts/write-findash-export.js'), ws = fs.readFileSync(wfile, 'utf8');
+  const fresh = () => compile(wfile, ws);
+  const a = fresh(); for (const arm of ['v1', 'legacy', 'v1']) step(a, arm);
+  const b = fresh(); for (const arm of ['legacy', 'v1', 'legacy']) step(b, arm);
+  // Break-once in memory: a cache key without the arm mixes the arms again.
+  const anchor = "  const cacheKey = `${snapshotDir}:${ticker}:${g31Variant() ?? 'legacy'}`;";
+  assert.equal(ws.split(anchor).length, 2, 'exact unique anchor');
+  const broken = compile(wfile, ws.replace(anchor, '  const cacheKey = `${snapshotDir}:${ticker}`;'));
+  step(broken, 'v1');
+  assert.throws(() => step(broken, 'legacy'), assert.AssertionError);
 });
 
 test.after(() => { assert.deepEqual(liveHashes(), before); fs.rmSync(tmp, { recursive: true, force: true }); });
