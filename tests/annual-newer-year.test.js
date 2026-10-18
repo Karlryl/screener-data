@@ -11,6 +11,7 @@ const path = require('path');
 const Y = require('../pull-yahoo.js');
 const R = require('../lib/stale-quarter-reload.js');
 const axes = require('../src/scoring/axes.js');
+const G = require('../lib/g31-recency.js');
 const r40 = require('../scripts/write-rule40-export.js');
 const { fixture, snapshot, NOW } = require('./stale-quarter-reload.test.js');
 const root = path.resolve(__dirname, '..');
@@ -124,10 +125,24 @@ async function check(name, fn) {
       assert.deepEqual(axes[k](s), axes[k](bare), k + ' reads the unchanged annual series');
     }
   });
-  await check('A quarter leg: with a quarterly pair the record is inert, every axis is identical', () => {
+  await check('A quarter leg: an equally new quarter keeps the level; only the bonus reads the newer year (G31 B3)', () => {
     const s = stored({ quarters: true }), bare = stored({ marker: null, quarters: true });
-    assert.equal(pct(axes.revGrowthLevel(s)), 50, 'growth comes from the quarters (60/40)');
-    for (const k of AXES) assert.deepEqual(axes[k](s), axes[k](bare), k);
+    assert.equal(pct(axes.revGrowthLevel(s)), 50, 'growth comes from the quarters (60/40), equal end keeps the quarter');
+    // G31 switch 18.10.2026 (B3): the annual bonus component is the validated FY26/FY25 record, not FY25/FY24.
+    assert.deepEqual(axes.revYoYComponents(s), [347927740 / 261655008 - 1, 0.5]);
+    assert.deepEqual(axes.revYoYComponents(bare), [182617952.5 / 95134807.4 - 1, 0.5]);
+    assert.deepEqual(G.withG31Variant('legacy', () => axes.revYoYComponents(s)), axes.revYoYComponents(bare), 'legacy: record inert');
+    for (const k of AXES.filter(k => k !== 'revYoYComponents')) assert.deepEqual(axes[k](s), axes[k](bare), k);
+  });
+  await check('G31 B1: dated quarters across an empty row keep the quarter leg like their missing-row twin; legacy fell to the record', () => {
+    const gap = stored({ quarters: true }); gap.timeseries.revenueQ[2] = null;
+    const twin = stored({ quarters: true }); twin.timeseries.revenueQ.splice(2, 1); twin.timeseries.revenueQEnds.splice(2, 1);
+    assert.equal(pct(axes.revGrowthLevel(gap)), 50);
+    assert.equal(axes.revGrowthLevel(gap), axes.revGrowthLevel(twin));
+    assert.deepEqual(axes.revYoYComponents(gap), axes.revYoYComponents(twin));
+    assert.equal(pct(G.withG31Variant('legacy', () => axes.revGrowthLevel(gap))), 32.97, 'legacy: gap rule, annual record');
+    const undated = stored({ quarters: true }); undated.timeseries.revenueQ[2] = null; delete undated.timeseries.revenueQEnds;
+    assert.equal(pct(axes.revGrowthLevel(undated)), 32.97, 'undated: the gap guard stays, the record carries');
   });
   await check('A annual leg: a record measured against another stored revenue, or without one, is ignored', () => {
     const other = stored(); other.meta.annualRevNewerYear.priorStored = 95134807.4;
@@ -161,7 +176,10 @@ async function check(name, fn) {
     assert.equal(r40.basisJahr(stored({ quarters: true })), null, 'quarter leg: the annual gate does not apply');
     const positional = stored({ quarters: true }); delete positional.timeseries.revenueQEnds;
     assert.notEqual(axes.revQuartalsYoY(positional), null, 'quarters still pair by position');
-    assert.equal(r40.neuestesQuartalsEnde(positional), Date.parse('2025-06-30'), 'quarter leg: the record never sets the period');
+    // G31 switch 18.10.2026: the anchor is the period of the shown number; an undated quarter pair has none
+    // (the row is then frischeUnbekannt). The record never sets it; pre-G31 the annual series dated it.
+    assert.equal(r40.neuestesQuartalsEnde(positional), null, 'quarter leg: the record never sets the period');
+    assert.equal(G.withG31Variant('legacy', () => r40.neuestesQuartalsEnde(positional)), Date.parse('2025-06-30'));
   });
 
   // ── A: the real pullAll call site ────────────────────────────────────────────
@@ -239,7 +257,10 @@ async function check(name, fn) {
     const s = await pull({ quarterlyRows }), bare = clone(s); delete bare.meta.annualRevNewerYear;
     assert(s.meta.annualRevNewerYear, 'recorded at pull time');
     assert.equal(pct(axes.revGrowthLevel(s)), 50);
-    for (const k of AXES) assert.deepEqual(axes[k](s), axes[k](bare), k);
+    // G31 B3: only the bonus component reads the recorded newer year; the legacy arm keeps it inert.
+    assert.notDeepEqual(axes.revYoYComponents(s), axes.revYoYComponents(bare));
+    assert.deepEqual(G.withG31Variant('legacy', () => axes.revYoYComponents(s)), axes.revYoYComponents(bare));
+    for (const k of AXES.filter(k => k !== 'revYoYComponents')) assert.deepEqual(axes[k](s), axes[k](bare), k);
   });
 
   // ── B: planner presence / absence ────────────────────────────────────────────

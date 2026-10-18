@@ -56,6 +56,7 @@ const LOADED_UNIVERSE = 14801;
 
 const formulas = require(path.join(REPO, 'src', 'scoring', 'formulas'));
 const axesFns = require(path.join(REPO, 'src', 'scoring', 'axes.js'));
+const { g31Shadow, quarterCandidate } = require(path.join(REPO, 'lib', 'g31-recency.js'));
 const { q, signTrack } = require(path.join(REPO, 'src', 'scoring', 'engine.js'));
 const { norm } = require(path.join(REPO, 'src', 'scoring', 'snapshot.js'));
 const {
@@ -210,7 +211,7 @@ function sourceHashes(file) {
 // wirft), statt still das Fenster zu schliessen oder zu oeffnen. Zwei offene
 // Uebergaenge sind ein Befund, kein Zustand.
 const PROTOCOL_DIR = path.join(REPO, 'protocol', 'gqs-00');
-function pendingTransitionHashes() {
+function pendingTransitionHashes(field = 'sourceFiles') {
   const dirs = (fs.existsSync(PROTOCOL_DIR) ? fs.readdirSync(PROTOCOL_DIR, { withFileTypes: true }) : [])
     .filter((e) => e.isDirectory() && e.name.endsWith('-pending')).map((e) => e.name)
     // Ein Verzeichnis OHNE transition.json ist keine Genehmigung, sondern ein leerer Rest
@@ -223,7 +224,9 @@ function pendingTransitionHashes() {
   if (!doc || doc.status !== 'pending' || !doc.sourceFiles) return {};
   assert(doc.from === CANONICAL_ID, 'offener Uebergang ' + dirs[0] + ' fuehrt aus ' + doc.from
     + ' heraus, versiegelt ist aber ' + CANONICAL_ID);
-  return doc.sourceFiles;
+  // field 'goldenTraces' (G31 switch 18.10.2026): caseId -> sha256Canonical of the one approved
+  // rebuilt trace of a golden case that the transition's formula change moves (verify() below).
+  return doc[field] || {};
 }
 
 function walkFiles(dir) {
@@ -414,7 +417,11 @@ function traceForCase(fixture, calibration, registry, registryHash) {
     };
   });
   const ebScore = shrinkToNeutral(result._scoreBase, result.cohortN);
-  const revQuarterly = axesFns.revQuartalsYoY(snapshot);
+  // G31 switch (18.10.2026): the axis reads the shared candidate g31Shadow(s).v1, so the trace names
+  // that leg. The quarterly raw value is the candidate's own ratio (the legacy expression, so an
+  // unchanged quarter pair stays bit-identical); without a quarter candidate it is null as before.
+  const g31Leg = g31Shadow(snapshot).v1, g31Quarter = quarterCandidate(snapshot);
+  const revQuarterly = g31Quarter.pct === null ? null : g31Quarter.current / g31Quarter.prior - 1;
   // Tag 1391: the annual fallback of revGrowthLevel reads a valid meta.annualRevNewerYear record
   // (axes.js revAnnualLegYoY); the trace names what the axis actually used. Golden fixtures carry
   // no record, so the sealed 1.1.0 traces are rebuilt byte-identically.
@@ -433,7 +440,7 @@ function traceForCase(fixture, calibration, registry, registryHash) {
       parentFallback: result.cohortFallback,
     },
     periodSelection: {
-      revGrowthLevel: revQuarterly !== null ? 'quarterly_yoy' : (revAnnual !== null ? 'annual_fallback' : 'missing'),
+      revGrowthLevel: g31Leg.basis === 'quarter' ? 'quarterly_yoy' : (g31Leg.pct !== null ? 'annual_fallback' : 'missing'),
       quarterlyYoYRaw: revQuarterly,
       annualYoYRaw: revAnnual,
     },
@@ -631,8 +638,19 @@ function verify() {
   assert.equal(sha256Canonical(preregHashView), prereg.integrity.canonicalSha256, 'preregistration scoped hash mismatch');
 
   const rebuiltTraces = fixtures.cases.map((fixture) => traceForCase(fixture, calibration, registry, manifest.formulaRegistrySha256));
-  assert.deepEqual(rebuiltTraces, committedTraces.traces, 'score traces are not deterministic');
+  assert.equal(rebuiltTraces.length, committedTraces.traces.length, 'score traces are not deterministic');
+  // Same pattern as the source hashes above: a golden case that the OPEN transition names by caseId may
+  // carry exactly one second trace, identified by the canonical hash of that rebuilt trace. Every other
+  // case stays pinned to its sealed trace and expectation; any third state stays red.
+  const pendingTraces = pendingTransitionHashes('goldenTraces');
+  for (const id of Object.keys(pendingTraces)) {
+    assert(fixtures.cases.some((fixture) => fixture.caseId === id), 'transition.json listet einen unbekannten Golden-Fall: ' + id);
+  }
   for (let i = 0; i < fixtures.cases.length; i++) {
+    const id = fixtures.cases[i].caseId;
+    if (pendingTraces[id] && sha256Canonical(rebuiltTraces[i]) === pendingTraces[id]) continue;
+    assert.deepEqual(rebuiltTraces[i], committedTraces.traces[i], 'score traces are not deterministic: ' + fixtures.cases[i].ticker
+      + (pendingTraces[id] ? ' differs from its sealed AND from its approved pending-transition trace' : ''));
     assert.deepEqual(expectedFromTrace(rebuiltTraces[i]), fixtures.cases[i].expected, 'golden fixture mismatch for ' + fixtures.cases[i].ticker);
   }
   const tie = fixtures.syntheticCases.find((entry) => entry.kind === 'percentile_midrank_tie');

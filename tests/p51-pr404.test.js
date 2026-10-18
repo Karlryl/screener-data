@@ -41,8 +41,9 @@ test('Smallcap tracks and overview retain their own growth provenance despite nu
     for (const key of ['qPunkte', 'qSpanTage']) { delete mainRow[key]; delete smallRow[key]; }
     assert.equal(mainRow.g31Shadow.v1.basis, 'year'); assert.equal(smallRow.g31Shadow.v1.basis, 'quarter');
     // P184 shadows follow the same dedicated store; the complete legacy comparison stays unchanged.
+    // G31 switch: the comparison fields (revGrowth*Legacy, overviewValueLegacy) follow the store like the labels.
     for (const key of ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd',
-      'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', 'g31Shadow', 'g31OverviewShadow']) { delete mainRow[key]; delete smallRow[key]; }
+      'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', ...require('../lib/g31-recency.js').G31_TRAILING_KEYS]) { delete mainRow[key]; delete smallRow[key]; }
     assert.deepEqual(mainRow, smallRow, 'only provenance labels may differ');
     process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR = path.join(dir, 'absent');
     delete require.cache[filename]; const fallback = require(filename);

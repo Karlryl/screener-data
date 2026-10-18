@@ -173,8 +173,8 @@ check('D1 buildBoard: legacy shadow order stays fixed before trailing G31 fields
   fs.writeFileSync(path.join(srcDir, 'semiconductors.json'), JSON.stringify({ profitable: [src], unprofitable: [] }));
   const board = W.buildBoard('semiconductors', null, { srcDir });
   const row = board.profitable[0];
-  // P184 appends separate shadows; every legacy key keeps its previous order.
-  const keys = Object.keys(row).filter(key => !['g31Shadow', 'g31OverviewShadow'].includes(key));
+  // P184 appends separate shadows and the G31 switch its comparison fields; every older key keeps its order.
+  const keys = Object.keys(row).filter(key => !require('../lib/g31-recency.js').G31_TRAILING_KEYS.includes(key));
   assert.deepEqual(Object.keys(row).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   assert.equal(keys[keys.length - 1], 'fcfShadow');
   assert.equal(keys[keys.length - 2], 'annualPairsShadow');

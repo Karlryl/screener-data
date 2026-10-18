@@ -26,7 +26,7 @@
 const { norm, firstPresent, periodEnds, jahresFensterAusgerichtet } = require('./snapshot.js');
 const { ruleOfX } = require('./axes.js');
 const { annualPeriodEnds, _tagesnummer, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../../lib/annual-pairs.js');
-const { quarterCandidate, g31Shadow, currenciesMatch } = require('../../lib/g31-recency.js');
+const { quarterCandidate, g31Shadow, currenciesMatch, g31Variant } = require('../../lib/g31-recency.js');
 
 function periodOf(leg) {
   return Object.fromEntries(['basis', 'periodEnd', 'priorPeriodEnd', 'sourcePeriodEnd', 'sourcePriorPeriodEnd', 'label', 'reason']
@@ -162,6 +162,20 @@ function overviewMetric(s, opts = {}) {
   }
   const kind = opts.specialTrack === 'reit' ? 'ffo-badge'
     : opts.gpClass === 'degenerate' ? 'revenue-badge' : 'gp';
+  // G31 (Karl 11.10.2026, live since 18.10.2026): GP and the revenue badge show the newest
+  // labelled candidate (overviewShadow, its label goes out via the writer). The legacy arm keeps
+  // the pre-G31 annual/TTM value below for the comparison export.
+  if (g31Variant() && kind !== 'ffo-badge') {
+    const { value, period } = overviewShadow(s, kind);
+    const metric = { kind, value, companion };
+    // P158's marker stays: an empty value whose only annual pair is non-adjacent says so.
+    if (value === null && (period.reason === OVERVIEW_YEARS_NOT_ADJACENT_TEXT
+        || growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind).withheld)) {
+      metric.valuePresent = false;
+      metric.reason = OVERVIEW_YEARS_NOT_ADJACENT_TEXT;
+    }
+    return metric;
+  }
   const { value, withheld } = growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind);
   const metric = { kind, value, companion };
   if (withheld) {
@@ -171,7 +185,7 @@ function overviewMetric(s, opts = {}) {
   return metric;
 }
 
-/** Calculate the labelled B4/B5 candidate without changing the live overview.
+/** Calculate the labelled B4/B5 candidate; overviewMetric shows it since the G31 switch (18.10.2026).
  * @param {object|null} s Prepared snapshot.
  * @param {string} kind Existing overview kind.
  * @returns {object|null} Shadow value as a fraction and its period, or null for other kinds.

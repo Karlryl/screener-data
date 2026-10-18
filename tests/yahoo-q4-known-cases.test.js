@@ -363,13 +363,19 @@ test('display evidence count and Rule40 use the same cached-snapshot correction'
     const w = require(writerPath);
     const out = w.mapBoardRow(F.boardZeile({ ticker: 'GEST.MC' }), 0);
     assert.equal(out.qPunkte, w.belegPunkte(s.timeseries).qPunkte - 1, 'Missing Q4 is not counted as a revenue observation');
-    const r = require('../scripts/write-rule40-export.js').sammleKandidaten({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir });
-    const candidates = r.kandidaten;
-    const candidate = candidates.find(c => c.ticker === 'GEST.MC');
+    const R40 = require('../scripts/write-rule40-export.js'), axes = require('../src/scoring/axes.js');
+    const { withG31Variant } = require('../lib/g31-recency.js');
+    const collect = () => R40.sammleKandidaten({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir }).kandidaten.find(c => c.ticker === 'GEST.MC');
+    const candidate = collect();
     assert.ok(candidate, 'Fixture passes the real Rule40 route');
-    const axes = require('../src/scoring/axes.js');
     assert.equal(candidate.wachstumRoh, axes.revGrowthLevel(applyKnownCases(s).snapshot));
-    assert.notEqual(candidate.wachstumRoh, axes.revGrowthLevel(s), 'Reader hook has a measurable effect');
+    // G31 switch (18.10.2026): the withheld Q4 sits between dated endpoints and no longer moves the growth leg,
+    // so the hook effect is measured in the legacy arm, where the gap rule still makes it visible.
+    withG31Variant('legacy', () => {
+      const old = collect();
+      assert.equal(old.wachstumRoh, axes.revGrowthLevel(applyKnownCases(s).snapshot));
+      assert.notEqual(old.wachstumRoh, axes.revGrowthLevel(s), 'Reader hook has a measurable effect');
+    });
   } finally {
     if (priorEnv === undefined) delete process.env.FINDASH_SNAPSHOTS_DIR;
     else process.env.FINDASH_SNAPSHOTS_DIR = priorEnv;

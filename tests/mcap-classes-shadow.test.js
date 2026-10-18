@@ -18,6 +18,8 @@ const REPORT = path.join(ROOT, 'scripts', 'mcap-classes-shadow-report.js');
 process.env.FINDASH_SNAPSHOTS_DIR = SNAPSHOTS;
 const { loadRegistry, computeClassesShadow, deviationPct } = require(MODULE);
 const writer = require('../scripts/write-findash-export.js');
+// P184 shadows and the G31 comparison fields (switch 18.10.2026) trail every older key.
+const { G31_TRAILING_KEYS } = require('../lib/g31-recency.js');
 const { buildReport } = require(REPORT);
 const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const entry = loadRegistry(REGISTRY).synthetic;
@@ -135,10 +137,10 @@ test('(f) every old key and its order are byte-identical to the pre-change expor
     const actual = board.profitable.map((row, i) => writer[mapper](row, i));
     const stripped = actual.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) =>
       // P184 appends independent shadows; the complete older mapping and its order remain frozen.
-      !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'g31Shadow', 'g31OverviewShadow'].includes(key))));
+      !['marketCapClassesShadow', 'marketCapClassesDeviationPct', ...G31_TRAILING_KEYS].includes(key))));
     assert.equal(JSON.stringify(stripped), JSON.stringify(baseline[mapper]), mapper);
     for (const row of actual.filter((r) => r.ticker !== 'P88-USD')) {
-      assert.deepEqual(Object.keys(row).filter(k => !['g31Shadow', 'g31OverviewShadow'].includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
+      assert.deepEqual(Object.keys(row).filter(k => !G31_TRAILING_KEYS.includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
       if (mapper !== 'mapSurvivalRow') assert.deepEqual(Object.keys(row).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
       assert.equal(row.marketCapClassesShadow.value, 710000000);
     }
@@ -257,7 +259,7 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
   // P134 adds source-period labels; exclude only these additions alongside the shadows from the frozen baseline.
   const stripped = rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) =>
     // P184 adds only these two trailing shadows to the unchanged legacy row.
-    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', 'g31Shadow', 'g31OverviewShadow'].includes(key))));
+    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', ...G31_TRAILING_KEYS].includes(key))));
   assert.equal(JSON.stringify(stripped), JSON.stringify(fixture.before.rows));
   const byTicker = Object.fromEntries(rows.map((row) => [row.ticker, row]));
   assert.deepEqual(byTicker['688428.SS'].marketCapClassesShadow, shadow, 'on-board: same issuer value as the sector board');
@@ -266,7 +268,7 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
   assert.ok(Math.abs(byTicker['9969.HK'].marketCapClassesDeviationPct - (900 / 710 - 1) * 100) < 1e-9);
   assert.equal(Object.hasOwn(byTicker['P88-USD'], 'marketCapClassesShadow'), false, 'unregistered: no new key');
   for (const row of rows.filter((r) => r.ticker !== 'P88-USD')) {
-    assert.deepEqual(Object.keys(row).filter(k => !['g31Shadow', 'g31OverviewShadow'].includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
+    assert.deepEqual(Object.keys(row).filter(k => !G31_TRAILING_KEYS.includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
     assert.deepEqual(Object.keys(row).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   }
 });

@@ -158,12 +158,16 @@ test('unusable quarterly values fall back to the withheld annual pair', () => {
     withheld(s, {}, 'gp');
   }
 });
-test('misaligned quarterly dates fall back to the withheld annual pair', () => {
+test('misaligned quarterly dates: no TTM; G31 shows the dated quarter pair, legacy the withheld annual pair', () => {
   const s = gp([200, null, 100], ENDS);
   s.timeseries = { grossProfitQ: [150, 150, 150, 150, 100, 100, 100, 100],
     grossProfitQEnds: ['2026-03-31', '2025-12-31', '2025-06-30', '2025-03-31',
       '2024-12-31', '2024-09-30', '2024-06-30', '2024-03-31'] };
-  withheld(s, {}, 'gp');
+  // G31 switch 18.10.2026 (B4): 2026-03-31 against its dated year-ago quarter 2025-03-31 (150 vs 150) is
+  // newer than the withheld annual pair; the misaligned eight quarters never form a TTM window.
+  plain(s, {}, 'gp', 0);
+  assert.equal(ov.overviewShadow(s, 'gp').period.priorPeriodEnd, '2025-03-31');
+  require('../../lib/g31-recency.js').withG31Variant('legacy', () => withheld(s, {}, 'gp'));
 });
 test('public growth APIs return null, never a verdict object', () => {
   for (const s of [gp([200, null, 100], ENDS), gp([200, 100], ['2025-12-31', '2023-12-31'])]) {

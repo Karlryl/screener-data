@@ -74,26 +74,26 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "72b1adb672e70eb305e50ee7bdad471f90b58c4ad0c8a95c99c48f066a605e04",
+    "src/scoring/axes.js": "5e95b563e21c43fcaa48495b5057c5b179c9f43a0b59d8cd1bb3b06b5bbf7350",
     "src/scoring/score.js": "a5af5595213c0ebffda09b34864384451b399acbc79cb335d099cd0d30534c1f",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "e6d6b62d69859a6d67cf91ffa97489f6abf17713c63ff6b63d9a10f23c7866a6",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
     "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
-    "src/scoring/overview.js": "ce93d5fa5cf60a3b8344fdba2e7989c653c68ea6bb1ace88278f6936db557a6a",
+    "src/scoring/overview.js": "f5aa134320e9297a68de744b84997ea6a5c70ee57a1bc5f2d6f7f7eb9b268127",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
     "src/scoring/profit-streak.js": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3"
   },
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
-    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow).",
+    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow). G31 switch 2026-10-18: production runs the v1 arm of lib/g31-recency.js (newest labelled quarter or validated fiscal year); the pre-G31 code is the legacy arm for the comparison export (see g31Switch).",
     "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair.",
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
     "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment.",
-    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change.",
+    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch).",
     "src/scoring/router.js": "P160 2026-10-11: F-13 pairs annual net income and revenue at the newest jointly finite index for the asset-manager zero-gross-profit gate. P205 2026-10-12: apply the existing size floor only to source-backed market-cap hand-table cases before routing. QH and 3018.TW leave the same-day universe; no formula or weight changed. Explicit P205 fix brief; independent release review by Claude remains required. See ergebnisse/P205/vorher-nachher.md.",
     "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak.",
     "src/scoring/smallcap-route.js": "P205 2026-10-12: route(s, MIN_MCAP) applies the existing 300M floor to source-backed hand-table cases; no formula or weight change."
@@ -232,5 +232,39 @@
     "parallelRun": "Starts on reviewed delivery; at most four weeks; current ranking remains unless the independent review and council authorize a switch.",
     "review": "P184b: overview revenue shadows retain P158 annual adjacency even when the scoring rule is off. Compact delivery and error isolation are pinned in tests/g31-aktualitaet-p184.test.js; evidence in ergebnisse/P184b/bericht.md. Pending independent master review; builder does not commit, merge, publish or seal.",
     "rollback": "Revert the P184 source changes and only the P184 pending hash registration together in a reviewed new commit."
+  },
+  "goldenTraces": {
+    "GQS00-023": "6de36e780a8b76de4bb3dc2b5d2a8b1e05145003409fc3a2e6d59fcd52a42f7f",
+    "GQS00-024": "53305a4e7264c0ce5afe730780e0ce2be11dbb3967820edb46da187f09cec4cc"
+  },
+  "g31Switch": {
+    "date": "2026-10-18",
+    "authority": "Karl's decision G31 of 11.10.2026 (Regelblatt v4: the boards show per firm the newest reported numbers, labelled with their period; recency goes before one uniform period; implemented via the formula path with Vorher/Nachher). Build brief sd-g31 of 18.10.2026 along P170 plan steps 1-4. Merge only after the independent Codex review.",
+    "scope": "The reviewed P184 v1 candidate becomes the production arm: revGrowthLevel and revYoYComponents (and through them ruleOfX, growthBounds/robustG and the growth bonus, the displayed revGrowthYoYPct with its period label, the Rule40 base and freshness gates) read g31Shadow(s).v1; overview.value for gp and revenue-badge is overviewShadow. The pre-G31 code stays reachable only through withG31Variant('legacy', fn) for the *Legacy comparison fields (at most four weeks). No weight, threshold, calibration policy, annual-pair switch default or FCF/#444 shadow changes; score.js unchanged.",
+    "previousSourceSha256LF": {
+      "src/scoring/axes.js": "72b1adb672e70eb305e50ee7bdad471f90b58c4ad0c8a95c99c48f066a605e04",
+      "src/scoring/overview.js": "ce93d5fa5cf60a3b8344fdba2e7989c653c68ea6bb1ace88278f6936db557a6a"
+    },
+    "sourceSha256LF": {
+      "src/scoring/axes.js": "5e95b563e21c43fcaa48495b5057c5b179c9f43a0b59d8cd1bb3b06b5bbf7350",
+      "src/scoring/overview.js": "f5aa134320e9297a68de744b84997ea6a5c70ee57a1bc5f2d6f7f7eb9b268127"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "definitionAmendmentAt120Seal": {
+      "axis": "revGrowthLevel",
+      "formula": "100 * winsor(current/prior - 1) of the newest valid candidate: the newest quarter against its dated year-ago quarter (undated: the positional partner with no empty quarter in between), or the validated fiscal-year pair (a valid annualLegNewerYear record, else annualRev[0]/annualRev[1]); the candidate with the later valid period end wins, an equal end keeps the quarter.",
+      "missing": "No valid candidate gives null (the axis drops). Held cells stay null and are never replaced by vendor values; a positive prior is required; explicit operand currency markers must agree.",
+      "inherits": "ruleOfX and the growth bonus (revYoYComponents = [validated annual candidate, quarter candidate], unchanged winsor and mean) inherit the amendment. overview.value for gp and revenue-badge is the labelled candidate of overviewShadow (display only)."
+    },
+    "goldenImpact": {
+      "movedCases": [
+        "GQS00-023 000002.SZ: revGrowthLevel annual_fallback -> quarterly_yoy, unroundedFinal 27.11143027806941 -> 27.853410053450364",
+        "GQS00-024 000006.SZ: revGrowthLevel annual_fallback -> quarterly_yoy, unroundedFinal 14.176033921533993 -> 14.176033921533993"
+      ],
+      "reason": "Both real-estate golden cases carry dated quarterly revenue with an empty 2025-09-30 row between the newest quarter and its dated year-ago quarter. Pre-G31 the gap rule forced the annual fallback; under G31 (B1) the dated pair is the newest valid candidate, so the trace names quarterly_yoy. GQS00-024 keeps its score (both growth values sit at the winsor bound); GQS00-023 moves from 27.11 to 27.85. verify() accepts exactly these rebuilt traces as the second variant (goldenTraces); the 23 other cases rebuild byte-identically."
+    },
+    "evidence": "docs/g31-umschaltung-vorher-nachher-2026-10-17.md (replay of the 17.10.2026 daily run 39036704898, before = df47be8, after = df47be8 plus this change); tests/g31-umschaltung.test.js, tests/g31-aktualitaet-p184.test.js, tests/rev-growth-basis.test.js, tests/annual-newer-year.test.js, tests/rule40-source-ends.test.js, tests/rule40-guards.test.js, tests/scoring/rev-growth-anzeige.test.js, tests/scoring/overview-adjacent-years.test.js.",
+    "review": "Build registration only; the independent blind Codex review decides the merge. The builder does not merge, publish, initialize or seal.",
+    "rollback": "Revert the sd-g31 source changes and only this g31Switch registration with its two pending hashes together in a reviewed new commit."
   }
 }

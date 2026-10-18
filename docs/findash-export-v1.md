@@ -1329,6 +1329,59 @@ Produktionsschalter. Ohne diesen Aufruf laufen die bisherigen Achsen unveränder
 Der Formellauf beginnt mit der geprüften Auslieferung und endet nach höchstens
 vier Wochen. Eine Umschaltung benötigt die separate unabhängige Prüfung und Entscheidung.
 
+# G31-Umschaltung (18.10.2026)
+
+Karls Entscheidung G31 vom 11.10.2026 ist umgesetzt: Die Boards zeigen je Firma die neuesten
+gemeldeten Zahlen, beschriftet mit ihrem Zeitraum. Der V1-Kandidat aus P184 ist jetzt die
+Produktionsrechnung; die Sätze der P184-Ergänzung, dass V1 weder Score noch Rang ändert und dass
+ohne Messaufruf die bisherigen Achsen laufen, gelten ab diesem Stand nicht mehr.
+
+**Ein Kandidat für alles.** Umsatzwachstum, Wertung und Etikett lesen dieselbe Auswahl
+`g31Shadow(snapshot).v1`: das neueste gültige Quartal gegen sein Vorjahresquartal oder das
+validierte Geschäftsjahr (neuerer Jahresdatensatz mit Fingerabdruck, sonst `annualRev[0]` gegen
+`annualRev[1]`). Ein späteres belegtes Ende gewinnt, ein gleiches Ende behält das Quartal. Bei
+datierten Endpunkten darf eine leere Zwischenzeile fehlen; undatierte Reihen behalten die
+Lückenprüfung. Zurückgehaltene Zellen bleiben leer, ein Vorjahreswert muss positiv sein,
+ausdrückliche Währungsangaben der beiden Werte müssen übereinstimmen. Davon abhängig:
+
+- `revGrowthYoYPct` mit `revGrowthBasis`, `revGrowthPeriodEnd`, `revGrowthPriorPeriodEnd` und den
+  beiden Quellenden (unveränderte Felder, neue Auswahl; Basiswerte wie bisher
+  `quarter`/`year`/`yearNewerRecord`/`none`),
+- die Achse `revGrowthLevel`, `ruleOfX` und der Wachstumsbonus; dessen Jahresbestandteil nutzt das
+  validierte neuere Geschäftsjahr auch neben einem Quartal (Mittelwert und Begrenzung unverändert),
+- Rule of 40: Wachstum, Basisquartal- und Basisjahr-Tor sowie das Frische-Tor, das jetzt das Ende
+  des Zeitraums der angezeigten Zahl prüft (`quartalsEnde` nennt diesen Zeitraum),
+- die Übersicht: `overview.value` beziehungsweise `overviewValue` für `gp` und `revenue-badge` ist
+  der beschriftete Kandidat aus `overviewShadow` (Bruchteil, keine Prozentzahl). Sein Zeitraum steht
+  weiter in `g31OverviewShadow.period` (Name bleibt aus Kompatibilität; der Wert dort ist derselbe
+  vor der Rundung auf drei Stellen). `ffo-badge` und `runway-badge` sind unverändert.
+
+`g31Shadow.v1` entspricht damit den Live-Feldern; `v2` (vier gegen vier Quartale) bleibt eine
+Messvariante, die nur `withG31Variant('v2', fn)` aktiviert.
+
+**Vergleichsfelder für höchstens vier Wochen (additiv, rückwärtskompatibel, kein v2-Sprung).**
+Die bisherige Rechnung desselben Snapshots steht daneben, damit findash alt und neu zeigen kann:
+
+| Feld | Zeilen | Inhalt |
+|---|---|---|
+| `revGrowthYoYPctLegacy` | HG, Quality, Smallcap, Überblicke, Survival, Rule of 40 | bisheriges ungeklemmtes Umsatzwachstum in Prozent oder `null`; in Rule of 40 wie `revGrowthYoYPct` auf eine Stelle gerundet |
+| `revGrowthBasisLegacy` | wie oben | bisherige Basis (`quarter`/`year`/`yearNewerRecord`/`none`) oder `null` |
+| `revGrowthPeriodEndLegacy`, `revGrowthPriorPeriodEndLegacy` | wie oben | ISO-Tag oder `null` |
+| `overviewValueLegacy` | Board- und Überblickszeilen (Rule of 40 aus der Board-Zeile) | bisheriger Übersichtswert für `gp`/`revenue-badge` als Bruchteil, auf drei Stellen gerundet, sonst `null` |
+
+Die Felder werden nur gesetzt, wenn der vom Schreiber gelesene Snapshot die exportierte Live-Zahl
+reproduziert; sonst stehen sie auf `null` (wie ein unbeschriftetes Wachstum). Ein zurückgehaltener
+Übersichtswert hat auch keinen Vergleichswert. Es sind reine Anzeigefelder: kein Score, kein Rang
+und keine Mitgliedschaft liest sie. `--check` prüft die vier Wachstumsfelder nach denselben Regeln
+wie das Live-Etikett (alle vier oder keines, bekannte Basis, ISO-Tage, `none` genau ohne Zahl) und
+`overviewValueLegacy` als Zahl oder `null`; je Board-Datei tragen alle Zeilen das Feld oder keine.
+Ältere Exporte ohne die Felder bleiben gültig. Das Entfernen nach höchstens vier Wochen ist eine
+eigene, angekündigte Vertragsänderung.
+
+Die bisherige Rechnung ist nur über `withG31Variant('legacy', fn)` erreichbar; es gibt keinen
+Umgebungs- oder Produktionsschalter. Vorher/Nachher auf dem Datenstand 17.10.2026:
+`docs/g31-umschaltung-vorher-nachher-2026-10-17.md`.
+
 ## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
 
 This is an additive feed under section 7, with no v2 bump and no change to

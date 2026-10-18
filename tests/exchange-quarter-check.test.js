@@ -8,6 +8,7 @@ const fs = require('node:fs'), path = require('node:path'), os = require('node:o
 const { Module, createRequire } = require('node:module');
 const X = require('../lib/exchange-quarter-check.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
+const { withG31Variant } = require('../lib/g31-recency.js');
 const axes = require('../src/scoring/axes.js');
 const { norm } = require('../src/scoring/snapshot.js');
 const F = require('./fixtures/exchange-quarter-check.json');
@@ -192,7 +193,10 @@ test('fill presence: 000002.SZ gets Q3-2025 = 9M - H1 from one Eastmoney vintage
   assert.equal(cell.exchangeFill.nativeCurrency, 'CNY'); assert.equal(cell.exchangeFill.derivation, '9M-H1');
   assert.equal(cell.exchangeFill.dataDate, '2025-10-31');
   assert.equal(cell.exchangeFill.reason, 'Umsatz 3. Quartal 2025 fehlte beim Datenanbieter und stammt aus der Börsenmeldung (Eastmoney, veröffentlicht 31.10.2025).');
-  assert.equal(revGrowthLeg(s).basis, 'year'); assert.equal(revGrowthLeg(a).basis, 'quarter');
+  // G31 switch (18.10.2026): the dated Q1 pair already carried growth across the empty Q3 row; the fill only
+  // completes the series. Legacy arm (pre-G31 gap rule): the fill restored the quarterly leg.
+  assert.equal(revGrowthLeg(s).basis, 'quarter'); assert.equal(revGrowthLeg(a).basis, 'quarter');
+  withG31Variant('legacy', () => { assert.equal(revGrowthLeg(s).basis, 'year'); assert.equal(revGrowthLeg(a).basis, 'quarter'); });
   assert.equal(X.exchangeRecord(a).filled[0].period, '2025-09-30'); assert.equal(X.exchangeRecord(s), null);
 });
 
@@ -311,10 +315,17 @@ test('F5 October: a delivered Q3-2025 off the exchange value outside the level p
   assert.equal(cell.financialMissing.reasonCode, 'exchange-quarter-mismatch');
   assert.equal(cell.financialMissing.reason, X.REASONS.lateQuarter);
   assert.deepEqual(cell.financialMissing.originalVendorRow, s.timeseries.revenueQ[k]);
-  assert.notEqual(revGrowthLeg(a).basis, 'quarter', 'the gap rule blocks the quarterly leg again');
+  // G31 switch (18.10.2026): the withheld Q3 sits between the dated endpoints, so the quarterly leg stays and
+  // G4 has no annual leg to check. Legacy arm (pre-G31 gap rule): it blocked the quarterly leg and G4 ran.
+  assert.equal(revGrowthLeg(a).basis, 'quarter', 'an empty intermediate quarter does not block the dated pair');
+  assert.ok(!r.growth, 'no annual check: the quarterly leg was not taken away');
+  withG31Variant('legacy', () => {
+    assert.notEqual(revGrowthLeg(a).basis, 'quarter', 'the gap rule blocks the quarterly leg again');
+    const rl = res(s);
+    assert.ok(rl.growth && rl.growth.basisAfter !== 'quarter', 'it took the quarterly leg away: the annual leg is checked (G4)');
+  });
   assert.equal(X.exchangeRecord(a).withheld.find(x => x.period === '2025-09-30').reasonCode, 'exchange-quarter-mismatch');
   assert.equal(serial(X.stripOwn(a)), serial(s), 'strip restores');
-  assert.ok(r.growth && r.growth.basisAfter !== 'quarter', 'it took the quarterly leg away: the annual leg is checked (G4)');
   // Growth already on the annual leg before (level partner empty): withheld, but no annual check and no growth withhold.
   const y = clone(s); y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
   assert.equal(revGrowthLeg(y).basis, 'year');

@@ -8,7 +8,7 @@ const W = require('../scripts/write-rule40-export.js');
 const { applyFinancialCases } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
 const { fixtureSnapshot } = require('../scripts/period-labels-check.js');
-const { baueExport, boardZeile, laeufer } = require('./rule40-fixture.js');
+const { baueExport, boardZeile, snapshot, laeufer } = require('./rule40-fixture.js');
 const baseline = require('./fixtures/mcap-classes-shadow/rule40-before.json');
 const crdo = require('./fixtures/period-labels/period-fixtures.json').cases.find(c => c.ticker === 'CRDO');
 const { test, bilanz } = laeufer();
@@ -63,6 +63,26 @@ test('P134: Rule40 check rejects either one-sided source pair, accepts both or n
   sourceKeys.forEach(key => { delete legacy.rows[0][key]; });
   assert.deepEqual(check(legacy), []);
   assert.equal(hash(), before, 'the deliberate red probe leaves the original export unchanged');
+});
+
+test('G31 B1: a dated pair across an empty quarter row and its missing-row twin give the same Rule40 row', () => {
+  const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'];
+  const rows = [];
+  for (const twin of [false, true]) {
+    const revenueQ = [110e6, 104e6, null, 98e6, 95e6].map(value => ({ value })), revenueQEnds = [...ends];
+    if (twin) { revenueQ.splice(2, 1); revenueQEnds.splice(2, 1); }
+    const f = baueExport([{ row: boardZeile(), reihe: false,
+      snap: snapshot({ revenueQ, revenueQEnds, annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31'] }) }]);
+    W.build(f);
+    rows.push(JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8')).rows[0]);
+    f.aufraeumen();
+  }
+  const pick = r => ['r40', 'revGrowthYoYPct', 'revGrowthPctUsed', 'revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd', 'quartalsEnde']
+    .map(k => r[k]);
+  assert.deepEqual(pick(rows[0]), pick(rows[1]));
+  assert.deepEqual([rows[0].revGrowthBasis, rows[0].revGrowthPeriodEnd, rows[0].revGrowthYoYPct], ['quarter', '2026-06-30', 15.8]);
+  // Comparison fields: the legacy arm fell back to the fiscal year only for the row with the empty quarter.
+  assert.deepEqual([rows[0].revGrowthBasisLegacy, rows[1].revGrowthBasisLegacy], ['year', 'quarter']);
 });
 
 bilanz('tests/rule40-source-ends.test.js');

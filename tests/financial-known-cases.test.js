@@ -975,8 +975,12 @@ test('annual readers: INFQ badge, gross-profit growth and annual fallback empty;
   const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
   const noAnnual = clone(table); noAnnual.cases = noAnnual.cases.filter(c => c.periodType === '3M'); noAnnual.statementScales = [];
   const infq = cfg => applyFinancialCases(clone(fixture.INFQ), cfg && { table: cfg }).snapshot;
+  const { withG31Variant } = require('../lib/g31-recency.js'), { overviewShadow } = require('../src/scoring/overview.js');
   const readersInfq = s => {
-    assert.equal(overviewMetric(s, {}).value, null, 'badge empty');
+    // G31 switch (18.10.2026): the annual GP reader stays empty (legacy arm); the live overview shows the newer
+    // dated GP quarter pair instead and never the withheld annual years.
+    assert.equal(withG31Variant('legacy', () => overviewMetric(s, {})).value, null, 'badge empty');
+    assert.notEqual(overviewShadow(s, 'gp').period.basis, 'year');
     assert.equal(axes.gpGrowth(s), null); assert.equal(axes.revAnnualLegYoY(s), null); assert.equal(axes.dilution(s), null);
     // The next vendor quarter is withheld (period-after-coverage): growth is empty, not the FY2024/FY2023 pair (+163.3 %).
     assert.equal(axes.revGrowthLevel(applyFinancialCases(nextQuarter(clone(fixture.INFQ))).snapshot), null);
@@ -996,7 +1000,10 @@ test('annual readers: INFQ badge, gross-profit growth and annual fallback empty;
   assert.equal(otf.meta.financialDataIssue, undefined);
   const scored = score.scoreUniverse([otf], formulas)[0];
   assert.notEqual(scored.reason, 'data-suspect'); assert.equal(scored.formulaId, 'financials');
-  assert.equal(overviewMetric(otf, { gpClass: 'degenerate' }).value, null);
+  // G31 switch (18.10.2026): the revenue badge uses the revenue-column candidate (the verified quarter pair);
+  // the annual badge of the legacy arm stays empty because the false annual cells are withheld.
+  assert.equal(overviewMetric(otf, { gpClass: 'degenerate' }).value * 100, axes.revGrowthLevel(otf));
+  assert.equal(withG31Variant('legacy', () => overviewMetric(otf, { gpClass: 'degenerate' })).value, null);
   assert.equal(axes.revAnnualLegYoY(otf), null);
   assert.equal((axes.revQuartalsYoY(otf) * 100).toFixed(2), (338032 / 319467 * 100 - 100).toFixed(2));
   assert.ok(financialReasons(otf).some(r => r.startsWith('Jahresumsatz fehlt:')));
@@ -1202,8 +1209,13 @@ test('HL: recast annual values and readers, older gaps, drift, undated input and
   assert.equal(serial(hl.annual.annualNetIncome), serial(fixture.HL.annual.annualNetIncome));
   assert.equal(serial(hl.timeseries), serial(fixture.HL.timeseries));
   // P177 restores the recast badge and gross-profit growth and changes the annual revenue-based axes.
-  assert.equal(overviewMetric(old, {}).value.toFixed(3), '2.139');
-  assert.equal(overviewMetric(hl, {}).value.toFixed(3), '1.783');
+  // G31 switch (18.10.2026): the annual GP badge is the legacy arm; the live overview shows the newer dated GP
+  // quarter pair, which P177 does not touch (every quarter stays byte for byte).
+  const { withG31Variant } = require('../lib/g31-recency.js');
+  assert.equal(withG31Variant('legacy', () => overviewMetric(old, {})).value.toFixed(3), '2.139');
+  assert.equal(withG31Variant('legacy', () => overviewMetric(hl, {})).value.toFixed(3), '1.783');
+  assert.equal(overviewMetric(hl, {}).value, overviewMetric(old, {}).value);
+  assert.equal(overviewMetric(hl, {}).value.toFixed(3), '1.108');
   assert.equal(axes.gpGrowth(old).toFixed(6), '2.414778'); assert.equal(axes.gpGrowth(hl).toFixed(6), '2.058185');
   for (const f of ['revGrowthLevel', 'marginTrajectory']) assert.equal(axes[f](hl), axes[f](old), f);
   for (const [f, before, after] of [['revAcceleration', '0.239095937', '0.205151068'],
@@ -1230,7 +1242,8 @@ test('HL: recast annual values and readers, older gaps, drift, undated input and
   for (const field of ['annualRev', 'annualGP', 'annualOpInc']) aliasAnnual[field][3].financialMissing.caseId = `HL.SW-${field}-period`;
   assert.deepEqual(applyFinancialCases(alias).snapshot.annual, aliasAnnual);
   // P177 changes the expected badge from missing to +178.3%; removing its authority still makes the guard red.
-  const guard = cfg => assert.equal(overviewMetric(applyFinancialCases(clone(fixture.HL), cfg && { table: cfg }).snapshot, {}).value.toFixed(3), '1.783');
+  // G31 switch: the annual badge is read in the legacy arm (the live overview shows the GP quarter pair).
+  const guard = cfg => assert.equal(withG31Variant('legacy', () => overviewMetric(applyFinancialCases(clone(fixture.HL), cfg && { table: cfg }).snapshot, {})).value.toFixed(3), '1.783');
   assert.throws(() => guard(noHl), assert.AssertionError); guard(); breaks++;
 });
 
