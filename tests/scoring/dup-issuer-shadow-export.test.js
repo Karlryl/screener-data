@@ -33,8 +33,9 @@ function writer(apply = shadow.applyDupIssuerShadow, loader = shadow.loadDupIssu
 function assertMarked(rows) {
   for (const entry of Object.values(table)) {
     for (const row of rows.filter((r) => entry.tickers.includes(r.ticker))) {
-      if (row.ticker === entry.codeKeeps) assert.ok(!Object.hasOwn(row, 'dupIssuer'), `${row.ticker}: kept ticker must not be flagged`);
-      else assert.equal(row.dupIssuer?.of, entry.codeKeeps, `${row.ticker}: missing/wrong dupIssuer.of (expected ${entry.codeKeeps})`);
+      const kept = shadow.markKeeps(entry); // codeKeeps, or the home listing where markFollowsHomeListing is set
+      if (row.ticker === kept) assert.ok(!Object.hasOwn(row, 'dupIssuer'), `${row.ticker}: kept ticker must not be flagged`);
+      else assert.equal(row.dupIssuer?.of, kept, `${row.ticker}: missing/wrong dupIssuer.of (expected ${kept})`);
     }
   }
 }
@@ -53,7 +54,7 @@ if (process.argv.includes('--prove-red')) {
 }
 
 test('guard detects the bypassed applicator on the unprocessed pair', () => {
-  assert.throws(() => assertMarked(unprocessed), /CPLE3\.SA: missing\/wrong dupIssuer\.of/);
+  assert.throws(() => assertMarked(unprocessed), /ELPC: missing\/wrong dupIssuer\.of \(expected CPLE3\.SA\)/);
 });
 
 test('all three real mappers mark every listed secondary and change no other output', () => {
@@ -68,8 +69,8 @@ test('all three real mappers mark every listed secondary and change no other out
       assert.equal(rows.length, input.length);
       assertMarked(rows);
       for (const row of rows) {
-        if (row.ticker !== entry.codeKeeps) assert.deepEqual(row.dupIssuer, {
-          of: entry.codeKeeps, issuer: entry.issuer, basis: 'hand-table:dup-issuer-shadow',
+        if (row.ticker !== shadow.markKeeps(entry)) assert.deepEqual(row.dupIssuer, {
+          of: shadow.markKeeps(entry), issuer: entry.issuer, basis: 'hand-table:dup-issuer-shadow',
         });
       }
       const stripped = rows.map(({ dupIssuer, ...rest }) => rest);

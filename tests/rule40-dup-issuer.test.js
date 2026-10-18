@@ -13,12 +13,13 @@ const { baueExport, boardZeile, snapshot, setzeWachstum } = require('./rule40-fi
 const writerFile = path.resolve(__dirname, '../scripts/write-rule40-export.js');
 const writerSource = fs.readFileSync(writerFile, 'utf8');
 const entry = shadow.loadDupIssuerShadowTable().copel;
-const secondary = entry.tickers.find((ticker) => ticker !== entry.codeKeeps);
-const marker = { of: entry.codeKeeps, issuer: entry.issuer, basis: 'hand-table:dup-issuer-shadow' };
+const kept = shadow.markKeeps(entry); // Copel: the home listing CPLE3.SA since 18.10. (markFollowsHomeListing)
+const secondary = entry.tickers.find((ticker) => ticker !== kept);
+const marker = { of: kept, issuer: entry.issuer, basis: 'hand-table:dup-issuer-shadow' };
 const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const hash = (file) => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const unrelated = () => ['FBNC', 'FBP'].map((ticker, i) => ({ row: boardZeile({ ticker, revGrowthYoYPct: 60 - i * 5 }) }));
-const pair = () => [entry.codeKeeps, secondary].map((ticker, i) => ({ row: boardZeile({ ticker, revGrowthYoYPct: 40 - i * 10 }) }));
+const pair = () => [kept, secondary].map((ticker, i) => ({ row: boardZeile({ ticker, revGrowthYoYPct: 40 - i * 10 }) }));
 
 // Only the shadow dependency is substituted; selection, calculations and disk writes stay real.
 function writerWithShadow(overrides, fixture) {
@@ -62,7 +63,7 @@ test('real written board marks the planted pair and preserves all other bytes', 
   const before = written(baseline);
   const after = written(planted);
   const withoutMarker = written(bypassed, writerWithShadow({ applyDupIssuerShadow: (row) => row }));
-  assert.deepEqual(after.rows.map((row) => row.ticker), ['FBNC', 'FBP', entry.codeKeeps, secondary]);
+  assert.deepEqual(after.rows.map((row) => row.ticker), ['FBNC', 'FBP', kept, secondary]);
   assert.deepEqual(after.rows.find((row) => row.ticker === secondary).dupIssuer, marker);
   assert.ok(after.rows.filter((row) => row.ticker !== secondary).every((row) => !Object.hasOwn(row, 'dupIssuer')));
   assert.equal(JSON.stringify(after.rows.slice(0, before.rows.length)), JSON.stringify(before.rows),
@@ -87,7 +88,7 @@ test('off-board secondary is marked even without its kept ticker on the board', 
   assert.equal(row.onBoard, false);
   assert.equal(row.score, null);
   assert.deepEqual(row.dupIssuer, marker);
-  assert.ok(!overview.rows.some((item) => item.ticker === entry.codeKeeps));
+  assert.ok(!overview.rows.some((item) => item.ticker === kept));
   assert.equal(W.check(fixture).ok, true);
 });
 
@@ -117,7 +118,7 @@ test('check rejects missing and wrong markers in a written temporary copy', () =
     else row.dupIssuer = invalid;
     assertRejected(checkCopy(copy));
   }
-  for (const ticker of [entry.codeKeeps, 'FBNC']) {
+  for (const ticker of [kept, 'FBNC']) {
     const copy = structuredClone(original);
     copy.rows.find((row) => row.ticker === ticker).dupIssuer = marker;
     const result = checkCopy(copy);

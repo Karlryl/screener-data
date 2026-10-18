@@ -580,7 +580,11 @@ function sammleKandidaten(opts = {}) {
     // genug belegte Achsen hat, bekommt auch hier keinen Rang — das Brett ist keine
     // Hintertuer um dieses Gate herum. Fuer Namen OHNE Brett-Zeile gibt es kein Urteil,
     // also auch keinen Ausschluss.
-    if (auchAufBrett && auchAufBrett.row.rankGrund !== null && auchAufBrett.row.rankGrund !== undefined) {
+    // Brief sd-dup (18.10.2026): a second listing without a board rank ('dupIssuer') has valid data and
+    // stays a candidate, so the learned growth bounds (and every other r40) do not move; this board
+    // keeps reporting it through its own dupIssuer marker.
+    const brettGrund = auchAufBrett ? auchAufBrett.row.rankGrund : null;
+    if (brettGrund !== null && brettGrund !== undefined && brettGrund !== 'dupIssuer') {
       abgewiesen.ohneRang++; continue;
     }
 
