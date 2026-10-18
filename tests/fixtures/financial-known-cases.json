@@ -1,5 +1,5 @@
 {
-  "source": "CI snapshots 2026-09-29 (first eight) and 2026-09-30 run 36690140002 (13 BDC/closed-end funds; CARG, PLUS, DCO, INFQ, VCTR, SLCE3.SA, CLSC3.SA, HOS, TYG, OLPX), retained public vendor evidence; HLX from run 36839128456 (2026-10-01); 2670.HK, ENGI3.SA, Z98.DE from run 36839128456 (2026-10-01); HIVE (no case: the issuer files no operating line; vendor packet must stay untouched) from run 36839128456 (2026-10-01); HL (annual gross profit cases) from run 36839128456 (2026-10-01); 2637.TW (hold, statements in TWD under a USD label) from run 36839128456 (2026-10-01); 002128.SZ (withheld misallocated and mixed-basis quarters) from run 36839128456 (2026-10-01); 402340.KS (hold: vendor revenue includes equity-method gains; gross-profit null cases) from run 36984285974 (2026-10-02); 8020.T (revenue quarters from the tanshin, two stored zeros) from run 36984285974 (2026-10-02); CIG-C (gross-profit quarters on the restated basis of the 2Q26 ITR) from run 36984285974 (2026-10-02); OBM.AX, CMM.AX, 3391.T (annual pair spans two fiscal years; prior year withheld) from run 37439518589 (2026-10-06); P129: 15 real ticker packets from frozen 2026-10-06 Daily Yahoo Pull 37439518589 and Small-Cap Pull 37464079110 (MAGN and AIAI), preserving the existing canonical fixture shape; P177: BYLOT.AT trimmed packet and HL annualRev/annualGP/annualOpInc period ends from frozen 2026-10-10 snapshots; two CIG-C gross-profit vendor fingerprints refreshed per G2/faelle-bereit.json using the retained fixture FX 0.19479507",
+  "source": "CI snapshots 2026-09-29 (first eight) and 2026-09-30 run 36690140002 (13 BDC/closed-end funds; CARG, PLUS, DCO, INFQ, VCTR, SLCE3.SA, CLSC3.SA, HOS, TYG, OLPX), retained public vendor evidence; HLX from run 36839128456 (2026-10-01); 2670.HK, ENGI3.SA, Z98.DE from run 36839128456 (2026-10-01); HIVE (no case: the issuer files no operating line; vendor packet must stay untouched) from run 36839128456 (2026-10-01); HL (annual gross profit cases) from run 36839128456 (2026-10-01); 2637.TW (hold, statements in TWD under a USD label) from run 36839128456 (2026-10-01); 002128.SZ (withheld misallocated and mixed-basis quarters) from run 36839128456 (2026-10-01); 402340.KS (hold: vendor revenue includes equity-method gains; gross-profit null cases) from run 36984285974 (2026-10-02); 8020.T (revenue quarters from the tanshin, two stored zeros) from run 36984285974 (2026-10-02); CIG-C (gross-profit quarters on the restated basis of the 2Q26 ITR) from run 36984285974 (2026-10-02); OBM.AX, CMM.AX, 3391.T (annual pair spans two fiscal years; prior year withheld) from run 37439518589 (2026-10-06); P129: 15 real ticker packets from frozen 2026-10-06 Daily Yahoo Pull 37439518589 and Small-Cap Pull 37464079110 (MAGN and AIAI), preserving the existing canonical fixture shape; P177: BYLOT.AT trimmed packet and HL annualRev/annualGP/annualOpInc period ends from frozen 2026-10-10 snapshots; two CIG-C gross-profit vendor fingerprints refreshed per G2/faelle-bereit.json using the retained fixture FX 0.19479507; hand table 18.10.2026: BLSH, CDR.WA, OTGLF (same vendor packet as CDR.WA), 000552.SZ trimmed packets (meta; revenueQ, grossProfitQ, opIncQ, annualRev, annualGP with period ends) from frozen 2026-10-17 Daily Yahoo Pull 39036704898",
   "snapshots": {
     "BANPU.BK": {
       "identifier": {
@@ -47579,6 +47579,3802 @@
           148222834.287,
           146868311.57569999,
           null
+        ]
+      }
+    },
+    "BLSH": {
+      "meta": {
+        "ticker": "BLSH",
+        "name": "Bullish",
+        "nameSource": "longName",
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "region": "US",
+        "exchangeName": "NYSE",
+        "reportingCurrency": "USD",
+        "tradingCurrency": "USD",
+        "tradingCurrencyAssumed": false,
+        "_ccyMissingCompletely": false,
+        "fetchedAt": "2026-10-14T08:26:34.424Z",
+        "asOf": "2026-10-17T14:05:05.155Z",
+        "filingDate": null,
+        "firstTradeDate": "2025-08-13T13:30:00.000Z",
+        "ipoYear": 2025,
+        "opIncSource": "yahoo-adjusted",
+        "gpZeroCodingNulled": false,
+        "gpZeroCodingYears": 0,
+        "fcfMarginTTMSuppressed": false,
+        "ccyAmbiguous": false,
+        "sharesOutstanding": 151648346,
+        "floatShares": 43847294,
+        "impliedSharesOutstanding": 151648346,
+        "institutionsPercentHeld": 0.26154,
+        "institutionsCount": 244,
+        "insidersPercentHeld": 0.86683,
+        "mostRecentQuarter": "2026-06-30T00:00:00.000Z",
+        "country": "Cayman Islands",
+        "fullTimeEmployees": 394,
+        "statementPeriods": {
+          "annualRev": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualGP": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualOpInc": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualNetIncome": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualBalance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualSBC": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualDepreciation": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualRepurchase": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualDividendsPaid": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualNetCommonStockIssuance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualSGA": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualShares": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "shares",
+              "basis": "shares-basis-unavailable",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualRnD": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualFCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualOCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "annualCapex": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "revenueQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "opIncQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "grossProfitQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            }
+          ],
+          "netIncomeQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "USD",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:26:34.424Z"
+            },
+            null
+          ]
+        },
+        "annualIncomeConflicts": [
+          {
+            "end": "2025-12-31",
+            "quoteSummary": 288500000,
+            "fts": 244970328000
+          },
+          {
+            "end": "2024-12-31",
+            "quoteSummary": 0,
+            "fts": 250263249000
+          }
+        ],
+        "annualIncomeGapReason": "conflicting-revenue-basis",
+        "mischVerhaeltnisFaktor": 1,
+        "reportingCurrencyOriginal": "USD",
+        "fxRateApplied": 1,
+        "fxConverted": true,
+        "_debtUnderstatedYears": 1,
+        "fundamentalsAsOf": "2026-10-14T08:26:34.424Z",
+        "fundamentalsTimeseriesFetchedAt": "2026-10-14T08:26:47.883Z",
+        "fundamentalsTimeseriesClockSource": "fts",
+        "fxRateSourceTrading": "identity",
+        "tradingCurrencyOriginal": "USD",
+        "tradingFxRateApplied": 1,
+        "priceCurrency": "USD"
+      },
+      "timeseries": {
+        "revenueQ": [
+          {
+            "value": 32650038000
+          },
+          {
+            "value": 51870229000
+          },
+          {
+            "value": 64401273000
+          },
+          {
+            "value": 41649657000
+          },
+          {
+            "value": 58662937000
+          }
+        ],
+        "revenueQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "grossProfitQ": [
+          {
+            "value": 28805000
+          },
+          {
+            "value": 29794000
+          },
+          {
+            "value": -85452000
+          },
+          {
+            "value": 65052000
+          },
+          {
+            "value": 7374000
+          }
+        ],
+        "grossProfitQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "opIncQ": [
+          {
+            "value": -8304000
+          },
+          {
+            "value": 7772000
+          },
+          {
+            "value": 27035000
+          },
+          {
+            "value": 19343000
+          },
+          {
+            "value": -12715000
+          }
+        ],
+        "opIncQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ]
+      },
+      "annual": {
+        "annualRev": [
+          {
+            "value": 244970328000
+          },
+          {
+            "value": 250263249000
+          },
+          {
+            "value": 116507500000
+          },
+          {
+            "value": 72895276000
+          },
+          null
+        ],
+        "annualRevEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31",
+          "2021-12-31"
+        ],
+        "annualGP": [
+          {
+            "value": 74084000
+          },
+          {
+            "value": 5280000
+          },
+          {
+            "value": -21672000
+          },
+          {
+            "value": -6555000
+          },
+          null
+        ],
+        "annualGPEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31",
+          "2021-12-31"
+        ]
+      }
+    },
+    "CDR.WA": {
+      "meta": {
+        "ticker": "CDR.WA",
+        "name": "CD Projekt Red S.A.",
+        "nameSource": "longName",
+        "sector": "Communication Services",
+        "industry": "Electronic Gaming & Multimedia",
+        "region": "EU",
+        "exchangeName": "Warsaw",
+        "reportingCurrency": "USD",
+        "tradingCurrency": "PLN",
+        "tradingCurrencyAssumed": false,
+        "_ccyMissingCompletely": false,
+        "fetchedAt": "2026-10-14T08:24:24.755Z",
+        "asOf": "2026-10-17T14:04:16.515Z",
+        "filingDate": null,
+        "firstTradeDate": "2000-01-03T08:00:00.000Z",
+        "ipoYear": 2000,
+        "opIncSource": "yahoo-adjusted",
+        "gpZeroCodingNulled": false,
+        "gpZeroCodingYears": 0,
+        "fcfMarginTTMSuppressed": false,
+        "ccyAmbiguous": false,
+        "sharesOutstanding": 99910510,
+        "floatShares": 99750007,
+        "impliedSharesOutstanding": 99910510,
+        "institutionsPercentHeld": 0.24282,
+        "institutionsCount": 176,
+        "insidersPercentHeld": 0.29525,
+        "mostRecentQuarter": "2026-06-30T00:00:00.000Z",
+        "country": "Poland",
+        "fullTimeEmployees": 808,
+        "statementPeriods": {
+          "annualRev": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualGP": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualOpInc": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualNetIncome": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualBalance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualSBC": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualDepreciation": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualRepurchase": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualDividendsPaid": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualNetCommonStockIssuance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualSGA": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualShares": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualRnD": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualFCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualOCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "annualCapex": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "revenueQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "opIncQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "grossProfitQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            }
+          ],
+          "netIncomeQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:24:24.755Z"
+            },
+            null
+          ]
+        },
+        "annualIncomeConflicts": [
+          {
+            "end": "2024-12-31",
+            "quoteSummary": 985030000,
+            "fts": 798372000
+          }
+        ],
+        "annualIncomeGapReason": "conflicting-revenue-basis",
+        "fxRateSourceReporting": "fx-rates.json @ 2026-10-14T07:49:12.564Z",
+        "mischVerhaeltnisFaktor": 1,
+        "reportingCurrencyOriginal": "PLN",
+        "fxRateApplied": 0.25635636,
+        "fxConverted": true,
+        "fundamentalsAsOf": "2026-10-14T08:24:24.755Z",
+        "fundamentalsTimeseriesFetchedAt": "2026-10-14T08:24:38.277Z",
+        "fundamentalsTimeseriesClockSource": "fts",
+        "fxRateSourceTrading": "fx-rates.json @ 2026-10-17T13:41:07.519Z",
+        "tradingCurrencyOriginal": "PLN",
+        "tradingFxRateApplied": 0.257387,
+        "priceCurrency": "USD"
+      },
+      "timeseries": {
+        "revenueQ": [
+          {
+            "value": 62602479.46836
+          },
+          {
+            "value": 48991494.89052
+          },
+          {
+            "value": 19195195.16772
+          },
+          {
+            "value": 89486827.29792
+          },
+          {
+            "value": 55561139.32824
+          }
+        ],
+        "revenueQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "grossProfitQ": [
+          {
+            "value": 58619727.0594
+          },
+          {
+            "value": 45439933.87908
+          },
+          {
+            "value": 38394748.39356
+          },
+          {
+            "value": 75487462.83468
+          },
+          {
+            "value": 42026805.30204
+          }
+        ],
+        "grossProfitQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "opIncQ": [
+          {
+            "value": 38010470.209920004
+          },
+          {
+            "value": 24883742.79612
+          },
+          {
+            "value": 27679565.25828
+          },
+          {
+            "value": 49894638.3468
+          },
+          {
+            "value": 18577632.69648
+          }
+        ],
+        "opIncQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ]
+      },
+      "annual": {
+        "annualRev": [
+          {
+            "value": 222258144.20004
+          },
+          {
+            "value": 204667739.84592
+          },
+          {
+            "value": 315369337.71564
+          },
+          {
+            "value": 244198915.98336
+          }
+        ],
+        "annualRevEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31"
+        ],
+        "annualGP": [
+          {
+            "value": 202012913.38176
+          },
+          {
+            "value": 174465884.3616
+          },
+          {
+            "value": 218477400.60276002
+          },
+          {
+            "value": 181654629.40872002
+          }
+        ],
+        "annualGPEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31"
+        ]
+      }
+    },
+    "OTGLF": {
+      "meta": {
+        "ticker": "OTGLF",
+        "name": "CD Projekt Red S.A.",
+        "nameSource": "longName",
+        "sector": "Communication Services",
+        "industry": "Electronic Gaming & Multimedia",
+        "region": "EU",
+        "exchangeName": "OTC Markets OTCPK",
+        "reportingCurrency": "USD",
+        "tradingCurrency": "USD",
+        "tradingCurrencyAssumed": false,
+        "_ccyMissingCompletely": false,
+        "fetchedAt": "2026-10-14T08:38:21.752Z",
+        "asOf": "2026-10-17T14:06:26.996Z",
+        "filingDate": null,
+        "firstTradeDate": "2017-04-12T13:30:00.000Z",
+        "ipoYear": 2017,
+        "opIncSource": "yahoo-adjusted",
+        "gpZeroCodingNulled": false,
+        "gpZeroCodingYears": 0,
+        "fcfMarginTTMSuppressed": false,
+        "ccyAmbiguous": false,
+        "sharesOutstanding": 99910510,
+        "floatShares": 99750007,
+        "impliedSharesOutstanding": 99910510,
+        "institutionsPercentHeld": 0.24282,
+        "institutionsCount": 176,
+        "insidersPercentHeld": 0.29525,
+        "mostRecentQuarter": "2026-06-30T00:00:00.000Z",
+        "country": "Poland",
+        "fullTimeEmployees": 808,
+        "statementPeriods": {
+          "annualRev": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualGP": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualOpInc": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualNetIncome": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualBalance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualSBC": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualDepreciation": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualRepurchase": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualDividendsPaid": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualNetCommonStockIssuance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualSGA": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualShares": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualRnD": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualFCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualOCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "annualCapex": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2021-12-31",
+              "duration": "12M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "revenueQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "opIncQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "grossProfitQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            }
+          ],
+          "netIncomeQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-09-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "PLN",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:38:21.752Z"
+            },
+            null
+          ]
+        },
+        "annualIncomeConflicts": [
+          {
+            "end": "2024-12-31",
+            "quoteSummary": 985030000,
+            "fts": 798372000
+          }
+        ],
+        "annualIncomeGapReason": "conflicting-revenue-basis",
+        "fxRateSourceReporting": "fx-rates.json @ 2026-10-14T07:49:12.564Z",
+        "tradingCurrencyOriginal": "USD",
+        "tradingFxRateApplied": 1,
+        "mischVerhaeltnisFaktor": 3.9008199367474243,
+        "reportingCurrencyOriginal": "PLN",
+        "fxRateApplied": 0.25635636,
+        "fxConverted": true,
+        "fundamentalsAsOf": "2026-10-14T08:38:21.752Z",
+        "fundamentalsTimeseriesFetchedAt": "2026-10-14T08:38:35.132Z",
+        "fundamentalsTimeseriesClockSource": "fts",
+        "fxRateSourceTrading": "identity",
+        "priceCurrency": "USD"
+      },
+      "timeseries": {
+        "revenueQ": [
+          {
+            "value": 62602479.46836
+          },
+          {
+            "value": 48991494.89052
+          },
+          {
+            "value": 19195195.16772
+          },
+          {
+            "value": 89486827.29792
+          },
+          {
+            "value": 55561139.32824
+          }
+        ],
+        "revenueQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "grossProfitQ": [
+          {
+            "value": 58619727.0594
+          },
+          {
+            "value": 45439933.87908
+          },
+          {
+            "value": 38394748.39356
+          },
+          {
+            "value": 75487462.83468
+          },
+          {
+            "value": 42026805.30204
+          }
+        ],
+        "grossProfitQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ],
+        "opIncQ": [
+          {
+            "value": 38010470.209920004
+          },
+          {
+            "value": 24883742.79612
+          },
+          {
+            "value": 27679565.25828
+          },
+          {
+            "value": 49894638.3468
+          },
+          {
+            "value": 18577632.69648
+          }
+        ],
+        "opIncQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-09-30",
+          "2025-06-30"
+        ]
+      },
+      "annual": {
+        "annualRev": [
+          {
+            "value": 222258144.20004
+          },
+          {
+            "value": 204667739.84592
+          },
+          {
+            "value": 315369337.71564
+          },
+          {
+            "value": 244198915.98336
+          }
+        ],
+        "annualRevEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31"
+        ],
+        "annualGP": [
+          {
+            "value": 202012913.38176
+          },
+          {
+            "value": 174465884.3616
+          },
+          {
+            "value": 218477400.60276002
+          },
+          {
+            "value": 181654629.40872002
+          }
+        ],
+        "annualGPEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31"
+        ]
+      }
+    },
+    "000552.SZ": {
+      "meta": {
+        "ticker": "000552.SZ",
+        "name": "Gansu Energy Chemical Co., Ltd.",
+        "nameSource": "longName",
+        "sector": "Energy",
+        "industry": "Thermal Coal",
+        "region": "CN",
+        "exchangeName": "Shenzhen",
+        "reportingCurrency": "USD",
+        "tradingCurrency": "CNY",
+        "tradingCurrencyAssumed": false,
+        "_ccyMissingCompletely": false,
+        "fetchedAt": "2026-10-14T08:07:42.412Z",
+        "asOf": "2026-10-17T14:02:52.811Z",
+        "filingDate": null,
+        "firstTradeDate": "1994-01-06T01:30:00.000Z",
+        "ipoYear": 1994,
+        "opIncSource": "yahoo-adjusted",
+        "gpZeroCodingNulled": false,
+        "gpZeroCodingYears": 0,
+        "fcfMarginTTMSuppressed": false,
+        "ccyAmbiguous": false,
+        "sharesOutstanding": 5351818822,
+        "floatShares": 2477836702,
+        "impliedSharesOutstanding": 5351818822,
+        "institutionsPercentHeld": 0.1254,
+        "institutionsCount": 50,
+        "insidersPercentHeld": 0.55251,
+        "mostRecentQuarter": "2026-06-30T00:00:00.000Z",
+        "country": "China",
+        "fullTimeEmployees": 23921,
+        "statementPeriods": {
+          "annualRev": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualGP": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualOpInc": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualNetIncome": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualBalance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualSBC": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualDepreciation": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualRepurchase": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualDividendsPaid": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualNetCommonStockIssuance": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualSGA": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualShares": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "shares",
+              "basis": "diluted-average-shares",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualRnD": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualFCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualOCF": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "annualCapex": [
+            {
+              "end": "2025-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2024-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2023-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2022-12-31",
+              "duration": "12M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "revenueQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "opIncQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "grossProfitQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ],
+          "netIncomeQ": [
+            {
+              "end": "2026-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2026-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-12-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-06-30",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            },
+            {
+              "end": "2025-03-31",
+              "duration": "3M",
+              "currency": "CNY",
+              "unit": "currency",
+              "basis": "yahoo-statement",
+              "fetchedAt": "2026-10-14T08:07:42.412Z"
+            }
+          ]
+        },
+        "annualIncomeConflicts": [
+          {
+            "end": "2024-12-31",
+            "quoteSummary": 9603970620,
+            "fts": 9692977964.85
+          }
+        ],
+        "annualIncomeGapReason": "conflicting-revenue-basis",
+        "fxRateSourceReporting": "fx-rates.json @ 2026-10-14T07:49:12.564Z",
+        "mischVerhaeltnisFaktor": 1,
+        "reportingCurrencyOriginal": "CNY",
+        "fxRateApplied": 0.14942546,
+        "fxConverted": true,
+        "fundamentalsAsOf": "2026-10-14T08:07:42.412Z",
+        "fundamentalsTimeseriesFetchedAt": "2026-10-14T08:07:55.761Z",
+        "fundamentalsTimeseriesClockSource": "fts",
+        "fxRateSourceTrading": "fx-rates.json @ 2026-10-17T13:41:07.519Z",
+        "tradingCurrencyOriginal": "CNY",
+        "tradingFxRateApplied": 0.14956178,
+        "priceCurrency": "USD"
+      },
+      "timeseries": {
+        "revenueQ": [
+          {
+            "value": 329078573.30383563
+          },
+          {
+            "value": 372865861.1922922
+          },
+          {
+            "value": 256887949.55588096
+          },
+          {
+            "value": 269284182.56759167
+          },
+          {
+            "value": 291471577.3757551
+          }
+        ],
+        "revenueQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-06-30",
+          "2025-03-31"
+        ],
+        "grossProfitQ": [
+          {
+            "value": 84023106.547858
+          },
+          {
+            "value": 66667742.97599099
+          },
+          {
+            "value": 53220302.01904254
+          },
+          {
+            "value": 30643903.797178235
+          },
+          {
+            "value": 59869618.840632476
+          }
+        ],
+        "grossProfitQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-06-30",
+          "2025-03-31"
+        ],
+        "opIncQ": [
+          {
+            "value": 20959910.227534436
+          },
+          {
+            "value": 12672047.85429061
+          },
+          {
+            "value": -2388460.3283227617
+          },
+          {
+            "value": -31748464.17911596
+          },
+          {
+            "value": 8716768.780174427
+          }
+        ],
+        "opIncQEnds": [
+          "2026-06-30",
+          "2026-03-31",
+          "2025-12-31",
+          "2025-06-30",
+          "2025-03-31"
+        ]
+      },
+      "annual": {
+        "annualRev": [
+          {
+            "value": 1171291042.1861787
+          },
+          {
+            "value": 1448377691.1675751
+          },
+          {
+            "value": 1682390550.7436147
+          },
+          {
+            "value": 1832155914.261621
+          }
+        ],
+        "annualRevEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31"
+        ],
+        "annualGP": [
+          {
+            "value": 185050978.42273754
+          },
+          {
+            "value": 473280810.8559083
+          },
+          {
+            "value": 603831519.5189109
+          },
+          {
+            "value": 860074207.4150144
+          }
+        ],
+        "annualGPEnds": [
+          "2025-12-31",
+          "2024-12-31",
+          "2023-12-31",
+          "2022-12-31"
         ]
       }
     }
