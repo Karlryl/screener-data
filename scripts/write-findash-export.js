@@ -412,12 +412,23 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     const alt = gleich && derivations.overviewLegacy ? derivations.overviewLegacy[kind] : null;
     out.overviewValueLegacy = alt ? round3(alt.value) : null;
     out.overviewPeriodLegacy = alt ? alt.period : null;
-    // P267: the live label is the period the engine carried with exactly this value; never re-derived here.
-    if (Object.hasOwn(out, 'overviewPeriod')) out.overviewPeriod = overviewPeriodFor(kind, out.overviewPeriod);
+    // P267: the live label is the period the engine carried with exactly this value. Where this export's own
+    // snapshot re-derives the candidate, value (same output rounding), basis and end must agree; otherwise the
+    // label is emptied with its reason instead of pairing a value with another number's period.
+    if (Object.hasOwn(out, 'overviewPeriod')) {
+      let label = overviewPeriodFor(kind, out.overviewPeriod);
+      const again = derivations.g31Overview?.[kind];
+      if (label && label.basis !== 'none' && derivations.wachstum && again?.period
+          && (!gleich || again.period.basis !== label.basis || (again.period.periodEnd ?? null) !== label.periodEnd)) {
+        label = { basis: 'none', periodEnd: null, priorPeriodEnd: null, reason: OVERVIEW_PERIOD_UNCONFIRMED };
+      }
+      out.overviewPeriod = label;
+    }
   }
   return out;
 }
 function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
+const OVERVIEW_PERIOD_UNCONFIRMED = 'Zeitraum nicht bestätigt: Der Datenstand des Exports ergibt für diese Firma einen anderen Wert oder Zeitraum.';
 /** Exported label of the overview value (P267): the engine's period for gp/revenue-badge, otherwise null; an
  * engine row without a period gets an empty label with its reason instead of a borrowed one.
  * @param {string|null|undefined} kind Overview kind of the row.
