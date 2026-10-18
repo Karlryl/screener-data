@@ -1,6 +1,6 @@
 {
   "_doku": [
-    "Detection and reporting; no merging, exclusion, score, name or membership change. Since 2026-10-18 (brief sd-dup) a listed secondary whose homeListingProposal equals codeKeeps holds no rank in the findash export (rank null, rankGrund dupIssuer; the row and its data stay). Open (null) or conflicting proposals change nothing.",
+    "Detection and reporting; no merging, exclusion, score, name or membership change. Since 2026-10-18 (brief sd-dup, master decision) homeListingProposal decides the rank in the findash export: every other ticker of the issuer gets rank null with rankGrund dupIssuer when the home ticker stands in the same ranking (row and data stay); alone it keeps its rank; an open (null) proposal changes nothing. For Copel and AXIA the marker below sits on the home row, i.e. on the wrong row.",
     "Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt.",
     "Entries are reports, never merge decisions; this is separate from the empty identity register (M16, M18, M19).",
     "codeKeeps records R11's re-enactment of the current production selection rule, not a decision about the true primary listing. Every other listed ticker is marked, even when codeKeeps is absent from the board.",

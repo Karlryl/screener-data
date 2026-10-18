@@ -259,7 +259,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
 const { readValueFlags, valueFlagProblems } = require('../lib/value-open-items.js');
-const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow, dupIssuerRankGrund } = require('../lib/dup-issuer-shadow-table.js');
+const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow, homeListingIndex, dupIssuerRankGrund } = require('../lib/dup-issuer-shadow-table.js');
 const { loadRegistry, computeClassesShadow, deviationPct } = require('../lib/mcap-classes-shadow.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
@@ -504,8 +504,11 @@ function ladeValueFlags(file = VALUE_OPEN_ITEMS_FILE, warn = console.warn, day =
 
 // Shadow reports are repository inputs: missing or malformed tables must throw.
 let _dupIssuerShadow = null;
+let _homeListing = null; // brief sd-dup: non-home ticker -> home ticker, same table load
 function ladeDupIssuerShadowTable(file) {
-  _dupIssuerShadow = secondaryIndex(loadDupIssuerShadowTable(file));
+  const table = loadDupIssuerShadowTable(file);
+  _dupIssuerShadow = secondaryIndex(table);
+  _homeListing = homeListingIndex(table);
   return _dupIssuerShadow.size;
 }
 
@@ -663,17 +666,22 @@ function belegteAchsen(coverageAxes) {
 // Survival-Zeilen sind nie gescort und tragen coverageAxes nie — sie laufen NICHT durch
 // dieses Gate (s. buildSurvival/validateSurvivalRow), sonst haetten sie geschlossen alle 101
 // ihren Runway-Rang verloren.
-function rangGrund(row) {
+// ranking: Set of all tickers of the ranking the row stands in (for a short list: its full
+// cohort track). Without it (single-row callers) only the coverage reasons are decided.
+function rangGrund(row, ranking) {
   const a = belegteAchsen(row && row.coverageAxes);
   if (!a) return 'coverageUnbekannt';
   // QC-Formel (Nenner < RANK_GATE_MIN_NENNER): nie gemessen, nie gegated
   if (a.m >= RANK_GATE_MIN_NENNER && a.n < RANK_MIN_AXES) return 'zuWenigBelegteAchsen';
-  // Brief sd-dup (18.10.2026): no firm twice in a ranking. A listed second listing whose primary
-  // listing the hand table decides keeps its row and data but holds no rank (all boards, incl.
-  // quality/ and smallcap/). Survival never passes this gate. Existing reasons take precedence.
-  if (_dupIssuerShadow === null) ladeDupIssuerShadowTable();
-  return dupIssuerRankGrund(row && row.ticker, _dupIssuerShadow);
+  // Brief sd-dup (18.10.2026): no firm twice in a ranking. A listing that is not the hand table's
+  // home listing keeps its row and data but holds no rank when the home listing stands in the
+  // same ranking (all scored boards, incl. quality/ and smallcap/; survival never passes this
+  // gate). Existing reasons take precedence.
+  if (!ranking) return null;
+  if (_homeListing === null) ladeDupIssuerShadowTable();
+  return dupIssuerRankGrund(row && row.ticker, _homeListing, ranking);
 }
+const tickerSet = (rows) => new Set((rows || []).map((r) => r && r.ticker));
 // Vergibt die Raenge EINER score-desc-Liste: eine gegatete Zeile bekommt rank:null + Grund
 // und verbraucht KEINE Rangnummer — die uebrigen bleiben dadurch luecken- und sprungfrei
 // 1..k. Sie behaelt ihre Array-Position (Score-Ordnung bleibt lesbar) und ihren Score.
@@ -684,10 +692,13 @@ function rangGrund(row) {
 // ersten Nacht auf fast jedem Board und niemand laese sie mehr. Alarm-Ermuedung ist ein
 // echter Schaden, und eine Schwelle auf einer nie gemessenen Grundgesamtheit ist keine
 // Schwelle. Die gekappten Listen behalten sie unveraendert (Pruefung 7b im Waechter).
+// opts.ranking: tickers of the whole ranking (short lists pass their full cohort track);
+// default is the list itself.
 function vergebeRaenge(rows, wo, opts = {}) {
   let rang = 0, entrangt = 0;
+  const ranking = opts.ranking || tickerSet(rows);
   for (const row of rows) {
-    const grund = rangGrund(row);
+    const grund = rangGrund(row, ranking);
     if (grund) { row.rank = null; row.rankGrund = grund; entrangt++; }
     else { row.rank = ++rang; row.rankGrund = null; }
   }
@@ -809,6 +820,7 @@ function mapSurvivalRow(r, i) {
 //                outputs/hypergrowth/full/ herein). Sonst ist alles identisch: dieselben
 //                Mapper, dieselbe Rangvergabe, dieselbe Schema-Huelle.
 // opts.rangOpts — an vergebeRaenge durchgereicht ({warn:false} fuer die Vollboards).
+// opts.rankings — {profitable, unprofitable} Sets of the full cohort tickers (short lists, brief sd-dup).
 // opts.deliveryMode / cohortCounts - T194 delivery disclosure for production HG boards.
 //                Generic callers can omit both and retain the legacy reusable seam.
 function isNonNegativeInteger(value) {
@@ -860,8 +872,8 @@ function buildBoard(id, coverage, opts = {}) {
     boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
     mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
-    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow).filter(Boolean).map(mitAnnualPairsSchatten).map(mitFcfSchatten(id)), id + '.profitable', rangOpts),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow).filter(Boolean).map(mitAnnualPairsSchatten).map(mitFcfSchatten(id)), id + '.unprofitable', rangOpts),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow).filter(Boolean).map(mitAnnualPairsSchatten).map(mitFcfSchatten(id)), id + '.profitable', { ...rangOpts, ranking: opts.rankings?.profitable }),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow).filter(Boolean).map(mitAnnualPairsSchatten).map(mitFcfSchatten(id)), id + '.unprofitable', { ...rangOpts, ranking: opts.rankings?.unprofitable }),
   };
   if (opts.deliveryMode) {
     board.cohortDelivery = cohortDeliveryFor(id, board, opts.deliveryMode, opts.cohortCounts);
@@ -1265,6 +1277,7 @@ function build(seam = {}) {
   for (const id of BRANCHES) {
     writeJsonAtomic(path.join(OUT_DIR, id + '.json'), buildBoard(id, coverage, {
       sourceBoard: Object.fromEntries(COHORT_TRACKS.map(track => [track, sourceBoards[id][track].slice(0, BOARD_TRACK_CAP)])),
+      rankings: Object.fromEntries(COHORT_TRACKS.map(track => [track, tickerSet(sourceBoards[id][track])])), // brief sd-dup: one ranking = the full cohort
       deliveryMode: 'topN',
       cohortCounts: cohortCounts && cohortCounts[id],
     }), opts);
@@ -1603,8 +1616,8 @@ function validateGeo(r, where, errs) {
 // durchrutschen; ohne (b) koennte ein zu scharfes Gate stumm halbe Boards entrangen.
 // Die Zeile bleibt in beiden Faellen sichtbar — score/ticker/Felder werden hier NICHT
 // gelockert, nur die Rangnummer haengt am Gate.
-function checkRangGate(r, where, errs) {
-  const grund = rangGrund(r);
+function checkRangGate(r, where, errs, ranking) {
+  const grund = rangGrund(r, ranking);
   if (grund) {
     if (r.rank !== null) errs.push(`${where}: rank=${JSON.stringify(r.rank)} trotz ${grund} — Belegbarkeits-Gate nicht angewandt`);
   } else if (!Number.isInteger(r.rank) || r.rank < 1) {
@@ -1616,11 +1629,11 @@ function checkRangGate(r, where, errs) {
   if ((r.rankGrund ?? null) !== grund) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)}, erwartet ${JSON.stringify(grund)}`);
 }
 
-function validateBoardRow(r, where, errs) {
+function validateBoardRow(r, where, errs, ranking) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (!Number.isFinite(r.score)) errs.push(`${where}: score not finite`);
-  checkRangGate(r, where, errs); // 18.08.: rank ist gate-abhaengig (int>=1 ODER null+Grund)
+  checkRangGate(r, where, errs, ranking); // 18.08.: rank ist gate-abhaengig (int>=1 ODER null+Grund)
   if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
   if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
   // overview: Pflicht (nullable). Key must be present. If object, kind/value/companion checked.
@@ -1639,9 +1652,9 @@ function validateBoardRow(r, where, errs) {
   checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
 }
 
-function validateOverviewRow(r, where, errs) {
+function validateOverviewRow(r, where, errs, ranking) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
-  checkRangGate(r, where, errs); // 18.08.: Belegbarkeits-Gate, s. checkRangGate
+  checkRangGate(r, where, errs, ranking); // 18.08.: Belegbarkeits-Gate, s. checkRangGate
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (typeof r.formulaId !== 'string' || !r.formulaId) errs.push(`${where}: formulaId`);
   if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
@@ -1849,7 +1862,8 @@ function validateFile(mk, kind, errs, opts = {}) {
   }
   if (kind === 'overview') {
     if (!Array.isArray(mk.rows)) { errs.push('overview: rows not array'); return; }
-    mk.rows.forEach((r, i) => validateOverviewRow(r, `overview[${i}]`, errs));
+    const ranking = tickerSet(mk.rows); // brief sd-dup: the flat overview is its own ranking
+    mk.rows.forEach((r, i) => validateOverviewRow(r, `overview[${i}]`, errs, ranking));
     checkRankSequence(mk.rows, 'overview.rows', errs);     // R2.18 (a)
     checkScoreDescending(mk.rows, 'overview.rows', errs);  // R2.18 (b) — overview.json is globally score-desc
     return;
@@ -1865,8 +1879,11 @@ function validateFile(mk, kind, errs, opts = {}) {
   if (opts.deliveryMode) {
     validateCohortDelivery(mk, kind, errs, { mode: opts.deliveryMode, counts: opts.cohortCounts });
   }
-  (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs));
-  (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs));
+  // brief sd-dup: a short list is checked against its full cohort track (opts.rankings), else itself.
+  const rankingP = opts.rankings?.profitable || tickerSet(mk.profitable);
+  const rankingU = opts.rankings?.unprofitable || tickerSet(mk.unprofitable);
+  (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs, rankingP));
+  (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs, rankingU));
   const alleZeilen = [].concat(mk.profitable || [], mk.unprofitable || []);
   checkFeldHomogen(alleZeilen, 'einmalertragPrognose', kind, errs);
   checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
@@ -1891,9 +1908,11 @@ function validateExport(outDir = OUT_DIR, opts = {}) {
   for (const id of BRANCHES) {
     const mk = readJSONOrNull(path.join(outDir, id + '.json'));
     if (!mk) { errs.push(`${id}: missing/unreadable`); continue; }
+    const full = readJSONOrNull(path.join(outDir, 'full', id + '.json')); // missing full/ is flagged by validateFullExport
     validateFile(mk, id, errs, {
       deliveryMode: 'topN',
       cohortCounts: cohortCountsForValidation(counts, id),
+      rankings: full ? { profitable: tickerSet(full.profitable), unprofitable: tickerSet(full.unprofitable) } : undefined,
     });
   }
   for (const [name, kind] of [['overview.json', 'overview'], ['survival.json', 'survival']]) {

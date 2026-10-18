@@ -1,12 +1,15 @@
 'use strict';
 /**
- * Brief sd-dup (18.10.2026): no firm twice in a ranking, and two fund wrappers carry their
- * non-operating class.
+ * Brief sd-dup (18.10.2026, with the master decision of the same day): no firm twice in a
+ * ranking, and two fund wrappers carry their non-operating class.
+ *
+ * Rule: the hand table's homeListingProposal is the primary listing. Every other listing of
+ * that issuer holds no rank (rankGrund "dupIssuer") when the home listing stands in the same
+ * ranking; alone it keeps its rank. Issuers with an open proposal (null) stay unchanged.
  *
  * Runs the real export chain (mapBoardRow/mapOverviewRow -> vergebeRaenge -> validateFile)
- * on synthetic rows built from the REAL hand table, so a later table decision (an open
- * homeListingProposal resolved) is picked up without editing this file. Nothing is read
- * from snapshots or engine outputs; no file is written.
+ * on synthetic rows built from the REAL hand table. Nothing is read from snapshots or engine
+ * outputs; no file is written.
  *
  * Usage: node tests/dup-issuer-rank.test.js (Exit 0/1)
  */
@@ -17,10 +20,10 @@ const { loadDupIssuerShadowTable } = require('../lib/dup-issuer-shadow-table.js'
 const { rankGrundShadowFor } = require('../lib/non-operating-classes.js');
 const nonOperating = require('../configs/non-operating-classes.json');
 
-const table = Object.values(loadDupIssuerShadowTable());
-// Decided = the sourced home listing is the kept ticker; only then is the primary listing known.
-const decided = table.filter((issuer) => issuer.homeListingProposal === issuer.codeKeeps);
-const open = table.filter((issuer) => issuer.homeListingProposal !== issuer.codeKeeps);
+const tableById = loadDupIssuerShadowTable();
+const table = Object.values(tableById);
+const decided = table.filter((issuer) => issuer.homeListingProposal !== null);
+const open = table.filter((issuer) => issuer.homeListingProposal === null);
 const issuerOf = new Map(table.flatMap((issuer) => issuer.tickers.map((t) => [t, issuer])));
 
 const row = (ticker, score, cov = '7/7') => ({
@@ -31,89 +34,118 @@ const row = (ticker, score, cov = '7/7') => ({
   marketCap: 1e10, phase: 'established', mcapBand: 'large', ipoRecency: 'mature',
   profitTier: 'langfristig-profitabel', ipoYear: 1999, cohortN: 90, cohortFallback: false,
 });
+const rows = (tickers, cov) => tickers.map((t, i) => row(t, 99 - i * 0.5, cov));
 // Every table ticker interleaved with unrelated fillers, score-desc like produceRankings.
-function cohort(cov) {
-  const tickers = table.flatMap((issuer) => issuer.tickers).flatMap((t, i) => ['FILL' + i, t]);
-  return tickers.map((t, i) => row(t, 99 - i * 0.5, cov));
-}
-const board = (rows) => wfe.vergebeRaenge(rows.map((r, i) => wfe.mapBoardRow(r, i)), 'test.profitable', { warn: false });
-const overview = (rows) => wfe.vergebeRaenge(rows.map((r, i) => wfe.mapOverviewRow(r, i)), 'test.overview', { warn: false });
-const check = (profitable) => {
+const cohort = (cov) => rows(table.flatMap((issuer) => issuer.tickers).flatMap((t, i) => ['FILL' + i, t]), cov);
+const board = (input, ranking) => wfe.vergebeRaenge(input.map((r, i) => wfe.mapBoardRow(r, i)), 'test.profitable', { warn: false, ranking });
+const overview = (input) => wfe.vergebeRaenge(input.map((r, i) => wfe.mapOverviewRow(r, i)), 'test.overview', { warn: false });
+const check = (profitable, rankings) => {
   const errors = [];
   wfe.validateFile({ schema: wfe.SCHEMA, generated_at: 'x', boardStatus: 'core', coverage: null,
-    branch: 'industrials', profitable, unprofitable: [] }, 'industrials', errors);
+    branch: 'industrials', profitable, unprofitable: [] }, 'industrials', errors, rankings ? { rankings } : {});
   return errors;
 };
-const rankedPerIssuer = (rows) => {
-  const count = new Map();
-  for (const r of rows) {
-    const issuer = issuerOf.get(r.ticker);
-    if (issuer && r.rank !== null) count.set(issuer.issuer, (count.get(issuer.issuer) || 0) + 1);
-  }
-  return count;
-};
+const pick = (list, ticker) => list.find((r) => r.ticker === ticker);
 
-test('the real table decides at least one issuer and leaves the open ones listed', () => {
-  assert.ok(decided.length > 0, 'no decided issuer: the guard below would test nothing');
-  assert.ok(open.every((issuer) => issuer.homeListingProposal === null || issuer.tickers.includes(issuer.homeListingProposal)));
+test('the real table: decided and open issuers exist; Copel and AXIA carry the marker on the home row', () => {
+  assert.ok(decided.length > 0 && open.length > 0);
+  for (const id of ['copel', 'axia-energia']) {
+    const issuer = tableById[id];
+    assert.notEqual(issuer.homeListingProposal, issuer.codeKeeps, `${id}: precondition of the wrong-row case`);
+  }
 });
 
 for (const [name, build, cov] of [['board', board, '7/7'], ['quality board (5 axes)', board, '5/5'], ['overview', overview, '7/7']]) {
-  test(`${name}: no decided issuer holds two ranks; its second listing stays visible without a rank`, () => {
-    const rows = build(cohort(cov));
-    const ranked = rankedPerIssuer(rows);
+  test(`${name}: every issuer holds at most one rank; only the home listing keeps it`, () => {
+    const out = build(cohort(cov));
+    const ranked = new Map();
+    for (const r of out) {
+      const issuer = issuerOf.get(r.ticker);
+      if (issuer && r.rank !== null) ranked.set(issuer.issuer, (ranked.get(issuer.issuer) || 0) + 1);
+    }
     for (const issuer of decided) {
       assert.equal(ranked.get(issuer.issuer), 1, `${issuer.issuer} must hold exactly one rank`);
-      for (const r of rows.filter((x) => issuer.tickers.includes(x.ticker))) {
-        if (r.ticker === issuer.homeListingProposal) {
-          assert.ok(Number.isInteger(r.rank), `${r.ticker}: primary listing keeps its rank`);
-          assert.equal(r.rankGrund, null);
+      for (const ticker of issuer.tickers) {
+        const r = pick(out, ticker);
+        if (ticker === issuer.homeListingProposal) {
+          assert.ok(Number.isInteger(r.rank) && r.rankGrund === null, `${ticker}: home listing keeps its rank`);
         } else {
-          assert.equal(r.rank, null, `${r.ticker}: second listing must not hold a rank`);
-          assert.equal(r.rankGrund, 'dupIssuer', `${r.ticker}: reason must be stated`);
-          assert.equal(r.dupIssuer?.of, issuer.codeKeeps, `${r.ticker}: marker stays`);
-          assert.ok(Number.isFinite(r.score), `${r.ticker}: score stays visible`);
+          assert.equal(r.rank, null, `${ticker}: other listing must not hold a rank`);
+          assert.equal(r.rankGrund, 'dupIssuer', `${ticker}: reason must be stated`);
+          assert.ok(Number.isFinite(r.score), `${ticker}: score stays visible`);
         }
       }
     }
-    // Brief: an open or conflicting home-listing proposal decides nothing, so nothing changes there.
     for (const issuer of open) {
-      for (const r of rows.filter((x) => issuer.tickers.includes(x.ticker))) {
-        assert.ok(Number.isInteger(r.rank) && r.rankGrund === null, `${r.ticker}: undecided case must stay unchanged`);
+      for (const ticker of issuer.tickers) {
+        const r = pick(out, ticker);
+        assert.ok(Number.isInteger(r.rank) && r.rankGrund === null, `${ticker}: open home listing, row unchanged`);
       }
     }
-    // Remaining ranks are gapless 1..k in list order.
-    assert.deepEqual(rows.filter((r) => r.rank !== null).map((r) => r.rank),
-      rows.filter((r) => r.rank !== null).map((_, i) => i + 1));
-    if (name !== 'overview') assert.deepEqual(check(rows), [], 'the --check accepts the gated list');
+    const ranks = out.filter((r) => r.rank !== null).map((r) => r.rank);
+    assert.deepEqual(ranks, ranks.map((_, i) => i + 1), 'remaining ranks are gapless');
+    if (name !== 'overview') assert.deepEqual(check(out), [], 'the --check accepts the gated list');
   });
 }
 
+test('marker on the wrong row (Copel, AXIA): the home row keeps rank and marker, the unmarked other row loses its rank', () => {
+  const out = board(rows(['CPLE3.SA', 'ELPC', 'AXIA', 'AXIA3.SA']));
+  assert.equal(pick(out, 'CPLE3.SA').rank, 1);
+  assert.equal(pick(out, 'CPLE3.SA').dupIssuer?.of, 'ELPC', 'the shadow marker itself is not moved by this change');
+  assert.equal(pick(out, 'ELPC').rank, null);
+  assert.equal(pick(out, 'ELPC').rankGrund, 'dupIssuer');
+  assert.ok(!Object.hasOwn(pick(out, 'ELPC'), 'dupIssuer'), 'ELPC carries no marker, the reason still applies');
+  assert.equal(pick(out, 'AXIA').rank, null);
+  assert.equal(pick(out, 'AXIA3.SA').rank, 2);
+  assert.deepEqual(check(out), []);
+});
+
+test('a non-home listing alone keeps its rank (Kloeckner: KCO.DE not in the ranking)', () => {
+  for (const ticker of ['KCO.VI', 'ELPC', 'AVAV.SW']) {
+    const [r] = board(rows([ticker]));
+    assert.equal(r.rank, 1, `${ticker}: the firm must not vanish from a ranking without its home listing`);
+    assert.equal(r.rankGrund, null);
+  }
+});
+
+test('a short list is ranked against its full cohort, and the --check uses the same cohort', () => {
+  const full = rows(['A', 'AVAV.SW', 'B', 'C', 'AVAV']);
+  const ranking = new Set(full.map((r) => r.ticker));
+  const fullOut = board(full);
+  const shortOut = board(full.slice(0, 3), ranking);
+  assert.deepEqual(shortOut.map((r) => r.rank), fullOut.slice(0, 3).map((r) => r.rank), 'short list = prefix of the full ranking');
+  assert.equal(pick(shortOut, 'AVAV.SW').rank, null, 'home AVAV stands in the full cohort, not in the short list');
+  assert.deepEqual(check(shortOut, { profitable: ranking, unprofitable: new Set() }), []);
+  assert.ok(check(shortOut).some((e) => /dupIssuer/.test(e)), 'without the cohort the short list would not match');
+});
+
 test('other rows move up by exactly one place per removed row above them', () => {
-  const tickers = ['A', 'AVAV.SW', 'B', 'GCP.DE', 'C', 'AVAV', 'GE', 'D'];
-  const after = board(tickers.map((t, i) => row(t, 90 - i)));
-  // Reference: the same list with neutral tickers in place of the two second listings.
-  const before = board(tickers.map((t, i) => row(t === 'AVAV.SW' || t === 'GCP.DE' ? 'NEUTRAL' + i : t, 90 - i)));
-  const removedAbove = (i) => tickers.slice(0, i).filter((t) => t === 'AVAV.SW' || t === 'GCP.DE').length;
+  const tickers = ['A', 'AVAV.SW', 'B', 'ELPC', 'C', 'AVAV', 'CPLE3.SA', 'D'];
+  const after = board(rows(tickers));
+  const removed = new Set(['AVAV.SW', 'ELPC']);
+  const before = board(rows(tickers.map((t, i) => (removed.has(t) ? 'NEUTRAL' + i : t))));
   after.forEach((r, i) => {
     if (r.rank === null) return;
-    assert.equal(r.rank, before[i].rank - removedAbove(i), `${r.ticker}: shift`);
+    const above = tickers.slice(0, i).filter((t) => removed.has(t)).length;
+    assert.equal(r.rank, before[i].rank - above, `${r.ticker}: shift`);
   });
   assert.deepEqual(after.map((r) => r.rank), [1, null, 2, null, 3, 4, 5, 6]);
   assert.deepEqual(after.map((r) => r.score), before.map((r) => r.score), 'scores and order unchanged');
 });
 
 test('an existing coverage reason takes precedence over dupIssuer', () => {
-  const [r] = board([row('AVAV.SW', 80, '3/7')]);
-  assert.equal(r.rank, null);
-  assert.equal(r.rankGrund, 'zuWenigBelegteAchsen');
+  const out = board([row('AVAV.SW', 80, '3/7'), row('AVAV', 70)]);
+  assert.equal(out[0].rank, null);
+  assert.equal(out[0].rankGrund, 'zuWenigBelegteAchsen');
 });
 
-test('the --check rejects a decided second listing that still holds a rank (export without the gate)', () => {
-  const ungated = [row('AVAV', 90), row('AVAV.SW', 89)].map((r, i) => wfe.mapBoardRow(r, i)); // no vergebeRaenge
-  assert.deepEqual(ungated.map((r) => r.rank), [1, 2], 'precondition: the mapper alone numbers every row');
-  const errors = check(ungated);
-  assert.ok(errors.some((e) => /AVAV|\[1\]/.test(e) && /dupIssuer/.test(e)), JSON.stringify(errors));
+test('the --check rejects a non-home listing that still holds a rank next to its home listing', () => {
+  for (const pair of [['AVAV', 'AVAV.SW'], ['CPLE3.SA', 'ELPC']]) {
+    const ungated = rows(pair).map((r, i) => wfe.mapBoardRow(r, i)); // no vergebeRaenge
+    assert.deepEqual(ungated.map((r) => r.rank), [1, 2], 'precondition: the mapper alone numbers every row');
+    const errors = check(ungated);
+    assert.ok(errors.some((e) => /\[1\]/.test(e) && /dupIssuer/.test(e)), JSON.stringify(errors));
+  }
 });
 
 test('INPP.L and OCI.L are non-operating closed-end funds with a sourced entry', () => {
