@@ -6,7 +6,7 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const { applyFinancialCases, financialReasons, validateTable, table } = require('../lib/financial-known-cases.js');
-const { revQuartalsYoY, gpGrowth } = require('../src/scoring/axes.js');
+const { revQuartalsYoY, revGrowthLevel, gpGrowth, revAcceleration, marginTrajectory } = require('../src/scoring/axes.js');
 const { overviewMetric } = require('../src/scoring/overview.js');
 const { handTableDerivation } = require('../lib/export-provenance.js');
 const shared = require('./fixtures/financial-known-cases.json').snapshots;
@@ -22,13 +22,14 @@ const beforeHashes = liveHashes();
 const REV = '2026-10-18-sdhand';
 const DASHES = new RegExp('[' + String.fromCharCode(0x2010) + '-' + String.fromCharCode(0x2015) + String.fromCharCode(0x2212) + ']');
 
-// [ticker, field, period, stored native vendor value, shown native value (null = withheld)]
+// [ticker, field, period, stored native vendor value, shown native value (null = withheld)], in table order.
 const cells = [
   ['BLSH', 'annualGP', '2025-12-31', 74084000, null],
   ['VCTR', 'annualGP', '2025-12-31', 711149000, null],
   ['CDR.WA', 'revenueQ', '2026-06-30', 244201000, 244201000],
   ['CDR.WA', 'revenueQ', '2026-03-31', 191107000, 191107000],
-  ['CDR.WA', 'revenueQ', '2025-12-31', 74877000, 74877000],
+  // Q4 2025 exists only as full year without GOG minus nine months with GOG: no reported number, withheld.
+  ['CDR.WA', 'revenueQ', '2025-12-31', 74877000, null],
   ['CDR.WA', 'revenueQ', '2025-09-30', 349072000, 349072000],
   ['CDR.WA', 'revenueQ', '2025-06-30', 216734000, 174930000],
   ['000552.SZ', 'revenueQ', '2026-06-30', 2202292523, 2202292523],
@@ -36,6 +37,23 @@ const cells = [
   ['000552.SZ', 'revenueQ', '2025-12-31', 1719171214.57, 1719171214.57],
   ['000552.SZ', 'revenueQ', '2025-06-30', 1802130524.26, 1817142765.65],
   ['000552.SZ', 'revenueQ', '2025-03-31', 1950615225.65, 1950615225.65],
+  // Unadjusted Q2 2025 profit next to the adjusted Q2 2025 revenue: withheld, never mixed.
+  ['000552.SZ', 'opIncQ', '2025-06-30', -212470245.56, null],
+  ['000552.SZ', 'grossProfitQ', '2025-06-30', 205078196.16, null],
+  // 2023 and older still contain GOG; 2024/2025 do not. Withholding 2023 also withholds 2022 (no-gap rule).
+  ['CDR.WA', 'annualRev', '2023-12-31', 1230199000, null],
+  ['CDR.WA', 'annualGP', '2023-12-31', 852241000, null],
+  // Profit series on the same basis as the revenue series: Q2 2025 restated, Q4 2025 withheld, Q3 2025 as reported.
+  ['CDR.WA', 'opIncQ', '2026-06-30', 148272000, 148272000],
+  ['CDR.WA', 'opIncQ', '2026-03-31', 97067000, 97067000],
+  ['CDR.WA', 'opIncQ', '2025-12-31', 107973000, null],
+  ['CDR.WA', 'opIncQ', '2025-09-30', 194630000, 194630000],
+  ['CDR.WA', 'opIncQ', '2025-06-30', 72468000, 72195000],
+  ['CDR.WA', 'grossProfitQ', '2026-06-30', 228665000, 228665000],
+  ['CDR.WA', 'grossProfitQ', '2026-03-31', 177253000, 177253000],
+  ['CDR.WA', 'grossProfitQ', '2025-12-31', 149771000, null],
+  ['CDR.WA', 'grossProfitQ', '2025-09-30', 294463000, 294463000],
+  ['CDR.WA', 'grossProfitQ', '2025-06-30', 163939000, 150923000],
 ];
 const idFor = ([ticker, field, period]) => `${ticker.toLowerCase()}-${period}-${field}-20261018`;
 const container = field => field.startsWith('annual') ? 'annual' : 'timeseries';
@@ -59,6 +77,8 @@ function guard(cell, config, ticker = cell[0], raw = fixtures[ticker]) {
   assert.ok(i >= 0, 'period present in the frozen packet');
   const result = applyFinancialCases(raw, config ? { table: config } : undefined).snapshot[box][field][i];
   assert.equal(value(result), shown === null ? null : shown * raw.meta.fxRateApplied, idFor(cell) + ' on ' + ticker);
+  // A withheld cell inside a covered series would stay empty by the coverage rule alone; pin its own reason too.
+  if (shown === null) assert.equal(result?.financialCorrection?.caseId, idFor(cell), idFor(cell) + ': own reason marker');
 }
 
 // Real nonzero CLI proof: SDHAND_RED_CASE=<caseId> node tests/hand-table-20261018.test.js exits 1.
@@ -68,30 +88,46 @@ if (process.env.SDHAND_RED_CASE) {
   try { guard(cell, without(c => c.caseId === idFor(cell))); } finally { assert.deepEqual(liveHashes(), beforeHashes); }
 }
 
-test('12 sourced cells, two coverage rows, only the four issuers, documented dates and no invented values', () => {
+test('26 sourced cells, four coverage rows, only the four issuers, documented dates and no invented values', () => {
   const own = table.cases.filter(c => c.revision === REV);
   assert.deepEqual(own.map(c => c.caseId), cells.map(idFor));
-  assert.deepEqual(table.cases.slice(-12).map(c => c.caseId), cells.map(idFor), 'appended after every earlier case');
+  assert.deepEqual(table.cases.slice(-cells.length).map(c => c.caseId), cells.map(idFor), 'appended after every earlier case');
   for (const c of own) {
     assert.equal(c.verifiedAt, '2026-10-18');
     assert.ok(!DASHES.test(c.reason), 'no dashes in the visible text');
-    assert.match(c.reason, c.replacementValue === null ? /^Bruttogewinn fehlt: / : c.replacementValue === c.expectedBadValue ? /^Umsatz bestätigt: / : /^Umsatz korrigiert: /);
+    const kind = c.replacementValue === null
+      ? (c.period === '2025-12-31' && c.ticker === 'CDR.WA' ? /^Viertes Quartal 2025 fehlt: / : c.ticker === 'CDR.WA' ? /^Jahreswerte fehlen: /
+        : c.ticker === '000552.SZ' ? /^Quartalsgewinn fehlt: / : /^Bruttogewinn fehlt: /)
+      : c.ticker === 'CDR.WA' ? (c.replacementValue === c.expectedBadValue ? /^Quartalszahlen bestätigt: / : /^Quartalszahlen korrigiert: /)
+        : c.replacementValue === c.expectedBadValue ? /^Umsatz bestätigt: / : /^Umsatz korrigiert: /;
+    assert.match(c.reason, kind, c.caseId);
     assert.match(c.reason, /Geprüft am 18\.10\.2026\.$/);
     for (const s of c.sources) {
       assert.match(s.url, /^https:\/\//); assert.ok(s.page && s.quote && s.form);
       assert.ok(s.filed || s.published || s.verifiedAt, 'documented date, never an invented publication date');
     }
   }
-  // Gross profit: withheld only (null), never a substitute 0; revenue: every replacement traces to its own sources.
+  // Gross profit: withheld only (null), never a substitute 0.
   assert.ok(own.filter(c => /^(BLSH|VCTR)$/.test(c.ticker)).every(c => c.replacementValue === null && c.field === 'annualGP' && c.index === 0));
-  for (const c of own.filter(c => c.field === 'revenueQ')) {
+  // Every non-null quarterly value traces to sources on ONE basis: the issuer's own comparison column or one report.
+  const basis = s => /including GOG/.test(s.note || '') ? 'with GOG' : 'without GOG';
+  for (const c of own.filter(c => c.periodType === '3M' && c.replacementValue !== null)) {
     const d = handTableDerivation(c);
     if (d) assert.equal(d.inputs[0].value - d.inputs[1].value, c.replacementValue, c.caseId);
     else assert.equal(c.sources[0].value, c.replacementValue, c.caseId);
+    if (c.ticker === 'CDR.WA') assert.equal(new Set(c.sources.map(basis)).size, 1, c.caseId + ': operands on one basis');
   }
-  assert.deepEqual(table.coverage.slice(-2), [
+  // The three CDR Q4 2025 cells would need operands on two bases; none of them is shown.
+  for (const field of ['revenueQ', 'opIncQ', 'grossProfitQ']) {
+    const q4 = own.find(c => c.ticker === 'CDR.WA' && c.field === field && c.period === '2025-12-31');
+    assert.equal(q4.replacementValue, null, field);
+    assert.deepEqual(q4.sources.map(basis).sort(), ['with GOG', 'without GOG'], field + ': mixed operands are documented, never confirmed');
+  }
+  assert.deepEqual(table.coverage.slice(-4), [
     { ticker: 'CDR.WA', listingAliases: ['OTGLF'], field: 'revenueQ', coversThrough: '2026-06-30' },
-    { ticker: '000552.SZ', field: 'revenueQ', coversThrough: '2026-06-30' }]);
+    { ticker: '000552.SZ', field: 'revenueQ', coversThrough: '2026-06-30' },
+    { ticker: 'CDR.WA', listingAliases: ['OTGLF'], field: 'opIncQ', coversThrough: '2026-06-30' },
+    { ticker: 'CDR.WA', listingAliases: ['OTGLF'], field: 'grossProfitQ', coversThrough: '2026-06-30' }]);
 });
 
 for (const cell of cells) test(idFor(cell) + ': exact fingerprint, guard green with the row, red without it', () => {
@@ -109,15 +145,33 @@ for (const cell of cells) test(idFor(cell) + ': exact fingerprint, guard green w
   }
 });
 
-test('board effect: both revenue pairs on the issuer basis, both gross-profit growths empty with a visible reason', () => {
-  const growth = (t, cfg) => revQuartalsYoY(applyFinancialCases(fixtures[t], cfg ? { table: cfg } : undefined).snapshot);
+test('board effect: CD Projekt on one basis, 000552.SZ on the adjusted pair, gross-profit growths empty with a reason', () => {
+  const run = (t, cfg) => applyFinancialCases(fixtures[t], cfg ? { table: cfg } : undefined).snapshot;
   for (const t of ['CDR.WA', 'OTGLF']) {
-    assert.equal(growth(t, before).toFixed(9), '0.126731385', t + ' vendor pair before (12.67 %)');
-    assert.equal(growth(t).toFixed(9), (244201 / 174930 - 1).toFixed(9), t + ': 39.60 % after');
+    const raw = fixtures[t], old = run(t, before), out = run(t), fx = raw.meta.fxRateApplied;
+    // Before: the vendor June pair (12.67 %) through the mixed Q4 cell; after: no quarterly pair across the gap,
+    // the existing annual leg compares 2025 with 2024, both without GOG (8.59 %).
+    assert.equal(revQuartalsYoY(old).toFixed(9), '0.126731385', t + ' vendor pair before');
+    assert.equal(revQuartalsYoY(out), null, t + ': no quarterly pair through the withheld Q4 2025');
+    assert.equal(revGrowthLevel(out).toFixed(6), ((866989 / 798372 - 1) * 100).toFixed(6), t + ': annual growth 2025/2024 without GOG');
     guard(cells.find(c => idFor(c) === 'cdr.wa-2025-06-30-revenueQ-20261018'), null, t);
+    const native = field => out.annual[field].map(value).map(v => v === null ? null : Math.round(v / fx));
+    assert.deepEqual(native('annualRev'), [866989000, 798372000, null, null], t + ' annualRev');
+    assert.deepEqual(native('annualGP'), [788016000, 680560000, null, null], t + ' annualGP');
+    assert.notEqual(revAcceleration(old), null, t + ' mixed-basis acceleration before');
+    assert.equal(revAcceleration(out), null, t + ': no acceleration across the GOG basis change');
+    // Margin axis: newest against oldest quarter, both without GOG (Q2 2026 and restated Q2 2025).
+    assert.ok(Math.abs(marginTrajectory(out) - (148272 / 244201 - 72195 / 174930)) < 1e-12, t + ' margin trajectory on one basis');
+    assert.ok(Math.abs(marginTrajectory(old) - (148272 / 244201 - 72468 / 216734)) < 1e-12, t + ' vendor margin trajectory before');
+    const reasons = financialReasons(out);
+    for (const p of ['Quartalszahlen korrigiert: ', 'Viertes Quartal 2025 fehlt: ', 'Jahreswerte fehlen: ']) assert.ok(reasons.some(s => s.startsWith(p)), t + ' ' + p);
+    assert.equal(reasons.length, 3, t + ': three distinct visible hints');
   }
-  assert.equal(growth('000552.SZ', before).toFixed(9), '0.222049398', '22.20 % before');
-  assert.equal(growth('000552.SZ').toFixed(9), (2202292523 / 1817142765.65 - 1).toFixed(9), '21.20 % after');
+  assert.equal(revQuartalsYoY(run('000552.SZ', before)).toFixed(9), '0.222049398', '22.20 % before');
+  const gs = run('000552.SZ');
+  assert.equal(revQuartalsYoY(gs).toFixed(9), (2202292523 / 1817142765.65 - 1).toFixed(9), '21.20 % after');
+  const q2 = gs.timeseries.revenueQEnds.indexOf('2025-06-30');
+  for (const field of ['opIncQ', 'grossProfitQ']) assert.equal(value(gs.timeseries[field][q2]), null, '000552.SZ ' + field + ' Q2 2025 withheld');
   for (const [t, raw] of [['BLSH', fixtures.BLSH], ['VCTR', fixtures.VCTR], ['VCTR', vctrDated]]) {
     const old = applyFinancialCases(raw, { table: before }).snapshot, out = applyFinancialCases(raw).snapshot;
     assert.ok(gpGrowth(old) !== null || t === 'VCTR' && raw === fixtures.VCTR, t + ' vendor GP growth axis before');
@@ -142,11 +196,11 @@ test('board effect: both revenue pairs on the issuer basis, both gross-profit gr
 });
 
 test('later vendor quarters stay withheld until checked; an unrelated issuer is untouched', () => {
-  for (const t of ['CDR.WA', '000552.SZ']) {
+  for (const [t, fields] of [['CDR.WA', ['revenueQ', 'opIncQ', 'grossProfitQ']], ['000552.SZ', ['revenueQ']]]) for (const field of fields) {
     const next = structuredClone(fixtures[t]);
-    next.timeseries.revenueQ.unshift({ value: 1 }); next.timeseries.revenueQEnds.unshift('2026-09-30');
-    const held = applyFinancialCases(next).snapshot.timeseries.revenueQ[0];
-    assert.equal(held.value, null); assert.equal(held.financialMissing.reasonCode, 'period-after-coverage');
+    next.timeseries[field].unshift({ value: 1 }); next.timeseries[field + 'Ends'].unshift('2026-09-30');
+    const held = applyFinancialCases(next).snapshot.timeseries[field][0];
+    assert.equal(held.value, null, t + ' ' + field); assert.equal(held.financialMissing.reasonCode, 'period-after-coverage');
   }
   // A changed vendor value is never overwritten with the checked one; it is withheld.
   const moved = structuredClone(fixtures['CDR.WA']); moved.timeseries.revenueQ[4] = { value: 1 };

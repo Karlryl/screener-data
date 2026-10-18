@@ -38,9 +38,9 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 277 authorized cells (231 quarterly, 46 annual) and eleven held packets have auditable sources', () => {
-  assert.equal(table.cases.length, 277); // P168f adds three Viaplay confirmations and one MFSL annual hold; hand table 18.10.2026 adds 12 cells (BLSH, VCTR, CDR.WA, 000552.SZ).
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 46); // P168f adds exactly four annual cases to P168e's 40; 18.10.2026 adds the BLSH and VCTR annual gross-profit holds.
+test('all 291 authorized cells (243 quarterly, 48 annual) and eleven held packets have auditable sources', () => {
+  assert.equal(table.cases.length, 291); // P168f adds three Viaplay confirmations and one MFSL annual hold; hand table 18.10.2026 adds 26 cells (BLSH, VCTR, CDR.WA, 000552.SZ).
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 48); // P168f adds exactly four annual cases to P168e's 40; 18.10.2026 adds the BLSH and VCTR gross-profit holds and two CDR.WA 2023 holds.
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -54,7 +54,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ', 'CIG-C|grossProfitQ',
-    '000688.SZ|revenueQ', 'GRANULES.NS|revenueQ', 'BYLOT.AT|revenueQ', 'CDR.WA|revenueQ', '000552.SZ|revenueQ'].sort()); // P177 adds the five verified BYLOT quarters and their coverage; 18.10.2026 adds CDR.WA and 000552.SZ.
+    '000688.SZ|revenueQ', 'GRANULES.NS|revenueQ', 'BYLOT.AT|revenueQ', 'CDR.WA|revenueQ', '000552.SZ|revenueQ', 'CDR.WA|opIncQ', 'CDR.WA|grossProfitQ'].sort()); // P177 adds the five verified BYLOT quarters and their coverage; 18.10.2026 adds CDR.WA (three series) and 000552.SZ.
   assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
   assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
@@ -64,7 +64,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 277); // P168f adds exactly four source-backed annual cases; 18.10.2026 adds 12 cells.
+  assert.equal(validateTable(clone(table)).cases.length, 291); // P168f adds exactly four source-backed annual cases; 18.10.2026 adds 26 cells.
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -632,10 +632,9 @@ test('excluded list: a quarantined packet has null sector, industry, market cap 
 
 // R2: other listings of the same issuer carry the identical false cells (checked in the 29.09. archive).
 test('listing aliases: YSNG.VI, PDN.TO, PALAF, MFSL.NS and ANE.MC are corrected like their primary; unrelated ticker untouched', () => {
-  // P177 makes HL numeric; its full alias result is checked in the dedicated HL test below. The numeric quarterly
-  // CDR.WA/OTGLF alias (18.10.2026) is checked on its own real packet in tests/hand-table-20261018.test.js.
-  const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases && c.replacementValue === null).map(c => [c.ticker, c.listingAliases]));
-  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'], '1ANE.MI': ['ANE.MC'] }); // P168d adds the MFSL listing, 14.10.2026 the ANE.MC listing; numeric P177/P168e aliases have dedicated tests.
+  // P177 makes HL numeric; its full alias result is checked in the dedicated HL test below.
+  const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases && (c.periodType !== '12M' || c.replacementValue === null)).map(c => [c.ticker, c.listingAliases]));
+  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'], '1ANE.MI': ['ANE.MC'], 'CDR.WA': ['OTGLF'] }); // P168d adds the MFSL listing, 14.10.2026 the ANE.MC listing, 18.10.2026 the OTGLF listing; numeric P177/P168e aliases have dedicated tests.
   const leg = (primary, alias) => { const s = clone(annualFixture[primary]); s.meta.ticker = alias; return s; };
   for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
     const input = leg(primary, alias), original = serial(input), r = applyFinancialCases(input);
@@ -1084,9 +1083,9 @@ test('replacement values trace to their sources: the whole real table passes, a 
   // The 162 cases of revision 2026-10-01c plus four annual P106 withholds:
   // 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one issuer-rounded confirmation
   // (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 140, difference: 24, rounded: 1, exempt: 10, null: 42 }); // P168f adds three direct-source confirmations and one null hold; 18.10.2026 adds five single-source and five derived revenue cells (CDR.WA, 000552.SZ) and two annual gross-profit holds.
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 142, difference: 25, rounded: 1, exempt: 10, null: 47 }); // P168f adds three direct-source confirmations and one null hold; 18.10.2026 adds 7 single-source and 6 derived revenue/gross-profit cells and 7 holds (four annual, three quarterly).
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
-  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 22, difference: 3, null: 2 });
+  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 24, difference: 5, null: 4 }); // 18.10.2026: CDR.WA five cells (Q4 2025 withheld), 000552.SZ Q2 2025 withheld.
   assert.equal(count(table.cases).none, undefined);
   assert.equal(validateTable(clone(table)).cases.length, table.cases.length);
   // Presence: a typo in a single-source, a derived and an issuer-rounded case each rejects the whole table.
@@ -1135,9 +1134,9 @@ test('opIncQ: five companies x five covered quarters, none unverified; readers o
   const op = table.cases.filter(c => c.field === 'opIncQ' && OPINC.includes(c.ticker));
   assert.deepEqual(OPINC.map(t => op.filter(c => c.ticker === t).length), [5, 5, 5, 5, 5]);
   assert.equal(op.length, 25);
-  assert.equal(table.cases.filter(c => c.field === 'opIncQ').length, 27, 'plus the two withheld Dian Tou cells');
+  assert.equal(table.cases.filter(c => c.field === 'opIncQ').length, 33, 'plus the two withheld Dian Tou cells and the six 18.10.2026 cells (CDR.WA five, 000552.SZ one)');
   assert.deepEqual(table.coverage.filter(v => v.field === 'opIncQ').map(v => v.ticker + '|' + v.coversThrough).sort(),
-    OPINC.map(t => t + '|2026-06-30').sort());
+    [...OPINC, 'CDR.WA'].map(t => t + '|2026-06-30').sort()); // 18.10.2026: CDR.WA opIncQ (tests/hand-table-20261018.test.js)
   const noOp = clone(table); noOp.cases = noOp.cases.filter(c => c.field !== 'opIncQ'); noOp.coverage = noOp.coverage.filter(v => v.field !== 'opIncQ');
   const readers = s => ({ trajectory: axes.marginTrajectory(s, bounds), tier: profitTierOf(s), lamp: newestQtrSuspect(s) });
   // Raw marginTrajectory (newest minus oldest present margin) before -> after; the other three companies are
@@ -1418,7 +1417,7 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
   // P177 refreshes the full digest for its documented HL/CIG-C changes; period labels and coverage remain pinned.
   const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
-  assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4 + 11 + 1 + 2 + 4 + 12, 'every added case exists'); // P168f appends exactly four annual cases; 18.10.2026 appends 12; the legacy prefix is unchanged.
+  assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4 + 11 + 1 + 2 + 4 + 26, 'every added case exists'); // P168f appends exactly four annual cases; 18.10.2026 appends 26; the legacy prefix is unchanged.
   const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [
     ['cases', 212, '9cf17195cb335fc74461cf054fb406be4846bb0a35165d25d5c8d3f897a440b6'], // P177 changes HL recast evidence and two CIG-C fingerprints, not period-label authority.
