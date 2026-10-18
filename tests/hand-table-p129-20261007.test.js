@@ -61,9 +61,9 @@ test('P129 manifest pins every cell and preserves all original authority and fix
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
     '1c61b93d34b5c283b345d911be792a7160f8c4d5bdfd348dd9a83dc3252cfaf9'); // P177 refreshes HL period ends and two CIG-C cells; the full prefix stays pinned.
-  assert.equal(table.coverage.length, 37, 'no coverage expansion without a fully verified quarterly series'); // P177 adds the verified BYLOT quarterly series.
+  assert.equal(table.coverage.length, 39, 'no coverage expansion without a fully verified quarterly series'); // P177 adds the verified BYLOT quarterly series; 18.10.2026 the fully verified CDR.WA and 000552.SZ series.
   assert.equal(table.periodLabels.length, 16, 'GRGD labels stay open; no ineffective live row');
-  assert.equal(Object.keys(fixtures).length, 63); // P177 appends the real frozen BYLOT packet for its five new quarterly cases.
+  assert.equal(Object.keys(fixtures).length, 67); // P177 appends the real frozen BYLOT packet for its five new quarterly cases; 18.10.2026 appends BLSH, CDR.WA, OTGLF and 000552.SZ.
   assert.equal(table.cases.slice(216, 225).filter(c => c.periodType === '12M').every(c => c.ticker === 'AIAI' && c.replacementValue === null), true,
     'no annual replacement from the #431 waiting list');
 });
@@ -107,7 +107,7 @@ test('P129 authorizes only named withholds and cannot reintroduce the rejected q
   const additions = table.cases.slice(216, 225);
   assert.ok(additions.every(row => row.replacementValue === null));
   assert.deepEqual([...new Set(additions.map(row => row.ticker))].sort(), ['1ANE.MI', '6269.T', 'AIAI', 'AJBU.SI', 'MAD.AX']);
-  assert.equal(table.coverage.length, 37); // P177 adds verified BYLOT coverage without changing any P129 withhold.
+  assert.equal(table.coverage.length, 39); // P177 adds verified BYLOT coverage without changing any P129 withhold; 18.10.2026 adds CDR.WA and 000552.SZ.
   for (const [ticker, current, prior, currency] of [
     ['AJBU.SI', 441362000, 310287000, 'SGD'], ['1ANE.MI', 2925000000, 3048000000, 'EUR'],
   ]) {
