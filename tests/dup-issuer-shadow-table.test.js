@@ -40,6 +40,20 @@ test('real table pins all nine issuers, all tickers and the recorded choices', (
   assert.deepEqual(loadFixture(valid()), { example: table.aerovironment });
 });
 
+// Codex review P266 P2-01: literal expectation, independent of markKeeps(). Copel and AXIA mark the
+// non-home ADR (markFollowsHomeListing); every other issuer, Kloeckner included, keeps codeKeeps.
+test('real table: literal marker per secondary ticker (no other issuer moves)', () => {
+  assert.deepEqual(Object.fromEntries([...index].map(([ticker, v]) => [ticker, v.of])), {
+    'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',
+    'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
+  });
+  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI']) {
+    assert.ok(!index.has(ticker), ticker + ' must stay unmarked');
+  }
+  const kco = applyDupIssuerShadow({ ticker: 'KCO.DE' }, index);
+  assert.deepEqual(kco.dupIssuer, { of: 'KCO.VI', issuer: 'Klöckner & Co', basis: 'hand-table:dup-issuer-shadow' });
+});
+
 test('missing file and invalid JSON fail loudly', () => {
   assert.throws(() => loadDupIssuerShadowTable(path.join(tmp, 'missing.json')), /ENOENT/);
   const file = path.join(tmp, 'malformed.json');

@@ -168,6 +168,34 @@ test('Zeile ohne Rang (Belegbarkeits-Gate) kommt nicht ins Brett', () => {
   abgewiesenWegen('ohneRang', { rank: null, rankGrund: 'zuWenigBelegteAchsen' });
 });
 
+// Brief sd-dup (18.10.2026, Codex review P266 P2-02): a second listing without a board rank
+// ('dupIssuer') has valid data and must stay a candidate, otherwise the learned growth bounds
+// and the r40 of other firms move.
+test('Zeile ohne Rang wegen dupIssuer bleibt Kandidat', () => {
+  drin({ rank: null, rankGrund: 'dupIssuer' });
+});
+
+test('dupIssuer ohne Rang aendert weder Kandidaten noch Wachstumsgrenzen noch r40 oder Auswahl', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const lauf = (grundFuerT7) => {
+    const eintraege = [];
+    for (let i = 0; i < W.MIN_WINSOR_SAMPLE + 50; i++) {
+      const over = { ticker: 'T' + i, revGrowthYoYPct: 20 + (i % 40) };
+      if (i === 7 && grundFuerT7) Object.assign(over, { rank: null, rankGrund: grundFuerT7 });
+      eintraege.push({ row: boardZeile(over), snap: snapshot({ fcfMarginTTM: 30 }) });
+    }
+    const f = baueExport(eintraege);
+    const res = W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+    const rows = JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8')).rows;
+    f.aufraeumen();
+    return { kandidaten: res.kandidaten, bounds: res.bounds, auswahl: rows.map((r) => [r.ticker, r.r40]) };
+  };
+  const gerankt = lauf(null), ohneRang = lauf('dupIssuer');
+  assert.ok(Array.isArray(gerankt.bounds), 'Vorbedingung: Wachstumsgrenzen werden gelernt');
+  assert.ok(gerankt.auswahl.some(([t]) => t === 'T7'), 'Vorbedingung: T7 steht im Brett');
+  assert.deepEqual(ohneRang, gerankt, 'dupIssuer darf Kandidatenzahl, Grenzen, r40 und Auswahl nicht veraendern');
+});
+
 // --- Fehlende Quellen ------------------------------------------------------
 test('eine Zeile ohne bildbares Wachstum wird gezaehlt, nicht geraten', () => {
   // Umsatz JA (sonst routet der Router sie als pre-revenue weg), aber nur EIN Jahr und

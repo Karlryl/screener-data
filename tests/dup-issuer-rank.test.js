@@ -126,6 +126,29 @@ test('filter feed: the home row of Copel and AXIA stays visible with its rank, t
   }
 });
 
+// Codex review P266 P2-01: literal markers on the exported rows, independent of markKeeps().
+test('exported rows carry the literal markers for Copel, AXIA and Kloeckner', () => {
+  const basis = 'hand-table:dup-issuer-shadow';
+  const out = board(rows(['CPLE3.SA', 'ELPC', 'AXIA3.SA', 'AXIA', 'KCO.VI', 'KCO.DE']));
+  const marker = (t) => (Object.hasOwn(pick(out, t), 'dupIssuer') ? pick(out, t).dupIssuer : 'none');
+  assert.equal(marker('CPLE3.SA'), 'none');
+  assert.deepEqual(marker('ELPC'), { of: 'CPLE3.SA', issuer: 'Copel', basis });
+  assert.equal(marker('AXIA3.SA'), 'none');
+  assert.deepEqual(marker('AXIA'), { of: 'AXIA3.SA', issuer: 'AXIA Energia', basis });
+  assert.equal(marker('KCO.VI'), 'none', 'Kloeckner keeps its marker on KCO.DE');
+  assert.deepEqual(marker('KCO.DE'), { of: 'KCO.VI', issuer: 'Klöckner & Co', basis });
+});
+
+test('filter feed: KCO.VI alone (17.10. situation) stays visible by default with its rank', () => {
+  const [kco] = board(rows(['KCO.VI']));
+  const template = filterSnapshots.find((s) => s.meta.ticker === 'PAY');
+  const snapshots = [{ ...structuredClone(template), meta: { ...template.meta, ticker: 'KCO.VI' } }];
+  const [row] = buildUniverse({ snapshots, boards: new Map([['KCO.VI', { branch: 'materials', row: kco }]]),
+    generatedAt: '2026-10-17T14:47:00Z' }).rows;
+  assert.equal(row.rk, 1);
+  assert.ok(!row.aus.some((a) => ['data-suspect', 'dup-issuer'].includes(a)), JSON.stringify(row.aus));
+});
+
 test('a non-home listing alone keeps its rank (Kloeckner: KCO.DE not in the ranking)', () => {
   for (const ticker of ['KCO.VI', 'ELPC', 'AVAV.SW']) {
     const [r] = board(rows([ticker]));
