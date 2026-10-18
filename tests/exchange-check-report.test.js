@@ -68,9 +68,13 @@ test('census: every would-withhold board row is listed with pairs, values and re
   }
   const fill = R.boardRows.find(r => r.ticker === '000002.SZ');
   assert.equal(fill.category, 'would-fill');
-  assert.equal(fill.effects.growth.before.basis, 'year'); assert.equal(fill.effects.growth.after.basis, 'quarter');
+  // G31 switch (18.10.2026): the dated pair already carried growth across the empty Q3 row (pre-G31: 'year').
+  assert.equal(fill.effects.growth.before.basis, 'quarter'); assert.equal(fill.effects.growth.after.basis, 'quarter');
   assert.ok(R.counts['board:broker'] && R.counts['board:CN'] && R.counts['board:TW'], 'per stratum and market');
-  assert.equal(R.gapBlockedBoardRows.wouldFill, R.boardRows.filter(r => r.category === 'would-fill').length);
+  // G31 switch (18.10.2026): an empty fill-period cell no longer blocks a dated quarter pair, so no would-fill
+  // board row is gap-blocked any more (pre-G31 all of them were); the would-fill rows themselves stay listed.
+  assert.equal(R.gapBlockedBoardRows.wouldFill, 0);
+  assert.ok(R.boardRows.filter(r => r.category === 'would-fill').length > 0);
 });
 test('census: every would-* row of every exported list (quality board, full list) and of the cohort is listed', () => {
   const q = R.boardRows.find(r => r.ticker === '000599.SZ');

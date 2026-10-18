@@ -25,5 +25,8 @@ test('an unusable old quarter cannot stale a valid newer-year growth candidate',
   const quarter = snapshot(); quarter.meta.annualRevNewerYear = s.meta.annualRevNewerYear;
   assert.equal(neuestesQuartalsEnde(quarter), Date.parse('2026-06-30'), 'usable quarterly comparison retains priority');
   delete s.meta.annualRevNewerYear;
-  assert.equal(neuestesQuartalsEnde(s), Date.parse('2024-03-31'), 'ordinary fallback is unchanged');
+  // G31 switch (18.10.2026): the anchor is the period of the shown number, here the fiscal year to 30.06.2024;
+  // the legacy arm kept the newest quarter with a value.
+  assert.equal(neuestesQuartalsEnde(s), Date.parse('2024-06-30'), 'the fiscal year that carries the number dates it');
+  assert.equal(require('../lib/g31-recency.js').withG31Variant('legacy', () => neuestesQuartalsEnde(s)), Date.parse('2024-03-31'), 'ordinary fallback is unchanged');
 });
