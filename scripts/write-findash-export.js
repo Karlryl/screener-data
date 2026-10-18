@@ -259,7 +259,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
 const { readValueFlags, valueFlagProblems } = require('../lib/value-open-items.js');
-const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
+const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow, dupIssuerRankGrund } = require('../lib/dup-issuer-shadow-table.js');
 const { loadRegistry, computeClassesShadow, deviationPct } = require('../lib/mcap-classes-shadow.js');
 // Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
 // Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
@@ -666,8 +666,13 @@ function belegteAchsen(coverageAxes) {
 function rangGrund(row) {
   const a = belegteAchsen(row && row.coverageAxes);
   if (!a) return 'coverageUnbekannt';
-  if (a.m < RANK_GATE_MIN_NENNER) return null;   // QC-Formel: nie gemessen, nie gegated
-  return a.n < RANK_MIN_AXES ? 'zuWenigBelegteAchsen' : null;
+  // QC-Formel (Nenner < RANK_GATE_MIN_NENNER): nie gemessen, nie gegated
+  if (a.m >= RANK_GATE_MIN_NENNER && a.n < RANK_MIN_AXES) return 'zuWenigBelegteAchsen';
+  // Brief sd-dup (18.10.2026): no firm twice in a ranking. A listed second listing whose primary
+  // listing the hand table decides keeps its row and data but holds no rank (all boards, incl.
+  // quality/ and smallcap/). Survival never passes this gate. Existing reasons take precedence.
+  if (_dupIssuerShadow === null) ladeDupIssuerShadowTable();
+  return dupIssuerRankGrund(row && row.ticker, _dupIssuerShadow);
 }
 // Vergibt die Raenge EINER score-desc-Liste: eine gegatete Zeile bekommt rank:null + Grund
 // und verbraucht KEINE Rangnummer — die uebrigen bleiben dadurch luecken- und sprungfrei
