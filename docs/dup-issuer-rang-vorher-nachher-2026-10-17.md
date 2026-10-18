@@ -3,7 +3,7 @@
 > Auf dem Datenstand vom 17.10.2026 verlieren neun Listenzeilen ihren Rang, alle Zweitnotierungen von fünf Firmen: AeroVironment (AVAV.SW), GE Aerospace (GE.VI), Galaxy Digital (1GLXY.MI), Copel (ELPC) und AXIA (AXIA). Sie bleiben mit allen Zahlen sichtbar und tragen den Grund `dupIssuer`; jede Firma steht danach nur noch einmal mit Rang in einer Rangliste.
 > - Maßgeblich ist die Heimatnotierung aus der Handtabelle. Bei Copel und AXIA sitzt die Markierung `dupIssuer` auf der Heimatnotierung (CPLE3.SA, AXIA3.SA), also auf der falschen Zeile; diese behalten ihren Rang (Versorger 55, Qualität Versorger 58 → 57), ELPC und AXIA verlieren ihn.
 > - Die Zeilen darunter rücken um genau einen Platz je entrangter Zeile darüber auf (höchstens zwei, bei den Versorgern). Klöckner, Amrize, Aeroméxico und Ascentage Pharma bleiben unverändert.
-> - INPP.L und OCI.L stehen jetzt als geschlossene Fonds in der Klassentabelle. Sie hatten schon vorher keinen Rang; Scores, Reihenfolge und alle anderen Zahlen bleiben gleich.
+> - INPP.L und OCI.L bekommen nur den Klassengrund „geschlossener Fonds“ im Schattenfeld; an dem, was Karl sieht, ändert das nichts (INPP.L zeigt weiter 7.614 % Umsatzwachstum, beide stehen weiter ohne Rang in der Finanzen-Liste). Fondsvehikel aus der operativen Rangliste zu nehmen, also die Klassentabelle scharf zu schalten, ist eine eigene, spätere Änderung mit eigenem Vorher/Nachher; dieser Zweig behebt das nicht.
 
 # Zweitnotierungen ohne Rang: vorher und nachher (Datenstand 17.10.2026)
 
@@ -72,7 +72,7 @@ GCP.DE (GE Aerospace) steht am 17.10. nur in der Ausschlussliste; käme es neben
 
 ## INPP.L und OCI.L
 
-Beide stehen jetzt in `configs/non-operating-classes.json` als `nichtOperativGeschlossenerFonds`, mit Primärquelle und wörtlichem Zitat: International Public Partnerships, Startseite des Emittenten („The Company is a closed ended FTSE 250 listed investment company which is incorporated in Guernsey“), Oakley Capital Investments, Jahresbericht 2025, Note 1 („is a closed-end investment company incorporated and registered“). Wirkung am 17.10.: Beide Zeilen der Finanzen-Kurzliste (Position 10 und 18) und des Vollboards tragen jetzt `rankGrundShadow: "nichtOperativGeschlossenerFonds"`. Einen Rang hatten sie schon vorher nicht (`rankGrund: "zuWenigBelegteAchsen"`, 3 von 7 Achsen); INPP.L zeigt weiter 7.614 % Umsatzwachstum. Die Klassentabelle ist ein Schatten: Sie aus der Liste zu nehmen, hieße die Tabelle scharf zu schalten, und das ist eine eigene Entscheidung.
+Beide stehen jetzt in `configs/non-operating-classes.json` als `nichtOperativGeschlossenerFonds`, mit Primärquelle und wörtlichem Zitat: International Public Partnerships, Startseite des Emittenten („The Company is a closed ended FTSE 250 listed investment company which is incorporated in Guernsey“), Oakley Capital Investments, Jahresbericht 2025, Note 1 („is a closed-end investment company incorporated and registered“). Wirkung am 17.10.: Beide Zeilen der Finanzen-Kurzliste (Position 10 und 18) und des Vollboards tragen jetzt `rankGrundShadow: "nichtOperativGeschlossenerFonds"`. Einen Rang hatten sie schon vorher nicht (`rankGrund: "zuWenigBelegteAchsen"`, 3 von 7 Achsen); INPP.L zeigt weiter 7.614 % Umsatzwachstum. Die Klassentabelle ist nur ein Schattenfeld, das findash nicht anzeigt; sichtbar ändert sich für beide nichts. Fondsvehikel aus der operativen Rangliste zu nehmen hieße, die Tabelle scharf zu schalten; das ist eine eigene, spätere Änderung mit eigenem Vorher/Nachher und gehört nicht zu diesem Zweig.
 
 ## Rule of 40
 
