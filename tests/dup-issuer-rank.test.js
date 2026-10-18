@@ -17,6 +17,8 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const wfe = require('../scripts/write-findash-export.js');
 const { loadDupIssuerShadowTable } = require('../lib/dup-issuer-shadow-table.js');
+const { buildUniverse } = require('../scripts/write-filter-universe.js');
+const filterSnapshots = require('./fixtures/w6/snapshots.json');
 const { rankGrundShadowFor } = require('../lib/non-operating-classes.js');
 const nonOperating = require('../configs/non-operating-classes.json');
 
@@ -47,12 +49,14 @@ const check = (profitable, rankings) => {
 };
 const pick = (list, ticker) => list.find((r) => r.ticker === ticker);
 
-test('the real table: decided and open issuers exist; Copel and AXIA carry the marker on the home row', () => {
+test('the real table: decided and open issuers exist; only Copel and AXIA move their marker to the non-home listing', () => {
   assert.ok(decided.length > 0 && open.length > 0);
   for (const id of ['copel', 'axia-energia']) {
     const issuer = tableById[id];
-    assert.notEqual(issuer.homeListingProposal, issuer.codeKeeps, `${id}: precondition of the wrong-row case`);
+    assert.notEqual(issuer.homeListingProposal, issuer.codeKeeps, `${id}: recorded codeKeeps is the non-home listing`);
   }
+  // Master decision 18.10.2026: no other issuer's marker moves (Kloeckner stays on codeKeeps KCO.VI).
+  assert.deepEqual(Object.keys(tableById).filter((id) => tableById[id].markFollowsHomeListing === true), ['axia-energia', 'copel']);
 });
 
 for (const [name, build, cov] of [['board', board, '7/7'], ['quality board (5 axes)', board, '5/5'], ['overview', overview, '7/7']]) {
@@ -88,16 +92,38 @@ for (const [name, build, cov] of [['board', board, '7/7'], ['quality board (5 ax
   });
 }
 
-test('marker on the wrong row (Copel, AXIA): the home row keeps rank and marker, the unmarked other row loses its rank', () => {
+test('Copel and AXIA: the home row keeps its rank and carries no marker, the ADR row is marked and unranked', () => {
   const out = board(rows(['CPLE3.SA', 'ELPC', 'AXIA', 'AXIA3.SA']));
   assert.equal(pick(out, 'CPLE3.SA').rank, 1);
-  assert.equal(pick(out, 'CPLE3.SA').dupIssuer?.of, 'ELPC', 'the shadow marker itself is not moved by this change');
+  assert.ok(!Object.hasOwn(pick(out, 'CPLE3.SA'), 'dupIssuer'), 'home listing CPLE3.SA is not marked');
   assert.equal(pick(out, 'ELPC').rank, null);
   assert.equal(pick(out, 'ELPC').rankGrund, 'dupIssuer');
-  assert.ok(!Object.hasOwn(pick(out, 'ELPC'), 'dupIssuer'), 'ELPC carries no marker, the reason still applies');
+  assert.equal(pick(out, 'ELPC').dupIssuer?.of, 'CPLE3.SA');
   assert.equal(pick(out, 'AXIA').rank, null);
+  assert.equal(pick(out, 'AXIA').dupIssuer?.of, 'AXIA3.SA');
   assert.equal(pick(out, 'AXIA3.SA').rank, 2);
+  assert.ok(!Object.hasOwn(pick(out, 'AXIA3.SA'), 'dupIssuer'), 'home listing AXIA3.SA is not marked');
   assert.deepEqual(check(out), []);
+});
+
+test('filter feed: the home row of Copel and AXIA stays visible with its rank, the ADR row is hidden by default', () => {
+  // findash filter contract (web/src/lib/filter-vertrag.json hiddenReasons) hides these reasons by default.
+  const hiddenByDefault = ['data-suspect', 'dup-issuer'];
+  const tickers = ['CPLE3.SA', 'ELPC', 'AXIA', 'AXIA3.SA'];
+  const out = board(rows(tickers));
+  const template = filterSnapshots.find((s) => s.meta.ticker === 'PAY');
+  const snapshots = tickers.map((t) => ({ ...structuredClone(template), meta: { ...template.meta, ticker: t } }));
+  const boards = new Map(out.map((r) => [r.ticker, { branch: 'utilities', row: r }]));
+  const feed = buildUniverse({ snapshots, boards, generatedAt: '2026-10-17T14:47:00Z' }).rows;
+  const visible = (t) => !feed.find((r) => r.t === t).aus.some((a) => hiddenByDefault.includes(a));
+  for (const home of ['CPLE3.SA', 'AXIA3.SA']) {
+    assert.ok(visible(home), `${home}: home row must be visible in the filter tab`);
+    assert.ok(Number.isInteger(feed.find((r) => r.t === home).rk), `${home}: keeps its rank`);
+  }
+  for (const adr of ['ELPC', 'AXIA']) {
+    assert.ok(!visible(adr), `${adr}: second listing hidden by default`);
+    assert.equal(feed.find((r) => r.t === adr).rk, undefined, `${adr}: no rank`);
+  }
 });
 
 test('a non-home listing alone keeps its rank (Kloeckner: KCO.DE not in the ranking)', () => {

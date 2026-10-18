@@ -1,10 +1,10 @@
 {
   "_doku": [
-    "Detection and reporting; no merging, exclusion, score, name or membership change. Since 2026-10-18 (brief sd-dup, master decision) homeListingProposal decides the rank in the findash export: every other ticker of the issuer gets rank null with rankGrund dupIssuer when the home ticker stands in the same ranking (row and data stay); alone it keeps its rank; an open (null) proposal changes nothing. For Copel and AXIA the marker below sits on the home row, i.e. on the wrong row.",
+    "Detection and reporting; no merging, exclusion, score, name or membership change. Since 2026-10-18 (brief sd-dup, master decision) homeListingProposal decides the rank in the findash export: every other ticker of the issuer gets rank null with rankGrund dupIssuer when the home ticker stands in the same ranking (row and data stay); alone it keeps its rank; an open (null) proposal changes nothing. markFollowsHomeListing (master decision 2026-10-18) puts the marker of Copel and AXIA on the non-home listing (ELPC, AXIA); Kloeckner keeps its marker on the home row KCO.DE (not exported on 2026-10-17; the general rule would mark and hide its only exported row KCO.VI), own decision.",
     "Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt.",
     "Entries are reports, never merge decisions; this is separate from the empty identity register (M16, M18, M19).",
     "codeKeeps records R11's re-enactment of the current production selection rule, not a decision about the true primary listing. Every other listed ticker is marked, even when codeKeeps is absent from the board.",
-    "homeListingProposal is R11 information only, with no effect on the flag; unresolved proposals are null.",
+    "homeListingProposal is R11 information only; it moves the flag only where markFollowsHomeListing is true; unresolved proposals are null.",
     "Sources and verbatim quotes are supplied by R11-FINAL (2026-09-30); no network re-check was performed in this task.",
     "RBI (QSR / QSP.TO) and Molson Coors (TAP-A / TPX.TO) are deliberately absent: economically equivalent exchangeable shares, not secondary listings; TPX.TO class attribution is unproven."
   ],
@@ -91,26 +91,28 @@
     "tickers": ["AXIA", "AXIA3.SA"],
     "codeKeeps": "AXIA",
     "homeListingProposal": "AXIA3.SA",
+    "markFollowsHomeListing": true,
     "source": {
       "url": "https://ri.axia.com.br/servicos-de-ri/perguntas-frequentes/",
       "quote": "AXIA3"
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal: AXIA3.SA (90% confidence); the flag still references AXIA."
+    "note": "R11 home-listing proposal: AXIA3.SA (90% confidence). Since 2026-10-18 (master decision, markFollowsHomeListing) the flag marks AXIA and references AXIA3.SA."
   },
   "copel": {
     "issuer": "Copel",
     "tickers": ["ELPC", "CPLE3.SA"],
     "codeKeeps": "ELPC",
     "homeListingProposal": "CPLE3.SA",
+    "markFollowsHomeListing": true,
     "source": {
       "url": "https://www.sec.gov/Archives/edgar/data/1041792/000207097926000155/elpc-20251231.htm",
       "quote": "CPLE3"
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "R11: ELPC is an ADS per the 20-F; home-listing proposal CPLE3.SA. The flag still references ELPC."
+    "note": "R11: ELPC is an ADS per the 20-F; home-listing proposal CPLE3.SA. Since 2026-10-18 (master decision, markFollowsHomeListing) the flag marks ELPC and references CPLE3.SA."
   },
   "kloeckner-co": {
     "issuer": "Klöckner & Co",

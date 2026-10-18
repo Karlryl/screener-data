@@ -1,7 +1,7 @@
 > **Auf einen Blick**
 >
 > Auf dem Datenstand vom 17.10.2026 verlieren neun Listenzeilen ihren Rang, alle Zweitnotierungen von fünf Firmen: AeroVironment (AVAV.SW), GE Aerospace (GE.VI), Galaxy Digital (1GLXY.MI), Copel (ELPC) und AXIA (AXIA). Sie bleiben mit allen Zahlen sichtbar und tragen den Grund `dupIssuer`; jede Firma steht danach nur noch einmal mit Rang in einer Rangliste.
-> - Maßgeblich ist die Heimatnotierung aus der Handtabelle. Bei Copel und AXIA sitzt die Markierung `dupIssuer` auf der Heimatnotierung (CPLE3.SA, AXIA3.SA), also auf der falschen Zeile; diese behalten ihren Rang (Versorger 55, Qualität Versorger 58 → 57), ELPC und AXIA verlieren ihn.
+> - Maßgeblich ist die Heimatnotierung aus der Handtabelle. Bei Copel und AXIA saß die Markierung `dupIssuer` bisher auf der Heimatnotierung (CPLE3.SA, AXIA3.SA); sie sitzt jetzt auf ELPC und AXIA. CPLE3.SA und AXIA3.SA behalten ihren Rang (Versorger 55, Qualität Versorger 58 → 57) und sind im Filter-Reiter sichtbar, ELPC und AXIA verlieren ihn und sind dort standardmäßig ausgeblendet.
 > - Die Zeilen darunter rücken um genau einen Platz je entrangter Zeile darüber auf (höchstens zwei, bei den Versorgern). Klöckner, Amrize, Aeroméxico und Ascentage Pharma bleiben unverändert.
 > - INPP.L und OCI.L bekommen nur den Klassengrund „geschlossener Fonds“ im Schattenfeld; an dem, was Karl sieht, ändert das nichts (INPP.L zeigt weiter 7.614 % Umsatzwachstum, beide stehen weiter ohne Rang in der Finanzen-Liste). Fondsvehikel aus der operativen Rangliste zu nehmen, also die Klassentabelle scharf zu schalten, ist eine eigene, spätere Änderung mit eigenem Vorher/Nachher; dieser Zweig behebt das nicht.
 
@@ -9,7 +9,7 @@
 
 ## Regel
 
-Die Heimatnotierung kommt allein aus der Handtabelle `configs/dup-issuer-shadow-table.json` (Feld `homeListingProposal`, Herkunft R11 mit Quelle und Zitat). Jede andere Notierung derselben Firma bekommt `rank: null` mit `rankGrund: "dupIssuer"`, sobald die Heimatnotierung in derselben Rangliste steht (bei einer Kurzliste: in der Vollkohorte desselben Tracks, damit Kurzliste und Vollboard deckungsgleich bleiben). Steht die andere Notierung allein, behält sie ihren Rang, sonst verschwände die Firma aus der Rangliste. Ist die Heimatnotierung offen (`null`), ändert sich nichts. Die Markierung `dupIssuer` selbst bleibt, wo sie war (Entscheidung des Masters vom 18.10.2026).
+Die Heimatnotierung kommt allein aus der Handtabelle `configs/dup-issuer-shadow-table.json` (Feld `homeListingProposal`, Herkunft R11 mit Quelle und Zitat). Jede andere Notierung derselben Firma bekommt `rank: null` mit `rankGrund: "dupIssuer"`, sobald die Heimatnotierung in derselben Rangliste steht (bei einer Kurzliste: in der Vollkohorte desselben Tracks, damit Kurzliste und Vollboard deckungsgleich bleiben). Steht die andere Notierung allein, behält sie ihren Rang, sonst verschwände die Firma aus der Rangliste. Ist die Heimatnotierung offen (`null`), ändert sich nichts. Die Markierung `dupIssuer` folgt bei Copel und AXIA ebenfalls der Heimatnotierung (neues Tabellenfeld `markFollowsHomeListing`, Entscheidung des Masters vom 18.10.2026): Markiert sind jetzt ELPC und AXIA, nicht mehr CPLE3.SA und AXIA3.SA. Bei allen anderen Firmen bleibt die Markierung, wo sie war. Allgemein angewandt würde sie nur bei Klöckner wandern: KCO.VI, am 17.10. die einzige ausgelieferte Zeile der Firma, wäre dann markiert und im Filter-Reiter standardmäßig ausgeblendet; deshalb bleibt Klöckner unverändert und braucht eine eigene Entscheidung.
 
 ## Messung
 
@@ -33,7 +33,7 @@ Grundlage ist die Nachstellung des Bewertungslaufs vom 17.10.2026 aus PR #10 (Co
 | Versorger, profitabel (Vollboard) | AXIA | 90 → ohne Rang | AXIA3.SA, 105 → 103 |
 | Qualität Versorger, profitabel | AXIA | 57 → ohne Rang | AXIA3.SA, 58 → 57 |
 
-Jede dieser Zeilen behält Score, Lampen, Kennzahlen und eine vorhandene Markierung `dupIssuer`; neu ist nur `rank: null` mit `rankGrund: "dupIssuer"`. ELPC und AXIA tragen keine Markierung, weil sie in der Tabelle als `codeKeeps` eingetragen sind; die Markierung steht bei diesen beiden Firmen auf der Heimatnotierung, also auf der falschen Zeile.
+Jede dieser Zeilen behält Score, Lampen und Kennzahlen; neu ist `rank: null` mit `rankGrund: "dupIssuer"`. ELPC und AXIA tragen jetzt die Markierung `dupIssuer` (Verweis auf CPLE3.SA bzw. AXIA3.SA); CPLE3.SA und AXIA3.SA tragen keine mehr. Das sind die einzigen Markierungen, die sich bewegen.
 
 ## Verschobene Ränge
 
@@ -55,15 +55,15 @@ Sichtbar in der Kurzliste Versorger, profitabel: CDIA.JK 57 → 56, CEG 58 → 5
 
 Sichtbar in Qualität Versorger, profitabel: AXIA3.SA 58 → 57, CEGR3.SA 59 → 58, VER.VI 60 → 59, ACO.TO 61 → 60, 3868.HK 62 → 61, D 63 → 62, ENEV3.SA 64 → 63, PGEO.JK 65 → 64, TXNM 66 → 65, 600025.SS 67 → 66, WTRG 68 → 67, DUK 69 → 68, EMA 70 → 69, EIX 71 → 70, AEP 72 → 71, ENELGXCH.SN 73 → 72, IRE.MI 74 → 73, AEE 75 → 74, NWE 76 → 75, 8174.T 77 → 76, ATGL.BO 78 → 77, CEPU 79 → 78, ERG.MI 80 → 79, 0579.HK 81 → 80, CNP 82 → 81, NI 83 → 82, IG.VI 84 → 83, ELI.BR 85 → 84, LNT 86 → 85, CPFE3.SA 87 → 86, WEC 88 → 87, TEP.L 89 → 88, ETR 90 → 89, 1SLR.MI 91 → 90, DTE 92 → 91, 000993.SZ 93 → 92, 002256.SZ 94 → 93, NGG 95 → 94, EOAN.DE 96 → 95, MGL.NS 97 → 96, ACE.MI 98 → 97, VEDPOWER.BO 99 → 98, REE.VI 100 → 99.
 
-Das Filter-Universum übernimmt die Vollboard-Ränge: 2.310 Zeilen ändern `rk` genau wie ihre Vollboard-Zeile (fünf davon auf leer). Die fünf entrangten Notierungen tragen dort zusätzlich den Grund `dupIssuer`. findash blendet im Filter standardmäßig `dup-issuer` aus, also die markierten Zeilen; bei Copel und AXIA ist das die Heimatnotierung. Im Filter-Reiter erscheinen Copel und AXIA deshalb standardmäßig nur als ELPC und AXIA ohne Rang, solange die Markierung auf der falschen Zeile sitzt.
+Das Filter-Universum übernimmt die Vollboard-Ränge: 2.310 Zeilen ändern `rk` genau wie ihre Vollboard-Zeile (fünf davon auf leer). Die fünf entrangten Notierungen tragen dort zusätzlich den Grund `dupIssuer`. findash blendet im Filter standardmäßig `dup-issuer` aus, also die markierten Zeilen. Copel und AXIA im Filter-Reiter: vorher CPLE3.SA (Rang 55) und AXIA3.SA (Rang 105) ausgeblendet, ELPC (56) und AXIA (90) sichtbar; nachher CPLE3.SA (55) und AXIA3.SA (103) sichtbar ohne Ausschlussgrund, ELPC und AXIA ohne Rang und ausgeblendet. KCO.VI bleibt sichtbar mit Rang 908.
 
-Die Datei `dup-issuer-rang-vorher-nachher-2026-10-17.csv` daneben enthält alle 2.462 geänderten Brettzeilen (9 entrangte, 2.449 verschobene, 4 Zeilen mit neuem Klassengrund).
+Die Datei `dup-issuer-rang-vorher-nachher-2026-10-17.csv` daneben enthält alle 2.464 geänderten Brettzeilen (9 entrangte, 2.449 verschobene, 2 nur mit entfernter Markierung (CPLE3.SA), 4 Zeilen mit neuem Klassengrund), mit Rang, Grund, Klassengrund und Markierung vorher und nachher.
 
 ## Unverändert
 
 | Firma | Zeilen am 17.10. | warum unverändert |
 |---|---|---|
-| Klöckner & Co | KCO.VI: Vollboard Rohstoffe 908; KCO.DE nicht im Export | Heimatnotierung KCO.DE steht in keiner Rangliste; KCO.VI ist die einzige Zeile der Firma und behält ihren Rang. |
+| Klöckner & Co | KCO.VI: Vollboard Rohstoffe 908; KCO.DE nicht im Export | Heimatnotierung KCO.DE steht in keiner Rangliste; KCO.VI ist die einzige Zeile der Firma und behält Rang und Sichtbarkeit. Die Markierung bleibt auf KCO.DE (siehe Regel). |
 | Amrize | AMRZ 424, AMRZ.SW 425 (Vollboard Rohstoffe) | Heimatnotierung offen (null). |
 | Grupo Aeroméxico | AERO 1.448 → 1.447, AERO.MX 1.449 → 1.448 (nur Verschiebung durch GE.VI) | Heimatnotierung offen (null). |
 | Ascentage Pharma | AAPG 268, 6855.HK 267 (Vollboard Gesundheit, unprofitabel) | Heimatnotierung offen (null). |
