@@ -53,8 +53,10 @@ const q4Off = moduleCopy('lib/yahoo-q4-known-cases.js', s => s, { './exchange-qu
   ...fillStep, applyExchangeCheck: s => X.applyExchangeCheck(s, { mode: 'off' }) } });
 const marked = s => serial(s).includes('"exchangeFill"') || /exchange-(pair|annual|quarter)-mismatch/.test(serial(s));
 // P138: only the identity and fill-only tests exclude 000688.SZ, whose hand-table corrections change the raw snapshot.
+// G31 switch (P268, 18.10.2026): 000599.SZ joins it (its unrestated Q2 2025 cells are held); the level examples use
+// 000564.SZ, the same kind of exchange level mismatch without a hand-table row.
 const T = Object.keys(F.snapshots);
-const noHandTable = T.filter(t => t !== '000688.SZ');
+const noHandTable = T.filter(t => !['000688.SZ', '000599.SZ'].includes(t));
 
 test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/main for every fixture snapshot', () => {
   for (const t of noHandTable) {
@@ -67,7 +69,7 @@ test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/m
 });
 
 test('prepareSnapshot calls the step: in an active copy the known wrong rows are withheld and fills are applied', () => {
-  const w = quiet(() => q4Active.prepareSnapshot(clone(F.snapshots['000599.SZ'])));
+  const w = quiet(() => q4Active.prepareSnapshot(clone(F.snapshots['000564.SZ'])));
   assert.ok(w.timeseries.revenueQ.some(c => c?.financialMissing?.reasonCode === 'exchange-pair-mismatch'));
   const f = quiet(() => q4Active.prepareSnapshot(clone(F.snapshots['000002.SZ'])));
   assert.ok(f.timeseries.revenueQ.some(c => c?.exchangeFill));
@@ -77,7 +79,7 @@ test('prepareSnapshot calls the step: in an active copy the known wrong rows are
   const broken = moduleCopy('lib/yahoo-q4-known-cases.js', s => replaceLine(s,
     "    const exchange = applyExchangeCheck(zero.snapshot);",
     "    const exchange = { snapshot: zero.snapshot, mode: 'off' };"), { './exchange-quarter-check.js': activeStep });
-  assert.throws(() => assert.ok(marked(quiet(() => broken.prepareSnapshot(clone(F.snapshots['000599.SZ'])))), 'step not called'), assert.AssertionError);
+  assert.throws(() => assert.ok(marked(quiet(() => broken.prepareSnapshot(clone(F.snapshots['000564.SZ'])))), 'step not called'), assert.AssertionError);
   breaks++;
 });
 
@@ -87,7 +89,7 @@ test('pull: the step never runs at pull time, so no persisted snapshot carries a
   assert.ok(src.includes('  const q4Checked = yahooQ4.prepareSnapshot(snap, { atPull: true });'));
   for (const t of T) assert.ok(!marked(quiet(() => q4Active.prepareSnapshot(clone(F.snapshots[t]), { atPull: true }))), t);
   const pull = moduleCopy('pull-yahoo.js', s => s, { './lib/yahoo-q4-known-cases.js': q4Active });
-  for (const t of ['000599.SZ', '000002.SZ', '6446.TW', '600150.SS']) {
+  for (const t of ['000564.SZ', '000002.SZ', '6446.TW', '600150.SS']) {
     const s = clone(F.snapshots[t]);
     quiet(() => pull._convertSnapshotToUSD(s));
     assert.ok(!marked(s), t + ': pull output has no marker');
@@ -118,7 +120,7 @@ test('stale-quarter reload: latestReportedQuarter is the same with the step acti
 
 test('board history: pit.revenueQExchange only with markers (active), with the original vendor values; absent in mode off', () => {
   const W = require('../scripts/write-board-history.js');
-  for (const t of ['000599.SZ', '000002.SZ', '600150.SS']) {
+  for (const t of ['000564.SZ', '000002.SZ', '600150.SS']) {
     const off = W.buildPit(quiet(() => q4Off.prepareSnapshot(clone(F.snapshots[t]))), new Set(), t);
     assert.ok(!Object.hasOwn(off, 'revenueQExchange'), t);
     const on = W.buildPit(quiet(() => q4Active.prepareSnapshot(clone(F.snapshots[t]))), new Set(), t);
@@ -138,7 +140,7 @@ test('store older than the limit: the rows stay unchecked and the process prints
   console.error = (...a) => lines.push(a.join(' ')); console.warn = () => {};
   const out = [];
   try {
-    for (const t of ['000002.SZ', '000599.SZ']) {
+    for (const t of ['000002.SZ', '000564.SZ']) {
       const s = clone(F.snapshots[t]); s.meta.fetchedAt = '2026-10-11T09:00:00.000Z'; // 9 days after the store
       out.push([serial(s), serial(q4Active.prepareSnapshot(s))]);
     }

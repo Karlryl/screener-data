@@ -114,7 +114,8 @@ check('A5 no growth figure: none, all null', () => {
       sourcePeriodEnd: null, sourcePriorPeriodEnd: null });
     assert.equal(axes.revGrowthLevel(s), null);
   }
-  assert.deepEqual(REV_GROWTH_BASES, ['quarter', 'year', 'yearNewerRecord', 'none']);
+  // P267: 'halfYear' labels a pair of two explicitly stored 6M periods (G31 arm only).
+  assert.deepEqual(REV_GROWTH_BASES, ['quarter', 'halfYear', 'year', 'yearNewerRecord', 'none']);
 });
 check('A6 metadata changes only aligned valid labels, never the growth value or selected source pair', () => {
   const s = snap({ rq: [120, 110, 105, 100, 100] }), before = revGrowthLeg(s);

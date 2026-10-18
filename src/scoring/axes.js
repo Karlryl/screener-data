@@ -128,7 +128,7 @@ function revAnnualLegYoY(s) {
   if (n && annualPairRuleEnabled('growth') && !annualPairPasses(checkNewerAnnualPair(s, n))) return null;
   return n ? n.revenue / n.priorRevenue - 1 : revAnnualYoY(s);
 }
-// G31 (Karl 11.10.2026, live since 18.10.2026): production runs the g31Variant() branch (arm v1)
+// G31 (Karl 11.10.2026, switch built 18.10.2026): production runs the g31Variant() branch (arm v1)
 // here and in revGrowthLevel; the code after it is the legacy arm for the *Legacy comparison export.
 function revYoYComponents(s) {
   if (g31Variant()) return g31Shadow(s)[g31Variant()].bonusComponents;

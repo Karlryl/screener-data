@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-10-18-p268",
+  "note": "Checked review hints for the G31 switch (diagnostic field g31Hinweis). Primary-source check P268 of 18.10.2026: the stored operands match the filings; the growth is driven by an acquisition or a seasonal base. Bound to the listing and the exact source ends of the shown pair. Never a hold: wrong values belong in configs/financial-known-cases.json.",
+  "entries": [
+    {
+      "ticker": "SAUD3.SA",
+      "periodEnd": "2026-06-30",
+      "priorPeriodEnd": "2025-06-30",
+      "code": "uebernahme",
+      "reason": "Übernahme im Zeitraum: Seit dem 01.05.2026 enthält der Umsatz die eingebrachte Gesundheitssparte von Bradesco, das Vorjahresquartal nicht. Auf vergleichbarer Basis nennt die Firma plus 10,8 % (Managementzahl, nicht geprüft). Geprüft am 18.10.2026.",
+      "sources": [
+        { "url": "https://api.mziq.com/mzfilemanager/v2/d/c504a4a5-75e7-4404-8af7-524b50cd7e11/54e27d45-e292-ec24-4587-f118d9396fc8?origin=2", "form": "ITR 30.06.2026 (English version)", "page": "PDF 16, consolidated statement of income; PDF 74", "quote": "3.01 Revenue from sales of goods and/or services 8,096,913 8,717,929 616,628 1,213,126" },
+        { "url": "https://api.mziq.com/mzfilemanager/v2/d/c504a4a5-75e7-4404-8af7-524b50cd7e11/5f967584-b370-d17f-328a-9991fafea1c8?origin=2", "form": "Ergebnisbericht 2T26", "page": "PDF 8 and 10", "quote": "Receitas totais (a) + (b) | 13.871 | 12.514 | 10,8%" }
+      ]
+    },
+    {
+      "ticker": "002289.SZ",
+      "periodEnd": "2026-06-30",
+      "priorPeriodEnd": "2025-06-30",
+      "code": "uebernahme",
+      "reason": "Übernahme im Zeitraum: Das Rechenzentrumsgeschäft (Zhongenyun) ist seit dem 01.12.2025 konsolidiert; ohne es läge der Halbjahresumsatz bei minus 29,5 %. Geprüft am 18.10.2026.",
+      "sources": [
+        { "url": "http://static.cninfo.com.cn/finalpage/2026-08-29/1225530291.PDF", "form": "2026 half-year report", "page": "PDF 7, 9 and 12", "quote": "营业收入（元） 547,123,597.77 134,498,755.98 306.79%" }
+      ]
+    },
+    {
+      "ticker": "688507.SS",
+      "periodEnd": "2026-06-30",
+      "priorPeriodEnd": "2025-06-30",
+      "code": "saisonbasis",
+      "reason": "Saisonbasis: Das Vorjahresquartal war mit 3,99 % des Jahresumsatzes 2025 saisonal sehr klein; das Halbjahr wuchs um 26,83 %. Geprüft am 18.10.2026.",
+      "sources": [
+        { "url": "https://sns.sseinfo.com/resources/images/upload/202608/2026082811140251412036691.pdf", "form": "Investor meeting record 25.08.2026", "page": "1", "quote": "2026 年第二季度，公司实现营业收入 3,331.06 万元，较上年同期增长 79.44%。" },
+        { "url": "http://static.cninfo.com.cn/finalpage/2026-04-28/1225203491.PDF", "form": "2025 annual report", "page": "PDF 8, quarterly data", "quote": "营业收入 38,787,256.24 18,563,619.29 48,559,745.53 359,898,194.26" }
+      ]
+    },
+    {
+      "ticker": "RHLD",
+      "periodEnd": "2026-06-30",
+      "priorPeriodEnd": "2025-06-30",
+      "code": "uebernahme",
+      "reason": "Übernahme im Zeitraum: Husky ist seit dem 12.01.2026 konsolidiert; das bestehende Geschäft wuchs im Quartal um 12 %. Geprüft am 18.10.2026.",
+      "sources": [
+        { "url": "https://www.sec.gov/Archives/edgar/data/2039497/000110465926091709/rhld-20260630x10q.htm", "form": "10-Q 30.06.2026", "page": "3, statements of operations; notes 3 and 4", "quote": "Net sales | $ 473.2 | $ 119.6 | $ 881.0 | $ 223.5" }
+      ]
+    },
+    {
+      "ticker": "002993.SZ",
+      "periodEnd": "2026-06-30",
+      "priorPeriodEnd": "2025-06-30",
+      "code": "uebernahme",
+      "reason": "Übernahme im Zeitraum: Liangwo (51 %) ist seit dem 19.03.2026 konsolidiert; ohne es wuchs der Halbjahresumsatz um 2,7 %. Geprüft am 18.10.2026.",
+      "sources": [
+        { "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225507990.PDF", "form": "2026 half-year report", "page": "PDF 8, 11 and 186", "quote": "营业收入（元） 7,923,256,248.22 3,190,581,732.51 148.33%" }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,7 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 const { applyFinancialCases, financialReasons, validateTable, table } = require('../lib/financial-known-cases.js');
 const { revQuartalsYoY, revGrowthLevel, gpGrowth, revAcceleration, marginTrajectory } = require('../src/scoring/axes.js');
 const { overviewMetric } = require('../src/scoring/overview.js');
+const { withG31Variant } = require('../lib/g31-recency.js');
 const { handTableDerivation } = require('../lib/export-provenance.js');
 const shared = require('./fixtures/financial-known-cases.json').snapshots;
 const fixtures = { BLSH: shared.BLSH, VCTR: shared.VCTR, 'CDR.WA': shared['CDR.WA'], OTGLF: shared.OTGLF, '000552.SZ': shared['000552.SZ'] };
@@ -91,7 +92,10 @@ if (process.env.SDHAND_RED_CASE) {
 test('26 sourced cells, four coverage rows, only the four issuers, documented dates and no invented values', () => {
   const own = table.cases.filter(c => c.revision === REV);
   assert.deepEqual(own.map(c => c.caseId), cells.map(idFor));
-  assert.deepEqual(table.cases.slice(-cells.length).map(c => c.caseId), cells.map(idFor), 'appended after every earlier case');
+  // Appended after every earlier case; only later revisions (G31 switch: BLSH/VCTR quarterly GP holds) may follow.
+  const first = table.cases.findIndex(c => c.revision === REV);
+  assert.deepEqual(table.cases.slice(first, first + cells.length).map(c => c.caseId), cells.map(idFor), 'appended after every earlier case');
+  assert.ok(table.cases.slice(first + cells.length).every(c => c.revision !== REV && c.verifiedAt >= '2026-10-18'), 'only later rows follow');
   for (const c of own) {
     assert.equal(c.verifiedAt, '2026-10-18');
     assert.ok(!DASHES.test(c.reason), 'no dashes in the visible text');
@@ -152,8 +156,11 @@ test('board effect: CD Projekt on one basis, 000552.SZ on the adjusted pair, gro
     // Before: the vendor June pair (12.67 %) through the mixed Q4 cell; after: no quarterly pair across the gap,
     // the existing annual leg compares 2025 with 2024, both without GOG (8.59 %).
     assert.equal(revQuartalsYoY(old).toFixed(9), '0.126731385', t + ' vendor pair before');
-    assert.equal(revQuartalsYoY(out), null, t + ': no quarterly pair through the withheld Q4 2025');
-    assert.equal(revGrowthLevel(out).toFixed(6), ((866989 / 798372 - 1) * 100).toFixed(6), t + ': annual growth 2025/2024 without GOG');
+    assert.equal(revQuartalsYoY(out), null, t + ': no quarterly pair through the withheld Q4 2025 (pre-G31 gap rule)');
+    // G31 switch (18.10.2026, B1): the withheld Q4 sits between the dated endpoints, so the newest pair on one
+    // basis, Q2 2026 against the restated Q2 2025 (both without GOG), carries the growth; legacy kept the year.
+    assert.equal(revGrowthLevel(out).toFixed(6), ((244201 / 174930 - 1) * 100).toFixed(6), t + ': Q2 2026 against restated Q2 2025 without GOG');
+    assert.equal(withG31Variant('legacy', () => revGrowthLevel(out)).toFixed(6), ((866989 / 798372 - 1) * 100).toFixed(6), t + ': legacy annual growth 2025/2024 without GOG');
     guard(cells.find(c => idFor(c) === 'cdr.wa-2025-06-30-revenueQ-20261018'), null, t);
     const native = field => out.annual[field].map(value).map(v => v === null ? null : Math.round(v / fx));
     assert.deepEqual(native('annualRev'), [866989000, 798372000, null, null], t + ' annualRev');

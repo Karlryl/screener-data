@@ -26,7 +26,9 @@ function plain(s, opts, kind, value) {
   const result = ov.overviewMetric(s, opts);
   assert.equal(result.kind, kind);
   assert.equal(result.value, value);
-  assert.deepEqual(Object.keys(result).sort(), ['companion', 'kind', 'value']);
+  // P267: gp and revenue-badge carry the period of exactly this value; no valuePresent/reason marker.
+  assert.deepEqual(Object.keys(result).sort(), kind === 'ffo-badge' ? ['companion', 'kind', 'value'] : ['companion', 'kind', 'period', 'value']);
+  if (kind !== 'ffo-badge') assert.deepEqual(Object.keys(result.period), ['basis', 'periodEnd', 'priorPeriodEnd', 'reason']);
 }
 
 test('German reason is exported verbatim', () => {

@@ -62,7 +62,7 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 // Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
 // damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
 // ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
-const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkValueFlags, rankGrundShadowFor, ergaenzeMarketCapClassesShadow, ladeMcapClassesRegistry } = require('./write-findash-export.js'); // P89: guarded shadow lookup; P88: class-wise market value shadow
+const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkOverviewPeriods, checkValueFlags, rankGrundShadowFor, ergaenzeMarketCapClassesShadow, ladeMcapClassesRegistry } = require('./write-findash-export.js'); // P89: guarded shadow lookup; P88: class-wise market value shadow
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -272,7 +272,7 @@ function basisJahr(snapshot) {
 function basisQuartal(snapshot) {
   if (g31Variant()) {
     const leg = g31Shadow(snapshot)[g31Variant()];
-    return leg.basis === 'quarter' ? leg.prior : leg.basis === 'ttm' ? leg.prior / 4 : null;
+    return leg.basis === 'quarter' ? leg.prior : leg.basis === 'halfYear' ? leg.prior / 2 : leg.basis === 'ttm' ? leg.prior / 4 : null;
   }
   if (!quartalsBeinTraegt(snapshot)) return null;
   const v = jahresVergleichIdx(snapshot, 'revenueQ', 0);
@@ -817,6 +817,11 @@ function baueZeilen(kandidaten, valueFlags = new Map(), measurement = {}) {
       zeile.revGrowthPeriodEndLegacy = alt ? alt.periodEnd : null;
       zeile.revGrowthPriorPeriodEndLegacy = alt ? alt.priorPeriodEnd : null;
       zeile.overviewValueLegacy = istZahl(row.overviewValueLegacy) ? row.overviewValueLegacy : null;
+      // P267: the board row's label of its overview value and of the comparison value, never re-derived here.
+      zeile.overviewPeriod = row.overviewPeriod ?? null;
+      zeile.overviewPeriodLegacy = row.overviewPeriodLegacy ?? null;
+      // P267 rule 1: review hint for a newly admitted B1 pair, only where this row's growth is the labelled leg.
+      zeile.g31Hinweis = k.wachstumBein ? k.g31Hinweis ?? null : null;
       // Tag 1401: marks only, never changes a value. On-board names carry the flags of their
       // full-board row (the main export wrote them from the same list); off-board names get them
       // from the list. No open item: no key (absence, not an empty array).
@@ -1133,6 +1138,7 @@ function check(opts = {}) {
     // 01.10.2026: dieselbe Basis-Regel wie der Haupt-Export, dazu das Etikett: traegt das
     // Jahresbein die Zahl, nennt quartalsEnde dessen Geschaeftsjahresende (oder null), nie ein Quartal.
     checkRevGrowthBasis(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler);
+    checkOverviewPeriods(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler); // P267 additive OPTIONAL
     checkValueFlags(r, '[rule40] Zeile ' + i + ' (' + r.ticker + ')', fehler);   // Tag 1401 additive OPTIONAL
     if ((r.revGrowthBasis === 'year' || r.revGrowthBasis === 'yearNewerRecord')
         && r.quartalsEnde !== (r.revGrowthPeriodEnd === null ? null : r.revGrowthPeriodEnd + 'T00:00:00.000Z')) {

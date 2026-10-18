@@ -159,8 +159,9 @@ test('exchange policy stays fill-only: fill a missing value, retain a differing 
   const run = ticker => X.applyExchangeCheck(structuredClone(F.snapshots[ticker]), { mode: 'fill-only', context });
   const fill = run('000002.SZ'); assert.equal(fill.result.category, 'would-fill');
   assert.notDeepEqual(fill.snapshot, F.snapshots['000002.SZ']);
-  const mismatch = run('000599.SZ'); assert.match(mismatch.result.category, /^would-withhold/);
-  assert.deepEqual(mismatch.snapshot, F.snapshots['000599.SZ']);
+  // 000599.SZ is owned by the hand table since the G31 switch (P268); 000564.SZ is the same level mismatch.
+  const mismatch = run('000564.SZ'); assert.match(mismatch.result.category, /^would-withhold/);
+  assert.deepEqual(mismatch.snapshot, F.snapshots['000564.SZ']);
 });
 
 test('B4/B5: the live overview shows the newest labelled candidate; legacy keeps the old values', () => {
@@ -170,7 +171,8 @@ test('B4/B5: the live overview shows the newest labelled candidate; legacy keeps
   const gp = overviewShadow(s, 'gp'); close(gp.value, 2);
   assert.equal(gp.period.label, 'Quartal bis 30.06.2026');
   close(overviewMetric(s).value, 2); close(legacy(s), 0.2);
-  assert.equal(Object.hasOwn(overviewMetric(s), 'period'), false);
+  // P267: the live metric carries the period of exactly its value (export shape, four keys).
+  assert.deepEqual(overviewMetric(s).period, { basis: 'quarter', periodEnd: '2026-06-30', priorPeriodEnd: '2025-06-30', reason: null });
   const rev = overviewShadow(newer(s), 'revenue-badge'); close(rev.value, 0.2);
   assert.equal(rev.period.label, 'Geschäftsjahr bis 31.08.2026');
   close(overviewMetric(s, { gpClass: 'degenerate' }).value, 0.2);
@@ -212,7 +214,9 @@ test('real ranking and mappers keep the live overview and append separate shadow
   assert.equal(row.score, 75); assert.equal(row.rank, 1);
   assert.deepEqual(Object.keys(row.overview), ['kind', 'value', 'companion']);
   assert.equal(row.overview.value, 2); // G31 switch: the newest labelled GP quarter (legacy 0.2)
-  assert.equal(Object.hasOwn(flat, 'overviewPeriod'), false);
+  // P267: value and label travel together from the engine to both mappers.
+  assert.deepEqual(flat.overviewPeriod, row.overviewPeriod);
+  assert.equal(row.overviewPeriod.basis, 'quarter'); assert.equal(row.overviewPeriod.periodEnd, '2026-06-30');
   assert.deepEqual(row.g31OverviewShadow, flat.g31OverviewShadow);
   for (const output of [row, flat]) assert.deepEqual(Object.keys(output).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   // P184b omits unavailable V2 from delivery; the complete diagnostic remains in g31Shadow().
@@ -348,7 +352,7 @@ test('shadow failures leave every legacy mapper field intact; smallcap hand-tabl
     overviewValue: overviewMetric(s).value }; // the flat overview mapper reads overviewValue
   // overviewValueLegacy (G31 switch) is verified against the shadow candidate; a failed shadow
   // cannot verify it, so it must fall back to null instead of an unverified pre-G31 number.
-  const legacy = row => Object.fromEntries(Object.entries(row).filter(([key]) => !['g31Shadow', 'g31OverviewShadow', 'overviewValueLegacy'].includes(key)));
+  const legacy = row => Object.fromEntries(Object.entries(row).filter(([key]) => !['g31Shadow', 'g31OverviewShadow', 'overviewValueLegacy', 'overviewPeriodLegacy'].includes(key)));
   for (const store of ['main', 'smallcap']) for (const mapper of ['mapBoardRow', 'mapOverviewRow']) {
     const expected = writer(G)[mapper](row, 0, store);
     close(expected.overviewValueLegacy, 0.2);

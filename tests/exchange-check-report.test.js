@@ -28,14 +28,14 @@ write(path.join(snaps, '_manifest.json'), { pulled_at: '2026-10-03T09:24:24.454Z
 // An H-share twin of 000002.SZ: same CNY quarters, own listing.
 const twin = structuredClone(F.snapshots['000002.SZ']); twin.meta.ticker = '2202.HK';
 write(path.join(snaps, '2202.HK.json'), twin);
-// Exported lists (findash-export/v1): 000599.SZ only on a quality board, 6949.TW only on the full list (and in
+// Exported lists (findash-export/v1): 000564.SZ only on a quality board, 6949.TW only on the full list (and in
 // excluded.json, which is not a ranked list), 1101.TW on no list.
 const v1 = path.join(outputs, 'findash-export', 'v1');
 const ranked = ts => ts.map((ticker, i) => ({ rank: i + 1, ticker, score: 50 }));
-const board = [...tickers.filter(t => !['1101.TW', '000599.SZ', '6949.TW'].includes(t)), '2202.HK'];
+const board = [...tickers.filter(t => !['1101.TW', '000564.SZ', '6949.TW'].includes(t)), '2202.HK'];
 write(path.join(v1, 'real-estate.json'), { generated_at: '2026-10-03T09:31:17.057Z', profitable: ranked(board), unprofitable: [] });
-write(path.join(v1, 'quality', 'real-estate.json'), { profitable: ranked(['000599.SZ']) });
-write(path.join(v1, 'full', 'real-estate.json'), { profitable: ranked([...board, '000599.SZ', '6949.TW']), unprofitable: [] });
+write(path.join(v1, 'quality', 'real-estate.json'), { profitable: ranked(['000564.SZ']) });
+write(path.join(v1, 'full', 'real-estate.json'), { profitable: ranked([...board, '000564.SZ', '6949.TW']), unprofitable: [] });
 write(path.join(v1, 'excluded.json'), { rows: [{ ticker: '6949.TW' }] });
 write(path.join(v1, 'rule40', 'overview.json'), { rows: [] });
 write(path.join(store, 'cn.json'), F.store.cn); write(path.join(store, 'tw.json'), F.store.tw);
@@ -43,7 +43,7 @@ write(path.join(bh, F.baseline.date, 'real-estate.json'), { generated_at: '2026-
 const before = tree(root);
 const out = path.join(root, 'report', 'exchange-check-shadow.json');
 const run = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'exchange-check-report.js'), '--out', out, '--snapshots', snaps,
-  '--outputs', outputs, '--store', store, '--board-history', bh, '--must-withhold', F.mustWithhold.filter(t => t !== '000688.SZ').join(',')], { encoding: 'utf8', timeout: 120000 });
+  '--outputs', outputs, '--store', store, '--board-history', bh, '--must-withhold', F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ'].includes(t)).join(',')], { encoding: 'utf8', timeout: 120000 });
 const R = run.status === 0 ? JSON.parse(fs.readFileSync(out, 'utf8')) : null;
 
 test('runs, writes only --out, inputs byte-identical', () => {
@@ -53,8 +53,9 @@ test('runs, writes only --out, inputs byte-identical', () => {
   assert.equal(R.schema, 'exchange-check-shadow/v1'); assert.equal(R.mode, 'shadow'); assert.equal(R.committedMode, 'fill-only');
   assert.equal(R.inputs.baselineDate, F.baseline.date); assert.deepEqual(R.warnings, []);
 });
-test('the 16 wrong board rows and the 5 risers: 20/20 would-withhold, none unchecked', () => {
-  assert.equal(R.mustWithholdPass, '20/20'); // P138: 000688.SZ is corrected by the hand table now, so 20 of the 21 stay in the must-withhold list
+test('the 16 wrong board rows and the 5 risers: 19/19 would-withhold, none unchecked', () => {
+  // P138: 000688.SZ is corrected by the hand table; G31 switch (P268): 000599.SZ is held by it. 19 of the 21 stay.
+  assert.equal(R.mustWithholdPass, '19/19');
   assert.ok(R.mustWithhold.every(x => x.pass && x.category !== 'unchecked' && x.onBoard));
 });
 test('census: every would-withhold board row is listed with pairs, values and reader effects', () => {
@@ -77,7 +78,7 @@ test('census: every would-withhold board row is listed with pairs, values and re
   assert.ok(R.boardRows.filter(r => r.category === 'would-fill').length > 0);
 });
 test('census: every would-* row of every exported list (quality board, full list) and of the cohort is listed', () => {
-  const q = R.boardRows.find(r => r.ticker === '000599.SZ');
+  const q = R.boardRows.find(r => r.ticker === '000564.SZ');
   assert.deepEqual(q.boards, [{ board: 'quality/real-estate', track: 'profitable', rank: 1, position: 1 }]);
   assert.ok(!R.boardRows.some(r => r.ticker === '6949.TW'), 'full list and excluded.json are not boards');
   const would = Object.entries(R.counts.all).filter(([k]) => k.startsWith('would-')).reduce((s, [, c]) => s + c, 0);
@@ -85,7 +86,7 @@ test('census: every would-* row of every exported list (quality board, full list
   assert.ok(R.census.every(r => r.category.startsWith('would-') && r.effects && r.effects.growth), 'effects on every census row');
   const off = R.census.find(r => r.ticker === '6949.TW');
   assert.equal(off.category, 'would-fill'); assert.equal(off.onBoard, false); assert.equal(off.fullRank.board, 'full/real-estate');
-  assert.ok(R.census.find(r => r.ticker === '000599.SZ').onBoard);
+  assert.ok(R.census.find(r => r.ticker === '000564.SZ').onBoard);
 });
 test('H-share twins of a checked A-share are counted, not guarded', () => {
   assert.deepEqual(R.twins.map(x => [x.ticker, x.twinOf]), [['2202.HK', '000002.SZ']]);

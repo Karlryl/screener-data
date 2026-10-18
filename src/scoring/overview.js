@@ -47,7 +47,7 @@ function growthVerdict(s, field, shadow = false) {
     const annual = shadow ? growthVerdict(s, 'annualGP', true) : null;
     if (shadow && quarter.pct !== null && quarter.sourcePeriodEnd
         && (annual.value === null || !annual.period?.sourcePeriodEnd || quarter.sourcePeriodEnd >= annual.period.sourcePeriodEnd)) {
-      return { value: quarter.pct / 100, withheld: false, period: periodOf(quarter) };
+      return { value: quarter.current / quarter.prior - 1, withheld: false, period: periodOf(quarter) };
     }
     if (shadow && annual.value !== null && annual.period?.sourcePeriodEnd) return annual;
     // Fix Bug 24: TTM-Fenster POSITIONAL auf der ROH-Serie schneiden (Muster
@@ -68,7 +68,6 @@ function growthVerdict(s, field, shadow = false) {
       }
       const ttmNew = raw.slice(0, 4).reduce((p, c) => p + c, 0);
       const ttmOld = raw.slice(4, 8).reduce((p, c) => p + c, 0);
-      if (!shadow && ttmOld > 0) return { value: ttmNew / ttmOld - 1, withheld: false };
       const ends = periodEnds(s, 'grossProfitQ'), end = ends[0], priorEnd = ends[4];
       if (ttmOld > 0) return { value: ttmNew / ttmOld - 1, withheld: false,
         period: { basis: 'ttm', periodEnd: end, priorPeriodEnd: priorEnd, sourcePeriodEnd: end,
@@ -103,7 +102,6 @@ function growthVerdict(s, field, shadow = false) {
   // Use P115's measured 334..397 days, not the brief's rounded 330..400 window.
   const withheld = older !== newer + 1 || (newEnd !== null && oldEnd !== null
     && (newEnd - oldEnd < ANNUAL_PAIR_MIN_DAYS || newEnd - oldEnd > ANNUAL_PAIR_MAX_DAYS));
-  if (!shadow) return { value: withheld ? null : values[newer] / values[older] - 1, withheld };
   const end = newEnd === null ? null : ends[newer], priorEnd = oldEnd === null ? null : ends[older];
   return { value: withheld ? null : values[newer] / values[older] - 1, withheld,
     period: { basis: 'year', periodEnd: end, priorPeriodEnd: priorEnd, sourcePeriodEnd: end, sourcePriorPeriodEnd: priorEnd,
@@ -148,12 +146,23 @@ function ruleOfXCompanion(s, growthBounds) {
   return ruleOfX(s, 2.3, true, growthBounds);
 }
 
+/** Export shape of an overview period (P267): basis, both ends and a German reason, always all four keys.
+ * @param {object|null|undefined} p Full period of the selected pair, or nothing when no pair exists.
+ * @returns {{basis:string, periodEnd:string|null, priorPeriodEnd:string|null, reason:string|null}} Label of the value.
+ */
+function overviewPeriodExport(p) {
+  if (!p) return { basis: 'none', periodEnd: null, priorPeriodEnd: null, reason: 'Kein vergleichbares Wertepaar vorhanden.' };
+  return { basis: p.basis ?? 'none', periodEnd: p.periodEnd ?? null, priorPeriodEnd: p.priorPeriodEnd ?? null, reason: p.reason ?? null };
+}
+
 /**
- * overviewMetric(s, opts) -> { kind, value, companion }
+ * overviewMetric(s, opts) -> { kind, value, companion, period }
  * opts: { gpClass:'real'|'degenerate'|'none', specialTrack:'reit'|'biotech'|null,
  *         growthBounds:[lo,hi]|null }
  * kind: 'gp' | 'revenue-badge' | 'ffo-badge' | 'runway-badge'
  * Non-adjacent annual pairs additionally carry valuePresent:false and reason.
+ * P267: gp and revenue-badge carry the period of exactly this value (overviewPeriodExport) in both arms, so
+ * score output and writer move value and label as one object; other kinds carry no period.
  */
 function overviewMetric(s, opts = {}) {
   const companion = ruleOfXCompanion(s, opts.growthBounds);
@@ -162,12 +171,12 @@ function overviewMetric(s, opts = {}) {
   }
   const kind = opts.specialTrack === 'reit' ? 'ffo-badge'
     : opts.gpClass === 'degenerate' ? 'revenue-badge' : 'gp';
-  // G31 (Karl 11.10.2026, live since 18.10.2026): GP and the revenue badge show the newest
+  // G31 (Karl 11.10.2026, switch built 18.10.2026): GP and the revenue badge show the newest
   // labelled candidate (overviewShadow, its label goes out via the writer). The legacy arm keeps
   // the pre-G31 annual/TTM value below for the comparison export.
   if (g31Variant() && kind !== 'ffo-badge') {
     const { value, period } = overviewShadow(s, kind);
-    const metric = { kind, value, companion };
+    const metric = { kind, value, companion, period: overviewPeriodExport(period) };
     // P158's marker stays: an empty value whose only annual pair is non-adjacent says so.
     if (value === null && (period.reason === OVERVIEW_YEARS_NOT_ADJACENT_TEXT
         || growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind).withheld)) {
@@ -176,8 +185,9 @@ function overviewMetric(s, opts = {}) {
     }
     return metric;
   }
-  const { value, withheld } = growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind);
+  const { value, withheld, period } = growthVerdict(s, kind === 'revenue-badge' ? 'annualRev' : kind);
   const metric = { kind, value, companion };
+  if (kind !== 'ffo-badge') metric.period = overviewPeriodExport(period);
   if (withheld) {
     metric.valuePresent = false;
     metric.reason = OVERVIEW_YEARS_NOT_ADJACENT_TEXT;
@@ -185,7 +195,7 @@ function overviewMetric(s, opts = {}) {
   return metric;
 }
 
-/** Calculate the labelled B4/B5 candidate; overviewMetric shows it since the G31 switch (18.10.2026).
+/** Calculate the labelled B4/B5 candidate; overviewMetric shows it under the G31 switch.
  * @param {object|null} s Prepared snapshot.
  * @param {string} kind Existing overview kind.
  * @returns {object|null} Shadow value as a fraction and its period, or null for other kinds.
@@ -200,7 +210,7 @@ function overviewShadow(s, kind) {
     const withheld = leg.basis === 'year' ? verdict.withheld
       : leg.basis === 'yearNewerRecord' && newer !== null && older !== null
         && (newer - older < ANNUAL_PAIR_MIN_DAYS || newer - older > ANNUAL_PAIR_MAX_DAYS);
-    verdict = { value: withheld || leg.pct === null ? null : leg.pct / 100,
+    verdict = { value: withheld || leg.pct === null ? null : leg.current / leg.prior - 1,
       period: { ...periodOf(leg), reason: withheld ? OVERVIEW_YEARS_NOT_ADJACENT_TEXT : leg.reason } };
   }
   return { kind, value: verdict.value, period: verdict.period || {
@@ -209,7 +219,7 @@ function overviewShadow(s, kind) {
 }
 
 module.exports = {
-  overviewMetric, overviewShadow, grossProfitGrowthYoY, ffoProxyGrowthYoY,
+  overviewMetric, overviewShadow, overviewPeriodExport, grossProfitGrowthYoY, ffoProxyGrowthYoY,
   cashRunwayQuarters, ruleOfXCompanion, yoyAnnual,
   OVERVIEW_YEARS_NOT_ADJACENT_TEXT,
 };

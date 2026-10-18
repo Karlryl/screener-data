@@ -81,11 +81,15 @@ test('mode off: the identical object for every fixture snapshot; the store is ne
 // ── Real-data acceptance: the 16 wrong board rows and the 5 wrong risers ────
 test('all 21 known wrong rows are checked and withheld (none unchecked); the withheld cell is the year-ago partner', () => {
   assert.equal(F.mustWithhold.length, 21);
-  // P138: 000688.SZ is now corrected by the hand table, so the exchange check leaves it alone (unchecked, hand-table); the other 20 stay withheld.
-  const handOwned = res(snap('000688.SZ'));
-  assert.equal(handOwned.category, 'unchecked');
-  assert.equal(handOwned.why, 'hand-table');
-  for (const t of F.mustWithhold.filter(t => t !== '000688.SZ')) {
+  // P138: 000688.SZ is now corrected by the hand table, so the exchange check leaves it alone (unchecked, hand-table).
+  // G31 switch (P268, 18.10.2026): 000599.SZ's unrestated Q2 2025 is held by the hand table, the same treatment.
+  // The other 19 stay withheld; the level examples below use 000564.SZ, the same kind of level mismatch.
+  for (const t of ['000688.SZ', '000599.SZ']) {
+    const handOwned = res(snap(t));
+    assert.equal(handOwned.category, 'unchecked', t);
+    assert.equal(handOwned.why, 'hand-table', t);
+  }
+  for (const t of F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ'].includes(t))) {
     const s = snap(t), r = res(s);
     assert.ok(['would-withhold', 'would-withhold-growth'].includes(r.category), t + ' ' + r.category + ' ' + r.why);
     const lvl = r.withhold.find(w => w.level);
@@ -122,7 +126,7 @@ test('securities firms are their own stratum: ratio consistency, not the level r
 });
 
 test('reason text: level pair says the annual figure is shown; a non-level pair gets the acceleration text', () => {
-  const lvl = run(snap('000599.SZ'), 'active').snapshot;
+  const lvl = run(snap('000564.SZ'), 'active').snapshot;
   const cell = lvl.timeseries.revenueQ.find(x => x?.financialMissing);
   assert.equal(cell.financialMissing.reason, X.REASONS.level);
   const r = res(snap('601901.SS'));
@@ -143,7 +147,7 @@ test('mixed pair leaves the acceleration input', () => {
 
 // ── G4: the annual fallback of a withheld row ────────────────────────────────
 test('annual fallback agrees with the exchange full years: growth shows the annual figure', () => {
-  const r = res(snap('000599.SZ'));
+  const r = res(snap('000564.SZ'));
   assert.equal(r.category, 'would-withhold'); assert.equal(r.growth.basisAfter, 'year'); assert.equal(r.growth.status, 'agree');
   assert.deepEqual(r.growth.periodsChecked, ['2025-12-31', '2024-12-31'], 'undated vendor years compared by value');
 });
@@ -392,7 +396,7 @@ test('November replay Taiwan: Q3-2025 then comes from the Q3-2026 filing compara
   assert.equal(r.category, 'would-fill'); assert.equal(r.fill.nativeValue, 3900000 * 1000);
 });
 test('reason text: level pair withheld and no annual figure -> the text says no growth is shown', () => {
-  const s = snap('000599.SZ'); s.annual.annualRev = s.annual.annualRev.map(() => null);
+  const s = snap('000564.SZ'); s.annual.annualRev = s.annual.annualRev.map(() => null);
   const r = res(s);
   assert.equal(r.growth.status, 'none'); assert.equal(r.category, 'would-withhold');
   const cell = run(clone(s), 'active').snapshot.timeseries.revenueQ.find(x => x?.financialMissing);
@@ -583,7 +587,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
     lib => assert.equal(r(lib, snap('600150.SS')).category, 'would-withhold-growth'));
   // strip restores
   red("      else if (OWN_CODES.has(row.financialMissing?.reasonCode)) w.put(container, field, i, row.financialMissing.originalVendorRow);", "",
-    lib => { const s = snap('000599.SZ'), a = lib.applyExchangeCheck(clone(s), { mode: 'active', context: CTX }).snapshot;
+    lib => { const s = snap('000564.SZ'), a = lib.applyExchangeCheck(clone(s), { mode: 'active', context: CTX }).snapshot;
       assert.equal(serial(lib.applyExchangeCheck(a, { mode: 'off' }).snapshot), serial(s)); });
   // F5: a disagreeing delivered fill-period cell is withheld in any position
   red("        res.withhold.push({ index: k, period: P, level: false, fillPeriod: true, vendorNative: native[k], exchangeNative: ex[k] });", "",
@@ -625,7 +629,7 @@ test('break-once: each guard line, when removed, turns its check red; the live m
   red("    if (!finite(b)) { missing++; continue; } // absent or null in the vintage: unproven, not unchanged", "    if (!finite(b)) continue;",
     lib => { const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] = null; assert.notEqual(r(lib, base(), ctxOf(F.store, b)).category, 'would-fill'); });
   // F5 annual check only when the quarterly leg is lost
-  red("      if (level || (revGrowthLeg(s).basis === 'quarter' && revGrowthLeg(guarded).basis !== 'quarter')) {", "      if (true) {",
+  red("      if (level || (interim(revGrowthLeg(s).basis) && !interim(revGrowthLeg(guarded).basis))) {", "      if (true) {",
     lib => { const y = base(), k = y.timeseries.revenueQEnds.indexOf('2025-09-30');
       y.timeseries.revenueQ[k] = { value: res(base()).fill.nativeValue * y.meta.fxRateApplied * 1.05 };
       y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
@@ -658,7 +662,7 @@ test('fill-only break-once: fills, all four withholding paths, default policy an
   };
   assert.throws(() => checkFill(mutant(anchor, "  const apply = mode === 'active';")), assert.AssertionError);
   checkFill(X); breaks++;
-  const cases = [['level', snap('000599.SZ'), X.REASONS.level], ['acceleration', snap('601901.SS'), X.REASONS.acceleration],
+  const cases = [['level', snap('000564.SZ'), X.REASONS.level], ['acceleration', snap('601901.SS'), X.REASONS.acceleration],
     ['growth', snap('600150.SS'), X.REASONS.growth], ['late-quarter', offQ3().s, X.REASONS.lateQuarter]];
   const broken = mutant(anchor, "  const apply = mode === 'active' || mode === 'fill-only';");
   for (const [name, s, reason] of cases) {
