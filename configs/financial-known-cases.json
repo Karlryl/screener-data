@@ -38,7 +38,11 @@
     { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
     { "ticker": "000688.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "GRANULES.NS", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "BYLOT.AT", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "BYLOT.AT", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "000552.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "grossProfitQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -7308,6 +7312,1011 @@
           "end": "2024-03-31",
           "currency": "INR",
           "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "blsh-2025-12-31-annualGP-20261018",
+      "ticker": "BLSH",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 74084000,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Bruttogewinn fehlt: Bullish weist im Quartals- und im Jahresabschluss keinen Bruttogewinn aus. Die Anbieterwerte sind keine berichtete Kennzahl; das Bruttogewinnwachstum bleibt deshalb leer. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1872195/000143774926007417/blsh20251231_20f.htm",
+          "form": "20-F 2025",
+          "accession": "0001437749-26-007417",
+          "filed": "2026-03-10",
+          "page": "F-4, consolidated statements of profit or loss (no gross profit line)",
+          "unit": "USD thousands",
+          "quote": "Cost of digital assets derecognized 5 (244,733,087) (250,104,770) (116,419,218)"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1872195/000143774926027475/ex_963171.htm",
+          "form": "6-K, Exhibit 99.2",
+          "accession": "0001437749-26-027475",
+          "filed": "2026-08-13",
+          "page": "Exhibit 99.2, printed page 2, condensed consolidated statements of profit or loss (no gross profit line)",
+          "unit": "USD thousands",
+          "quote": "Cost of digital assets derecognized 5 (32,569,561) (58,615,273) (84,362,303) (138,824,914)"
+        }
+      ]
+    },
+    {
+      "caseId": "vctr-2025-12-31-annualGP-20261018",
+      "ticker": "VCTR",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 711149000,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Bruttogewinn fehlt: Victory Capital weist weder Bruttogewinn noch Umsatzkosten aus. Die Anbieterwerte sind keine berichtete Kennzahl; das Bruttogewinnwachstum bleibt deshalb leer. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1570827/000119312526077057/vctr-20251231.htm",
+          "form": "10-K 2025",
+          "accession": "0001193125-26-077057",
+          "filed": "2026-02-26",
+          "page": "72, consolidated statements of operations (no gross profit or cost of revenue line)",
+          "unit": "USD thousands",
+          "quote": "Total operating expenses 827,708 465,963 492,570 Income from operations 478,423 427,514 328,458"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1570827/000119312526337010/vctr-20260630.htm",
+          "form": "10-Q Q2 2026",
+          "accession": "0001193125-26-337010",
+          "filed": "2026-08-06",
+          "page": "5, condensed consolidated statements of operations (no gross profit or cost of revenue line)",
+          "unit": "USD thousands",
+          "quote": "Total operating expenses 241,612 256,998 470,416 383,692 Income from operations 193,749 94,214 352,934 187,122"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2026-06-30-revenueQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 244201000,
+      "replacementValue": 244201000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf",
+          "form": "CD PROJEKT RED Group, H1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 435 308 355 021",
+          "unit": "PLN thousands",
+          "value": 435308000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 191 107 180 091",
+          "unit": "PLN thousands",
+          "value": 191107000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2026-03-31-revenueQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 191107000,
+      "replacementValue": 191107000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 191 107 180 091",
+          "unit": "PLN thousands",
+          "value": 191107000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-12-31-revenueQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 74877000,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Viertes Quartal 2025 fehlt: Umsatz, Betriebsergebnis und Bruttogewinn von CD Projekt lassen sich für dieses Quartal nur als Jahr ohne GOG minus neun Monate mit GOG bilden und sind keine berichteten Zahlen. Das Umsatzwachstum vergleicht deshalb die Geschäftsjahre 2025 und 2024, beide ohne GOG. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/consolidated-financial-statements-of-the-cd-projekt-group-for-2025.pdf",
+          "form": "CD PROJEKT Group, consolidated financial statements 2025",
+          "page": "PDF 6, consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 866 989 798 372",
+          "unit": "PLN thousands",
+          "value": 866989000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "note": "continuing operations, GOG sold on 31.12.2025"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2025/11/consolidated-financial-statement-of-the-cd-projekt-group-for-q3-2025.pdf",
+          "form": "CD PROJEKT Group, Q3 2025 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 349 072 227 449 792 112 652 140",
+          "unit": "PLN thousands",
+          "value": 792112000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "note": "as originally reported, including GOG"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-09-30-revenueQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 349072000,
+      "replacementValue": 349072000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2025/11/consolidated-financial-statement-of-the-cd-projekt-group-for-q3-2025.pdf",
+          "form": "CD PROJEKT Group, Q3 2025 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 349 072 227 449 792 112 652 140",
+          "unit": "PLN thousands",
+          "value": 349072000,
+          "currency": "PLN",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "note": "as originally reported, including GOG"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-06-30-revenueQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 216734000,
+      "replacementValue": 174930000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen korrigiert: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf",
+          "form": "CD PROJEKT RED Group, H1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 435 308 355 021",
+          "unit": "PLN thousands",
+          "value": 355021000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "comparative restated without GOG (continuing operations)"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 191 107 180 091",
+          "unit": "PLN thousands",
+          "value": 180091000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "comparative restated without GOG (continuing operations)"
+        }
+      ]
+    },
+    {
+      "caseId": "000552.sz-2026-06-30-revenueQ-20261018",
+      "ticker": "000552.SZ",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 2202292523,
+      "replacementValue": 2202292523,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Umsatz bestätigt: Gansu Energy Chemical hat am 1. Oktober 2025 eine Gesellschaft desselben Mehrheitsaktionärs übernommen und weist die Vorjahresquartale angepasst aus. Das Wachstum vergleicht die beiden Juniquartale auf dieser Basis, also 2.202,3 gegen 1.817,1 Mio. CNY statt gegen die alten 1.802,1 Mio. CNY. Das vierte Quartal 2025 ist der Wert aus der Quartalsübersicht des Geschäftsberichts 2025; er enthält rechnerisch auch Umsätze der übernommenen Gesellschaft aus früheren Quartalen 2025. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225495701.PDF",
+          "published": "2026-08-25",
+          "form": "Gansu Energy Chemical, 2026 half-year report summary",
+          "page": "PDF 2, 主要会计数据和财务指标 (the text layer wraps the last digit of each number onto its own line, e.g. 4,697,622,710.9 / 9; search for 营业收入（元）)",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 4,697,622,710.99 3,717,701,808.70 3,767,757,991.30 24.68%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 4697622710.99,
+          "currency": "CNY",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF",
+          "published": "2026-04-28",
+          "form": "Gansu Energy Chemical, 2026 first-quarter report",
+          "page": "PDF 2, 主要会计数据和财务指标",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 2,495,330,187.99 1,915,571,284.44 1,950,615,225.65 27.93%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 2495330187.99,
+          "currency": "CNY",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "000552.sz-2026-03-31-revenueQ-20261018",
+      "ticker": "000552.SZ",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 2495330187.99,
+      "replacementValue": 2495330187.99,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Umsatz bestätigt: Gansu Energy Chemical hat am 1. Oktober 2025 eine Gesellschaft desselben Mehrheitsaktionärs übernommen und weist die Vorjahresquartale angepasst aus. Das Wachstum vergleicht die beiden Juniquartale auf dieser Basis, also 2.202,3 gegen 1.817,1 Mio. CNY statt gegen die alten 1.802,1 Mio. CNY. Das vierte Quartal 2025 ist der Wert aus der Quartalsübersicht des Geschäftsberichts 2025; er enthält rechnerisch auch Umsätze der übernommenen Gesellschaft aus früheren Quartalen 2025. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF",
+          "published": "2026-04-28",
+          "form": "Gansu Energy Chemical, 2026 first-quarter report",
+          "page": "PDF 2, 主要会计数据和财务指标",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 2,495,330,187.99 1,915,571,284.44 1,950,615,225.65 27.93%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 2495330187.99,
+          "currency": "CNY",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "000552.sz-2025-12-31-revenueQ-20261018",
+      "ticker": "000552.SZ",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 1719171214.57,
+      "replacementValue": 1719171214.57,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Umsatz bestätigt: Gansu Energy Chemical hat am 1. Oktober 2025 eine Gesellschaft desselben Mehrheitsaktionärs übernommen und weist die Vorjahresquartale angepasst aus. Das Wachstum vergleicht die beiden Juniquartale auf dieser Basis, also 2.202,3 gegen 1.817,1 Mio. CNY statt gegen die alten 1.802,1 Mio. CNY. Das vierte Quartal 2025 ist der Wert aus der Quartalsübersicht des Geschäftsberichts 2025; er enthält rechnerisch auch Umsätze der übernommenen Gesellschaft aus früheren Quartalen 2025. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-28/1225201908.PDF",
+          "published": "2026-04-28",
+          "form": "Gansu Energy Chemical, 2025 annual report",
+          "page": "PDF 9, printed page 9, 八、分季度主要财务指标, 第四季度",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入 1,915,571,284.44 1,802,130,524.26 2,401,757,971.65 1,719,171,214.57",
+          "unit": "CNY 元, multiplier 1",
+          "value": 1719171214.57,
+          "currency": "CNY",
+          "start": "2025-10-01",
+          "end": "2025-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "000552.sz-2025-06-30-revenueQ-20261018",
+      "ticker": "000552.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 1802130524.26,
+      "replacementValue": 1817142765.65,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Umsatz korrigiert: Gansu Energy Chemical hat am 1. Oktober 2025 eine Gesellschaft desselben Mehrheitsaktionärs übernommen und weist die Vorjahresquartale angepasst aus. Das Wachstum vergleicht die beiden Juniquartale auf dieser Basis, also 2.202,3 gegen 1.817,1 Mio. CNY statt gegen die alten 1.802,1 Mio. CNY. Das vierte Quartal 2025 ist der Wert aus der Quartalsübersicht des Geschäftsberichts 2025; er enthält rechnerisch auch Umsätze der übernommenen Gesellschaft aus früheren Quartalen 2025. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225495701.PDF",
+          "published": "2026-08-25",
+          "form": "Gansu Energy Chemical, 2026 half-year report summary",
+          "page": "PDF 2, 主要会计数据和财务指标 (the text layer wraps the last digit of each number onto its own line, e.g. 4,697,622,710.9 / 9; search for 营业收入（元）)",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 4,697,622,710.99 3,717,701,808.70 3,767,757,991.30 24.68%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 3767757991.3,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (adjusted for the common-control merger)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF",
+          "published": "2026-04-28",
+          "form": "Gansu Energy Chemical, 2026 first-quarter report",
+          "page": "PDF 2, 主要会计数据和财务指标",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 2,495,330,187.99 1,915,571,284.44 1,950,615,225.65 27.93%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 1950615225.65,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (adjusted for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "000552.sz-2025-03-31-revenueQ-20261018",
+      "ticker": "000552.SZ",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 1950615225.65,
+      "replacementValue": 1950615225.65,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Umsatz bestätigt: Gansu Energy Chemical hat am 1. Oktober 2025 eine Gesellschaft desselben Mehrheitsaktionärs übernommen und weist die Vorjahresquartale angepasst aus. Das Wachstum vergleicht die beiden Juniquartale auf dieser Basis, also 2.202,3 gegen 1.817,1 Mio. CNY statt gegen die alten 1.802,1 Mio. CNY. Das vierte Quartal 2025 ist der Wert aus der Quartalsübersicht des Geschäftsberichts 2025; er enthält rechnerisch auch Umsätze der übernommenen Gesellschaft aus früheren Quartalen 2025. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF",
+          "published": "2026-04-28",
+          "form": "Gansu Energy Chemical, 2026 first-quarter report",
+          "page": "PDF 2, 主要会计数据和财务指标",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 2,495,330,187.99 1,915,571,284.44 1,950,615,225.65 27.93%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 1950615225.65,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (adjusted for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "000552.sz-2025-06-30-opIncQ-20261018",
+      "ticker": "000552.SZ",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": -212470245.56,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalsgewinn fehlt: Für das zweite Quartal 2025 liegt nur der angepasste Umsatz vor; Betriebsergebnis und Bruttogewinn des Anbieters stehen noch auf der Basis vor dem Zusammenschluss und würden mit dem angepassten Umsatz vermischt. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225495701.PDF",
+          "published": "2026-08-25",
+          "form": "Gansu Energy Chemical, 2026 half-year report summary",
+          "page": "PDF 2, 主要会计数据和财务指标 (the text layer wraps the last digit of each number onto its own line, e.g. 4,697,622,710.9 / 9; search for 营业收入（元）)",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 4,697,622,710.99 3,717,701,808.70 3,767,757,991.30 24.68%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 3767757991.3,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (adjusted for the common-control merger)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF",
+          "published": "2026-04-28",
+          "form": "Gansu Energy Chemical, 2026 first-quarter report",
+          "page": "PDF 2, 主要会计数据和财务指标",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 2,495,330,187.99 1,915,571,284.44 1,950,615,225.65 27.93%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 1950615225.65,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (adjusted for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "000552.sz-2025-06-30-grossProfitQ-20261018",
+      "ticker": "000552.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 205078196.16,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalsgewinn fehlt: Für das zweite Quartal 2025 liegt nur der angepasste Umsatz vor; Betriebsergebnis und Bruttogewinn des Anbieters stehen noch auf der Basis vor dem Zusammenschluss und würden mit dem angepassten Umsatz vermischt. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225495701.PDF",
+          "published": "2026-08-25",
+          "form": "Gansu Energy Chemical, 2026 half-year report summary",
+          "page": "PDF 2, 主要会计数据和财务指标 (the text layer wraps the last digit of each number onto its own line, e.g. 4,697,622,710.9 / 9; search for 营业收入（元）)",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 4,697,622,710.99 3,717,701,808.70 3,767,757,991.30 24.68%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 3767757991.3,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (adjusted for the common-control merger)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-28/1225201919.PDF",
+          "published": "2026-04-28",
+          "form": "Gansu Energy Chemical, 2026 first-quarter report",
+          "page": "PDF 2, 主要会计数据和财务指标",
+          "verifiedAt": "2026-10-18",
+          "quote": "营业收入（元） 2,495,330,187.99 1,915,571,284.44 1,950,615,225.65 27.93%",
+          "unit": "CNY 元, multiplier 1",
+          "value": 1950615225.65,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (adjusted for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2023-12-31-annualRev-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 1230199000,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Jahreswerte fehlen: CD Projekt weist 2024 und 2025 nach dem Verkauf von GOG ohne GOG aus; 2023 und älter enthalten GOG und werden nicht über diesen Basiswechsel hinweg verglichen. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/key-financial-data-fy-2025.xlsx",
+          "form": "CD PROJEKT Group, key financial data FY 2025 (XLSX)",
+          "page": "sheet 2024, segment table, 2023 columns CD PROJEKT RED / GOG.COM / eliminations / total",
+          "verifiedAt": "2026-10-18",
+          "unit": "PLN thousands",
+          "quote": "Sales revenues 1037873 234969 -42643 1230199; Gross profit/(loss) on sales 785510 66833 -102 852241"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/consolidated-financial-statements-of-the-cd-projekt-group-for-2025.pdf",
+          "form": "CD PROJEKT Group, consolidated financial statements 2025",
+          "page": "PDF 19, restatement of 2024 after the GOG disposal",
+          "verifiedAt": "2026-10-18",
+          "unit": "PLN thousands",
+          "quote": "Sales revenue 985 030 (186 658) 798 372; Gross profit on sales 737 878 (57 318) 680 560"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/consolidated-financial-statements-of-the-cd-projekt-group-for-2025.pdf",
+          "form": "CD PROJEKT Group, consolidated financial statements 2025",
+          "page": "PDF 6, consolidated income statement (2025 and restated 2024, both without GOG)",
+          "verifiedAt": "2026-10-18",
+          "quote": "Sales revenue 866 989 798 372",
+          "unit": "PLN thousands",
+          "value": 866989000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "note": "continuing operations, GOG sold on 31.12.2025"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2023-12-31-annualGP-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "annualGP",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 852241000,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Jahreswerte fehlen: CD Projekt weist 2024 und 2025 nach dem Verkauf von GOG ohne GOG aus; 2023 und älter enthalten GOG und werden nicht über diesen Basiswechsel hinweg verglichen. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/key-financial-data-fy-2025.xlsx",
+          "form": "CD PROJEKT Group, key financial data FY 2025 (XLSX)",
+          "page": "sheet 2024, segment table, 2023 columns CD PROJEKT RED / GOG.COM / eliminations / total",
+          "verifiedAt": "2026-10-18",
+          "unit": "PLN thousands",
+          "quote": "Sales revenues 1037873 234969 -42643 1230199; Gross profit/(loss) on sales 785510 66833 -102 852241"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/consolidated-financial-statements-of-the-cd-projekt-group-for-2025.pdf",
+          "form": "CD PROJEKT Group, consolidated financial statements 2025",
+          "page": "PDF 19, restatement of 2024 after the GOG disposal",
+          "verifiedAt": "2026-10-18",
+          "unit": "PLN thousands",
+          "quote": "Sales revenue 985 030 (186 658) 798 372; Gross profit on sales 737 878 (57 318) 680 560"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2026-06-30-opIncQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 148272000,
+      "replacementValue": 148272000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf",
+          "form": "CD PROJEKT RED Group, H1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit 245 339 166 208",
+          "unit": "PLN thousands",
+          "value": 245339000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit 97 067 94 013",
+          "unit": "PLN thousands",
+          "value": 97067000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2026-03-31-opIncQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 97067000,
+      "replacementValue": 97067000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit 97 067 94 013",
+          "unit": "PLN thousands",
+          "value": 97067000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-12-31-opIncQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 107973000,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Viertes Quartal 2025 fehlt: Umsatz, Betriebsergebnis und Bruttogewinn von CD Projekt lassen sich für dieses Quartal nur als Jahr ohne GOG minus neun Monate mit GOG bilden und sind keine berichteten Zahlen. Das Umsatzwachstum vergleicht deshalb die Geschäftsjahre 2025 und 2024, beide ohne GOG. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/consolidated-financial-statements-of-the-cd-projekt-group-for-2025.pdf",
+          "form": "CD PROJEKT Group, consolidated financial statements 2025",
+          "page": "PDF 6, consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit 470 648 366 548",
+          "unit": "PLN thousands",
+          "value": 470648000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "note": "continuing operations, GOG sold on 31.12.2025"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2025/11/consolidated-financial-statement-of-the-cd-projekt-group-for-q3-2025.pdf",
+          "form": "CD PROJEKT Group, Q3 2025 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit/(loss) 194 630 80 610 362 675 220 874",
+          "unit": "PLN thousands",
+          "value": 362675000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "note": "as originally reported, including GOG"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-09-30-opIncQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 194630000,
+      "replacementValue": 194630000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2025/11/consolidated-financial-statement-of-the-cd-projekt-group-for-q3-2025.pdf",
+          "form": "CD PROJEKT Group, Q3 2025 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit/(loss) 194 630 80 610 362 675 220 874",
+          "unit": "PLN thousands",
+          "value": 194630000,
+          "currency": "PLN",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "note": "as originally reported, including GOG"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-06-30-opIncQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 72468000,
+      "replacementValue": 72195000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen korrigiert: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf",
+          "form": "CD PROJEKT RED Group, H1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit 245 339 166 208",
+          "unit": "PLN thousands",
+          "value": 166208000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "comparative restated without GOG (continuing operations)"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Operating profit 97 067 94 013",
+          "unit": "PLN thousands",
+          "value": 94013000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "comparative restated without GOG (continuing operations)"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2026-06-30-grossProfitQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 228665000,
+      "replacementValue": 228665000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf",
+          "form": "CD PROJEKT RED Group, H1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit on sales 405 918 317 025",
+          "unit": "PLN thousands",
+          "value": 405918000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit on sales 177 253 166 102",
+          "unit": "PLN thousands",
+          "value": 177253000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2026-03-31-grossProfitQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 177253000,
+      "replacementValue": 177253000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit on sales 177 253 166 102",
+          "unit": "PLN thousands",
+          "value": 177253000,
+          "currency": "PLN",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-12-31-grossProfitQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 149771000,
+      "replacementValue": null,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Viertes Quartal 2025 fehlt: Umsatz, Betriebsergebnis und Bruttogewinn von CD Projekt lassen sich für dieses Quartal nur als Jahr ohne GOG minus neun Monate mit GOG bilden und sind keine berichteten Zahlen. Das Umsatzwachstum vergleicht deshalb die Geschäftsjahre 2025 und 2024, beide ohne GOG. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/03/consolidated-financial-statements-of-the-cd-projekt-group-for-2025.pdf",
+          "form": "CD PROJEKT Group, consolidated financial statements 2025",
+          "page": "PDF 6, consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit on sales 788 016 680 560",
+          "unit": "PLN thousands",
+          "value": 788016000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "note": "continuing operations, GOG sold on 31.12.2025"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2025/11/consolidated-financial-statement-of-the-cd-projekt-group-for-q3-2025.pdf",
+          "form": "CD PROJEKT Group, Q3 2025 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit/(loss) on sales 294 463 168 470 638 245 480 327",
+          "unit": "PLN thousands",
+          "value": 638245000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "note": "as originally reported, including GOG"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-09-30-grossProfitQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 294463000,
+      "replacementValue": 294463000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen bestätigt: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2025/11/consolidated-financial-statement-of-the-cd-projekt-group-for-q3-2025.pdf",
+          "form": "CD PROJEKT Group, Q3 2025 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit/(loss) on sales 294 463 168 470 638 245 480 327",
+          "unit": "PLN thousands",
+          "value": 294463000,
+          "currency": "PLN",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "note": "as originally reported, including GOG"
+        }
+      ]
+    },
+    {
+      "caseId": "cdr.wa-2025-06-30-grossProfitQ-20261018",
+      "ticker": "CDR.WA",
+      "listingAliases": [
+        "OTGLF"
+      ],
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 163939000,
+      "replacementValue": 150923000,
+      "revision": "2026-10-18-sdhand",
+      "verifiedAt": "2026-10-18",
+      "reason": "Quartalszahlen korrigiert: CD Projekt weist nach dem Verkauf von GOG Ende 2025 die Vorjahreszahlen ohne GOG aus; das zweite Quartal 2025 steht auf dieser Basis (Umsatz 174,9 statt 216,7 Mio. PLN, Betriebsergebnis 72,2 statt 72,5 Mio. PLN, Bruttogewinn 150,9 statt 163,9 Mio. PLN). Das dritte Quartal 2025 bleibt auf der ursprünglichen Basis mit GOG; ein neu ausgewiesener Wert ist nicht veröffentlicht. Geprüft am 18.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/09/condensed-interim-consolidated-financial-statement-of-the-cd-projekt-red-group-h1-2026.pdf",
+          "form": "CD PROJEKT RED Group, H1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit on sales 405 918 317 025",
+          "unit": "PLN thousands",
+          "value": 317025000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "comparative restated without GOG (continuing operations)"
+        },
+        {
+          "url": "https://www.cdprojekt.com/en/wp-content/uploads-en/2026/05/consolidated-financial-statement-of-the-cd-projekt-group-for-q1-2026.pdf",
+          "form": "CD PROJEKT Group, Q1 2026 interim condensed consolidated financial statements",
+          "page": "PDF 7, interim condensed consolidated income statement",
+          "verifiedAt": "2026-10-18",
+          "quote": "Gross profit on sales 177 253 166 102",
+          "unit": "PLN thousands",
+          "value": 166102000,
+          "currency": "PLN",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "comparative restated without GOG (continuing operations)"
         }
       ]
     }
