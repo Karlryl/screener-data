@@ -128,6 +128,8 @@ function revAnnualLegYoY(s) {
   if (n && annualPairRuleEnabled('growth') && !annualPairPasses(checkNewerAnnualPair(s, n))) return null;
   return n ? n.revenue / n.priorRevenue - 1 : revAnnualYoY(s);
 }
+// G31 (Karl 11.10.2026, switch built 18.10.2026): production runs the g31Variant() branch (arm v1)
+// here and in revGrowthLevel; the code after it is the legacy arm for the *Legacy comparison export.
 function revYoYComponents(s) {
   if (g31Variant()) return g31Shadow(s)[g31Variant()].bonusComponents;
   const comps = [];
@@ -152,8 +154,11 @@ function revYoYComponents(s) {
 // Quartals-Bein gibt.
 function revGrowthLevel(s, growthBounds) {
   if (g31Variant()) {
-    const pct = g31Shadow(s)[g31Variant()].pct;
-    return pct === null ? null : (growthBounds ? Math.max(growthBounds[0], Math.min(growthBounds[1], pct / 100)) * 100 : pct);
+    const leg = g31Shadow(s)[g31Variant()];
+    if (leg.pct === null) return null;
+    // The legacy expression on the selected pair: an unchanged pair stays bit-identical.
+    const g = leg.current / leg.prior - 1;
+    return (growthBounds ? Math.max(growthBounds[0], Math.min(growthBounds[1], g)) : g) * 100;
   }
   const quartal = revQuartalsYoY(s);
   let g = (quartal !== null) ? quartal : revAnnualLegYoY(s);

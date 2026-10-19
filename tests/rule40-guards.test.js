@@ -86,6 +86,9 @@ test('winziges Vorjahresquartal toetet keine Zeile, deren Wachstum aus dem Jahre
     revenueQ: [{ value: null }, { value: 110e6 }, { value: 105e6 }, { value: 100e6 }, { value: 1e6 }],
     revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
     annualRev: [400e6, 320e6, 240e6],
+    // G31 (18.10.2026): the freshness anchor is the period of the leg that carries the number,
+    // here the fiscal year; it is dated so the row stays rankable.
+    annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'],
   }, undefined, false);
 });
 
@@ -151,8 +154,10 @@ test('fundamentalsAsOf ist KEIN Waechter mehr (es misst den Abruf, nicht den Zei
 test('ohne Quartalsenden zieht der Waechter die JAHRESreihe heran', () => {
   // Jahresmelder (revenueQ leer -> revGrowthLevel nimmt den Jahres-Fallback) haben trotzdem
   // einen Zeitraum. Frueher uebersprang der Waechter sie stillschweigend.
-  drin({}, { revenueQEnds: [], annualRevEnds: ['2026-03-31', '2025-03-31', '2024-03-31'] });
-  abgewiesenWegen('veraltet', {}, { revenueQEnds: [], annualRevEnds: ['2020-03-31', '2019-03-31'] });
+  // G31 (18.10.2026): an annual reporter has no quarterly series at all (revenueQ empty), so the
+  // annual leg carries the number and dates it. An undated quarterly pair is a separate case below.
+  drin({}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2026-03-31', '2025-03-31', '2024-03-31'] }, undefined, false);
+  abgewiesenWegen('veraltet', {}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2020-03-31', '2019-03-31', '2018-03-31'] }, undefined, false);
 });
 
 test('ohne JEDEN lesbaren Zeitraum fliegt die Zeile raus — Anzeige-Regel, nicht Waechter-Logik', () => {
@@ -294,10 +299,13 @@ test('bei tragendem Quartalsbein greift das Jahres-Tor nicht, auch bei winzigem 
 // Ein Quartalsende ohne Zahl dahinter ist ein Platzhalter. Verankerte der Waechter darauf,
 // behauptete die Zeile eine Frische, die ihre Zahlen nicht haben (479 von 13.916 Snapshots
 // am Stand 2026-09-19).
-test('leeres juengstes Quartal: der Anker rutscht auf das naechste Quartal MIT Wert', () => {
+test('leeres juengstes Quartal: der Anker rutscht auf das Bein, das die Zahl traegt', () => {
+  // G31 (18.10.2026): without a newest quarter value the fiscal year carries the number; its end
+  // is the anchor (pre-G31: the next quarter with a value). Both are fresh here.
   drin({}, {
     revenueQ: [{ value: null }, { value: 110e6 }, { value: 105e6 }, { value: 100e6 }, { value: 95e6 }],
     revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
+    annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'],
   }, undefined, false);
 });
 
@@ -308,6 +316,8 @@ test('leeres juengstes Quartal ueber veralteten Werten wird als veraltet erkannt
   abgewiesenWegen('veraltet', {}, {
     revenueQ: [{ value: null }, { value: 110e6 }, { value: 105e6 }, { value: 100e6 }, { value: 95e6 }],
     revenueQEnds: ['2026-06-30', '2020-06-30', '2020-03-31', '2019-12-31', '2019-09-30'],
+    // G31: the fiscal year that now carries the number is just as old, so the row stays out.
+    annualRevEnds: ['2020-06-30', '2019-06-30', '2018-06-30'],
   }, undefined, false);
 });
 
@@ -322,6 +332,14 @@ test('Quartalsenden ohne jeden Wert belegen keine Frische (frischeUnbekannt)', (
     revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'],
     annualRevEnds: undefined,
   }, undefined, false);
+});
+
+// G31 (18.10.2026): the anchor is the period of the number shown. An undated quarter pair carries the
+// number but has no period, so the row is not rankable (frischeUnbekannt); pre-G31 the fiscal-year series dated it.
+test('G31: undatiertes Quartalspaar traegt die Zahl ohne Zeitraum -> frischeUnbekannt (vor G31: Jahresreihe)', () => {
+  const ohneQuartalsenden = { revenueQEnds: [], annualRevEnds: ['2026-03-31', '2025-03-31', '2024-03-31'] };
+  abgewiesenWegen('frischeUnbekannt', {}, ohneQuartalsenden);
+  require('../lib/g31-recency.js').withG31Variant('legacy', () => drin({}, ohneQuartalsenden));
 });
 
 bilanz('tests/rule40-guards.test.js');

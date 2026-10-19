@@ -169,6 +169,8 @@ function p154Fixture(c) {
   const s = snapshot(), prior = new Date(c.period);
   prior.setUTCFullYear(prior.getUTCFullYear() - 1);
   Object.assign(s.meta, { ticker: c.ticker, reportingCurrency: c.currency, tradingCurrency: c.currency });
+  // G31 switch (18.10.2026): a later fiscal year would win over the corrected quarter; keep it older.
+  s.annual.annualRevEnds = ['2024-12-31', '2023-12-31'];
   // Exercise an existing persisted marker; equal confirmed cells deliberately acquire no new marker.
   s.timeseries = { revenueQ: [{ value: c.replacementValue, financialCorrection: {
     caseId: c.caseId, replacementNativeValue: c.replacementValue, nativeCurrency: c.currency, revision: financialTable.revision,

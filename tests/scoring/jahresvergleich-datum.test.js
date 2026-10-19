@@ -14,6 +14,7 @@ const {
 const { revGrowthLevel, revYoYComponents, revAcceleration, revQuartalsYoY } = require('../../src/scoring/axes.js');
 const { LAMPS } = require('../../src/scoring/lamps.js');
 const { overviewMetric } = require('../../src/scoring/overview.js');
+const { withG31Variant } = require('../../lib/g31-recency.js');
 
 let fail = 0;
 function check(name, fn) {
@@ -94,12 +95,19 @@ check('gar kein Jahres-Kandidat UND kein annual -> null (Achse droppt ehrlich)',
 const CRDA_WERTE = [320126000, 320086000, null, 334595000, 323339000, 358318000];
 const CRDA_ENDEN = ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31', '2024-12-31'];
 
-check('Werte-Loch trotz vollstaendiger Enden: Quartals-Bein droppt, Jahresreihe traegt', () => {
+check('Werte-Loch trotz vollstaendiger Enden: G31 nimmt das datierte Paar, die Vor-G31-Rechnung die Jahresreihe', () => {
   const s = snap(CRDA_WERTE, CRDA_ENDEN, [800, 1000]);
   assert.deepStrictEqual(jahresVergleichIdx(s, 'revenueQ', 0), { idx: 4, quelle: 'datum' });
-  assert.strictEqual(revQuartalsYoY(s), null, 'loechrige Reihe darf keine Quartalszahl liefern');
-  assert.strictEqual(revYoYComponents(s).length, 1, 'nur das Jahres-Bein');
-  assert.ok(Math.abs(revGrowthLevel(s) - (-20)) < 1e-9, `revGrowthLevel=${revGrowthLevel(s)} erwartet -20 (Jahresreihe)`);
+  assert.strictEqual(revQuartalsYoY(s), null, 'das Vor-G31-Quartalsbein (Lueckenregel) liefert keine Quartalszahl');
+  // G31-Umschaltung 18.10.2026 (Karl 11.10., B1): beide Endpunkte sind datiert und endlich, das leere
+  // Zwischenquartal stoert die Paarung nicht. CRD-A zeigt damit -0,99 % (Quartal) statt -20 % (Jahr).
+  const erwartet = (CRDA_WERTE[0] / CRDA_WERTE[4] - 1) * 100;
+  assert.ok(Math.abs(revGrowthLevel(s) - erwartet) < 1e-9, `revGrowthLevel=${revGrowthLevel(s)} erwartet ${erwartet} (Quartal)`);
+  assert.strictEqual(revYoYComponents(s).length, 2, 'Jahres- und Quartalsbein');
+  withG31Variant('legacy', () => {
+    assert.strictEqual(revYoYComponents(s).length, 1, 'nur das Jahres-Bein');
+    assert.ok(Math.abs(revGrowthLevel(s) - (-20)) < 1e-9, `revGrowthLevel=${revGrowthLevel(s)} erwartet -20 (Jahresreihe)`);
+  });
 });
 
 check('Gegenprobe: dieselbe Reihe OHNE Loch liefert das Quartals-Bein', () => {
@@ -168,9 +176,12 @@ check('overview grossProfitGrowthYoY: schiefes Fenster faellt auf annualGP zurue
     annual: { annualRev: q([100, 90]), annualGP: q([50, 40]) },
     timeseries: { revenueQ: q([1, 1]), grossProfitQ: q([40, 30, 30, 30, 10, 10, 10, 10]), grossProfitQEnds: gpEnden },
   };
+  // TTM-Block waere 130/40-1 = +225 %; ausgerichtet ist er nicht. G31 (18.10.2026): das datierte Paar
+  // 2026-03-31 gegen 2025-03-31 (40/30-1 = +33,3 %) ist neuer als annualGP; vor G31: annualGP 50/40-1 = +25 %.
   const m = overviewMetric(basis, 'software-comm-services', 'profitable');
-  // TTM-Block waere 130/40-1 = +225 %; ausgerichtet ist er nicht -> annualGP 50/40-1 = +25 %
-  assert.ok(Math.abs(m.value - 0.25) < 1e-9, `value=${m.value}`);
+  assert.ok(Math.abs(m.value - 1 / 3) < 1e-9, `value=${m.value}`);
+  const alt = withG31Variant('legacy', () => overviewMetric(basis, 'software-comm-services', 'profitable'));
+  assert.ok(Math.abs(alt.value - 0.25) < 1e-9, `legacy value=${alt.value}`);
 });
 
 // ── Lampen ─────────────────────────────────────────────────────────────────────────

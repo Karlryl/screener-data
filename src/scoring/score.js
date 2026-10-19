@@ -1457,7 +1457,8 @@ function produceRankings(results, opts = {}) {
       ticker: e.ticker, score: round1(e.score), track: e.track, lamps: e.lamps,
       // audit/fix (Bug 8): skalenbewusst runden. audit/fix (Bug 23): companion (Rule-of-X) durchreichen
       // (Prozent-Skala ~0-300 -> round1). Wird berechnet, ging aber bisher im Datenvertrag verloren.
-      overview: e.overview ? { kind: e.overview.kind, value: roundOverviewValue(e.overview), companion: round1(e.overview.companion) } : null,
+      // P267 (G31 switch): the period of exactly this value travels with it; null for kinds without a period.
+      overview: e.overview ? { kind: e.overview.kind, value: roundOverviewValue(e.overview), companion: round1(e.overview.companion), period: e.overview.period ?? null } : null,
       ...rowMeta(e), ...breakdown(e), // 2.11 Stufe A: scoreBase + factors{shrink,burn,growth,cycle}
       // audit/fix (D1/D2): rohen Score zum Sortieren behalten, NUR fuer die Anzeige runden.
       // Sortiert man das gerundete Feld, entstehen kuenstliche round1-Ties, die JS-stable-sort
@@ -1470,6 +1471,7 @@ function produceRankings(results, opts = {}) {
       // audit/fix (Bug 8): skalenbewusst; audit/fix (Bug 23): companion durchreichen.
       overviewKind: e.overview ? e.overview.kind : null, overviewValue: roundOverviewValue(e.overview),
       overviewCompanion: e.overview ? round1(e.overview.companion) : null,
+      overviewPeriod: e.overview ? e.overview.period ?? null : null,
       lamps: e.lamps, ...rowMeta(e), ...breakdown(e), _raw: e.score }); // 2.11 Stufe A: scoreBase + factors
   }
   // audit/fix (D1/D2/D3): roher Score + deterministischer Ticker-Tie-Break VOR dem Slicen,

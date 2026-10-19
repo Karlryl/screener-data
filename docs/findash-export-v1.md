@@ -1329,6 +1329,101 @@ Produktionsschalter. Ohne diesen Aufruf laufen die bisherigen Achsen unveränder
 Der Formellauf beginnt mit der geprüften Auslieferung und endet nach höchstens
 vier Wochen. Eine Umschaltung benötigt die separate unabhängige Prüfung und Entscheidung.
 
+# G31-Umschaltung (18.10.2026)
+
+Karls Entscheidung G31 vom 11.10.2026 ist umgesetzt: Die Boards zeigen je Firma die neuesten
+gemeldeten Zahlen, beschriftet mit ihrem Zeitraum. Der V1-Kandidat aus P184 ist jetzt die
+Produktionsrechnung; die Sätze der P184-Ergänzung, dass V1 weder Score noch Rang ändert und dass
+ohne Messaufruf die bisherigen Achsen laufen, gelten ab diesem Stand nicht mehr.
+
+**Ein Kandidat für alles.** Umsatzwachstum, Wertung und Etikett lesen dieselbe Auswahl
+`g31Shadow(snapshot).v1`: das neueste gültige Quartal gegen sein Vorjahresquartal oder das
+validierte Geschäftsjahr (neuerer Jahresdatensatz mit Fingerabdruck, sonst `annualRev[0]` gegen
+`annualRev[1]`). Ein späteres belegtes Ende gewinnt, ein gleiches Ende behält das Quartal. Bei
+datierten Endpunkten darf eine leere Zwischenzeile fehlen; undatierte Reihen behalten die
+Lückenprüfung. Zurückgehaltene Zellen bleiben leer, ein Vorjahreswert muss positiv sein,
+ausdrückliche Währungsangaben der beiden Werte müssen übereinstimmen. Davon abhängig:
+
+- `revGrowthYoYPct` mit `revGrowthBasis`, `revGrowthPeriodEnd`, `revGrowthPriorPeriodEnd` und den
+  beiden Quellenden (unveränderte Felder, neue Auswahl; Basiswerte wie bisher
+  `quarter`/`year`/`yearNewerRecord`/`none`, neu `halfYear` nach dem P267-Nachtrag),
+- die Achse `revGrowthLevel`, `ruleOfX` und der Wachstumsbonus; dessen Jahresbestandteil nutzt das
+  validierte neuere Geschäftsjahr auch neben einem Quartal (Mittelwert und Begrenzung unverändert),
+- Rule of 40: Wachstum, Basisquartal- und Basisjahr-Tor sowie das Frische-Tor, das jetzt das Ende
+  des Zeitraums der angezeigten Zahl prüft (`quartalsEnde` nennt diesen Zeitraum),
+- die Übersicht: `overview.value` beziehungsweise `overviewValue` für `gp` und `revenue-badge` ist
+  der beschriftete Kandidat aus `overviewShadow` (Bruchteil, keine Prozentzahl). Sein Zeitraum steht
+  in `overviewPeriod` (P267-Nachtrag unten). `g31OverviewShadow` ist eine eigene Nachrechnung mit
+  eigenem Wert; sein `period` gehört nur zu `g31OverviewShadow.value` und ist kein Etikett für
+  `overview.value`. `ffo-badge` und `runway-badge` sind unverändert.
+
+`g31Shadow.v1` entspricht damit den Live-Feldern; `v2` (vier gegen vier Quartale) bleibt eine
+Messvariante, die nur `withG31Variant('v2', fn)` aktiviert.
+
+**Vergleichsfelder für höchstens vier Wochen (additiv, rückwärtskompatibel, kein v2-Sprung).**
+Die bisherige Rechnung desselben Snapshots steht daneben, damit findash alt und neu zeigen kann:
+
+| Feld | Zeilen | Inhalt |
+|---|---|---|
+| `revGrowthYoYPctLegacy` | HG, Quality, Smallcap, Überblicke, Survival, Rule of 40 | bisheriges ungeklemmtes Umsatzwachstum in Prozent oder `null`; in Rule of 40 wie `revGrowthYoYPct` auf eine Stelle gerundet |
+| `revGrowthBasisLegacy` | wie oben | bisherige Basis (`quarter`/`year`/`yearNewerRecord`/`none`) oder `null` |
+| `revGrowthPeriodEndLegacy`, `revGrowthPriorPeriodEndLegacy` | wie oben | ISO-Tag oder `null` |
+| `overviewValueLegacy` | Board- und Überblickszeilen (Rule of 40 aus der Board-Zeile) | bisheriger Übersichtswert für `gp`/`revenue-badge` als Bruchteil, auf drei Stellen gerundet, sonst `null` |
+
+Die Felder werden nur gesetzt, wenn der vom Schreiber gelesene Snapshot die exportierte Live-Zahl
+reproduziert; sonst stehen sie auf `null` (wie ein unbeschriftetes Wachstum). Ein zurückgehaltener
+Übersichtswert hat auch keinen Vergleichswert. Es sind reine Anzeigefelder: kein Score, kein Rang
+und keine Mitgliedschaft liest sie. `--check` prüft die vier Wachstumsfelder nach denselben Regeln
+wie das Live-Etikett (alle vier oder keines, bekannte Basis, ISO-Tage, `none` genau ohne Zahl) und
+`overviewValueLegacy` als Zahl oder `null`; je Board-Datei tragen alle Zeilen das Feld oder keine.
+Ältere Exporte ohne die Felder bleiben gültig. Das Entfernen nach höchstens vier Wochen ist eine
+eigene, angekündigte Vertragsänderung.
+
+Die bisherige Rechnung ist nur über `withG31Variant('legacy', fn)` erreichbar; es gibt keinen
+Umgebungs- oder Produktionsschalter. Vorher/Nachher auf dem Datenstand 17.10.2026:
+`docs/g31-umschaltung-vorher-nachher-2026-10-17.md`.
+
+## P267-Nachtrag (18.10.2026): Zeitraum am Wert, Halbjahre, Prüfhinweis
+
+Alle Felder sind additiv und optional; ältere Exporte ohne sie bleiben gültig. Sie stehen am
+Zeilenende vor `g31Shadow` und `g31OverviewShadow`.
+
+| Feld | Zeilen | Inhalt |
+|---|---|---|
+| `overviewPeriod` | Board- und Überblickszeilen, Rule of 40 aus der Board-Zeile | Zeitraum genau des angezeigten Übersichtswerts: `{basis, periodEnd, priorPeriodEnd, reason}` für `gp`/`revenue-badge`, sonst `null` |
+| `overviewPeriodLegacy` | wie oben | derselbe Aufbau für `overviewValueLegacy` aus der bisherigen Rechnung, sonst `null` |
+| `g31Hinweis` | HG, Quality, Smallcap, Überblicke, Rule of 40 | `{code, reason}` oder `null`; Prüfhinweis zum angezeigten Umsatzwachstum |
+
+**`overviewPeriod`.** Die Rechnung gibt den Zeitraum zusammen mit dem Wert aus (`overviewMetric` →
+Score-Ausgabe → Schreiber); der Schreiber leitet ihn nicht neu her. `basis` ist `quarter`,
+`halfYear`, `ttm`, `year`, `yearNewerRecord` oder `none`; die Enden sind ISO-Tage oder `null`. Wo der
+Schreiber denselben Kandidaten aus seinem Snapshot nachrechnet, müssen Wert (auf drei Stellen
+gerundet), Basis und Ende übereinstimmen; sonst lautet das Feld `basis: 'none'` ohne Enden mit dem
+Grund „Zeitraum nicht bestätigt: Der Datenstand des Exports ergibt für diese Firma einen anderen
+Wert oder Zeitraum.“ Ein zurückgehaltener Übersichtswert trägt `basis: 'none'` mit dem Haltegrund;
+Vergleichswert, Vergleichszeitraum und der Schattenwert in `g31OverviewShadow` sind dann ebenfalls
+leer, kein Schatten füllt ein gehaltenes Feld. `basis: 'none'` steht nie ohne Grund.
+
+**Halbjahre.** Sind beide Werte eines Paars in `meta.statementPeriods` ausdrücklich als `6M`
+gespeichert (Liste so lang wie die Reihe, Ende gleich dem Quellenende), heißt die Basis `halfYear`
+und das Etikett „Halbjahr bis …“; das gilt für Umsatz (`revGrowthBasis`) und GP. Ausdrücklich
+verschiedene Dauern (`6M` gegen `3M`) bilden kein Paar. Eine fehlende oder nicht zuordenbare Dauer
+gilt nicht als Widerspruch und wird nicht erfunden. Am 17.10.2026 waren alle 1.198 neu zugelassenen
+Quartalspaare als `3M/3M` gespeichert; `halfYear` kam nicht vor.
+
+**`g31Hinweis` (Prüfhinweis, Master-Entscheidung 18.10.2026).** Nur Diagnose: Er sperrt und ändert
+keinen Wert, keinen Score und keinen Rang; falsche Werte hält allein die Handtabelle
+(`configs/financial-known-cases.json`). Er steht nur, wo der Snapshot die angezeigte Umsatzzahl
+reproduziert. Zuerst gilt ein geprüfter Eintrag aus `configs/g31-hinweise.json` für genau diese
+Notierung und genau diese beiden Quellenenden (`code` `uebernahme` oder `saisonbasis`, Grund mit
+Prüfdatum, Quelle mit Seite und Zitat); kommt ein neueres Quartal, entfällt er von selbst. Sonst
+wird nur ein neu zugelassenes datiertes Paar mit leerer Zwischenzeile gegen das passende volle
+Geschäftsjahr derselben Einheit und Währung geprüft: neuester Wert über 75 % des Jahresumsatzes
+(`aktuell-gross`), Vorjahreswert unter 6,25 % (`vorjahr-klein`) oder die gespeicherten Quartale des
+Jahres zusammen über 125 % (`quartalssumme`). Das sind technische Hinweisgrenzen, keine von Karl
+festgelegten Ausschlussregeln; der Grund sagt ausdrücklich, dass der Wert weder gesperrt noch gegen
+den Firmenbericht geprüft ist.
+
 ## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
 
 This is an additive feed under section 7, with no v2 bump and no change to

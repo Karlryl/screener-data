@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const { isDeepStrictEqual } = require('node:util');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -56,6 +57,7 @@ const LOADED_UNIVERSE = 14801;
 
 const formulas = require(path.join(REPO, 'src', 'scoring', 'formulas'));
 const axesFns = require(path.join(REPO, 'src', 'scoring', 'axes.js'));
+const { g31Shadow, quarterCandidate } = require(path.join(REPO, 'lib', 'g31-recency.js'));
 const { q, signTrack } = require(path.join(REPO, 'src', 'scoring', 'engine.js'));
 const { norm } = require(path.join(REPO, 'src', 'scoring', 'snapshot.js'));
 const {
@@ -210,7 +212,7 @@ function sourceHashes(file) {
 // wirft), statt still das Fenster zu schliessen oder zu oeffnen. Zwei offene
 // Uebergaenge sind ein Befund, kein Zustand.
 const PROTOCOL_DIR = path.join(REPO, 'protocol', 'gqs-00');
-function pendingTransitionHashes() {
+function pendingTransitionHashes(field = 'sourceFiles') {
   const dirs = (fs.existsSync(PROTOCOL_DIR) ? fs.readdirSync(PROTOCOL_DIR, { withFileTypes: true }) : [])
     .filter((e) => e.isDirectory() && e.name.endsWith('-pending')).map((e) => e.name)
     // Ein Verzeichnis OHNE transition.json ist keine Genehmigung, sondern ein leerer Rest
@@ -223,8 +225,24 @@ function pendingTransitionHashes() {
   if (!doc || doc.status !== 'pending' || !doc.sourceFiles) return {};
   assert(doc.from === CANONICAL_ID, 'offener Uebergang ' + dirs[0] + ' fuehrt aus ' + doc.from
     + ' heraus, versiegelt ist aber ' + CANONICAL_ID);
-  return doc.sourceFiles;
+  // field 'goldenTraces' (G31 switch 18.10.2026): caseId -> sha256Canonical of the one approved
+  // rebuilt trace of a golden case that the transition's formula change moves (verify() below).
+  return doc[field] || {};
 }
+
+/** A registered second golden trace (P267) passes only as strict JSON, so NaN, Infinity or undefined cannot hide
+ * behind the canonical hash (JSON folds them into null), and only with exactly its registered hash.
+ * @param {object} trace Rebuilt trace.
+ * @param {string|undefined} hash Registered canonical SHA-256 of that trace.
+ * @returns {boolean} Whether the open transition approves this trace.
+ */
+function acceptsPendingTrace(trace, hash) {
+  return typeof hash === 'string' && isDeepStrictEqual(JSON.parse(JSON.stringify(trace)), trace) && sha256Canonical(trace) === hash;
+}
+
+// P267: productive libraries outside src/scoring that the open transition must register by hash.
+// P267-r2: annual-pairs.js supplies the dated fiscal-year ends and pair checks the selection reads.
+const REQUIRED_DEPENDENCIES = Object.freeze(['lib/g31-recency.js', 'lib/annual-pairs.js']);
 
 function walkFiles(dir) {
   const out = [];
@@ -414,7 +432,11 @@ function traceForCase(fixture, calibration, registry, registryHash) {
     };
   });
   const ebScore = shrinkToNeutral(result._scoreBase, result.cohortN);
-  const revQuarterly = axesFns.revQuartalsYoY(snapshot);
+  // G31 switch (18.10.2026): the axis reads the shared candidate g31Shadow(s).v1, so the trace names
+  // that leg. The quarterly raw value is the candidate's own ratio (the legacy expression, so an
+  // unchanged quarter pair stays bit-identical); without a quarter candidate it is null as before.
+  const g31Leg = g31Shadow(snapshot).v1, g31Quarter = quarterCandidate(snapshot);
+  const revQuarterly = g31Quarter.pct === null ? null : g31Quarter.current / g31Quarter.prior - 1;
   // Tag 1391: the annual fallback of revGrowthLevel reads a valid meta.annualRevNewerYear record
   // (axes.js revAnnualLegYoY); the trace names what the axis actually used. Golden fixtures carry
   // no record, so the sealed 1.1.0 traces are rebuilt byte-identically.
@@ -433,7 +455,7 @@ function traceForCase(fixture, calibration, registry, registryHash) {
       parentFallback: result.cohortFallback,
     },
     periodSelection: {
-      revGrowthLevel: revQuarterly !== null ? 'quarterly_yoy' : (revAnnual !== null ? 'annual_fallback' : 'missing'),
+      revGrowthLevel: ['quarter', 'halfYear'].includes(g31Leg.basis) ? 'quarterly_yoy' : (g31Leg.pct !== null ? 'annual_fallback' : 'missing'),
       quarterlyYoYRaw: revQuarterly,
       annualYoYRaw: revAnnual,
     },
@@ -611,6 +633,15 @@ function verify() {
       rel + ' differs from its sealed source hash'
       + (pendingSource[rel] ? ' AND from its approved pending-transition hash' : ''));
   }
+  // P267: the G31 selection library is productive but lies outside src/scoring; while a transition is open it must
+  // be registered with its fingerprint (dependencyFiles) and match it. The historical sealed source set is untouched.
+  const pendingDeps = pendingTransitionHashes('dependencyFiles');
+  if (Object.keys(pendingSource).length) {
+    for (const rel of REQUIRED_DEPENDENCIES) assert(rel in pendingDeps, 'transition.json registriert die produktive Abhaengigkeit nicht: ' + rel);
+  }
+  for (const [rel, hash] of Object.entries(pendingDeps)) {
+    assert(sourceHashes(path.join(REPO, rel)).includes(hash), rel + ' differs from its registered dependency hash');
+  }
   const registryWithoutSourceHashes = structuredClone(registry);
   const rebuiltWithoutSourceHashes = structuredClone(rebuiltRegistry);
   registryWithoutSourceHashes.immutableDefinitions.sourceFiles = sealedKeys;
@@ -631,8 +662,19 @@ function verify() {
   assert.equal(sha256Canonical(preregHashView), prereg.integrity.canonicalSha256, 'preregistration scoped hash mismatch');
 
   const rebuiltTraces = fixtures.cases.map((fixture) => traceForCase(fixture, calibration, registry, manifest.formulaRegistrySha256));
-  assert.deepEqual(rebuiltTraces, committedTraces.traces, 'score traces are not deterministic');
+  assert.equal(rebuiltTraces.length, committedTraces.traces.length, 'score traces are not deterministic');
+  // Same pattern as the source hashes above: a golden case that the OPEN transition names by caseId may
+  // carry exactly one second trace, identified by the canonical hash of that rebuilt trace. Every other
+  // case stays pinned to its sealed trace and expectation; any third state stays red.
+  const pendingTraces = pendingTransitionHashes('goldenTraces');
+  for (const id of Object.keys(pendingTraces)) {
+    assert(fixtures.cases.some((fixture) => fixture.caseId === id), 'transition.json listet einen unbekannten Golden-Fall: ' + id);
+  }
   for (let i = 0; i < fixtures.cases.length; i++) {
+    const id = fixtures.cases[i].caseId;
+    if (pendingTraces[id] && acceptsPendingTrace(rebuiltTraces[i], pendingTraces[id])) continue;
+    assert.deepEqual(rebuiltTraces[i], committedTraces.traces[i], 'score traces are not deterministic: ' + fixtures.cases[i].ticker
+      + (pendingTraces[id] ? ' differs from its sealed AND from its approved pending-transition trace' : ''));
     assert.deepEqual(expectedFromTrace(rebuiltTraces[i]), fixtures.cases[i].expected, 'golden fixture mismatch for ' + fixtures.cases[i].ticker);
   }
   const tie = fixtures.syntheticCases.find((entry) => entry.kind === 'percentile_midrank_tie');
@@ -694,5 +736,5 @@ if (require.main === module) {
 
 module.exports = {
   FREEZE_DIR, buildRegistry, canonicalStringify, sha256Canonical, sourceHashes,
-  traceForCase, initialize, seal, verify,
+  traceForCase, initialize, seal, verify, acceptsPendingTrace,
 };

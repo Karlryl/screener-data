@@ -41,6 +41,8 @@ function mapperModule(source, samples) {
     safeSnapshotFilename: ticker => ticker + '.json', prepareYahooQ4Snapshot: snap => snap,
     financialReasons: snap => snap?.meta?.reasons || [], captureSnapshot: snap => snap,
     revGrowthLeg: () => null, fcfSchattenJeAlpha: () => null, annualPairsShadowForSnapshot: () => null,
+    withG31Variant: () => null, overviewMetric: () => ({ value: null }), // G31 comparison fields stay inert here too.
+    g31Variant: () => 'v1', // P267-r3: the derivation cache key names the active arm.
     _dupIssuerShadow: new Map(), _valueFlags: new Map(), applyDupIssuerShadow: () => {},
     rankGrundShadowFor: () => null, athFor: () => null,
     overviewGrowthHold: () => null, applyOverviewHold: row => row, // P186 hold stays inert here, like the other shadows.

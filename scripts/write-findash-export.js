@@ -311,10 +311,13 @@ let _mcapGenullt = 0, _mcapGeprueft = 0, _mcapVerworfen = 0;
 // Zwei getrennte Caches hiessen zwei Lesevorgaenge ueber ~9.000 Ticker fuer dieselbe Datei.
 const _snapCache = new Map();
 const marketCapGuard = require('../lib/market-cap-guard.js');
-const { g31Export, g31Variant = () => null, g31Last = row => row } = require('../lib/g31-recency.js');
+const { g31Export, g31Variant = () => null, g31Last = row => row, withG31Variant = (variant, fn) => fn() } = require('../lib/g31-recency.js');
+const { overviewMetric } = require('../src/scoring/overview.js');
+const round3 = (x) => (Number.isFinite(x) ? Math.round(x * 1000) / 1000 : null); // = score.js round3 of overview values
 function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
   const snapshotDir = snapshotStore === 'smallcap' ? SMALLCAP_SNAP_DIR : SNAP_DIR;
-  const cacheKey = `${snapshotDir}:${ticker}`;
+  // P267-r3: the derivations depend on the active G31 arm (overviewLive, wachstum), so the arm is part of the key.
+  const cacheKey = `${snapshotDir}:${ticker}:${g31Variant() ?? 'legacy'}`;
   if (_snapCache.has(cacheKey)) return _snapCache.get(cacheKey);
   let snap = null, snapFehler = null;
   try {
@@ -336,6 +339,15 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     correctedMarketCap: marketCapGuard.table[ticker] ? snap?.marketCap?.value : null,
     overviewHold: overviewGrowthHold(ticker, snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
+    // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values.
+    wachstumLegacy: snap ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
+    overviewLegacy: snap ? withG31Variant('legacy', () => {
+      const pick = m => ({ value: m.value, period: m.period ?? null });
+      return { gp: pick(overviewMetric(snap)), 'revenue-badge': pick(overviewMetric(snap, { gpClass: 'degenerate' })) };
+    }) : null,
+    // P267-r2: the live overview value and its period re-derived in the ACTIVE arm (v1 in production, the old
+    // calculation inside withG31Variant('legacy')); the label check compares against exactly this candidate.
+    overviewLive: snap ? { gp: overviewMetric(snap), 'revenue-badge': overviewMetric(snap, { gpClass: 'degenerate' }) } : null,
     ...(typeof g31Export === 'function' ? g31Export(snap) : { g31Shadow: null, g31Overview: {} }),
     fcfSchatten: snap ? fcfSchattenJeAlpha(snap, ticker) : null, // P87, additiv
     // Shared mappers only read existing derivations; HG builders request this once.
@@ -374,20 +386,67 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     derivations = snapAbleitungenFuer(out.ticker, 'smallcap');
     leg = derivations.wachstum;
   }
+  const passt = leg && leg.pct === wert;
   if (!Object.hasOwn(out, 'runwayQuarters')) {
     out.g31Shadow = derivations.g31Shadow;
     out.g31OverviewShadow = derivations.g31Overview[out.overview?.kind || out.overviewKind] ?? null;
+    // P267 rule 1: review hint for a newly admitted B1 pair, only where this snapshot reproduces the shown growth.
+    out.g31Hinweis = passt ? derivations.g31Hinweis ?? null : null;
   }
-  const passt = leg && leg.pct === wert;
   if (!passt) _wachstumOhneEtikett++;
   out.revGrowthBasis = passt ? leg.basis : null;
   out.revGrowthPeriodEnd = passt ? leg.periodEnd : null;
   out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
   out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
   out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
+  // G31 switch (18.10.2026): the pre-G31 numbers of the SAME snapshot as comparison fields for at
+  // most four weeks, set only where that snapshot reproduces the exported live number (otherwise
+  // null, like an unlabelled row). Display only: no score, rank or membership reads them.
+  const alt = passt && (derivations.wachstum?.pct ?? null) === wert ? derivations.wachstumLegacy : null;
+  out.revGrowthYoYPctLegacy = alt ? alt.pct : null;
+  out.revGrowthBasisLegacy = alt ? alt.basis : null;
+  out.revGrowthPeriodEndLegacy = alt ? alt.periodEnd : null;
+  out.revGrowthPriorPeriodEndLegacy = alt ? alt.priorPeriodEnd : null;
+  const flat = Object.hasOwn(out, 'overviewKind');
+  if (flat || Object.hasOwn(out, 'overview')) { // board and overview rows; survival rows carry no overview
+    const kind = flat ? out.overviewKind : out.overview?.kind;
+    const shown = flat ? out.overviewValue : out.overview?.value ?? null;
+    const again = derivations.overviewLive?.[kind];
+    const neu = again?.value;
+    const gleich = neu !== undefined && (neu === null ? shown === null : round3(neu) === shown);
+    const alt = gleich && derivations.overviewLegacy ? derivations.overviewLegacy[kind] : null;
+    out.overviewValueLegacy = alt ? round3(alt.value) : null;
+    out.overviewPeriodLegacy = alt ? alt.period : null;
+    // P267: the live label is the period the engine carried with exactly this value. Where this export's own
+    // snapshot re-derives the candidate, value (same output rounding), basis and end must agree; otherwise the
+    // label is emptied with its reason instead of pairing a value with another number's period.
+    if (Object.hasOwn(out, 'overviewPeriod')) {
+      let label = overviewPeriodFor(kind, out.overviewPeriod);
+      if (label && label.basis !== 'none' && derivations.wachstum && again?.period
+          && (!gleich || again.period.basis !== label.basis || (again.period.periodEnd ?? null) !== label.periodEnd
+            || (again.period.priorPeriodEnd ?? null) !== label.priorPeriodEnd)) {
+        label = { basis: 'none', periodEnd: null, priorPeriodEnd: null, reason: OVERVIEW_PERIOD_UNCONFIRMED };
+      }
+      out.overviewPeriod = label;
+    }
+  }
   return out;
 }
 function wachstumOhneEtikett() { return _wachstumOhneEtikett; }
+const OVERVIEW_PERIOD_UNCONFIRMED = 'Zeitraum nicht bestätigt: Der Datenstand des Exports ergibt für diese Firma einen anderen Wert oder Zeitraum.';
+/** Exported label of the overview value (P267): the engine's period for gp/revenue-badge, otherwise null; an
+ * engine row without a period gets an empty label with its reason instead of a borrowed one.
+ * @param {string|null|undefined} kind Overview kind of the row.
+ * @param {object|null|undefined} period Period carried by the engine with the value.
+ * @returns {object|null} {basis, periodEnd, priorPeriodEnd, reason} or null.
+ */
+function overviewPeriodFor(kind, period) {
+  if (kind !== 'gp' && kind !== 'revenue-badge') return null;
+  if (!period || typeof period !== 'object' || typeof period.basis !== 'string') {
+    return { basis: 'none', periodEnd: null, priorPeriodEnd: null, reason: 'Zeitraum nicht übermittelt: die Zeile stammt aus einer Rechnung ohne Zeitraumangabe.' };
+  }
+  return { basis: period.basis, periodEnd: period.periodEnd ?? null, priorPeriodEnd: period.priorPeriodEnd ?? null, reason: period.reason ?? null };
+}
 
 // Beweis-Frage, bewusst eng: wurde die marketCap dieser Zeile von der HANDELS-Waehrung
 // nach USD gebracht? Vier Wege zaehlen als Beleg, alles andere ist unbelegt.
@@ -750,6 +809,11 @@ function applyOverviewHold(out, snapshotStore) {
   if (!hold || (Number.isFinite(hold.expectedValue) && value === hold.expectedValue)) return out;
   if (flat) out.overviewValue = null;
   else out.overview.value = null;
+  // A held value has no label, comparison or shadow value either (P267: no shadow refills a held field).
+  if (Object.hasOwn(out, 'overviewPeriod')) out.overviewPeriod = { basis: 'none', periodEnd: null, priorPeriodEnd: null, reason: hold.reason };
+  if (Object.hasOwn(out, 'overviewValueLegacy')) out.overviewValueLegacy = null;
+  if (Object.hasOwn(out, 'overviewPeriodLegacy')) out.overviewPeriodLegacy = null;
+  if (out.g31OverviewShadow) out.g31OverviewShadow = { value: null, reason: hold.reason };
   out.financialDataReasons = [...new Set([...(out.financialDataReasons || []), hold.reason])];
   return out;
 }
@@ -769,6 +833,7 @@ function mapBoardRow(r, i, snapshotStore, marketCapFloor) {
       value: r.overview.value,         // number|null, CAN be negative (YoY shrink)
       companion: r.overview.companion, // number|null (Rule-of-X companion)
     },
+    overviewPeriod: r.overview == null ? null : r.overview.period ?? null, // P267: label of exactly this value (trailing key)
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
@@ -791,6 +856,7 @@ function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
     overviewValue: r.overviewValue,         // number|null, CAN be negative
     overviewCompanion: r.overviewCompanion, // number|null
     lamps: r.lamps || [],
+    overviewPeriod: r.overviewPeriod ?? null, // P267: label of exactly this value (trailing key)
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
@@ -1503,14 +1569,42 @@ function checkShareDilution(r, where, errs) {
 // (Zahl liess sich nicht nachrechnen); dann darf auch kein Zeitraum dastehen.
 const REV_GROWTH_FELDER = ['revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthPriorPeriodEnd'];
 const REV_GROWTH_SOURCE_FELDER = ['revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd'];
+// G31 switch (18.10.2026): the pre-G31 comparison fields. Absent on older exports; when present,
+// all four together and under exactly the rules of the live label (checked on a renamed view).
+const REV_GROWTH_LEGACY = Object.freeze({ revGrowthYoYPct: 'revGrowthYoYPctLegacy', revGrowthBasis: 'revGrowthBasisLegacy',
+  revGrowthPeriodEnd: 'revGrowthPeriodEndLegacy', revGrowthPriorPeriodEnd: 'revGrowthPriorPeriodEndLegacy' });
+// P267: label of the overview value and of its comparison value. Absent on older exports; when present an object
+// {basis, periodEnd, priorPeriodEnd, reason} or null, ISO days, no dates on 'none', an empty label always with its reason.
+const OVERVIEW_PERIOD_BASES = Object.freeze(['quarter', 'halfYear', 'year', 'yearNewerRecord', 'ttm', 'none']);
+function checkOverviewPeriods(r, where, errs) {
+  const live = r.overview && typeof r.overview === 'object' ? r.overview.value : r.overviewValue;
+  for (const [key, value] of [['overviewPeriod', live], ['overviewPeriodLegacy', r.overviewValueLegacy]]) {
+    if (!(key in r) || r[key] === null) continue;
+    const p = r[key];
+    if (typeof p !== 'object' || Array.isArray(p) || !OVERVIEW_PERIOD_BASES.includes(p.basis)
+        || !['periodEnd', 'priorPeriodEnd', 'reason'].every(k => k in p)) { errs.push(`${where}: ${key}=${JSON.stringify(p)} keine Zeitraumangabe`); continue; }
+    for (const k of ['periodEnd', 'priorPeriodEnd']) if (p[k] !== null && isoTag(p[k]) !== p[k]) errs.push(`${where}: ${key}.${k}=${JSON.stringify(p[k])} kein ISO-Tag|null`);
+    if (p.reason !== null && typeof p.reason !== 'string') errs.push(`${where}: ${key}.reason kein Text|null`);
+    if (p.basis === 'none' && (p.periodEnd !== null || p.priorPeriodEnd !== null)) errs.push(`${where}: ${key} 'none' mit Datum`);
+    if (p.basis === 'none' && !p.reason) errs.push(`${where}: ${key} 'none' ohne Grund`);
+    if ((value ?? null) === null && p.basis !== 'none' && !p.reason) errs.push(`${where}: ${key} Zeitraum ohne Wert und ohne Grund`);
+  }
+}
 function checkRevGrowthBasis(r, where, errs) {
+  const alt = Object.entries(REV_GROWTH_LEGACY).filter(([, k]) => k in r);
+  if (alt.length && alt.length !== 4) errs.push(`${where}: revGrowth*Legacy nur teilweise vorhanden`);
+  else if (alt.length) {
+    const v = r.revGrowthYoYPctLegacy;
+    if (v !== null && !Number.isFinite(v)) errs.push(`${where}: revGrowthYoYPctLegacy=${JSON.stringify(v)} keine Zahl|null`);
+    checkRevGrowthBasis(Object.fromEntries(alt.map(([live, k]) => [live, r[k]])), `${where} [Legacy]`, errs);
+  }
   const da = REV_GROWTH_FELDER.filter((k) => k in r).length;
   const quellenDa = REV_GROWTH_SOURCE_FELDER.filter((k) => k in r).length;
   if (da === 0 && quellenDa === 0) return;
   if (da !== REV_GROWTH_FELDER.length) { errs.push(`${where}: revGrowthBasis/PeriodEnd/PriorPeriodEnd nur teilweise vorhanden`); return; }
   if (quellenDa !== 0 && quellenDa !== REV_GROWTH_SOURCE_FELDER.length) errs.push(`${where}: revGrowthSourcePeriodEnd/SourcePriorPeriodEnd nur teilweise vorhanden`);
   const b = r.revGrowthBasis;
-  if (b !== null && !REV_GROWTH_BASES.includes(b) && !(g31Variant() && b === 'ttm')) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)}`);
+  if (b !== null && !REV_GROWTH_BASES.includes(b) && !(g31Variant() === 'v2' && b === 'ttm')) errs.push(`${where}: revGrowthBasis=${JSON.stringify(b)}`);
   for (const k of [...REV_GROWTH_FELDER.slice(1), ...REV_GROWTH_SOURCE_FELDER.filter(k => k in r)]) {
     if (r[k] !== null && isoTag(r[k]) !== r[k]) errs.push(`${where}: ${k}=${JSON.stringify(r[k])} kein ISO-Tag|null`);
     if (r[k] !== null && (b === null || b === 'none')) errs.push(`${where}: ${k} gesetzt bei revGrowthBasis=${JSON.stringify(b)}`);
@@ -1587,7 +1681,9 @@ function validateGeo(r, where, errs) {
   // eine Zeile hoeher voll geprueft wird; die Asymmetrie war unbegruendet.
   checkOptionalSpanneOrNull(r, 'qSpanTage', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
-  checkRevGrowthBasis(r, where, errs);                              // 01.10. additiv OPTIONAL
+  checkOptionalNumOrNull(r, 'overviewValueLegacy', where, errs);   // G31 switch 18.10. additiv OPTIONAL
+  checkOverviewPeriods(r, where, errs);                             // P267 additiv OPTIONAL
+  checkRevGrowthBasis(r, where, errs);                             // 01.10. additiv OPTIONAL
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
   checkEinmalertragBewertbarkeit(r, where, errs);                   // Urteil 16.08. additiv OPTIONAL
@@ -1889,6 +1985,9 @@ function validateFile(mk, kind, errs, opts = {}) {
   checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
   checkFeldHomogen(alleZeilen, 'shareDilution', kind, errs);
   checkFeldHomogen(alleZeilen, 'revGrowthBasis', kind, errs);
+  checkFeldHomogen(alleZeilen, 'revGrowthBasisLegacy', kind, errs);
+  checkFeldHomogen(alleZeilen, 'overviewValueLegacy', kind, errs);
+  checkFeldHomogen(alleZeilen, 'overviewPeriod', kind, errs);
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
   checkRankSequence(mk.profitable, `${kind}.profitable`, errs);
@@ -2320,7 +2419,7 @@ module.exports = {
   // tests/belegpunkte.test.js FUEHRT sie aus, statt den Quelltext nach Mustern abzusuchen.
   belegPunkte,
   // 01.10.: Basis/Zeitraum des Umsatzwachstums (tests/rev-growth-basis.test.js FUEHRT es aus).
-  ergaenzeWachstumsBasis, checkRevGrowthBasis, wachstumOhneEtikett,
+  ergaenzeWachstumsBasis, checkRevGrowthBasis, checkOverviewPeriods, wachstumOhneEtikett,
   // Tag 1401: valueFlags loader seam (tests/value-flags.test.js runs the mappers with a fixture list).
   ladeValueFlags, checkValueFlags,
   ladeMcapClassesRegistry, ergaenzeMarketCapClassesShadow,

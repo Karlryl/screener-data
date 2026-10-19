@@ -32,17 +32,19 @@ const newer = s => { s.meta.annualRevNewerYear = { end: '2026-08-31', priorEnd: 
 test('B1: dated endpoints survive an empty intermediate row, matching its absent-row twin', () => {
   const s = snapshot(), before = JSON.stringify(s), twin = structuredClone(s);
   twin.timeseries.revenueQ.splice(1, 1); twin.timeseries.revenueQEnds.splice(1, 1);
-  close(axes.revGrowthLevel(s), 50);
+  // G31 switch 18.10.2026: production is the v1 arm; the pre-G31 value stays reachable as 'legacy'.
+  close(axes.revGrowthLevel(s), 100);
   close(G.g31Shadow(s).v1.pct, 100);
   assert.deepEqual(G.g31Shadow(s).v1, G.g31Shadow(twin).v1);
   assert.equal(JSON.stringify(s), before);
-  close(G.withG31Variant('v1', () => axes.revGrowthLevel(s)), 100);
-  close(axes.revGrowthLevel(s), 50);
+  close(G.withG31Variant('legacy', () => axes.revGrowthLevel(s)), 50);
+  close(axes.revGrowthLevel(s), 100);
 });
 
 test('B2: later validated annual wins; equal dates retain the quarter', () => {
   const s = newer(snapshot()); s.timeseries.revenueQ[1] = 100;
-  close(axes.revGrowthLevel(s), 100);
+  close(G.withG31Variant('legacy', () => axes.revGrowthLevel(s)), 100);
+  close(axes.revGrowthLevel(s), 20);
   const selected = G.g31Shadow(s).v1;
   close(selected.pct, 20); assert.equal(selected.basis, 'yearNewerRecord');
   assert.equal(selected.label, 'Geschäftsjahr bis 31.08.2026');
@@ -52,9 +54,9 @@ test('B2: later validated annual wins; equal dates retain the quarter', () => {
 
 test('B3: bonus uses the validated newer annual component even with a quarter', () => {
   const s = newer(snapshot()); s.timeseries.revenueQ[1] = 100;
-  close(robustG(s), 0.75);
+  close(G.withG31Variant('legacy', () => robustG(s)), 0.75);
   close(G.withG31Variant('v1', () => robustG(s)), 0.6);
-  close(robustG(s), 0.75);
+  close(robustG(s), 0.6);
 });
 
 test('V2 sums eight complete consecutive quarters, and never substitutes an annual value', () => {
@@ -157,19 +159,25 @@ test('exchange policy stays fill-only: fill a missing value, retain a differing 
   const run = ticker => X.applyExchangeCheck(structuredClone(F.snapshots[ticker]), { mode: 'fill-only', context });
   const fill = run('000002.SZ'); assert.equal(fill.result.category, 'would-fill');
   assert.notDeepEqual(fill.snapshot, F.snapshots['000002.SZ']);
-  const mismatch = run('000599.SZ'); assert.match(mismatch.result.category, /^would-withhold/);
-  assert.deepEqual(mismatch.snapshot, F.snapshots['000599.SZ']);
+  // 000599.SZ is owned by the hand table since the G31 switch (P268); 000564.SZ is the same level mismatch.
+  const mismatch = run('000564.SZ'); assert.match(mismatch.result.category, /^would-withhold/);
+  assert.deepEqual(mismatch.snapshot, F.snapshots['000564.SZ']);
 });
 
-test('B4/B5 export newest labelled shadows while the live overview retains its old values', () => {
+test('B4/B5: the live overview shows the newest labelled candidate; legacy keeps the old values', () => {
+  // G31 switch 18.10.2026: overviewMetric now equals overviewShadow; 'legacy' reproduces the pre-G31 value.
+  const legacy = (...args) => G.withG31Variant('legacy', () => overviewMetric(...args)).value;
   const s = snapshot();
   const gp = overviewShadow(s, 'gp'); close(gp.value, 2);
   assert.equal(gp.period.label, 'Quartal bis 30.06.2026');
-  close(overviewMetric(s).value, 0.2); assert.equal(Object.hasOwn(overviewMetric(s), 'period'), false);
+  close(overviewMetric(s).value, 2); close(legacy(s), 0.2);
+  // P267: the live metric carries the period of exactly its value (export shape, four keys).
+  assert.deepEqual(overviewMetric(s).period, { basis: 'quarter', periodEnd: '2026-06-30', priorPeriodEnd: '2025-06-30', reason: null });
   const rev = overviewShadow(newer(s), 'revenue-badge'); close(rev.value, 0.2);
   assert.equal(rev.period.label, 'Geschäftsjahr bis 31.08.2026');
-  close(overviewMetric(s, { gpClass: 'degenerate' }).value, 0.5);
-  s.timeseries.grossProfitQ[0] = -30; close(overviewShadow(s, 'gp').value, -2);
+  close(overviewMetric(s, { gpClass: 'degenerate' }).value, 0.2);
+  close(legacy(s, { gpClass: 'degenerate' }), 0.5);
+  s.timeseries.grossProfitQ[0] = -30; close(overviewShadow(s, 'gp').value, -2); close(overviewMetric(s).value, -2);
   s.timeseries.grossProfitQ[4] = 0; close(overviewShadow(s, 'gp').value, 0.2);
   close(overviewMetric(s).value, 0.2);
   assert.equal(overviewShadow(s, 'runway-badge'), null);
@@ -205,8 +213,10 @@ test('real ranking and mappers keep the live overview and append separate shadow
   const flat = mapOverviewRow(ranked.overview[0], 0);
   assert.equal(row.score, 75); assert.equal(row.rank, 1);
   assert.deepEqual(Object.keys(row.overview), ['kind', 'value', 'companion']);
-  assert.equal(row.overview.value, 0.2);
-  assert.equal(Object.hasOwn(flat, 'overviewPeriod'), false);
+  assert.equal(row.overview.value, 2); // G31 switch: the newest labelled GP quarter (legacy 0.2)
+  // P267: value and label travel together from the engine to both mappers.
+  assert.deepEqual(flat.overviewPeriod, row.overviewPeriod);
+  assert.equal(row.overviewPeriod.basis, 'quarter'); assert.equal(row.overviewPeriod.periodEnd, '2026-06-30');
   assert.deepEqual(row.g31OverviewShadow, flat.g31OverviewShadow);
   for (const output of [row, flat]) assert.deepEqual(Object.keys(output).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   // P184b omits unavailable V2 from delivery; the complete diagnostic remains in g31Shadow().
@@ -338,10 +348,16 @@ test('shadow failures leave every legacy mapper field intact; smallcap hand-tabl
       return snap;
     } },
   });
-  const row = { ticker: s.meta.ticker, score: 75, revGrowthYoYPct: 50, overview: overviewMetric(s), overviewKind: 'gp' };
-  const legacy = row => Object.fromEntries(Object.entries(row).filter(([key]) => !['g31Shadow', 'g31OverviewShadow'].includes(key)));
+  const row = { ticker: s.meta.ticker, score: 75, revGrowthYoYPct: 50, overview: overviewMetric(s), overviewKind: 'gp',
+    overviewValue: overviewMetric(s).value }; // the flat overview mapper reads overviewValue
+  // P267-r2: overviewValueLegacy and the overview label are verified against the live candidate re-derived in
+  // the active arm, no longer against the shadow, so a shadow failure does not decide them. They stay outside
+  // this comparison because the in-memory library copy below does not share its arm switch with the real
+  // overview module (its legacy scope cannot reach overviewMetric).
+  const legacy = row => Object.fromEntries(Object.entries(row).filter(([key]) => !['g31Shadow', 'g31OverviewShadow', 'overviewValueLegacy', 'overviewPeriodLegacy'].includes(key)));
   for (const store of ['main', 'smallcap']) for (const mapper of ['mapBoardRow', 'mapOverviewRow']) {
     const expected = writer(G)[mapper](row, 0, store);
+    close(expected.overviewValueLegacy, 0.2);
     for (const lib of [brokenGrowth, brokenOverview]) {
       const actual = writer(lib)[mapper](row, 0, store);
       assert.equal(JSON.stringify(legacy(actual)), JSON.stringify(legacy(expected)));
@@ -356,11 +372,13 @@ test('shadow failures leave every legacy mapper field intact; smallcap hand-tabl
 });
 
 test('shadow scope restores after throws, nesting and rejected async calls', () => {
-  assert.throws(() => G.withG31Variant('v1', () => { throw Error('probe'); }), /probe/);
-  assert.equal(G.g31Variant(), null);
-  G.withG31Variant('v1', () => { G.withG31Variant('v2', () => assert.equal(G.g31Variant(), 'v2')); assert.equal(G.g31Variant(), 'v1'); });
-  assert.throws(() => G.withG31Variant('v1', async () => 1), /synchronous/);
-  assert.equal(G.g31Variant(), null);
+  // G31 switch 18.10.2026: the production arm is v1; 'legacy' is the only way to the pre-G31 calculation.
+  assert.throws(() => G.withG31Variant('legacy', () => { throw Error('probe'); }), /probe/);
+  assert.equal(G.g31Variant(), 'v1');
+  G.withG31Variant('legacy', () => { G.withG31Variant('v2', () => assert.equal(G.g31Variant(), 'v2')); assert.equal(G.g31Variant(), null); });
+  assert.throws(() => G.withG31Variant('legacy', async () => 1), /synchronous/);
+  assert.throws(() => G.withG31Variant(null, () => 1), /legacy/);
+  assert.equal(G.g31Variant(), 'v1');
 });
 
 test('break-once: B1, B2 and B3 each reject an in-memory broken source; live hashes unchanged', () => {
@@ -379,8 +397,8 @@ test('break-once: B1, B2 and B3 each reject an in-memory broken source; live has
     "  if (!pair || pair.idx >= values.length || (true")), assert.AssertionError);
   assert.throws(() => checkB2(mutant('  const v1 = quarter.pct === null || newerAnnual ? annual : quarter;',
     '  const v1 = quarter.pct === null ? annual : quarter;')), assert.AssertionError);
-  const brokenBonus = mutant('  const components = leg => [annual, leg].filter(c => c.pct !== null).map(c => c.pct / 100);',
-    '  const components = leg => [leg].filter(c => c.pct !== null).map(c => c.pct / 100);');
+  const brokenBonus = mutant('  const components = leg => [annual, leg].filter(c => c.pct !== null).map(c => c.current / c.prior - 1);',
+    '  const components = leg => [leg].filter(c => c.pct !== null).map(c => c.current / c.prior - 1);');
   assert.throws(() => checkB3(brokenBonus), assert.AssertionError);
   checkB1(brokenBonus); checkB2(brokenBonus);
   checkB1(G); checkB2(G); checkB3(G); assert.equal(hash(), before);

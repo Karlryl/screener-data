@@ -26,6 +26,7 @@ process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR = tmpSmall;
 
 const axes = require('../src/scoring/axes.js');
 const { revGrowthLeg, REV_GROWTH_BASES } = require('../lib/rev-growth-basis.js');
+const { withG31Variant } = require('../lib/g31-recency.js');
 const W = require('../scripts/write-findash-export.js');
 const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
@@ -58,13 +59,28 @@ check('A1 quarter leg: newest quarter vs the dated year-ago quarter, both ends',
     sourcePeriodEnd: '2026-06-30', sourcePriorPeriodEnd: '2025-06-30' });
   sameAsLevel(s, leg);
 });
-check('A2 a quarter gap (gap rule) falls to the year leg, dated annual series gives both ends', () => {
-  const s = snap({ rq: [120, 110, null, 100, 100], ar: [400, 300], arEnds: ['2025-12-31', '2024-12-31'] });
+check('A2 G31: a dated quarter pair survives an empty intermediate row exactly like its missing-row twin', () => {
+  // G31 switch 18.10.2026 (B1): both stored endpoints are dated and finite, so the empty middle row does not
+  // matter; the twin without that row picks the same pair. The legacy arm keeps the old gap rule.
+  const arEnds = ['2025-12-31', '2024-12-31'];
+  const s = snap({ rq: [120, 110, null, 100, 100], ar: [400, 300], arEnds });
+  const twin = snap({ rq: [120, 110, 100, 100], rqEnds: ['2026-06-30', '2026-03-31', '2025-09-30', '2025-06-30'], ar: [400, 300], arEnds });
   const leg = revGrowthLeg(s);
-  assert.equal(leg.basis, 'year');
-  assert.equal(leg.periodEnd, '2025-12-31');
-  assert.equal(leg.priorPeriodEnd, '2024-12-31');
+  assert.deepEqual(leg, revGrowthLeg(twin));
+  assert.deepEqual([leg.basis, leg.periodEnd, leg.priorPeriodEnd], ['quarter', '2026-06-30', '2025-06-30']);
+  assert.equal(leg.pct, (120 / 100 - 1) * 100);
+  sameAsLevel(s, leg); sameAsLevel(twin, revGrowthLeg(twin));
+  const old = withG31Variant('legacy', () => revGrowthLeg(s));
+  assert.deepEqual([old.basis, old.periodEnd, old.priorPeriodEnd], ['year', '2025-12-31', '2024-12-31']);
+  assert.equal(old.pct, withG31Variant('legacy', () => axes.revGrowthLevel(s)));
+});
+check('A2b undated quarter series: the positional pair keeps the gap guard and the year leg carries', () => {
+  const s = snap({ rq: [120, 110, null, 100, 100], rqEnds: null, ar: [400, 300], arEnds: ['2025-12-31', '2024-12-31'] });
+  const leg = revGrowthLeg(s);
+  assert.deepEqual([leg.basis, leg.periodEnd, leg.priorPeriodEnd], ['year', '2025-12-31', '2024-12-31']);
   sameAsLevel(s, leg);
+  const filled = snap({ rq: [120, 110, 105, 100, 100], rqEnds: null });
+  assert.deepEqual([revGrowthLeg(filled).basis, revGrowthLeg(filled).periodEnd], ['quarter', null], 'without a gap the positional pair stays');
 });
 check('A3 undated or misaligned annual series: year, period ends null (never guessed)', () => {
   for (const arEnds of [[null, null], undefined, ['2025-12-31'], ['2025-02-30', '2024-12-31']]) {
@@ -98,7 +114,8 @@ check('A5 no growth figure: none, all null', () => {
       sourcePeriodEnd: null, sourcePriorPeriodEnd: null });
     assert.equal(axes.revGrowthLevel(s), null);
   }
-  assert.deepEqual(REV_GROWTH_BASES, ['quarter', 'year', 'yearNewerRecord', 'none']);
+  // P267: 'halfYear' labels a pair of two explicitly stored 6M periods (G31 arm only).
+  assert.deepEqual(REV_GROWTH_BASES, ['quarter', 'halfYear', 'year', 'yearNewerRecord', 'none']);
 });
 check('A6 metadata changes only aligned valid labels, never the growth value or selected source pair', () => {
   const s = snap({ rq: [120, 110, 105, 100, 100] }), before = revGrowthLeg(s);

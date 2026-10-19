@@ -97,5 +97,26 @@ check('die Werte sind nicht alle gleich (faengt einen konstanten Berechnungsfehl
   assert.ok(verschieden > werte.length * 0.5, `nur ${verschieden} verschiedene Werte bei ${werte.length} Zeilen — riecht nach konstantem Fehler`);
 });
 
+// G31 switch (18.10.2026, P170 check B1): runs without a universe. A dated quarter pair across an empty
+// intermediate row and its twin without that row show the same growth on the board row; the undated
+// variant keeps the gap guard and shows the fiscal year.
+check('G31: dated pair across an empty quarter row shows the same board growth as its missing-row twin', () => {
+  const { revGrowthLevel } = require('../../src/scoring/axes.js');
+  const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'];
+  const snap = (q, e) => ({ meta: {}, annual: { annualRev: [{ value: 400 }, { value: 300 }] },
+    timeseries: { revenueQ: q.map((value) => ({ value })), ...(e ? { revenueQEnds: e } : {}) } });
+  const gap = snap([120, 110, null, 100, 100], ends);
+  const twin = snap([120, 110, 100, 100], ends.filter((_, i) => i !== 2));
+  const undated = snap([120, 110, null, 100, 100], null);
+  const entry = (ticker, s, score) => ({ ticker, action: 'route', formulaId: 'it-services', track: 'profitable', score,
+    revGrowthYoYPct: revGrowthLevel(s) });
+  const rows = produceRankings([entry('GAP', gap, 70), entry('TWIN', twin, 69), entry('UNDATED', undated, 68)], { topN: 50 })
+    .full['it-services'].profitable;
+  const g = (t) => rows.find((r) => r.ticker === t).revGrowthYoYPct;
+  assert.equal(g('GAP'), g('TWIN'));
+  assert.ok(Math.abs(g('GAP') - 20) < 1e-9, 'newest quarter 120 against its dated year-ago quarter 100');
+  assert.ok(Math.abs(g('UNDATED') - (400 / 300 - 1) * 100) < 1e-9, 'undated: gap guard, fiscal year carries');
+});
+
 console.log(`rev-growth-anzeige.test.js: ${pass} ok, ${fail} fail${skip ? ', ' + skip + ' skip' : ''}`);
 process.exit(fail ? 1 : 0);
