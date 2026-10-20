@@ -147,3 +147,60 @@ Zaehlwerk: roh 7 · naiver Set-Key 6 · zwei Relationen 5 · zwei Relationen ohn
 ```
 
 Vorher hatte die Sperre am 13.10. ein Alter von 17 Tagen, am 27.10. von 31 Tagen; nur letzteres überschritt die unveränderte Altersgrenze. Nachher bleiben BANPU.BK, KINV-A.ST, KINV-B.ST, PCT.L und das gemeinsame Ereignis TSRYF/TWE.AX unverändert offen und meldbar. Beide Nachläufe sind grün, aber das Budget bleibt ausgeschöpft. Das Ergebnis mit der Uhr am 27.10. gilt für den geprüften Datenstand vom 13.10.; unbekannte spätere Anbieteränderungen sind damit nicht vorweggenommen.
+
+## Gezielte Klärung P275 am 20.10.2026
+
+Der planmäßige Lauf 39387109481 vom 20.10.2026 meldete acht neue Einzelwerte in sechs Ereignissen bei erlaubten fünf. Die Nachstellung verwendet ausschließlich das CI-Artefakt `snapshots` dieses Laufs (16.107 Snapshot-Dateien). Der unveränderte Produktionswächter wird mit diesem Eingabeordner und der Uhr `2026-10-20T12:00:00Z` ohne Aufnahmeflag aufgerufen. Er liefert vorher dieselben acht Funde wie das CI und endet mit Exit 1. Die Zuordnung Index zu Geschäftsjahr folgt für jeden Fall übereinstimmenden `meta.statementPeriods` und `annual.*Ends`; die Rückrechnung in die Berichtswährung verwendet den gespeicherten `fxRateApplied`.
+
+| Fund | Geschäftsjahr, nativ | Urteil | Beleg |
+|---|---|---|---|
+| TYG annualNetIncome[1] | 30.11.2024: 210.921.731 USD, Nachbarn 19.355.818 / −15.622.613 | echtes Sonderjahr, aufgenommen | N-CSR FY2024 S. 38, FY2025 S. 11, FY2023 S. 42 |
+| PCT.L annualNetIncome[2] | 30.04.2024: 1.115.437 Tsd. GBP, Nachbarn 118.355 / −105.182 | echtes Sonderjahr, aufgenommen | Annual Report 2024 S. 102, 2025 S. 106 |
+| 603822.SS annualNetIncome[1] | 2024: −366.940.285,42 CNY, Nachbarn 31.348.113,74 / −7.540.228,65 | echtes Sonderjahr, aufgenommen | Geschäftsbericht 2025 S. 7/196, 2024 S. 6/219 |
+| PCT.L annualRev[2] | 30.04.2024: 1.118.772 Tsd. GBP (Anbieterwert) | Jahr echt, Wert nicht gedruckt; bleibt NEU | siehe unten |
+| TWE.AX / TSRYF annualOpInc[1] | 30.06.2025: 518,1 Mio AUD, Nachbarn 57,5 / 42,6 | Anbieterwert ohne Berichtszeile; bleibt NEU | Annual Report 2025 S. 90 |
+| KINV-A.ST / KINV-B.ST annualRev[2] | 2023: 936 Mio SEK, Nachbarn 23 / 0 | rechter Nachbar falsch; Eichfall, bleibt NEU | Geschäftsbericht 2023 S. 70 |
+
+**TYG** (Tortoise Energy Infrastructure Corp., Closed-End-Fonds, Geschäftsjahr bis 30.11.). Der gespeicherte Wert ist die Zeile „Net Increase (Decrease) in Net Assets Applicable to Common Stockholders Resulting from Operations“. Sie besteht fast nur aus realisierten und unrealisierten Kursgewinnen; das Sonderjahr ist der Kursanstieg der Midstream-Werte im Geschäftsjahr 2024. Alle drei Werte stimmen dollargenau:
+
+* [N-CSR FY2024](https://www.sec.gov/Archives/edgar/data/1268533/000120677425000062/tyg4427083-ncsr.htm), Seite 38, erste Spalte: `Resulting from Operations $ 210,921,731`.
+* [N-CSR FY2025](https://www.sec.gov/Archives/edgar/data/1268533/000121390026013154/ea0272590-01_ncsr.htm), Seite 11: `Resulting from Operations $ 19,355,818`.
+* [N-CSR FY2023](https://www.sec.gov/Archives/edgar/data/1268533/000120677424000089/tyg4285943-ncsr.htm), Seite 42, erste Spalte: `Resulting from Operations $ (15,622,613 )`.
+
+Die bestehende TYG-Sperre der Handtabelle (`tyg-stale-2017-packet-20261001`) bleibt unberührt. Ihr Fingerabdruck passt nicht mehr, weil das Datenpaket inzwischen bis zum Geschäftsjahr 2025 reicht; die Freigabe dieser Sperre ist eine eigene Entscheidung.
+
+**PCT.L** (Polar Capital Technology Trust plc, Investment Trust, Geschäftsjahr bis 30.04.). Das Nettoergebnis ist die Gesamtspalte von „Net profit/(loss) for the year and total comprehensive income/(expense)“, getragen von Gewinnen auf Anlagen von 1.147.978 Tsd. GBP im Jahr bis 30.04.2024. Die Werte stimmen tausendgenau:
+
+* [Annual Report 2024](https://www.pctannualhighlights.co.uk/static/literature/PCTT_Annual_Report_2024.pdf), Seite 102, Spalten 2024/2023: `comprehensive income/(expense) (9,219) 1,124,656 1,115,437 (6,860) (98,322) (105,182)`.
+* [Annual Report 2025](https://data.fca.org.uk/artefacts/NSM/Portal/NI-000124607/NI-000124607.pdf), Seite 106: `comprehensive income (11,286) 129,641 118,355`.
+
+Der Anbieter-Umsatz von PCT.L (122.389 / 1.118.772 / −101.774 Tsd. GBP) steht in keinem Bericht. Die nächste gedruckte Zeile ist „Gain/(loss) before finance costs and tax“ mit 122,507 / 1,119,253 / (101,436). Das Sonderjahr ist damit belegt, der gespeicherte Wert nicht. Außerdem läge PCT.L mit beiden Reihen als Zwei-Reihen-Form mit einem Faktorverhältnis von 1,031 in der Eichlücke 1,0000 bis 1,0375; Q1-5 verlangt in diesem Fall eine Neuherleitung der Toleranz 1,02. Das ist eine Methodenentscheidung und gehört nicht zu dieser Aufnahme. Der Umsatzfund bleibt deshalb NEU.
+
+**603822.SS** (浙江嘉澳环保科技股份有限公司, Zhejiang Jiaao Enprotech, heute „ST嘉澳“). Gespeichert ist das den Aktionären der Muttergesellschaft zurechenbare Ergebnis, nicht das Konzern-Nettoergebnis (2024: −373.415.096,90 CNY). Die Einheit lautet `单位：元币种：人民币`.
+
+* [Geschäftsbericht 2025](https://static.cninfo.com.cn/finalpage/2026-04-10/1225091341.PDF), Seite 7/196, Spalten 2025/2024/2023: `归属于上市公司股东的净利润 31,348,113.74 -366,940,285.42 不适用 -7,540,228.65`; Einheit auf Seite 6/196.
+* [Geschäftsbericht 2024](https://static.cninfo.com.cn/finalpage/2025-04-29/1223386657.PDF), Seite 6/219, dieselben Werte für 2024 und 2023. Der Wert für 2023 ist der nach dem korrigierten Bericht 2023 angepasste Stand. Seite 10/219 nennt als Ursache des Verlusts `亏损主要受原材料价格上涨，欧盟生物柴油反倾销，市场需求疲软`.
+
+**TWE.AX / TSRYF** (Treasury Wine Estates, Zweitnotierung TSRYF mit identischen Zahlen). Die Anbieterreihe 57,5 / 518,1 / 42,6 / 182,7 Mio AUD steht in keinem Bericht. Der [Annual Report 2025](https://announcements.asx.com.au/asxpdf/20250813/pdf/06mt6g6f8jsktk.pdf) zeigt auf Seite 90 `Profit before tax and finance costs` 736,6 (2025) und 266,6 (2024) Mio AUD. Mit diesen gemeldeten Werten läge 2025 höchstens beim 2,8-Fachen eines Nachbarn, also kein Sonderjahr. Der Fall wird nicht aufgenommen; eine Korrektur über die Handtabelle ist eine eigene Entscheidung.
+
+**KINV-A.ST / KINV-B.ST**. Der Umsatz des Anbieters ist bei Kinnevik die Zeile „Dividends received“. Der [Geschäftsbericht 2023](https://www.kinnevik.com/files/mfn/c534f5b4-c274-46a1-a7a5-61da9da7be9c/annual-sustainability-report-2023.pdf), Druckseite 70, nennt 936 (2023) und 3 538 (2022) Mio SEK. Der rechte Nachbar 2022 steht im Snapshot als 0 und ist damit falsch; mit 3 538 gäbe es keinen Ausreißer. Die Reihe ist ein Eichfall und bleibt NEU.
+
+Genau drei USD-Schlüssel und drei native Identitäten kommen hinzu: Bestand 164 → 167 Schlüssel, 146 → 149 native Einträge. `usdFaktor = 1` und `maxRelativeAbweichung = 0` beziehen sich auf denselben Snapshot. Alle bisherigen Einträge, Aufnahmedatum und Vergleichspopulation bleiben erhalten. Im Test P168d entfällt nur die Erwartung, dass das Nettoergebnis von PCT.L NEU bleibt; der Umsatz von PCT.L, BANPU.BK und TWE.AX/TSRYF bleiben dort NEU.
+
+**Boardwirkung: keine.** Geändert werden nur die bekannte Fallliste des Wächters, Dokumentation und Tests. Die Fallliste liest außer dem Wächter nur Diagnoseskripte; Scoring, Board-Export und Handtabelle lesen sie nicht. Wächtercode, Handtabelle und ihre Bibliothek sind bytegleich mit dem Ausgangsstand, einschließlich Faktor 8, `MIN_BETRAG`, erlaubter Zahl 5, Toleranz 1,02, `MELDEND_BIS` und Altersgrenze.
+
+Der neue Test `annual-spikes-p275.test.js` prüft Quellenzuordnung, Wechselkursdrift, geänderte Zentral- und Nachbarwerte, Währung, Jahr, Firma und Reihe, die abgelehnten Fälle und die unveränderten Grenzwerte. Die Bruchprobe entfernt im Arbeitsspeicher jeweils eine native Autorität; Live-Prüfsummen bleiben gleich. Zusätzlich wurde einmal der Eintrag von 603822.SS in der Arbeitskopie entfernt: drei Tests wurden rot, der Wächter zählte fünf Ereignisse, danach wurde die Datei bytegleich wiederhergestellt.
+
+```text
+Vorher:
+Jahres-Ausreisser: 149 in 16107 gelesenen Snapshots · davon NEU: 8
+Zaehlwerk: roh 8 · naiver Set-Key 7 · zwei Relationen 6 · zwei Relationen ohne Sperren 6 (erlaubt 5)
+Exit 1
+
+Nachher:
+Jahres-Ausreisser: 149 in 16107 gelesenen Snapshots · davon NEU: 5
+Zaehlwerk: roh 5 · naiver Set-Key 4 · zwei Relationen 4 · zwei Relationen ohne Sperren 4 (erlaubt 5)
+Exit 0
+```
+
+Nachher bleiben KINV-A.ST, KINV-B.ST, der Umsatz von PCT.L und das gemeinsame Ereignis TSRYF/TWE.AX offen und meldbar. Der Lauf ist grün, mit einem freien Ereignis im Budget.
