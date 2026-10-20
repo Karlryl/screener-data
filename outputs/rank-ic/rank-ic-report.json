@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-17T14:50:38.102Z",
+  "generatedAt": "2026-10-20T08:58:36.318Z",
   "spec": "Ledger 2.8 §1–§4/§8; raw∧residual je Board×Horizont; Schwellen 28d>0,03 und 84d>0,05; BY je eingefrorener Manifestgeneration",
-  "vintagesTotal": 49,
+  "vintagesTotal": 50,
   "vintagesExcluded": [
     "2026-07-14",
     "2026-07-15",
@@ -48,6 +48,11 @@
     {
       "date": "2026-10-14",
       "board": "materials",
+      "reason": "gate-suspect: p99-delta-exceeds-threshold"
+    },
+    {
+      "date": "2026-10-20",
+      "board": "it-services",
       "reason": "gate-suspect: p99-delta-exceeds-threshold"
     }
   ],
@@ -471,7 +476,7 @@
             {
               "date": "2026-09-05",
               "n": 2147,
-              "icRaw": 0.022868100423560755,
+              "icRaw": 0.02286825561836309,
               "icResid": 0.034019337532574995,
               "nResid": 1638,
               "quota": {
@@ -607,7 +612,9 @@
         "2026-08-05/28": 0.007,
         "2026-09-05/28": 0.007
       },
-      "datesExcluded": []
+      "datesExcluded": [
+        "2026-10-20"
+      ]
     },
     "materials": {
       "horizons": {
@@ -697,8 +704,8 @@
             {
               "date": "2026-08-05",
               "n": 436,
-              "icRaw": 0.056337680987431936,
-              "icResid": 0.06804934940376872,
+              "icRaw": 0.056343762026837996,
+              "icResid": 0.06861808111789633,
               "nResid": 399,
               "quota": {
                 "ok": 434,
@@ -730,15 +737,15 @@
           "nEff": 2,
           "mde": 0.1614,
           "meanICRaw": -0.0085,
-          "meanICResid": 0.0021,
+          "meanICResid": 0.0024,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
             "lo": -0.0085,
             "hi": -0.0085
           },
           "ci90Resid": {
-            "lo": 0.0021,
-            "hi": 0.0021
+            "lo": 0.0024,
+            "hi": 0.0024
           },
           "verdict": "unterpowert — kein Urteil (N_eff<8)"
         },
@@ -1167,7 +1174,7 @@
       ]
     }
   },
-  "newestPriceDate": "2026-10-16",
+  "newestPriceDate": "2026-10-19",
   "schemaVersion": 2,
   "families": [
     {
@@ -1694,7 +1701,8 @@
           "2026-07-27",
           "2026-07-28",
           "2026-07-29",
-          "2026-08-03"
+          "2026-08-03",
+          "2026-10-20"
         ]
       },
       {
