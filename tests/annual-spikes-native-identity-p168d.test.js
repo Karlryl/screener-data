@@ -111,7 +111,7 @@ test('P168d: four genuine events are known, while false and undecidable events s
   for (const [ticker, reihe, periode, waehrung, werte] of [
     ['BANPU.BK', 'annualOpInc', '2023-12-31', 'USD', [-28259000, 6003496000, 524803000]],
     ['PCT.L', 'annualRev', '2024-04-30', 'GBP', [122389000, 1118772000, -101774000]],
-    ['PCT.L', 'annualNetIncome', '2024-04-30', 'GBP', [118355000, 1115437000, -105182000]],
+    // P275 sources PCT.L annualNetIncome FY2024 from the issuer reports (annual-spikes-p275.test.js).
     ...['TSRYF', 'TWE.AX'].map(t => [t, 'annualOpInc', '2025-06-30', 'AUD', [57500000, 518100000, 42600000]]),
   ]) assert.equal(known(W, { ticker, reihe, index: 1, nativ: { periode, waehrung, werte } }, B), false, ticker);
   for (const ticker of ['KINV-A.ST', 'KINV-B.ST', 'MFSL.BO', 'MFSL.NS', 'VPLAY-A.ST']) {
