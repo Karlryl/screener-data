@@ -204,3 +204,7 @@ Exit 0
 ```
 
 Nachher bleiben KINV-A.ST, KINV-B.ST, der Umsatz von PCT.L und das gemeinsame Ereignis TSRYF/TWE.AX offen und meldbar. Der Lauf ist grün, mit einem freien Ereignis im Budget.
+
+## Nachtrag P276 am 21.10.2026
+
+Die Handtabelle trägt jetzt die gemeldeten Betriebsergebnisse von Treasury Wine Estates (TWE.AX / TSRYF, „Profit before tax and finance costs“ 736,6 Mio. AUD für das Geschäftsjahr bis 30.06.2025, Nachbarn −1.279,6 und 266,6) und hält den Umsatz von Kinnevik (KINV-A.ST / KINV-B.ST, die Quartale auch bei KNEVF) vollständig zurück (keine Umsatzzeile im Abschluss); Einzelheiten in `docs/financial-corrections.md`, Abschnitt „Handtabelle P276“. Auf dem Artefakt des Laufs 39563364953 (16.121 gelesene Snapshots, Uhr `2026-10-21T12:00:00Z`) meldet der unveränderte Wächter vorher 5 NEU-Werte (4 Ereignisse) und nachher 1 (PCT.L annualRev, 1 Ereignis, erlaubt 5). Die TYG-Sperre bleibt; PCT.L Umsatz bleibt bis zur Methodenentscheidung zu Q1-5 offen.

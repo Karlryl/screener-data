@@ -8739,6 +8739,466 @@
           "calculation": "Q2 2025 restated = 14,467,085,467.59 - 7,096,759,116.51 = 7,370,326,351.08 CNY; stored Q2 2025 1,136,833,640.79 = 2,271,563,460.46 - 1,134,729,819.67 (before restatement)"
         }
       ]
+    },
+    {
+      "caseId": "twe.ax-2026-06-30-annualOpInc-20261021",
+      "ticker": "TWE.AX",
+      "listingAliases": [
+        "TSRYF"
+      ],
+      "field": "annualOpInc",
+      "period": "2026-06-30",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 57500000,
+      "replacementValue": -1279600000,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "metricDefinition": "Profit before tax and finance costs",
+      "reason": "Betriebsergebnis korrigiert: Treasury Wine Estates weist das Betriebsergebnis als Zeile „Profit before tax and finance costs“ aus, nach allen betrieblichen Aufwendungen und vor Finanzergebnis und Steuern. Für das Geschäftsjahr 2025/26 sind es ein Verlust von 1.279,6 Mio. AUD (darin 1.569,1 Mio. AUD Sonderposten in den sonstigen Aufwendungen; Sonderposten vor Steuern insgesamt 1.712,2 Mio. AUD, vor allem Wertminderungen); der Anbieterwert 57,5 Mio. AUD steht in keinem Bericht. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20260813/pdf/072q138tbg4pq1.pdf",
+          "form": "Treasury Wine Estates, Annual Report 2026",
+          "published": "2026-08-13",
+          "page": "84 (gedruckt), 87 (PDF), consolidated statement of profit or loss",
+          "verifiedAt": "2026-10-21",
+          "sourceUnit": "AUD millions",
+          "currency": "AUD",
+          "unit": "currency",
+          "quote": "(Loss)/Profit before tax and finance costs (1,279.6) 736.6",
+          "value": -1279600000,
+          "start": "2025-07-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "twe.ax-2025-06-30-annualOpInc-20261021",
+      "ticker": "TWE.AX",
+      "listingAliases": [
+        "TSRYF"
+      ],
+      "field": "annualOpInc",
+      "period": "2025-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 518100000,
+      "replacementValue": 736600000,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "metricDefinition": "Profit before tax and finance costs",
+      "reason": "Betriebsergebnis korrigiert: Treasury Wine Estates weist das Betriebsergebnis als Zeile „Profit before tax and finance costs“ aus, nach allen betrieblichen Aufwendungen und vor Finanzergebnis und Steuern. Für das Geschäftsjahr 2024/25 sind es 736,6 Mio. AUD; der Anbieterwert 518,1 Mio. AUD steht in keinem Bericht. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20250813/pdf/06mt6g6f8jsktk.pdf",
+          "form": "Treasury Wine Estates, Annual Report 2025",
+          "published": "2025-08-13",
+          "page": "90 (gedruckt), 93 (PDF), consolidated statement of profit or loss",
+          "verifiedAt": "2026-10-21",
+          "sourceUnit": "AUD millions",
+          "currency": "AUD",
+          "unit": "currency",
+          "quote": "Profit before tax and finance costs 736.6 266.6",
+          "value": 736600000,
+          "start": "2024-07-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20260813/pdf/072q138tbg4pq1.pdf",
+          "form": "Treasury Wine Estates, Annual Report 2026",
+          "published": "2026-08-13",
+          "page": "84 (gedruckt), 87 (PDF), consolidated statement of profit or loss",
+          "verifiedAt": "2026-10-21",
+          "sourceUnit": "AUD millions",
+          "currency": "AUD",
+          "unit": "currency",
+          "quote": "(Loss)/Profit before tax and finance costs (1,279.6) 736.6",
+          "value": 736600000,
+          "start": "2024-07-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "twe.ax-2024-06-30-annualOpInc-20261021",
+      "ticker": "TWE.AX",
+      "listingAliases": [
+        "TSRYF"
+      ],
+      "field": "annualOpInc",
+      "period": "2024-06-30",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 42600000,
+      "replacementValue": 266600000,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "metricDefinition": "Profit before tax and finance costs",
+      "reason": "Betriebsergebnis korrigiert: Treasury Wine Estates weist das Betriebsergebnis als Zeile „Profit before tax and finance costs“ aus, nach allen betrieblichen Aufwendungen und vor Finanzergebnis und Steuern. Für das Geschäftsjahr 2023/24 sind es 266,6 Mio. AUD; der Anbieterwert 42,6 Mio. AUD steht in keinem Bericht. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20240815/pdf/066mnz7ykvgpfv.pdf",
+          "form": "Treasury Wine Estates, Annual Report 2024",
+          "published": "2024-08-15",
+          "page": "PDF 54 (double page), consolidated statement of profit or loss",
+          "verifiedAt": "2026-10-21",
+          "sourceUnit": "AUD millions",
+          "currency": "AUD",
+          "unit": "currency",
+          "quote": "Profit before tax and finance costs 266.6 409.7",
+          "value": 266600000,
+          "start": "2023-07-01",
+          "end": "2024-06-30"
+        },
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20250813/pdf/06mt6g6f8jsktk.pdf",
+          "form": "Treasury Wine Estates, Annual Report 2025",
+          "published": "2025-08-13",
+          "page": "90 (gedruckt), 93 (PDF), consolidated statement of profit or loss",
+          "verifiedAt": "2026-10-21",
+          "sourceUnit": "AUD millions",
+          "currency": "AUD",
+          "unit": "currency",
+          "quote": "Profit before tax and finance costs 736.6 266.6",
+          "value": 266600000,
+          "start": "2023-07-01",
+          "end": "2024-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "twe.ax-2023-06-30-annualOpInc-20261021",
+      "ticker": "TWE.AX",
+      "listingAliases": [
+        "TSRYF"
+      ],
+      "field": "annualOpInc",
+      "period": "2023-06-30",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 182700000,
+      "replacementValue": 409700000,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "metricDefinition": "Profit before tax and finance costs",
+      "reason": "Betriebsergebnis korrigiert: Treasury Wine Estates weist das Betriebsergebnis als Zeile „Profit before tax and finance costs“ aus, nach allen betrieblichen Aufwendungen und vor Finanzergebnis und Steuern. Für das Geschäftsjahr 2022/23 sind es 409,7 Mio. AUD; der Anbieterwert 182,7 Mio. AUD steht in keinem Bericht. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20240815/pdf/066mnz7ykvgpfv.pdf",
+          "form": "Treasury Wine Estates, Annual Report 2024",
+          "published": "2024-08-15",
+          "page": "PDF 54 (double page), consolidated statement of profit or loss",
+          "verifiedAt": "2026-10-21",
+          "sourceUnit": "AUD millions",
+          "currency": "AUD",
+          "unit": "currency",
+          "quote": "Profit before tax and finance costs 266.6 409.7",
+          "value": 409700000,
+          "start": "2022-07-01",
+          "end": "2023-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2025-12-31-annualRev-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST"
+      ],
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Jahresumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Jahre sind erhaltene Dividenden oder eine Null (für 2022 meldet Kinnevik 3.538 Mio. SEK Dividenden) und keine berichtete Kennzahl; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/59ab9d16-5d53-4ad8-abf3-71a6db358a9c/annual-sustainability-report-2025.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2025",
+          "published": "2026-04-01",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 47, Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in Fair Value of Financial Assets 3 -4 222 -2 661; Dividends Received 3 - 23"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2024-12-31-annualRev-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST"
+      ],
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 23000000,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Jahresumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Jahre sind erhaltene Dividenden oder eine Null (für 2022 meldet Kinnevik 3.538 Mio. SEK Dividenden) und keine berichtete Kennzahl; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/59ab9d16-5d53-4ad8-abf3-71a6db358a9c/annual-sustainability-report-2025.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2025",
+          "published": "2026-04-01",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 47, Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in Fair Value of Financial Assets 3 -4 222 -2 661; Dividends Received 3 - 23"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2023-12-31-annualRev-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST"
+      ],
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 936000000,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Jahresumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Jahre sind erhaltene Dividenden oder eine Null (für 2022 meldet Kinnevik 3.538 Mio. SEK Dividenden) und keine berichtete Kennzahl; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/c534f5b4-c274-46a1-a7a5-61da9da7be9c/annual-sustainability-report-2023.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2023",
+          "published": "2024-04-04",
+          "verifiedAt": "2026-10-21",
+          "page": "70 (gedruckt), 72 (PDF), Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in fair value of financial assets 3 -5 651 -22 856; Dividends received 3 936 3 538"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2022-12-31-annualRev-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST"
+      ],
+      "field": "annualRev",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Jahresumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Jahre sind erhaltene Dividenden oder eine Null (für 2022 meldet Kinnevik 3.538 Mio. SEK Dividenden) und keine berichtete Kennzahl; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/c534f5b4-c274-46a1-a7a5-61da9da7be9c/annual-sustainability-report-2023.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2023",
+          "published": "2024-04-04",
+          "verifiedAt": "2026-10-21",
+          "page": "70 (gedruckt), 72 (PDF), Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in fair value of financial assets 3 -5 651 -22 856; Dividends received 3 936 3 538"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2026-06-30-revenueQ-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST",
+        "KNEVF"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 1717000000,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Quartalsumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Quartale sind das Ergebnis nach Finanzposten (zweites Quartal 2026: 1.717 Mio. SEK, erstes Quartal 2026: Verlust von 7.969 Mio. SEK) und keine Umsatzzeile; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/fd0df0da-d84a-4c8a-ba85-54bf82590fc3/q2-2026-e.pdf",
+          "form": "Kinnevik, Interim Report 1 January to 30 June 2026",
+          "published": "2026-07-07",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 7, Consolidated Income Statement (no revenue line; vendor quarters = profit/loss after financial net, Q1 2026 = H1 −6 252 minus Q2 1 717)",
+          "quote": "Profit/Loss after Financial Net 1 717 626 −6 252 −2 411 −4 238"
+        },
+        {
+          "url": "https://www.kinnevik.com/files/mfn/59ab9d16-5d53-4ad8-abf3-71a6db358a9c/annual-sustainability-report-2025.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2025",
+          "published": "2026-04-01",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 47, Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in Fair Value of Financial Assets 3 -4 222 -2 661; Dividends Received 3 - 23"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2026-03-31-revenueQ-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST",
+        "KNEVF"
+      ],
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": -7969000000,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Quartalsumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Quartale sind das Ergebnis nach Finanzposten (zweites Quartal 2026: 1.717 Mio. SEK, erstes Quartal 2026: Verlust von 7.969 Mio. SEK) und keine Umsatzzeile; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/fd0df0da-d84a-4c8a-ba85-54bf82590fc3/q2-2026-e.pdf",
+          "form": "Kinnevik, Interim Report 1 January to 30 June 2026",
+          "published": "2026-07-07",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 7, Consolidated Income Statement (no revenue line; vendor quarters = profit/loss after financial net, Q1 2026 = H1 −6 252 minus Q2 1 717)",
+          "quote": "Profit/Loss after Financial Net 1 717 626 −6 252 −2 411 −4 238"
+        },
+        {
+          "url": "https://www.kinnevik.com/files/mfn/59ab9d16-5d53-4ad8-abf3-71a6db358a9c/annual-sustainability-report-2025.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2025",
+          "published": "2026-04-01",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 47, Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in Fair Value of Financial Assets 3 -4 222 -2 661; Dividends Received 3 - 23"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2025-12-31-revenueQ-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST",
+        "KNEVF"
+      ],
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": -2567000000,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Quartalsumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Quartale sind das Ergebnis nach Finanzposten (zweites Quartal 2026: 1.717 Mio. SEK, erstes Quartal 2026: Verlust von 7.969 Mio. SEK) und keine Umsatzzeile; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/fd0df0da-d84a-4c8a-ba85-54bf82590fc3/q2-2026-e.pdf",
+          "form": "Kinnevik, Interim Report 1 January to 30 June 2026",
+          "published": "2026-07-07",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 7, Consolidated Income Statement (no revenue line; vendor quarters = profit/loss after financial net, Q1 2026 = H1 −6 252 minus Q2 1 717)",
+          "quote": "Profit/Loss after Financial Net 1 717 626 −6 252 −2 411 −4 238"
+        },
+        {
+          "url": "https://www.kinnevik.com/files/mfn/59ab9d16-5d53-4ad8-abf3-71a6db358a9c/annual-sustainability-report-2025.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2025",
+          "published": "2026-04-01",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 47, Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in Fair Value of Financial Assets 3 -4 222 -2 661; Dividends Received 3 - 23"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2025-06-30-revenueQ-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST",
+        "KNEVF"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 626000000,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Quartalsumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Quartale sind das Ergebnis nach Finanzposten (zweites Quartal 2026: 1.717 Mio. SEK, erstes Quartal 2026: Verlust von 7.969 Mio. SEK) und keine Umsatzzeile; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/fd0df0da-d84a-4c8a-ba85-54bf82590fc3/q2-2026-e.pdf",
+          "form": "Kinnevik, Interim Report 1 January to 30 June 2026",
+          "published": "2026-07-07",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 7, Consolidated Income Statement (no revenue line; vendor quarters = profit/loss after financial net, Q1 2026 = H1 −6 252 minus Q2 1 717)",
+          "quote": "Profit/Loss after Financial Net 1 717 626 −6 252 −2 411 −4 238"
+        },
+        {
+          "url": "https://www.kinnevik.com/files/mfn/59ab9d16-5d53-4ad8-abf3-71a6db358a9c/annual-sustainability-report-2025.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2025",
+          "published": "2026-04-01",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 47, Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in Fair Value of Financial Assets 3 -4 222 -2 661; Dividends Received 3 - 23"
+        }
+      ]
+    },
+    {
+      "caseId": "kinv-a.st-2025-03-31-revenueQ-20261021",
+      "ticker": "KINV-A.ST",
+      "listingAliases": [
+        "KINV-B.ST",
+        "KNEVF"
+      ],
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": -3037000000,
+      "replacementValue": null,
+      "revision": "2026-10-21-p276",
+      "verifiedAt": "2026-10-21",
+      "reason": "Quartalsumsatz fehlt: Kinnevik ist eine Beteiligungsgesellschaft und weist keinen Umsatz aus. Die Anbieterwerte der Quartale sind das Ergebnis nach Finanzposten (zweites Quartal 2026: 1.717 Mio. SEK, erstes Quartal 2026: Verlust von 7.969 Mio. SEK) und keine Umsatzzeile; das Umsatzwachstum bleibt deshalb leer. Geprüft am 21.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.kinnevik.com/files/mfn/fd0df0da-d84a-4c8a-ba85-54bf82590fc3/q2-2026-e.pdf",
+          "form": "Kinnevik, Interim Report 1 January to 30 June 2026",
+          "published": "2026-07-07",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 7, Consolidated Income Statement (no revenue line; vendor quarters = profit/loss after financial net, Q1 2026 = H1 −6 252 minus Q2 1 717)",
+          "quote": "Profit/Loss after Financial Net 1 717 626 −6 252 −2 411 −4 238"
+        },
+        {
+          "url": "https://www.kinnevik.com/files/mfn/59ab9d16-5d53-4ad8-abf3-71a6db358a9c/annual-sustainability-report-2025.pdf",
+          "form": "Kinnevik, Annual & Sustainability Report 2025",
+          "published": "2026-04-01",
+          "verifiedAt": "2026-10-21",
+          "page": "PDF 47, Consolidated Statement of Comprehensive Income (no revenue line)",
+          "quote": "Change in Fair Value of Financial Assets 3 -4 222 -2 661; Dividends Received 3 - 23"
+        }
+      ]
     }
   ],
   "quarantines": [

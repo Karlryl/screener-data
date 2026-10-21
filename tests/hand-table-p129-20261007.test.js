@@ -63,7 +63,7 @@ test('P129 manifest pins every cell and preserves all original authority and fix
     '1c61b93d34b5c283b345d911be792a7160f8c4d5bdfd348dd9a83dc3252cfaf9'); // P177 refreshes HL period ends and two CIG-C cells; the full prefix stays pinned.
   assert.equal(table.coverage.length, 41, 'no coverage expansion without a fully verified quarterly series'); // P177 adds the verified BYLOT quarterly series; 18.10.2026 the fully verified CDR.WA (three) and 000552.SZ series.
   assert.equal(table.periodLabels.length, 16, 'GRGD labels stay open; no ineffective live row');
-  assert.equal(Object.keys(fixtures).length, 68); // P177 appends the real frozen BYLOT packet for its five new quarterly cases; 18.10.2026 appends BLSH, CDR.WA, OTGLF and 000552.SZ; the G31 switch appends 000599.SZ (P268).
+  assert.equal(Object.keys(fixtures).length, 69); // P177 appends the real frozen BYLOT packet for its five new quarterly cases; 18.10.2026 appends BLSH, CDR.WA, OTGLF and 000552.SZ; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST.
   assert.equal(table.cases.slice(216, 225).filter(c => c.periodType === '12M').every(c => c.ticker === 'AIAI' && c.replacementValue === null), true,
     'no annual replacement from the #431 waiting list');
 });
