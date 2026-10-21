@@ -38,12 +38,12 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 303 authorized cells (255 quarterly, 48 annual) and eleven held packets have auditable sources', () => {
+test('all 316 authorized cells (260 quarterly, 56 annual) and eleven held packets have auditable sources', () => {
   // G31 switch 18.10.2026 adds nine quarterly gross-profit holds (BLSH five, VCTR four): neither issuer reports a
   // gross profit, and the switch would otherwise show the vendor quarters as newest GP growth. P268 adds three
   // 000599.SZ holds: its stored Q2 2025 predates the restatement while Q1 2025 is restated.
-  assert.equal(table.cases.length, 303); // P168f adds three Viaplay confirmations and one MFSL annual hold; hand table 18.10.2026 adds 26 cells (BLSH, VCTR, CDR.WA, 000552.SZ).
-  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 48); // P168f adds exactly four annual cases to P168e's 40; 18.10.2026 adds the BLSH and VCTR gross-profit holds and two CDR.WA 2023 holds.
+  assert.equal(table.cases.length, 316); // P168f adds three Viaplay confirmations and one MFSL annual hold; hand table 18.10.2026 adds 26 cells (BLSH, VCTR, CDR.WA, 000552.SZ); P276 adds 13 (TWE.AX operating income, Kinnevik revenue).
+  assert.equal(table.cases.filter(c => c.periodType === '12M').length, 56); // P168f adds exactly four annual cases to P168e's 40; 18.10.2026 adds the BLSH and VCTR gross-profit holds and two CDR.WA 2023 holds; P276 four TWE.AX operating-income and four Kinnevik revenue years.
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
@@ -67,7 +67,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 303); // P168f adds exactly four source-backed annual cases; 18.10.2026 adds 26 cells; the G31 switch nine GP holds and three 000599.SZ holds.
+  assert.equal(validateTable(clone(table)).cases.length, 316); // P168f adds exactly four source-backed annual cases; 18.10.2026 adds 26 cells; the G31 switch nine GP holds and three 000599.SZ holds; P276 13 cells.
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -637,7 +637,7 @@ test('excluded list: a quarantined packet has null sector, industry, market cap 
 test('listing aliases: YSNG.VI, PDN.TO, PALAF, MFSL.NS and ANE.MC are corrected like their primary; unrelated ticker untouched', () => {
   // P177 makes HL numeric; its full alias result is checked in the dedicated HL test below.
   const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases && (c.periodType !== '12M' || c.replacementValue === null)).map(c => [c.ticker, c.listingAliases]));
-  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'], '1ANE.MI': ['ANE.MC'], 'CDR.WA': ['OTGLF'] }); // P168d adds the MFSL listing, 14.10.2026 the ANE.MC listing, 18.10.2026 the OTGLF listing; numeric P177/P168e aliases have dedicated tests.
+  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'], '1ANE.MI': ['ANE.MC'], 'CDR.WA': ['OTGLF'], 'KINV-A.ST': ['KINV-B.ST'] }); // P168d adds the MFSL listing, 14.10.2026 the ANE.MC listing, 18.10.2026 the OTGLF listing, P276 the KINV-B.ST listing; numeric P177/P168e aliases have dedicated tests.
   const leg = (primary, alias) => { const s = clone(annualFixture[primary]); s.meta.ticker = alias; return s; };
   for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
     const input = leg(primary, alias), original = serial(input), r = applyFinancialCases(input);
@@ -1095,7 +1095,7 @@ test('replacement values trace to their sources: the whole real table passes, a 
   // The 162 cases of revision 2026-10-01c plus four annual P106 withholds:
   // 16 derived quarters (BDC Q4 cells, ARCC, INFQ, PSEC) and one issuer-rounded confirmation
   // (OXLC 2025-03-31, "$121.2 million") pass; none fails.
-  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 142, difference: 25, rounded: 1, exempt: 10, null: 58 }); // G31 switch adds nine quarterly GP holds (BLSH, VCTR) and two non-opIncQ 000599.SZ holds; P168f adds three direct-source confirmations and one null hold; 18.10.2026 adds 7 single-source and 6 derived revenue/gross-profit cells and 7 holds (four annual, three quarterly).
+  assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 146, difference: 25, rounded: 1, exempt: 10, null: 67 }); // P276 adds four single-source TWE.AX operating-income years and nine Kinnevik revenue holds; G31 switch adds nine quarterly GP holds (BLSH, VCTR) and two non-opIncQ 000599.SZ holds; P168f adds three direct-source confirmations and one null hold; 18.10.2026 adds 7 single-source and 6 derived revenue/gross-profit cells and 7 holds (four annual, three quarterly).
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
   assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 24, difference: 5, null: 5 }); // 18.10.2026: CDR.WA five cells (Q4 2025 withheld), 000552.SZ Q2 2025 withheld; P268: 000599.SZ Q2 2025 withheld.
   assert.equal(count(table.cases).none, undefined);
@@ -1435,7 +1435,7 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
   // P177 refreshes the full digest for its documented HL/CIG-C changes; period labels and coverage remain pinned.
   const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
-  assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4 + 11 + 1 + 2 + 4 + 26 + 12, 'every added case exists'); // P168f appends exactly four annual cases; 18.10.2026 appends 26, the G31 switch twelve holds; the legacy prefix is unchanged.
+  assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4 + 11 + 1 + 2 + 4 + 26 + 12 + 13, 'every added case exists'); // P168f appends exactly four annual cases; 18.10.2026 appends 26, the G31 switch twelve holds, P276 13 cells; the legacy prefix is unchanged.
   const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [
     ['cases', 212, '9cf17195cb335fc74461cf054fb406be4846bb0a35165d25d5c8d3f897a440b6'], // P177 changes HL recast evidence and two CIG-C fingerprints, not period-label authority.
