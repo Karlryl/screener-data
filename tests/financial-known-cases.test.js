@@ -637,13 +637,17 @@ test('excluded list: a quarantined packet has null sector, industry, market cap 
 test('listing aliases: YSNG.VI, PDN.TO, PALAF, MFSL.NS and ANE.MC are corrected like their primary; unrelated ticker untouched', () => {
   // P177 makes HL numeric; its full alias result is checked in the dedicated HL test below.
   const aliases = Object.fromEntries(table.cases.filter(c => c.listingAliases && (c.periodType !== '12M' || c.replacementValue === null)).map(c => [c.ticker, c.listingAliases]));
-  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'], '1ANE.MI': ['ANE.MC'], 'CDR.WA': ['OTGLF'], 'KINV-A.ST': ['KINV-B.ST'] }); // P168d adds the MFSL listing, 14.10.2026 the ANE.MC listing, 18.10.2026 the OTGLF listing, P276 the KINV-B.ST listing; numeric P177/P168e aliases have dedicated tests.
+  assert.deepEqual(aliases, { 'YSN.DE': ['YSNG.VI'], 'PDN.AX': ['PDN.TO', 'PALAF'], 'MFSL.BO': ['MFSL.NS'], '1ANE.MI': ['ANE.MC'], 'CDR.WA': ['OTGLF'], 'KINV-A.ST': ['KINV-B.ST', 'KNEVF'] }); // P168d adds the MFSL listing, 14.10.2026 the ANE.MC listing, 18.10.2026 the OTGLF listing, P276 the KINV-B.ST and KNEVF listings (KNEVF on the quarterly holds only); numeric P177/P168e aliases have dedicated tests.
   const leg = (primary, alias) => { const s = clone(annualFixture[primary]); s.meta.ticker = alias; return s; };
   for (const [primary, list] of Object.entries(aliases)) for (const alias of list) {
     const input = leg(primary, alias), original = serial(input), r = applyFinancialCases(input);
     const primaryOut = applyFinancialCases(clone(annualFixture[primary])).snapshot;
     assert.equal(serial(r.snapshot.timeseries), serial(primaryOut.timeseries), alias + ' corrected like ' + primary);
-    assert.equal(serial(r.snapshot.annual), serial(primaryOut.annual), alias + ' annual like ' + primary);
+    // P276: KNEVF carries Kinnevik's vendor quarters but another annual series, so it is no alias of the annual holds:
+    // its annual block must stay exactly the input, every other alias leg must equal the primary.
+    const annualAlias = table.cases.filter(c => c.ticker === primary && c.periodType === '12M' && c.replacementValue === null)
+      .every(c => (c.listingAliases || []).includes(alias));
+    assert.equal(serial(r.snapshot.annual), serial(annualAlias ? primaryOut.annual : input.annual), alias + ' annual like ' + (annualAlias ? primary : 'its input'));
     // False zeros remain withheld (missing).
     assert.ok(r.events.some(e => e.status === 'missing' && e.ticker === alias));
     assert.equal(serial(input), original);

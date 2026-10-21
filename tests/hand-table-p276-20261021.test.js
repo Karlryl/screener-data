@@ -3,8 +3,10 @@
 // - TWE.AX / TSRYF annualOpInc: the vendor values 57.5 / 518.1 / 42.6 / 182.7 Mio AUD appear in no report. The issuer's
 //   operating line is "Profit before tax and finance costs" (after all operating expenses, before finance items and
 //   tax); its values -1,279.6 / 736.6 / 266.6 / 409.7 Mio AUD replace them.
-// - KINV-A.ST / KINV-B.ST revenue: Kinnevik reports no revenue line. The vendor fills it with dividends received or
-//   fair-value changes (negative "revenue", 2022 a false 0). Every annual and quarterly cell is withheld, never 0.
+// - KINV-A.ST / KINV-B.ST / KNEVF revenue: Kinnevik reports no revenue line. The vendor fills the years with dividends
+//   received or a 0 (2022 a false 0) and the quarters with profit after financial net (partly negative). Every annual
+//   and quarterly cell is withheld, never 0. KNEVF carries the identical quarters but a different annual series (the
+//   fair-value change), so it is an alias of the quarterly holds only; its annual series is left as it is.
 // Real frozen packets of the daily run 39563364953 (tests/fixtures/hand-table-p276.json). Every red probe changes an
 // in-memory table copy only; live files are hashed before and after.
 const test = require('node:test'), assert = require('node:assert/strict');
@@ -39,6 +41,9 @@ const kinv = [
 ];
 const cells = [...twe.map(c => ['TWE.AX', ...c]), ...kinv.map(c => ['KINV-A.ST', ...c])];
 const listings = { 'TWE.AX': ['TWE.AX', 'TSRYF'], 'KINV-A.ST': ['KINV-A.ST', 'KINV-B.ST'] };
+// Listings that carry the exact vendor values of a series (KNEVF: identical quarters, other annual values).
+const listingsFor = (ticker, field) => field === 'revenueQ' ? [...listings[ticker], 'KNEVF'] : listings[ticker];
+const kinvAll = [...listings['KINV-A.ST'], 'KNEVF'];
 const idFor = ([ticker, field, period]) => `${ticker.toLowerCase()}-${period}-${field}-20261021`;
 const box = field => field.startsWith('annual') ? 'annual' : 'timeseries';
 
@@ -61,11 +66,13 @@ function guard(cell, config, raw) {
   assert.equal(row?.financialCorrection?.caseId, idFor(cell), idFor(cell) + ': own reason marker');
 }
 
-// Real nonzero CLI proof: P276_RED_CASE=<caseId> node tests/hand-table-p276-20261021.test.js exits 1.
+// Real nonzero CLI proof: P276_RED_CASE=<caseId> [P276_RED_LISTING=<listing>] node tests/hand-table-p276-20261021.test.js
+// exits 1. Without P276_RED_LISTING the primary listing is probed.
 if (process.env.P276_RED_CASE) {
   const cell = cells.find(c => idFor(c) === process.env.P276_RED_CASE);
-  assert.ok(cell, 'known red-once target');
-  try { guard(cell, without(c => c.caseId === idFor(cell)), fixtures[cell[0]]); } finally { assert.deepEqual(liveHashes(), beforeHashes); }
+  const listing = process.env.P276_RED_LISTING || cell?.[0];
+  assert.ok(cell && listingsFor(cell[0], cell[1]).includes(listing), 'known red-once target');
+  try { guard(cell, without(c => c.caseId === idFor(cell)), fixtures[listing]); } finally { assert.deepEqual(liveHashes(), beforeHashes); }
 }
 
 test('13 sourced cells, appended, only TWE and Kinnevik, no substitute 0', () => {
@@ -75,7 +82,7 @@ test('13 sourced cells, appended, only TWE and Kinnevik, no substitute 0', () =>
   assert.equal(first + own.length, table.cases.length, 'appended after every earlier case');
   for (const c of own) {
     assert.equal(c.verifiedAt, '2026-10-21');
-    assert.deepEqual(c.listingAliases, listings[c.ticker].slice(1));
+    assert.deepEqual(c.listingAliases, listingsFor(c.ticker, c.field).slice(1));
     assert.match(c.reason, /Geprüft am 21\.10\.2026\.$/);
     assert.notEqual(c.replacementValue, 0, 'never a substitute 0');
     for (const s of c.sources) { assert.match(s.url, /^https:\/\//); assert.ok(s.page && s.quote && s.form && s.published); }
@@ -96,7 +103,7 @@ for (const cell of cells) test(idFor(cell) + ': exact fingerprint on every listi
   const [ticker, field, period, old, shown] = cell, b = box(field);
   const c = table.cases.find(c => c.caseId === idFor(cell));
   assert.deepEqual([c.ticker, c.field, c.period, c.expectedBadValue, c.replacementValue], [ticker, field, period, old, shown]);
-  for (const t of listings[ticker]) {
+  for (const t of listingsFor(ticker, field)) {
     const raw = fixtures[t], i = raw[b][field + 'Ends'].indexOf(period);
     assert.equal(c.currency, raw.meta.reportingCurrencyOriginal);
     assert.equal(old * raw.meta.fxRateApplied, value(raw[b][field][i]), t + ': exact stored USD fingerprint');
@@ -116,13 +123,14 @@ test('the wrong values never come back: TWE operating series is the issuer serie
     assert.deepEqual(native(out), [-1279600000, 736600000, 266600000, 409700000], t + ' issuer after');
     assert.ok(financialReasons(out).some(s => s.startsWith('Betriebsergebnis korrigiert: Treasury Wine Estates')));
   }
-  for (const t of listings['KINV-A.ST']) {
+  for (const t of kinvAll) {
     const raw = fixtures[t], old = applyFinancialCases(raw, { table: before }).snapshot, out = applyFinancialCases(raw).snapshot;
-    // Before: the filter universe showed 174.28 % "revenue growth" (Q2 2026 against Q2 2025 fair-value lines).
+    // Before: the filter universe showed 174.28 % "revenue growth" (Q2 2026 against Q2 2025 profit after financial net).
     assert.equal((revQuartalsYoY(old) * 100).toFixed(2), '174.28', t + ' vendor quarterly growth before');
     assert.equal(revQuartalsYoY(out), null, t + ': no quarterly revenue growth');
     assert.equal(revGrowthLevel(out), null, t + ': no revenue growth at all');
-    assert.ok(out.annual.annualRev.every(r => value(r) === null), t + ': every annual revenue withheld, no 0');
+    if (t === 'KNEVF') assert.deepEqual(out.annual.annualRev, raw.annual.annualRev, 'KNEVF annual series is another vendor series, untouched');
+    else assert.ok(out.annual.annualRev.every(r => value(r) === null), t + ': every annual revenue withheld, no 0');
     assert.ok(out.timeseries.revenueQ.every(r => value(r) === null), t + ': every quarterly revenue withheld, no 0');
     assert.ok(financialReasons(out).some(s => s.includes('Kinnevik ist eine Beteiligungsgesellschaft')));
   }
@@ -132,7 +140,7 @@ test('nothing else changes; idempotent; a later Kinnevik quarter finds no year-a
   for (const [t, raw] of Object.entries(fixtures)) {
     const out = applyFinancialCases(raw).snapshot, old = applyFinancialCases(raw, { table: before }).snapshot;
     assert.deepEqual(applyFinancialCases(out).snapshot, out, t + ' idempotent');
-    const targeted = new Set(cells.filter(c => listings[c[0]].includes(t)).map(c => c[1]));
+    const targeted = new Set(cells.filter(c => listingsFor(c[0], c[1]).includes(t)).map(c => c[1]));
     for (const b of ['timeseries', 'annual']) for (const field of Object.keys(raw[b])) {
       if (!targeted.has(field)) assert.deepEqual(out[b][field], old[b][field], `${t} ${field} untouched`);
     }
@@ -143,7 +151,7 @@ test('nothing else changes; idempotent; a later Kinnevik quarter finds no year-a
   // ponytail: no coverage for a withheld-only series (table design); a new vendor quarter shows but has no
   // year-ago partner until Q3 2027 (Q3 2025 is absent, Q4 2025 to Q2 2026 are withheld). Ceiling: from Q3 2027 a
   // vendor pair could return; the non-operating class route (configs/non-operating-classes.json) is the upgrade.
-  for (const t of listings['KINV-A.ST']) {
+  for (const t of kinvAll) {
     const next = structuredClone(fixtures[t]);
     next.timeseries.revenueQ.unshift({ value: 1 }); next.timeseries.revenueQEnds.unshift('2026-09-30');
     const out = applyFinancialCases(next).snapshot;
