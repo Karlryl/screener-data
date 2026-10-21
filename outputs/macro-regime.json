@@ -1,9 +1,9 @@
 {
-  "asOf": "2026-10-20T08:49:37.387Z",
+  "asOf": "2026-10-21T08:53:23.783Z",
   "ticker": "SPY",
   "maPeriod": 200,
   "regimeCounts": {
-    "BULL": 144,
+    "BULL": 145,
     "BEAR": 2,
     "SIDEWAYS": 16
   },
@@ -978,6 +978,12 @@
       "regime": "BULL",
       "price": 763.25,
       "sma200": 721.88,
+      "_convention": "sma=t-200..t-1, price=t-1"
+    },
+    "2026-10-20": {
+      "regime": "BULL",
+      "price": 766.48,
+      "sma200": 722.33,
       "_convention": "sma=t-200..t-1, price=t-1"
     }
   }
