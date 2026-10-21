@@ -62,7 +62,7 @@ test('P168e: unrelated ticker, period, currency, unit and changed vendor value s
   assert.deepEqual(scan(raw).fresh.map(x => x.reihe), ['annualNetIncome'], 'other series of a corrected ticker is not approved');
 });
 
-test('P168e: both Kinnevik listings apply the exact sourced case without changing revenue', () => {
+test('P168e: both Kinnevik listings apply the exact sourced case; P276 withholds the revenue series', () => {
   for (const [ticker, fx] of [['KINV-A.ST', 0.099577785], ['KINV-B.ST', 0.099898696]]) {
     const raw = fixture(ticker, fx);
     raw.annual.annualOpInc = [0, 21964310, 893851920, 0].map(value => ({ value: value * fx }));
@@ -70,8 +70,10 @@ test('P168e: both Kinnevik listings apply the exact sourced case without changin
     raw.annual.annualRevEnds = [...raw.annual.annualOpIncEnds];
     const result = scan(raw);
     assert.equal(result.findings.find(x => x.reihe === 'annualOpInc').handtabellenFall, 'p168e-kinv-2023-12-31-annualOpInc');
-    assert.deepEqual(result.fresh.map(x => x.reihe), ['annualRev']);
-    assert.deepEqual(F.applyFinancialCases(raw).snapshot.annual.annualRev, raw.annual.annualRev);
+    // P276 (21.10.2026): Kinnevik reports no revenue line; every vendor revenue year is withheld (never 0), so the
+    // revenue spike is no longer NEU. Before P276 this asserted ['annualRev'] and an unchanged revenue series.
+    assert.deepEqual(result.fresh.map(x => x.reihe), []);
+    assert.ok(F.applyFinancialCases(raw).snapshot.annual.annualRev.every(row => row.value === null && row.financialCorrection?.caseId?.startsWith('kinv-a.st-')));
   }
 });
 

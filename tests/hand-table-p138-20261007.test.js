@@ -62,7 +62,7 @@ test('P138 appends exactly ten cells, two coverage entries and two genuine trimm
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
     '1c61b93d34b5c283b345d911be792a7160f8c4d5bdfd348dd9a83dc3252cfaf9'); // P177 refreshes HL period ends and two CIG-C cells; the full prefix stays pinned.
-  assert.equal(Object.keys(fixtures).length, 68); // P177 appends the real frozen BYLOT packet after the two P138 fixtures; 18.10.2026 appends four 17.10. packets; the G31 switch appends 000599.SZ (P268).
+  assert.equal(Object.keys(fixtures).length, 69); // P177 appends the real frozen BYLOT packet after the two P138 fixtures; 18.10.2026 appends four 17.10. packets; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST.
   assert.equal(hash(fixtures['000688.SZ']), '74c1bfc25c4fe547fb5a3ab14e730095ad46671a8212f92846bd838ff266f408');
   assert.equal(hash(fixtures['GRANULES.NS']), '2205dd5cbaf8ab29e2766e78298b2535404b4364a0de0b0d9b935a5121622483');
 });
