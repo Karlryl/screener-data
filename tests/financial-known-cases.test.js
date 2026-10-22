@@ -51,14 +51,15 @@ test('all 316 authorized cells (260 quarterly, 56 annual) and eleven held packet
 });
 
 // M1: a series with any non-null value (replaced or confirmed) needs exactly one coverage entry.
-test('coverage is mandatory for every series with a non-null value, unique, and absent for false-zero series', () => {
+test('coverage is mandatory for every series with a non-null value, unique, and absent for false-zero series except the MODEC hold', () => {
   const need = new Set(table.cases.filter(c => c.periodType === '3M' && c.replacementValue !== null).map(c => c.ticker + '|' + c.field));
   assert.deepEqual([...need].sort(), [...['ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'CSWC', 'FSK', 'GBDC', 'HTGC', 'KBDC', 'MAIN', 'MSDL',
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ', 'CIG-C|grossProfitQ',
     '000688.SZ|revenueQ', 'GRANULES.NS|revenueQ', 'BYLOT.AT|revenueQ', 'CDR.WA|revenueQ', '000552.SZ|revenueQ', 'CDR.WA|opIncQ', 'CDR.WA|grossProfitQ'].sort()); // P177 adds the five verified BYLOT quarters and their coverage; 18.10.2026 adds CDR.WA (three series) and 000552.SZ.
-  assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need].sort());
+  // P148 (22.10.2026): MODEC revenue is the only all-null series that carries coverage (tests/modec-followup.test.js), so the next vendor quarter stays empty.
+  assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need, '6269.T|revenueQ'].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
   assert.throws(() => validateTable(noHtgc), /Missing financial coverage: HTGC\|revenueQ/);
   const noKey = clone(table); delete noKey.coverage; assert.throws(() => validateTable(noKey), /Invalid financial hand table/);
@@ -320,7 +321,7 @@ const nextQuarter = (s, v = 60e6) => {
 };
 test('coversThrough: newer vendor quarter is missing and stale; covered quarters corrected; unrelated ticker untouched', () => {
   const revenueCovered = table.coverage.filter(v => v.field === 'revenueQ').map(v => v.ticker);
-  assert.deepEqual(revenueCovered.slice().sort(), ['000552.SZ', '000688.SZ', '8020.T', 'ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'BYLOT.AT', 'CARG', 'CDR.WA', 'CSWC', 'DCO', 'FSK', 'GBDC', 'GRANULES.NS', 'HTGC', // P177 adds verified BYLOT coverage; 18.10.2026 adds CDR.WA and 000552.SZ.
+  assert.deepEqual(revenueCovered.slice().sort(), ['000552.SZ', '000688.SZ', '6269.T', '8020.T', 'ARCC', 'BANPU.BK', 'BBDC', 'BXSL', 'BYLOT.AT', 'CARG', 'CDR.WA', 'CSWC', 'DCO', 'FSK', 'GBDC', 'GRANULES.NS', 'HTGC', // P177 adds verified BYLOT coverage; 18.10.2026 adds CDR.WA and 000552.SZ.
     'INFQ', 'KBDC', 'MAIN', 'MSDL', 'OBDC', 'OTF', 'OXLC', 'PLUS', 'PSEC', 'SLCE3.SA', 'TRIN', 'TSLX']);
   for (const ticker of revenueCovered.filter(t => t !== 'BANPU.BK')) {
     const input = nextQuarter(clone(fixture[ticker])), original = serial(input);
@@ -1452,13 +1453,18 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   // The table without the 18.10.2026 rows still yields the P177/P168d state byte for byte.
   const earlier = clone(table); earlier.cases = earlier.cases.filter(c => !['2026-10-18-sdhand', '2026-10-18-sdg31'].includes(c.revision));
   earlier.coverage = earlier.coverage.filter(v => !['CDR.WA', '000552.SZ'].includes(v.ticker));
-  assert.equal(digest(results(validateTable(earlier))), 'd7ed5c4f8878a4d11dc2e16e5de2bcf16891d1b690dee5e0aceca9ed61093855', // P168d changed only revision annotations in these 42 fixtures; values and evidence remain pinned.
+  // P148 (22.10.2026) bumps the table revision; the two legacy pins below are reproduced under the revision label they were taken with.
+  const P168D = '2026-10-11-p168d';
+  assert.equal(digest(results(validateTable({ ...earlier, revision: P168D }))), 'd7ed5c4f8878a4d11dc2e16e5de2bcf16891d1b690dee5e0aceca9ed61093855', // P168d changed only revision annotations in these 42 fixtures; values and evidence remain pinned.
     'P177 results with P168d revision annotations, including events and reader-facing reasons');
   // 18.10.2026 withholds the four VCTR annual gross-profit years; VCTR is the only one of these 42 results that changes.
   const now = results(), old = results(validateTable(earlier));
   assert.deepEqual(now.filter((r, i) => serial(r) !== serial(old[i])).map(r => r[0]), ['VCTR']);
   // G31 switch (18.10.2026): the four VCTR quarterly GP holds change only VCTR again (asserted above); new pin.
-  assert.equal(digest(now), 'dcf22be3b9ddae04473499e2008c04bfc07b06f5cd5406c216aab4795366dbfe', 'current results pinned');
+  assert.equal(digest(results(validateTable({ ...table, revision: P168D }))), 'dcf22be3b9ddae04473499e2008c04bfc07b06f5cd5406c216aab4795366dbfe',
+    'the pre-P148 results are unchanged (the revision bump alters annotations only)');
+  // P148: current results with the current revision label.
+  assert.equal(digest(now), '31be014df58a8a0964ba2a578c9e54fcda475ab949b32b02d6a79eed3518f01e', 'current results pinned');
 });
 
 test('period-label validation rejects malformed dates, evidence, duplicate authority and contradictory values', () => {
