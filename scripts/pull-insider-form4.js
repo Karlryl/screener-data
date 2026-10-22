@@ -56,6 +56,7 @@ const https = require('https');
 // Tag 189: atomic tmp+rename writes for both cache files.
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { readJsonExistingOrThrow, FEHLT } = require('../lib/read-json.js');
+const { archiveThenCap, serializeCache, snapshotRows, expandCache } = require('../lib/form4-cache-archive.js');
 
 // ─── Config ─────────────────────────────────────────────────────────────
 const ROOT = path.join(__dirname, '..');
@@ -127,9 +128,11 @@ function readJsonSafe(p) {
 // Erstanlage = Datei fehlt. Korrupt = vorhandener Bestand -> Wurf, nichts wird ueberschrieben.
 // Beide Form-4-Skripte teilen sich diesen Leser (pull-insider-form4-daily.js importiert ihn),
 // damit die Regel an EINER Stelle steht — sie schreiben dieselbe Datei.
+// P280: rows are stored compacted (lib/form4-cache-archive.js); expanded here so
+// every caller sees the full row shape.
 function ladeForm4Cache(p = FORM4_CACHE_PATH) {
   const v = readJsonExistingOrThrow(p);
-  return v === FEHLT ? {} : v;
+  return v === FEHLT ? {} : expandCache(v);
 }
 
 function ensureDir(p) {
@@ -621,12 +624,20 @@ async function main(opts = {}) {
   const byTicker = (existing && existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
 
-  const checkpoint = () => cacheWriter(cachePath, JSON.stringify({
-    updatedAt: new Date().toISOString(),
-    userAgentSource: 'process.env.SEC_CONTACT',
-    lookbackDays: FORM4_LOOKBACK_DAYS,
-    byTicker
-  }));
+  // P280: archive every row that leaves the cache, verify, then cap all tickers.
+  const archiveDir = opts.archiveDir || path.join(path.dirname(cachePath), 'archive', 'sec-form4');
+  let baseline = snapshotRows(byTicker);
+  const checkpoint = () => {
+    const arch = archiveThenCap({ byTicker, baseline, archiveDir,
+      lookbackDays: FORM4_LOOKBACK_DAYS, now: Date.now() });
+    cacheWriter(cachePath, serializeCache({
+      updatedAt: new Date().toISOString(),
+      userAgentSource: 'process.env.SEC_CONTACT',
+      lookbackDays: FORM4_LOOKBACK_DAYS,
+      byTicker
+    }));
+    baseline = arch.baseline;
+  };
 
   let fetched = 0, skippedFresh = 0, errors = 0, totalTxns = 0;
   for (const { ticker, cikInfo } of usTickers) {

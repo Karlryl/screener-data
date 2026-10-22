@@ -474,6 +474,7 @@ function form4MainHarness({ tickers = ['TST'], existing = { byTicker: {} }, pull
     opts: {
       externalDir: os.tmpdir(),
       cachePath: path.join(os.tmpdir(), 'form4-h05-never-written-' + process.pid + '.json'),
+      archiveDir: fs.mkdtempSync(path.join(os.tmpdir(), 'form4-h05-archive-')),
       watchlist: { stocks: tickers.map((ticker) => ({ ticker })) },
       tickerCikMap,
       existing,
@@ -488,8 +489,10 @@ function form4MainHarness({ tickers = ['TST'], existing = { byTicker: {} }, pull
   };
 }
 
-const H05_OLD_TXN = { accessionNumber: '0000000000-25-000009', transactionCode: 'S' };
-const H05_NEW_TXN = { accessionNumber: '0000000000-26-000001', transactionCode: 'P' };
+// P280: dated inside the 180-day window - since P280 every checkpoint caps all tickers
+// (rows without a date count as expired and go to the archive, as in the daily merge).
+const H05_OLD_TXN = { accessionNumber: '0000000000-25-000009', transactionCode: 'S', transactionDate: heuteISO };
+const H05_NEW_TXN = { accessionNumber: '0000000000-26-000001', transactionCode: 'P', transactionDate: heuteISO };
 const h05Previous = () => ({
   ticker: 'TST',
   fetchedAt: '2000-01-01T00:00:00.000Z',
