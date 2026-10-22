@@ -9206,6 +9206,7 @@
       "caseId": "banpu-mixed-issuer-packet-20260929",
       "ticker": "BANPU.BK",
       "reason": "Score fehlt: Anbieter vermischt Banpu mit Banpu Power; Jahreszahlen, Aktienzahl und Branchenzuordnung sind nicht verlässlich zugeordnet.",
+      "reasonDate": "2026-09-29",
       "fingerprint": [
         {
           "path": [
@@ -9252,6 +9253,7 @@
       "caseId": "kbdc-vendor-annual-revenue-20261001",
       "ticker": "KBDC",
       "reason": "Score fehlt: Jahresumsatz des Anbieters weicht vom SEC-Abschluss ab (2025: 235,8 Mio. USD, Anbieter 102,1 Mio.); er trägt den Großteil des Scores.",
+      "reasonDate": "2026-10-01",
       "fingerprint": [
         {
           "path": [
@@ -9293,6 +9295,7 @@
       "caseId": "hos-other-issuer-packet-20261001",
       "ticker": "HOS",
       "reason": "Score fehlt: Der Ticker HOS gehört seit 01.09.2026 zur umbenannten Helix Energy Solutions (SEC-Nr. 866829); der Anbieter liefert noch Zahlen der früheren Hornbeck Offshore von 2018/2019.",
+      "reasonDate": "2026-10-01",
       "fingerprint": [
         {
           "path": [
@@ -9335,7 +9338,8 @@
     {
       "caseId": "tyg-stale-2017-packet-20261001",
       "ticker": "TYG",
-      "reason": "Score fehlt: Die Abschlusszahlen des Anbieters enden mit dem Geschäftsjahr bis 30.11.2017; das daraus berechnete Wachstum (−98,9 %) ist kein aktueller Wert.",
+      "reason": "Score fehlt: Der Jahresumsatz des Anbieters steht in keinem Jahresbericht des Fonds (Geschäftsjahr bis 30.11.2025: 46,6 Mio. USD, laut Bericht 24,9 Mio. USD Anlageerträge; für 2023 sogar −25,7 Mio. USD). Ein Wachstum daraus wäre falsch. Geprüft am 22.10.2026.",
+      "reasonDate": "2026-10-22",
       "fingerprint": [
         {
           "path": [
@@ -9344,7 +9348,7 @@
             0,
             "value"
           ],
-          "expected": 1956780
+          "expected": 46610962
         },
         {
           "path": [
@@ -9353,21 +9357,11 @@
             0,
             "value"
           ],
-          "expected": -113427640
+          "expected": 19355818
         }
       ],
-      "annualPairPeriod": "2017-11-30",
+      "annualPairPeriod": "2025-11-30",
       "sources": [
-        {
-          "url": "https://www.sec.gov/Archives/edgar/data/1268533/000120677418000174/tyg3364733-ncsr.htm",
-          "page": "N-CSR FY2017, Statements of Operations, Year Ended November 30, 2017 (first column: Tortoise Energy Infrastructure)",
-          "quote": "Total Investment Income 1,956,784 4,420,833",
-          "unit": "USD",
-          "value": 1956784,
-          "start": "2016-12-01",
-          "end": "2017-11-30",
-          "accession": "0001206774-18-000174"
-        },
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1268533/000121390026013154/ea0272590-01_ncsr.htm",
           "page": "N-CSR FY2025, Consolidated Statement of Operations, year ended November 30, 2025",
@@ -9378,12 +9372,14 @@
           "end": "2025-11-30",
           "accession": "0001213900-26-013154"
         }
-      ]
+      ],
+      "vendorEvidence": "Snapshot of run 39741351636 (2026-10-22, fundamentals fetched 2026-10-14): annualRev 46,610,962 / 214,669,756 / -25,709,931 / 114,482,285 and annualNetIncome 19,355,818 / 210,921,731 / -15,622,613 / 103,261,597 for the fiscal years ending 2025-11-30 to 2022-11-30. Net income equals the N-CSR line \"Resulting from Operations\" (FY2025 19,355,818; FY2024 210,921,731; FY2023 (15,622,613), see docs/annual-spikes.md); the vendor revenue equals no N-CSR line (FY2025 Total Investment Income 24,889,525). Re-checked 2026-10-22; the hold of 2026-10-01 fingerprinted the earlier FY2017 packet (1,956,780 / -113,427,640)."
     },
     {
       "caseId": "olpx-delisted-zero-gross-profit-20261001",
       "ticker": "OLPX",
       "reason": "Score fehlt: Olaplex ist seit 07.07.2026 nach einer Übernahme nicht mehr börsennotiert; der Anbieter führt alle Quartals-Bruttogewinne als 0 (laut SEC Q1 2026: 71,7 Mio. USD).",
+      "reasonDate": "2026-10-01",
       "fingerprint": [
         {
           "path": [
@@ -9427,6 +9423,7 @@
       "caseId": "hlx-retired-ticker-20261002",
       "ticker": "HLX",
       "reason": "Score fehlt: Der Ticker HLX ist seit dem Zusammenschluss mit Hornbeck Offshore (8-K vom 04.09.2026) nicht mehr notiert; die Firma wird als HOS gehandelt. Kurs und Börsenwert unter HLX stehen seit 01.09.2026 still.",
+      "reasonDate": "2026-10-02",
       "fingerprint": [
         {
           "path": [
@@ -9463,6 +9460,7 @@
       "caseId": "yunji-pre-split-price-20261002",
       "ticker": "2670.HK",
       "reason": "Score fehlt: Der Anbieter zeigt für Yunji seit der Aktienteilung 1:10 (wirksam 23.09.2026) noch den Kurs vor der Teilung (97 HKD statt zuletzt 6,01 HKD) und damit einen Börsenwert von 8,57 statt rund 0,53 Mrd. USD. Mit dem richtigen Wert läge Yunji unter der Untergrenze von 800 Mio. USD.",
+      "reasonDate": "2026-10-02",
       "fingerprint": [
         {
           "path": [
@@ -9493,6 +9491,7 @@
       "caseId": "energisa-mixed-class-market-cap-20261002",
       "ticker": "ENGI3.SA",
       "reason": "Score fehlt: Der Anbieter rechnet den Börsenwert von Energisa mit 3,78 Mrd. Aktien zum Kurs der Stammaktie und zeigt 9,14 Mrd. USD. Energisa hat laut eigener Aktionärsstruktur vom 31.08.2026 975.954.372 Stamm- und 1.542.412.758 Vorzugsaktien; mit beiden Kursen sind das rund 5,4 Mrd. USD. Der Abruf kennt den Kurs der Vorzugsaktie nicht, deshalb bleibt Energisa gesperrt, bis er ihn kennt.",
+      "reasonDate": "2026-10-02",
       "fingerprint": [
         {
           "path": [
@@ -9523,6 +9522,7 @@
       "caseId": "jbs-frankfurt-wrong-share-count-20261002",
       "ticker": "Z98.DE",
       "reason": "Score fehlt: Der Anbieter rechnet den Börsenwert der Frankfurter JBS-Notierung mit 3,29 Mrd. Aktien und zeigt 37,4 Mrd. USD. Laut JBS sind es 1.070.929.187 Aktien (Klasse A und B), also rund 12,2 Mrd. USD. JBS selbst steht mit richtigem Börsenwert auf dem Board.",
+      "reasonDate": "2026-10-02",
       "fingerprint": [
         {
           "path": [
@@ -9553,6 +9553,7 @@
       "caseId": "wisdom-marine-twd-under-usd-20261002",
       "ticker": "2637.TW",
       "reason": "Score fehlt: Wisdom Marine berichtet in US-Dollar; der Anbieter führt alle Abschlusszahlen in Taiwan-Dollar unter dem Kennzeichen USD (Umsatz 2025: 16.949 Mio. statt 542,0 Mio. USD). Gesperrt, bis die Zahlen in der Berichtswährung vorliegen.",
+      "reasonDate": "2026-10-02",
       "fingerprint": [
         {
           "path": [
@@ -9596,6 +9597,7 @@
       "caseId": "402340.ks-equity-method-revenue-20261002",
       "ticker": "402340.KS",
       "reason": "Score fehlt: Der Anbieter zählt bei SK Square die Gewinne aus Beteiligungen zum Umsatz (zweites Quartal 2026: 19.609,8 statt 328,5 Mrd. KRW laut Halbjahresbericht). Das dritte und vierte Quartal 2025 hat die Firma nach dem Verkauf von Dreamus noch nicht auf der neuen Basis veröffentlicht; ein Wachstum aus gemischten Basen wäre falsch.",
+      "reasonDate": "2026-10-02",
       "fingerprint": [
         {
           "path": [

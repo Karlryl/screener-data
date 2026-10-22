@@ -57,11 +57,11 @@ test('P138 appends exactly ten cells, two coverage entries and two genuine trimm
   for (const [key, count, digest] of [
     ['cases', 216, '3cf2cd8528d0242838af9c2bfdbe8d13531e1d6c1c63f993c96eec8c09daa82b'], // P177 updates HL recast evidence and two CIG-C fingerprints within this prefix.
     ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],
-    ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],
+    ['quarantines', 11, '609406b7d3e5bfd3096867a5c88dae0b937623a70fbc1e5d76e2e4cce9967065'], // 22.10.2026: reasonDate on every hold; TYG re-checked on the FY2025 packet.
     ['periodLabels', 16, '57bb38710653f7db4cfb98a1e1820372f2c628ef22ff4fb5da0637fe44667445'],
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
-    '1c61b93d34b5c283b345d911be792a7160f8c4d5bdfd348dd9a83dc3252cfaf9'); // P177 refreshes HL period ends and two CIG-C cells; the full prefix stays pinned.
+    'd21d098a3c132f0523cc28b2e2017d54c5076af6c6cd296595d8a659e3cec16e'); // P177 refreshes HL period ends and two CIG-C cells; 22.10.2026 refreshes only TYG (FY2025 packet); the full prefix stays pinned.
   assert.equal(Object.keys(fixtures).length, 69); // P177 appends the real frozen BYLOT packet after the two P138 fixtures; 18.10.2026 appends four 17.10. packets; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST.
   assert.equal(hash(fixtures['000688.SZ']), '74c1bfc25c4fe547fb5a3ab14e730095ad46671a8212f92846bd838ff266f408');
   assert.equal(hash(fixtures['GRANULES.NS']), '2205dd5cbaf8ab29e2766e78298b2535404b4364a0de0b0d9b935a5121622483');
