@@ -1,145 +1,22 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-21T09:00:52.091Z",
+  "generated_at": "2026-10-22T08:58:20.084Z",
   "branch": "consumer-staples",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 66.9,
-    "generated_at": "2026-10-21T08:53:14.533Z"
+    "coverage_pct": 66,
+    "generated_at": "2026-10-22T08:50:10.212Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "LWAY",
-      "score": 66.2,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.154,
-        "companion": 42.2
-      },
-      "name": "Lifeway Foods, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": 334765504,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1988,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 68.1,
-      "scoreShrunk": 66.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 82.1,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 60.7,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 73.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 82.1,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 30,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 71.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 39.3,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 24.10344891560454,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 24.10344891560454,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 0.198,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 24.10344891560454,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.15415584415584416,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 2,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "SUJA",
-      "score": 66.1,
+      "score": 66.7,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -156,19 +33,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 438780128,
+      "marketCap": 398223904,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2026,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 68,
-      "scoreShrunk": 66.1,
+      "scoreBase": 68.8,
+      "scoreShrunk": 66.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -177,37 +54,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75,
+          "pct": 73.1,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 25,
+          "pct": 26.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 65.4,
+          "pct": 62.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 67.9,
+          "pct": 65.4,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 16.7,
+          "pct": 17.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 65.6,
+          "pct": 70,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 75,
+          "pct": 80.8,
           "weight": 2.4
         }
       ],
@@ -260,11 +137,134 @@
       }
     },
     {
+      "rank": 2,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "LWAY",
+      "score": 66.6,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.154,
+        "companion": 42.2
+      },
+      "name": "Lifeway Foods, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": 338693280,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1988,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 16,
+      "cohortFallback": false,
+      "scoreBase": 68.7,
+      "scoreShrunk": 66.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 80.8,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 65.4,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 70.8,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 80.8,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 25,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 76.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 42.3,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 24.10344891560454,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 24.10344891560454,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": 0.198,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 24.10344891560454,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.15415584415584416,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
       "rank": 3,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "HELE",
-      "score": 62.4,
+      "score": 62.5,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -279,7 +279,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 672948608,
+      "marketCap": 688152512,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -288,10 +288,10 @@
       "ipoYear": 1976,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 63.9,
-      "scoreShrunk": 62.4,
+      "scoreBase": 64.1,
+      "scoreShrunk": 62.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -300,37 +300,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 67.9,
+          "pct": 65.4,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 75,
+          "pct": 80.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 34.6,
+          "pct": 29.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 75,
+          "pct": 73.1,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 90,
+          "pct": 89.3,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 84.4,
+          "pct": 90,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 53.6,
+          "pct": 57.7,
           "weight": 2.4
         }
       ],
@@ -387,7 +387,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NGVC",
-      "score": 61.9,
+      "score": 62,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -403,7 +403,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 685614080,
+      "marketCap": 681696320,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -412,10 +412,10 @@
       "ipoYear": 2012,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 63.3,
-      "scoreShrunk": 61.9,
+      "scoreBase": 63.5,
+      "scoreShrunk": 62,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -424,37 +424,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 60.7,
+          "pct": 57.7,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 67.9,
+          "pct": 73.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 50,
+          "pct": 45.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 53.6,
+          "pct": 50,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 56.7,
+          "pct": 53.6,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 78.1,
+          "pct": 83.3,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 67.9,
+          "pct": 73.1,
           "weight": 2.4
         }
       ],
@@ -511,7 +511,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "PRE",
-      "score": 61.9,
+      "score": 61.8,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -530,7 +530,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 371160928,
+      "marketCap": 363550336,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -539,10 +539,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
       "scoreBase": 63.3,
-      "scoreShrunk": 61.9,
+      "scoreShrunk": 61.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -551,37 +551,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 96.4,
+          "pct": 96.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 96.4,
+          "pct": 96.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 96.2,
+          "pct": 95.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 96.4,
+          "pct": 96.2,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 76.7,
+          "pct": 75,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 15.6,
+          "pct": 16.7,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 3.6,
+          "pct": 3.8,
           "weight": 2.4
         }
       ],
@@ -591,7 +591,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 11.8,
-        "pctl": 0.929
+        "pctl": 0.923
       },
       "ath": null,
       "qPunkte": 5,
@@ -641,7 +641,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "AGCC",
-      "score": 61.4,
+      "score": 61.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -666,10 +666,10 @@
       "ipoYear": 2025,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 65.9,
-      "scoreShrunk": 61.4,
+      "scoreBase": 65.3,
+      "scoreShrunk": 61.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -678,22 +678,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 89.3,
+          "pct": 88.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 10.7,
+          "pct": 11.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 88.5,
+          "pct": 87.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 89.3,
+          "pct": 88.5,
           "weight": 0.6
         },
         {
@@ -703,7 +703,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 3.1,
+          "pct": 3.3,
           "weight": 2
         },
         {
@@ -765,7 +765,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VLGEA",
-      "score": 58.4,
+      "score": 58.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -779,7 +779,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 645111680,
+      "marketCap": 638300800,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -788,10 +788,10 @@
       "ipoYear": 1973,
       "coverageAxes": "5/7",
       "coverageWeight": 0.64,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 63.3,
-      "scoreShrunk": 58.4,
+      "scoreBase": 62.7,
+      "scoreShrunk": 58.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -800,12 +800,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 53.6,
+          "pct": 50,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 46.4,
+          "pct": 50,
           "weight": 0.5
         },
         {
@@ -815,17 +815,17 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 60.7,
+          "pct": 57.7,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 50,
+          "pct": 46.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 90.6,
+          "pct": 96.7,
           "weight": 2
         },
         {
@@ -886,131 +886,8 @@
       "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "LND",
-      "score": 52,
-      "track": "profitable",
-      "lamps": [
-        "unprofit",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.715,
-        "companion": -21.1
-      },
-      "name": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
-      "country": "Brazil",
-      "region": "South America",
-      "sector": "Consumer Defensive",
-      "marketCap": 366584896,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2012,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 52.3,
-      "scoreShrunk": 52,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 32.1,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 89.3,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 3.8,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 25,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 23.3,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 96.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 89.3,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": -9.170038530475555,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": -9.170038530475555,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": -0.715,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -9.170038530475555,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.7152335307387774,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 9,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "MAGN",
-      "score": 45.2,
+      "score": 44.3,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1028,7 +905,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 392917632,
+      "marketCap": 396861120,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1037,10 +914,10 @@
       "ipoYear": 1980,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 44.5,
-      "scoreShrunk": 45.2,
+      "scoreBase": 43.3,
+      "scoreShrunk": 44.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1049,22 +926,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 39.3,
+          "pct": 34.6,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 3.6,
+          "pct": 3.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 19.2,
+          "pct": 12.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 32.1,
+          "pct": 26.9,
           "weight": 0.6
         },
         {
@@ -1074,12 +951,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 46.9,
+          "pct": 50,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 82.1,
+          "pct": 88.5,
           "weight": 2.4
         }
       ],
@@ -1132,11 +1009,11 @@
       }
     },
     {
-      "rank": 10,
+      "rank": 9,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SNDL",
-      "score": 42.5,
+      "score": 41.3,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1152,7 +1029,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 308881664,
+      "marketCap": 315034688,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1161,10 +1038,10 @@
       "ipoYear": 2019,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 41.6,
-      "scoreShrunk": 42.5,
+      "scoreBase": 40.2,
+      "scoreShrunk": 41.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1173,37 +1050,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 46.4,
+          "pct": 42.3,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 82.1,
+          "pct": 88.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 57.7,
+          "pct": 54.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 39.3,
+          "pct": 34.6,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 36.7,
+          "pct": 32.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 28.1,
+          "pct": 30,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 25,
+          "pct": 26.9,
           "weight": 2.4
         }
       ],
@@ -1248,7 +1125,7 @@
         }
       },
       "g31OverviewShadow": {
-        "value": -0.1664472419047055,
+        "value": -0.1664472419047056,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -1256,11 +1133,11 @@
       }
     },
     {
-      "rank": 11,
+      "rank": 10,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "DNUT",
-      "score": 37.4,
+      "score": 38.6,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1278,7 +1155,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 511825024,
+      "marketCap": 515295008,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1287,10 +1164,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 35.9,
-      "scoreShrunk": 37.4,
+      "scoreBase": 37.2,
+      "scoreShrunk": 38.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1299,37 +1176,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 10.7,
+          "pct": 11.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 39.3,
+          "pct": 42.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 42.3,
+          "pct": 37.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 10.7,
+          "pct": 11.5,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 83.3,
+          "pct": 82.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 53.1,
+          "pct": 56.7,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 60.7,
+          "pct": 65.4,
           "weight": 2.4
         }
       ],
@@ -1382,11 +1259,11 @@
       }
     },
     {
-      "rank": 12,
+      "rank": 11,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VITL",
-      "score": 35.8,
+      "score": 37.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1403,7 +1280,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 350321184,
+      "marketCap": 352467776,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1412,10 +1289,10 @@
       "ipoYear": 2020,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 34.1,
-      "scoreShrunk": 35.8,
+      "scoreBase": 35.5,
+      "scoreShrunk": 37.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1424,37 +1301,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 25,
+          "pct": 26.9,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 53.6,
+          "pct": 57.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 80.8,
+          "pct": 79.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 17.9,
+          "pct": 19.2,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 10,
+          "pct": 10.7,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 34.4,
+          "pct": 36.7,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 17.9,
+          "pct": 19.2,
           "weight": 2.4
         }
       ],
@@ -1464,7 +1341,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 2.2,
-        "pctl": 0.786
+        "pctl": 0.769
       },
       "ath": null,
       "qPunkte": 5,
@@ -1510,11 +1387,11 @@
       }
     },
     {
-      "rank": 13,
+      "rank": 12,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "HNST",
-      "score": 30.8,
+      "score": 31.2,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1530,7 +1407,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 533203328,
+      "marketCap": 543395392,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1539,10 +1416,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 28.5,
-      "scoreShrunk": 30.8,
+      "scoreBase": 28.8,
+      "scoreShrunk": 31.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1551,37 +1428,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 17.9,
+          "pct": 19.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 17.9,
+          "pct": 19.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 26.9,
+          "pct": 20.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 46.4,
+          "pct": 42.3,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 70,
+          "pct": 67.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 21.9,
+          "pct": 23.3,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 46.4,
+          "pct": 50,
           "weight": 2.4
         }
       ],
@@ -1591,7 +1468,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 4.4,
-        "pctl": 0.857
+        "pctl": 0.846
       },
       "ath": null,
       "qPunkte": 5,
@@ -1637,11 +1514,11 @@
       }
     },
     {
-      "rank": 14,
+      "rank": 13,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MGPI",
-      "score": 12.8,
+      "score": 13,
       "track": "profitable",
       "lamps": [
         "unprofit"
@@ -1655,7 +1532,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 321639424,
+      "marketCap": 323994976,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1664,10 +1541,10 @@
       "ipoYear": 1988,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 22.8,
-      "scoreShrunk": 25.7,
+      "scoreBase": 23,
+      "scoreShrunk": 26,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1676,37 +1553,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 3.6,
+          "pct": 3.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 32.1,
+          "pct": 34.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 11.5,
+          "pct": 4.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 3.6,
+          "pct": 3.8,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 63.3,
+          "pct": 60.7,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 59.4,
+          "pct": 63.3,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 32.1,
+          "pct": 34.6,
           "weight": 2.4
         }
       ],
