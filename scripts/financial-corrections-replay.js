@@ -34,15 +34,33 @@ const LABEL_ANNOTATION = 'reportedRevenueQEnds';
  * @returns {Array<object>} The cell changes (event plus oldRow/newRow); throws on any unrelated byte.
  */
 function diffCells(before, after, events, annotations = null) {
-  const restore = clone(after), changes = [];
+  const restore = clone(after), changes = [], inserted = {};
+  // A leading-gap fill (vendor-gap-filled) inserts a cell in front of a series. It is matched by its period end and cut
+  // out again with the entries the overlay shifted alongside (Ends, netIncomeQ without own Ends, statementPeriods), so
+  // every other byte still compares by position; event indices name output positions and are moved back by the cuts.
+  for (const e of events.filter(e => e.reasonCode === 'vendor-gap-filled')) {
+    const block = restore[e.container], k = (block?.[e.field + 'Ends'] || []).indexOf(e.period);
+    const row = block?.[e.field]?.[k];
+    assert.ok(k >= 0 && row?.financialCorrection?.caseId === e.caseId && row.financialCorrection.originalVendorRow === null,
+      before.meta.ticker + ': inserted cell ' + e.caseId + ' not found by period end');
+    changes.push({ ...e, oldRow: null, newRow: row });
+    const cut = (obj, key) => { if (Array.isArray(obj?.[key])) obj[key] = obj[key].filter((_, j) => j !== k); };
+    cut(block, e.field + 'Ends');
+    for (const f of [e.field, ...(e.field === 'revenueQ' && !Array.isArray(block.netIncomeQEnds) ? ['netIncomeQ'] : [])]) {
+      cut(block, f); cut(restore.meta?.statementPeriods, f);
+      inserted[e.container + '/' + f] = (inserted[e.container + '/' + f] || 0) + 1;
+    }
+  }
   // Stale cells are withheld as missing, so they are cell changes too and must be listed.
-  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status) &&
+  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status) && e.reasonCode !== 'vendor-gap-filled' &&
     typeof e.container === 'string' && typeof e.field === 'string' && Number.isInteger(e.index))) {
-    const original = before[e.container][e.field][e.index];
+    // ponytail: fills are always leading, so every other cell of a filled series sits behind all inserted ones.
+    const i = e.index - (inserted[e.container + '/' + e.field] || 0);
+    const original = before[e.container][e.field][i];
     const changed = after[e.container][e.field][e.index];
     if (serial(original) === serial(changed)) continue;
     changes.push({ ...e, oldRow: original, newRow: changed });
-    restore[e.container][e.field][e.index] = clone(original);
+    restore[e.container][e.field][i] = clone(original);
   }
   if (events.some(e => e.status === 'quarantined' || e.reasonCode === 'quarantine-superseded')) {
     const { financialDataIssue: oldIssue, ...oldMeta } = before.meta;

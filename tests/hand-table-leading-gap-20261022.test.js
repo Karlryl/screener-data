@@ -10,6 +10,8 @@ const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const { applyFinancialCases, financialReasons, table } = require('../lib/financial-known-cases.js');
 const { g31Shadow } = require('../lib/g31-recency.js');
+const { diffCells } = require('../scripts/financial-corrections-replay.js');
+const { latestReportedQuarter, quarterAgeDays } = require('../lib/stale-quarter-reload.js');
 const stored = require('./fixtures/hand-table-leading-gap-plus.json').snapshots.PLUS;
 const root = path.resolve(__dirname, '..');
 const value = row => typeof row === 'number' ? row : row?.value ?? null;
@@ -88,6 +90,67 @@ test('no fill when the vendor delivers the quarter itself or a newer one', () =>
   const sh = apply(shifted);
   assert.deepEqual(sh.timeseries.revenueQEnds, shifted.timeseries.revenueQEnds);
   assert.equal(sh.timeseries.revenueQ[0].financialMissing.reasonCode, 'period-not-verified');
+});
+
+// Review of PR #22 (22.10.2026): the pull often keeps one older, empty netIncomeQ cell more than revenueQ (FSK: 6 vs 5,
+// trailing null). netIncomeQ is read by position from index 0 against revenueQEnds, so it must shift at any length, and
+// its statement periods with it; before this fix the March value sat under the June end.
+const longer = input => {
+  const s = structuredClone(input);
+  s.timeseries.netIncomeQ.push(null);
+  s.meta.statementPeriods.netIncomeQ.push(null);
+  return s;
+};
+for (const [name, input] of [['stored', stored], ['raw', raw], ['stored, netIncomeQ one longer', longer(stored)],
+  ['raw, netIncomeQ one longer', longer(raw)]]) {
+  test(`netIncomeQ, statement periods and event indices stay aligned after the fill (${name})`, () => {
+    const logged = [], before = structuredClone(input);
+    const { snapshot: s, events } = applyFinancialCases(structuredClone(input), { onEvent: e => logged.push(e) });
+    const ts = s.timeseries, ends = ts.revenueQEnds;
+    assert.equal(ends[0], '2026-06-30');
+    assert.equal(ts.netIncomeQ.length, input.timeseries.netIncomeQ.length + 1);
+    assert.deepEqual(ts.netIncomeQ.map(value), [null, ...input.timeseries.netIncomeQ.map(value)]);
+    // Every stored netIncomeQ value still sits under its own quarter end.
+    input.timeseries.netIncomeQ.forEach((row, i) => { if (value(row) != null) assert.equal(ends[i + 1], input.timeseries.revenueQEnds[i]); });
+    for (const f of ['revenueQ', 'netIncomeQ']) {
+      const periods = s.meta.statementPeriods[f];
+      assert.equal(periods.length, input.meta.statementPeriods[f].length + 1, f);
+      periods.forEach((p, i) => { if (p) assert.equal(p.end, ends[i], `${f} ${i}`); });
+    }
+    // Events name output positions: the fill, the corrected March cell and the withheld coverage cell alike.
+    for (const e of events.filter(e => e.container === 'timeseries' && Number.isInteger(e.index))) {
+      assert.equal(ts[e.field + 'Ends'][e.index], e.period, e.caseId);
+    }
+    assert.deepEqual(logged, events);
+    // The replay's byte check (scripts/financial-corrections-replay.js) passes: only the named cells changed.
+    const changes = diffCells(before, s, events);
+    const filled = changes.filter(c => c.reasonCode === 'vendor-gap-filled');
+    assert.deepEqual(filled.map(c => [c.field, c.oldRow, value(c.newRow)]),
+      Object.entries(june).map(([f, v]) => [f, null, v]));
+  });
+}
+
+test('replay byte check stays strict on a filled series', () => {
+  const { snapshot: s, events } = applyFinancialCases(structuredClone(raw));
+  // The pre-fix shape (netIncomeQ not shifted) is an unrelated byte change and must still throw.
+  const unshifted = structuredClone(s);
+  unshifted.timeseries.netIncomeQ = unshifted.timeseries.netIncomeQ.slice(1);
+  assert.throws(() => diffCells(raw, unshifted, events), /all unrelated bytes must match/);
+  // A fill event whose cell is not at its period end throws instead of passing silently.
+  const moved = structuredClone(s);
+  moved.timeseries.revenueQEnds[0] = '2026-07-31';
+  assert.throws(() => diffCells(raw, moved, events), /inserted cell plus-2026-06-30-revenueQ not found/);
+});
+
+// Review of PR #22, third point: the stale-quarter reload plans from latestReportedQuarter (hand tables applied) but
+// compares the reload bundle without them (pull-yahoo.js, "older than stored"). Counting the fill there would hide
+// PLUS from the reload until 28.10. and then reject each reload as older than stored; the fill is no vendor delivery.
+test('the stale-quarter reload still sees the vendor newest quarter, not the fill', () => {
+  const now = Date.parse('2026-10-22T12:00:00Z');
+  for (const input of [stored, raw, apply(stored), apply(raw)]) {
+    assert.equal(latestReportedQuarter(structuredClone(input), now), '2026-03-31');
+  }
+  assert.ok(quarterAgeDays('2026-03-31', now) > 120); // still a reload candidate, as on origin/main
 });
 
 test('live files unchanged', () => assert.deepEqual(liveHashes(), beforeHashes));
