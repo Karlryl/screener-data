@@ -6,7 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
-const { buildUniverse, growth3, validateUniverse, build, ROW_KEYS, NUMBER_KEYS, MAX_BYTES } = require('../scripts/write-filter-universe.js');
+const { buildUniverse, growth3, salesMultiples, validateUniverse, build, ROW_KEYS, NUMBER_KEYS, MAX_BYTES } = require('../scripts/write-filter-universe.js');
 const { mischVal, mischVerhaeltnisUnkorrigiert } = require('../scripts/write-board-history.js');
 const { MAX_FCF_MARGIN_PCT } = require('../scripts/write-rule40-export.js');
 const snapshots = require('./fixtures/w6/snapshots.json');
@@ -72,6 +72,47 @@ test('sales ratios follow PIT FX evidence while both PE ratios stay strict', () 
     assert.equal(actual.ps ?? null, mischVal(source.metrics.priceSales, withheld));
     assert.equal(actual.evs ?? null, mischVal(source.metrics.enterpriseToRevenue, withheld));
   }
+});
+
+test('negative or zero sales multiples are withheld with a reason, never shown (Kinnevik)', () => {
+  // Shapes from the stored snapshots of 2026-08-29: KINV-A.ST (revenue TTM -843 M USD, Yahoo P/S -2.18,
+  // EV/S -1.27), a Pershing-like row (negative revenue AND negative EV: EV/S positive but meaningless) and
+  // a net-cash bank-like row (positive revenue, EV/S -1.14).
+  const cases = [
+    ['KINV-A.ST', { revenueTTM: -843022392, priceSales: -2.1796038, enterpriseToRevenue: -1.274 }, undefined, undefined, 'umsatz-negativ'],
+    ['PSHLIKE', { revenueTTM: -1e8, priceSales: -10.6, enterpriseToRevenue: 10.01 }, undefined, undefined, 'umsatz-negativ'],
+    ['NOREV', { priceSales: -3.3 }, undefined, undefined, 'umsatz-negativ'],
+    ['NETCASH', { revenueTTM: 5e8, priceSales: 2.43, enterpriseToRevenue: -1.14 }, 2.43, undefined, 'ev-negativ'],
+    ['EVZERO', { revenueTTM: 5e8, priceSales: 2, enterpriseToRevenue: 0 }, 2, undefined, 'ev-negativ'],
+    ['OK', { revenueTTM: 5e8, priceSales: 2, enterpriseToRevenue: 0.004 }, 2, 0.004, null],
+    ['REVZERO', { revenueTTM: 0, priceSales: 2, enterpriseToRevenue: 3 }, 2, 3, null],
+  ];
+  const list = cases.map(([ticker, values]) => {
+    const copy = structuredClone(snapshots[0]);
+    copy.meta.ticker = ticker;
+    for (const [key, value] of Object.entries(values)) copy.metrics[key] = { value };
+    if (!Object.hasOwn(values, 'revenueTTM')) delete copy.metrics.revenueTTM;
+    if (!Object.hasOwn(values, 'enterpriseToRevenue')) delete copy.metrics.enterpriseToRevenue;
+    return copy;
+  });
+  const feed = buildUniverse({ snapshots: list, excluded: new Map(cases.map(([t]) => [t, ['non-operating-rev']])), generatedAt });
+  assert.deepEqual(validateUniverse(feed, Buffer.byteLength(JSON.stringify(feed))), []);
+  for (const [ticker, , ps, evs, reason] of cases) {
+    const row = feed.rows.find(r => r.t === ticker);
+    assert.equal(row.ps, ps, ticker + '.ps');
+    assert.equal(row.evs, evs, ticker + '.evs');
+    for (const code of ['umsatz-negativ', 'ev-negativ']) assert.equal(row.aus.includes(code), code === reason, ticker + ' ' + code);
+  }
+  // A currency verdict that already withholds both ratios adds no sales reason.
+  assert.deepEqual(salesMultiples(list[0], true), { ps: null, evs: null, reason: null });
+  for (const mutate of [r => { r.ps = -2.18; }, r => { r.evs = -1.27; }, r => { r.ps = 0; }, r => { r.evs = 1; }]) {
+    const bad = structuredClone(feed);
+    mutate(bad.rows.find(r => r.t === 'KINV-A.ST'));
+    assert.ok(validateUniverse(bad, 1000).length, 'validator must reject ' + mutate);
+  }
+  const evBack = structuredClone(feed);
+  evBack.rows.find(r => r.t === 'NETCASH').evs = 1;
+  assert.ok(validateUniverse(evBack, 1000).some(e => e.includes('inconsistent ev reason')));
 });
 
 test('CAGR requires both positive endpoints and preserves missing slots', () => {
@@ -305,9 +346,11 @@ test('scan every row for missing source values becoming zero', () => {
     if (source.metrics?.fcfMarginTTM?.value > MAX_FCF_MARGIN_PCT) assert.equal(row.fcf, undefined, row.t + '.fcf ceiling');
     if (row.asOf !== undefined) assert.match(row.asOf, /^\d{4}-\d{2}-\d{2}$/, row.t + '.asOf date');
     const withheld = mischVerhaeltnisUnkorrigiert(source.meta);
+    const revenue = source.metrics?.revenueTTM?.value, rawPs = mischVal(source.metrics?.priceSales, withheld);
+    const negativeRevenue = (Number.isFinite(revenue) && revenue < 0) || (rawPs !== null && rawPs <= 0);
     for (const [key, sourceKey] of [['ps', 'priceSales'], ['evs', 'enterpriseToRevenue']]) {
       const value = mischVal(source.metrics?.[sourceKey], withheld);
-      if (value === null) assert.equal(row[key], undefined, row.t + '.' + key + ' PIT guard');
+      if (value === null || value <= 0 || negativeRevenue) assert.equal(row[key], undefined, row.t + '.' + key + ' PIT/sign guard');
       else {
         const rounded = Math.round(value * 100) / 100;
         const expected = rounded === 0 && value !== 0 ? Number(value.toPrecision(2)) : rounded;
