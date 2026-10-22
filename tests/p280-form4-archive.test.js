@@ -211,3 +211,19 @@ test('P280 guard: the daily writer archives a 4/A-purged row before it writes th
   const cached = A.expandCache(result.writes.at(-1)).byTicker.AAA.transactions;
   assert.deepEqual(cached.map(t => t.transactionShares), [120], 'the cache holds only the amended row');
 });
+
+test('P280 review: the per-ticker puller checkpoints every 50 processed tickers and once at the end', async () => {
+  const dir = tmp();
+  const tickers = Array.from({ length: 51 }, (_, i) => 'T' + String(i + 1).padStart(2, '0'));
+  const writes = [];
+  await F4.main({
+    externalDir: dir, cachePath: path.join(dir, 'sec-form4-cache.json'), archiveDir: path.join(dir, 'archive'),
+    sampleLimit: null, existing: { byTicker: {} },
+    watchlist: { stocks: tickers.map(ticker => ({ ticker })) },
+    tickerCikMap: Object.fromEntries(tickers.map((t, i) => [t, { cik: String(i + 1).padStart(10, '0'), name: t }])),
+    pullTickerForm4: async () => ({ transactions: [], filingsScanned: 0 }),
+    writeFileAtomic: (p, body) => writes.push(Object.keys(JSON.parse(body).byTicker).length),
+    exit: (c) => { throw new Error('exit ' + c); },
+  });
+  assert.deepEqual(writes, [50, 51], 'one checkpoint after ticker 50, one after the loop');
+});
