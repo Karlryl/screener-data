@@ -155,3 +155,59 @@ test('P280: the daily writer archives before it writes', () => {
   const w = body.search(/^ {2}writeFileAtomic\(FORM4_CACHE_PATH, serializeCache\(\{$/m);
   assert.ok(a >= 0 && w > a, 'writeCache must call archiveThenCap before writeFileAtomic');
 });
+
+test('P280 guard: a row loaded from disk equals the same row freshly parsed (key order ignored)', async () => {
+  const dir = tmp();
+  const cachePath = path.join(dir, 'sec-form4-cache.json');
+  const now = Date.now();
+  const at = (d) => new Date(now - d * DAY).toISOString().slice(0, 10);
+  const dated = (r, d) => Object.assign(r, { transactionDate: at(d), filingDate: at(d), periodOfReport: at(d) });
+  // row() builds the parser key order: owners and issuerTradingSymbol sit in the middle.
+  const parsed = [dated(row('X-1', 0), 5), dated(row('X-2', 0), 9)];
+  fs.writeFileSync(cachePath, A.serializeCache({ byTicker: {
+    AAA: { ticker: 'AAA', fetchedAt: null, transactions: parsed } } }));
+  const loaded = F4.ladeForm4Cache(cachePath).byTicker.AAA.transactions[0];
+  assert.notEqual(Object.keys(loaded).join(), Object.keys(parsed[0]).join(), 'fixture must differ in key order');
+  await F4.main({
+    externalDir: dir, cachePath, sampleLimit: null,
+    watchlist: { stocks: [{ ticker: 'AAA' }] },
+    tickerCikMap: { AAA: { cik: '0000000001', name: 'A' } },
+    pullTickerForm4: async () => ({ transactions: structuredClone(parsed), filingsScanned: 1 }),
+    exit: (c) => { throw new Error('exit ' + c); },
+  });
+  const lines = A.readArchive(A.archiveFileFor(path.join(dir, 'archive', 'sec-form4'), now));
+  assert.deepEqual(lines.map(l => l.reason + ':' + l.row.accessionNumber), [],
+    'an unchanged re-pulled row must not be archived as dropped');
+  assert.deepEqual(F4.ladeForm4Cache(cachePath).byTicker.AAA.transactions, parsed);
+});
+
+test('P280 guard: archive dedupe ignores key order', () => {
+  const dir = tmp();
+  const r = row('A-1', 200);
+  const reordered = Object.fromEntries(Object.entries(r).reverse());
+  const run = (x) => A.archiveThenCap({ byTicker: { AAA: { transactions: [x] } },
+    baseline: new Map(), archiveDir: dir, lookbackDays: 180, now: NOW });
+  run(r);
+  run(reordered);
+  assert.equal(archived(dir).length, 1, 'the same row in another key order is archived once');
+});
+
+test('P280 guard: the daily writer archives a 4/A-purged row before it writes the cache', async () => {
+  const { loadDaily } = require('./helpers/form4-daily-harness');
+  const old = row('0000000001-26-000001', 0, { transactionDate: '2026-09-01', filingDate: '2026-09-02',
+    periodOfReport: '2026-09-01', transactionShares: 100 });
+  const h = loadDaily({
+    now: '2026-09-26T07:00:00Z', cursor: '20260924', formType: '4/A',
+    byTicker: { AAA: { ticker: 'AAA', cik: '0000000001', name: 'Fixture issuer', transactions: [old] } },
+    parse: () => [Object.assign(structuredClone(old), { transactionShares: 120 })],
+  });
+  const result = await h.run();
+  assert.equal(result.exit, 0);
+  const lines = A.readArchive(A.archiveFileFor(h.archiveDir, Date.parse('2026-09-26T07:00:00Z')));
+  assert.ok(lines.some(l => l.reason === 'dropped' && l.ticker === 'AAA' &&
+    A.canon(l.row) === A.canon(old)), 'the row purged by the 4/A must be in the archive as dropped');
+  assert.equal(h.order[0], 'archive', 'the archive is written before the first cache write');
+  assert.ok(h.order.includes('cache'));
+  const cached = A.expandCache(result.writes.at(-1)).byTicker.AAA.transactions;
+  assert.deepEqual(cached.map(t => t.transactionShares), [120], 'the cache holds only the amended row');
+});
