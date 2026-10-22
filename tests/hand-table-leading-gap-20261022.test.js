@@ -11,7 +11,9 @@ const fs = require('node:fs'), path = require('node:path'), crypto = require('no
 const { applyFinancialCases, financialReasons, table } = require('../lib/financial-known-cases.js');
 const { g31Shadow } = require('../lib/g31-recency.js');
 const { diffCells } = require('../scripts/financial-corrections-replay.js');
-const { latestReportedQuarter, quarterAgeDays } = require('../lib/stale-quarter-reload.js');
+const { latestReportedQuarter, planReload } = require('../lib/stale-quarter-reload.js');
+const { quarterOpMargins } = require('../src/scoring/axes.js');
+const { newestQtrSuspect } = require('../src/scoring/lamps.js');
 const stored = require('./fixtures/hand-table-leading-gap-plus.json').snapshots.PLUS;
 const root = path.resolve(__dirname, '..');
 const value = row => typeof row === 'number' ? row : row?.value ?? null;
@@ -150,7 +152,117 @@ test('the stale-quarter reload still sees the vendor newest quarter, not the fil
   for (const input of [stored, raw, apply(stored), apply(raw)]) {
     assert.equal(latestReportedQuarter(structuredClone(input), now), '2026-03-31');
   }
-  assert.ok(quarterAgeDays('2026-03-31', now) > 120); // still a reload candidate, as on origin/main
+  // The real planner keeps PLUS a reload candidate (March is 205 days old, limit 120). With the fill counted as delivered
+  // (June, 114 days) it would not be one. Fundamentals fetched 8 days earlier, past the 7-day retry window.
+  const filled = apply(raw);
+  filled.meta.fundamentalsTimeseriesFetchedAt = '2026-10-14T08:00:00.000Z';
+  const io = { existsSync: () => true, readFileSync: () => JSON.stringify(filled) };
+  const plan = planReload([{ ticker: 'PLUS' }], { snapshotDir: 'mem', cacheDir: null, now, io,
+    config: require('../configs/stale-quarter-reload.json') });
+  assert.deepEqual(plan.candidates.map(c => [c.ticker, c.end, c.basis]), [['PLUS', '2026-03-31', 'quarter']]);
+});
+
+// Hand-table variants on copies of the real table (applyFinancialCases validates them again).
+const tableWith = edit => { const t = structuredClone(table); edit(t); return t; };
+const revenueOnly = tableWith(t => {
+  const other = x => x.ticker === 'PLUS' && x.field !== 'revenueQ';
+  t.cases = t.cases.filter(c => !other(c));
+  t.coverage = t.coverage.filter(v => !other(v));
+});
+const quarterly = ['revenueQ', 'grossProfitQ', 'opIncQ'];
+const newestEnds = s => quarterly.map(f => s.timeseries[f + 'Ends'][0]);
+const gapEvents = events => events.filter(e => /^vendor-gap/.test(e.reasonCode || ''));
+
+// Review of PR #22, round 2 (P1): readers pair revenueQ, grossProfitQ and opIncQ by position (axes.js quarterOpMargins,
+// lamps.js newestQtrSuspect). With revenue-only coverage (22 issuers, e.g. ARCC, 8020.T, 000688.SZ) a revenue fill
+// alone put the June revenue over the March operating income (first margin 0.0476 instead of 0.0536). A series with
+// values and no own case for the quarter now blocks the fill: every series stays on March, the quarter is logged.
+test('no fill unless every quarterly series with values is filled for the same quarter', () => {
+  for (const input of [stored, raw]) {
+    const { snapshot: s, events } = applyFinancialCases(structuredClone(input), { table: revenueOnly });
+    for (const f of quarterly) {
+      assert.deepEqual(s.timeseries[f + 'Ends'], input.timeseries.revenueQEnds, f);
+      assert.equal(s.timeseries[f].length, input.timeseries[f].length, f);
+    }
+    assert.deepEqual(s.timeseries.netIncomeQ.map(value), input.timeseries.netIncomeQ.map(value));
+    // March revenue (576,174 TUSD) under March operating income, never the June revenue (649,113) over it.
+    assert.equal(value(s.timeseries.revenueQ[0]), 576174000);
+    assert.equal(quarterOpMargins(s)[0], value(s.timeseries.opIncQ[0]) / 576174000);
+    assert.equal(newestQtrSuspect(s), newestQtrSuspect(input));
+    assert.deepEqual(gapEvents(events).map(e => [e.caseId, e.status, e.reasonCode]),
+      [['plus-2026-06-30-revenueQ', 'stale', 'vendor-gap-unfilled']]);
+    assert.match(gapEvents(events)[0].reason, /Nicht jede Quartalsreihe/);
+    diffCells(input, s, events);
+  }
+});
+
+// A series without any value (BDC gross profit and operating income, e.g. ARCC or FSK on 22.10.) cannot be paired
+// wrongly; it gets an empty cell for the filled quarter, so every series ends on June.
+test('empty sibling series get an empty cell and stay aligned with the fill', () => {
+  for (const input of [stored, raw]) {
+    const bdc = structuredClone(input);
+    for (const f of ['grossProfitQ', 'opIncQ']) bdc.timeseries[f] = bdc.timeseries[f].map(() => null);
+    const { snapshot: s, events } = applyFinancialCases(structuredClone(bdc), { table: revenueOnly });
+    assert.equal(value(s.timeseries.revenueQ[0]), june.revenueQ);
+    for (const f of ['grossProfitQ', 'opIncQ']) {
+      assert.deepEqual(s.timeseries[f + 'Ends'], s.timeseries.revenueQEnds, f);
+      assert.deepEqual(s.timeseries[f], [null, ...bdc.timeseries[f]], f);
+      assert.equal(s.meta.statementPeriods[f][0].end, '2026-06-30', f);
+    }
+    assert.deepEqual(gapEvents(events).map(e => [e.field, e.reasonCode, e.index]), [['revenueQ', 'vendor-gap-filled', 0],
+      ['grossProfitQ', 'vendor-gap-aligned', 0], ['opIncQ', 'vendor-gap-aligned', 0]]);
+    assert.deepEqual(quarterOpMargins(s), []);
+    assert.equal(newestQtrSuspect(s), null);
+    // The replay's byte check cuts the aligned cells too and throws when one is missing; a second pass changes nothing.
+    assert.equal(diffCells(bdc, s, events).filter(x => /^vendor-gap/.test(x.reasonCode)).length, 3);
+    const lost = structuredClone(s);
+    lost.timeseries.opIncQ.shift(); lost.timeseries.opIncQEnds.shift();
+    assert.throws(() => diffCells(bdc, lost, events), /not found by period end in opIncQ/);
+    assert.deepEqual(applyFinancialCases(structuredClone(s), { table: revenueOnly }).snapshot.timeseries, s.timeseries);
+  }
+});
+
+// Review of PR #22, round 2 (P2, G6/G7): a replay or back-test of an older snapshot must not see a quarter that was not
+// public yet. The June 10-Q was filed on 04.08.2026: a snapshot fetched that day gets no fill, one fetched the next day
+// does. The latest source date counts (a difference of two filings is known from the later one), and a case without a
+// source date, or a packet without a fetch time, never fills.
+test('point in time: a fill needs a source published before the fetch day', () => {
+  const at = fetchedAt => { const s = structuredClone(raw); s.meta.fetchedAt = fetchedAt; return s; };
+  const filingDay = applyFinancialCases(at('2026-08-04T21:00:00Z'));
+  assert.deepEqual(newestEnds(filingDay.snapshot), Array(3).fill('2026-03-31'));
+  assert.deepEqual(gapEvents(filingDay.events), []);
+  assert.deepEqual(newestEnds(apply(at('2026-08-05T06:00:00Z'))), Array(3).fill('2026-06-30'));
+  const unclocked = applyFinancialCases(at(undefined));
+  assert.deepEqual(newestEnds(unclocked.snapshot), Array(3).fill('2026-03-31'));
+  assert.deepEqual(gapEvents(unclocked.events).map(e => /Veröffentlichungsdatum/.test(e.reason)), [true, true, true]);
+  const june = t => t.cases.find(c => c.caseId === 'plus-2026-06-30-revenueQ');
+  const later = tableWith(t => june(t).sources.push({ ...june(t).sources[0], filed: '2026-10-22' }));
+  const undated = tableWith(t => { delete june(t).sources[0].filed; });
+  for (const [tbl, first] of [[later, 'Nicht jede Quartalsreihe'], [undated, 'Veröffentlichungsdatum']]) {
+    const { snapshot: s, events } = applyFinancialCases(structuredClone(raw), { table: tbl });
+    assert.deepEqual(newestEnds(s), Array(3).fill('2026-03-31'));
+    const logged = gapEvents(events);
+    assert.ok(logged.every(e => e.status === 'stale' && e.reasonCode === 'vendor-gap-unfilled'));
+    assert.deepEqual(logged.map(e => e.caseId).sort(), (tbl === later ? [] : ['plus-2026-06-30-revenueQ'])
+      .concat(['plus-2026-06-30-grossProfitQ', 'plus-2026-06-30-opIncQ']).sort());
+    assert.ok(logged.some(e => e.reason.includes(first)));
+  }
+});
+
+// Two missing quarters fill together; a quarter skipped in between blocks the fill (positions would jump a quarter).
+test('two missing quarters fill together, a hole blocks the fill', () => {
+  const drop = structuredClone(raw), ts = drop.timeseries;
+  for (const f of quarterly) { ts[f] = ts[f].slice(1); ts[f + 'Ends'] = ts[f + 'Ends'].slice(1); }
+  ts.netIncomeQ = ts.netIncomeQ.slice(1);
+  for (const f of [...quarterly, 'netIncomeQ']) drop.meta.statementPeriods[f] = drop.meta.statementPeriods[f].slice(1);
+  const { snapshot: s, events } = applyFinancialCases(structuredClone(drop));
+  for (const f of quarterly) assert.deepEqual(s.timeseries[f + 'Ends'], ['2026-06-30', '2026-03-31', ...ts[f + 'Ends']], f);
+  assert.deepEqual(s.timeseries.netIncomeQ.map(value), [null, null, ...ts.netIncomeQ.map(value)]);
+  assert.equal(diffCells(drop, s, events).filter(c => c.reasonCode === 'vendor-gap-filled').length, 6);
+  const noMarch = tableWith(t => { t.cases = t.cases.filter(c => !(c.ticker === 'PLUS' && c.period === '2026-03-31')); });
+  const h = applyFinancialCases(structuredClone(drop), { table: noMarch });
+  assert.deepEqual(newestEnds(h.snapshot), Array(3).fill('2025-12-31'));
+  assert.deepEqual(gapEvents(h.events).map(e => e.reason.includes('fehlt ein Quartal')), [true, true, true]);
 });
 
 test('live files unchanged', () => assert.deepEqual(liveHashes(), beforeHashes));

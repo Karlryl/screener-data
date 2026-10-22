@@ -38,11 +38,16 @@ function diffCells(before, after, events, annotations = null) {
   // A leading-gap fill (vendor-gap-filled) inserts a cell in front of a series. It is matched by its period end and cut
   // out again with the entries the overlay shifted alongside (Ends, netIncomeQ without own Ends, statementPeriods), so
   // every other byte still compares by position; event indices name output positions and are moved back by the cuts.
-  for (const e of events.filter(e => e.reasonCode === 'vendor-gap-filled')) {
-    const block = restore[e.container], k = (block?.[e.field + 'Ends'] || []).indexOf(e.period);
+  // An empty sibling series gets an empty cell for the same quarter (vendor-gap-aligned) and is cut the same way; without
+  // own Ends it is found by position (the inserted cells lead, earlier cuts moved the next one to the front).
+  const gapCodes = ['vendor-gap-filled', 'vendor-gap-aligned'];
+  for (const e of events.filter(e => gapCodes.includes(e.reasonCode))) {
+    const block = restore[e.container], ends = block?.[e.field + 'Ends'];
+    const k = Array.isArray(ends) ? ends.indexOf(e.period) : e.index - (inserted[e.container + '/' + e.field] || 0);
     const row = block?.[e.field]?.[k];
-    assert.ok(k >= 0 && row?.financialCorrection?.caseId === e.caseId && row.financialCorrection.originalVendorRow === null,
-      before.meta.ticker + ': inserted cell ' + e.caseId + ' not found by period end');
+    assert.ok(k >= 0 && (e.reasonCode === 'vendor-gap-aligned' ? row === null
+      : row?.financialCorrection?.caseId === e.caseId && row.financialCorrection.originalVendorRow === null),
+    before.meta.ticker + ': inserted cell ' + e.caseId + ' not found by period end in ' + e.field);
     changes.push({ ...e, oldRow: null, newRow: row });
     const cut = (obj, key) => { if (Array.isArray(obj?.[key])) obj[key] = obj[key].filter((_, j) => j !== k); };
     cut(block, e.field + 'Ends');
@@ -52,7 +57,7 @@ function diffCells(before, after, events, annotations = null) {
     }
   }
   // Stale cells are withheld as missing, so they are cell changes too and must be listed.
-  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status) && e.reasonCode !== 'vendor-gap-filled' &&
+  for (const e of events.filter(e => ['corrected', 'missing', 'stale'].includes(e.status) && !gapCodes.includes(e.reasonCode) &&
     typeof e.container === 'string' && typeof e.field === 'string' && Number.isInteger(e.index))) {
     // ponytail: fills are always leading, so every other cell of a filled series sits behind all inserted ones.
     const i = e.index - (inserted[e.container + '/' + e.field] || 0);
