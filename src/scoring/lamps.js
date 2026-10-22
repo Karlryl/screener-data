@@ -15,6 +15,7 @@ const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVa
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
 const { table: financialCases, envelope } = require('../../lib/financial-known-cases.js');
+const { annualPeriodEnds } = require('../../lib/annual-pairs.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -825,11 +826,13 @@ function opIncSynthetisch(s) {
 // rescale) keeps the lamp. A series without any shown value is not decided here (the source label rules).
 // Only opIncYahooAdjusted reads this: opIncSynthetisch explains the K2 gate (histOpInc), which still blanks
 // every historical axis of a computed-margin series, so that label stays with the gate.
-// Reads the raw annual rows on purpose: norm() drops the correction marker and the period ends.
+// Reads the raw annual rows on purpose: norm() drops the correction marker. Period ends come only through
+// annualPeriodEnds() (lib/annual-pairs.js, the validated accessor G31 uses, a GQS-00 dependency file): this file
+// never reads a raw *Ends field (A10 substrate guard); display only, no axis reads the ends here.
 const HANDTABELLE_OPINC = financialCases.cases.filter((c) => c.field === 'annualOpInc' && c.replacementValue !== null);
 const HANDTABELLE_OPINC_IDS = new Set(HANDTABELLE_OPINC.map((c) => c.caseId));
 function opIncAusAbschluss(s) {
-  const rows = s.annual && s.annual.annualOpInc, ends = s.annual && s.annual.annualOpIncEnds;
+  const rows = s.annual && s.annual.annualOpInc, ends = annualPeriodEnds(s, 'annualOpInc');
   if (!Array.isArray(rows)) return false;
   const ticker = s.meta && s.meta.ticker, env = envelope(s);
   const wert = (r) => (r && typeof r === 'object' ? r.value : r);

@@ -52,6 +52,12 @@ test('a shown cell at a case period that is not the issuer value keeps the lamp'
   assert.equal(flags(s).opIncYahooAdjusted, true);
 });
 
+test('the issuer value at a period without a case keeps the lamp (vendor repeating a confirmed year)', () => {
+  const s = structuredClone(prepared(vplay()));
+  s.annual.annualOpIncEnds[0] = '2026-12-31';
+  assert.equal(flags(s).opIncYahooAdjusted, true);
+});
+
 test('another currency factor than the one the case was applied under keeps the lamp', () => {
   const s = structuredClone(prepared(vplay()));
   s.meta.fxRateApplied = fx * 1.03;
