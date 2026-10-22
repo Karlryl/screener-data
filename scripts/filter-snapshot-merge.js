@@ -35,7 +35,7 @@ const path = require('path');
 const { safeSnapshotFilename, isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
-const { mergeSizeExits, sizeExitRunTag, currentRunReports, sizeExitRunDay, sizeExitsHistoryPath, readSizeExitHistory, updateSizeExitHistory, SIZE_EXITS_FILE, SIZE_EXIT_SHARD_PATTERN } = require('../lib/size-exits.js');
+const { mergeSizeExits, sizeExitRunTag, currentRunReports, incompleteShards, sizeExitRunDay, sizeExitsHistoryPath, readSizeExitHistory, updateSizeExitHistory, SIZE_EXITS_FILE, SIZE_EXIT_SHARD_PATTERN } = require('../lib/size-exits.js');
 // U2-BO/NS (s. WURZEL_ZWILLING unten): der Emittenten-Schluessel wird IMPORTIERT, nie nachgebaut.
 // Lesen aus src/scoring/** ist ausdruecklich erlaubt; das GQS-Siegel bindet nur AENDERUNGEN dort.
 // U3-Milan (s. MILAN_KANDIDATEN unten) braucht zusaetzlich den STRENGEN Schluessel und den
@@ -2178,17 +2178,23 @@ function run(argv) {
   const sizeExitFiles = currentRunReports(files, process.env);
   // Local shard pulls have no shared generation; do not guess from cached dates.
   if (!sizeExitTag) console.log('[size-exits] No shared run identity. Current size exits are unknown.');
-  const sizeExits = mergeSizeExits(sizeExitFiles.map(f => JSON.parse(fs.readFileSync(path.join(eingang, f), 'utf8')).sizeExits));
+  const sizeExitReports = sizeExitFiles.map(f => JSON.parse(fs.readFileSync(path.join(eingang, f), 'utf8')));
+  const sizeExits = mergeSizeExits(sizeExitReports.map(r => r.sizeExits));
   const runDate = sizeExitRunDay(process.env);
   const historyPath = sizeExitsHistoryPath(argv);
-  const known = Boolean(sizeExitTag && sizeExitFiles.length);
-  const exits = known ? updateSizeExitHistory(sizeExits, runDate, { historyPath, fs, writeFileAtomic })
+  // P155 b: the list is known only when each of SHARD_COUNT shards finished a successful pull.
+  // An aborted shard's exits still enter the history: its snapshot is already gone from the
+  // shard cache, so no later pull can observe that removal again.
+  const missingShards = sizeExitTag ? incompleteShards(sizeExitFiles, sizeExitReports, process.env.SHARD_COUNT) : null;
+  const known = Boolean(missingShards && !missingShards.length);
+  const exits = sizeExitFiles.length ? updateSizeExitHistory(sizeExits, runDate, { historyPath, fs, writeFileAtomic })
     : readSizeExitHistory(historyPath, fs).exits;
   for (const f of uebernehmen) {
     if (f === SIZE_EXITS_FILE || SIZE_EXIT_SHARD_PATTERN.test(f)) continue;
     fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
   }
-  if (!sizeExitFiles.length) console.log('[size-exits] No completed reports for this pull. Current size exits are unknown.');
+  if (sizeExitTag && !missingShards) console.log(`::warning::[size-exits] SHARD_COUNT missing or invalid (${process.env.SHARD_COUNT}). Current size exits are unknown.`);
+  else if (sizeExitTag && !known) console.log(`[size-exits] No successful pull report for shard(s) ${missingShards.join(', ')} of ${process.env.SHARD_COUNT}. Current size exits are unknown.`);
   writeFileAtomic(path.join(ziel, SIZE_EXITS_FILE), JSON.stringify({ schema: 'size-exits/v2', known, runDate, exits }));
 
   // DAS EINZIGE LOCH IM AUSSCHLUSS: dieser Schritt KOPIERT nur, er raeumt das Ziel nicht ab.
