@@ -33,9 +33,10 @@
  * Idempotent / resumable:
  *   - Per-ticker freshness gate: if a ticker's cache entry is < 24 h old,
  *     skip its fetches entirely.
- *   - After each ticker is finished, the full cache file is re-written
- *     atomically — so a Ctrl-C halfway through still leaves a usable
- *     cache, and the next run picks up where it stopped.
+ *   - After every 50 finished tickers and once at the end, the full cache
+ *     file is re-written atomically (P280) — so a Ctrl-C halfway through
+ *     still leaves a usable cache, and the next run picks up where it stopped
+ *     (at most the last 49 tickers are fetched again).
  *
  * Run locally:
  *   & "C:\Program Files\nodejs\node.exe" scripts/pull-insider-form4.js
@@ -56,6 +57,7 @@ const https = require('https');
 // Tag 189: atomic tmp+rename writes for both cache files.
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { readJsonExistingOrThrow, FEHLT } = require('../lib/read-json.js');
+const { archiveThenCap, serializeCache, snapshotRows, expandCache } = require('../lib/form4-cache-archive.js');
 
 // ─── Config ─────────────────────────────────────────────────────────────
 const ROOT = path.join(__dirname, '..');
@@ -96,6 +98,8 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 // downstream methods score on 90 d and 180 d windows so 180 d is the
 // natural upper bound.
 const FORM4_LOOKBACK_DAYS = 180;
+// P280 review: processed tickers between two cache checkpoints (see main()).
+const CHECKPOINT_EVERY = 50;
 
 // Ticker→CIK map staleness. SEC re-publishes the file on every business
 // day but content changes are rare (only when new IPOs list); a weekly
@@ -127,9 +131,11 @@ function readJsonSafe(p) {
 // Erstanlage = Datei fehlt. Korrupt = vorhandener Bestand -> Wurf, nichts wird ueberschrieben.
 // Beide Form-4-Skripte teilen sich diesen Leser (pull-insider-form4-daily.js importiert ihn),
 // damit die Regel an EINER Stelle steht — sie schreiben dieselbe Datei.
+// P280: rows are stored compacted (lib/form4-cache-archive.js); expanded here so
+// every caller sees the full row shape.
 function ladeForm4Cache(p = FORM4_CACHE_PATH) {
   const v = readJsonExistingOrThrow(p);
-  return v === FEHLT ? {} : v;
+  return v === FEHLT ? {} : expandCache(v);
 }
 
 function ensureDir(p) {
@@ -621,12 +627,25 @@ async function main(opts = {}) {
   const byTicker = (existing && existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
 
-  const checkpoint = () => cacheWriter(cachePath, JSON.stringify({
-    updatedAt: new Date().toISOString(),
-    userAgentSource: 'process.env.SEC_CONTACT',
-    lookbackDays: FORM4_LOOKBACK_DAYS,
-    byTicker
-  }));
+  // P280: archive every row that leaves the cache, verify, then cap all tickers.
+  const archiveDir = opts.archiveDir || path.join(path.dirname(cachePath), 'archive', 'sec-form4');
+  let baseline = snapshotRows(byTicker);
+  const checkpoint = () => {
+    const arch = archiveThenCap({ byTicker, baseline, archiveDir,
+      lookbackDays: FORM4_LOOKBACK_DAYS, now: Date.now() });
+    cacheWriter(cachePath, serializeCache({
+      updatedAt: new Date().toISOString(),
+      userAgentSource: 'process.env.SEC_CONTACT',
+      lookbackDays: FORM4_LOOKBACK_DAYS,
+      byTicker
+    }));
+    baseline = arch.baseline;
+  };
+  // P280 review: one checkpoint (archive check plus the verified, compacted write of the
+  // whole ~47 MB cache) costs ~0.6-0.8 s, so it runs every CHECKPOINT_EVERY processed
+  // tickers and once after the loop. A crash loses at most that much fetch work; the
+  // file on disk stays the last complete state, so no row is lost (G24).
+  let sinceCheckpoint = 0;
 
   let fetched = 0, skippedFresh = 0, errors = 0, totalTxns = 0;
   for (const { ticker, cikInfo } of usTickers) {
@@ -732,9 +751,13 @@ async function main(opts = {}) {
     } finally {
       // Keep the single checkpoint outside the pull catch: a disk failure must
       // reject the run, not be misclassified as another ticker/SEC failure.
-      if (shouldCheckpoint) checkpoint();
+      if (shouldCheckpoint && ++sinceCheckpoint >= CHECKPOINT_EVERY) {
+        checkpoint();
+        sinceCheckpoint = 0;
+      }
     }
   }
+  if (sinceCheckpoint) checkpoint();
 
   console.log('');
   console.log('Done. fetched=' + fetched + ' skipped(fresh)=' + skippedFresh +

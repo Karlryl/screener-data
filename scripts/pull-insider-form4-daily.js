@@ -22,7 +22,8 @@
  * pull-insider-form4.js: { updatedAt, userAgent, lookbackDays,
  * lastIndexedDate, byTicker }). Transactions deduped by accession+date+
  * code+shares+price+acquiredDisposed+owner; anything older than 180 days is
- * dropped at merge time to keep the cache bounded. lastIndexedDate is the
+ * archived to external-data/archive/sec-form4/ and only then removed from the
+ * cache, for every ticker, at write time (P280). lastIndexedDate is the
  * resumability cursor (BH-020): targetDates() fills the gap from there to
  * yesterday instead of a fixed DAYS window, so a missed run doesn't
  * permanently drop filings.
@@ -54,6 +55,8 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 // ladeForm4Cache: fail-loud-Leser fuer DIESE Datei — beide Skripte schreiben denselben
 // Cache, also gilt dieselbe Erstanlage-Regel (F-CGPT-029, s. Kommentar dort).
 const { parseForm4Xml, ladeForm4Cache } = require('./pull-insider-form4.js');
+// P280: archive before prune, cap for every ticker, compact rows (see the lib header).
+const { archiveThenCap, serializeCache, snapshotRows } = require('../lib/form4-cache-archive.js');
 
 // ─── Config ─────────────────────────────────────────────────────────────
 const ROOT = path.join(__dirname, '..');
@@ -61,6 +64,7 @@ const WATCHLIST_PATH = path.join(ROOT, 'watchlist.json');
 const EXTERNAL_DIR = path.join(ROOT, 'external-data');
 const TICKER_CIK_MAP_PATH = path.join(EXTERNAL_DIR, 'sec-ticker-cik-map.json');
 const FORM4_CACHE_PATH = path.join(EXTERNAL_DIR, 'sec-form4-cache.json');
+const FORM4_ARCHIVE_DIR = path.join(EXTERNAL_DIR, 'archive', 'sec-form4');
 const EDGAR_HOLIDAYS = require('../configs/edgar-holidays.json');
 
 const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
@@ -399,8 +403,10 @@ function purgeAmendedPeriod(entry, periodOfReport) {
   return before - entry.transactions.length;
 }
 
-// Merge a batch of new txns into byTicker[ticker], dedupe by txnKey, and
-// drop anything older than the 180d lookback. Returns count actually added.
+// Merge a batch of new txns into byTicker[ticker], dedupe by txnKey. Returns count
+// actually added. P280: NO pruning here any more. The 180d window is applied in
+// writeCache for EVERY ticker, after the leaving rows are archived (G24); a late
+// filing with an old transaction date is therefore archived instead of discarded.
 function mergeTransactions(byTicker, ticker, cikPadded, name, newTxns) {
   let entry = byTicker[ticker];
   if (!entry || typeof entry !== 'object') {
@@ -408,14 +414,10 @@ function mergeTransactions(byTicker, ticker, cikPadded, name, newTxns) {
     byTicker[ticker] = entry;
   }
   if (!Array.isArray(entry.transactions)) entry.transactions = [];
-  // Prune stale txns already in the cache so it stays bounded.
-  entry.transactions = entry.transactions.filter(t =>
-    withinLookback(t.transactionDate || t.filingDate, FORM4_LOOKBACK_DAYS));
 
   const seen = new Set(entry.transactions.map(txnKey));
   let added = 0;
   for (const t of newTxns) {
-    if (!withinLookback(t.transactionDate || t.filingDate, FORM4_LOOKBACK_DAYS)) continue;
     const k = txnKey(t);
     if (seen.has(k)) continue;
     seen.add(k);
@@ -457,8 +459,18 @@ function resolveMergeTicker(parsedTxns, fallbackTicker) {
 // KEIN Ersatz fuer die eigentliche Frage (gehoert die Datei ueberhaupt nach git?) —
 // das ist eine Karl-Entscheidung und liegt im Vault (Knowledge/Trading/growth-screener,
 // Entscheidungsseite vom 28.08.2026), NICHT in diesem Repo.
+// P280: rows of the last persisted cache state; writeCache archives every row that
+// left the cache since then. Set in main() right after the cache is loaded.
+let cacheBaseline = new Map();
 function writeCache(byTicker, lastIndexedDate) {
-  writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
+  // Archive first, verify the restore, only then cap (throws -> cache not written).
+  const arch = archiveThenCap({ byTicker, baseline: cacheBaseline, archiveDir: FORM4_ARCHIVE_DIR,
+    lookbackDays: FORM4_LOOKBACK_DAYS, now: Date.now() });
+  if (arch.expired || arch.dropped) {
+    console.log('[archive] expired=' + arch.expired + ' dropped=' + arch.dropped +
+      ' appended=' + arch.appended + ' -> ' + arch.file);
+  }
+  writeFileAtomic(FORM4_CACHE_PATH, serializeCache({
     updatedAt: new Date().toISOString(),
     userAgentSource: 'process.env.SEC_CONTACT',
     lookbackDays: FORM4_LOOKBACK_DAYS,
@@ -467,6 +479,7 @@ function writeCache(byTicker, lastIndexedDate) {
     lastIndexedDate: lastIndexedDate || null,
     byTicker
   }));
+  cacheBaseline = arch.baseline;
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
@@ -483,6 +496,7 @@ async function main() {
   const existing = ladeForm4Cache();
   const byTicker = (existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
+  cacheBaseline = snapshotRows(byTicker);
 
   const dates = targetDates(existing.lastIndexedDate);
   console.log('[dates] targeting ' + dates.length + ' date(s): ' + dates.join(', '));
