@@ -4,6 +4,7 @@
 // No dependency may escape this allowlist into live filesystem/network operations.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const { EventEmitter } = require('node:events');
@@ -13,10 +14,15 @@ const SCRIPT = path.join(ROOT, 'scripts/pull-insider-form4-daily.js');
 const CALENDAR = path.join(ROOT, 'configs/edgar-holidays.json');
 
 function loadDaily({ now = '2026-09-26T07:00:00Z', cursor = '20260904',
-  env = {}, responses = {}, hits = {}, source = fs.readFileSync(SCRIPT, 'utf8') } = {}) {
-  const requests = [], writes = [], logs = [];
+  env = {}, responses = {}, hits = {}, source = fs.readFileSync(SCRIPT, 'utf8'),
+  byTicker = {}, parse = () => [], formType = '4' } = {}) {
+  const requests = [], writes = [], logs = [], order = [];
   const attempts = new Map();
-  const initial = { lastIndexedDate: cursor, byTicker: {} };
+  const initial = { lastIndexedDate: cursor, byTicker };
+  // P280: the real archive module, but always writing to a fresh temp dir (never the
+  // repo's external-data/archive/). order[] records archive vs cache writes.
+  const archive = require('../../lib/form4-cache-archive.js');
+  const archiveDir = fs.mkdtempSync(path.join(os.tmpdir(), 'form4-daily-archive-'));
   const epoch = Date.parse(now);
   class Clock extends Date {
     constructor(...args) { super(...(args.length ? args : [epoch])); }
@@ -54,7 +60,7 @@ function loadDaily({ now = '2026-09-26T07:00:00Z', cursor = '20260904',
         const status = Array.isArray(reply) ? reply[Math.min(attempt, reply.length - 1)] : reply;
         const body = date
           ? Array.from({ length: hits[date] ?? 1 }, (_, i) =>
-            `4 Fixture issuer 1 ${date} edgar/data/1/${date}-${i}.txt`).join('\n')
+            `${formType} Fixture issuer 1 ${date} edgar/data/1/${date}-${i}.txt`).join('\n')
           : '<ownershipDocument/>';
         const request = new EventEmitter();
         request.setTimeout = () => request;
@@ -74,13 +80,21 @@ function loadDaily({ now = '2026-09-26T07:00:00Z', cursor = '20260904',
     '../lib/atomic-write.js': {
       writeFileAtomic(file, body) {
         assert.equal(file, cachePath, 'Unexpected cache destination');
+        order.push('cache');
         writes.push(JSON.parse(body));
       },
     },
     './pull-insider-form4.js': {
       ladeForm4Cache: () => structuredClone(initial),
-      parseForm4Xml: () => [],
+      parseForm4Xml: parse,
     },
+    '../lib/form4-cache-archive.js': Object.assign({}, archive, {
+      archiveThenCap(opts) {
+        const res = archive.archiveThenCap(Object.assign({}, opts, { archiveDir }));
+        if (res.appended) order.push('archive');
+        return res;
+      },
+    }),
     '../lib/sec-user-agent': { secUserAgent: () => 'offline-test' },
     '../lib/sec-rate-limit.js': { RATE_DELAY_MS: 0, RATE_LIMIT_BACKOFF_MS: 0 },
     '../configs/edgar-holidays.json': JSON.parse(fs.readFileSync(CALENDAR, 'utf8')),
@@ -97,7 +111,7 @@ function loadDaily({ now = '2026-09-26T07:00:00Z', cursor = '20260904',
     setTimeout: callback => queueMicrotask(callback),
   }, { filename: SCRIPT });
   return {
-    api: mod.exports, requests, writes, logs,
+    api: mod.exports, requests, writes, logs, order, archiveDir,
     async run() {
       let exit = 0;
       try { await mod.exports.main(); }
