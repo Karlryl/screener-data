@@ -14,7 +14,8 @@ if (process.argv.includes('--break-once')) {
   const targets = ['lib/size-exits.js', 'pull-yahoo.js', 'scripts/filter-snapshot-merge.js', 'src/scoring/run-screener.js'];
   const hashes = () => targets.map(p => crypto.createHash('sha256').update(readSource(path.join(ROOT, p))).digest('hex'));
   const before = hashes();
-  for (const mutation of ['floor', 'record', 'merge', 'metadata', 'generation', 'union', 'attempt-order']) {
+  for (const mutation of ['floor', 'record', 'merge', 'metadata', 'generation', 'union', 'attempt-order',
+    'complete-early', 'complete-marker', 'complete-on-failure']) {
     const r = cp.spawnSync(process.execPath, [__filename], { cwd: ROOT, encoding: 'utf8',
       env: { ...process.env, SIZE_EXIT_MUTATION: mutation } });
     assert.equal(r.status, 1, mutation + ' must turn the guard red');
@@ -34,6 +35,9 @@ const mutations = {
   union: ['lib/size-exits.js', '    reports.push({ file: f, shard: m[1], attempt: Number(m[3]) });', '    reports.splice(0, reports.length, ...reports.filter(r => r.shard !== m[1]), { file: f, shard: m[1], attempt: Number(m[3]) });'],
   'attempt-order': ['lib/size-exits.js', '  return reports.sort((a, b) => a.shard < b.shard ? -1 : a.shard > b.shard ? 1 : a.attempt - b.attempt).map(r => r.file);', '  return reports.map(r => r.file).sort();'],
   'prune-call': ['pull-yahoo.js', "  const prunedSizeExitReports = pruneSizeExitReports(outputDir, sizeExitPath, { warn: message => _log('WARN', message) });", '  const prunedSizeExitReports = [];'],
+  'complete-early': ['pull-yahoo.js', '  _sizeExitCheckpoint = (complete = false) => writeFileAtomic(sizeExitPath, JSON.stringify({', '  _sizeExitCheckpoint = (complete = true) => writeFileAtomic(sizeExitPath, JSON.stringify({'],
+  'complete-marker': ['pull-yahoo.js', '  _sizeExitCheckpoint(true);', '  // mutant: never mark the report complete'],
+  'complete-on-failure': ['pull-yahoo.js', '  if (failRatio > 0.75) return 1;', '  // mutant: a failed pull counts as successful'],
 };
 function mutate(source, file) {
   const row = mutations[process.env.SIZE_EXIT_MUTATION];
@@ -52,6 +56,7 @@ process.env.STALE_QUARTER_RELOAD = '0';
 process.env.GITHUB_RUN_ID = '123456';
 process.env.GITHUB_RUN_ATTEMPT = '2';
 process.env.RUN_DATE_UTC = '2026-10-07';
+process.env.SHARD_COUNT = '1';
 delete process.env.VOLL_PULL_TICKER;
 delete process.env.MISSING_CAP_CARRIER;
 global.fetch = () => { throw new Error('NO NETWORK'); };
@@ -133,7 +138,7 @@ const print = console.log.bind(console);
 console.log = console.warn = console.error = (...args) => logs.push(args.join(' '));
 const helpers = require('../lib/size-exits.js');
 const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitReasonDe, sizeExitRunTag, SIZE_EXITS_FILE, SIZE_EXIT_SHARD_PATTERN } = helpers;
-const { pullAll, recordSizeExit, mergeSmallcapSnapshots } = require('../pull-yahoo.js');
+const { pullAll, recordSizeExit, mergeSmallcapSnapshots, finishPull } = require('../pull-yahoo.js');
 const { loadUniverse, loadSmallcapUniverse } = require('../src/scoring/run-screener.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { teileEingang } = require('../scripts/filter-snapshot-merge.js');
@@ -224,6 +229,7 @@ async function pull(prior, value, age = 1, shard = 0, full, deletionFailure = nu
   assert(files.has(report(shard)), 'completed pulls must write a report even when empty');
   const data = JSON.parse(files.get(report(shard)));
   assert.equal(data.n_missing_mcap, result.n_missing_mcap, 'manifest counter pin must remain unchanged');
+  assert.equal(data.complete, false, 'pullAll alone never marks its report complete');
   return { result, records: data.sizeExits };
 }
 
@@ -253,6 +259,15 @@ async function run() {
   assert(!files.has(path.join(out, ticker + '.json')));
   assert.equal(recordSizeExit(ticker, 8e8, 8e8, iso(0), 'full-pull'), null);
   print('PASS actual pull: both paths print $0.8B and jointly record one full-pull exit');
+  // P155 b: only a pull that exits 0 marks its report complete; the merge needs one per shard.
+  const reportData = () => JSON.parse(files.get(report(0)));
+  assert.equal(finishPull({ ...r.result, n_failed: r.result.n_total }), 1, 'a fail ratio above 75 % fails the pull');
+  assert.equal(finishPull({ ...r.result, failures: [{ errClass: 'mapper-bug' }] }), 1, 'a mapper bug fails the pull');
+  assert.equal(reportData().complete, false, 'a failed pull leaves its report incomplete');
+  assert.equal(finishPull(r.result), 0);
+  assert.deepEqual(reportData(), { n_missing_mcap: r.result.n_missing_mcap, sizeExits: r.records, complete: true },
+    'a successful pull marks its report complete and keeps its exits');
+  print('PASS pull completion: only an exit-0 pull marks its size-exit report complete');
 
   r = await pull(true, 799999999, 40);
   assert.equal(r.records[0].marketCapUsd, 799999999);
@@ -322,7 +337,7 @@ async function run() {
   const oldAttempt = current.replace('123456-2', '123456-1');
   const emptyShard = path.basename(report(1));
   for (const [name, value] of [[current, [exit, immx]], [emptyShard, []], [oldRun, [buildSizeExit('OLD', 1, 8e8, iso(1), 'full-pull')]], [oldAttempt, [buildSizeExit('RETRY', 1, 8e8, iso(0), 'full-pull')]], [SIZE_EXITS_FILE, [exit]]]) {
-    files.set(path.join(incoming, name), JSON.stringify({ n_missing_mcap: 0, sizeExits: value }));
+    files.set(path.join(incoming, name), JSON.stringify({ n_missing_mcap: 0, sizeExits: value, complete: true }));
   }
   files.set(path.join(incoming, ticker + '.json'), JSON.stringify(seed));
   const filterSource = mutate(readSource(path.join(ROOT, 'scripts/filter-snapshot-merge.js'), 'utf8'), path.join(ROOT, 'scripts/filter-snapshot-merge.js'));
@@ -340,7 +355,7 @@ async function run() {
   assert.deepEqual(fs.readdirSync(merged).sort(), [ticker + '.json', SIZE_EXITS_FILE].sort());
   for (const name of [current, oldRun, oldAttempt]) assert(SIZE_EXIT_SHARD_PATTERN.test(name));
   for (const file of fs.readdirSync(merged)) files.delete(path.join(merged, file));
-  files.set(path.join(incoming, current), '{"n_missing_mcap":0,"sizeExits":[]}');
+  files.set(path.join(incoming, current), '{"n_missing_mcap":0,"sizeExits":[],"complete":true}');
   vm.runInNewContext(mergeBlock, context);
   assert.deepEqual(JSON.parse(files.get(path.join(merged, SIZE_EXITS_FILE))), manifest([immx, retry, exit]), 'empty completion retains the history');
   files.set(path.join(merged, SIZE_EXITS_FILE), JSON.stringify(manifest([exit])));
@@ -351,7 +366,7 @@ async function run() {
   // shard that already succeeded keeps its attempt-1 report. It is still true for today and must survive.
   const keptShard0 = current.replace('123456-2', '123456-1');
   const future = current.replace('123456-2', '123456-3');
-  files.set(path.join(incoming, keptShard0), JSON.stringify({ n_missing_mcap: 0, sizeExits: [exit] }));
+  files.set(path.join(incoming, keptShard0), JSON.stringify({ n_missing_mcap: 0, sizeExits: [exit], complete: true }));
   files.set(path.join(incoming, future), JSON.stringify({ n_missing_mcap: 0, sizeExits: [buildSizeExit('FUTURE', 1, 8e8, iso(0), 'full-pull')] }));
   const rerun = { ...context, files: [keptShard0, emptyShard, future], uebernehmen: [keptShard0, emptyShard, future] };
   files.delete(historyPath);
@@ -370,7 +385,7 @@ async function run() {
   assert.deepEqual(JSON.parse(files.get(path.join(merged, SIZE_EXITS_FILE))), manifest([second]), 'attempt 2 wins the same ticker');
   const tenth = current.replace('123456-2', '123456-10');
   const tenthExit = { ...exit, marketCapUsd: 770000000 };
-  files.set(path.join(incoming, tenth), JSON.stringify({ sizeExits: [tenthExit] }));
+  files.set(path.join(incoming, tenth), JSON.stringify({ sizeExits: [tenthExit], complete: true }));
   const tenthEnv = { ...process.env, GITHUB_RUN_ATTEMPT: '10' };
   assert.deepEqual(helpers.currentRunReports([tenth, current, keptShard0], tenthEnv), [keptShard0, current, tenth]);
   vm.runInNewContext(mergeBlock, { ...sameShard, files: [tenth, current], process: { env: tenthEnv } });
