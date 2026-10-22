@@ -14,6 +14,8 @@ const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVa
 // U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
+const { table: financialCases, envelope } = require('../../lib/financial-known-cases.js');
+const { annualPeriodEnds } = require('../../lib/annual-pairs.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -814,6 +816,33 @@ function opIncSynthetisch(s) {
   return opIncSynthetic(s);
 }
 
+// Hand table (lib/financial-known-cases.js, applied in prepareSnapshot before scoring): numeric annualOpInc
+// cases put the issuer's value from the annual report into a cell, either with a correction marker (vendor value
+// was wrong) or unchanged (vendor value confirmed: expectedBadValue === replacementValue, no marker). The hand
+// table withholds a cell at a case period whose vendor value drifted or whose currency changed, so a shown cell
+// there holds exactly replacementValue x envelope factor. meta.opIncSource still names the vendor stream, so a
+// series whose EVERY shown value is such an issuer cell would carry a Yahoo lamp that says the opposite of what
+// is shown (TWE.AX after P276, VPLAY-A.ST after P168e/P168f). Any other shown cell (vendor, statement-scale
+// rescale) keeps the lamp. A series without any shown value is not decided here (the source label rules).
+// Only opIncYahooAdjusted reads this: opIncSynthetisch explains the K2 gate (histOpInc), which still blanks
+// every historical axis of a computed-margin series, so that label stays with the gate.
+// Reads the raw annual rows on purpose: norm() drops the correction marker. Period ends come only through
+// annualPeriodEnds() (lib/annual-pairs.js, the validated accessor G31 uses, a GQS-00 dependency file): this file
+// never reads a raw *Ends field (A10 substrate guard); display only, no axis reads the ends here.
+const HANDTABELLE_OPINC = financialCases.cases.filter((c) => c.field === 'annualOpInc' && c.replacementValue !== null);
+const HANDTABELLE_OPINC_IDS = new Set(HANDTABELLE_OPINC.map((c) => c.caseId));
+function opIncAusAbschluss(s) {
+  const rows = s.annual && s.annual.annualOpInc, ends = annualPeriodEnds(s, 'annualOpInc');
+  if (!Array.isArray(rows)) return false;
+  const ticker = s.meta && s.meta.ticker, env = envelope(s);
+  const wert = (r) => (r && typeof r === 'object' ? r.value : r);
+  const ausAbschluss = (r, i) => !!(r && r.financialCorrection && HANDTABELLE_OPINC_IDS.has(r.financialCorrection.caseId)) ||
+    (!!env && Array.isArray(ends) && HANDTABELLE_OPINC.some((c) => [c.ticker, ...(c.listingAliases || [])].includes(ticker) &&
+      c.period === ends[i] && c.currency === env.currency && wert(r) === c.replacementValue * env.factor));
+  const shown = rows.map((r, i) => [r, i]).filter(([r]) => Number.isFinite(wert(r)));
+  return shown.length > 0 && shown.every(([r, i]) => ausAbschluss(r, i));
+}
+
 // 18. (B4) K1-Doppelboden (R1): die Reihe stammt aus Yahoos still und unversioniert bereinigtem
 // Stream, nicht aus dem eingereichten Abschluss. K1 hat 2:1 GAAP-as-filed zur Scoring-Definition
 // erklaert; wo keine SEC-Serie existiert, bleibt die Yahoo-Reihe als ehrlich etikettierter Proxy
@@ -822,7 +851,7 @@ function opIncSynthetisch(s) {
 // yahoo-adjusted gegen 128 sec-gaap (Migration 29.08., PR #90).
 function opIncYahooAdjusted(s) {
   if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
-  return s.meta.opIncSource === 'yahoo-adjusted';
+  return s.meta.opIncSource === 'yahoo-adjusted' && !opIncAusAbschluss(s);
 }
 
 const LAMPS = {

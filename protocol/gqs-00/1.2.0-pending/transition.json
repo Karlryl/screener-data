@@ -78,7 +78,7 @@
     "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
-    "src/scoring/lamps.js": "e6d6b62d69859a6d67cf91ffa97489f6abf17713c63ff6b63d9a10f23c7866a6",
+    "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
     "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
     "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a",
@@ -289,6 +289,17 @@
       "evidence": "tests/g31-p267.test.js, tests/scoring/gqs00-freeze.test.js, tests/g31-umschaltung.test.js, tests/g31-aktualitaet-p184.test.js; Vorher/Nachher docs/g31-umschaltung-vorher-nachher-2026-10-17.md (recomputed on the same 17.10.2026 replay).",
       "review": "Build registration only; the independent Codex re-review decides the merge."
     }
+  },
+  "handTableSourceLamps": {
+    "date": "2026-10-22",
+    "authority": "Daylauf 5 lane sd-twe-lampe master order: TWE.AX kept the lamp Betriebsergebnis aus Yahoo-Bereinigung after hand table P276 (Tag 1473); a display-only correction of a wrong label under Regelblatt G2; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only the lamps.js fingerprint. opIncYahooAdjusted is false when every shown annualOpInc value is a hand-table issuer value of configs/financial-known-cases.json: a correction marker of a numeric annualOpInc case, or a confirmed cell at a case period of this listing whose value equals replacementValue x envelope factor (period ends only through annualPeriodEnds() of lib/annual-pairs.js, never a raw *Ends field: A10 substrate guard). opIncSynthetisch is unchanged (it stays with the K2 gate). Neither lamp is in DATA_SUSPECT_LAMPS; no score, rank, routing, calibration, formula, weight or threshold change.",
+    "file": "src/scoring/lamps.js",
+    "sourceSha256LF": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
+    "previousPendingSha256LF": "e6d6b62d69859a6d67cf91ffa97489f6abf17713c63ff6b63d9a10f23c7866a6",
+    "goldenImpact": "verify() rebuilds the 25 golden traces unchanged; lamps carry no weight in them.",
+    "evidence": "tests/opinc-source-lamp-hand-table.test.js (red on the previous lamps.js, green after), tests/scoring/gqs00-freeze.test.js (red after the source edit before this entry, green afterwards). Before/after: 131 packet objects of tests/fixtures (with the HL.SW alias) change opIncYahooAdjusted on TWE.AX, TSRYF, HL and HL.SW only, no other lamp; the VPLAY-A.ST packet of the guard (one corrected, three confirmed cells) loses it too; 15,044 local snapshots of 29.08. (undated annualOpInc): 0 lamp changes.",
+    "review": "Build registration only; independent review decides the merge."
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",

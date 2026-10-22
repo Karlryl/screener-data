@@ -1025,7 +1025,8 @@ test('annual readers: INFQ badge, gross-profit growth and annual fallback empty;
 // the boards with a visible reason: withholding its annual cells would put it back with a false profit streak
 // ("0 Jahre, letzter Verlust 2025" from the SEC bulk operating income, which is the negated net expenses).
 // OTF was held the same way until 01.10.; its four false annual cells are now withheld instead (test above).
-// 01.10.: HOS (packet of a former company under a reused ticker), TYG (statements end 2017), OLPX (delisted, all
+// 01.10.: HOS (packet of a former company under a reused ticker), TYG (statements end 2017; re-checked 22.10.: the FY2025
+// packet's revenue equals no N-CSR line, fixture refreshed), OLPX (delisted, all
 // gross profits 0) are held the same way. 02.10.: HLX (retired ticker, price and market cap frozen since 01.09.).
 // 02.10. review round 2: 2670.HK (pre-split price), ENGI3.SA (one class price x all classes), Z98.DE (JBS wrong count on
 // a non-USD leg): wrong market caps the share-count table cannot carry; held until a price- or class-aware fix exists.
@@ -1041,7 +1042,10 @@ test('holds KBDC, HOS, TYG, OLPX, HLX, 2670.HK, ENGI3.SA, Z98.DE, 2637.TW, 40234
       assert.equal(r.snapshot.meta.financialDataIssue?.caseId, q.caseId, ticker + ' held');
       assert.equal(score.isDataSuspect(r.snapshot, [], 'route'), true);
       const scored = score.scoreUniverse([r.snapshot], formulas)[0];
-      assert.equal(scored.score, null); assert.equal(scored.reason, 'data-suspect'); assert.equal(scored.reasonText, q.reason);
+      assert.equal(scored.score, null);
+      // TYG (22.10.2026): on the FY2025 packet the router already excludes the closed-end fund; the hold keeps its reason.
+      if (ticker === 'TYG') assert.equal(scored.reason, 'non-operating-rev');
+      else { assert.equal(scored.reason, 'data-suspect'); assert.equal(scored.reasonText, q.reason); }
       assert.ok(financialReasons(r.snapshot).includes(q.reason));
       return r;
     };
@@ -1444,7 +1448,7 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [
     ['cases', 212, '9cf17195cb335fc74461cf054fb406be4846bb0a35165d25d5c8d3f897a440b6'], // P177 changes HL recast evidence and two CIG-C fingerprints, not period-label authority.
-    ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],
+    ['quarantines', 11, '609406b7d3e5bfd3096867a5c88dae0b937623a70fbc1e5d76e2e4cce9967065'], // 22.10.2026: reasonDate on every hold; TYG re-checked on the FY2025 packet.
     ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],
   ]) { assert.equal(legacy(key).length, count); assert.equal(digest(legacy(key)), hash, key); }
   assert.equal(Object.keys(legacyFixture).length, 42);
@@ -1455,16 +1459,17 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   earlier.coverage = earlier.coverage.filter(v => !['CDR.WA', '000552.SZ'].includes(v.ticker));
   // P148 (22.10.2026) bumps the table revision; the two legacy pins below are reproduced under the revision label they were taken with.
   const P168D = '2026-10-11-p168d';
-  assert.equal(digest(results(validateTable({ ...earlier, revision: P168D }))), 'd7ed5c4f8878a4d11dc2e16e5de2bcf16891d1b690dee5e0aceca9ed61093855', // P168d changed only revision annotations in these 42 fixtures; values and evidence remain pinned.
+  assert.equal(digest(results(validateTable({ ...earlier, revision: P168D }))), '869fe955391621cf758d80a331fe55d8efd557c881553e1e7f384e4aef6d7420', // P168d changed only revision annotations in these 42 fixtures; 22.10.2026 changes only TYG (FY2025 packet, re-checked hold).
     'P177 results with P168d revision annotations, including events and reader-facing reasons');
   // 18.10.2026 withholds the four VCTR annual gross-profit years; VCTR is the only one of these 42 results that changes.
   const now = results(), old = results(validateTable(earlier));
   assert.deepEqual(now.filter((r, i) => serial(r) !== serial(old[i])).map(r => r[0]), ['VCTR']);
   // G31 switch (18.10.2026): the four VCTR quarterly GP holds change only VCTR again (asserted above); new pin.
-  assert.equal(digest(results(validateTable({ ...table, revision: P168D }))), 'dcf22be3b9ddae04473499e2008c04bfc07b06f5cd5406c216aab4795366dbfe',
-    'the pre-P148 results are unchanged (the revision bump alters annotations only)');
-  // P148: current results with the current revision label.
-  assert.equal(digest(now), '31be014df58a8a0964ba2a578c9e54fcda475ab949b32b02d6a79eed3518f01e', 'current results pinned');
+  // 22.10.2026: the refreshed TYG packet and its re-checked hold change only TYG (checked against origin/main on all 69 fixtures).
+  assert.equal(digest(results(validateTable({ ...table, revision: P168D }))), 'f2217eca3746f491e33b1fd7d8c25aa04ad73086e5ee6915c7631bac2efb3edf',
+    'the pre-P148 results (with the TYG refresh) are unchanged (the revision bump alters annotations only)');
+  // P148 + TYG: current results with the current revision label; differs from origin/main (31be014d...) only in TYG, checked on 42 and 69 fixtures.
+  assert.equal(digest(now), '23f4b47992e0c642dcfa16a88a705fd56a760fcae3e186543e98ead41d3ca0a6', 'current results pinned');
 });
 
 test('period-label validation rejects malformed dates, evidence, duplicate authority and contradictory values', () => {

@@ -524,6 +524,9 @@ jobs:
         timeout-minutes: 2
         run: node scripts/prepare-stale-quarter-ranks.js
 
+      # P280: external-data/archive/sec-form4/ travels WITH the form4 cache. The puller
+      # archives rows before it trims them; without the archive in this artifact the merge
+      # job would commit the trimmed cache and the archived rows would die with the runner.
       - name: Upload prep state (watchlist + fx + earnings + insider)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -534,6 +537,7 @@ jobs:
             earnings-calendar.json
             outputs/stale-quarter-ranks.json
             external-data/sec-form4-cache.json
+            external-data/archive/sec-form4/
             data-health/entdeckungs-ausschluss.json
           if-no-files-found: warn
           retention-days: 1
