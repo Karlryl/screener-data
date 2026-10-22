@@ -14,6 +14,7 @@ const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVa
 // U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
+const { table: financialCases } = require('../../lib/financial-known-cases.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -811,7 +812,22 @@ function einmalertragBewertbarkeit(s) {
 // gemeldet. Genau die Reihe, die das K2-Gate oben aus allen historischen Auswertungen heraushaelt.
 function opIncSynthetisch(s) {
   if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
-  return opIncSynthetic(s);
+  return opIncSynthetic(s) && !opIncAusAbschluss(s);
+}
+
+// Hand table (lib/financial-known-cases.js, applied in prepareSnapshot before scoring): numeric annualOpInc
+// cases replace vendor cells with the issuer's value from the annual report. meta.opIncSource still names the
+// vendor stream the packet came from, so a series whose EVERY shown value is such an issuer cell would carry a
+// source lamp that says the opposite of what is shown (TWE.AX after P276). Only cells whose correction marker
+// names an annualOpInc hand-table case count; a statement-scale rescale or any vendor cell left keeps the lamp.
+// A series without any shown value is not decided here (the source label rules, as before).
+// Reads the raw annual rows on purpose: norm() drops the correction marker.
+const HANDTABELLE_OPINC = new Set(financialCases.cases.filter((c) => c.field === 'annualOpInc').map((c) => c.caseId));
+function opIncAusAbschluss(s) {
+  const rows = s.annual && s.annual.annualOpInc;
+  if (!Array.isArray(rows)) return false;
+  const shown = rows.filter((r) => Number.isFinite(r && typeof r === 'object' ? r.value : r));
+  return shown.length > 0 && shown.every((r) => !!(r && r.financialCorrection && HANDTABELLE_OPINC.has(r.financialCorrection.caseId)));
 }
 
 // 18. (B4) K1-Doppelboden (R1): die Reihe stammt aus Yahoos still und unversioniert bereinigtem
@@ -822,7 +838,7 @@ function opIncSynthetisch(s) {
 // yahoo-adjusted gegen 128 sec-gaap (Migration 29.08., PR #90).
 function opIncYahooAdjusted(s) {
   if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
-  return s.meta.opIncSource === 'yahoo-adjusted';
+  return s.meta.opIncSource === 'yahoo-adjusted' && !opIncAusAbschluss(s);
 }
 
 const LAMPS = {
