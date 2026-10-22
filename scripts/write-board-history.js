@@ -59,6 +59,7 @@ const { boardStatus } = require('../src/scoring/board-status.js');
 const priceStore = require('../lib/price-history-store.js');   // LT1: Quelle der PIT-Preisfelder
 const { istStrukturell } = require('../lib/board-history-flag.js');   // Tag 1396: one rule, one place
 const { readValueFlags } = require('../lib/value-open-items.js');   // Tag 1401: valueFlags on stored rows
+const { table: financialCases } = require('../lib/financial-known-cases.js');
 
 // ── benannte Konstanten (keine Magic Numbers; Herkunft dokumentiert) ─────────
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -967,11 +968,20 @@ function reiheGefuellt(a) { return Array.isArray(a) && a.some((x) => x != null);
 //       sonst Verfall. meta.opIncSource steht nicht in der Zeile; ein toter Diskriminator
 //       (Ticker in SEC, Quelle auf null) zeigt sich als Reihen-Leerung/Achsenverlust in (a)/(b),
 //       die die Freigabe NIE ueberstimmt (Waechter-Arm C3).
+//       Second proof (Daylauf 5): a lost opIncYahooAdjusted is released for a listing with numeric
+//       annualOpInc hand-table cases (opts.handTableOpInc); lamps.js drops that lamp once every shown
+//       value is an issuer value from the annual report. opIncSynthetisch is not released by it.
 //   (d) jeder andere Lampen-Uebergang (true -> false/null) ist Beobachtung: gezaehlt und
 //       namentlich im Kanal-B-Protokoll und im Sidecar, ohne Veto (lampenBeobachtung).
 // opts.quartale(ticker) liefert { opIncQ, opIncQEnds } aus dem AKTUELLEN Snapshot (kein
 // Schema-Zusatz an der Messreihe); fehlt es, wird der opIncQ-Slot nicht angenommen.
 const QUELL_LAMPEN = new Set(['opIncSynthetisch', 'opIncYahooAdjusted']);
+// Listings (ticker and aliases) with numeric annualOpInc hand-table cases: proof (c) for opIncYahooAdjusted.
+const handTableOpIncListings = () => new Set(financialCases.cases
+  .filter((c) => c.field === 'annualOpInc' && c.replacementValue !== null)
+  .flatMap((c) => [c.ticker, ...(c.listingAliases || [])]));
+const quellFreigabe = (l, ticker, opts) => (opts.secTicker instanceof Set && opts.secTicker.has(ticker)) ||
+  (l === 'opIncYahooAdjusted' && opts.handTableOpInc instanceof Set && opts.handTableOpInc.has(ticker));
 const KOPF_ACHSE = 'marginTrajectory';   // einzige Achse mit Kopf-Null-Guard (src/scoring/axes.js:288-301)
 const anzahlGefuellt = (a) => (Array.isArray(a) ? a.filter((x) => x != null).length : 0);
 // Achsen, die vorher einen Wert hatten und nachher keinen; null wenn axisBreakdown fehlt.
@@ -1019,10 +1029,9 @@ function integritaetsVerfall(vorher, nachher, opts) {
   }
   if (Array.isArray(vorher.lamps) && vorher.lamps.length) {                                       // (c)
     const jetzt = new Set(Array.isArray(nachher.lamps) ? nachher.lamps : []);
-    const sec = opts.secTicker instanceof Set ? opts.secTicker : null;
     for (const l of vorher.lamps) {
       if (jetzt.has(l) || !QUELL_LAMPEN.has(l)) continue;
-      if (sec && sec.has(nachher.ticker)) continue;   // Quell-Upgrade, am Objekt bewiesen
+      if (quellFreigabe(l, nachher.ticker, opts)) continue;   // Quell-Upgrade, am Objekt bewiesen
       return 'Lampe ' + l + ' verloren';
     }
   }
@@ -1034,10 +1043,9 @@ function lampenBeobachtung(vorher, nachher, opts) {
   const out = { verloren: [], quellUpgrade: [] };
   if (!vorher || !nachher || !Array.isArray(vorher.lamps)) return out;
   const jetzt = new Set(Array.isArray(nachher.lamps) ? nachher.lamps : []);
-  const sec = opts && opts.secTicker instanceof Set ? opts.secTicker : null;
   for (const l of vorher.lamps) {
     if (jetzt.has(l)) continue;
-    if (QUELL_LAMPEN.has(l)) { if (sec && sec.has(nachher.ticker)) out.quellUpgrade.push(l); }
+    if (QUELL_LAMPEN.has(l)) { if (quellFreigabe(l, nachher.ticker, opts || {})) out.quellUpgrade.push(l); }
     else out.verloren.push(l);
   }
   return out;
@@ -1820,6 +1828,7 @@ function run(opts) {
     if (!(b && b.typ === 'daten-schub')) return {};
     if (!datenSchubOpts) datenSchubOpts = {
       secTicker: secTickerLesen(P.EXTERNAL_DIR),
+      handTableOpInc: handTableOpIncListings(),
       quartale: (ticker) => { const s = readSnapshot(ticker); const ts = (s && s.timeseries) || {}; return { opIncQ: ts.opIncQ, opIncQEnds: ts.opIncQEnds }; },
     };
     return datenSchubOpts;
@@ -2155,7 +2164,7 @@ module.exports = {
   quantile, assertNoPicksHistory, buildPit, mischVal, mischVerhaeltnisUnkorrigiert,
   pitPriceFeatures, pitDecileByIndex, attachPitPriceFields,   // LT1 (Rat 10)
   priorVintageDate, priorBoardVintage, excludedDates, massstabBruchFuer, bruchProtokollZeilen,
-  integritaetsVerfall, lampenBeobachtung, secTickerLesen, kopplungProtokollZeilen,   // WB-4'
+  integritaetsVerfall, lampenBeobachtung, secTickerLesen, handTableOpIncListings, kopplungProtokollZeilen,   // WB-4'
   _setPaths, resolvePaths,
   frozenThresholdOf,
   neuesQuartalErklaert, quartalLaneShadow, quartalLaneShadowSummary,   // Quartals-Spur (SHADOW, 26.09.)

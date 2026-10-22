@@ -14,7 +14,7 @@ const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVa
 // U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
-const { table: financialCases } = require('../../lib/financial-known-cases.js');
+const { table: financialCases, envelope } = require('../../lib/financial-known-cases.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -812,22 +812,32 @@ function einmalertragBewertbarkeit(s) {
 // gemeldet. Genau die Reihe, die das K2-Gate oben aus allen historischen Auswertungen heraushaelt.
 function opIncSynthetisch(s) {
   if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
-  return opIncSynthetic(s) && !opIncAusAbschluss(s);
+  return opIncSynthetic(s);
 }
 
 // Hand table (lib/financial-known-cases.js, applied in prepareSnapshot before scoring): numeric annualOpInc
-// cases replace vendor cells with the issuer's value from the annual report. meta.opIncSource still names the
-// vendor stream the packet came from, so a series whose EVERY shown value is such an issuer cell would carry a
-// source lamp that says the opposite of what is shown (TWE.AX after P276). Only cells whose correction marker
-// names an annualOpInc hand-table case count; a statement-scale rescale or any vendor cell left keeps the lamp.
-// A series without any shown value is not decided here (the source label rules, as before).
-// Reads the raw annual rows on purpose: norm() drops the correction marker.
-const HANDTABELLE_OPINC = new Set(financialCases.cases.filter((c) => c.field === 'annualOpInc').map((c) => c.caseId));
+// cases put the issuer's value from the annual report into a cell, either with a correction marker (vendor value
+// was wrong) or unchanged (vendor value confirmed: expectedBadValue === replacementValue, no marker). The hand
+// table withholds a cell at a case period whose vendor value drifted or whose currency changed, so a shown cell
+// there holds exactly replacementValue x envelope factor. meta.opIncSource still names the vendor stream, so a
+// series whose EVERY shown value is such an issuer cell would carry a Yahoo lamp that says the opposite of what
+// is shown (TWE.AX after P276, VPLAY-A.ST after P168e/P168f). Any other shown cell (vendor, statement-scale
+// rescale) keeps the lamp. A series without any shown value is not decided here (the source label rules).
+// Only opIncYahooAdjusted reads this: opIncSynthetisch explains the K2 gate (histOpInc), which still blanks
+// every historical axis of a computed-margin series, so that label stays with the gate.
+// Reads the raw annual rows on purpose: norm() drops the correction marker and the period ends.
+const HANDTABELLE_OPINC = financialCases.cases.filter((c) => c.field === 'annualOpInc' && c.replacementValue !== null);
+const HANDTABELLE_OPINC_IDS = new Set(HANDTABELLE_OPINC.map((c) => c.caseId));
 function opIncAusAbschluss(s) {
-  const rows = s.annual && s.annual.annualOpInc;
+  const rows = s.annual && s.annual.annualOpInc, ends = s.annual && s.annual.annualOpIncEnds;
   if (!Array.isArray(rows)) return false;
-  const shown = rows.filter((r) => Number.isFinite(r && typeof r === 'object' ? r.value : r));
-  return shown.length > 0 && shown.every((r) => !!(r && r.financialCorrection && HANDTABELLE_OPINC.has(r.financialCorrection.caseId)));
+  const ticker = s.meta && s.meta.ticker, env = envelope(s);
+  const wert = (r) => (r && typeof r === 'object' ? r.value : r);
+  const ausAbschluss = (r, i) => !!(r && r.financialCorrection && HANDTABELLE_OPINC_IDS.has(r.financialCorrection.caseId)) ||
+    (!!env && Array.isArray(ends) && HANDTABELLE_OPINC.some((c) => [c.ticker, ...(c.listingAliases || [])].includes(ticker) &&
+      c.period === ends[i] && c.currency === env.currency && wert(r) === c.replacementValue * env.factor));
+  const shown = rows.map((r, i) => [r, i]).filter(([r]) => Number.isFinite(wert(r)));
+  return shown.length > 0 && shown.every(([r, i]) => ausAbschluss(r, i));
 }
 
 // 18. (B4) K1-Doppelboden (R1): die Reihe stammt aus Yahoos still und unversioniert bereinigtem
