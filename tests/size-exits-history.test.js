@@ -79,9 +79,9 @@ function check(libSource, mergeSource) {
   const logs = [];
   const ctx = { ...h, fs: io, path, console: { log: s => logs.push(s) }, writeFileAtomic: atomic,
     argv: ['node', 'filter-snapshot-merge.js', '--size-exits-history', historyPath],
-    process: { env: { GITHUB_RUN_ID: '123456', GITHUB_RUN_ATTEMPT: '2', RUN_DATE_UTC: '2026-10-08' } },
+    process: { env: { GITHUB_RUN_ID: '123456', GITHUB_RUN_ATTEMPT: '2', RUN_DATE_UTC: '2026-10-08', SHARD_COUNT: '1' } },
     eingang: incoming, ziel: output, files: [report, 'AAPL.json'], uebernehmen: [report, 'AAPL.json'] };
-  files.set(path.join(incoming, report), JSON.stringify({ sizeExits: [record('NEW')] }));
+  files.set(path.join(incoming, report), JSON.stringify({ sizeExits: [record('NEW')], complete: true }));
   files.set(path.join(incoming, 'AAPL.json'), '{"snapshot":"unchanged"}');
   vm.runInNewContext(block, ctx);
   const expected = { schema: 'size-exits/v2', known: true, runDate: '2026-10-08', exits: [latest, record('NEW')] };
@@ -96,7 +96,28 @@ function check(libSource, mergeSource) {
     assert.deepEqual(JSON.parse(files.get(manifestPath)), { ...expected, known: false }, 'unknown run retains remembered exits');
   }
   assert.equal(writes.filter(p => p === historyPath).length, historyWrites, 'unknown run does not rewrite unchanged history');
-  files.set(path.join(incoming, report), '{"sizeExits":[]}');
+  // P155 b: known needs a successful pull report for each of SHARD_COUNT shards of this run.
+  const report1 = '_manifest-size-exits.shard-1.run-123456-1.json';
+  const two = { ...ctx, process: { env: { ...ctx.process.env, SHARD_COUNT: '2' } }, files: [report, report1], uebernehmen: [report, report1] };
+  files.set(path.join(incoming, report1), JSON.stringify({ sizeExits: [record('ABORT')] }));
+  vm.runInNewContext(block, two);
+  assert.deepEqual(JSON.parse(files.get(manifestPath)), { ...expected, known: false, exits: [latest, record('ABORT'), record('NEW')] },
+    'an aborted shard makes the list unknown, but its removal still enters the history');
+  assert.equal(files.get(historyPath), history([latest, record('ABORT'), record('NEW')]), 'aborted shard exit is kept in the history');
+  assert.match(logs.at(-1), /shard\(s\) 1 of 2\b/, 'the missing shard is named');
+  files.set(path.join(incoming, report1), JSON.stringify({ sizeExits: [record('ABORT')], complete: true }));
+  vm.runInNewContext(block, two);
+  assert.equal(JSON.parse(files.get(manifestPath)).known, true, 'every shard complete, one from an earlier attempt');
+  for (const [name, env] of [['missing SHARD_COUNT', { SHARD_COUNT: undefined }], ['zero SHARD_COUNT', { SHARD_COUNT: '0' }],
+    ['non-numeric SHARD_COUNT', { SHARD_COUNT: '2x' }], ['third shard missing', { SHARD_COUNT: '3' }]]) {
+    vm.runInNewContext(block, { ...two, process: { env: { ...two.process.env, ...env } } });
+    assert.equal(JSON.parse(files.get(manifestPath)).known, false, name);
+  }
+  assert.match(logs.at(-2), /SHARD_COUNT missing or invalid/, 'an invalid shard count is reported');
+  files.set(path.join(incoming, report1), JSON.stringify({ sizeExits: [], complete: 'true' }));
+  vm.runInNewContext(block, two);
+  assert.equal(JSON.parse(files.get(manifestPath)).known, false, 'only complete === true marks a successful pull');
+  files.set(path.join(incoming, report), '{"sizeExits":[],"complete":true}');
   vm.runInNewContext(block, ctx);
   assert.equal(JSON.parse(files.get(manifestPath)).known, true, 'an empty completed report is known');
   const aged = [record('Z', 91), record('A', 90)];
@@ -148,9 +169,13 @@ if (process.argv.includes('--break-once')) {
     ['option', 0, '  return path.resolve(argv[i + 1]);', "  return path.resolve(__dirname, '..', SIZE_EXITS_HISTORY_FILE);"],
     ['run-day', 1, '  const runDate = sizeExitRunDay(process.env);', "  const runDate = '2026-10-01';"],
     ['manifest', 1, "  writeFileAtomic(path.join(ziel, SIZE_EXITS_FILE), JSON.stringify({ schema: 'size-exits/v2', known, runDate, exits }));", '  writeFileAtomic(path.join(ziel, SIZE_EXITS_FILE), JSON.stringify(exits));'],
-    ['known-false', 1, '  const known = Boolean(sizeExitTag && sizeExitFiles.length);', '  const known = false;'],
-    ['known-true', 1, '  const known = Boolean(sizeExitTag && sizeExitFiles.length);', '  const known = true;'],
+    ['known-false', 1, '  const known = Boolean(missingShards && !missingShards.length);', '  const known = false;'],
+    ['known-true', 1, '  const known = Boolean(missingShards && !missingShards.length);', '  const known = true;'],
     ['unknown-history', 1, '    : readSizeExitHistory(historyPath, fs).exits;', '    : updateSizeExitHistory(sizeExits, runDate, { historyPath, fs, writeFileAtomic });'],
+    ['partial-history', 1, '  const exits = sizeExitFiles.length ? updateSizeExitHistory(sizeExits, runDate, { historyPath, fs, writeFileAtomic })', '  const exits = known ? updateSizeExitHistory(sizeExits, runDate, { historyPath, fs, writeFileAtomic })'],
+    ['complete-flag', 0, '  const complete = new Set(files.filter((f, i) => reports[i] && reports[i].complete === true)', '  const complete = new Set(files.filter((f, i) => reports[i])'],
+    ['shard-count', 0, '  if (!/^[1-9]\\d*$/.test(String(shardCount))) return null;', '  if (!shardCount) return null;'],
+    ['all-shards', 0, '  return [...Array(Number(shardCount)).keys()].filter(i => !complete.has(String(i)));', '  return [];'],
   ];
   for (const [name, index, from, to] of mutations) {
     const copy = sources.slice(), lines = copy[index].split(/\r?\n/);

@@ -50,10 +50,10 @@ if (process.env.P138_RED_CASE) {
 
 test('P138 appends exactly ten cells, two coverage entries and two genuine trimmed packets', () => {
   assert.deepEqual(table.cases.slice(233, 243).map(c => c.caseId), cells.map(idFor)); // P138: +10 after the nine P129 and eight P47 cases (216 + 9 + 8); P140 appends its four cases after index 243
-  assert.deepEqual(table.coverage.slice(34), [...['000688.SZ', 'GRANULES.NS', 'BYLOT.AT'].map(ticker =>
+  assert.deepEqual(table.coverage.slice(34, 41), [...['000688.SZ', 'GRANULES.NS', 'BYLOT.AT'].map(ticker =>
     ({ ticker, field: 'revenueQ', coversThrough: '2026-06-30' })), { ticker: 'CDR.WA', listingAliases: ['OTGLF'], field: 'revenueQ', coversThrough: '2026-06-30' },
     { ticker: '000552.SZ', field: 'revenueQ', coversThrough: '2026-06-30' },
-    ...['opIncQ', 'grossProfitQ'].map(field => ({ ticker: 'CDR.WA', listingAliases: ['OTGLF'], field, coversThrough: '2026-06-30' }))]); // P177 appends verified BYLOT coverage after the two P138 entries; 18.10.2026 appends CDR.WA (three series) and 000552.SZ.
+    ...['opIncQ', 'grossProfitQ'].map(field => ({ ticker: 'CDR.WA', listingAliases: ['OTGLF'], field, coversThrough: '2026-06-30' }))]); // P177 appends verified BYLOT coverage after the two P138 entries; 18.10.2026 appends CDR.WA (three series) and 000552.SZ; P148 (22.10.2026) appends the MODEC row after these seven.
   for (const [key, count, digest] of [
     ['cases', 216, '3cf2cd8528d0242838af9c2bfdbe8d13531e1d6c1c63f993c96eec8c09daa82b'], // P177 updates HL recast evidence and two CIG-C fingerprints within this prefix.
     ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],

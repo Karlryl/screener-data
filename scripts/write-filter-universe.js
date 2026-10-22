@@ -72,6 +72,24 @@ function usableFcf(snapshot) {
     && fcfMarginValid(margin, norm(snapshot, 'annualFCF'), norm(snapshot, 'annualOCF')) ? margin : null;
 }
 
+/**
+ * Sales multiples are shown only when positive and computed on positive revenue (T2).
+ * Yahoo divides market cap and EV by trailing revenue. Holding companies that book fair-value losses
+ * as revenue (Kinnevik, Exor, Reinet) get a negative divisor: P/S turns negative and EV/S takes the
+ * wrong sign (positive when EV is negative too). A non-positive EV/S on positive revenue means EV <= 0.
+ * @param {object} snapshot Prepared snapshot.
+ * @param {boolean} withheld Currency verdict that already withholds both ratios.
+ * @returns {{ps: number|null, evs: number|null, reason: string|null}} Shown values and the presence reason.
+ */
+function salesMultiples(snapshot, withheld) {
+  const ps = mischVal(snapshot.metrics?.priceSales, withheld), evs = mischVal(snapshot.metrics?.enterpriseToRevenue, withheld);
+  if (ps === null && evs === null) return { ps: null, evs: null, reason: null };
+  const revenue = metricVal(snapshot, 'revenueTTM');
+  // ponytail: revenue exactly 0 is treated as a placeholder (T2), only a negative divisor proves the sign.
+  if ((revenue !== null && revenue < 0) || (ps !== null && ps <= 0)) return { ps: null, evs: null, reason: 'umsatz-negativ' };
+  return { ps: round(ps), evs: evs !== null && evs > 0 ? round(evs) : null, reason: evs !== null && evs <= 0 ? 'ev-negativ' : null };
+}
+
 function usableRule40(snapshot, generatedAt) {
   const growth = revGrowthLevel(snapshot), margin = usableFcf(snapshot);
   if (!finite(growth) || margin === null || r40.datenSuspekt(snapshot)
@@ -122,6 +140,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     if (board?.rankGrund) aus.push(board.rankGrund);
     const salesMixed = mischVerhaeltnisUnkorrigiert(meta);
     const ratio = (name, withheld) => mischVal(snapshot.metrics?.[name], withheld);
+    const sales = salesMultiples(snapshot, salesMixed);
+    if (sales.reason) aus.push(sales.reason);
     const trailing = ratio('pe', mixed);
     const pe = finite(trailing) && trailing > 0 ? round(trailing) : null;
     const netIncome = norm(snapshot, 'annualNetIncome')[0];
@@ -142,8 +162,7 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       mc: meta.marketCapReason || marketCapCases[ticker] ? (finite(snapshot.marketCap?.value) ? round(snapshot.marketCap.value) : null) : board ? (finite(board.marketCap) ? board.marketCap : null)
         : (beurteileWaehrungsbeleg(meta).ok ? round(snapshot.marketCap?.value) : null),
       g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
-      ps: round(ratio('priceSales', salesMixed)),
-      evs: round(ratio('enterpriseToRevenue', salesMixed)),
+      ps: sales.ps, evs: sales.evs,
       pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
       fpe: round(ratio('forwardPE', mixed)),
       ...div, po: payout === 0 && div.dySt === 'zahlt' ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
@@ -195,6 +214,9 @@ function validateUniverse(feed, bytes) {
     if (mixed !== (row.peSt === 'waehrung') || (mixed && ['pe', 'fpe'].some(k => row[k] != null))) errors.push(where + ': currency guard');
     if (row.po === 0 && row.dySt === 'zahlt') errors.push(where + ': placeholder payout');
     if (row.gm === 0) errors.push(where + ': placeholder gross margin');
+    if (['ps', 'evs'].some(k => row[k] != null && row[k] <= 0)) errors.push(where + ': non-positive sales multiple');
+    if (row.aus.includes('umsatz-negativ') && (row.ps != null || row.evs != null)) errors.push(where + ': sales multiple on negative revenue');
+    if (row.aus.includes('ev-negativ') && row.evs != null) errors.push(where + ': inconsistent ev reason');
     if (row.d52 != null && (row.d52 < -100 || row.d52 > 0)) errors.push(where + ': invalid d52');
     if (row.aus.includes('d52-implausible') && row.d52 != null) errors.push(where + ': inconsistent d52 reason');
     if (row.fcf != null && row.fcf > r40.MAX_FCF_MARGIN_PCT) errors.push(where + ': invalid fcf');
@@ -286,4 +308,4 @@ function main(argv) {
 }
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
-module.exports = { buildUniverse, growth3, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
+module.exports = { buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };

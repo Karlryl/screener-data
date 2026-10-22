@@ -61,7 +61,8 @@ test('P129 manifest pins every cell and preserves all original authority and fix
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
     'd21d098a3c132f0523cc28b2e2017d54c5076af6c6cd296595d8a659e3cec16e'); // P177 refreshes HL period ends and two CIG-C cells; 22.10.2026 refreshes only TYG (FY2025 packet); the full prefix stays pinned.
-  assert.equal(table.coverage.length, 41, 'no coverage expansion without a fully verified quarterly series'); // P177 adds the verified BYLOT quarterly series; 18.10.2026 the fully verified CDR.WA (three) and 000552.SZ series.
+  assert.equal(table.coverage.length, 42, 'no coverage expansion without a fully verified quarterly series'); // P177 adds the verified BYLOT quarterly series; 18.10.2026 the fully verified CDR.WA (three) and 000552.SZ series; P148 (22.10.2026) the all-null MODEC revenue hold, the only series covered without a verified value.
+  assert.deepEqual(table.coverage[41], { ticker: '6269.T', field: 'revenueQ', coversThrough: '2026-06-30' }, 'P148: MODEC alone carries all-null series authority');
   assert.equal(table.periodLabels.length, 16, 'GRGD labels stay open; no ineffective live row');
   assert.equal(Object.keys(fixtures).length, 69); // P177 appends the real frozen BYLOT packet for its five new quarterly cases; 18.10.2026 appends BLSH, CDR.WA, OTGLF and 000552.SZ; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST.
   assert.equal(table.cases.slice(216, 225).filter(c => c.periodType === '12M').every(c => c.ticker === 'AIAI' && c.replacementValue === null), true,
@@ -103,11 +104,11 @@ test('retained withholds select source-verified annual pairs or an empty growth'
   assert.deepEqual(revGrowthLeg(modec), revGrowthLeg(fixtures['6269.T']));
 });
 
-test('P129 authorizes only named withholds and cannot reintroduce the rejected quarterly coverage', () => {
+test('P129 authorizes only named withholds; the MODEC coverage row (P148) is the one explicit all-null exception', () => {
   const additions = table.cases.slice(216, 225);
   assert.ok(additions.every(row => row.replacementValue === null));
   assert.deepEqual([...new Set(additions.map(row => row.ticker))].sort(), ['1ANE.MI', '6269.T', 'AIAI', 'AJBU.SI', 'MAD.AX']);
-  assert.equal(table.coverage.length, 41); // P177 adds verified BYLOT coverage without changing any P129 withhold; 18.10.2026 adds CDR.WA (three) and 000552.SZ.
+  assert.equal(table.coverage.length, 42); // P177 adds verified BYLOT coverage without changing any P129 withhold; 18.10.2026 adds CDR.WA (three) and 000552.SZ; P148 adds the all-null MODEC hold as coverage row 42.
   for (const [ticker, current, prior, currency] of [
     ['AJBU.SI', 441362000, 310287000, 'SGD'], ['1ANE.MI', 2925000000, 3048000000, 'EUR'],
   ]) {

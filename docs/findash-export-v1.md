@@ -1446,7 +1446,7 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `mc` | number or absent | USD market capitalization, using the existing currency-evidence guard |
 | `g` | number or absent | Revenue growth in percent, official board value or `revGrowthLevel` |
 | `g3` | number or absent | `(annualRev[0]/annualRev[3])^(1/3)-1`, times 100; both endpoints strictly positive; a known different year interval is withheld |
-| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E |
+| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E; `ps`/`evs` are always positive when present |
 | `peSt` | string | `vorhanden`, `verlust`, `unbekannt`, `waehrung`; loss means missing P/E with negative latest annual net income |
 | `dy`, `dySt` | number or absent; string | Dividend yield in percent; `zahlt`, `keine`, `unbekannt` |
 | `po`, `roe`, `gm` | number or absent | Payout ratio, return on equity and gross margin, already stored as percentages |
@@ -1454,7 +1454,7 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `r40` | number or absent | `ruleOfX(snapshot,1,true,bounds)` only after valid FCF and shared Rule40 data/unit/base-period/freshness/sector gates |
 | `d52`, `ath` | number or absent | Percent distance from 52-week high and seeded ATH, negative below the high; missing price/high remains null; `d52` is clamped to at most 0 |
 | `asOf` | string or absent | UTC date (`YYYY-MM-DD`) of the oldest available metric/fundamentals/ATH source, not today's price-only refresh |
-| `aus` | string[] | Exclusion and warning codes, including `dup-issuer`, `data-suspect`, rank reasons and `mischwaehrung`; the rows remain present |
+| `aus` | string[] | Exclusion and warning codes, including `dup-issuer`, `data-suspect`, rank reasons, `mischwaehrung`, `umsatz-negativ` and `ev-negativ`; the rows remain present |
 
 Null-valued keys are omitted to reduce payload size; an absent key means null,
 never zero. `t`, `peSt`, `dySt` and `aus` are always present. Unknown keys and
@@ -1479,6 +1479,15 @@ of W6. The PIT values and gap markers remain unchanged.
 undefined, in every sector; the validator rejects every `gm:0`. `po:0` for
 `dySt:"zahlt"` is also missing and omitted. Payout zero for a non-payer/unknown
 dividend state remains zero; other valid reported zeros are unchanged.
+
+**Sales multiples (22.10.2026):** Yahoo divides market cap and EV by trailing revenue. When trailing
+revenue is negative (holding companies booking fair-value losses as revenue, e.g. Kinnevik,
+Exor, Reinet) both `ps` and `evs` are withheld and `aus` gets `umsatz-negativ`; the sign of a
+present `ps` counts as revenue evidence when `revenueTTM` is missing. With positive revenue a zero or
+negative `evs` (EV <= 0) is withheld and `aus` gets `ev-negativ`; `ps` stays. A currency verdict that
+already withholds both ratios adds neither code. The validator rejects a present non-positive `ps`/`evs`
+and a present multiple next to its code. Board history (`pit.priceSales`/`pit.evSales`) keeps the raw
+provider sign; this rule is display-only.
 
 **52-week high plausibility:** with positive finite price and high, a price/high
 ratio below 0.05 or above 1.20 withholds `d52` and adds `d52-implausible` to `aus`.

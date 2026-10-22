@@ -1,15 +1,16 @@
 # Exchange cross-check: pair guard and fill of 2025-09-30 (Tag 1403, G2b)
 
 `lib/exchange-quarter-check.js` compares the vendor's quarterly revenue with the exchange store
-(`docs/exchange-quarters-store.md`, Tag 1399). **Committed mode: `off`** (`configs/exchange-quarter-policy.json`).
-No reader sees any change; the measurement runs in mode `shadow` through `scripts/exchange-check-report.js`.
+(`docs/exchange-quarters-store.md`, Tag 1399). **Committed mode: `fill-only`** (`configs/exchange-quarter-policy.json`, P71).
+Readers see only eligible fills of empty 2025-09-30 cells and never a withheld cell; the measurement runs in mode `shadow` through `scripts/exchange-check-report.js`.
 
 ## Modes and placement
 
 | Mode | Who | Effect |
 |---|---|---|
-| `off` | every reader (default) | strips the step's own markers (none exist) and returns the identical object |
+| `off` | nobody since P71 (the committed mode before) | strips the step's own markers (none exist) and returns the identical object |
 | `shadow` | `scripts/exchange-check-report.js` only | computes the result, returns the snapshot unchanged |
+| `fill-only` | every reader (committed, P71) | applies eligible fills at read time, never withholds |
 | `active` | nobody yet (G2c = the one-line switch in the policy) | applies guard and fill at read time |
 
 - Read time only: `prepareSnapshot` (`lib/yahoo-q4-known-cases.js`) appends the step after the zero guard, so
@@ -29,7 +30,7 @@ No reader sees any change; the measurement runs in mode `shadow` through `script
   `configs/yahoo-q4-known-cases.json`, or any foreign marker on a revenue cell, is `unchecked(hand-table)`.
 - No file under `src/scoring/` changes. Feeding Eastmoney values into scoring is the route `scripts/build-cnannual.js`
   lines 8-18 describe as a seal question for `run-screener.js`; this step does not touch the sealed loader, it
-  is a data-layer repair in the unsealed overlay like #398-#403, and it stays off until a reviewed switch.
+  is a data-layer repair in the unsealed overlay like #398-#403, and its withholding (`active`) stays off until a reviewed switch.
 
 ## Guard
 

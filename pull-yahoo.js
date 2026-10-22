@@ -3674,9 +3674,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const results = [];
   // Persist each removal: timed-out shards still upload their surviving snapshots.
   // The frozen manifest contract pins the missing-cap counter on every _manifest report.
-  _sizeExitCheckpoint = () => writeFileAtomic(sizeExitPath, JSON.stringify({
+  // complete stays false until finishPull marks an exit-0 pull (P155 b: merge's sizeExitsKnown).
+  _sizeExitCheckpoint = (complete = false) => writeFileAtomic(sizeExitPath, JSON.stringify({
     n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
     sizeExits: mergeSizeExits([[..._sizeExits.values()]]),
+    complete,
   }));
   const failures = [];
   let n_full_period_regression_blocked = 0;
@@ -5913,6 +5915,16 @@ async function main() {
   }
 
   const manifest = await pullAll(watchlist, args.output, args.rateLimit);
+  process.exit(finishPull(manifest));
+}
+
+/**
+ * Decide the pull's exit code; only an exit-0 pull marks its size-exit report complete,
+ * so the merge can tell a finished shard from an aborted or failed one (P155 b).
+ * @param {object} manifest Manifest returned by pullAll, with results, failures, n_total and n_failed.
+ * @returns {number} Process exit code, 0 for success and 1 for failure.
+ */
+function finishPull(manifest) {
   // Tag 147: threshold is relative to "attempted" (excludes skipped-mcap which never
   // hit the network). Counting skipped-mcap in n_total inflated the denominator and
   // made the 75% guard meaningless for large universes with many micro-cap tickers.
@@ -5930,9 +5942,11 @@ async function main() {
   const mapperBugCount = (manifest.failures || []).filter(f => f.errClass === 'mapper-bug').length;
   if (mapperBugCount > 0) {
     _log('ERROR', `MAPPER-BUG: ${mapperBugCount} TypeError/ReferenceError in mapYahooToCanonical — programming error, not transient Yahoo failure`);
-    process.exit(1);
+    return 1;
   }
-  process.exit(failRatio > 0.75 ? 1 : 0);
+  if (failRatio > 0.75) return 1;
+  _sizeExitCheckpoint(true);
+  return 0;
 }
 
 // TASK 0.9 (Pull-Diät): pure decision fn — did this ticker report earnings since
@@ -6088,7 +6102,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
   countSkippedMcap,
-  recordSizeExit,
+  recordSizeExit, finishPull,
   preserveSnapshotForMissingCurrency,
   // Tag 466: Ueberspring-Entscheidung der Small-Cap-Eigentumsgrenze — an ihr haengt, ob
   // Aufsteiger im Hauptboard sichtbar sind. Waechter: tests/smallcap-eigentumsgrenze.test.js

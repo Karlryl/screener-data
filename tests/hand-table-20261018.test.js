@@ -127,7 +127,7 @@ test('26 sourced cells, four coverage rows, only the four issuers, documented da
     assert.equal(q4.replacementValue, null, field);
     assert.deepEqual(q4.sources.map(basis).sort(), ['with GOG', 'without GOG'], field + ': mixed operands are documented, never confirmed');
   }
-  assert.deepEqual(table.coverage.slice(-4), [
+  assert.deepEqual(table.coverage.slice(37, 41), [ // fixed positions: P148 appends the MODEC row after these four
     { ticker: 'CDR.WA', listingAliases: ['OTGLF'], field: 'revenueQ', coversThrough: '2026-06-30' },
     { ticker: '000552.SZ', field: 'revenueQ', coversThrough: '2026-06-30' },
     { ticker: 'CDR.WA', listingAliases: ['OTGLF'], field: 'opIncQ', coversThrough: '2026-06-30' },
