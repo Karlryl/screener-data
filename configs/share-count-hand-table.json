@@ -98,6 +98,75 @@
     "verifiedAt": "2026-10-12",
     "withholdUnverified": true
   },
+  "8035.T": {
+    "shares": 2280791810,
+    "sharesAsOf": "2026-04-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      453967442
+    ],
+    "wrongSharesSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 27,339,565,394 USD / price 60.22362584 USD = 453,967,442 shares (pre-split count); the same snapshot's meta.sharesOutstanding is already post-split (2,271,484,280)",
+    "reason": "Börsenwert aus 2.280.791.810 Aktien berechnet: Stückzahl zum 30.04.2026 laut Tokyo Electron (456.158.362 Aktien ohne eigene Aktien), mal 5 wegen des Aktiensplits von 1 zu 5 am 1. Oktober 2026. Yahoo rechnet den Kurs nach dem Split noch mit der Aktienzahl vor dem Split.",
+    "source": {
+      "url": "https://www.tel.com/news/ir/2026/qncnjq00000000na-att/20260529_002_e.pdf",
+      "quote": "Number of outstanding shares (Excluding treasury stock): 456,158,362 shares",
+      "page": "Notice regarding the Establishment of a Share Repurchase Facility, May 29, 2026, page 2 (Possession of treasury stock as of April 30, 2026)",
+      "unit": "shares outstanding excluding treasury stock, 456,158,362 before the split x 5 = 2,280,791,810",
+      "splitSource": "https://www.tel.com/news/ir/2026/qncnjq00000000ld-att/20260529_001_e.pdf",
+      "splitQuote": "Each share of common stock owned by shareholders listed or recorded in the closing register of shareholders on the record date of Wednesday, September 30, 2026, will be split into 5 shares.",
+      "crossCheck": "Same split notice: Total number of issued shares after stock split 2,340,163,665 shares (incl. treasury stock); repurchases under the facility since May lower the count by at most 37.5 million post-split shares (1.6 %), inside the 3 % tolerance",
+      "form": "Mitteilung zum Aktienrückkauf vom 29.05.2026 mit Bestand eigener Aktien und Mitteilung zum Aktiensplit vom 29.05.2026"
+    },
+    "verifiedAt": "2026-10-24",
+    "withholdUnverified": true
+  },
+  "285A.T": {
+    "shares": 1644045264,
+    "sharesAsOf": "2026-06-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      532635175
+    ],
+    "wrongSharesSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 43,259,141,449 USD / price 81.2172074 USD = 532,635,175 shares (pre-split count); meta.sharesOutstanding 1,597,515,021 = 3 x 532,505,007",
+    "reason": "Börsenwert aus 1.644.045.264 Aktien berechnet: Stückzahl zum 30.06.2026 laut Kioxia (548.015.088 Aktien), mal 3 wegen des Aktiensplits von 1 zu 3 am 1. Oktober 2026. Yahoo rechnet den Kurs nach dem Split noch mit der Aktienzahl vor dem Split.",
+    "source": {
+      "url": "https://fs2.magicalir.net/tdnet/2026/285A/20260731505278.pdf",
+      "quote": "Total outstanding shares after stock split 1,644,045,264 shares",
+      "page": "Notice Regarding Stock Split and According Partial Amendment to Articles of Incorporation, July 31, 2026, page 1, section 1 (2) ii",
+      "unit": "shares (issued as of 2026-06-30 x 3; treasury shares 450 before the split)",
+      "splitQuote": "split at a ratio of 3 to 1, with September 30, 2026 as the record date",
+      "crossCheck": "Earnings release Q1 FY2026 (Kioxia, filed on SGX): issued shares 548,015,088 and treasury shares 450 as of June 30, 2026",
+      "form": "Mitteilung zum Aktiensplit vom 31.07.2026 (TDnet, Kioxia Holdings)"
+    },
+    "verifiedAt": "2026-10-24",
+    "withholdUnverified": true
+  },
+  "LISN.SW": {
+    "shares": 229956,
+    "sharesAsOf": "2026-06-15",
+    "validFrom": "2026-06-15",
+    "reviewBy": "2027-03-15",
+    "wrongShares": [
+      1086190
+    ],
+    "wrongSharesSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 114,301,055,776 USD / registered-share price 105,231.18462 USD = 1,086,190 (registered shares plus participation certificates counted one for one)",
+    "reason": "Börsenwert aus 133.437 Namenaktien und 965.188 Partizipationsscheinen berechnet: Stückzahl zum 15.06.2026 laut Lindt & Sprüngli (Handelsregister vom 28.04.2026 abzüglich der im Juni gelöschten Papiere). Zehn Partizipationsscheine zählen laut Statuten wie eine Namenaktie. Bewertet wird mit dem Kurs der Namenaktie, der Wert ist daher eine Näherung auf etwa 1 bis 2 Prozent. Yahoo zählte jeden Partizipationsschein wie eine Namenaktie.",
+    "source": {
+      "url": "https://www.lindt-spruengli.com/media/tqrgcc3i/sbb-2026-2029_buyback_notice_30_april_2026.pdf",
+      "quote": "The share capital of Lindt & Sprüngli entered in the Commercial Register on 28 April 2026 amounts to CHF 13,390,500 and is divided into 133,905 registered shares, each with a nominal value of CHF 100. The participation capital of Lindt & Sprüngli entered in the Commercial Register on 28 April 2026 amounts to CHF 9,890,280 and is divided into 989,028 participation certificates, each with a nominal value of CHF 10.",
+      "cancellationQuote": "Of these, 468 registered shares and 23,840 participation certificates are expected to be cancelled in June 2026 in connection with the capital reduction resolved on 16 April 2026.",
+      "page": "Buyback notice of 30 April 2026, pages 1 and 2",
+      "unit": "registered-share equivalents: 133,437 registered shares + 965,188 participation certificates / 10 = 229,955.8, rounded to 229,956",
+      "parValueSource": "https://www.lindt-spruengli.com/media/zlda3ndp/statuten_e_050326.pdf",
+      "parValueQuote": "The participation certificates are entitled, in proportion to their par value, to the same portion of the balance sheet proceeds, interim dividends, repayments of the statutory capital reserve and liquidation proceeds of the Company as the registered shares",
+      "crossCheck": "Lindt capital-structure page (lindt-eshopglobal.com/investors/share-information/capital-structure): total capital as per June 15, 2026 split into 133,437 registered shares and 965,188 participation certificates. Two-price value on 2026-10-23 (133,437 x 105,231.18 + 965,188 x 10,182.88 USD) = 23.87 bn USD; this row gives 24.20 bn USD (+1.4 %)",
+      "form": "Rückkaufinserat vom 30.04.2026 mit Handelsregisterstand und Statuten vom 05.03.2026, Artikel 4 Absatz 2"
+    },
+    "verifiedAt": "2026-10-24",
+    "withholdUnverified": true
+  },
   "_holds": {
     "ISBTR.IS": {
       "validFrom": "2026-10-10",
@@ -108,6 +177,61 @@
         "page": "Shareholder Information, June 30, 2026"
       },
       "verifiedAt": "2026-10-12",
+      "reviewBy": "2026-11-16"
+    },
+    "LISNE.SW": {
+      "validFrom": "2026-05-04",
+      "reason": "LISNE ist die zweite Handelslinie für den Rückkauf von Namenaktien, auf der nur Lindt & Sprüngli kauft. Yahoo bewertet sie mit allen Namenaktien und Partizipationsscheinen zum Kurs der Namenaktie; maßgeblich ist die Notierung LISN.SW.",
+      "source": {
+        "url": "https://www.lindt-spruengli.com/media/tqrgcc3i/sbb-2026-2029_buyback_notice_30_april_2026.pdf",
+        "quote": "CH1192548399",
+        "page": "Buyback notice of 30 April 2026, page 4, table 'Securities numbers, ISINs and ticker symbols': the ISIN cell of the row 'Registered share of CHF 100 nominal value (Buyback on separate trading line)', ticker cell LISNE",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 113,459,289,045 USD / price 104,623.61427 USD = 1,084,452"
+      },
+      "verifiedAt": "2026-10-24",
+      "reviewBy": "2027-03-15"
+    },
+    "LISPE.SW": {
+      "validFrom": "2026-05-04",
+      "reason": "LISPE ist die zweite Handelslinie für den Rückkauf von Partizipationsscheinen, auf der nur Lindt & Sprüngli kauft. Yahoo bewertet sie mit einer Stückzahl, die weder zu den Partizipationsscheinen noch zum Gesamtkapital passt; maßgeblich ist die Notierung LISN.SW.",
+      "source": {
+        "url": "https://www.lindt-spruengli.com/media/tqrgcc3i/sbb-2026-2029_buyback_notice_30_april_2026.pdf",
+        "quote": "CH1192548407",
+        "page": "Buyback notice of 30 April 2026, page 4, table 'Securities numbers, ISINs and ticker symbols': the ISIN cell of the row 'Participation certificate of CHF 10 nominal value (Buyback on separate trading line)', ticker cell LISPE",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 111,182,869,577 USD / price 10,195.030473 USD = 10,905,595"
+      },
+      "verifiedAt": "2026-10-24",
+      "reviewBy": "2027-03-15"
+    },
+    "1WAF.MI": {
+      "validFrom": "2026-10-05",
+      "reason": "Der Kurs der Mailänder Zweitnotiz war am 23.10.2026 drei Wochen alt (83,20 Euro vom 2. Oktober), die Heimatbörse Xetra stand am selben Tag bei 58,90 Euro. Maßgeblich ist die Notierung WAF.DE.",
+      "source": {
+        "url": "https://www.siltronic.com/en/investors/information-on-the-share.html",
+        "quote": "The Siltronic AG share has been listed on the Regulated Market (Prime Standard) of the Frankfurt Stock Exchange",
+        "page": "Issuer page 'Facts and figures': ISIN DE000WAF3001, 'Stock exchanges' Frankfurt Stock Exchange (the only exchange named; Milan is not listed by the issuer), 33,000,000 no-par-value registered shares",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): 1WAF.MI price 93.17952384 USD / tradingFx 1.1199462 = 83.20 EUR, marketCap 3,074,924,287 USD; WAF.DE (Xetra) price 65.96483118 USD = 58.90 EUR, marketCap 2,176,839,536 USD; both 33,000,000 shares",
+        "secondSource": {
+          "url": "https://www.borsaitaliana.it/borsa/azioni/global-equity-market/dati-completi.html?isin=DE000WAF3001&lang=en&mic=BGEM",
+          "quote": "Reference Close | 83.20 - 26/10/02 5:45:00 PM",
+          "note": "Captured on 2026-10-23 before the Milan close; the live page later shows Reference Close 56.55 - 26/10/23. The stored vendor snapshot of 2026-10-23 holds the same 83.20 EUR for 1WAF.MI against 58.90 EUR on Xetra."
+        }
+      },
+      "verifiedAt": "2026-10-24",
+      "reviewBy": "2026-11-16"
+    },
+    "ARX.TO": {
+      "validFrom": "2026-09-05",
+      "reason": "ARC Resources wurde von Shell übernommen (Abschluss am 02.09.2026) und am 04.09.2026 von der Börse Toronto genommen. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.arcresources.com/news-releases/arc-resources-ltd-announces-closing-of-acquisition-by-shell-plc/",
+        "quote": "It is anticipated that the ARC Shares will be delisted from trading on the Toronto Stock Exchange (\"TSX\") at the close of trading two trading days after the closing of the transactions under the Arrangement Agreement.",
+        "page": "News release of September 2, 2026",
+        "crossCheck": "https://www.stockwatch.com/News/Item/Z-C!ARX-3860678/C/ARX (TSX bulletin, 2026-09-03): ARC Resources Ltd. will be delisted at the close on Sept. 4, 2026",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 13,695,515,225 USD from yahoo_quoteSummary, no price block; the filter export carries asOf 2026-09-04"
+      },
+      "verifiedAt": "2026-10-24",
       "reviewBy": "2026-11-16"
     }
   }
