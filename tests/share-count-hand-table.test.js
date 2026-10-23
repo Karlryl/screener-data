@@ -55,6 +55,11 @@ const WRONG = {
   ABTC: { px: 8.48, vendorShares: 121819713, mcap: 1033031104, issuer: 72819713 },
   ANDG: { px: 54.4, vendorShares: 18540410, mcap: 1008598336, issuer: 112887382 },
   JBS: { px: 12.029999732971191, vendorShares: 3289363863, mcap: 39571046400, issuer: 1070929187 },
+  // Snapshots of run 39918190374 (2026-10-23), USD price after conversion: pre-split counts after the
+  // 1:5 (TEL) and 1:3 (Kioxia) splits of 2026-10-01, and Lindt registered + participation counted 1:1.
+  '8035.T': { px: 60.22362584, vendorShares: 453967442, mcap: 27339565394.16052, issuer: 2280791810 },
+  '285A.T': { px: 81.2172074, vendorShares: 532635175, mcap: 43259141448.56342, issuer: 1644045264 },
+  'LISN.SW': { px: 105231.18462, vendorShares: 1086190, mcap: 114301055775.69977, issuer: 229956 },
 };
 const TABLE = loadShareCountTable();
 const unveraendert = (snap, ticker, table = TABLE) => {
