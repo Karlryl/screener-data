@@ -44,7 +44,9 @@
     { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "grossProfitQ", "coversThrough": "2026-06-30" },
     { "ticker": "6269.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30" }
+    { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "2498.HK", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "300277.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -9383,6 +9385,549 @@
           "verifiedAt": "2026-10-22"
         }
       ]
+    },
+    {
+      "caseId": "2498.hk-2026-06-30-revenueQ-20261024",
+      "ticker": "2498.HK",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": 560999000,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Der Anbieter liefert für das zweite Quartal 2026 (Ende 30.06.2026) eine Null; Robosense meldet für dieses Quartal 561,0 Mio. CNY. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601087.pdf",
+          "form": "RoboSense, interim results announcement for the six months ended June 30, 2026",
+          "published": "2026-08-26",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial highlights (three months ended June 30); again PDF 12",
+          "unit": "CNY thousands",
+          "quote": "Revenue 560,999 455,365",
+          "value": 560999000,
+          "currency": "CNY",
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2498.hk-2025-12-31-revenueQ-20261024",
+      "ticker": "2498.HK",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 750694000,
+      "replacementValue": 750694000,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 31.12.2025 stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0325/2026032501102.pdf",
+          "form": "RoboSense, annual results announcement for the year ended December 31, 2025",
+          "published": "2026-03-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial highlights (three months ended December 31); again PDF 15",
+          "unit": "CNY thousands",
+          "quote": "Revenue 750,694 513,932",
+          "value": 750694000,
+          "currency": "CNY",
+          "start": "2025-10-01",
+          "end": "2025-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "2498.hk-2025-09-30-revenueQ-20261024",
+      "ticker": "2498.HK",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 407107000,
+      "replacementValue": 407107000,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 30.09.2025 stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2025/1125/2025112501075.pdf",
+          "form": "RoboSense, unaudited financial results for the nine months ended September 30, 2025",
+          "published": "2025-11-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 8 (three months ended September 30); again PDF 14",
+          "unit": "CNY thousands",
+          "quote": "Revenue 407,107 407,876",
+          "value": 407107000,
+          "currency": "CNY",
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2498.hk-2025-06-30-revenueQ-20261024",
+      "ticker": "2498.HK",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 455365000,
+      "replacementValue": 455365000,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 30.06.2025 stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0826/2026082601087.pdf",
+          "form": "RoboSense, interim results announcement for the six months ended June 30, 2026",
+          "published": "2026-08-26",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial highlights (three months ended June 30, 2025 column)",
+          "unit": "CNY thousands",
+          "quote": "Revenue 560,999 455,365",
+          "value": 455365000,
+          "currency": "CNY",
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2026-06-30-revenueQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 1577628475.56,
+      "replacementValue": 1577628475.56,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 30.06.2026 stimmt mit dem Abschluss der Firma überein (erstes Halbjahr 2026 minus erstes Quartal 2026).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225513270.PDF",
+          "form": "Hangzhou Turbine Power (汽轮科技), 2026 half-year report",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 2,881,213,339.96 75,164,410.92 2,522,369,024.90 14.23%",
+          "value": 2881213339.96,
+          "currency": "CNY",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1303584864.4,
+          "currency": "CNY",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2026-03-31-revenueQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 1303584864.4,
+      "replacementValue": 1303584864.4,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 31.03.2026 stimmt mit dem Abschluss der Firma überein.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1303584864.4,
+          "currency": "CNY",
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2025-12-31-revenueQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 70884126.58,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Der Anbieterwert für das vierte Quartal 2025 (Ende 31.12.2025) ist der Umsatz der Firma vor der Fusion mit Hangzhou Steam Turbine (16.03.2026). Die Firma weist ihre Vorjahre seither einschließlich des übernommenen Geschäfts aus; für dieses Quartal ist ein solcher Wert noch nicht veröffentlicht. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225513270.PDF",
+          "form": "Hangzhou Turbine Power (汽轮科技), 2026 half-year report",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 2,881,213,339.96 75,164,410.92 2,522,369,024.90 14.23%",
+          "currency": "CNY",
+          "note": "restatement reason on the same page: 追溯调整或重述原因 同一控制下企业合并; merger date PDF 137: 2026 年 03 月 16 日 完成资产交割"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "同一控制下企业合并"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2025-06-30-revenueQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 49592525.26,
+      "replacementValue": 1419410099.3700001,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Hangzhou Turbine Power hat am 16.03.2026 die Hangzhou Steam Turbine desselben Mehrheitsaktionärs übernommen und weist die Vorjahresquartale angepasst aus. Das Wachstum vergleicht die beiden Juniquartale auf dieser Basis, also 1.577,6 gegen 1.419,4 Mio. CNY statt gegen die alten 49,6 Mio. CNY vor der Fusion. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225513270.PDF",
+          "form": "Hangzhou Turbine Power (汽轮科技), 2026 half-year report",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 2,881,213,339.96 75,164,410.92 2,522,369,024.90 14.23%",
+          "value": 2522369024.9,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (prior-year half year restated for the common-control merger, 追溯调整或重述原因 同一控制下企业合并)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1102958925.53,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (prior-year quarter restated for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2025-03-31-revenueQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 1102958925.53,
+      "replacementValue": 1102958925.53,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 31.03.2025 stimmt mit dem angepassten Vorjahreswert der Firma (einschließlich Hangzhou Steam Turbine) überein.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1102958925.53,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (prior-year quarter restated for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "002379.sz-2025-12-31-revenueQ-20261024",
+      "ticker": "002379.SZ",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 154694624123.29,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Der Anbieterwert für das vierte Quartal 2025 (Ende 31.12.2025) entspricht fast dem Jahresumsatz der Gruppe nach der Übernahme von Shandong Hongtuo (Januar 2026) und kann kein Quartal sein; ein Quartalswert auf angepasster Basis ist nicht veröffentlicht. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-22/1225490536.PDF",
+          "form": "Shandong Hongqiao Aluminum (宏桥控股), 2026 half-year report",
+          "published": "2026-08-22",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 86,503,979,245.58 1,448,052,736.30 77,269,896,466.32 11.95%",
+          "value": 77269896466.32,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后; 追溯调整或重述原因 同一控制下企业合并"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-01-05/1224912962.PDF",
+          "form": "Hongchuang Holding, completion of the transfer of Shandong Hongtuo Industrial",
+          "published": "2026-01-05",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1",
+          "quote": "山东宏拓实业有限公司 100%股权已全部过户登记至本公司名下"
+        }
+      ]
+    },
+    {
+      "caseId": "002379.sz-2025-06-30-revenueQ-20261024",
+      "ticker": "002379.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 677461834.53,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Der Anbieterwert für das zweite Quartal 2025 (Ende 30.06.2025) ist der Umsatz vor der Übernahme von Shandong Hongtuo; die Firma weist das erste Halbjahr 2025 angepasst mit 77.269,9 statt 1.448,1 Mio. CNY aus. Der Vergleich mit dem zweiten Quartal 2026 zeigte deshalb ein Wachstum von mehr als 6.000 %. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-22/1225490536.PDF",
+          "form": "Shandong Hongqiao Aluminum (宏桥控股), 2026 half-year report",
+          "published": "2026-08-22",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 86,503,979,245.58 1,448,052,736.30 77,269,896,466.32 11.95%",
+          "value": 1448052736.3,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整前 (before the common-control restatement)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-01-05/1224912962.PDF",
+          "form": "Hongchuang Holding, completion of the transfer of Shandong Hongtuo Industrial",
+          "published": "2026-01-05",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1",
+          "quote": "山东宏拓实业有限公司 100%股权已全部过户登记至本公司名下"
+        }
+      ]
+    },
+    {
+      "caseId": "eydap.at-2025-12-31-annualRev-20261024",
+      "ticker": "EYDAP.AT",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz fehlt: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter eine Null, EYDAP meldet 364,7 Mio. EUR. Weil der Anbieter auch die Jahre 2021 bis 2024 nicht liefert, bleiben die älteren Jahre ebenfalls leer und das Umsatzwachstum wird nicht berechnet. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://athens.euronext.com/sites/default/files/hermes_3/2026-04/en/fec80c51-7b57-41e4-880c-517b57f1e498/778_2788_2026_English_2.pdf",
+          "form": "EYDAP, press release on the presentation of 2025 financial results (ATHEX)",
+          "published": "2026-04-30",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1",
+          "quote": "Revenue stood at €364.7 million, representing a decrease of 2.4%",
+          "unit": "EUR millions",
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://www.eydap.gr/userfiles/Presentations/CORPORATE%20PRESENTATION%202026.pdf",
+          "form": "EYDAP, Annual Financial Results 2025 presentation",
+          "published": "2026-04-30",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 13",
+          "quote": "Turnover 351.574 373.703 364.699",
+          "unit": "EUR thousands (2023, 2024, 2025)"
+        },
+        {
+          "url": "https://www.eydap.gr/userfiles/FinancialResults/2021/Annual/Annual_Financial_Report_2021.pdf",
+          "form": "EYDAP, Annual Financial Report 2021",
+          "published": "2022-04-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 187, income statement (group 2021, 2020; company 2021, 2020)",
+          "quote": "Turnover 5 360.764 330.325 360.753 330.318",
+          "unit": "EUR thousands",
+          "note": "the vendor year 2020 (330,325) matches; 2021 exists but is missing in the vendor series"
+        }
+      ]
+    },
+    {
+      "caseId": "min.ax-2024-06-30-annualRev-nonadjacent-20261024",
+      "ticker": "MIN.AX",
+      "field": "annualRev",
+      "period": "2024-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 5259000000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz 2024 (Ende 30.06.2024) zurückgehalten: Der Anbieter liefert das Geschäftsjahr 2025 nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre als Jahreswachstum erschien. Laut Firma betrug der Umsatz 6.461 Mio. AUD (2026), 4.472 Mio. AUD (2025) und 5.278 Mio. AUD (2024). Die Sperre gilt dem Jahr mit Ende 30.06.2024; dieses Jahr und die älteren Jahre bleiben leer, auch wenn der Anbieter 2025 später nachliefert, bis die Sperre nach einer erneuten Prüfung aufgehoben wird. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://announcements.asx.com.au/asxpdf/20260827/pdf/0738vyr15m8nsc.pdf",
+          "form": "Mineral Resources, FY26 results presentation (ASX)",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 15",
+          "quote": "REVENUE 6,461 4,472 1,989 44%",
+          "unit": "AUD millions (FY26, FY25)"
+        },
+        {
+          "url": "https://clients3.weblink.com.au/pdf/MIN/02985013.pdf",
+          "form": "Mineral Resources, 2025 Financial Report incl. Appendix 4E",
+          "published": "2025-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 73, consolidated income statement for the year ended 30 June 2025 (2025, 2024)",
+          "quote": "4,472 5,278",
+          "unit": "AUD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2025-06-30-opIncQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 5634215.11,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsgewinn fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liegt nur der angepasste Umsatz einschließlich Hangzhou Steam Turbine vor; Betriebsergebnis und Bruttogewinn des Anbieters stehen noch auf der Basis vor der Fusion und würden mit dem angepassten Umsatz vermischt. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225513270.PDF",
+          "form": "Hangzhou Turbine Power (汽轮科技), 2026 half-year report",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 2,881,213,339.96 75,164,410.92 2,522,369,024.90 14.23%",
+          "value": 2522369024.9,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (prior-year half year restated for the common-control merger, 追溯调整或重述原因 同一控制下企业合并)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1102958925.53,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (prior-year quarter restated for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2025-06-30-grossProfitQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 13946089.34,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsgewinn fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liegt nur der angepasste Umsatz einschließlich Hangzhou Steam Turbine vor; Betriebsergebnis und Bruttogewinn des Anbieters stehen noch auf der Basis vor der Fusion und würden mit dem angepassten Umsatz vermischt. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225513270.PDF",
+          "form": "Hangzhou Turbine Power (汽轮科技), 2026 half-year report",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 2,881,213,339.96 75,164,410.92 2,522,369,024.90 14.23%",
+          "value": 2522369024.9,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (prior-year half year restated for the common-control merger, 追溯调整或重述原因 同一控制下企业合并)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1102958925.53,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (prior-year quarter restated for the common-control merger)"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -10533,6 +11078,39 @@
               "unitStatement": "(Amounts in INR million, unless otherwise stated)"
             }
           ]
+        }
+      ]
+    }
+  ],
+  "metricHolds": [
+    {
+      "caseId": "ionq-ebitdaMargins-20261024",
+      "ticker": "IONQ",
+      "metric": "ebitdaMargins",
+      "expectedBadValue": 0,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "EBITDA-Marge fehlt: Der Anbieter liefert 0 %, IonQ weist im zweiten Quartal 2026 (Ende 30.06.2026) aber bei 80,1 Mio. USD Umsatz einen Betriebsverlust von 337,2 Mio. USD und Abschreibungen von 46,1 Mio. USD aus; die Marge liegt damit weit unter null. Die Spalte R40 (EBITDA) bleibt deshalb leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1824920/000119312526341001/ionq-20260630.htm",
+          "form": "10-Q Q2 2026",
+          "accession": "0001193125-26-341001",
+          "filed": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "condensed consolidated statements of operations (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "USD thousands",
+          "quote": "Revenue $ 80,050 $ 20,694 $ 144,718 $ 28,260; Depreciation and amortization 46,087 10,616 89,216 17,177; Loss from operations ( 337,243 ) ( 160,592 ) ( 608,750 ) ( 236,271 )"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1824920/000119312526071562/ionq-20251231.htm",
+          "form": "10-K 2025",
+          "accession": "0001193125-26-071562",
+          "filed": "2026-02-25",
+          "verifiedAt": "2026-10-24",
+          "page": "consolidated statements of operations (2025, 2024, 2023)",
+          "unit": "USD thousands",
+          "quote": "Loss from operations ( 633,715 ) ( 232,455 ) ( 157,754 )"
         }
       ]
     }
