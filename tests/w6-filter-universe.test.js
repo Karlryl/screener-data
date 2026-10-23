@@ -345,12 +345,21 @@ test('scan every row for missing source values becoming zero', () => {
     assert.notEqual(row.gm, 0, row.t + '.gm zero');
     if (source.metrics?.fcfMarginTTM?.value > MAX_FCF_MARGIN_PCT) assert.equal(row.fcf, undefined, row.t + '.fcf ceiling');
     if (row.asOf !== undefined) assert.match(row.asOf, /^\d{4}-\d{2}-\d{2}$/, row.t + '.asOf date');
+    // 22.10.2026 ceilings: every reason matches the source in both directions and no shown value is beyond its ceiling.
+    const gmValue = source.metrics?.grossMargin?.value, dyValue = source.metrics?.dividendYield?.value, poValue = source.metrics?.payoutRatio?.value;
+    const dyStatus = source.metrics?.dividendStatus?.value;
+    assert.equal(row.aus.includes('gm-implausible'), Number.isFinite(gmValue) && Math.abs(Math.round(gmValue * 100) / 100) > 100, row.t + '.gm reason');
+    assert.equal(row.aus.includes('dy-implausible'), Number.isFinite(dyValue) && dyValue > 25 && (dyStatus == null || dyStatus === 'zahlt'), row.t + '.dy reason');
+    assert.equal(row.aus.includes('po-implausible'), Number.isFinite(poValue) && (poValue > 300 || poValue < 0), row.t + '.po reason');
+    if (row.gm !== undefined) assert.ok(Math.abs(row.gm) <= 100, row.t + '.gm ceiling');
+    if (row.dy !== undefined) assert.ok(row.dy <= 25, row.t + '.dy ceiling');
+    if (row.po !== undefined) assert.ok(row.po >= 0 && row.po <= 300, row.t + '.po ceiling');
     const withheld = mischVerhaeltnisUnkorrigiert(source.meta);
     const revenue = source.metrics?.revenueTTM?.value, rawPs = mischVal(source.metrics?.priceSales, withheld);
     const negativeRevenue = (Number.isFinite(revenue) && revenue < 0) || (rawPs !== null && rawPs <= 0);
     for (const [key, sourceKey] of [['ps', 'priceSales'], ['evs', 'enterpriseToRevenue']]) {
       const value = mischVal(source.metrics?.[sourceKey], withheld);
-      if (value === null || value <= 0 || negativeRevenue) assert.equal(row[key], undefined, row.t + '.' + key + ' PIT/sign guard');
+      if (value === null || value <= 0 || negativeRevenue || (key === 'evs' && row.aus.includes('evs-waehrung'))) assert.equal(row[key], undefined, row.t + '.' + key + ' PIT/sign/currency guard');
       else {
         const rounded = Math.round(value * 100) / 100;
         const expected = rounded === 0 && value !== 0 ? Number(value.toPrecision(2)) : rounded;
@@ -361,4 +370,87 @@ test('scan every row for missing source values becoming zero', () => {
     if (row.b === undefined) { assert.equal(row.sc, undefined); assert.equal(row.rk, undefined); }
   }
   console.log('Missing-value scan: ' + feed.rows.length + ' rows; source=' + (dir || 'tests/fixtures/w6/snapshots.json'));
+});
+
+// ---- Filter outliers 22.10.2026 (gross margin, dividend yield, payout, EV/S currency) ----
+const withMetrics = (patch, ticker = 'PAY') => {
+  const copy = structuredClone(snapshots[0]);
+  for (const [key, value] of Object.entries(patch)) copy.metrics[key] = { value };
+  copy.meta.ticker = ticker;
+  return copy;
+};
+const rowOf = (snapshot, aus = ['non-operating-rev']) => buildUniverse({ snapshots: [snapshot], excluded: new Map([[snapshot.meta.ticker, aus]]), generatedAt }).rows[0];
+
+test('gross margin beyond plus or minus 100 percent is withheld with a reason, the boundary and float noise survive', () => {
+  for (const [value, expected] of [[100, 100], [100.004, 100], [99.99, 99.99], [-100, -100], [-99.99, -99.99], [100.01, undefined], [195.83, undefined],
+    [-100.6, undefined], [-270.79, undefined], [0, undefined]]) {
+    const row = rowOf(withMetrics({ grossMargin: value }));
+    assert.equal(row.gm, expected, 'gm ' + value);
+    assert.equal(row.aus.includes('gm-implausible'), value !== 0 && Math.abs(Math.round(value * 100) / 100) > 100, 'reason ' + value);
+    assert.deepEqual(validateUniverse(buildUniverse({ snapshots: [withMetrics({ grossMargin: value })], excluded: new Map([['PAY', ['non-operating-rev']]]), generatedAt }), 1000), []);
+  }
+});
+
+test('dividend yield above 25 percent is withheld as unknown with a reason; its payout zero does not resurface', () => {
+  for (const [value, expected, state] of [[25, 25, 'zahlt'], [25.01, undefined, 'unbekannt'], [182, undefined, 'unbekannt'], [0.001, 0.001, 'zahlt']]) {
+    const row = rowOf(withMetrics({ dividendYield: value, dividendStatus: 'zahlt', payoutRatio: 0 }));
+    assert.equal(row.dy, expected, 'dy ' + value);
+    assert.equal(row.dySt, state, 'state ' + value);
+    assert.equal(row.aus.includes('dy-implausible'), value > 25, 'reason ' + value);
+    // SBB-D.ST regression: payout zero is a placeholder next to a payer, also when the yield itself is withheld.
+    assert.equal(row.po, undefined, 'po placeholder ' + value);
+  }
+  // A non-payer keeps its real zero payout.
+  assert.equal(rowOf(withMetrics({ dividendYield: null, dividendStatus: 'keine', payoutRatio: 0 })).po, 0);
+});
+
+test('payout above 300 percent or negative is withheld with a reason', () => {
+  for (const [value, expected] of [[300, 300], [299.99, 299.99], [300.01, undefined], [2788100, undefined], [-0.01, undefined], [-50, undefined], [0.001, 0.001]]) {
+    const row = rowOf(withMetrics({ payoutRatio: value, dividendStatus: 'zahlt', dividendYield: 2 }));
+    assert.equal(row.po, expected, 'po ' + value);
+    assert.equal(row.aus.includes('po-implausible'), value > 300 || value < 0, 'reason ' + value);
+  }
+});
+
+test('EV/S built from a reporting-currency enterprise value is withheld (KXIAY), local listings and near-parity pairs are untouched', () => {
+  // KXIAY shape from the 22.10.2026 snapshot: JPY reporter, USD ADR, pull factor 157.32, EV still in JPY.
+  const base = (patch = {}) => {
+    const s = withMetrics({ priceSales: 1.88, enterpriseToRevenue: 292.3, enterpriseValue: 6988309725184, revenueTTM: 23912394607 }, 'KXIAY');
+    Object.assign(s.meta, { reportingCurrency: 'USD', reportingCurrencyOriginal: 'JPY', tradingCurrency: 'USD', tradingCurrencyOriginal: 'USD', mischVerhaeltnisFaktor: 157.32 });
+    s.marketCap = { value: 45007671296 };
+    s.annual.annualBalance = [{ totalDebt: 6658750445, totalCash: 2991997126 }];
+    for (const [path, value] of Object.entries(patch)) { const [a, b] = path.split('.'); s[a][b] = value; }
+    return s;
+  };
+  const kx = rowOf(base());
+  assert.equal(kx.evs, undefined);
+  assert.equal(kx.ps, 1.88);
+  assert.ok(kx.aus.includes('evs-waehrung'));
+  // EV in the trading currency (USD ADR whose EV is already USD): kept.
+  assert.equal(rowOf(base({ 'metrics.enterpriseValue': { value: 48e9 } })).evs, 292.3);
+  // Local HKD listing of a USD reporter (factor 0.127, EV in HKD): the pull's reading is right, kept.
+  const hk = base({ 'metrics.enterpriseValue': { value: 5.3e10 }, 'meta.mischVerhaeltnisFaktor': 0.127 });
+  hk.meta.reportingCurrencyOriginal = 'USD'; hk.meta.tradingCurrencyOriginal = 'HKD';
+  assert.ok(!rowOf(hk).aus.includes('evs-waehrung'));
+  // Near parity (EUR/USD 0.89): both readings are within the noise, never flagged.
+  assert.ok(!rowOf(base({ 'meta.mischVerhaeltnisFaktor': 0.8924 })).aus.includes('evs-waehrung'));
+  // Without balance data the EV/market-cap ratio decides: 155 as is, 0.99 divided by the factor -> flagged; 1.2 -> kept.
+  const noBalance = patch => { const s = base(patch); delete s.annual.annualBalance; return s; };
+  assert.ok(rowOf(noBalance()).aus.includes('evs-waehrung'));
+  assert.ok(!rowOf(noBalance({ 'metrics.enterpriseValue': { value: 54e9 } })).aus.includes('evs-waehrung'));
+  // Missing enterprise value or market cap: nothing to judge, nothing flagged.
+  assert.ok(!rowOf(base({ 'metrics.enterpriseValue': { value: null } })).aus.includes('evs-waehrung'));
+});
+
+test('validator rejects every outlier ceiling and every reason without its empty field (both directions)', () => {
+  const feed = buildUniverse({ snapshots: [withMetrics({ grossMargin: 50, dividendYield: 2, dividendStatus: 'zahlt', payoutRatio: 40 })], excluded: new Map([['PAY', ['non-operating-rev']]]), generatedAt });
+  assert.deepEqual(validateUniverse(feed, 1000), []);
+  const mutations = [r => { r.gm = 100.01; }, r => { r.gm = -100.01; }, r => { r.aus.push('gm-implausible'); }, r => { r.dy = 25.01; },
+    r => { r.aus.push('dy-implausible'); }, r => { r.po = 300.01; }, r => { r.po = -1; }, r => { r.aus.push('po-implausible'); }, r => { r.evs = 1; r.aus.push('evs-waehrung'); }];
+  for (const mutate of mutations) { const bad = structuredClone(feed); mutate(bad.rows[0]); assert.ok(validateUniverse(bad, 1000).length, 'validator must reject ' + mutate); }
+});
+
+test('contract text names every new reason code', () => {
+  const contract = fs.readFileSync(path.join(__dirname, '..', 'docs', 'findash-export-v1.md'), 'utf8');
+  for (const code of ['gm-implausible', 'dy-implausible', 'po-implausible', 'evs-waehrung']) assert.ok(contract.includes(code), code);
 });

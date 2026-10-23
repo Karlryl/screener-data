@@ -1489,6 +1489,13 @@ already withholds both ratios adds neither code. The validator rejects a present
 and a present multiple next to its code. Board history (`pit.priceSales`/`pit.evSales`) keeps the raw
 provider sign; this rule is display-only.
 
+**Outlier ceilings (22.10.2026):** a gross margin beyond plus or minus 100 % (gross profit cannot exceed revenue; below -100 % the vendor margin is
+unverifiable), a dividend yield above 25 % and a payout ratio above 300 % or below 0 are withheld, never clipped, and `aus` gets
+`gm-implausible`, `dy-implausible` or `po-implausible`. A withheld yield sets `dySt` to `unbekannt` and its payout zero stays missing.
+`evs` is withheld with `evs-waehrung` when Yahoo built it from an enterprise value in the reporting currency while the pull multiplied it by the
+trading/reporting factor (USD-listed ADR/OTC lines, factor outside 0.5 to 2, compared against market cap + debt - cash). Board history keeps the raw
+provider values; this rule is display-only.
+
 **52-week high plausibility:** with positive finite price and high, a price/high
 ratio below 0.05 or above 1.20 withholds `d52` and adds `d52-implausible` to `aus`.
 The boundaries are inclusive: 0.05 yields -95%; ratios from 1.00 through 1.20
