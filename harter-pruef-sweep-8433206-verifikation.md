@@ -2,6 +2,8 @@
 
 **Prüf-SHA: `84332060095aee8a5a056d81d3977ae9e8074c35`**
 
+> Hinweis 22.10.2026: Dieser Prüf-SHA und alle weiteren SHAs und Zeilennummern in dieser Datei stammen aus der alten Versionsgeschichte vom 05.08.2026. Seit 13.10.2026 hat dieses Repo eine frische Geschichte; der Stand ist hier nicht abrufbar. Historischer Bericht, kein aktueller Befundstand.
+
 Alle Widerlegungsversuche ankern an diesem unveränderten Stand. Temporäre Mutationen wurden nach jedem Versuch zurückgenommen; die getrennten Prüf-Worktrees endeten auf dem Prüf-SHA mit leerem `git diff` und leerem `git status --short`.
 
 ### F-CGPT-001 | verdikt=BESTAETIGT | schwere_neu=hoch
