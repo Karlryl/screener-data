@@ -2,6 +2,8 @@
 
 PRÜF-COMMIT: `84332060095aee8a5a056d81d3977ae9e8074c35`
 
+> Hinweis 22.10.2026: Dieser Prüf-SHA und alle weiteren SHAs und Zeilennummern in dieser Datei stammen aus der alten Versionsgeschichte vom 05.08.2026. Seit 13.10.2026 hat dieses Repo eine frische Geschichte; der Stand ist hier nicht abrufbar. Historischer Bericht, kein aktueller Befundstand.
+
 PRÜFSTAND: `main`; `HEAD`, `origin/main` und `git ls-remote origin refs/heads/main` zeigten zu Prüfbeginn denselben SHA. Alle Befunde und Zählungen beziehen sich ausschließlich auf diesen Git-Baum.
 
 ZÄHLMETHODE: Dateibestand mit `git ls-tree -r --name-only <SHA>`; Inhalte mit `git show <SHA>:<pfad>`; Referenzen mit vollständiger `git grep`-/Textmatrix über alle getrackten Textdateien. Lokale ignorierte Laufzeitdateien sind ausdrücklich nicht eingerechnet.
