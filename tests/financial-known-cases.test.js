@@ -38,11 +38,11 @@ function replaceLine(source, oldLine, newLine) {
   return lines.map(l => l === oldLine ? newLine : l).join('\n');
 }
 
-test('all 316 authorized cells (260 quarterly, 56 annual) and eleven held packets have auditable sources', () => {
+test('all 321 authorized cells (265 quarterly, 56 annual) and eleven held packets have auditable sources', () => {
   // G31 switch 18.10.2026 adds nine quarterly gross-profit holds (BLSH five, VCTR four): neither issuer reports a
   // gross profit, and the switch would otherwise show the vendor quarters as newest GP growth. P268 adds three
   // 000599.SZ holds: its stored Q2 2025 predates the restatement while Q1 2025 is restated.
-  assert.equal(table.cases.length, 316); // P168f adds three Viaplay confirmations and one MFSL annual hold; hand table 18.10.2026 adds 26 cells (BLSH, VCTR, CDR.WA, 000552.SZ); P276 adds 13 (TWE.AX operating income, Kinnevik revenue).
+  assert.equal(table.cases.length, 321); // P168f adds three Viaplay confirmations and one MFSL annual hold; hand table 18.10.2026 adds 26 cells (BLSH, VCTR, CDR.WA, 000552.SZ); P276 adds 13 (TWE.AX operating income, Kinnevik revenue); 23.10.2026 adds five CIG-C operating-income quarters.
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 56); // P168f adds exactly four annual cases to P168e's 40; 18.10.2026 adds the BLSH and VCTR gross-profit holds and two CDR.WA 2023 holds; P276 four TWE.AX operating-income and four Kinnevik revenue years.
   assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
   assert.throws(() => validateTable({}), /Invalid/);
@@ -57,7 +57,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
     'OBDC', 'OTF', 'OXLC', 'PSEC', 'TRIN', 'TSLX'].map(t => t + '|revenueQ'),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].flatMap(t => [t + '|grossProfitQ', t + '|revenueQ']),
     ...['CARG', 'DCO', 'INFQ', 'PLUS', 'SLCE3.SA'].map(t => t + '|opIncQ'), '8020.T|revenueQ', 'CIG-C|grossProfitQ',
-    '000688.SZ|revenueQ', 'GRANULES.NS|revenueQ', 'BYLOT.AT|revenueQ', 'CDR.WA|revenueQ', '000552.SZ|revenueQ', 'CDR.WA|opIncQ', 'CDR.WA|grossProfitQ'].sort()); // P177 adds the five verified BYLOT quarters and their coverage; 18.10.2026 adds CDR.WA (three series) and 000552.SZ.
+    '000688.SZ|revenueQ', 'GRANULES.NS|revenueQ', 'BYLOT.AT|revenueQ', 'CDR.WA|revenueQ', '000552.SZ|revenueQ', 'CDR.WA|opIncQ', 'CDR.WA|grossProfitQ', 'CIG-C|opIncQ'].sort()); // P177 adds the five verified BYLOT quarters and their coverage; 18.10.2026 adds CDR.WA (three series) and 000552.SZ. 23.10.2026 adds CIG-C opIncQ.
   // P148 (22.10.2026): MODEC revenue is the only all-null series that carries coverage (tests/modec-followup.test.js), so the next vendor quarter stays empty.
   assert.deepEqual(table.coverage.map(v => v.ticker + '|' + v.field).sort(), [...need, '6269.T|revenueQ'].sort());
   const noHtgc = clone(table); noHtgc.coverage = noHtgc.coverage.filter(v => v.ticker !== 'HTGC');
@@ -68,7 +68,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => validateTable(dupCoverage), /Invalid financial coverage \(bad or duplicate\): HTGC/);
   const dupId = clone(table); dupId.cases[1].caseId = dupId.cases[0].caseId; assert.throws(() => validateTable(dupId), /duplicate/);
   // Absence: false-zero series (null replacement) validate without coverage; the real table passes.
-  assert.equal(validateTable(clone(table)).cases.length, 316); // P168f adds exactly four source-backed annual cases; 18.10.2026 adds 26 cells; the G31 switch nine GP holds and three 000599.SZ holds; P276 13 cells.
+  assert.equal(validateTable(clone(table)).cases.length, 321); // P168f adds exactly four source-backed annual cases; 18.10.2026 adds 26 cells; the G31 switch nine GP holds and three 000599.SZ holds; P276 13 cells; 23.10.2026 five CIG-C opIncQ cells.
   // Break-once in memory: without the coverage requirement the HTGC gap validates silently.
   const broken = moduleCopy('lib/financial-known-cases.js', s => replaceLine(s,
     "  for (const key of basisWrong) if (!covered.has(key)) throw new Error('Missing financial coverage: ' + key);", ''));
@@ -1106,7 +1106,7 @@ test('replacement values trace to their sources: the whole real table passes, a 
   // (OXLC 2025-03-31, "$121.2 million") pass; none fails.
   assert.deepEqual(count(table.cases.filter(c => !e4Case(c) && !e5Case(c))), { single: 146, difference: 25, rounded: 1, exempt: 10, null: 67 }); // P276 adds four single-source TWE.AX operating-income years and nine Kinnevik revenue holds; G31 switch adds nine quarterly GP holds (BLSH, VCTR) and two non-opIncQ 000599.SZ holds; P168f adds three direct-source confirmations and one null hold; 18.10.2026 adds 7 single-source and 6 derived revenue/gross-profit cells and 7 holds (four annual, three quarterly).
   // E4 operating income: 22 single-source, 3 derived; the two Dian Tou opIncQ cells are withheld (null).
-  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 24, difference: 5, null: 5 }); // 18.10.2026: CDR.WA five cells (Q4 2025 withheld), 000552.SZ Q2 2025 withheld; P268: 000599.SZ Q2 2025 withheld.
+  assert.deepEqual(count(table.cases.filter(c => c.field === 'opIncQ')), { single: 26, difference: 6, null: 7 }); // 18.10.2026: CDR.WA five cells (Q4 2025 withheld), 000552.SZ Q2 2025 withheld; P268: 000599.SZ Q2 2025 withheld. 23.10.2026: CIG-C Q2 2026 and Q2 2025 single-source, Q1 2026 six months minus Q2, Q3/Q4 2025 withheld.
   assert.equal(count(table.cases).none, undefined);
   assert.equal(validateTable(clone(table)).cases.length, table.cases.length);
   // Presence: a typo in a single-source, a derived and an issuer-rounded case each rejects the whole table.
@@ -1155,9 +1155,9 @@ test('opIncQ: five companies x five covered quarters, none unverified; readers o
   const op = table.cases.filter(c => c.field === 'opIncQ' && OPINC.includes(c.ticker));
   assert.deepEqual(OPINC.map(t => op.filter(c => c.ticker === t).length), [5, 5, 5, 5, 5]);
   assert.equal(op.length, 25);
-  assert.equal(table.cases.filter(c => c.field === 'opIncQ').length, 34, 'plus the two withheld Dian Tou cells, the six 18.10.2026 cells (CDR.WA five, 000552.SZ one) and the P268 000599.SZ hold');
+  assert.equal(table.cases.filter(c => c.field === 'opIncQ').length, 39, 'plus the two withheld Dian Tou cells, the six 18.10.2026 cells (CDR.WA five, 000552.SZ one), the P268 000599.SZ hold and the five 23.10.2026 CIG-C cells');
   assert.deepEqual(table.coverage.filter(v => v.field === 'opIncQ').map(v => v.ticker + '|' + v.coversThrough).sort(),
-    [...OPINC, 'CDR.WA'].map(t => t + '|2026-06-30').sort()); // 18.10.2026: CDR.WA opIncQ (tests/hand-table-20261018.test.js)
+    [...OPINC, 'CDR.WA', 'CIG-C'].map(t => t + '|2026-06-30').sort()); // 18.10.2026: CDR.WA opIncQ (tests/hand-table-20261018.test.js); 23.10.2026: CIG-C opIncQ (CIG-C test below)
   const noOp = clone(table); noOp.cases = noOp.cases.filter(c => c.field !== 'opIncQ'); noOp.coverage = noOp.coverage.filter(v => v.field !== 'opIncQ');
   const readers = s => ({ trajectory: axes.marginTrajectory(s, bounds), tier: profitTierOf(s), lamp: newestQtrSuspect(s) });
   // Raw marginTrajectory (newest minus oldest present margin) before -> after; the other three companies are
@@ -1419,9 +1419,14 @@ test('CIG-C: gross profit on the restated basis of the 2Q26 ITR, Q3/Q4 2025 with
   assert.deepEqual(brl(r.snapshot), [1952136, 1768103, null, null, 2199760]);
   assert.ok(!r.events.some(e => e.status === 'stale' || e.reasonCode === 'period-not-verified'));
   assert.ok(financialReasons(r.snapshot).some(t => t.startsWith('Bruttogewinn fehlt: Cemig hat die Kosten')));
-  // Absence: revenue, operating income and the annual block stay byte for byte; another listing of the issuer
+  // 23.10.2026: operating income (CVM account 3.05) on the same restated basis; Q3/Q4 2025 withheld as for gross profit.
+  const brlOp = s => norm(s, 'opIncQ').map(x => x === null ? null : Math.round(x / fx / 1e3));
+  assert.deepEqual(brlOp(applyFinancialCases(clone(raw), { table: noCig }).snapshot), [1899238, 1309543, 2387937, 1023883, 2019295]);
+  assert.deepEqual(brlOp(r.snapshot), [1829246, 1443005, null, null, 1690677]);
+  assert.ok(financialReasons(r.snapshot).some(t => t.startsWith('Betriebsergebnis fehlt: Cemig hat die Kosten')));
+  // Absence: revenue and the annual block stay byte for byte; another listing of the issuer
   // (CMIG3.SA and CIG carry different vendor packets) is not touched by these cases.
-  for (const f of ['revenueQ', 'opIncQ']) assert.equal(serial(r.snapshot.timeseries[f]), serial(raw.timeseries[f]), f);
+  for (const f of ['revenueQ']) assert.equal(serial(r.snapshot.timeseries[f]), serial(raw.timeseries[f]), f);
   assert.equal(serial(r.snapshot.annual), serial(raw.annual));
   for (const t of ['CMIG3.SA', 'CIG']) { const o = clone(raw); o.meta.ticker = t; assert.equal(applyFinancialCases(o).snapshot, o, t); }
   // Drift (review 7ed68f1, finding 2): a moved vendor cell is withheld as vendor-value-changed, never replaced with
@@ -1444,7 +1449,7 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
   // P177 refreshes the full digest for its documented HL/CIG-C changes; period labels and coverage remain pinned.
   const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
-  assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4 + 11 + 1 + 2 + 4 + 26 + 12 + 13, 'every added case exists'); // P168f appends exactly four annual cases; 18.10.2026 appends 26, the G31 switch twelve holds, P276 13 cells; the legacy prefix is unchanged.
+  assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4 + 11 + 1 + 2 + 4 + 26 + 12 + 13 + 5, 'every added case exists'); // P168f appends exactly four annual cases; 18.10.2026 appends 26, the G31 switch twelve holds, P276 13 cells, 23.10.2026 five CIG-C opIncQ cells; the legacy prefix is unchanged.
   const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [
     ['cases', 212, '9cf17195cb335fc74461cf054fb406be4846bb0a35165d25d5c8d3f897a440b6'], // P177 changes HL recast evidence and two CIG-C fingerprints, not period-label authority.
@@ -1454,22 +1459,24 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   assert.equal(Object.keys(legacyFixture).length, 42);
   const results = cfg => Object.entries(legacyFixture).map(([ticker, s]) => [ticker, applyFinancialCases(clone(s), cfg && { table: cfg }),
     financialReasons(applyFinancialCases(clone(s), cfg && { table: cfg }).snapshot)]);
-  // The table without the 18.10.2026 rows still yields the P177/P168d state byte for byte.
-  const earlier = clone(table); earlier.cases = earlier.cases.filter(c => !['2026-10-18-sdhand', '2026-10-18-sdg31'].includes(c.revision));
-  earlier.coverage = earlier.coverage.filter(v => !['CDR.WA', '000552.SZ'].includes(v.ticker));
+  // The table without the 18.10.2026 and 23.10.2026 rows still yields the P177/P168d state byte for byte.
+  const earlier = clone(table); earlier.cases = earlier.cases.filter(c => !['2026-10-18-sdhand', '2026-10-18-sdg31', '2026-10-23-sdcigc'].includes(c.revision));
+  earlier.coverage = earlier.coverage.filter(v => !['CDR.WA', '000552.SZ'].includes(v.ticker) && !(v.ticker === 'CIG-C' && v.field === 'opIncQ'));
   // P148 (22.10.2026) bumps the table revision; the two legacy pins below are reproduced under the revision label they were taken with.
+  // 23.10.2026: the CIG-C fixture carries the refreshed opIncQ[0]/[4] vendor fingerprints, so the three digests below move
+  // in CIG-C only (all other 41 results byte-identical to 1780151ed7, checked with the HEAD table and fixture).
   const P168D = '2026-10-11-p168d';
-  assert.equal(digest(results(validateTable({ ...earlier, revision: P168D }))), '869fe955391621cf758d80a331fe55d8efd557c881553e1e7f384e4aef6d7420', // P168d changed only revision annotations in these 42 fixtures; 22.10.2026 changes only TYG (FY2025 packet, re-checked hold).
+  assert.equal(digest(results(validateTable({ ...earlier, revision: P168D }))), 'b5f8560fdb52ff10bba837322111df2da198992a29b76fff9e073e7a99f10d81', // P168d changed only revision annotations in these 42 fixtures; 22.10.2026 changes only TYG (FY2025 packet, re-checked hold); 23.10.2026 only the CIG-C fixture opIncQ fingerprints.
     'P177 results with P168d revision annotations, including events and reader-facing reasons');
-  // 18.10.2026 withholds the four VCTR annual gross-profit years; VCTR is the only one of these 42 results that changes.
+  // 18.10.2026 withholds the four VCTR annual gross-profit years; 23.10.2026 corrects the CIG-C operating income; only these two of the 42 results change.
   const now = results(), old = results(validateTable(earlier));
-  assert.deepEqual(now.filter((r, i) => serial(r) !== serial(old[i])).map(r => r[0]), ['VCTR']);
+  assert.deepEqual(now.filter((r, i) => serial(r) !== serial(old[i])).map(r => r[0]), ['VCTR', 'CIG-C']);
   // G31 switch (18.10.2026): the four VCTR quarterly GP holds change only VCTR again (asserted above); new pin.
   // 22.10.2026: the refreshed TYG packet and its re-checked hold change only TYG (checked against origin/main on all 69 fixtures).
-  assert.equal(digest(results(validateTable({ ...table, revision: P168D }))), 'f2217eca3746f491e33b1fd7d8c25aa04ad73086e5ee6915c7631bac2efb3edf',
-    'the pre-P148 results (with the TYG refresh) are unchanged (the revision bump alters annotations only)');
-  // P148 + TYG: current results with the current revision label; differs from origin/main (31be014d...) only in TYG, checked on 42 and 69 fixtures.
-  assert.equal(digest(now), '23f4b47992e0c642dcfa16a88a705fd56a760fcae3e186543e98ead41d3ca0a6', 'current results pinned');
+  assert.equal(digest(results(validateTable({ ...table, revision: P168D }))), '1f2dc6f92da20ce42e0c8dbd2701058e713a54684da259efee51fc5b2ee047d0',
+    'the pre-P148 results (with the TYG refresh and the 23.10.2026 CIG-C rows) are unchanged (the revision bump alters annotations only)');
+  // P148 + TYG + 23.10.2026 CIG-C: current results with the current revision label; differs from 1780151ed7 (23f4b479...) only in CIG-C.
+  assert.equal(digest(now), '93e6bf4e592d12c1cb6e2b8fd22a04f123b661864e20e0ce8921c4ed2caee923', 'current results pinned');
 });
 
 test('period-label validation rejects malformed dates, evidence, duplicate authority and contradictory values', () => {
