@@ -349,17 +349,19 @@ test('scan every row for missing source values becoming zero', () => {
     const gmValue = source.metrics?.grossMargin?.value, dyValue = source.metrics?.dividendYield?.value, poValue = source.metrics?.payoutRatio?.value;
     const dyStatus = source.metrics?.dividendStatus?.value;
     assert.equal(row.aus.includes('gm-implausible'), Number.isFinite(gmValue) && Math.abs(Math.round(gmValue * 100) / 100) > 100, row.t + '.gm reason');
-    assert.equal(row.aus.includes('dy-implausible'), Number.isFinite(dyValue) && dyValue > 25 && (dyStatus == null || dyStatus === 'zahlt'), row.t + '.dy reason');
-    assert.equal(row.aus.includes('po-implausible'), Number.isFinite(poValue) && (poValue > 300 || poValue < 0), row.t + '.po reason');
+    assert.equal(row.aus.includes('dy-implausible'), Number.isFinite(dyValue) && dyValue > 50 && (dyStatus == null || dyStatus === 'zahlt'), row.t + '.dy reason');
+    const poContradiction = poValue > 0 && row.dySt !== 'zahlt' && !row.aus.includes('dy-implausible');
+    assert.equal(row.aus.includes('po-implausible'), Number.isFinite(poValue) && (poValue > 100000 || poValue < 0 || poContradiction), row.t + '.po reason');
     if (row.gm !== undefined) assert.ok(Math.abs(row.gm) <= 100, row.t + '.gm ceiling');
-    if (row.dy !== undefined) assert.ok(row.dy <= 25, row.t + '.dy ceiling');
-    if (row.po !== undefined) assert.ok(row.po >= 0 && row.po <= 300, row.t + '.po ceiling');
+    if (row.dy !== undefined) assert.ok(row.dy <= 50, row.t + '.dy ceiling');
+    if (row.po !== undefined) assert.ok(row.po >= 0 && row.po <= 100000, row.t + '.po ceiling');
+    assert.ok(!(row.aus.includes('evs-waehrung') && row.aus.includes('evs-implausible')), row.t + '.evs one code');
     const withheld = mischVerhaeltnisUnkorrigiert(source.meta);
     const revenue = source.metrics?.revenueTTM?.value, rawPs = mischVal(source.metrics?.priceSales, withheld);
     const negativeRevenue = (Number.isFinite(revenue) && revenue < 0) || (rawPs !== null && rawPs <= 0);
     for (const [key, sourceKey] of [['ps', 'priceSales'], ['evs', 'enterpriseToRevenue']]) {
       const value = mischVal(source.metrics?.[sourceKey], withheld);
-      if (value === null || value <= 0 || negativeRevenue || (key === 'evs' && row.aus.includes('evs-waehrung'))) assert.equal(row[key], undefined, row.t + '.' + key + ' PIT/sign/currency guard');
+      if (value === null || value <= 0 || negativeRevenue || (key === 'evs' && (row.aus.includes('evs-waehrung') || row.aus.includes('evs-implausible')))) assert.equal(row[key], undefined, row.t + '.' + key + ' PIT/sign/currency guard');
       else {
         const rounded = Math.round(value * 100) / 100;
         const expected = rounded === 0 && value !== 0 ? Number(value.toPrecision(2)) : rounded;
@@ -391,12 +393,12 @@ test('gross margin beyond plus or minus 100 percent is withheld with a reason, t
   }
 });
 
-test('dividend yield above 25 percent is withheld as unknown with a reason; its payout zero does not resurface', () => {
-  for (const [value, expected, state] of [[25, 25, 'zahlt'], [25.01, undefined, 'unbekannt'], [182, undefined, 'unbekannt'], [0.001, 0.001, 'zahlt']]) {
+test('dividend yield above 50 percent is withheld as unknown with a reason; its payout zero does not resurface', () => {
+  for (const [value, expected, state] of [[25.01, 25.01, 'zahlt'], [50, 50, 'zahlt'], [50.01, undefined, 'unbekannt'], [182, undefined, 'unbekannt'], [0.001, 0.001, 'zahlt']]) {
     const row = rowOf(withMetrics({ dividendYield: value, dividendStatus: 'zahlt', payoutRatio: 0 }));
     assert.equal(row.dy, expected, 'dy ' + value);
     assert.equal(row.dySt, state, 'state ' + value);
-    assert.equal(row.aus.includes('dy-implausible'), value > 25, 'reason ' + value);
+    assert.equal(row.aus.includes('dy-implausible'), value > 50, 'reason ' + value);
     // SBB-D.ST regression: payout zero is a placeholder next to a payer, also when the yield itself is withheld.
     assert.equal(row.po, undefined, 'po placeholder ' + value);
   }
@@ -404,12 +406,26 @@ test('dividend yield above 25 percent is withheld as unknown with a reason; its 
   assert.equal(rowOf(withMetrics({ dividendYield: null, dividendStatus: 'keine', payoutRatio: 0 })).po, 0);
 });
 
-test('payout above 300 percent or negative is withheld with a reason', () => {
-  for (const [value, expected] of [[300, 300], [299.99, 299.99], [300.01, undefined], [2788100, undefined], [-0.01, undefined], [-50, undefined], [0.001, 0.001]]) {
+test('payout above 100000 percent, negative, or without a dividend is withheld with a reason; high real ratios stay', () => {
+  for (const [value, expected] of [[100000, 100000], [99999.99, 99999.99], [100000.01, undefined], [2788100, undefined], [15375, 15375], [-0.01, undefined], [-50, undefined], [0.001, 0.001]]) {
     const row = rowOf(withMetrics({ payoutRatio: value, dividendStatus: 'zahlt', dividendYield: 2 }));
     assert.equal(row.po, expected, 'po ' + value);
-    assert.equal(row.aus.includes('po-implausible'), value > 300 || value < 0, 'reason ' + value);
+    assert.equal(row.aus.includes('po-implausible'), value > 100000 || value < 0, 'reason ' + value);
   }
+  // 000059.SZ shape: payout 347 next to dividend yield 0 / dySt 'keine' is a contradiction -> withheld.
+  const sz = rowOf(withMetrics({ payoutRatio: 347, dividendYield: null, dividendStatus: 'keine' }));
+  assert.equal(sz.dySt, 'keine');
+  assert.equal(sz.po, undefined);
+  assert.ok(sz.aus.includes('po-implausible'));
+  // A withheld yield (dy-implausible) is no contradiction: the payout stays.
+  const wy = rowOf(withMetrics({ payoutRatio: 40, dividendYield: 182, dividendStatus: 'zahlt' }));
+  assert.equal(wy.po, 40);
+  assert.ok(!wy.aus.includes('po-implausible'));
+  // SLG shape: payout 15375 of a payer is a correct number -> shown.
+  const slg = rowOf(withMetrics({ payoutRatio: 15375, dividendYield: 4.5, dividendStatus: 'zahlt' }));
+  assert.equal(slg.po, 15375);
+  assert.ok(!slg.aus.includes('po-implausible'));
+  for (const r of [sz, wy, slg]) assert.deepEqual(validateUniverse({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [r] }, 1000), []);
 });
 
 test('EV/S built from a reporting-currency enterprise value is withheld (KXIAY), local listings and near-parity pairs are untouched', () => {
@@ -442,15 +458,47 @@ test('EV/S built from a reporting-currency enterprise value is withheld (KXIAY),
   assert.ok(!rowOf(base({ 'metrics.enterpriseValue': { value: null } })).aus.includes('evs-waehrung'));
 });
 
+test('EV/S fitting neither reading is withheld as implausible (KAJMF); the EV factor bound is e', () => {
+  // check = mcap + debt - cash; KAJMF shape: factor 158, ev/check about 20, ev/(check*factor) about 0.13.
+  const mcap = 45e9, debt = 6e9, cash = 3e9, check = mcap + debt - cash;
+  const shaped = (factor, ev) => {
+    const s = withMetrics({ priceSales: 0.8, enterpriseToRevenue: 18.68, enterpriseValue: ev, revenueTTM: 5e10 }, 'KAJMF');
+    Object.assign(s.meta, { reportingCurrency: 'USD', reportingCurrencyOriginal: 'JPY', tradingCurrency: 'USD', tradingCurrencyOriginal: 'USD', mischVerhaeltnisFaktor: factor });
+    s.marketCap = { value: mcap };
+    s.annual.annualBalance = [{ totalDebt: debt, totalCash: cash }];
+    return rowOf(s);
+  };
+  const kajmf = shaped(158, 20 * check);
+  assert.equal(kajmf.evs, undefined);
+  assert.equal(kajmf.ps, 0.8);
+  assert.ok(kajmf.aus.includes('evs-implausible'));
+  assert.ok(!kajmf.aus.includes('evs-waehrung'));
+  // ev/check = 3 (ln 1.1) is plausible: kept.
+  const ok3 = shaped(158, 3 * check);
+  assert.equal(ok3.evs, 18.68);
+  assert.ok(!ok3.aus.some(a => a.startsWith('evs-')));
+  // Factor 2.5 (inside 1/e..e) with ev = check * factor: never a currency verdict, and ln 2.5 is plausible -> not flagged by design.
+  const f25 = shaped(2.5, 2.5 * check);
+  assert.equal(f25.evs, 18.68);
+  assert.ok(!f25.aus.some(a => a.startsWith('evs-')));
+  // Factor 3 with ev = check * factor: the currency reading wins -> evs-waehrung only.
+  const f3 = shaped(3, 3 * check);
+  assert.equal(f3.evs, undefined);
+  assert.deepEqual(f3.aus.filter(a => a.startsWith('evs-')), ['evs-waehrung']);
+  for (const r of [kajmf, ok3, f25, f3]) assert.deepEqual(validateUniverse({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [r] }, 1000), []);
+});
+
 test('validator rejects every outlier ceiling and every reason without its empty field (both directions)', () => {
   const feed = buildUniverse({ snapshots: [withMetrics({ grossMargin: 50, dividendYield: 2, dividendStatus: 'zahlt', payoutRatio: 40 })], excluded: new Map([['PAY', ['non-operating-rev']]]), generatedAt });
   assert.deepEqual(validateUniverse(feed, 1000), []);
-  const mutations = [r => { r.gm = 100.01; }, r => { r.gm = -100.01; }, r => { r.aus.push('gm-implausible'); }, r => { r.dy = 25.01; },
-    r => { r.aus.push('dy-implausible'); }, r => { r.po = 300.01; }, r => { r.po = -1; }, r => { r.aus.push('po-implausible'); }, r => { r.evs = 1; r.aus.push('evs-waehrung'); }];
+  const mutations = [r => { r.gm = 100.01; }, r => { r.gm = -100.01; }, r => { r.aus.push('gm-implausible'); }, r => { r.dy = 50.01; },
+    r => { r.aus.push('dy-implausible'); }, r => { r.po = 100000.01; }, r => { r.po = -1; }, r => { r.aus.push('po-implausible'); }, r => { r.evs = 1; r.aus.push('evs-waehrung'); },
+    r => { r.evs = 1; r.aus.push('evs-implausible'); }, r => { delete r.evs; r.aus.push('evs-waehrung', 'evs-implausible'); },
+    r => { delete r.dy; r.dySt = 'keine'; r.po = 40; }];
   for (const mutate of mutations) { const bad = structuredClone(feed); mutate(bad.rows[0]); assert.ok(validateUniverse(bad, 1000).length, 'validator must reject ' + mutate); }
 });
 
 test('contract text names every new reason code', () => {
   const contract = fs.readFileSync(path.join(__dirname, '..', 'docs', 'findash-export-v1.md'), 'utf8');
-  for (const code of ['gm-implausible', 'dy-implausible', 'po-implausible', 'evs-waehrung']) assert.ok(contract.includes(code), code);
+  for (const code of ['gm-implausible', 'dy-implausible', 'po-implausible', 'evs-waehrung', 'evs-implausible']) assert.ok(contract.includes(code), code);
 });

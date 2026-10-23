@@ -37,10 +37,11 @@ const round = v => {
 const text = v => typeof v === 'string' && v.trim() ? v.trim().replace(/\s+/g, ' ') : null;
 // Plausibility ceilings (G2/T2: a value beyond them is withheld with a reason, never clipped or replaced).
 const GM_MAX_ABS_PCT = 100;   // gross profit cannot exceed revenue; below -100 % the vendor margin is unverifiable
-const DY_MAX_PCT = 25;
-const PO_MAX_PCT = 300;
-const EV_FACTOR_MIN = 2;      // the pull's FX factor must be at least 2x (or at most 1/2) to tell the two readings apart
+const DY_MAX_PCT = 50;        // 25-50 % exists (shipping, special dividends); above 50 % every seen case was a unit/currency error
+const PO_MAX_PCT = 100000;    // unit errors only (BANPU.BK 2,788,100); high real ratios (SLG 15375) stay, findash caps ranking at 100
+const EV_FACTOR_MIN = Math.E; // with EV_MARGIN 1.0 a factor inside 1/e..e can never win the balance comparison
 const EV_MARGIN = 1.0;        // one reading must beat the other by a factor e (ln distance 1.0)
+const EV_IMPLAUSIBLE_LN = 1.5; // EV is mcap + debt - cash by definition; beyond a factor e^1.5 it is impossible
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const snapshotFiles = dir => fs.readdirSync(dir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).sort();
 
@@ -92,6 +93,19 @@ function evInReportingCurrency(snapshot) {
   }
   const q = ev / mcap;
   return (q < 0.1 || q > 10) && q / factor >= 0.1 && q / factor <= 10;
+}
+
+/**
+ * Detect an enterprise value that fits neither reading (KAJMF EV/mcap 23): with balance data the vendor EV must lie
+ * within a factor e^1.5 of mcap + debt - cash. Checked only after evInReportingCurrency did not fire.
+ * @param {object} snapshot Prepared snapshot.
+ * @returns {boolean} True when the EV/S must be withheld as implausible.
+ */
+function evImplausible(snapshot) {
+  const mcap = snapshot.marketCap?.value, ev = metricVal(snapshot, 'enterpriseValue');
+  const debt = norm(snapshot, 'annualBalance', 'totalDebt')[0], cash = norm(snapshot, 'annualBalance', 'totalCash')[0];
+  if (!(mcap > 0) || !(ev > 0) || !finite(debt) || !finite(cash)) return false;
+  return Math.abs(Math.log(ev / Math.max(mcap + debt - cash, 0.1 * mcap))) > EV_IMPLAUSIBLE_LN;
 }
 
 function usableFcf(snapshot) {
@@ -173,6 +187,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     if (sales.reason) aus.push(sales.reason);
     const evsCurrency = sales.evs !== null && evInReportingCurrency(snapshot);
     if (evsCurrency) aus.push('evs-waehrung');
+    const evsBad = sales.evs !== null && !evsCurrency && evImplausible(snapshot);
+    if (evsBad) aus.push('evs-implausible');
     const trailing = ratio('pe', mixed);
     const pe = finite(trailing) && trailing > 0 ? round(trailing) : null;
     const netIncome = norm(snapshot, 'annualNetIncome')[0];
@@ -187,7 +203,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     const { implausible: dyBad, ...div } = dividend(snapshot), payout = metricVal(snapshot, 'payoutRatio');
     const grossMargin = metricVal(snapshot, 'grossMargin');
     const gmBad = finite(grossMargin) && Math.abs(round(grossMargin)) > GM_MAX_ABS_PCT;
-    const poBad = finite(payout) && (payout > PO_MAX_PCT || payout < 0);
+    // A positive payout without a paid (or withheld) dividend contradicts itself (000059.SZ: 347 next to dy 0).
+    const poBad = finite(payout) && (payout > PO_MAX_PCT || payout < 0 || (payout > 0 && div.dySt !== 'zahlt' && !dyBad));
     if (gmBad) aus.push('gm-implausible');
     if (dyBad) aus.push('dy-implausible');
     if (poBad) aus.push('po-implausible');
@@ -198,7 +215,7 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       mc: meta.marketCapReason || marketCapCases[ticker] ? (finite(snapshot.marketCap?.value) ? round(snapshot.marketCap.value) : null) : board ? (finite(board.marketCap) ? board.marketCap : null)
         : (beurteileWaehrungsbeleg(meta).ok ? round(snapshot.marketCap?.value) : null),
       g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
-      ps: sales.ps, evs: evsCurrency ? null : sales.evs,
+      ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
       pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
       fpe: round(ratio('forwardPE', mixed)),
       ...div, po: poBad || (payout === 0 && (div.dySt === 'zahlt' || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
@@ -255,8 +272,10 @@ function validateUniverse(feed, bytes) {
     if (row.dy != null && row.dy > DY_MAX_PCT) errors.push(where + ': dividend yield beyond ceiling');
     if (row.aus.includes('dy-implausible') && (row.dy != null || row.dySt !== 'unbekannt')) errors.push(where + ': inconsistent dy reason');
     if (row.po != null && (row.po > PO_MAX_PCT || row.po < 0)) errors.push(where + ': payout beyond ceiling');
+    if (row.po > 0 && row.dySt !== 'zahlt' && !row.aus.includes('dy-implausible')) errors.push(where + ': payout without dividend');
     if (row.aus.includes('po-implausible') && row.po != null) errors.push(where + ': inconsistent po reason');
     if (row.aus.includes('evs-waehrung') && row.evs != null) errors.push(where + ': inconsistent ev currency reason');
+    if (row.aus.includes('evs-implausible') && (row.evs != null || row.aus.includes('evs-waehrung'))) errors.push(where + ': inconsistent ev implausible reason');
     if (['ps', 'evs'].some(k => row[k] != null && row[k] <= 0)) errors.push(where + ': non-positive sales multiple');
     if (row.aus.includes('umsatz-negativ') && (row.ps != null || row.evs != null)) errors.push(where + ': sales multiple on negative revenue');
     if (row.aus.includes('ev-negativ') && row.evs != null) errors.push(where + ': inconsistent ev reason');
@@ -351,4 +370,4 @@ function main(argv) {
 }
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
-module.exports = { evInReportingCurrency, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
+module.exports = { evInReportingCurrency, evImplausible,GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
