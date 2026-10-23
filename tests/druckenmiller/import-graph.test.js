@@ -1,7 +1,7 @@
 'use strict';
 /** tests/druckenmiller/import-graph.test.js — Standalone-Runner.
  *
- * DIE ZUSICHERUNG (Mandats-Grenze, screener-data/CLAUDE.md:17-21): kein Weg fuehrt vom
+ * DIE ZUSICHERUNG (Mandats-Grenze, screener-data/CLAUDE.md, Abschnitt "Kern-Designprinzip"): kein Weg fuehrt vom
  * Qualitaets-Score in dieses Modul und keiner zurueck. Der Score misst ausschliesslich
  * fundamentale Qualitaet; jedes preisnormierte Signal darin ist ein Mandats-Verstoss.
  * lib/druckenmiller/** rechnet ausschliesslich mit Preisen — es DARF den Boards nie
