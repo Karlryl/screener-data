@@ -6,6 +6,7 @@
     "codeKeeps records R11's re-enactment of the current production selection rule, not a decision about the true primary listing. Every other listed ticker is marked, even when codeKeeps is absent from the board.",
     "homeListingProposal is R11 information only; it moves the flag only where markFollowsHomeListing is true; unresolved proposals are null.",
     "Sources and verbatim quotes are supplied by R11-FINAL (2026-09-30); no network re-check was performed in this task.",
+    "2026-10-23 (numbers-trust audit 23.10.): circle, strategy, energy-fuels, star-bulk, vinci and the GE leg 1GE.MI were added with sources fetched and quotes checked verbatim on 2026-10-23; vinci's home listing DG.PA is excluded by production, so its legs DG.SW and DG.VI keep their ranks until DG.PA stands in the ranking.",
     "RBI (QSR / QSP.TO) and Molson Coors (TAP-A / TPX.TO) are deliberately absent: economically equivalent exchangeable shares, not secondary listings; TPX.TO class attribution is unproven."
   ],
   "aerovironment": {
@@ -23,7 +24,7 @@
   },
   "ge-aerospace": {
     "issuer": "GE Aerospace",
-    "tickers": ["GE", "GCP.DE", "GE.VI"],
+    "tickers": ["GE", "GCP.DE", "GE.VI", "1GE.MI"],
     "codeKeeps": "GE",
     "homeListingProposal": "GE",
     "source": {
@@ -32,7 +33,7 @@
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "US ISIN US3696043013. GE.VI has been excluded by production as dup-issuer since 2026-09-30; retained here in case it returns."
+    "note": "US ISIN US3696043013. GE.VI has been excluded by production as dup-issuer since 2026-09-30; retained here in case it returns. 1GE.MI added 2026-10-23 (numbers-trust audit 23.10.: GE rank 236 and 1GE.MI rank 235 on industrials profitable, both 70.4); source checked 2026-10-23: https://www.borsaitaliana.it/borsa/azioni/global-equity-market/scheda/US3696043013-BGEM.html?lang=it, quote \"Azioni Ge Aerospace: quotazioni in tempo reale | US3696043013\", field \"Codice Alfanumerico\" 1GE (Global Equity Market)."
   },
   "galaxy-digital": {
     "issuer": "Galaxy Digital",
@@ -126,5 +127,70 @@
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
     "note": "R11 home-listing proposal: KCO.DE (95% confidence); the flag still references KCO.VI."
+  },
+  "circle": {
+    "issuer": "Circle Internet Group",
+    "tickers": ["CRCL", "CRCL.SW"],
+    "codeKeeps": "CRCL",
+    "homeListingProposal": "CRCL",
+    "source": {
+      "url": "https://www.six-group.com/fqs/ref.json?select=ShortName,ISIN,ValorSymbol,PortalSegment&where=ValorSymbol=CRCL",
+      "quote": "CIRCLE INT.GRP A DL-,0001"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "SIX Swiss Exchange reference data list CRCL with the US ISIN US1725731079 (class A common stock of the US issuer); home-listing proposal CRCL (NYSE). Numbers-trust audit 23.10.: CRCL and CRCL.SW both 63.2 on financials unprofitable."
+  },
+  "strategy": {
+    "issuer": "Strategy",
+    "tickers": ["MSTR", "MSTR.SW"],
+    "codeKeeps": "MSTR",
+    "homeListingProposal": "MSTR",
+    "source": {
+      "url": "https://www.six-group.com/fqs/ref.json?select=ShortName,ISIN,ValorSymbol,PortalSegment&where=ValorSymbol=MSTR",
+      "quote": "STRATEGY     A NEW DL-001"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "SIX Swiss Exchange reference data list MSTR with the US ISIN US5949724083 (class A common stock of the US issuer); home-listing proposal MSTR (Nasdaq). Numbers-trust audit 23.10.: MSTR and MSTR.SW both 35.3 on software-comm-services unprofitable."
+  },
+  "energy-fuels": {
+    "issuer": "Energy Fuels",
+    "tickers": ["UUUU", "EF2.AX"],
+    "codeKeeps": "UUUU",
+    "homeListingProposal": "UUUU",
+    "source": {
+      "url": "https://investors.energyfuels.com/2026-08-28-Energy-Fuels-Completes-Acquisition-of-Australian-Strategic-Materials",
+      "quote": "Energy Fuels trades its CHESS Depositary Interests (CDIs) on the ASX Limited under the trading symbol \"EF2.\""
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "EF2.AX is a CDI (1:1) on the ASX, not a separate share class; the same release names the common shares on the NYSE American (UUUU) and the TSX (EFR). Home-listing proposal UUUU. Numbers-trust audit 23.10.: EF2.AX and UUUU both 34.6 on energy unprofitable."
+  },
+  "star-bulk": {
+    "issuer": "Star Bulk Carriers",
+    "tickers": ["SBLK", "SBLK.AT"],
+    "codeKeeps": "SBLK",
+    "homeListingProposal": "SBLK",
+    "source": {
+      "url": "https://www.euronext.com/en/about/media/euronext-press-releases/star-bulk-carriers-corp-lists-euronext",
+      "quote": "on its listing on Euronext Athens (ticker code: SBLK)"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "Parallel listing on Euronext Athens since 2026-09-15 (same release: admission of the existing shares); the company's announcement of 2026-09-04 names the common shares listed on the Nasdaq Global Select Market since December 2007. Home-listing proposal SBLK."
+  },
+  "vinci": {
+    "issuer": "Vinci",
+    "tickers": ["DG.PA", "DG.SW", "DG.VI"],
+    "codeKeeps": "DG.VI",
+    "homeListingProposal": "DG.PA",
+    "source": {
+      "url": "https://www.vinci.com/en/finance/share/stock-data",
+      "quote": "Euronext Paris (compartment A)"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "ISIN FR0000125486 on the issuer page. Legs checked 2026-10-23: SIX reference data https://www.six-group.com/fqs/ref.json?select=ShortName,ISIN,ValorSymbol,PortalSegment&where=ValorSymbol=DG (\"VINCI S.A. INH.   EO 2,50\", FR0000125486) and https://www.wienerborse.at/aktien-global-market/vinci-sa-FR0000125486/ (\"VINCI SA\"). codeKeeps DG.VI: production excluded DG.PA as dup-issuer on 2026-10-23 and keeps DG.VI; while DG.PA is not in the ranking, DG.SW and DG.VI keep their ranks (rule: home listing must stand in the same ranking)."
   }
 }
