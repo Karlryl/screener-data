@@ -17,7 +17,7 @@ function loadFixture(value) {
 }
 const valid = () => ({ _doku: ['Skipped documentation'], example: structuredClone(table.aerovironment) });
 
-test('real table pins all fourteen issuers, all tickers and the recorded choices', () => {
+test('real table pins all fifteen issuers, all tickers and the recorded choices', () => {
   assert.deepEqual(Object.values(table).map((r) => [r.issuer, r.tickers, r.codeKeeps, r.homeListingProposal]), [
     ['AeroVironment', ['AVAV', 'AVAV.SW'], 'AVAV', 'AVAV'],
     ['GE Aerospace', ['GE', 'GCP.DE', 'GE.VI', '1GE.MI'], 'GE', 'GE'],
@@ -34,15 +34,18 @@ test('real table pins all fourteen issuers, all tickers and the recorded choices
     ['Energy Fuels', ['UUUU', 'EF2.AX'], 'UUUU', 'UUUU'],
     ['Star Bulk Carriers', ['SBLK', 'SBLK.AT'], 'SBLK', 'SBLK'],
     ['Vinci', ['DG.PA', 'DG.SW', 'DG.VI'], 'DG.VI', 'DG.PA'],
+    // Numbers-trust audit 23.10.2026, entered 24.10.: PSKY is the former Nasdaq ticker of SKYD (8-K of 2026-10-06).
+    ['Skydance Corporation', ['SKYD', 'PSKY'], 'SKYD', 'SKYD'],
   ]);
   const tickers = Object.values(table).flatMap((r) => r.tickers);
   assert.equal(new Set(tickers).size, tickers.length);
-  assert.equal(index.size, 17); // GE has three secondaries; GE.VI is currently absent.
+  assert.equal(index.size, 18); // GE has three secondaries; GE.VI is currently absent.
   for (const ticker of ['QSR', 'QSP.TO', 'TAP-A', 'TPX.TO']) assert.ok(!tickers.includes(ticker));
   const added = new Set(['circle', 'strategy', 'energy-fuels', 'star-bulk', 'vinci']);
   for (const [id, row] of Object.entries(table)) {
-    assert.equal(row.sourceCheckedOn, added.has(id) ? '2026-10-23' : '2026-09-30');
-    assert.equal(row.enteredOn, added.has(id) ? '2026-10-23' : '2026-10-06');
+    const day = id === 'skydance' ? '2026-10-24' : null;
+    assert.equal(row.sourceCheckedOn, day || (added.has(id) ? '2026-10-23' : '2026-09-30'));
+    assert.equal(row.enteredOn, day || (added.has(id) ? '2026-10-23' : '2026-10-06'));
   }
   assert.deepEqual(loadFixture(valid()), { example: table.aerovironment });
 });
@@ -54,9 +57,9 @@ test('real table: literal marker per secondary ticker (no other issuer moves)', 
     'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',
     'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
     '1GE.MI': 'GE', 'CRCL.SW': 'CRCL', 'MSTR.SW': 'MSTR', 'EF2.AX': 'UUUU', 'SBLK.AT': 'SBLK',
-    'DG.PA': 'DG.VI', 'DG.SW': 'DG.VI',
+    'DG.PA': 'DG.VI', 'DG.SW': 'DG.VI', PSKY: 'SKYD',
   });
-  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI']) {
+  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI', 'SKYD']) {
     assert.ok(!index.has(ticker), ticker + ' must stay unmarked');
   }
   const kco = applyDupIssuerShadow({ ticker: 'KCO.DE' }, index);
