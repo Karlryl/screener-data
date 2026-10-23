@@ -50,6 +50,13 @@ const COUNTRY_TO_REGION = {
   'Jordan': 'Middle East', 'Qatar': 'Middle East', 'Kuwait': 'Middle East', 'Turkey': 'Middle East',
   'South Africa': 'Africa', 'Nigeria': 'Africa', 'Egypt': 'Africa', 'Morocco': 'Africa',
   'Australia': 'Oceania', 'New Zealand': 'Oceania',
+  // Nachgetragen (Guard-Audit 23.10.): in Snapshots beobachtet, vorher ohne Region.
+  'Bahamas': 'North America', 'Barbados': 'North America', 'British Virgin Islands': 'North America',
+  'Bulgaria': 'Europe', 'Czech Republic': 'Europe', 'Hungary': 'Europe', 'Iceland': 'Europe',
+  'Liechtenstein': 'Europe', 'Lithuania': 'Europe', 'Malta': 'Europe', 'Romania': 'Europe',
+  'Russia': 'Europe', 'Slovenia': 'Europe',
+  'Cambodia': 'Asia', 'Macau': 'Asia', 'Mongolia': 'Asia', 'Kazakhstan': 'Asia',
+  'Gabon': 'Africa', 'Mauritius': 'Africa',
 };
 
 // Alias-Normalisierung fuer meta.country (Daten sind sauber, defensiv dennoch).
