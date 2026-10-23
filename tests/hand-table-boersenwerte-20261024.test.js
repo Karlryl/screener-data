@@ -102,7 +102,14 @@ pruefe('presence: LISNE.SW, LISPE.SW, 1WAF.MI and ARX.TO are withheld (empty fie
     assert.strictEqual(out.marketCap.yahooValue, w.mcap);
     assert.ok(out.meta.marketCapReason.startsWith('Börsenwert nicht verlässlich: ' + guard.holds[t].reason), `${t}: reason`);
     assert.ok(!/ - | – | — /.test(guard.holds[t].reason), `${t}: dash in reason`);
+    // A delisted line has no value to prove later: the standard "not yet proven" sentence must not follow.
+    const standard = out.meta.marketCapReason.endsWith('Ein aktueller vergleichbarer Wert ist noch nicht belegt.');
+    assert.strictEqual(standard, t !== 'ARX.TO', `${t}: standard sentence ${standard ? 'present' : 'missing'}`);
   }
+});
+
+pruefe('presence: the reasons of the corrected rows name the as-of date of the share count', () => {
+  for (const t of Object.keys(CORRECTED)) assert.ok(/Stückzahl zum \d{2}\.\d{2}\.\d{4} laut /.test(guard.table[t].reason), `${t}: undated reason`);
 });
 
 pruefe('absence: once Yahoo uses the issuer count, the row confirms and keeps the vendor value', () => {
