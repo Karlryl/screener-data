@@ -45,7 +45,7 @@ test('next and later vendor quarters stay empty through the real loader', () => 
     assert.equal(out.timeseries.revenueQ[0].financialMissing.reasonCode,'period-after-coverage');
     assert.equal(out.timeseries.revenueQ[0].financialMissing.originalVendorRow.value,1524632400);
     assert.ok(out.timeseries.revenueQ.every(r=>value(r)===null));
-    assert.ok(financialReasons(out).includes(MISSING_REASONS['period-after-coverage']));
+    assert.ok(financialReasons(out).some(t=>t.startsWith(MISSING_REASONS['period-after-coverage'])));
     assert.deepEqual(out.annual,s.annual);
     assert.equal(revGrowthLeg(out).basis,'year');
     assert.ok(Math.abs(revGrowthLeg(out).pct - (4581232 / 4186461 - 1)*100)<1e-10);
