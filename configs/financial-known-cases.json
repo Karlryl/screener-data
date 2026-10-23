@@ -46,7 +46,8 @@
     { "ticker": "6269.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "2498.HK", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "300277.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "300277.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -9926,6 +9927,468 @@
           "start": "2025-01-01",
           "end": "2025-03-31",
           "note": "调整后 (prior-year quarter restated for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2026-06-30-revenueQ-20261024",
+      "ticker": "603993.SS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": 68916690474.87,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Der Anbieter liefert für das zweite Quartal 2026 (Ende 30.06.2026) eine Null. CMOC meldet für das erste Halbjahr 2026 einen Umsatz von 135,3 Mrd. CNY und für das erste Quartal 66,4 Mrd. CNY; das zweite Quartal lag damit bei 68,9 Mrd. CNY. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-20/1225482748.PDF",
+          "form": "CMOC (洛阳钼业), 2026 half-year report",
+          "published": "2026-08-20",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 78, consolidated income statement, revenue line (营业收入; this page has no machine-readable Chinese text layer, the numbers are searchable)",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "135,319,885,598.22 94,772,503,770.20",
+          "currency": "CNY",
+          "value": 135319885598.22,
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-25/1225189634.PDF",
+          "form": "CMOC (洛阳钼业), 2026 first-quarter report (corrected version, 更正版)",
+          "published": "2026-04-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 3, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入 66,403,195,123.35 46,005,929,071.08 44.34",
+          "currency": "CNY",
+          "value": 66403195123.35,
+          "start": "2026-01-01",
+          "end": "2026-03-31"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2025-12-31-revenueQ-20261024",
+      "ticker": "603993.SS",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 61198437020,
+      "replacementValue": 61198437020,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 31.12.2025 stimmt mit dem Abschluss der Firma überein (dort auf Tausend CNY gerundet).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047937.PDF",
+          "form": "CMOC (洛阳钼业), 2025 annual report summary (年报摘要)",
+          "published": "2026-03-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 21, 报告期分季度的主要会计数据 (单位：千元)",
+          "unit": "CNY thousands",
+          "quote": "营业收入 46,005,929 48,766,575 50,712,708 61,198,437",
+          "currency": "CNY",
+          "value": 61198437000,
+          "roundingStep": 1000,
+          "start": "2025-10-01",
+          "end": "2025-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2025-09-30-revenueQ-20261024",
+      "ticker": "603993.SS",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 50712708270,
+      "replacementValue": 50712708270,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 30.09.2025 stimmt mit dem Abschluss der Firma überein (dort auf Tausend CNY gerundet).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047937.PDF",
+          "form": "CMOC (洛阳钼业), 2025 annual report summary (年报摘要)",
+          "published": "2026-03-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 21, 报告期分季度的主要会计数据 (单位：千元)",
+          "unit": "CNY thousands",
+          "quote": "营业收入 46,005,929 48,766,575 50,712,708 61,198,437",
+          "currency": "CNY",
+          "value": 50712708000,
+          "roundingStep": 1000,
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2025-06-30-revenueQ-20261024",
+      "ticker": "603993.SS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 48766574700,
+      "replacementValue": 48766574700,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 30.06.2025 stimmt mit dem Abschluss der Firma überein (dort auf Tausend CNY gerundet).",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047937.PDF",
+          "form": "CMOC (洛阳钼业), 2025 annual report summary (年报摘要)",
+          "published": "2026-03-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 21, 报告期分季度的主要会计数据 (单位：千元)",
+          "unit": "CNY thousands",
+          "quote": "营业收入 46,005,929 48,766,575 50,712,708 61,198,437",
+          "currency": "CNY",
+          "value": 48766575000,
+          "roundingStep": 1000,
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2026-06-30-grossProfitQ-20261024",
+      "ticker": "603993.SS",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Bruttogewinn fehlt: Der Anbieter liefert für das zweite Quartal 2026 (Ende 30.06.2026) eine Null. Nach den Abschlüssen der Firma (Umsatz minus Umsatzkosten) lag der Bruttogewinn dieses Quartals bei rund 15,9 Mrd. CNY. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-20/1225482748.PDF",
+          "form": "CMOC (洛阳钼业), 2026 half-year report",
+          "published": "2026-08-20",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 174, notes to the consolidated statements, revenue and cost of sales (营业收入、营业成本), line 合计 (revenue and cost, H1 2026 and H1 2025; numbers searchable)",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "135,319,885,598.22 104,184,032,395.96 94,772,503,770.20 74,727,331,950.71",
+          "currency": "CNY"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-25/1225189634.PDF",
+          "form": "CMOC (洛阳钼业), 2026 first-quarter report (corrected version, 更正版)",
+          "published": "2026-04-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 11, 合并利润表",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "其中：营业成本 51,206,864,207.84 35,730,514,956.58",
+          "currency": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2025-12-31-grossProfitQ-20261024",
+      "ticker": "603993.SS",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Bruttogewinn fehlt: Der Anbieter liefert für das vierte Quartal 2025 (Ende 31.12.2025) eine Null. Nach den Abschlüssen der Firma (Umsatz minus Umsatzkosten) lag der Bruttogewinn dieses Quartals bei rund 17,5 Mrd. CNY. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225046687.PDF",
+          "form": "CMOC (洛阳钼业), 2025 annual report",
+          "published": "2026-03-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 180, note 48 营业收入、营业成本, line 合计 (2025 revenue and cost, 2024 revenue and cost)",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "合计 206,683,649,050.43 157,229,379,805.35 213,028,664,834.79 177,773,986,291.91",
+          "currency": "CNY"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-25/1224732937.PDF",
+          "form": "CMOC (洛阳钼业), 2025 third-quarter report",
+          "published": "2025-10-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 14, 合并利润表 (nine months 2025 and 2024)",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "其中：营业成本 113,530,810,246.03 127,476,334,514.65",
+          "currency": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2025-09-30-grossProfitQ-20261024",
+      "ticker": "603993.SS",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Bruttogewinn fehlt: Der Anbieter liefert für das dritte Quartal 2025 (Ende 30.09.2025) eine Null. Nach den Abschlüssen der Firma (Umsatz minus Umsatzkosten) lag der Bruttogewinn dieses Quartals bei rund 11,9 Mrd. CNY. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-25/1224732937.PDF",
+          "form": "CMOC (洛阳钼业), 2025 third-quarter report",
+          "published": "2025-10-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 14, 合并利润表 (nine months 2025 and 2024)",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "其中：营业成本 113,530,810,246.03 127,476,334,514.65",
+          "currency": "CNY"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-20/1225482748.PDF",
+          "form": "CMOC (洛阳钼业), 2026 half-year report",
+          "published": "2026-08-20",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 174, notes to the consolidated statements, revenue and cost of sales (营业收入、营业成本), line 合计 (revenue and cost, H1 2026 and H1 2025; numbers searchable)",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "135,319,885,598.22 104,184,032,395.96 94,772,503,770.20 74,727,331,950.71",
+          "currency": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "603993.ss-2025-06-30-grossProfitQ-20261024",
+      "ticker": "603993.SS",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Bruttogewinn fehlt: Der Anbieter liefert für das zweite Quartal 2025 (Ende 30.06.2025) eine Null. Nach den Abschlüssen der Firma (Umsatz minus Umsatzkosten) lag der Bruttogewinn dieses Quartals bei rund 9,8 Mrd. CNY. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-20/1225482748.PDF",
+          "form": "CMOC (洛阳钼业), 2026 half-year report",
+          "published": "2026-08-20",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 174, notes to the consolidated statements, revenue and cost of sales (营业收入、营业成本), line 合计 (revenue and cost, H1 2026 and H1 2025; numbers searchable)",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "135,319,885,598.22 104,184,032,395.96 94,772,503,770.20 74,727,331,950.71",
+          "currency": "CNY"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-25/1225189634.PDF",
+          "form": "CMOC (洛阳钼业), 2026 first-quarter report (corrected version, 更正版)",
+          "published": "2026-04-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 11, 合并利润表",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "其中：营业成本 51,206,864,207.84 35,730,514,956.58",
+          "currency": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "infrac.sw-2026-03-31-revenueQ-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": 2000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 2.000 CHF, auf den Franken genau so viel wie für das erste Quartal 2025. Infracore legt Halbjahres- und Jahreszahlen vor und weist für das erste Halbjahr 2026 einen Umsatz von 35,9 Mio. CHF aus, fast ganz aus Mieten; ein Quartalsumsatz von 2.000 CHF ist damit nicht möglich. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/9667f07e-fb7e-4695-b395-6f9e32b0bd96/assets/HY_2026_Infracore.pdf",
+          "form": "Infracore SA, Half-Year Report 2026",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 16, consolidated income statement (HY 2026, HY 2025)",
+          "unit": "CHF thousands",
+          "quote": "Total revenue 35’876 34’068",
+          "currency": "CHF"
+        },
+        {
+          "url": "https://www.infracore.ch/media/document/9667f07e-fb7e-4695-b395-6f9e32b0bd96/assets/HY_2026_Infracore.pdf",
+          "form": "Infracore SA, Half-Year Report 2026",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 2, key figures (HY 2026, HY 2025, FY2025)",
+          "unit": "CHF thousands",
+          "quote": "Rental income 35’871 34’063 66’059",
+          "currency": "CHF"
+        }
+      ]
+    },
+    {
+      "caseId": "infrac.sw-2025-03-31-revenueQ-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": 2000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das erste Quartal 2025 (Ende 31.03.2025) liefert der Anbieter 2.000 CHF, auf den Franken genau so viel wie für das erste Quartal 2026. Infracore legt Halbjahres- und Jahreszahlen vor und weist für das erste Halbjahr 2025 einen Umsatz von 34,1 Mio. CHF aus, fast ganz aus Mieten; ein Quartalsumsatz von 2.000 CHF ist damit nicht möglich. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/9667f07e-fb7e-4695-b395-6f9e32b0bd96/assets/HY_2026_Infracore.pdf",
+          "form": "Infracore SA, Half-Year Report 2026",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 16, consolidated income statement (HY 2026, HY 2025)",
+          "unit": "CHF thousands",
+          "quote": "Total revenue 35’876 34’068",
+          "currency": "CHF"
+        },
+        {
+          "url": "https://www.infracore.ch/media/document/9667f07e-fb7e-4695-b395-6f9e32b0bd96/assets/HY_2026_Infracore.pdf",
+          "form": "Infracore SA, Half-Year Report 2026",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 2, key figures (HY 2026, HY 2025, FY2025)",
+          "unit": "CHF thousands",
+          "quote": "Rental income 35’871 34’063 66’059",
+          "currency": "CHF"
+        }
+      ]
+    },
+    {
+      "caseId": "infrac.sw-2026-03-31-opIncQ-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": -1427000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter einen Verlust von 1,4 Mio. CHF. Infracore weist für das erste Halbjahr 2026 ein Betriebsergebnis (EBIT) von 32,2 Mio. CHF aus; für das Quartal selbst legt die Firma keinen Wert vor, und der Anbieter liefert für dasselbe Quartal einen unmöglichen Umsatz von 2.000 CHF. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/9667f07e-fb7e-4695-b395-6f9e32b0bd96/assets/HY_2026_Infracore.pdf",
+          "form": "Infracore SA, Half-Year Report 2026",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 16, consolidated income statement (HY 2026, HY 2025)",
+          "unit": "CHF thousands",
+          "quote": "EBIT 32’197 31’068",
+          "currency": "CHF"
+        }
+      ]
+    },
+    {
+      "caseId": "infrac.sw-2025-03-31-opIncQ-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "opIncQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": -1558000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das erste Quartal 2025 (Ende 31.03.2025) liefert der Anbieter einen Verlust von 1,6 Mio. CHF. Infracore weist für das erste Halbjahr 2025 ein Betriebsergebnis (EBIT) von 31,1 Mio. CHF aus; für das Quartal selbst legt die Firma keinen Wert vor, und der Anbieter liefert für dasselbe Quartal einen unmöglichen Umsatz von 2.000 CHF. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/9667f07e-fb7e-4695-b395-6f9e32b0bd96/assets/HY_2026_Infracore.pdf",
+          "form": "Infracore SA, Half-Year Report 2026",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 16, consolidated income statement (HY 2026, HY 2025)",
+          "unit": "CHF thousands",
+          "quote": "EBIT 32’197 31’068",
+          "currency": "CHF"
+        }
+      ]
+    },
+    {
+      "caseId": "infrac.sw-2025-12-31-annualRev-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": 24000,
+      "replacementValue": 66363000,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 24.000 CHF; das ist nur eine Zeile der sonstigen Erträge im Anhang. Infracore weist einen Umsatz von 66,4 Mio. CHF aus, fast ganz aus Mieten. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/804ef8a5-6235-49b1-a37b-d4d2a895eed0/assets/Infracore_Annual_Report_2025.pdf",
+          "form": "Infracore SA, Annual Report 2025",
+          "published": "2026-03-11",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 28, consolidated income statement (2025, 2024; in thousands of CHF)",
+          "quote": "Total revenue 66’363 60’473",
+          "value": 66363000,
+          "currency": "CHF",
+          "unit": "currency",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "note": "stated in CHF thousands; value in CHF. PDF 38, note 5 Other revenue: \"Other revenue 24 8\" (the vendor annual values 24,000 and 8,000 CHF)"
+        }
+      ]
+    },
+    {
+      "caseId": "infrac.sw-2024-12-31-annualRev-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": 8000,
+      "replacementValue": 60473000,
+      "revision": "2026-10-24-sdumsatz2",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2024 (Ende 31.12.2024) liefert der Anbieter 8.000 CHF, die sonstigen Erträge laut Anhang. Infracore weist einen Umsatz von 60,5 Mio. CHF aus. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/804ef8a5-6235-49b1-a37b-d4d2a895eed0/assets/Infracore_Annual_Report_2025.pdf",
+          "form": "Infracore SA, Annual Report 2025",
+          "published": "2026-03-11",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 28, consolidated income statement (2025, 2024; in thousands of CHF)",
+          "quote": "Total revenue 66’363 60’473",
+          "value": 60473000,
+          "currency": "CHF",
+          "unit": "currency",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "note": "stated in CHF thousands; value in CHF. PDF 38, note 5 Other revenue: \"Other revenue 24 8\" (the vendor annual values 24,000 and 8,000 CHF)"
         }
       ]
     }
