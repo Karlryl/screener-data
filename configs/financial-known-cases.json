@@ -9780,7 +9780,7 @@
           "published": "2026-04-30",
           "verifiedAt": "2026-10-24",
           "page": "PDF 1",
-          "quote": "Revenue stood at 364.7 million, representing a decrease of 2.4%",
+          "quote": "Revenue stood at €364.7 million, representing a decrease of 2.4%",
           "unit": "EUR millions",
           "start": "2025-01-01",
           "end": "2025-12-31"
@@ -9819,7 +9819,7 @@
       "replacementValue": null,
       "revision": "2026-10-24-sdumsatz",
       "verifiedAt": "2026-10-24",
-      "reason": "Jahresumsatz 2024 (Ende 30.06.2024) zurückgehalten: Der Anbieter liefert das Geschäftsjahr 2025 nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre als Jahreswachstum erschien. Laut Firma betrug der Umsatz 6.461 Mio. AUD (2026), 4.472 Mio. AUD (2025) und 5.278 Mio. AUD (2024). Ältere Jahre bleiben ebenfalls leer, bis der Anbieter 2025 liefert. Geprüft am 24.10.2026.",
+      "reason": "Jahresumsatz 2024 (Ende 30.06.2024) zurückgehalten: Der Anbieter liefert das Geschäftsjahr 2025 nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre als Jahreswachstum erschien. Laut Firma betrug der Umsatz 6.461 Mio. AUD (2026), 4.472 Mio. AUD (2025) und 5.278 Mio. AUD (2024). Die Sperre gilt dem Jahr mit Ende 30.06.2024; dieses Jahr und die älteren Jahre bleiben leer, auch wenn der Anbieter 2025 später nachliefert, bis die Sperre nach einer erneuten Prüfung aufgehoben wird. Geprüft am 24.10.2026.",
       "sources": [
         {
           "url": "https://announcements.asx.com.au/asxpdf/20260827/pdf/0738vyr15m8nsc.pdf",
@@ -9838,6 +9838,94 @@
           "page": "PDF 73, consolidated income statement for the year ended 30 June 2025 (2025, 2024)",
           "quote": "4,472 5,278",
           "unit": "AUD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2025-06-30-opIncQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 5634215.11,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsgewinn fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liegt nur der angepasste Umsatz einschließlich Hangzhou Steam Turbine vor; Betriebsergebnis und Bruttogewinn des Anbieters stehen noch auf der Basis vor der Fusion und würden mit dem angepassten Umsatz vermischt. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225513270.PDF",
+          "form": "Hangzhou Turbine Power (汽轮科技), 2026 half-year report",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 2,881,213,339.96 75,164,410.92 2,522,369,024.90 14.23%",
+          "value": 2522369024.9,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (prior-year half year restated for the common-control merger, 追溯调整或重述原因 同一控制下企业合并)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1102958925.53,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (prior-year quarter restated for the common-control merger)"
+        }
+      ]
+    },
+    {
+      "caseId": "300277.sz-2025-06-30-grossProfitQ-20261024",
+      "ticker": "300277.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 13946089.34,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdumsatz",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsgewinn fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liegt nur der angepasste Umsatz einschließlich Hangzhou Steam Turbine vor; Betriebsergebnis und Bruttogewinn des Anbieters stehen noch auf der Basis vor der Fusion und würden mit dem angepassten Umsatz vermischt. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-27/1225513270.PDF",
+          "form": "Hangzhou Turbine Power (汽轮科技), 2026 half-year report",
+          "published": "2026-08-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 2,881,213,339.96 75,164,410.92 2,522,369,024.90 14.23%",
+          "value": 2522369024.9,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "note": "调整后 (prior-year half year restated for the common-control merger, 追溯调整或重述原因 同一控制下企业合并)"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-04-27/1225187563.PDF",
+          "form": "Hangzhou Turbine Power (then 海联讯), 2026 first-quarter report",
+          "published": "2026-04-27",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, 主要会计数据和财务指标",
+          "unit": "CNY 元, multiplier 1",
+          "quote": "营业收入（元） 1,303,584,864.40 25,571,885.66 1,102,958,925.53 18.19%",
+          "value": 1102958925.53,
+          "currency": "CNY",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "note": "调整后 (prior-year quarter restated for the common-control merger)"
         }
       ]
     }
