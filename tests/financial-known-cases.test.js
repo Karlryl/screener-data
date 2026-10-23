@@ -145,7 +145,7 @@ for (const c of table.cases.filter(x => x.periodType === '12M' && x.replacementV
   m.snapshot.annual[c.field].forEach((row, j) => moved.annual[c.field][j] === null ? assert.equal(row, null, 'gap ' + j)
     : assert.equal(row.financialMissing.reasonCode, 'annual-value-changed', 'cell ' + j));
   assert.ok(m.events.some(e => e.caseId === c.caseId && e.status === 'stale' && e.reasonCode === 'annual-value-changed'));
-  assert.ok(financialReasons(m.snapshot).includes(MISSING_REASONS['annual-value-changed']));
+  assert.ok(financialReasons(m.snapshot).some(t => t.startsWith(MISSING_REASONS['annual-value-changed'])));
   const again = applyFinancialCases(m.snapshot);
   assert.equal(serial(again.snapshot), serial(m.snapshot), 'fail-closed pass is idempotent');
   assert.ok(again.events.some(e => e.status === 'stale' && e.reasonCode === 'annual-value-changed'), 'and keeps warning');
@@ -301,7 +301,7 @@ test('stale values, wrong units/currency/source and duplicate dates become missi
     assert.equal(value(row), null, 'Stale vendor value is withheld, never kept or zeroed');
     assert.equal(row.financialMissing.reasonCode, code);
     assert.equal(row.financialMissing.reason, MISSING_REASONS[code]);
-    assert.ok(financialReasons(r.snapshot).includes(MISSING_REASONS[code]));
+    assert.ok(financialReasons(r.snapshot).some(t => t.startsWith(MISSING_REASONS[code])));
     assert.ok(r.events.some(e => e.status === 'stale' && e.reasonCode === code && e.index === 0));
     assert.equal(serial(input), original, 'Input is not mutated');
     const again = applyFinancialCases(r.snapshot);
@@ -330,7 +330,8 @@ test('coversThrough: newer vendor quarter is missing and stale; covered quarters
     assert.equal(value(row), null);
     assert.equal(row.financialMissing.reasonCode, 'period-after-coverage');
     assert.equal(row.financialMissing.originalVendorRow.value, 60e6);
-    assert.ok(financialReasons(r.snapshot).includes(MISSING_REASONS['period-after-coverage']));
+    // A later unverified quarter is named, so the text never reads as the shown quarter.
+    assert.ok(financialReasons(r.snapshot).includes(MISSING_REASONS['period-after-coverage'] + ' Das betrifft die Periode mit Ende 30.09.2026.'));
     assert.equal(r.events.filter(e => e.status === 'stale').length, 1);
     assert.equal(r.events.find(e => e.status === 'stale').period, '2026-09-30');
     // Covered periods are still corrected (or withheld where the table withholds them).
@@ -1466,17 +1467,21 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   // 23.10.2026: the CIG-C fixture carries the refreshed opIncQ[0]/[4] vendor fingerprints, so the three digests below move
   // in CIG-C only (all other 41 results byte-identical to 1780151ed7, checked with the HEAD table and fixture).
   const P168D = '2026-10-11-p168d';
-  assert.equal(digest(results(validateTable({ ...earlier, revision: P168D }))), 'b5f8560fdb52ff10bba837322111df2da198992a29b76fff9e073e7a99f10d81', // P168d changed only revision annotations in these 42 fixtures; 22.10.2026 changes only TYG (FY2025 packet, re-checked hold); 23.10.2026 only the CIG-C fixture opIncQ fingerprints.
+  // 23.10.2026 (PLUS hint): a generic missing text names its period end; of the 42 results only the HL reason text moves
+  // ("... Das betrifft die Periode mit Ende 31.12.2022."), every applied snapshot is byte-identical to the previous lib.
+  assert.equal(digest(results(validateTable({ ...earlier, revision: P168D }))), 'd1a2932283e08c9071489437ce278fb49d071ba90cfa50771b355234397c3c0b', // P168d changed only revision annotations in these 42 fixtures; 22.10.2026 changes only TYG (FY2025 packet, re-checked hold); 23.10.2026 only the CIG-C fixture opIncQ fingerprints.
     'P177 results with P168d revision annotations, including events and reader-facing reasons');
   // 18.10.2026 withholds the four VCTR annual gross-profit years; 23.10.2026 corrects the CIG-C operating income; only these two of the 42 results change.
   const now = results(), old = results(validateTable(earlier));
   assert.deepEqual(now.filter((r, i) => serial(r) !== serial(old[i])).map(r => r[0]), ['VCTR', 'CIG-C']);
   // G31 switch (18.10.2026): the four VCTR quarterly GP holds change only VCTR again (asserted above); new pin.
   // 22.10.2026: the refreshed TYG packet and its re-checked hold change only TYG (checked against origin/main on all 69 fixtures).
-  assert.equal(digest(results(validateTable({ ...table, revision: P168D }))), '1f2dc6f92da20ce42e0c8dbd2701058e713a54684da259efee51fc5b2ee047d0',
+  // 23.10.2026 (PLUS hint): moves only by the dated HL missing text (see the first pin above).
+  assert.equal(digest(results(validateTable({ ...table, revision: P168D }))), '3c0b288537946a9c5a8005f5f45b6a29a555bd2814b1d04168d98273ae9266ba',
     'the pre-P148 results (with the TYG refresh and the 23.10.2026 CIG-C rows) are unchanged (the revision bump alters annotations only)');
   // P148 + TYG + 23.10.2026 CIG-C: current results with the current revision label; differs from 1780151ed7 (23f4b479...) only in CIG-C.
-  assert.equal(digest(now), '93e6bf4e592d12c1cb6e2b8fd22a04f123b661864e20e0ce8921c4ed2caee923', 'current results pinned');
+  // 23.10.2026 (PLUS hint): moves only by the dated HL missing text.
+  assert.equal(digest(now), 'ff1fd40ae7baf0163ed26754f0c2ba06e85cf4b358d0815f49707d333188e07f', 'current results pinned');
 });
 
 test('period-label validation rejects malformed dates, evidence, duplicate authority and contradictory values', () => {
