@@ -67,6 +67,38 @@ for (const [name, input] of [['stored packet (read time)', stored], ['raw packet
   });
 }
 
+// Export of 23.10.2026: the PLUS row showed the verified June quarter (+0.99 %) next to "Quartalswert fehlt: Periode nicht
+// gegen Primärquelle geprüft", which was about the withheld quarter to 31.03.2025. A missing text names its period.
+test('a withheld older quarter never reads as the shown one: its hint names its period', () => {
+  for (const input of [stored, raw]) {
+    const s = apply(input), reasons = financialReasons(s);
+    assert.equal(s.timeseries.revenueQ[0].financialMissing, undefined);
+    const missing = reasons.filter(r => r.startsWith('Quartalswert fehlt'));
+    assert.deepEqual(missing, ['Quartalswert fehlt: Periode nicht gegen Primärquelle geprüft; die Anbieterreihe dieser Firma ' +
+      'hat eine falsche Basis. Das betrifft die Periode mit Ende 31.03.2025.']);
+  }
+});
+
+// Currency path of the fill: a non-USD case converts with the stored rate and still waits for its filing day.
+test('fill in a converted reporting currency uses the stored rate and the point-in-time rule', () => {
+  const rate = 1.25, eur = structuredClone(table);
+  for (const c of eur.cases) if (c.ticker === 'PLUS') c.currency = 'EUR';
+  const s = structuredClone(raw);
+  Object.assign(s.meta, { reportingCurrencyOriginal: 'EUR', fxRateApplied: rate });
+  for (const f of Object.keys(june)) s.timeseries[f] = s.timeseries[f].map((r, i) => {
+    const c = eur.cases.find(c => c.ticker === 'PLUS' && c.field === f && c.period === s.timeseries[f + 'Ends'][i]);
+    return c ? { value: c.expectedBadValue * rate } : r;
+  });
+  const out = applyFinancialCases(structuredClone(s), { table: eur }).snapshot;
+  for (const f of Object.keys(june)) {
+    assert.equal(out.timeseries[f + 'Ends'][0], '2026-06-30', f);
+    assert.equal(value(out.timeseries[f][0]), june[f] * rate, f);
+    assert.equal(out.timeseries[f][0].financialCorrection.nativeCurrency, 'EUR');
+  }
+  s.meta.fetchedAt = '2026-08-04T12:00:00Z'; // filing day of the 10-Q: not public yet at fetch time
+  assert.equal(applyFinancialCases(s, { table: eur }).snapshot.timeseries.revenueQEnds[0], '2026-03-31');
+});
+
 test('no fill when the vendor delivers the quarter itself or a newer one', () => {
   const back = structuredClone(raw);
   const ts = back.timeseries;
