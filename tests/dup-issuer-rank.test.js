@@ -182,6 +182,32 @@ test('other rows move up by exactly one place per removed row above them', () =>
   assert.deepEqual(after.map((r) => r.score), before.map((r) => r.score), 'scores and order unchanged');
 });
 
+// Numbers-trust audit 23.10.2026: Circle stood twice (CRCL rank 4, CRCL.SW rank 5, both 63.2).
+test('CRCL/CRCL.SW with the same score: the home listing keeps its rank in either tie order', () => {
+  for (const order of [['CRCL', 'CRCL.SW'], ['CRCL.SW', 'CRCL']]) {
+    const out = board([row('A', 70), ...order.map((t) => row(t, 63.2)), row('B', 60)]);
+    assert.equal(pick(out, 'CRCL').rank, 2, order.join(','));
+    assert.equal(pick(out, 'CRCL').rankGrund, null);
+    assert.equal(pick(out, 'CRCL.SW').rank, null);
+    assert.equal(pick(out, 'CRCL.SW').rankGrund, 'dupIssuer');
+    assert.equal(pick(out, 'CRCL.SW').score, 63.2, 'score stays visible');
+    assert.deepEqual(pick(out, 'CRCL.SW').dupIssuer, { of: 'CRCL', issuer: 'Circle Internet Group', basis: 'hand-table:dup-issuer-shadow' });
+    assert.equal(pick(out, 'B').rank, 3, 'the row below moves up one place');
+  }
+});
+
+// Audit 23.10.2026: AVAV.SW (59.7, ipoYear 2026) stood far above its home leg AVAV (29.9, ipoYear 2007).
+test('AVAV.SW with a higher score and a newer ipoYear still loses the rank to the home listing AVAV', () => {
+  const leg = { ...row('AVAV.SW', 59.7), ipoYear: 2026 };
+  const home = { ...row('AVAV', 29.9), ipoYear: 2007 };
+  const out = board([row('A', 70), leg, row('B', 50), row('C', 40), home]);
+  assert.deepEqual(out.map((r) => [r.ticker, r.rank, r.rankGrund]), [
+    ['A', 1, null], ['AVAV.SW', null, 'dupIssuer'], ['B', 2, null], ['C', 3, null], ['AVAV', 4, null],
+  ]);
+  assert.equal(pick(out, 'AVAV.SW').score, 59.7);
+  assert.deepEqual(check(out), []);
+});
+
 test('an existing coverage reason takes precedence over dupIssuer', () => {
   const out = board([row('AVAV.SW', 80, '3/7'), row('AVAV', 70)]);
   assert.equal(out[0].rank, null);

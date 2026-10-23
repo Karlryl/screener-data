@@ -17,10 +17,10 @@ function loadFixture(value) {
 }
 const valid = () => ({ _doku: ['Skipped documentation'], example: structuredClone(table.aerovironment) });
 
-test('real table pins all nine issuers, all tickers and the recorded choices', () => {
+test('real table pins all fourteen issuers, all tickers and the recorded choices', () => {
   assert.deepEqual(Object.values(table).map((r) => [r.issuer, r.tickers, r.codeKeeps, r.homeListingProposal]), [
     ['AeroVironment', ['AVAV', 'AVAV.SW'], 'AVAV', 'AVAV'],
-    ['GE Aerospace', ['GE', 'GCP.DE', 'GE.VI'], 'GE', 'GE'],
+    ['GE Aerospace', ['GE', 'GCP.DE', 'GE.VI', '1GE.MI'], 'GE', 'GE'],
     ['Galaxy Digital', ['GLXY', '1GLXY.MI'], 'GLXY', 'GLXY'],
     ['Ascentage Pharma', ['AAPG', '6855.HK'], 'AAPG', null],
     ['Grupo Aeroméxico', ['AERO', 'AERO.MX'], 'AERO', null],
@@ -28,14 +28,21 @@ test('real table pins all nine issuers, all tickers and the recorded choices', (
     ['AXIA Energia', ['AXIA', 'AXIA3.SA'], 'AXIA', 'AXIA3.SA'],
     ['Copel', ['ELPC', 'CPLE3.SA'], 'ELPC', 'CPLE3.SA'],
     ['Klöckner & Co', ['KCO.VI', 'KCO.DE'], 'KCO.VI', 'KCO.DE'],
+    // Numbers-trust audit 23.10.2026: legs the name-only duplicate check missed.
+    ['Circle Internet Group', ['CRCL', 'CRCL.SW'], 'CRCL', 'CRCL'],
+    ['Strategy', ['MSTR', 'MSTR.SW'], 'MSTR', 'MSTR'],
+    ['Energy Fuels', ['UUUU', 'EF2.AX'], 'UUUU', 'UUUU'],
+    ['Star Bulk Carriers', ['SBLK', 'SBLK.AT'], 'SBLK', 'SBLK'],
+    ['Vinci', ['DG.PA', 'DG.SW', 'DG.VI'], 'DG.VI', 'DG.PA'],
   ]);
   const tickers = Object.values(table).flatMap((r) => r.tickers);
   assert.equal(new Set(tickers).size, tickers.length);
-  assert.equal(index.size, 10); // GE has two secondaries; GE.VI is currently absent.
+  assert.equal(index.size, 17); // GE has three secondaries; GE.VI is currently absent.
   for (const ticker of ['QSR', 'QSP.TO', 'TAP-A', 'TPX.TO']) assert.ok(!tickers.includes(ticker));
-  for (const row of Object.values(table)) {
-    assert.equal(row.sourceCheckedOn, '2026-09-30');
-    assert.equal(row.enteredOn, '2026-10-06');
+  const added = new Set(['circle', 'strategy', 'energy-fuels', 'star-bulk', 'vinci']);
+  for (const [id, row] of Object.entries(table)) {
+    assert.equal(row.sourceCheckedOn, added.has(id) ? '2026-10-23' : '2026-09-30');
+    assert.equal(row.enteredOn, added.has(id) ? '2026-10-23' : '2026-10-06');
   }
   assert.deepEqual(loadFixture(valid()), { example: table.aerovironment });
 });
@@ -46,8 +53,10 @@ test('real table: literal marker per secondary ticker (no other issuer moves)', 
   assert.deepEqual(Object.fromEntries([...index].map(([ticker, v]) => [ticker, v.of])), {
     'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',
     'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
+    '1GE.MI': 'GE', 'CRCL.SW': 'CRCL', 'MSTR.SW': 'MSTR', 'EF2.AX': 'UUUU', 'SBLK.AT': 'SBLK',
+    'DG.PA': 'DG.VI', 'DG.SW': 'DG.VI',
   });
-  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI']) {
+  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI']) {
     assert.ok(!index.has(ticker), ticker + ' must stay unmarked');
   }
   const kco = applyDupIssuerShadow({ ticker: 'KCO.DE' }, index);
