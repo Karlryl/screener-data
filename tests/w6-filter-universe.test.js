@@ -6,7 +6,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
-const { buildUniverse, growth3, salesMultiples, validateUniverse, build, ROW_KEYS, NUMBER_KEYS, MAX_BYTES } = require('../scripts/write-filter-universe.js');
+const { buildUniverse, evImplausible, growth3, salesMultiples, validateUniverse, build, ROW_KEYS, NUMBER_KEYS, MAX_BYTES } = require('../scripts/write-filter-universe.js');
 const { mischVal, mischVerhaeltnisUnkorrigiert } = require('../scripts/write-board-history.js');
 const { MAX_FCF_MARGIN_PCT } = require('../scripts/write-rule40-export.js');
 const snapshots = require('./fixtures/w6/snapshots.json');
@@ -350,8 +350,7 @@ test('scan every row for missing source values becoming zero', () => {
     const dyStatus = source.metrics?.dividendStatus?.value;
     assert.equal(row.aus.includes('gm-implausible'), Number.isFinite(gmValue) && Math.abs(Math.round(gmValue * 100) / 100) > 100, row.t + '.gm reason');
     assert.equal(row.aus.includes('dy-implausible'), Number.isFinite(dyValue) && dyValue > 50 && (dyStatus == null || dyStatus === 'zahlt'), row.t + '.dy reason');
-    const poContradiction = poValue > 0 && row.dySt !== 'zahlt' && !row.aus.includes('dy-implausible');
-    assert.equal(row.aus.includes('po-implausible'), Number.isFinite(poValue) && (poValue > 100000 || poValue < 0 || poContradiction), row.t + '.po reason');
+    assert.equal(row.aus.includes('po-implausible'), Number.isFinite(poValue) && (poValue > 100000 || poValue < 0), row.t + '.po reason');
     if (row.gm !== undefined) assert.ok(Math.abs(row.gm) <= 100, row.t + '.gm ceiling');
     if (row.dy !== undefined) assert.ok(row.dy <= 50, row.t + '.dy ceiling');
     if (row.po !== undefined) assert.ok(row.po >= 0 && row.po <= 100000, row.t + '.po ceiling');
@@ -361,6 +360,7 @@ test('scan every row for missing source values becoming zero', () => {
     const negativeRevenue = (Number.isFinite(revenue) && revenue < 0) || (rawPs !== null && rawPs <= 0);
     for (const [key, sourceKey] of [['ps', 'priceSales'], ['evs', 'enterpriseToRevenue']]) {
       const value = mischVal(source.metrics?.[sourceKey], withheld);
+      if (key === 'evs' && value > 0 && !negativeRevenue && !row.aus.includes('evs-waehrung')) assert.equal(row.aus.includes('evs-implausible'), evImplausible(source), row.t + '.evs implausible reason');
       if (value === null || value <= 0 || negativeRevenue || (key === 'evs' && (row.aus.includes('evs-waehrung') || row.aus.includes('evs-implausible')))) assert.equal(row[key], undefined, row.t + '.' + key + ' PIT/sign/currency guard');
       else {
         const rounded = Math.round(value * 100) / 100;
@@ -406,18 +406,18 @@ test('dividend yield above 50 percent is withheld as unknown with a reason; its 
   assert.equal(rowOf(withMetrics({ dividendYield: null, dividendStatus: 'keine', payoutRatio: 0 })).po, 0);
 });
 
-test('payout above 100000 percent, negative, or without a dividend is withheld with a reason; high real ratios stay', () => {
+test('payout above 100000 percent or negative is withheld with a reason; high real ratios stay', () => {
   for (const [value, expected] of [[100000, 100000], [99999.99, 99999.99], [100000.01, undefined], [2788100, undefined], [15375, 15375], [-0.01, undefined], [-50, undefined], [0.001, 0.001]]) {
     const row = rowOf(withMetrics({ payoutRatio: value, dividendStatus: 'zahlt', dividendYield: 2 }));
     assert.equal(row.po, expected, 'po ' + value);
     assert.equal(row.aus.includes('po-implausible'), value > 100000 || value < 0, 'reason ' + value);
   }
-  // 000059.SZ shape: payout 347 next to dividend yield 0 / dySt 'keine' is a contradiction -> withheld.
+  // 000059.SZ shape: payout 347 next to dividend yield 0 / dySt 'keine'; the yield field is the broken one -> payout shown.
   const sz = rowOf(withMetrics({ payoutRatio: 347, dividendYield: null, dividendStatus: 'keine' }));
   assert.equal(sz.dySt, 'keine');
-  assert.equal(sz.po, undefined);
-  assert.ok(sz.aus.includes('po-implausible'));
-  // A withheld yield (dy-implausible) is no contradiction: the payout stays.
+  assert.equal(sz.po, 347);
+  assert.ok(!sz.aus.includes('po-implausible'));
+  // A withheld yield (dy-implausible) keeps its payout.
   const wy = rowOf(withMetrics({ payoutRatio: 40, dividendYield: 182, dividendStatus: 'zahlt' }));
   assert.equal(wy.po, 40);
   assert.ok(!wy.aus.includes('po-implausible'));
@@ -488,13 +488,31 @@ test('EV/S fitting neither reading is withheld as implausible (KAJMF); the EV fa
   for (const r of [kajmf, ok3, f25, f3]) assert.deepEqual(validateUniverse({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [r] }, 1000), []);
 });
 
+test('EV/S of a factor < 1 listing whose balance fits mcap + (debt - cash) * factor is shown (HCLTECH.NS, 23.10.2026 snapshot)', () => {
+  // ln(ev / check1) = 2.23 as delivered, but ev / (mcap + (debt - cash) * factor) = ln -0.05 -> shown.
+  const shaped = (factor, evs = 2.542313588871) => {
+    const s = withMetrics({ priceSales: 2.74, enterpriseToRevenue: evs, enterpriseValue: 37750839837.581375, revenueTTM: 1.485e10 }, 'HCLTECH.NS');
+    Object.assign(s.meta, { reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', tradingCurrency: 'INR', tradingCurrencyOriginal: 'INR', mischVerhaeltnisFaktor: factor });
+    s.marketCap = { value: 40660683802.23747 };
+    s.annual.annualBalance = [{ totalDebt: 1590000000, totalCash: 82120000000 }];
+    return rowOf(s);
+  };
+  const hcl = shaped(0.010523823);
+  assert.equal(hcl.evs, 2.54);
+  assert.ok(!hcl.aus.some(a => a.startsWith('evs-')));
+  assert.deepEqual(validateUniverse({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [hcl] }, 1000), []);
+  // Same numbers with factor >= 1 and no currency verdict (inside 1/e..e): the third reading is not accepted -> implausible.
+  const f2 = shaped(2);
+  assert.equal(f2.evs, undefined);
+  assert.deepEqual(f2.aus.filter(a => a.startsWith('evs-')), ['evs-implausible']);
+});
+
 test('validator rejects every outlier ceiling and every reason without its empty field (both directions)', () => {
   const feed = buildUniverse({ snapshots: [withMetrics({ grossMargin: 50, dividendYield: 2, dividendStatus: 'zahlt', payoutRatio: 40 })], excluded: new Map([['PAY', ['non-operating-rev']]]), generatedAt });
   assert.deepEqual(validateUniverse(feed, 1000), []);
   const mutations = [r => { r.gm = 100.01; }, r => { r.gm = -100.01; }, r => { r.aus.push('gm-implausible'); }, r => { r.dy = 50.01; },
     r => { r.aus.push('dy-implausible'); }, r => { r.po = 100000.01; }, r => { r.po = -1; }, r => { r.aus.push('po-implausible'); }, r => { r.evs = 1; r.aus.push('evs-waehrung'); },
-    r => { r.evs = 1; r.aus.push('evs-implausible'); }, r => { delete r.evs; r.aus.push('evs-waehrung', 'evs-implausible'); },
-    r => { delete r.dy; r.dySt = 'keine'; r.po = 40; }];
+    r => { r.evs = 1; r.aus.push('evs-implausible'); }, r => { delete r.evs; r.aus.push('evs-waehrung', 'evs-implausible'); }];
   for (const mutate of mutations) { const bad = structuredClone(feed); mutate(bad.rows[0]); assert.ok(validateUniverse(bad, 1000).length, 'validator must reject ' + mutate); }
 });
 

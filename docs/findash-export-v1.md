@@ -1490,14 +1490,17 @@ and a present multiple next to its code. Board history (`pit.priceSales`/`pit.ev
 provider sign; this rule is display-only.
 
 **Outlier ceilings (22.10.2026):** a gross margin beyond plus or minus 100 % (gross profit cannot exceed revenue; below -100 % the vendor margin is
-unverifiable), a dividend yield above 50 % and a payout ratio above 100000 % (unit errors only), below 0, or above 0 while `dySt` is not
-`zahlt` and the yield was not withheld (a payout without a dividend) are withheld, never clipped, and `aus` gets
+unverifiable), a dividend yield above 50 % and a payout ratio above 100000 % (unit errors only) or below 0 are withheld, never clipped, and `aus` gets
 `gm-implausible`, `dy-implausible` or `po-implausible`. High real payout ratios (e.g. 15375 %) stay; findash caps payout ranking at 100.
+A positive payout next to `dySt` `keine` stays: the vendor yield field is the unreliable one (most such rows paid per the annual cash flow).
 A withheld yield sets `dySt` to `unbekannt` and its payout zero stays missing.
 `evs` is withheld with `evs-waehrung` when Yahoo built it from an enterprise value in the reporting currency while the pull multiplied it by the
 trading/reporting factor (USD-listed ADR/OTC lines, factor outside 1/e to e, compared against market cap + debt - cash). Otherwise, when the
-latest annual balance gives debt and cash and the vendor EV differs from max(market cap + debt - cash, 0.1 x market cap) by more than a factor
-e^1.5 in either direction, `evs` is withheld with `evs-implausible`; a row carries at most one of the two codes. Board history keeps the raw
+latest annual balance gives debt and cash and the vendor EV differs by more than a factor e^1.5 in either direction from every applicable
+reading, `evs` is withheld with `evs-implausible`. The readings are max(market cap + debt - cash, 0.1 x market cap) (balance as delivered) and,
+only when the pull factor is below 1, max(market cap + (debt - cash) x factor, 0.1 x market cap) (balance in the other currency, e.g. HCLTECH.NS).
+A fit of that second reading with factor >= 1 can be a broken mix of USD market cap and reporting-currency net debt (KAJMF), so it is not
+accepted there; the clean repair is the EV scaling in pull-yahoo.js (follow-up). A row carries at most one of the two codes. Board history keeps the raw
 provider values; this rule is display-only.
 
 **52-week high plausibility:** with positive finite price and high, a price/high

@@ -96,8 +96,9 @@ function evInReportingCurrency(snapshot) {
 }
 
 /**
- * Detect an enterprise value that fits neither reading (KAJMF EV/mcap 23): with balance data the vendor EV must lie
- * within a factor e^1.5 of mcap + debt - cash. Checked only after evInReportingCurrency did not fire.
+ * Detect an enterprise value that fits no reading (KAJMF EV/mcap 23): with balance data the vendor EV must lie within a
+ * factor e^1.5 of mcap + debt - cash, or, for factor < 1 (HCLTECH.NS: balance in INR, EV in USD), of
+ * mcap + (debt - cash) * factor. Checked only after evInReportingCurrency did not fire.
  * @param {object} snapshot Prepared snapshot.
  * @returns {boolean} True when the EV/S must be withheld as implausible.
  */
@@ -105,7 +106,10 @@ function evImplausible(snapshot) {
   const mcap = snapshot.marketCap?.value, ev = metricVal(snapshot, 'enterpriseValue');
   const debt = norm(snapshot, 'annualBalance', 'totalDebt')[0], cash = norm(snapshot, 'annualBalance', 'totalCash')[0];
   if (!(mcap > 0) || !(ev > 0) || !finite(debt) || !finite(cash)) return false;
-  return Math.abs(Math.log(ev / Math.max(mcap + debt - cash, 0.1 * mcap))) > EV_IMPLAUSIBLE_LN;
+  const far = check => Math.abs(Math.log(ev / Math.max(check, 0.1 * mcap))) > EV_IMPLAUSIBLE_LN;
+  const factor = snapshot.meta?.mischVerhaeltnisFaktor;
+  // ponytail: with factor >= 1 a check3 fit can be USD mcap plus reporting-currency net debt (KAJMF); real fix is EV scaling in pull-yahoo.js.
+  return far(mcap + debt - cash) && !(factor > 0 && factor < 1 && !far(mcap + (debt - cash) * factor));
 }
 
 function usableFcf(snapshot) {
@@ -203,8 +207,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     const { implausible: dyBad, ...div } = dividend(snapshot), payout = metricVal(snapshot, 'payoutRatio');
     const grossMargin = metricVal(snapshot, 'grossMargin');
     const gmBad = finite(grossMargin) && Math.abs(round(grossMargin)) > GM_MAX_ABS_PCT;
-    // A positive payout without a paid (or withheld) dividend contradicts itself (000059.SZ: 347 next to dy 0).
-    const poBad = finite(payout) && (payout > PO_MAX_PCT || payout < 0 || (payout > 0 && div.dySt !== 'zahlt' && !dyBad));
+    // Only a negative payout or a unit error is withheld; the vendor yield, not the payout, is the broken field (000059.SZ).
+    const poBad = finite(payout) && (payout > PO_MAX_PCT || payout < 0);
     if (gmBad) aus.push('gm-implausible');
     if (dyBad) aus.push('dy-implausible');
     if (poBad) aus.push('po-implausible');
@@ -272,7 +276,6 @@ function validateUniverse(feed, bytes) {
     if (row.dy != null && row.dy > DY_MAX_PCT) errors.push(where + ': dividend yield beyond ceiling');
     if (row.aus.includes('dy-implausible') && (row.dy != null || row.dySt !== 'unbekannt')) errors.push(where + ': inconsistent dy reason');
     if (row.po != null && (row.po > PO_MAX_PCT || row.po < 0)) errors.push(where + ': payout beyond ceiling');
-    if (row.po > 0 && row.dySt !== 'zahlt' && !row.aus.includes('dy-implausible')) errors.push(where + ': payout without dividend');
     if (row.aus.includes('po-implausible') && row.po != null) errors.push(where + ': inconsistent po reason');
     if (row.aus.includes('evs-waehrung') && row.evs != null) errors.push(where + ': inconsistent ev currency reason');
     if (row.aus.includes('evs-implausible') && (row.evs != null || row.aus.includes('evs-waehrung'))) errors.push(where + ': inconsistent ev implausible reason');
@@ -370,4 +373,4 @@ function main(argv) {
 }
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
-module.exports = { evInReportingCurrency, evImplausible,GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
+module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
