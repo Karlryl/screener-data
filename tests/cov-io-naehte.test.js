@@ -312,7 +312,8 @@ function main() {
       assert.ok(r.pauseElapsedMs >= 30, 'same-host requests respect a real 30 ms pause');
       const paused = r.requests.filter(q => q.url.startsWith('https://pause.invalid/'));
       assert.equal(paused.length, 2);
-      assert.ok(paused[1].at - paused[0].at >= 30, 'actual request starts remain spaced');
+      // >= 29: Date.now() ms rounding around a 30 ms timer (seen red once on CI on 23.10.2026, run 39956235758)
+      assert.ok(paused[1].at - paused[0].at >= 29, 'actual request starts remain spaced');
       assert.equal(r.statusErrors[0].calls, 1);
       assert.match(r.statusErrors[0].message, /HTTP 402: Gratis-Kontingent/);
       assert.equal(r.statusErrors[1].calls, 1);
