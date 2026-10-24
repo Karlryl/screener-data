@@ -1116,8 +1116,33 @@ const HANDELS_AGGREGAT_METRIKEN = ['enterpriseValue'];
 // Handel, EBITDA am Bericht) und kommt mit, damit die Liste nicht wieder auseinanderlaeuft;
 // einen Konsumenten hat es derzeit nicht.
 const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterpriseToEbitda'];
+// EV-Lesart (23.10.2026): die Handelswaehrung des EV ist auf Heimatboersen belegt (BREN.JK,
+// 9992.HK, 0020.HK oben), fuer USD-notierte ADR/OTC-Linien auslaendischer Berichterstatter
+// liefert Yahoo das EV aber oft schon in der BERICHTS-Waehrung (KXIAY: EV 6,99 Bio. JPY gegen
+// mcap 40,7 Mrd USD; enterpriseToRevenue 1,858 ist dann schon richtig und wurde x157 zu 292).
+// Entscheidung je Snapshot an der Definition EV = mcap + Schulden - Kasse (neueste Jahresbilanz).
+// Alle Faktoren hier sind X->USD: mischFaktor = Handelsfaktor/Berichtsfaktor, also ist
+// evHandelUsd / mischFaktor das EV, gelesen als Berichtswaehrung. Gleiche Regel wie der
+// Anzeige-Waechter scripts/write-filter-universe.js evInReportingCurrency (Marge ln 1,0,
+// Faktor ausserhalb 1/e..e), dazu muss die Gewinner-Lesart selbst passen (Abstand <= ln-1,5,
+// wie evImplausible) — eine Lesart, die nicht passt, liefert nie einen Wert (G2).
+const EV_LESART_MARGE = 1.0;
+const EV_LESART_PASST_LN = 1.5;
+function _evWaehrungsLesart(mcapUsd, evHandelUsd, mischFaktor, nettoSchuldUsd) {
+  // ponytail: innerhalb 1/e..e kann die Marge nie gewonnen werden -> kein Test, kein Vermerk.
+  if (!(mischFaktor > 0) || (mischFaktor < Math.E && mischFaktor > 1 / Math.E)) return null;
+  if (!(mcapUsd > 0) || !(evHandelUsd > 0) || !Number.isFinite(nettoSchuldUsd)) return 'unclear';
+  const soll = Math.max(mcapUsd + nettoSchuldUsd, 0.1 * mcapUsd);
+  const dHandel = Math.abs(Math.log(evHandelUsd / soll));
+  const dBericht = Math.abs(Math.log(evHandelUsd / mischFaktor / soll));
+  if (dBericht < dHandel - EV_LESART_MARGE && dBericht <= EV_LESART_PASST_LN) return 'reporting';
+  if (dHandel < dBericht - EV_LESART_MARGE && dHandel <= EV_LESART_PASST_LN) return 'trading';
+  return 'unclear';
+}
+const EV_VERHAELTNIS_METRIKEN = ['enterpriseToRevenue', 'enterpriseToEbitda'];
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
-function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor) {
+// bilanzFaktor: Faktor X->USD der noch unskalierten Jahresbilanz (USD-Zweig 1, sonst stmt.factor).
+function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor, bilanzFaktor) {
   if (!snap || !snap.metrics) return;
   // fiftyTwoWeekHigh uses the same per-share factor as the price-only path.
   // No usable factor -> null, never an unconverted quote.
@@ -1141,9 +1166,19 @@ function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor
   // Faktor 1 ist ein vollwertiger Beleg (Handel = Bericht, nichts zu korrigieren).
   if (snap.meta) snap.meta.mischVerhaeltnisFaktor = mischFaktor;
   if (mischFaktor === 1) return;
+  const bil = snap.annual && Array.isArray(snap.annual.annualBalance) ? snap.annual.annualBalance[0] : null;
+  const ev = snap.metrics.enterpriseValue;
+  const lesart = _evWaehrungsLesart(snap.marketCap && snap.marketCap.value, ev && ev.value, mischFaktor,
+    bil ? (bil.totalDebt - bil.totalCash) * bilanzFaktor : NaN);
+  if (lesart && snap.meta) snap.meta.evCurrencyReading = lesart;
+  if (lesart === 'reporting') {
+    // EV kam in Berichtswaehrung: auf USD bringen (Schema-Bedeutung bleibt), EV-Verhaeltnisse sind schon stimmig.
+    snap.metrics.enterpriseValue = Object.assign({}, ev, { value: ev.value / mischFaktor });
+  }
   for (const k of MISCH_VERHAELTNIS_METRIKEN) {
     const m = snap.metrics[k];
     if (m == null) continue;
+    if (lesart === 'reporting' && EV_VERHAELTNIS_METRIKEN.includes(k)) continue;
     if (typeof m === 'number') {
       if (Number.isFinite(m)) snap.metrics[k] = m * mischFaktor;
     } else if (typeof m === 'object' && 'value' in m && Number.isFinite(m.value)) {
@@ -1208,7 +1243,7 @@ function _applyTradingScale(snap, financialFactor) {
   // financialFactor = 1, EV blieb deshalb voellig unumgerechnet in IDR stehen.
   // Misch-Verhaeltnisse (priceSales, enterpriseToRevenue, ...) haben eine GROESSE im
   // Zaehler (mcap bzw. EV) und eine Berichtsgroesse im Nenner — also der Aggregat-Faktor.
-  _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / financialFactor);
+  _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / financialFactor, financialFactor);
   return { ok: true };
 }
 
@@ -1448,7 +1483,7 @@ function _convertSnapshotToUSD(snap) {
     // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
     // Waehrungs-Chunk 3: derselbe Anwender wie im USD-Zweig (enterpriseValue kam dazu,
     // priceSales wird um das Misch-Verhaeltnis korrigiert).
-    _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / factor);
+    _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / factor, stmt.factor);
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
@@ -6149,6 +6184,8 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // baut sie fuer die Ausbau-Probe wirklich aus und sieht den Waechter rot werden, statt sich
   // auf ein Schreibmuster im Quelltext zu verlassen.
   MISCH_VERHAELTNIS_METRIKEN,
+  // EV-Lesart 23.10.: Entscheidung als Seam fuer den Vorher/Nachher-Treiber und die Tests.
+  _evWaehrungsLesart,
   // Pence-Trennung 02.09.2026: die beiden Einheiten-Klassen als Seam — der Waechter
   // (tests/waehrung-pence-aggregat.test.js) prueft an der LEBENDEN Liste, dass Kursziele
   // und Groessen nicht wieder in denselben Topf wandern.
