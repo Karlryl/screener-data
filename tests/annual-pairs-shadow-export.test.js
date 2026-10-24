@@ -137,7 +137,8 @@ check('real writers: every existing row key, value, rank and score is byte-ident
   }
   const rejected = out.top.profitable.find(r => r.ticker === 'SBR').annualPairsShadow;
   assert.equal(rejected.growth.code, 'missing-year'); assert.equal(rejected.growth.shadow, null);
-  assert.ok(Number.isFinite(rejected.growth.today));
+  // Period gate (24.10.2026): production no longer shows a missing-year pair, so today equals the shadow.
+  assert.equal(rejected.growth.today, null);
   assert.equal(out.top.profitable.find(r => r.ticker === 'NOSNAP').annualPairsShadow.growth.code, 'no-snapshot');
   assert.equal(out.top.profitable.find(r => r.ticker === 'BROKEN').annualPairsShadow.growth.code, 'snapshot-unreadable');
   assert.equal(actual.harness.warnings.filter(x => x.includes('[annual-pairs-shadow]')).length, 0);
