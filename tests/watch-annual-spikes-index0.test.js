@@ -12,7 +12,8 @@
 // rule (index-0 call removed, annualGP out of REIHEN, JA-2 on REIHEN.length, Q1 filter removed,
 // inner-spike skip removed, collapse sign condition removed, jump branch off) and report path
 // (index 0 counted in funde, report sets the exit code, count line not printed, summary not
-// written, table without the 50 M filter, hand-table rows in the table, cap removed): 15 of 15 red.
+// written, table without the 50 M filter, hand-table rows in the table, cap removed, table sort
+// without String() on a numeric ticker): 16 of 16 red.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -185,13 +186,17 @@ test('main: a snapshot set with only index-0 findings exits 0 and reports them',
       'CI0.json': { meta: { ticker: 'CI0' }, annual: { annualRev: series(jump), annualOpInc: series(jump), annualNetIncome: series(jump) } },
       'Q10.json': { meta: { ticker: 'Q10' }, annual: { annualRev: series(jump), annualOpInc: series(jump.map((v) => v / 4)) } },
       'GP0.json': { meta: { ticker: 'GP0', reportingCurrency: 'USD' }, annual: { annualGP: series(jump) } },
+      // A non-string ticker with the same factor as the rows above reaches the ticker tie-break of
+      // the table sort; the report-only path must not crash (the CLI catch would exit 1).
+      'NUM.json': { meta: { ticker: 1234, reportingCurrency: 'USD' }, annual: { annualRev: series(jump) } },
     }, summary);
     assert.equal(r.code, 0, r.err.join('\n'));
     assert.deepEqual(r.err, [], 'no ::error:: line at all');
-    assert.ok(r.out.includes('Jahres-Ausreisser: 0 in 3 gelesenen Snapshots · davon NEU: 0'), r.out.join('\n'));
-    assert.ok(r.out.some((l) => l.startsWith('::warning::Neuestes Geschaeftsjahr (nur Meldung, zaehlt nicht fuer Rot): 6 Funde · annualRev 2 ')));
+    assert.ok(r.out.includes('Jahres-Ausreisser: 0 in 4 gelesenen Snapshots · davon NEU: 0'), r.out.join('\n'));
+    assert.ok(r.out.some((l) => l.startsWith('::warning::Neuestes Geschaeftsjahr (nur Meldung, zaehlt nicht fuer Rot): 7 Funde · annualRev 3 ')));
     const md = fs.readFileSync(summary, 'utf8');
     assert.ok(md.includes('| GP0 | Bruttogewinn | 400.000,0 | 460,0 | USD | fehlt | fehlt | 869,6 |'), md);
+    assert.ok(md.includes('| 1234 | Umsatz | 400.000,0 | 460,0 | USD | fehlt | fehlt | 869,6 |'), 'the numeric-ticker row is printed');
     assert.ok(r.out.some((l) => l.includes('| GP0 | Bruttogewinn |')), 'the table is on stdout too');
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

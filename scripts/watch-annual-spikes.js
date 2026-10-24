@@ -199,7 +199,7 @@ function neuestesJahrBericht(neueste, maxZeilen = BERICHT_MAX_ZEILEN) {
   const hand = liste.filter((x) => x.handtabellenFall).length;
   const revGp = liste.filter((x) => BERICHT_TABELLE.includes(x.reihe) && !x.handtabellenFall);
   const zeilen = revGp.filter((x) => Math.abs(x.wert) >= MIN_BETRAG && Math.abs(x.rechts) >= MIN_BETRAG)
-    .sort((a, b) => faktor(b) - faktor(a) || a.ticker.localeCompare(b.ticker, 'en') || a.reihe.localeCompare(b.reihe, 'en'));
+    .sort((a, b) => faktor(b) - faktor(a) || String(a.ticker).localeCompare(String(b.ticker), 'en') || a.reihe.localeCompare(b.reihe, 'en'));
   const warnung = `::warning::Neuestes Geschaeftsjahr (nur Meldung, zaehlt nicht fuer Rot): ${liste.length} Funde · `
     + Object.keys(BERICHT_REIHEN).map((r) => `${r} ${zahl(r)} (Sprung ${zahl(r, 'sprung')} · Einbruch ${zahl(r, 'einbruch')})`).join(' · ')
     + ` · davon Handtabelle ${hand} · Tabelle Umsatz/Bruttogewinn ab ${MIN_BETRAG / 1e6} Mio: ${zeilen.length}`;
