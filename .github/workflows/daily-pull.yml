@@ -2176,6 +2176,18 @@ jobs:
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check
 
+      # Plausibility watcher (Daylauf 7, 24.10.2026). REPORTS ONLY: lists implausible board rows of the
+      # finished export (growth extremes, period gaps, zero revenue, market-cap jumps against the newest
+      # board-history vintage, duplicates, score bounds) in v1/waechter/plausibilitaet.json, the step
+      # summary and one ::warning:: per finding class. It changes no number, withholds nothing and must
+      # never turn the run red: exit 0 by design, `|| true`, continue-on-error and a timeout on top.
+      # The 15-file count gate above counts v1/*.json without recursion, and the Pages deploy copies
+      # `../outputs/findash-export/v1/.` completely, so waechter/ rides along.
+      - name: Plausibility watcher (reporting only)
+        continue-on-error: true
+        timeout-minutes: 3
+        run: node scripts/plausibilitaets-waechter.js || true
+
       # Rule-of-40-Brett (Vertrag §14). Es liest den FERTIGEN v1-Export und die Snapshots und
       # schreibt NUR den Unterordner v1/rule40/ — der Haupt-Export ist zu diesem Zeitpunkt schon
       # geschrieben UND durch das Vertragstor oben gegangen.

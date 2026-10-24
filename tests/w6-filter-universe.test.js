@@ -332,6 +332,7 @@ test('scan every row for missing source values becoming zero', () => {
       if (!Number.isFinite(source.metrics?.[sourceKey]?.value)) assert.equal(row[key], undefined, row.t + '.' + key);
     }
     if (!Number.isFinite(source.marketCap?.value)) assert.equal(row.mc, undefined, row.t + '.mc');
+    if (!(source.metrics?.forwardPE?.value > 0)) assert.equal(row.fpe, undefined, row.t + '.fpe non-positive');
     if (!(source.annual?.annualRev?.[0]?.value > 0) || !(source.annual?.annualRev?.[3]?.value > 0)) assert.equal(row.g3, undefined, row.t + '.g3');
     if (!(source.price?.regularMarketPrice > 0) || !(source.metrics?.fiftyTwoWeekHigh?.value > 0)) assert.equal(row.d52, undefined, row.t + '.d52');
     const high = source.metrics?.fiftyTwoWeekHigh?.value, price = source.price?.regularMarketPrice;
@@ -519,4 +520,18 @@ test('validator rejects every outlier ceiling and every reason without its empty
 test('contract text names every new reason code', () => {
   const contract = fs.readFileSync(path.join(__dirname, '..', 'docs', 'findash-export-v1.md'), 'utf8');
   for (const code of ['gm-implausible', 'dy-implausible', 'po-implausible', 'evs-waehrung', 'evs-implausible']) assert.ok(contract.includes(code), code);
+});
+
+test('forward P/E is shown only when positive; zero or negative (forecast loss) stays missing and the validator rejects it (24.10.2026)', () => {
+  const one = row => ({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [row] });
+  for (const [value, expected] of [[-12, undefined], [0, undefined], [15, 15], [0.001, 0.001]]) {
+    const row = rowOf(withMetrics({ forwardPE: value }));
+    assert.equal(row.fpe, expected, 'fpe ' + value);
+    assert.deepEqual(validateUniverse(one(row), 1000), [], 'valid row for fpe ' + value);
+  }
+  for (const bad of [-12, 0]) {
+    const row = rowOf(withMetrics({ forwardPE: 15 }));
+    row.fpe = bad;
+    assert.ok(validateUniverse(one(row), 1000).some(e => e.includes('non-positive forward P/E')), 'validator must reject fpe ' + bad);
+  }
 });

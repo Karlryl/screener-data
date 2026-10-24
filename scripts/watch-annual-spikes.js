@@ -73,7 +73,12 @@ function parseMaxNeu(raw) {
   return value;
 }
 
-const REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome'];
+// annualGP joined the scan on 24.10.2026 (spike-watcher coverage audit 22.10., item 3).
+const REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome', 'annualGP'];
+// The shape gates JA-2 (cignaFaelle) and Q1 (faktorGleicheFaelle) were measured and decided on
+// these three founding series; they stay on them so that adding annualGP neither weakens JA-2
+// (all REIHEN would need four hits) nor moves a 2-of-3 form out of Q1 (a third GP hit).
+const GRUND_REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome'];
 
 // ── Capex-Vorzeichen (Review-Befund 03.08.2026) ──────────────────────────────────────
 // Die Burn-Bremse rekonstruiert fehlendes OCF als FCF minus Capex (lamps.js
@@ -115,6 +120,7 @@ function loadBaseline(p) {
  * abweicht. Rein und ohne I/O — die Regel ist damit ohne Snapshots pruefbar.
  * Nur INNERE Positionen: der erste und letzte Wert haben keinen zweiten Nachbarn,
  * und ein Randwert ohne Gegenprobe waere geraten, nicht gemessen.
+ * The newest value (index 0) gets its own one-sided rule in findeNeuestenAusreisser below.
  */
 function findeAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
   const werte = (Array.isArray(reihe) ? reihe : []).map((x) => (x && typeof x.value === 'number' && Number.isFinite(x.value) ? x.value : null));
@@ -128,6 +134,96 @@ function findeAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
     if (Math.abs(v) / nachbar >= faktor) treffer.push({ index: i, wert: v, links: l, rechts: r });
   }
   return treffer;
+}
+
+/**
+ * The NEWEST annual value (index 0) has no newer neighbour, so findeAusreisser never judges it,
+ * and that is exactly where a fresh bad vendor value lands (TWE.AX FY2026, P276). One-sided rule:
+ * index 0 is flagged when it is at least `faktor` times the previous year (absolute values) and
+ * at least `minBetrag`, or when the previous year is at least `faktor` times the newest and at
+ * least `minBetrag` while both are positive, so a loss year or a shrinking loss never counts;
+ * a doubling or halving is a factor of 2 and stays far below 8. A zero on either side has no
+ * ratio and is skipped, like a zero neighbour in findeAusreisser. When index 1 is itself an
+ * inner spike, index 0 is only its return to normal: that anomaly is already reported at index 1
+ * and is not reported a second time here.
+ * REPORT-ONLY (master decision 24.10.2026): no return jump can confirm a one-sided finding, and
+ * on the CI population of 24.10. the rule found 967 newest years, mostly real step changes from a
+ * near-zero previous year. scanSnapshots therefore keeps these findings out of `funde`: they never
+ * reach NEU, the event budget, JA-2 or Q1 and never change the exit code; main() only reports
+ * them (neuestesJahrBericht). A threshold for a counting version is a later, separate decision.
+ * @returns {Array<{index:0, wert:number, links:null, rechts:number}>} At most one finding;
+ *   links is null because index 0 has no newer neighbour.
+ */
+function findeNeuestenAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
+  const wert = (x) => (x && typeof x.value === 'number' && Number.isFinite(x.value) ? x.value : null);
+  const v = Array.isArray(reihe) ? wert(reihe[0]) : null, r = Array.isArray(reihe) ? wert(reihe[1]) : null;
+  if (v == null || r == null || v === 0 || r === 0) return [];
+  if (findeAusreisser(reihe.slice(0, 3), faktor, minBetrag).length) return [];
+  const sprung = Math.abs(v) >= minBetrag && Math.abs(v) / Math.abs(r) >= faktor;
+  const einbruch = v > 0 && r > 0 && r >= minBetrag && r / v >= faktor;
+  return sprung || einbruch ? [{ index: 0, wert: v, links: null, rechts: r }] : [];
+}
+
+/**
+ * Display values of an index-0 finding for the report: native currency when the FX evidence is
+ * complete, otherwise the stored currency; without a currency no number is shown (T1, G2).
+ */
+function berichtsWerte(s, name, t) {
+  const m = s.meta || {}, ends = s.annual?.[name + 'Ends'] || [], fx = m.fxRateApplied;
+  const nativ = m.fxConverted === true && Number.isFinite(fx) && fx > 0 && /^[A-Z]{3}$/.test(m.reportingCurrencyOriginal || '');
+  const waehrung = nativ ? m.reportingCurrencyOriginal
+    : (m.fxConverted !== true && /^[A-Z]{3}$/.test(m.reportingCurrency || '') ? m.reportingCurrency : null);
+  const teiler = nativ ? fx : 1;
+  const ende = (i) => (gueltigesPeriodenende(ends[i]) ? ends[i] : null);
+  return { waehrung, wert: waehrung ? t.wert / teiler : null, vorjahr: waehrung ? t.rechts / teiler : null,
+    ende: ende(0), endeVorjahr: ende(1) };
+}
+
+// Report order and German labels; only revenue and gross profit get table rows.
+const BERICHT_REIHEN = { annualRev: 'Umsatz', annualGP: 'Bruttogewinn', annualOpInc: 'Betriebsergebnis', annualNetIncome: 'Nettoergebnis' };
+const BERICHT_TABELLE = ['annualRev', 'annualGP'];
+const BERICHT_MAX_ZEILEN = 100;
+
+/**
+ * Report of the index-0 findings (pure, no I/O). Returns one ::warning:: line with the counts per
+ * series and branch, and a German Markdown section (stdout and GITHUB_STEP_SUMMARY) with a table
+ * of revenue and gross profit rows whose two values are both at least MIN_BETRAG; hand-table
+ * cells are already corrected before scoring and only counted. Never touches the exit code.
+ */
+function neuestesJahrBericht(neueste, maxZeilen = BERICHT_MAX_ZEILEN) {
+  const liste = neueste || [];
+  if (!liste.length) return { warnung: null, zeile: 'Neuestes Geschaeftsjahr (nur Meldung, zaehlt nicht fuer Rot): 0 Funde', markdown: null };
+  const zweig = (x) => (Math.abs(x.wert) >= Math.abs(x.rechts) ? 'sprung' : 'einbruch');
+  const faktor = (x) => Math.max(Math.abs(x.wert), Math.abs(x.rechts)) / Math.min(Math.abs(x.wert), Math.abs(x.rechts));
+  const zahl = (r, z) => liste.filter((x) => x.reihe === r && (!z || zweig(x) === z)).length;
+  const hand = liste.filter((x) => x.handtabellenFall).length;
+  const revGp = liste.filter((x) => BERICHT_TABELLE.includes(x.reihe) && !x.handtabellenFall);
+  const zeilen = revGp.filter((x) => Math.abs(x.wert) >= MIN_BETRAG && Math.abs(x.rechts) >= MIN_BETRAG)
+    .sort((a, b) => faktor(b) - faktor(a) || String(a.ticker).localeCompare(String(b.ticker), 'en') || a.reihe.localeCompare(b.reihe, 'en'));
+  const warnung = `::warning::Neuestes Geschaeftsjahr (nur Meldung, zaehlt nicht fuer Rot): ${liste.length} Funde · `
+    + Object.keys(BERICHT_REIHEN).map((r) => `${r} ${zahl(r)} (Sprung ${zahl(r, 'sprung')} · Einbruch ${zahl(r, 'einbruch')})`).join(' · ')
+    + ` · davon Handtabelle ${hand} · Tabelle Umsatz/Bruttogewinn ab ${MIN_BETRAG / 1e6} Mio: ${zeilen.length}`;
+  const zahlFmt = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const mio = (v) => (v == null ? 'fehlt' : zahlFmt.format(v / 1e6));
+  const md = [
+    '### Neuestes Geschäftsjahr: auffällige Sprünge (nur Meldung, der Lauf wird dadurch nicht rot)',
+    '',
+    `Verglichen wird das neueste Geschäftsjahr mit dem Vorjahr; auffällig ist ein Faktor von mindestens ${FAKTOR}. `
+      + `Die Tabelle zeigt Umsatz und Bruttogewinn, wenn beide Jahre mindestens ${MIN_BETRAG / 1e6} Mio. USD betragen. `
+      + 'Beträge in Mio. der Berichtswährung.',
+    `Nur gezählt: Betriebsergebnis ${zahl('annualOpInc')}, Nettoergebnis ${zahl('annualNetIncome')}, `
+      + `Umsatz und Bruttogewinn unter der Betragsgrenze ${revGp.length - zeilen.length}, `
+      + `per Handtabelle bereits korrigiert ${hand}.`,
+    '',
+    '| Ticker | Kennzahl | Neuestes Jahr | Vorjahr | Währung | Ende neuestes Jahr | Ende Vorjahr | Faktor |',
+    '|---|---|---:|---:|---|---|---|---:|',
+    ...zeilen.slice(0, maxZeilen).map((x) => `| ${x.ticker} | ${BERICHT_REIHEN[x.reihe]} | ${mio(x.bericht?.wert)} | `
+      + `${mio(x.bericht?.vorjahr)} | ${x.bericht?.waehrung || 'fehlt'} | ${x.bericht?.ende || 'fehlt'} | `
+      + `${x.bericht?.endeVorjahr || 'fehlt'} | ${zahlFmt.format(faktor(x))} |`),
+  ];
+  if (!zeilen.length) md.push('| keine | | | | | | | |');
+  if (zeilen.length > maxZeilen) md.push('', `Gekappt: ${maxZeilen} von ${zeilen.length} Zeilen gezeigt, die mit dem größten Faktor zuerst.`);
+  return { warnung, zeile: null, markdown: md.join('\n') };
 }
 
 function stabilerSchluessel(x) {
@@ -651,11 +747,12 @@ const faecher = (ereignis) => new Set(ereignis.map((x) => x.ticker)).size;
 function cignaFaelle(funde) {
   const reihenJeJahr = new Map();
   for (const x of funde) {
+    if (!GRUND_REIHEN.includes(x.reihe)) continue;
     const k = `${x.ticker}|${x.index}`;
     if (!reihenJeJahr.has(k)) reihenJeJahr.set(k, new Set());
     reihenJeJahr.get(k).add(x.reihe);
   }
-  return [...reihenJeJahr.entries()].filter(([, r]) => r.size === REIHEN.length).map(([k]) => k);
+  return [...reihenJeJahr.entries()].filter(([, r]) => r.size === GRUND_REIHEN.length).map(([k]) => k);
 }
 
 /**
@@ -703,6 +800,9 @@ const ausreisserFaktor = (x) => Math.abs(x.wert) / Math.max(Math.abs(x.links), M
 function faktorGleicheFaelle(funde, toleranz = FAKTOR_GLEICH_TOL) {
   const reihenJeJahr = new Map();
   for (const x of funde) {
+    // = GRUND_REIHEN, inlined: t-kdrift-signatur.js and t-jahresausreisser-klassifikation.js copy
+    // this function without that constant into an isolated vm context.
+    if (!['annualOpInc', 'annualRev', 'annualNetIncome'].includes(x.reihe)) continue;
     const k = `${x.ticker}|${x.index}`;
     if (!reihenJeJahr.has(k)) reihenJeJahr.set(k, new Map());
     reihenJeJahr.get(k).set(x.reihe, x);
@@ -766,6 +866,7 @@ function breitesterFaecherImBestand(faelle) {
  */
 function scanSnapshots(snapDir) {
   const funde = [];
+  const neueste = []; // index-0 findings, report-only (see findeNeuestenAusreisser)
   const capexPositiv = [];
   // JA-3: die Ticker, bei denen die vorhandenen Jahresreihen NICHT gleich lang sind.
   // Bei ihnen zeigt derselbe Index nicht auf dasselbe Geschaeftsjahr, also darf
@@ -792,7 +893,7 @@ function scanSnapshots(snapDir) {
     let handtabelle;
     for (const name of REIHEN) {
       const enden = periodEnds(s, name);
-      for (const t of findeAusreisser(annual[name])) {
+      for (const t of [...findeAusreisser(annual[name]), ...findeNeuestenAusreisser(annual[name])]) {
         handtabelle ??= applyFinancialCases(s);
         // Only an exact applied cell counts; propagated holds and stale fingerprints do not.
         const korrektur = handtabelle.events.find(e => e.ticker === ticker && e.container === 'annual'
@@ -811,16 +912,19 @@ function scanSnapshots(snapDir) {
         const behandelt = Array.isArray(perioden) && perioden.indexOf(perioden[t.index]) === t.index
           && perioden.lastIndexOf(perioden[t.index]) === t.index
           && validUnit(annual[name][t.index], s.meta?.reportingCurrency, '12M') && (korrektur || bestaetigt);
-        funde.push({ ticker, reihe: name, periode: enden[t.index], ...t,
+        const fund = { ticker, reihe: name, periode: enden[t.index], ...t,
           ...(behandelt ? { handtabellenFall: behandelt.caseId } : {}),
           nativ: nativeIdentitaet(s, name, t.index), fxRateApplied: s.meta?.fxRateApplied,
-          opIncSource: s.meta?.opIncSource });
+          opIncSource: s.meta?.opIncSource };
+        // Index 0 only comes from findeNeuestenAusreisser and is report-only: never in `funde`.
+        if (t.index === 0) neueste.push({ ...fund, bericht: berichtsWerte(s, name, t) });
+        else funde.push(fund);
       }
     }
     capexWerte += norm(s, 'annualCapex').filter(Number.isFinite).length;
     for (const t of positiveCapexJahre(s)) capexPositiv.push({ ticker, ...t });
   }
-  return { funde, capexPositiv, capexWerte, gescannt, parseFehler, reihenUngleich };
+  return { funde, neueste, capexPositiv, capexWerte, gescannt, parseFehler, reihenUngleich };
 }
 
 function main(jetzt = new Date(), meldendBis = null) {
@@ -869,6 +973,20 @@ function main(jetzt = new Date(), meldendBis = null) {
     console.error(`::error::${capexPositiv.length} POSITIVE annualCapex-Werte (Grundlast im Bestand: 0 von 40.950 — jedes Auftreten ist ein Ereignis). `
       + 'Die Burn-Bremse rekonstruiert fehlendes OCF als FCF minus Capex (lamps.js operatingCashSeries) und rechnet dabei mit Capex <= 0. '
       + 'Ist das Vorzeichen gedreht, kann eine Strafe entstehen, die die Lampe nicht anzeigt. Liste oben.');
+  }
+
+  // Newest annual value (index 0): REPORT-ONLY (master decision 24.10.2026). Like the capex check
+  // it does not depend on the baseline, so it runs before every branch below; it never sets
+  // datenExit, and a failing step-summary write only warns.
+  const bericht = neuestesJahrBericht(scan.neueste);
+  console.log(bericht.warnung || bericht.zeile);
+  if (bericht.markdown) {
+    console.log(bericht.markdown);
+    const ziel = process.env.GITHUB_STEP_SUMMARY;
+    if (typeof ziel === 'string' && ziel) {
+      try { fs.appendFileSync(ziel, '\n' + bericht.markdown + '\n', 'utf8'); }
+      catch (e) { console.log(`::warning::Step-Summary nicht schreibbar (${e.message}); nur Meldung, kein Einfluss auf das Ergebnis`); }
+    }
   }
 
   // Bewusstes Neuaufnehmen: NUR gegen eine CI-POPULATION sinnvoll (siehe Populations-Wache
@@ -1050,7 +1168,7 @@ function main(jetzt = new Date(), meldendBis = null) {
   const cigna = cignaFaelle(neu);
   if (cigna.length) {
     datenExit = 1;
-    console.error(`::error::${cigna.length} Ticker mit ALLEN ${REIHEN.length} Jahresreihen am selben Index: `
+    console.error(`::error::${cigna.length} Ticker mit ALLEN ${GRUND_REIHEN.length} Jahresreihen am selben Index: `
       + `${cigna.join(' · ')}. Das ist die Gruendungs-Fehlerklasse dieses Waechters (Cigna 2022), und sie ist `
       + 'IMMER rot: die Ereigniszaehlung zoege sie zu EINEM Ereignis mit Faecher 1 zusammen, wo drei Funde '
       + 'stehen — Faecher-Tor und Alters-Tor sind beide blind dafuer. Grundlast im Bestand: 2, beide verankert.');
@@ -1097,7 +1215,7 @@ function main(jetzt = new Date(), meldendBis = null) {
   return datenExit;
 }
 
-module.exports = { nativeIdentitaet, nativerSchluessel, istEichfall, findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ,
+module.exports = { nativeIdentitaet, nativerSchluessel, istEichfall, findeAusreisser, findeNeuestenAusreisser, neuestesJahrBericht, berichtsWerte, BERICHT_MAX_ZEILEN, REIHEN, GRUND_REIHEN, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ,
   // Gerichtsbeschluss 02.09.2026 (JA-1..JA-7): exportiert, damit die Bruchproben die
   // SACHE pinnen koennen und nicht ein Textmuster im Log.
   sperrSchluessel, pruefeAusschluesse, sperrenOhneWirkung, toteSperrenUrteil, ereignisse, faecher, cignaFaelle,
