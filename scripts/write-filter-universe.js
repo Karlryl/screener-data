@@ -195,6 +195,9 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     if (evsBad) aus.push('evs-implausible');
     const trailing = ratio('pe', mixed);
     const pe = finite(trailing) && trailing > 0 ? round(trailing) : null;
+    // Same rule as pe: a zero or negative forward P/E is a forecast loss, not the cheapest stock; it stays missing.
+    const forward = ratio('forwardPE', mixed);
+    const fpe = finite(forward) && forward > 0 ? round(forward) : null;
     const netIncome = norm(snapshot, 'annualNetIncome')[0];
     const high = metricVal(snapshot, 'fiftyTwoWeekHigh'), price = snapshot.price?.regularMarketPrice;
     const highRatio = finite(price) && price > 0 && finite(high) && high > 0 ? price / high : null;
@@ -221,7 +224,7 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
       ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
       pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
-      fpe: round(ratio('forwardPE', mixed)),
+      fpe,
       ...div, po: poBad || (payout === 0 && (div.dySt === 'zahlt' || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
       fcf: round(usableFcf(snapshot)),
       // The prior gate prevents ruleOfX from silently falling back to growth alone.
@@ -265,6 +268,7 @@ function validateUniverse(feed, bytes) {
     if (row.b != null && row.sc == null) errors.push(where + ': board without score');
     if (!['vorhanden', 'verlust', 'unbekannt', 'waehrung'].includes(row.peSt)
         || (row.pe != null) !== (row.peSt === 'vorhanden') || (row.pe != null && row.pe <= 0)) errors.push(where + ': inconsistent peSt');
+    if (row.fpe != null && row.fpe <= 0) errors.push(where + ': non-positive forward P/E');
     if (!['zahlt', 'keine', 'unbekannt'].includes(row.dySt)
         || (row.dy != null) !== (row.dySt === 'zahlt') || (row.dy != null && row.dy <= 0)) errors.push(where + ': inconsistent dySt');
     const mixed = row.aus.includes('mischwaehrung');
