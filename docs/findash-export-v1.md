@@ -1446,7 +1446,7 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `mc` | number or absent | USD market capitalization, using the existing currency-evidence guard |
 | `g` | number or absent | Revenue growth in percent, official board value or `revGrowthLevel` |
 | `g3` | number or absent | `(annualRev[0]/annualRev[3])^(1/3)-1`, times 100; both endpoints strictly positive; a known different year interval is withheld |
-| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E; `ps`/`evs` are always positive when present |
+| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E; all four are always positive when present (a zero or negative forward P/E, a forecast loss, is omitted like a non-positive `pe`, 24.10.2026) |
 | `peSt` | string | `vorhanden`, `verlust`, `unbekannt`, `waehrung`; loss means missing P/E with negative latest annual net income |
 | `dy`, `dySt` | number or absent; string | Dividend yield in percent; `zahlt`, `keine`, `unbekannt` |
 | `po`, `roe`, `gm` | number or absent | Payout ratio, return on equity and gross margin, already stored as percentages |
