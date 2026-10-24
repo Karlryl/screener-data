@@ -20,7 +20,7 @@ function exportTree(generatedAt = DAY + 'T08:43:33.489Z') {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tageslauf-erw-'));
   const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), JSON.stringify(obj)); };
   write('index.json', { schema: 'findash-export/v1', generated_at: generatedAt, branches: ['energy', 'utilities'] });
-  write('full/energy.json', { schema: 'findash-export/v1', profitable: [row('AAA', 7, { zero: 0 }), row('LEG.SW', null), row('DUP', 3)],
+  write('full/energy.json', { schema: 'findash-export/v1', profitable: [row('AAA', 7, { zero: 0 }), row('LEG.SW', null), row('DUP', 3), row('NORG', 5, { rankGrund: undefined })],
     unprofitable: [row('BBB', 12, { track: 'unprofitable', name: 'Same Name AG' }), row('CCC', 40, { track: 'unprofitable', name: 'Same Name AG' })] });
   write('full/utilities.json', { schema: 'findash-export/v1', profitable: [row('DUP', 9)], unprofitable: [] });
   write('filter/universum.json', { schema: 'findash-export/v1', rows: [
@@ -136,12 +136,45 @@ test('abgelaufen is never failed; gueltigAb in the future is skipped and listed'
   assert.match(r.lines[0], /^1 von 2 Erwartungen erfüllt, 0 nicht erfüllt, 0 nicht messbar, 1 abgelaufen; 1 noch nicht fällig/);
   assert.ok(r.lines.includes('Noch nicht fällig: morgen (ab 2026-10-25)'));
   assert.deepEqual(r.report.nochNichtFaellig, ['morgen']);
-  const g = await verdicts([ // an OR whose rank alternative expired can no longer fail
-    e({ gruppe: 'g', ticker: 'AAA', feld: 'rankGrund', op: 'eq', wert: 'zuWenigBelegteAchsen' }),
-    e({ gruppe: 'g', ticker: 'AAA', feld: 'rank', op: 'between', min: 100, max: 200, gueltigBis: '2026-10-23', gueltigAb: '2026-10-01' }),
+  // An expired member never decides a group: the live member's verdict counts.
+  const expired = { feld: 'rank', op: 'between', min: 100, max: 200, gueltigAb: '2026-10-01', gueltigBis: '2026-10-23' };
+  const nm = await verdicts([ // live member not measurable (NORG carries no rankGrund key)
+    e({ gruppe: 'g', ticker: 'NORG', feld: 'rankGrund', op: 'eq', wert: 'zuWenigBelegteAchsen' }),
+    e({ gruppe: 'g', ticker: 'NORG', ...expired }),
   ]);
-  assert.deepEqual(g.u, ['abgelaufen']);
-  assert.equal(g.code, 0);
+  assert.deepEqual(nm.u, ['nicht messbar']);
+  assert.equal(nm.code, 1);
+  const wrong = await verdicts([ // live member with a wrong rankGrund (dupIssuer)
+    e({ gruppe: 'g', ticker: 'LEG.SW', feld: 'rankGrund', op: 'eq', wert: 'zuWenigBelegteAchsen' }),
+    e({ gruppe: 'g', ticker: 'LEG.SW', ...expired }),
+  ]);
+  assert.deepEqual(wrong.u, ['nicht erfüllt']);
+  assert.equal(wrong.code, 1);
+  const allExpired = await verdicts([
+    e({ gruppe: 'g', ticker: 'LEG.SW', feld: 'rankGrund', op: 'eq', wert: 'zuWenigBelegteAchsen', gueltigAb: '2026-10-01', gueltigBis: '2026-10-23' }),
+    e({ gruppe: 'g', ticker: 'LEG.SW', ...expired }),
+  ]);
+  assert.deepEqual(allExpired.u, ['abgelaufen']);
+  assert.equal(allExpired.code, 0);
+});
+
+test('between is inclusive at both ends', async () => {
+  const r = await verdicts([ // AAA rank 7
+    e({ ticker: 'AAA', feld: 'rank', op: 'between', min: 7, max: 10 }),
+    e({ ticker: 'AAA', feld: 'rank', op: 'between', min: 1, max: 7 }),
+    e({ ticker: 'AAA', feld: 'rank', op: 'between', min: 8, max: 10 }),
+    e({ ticker: 'AAA', feld: 'rank', op: 'between', min: 1, max: 6 }),
+  ]);
+  assert.deepEqual(r.u, ['erfüllt', 'erfüllt', 'nicht erfüllt', 'nicht erfüllt']);
+});
+
+test('nothing due: a prominent first line says it is no check result, exit 0', async () => {
+  const r = await verdicts([e({ ticker: 'AAA', op: 'present', gueltigAb: '2026-10-25' })]);
+  assert.equal(r.code, 0);
+  assert.equal(r.lines[0], 'Hinweis: Export vom 2026-10-24, keine Erwartung fällig; das ist kein Prüfergebnis.');
+  assert.match(r.lines[1], /^0 von 0 Erwartungen erfüllt/);
+  const due = await verdicts([e({ ticker: 'AAA', op: 'present' })]);
+  assert.ok(!due.lines.some(l => l.startsWith('Hinweis:')), due.lines.join('\n'));
 });
 
 test('due date is the export data day (Berlin date of generated_at); --datum only overrides it', async () => {

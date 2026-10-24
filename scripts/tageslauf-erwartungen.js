@@ -23,8 +23,9 @@
  *   zaehle  instead of a row: the measured value is the number of rows whose feld equals or contains it.
  *   op     between (min..max) | eq (wert, numeric ± toleranz) | null | notNull | contains (wert as
  *          substring or muster as regex, on a string or any element of an array) | absent | present (row).
- *   gruppe entries sharing it form one expectation (name must not be another entry's id); one erfüllt
- *          member is enough, and once a member is abgelaufen the group can no longer fail.
+ *   gruppe entries sharing it form one expectation (name must not be another entry's id): erfüllt if any
+ *          member is erfüllt; abgelaufen only if every member is abgelaufen; else nicht messbar if any
+ *          member is, else nicht erfüllt. Give all members the same gueltigBis so the group expires whole.
  *   gueltigAb  first data day the effect is live; later entries are listed as noch nicht fällig.
  *   gueltigBis after it the entry is only reported as abgelaufen, never failed (set it on drifting values
  *          such as rank, market-cap, score or growth ranges).
@@ -245,13 +246,15 @@ async function run({ exportBase, erwartungen, datum: override }) {
   }
   const results = [...checks.values()].map(members => {
     const u = members.map(m => m.urteil);
-    // An OR with an expired alternative cannot be failed any more (gueltigBis: never nicht erfüllt).
-    const urteil = u.includes(ERFUELLT) ? ERFUELLT : u.includes(ABGELAUFEN) ? ABGELAUFEN : u.includes(NM) ? NM : NICHT;
+    // An expired member never decides the group: a live member that fails still fails it.
+    const urteil = u.includes(ERFUELLT) ? ERFUELLT : u.every(x => x === ABGELAUFEN) ? ABGELAUFEN : u.includes(NM) ? NM : NICHT;
     return { id: members.map(m => m.e.id).join(' + '), pr: members[0].e.pr, urteil, members };
   });
   const count = u => results.filter(r => r.urteil === u).length;
   const laterChecks = new Set(later.map(e => e.gruppe ?? e.id)).size; // counted like results: a group is one
   const lines = [
+    // An exit 0 that checked nothing must not read like a green result.
+    ...(results.length ? [] : [`Hinweis: Export vom ${exportDay}, keine Erwartung fällig; das ist kein Prüfergebnis.`]),
     `${count(ERFUELLT)} von ${results.length} Erwartungen erfüllt, ${count(NICHT)} nicht erfüllt, ${count(NM)} nicht messbar, ` +
       `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
