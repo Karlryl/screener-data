@@ -1545,6 +1545,16 @@ function _metric(value, source, confidence, asOf) {
   return { value, source, confidence, asOf };
 }
 
+// Stale-price gate (Daylauf 7): Yahoo's own trade time of the quote behind a market cap. asOf is the pull
+// clock and says nothing about the quote (1WAF.MI: asOf 2026-10-23, quote from 2026-09-25). Read by
+// lib/market-cap-guard.js. Accepts a Date (yahoo-finance2), epoch seconds or milliseconds, or an ISO string;
+// 0 or a negative time is a missing stamp, never 01.01.1970.
+function _quoteTime(v) {
+  if (v && typeof v === 'object' && !(v instanceof Date) && 'raw' in v) v = v.raw;
+  const ms = v instanceof Date ? v.getTime() : typeof v === 'number' ? (v < 1e11 ? v * 1000 : v) : typeof v === 'string' ? Date.parse(v) : NaN;
+  return Number.isFinite(ms) && ms > 0 ? new Date(ms).toISOString() : null;
+}
+
 // bug-fix (audit 2026-06-21): trim only TRAILING nulls, preserving interior null years so sibling
 // annual arrays stay positionally aligned (methods zip annualRev[i] with annualOpInc[i]/annualFCF[i]
 // /annualOCF[i] by index). The old .filter(Boolean) compacted nulls per-array, desyncing the index
@@ -2527,7 +2537,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     // absent (Live-Yahoo-Schema-Drift) — previously a null here unlinked an otherwise
     // valid snapshot (skipped-mcap) even though the price module (already loaded, see
     // MODULES) carried the value.
-    marketCap: _metric(_y(sd, 'marketCap') ?? _y(pr, 'marketCap'), SRC, CONF, asOf),
+    marketCap: (function() {
+      const m = _metric(_y(sd, 'marketCap') ?? _y(pr, 'marketCap'), SRC, CONF, asOf);
+      const t = _quoteTime(_y(pr, 'regularMarketTime'));
+      if (m && t) m.regularMarketTime = t;
+      return m;
+    })(),
     metrics: {
       revenueTTM:       _metric(revTTM, SRC, CONF, asOf),
       revenueGrowthYoY: _metric(revGrowthYoY, SRC, CONF, asOf),
@@ -4083,6 +4098,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // meta.asOf damit. Ein zweiter Date()-Aufruf liesse die beiden Stempel desselben
       // Vorgangs um Millisekunden auseinanderlaufen — zwei Wahrheiten fuer einen Schreibakt.
       existing.marketCap.asOf = newAsOf;
+      // Same rule for the quote time: written with the value or removed, never left from an older quote.
+      const quoteTime = _quoteTime(q.regularMarketTime);
+      if (quoteTime) existing.marketCap.regularMarketTime = quoteTime;
+      else delete existing.marketCap.regularMarketTime;
       // Review 19.09.: das `||` liess die alte Herkunft `yahoo_quoteSummary` auf einem Wert
       // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
       // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
@@ -5382,6 +5401,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             const r = await _priceOnlyUpdate(stock, outputDir, prior, {
               regularMarketPrice: _y(yahoo.price, 'regularMarketPrice'), currency: _y(yahoo.price, 'currency'),
               marketCap: _y(yahoo.summaryDetail, 'marketCap') ?? _y(yahoo.price, 'marketCap'),
+              regularMarketTime: _y(yahoo.price, 'regularMarketTime'),
             });
             event.priceUpdated = true;
             results.push({ ...r, fundamentalsRetainedReason: fullPeriodReasonDe });
