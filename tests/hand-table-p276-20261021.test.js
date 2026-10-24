@@ -80,9 +80,10 @@ test('13 sourced cells, appended, only TWE and Kinnevik, no substitute 0', () =>
   assert.deepEqual(own.map(c => c.caseId), cells.map(idFor));
   const first = table.cases.findIndex(c => c.revision === REV);
   // 23.10.2026 appends the five CIG-C operating-income cells after the P276 rows, 24.10.2026 the 15 cells of lane
-  // sd-umsatzreihen and the 14 of lane sd-umsatzreihen-2; nothing else follows them.
+  // sd-umsatzreihen, the 14 of lane sd-umsatzreihen-2 and the two INFRAC.SW operating-income years of lane
+  // sd-umsatzreihen-3; nothing else follows them.
   const later = table.cases.slice(first + own.length);
-  assert.deepEqual(later.map(c => c.revision), [...Array(5).fill('2026-10-23-sdcigc'), ...Array(15).fill('2026-10-24-sdumsatz'), ...Array(14).fill('2026-10-24-sdumsatz2')], 'appended after every earlier case');
+  assert.deepEqual(later.map(c => c.revision), [...Array(5).fill('2026-10-23-sdcigc'), ...Array(15).fill('2026-10-24-sdumsatz'), ...Array(14).fill('2026-10-24-sdumsatz2'), ...Array(2).fill('2026-10-24-sdumsatz3')], 'appended after every earlier case');
   for (const c of own) {
     assert.equal(c.verifiedAt, '2026-10-21');
     assert.deepEqual(c.listingAliases, listingsFor(c.ticker, c.field).slice(1));
