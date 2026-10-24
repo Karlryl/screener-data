@@ -54,11 +54,13 @@ const DECKEL = 100;    // topN-Default aus run-screener.js (produceRankings)
 
 // Eine Engine-Zeile, wie sie in outputs/hypergrowth[/full]/<branch>.json steht.
 // score faellt streng monoton (score.js byScore) — sonst trippt checkScoreDescending.
+// Daylauf 7 (24.10.): spread over the scale like a real cohort (full-board median 73.0; the
+// export gate wants the median of a full board in [20, 80]).
 function zeile(i, track, gated) {
   return {
     ticker: 'T' + String(i).padStart(4, '0'),
     name: 'Firma ' + i,
-    score: Math.round((99 - i * 0.1) * 10) / 10,
+    score: Math.round((99 - i * 0.5) * 10) / 10,
     track,
     lamps: [],
     overview: { kind: 'gp', value: 0.338, companion: 62.7 },
