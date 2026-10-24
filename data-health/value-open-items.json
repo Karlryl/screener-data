@@ -2,7 +2,7 @@
   "_doc": "Sticky open-items list (Tag 1398). Written only by scripts/value-open-items.js in the daily run (step \"Value open-items (factor 3, sticky)\"). An item opens when a stored revenueQ/grossProfitQ (same quarter) or marketCap moves by more than factor 3 (or to 0) against its last accepted value, and stays open until a hand-table row or an entry in data-health/value-acceptances.json closes it. Labels only describe. Never edit by hand; the AI daily run works the list (docs/value-open-items.md).",
   "schema": "value-open-items/v1",
   "factor": 3,
-  "updatedFor": "2026-10-23",
+  "updatedFor": "2026-10-24",
   "items": [
     {
       "id": "LCLN|marketCap|2026-08-09",
@@ -2001,7 +2001,7 @@
       "newValue": 9258000000,
       "factor": 5.1336,
       "firstSeen": "2026-09-29",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-03-31",
@@ -2010,7 +2010,7 @@
           "newValue": 9258000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-12-31",
@@ -2019,7 +2019,7 @@
           "newValue": 11060000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-09-30",
@@ -2028,7 +2028,7 @@
           "newValue": 10420000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -2037,7 +2037,7 @@
           "newValue": 8804000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2026-06-30",
@@ -2046,12 +2046,11 @@
           "newValue": 10498000000,
           "factor": 5.1336,
           "firstSeen": "2026-10-06",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [
-        "korrigiert-von-uns",
-        "nicht-auf-board"
+        "korrigiert-von-uns"
       ],
       "status": "open",
       "closedBy": null,
@@ -2067,7 +2066,7 @@
       "newValue": 3085000000,
       "factor": 5.1336,
       "firstSeen": "2026-09-29",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-03-31",
@@ -2076,7 +2075,7 @@
           "newValue": 3085000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-12-31",
@@ -2085,7 +2084,7 @@
           "newValue": 4281000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-09-30",
@@ -2094,7 +2093,7 @@
           "newValue": 3788000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -2103,7 +2102,7 @@
           "newValue": 2719000000,
           "factor": 5.1336,
           "firstSeen": "2026-09-29",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2026-06-30",
@@ -2112,12 +2111,11 @@
           "newValue": 3204000000,
           "factor": 5.1336,
           "firstSeen": "2026-10-06",
-          "lastSeen": "2026-10-06"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [
-        "korrigiert-von-uns",
-        "nicht-auf-board"
+        "korrigiert-von-uns"
       ],
       "status": "open",
       "closedBy": null,
@@ -2542,19 +2540,19 @@
       "field": "marketCap",
       "periodEnd": null,
       "acceptedValue": 51807772672,
-      "newValue": 8580140544,
-      "factor": 6.0381,
+      "newValue": 8306590720,
+      "factor": 6.2369,
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": null,
           "acceptedValue": 51807772672,
           "acceptedFrom": "2026-10-01",
-          "newValue": 8580140544,
-          "factor": 6.0381,
+          "newValue": 8306590720,
+          "factor": 6.2369,
           "firstSeen": "2026-10-02",
-          "lastSeen": "2026-10-23",
+          "lastSeen": "2026-10-24",
           "acceptedShares": null,
           "newShares": 667196000
         }
@@ -2574,7 +2572,7 @@
       "newValue": 71617772.6619,
       "factor": 9.9403,
       "firstSeen": "2026-10-03",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-06-30",
@@ -2583,7 +2581,7 @@
           "newValue": 71617772.6619,
           "factor": 9.9403,
           "firstSeen": "2026-10-03",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -2592,7 +2590,7 @@
           "newValue": 64572073.1634,
           "factor": 9.9403,
           "firstSeen": "2026-10-03",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2610,7 +2608,7 @@
       "newValue": 58750294.2798,
       "factor": 9.9403,
       "firstSeen": "2026-10-03",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-06-30",
@@ -2619,7 +2617,7 @@
           "newValue": 58750294.2798,
           "factor": 9.9403,
           "firstSeen": "2026-10-03",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -2628,7 +2626,7 @@
           "newValue": 53154777.5907,
           "factor": 9.9403,
           "firstSeen": "2026-10-03",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2643,26 +2641,25 @@
       "field": "marketCap",
       "periodEnd": null,
       "acceptedValue": 10217389067.363943,
-      "newValue": 1010813876.0981381,
-      "factor": 10.1081,
+      "newValue": 996676719.6249129,
+      "factor": 10.2515,
       "firstSeen": "2026-10-06",
-      "lastSeen": "2026-10-22",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": null,
           "acceptedValue": 10217389067.363943,
           "acceptedFrom": "2026-10-03",
-          "newValue": 1010813876.0981381,
-          "factor": 10.1081,
+          "newValue": 996676719.6249129,
+          "factor": 10.2515,
           "firstSeen": "2026-10-06",
-          "lastSeen": "2026-10-22",
+          "lastSeen": "2026-10-24",
           "acceptedShares": 601426988,
           "newShares": 60138656
         }
       ],
       "labels": [
-        "kapitalmassnahme",
-        "nicht-auf-board"
+        "kapitalmassnahme"
       ],
       "status": "open",
       "closedBy": null,
@@ -2675,19 +2672,19 @@
       "field": "marketCap",
       "periodEnd": null,
       "acceptedValue": 842732779.6569293,
-      "newValue": 3453535505.518756,
-      "factor": 4.098,
+      "newValue": 3455019888.7200522,
+      "factor": 4.0998,
       "firstSeen": "2026-10-06",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": null,
           "acceptedValue": 842732779.6569293,
           "acceptedFrom": "2026-09-24",
-          "newValue": 3453535505.518756,
-          "factor": 4.098,
+          "newValue": 3455019888.7200522,
+          "factor": 4.0998,
           "firstSeen": "2026-10-06",
-          "lastSeen": "2026-10-23",
+          "lastSeen": "2026-10-24",
           "acceptedShares": null,
           "newShares": 33000000
         }
@@ -2704,19 +2701,19 @@
       "field": "marketCap",
       "periodEnd": null,
       "acceptedValue": 1502314167.103488,
-      "newValue": 6323196402.332467,
-      "factor": 4.209,
+      "newValue": 6325914210.359378,
+      "factor": 4.2108,
       "firstSeen": "2026-10-06",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": null,
           "acceptedValue": 1502314167.103488,
           "acceptedFrom": "2026-10-03",
-          "newValue": 6323196402.332467,
-          "factor": 4.209,
+          "newValue": 6325914210.359378,
+          "factor": 4.2108,
           "firstSeen": "2026-10-06",
-          "lastSeen": "2026-10-23",
+          "lastSeen": "2026-10-24",
           "acceptedShares": 80825000,
           "newShares": 423940384
         }
@@ -2757,7 +2754,9 @@
           "lastSeen": "2026-10-23"
         }
       ],
-      "labels": [],
+      "labels": [
+        "nicht-auf-board"
+      ],
       "status": "open",
       "closedBy": null,
       "closedAt": null
@@ -2786,7 +2785,9 @@
           "newShares": 60138656
         }
       ],
-      "labels": [],
+      "labels": [
+        "nicht-auf-board"
+      ],
       "status": "open",
       "closedBy": null,
       "closedAt": null
@@ -2801,7 +2802,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-03-31",
@@ -2810,7 +2811,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-12-31",
@@ -2819,7 +2820,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2837,7 +2838,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-06-30",
@@ -2846,7 +2847,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2864,7 +2865,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2025-12-31",
@@ -2873,7 +2874,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -2882,7 +2883,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2900,7 +2901,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2025-12-31",
@@ -2909,7 +2910,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -2918,7 +2919,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2936,7 +2937,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-01-31",
@@ -2945,7 +2946,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2963,7 +2964,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-03-31",
@@ -2972,7 +2973,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-12-31",
@@ -2981,7 +2982,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -2999,7 +3000,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2025-09-30",
@@ -3008,7 +3009,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -3017,7 +3018,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-03-31",
@@ -3026,7 +3027,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2024-12-31",
@@ -3035,7 +3036,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -3053,7 +3054,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2025-06-30",
@@ -3062,7 +3063,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-03-31",
@@ -3071,7 +3072,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2024-12-31",
@@ -3080,7 +3081,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -3109,13 +3110,17 @@
           "firstSeen": "2026-10-14",
           "lastSeen": "2026-10-23",
           "acceptedShares": 1597515021,
-          "newShares": 1597515021
+          "newShares": 1597515021,
+          "closedValue": 133724013904.68327
         }
       ],
-      "labels": [],
-      "status": "open",
-      "closedBy": null,
-      "closedAt": null
+      "labels": [
+        "korrigiert-von-uns",
+        "zurueckgekehrt"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:shares:285A.T",
+      "closedAt": "2026-10-24"
     },
     {
       "id": "8035.T|marketCap|2026-10-14",
@@ -3138,13 +3143,17 @@
           "firstSeen": "2026-10-14",
           "lastSeen": "2026-10-23",
           "acceptedShares": 2340163665,
-          "newShares": 2340163665
+          "newShares": 2340163665,
+          "closedValue": 137562520681.23587
         }
       ],
-      "labels": [],
-      "status": "open",
-      "closedBy": null,
-      "closedAt": null
+      "labels": [
+        "korrigiert-von-uns",
+        "zurueckgekehrt"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:shares:8035.T",
+      "closedAt": "2026-10-24"
     },
     {
       "id": "6981.T|grossProfitQ|2026-10-14",
@@ -3156,7 +3165,7 @@
       "newValue": 0,
       "factor": null,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2025-09-30",
@@ -3165,7 +3174,7 @@
           "newValue": 0,
           "factor": null,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         },
         {
           "periodEnd": "2025-06-30",
@@ -3192,7 +3201,7 @@
       "newValue": 3365281018.346,
       "factor": 6.3544,
       "firstSeen": "2026-10-14",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": "2026-06-30",
@@ -3201,7 +3210,7 @@
           "newValue": 3365281018.346,
           "factor": 6.3544,
           "firstSeen": "2026-10-14",
-          "lastSeen": "2026-10-23"
+          "lastSeen": "2026-10-24"
         }
       ],
       "labels": [],
@@ -3216,19 +3225,19 @@
       "field": "marketCap",
       "periodEnd": null,
       "acceptedValue": 6072704518.335528,
-      "newValue": 60489250240.11878,
-      "factor": 9.9608,
+      "newValue": 60481306517.72518,
+      "factor": 9.9595,
       "firstSeen": "2026-10-17",
-      "lastSeen": "2026-10-23",
+      "lastSeen": "2026-10-24",
       "cells": [
         {
           "periodEnd": null,
           "acceptedValue": 6072704518.335528,
           "acceptedFrom": "2026-10-15",
-          "newValue": 60489250240.11878,
-          "factor": 9.9608,
+          "newValue": 60481306517.72518,
+          "factor": 9.9595,
           "firstSeen": "2026-10-17",
-          "lastSeen": "2026-10-23",
+          "lastSeen": "2026-10-24",
           "acceptedShares": 90679175,
           "newShares": 90679175
         }
@@ -3237,6 +3246,97 @@
       "status": "open",
       "closedBy": null,
       "closedAt": null
+    },
+    {
+      "id": "LISN.SW|marketCap|2026-10-24",
+      "company": "LISN.SW",
+      "board": "consumer-staples",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 114301055775.69977,
+      "newValue": 24108966007.488003,
+      "factor": 4.741,
+      "firstSeen": "2026-10-24",
+      "lastSeen": "2026-10-24",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 114301055775.69977,
+          "acceptedFrom": "2026-10-23",
+          "newValue": 24108966007.488003,
+          "factor": 4.741,
+          "firstSeen": "2026-10-24",
+          "lastSeen": "2026-10-24",
+          "acceptedShares": 1086190,
+          "newShares": 1086190,
+          "closedValue": 24108966007.488003
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:shares:LISN.SW",
+      "closedAt": "2026-10-24"
+    },
+    {
+      "id": "LU|marketCap|2026-10-24",
+      "company": "LU",
+      "board": "financials",
+      "field": "marketCap",
+      "periodEnd": null,
+      "acceptedValue": 801167168,
+      "newValue": 6985512960,
+      "factor": 8.7192,
+      "firstSeen": "2026-10-24",
+      "lastSeen": "2026-10-24",
+      "cells": [
+        {
+          "periodEnd": null,
+          "acceptedValue": 801167168,
+          "acceptedFrom": "2026-10-13",
+          "newValue": 6985512960,
+          "factor": 8.7192,
+          "firstSeen": "2026-10-24",
+          "lastSeen": "2026-10-24",
+          "acceptedShares": 866688892,
+          "newShares": 866688892
+        }
+      ],
+      "labels": [],
+      "status": "open",
+      "closedBy": null,
+      "closedAt": null
+    },
+    {
+      "id": "300277.SZ|revenueQ|2026-10-24",
+      "company": "300277.SZ",
+      "board": "industrials",
+      "field": "revenueQ",
+      "periodEnd": "2025-06-30",
+      "acceptedValue": 7410385.89953712,
+      "newValue": 212096007.027008,
+      "factor": 28.6215,
+      "firstSeen": "2026-10-24",
+      "lastSeen": "2026-10-24",
+      "cells": [
+        {
+          "periodEnd": "2025-06-30",
+          "acceptedValue": 7410385.89953712,
+          "acceptedFrom": "2026-10-23",
+          "newValue": 212096007.027008,
+          "factor": 28.6215,
+          "firstSeen": "2026-10-24",
+          "lastSeen": "2026-10-24",
+          "closedValue": 212096007.027008
+        }
+      ],
+      "labels": [
+        "korrigiert-von-uns"
+      ],
+      "status": "closed",
+      "closedBy": "hand-table:300277.sz-2025-06-30-revenueQ-20261024",
+      "closedAt": "2026-10-24"
     }
   ]
 }
