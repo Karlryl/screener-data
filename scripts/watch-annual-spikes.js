@@ -73,7 +73,12 @@ function parseMaxNeu(raw) {
   return value;
 }
 
-const REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome'];
+// annualGP joined the scan on 24.10.2026 (spike-watcher coverage audit 22.10., item 3).
+const REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome', 'annualGP'];
+// The shape gates JA-2 (cignaFaelle) and Q1 (faktorGleicheFaelle) were measured and decided on
+// these three founding series; they stay on them so that adding annualGP neither weakens JA-2
+// (all REIHEN would need four hits) nor moves a 2-of-3 form out of Q1 (a third GP hit).
+const GRUND_REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome'];
 
 // ── Capex-Vorzeichen (Review-Befund 03.08.2026) ──────────────────────────────────────
 // Die Burn-Bremse rekonstruiert fehlendes OCF als FCF minus Capex (lamps.js
@@ -115,6 +120,7 @@ function loadBaseline(p) {
  * abweicht. Rein und ohne I/O — die Regel ist damit ohne Snapshots pruefbar.
  * Nur INNERE Positionen: der erste und letzte Wert haben keinen zweiten Nachbarn,
  * und ein Randwert ohne Gegenprobe waere geraten, nicht gemessen.
+ * The newest value (index 0) gets its own one-sided rule in findeNeuestenAusreisser below.
  */
 function findeAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
   const werte = (Array.isArray(reihe) ? reihe : []).map((x) => (x && typeof x.value === 'number' && Number.isFinite(x.value) ? x.value : null));
@@ -128,6 +134,31 @@ function findeAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
     if (Math.abs(v) / nachbar >= faktor) treffer.push({ index: i, wert: v, links: l, rechts: r });
   }
   return treffer;
+}
+
+/**
+ * The NEWEST annual value (index 0) has no newer neighbour, so findeAusreisser never judges it,
+ * and that is exactly where a fresh bad vendor value lands (TWE.AX FY2026, P276). One-sided rule:
+ * index 0 is flagged when it is at least `faktor` times the previous year (absolute values) and
+ * at least `minBetrag`, or when the previous year is at least `faktor` times the newest and at
+ * least `minBetrag` while both are positive, so a loss year or a shrinking loss never counts;
+ * a doubling or halving is a factor of 2 and stays far below 8. A zero on either side has no
+ * ratio and is skipped, like a zero neighbour in findeAusreisser. When index 1 is itself an
+ * inner spike, index 0 is only its return to normal: that anomaly is already reported at index 1
+ * and is not reported a second time here.
+ * ponytail: no return jump can confirm a one-sided finding, so real step changes (a first big
+ * profit year) are flagged too; the baseline decides what is known, not this function.
+ * @returns {Array<{index:0, wert:number, links:null, rechts:number}>} At most one finding;
+ *   links is null because index 0 has no newer neighbour.
+ */
+function findeNeuestenAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
+  const wert = (x) => (x && typeof x.value === 'number' && Number.isFinite(x.value) ? x.value : null);
+  const v = Array.isArray(reihe) ? wert(reihe[0]) : null, r = Array.isArray(reihe) ? wert(reihe[1]) : null;
+  if (v == null || r == null || v === 0 || r === 0) return [];
+  if (findeAusreisser(reihe.slice(0, 3), faktor, minBetrag).length) return [];
+  const sprung = Math.abs(v) >= minBetrag && Math.abs(v) / Math.abs(r) >= faktor;
+  const einbruch = v > 0 && r > 0 && r >= minBetrag && r / v >= faktor;
+  return sprung || einbruch ? [{ index: 0, wert: v, links: null, rechts: r }] : [];
 }
 
 function stabilerSchluessel(x) {
@@ -651,11 +682,12 @@ const faecher = (ereignis) => new Set(ereignis.map((x) => x.ticker)).size;
 function cignaFaelle(funde) {
   const reihenJeJahr = new Map();
   for (const x of funde) {
+    if (!GRUND_REIHEN.includes(x.reihe)) continue;
     const k = `${x.ticker}|${x.index}`;
     if (!reihenJeJahr.has(k)) reihenJeJahr.set(k, new Set());
     reihenJeJahr.get(k).add(x.reihe);
   }
-  return [...reihenJeJahr.entries()].filter(([, r]) => r.size === REIHEN.length).map(([k]) => k);
+  return [...reihenJeJahr.entries()].filter(([, r]) => r.size === GRUND_REIHEN.length).map(([k]) => k);
 }
 
 /**
@@ -703,6 +735,9 @@ const ausreisserFaktor = (x) => Math.abs(x.wert) / Math.max(Math.abs(x.links), M
 function faktorGleicheFaelle(funde, toleranz = FAKTOR_GLEICH_TOL) {
   const reihenJeJahr = new Map();
   for (const x of funde) {
+    // = GRUND_REIHEN, inlined: t-kdrift-signatur.js and t-jahresausreisser-klassifikation.js copy
+    // this function without that constant into an isolated vm context.
+    if (!['annualOpInc', 'annualRev', 'annualNetIncome'].includes(x.reihe)) continue;
     const k = `${x.ticker}|${x.index}`;
     if (!reihenJeJahr.has(k)) reihenJeJahr.set(k, new Map());
     reihenJeJahr.get(k).set(x.reihe, x);
@@ -714,6 +749,8 @@ function faktorGleicheFaelle(funde, toleranz = FAKTOR_GLEICH_TOL) {
     const [a, b] = [...reihen.values()].map(ausreisserFaktor);
     // findeAusreisser garantiert nachbar !== 0 und |Wert|/nachbar >= FAKTOR: beide
     // Faktoren sind endlich und > 0, ein Division-durch-null-Zweig waere toter Code.
+    // findeNeuestenAusreisser (index 0, links null) skips a zero on either side, so this holds
+    // there too; a collapse finding just carries a factor below 1.
     if (Math.max(a, b) / Math.min(a, b) <= toleranz) gleich.push(k);
   }
   return { zweiVonDrei, gleich };
@@ -792,7 +829,7 @@ function scanSnapshots(snapDir) {
     let handtabelle;
     for (const name of REIHEN) {
       const enden = periodEnds(s, name);
-      for (const t of findeAusreisser(annual[name])) {
+      for (const t of [...findeAusreisser(annual[name]), ...findeNeuestenAusreisser(annual[name])]) {
         handtabelle ??= applyFinancialCases(s);
         // Only an exact applied cell counts; propagated holds and stale fingerprints do not.
         const korrektur = handtabelle.events.find(e => e.ticker === ticker && e.container === 'annual'
@@ -838,7 +875,8 @@ function main(jetzt = new Date(), meldendBis = null) {
   const gelesen = scan.gescannt - scan.parseFehler;
   const schluessel = stabilerSchluessel;
   const basis = loadBaseline(BASELINE_PATH);
-  const mio = (v) => (v / 1e6).toFixed(0);
+  // null = no neighbour (index 0 has no newer year); printing it as 0 would invent a value.
+  const mio = (v) => (v == null ? '—' : (v / 1e6).toFixed(0));
 
   // LESE-UMFANG ZUERST, aus demselben Grund wie die Capex-Pruefung darunter: er haengt nicht am
   // Ausreisser-Bestand und darf deshalb weder von der Populations-Wache noch vom
@@ -1050,7 +1088,7 @@ function main(jetzt = new Date(), meldendBis = null) {
   const cigna = cignaFaelle(neu);
   if (cigna.length) {
     datenExit = 1;
-    console.error(`::error::${cigna.length} Ticker mit ALLEN ${REIHEN.length} Jahresreihen am selben Index: `
+    console.error(`::error::${cigna.length} Ticker mit ALLEN ${GRUND_REIHEN.length} Jahresreihen am selben Index: `
       + `${cigna.join(' · ')}. Das ist die Gruendungs-Fehlerklasse dieses Waechters (Cigna 2022), und sie ist `
       + 'IMMER rot: die Ereigniszaehlung zoege sie zu EINEM Ereignis mit Faecher 1 zusammen, wo drei Funde '
       + 'stehen — Faecher-Tor und Alters-Tor sind beide blind dafuer. Grundlast im Bestand: 2, beide verankert.');
@@ -1090,14 +1128,14 @@ function main(jetzt = new Date(), meldendBis = null) {
   // ── Das Rausch-Budget, ab jetzt in Ereignissen und ohne die Sperren (JA-1) ──
   if (gezaehlt > maxNeu) {
     torRot(`${gezaehlt} NEUE Jahres-Ausreisser-EREIGNISSE (erlaubt ${maxNeu}) — einzelne Jahre `
-      + `weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch `
+      + `weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab (das neueste Jahr [0]: vom Vorjahr). Entweder echte Sonderjahre oder frisch `
       + `eingefrorene Fehlabrufe; Liste oben. Gezaehlt wird in EREIGNISSEN (zwei Relationen) und ohne die `
       + `${ausgeschlossen.length} Sperre(n) — gedruckt werden unveraendert alle ${neu.length} Funde.`);
   }
   return datenExit;
 }
 
-module.exports = { nativeIdentitaet, nativerSchluessel, istEichfall, findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ,
+module.exports = { nativeIdentitaet, nativerSchluessel, istEichfall, findeAusreisser, findeNeuestenAusreisser, REIHEN, GRUND_REIHEN, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ,
   // Gerichtsbeschluss 02.09.2026 (JA-1..JA-7): exportiert, damit die Bruchproben die
   // SACHE pinnen koennen und nicht ein Textmuster im Log.
   sperrSchluessel, pruefeAusschluesse, sperrenOhneWirkung, toteSperrenUrteil, ereignisse, faecher, cignaFaelle,
