@@ -47,7 +47,10 @@
     { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "2498.HK", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "300277.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "2855.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "2855.TW", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "6005.TW", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -10455,6 +10458,1578 @@
           "start": "2024-01-01",
           "end": "2024-12-31",
           "note": "EBIT includes the result from revaluation of the investment properties (same page: \"Result from revaluation 14 16’160 5’384\")."
+        }
+      ]
+    },
+    {
+      "caseId": "uwmc-2026-06-30-revenueQ-20261024",
+      "ticker": "UWMC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -112047000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter einen negativen Umsatz von minus 112,0 Mio. USD; UWM meldet für dieses Quartal 888,0 Mio. USD Gesamtumsatz. Kein Ersatzwert, weil die übrigen Anbieterquartale auf einer anderen Basis als die Firmenzahlen stehen (erstes Quartal 2026: 504,5 statt 901,4 Mio. USD). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1783398/000178339826000114/q22026ex-991pressrelease.htm",
+          "form": "UWM Holdings, Form 8-K exhibit 99.1, results for the second quarter 2026",
+          "verifiedAt": "2026-10-24",
+          "page": "condensed consolidated statements of operations (three months ended June 30, 2026, March 31, 2026, June 30, 2025)",
+          "unit": "USD thousands",
+          "quote": "Total revenue 888,003 901,427 758,700",
+          "accession": "0001783398-26-000114",
+          "filed": "2026-08-06"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1783398/000178339826000114/q22026ex-991pressrelease.htm",
+          "form": "UWM Holdings, Form 8-K exhibit 99.1, addendum",
+          "verifiedAt": "2026-10-24",
+          "page": "consolidated statements of operations for the three months ended June 30, 2026, March 31, 2026, December 31, 2025, September 30, 2025, June 30, 2025",
+          "unit": "USD thousands",
+          "quote": "Total revenue 888,003 901,427 945,247 843,252 758,700",
+          "accession": "0001783398-26-000114",
+          "filed": "2026-08-06",
+          "note": "vendor quarters in the same order: -112,047; 504,502; 522,412; 338,597; 651,104"
+        }
+      ]
+    },
+    {
+      "caseId": "mphc.qa-2026-06-30-revenueQ-20261024",
+      "ticker": "MPHC.QA",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "QAR",
+      "unit": "currency",
+      "expectedBadValue": -177646000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter minus 177,6 Mio. QAR. Mesaieed Petrochemical ist eine Holding und bilanziert ihre Gemeinschaftsunternehmen nach der Equity-Methode; der Anbieter liefert als Umsatz die oberste Zeile der Erfolgsrechnung, also den Ergebnisanteil der Gemeinschaftsunternehmen samt Zinsertrag. Einen Umsatz nennt die Firma nur auf anteiliger Basis (erstes Halbjahr 2026: 605 Mio. QAR, minus 57 %). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.mphc.com.qa/media/za2i1rax/mphc-financial-statements-h1-2026-english.pdf",
+          "form": "MPHC, condensed interim financial information for the six-month period ended 30 June 2026 (IAS 34, reviewed)",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 5, condensed interim statement of profit or loss (six months 2026, 2025)",
+          "unit": "QAR thousands",
+          "quote": "Share of results from joint ventures 4 (ii) (223,340) 340,317 Interest income 48,143 43,911 (175,197) 384,228",
+          "note": "the top line is the equity-method share of results plus interest income; the two vendor quarters of 2026 sum to -174,646"
+        },
+        {
+          "url": "https://mphc.com.qa/media/fc1d5c3j/mphc-earnings-press-release-h1-2026-english.pdf",
+          "form": "MPHC, press release on the results for the six-month period ended 30 June 2026",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial performance indicators (non-IFRS proportionate consolidation)",
+          "unit": "QAR millions",
+          "quote": "Revenue (QR million) 605 1,411 -57%"
+        }
+      ]
+    },
+    {
+      "caseId": "mphc.qa-2026-03-31-revenueQ-20261024",
+      "ticker": "MPHC.QA",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "QAR",
+      "unit": "currency",
+      "expectedBadValue": 3000000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 3,0 Mio. QAR. Mesaieed Petrochemical ist eine Holding und bilanziert ihre Gemeinschaftsunternehmen nach der Equity-Methode; der Anbieter liefert als Umsatz die oberste Zeile der Erfolgsrechnung, also den Ergebnisanteil der Gemeinschaftsunternehmen samt Zinsertrag. Einen Umsatz nennt die Firma nur auf anteiliger Basis (erstes Halbjahr 2026: 605 Mio. QAR, minus 57 %). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.mphc.com.qa/media/za2i1rax/mphc-financial-statements-h1-2026-english.pdf",
+          "form": "MPHC, condensed interim financial information for the six-month period ended 30 June 2026 (IAS 34, reviewed)",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 5, condensed interim statement of profit or loss (six months 2026, 2025)",
+          "unit": "QAR thousands",
+          "quote": "Share of results from joint ventures 4 (ii) (223,340) 340,317 Interest income 48,143 43,911 (175,197) 384,228",
+          "note": "the top line is the equity-method share of results plus interest income; the two vendor quarters of 2026 sum to -174,646"
+        },
+        {
+          "url": "https://mphc.com.qa/media/fc1d5c3j/mphc-earnings-press-release-h1-2026-english.pdf",
+          "form": "MPHC, press release on the results for the six-month period ended 30 June 2026",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial performance indicators (non-IFRS proportionate consolidation)",
+          "unit": "QAR millions",
+          "quote": "Revenue (QR million) 605 1,411 -57%"
+        }
+      ]
+    },
+    {
+      "caseId": "mphc.qa-2025-12-31-revenueQ-20261024",
+      "ticker": "MPHC.QA",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "QAR",
+      "unit": "currency",
+      "expectedBadValue": 17347000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das vierte Quartal 2025 (Ende 31.12.2025) liefert der Anbieter 17,3 Mio. QAR. Mesaieed Petrochemical ist eine Holding und bilanziert ihre Gemeinschaftsunternehmen nach der Equity-Methode; der Anbieter liefert als Umsatz die oberste Zeile der Erfolgsrechnung, also den Ergebnisanteil der Gemeinschaftsunternehmen samt Zinsertrag. Einen Umsatz nennt die Firma nur auf anteiliger Basis (erstes Halbjahr 2026: 605 Mio. QAR, minus 57 %). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.mphc.com.qa/media/za2i1rax/mphc-financial-statements-h1-2026-english.pdf",
+          "form": "MPHC, condensed interim financial information for the six-month period ended 30 June 2026 (IAS 34, reviewed)",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 5, condensed interim statement of profit or loss (six months 2026, 2025)",
+          "unit": "QAR thousands",
+          "quote": "Share of results from joint ventures 4 (ii) (223,340) 340,317 Interest income 48,143 43,911 (175,197) 384,228",
+          "note": "the top line is the equity-method share of results plus interest income; the two vendor quarters of 2026 sum to -174,646"
+        },
+        {
+          "url": "https://mphc.com.qa/media/fc1d5c3j/mphc-earnings-press-release-h1-2026-english.pdf",
+          "form": "MPHC, press release on the results for the six-month period ended 30 June 2026",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial performance indicators (non-IFRS proportionate consolidation)",
+          "unit": "QAR millions",
+          "quote": "Revenue (QR million) 605 1,411 -57%"
+        }
+      ]
+    },
+    {
+      "caseId": "mphc.qa-2025-06-30-revenueQ-20261024",
+      "ticker": "MPHC.QA",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "QAR",
+      "unit": "currency",
+      "expectedBadValue": 196570000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liefert der Anbieter 196,6 Mio. QAR. Mesaieed Petrochemical ist eine Holding und bilanziert ihre Gemeinschaftsunternehmen nach der Equity-Methode; der Anbieter liefert als Umsatz die oberste Zeile der Erfolgsrechnung, also den Ergebnisanteil der Gemeinschaftsunternehmen samt Zinsertrag. Einen Umsatz nennt die Firma nur auf anteiliger Basis (erstes Halbjahr 2026: 605 Mio. QAR, minus 57 %). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.mphc.com.qa/media/za2i1rax/mphc-financial-statements-h1-2026-english.pdf",
+          "form": "MPHC, condensed interim financial information for the six-month period ended 30 June 2026 (IAS 34, reviewed)",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 5, condensed interim statement of profit or loss (six months 2026, 2025)",
+          "unit": "QAR thousands",
+          "quote": "Share of results from joint ventures 4 (ii) (223,340) 340,317 Interest income 48,143 43,911 (175,197) 384,228",
+          "note": "the top line is the equity-method share of results plus interest income; the two vendor quarters of 2026 sum to -174,646"
+        },
+        {
+          "url": "https://mphc.com.qa/media/fc1d5c3j/mphc-earnings-press-release-h1-2026-english.pdf",
+          "form": "MPHC, press release on the results for the six-month period ended 30 June 2026",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial performance indicators (non-IFRS proportionate consolidation)",
+          "unit": "QAR millions",
+          "quote": "Revenue (QR million) 605 1,411 -57%"
+        }
+      ]
+    },
+    {
+      "caseId": "mphc.qa-2025-03-31-revenueQ-20261024",
+      "ticker": "MPHC.QA",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "QAR",
+      "unit": "currency",
+      "expectedBadValue": 190308000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das erste Quartal 2025 (Ende 31.03.2025) liefert der Anbieter 190,3 Mio. QAR. Mesaieed Petrochemical ist eine Holding und bilanziert ihre Gemeinschaftsunternehmen nach der Equity-Methode; der Anbieter liefert als Umsatz die oberste Zeile der Erfolgsrechnung, also den Ergebnisanteil der Gemeinschaftsunternehmen samt Zinsertrag. Einen Umsatz nennt die Firma nur auf anteiliger Basis (erstes Halbjahr 2026: 605 Mio. QAR, minus 57 %). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.mphc.com.qa/media/za2i1rax/mphc-financial-statements-h1-2026-english.pdf",
+          "form": "MPHC, condensed interim financial information for the six-month period ended 30 June 2026 (IAS 34, reviewed)",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 5, condensed interim statement of profit or loss (six months 2026, 2025)",
+          "unit": "QAR thousands",
+          "quote": "Share of results from joint ventures 4 (ii) (223,340) 340,317 Interest income 48,143 43,911 (175,197) 384,228",
+          "note": "the top line is the equity-method share of results plus interest income; the two vendor quarters of 2026 sum to -174,646"
+        },
+        {
+          "url": "https://mphc.com.qa/media/fc1d5c3j/mphc-earnings-press-release-h1-2026-english.pdf",
+          "form": "MPHC, press release on the results for the six-month period ended 30 June 2026",
+          "published": "2026-08-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 1, key financial performance indicators (non-IFRS proportionate consolidation)",
+          "unit": "QAR millions",
+          "quote": "Revenue (QR million) 605 1,411 -57%"
+        }
+      ]
+    },
+    {
+      "caseId": "mphc.qa-2025-12-31-annualRev-20261024",
+      "ticker": "MPHC.QA",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "QAR",
+      "unit": "currency",
+      "expectedBadValue": 549258000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz fehlt: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 549,3 Mio. QAR; das ist die Zwischensumme aus Ergebnisanteil der Gemeinschaftsunternehmen, Zinsertrag und sonstigem Ertrag, kein Umsatz. Die älteren Jahre stehen auf derselben Basis und bleiben ebenfalls leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://mphc.com.qa/media/asoplzqt/mesaieed-petrochemical-holding-company-q-p-s-c-english-december-2025-final.pdf",
+          "form": "MPHC, financial statements for the year ended 31 December 2025 (audited)",
+          "published": "2026-01-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 8, statement of profit or loss (2025, 2024)",
+          "unit": "QAR thousands",
+          "quote": "Share of results from joint ventures 4 (ii) 454,119 582,659 Interest income 7 92,052 147,416 Other income (Net) 3,087 4,750 549,258 734,825",
+          "note": "the vendor years 2025 and 2024 (549,258; 734,825) are this subtotal"
+        }
+      ]
+    },
+    {
+      "caseId": "frnm-2026-06-30-revenueQ-20261024",
+      "ticker": "FRNM",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter einen Umsatz von 0; Freenome meldet für dieses Quartal 2,274 Mio. USD Gesamtumsatz. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2017526/000114036126032873/ef20080133_ex99-2.htm",
+          "form": "Freenome, Form 8-K/A exhibit 99.2 (MD&A of Freenome Inc. for the three and six months ended June 30, 2026)",
+          "verifiedAt": "2026-10-24",
+          "page": "comparison of the three and six months ended June 30, 2026 and 2025 (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "USD thousands",
+          "quote": "Total revenue $ 2,274 $ 1,101 $ 6,496 $ 1,495 Operating costs and expenses: Cost of services $ 497 509 937 884",
+          "accession": "0001140361-26-032873",
+          "filed": "2026-08-13",
+          "note": "the vendor net loss of the quarter (-69,029) matches this table"
+        }
+      ]
+    },
+    {
+      "caseId": "frnm-2026-06-30-grossProfitQ-20261024",
+      "ticker": "FRNM",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter einen Bruttogewinn von 0, obwohl Freenome 2,274 Mio. USD Umsatz und 0,497 Mio. USD Kosten der Leistungen meldet. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2017526/000114036126032873/ef20080133_ex99-2.htm",
+          "form": "Freenome, Form 8-K/A exhibit 99.2 (MD&A of Freenome Inc. for the three and six months ended June 30, 2026)",
+          "verifiedAt": "2026-10-24",
+          "page": "comparison of the three and six months ended June 30, 2026 and 2025 (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "USD thousands",
+          "quote": "Total revenue $ 2,274 $ 1,101 $ 6,496 $ 1,495 Operating costs and expenses: Cost of services $ 497 509 937 884",
+          "accession": "0001140361-26-032873",
+          "filed": "2026-08-13",
+          "note": "the vendor net loss of the quarter (-69,029) matches this table"
+        }
+      ]
+    },
+    {
+      "caseId": "esds.ns-2026-06-30-revenueQ-20261024",
+      "ticker": "ESDS.NS",
+      "listingAliases": [
+        "ESDS.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsumsatz fehlt: Für das erste Quartal des Geschäftsjahres 2026/27 (Ende 30.06.2026) liefert der Anbieter einen Umsatz von 0; ESDS meldet für dieses Quartal konzernweit 1.336,57 Mio. INR Umsatzerlöse. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/b3f74873-bb3d-45f8-ae76-c90aca2297c0.pdf",
+          "form": "ESDS Software Solution, outcome of the board meeting of 24.09.2026 with the unaudited financial results for the quarter ended June 30, 2026 (BSE and NSE)",
+          "published": "2026-09-24",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, unaudited consolidated financial results, column quarter ended June 30, 2026: revenue from operations, other income, total income",
+          "unit": "INR millions",
+          "quote": "1 ,336.57 15.14 1 ,351.71",
+          "note": "the scanned text layer writes 1,336.57 as “1 ,336.57”; the vendor net income of the quarter (292.77) matches the same column"
+        }
+      ]
+    },
+    {
+      "caseId": "esds.ns-2026-06-30-grossProfitQ-20261024",
+      "ticker": "ESDS.NS",
+      "listingAliases": [
+        "ESDS.BO"
+      ],
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das erste Quartal des Geschäftsjahres 2026/27 (Ende 30.06.2026) liefert der Anbieter einen Bruttogewinn von 0, ESDS meldet für dieses Quartal konzernweit 1.336,57 Mio. INR Umsatzerlöse. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/b3f74873-bb3d-45f8-ae76-c90aca2297c0.pdf",
+          "form": "ESDS Software Solution, outcome of the board meeting of 24.09.2026 with the unaudited financial results for the quarter ended June 30, 2026 (BSE and NSE)",
+          "published": "2026-09-24",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, unaudited consolidated financial results, column quarter ended June 30, 2026: revenue from operations, other income, total income",
+          "unit": "INR millions",
+          "quote": "1 ,336.57 15.14 1 ,351.71",
+          "note": "the scanned text layer writes 1,336.57 as “1 ,336.57”; the vendor net income of the quarter (292.77) matches the same column"
+        }
+      ]
+    },
+    {
+      "caseId": "rob.wa-2025-12-31-annualRev-20261024",
+      "ticker": "ROB.WA",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "PLN",
+      "unit": "currency",
+      "expectedBadValue": 0,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz fehlt: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter einen Umsatz von 0; Robyg meldet für 2025 rund 1,5 Mrd. PLN Umsatzerlöse. Die Jahre 2018 bis 2024 fehlen beim Anbieter, deshalb bleiben auch die älteren Jahre (zuletzt 2017) leer und das Umsatzwachstum wird nicht berechnet. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://ri.robyg.pl/en/posts/categories/aktualnosci/robyg-group-financial-results-in-2025",
+          "form": "ROBYG Group, financial results in 2025 (investor relations news)",
+          "published": "2026-03-04",
+          "verifiedAt": "2026-10-24",
+          "page": "news text, first paragraph",
+          "unit": "PLN billions",
+          "quote": "recorded sales revenues of PLN 1.5 billion (2024: PLN 1.3 billion; +15%)"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2026-06-30-revenueQ-20261024",
+      "ticker": "2855.TW",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 22329556000,
+      "replacementValue": 12058748000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter 22.329,6 Mio. TWD; laut Konzernabschluss von President Securities betragen die Erträge 12.058,7 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100",
+          "value": 12058748000,
+          "currency": "TWD",
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202602_2855_AI1.pdf",
+          "form": "President Securities, 2026 second-quarter consolidated financial report on MOPS (Chinese original)",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, 合併綜合損益表",
+          "unit": "TWD thousands",
+          "quote": "收益合計 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2026-03-31-revenueQ-20261024",
+      "ticker": "2855.TW",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 10554029000,
+      "replacementValue": 5486108000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 10.554,0 Mio. TWD; laut Konzernabschluss von President Securities betragen die Erträge 5.486,1 Mio. TWD (erstes Halbjahr 2026 minus zweites Quartal 2026). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100",
+          "value": 17544856000,
+          "currency": "TWD",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100",
+          "value": 12058748000,
+          "currency": "TWD",
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-12-31-revenueQ-20261024",
+      "ticker": "2855.TW",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 5542151000,
+      "replacementValue": 4925145000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das vierte Quartal 2025 (Ende 31.12.2025) liefert der Anbieter 5.542,2 Mio. TWD; laut Konzernabschluss von President Securities betragen die Erträge 4.925,1 Mio. TWD (Geschäftsjahr 2025 minus neun Monate 2025). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20260504090542742959.pdf",
+          "form": "President Securities, consolidated financial statements December 31, 2025 and 2024 (English translation, auditors’ report of March 2, 2026)",
+          "published": "2026-03-02",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 11, consolidated statements of comprehensive income (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 13,541,305 100 13,029,981 100",
+          "value": 13541305000,
+          "currency": "TWD",
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 13, 2025)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 4,576,444 100 2,660,682 100 8,616,160 100 10,259,159 100",
+          "value": 8616160000,
+          "currency": "TWD",
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-09-30-revenueQ-20261024",
+      "ticker": "2855.TW",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 5209443000,
+      "replacementValue": 4576444000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das dritte Quartal 2025 (Ende 30.09.2025) liefert der Anbieter 5.209,4 Mio. TWD; laut Konzernabschluss von President Securities betragen die Erträge 4.576,4 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 13, 2025)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 4,576,444 100 2,660,682 100 8,616,160 100 10,259,159 100",
+          "value": 4576444000,
+          "currency": "TWD",
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-06-30-revenueQ-20261024",
+      "ticker": "2855.TW",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 298226000,
+      "replacementValue": 2311393000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das zweite Quartal 2025 (Ende 30.06.2025) liefert der Anbieter 298,2 Mio. TWD; laut Konzernabschluss von President Securities betragen die Erträge 2.311,4 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100",
+          "value": 2311393000,
+          "currency": "TWD",
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202602_2855_AI1.pdf",
+          "form": "President Securities, 2026 second-quarter consolidated financial report on MOPS (Chinese original)",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, 合併綜合損益表",
+          "unit": "TWD thousands",
+          "quote": "收益合計 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2026-06-30-opIncQ-20261024",
+      "ticker": "2855.TW",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 18712523000,
+      "replacementValue": 5869930000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Betriebsergebnis korrigiert: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter 18.712,5 Mio. TWD; laut Konzernabschluss von President Securities beträgt das Betriebsergebnis 5.869,9 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 13, consolidated statements of comprehensive income, continued (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 5,869,930 49 $ 264,450 12 $ 7,968,511 46 $ 1,583 -",
+          "value": 5869930000,
+          "currency": "TWD",
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2026-03-31-opIncQ-20261024",
+      "ticker": "2855.TW",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 7914617000,
+      "replacementValue": 2098581000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Betriebsergebnis korrigiert: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 7.914,6 Mio. TWD; laut Konzernabschluss von President Securities beträgt das Betriebsergebnis 2.098,6 Mio. TWD (erstes Halbjahr 2026 minus zweites Quartal 2026). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 13, consolidated statements of comprehensive income, continued (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 5,869,930 49 $ 264,450 12 $ 7,968,511 46 $ 1,583 -",
+          "value": 7968511000,
+          "currency": "TWD",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 13, consolidated statements of comprehensive income, continued (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 5,869,930 49 $ 264,450 12 $ 7,968,511 46 $ 1,583 -",
+          "value": 5869930000,
+          "currency": "TWD",
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-12-31-opIncQ-20261024",
+      "ticker": "2855.TW",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 2978005000,
+      "replacementValue": 1694145000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Betriebsergebnis korrigiert: Für das vierte Quartal 2025 (Ende 31.12.2025) liefert der Anbieter 2.978,0 Mio. TWD; laut Konzernabschluss von President Securities beträgt das Betriebsergebnis 1.694,1 Mio. TWD (Geschäftsjahr 2025 minus neun Monate 2025). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20260504090542742959.pdf",
+          "form": "President Securities, consolidated financial statements December 31, 2025 and 2024 (English translation)",
+          "published": "2026-03-02",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income, continued (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 3,580,117 26 $ 3,661,438 28",
+          "value": 3580117000,
+          "currency": "TWD",
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 8, consolidated statements of comprehensive income, continued (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 1,884,389 41 $ 339,807 13 $ 1,885,972 22 $ 3,138,835 31",
+          "value": 1885972000,
+          "currency": "TWD",
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-09-30-opIncQ-20261024",
+      "ticker": "2855.TW",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 3069864000,
+      "replacementValue": 1884389000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Betriebsergebnis korrigiert: Für das dritte Quartal 2025 (Ende 30.09.2025) liefert der Anbieter 3.069,9 Mio. TWD; laut Konzernabschluss von President Securities beträgt das Betriebsergebnis 1.884,4 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 8, consolidated statements of comprehensive income, continued (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 1,884,389 41 $ 339,807 13 $ 1,885,972 22 $ 3,138,835 31",
+          "value": 1884389000,
+          "currency": "TWD",
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-06-30-opIncQ-20261024",
+      "ticker": "2855.TW",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": -1148440000,
+      "replacementValue": 264450000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Betriebsergebnis korrigiert: Für das zweite Quartal 2025 (Ende 30.06.2025) liefert der Anbieter minus 1.148,4 Mio. TWD; laut Konzernabschluss von President Securities beträgt das Betriebsergebnis 264,5 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 13, consolidated statements of comprehensive income, continued (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 5,869,930 49 $ 264,450 12 $ 7,968,511 46 $ 1,583 -",
+          "value": 264450000,
+          "currency": "TWD",
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2026-06-30-grossProfitQ-20261024",
+      "ticker": "2855.TW",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 21857529000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter 21.857,5 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von President Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 13, 2025)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 4,576,444 100 2,660,682 100 8,616,160 100 10,259,159 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2026-03-31-grossProfitQ-20261024",
+      "ticker": "2855.TW",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 10199172000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 10.199,2 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von President Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 13, 2025)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 4,576,444 100 2,660,682 100 8,616,160 100 10,259,159 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-12-31-grossProfitQ-20261024",
+      "ticker": "2855.TW",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 5247789000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das vierte Quartal 2025 (Ende 31.12.2025) liefert der Anbieter 5.247,8 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von President Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 13, 2025)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 4,576,444 100 2,660,682 100 8,616,160 100 10,259,159 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-09-30-grossProfitQ-20261024",
+      "ticker": "2855.TW",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 4938627000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das dritte Quartal 2025 (Ende 30.09.2025) liefert der Anbieter 4.938,6 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von President Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 13, 2025)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 4,576,444 100 2,660,682 100 8,616,160 100 10,259,159 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-06-30-grossProfitQ-20261024",
+      "ticker": "2855.TW",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 93679000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liefert der Anbieter 93,7 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von President Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20261014143217513812.pdf",
+          "form": "President Securities, consolidated financial statements June 30, 2026 and 2025 (English translation, auditors’ review report of August 25, 2026)",
+          "published": "2026-08-25",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income (three months 2026, 2025; six months 2026, 2025)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 12,058,748 100 2,311,393 100 17,544,856 100 4,039,716 100"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=2855&filename=202503_2855_AIA.pdf",
+          "form": "President Securities, consolidated financial statements September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 13, 2025)",
+          "published": "2025-11-13",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income (three months 2025, 2024; nine months 2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 4,576,444 100 2,660,682 100 8,616,160 100 10,259,159 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-12-31-annualRev-20261024",
+      "ticker": "2855.TW",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 12417434000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz fehlt: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 12.417,4 Mio. TWD, laut Konzernabschluss betragen die Erträge 13.541,3 Mio. TWD (2024: 13.030,0 statt 15.939,8 Mio. TWD beim Anbieter). Die Jahresreihe des Anbieters steht auf einer anderen Basis und bleibt für alle Jahre leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20260504090542742959.pdf",
+          "form": "President Securities, consolidated financial statements December 31, 2025 and 2024 (English translation, auditors’ report of March 2, 2026)",
+          "published": "2026-03-02",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 11, consolidated statements of comprehensive income (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 13,541,305 100 13,029,981 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-12-31-annualGP-20261024",
+      "ticker": "2855.TW",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 11426376000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahres-Bruttogewinn fehlt: Ein Wertpapierhaus weist keinen Bruttogewinn aus; der Wert des Anbieters für das Geschäftsjahr 2025 (Ende 31.12.2025, 11.426,4 Mio. TWD) steht auf einer anderen Basis als der Konzernabschluss und bleibt wie die älteren Jahre leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20260504090542742959.pdf",
+          "form": "President Securities, consolidated financial statements December 31, 2025 and 2024 (English translation, auditors’ report of March 2, 2026)",
+          "published": "2026-03-02",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 11, consolidated statements of comprehensive income (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Total revenues 13,541,305 100 13,029,981 100"
+        }
+      ]
+    },
+    {
+      "caseId": "2855.tw-2025-12-31-annualOpInc-20261024",
+      "ticker": "2855.TW",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 4859021000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresbetriebsergebnis fehlt: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 4.859,0 Mio. TWD, laut Konzernabschluss beträgt das Betriebsergebnis 3.580,1 Mio. TWD (2024: 3.661,4 statt 9.368,8 Mio. TWD). Die Jahresreihe bleibt für alle Jahre leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.pscnet.com.tw/upload/pscnet/file/20260504090542742959.pdf",
+          "form": "President Securities, consolidated financial statements December 31, 2025 and 2024 (English translation)",
+          "published": "2026-03-02",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 12, consolidated statements of comprehensive income, continued (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "Operating profit $ 3,580,117 26 $ 3,661,438 28"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2026-06-30-revenueQ-20261024",
+      "ticker": "6005.TW",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 32187396000,
+      "replacementValue": 12066734000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter 32.187,4 Mio. TWD; laut Konzernabschluss von Capital Securities betragen die Erträge 12.066,7 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734",
+          "value": 12066734000,
+          "currency": "TWD",
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2026-03-31-revenueQ-20261024",
+      "ticker": "6005.TW",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 16492204000,
+      "replacementValue": 7131080000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 16.492,2 Mio. TWD; laut Konzernabschluss von Capital Securities betragen die Erträge 7.131,1 Mio. TWD (erstes Halbjahr 2026 minus zweites Quartal 2026). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734",
+          "value": 19197814000,
+          "currency": "TWD",
+          "start": "2026-01-01",
+          "end": "2026-06-30"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734",
+          "value": 12066734000,
+          "currency": "TWD",
+          "start": "2026-04-01",
+          "end": "2026-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-12-31-revenueQ-20261024",
+      "ticker": "6005.TW",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 8870137000,
+      "replacementValue": 5295420000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das vierte Quartal 2025 (Ende 31.12.2025) liefert der Anbieter 8.870,1 Mio. TWD; laut Konzernabschluss von Capital Securities betragen die Erträge 5.295,4 Mio. TWD (Geschäftsjahr 2025 minus neun Monate 2025). Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.capital.com.tw/en_v7/aboutCapital/ir/PDF/E2025con_Q4.pdf",
+          "form": "Capital Securities, consolidated financial statements for the years ended December 31, 2025 and 2024 (English translation, auditors’ report of March 6, 2026)",
+          "published": "2026-03-06",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 10, consolidated statements of comprehensive income: income total and expenses total (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "19,230,991 100 17,149,090 100; 14,810,845 77 13,349,871 78",
+          "value": 19230991000,
+          "currency": "TWD",
+          "start": "2025-01-01",
+          "end": "2025-12-31"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095",
+          "value": 13935571000,
+          "currency": "TWD",
+          "start": "2025-01-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-09-30-revenueQ-20261024",
+      "ticker": "6005.TW",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 7959417000,
+      "replacementValue": 5493095000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das dritte Quartal 2025 (Ende 30.09.2025) liefert der Anbieter 7.959,4 Mio. TWD; laut Konzernabschluss von Capital Securities betragen die Erträge 5.493,1 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095",
+          "value": 5493095000,
+          "currency": "TWD",
+          "start": "2025-07-01",
+          "end": "2025-09-30"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-06-30-revenueQ-20261024",
+      "ticker": "6005.TW",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 1595501000,
+      "replacementValue": 4453908000,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Umsatz korrigiert: Für das zweite Quartal 2025 (Ende 30.06.2025) liefert der Anbieter 1.595,5 Mio. TWD; laut Konzernabschluss von Capital Securities betragen die Erträge 4.453,9 Mio. TWD. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734",
+          "value": 4453908000,
+          "currency": "TWD",
+          "start": "2025-04-01",
+          "end": "2025-06-30"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2026-06-30-opIncQ-20261024",
+      "ticker": "6005.TW",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 25415067000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter 25.415,1 Mio. TWD. Die Anbieterreihe steht auf einer anderen Basis als der Konzernabschluss von Capital Securities (im zweiten Quartal 2026 läge das Betriebsergebnis des Anbieters mit 25.415,1 Mio. TWD über den Erträgen von 12.066,7 Mio. TWD); der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2026-03-31-opIncQ-20261024",
+      "ticker": "6005.TW",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 12319846000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 12.319,8 Mio. TWD. Die Anbieterreihe steht auf einer anderen Basis als der Konzernabschluss von Capital Securities (im zweiten Quartal 2026 läge das Betriebsergebnis des Anbieters mit 25.415,1 Mio. TWD über den Erträgen von 12.066,7 Mio. TWD); der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-12-31-opIncQ-20261024",
+      "ticker": "6005.TW",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 5393201000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das vierte Quartal 2025 (Ende 31.12.2025) liefert der Anbieter 5.393,2 Mio. TWD. Die Anbieterreihe steht auf einer anderen Basis als der Konzernabschluss von Capital Securities (im zweiten Quartal 2026 läge das Betriebsergebnis des Anbieters mit 25.415,1 Mio. TWD über den Erträgen von 12.066,7 Mio. TWD); der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-09-30-opIncQ-20261024",
+      "ticker": "6005.TW",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 4657162000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das dritte Quartal 2025 (Ende 30.09.2025) liefert der Anbieter 4.657,2 Mio. TWD. Die Anbieterreihe steht auf einer anderen Basis als der Konzernabschluss von Capital Securities (im zweiten Quartal 2026 läge das Betriebsergebnis des Anbieters mit 25.415,1 Mio. TWD über den Erträgen von 12.066,7 Mio. TWD); der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-06-30-opIncQ-20261024",
+      "ticker": "6005.TW",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": -1037501000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liefert der Anbieter minus 1.037,5 Mio. TWD. Die Anbieterreihe steht auf einer anderen Basis als der Konzernabschluss von Capital Securities (im zweiten Quartal 2026 läge das Betriebsergebnis des Anbieters mit 25.415,1 Mio. TWD über den Erträgen von 12.066,7 Mio. TWD); der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2026-06-30-grossProfitQ-20261024",
+      "ticker": "6005.TW",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 31062420000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das zweite Quartal 2026 (Ende 30.06.2026) liefert der Anbieter 31.062,4 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von Capital Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2026-03-31-grossProfitQ-20261024",
+      "ticker": "6005.TW",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 15469050000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das erste Quartal 2026 (Ende 31.03.2026) liefert der Anbieter 15.469,1 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von Capital Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-12-31-grossProfitQ-20261024",
+      "ticker": "6005.TW",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 8083521000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das vierte Quartal 2025 (Ende 31.12.2025) liefert der Anbieter 8.083,5 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von Capital Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-09-30-grossProfitQ-20261024",
+      "ticker": "6005.TW",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 7034200000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das dritte Quartal 2025 (Ende 30.09.2025) liefert der Anbieter 7.034,2 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von Capital Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-06-30-grossProfitQ-20261024",
+      "ticker": "6005.TW",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 810747000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Quartals-Bruttogewinn fehlt: Für das zweite Quartal 2025 (Ende 30.06.2025) liefert der Anbieter 810,7 Mio. TWD. Ein Wertpapierhaus weist keinen Bruttogewinn aus, und die Anbieterreihe steht auf einer anderen Basis als die Erträge im Konzernabschluss von Capital Securities; der Wert bleibt leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202602_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the six months ended June 30, 2026 and 2025 (English translation on MOPS, auditors’ report of August 28, 2026)",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 9, consolidated statements of comprehensive income, income total (three months 2026, 2025; six months 2026, 2025); PDF 101, segment revenue totals",
+          "unit": "TWD thousands",
+          "quote": "12,066,734 100 4,453,908 100 19,197,814 100 8,442,476 100; Segment Revenue $ 4,917,544 204,706 10,001,914 (3,643,915) 285,462 443,950 (142,927) 12,066,734"
+        },
+        {
+          "url": "https://doc.twse.com.tw/server-java/t57sb01?step=9&kind=A&co_id=6005&filename=202503_6005_AIA.pdf",
+          "form": "Capital Securities, consolidated financial statements for the nine months ended September 30, 2025 and 2024 (English translation on MOPS, auditors’ review report of November 10, 2025)",
+          "published": "2025-11-10",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 7, consolidated statements of comprehensive income, income total (three months 2025, 2024; nine months 2025, 2024); PDF 95, segment revenue total",
+          "unit": "TWD thousands",
+          "quote": "5,493,095 100 4,741,945 100 13,935,571 100 13,106,481 100; Segment Revenue $ 2,269,570 133,327 865,543 1,538,490 44,605 735,057 (93,497) 5,493,095"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-12-31-annualRev-20261024",
+      "ticker": "6005.TW",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 21662007000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresumsatz fehlt: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 21.662,0 Mio. TWD, laut Konzernabschluss betragen die Erträge 19.231,0 Mio. TWD (2024: 17.149,1 statt 20.263,6 Mio. TWD beim Anbieter). Die Jahresreihe des Anbieters steht auf einer anderen Basis und bleibt für alle Jahre leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.capital.com.tw/en_v7/aboutCapital/ir/PDF/E2025con_Q4.pdf",
+          "form": "Capital Securities, consolidated financial statements for the years ended December 31, 2025 and 2024 (English translation, auditors’ report of March 6, 2026)",
+          "published": "2026-03-06",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 10, consolidated statements of comprehensive income: income total and expenses total (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "19,230,991 100 17,149,090 100; 14,810,845 77 13,349,871 78"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-12-31-annualGP-20261024",
+      "ticker": "6005.TW",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 18522994000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahres-Bruttogewinn fehlt: Ein Wertpapierhaus weist keinen Bruttogewinn aus; der Wert des Anbieters für das Geschäftsjahr 2025 (Ende 31.12.2025, 18.523,0 Mio. TWD) steht auf einer anderen Basis als der Konzernabschluss und bleibt wie die älteren Jahre leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.capital.com.tw/en_v7/aboutCapital/ir/PDF/E2025con_Q4.pdf",
+          "form": "Capital Securities, consolidated financial statements for the years ended December 31, 2025 and 2024 (English translation, auditors’ report of March 6, 2026)",
+          "published": "2026-03-06",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 10, consolidated statements of comprehensive income: income total and expenses total (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "19,230,991 100 17,149,090 100; 14,810,845 77 13,349,871 78"
+        }
+      ]
+    },
+    {
+      "caseId": "6005.tw-2025-12-31-annualOpInc-20261024",
+      "ticker": "6005.TW",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 9574080000,
+      "replacementValue": null,
+      "revision": "2026-10-24-sdtriage",
+      "verifiedAt": "2026-10-24",
+      "reason": "Jahresbetriebsergebnis fehlt: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 9.574,1 Mio. TWD; laut Konzernabschluss stehen Erträge von 19.231,0 Mio. TWD Aufwendungen von 14.810,8 Mio. TWD gegenüber, das Betriebsergebnis liegt also bei 4.420,1 Mio. TWD. Die Jahresreihe bleibt für alle Jahre leer. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.capital.com.tw/en_v7/aboutCapital/ir/PDF/E2025con_Q4.pdf",
+          "form": "Capital Securities, consolidated financial statements for the years ended December 31, 2025 and 2024 (English translation, auditors’ report of March 6, 2026)",
+          "published": "2026-03-06",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 10, consolidated statements of comprehensive income: income total and expenses total (2025, 2024)",
+          "unit": "TWD thousands",
+          "quote": "19,230,991 100 17,149,090 100; 14,810,845 77 13,349,871 78"
         }
       ]
     }
