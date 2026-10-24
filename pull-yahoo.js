@@ -1547,11 +1547,12 @@ function _metric(value, source, confidence, asOf) {
 
 // Stale-price gate (Daylauf 7): Yahoo's own trade time of the quote behind a market cap. asOf is the pull
 // clock and says nothing about the quote (1WAF.MI: asOf 2026-10-23, quote from 2026-09-25). Read by
-// lib/market-cap-guard.js. Accepts a Date (yahoo-finance2), epoch seconds or milliseconds, or an ISO string.
+// lib/market-cap-guard.js. Accepts a Date (yahoo-finance2), epoch seconds or milliseconds, or an ISO string;
+// 0 or a negative time is a missing stamp, never 01.01.1970.
 function _quoteTime(v) {
   if (v && typeof v === 'object' && !(v instanceof Date) && 'raw' in v) v = v.raw;
   const ms = v instanceof Date ? v.getTime() : typeof v === 'number' ? (v < 1e11 ? v * 1000 : v) : typeof v === 'string' ? Date.parse(v) : NaN;
-  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+  return Number.isFinite(ms) && ms > 0 ? new Date(ms).toISOString() : null;
 }
 
 // bug-fix (audit 2026-06-21): trim only TRAILING nulls, preserving interior null years so sibling

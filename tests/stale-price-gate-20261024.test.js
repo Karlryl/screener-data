@@ -5,19 +5,24 @@
 // and PSKY (Nasdaq line ended 05.10.) showed stale market caps and had to be held by hand. The snapshots carry no
 // quote time (meta.asOf and marketCap.asOf are the pull clock), so pull-yahoo.js now stamps Yahoo's own
 // regularMarketTime on marketCap, and lib/market-cap-guard.js withholds a value whose quote is more than
-// STALE_PRICE_TRADING_DAYS weekdays older than the pull day, on the same hold path as a hand-table hold.
+// STALE_PRICE_WEEKDAYS weekdays older than the run day, on the same hold path as a hand-table hold.
 // This guard runs the REAL guard and the REAL mapper on synthetic snapshots in the stored key shape:
 //   presence  - a stale quote empties the value with the German reason, presence marker and vendor value kept
-//   absence   - a fresh quote, a quote exactly at the limit, a weekend and no quote time leave the row untouched
+//   run day   - a snapshot whose pull keeps failing ages against the run day, not against its own asOf
+//   absence   - a fresh quote, a quote exactly at the limit, a weekend, no quote time and epoch 0 leave the row
 //   precedence- a hand-table hold keeps its own reason; a hand-table correction on a stale quote is emptied once
 //   dup leg   - PSKY (vendor stamps a fresh time on the old price) keeps its value; the dup table still removes its rank
 //   pull      - the mapper stamps marketCap.regularMarketTime from price.regularMarketTime (Date or epoch seconds)
-// Break-once on test data only: `node tests/stale-price-gate-20261024.test.js --prove-red` feeds the fixture at
-// exactly the limit to the presence check and must exit 1. No wall clock; live files are hashed before and after.
+// Break-once on test data only: `node tests/stale-price-gate-20261024.test.js --prove-red` compiles the guard in
+// memory with its gate line (the whole line, anchored exactly once) replaced by "always fresh" and runs the presence
+// check against it; it must exit 1. No file is written, no wall clock (run day fixed via RUN_DATE_UTC), live files
+// are hashed before and after.
+process.env.RUN_DATE_UTC = '2026-10-23'; // Friday, run 39918190374; set before the guard freezes its run day
 const assert = require('assert');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const Module = require('module');
 const guard = require('../lib/market-cap-guard.js');
 const dup = require('../lib/dup-issuer-shadow-table.js');
 const py = require('../pull-yahoo.js');
@@ -31,28 +36,29 @@ function pruefe(name, fn) {
   try { fn(); ok++; } catch (e) { fail++; console.error('FAIL ' + name + ': ' + (e && e.message)); }
 }
 
-const AS_OF = '2026-10-23T08:12:46.554Z'; // pull clock of run 39918190374 (Friday)
+const AS_OF = '2026-10-23T08:12:46.554Z'; // pull clock of run 39918190374
 function snap(ticker, { quoteTime, asOf = AS_OF, mcap = 77595885568, px = 9.5 } = {}) {
   return {
     meta: { ticker, tradingCurrency: 'USD', tradingCurrencyOriginal: 'USD', reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD',
       fxConverted: true, tradingFxRateApplied: 1, fxRateApplied: 1, priceCurrency: 'USD', asOf },
-    marketCap: { value: mcap, source: 'yahoo_quoteSummary', confidence: 0.9, asOf, ...(quoteTime ? { regularMarketTime: quoteTime } : {}) },
+    marketCap: { value: mcap, source: 'yahoo_quoteSummary', confidence: 0.9, asOf, ...(quoteTime !== undefined ? { regularMarketTime: quoteTime } : {}) },
     metrics: { priceSales: 2.1, enterpriseValue: 1e11, enterpriseToRevenue: 2.5, enterpriseToEbitda: 9, forwardPE: 11.2 },
     price: { regularMarketPrice: px, currencyUnit: 'USD', currency: 'USD' },
   };
 }
-const LIMIT = guard.STALE_PRICE_TRADING_DAYS;
+const LIMIT = guard.STALE_PRICE_WEEKDAYS;
+const reasonFor = (priceDay) => `Letzter Kurs vom ${priceDay}, älter als ${LIMIT} Wochentage (Montag bis Freitag); Börsenwert nicht gezeigt.`;
 
-function expectWithheld(s, priceDay) {
+function expectWithheld(s, priceDay, g = guard) {
   const before = JSON.stringify(s);
-  const out = guard.prepareMarketCap(s);
-  assert.notStrictEqual(out, s, 'stale row must be prepared on a copy');
+  const out = g.prepareMarketCap(s);
   assert.strictEqual(JSON.stringify(s), before, 'input snapshot mutated');
   assert.strictEqual(out.marketCap.value, null, `${s.meta.ticker}: value shown (quote ${s.marketCap.regularMarketTime})`);
+  assert.notStrictEqual(out, s, 'stale row must be prepared on a copy');
   assert.strictEqual(out.marketCap.missing, true, 'presence marker missing');
   assert.strictEqual(out.marketCap.source, guard.STALE_PRICE_SOURCE);
   assert.strictEqual(out.marketCap.yahooValue, s.marketCap.value, 'vendor value not kept');
-  assert.strictEqual(out.meta.marketCapReason, `Letzter Kurs vom ${priceDay}, älter als ${LIMIT} Handelstage; Börsenwert nicht gezeigt.`);
+  assert.strictEqual(out.meta.marketCapReason, reasonFor(priceDay));
   for (const f of ['priceSales', 'enterpriseValue', 'enterpriseToRevenue', 'enterpriseToEbitda']) assert.strictEqual(out.metrics[f], null, f + ' not blanked');
   assert.strictEqual(out.metrics.forwardPE, 11.2, 'unrelated metric touched');
   // The two board exits every reader uses: export/filter/rule40 drop on reason + empty value, scoring on missing + empty value.
@@ -66,46 +72,85 @@ function expectUntouched(s) {
   assert.ok(!out.meta.marketCapReason, 'reason on an untouched row');
 }
 
-// Friday 2026-10-23: quote of Tuesday 2026-10-13 is 8 weekdays old, Wednesday 2026-10-14 exactly 7.
-const AT_LIMIT = snap('WBD', { quoteTime: '2026-10-14T20:00:00.000Z' });
+// The real guard compiled in memory with exactly its gate line switched to "always fresh" (nothing is written).
+const GUARD_FILE = path.join(__dirname, '..', 'lib', 'market-cap-guard.js');
+const GATE_LINE = "  if (age.age <= limit) return { status: 'fresh' };";
+function sabotagedGuard() {
+  const lines = fs.readFileSync(GUARD_FILE, 'utf8').replace(/\r\n/g, '\n').split('\n');
+  assert.strictEqual(lines.filter((l) => l === GATE_LINE).length, 1, 'gate line anchor must hit exactly one whole line');
+  const m = new Module(GUARD_FILE, module);
+  m.filename = GUARD_FILE;
+  m.paths = Module._nodeModulePaths(path.dirname(GUARD_FILE));
+  m._compile(lines.map((l) => (l === GATE_LINE ? "  return { status: 'fresh' };" : l)).join('\n'), GUARD_FILE);
+  return m.exports;
+}
+const WBD_STALE = () => snap('WBD', { quoteTime: '2026-10-05T20:00:01.000Z' });
+
 if (process.argv.includes('--prove-red')) {
-  expectWithheld(AT_LIMIT, '14.10.2026'); // must throw: a quote exactly at the limit is shown
+  expectWithheld(WBD_STALE(), '05.10.2026', sabotagedGuard()); // must throw "value shown": the gate line decides
   console.log('stale-price-gate-20261024: --prove-red did NOT fire');
   process.exit(0);
 }
 
-pruefe('constant: default limit 7 weekdays, source name of the hold', () => {
+pruefe('constant: default limit 7 weekdays, source name of the hold, run day from RUN_DATE_UTC', () => {
   assert.strictEqual(LIMIT, 7);
   assert.strictEqual(guard.STALE_PRICE_SOURCE, 'stale-price:market-cap-hold');
+  assert.strictEqual(guard.priceAge(snap('X', { quoteTime: '2026-10-22T20:00:00.000Z' }), 100).age, 1);
 });
 
-pruefe('presence: WBD-like quote of 05.10. on the 23.10. pull is withheld (14 weekdays)', () => {
-  expectWithheld(snap('WBD', { quoteTime: '2026-10-05T20:00:01.000Z' }), '05.10.2026');
-  assert.strictEqual(guard.priceAge(snap('WBD', { quoteTime: '2026-10-05T20:00:01.000Z' }), 100).age, 14);
+pruefe('break-once harness: the gate line is anchored once and the sabotaged gate shows the stale value', () => {
+  assert.throws(() => expectWithheld(WBD_STALE(), '05.10.2026', sabotagedGuard()), /value shown/);
+});
+
+pruefe('presence: WBD-like quote of 05.10. on the 23.10. run is withheld (14 weekdays)', () => {
+  expectWithheld(WBD_STALE(), '05.10.2026');
+  assert.strictEqual(guard.priceAge(WBD_STALE(), 100).age, 14);
 });
 
 pruefe('presence: one weekday past the limit is withheld', () => {
   expectWithheld(snap('WBD', { quoteTime: '2026-10-13T20:00:00.000Z' }), '13.10.2026');
 });
 
+pruefe('run day: a snapshot whose pull keeps failing ages against the run day, not its own asOf', () => {
+  // Last good pull 13.10. with a quote of 12.10.: one weekday old at its own asOf, nine at the 23.10. run.
+  const s = snap('FAIL', { quoteTime: '2026-10-12T20:00:00.000Z', asOf: '2026-10-13T08:10:00.000Z' });
+  assert.strictEqual(guard.priceAge(s, 100).age, 9);
+  assert.strictEqual(guard.priceAge(s, 100, '2026-10-13').age, 1);
+  expectWithheld(s, '12.10.2026');
+});
+
 pruefe('absence: a quote exactly at the limit is shown', () => {
-  assert.strictEqual(guard.priceAge(AT_LIMIT).age, 7);
-  expectUntouched(AT_LIMIT);
-});
-
-pruefe('absence: fresh quote, Saturday pull on Friday quote, Lunar New Year closure of 7 weekdays', () => {
-  expectUntouched(snap('AAPL', { quoteTime: '2026-10-22T20:00:01.000Z' }));
-  expectUntouched(snap('AAPL', { quoteTime: '2026-10-23T20:00:01.000Z', asOf: '2026-10-24T08:35:49.879Z' }));
-  assert.strictEqual(guard.priceAge(snap('AAPL', { quoteTime: '2026-10-23T20:00:01.000Z', asOf: '2026-10-24T08:35:49.879Z' })).age, 0);
-  // Taiwan 2026: last bar 11.02., market closed until 23.02.; the Saturday run of 21.02. sees 7 weekdays.
-  expectUntouched(snap('2330.TW', { quoteTime: '2026-02-11T05:30:00.000Z', asOf: '2026-02-21T08:40:00.000Z' }));
-});
-
-pruefe('absence: no quote time is reported, never held', () => {
-  const s = snap('OLD', {});
+  const s = snap('WBD', { quoteTime: '2026-10-14T20:00:00.000Z' });
+  assert.strictEqual(guard.priceAge(s).age, 7);
   expectUntouched(s);
-  assert.strictEqual(guard.applyStalePriceGate(structuredClone(s)).status, 'no-quote-time');
+});
+
+pruefe('absence: fresh quote; Saturday run on a Friday quote; Lunar New Year closure of 7 weekdays', () => {
+  expectUntouched(snap('AAPL', { quoteTime: '2026-10-22T20:00:01.000Z' }));
+  const sat = snap('AAPL', { quoteTime: '2026-10-23T20:00:01.000Z', asOf: '2026-10-24T08:35:49.879Z' });
+  assert.strictEqual(guard.priceAge(sat, 7, '2026-10-24').age, 0);
+  assert.strictEqual(guard.applyStalePriceGate(structuredClone(sat), 7, '2026-10-24').status, 'fresh');
+  // Taiwan 2026: last bar 11.02., market closed until 23.02.; the Saturday run of 21.02. sees 7 weekdays.
+  const tw = snap('2330.TW', { quoteTime: '2026-02-11T05:30:00.000Z', asOf: '2026-02-21T08:40:00.000Z' });
+  assert.strictEqual(guard.priceAge(tw, 7, '2026-02-21').age, 7);
+  assert.strictEqual(guard.applyStalePriceGate(structuredClone(tw), 7, '2026-02-21').status, 'fresh');
+});
+
+pruefe('absence: no quote time and a quote time of 0 are reported, never held', () => {
+  const none = snap('OLD', {});
+  expectUntouched(none);
+  assert.strictEqual(guard.applyStalePriceGate(structuredClone(none)).status, 'no-quote-time');
+  const epoch = snap('ZERO', { quoteTime: '1970-01-01T00:00:00.000Z' });
+  expectUntouched(epoch);
+  assert.strictEqual(guard.applyStalePriceGate(structuredClone(epoch)).status, 'no-quote-time');
   assert.strictEqual(guard.applyStalePriceGate(structuredClone(snap('NUL', { mcap: null }))).status, 'no-value');
+});
+
+pruefe('robust: a stale snapshot without meta is withheld and gets meta with the reason', () => {
+  const s = { marketCap: { value: 5e9, asOf: AS_OF, regularMarketTime: '2026-10-05T20:00:00.000Z' } };
+  assert.strictEqual(guard.applyStalePriceGate(s).status, 'withheld');
+  assert.strictEqual(s.meta.marketCapReason, reasonFor('05.10.2026'));
+  assert.strictEqual(s.marketCap.value, null);
 });
 
 pruefe('precedence: hand-table holds ARX.TO and 1WAF.MI keep their own reason on a stale quote', () => {
@@ -136,7 +181,7 @@ pruefe('precedence: a hand-table correction on a stale quote is emptied with the
 });
 
 pruefe('idempotent: preparing a prepared stale row keeps value, source and reason', () => {
-  const once = guard.prepareMarketCap(snap('WBD', { quoteTime: '2026-10-05T20:00:01.000Z' }));
+  const once = guard.prepareMarketCap(WBD_STALE());
   const twice = guard.prepareMarketCap(once);
   assert.deepStrictEqual(twice, once);
 });
@@ -144,7 +189,7 @@ pruefe('idempotent: preparing a prepared stale row keeps value, source and reaso
 pruefe('tally: checked, unstamped and withheld values are counted for the exit line', () => {
   const before = { ...guard.staleTally };
   guard.prepareMarketCap(snap('OLD', {}));
-  guard.prepareMarketCap(snap('WBD', { quoteTime: '2026-10-05T20:00:01.000Z' }));
+  guard.prepareMarketCap(WBD_STALE());
   guard.prepareMarketCap(snap('AAPL', { quoteTime: '2026-10-22T20:00:01.000Z' }));
   assert.deepStrictEqual(Object.fromEntries(Object.keys(before).map((k) => [k, guard.staleTally[k] - before[k]])),
     { checked: 3, noQuoteTime: 1, withheld: 1 });
@@ -160,12 +205,12 @@ pruefe('dup leg: PSKY keeps its value on a fresh vendor time; the dup table stil
   assert.ok(!('dupIssuer' in stale), 'gate wrote a dup marker');
 });
 
-pruefe('pull: the real mapper stamps marketCap.regularMarketTime from the price module', () => {
+pruefe('pull: the real mapper stamps marketCap.regularMarketTime from the price module, 0 stays unstamped', () => {
   const map = (price) => py.mapYahooToCanonical({ summaryDetail: { marketCap: 19188787200 },
     price: Object.assign({ marketCap: 19188787200, regularMarketPrice: 33.91, currency: 'CAD' }, price) }, { ticker: 'FIXT', name: 'Fixture' }, AS_OF);
   assert.strictEqual(map({ regularMarketTime: new Date('2026-09-04T20:00:01.000Z') }).marketCap.regularMarketTime, '2026-09-04T20:00:01.000Z');
   assert.strictEqual(map({ regularMarketTime: 1788552001 }).marketCap.regularMarketTime, '2026-09-04T20:00:01.000Z');
-  assert.ok(!('regularMarketTime' in map({}).marketCap), 'time invented without a vendor field');
+  for (const v of [0, -1, new Date(0), undefined]) assert.ok(!('regularMarketTime' in map({ regularMarketTime: v }).marketCap), 'stamp from ' + String(v));
   assert.strictEqual(map({}).marketCap.asOf, AS_OF, 'pull clock changed');
 });
 
