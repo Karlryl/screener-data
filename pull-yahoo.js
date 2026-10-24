@@ -168,6 +168,14 @@ function istTeilmengenLauf(anzahlListe, bekanntesNTotal) {
 }
 let _manifestSubsetTag = null;   // gesetzt in main(), gelesen an der Schreibstelle
 let _manifestSchutzUmgangen = null;  // Grund, falls das Altmanifest nicht lesbar war
+// Sweep 24.10.: ONE path rule for every slim-manifest write. The incremental flush wrote a
+// hard-coded _manifest.json and overwrote the daily manifest on a subset run, while the log
+// said it stays untouched. Guard: tests/manifest-teilmenge.test.js runs the real main().
+function _slimManifestPath(outputDir) {
+  return path.join(outputDir, _manifestSubsetTag
+    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
+    : '_manifest.json');
+}
 const _sizeExits = new Map();
 let _sizeExitSnapshotTickers = new Set();
 let _sizeExitCheckpoint = null;
@@ -3582,10 +3590,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _fundamentalsRefreshDeferred = 0;
   // TASK 0.11: reset the silent-error counters so each pullAll reports its own tally.
   _lampErrors = 0;
-  // JS-Review 19.09.: geteilten Zustand hier aufraeumen wie die Zaehler daneben. (Beim ersten
-  // Versuch landete diese Zeile in _recordGpZeroCoding — also in einer Funktion, die JE ZEILE
-  // laeuft und den Schutz mitten im Lauf abgeraeumt haette. Anker war mehrdeutig.)
-  _manifestSubsetTag = null; _manifestSchutzUmgangen = null;
+  // Sweep 24.10.: _manifestSubsetTag and _manifestSchutzUmgangen are NOT reset here. main()
+  // decides them before calling pullAll; the reset that stood here (JS-Review 19.09.) wiped
+  // the subset tag on every run, so both manifest writes went to _manifest.json. Direct
+  // pullAll callers (tests) never set them, so nothing leaks between runs.
   _sizeExits.clear();
   _sizeExitCheckpoint = null;
   _sizeExitSnapshotTickers = new Set(watchlist.stocks.filter(stock =>
@@ -3830,7 +3838,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized },
         partial: true
       };
-      const mPath = path.join(outputDir, '_manifest.json');
+      const mPath = _slimManifestPath(outputDir);   // same rule as the final write
       writeFileAtomic(mPath, JSON.stringify(slim));
     } catch (e) {
       _manifestCheckpointErrors++;
@@ -5668,9 +5676,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, pulled=${reloadStats.pulled}, newer=${reloadStats.newer}, still-old-yahoo=${reloadStats.still_old_yahoo}, skipped-cap=${reloadStats.skipped_cap}, fetch-failed=${reloadStats.fetch_failed}, reload-failed=${reloadStats.reload_failed}, no-quarter=${reloadStats.no_quarter}`);
   _log('INFO', `Missing-market-cap observations: ${manifest.n_missing_mcap} (not counted as successful pulls)`);
   // Tag 189: factored into writeFileAtomic helper.
-  const slimPath = path.join(outputDir, _manifestSubsetTag
-    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
-    : '_manifest.json');
+  const slimPath = _slimManifestPath(outputDir);
   if (_manifestSubsetTag) {
     _log('WARN', 'Teilmengen-Lauf: Tagesmanifest bleibt unberuehrt, Bilanz nach ' + path.basename(slimPath));
   }
