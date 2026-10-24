@@ -45,7 +45,7 @@ const ADS_HAND_TABLE = loadAdsHandTable();
 // Tag 1397: issuer share counts for lines Yahoo prices with a wrong count (same two write sites).
 const SHARE_COUNT_TABLE = loadShareCountTable();
 const { applyMarketCapGuard, marketCapFloor, tradingRate, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
-const { loadStatementCurrencyTable, statementFactor, statementRowPending } = require('./lib/statement-currency-hand-table.js');
+const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
 const yahooQ4 = require('./lib/yahoo-q4-known-cases.js');
@@ -89,7 +89,7 @@ function _statementFactor(snap, origCurrency, factor) {
   const r = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE);
   const tk = snap && snap.meta && snap.meta.ticker;
   if (r.status === 'corrected') _log('INFO', `  ${tk}: ${r.series === 'annual' ? 'annual' : 'statement'} series kept in USD (statement-currency hand table), ${origCurrency} factor on financialData${r.series === 'annual' ? ' and quarterly series' : ''}`);
-  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, reporting factor used: ${r.reason}`);
+  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, ${r.hold ? 'row not verifiable' : 'reporting factor used'}: ${r.reason}`);
   return r;
 }
 
@@ -168,6 +168,14 @@ function istTeilmengenLauf(anzahlListe, bekanntesNTotal) {
 }
 let _manifestSubsetTag = null;   // gesetzt in main(), gelesen an der Schreibstelle
 let _manifestSchutzUmgangen = null;  // Grund, falls das Altmanifest nicht lesbar war
+// Sweep 24.10.: ONE path rule for every slim-manifest write. The incremental flush wrote a
+// hard-coded _manifest.json and overwrote the daily manifest on a subset run, while the log
+// said it stays untouched. Guard: tests/manifest-teilmenge.test.js runs the real main().
+function _slimManifestPath(outputDir) {
+  return path.join(outputDir, _manifestSubsetTag
+    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
+    : '_manifest.json');
+}
 const _sizeExits = new Map();
 let _sizeExitSnapshotTickers = new Set();
 let _sizeExitCheckpoint = null;
@@ -1402,6 +1410,12 @@ function _convertSnapshotToUSD(snap) {
   // MODEC is annual-only: its quarterly series still use the JPY reporting factor. Read the
   // UNSCALED revenueTTM before the metrics loop; omitted series preserves the original all-series scope.
   const stmt = _statementFactor(snap, origCurrency, factor);
+  // Sweep 24.10.: an unverifiable row (financialCurrency or the revenue check missing) withholds its
+  // statement series instead of dividing proven USD statements by the local rate (G2, T2: null + marker).
+  if (stmt.hold) {
+    const held = holdStatementSeries(snap, stmt.series);
+    console.warn(`::warning::${snap.meta.ticker}: statement-currency hand table row not verifiable (${stmt.reason}), ${held} statement values withheld - re-verify configs/statement-currency-hand-table.json`);
+  }
   const scaleAnnual = (item) => scaleTradingBy(item, stmt.factor);
   const scaleQuarter = (item) => scaleTradingBy(item, stmt.series === 'annual' ? factor : stmt.factor);
 
@@ -3582,10 +3596,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _fundamentalsRefreshDeferred = 0;
   // TASK 0.11: reset the silent-error counters so each pullAll reports its own tally.
   _lampErrors = 0;
-  // JS-Review 19.09.: geteilten Zustand hier aufraeumen wie die Zaehler daneben. (Beim ersten
-  // Versuch landete diese Zeile in _recordGpZeroCoding — also in einer Funktion, die JE ZEILE
-  // laeuft und den Schutz mitten im Lauf abgeraeumt haette. Anker war mehrdeutig.)
-  _manifestSubsetTag = null; _manifestSchutzUmgangen = null;
+  // Sweep 24.10.: _manifestSubsetTag and _manifestSchutzUmgangen are NOT reset here. main()
+  // decides them before calling pullAll; the reset that stood here (JS-Review 19.09.) wiped
+  // the subset tag on every run, so both manifest writes went to _manifest.json. Direct
+  // pullAll callers (tests) never set them, so nothing leaks between runs.
   _sizeExits.clear();
   _sizeExitCheckpoint = null;
   _sizeExitSnapshotTickers = new Set(watchlist.stocks.filter(stock =>
@@ -3830,7 +3844,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized },
         partial: true
       };
-      const mPath = path.join(outputDir, '_manifest.json');
+      const mPath = _slimManifestPath(outputDir);   // same rule as the final write
       writeFileAtomic(mPath, JSON.stringify(slim));
     } catch (e) {
       _manifestCheckpointErrors++;
@@ -5668,9 +5682,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, pulled=${reloadStats.pulled}, newer=${reloadStats.newer}, still-old-yahoo=${reloadStats.still_old_yahoo}, skipped-cap=${reloadStats.skipped_cap}, fetch-failed=${reloadStats.fetch_failed}, reload-failed=${reloadStats.reload_failed}, no-quarter=${reloadStats.no_quarter}`);
   _log('INFO', `Missing-market-cap observations: ${manifest.n_missing_mcap} (not counted as successful pulls)`);
   // Tag 189: factored into writeFileAtomic helper.
-  const slimPath = path.join(outputDir, _manifestSubsetTag
-    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
-    : '_manifest.json');
+  const slimPath = _slimManifestPath(outputDir);
   if (_manifestSubsetTag) {
     _log('WARN', 'Teilmengen-Lauf: Tagesmanifest bleibt unberuehrt, Bilanz nach ' + path.basename(slimPath));
   }
