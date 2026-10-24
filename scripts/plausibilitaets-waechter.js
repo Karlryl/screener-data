@@ -205,11 +205,11 @@ async function pruefe(opt) {
     hinweise.push(`${SNAPSHOT_CODES.join(', ')} nicht geprüft: kein Snapshot-Ordner.`);
   } else {
     const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
-    let ohneDatum = 0;
+    let ohneDatum = 0, ersterFehler = null;
     for (const z of zeilen) {
       let s;
       try { s = prepareSnapshot(readJson(path.join(opt.snapshotsDir, safeSnapshotFilename(z.r.ticker)))); }
-      catch (_) { fehlend++; continue; }
+      catch (e) { fehlend++; if (!ersterFehler && e.code !== 'ENOENT') ersterFehler = e.message; continue; }
       gelesen++;
       for (const [feld, endenFeld, wort] of [['annualRev', s.annual?.annualRevEnds, 'Jahresumsatz'], ['revenueQ', s.timeseries?.revenueQEnds, 'Quartalsumsatz']]) {
         const reihe = norm(s, feld);
@@ -235,6 +235,9 @@ async function pruefe(opt) {
       }
     }
     if (fehlend) hinweise.push(`${fehlend} Boardzeilen ohne lesbaren Snapshot; für sie liefen die Snapshot-Prüfungen nicht.`);
+    if (ersterFehler) hinweise.push(`Erster Lesefehler eines Snapshots: ${ersterFehler}`);
+    // Not one snapshot read (e.g. a broken hand table makes every prepareSnapshot throw): the checks did not run (T2).
+    if (zeilen.length && !gelesen) for (const c of SNAPSHOT_CODES) zusammenfassung[c] = null;
     if (ohneDatum) hinweise.push(`${ohneDatum} Snapshots ohne Abrufdatum des Börsenwerts; kurs-alt dort nicht geprüft.`);
   }
 

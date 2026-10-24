@@ -168,6 +168,28 @@ test('cap: at most 200 cases per class, the rest counted in gekuerzt and logged;
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('no snapshot readable at all: the three snapshot checks say null, not 0, and the first read error is named', () => {
+  const dir = tmp();
+  try {
+    const snaps = path.join(dir, 'snapshots');
+    fs.mkdirSync(snaps);
+    for (const t of ['PW-OK', 'PW-GROW']) fs.writeFileSync(path.join(snaps, t + '.json'), '{broken');
+    const exp = path.join(dir, 'export');
+    fs.mkdirSync(path.join(exp, 'full'), { recursive: true });
+    fs.writeFileSync(path.join(exp, 'index.json'), JSON.stringify({ generated_at: '2026-10-24T08:00:00Z', branches: ['energy'] }));
+    const row = (ticker, rank) => ({ rank, rankGrund: null, ticker, name: ticker, country: 'United States', marketCap: 1e9, score: 50,
+      scoreShrunk: 50, revGrowthYoYPct: 20, revGrowthBasis: 'quarter', revGrowthPeriodEnd: '2026-06-30', revGrowthPriorPeriodEnd: '2025-06-30' });
+    fs.writeFileSync(path.join(exp, 'full', 'energy.json'), JSON.stringify({ branch: 'energy', profitable: [row('PW-OK', 1), row('PW-GROW', 2)], unprofitable: [] }));
+    const r = run(['--export', exp, '--snapshots', snaps, '--board-history', path.join(dir, 'none'), '--out', path.join(dir, 'out.json'), '--gestern', path.join(dir, 'none.json')]);
+    assert.equal(r.status, 0);
+    assert.equal(r.report.status, 'ok');
+    assert.equal(r.report.quellen.snapshotsFehlend, 2);
+    for (const code of ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt']) assert.equal(r.report.zusammenfassung[code], null, code);
+    assert.equal(r.report.zusammenfassung['wachstum-extrem'], 0, 'export-only checks still ran');
+    assert.ok(r.report.hinweise.some((h) => /^Erster Lesefehler eines Snapshots: /.test(h)));
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('empty export: status kein-export, file written, exit 0', () => {
   const dir = tmp();
   try {
