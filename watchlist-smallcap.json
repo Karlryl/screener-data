@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 493,
+    "count": 491,
     "partial": false
   },
   "stocks": [
@@ -369,14 +369,6 @@
       "yahoo_symbol": "TCBX",
       "name": "Third Coast Bancshares, Inc. Common Stock",
       "marketCapUsd": 664844288,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "ASC",
-      "yahoo_symbol": "ASC",
-      "name": "Ardmore Shipping Corporation Common Stock",
-      "marketCapUsd": 664674624,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -1417,14 +1409,6 @@
       "yahoo_symbol": "TATT",
       "name": "TAT Technologies Ltd. - Ordinary Shares",
       "marketCapUsd": 528673344,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "VSTM",
-      "yahoo_symbol": "VSTM",
-      "name": "Verastem, Inc. - Common Stock",
-      "marketCapUsd": 527241856,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -3957,12 +3941,17 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-10-17T10:27:41.693Z",
+  "lastReconcile": "2026-10-24T10:39:20.676Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "BMBL",
+      "ticker": "ASC",
       "grund": "band-austritt-oben",
-      "mcap": 910107584
+      "mcap": 818263040
+    },
+    {
+      "ticker": "VSTM",
+      "grund": "band-austritt-oben",
+      "mcap": 909256960
     }
   ]
 }
