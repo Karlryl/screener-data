@@ -32,10 +32,12 @@ function test(name, fn) {
 }
 
 // Gleiches Fixture-Muster wie tests/g-sec-union-test.js.
+const jahrVor = (end) => String(Number(end.slice(0, 4)) - 1) + end.slice(4);
 function gaapFixture(rows) {
   const gaap = {};
   for (const [concept, facts] of Object.entries(rows)) {
-    gaap[concept] = { units: { USD: facts.map((f) => Object.assign({ form: '10-K', fp: 'FY' }, f)) } };
+    // F-02: annual duration facts need a full-year period; synthetic rows span the year before `end`.
+    gaap[concept] = { units: { USD: facts.map((f) => Object.assign({ form: '10-K', fp: 'FY', start: jahrVor(f.end) }, f)) } };
   }
   return gaap;
 }
@@ -148,6 +150,9 @@ test('Incl-only-Namen CALX/CEVA/COHU/LITE behalten JEDEN Wert (Regressionsanker 
 });
 
 test('LITE fy2019: die Faktor-2-Wache verwirft die Ueberschneidung vor UND nach dem Dreh', () => {
+  // F-02 (22.10.2026): in the real 10-K the 404.6 M USD Revenues row is a quarter; since F-02 the real LITE
+  // FY2019 keeps its 1,565.3 M USD annual revenue (tests/sec-annual-period.test.js). Both synthetic rows here
+  // are full years, so this test remains the control that a GENUINE annual conflict still drops the year.
   // Incl 1.565,3 Mio. gegen Revenues 404,6 Mio. = Faktor 3,87. Der Dreh tauscht nur,
   // WER Gewinner und wer Verlierer der Meldung ist - verworfen wird das Jahr weiterhin.
   const gaap = gaapFixture({
@@ -169,9 +174,9 @@ test('ARGX-Haertung: ifrs-full fuehrt NUR Revenue - Bestandteile bleiben drausse
 
 test('ARGX-Fall end-to-end: kein Umsatzjahr aus SEC, uebrige Reihen kommen an', () => {
   const companyfacts = { facts: { 'ifrs-full': {
-    RevenueFromContractsWithCustomers: { units: { USD: [{ fy: 2023, val: 35500000, end: '2023-12-31', form: '20-F', fp: 'FY' }] } },
-    RevenueAndOperatingIncome: { units: { USD: [{ fy: 2023, val: 1268600000, end: '2023-12-31', form: '20-F', fp: 'FY' }] } },
-    ProfitLossFromOperatingActivities: { units: { USD: [{ fy: 2023, val: -220000000, end: '2023-12-31', form: '20-F', fp: 'FY' }] } },
+    RevenueFromContractsWithCustomers: { units: { USD: [{ fy: 2023, val: 35500000, start: '2023-01-01', end: '2023-12-31', form: '20-F', fp: 'FY' }] } },
+    RevenueAndOperatingIncome: { units: { USD: [{ fy: 2023, val: 1268600000, start: '2023-01-01', end: '2023-12-31', form: '20-F', fp: 'FY' }] } },
+    ProfitLossFromOperatingActivities: { units: { USD: [{ fy: 2023, val: -220000000, start: '2023-01-01', end: '2023-12-31', form: '20-F', fp: 'FY' }] } },
   } } };
   const sec = extractSecSeries(companyfacts, 'ARGX');
   assert.equal(sec.taxonomie, 'ifrs-full');
