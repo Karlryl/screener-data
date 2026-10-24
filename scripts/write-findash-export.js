@@ -45,6 +45,7 @@ const { overviewGrowthHold } = require('../lib/overview-known-cases.js');
 const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
+const { mcapKlasseOf } = require('../src/scoring/score.js'); // validateGeo: the size class must follow marketCap
 // P89 SHADOW (master decision on review finding 2): the class table is validated strictly
 // (lib throws, the PR check tests this exact file), but a shadow table must never abort the
 // live daily export. On a load/validation error every row gets rankGrundShadow = null and the
@@ -191,6 +192,7 @@ const BRANCHES = [
 // Zahl bzw. boolean; auf pre-revenue survival-Zeilen null (nie gescort).
 // Task 2.11 Stufe A: scoreBase + scoreShrunk (number|null) + factors ({burn,growth,cycle}|null) — additiv OPTIONAL
 // (Score-Transparenz, wie coverageAxes NICHT im --check, damit legitime Abwesenheit/alte Consumer nicht brechen).
+// Since 24.10. --check validates PRESENT values (scale and product, checkScoreBreakdown); absence stays legal.
 // F-5 (Karl 26.07.): revGrowthYoYPct = Umsatzwachstum als ANZEIGE-Spalte in findash.
 // Reine Anzeige, kein Score-Input. Quelle ist derselbe selbst gerechnete Wert, den auch die
 // Achse revGrowthLevel sieht (score.js) — NICHT Yahoos metrics.revenueGrowthYoY, das wegen
@@ -609,6 +611,9 @@ function ergaenzeWaehrungsbeleg(out, snapshotStore = 'main') {
     if (!beleg.ok) {
       _mcapGenullt++;
       out.marketCap = null;
+      // Same rule as the guard branch above: a nulled size must not keep its size class.
+      out.mcapBand = null;
+      out.mcapKlasse = null;
     }
   }
   return out;
@@ -1667,6 +1672,16 @@ function validateGeo(r, where, errs) {
   checkStrOrNull(r, 'region', where, errs);
   checkStrOrNull(r, 'sector', where, errs);
   checkNumOrNull(r, 'marketCap', where, errs);
+  // Daylauf 7 (24.10.): the absolute size class follows the size. Additive OPTIONAL like the other
+  // K-3 fields; null stays legal next to a size because the guard branch in ergaenzeWaehrungsbeleg
+  // nulls the class when it replaces marketCap.
+  checkOptionalEnumOrNull(r, 'mcapKlasse', VALID_MCAP, where, errs);
+  if (Number.isFinite(r.marketCap) && r.marketCap <= 0) errs.push(`${where}: marketCap=${r.marketCap} not > 0`);
+  const klasse = r.mcapKlasse ?? null;
+  if (r.marketCap === null && klasse !== null) errs.push(`${where}: mcapKlasse=${JSON.stringify(klasse)} without marketCap`);
+  else if (Number.isFinite(r.marketCap) && klasse !== null && klasse !== mcapKlasseOf(r.marketCap)) {
+    errs.push(`${where}: mcapKlasse=${JSON.stringify(klasse)} does not match marketCap ${r.marketCap} (${mcapKlasseOf(r.marketCap)})`);
+  }
   // Chunk 4a (16.08.): die Einheit der Groesse und der Nachweis ihrer Umrechnung.
   // Additiv OPTIONAL wie revGrowthYoYPct — bereits gespeicherte v1-Dateien tragen die
   // Felder nicht und duerfen Karls rotes X nicht ausloesen. Sind sie da, werden sie voll
@@ -1725,6 +1740,48 @@ function checkRangGate(r, where, errs, ranking) {
   if ((r.rankGrund ?? null) !== grund) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)}, erwartet ${JSON.stringify(grund)}`);
 }
 
+// Daylauf 7 (24.10.): score transparency fields (Task 2.11) on the 0-100 scale. Additive OPTIONAL:
+// absence or null stays legal; a present value must be on the scale and must explain the score
+// (score.js breakdown: final == scoreShrunk * burn * growth * cycle, capped by gedeckelt()).
+const FACTOR_MAX = 1.05; // growth boost tops out at 1 + GROWTH_BOOST_K; burn and cycle are <= 1
+// score and scoreShrunk are round1, the factors round3, so the published fields disagree by
+// rounding alone: 0.05 (score) + 0.05 * 1.05 (scoreShrunk) + 3 * 0.0005 * 1.05 * scoreShrunk (factors).
+// A flat 0.15 would turn rounding noise red: on the 24.10. export the exact per-row rounding bound
+// exceeds 0.15 on 6,429 of 13,418 rows (largest bound 0.256; largest deviation seen 0.130).
+const productTolerance = (shrunk) => 0.05 + 0.05 * FACTOR_MAX + 3 * 0.0005 * FACTOR_MAX * shrunk + 1e-3;
+function checkScoreBreakdown(r, where, errs) {
+  const s = r.scoreShrunk ?? null, f = r.factors ?? null;
+  if (s !== null && !(Number.isFinite(s) && s >= 0 && s <= SCORE_MAX)) errs.push(`${where}: scoreShrunk=${JSON.stringify(s)} outside [0, ${SCORE_MAX}]`);
+  if (f !== null) {
+    const bad = ['burn', 'growth', 'cycle'].filter((k) => !(Number.isFinite(f[k]) && f[k] > 0 && f[k] <= FACTOR_MAX));
+    if (bad.length) errs.push(`${where}: factors.${bad.join('/')} not finite in (0, ${FACTOR_MAX}]`);
+    else if (Number.isFinite(s) && Number.isFinite(r.score)) {
+      const product = s * f.burn * f.growth * f.cycle;
+      if (Math.abs(r.score - Math.min(SCORE_MAX, product)) > productTolerance(s)) {
+        errs.push(`${where}: score=${r.score} does not match scoreShrunk*factors=${product.toFixed(2)}`);
+      }
+    }
+  }
+  if (Array.isArray(r.axisBreakdown)) {
+    r.axisBreakdown.forEach((a, i) => {
+      const pct = a?.pct ?? null;
+      if (pct !== null && !(Number.isFinite(pct) && pct >= 0 && pct <= 100)) errs.push(`${where}: axisBreakdown[${i}].pct=${JSON.stringify(pct)} outside [0, 100]`);
+    });
+  }
+}
+// Per file: the Skalen-Deckel criterion declared at SCORE_MAX (more than 10 rows exactly at 100
+// means the cap masks scale inflation) and, on full boards, a median that stays mid-scale.
+const SCORE_AT_MAX_LIMIT = 10;
+const FULL_MEDIAN_RANGE = [20, 80];
+function checkScoreScale(rows, kind, errs, isFullBoard) {
+  const scores = rows.map((r) => r && r.score).filter(Number.isFinite).sort((a, b) => a - b);
+  const atMax = scores.filter((x) => x === SCORE_MAX).length;
+  if (atMax > SCORE_AT_MAX_LIMIT) errs.push(`${kind}: ${atMax} rows at score ${SCORE_MAX} (limit ${SCORE_AT_MAX_LIMIT}, Skalen-Deckel criterion)`);
+  if (!isFullBoard || !scores.length) return;
+  const median = (scores[(scores.length - 1) >> 1] + scores[scores.length >> 1]) / 2;
+  if (median < FULL_MEDIAN_RANGE[0] || median > FULL_MEDIAN_RANGE[1]) errs.push(`${kind}: median score ${median} outside [${FULL_MEDIAN_RANGE.join(', ')}]`);
+}
+
 function validateBoardRow(r, where, errs, ranking) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
@@ -1746,6 +1803,7 @@ function validateBoardRow(r, where, errs, ranking) {
   }
   validateGeo(r, where, errs);
   checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
+  checkScoreBreakdown(r, where, errs);
 }
 
 function validateOverviewRow(r, where, errs, ranking) {
@@ -1762,6 +1820,7 @@ function validateOverviewRow(r, where, errs, ranking) {
   if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
   validateGeo(r, where, errs);
   checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
+  checkScoreBreakdown(r, where, errs);
 }
 
 function validateSurvivalRow(r, where, errs) {
@@ -1962,6 +2021,7 @@ function validateFile(mk, kind, errs, opts = {}) {
     mk.rows.forEach((r, i) => validateOverviewRow(r, `overview[${i}]`, errs, ranking));
     checkRankSequence(mk.rows, 'overview.rows', errs);     // R2.18 (a)
     checkScoreDescending(mk.rows, 'overview.rows', errs);  // R2.18 (b) — overview.json is globally score-desc
+    checkScoreScale(mk.rows, kind, errs, false);
     return;
   }
   // board file: branch (Pflicht, = filename) + profitable/unprofitable arrays of BoardRow.
@@ -1988,6 +2048,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   checkFeldHomogen(alleZeilen, 'revGrowthBasisLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewValueLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewPeriod', kind, errs);
+  checkScoreScale(alleZeilen, kind, errs, opts.deliveryMode === 'full');
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
   checkRankSequence(mk.profitable, `${kind}.profitable`, errs);

@@ -888,8 +888,11 @@ function writerFixtures() {
   const hg = mod.exports, source = path.join(root, 'outputs', 'hypergrowth');
   const out = path.join(root, 'outputs', 'findash-export', 'v1');
   fs.mkdirSync(path.join(source, 'full'), { recursive: true }); fs.mkdirSync(snapDir, { recursive: true });
-  const snap = snapshot(); fs.writeFileSync(path.join(snapDir, 'TEST.json'), JSON.stringify(snap));
-  const row = fixture40.boardZeile({ ticker: 'TEST', marketCap: 0, revGrowthYoYPct: p.captureSnapshot(snap).leg.pct,
+  // Daylauf 7 (24.10.): the export gate rejects a zero size, a size class that does not match the size
+  // and a score its breakdown does not explain, so the shipped row carries a large-cap size and
+  // scoreShrunk 78.4 (78.4 * 1.02 = 80.0, the fixture score).
+  const snap = snapshot(); snap.marketCap.value = 5e10; fs.writeFileSync(path.join(snapDir, 'TEST.json'), JSON.stringify(snap));
+  const row = fixture40.boardZeile({ ticker: 'TEST', marketCap: 5e10, scoreShrunk: 78.4, revGrowthYoYPct: p.captureSnapshot(snap).leg.pct,
     ipoRecency: 'mature', profitStreak: null });
   const counts = {};
   for (const branch of hg.BRANCHES) {

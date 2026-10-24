@@ -127,5 +127,83 @@ test('board unprofitable-Track: eigene rank-Sequenz, Bruch dort isoliert erkannt
   assert.ok(!e.some((x) => /energy\.profitable\[.*score-Ordnung/.test(x)), 'profitable-Track ist sauber, darf nicht mit-trippen');
 });
 
+// --- Daylauf 7 (24.10.): score scale, cap count, median per full board, size class ----------
+// Breakdown fields in the shape score.js emits (score == min(100, scoreShrunk*burn*growth*cycle)
+// up to rounding). LOV.AX on the 24.10. export: 72.8 * 1.032 = 75.13, exported score 75.0.
+const F_LOV = { burn: 1, growth: 1.032, cycle: 1 };
+const withBreakdown = (row, scoreShrunk, factors = F_LOV) => ({ ...row, scoreShrunk, factors,
+  axisBreakdown: [{ key: 'gm', pct: 88.1, weight: 0.2 }, { key: 'fcf', pct: null, weight: 0.1 }] });
+const boardRow = (score) => board3([score])[0];
+const ovRow = (score) => overview3([score])[0];
+const rowErrs = (fn, r) => { const e = []; fn(r, 'w', e); return e; };
+const fullHull = (profitable, unprofitable = []) => {
+  const hull = mkHull(profitable, unprofitable);
+  hull.cohortDelivery = wfe.cohortDeliveryFor('energy', hull, 'full');
+  return hull;
+};
+// n scores falling evenly from top to bottom (score-desc like a real track)
+const spread = (n, top, bottom) => Array.from({ length: n }, (_, i) => Math.round((top - (top - bottom) * i / (n - 1)) * 10) / 10);
+
+test('breakdown: score.js-shaped fields pass on board and overview rows (rounding gap 0.13)', () => {
+  assert.deepEqual(rowErrs(wfe.validateBoardRow, withBreakdown(boardRow(75), 72.8)), []);
+  assert.deepEqual(rowErrs(wfe.validateOverviewRow, withBreakdown(ovRow(75), 72.8)), []);
+  // capped row: product 104.1 (SNDK shape on 24.10.) is exported as 100
+  assert.deepEqual(rowErrs(wfe.validateBoardRow, withBreakdown(boardRow(100), 99.1, { burn: 1, growth: 1.05, cycle: 1 })), []);
+  // absence and null stay legal (additive optional fields)
+  assert.deepEqual(rowErrs(wfe.validateBoardRow, { ...boardRow(75), scoreShrunk: null, factors: null, axisBreakdown: null }), []);
+});
+test('breakdown: scoreShrunk 9500 trips (board and overview)', () => {
+  assert.ok(rowErrs(wfe.validateBoardRow, withBreakdown(boardRow(75), 9500)).some((x) => /scoreShrunk=9500 outside/.test(x)));
+  assert.ok(rowErrs(wfe.validateOverviewRow, withBreakdown(ovRow(75), 9500)).some((x) => /scoreShrunk=9500 outside/.test(x)));
+});
+test('breakdown: factors.growth = 105 trips', () => {
+  const e = rowErrs(wfe.validateBoardRow, withBreakdown(boardRow(75), 72.8, { burn: 1, growth: 105, cycle: 1 }));
+  assert.ok(e.some((x) => /factors\.growth not finite/.test(x)), JSON.stringify(e));
+});
+test('breakdown: a zero, missing or non-finite factor trips', () => {
+  for (const f of [{ burn: 0, growth: 1, cycle: 1 }, { burn: 1, growth: 1 }, { burn: 1, growth: 1, cycle: null }, 7]) {
+    assert.ok(rowErrs(wfe.validateBoardRow, withBreakdown(boardRow(75), 72.8, f)).some((x) => /factors\./.test(x)), JSON.stringify(f));
+  }
+});
+test('breakdown: a score the factors do not explain trips', () => {
+  const e = rowErrs(wfe.validateBoardRow, withBreakdown(boardRow(75), 50));
+  assert.ok(e.some((x) => /does not match scoreShrunk\*factors/.test(x)), JSON.stringify(e));
+  // just outside the rounding bound at scoreShrunk 72.8 (0.05 + 0.0525 + 0.1147 + 0.001 = 0.218)
+  assert.ok(rowErrs(wfe.validateBoardRow, withBreakdown(boardRow(75.4), 72.8)).some((x) => /does not match/.test(x)));
+});
+test('breakdown: axisBreakdown pct outside [0, 100] trips', () => {
+  const r = withBreakdown(boardRow(75), 72.8);
+  r.axisBreakdown = [{ key: 'gm', pct: 250, weight: 0.2 }];
+  assert.ok(rowErrs(wfe.validateBoardRow, r).some((x) => /axisBreakdown\[0\]\.pct=250/.test(x)));
+});
+test('cap count: 12 rows at 100 trip a board and the overview, 10 rows pass', () => {
+  let e = []; wfe.validateFile(mkHull(board3(Array(12).fill(100))), 'energy', e);
+  assert.ok(e.some((x) => /12 rows at score 100/.test(x)), JSON.stringify(e));
+  e = []; wfe.validateFile(mkOverviewFile(overview3(Array(12).fill(100))), 'overview', e);
+  assert.ok(e.some((x) => /12 rows at score 100/.test(x)), JSON.stringify(e));
+  e = []; wfe.validateFile(mkHull(board3(Array(10).fill(100))), 'energy', e);
+  assert.deepEqual(e, []);
+});
+test('median: a full board scaled x0.01 trips, the unscaled board passes', () => {
+  const scores = spread(40, 95, 5); // median 50
+  let e = []; wfe.validateFile(fullHull(board3(scores)), 'energy', e, { deliveryMode: 'full' });
+  assert.deepEqual(e, []);
+  e = []; wfe.validateFile(fullHull(board3(scores.map((s) => Math.round(s) / 100))), 'energy', e, { deliveryMode: 'full' });
+  assert.ok(e.some((x) => /median score .* outside \[20, 80\]/.test(x)), JSON.stringify(e));
+  // a short top-N list legitimately sits high; the median applies to full boards only
+  e = []; wfe.validateFile(mkHull(board3(spread(10, 99, 90))), 'energy', e);
+  assert.deepEqual(e, []);
+});
+test('size class: mcapKlasse must follow marketCap; marketCap must be > 0', () => {
+  const r = boardRow(75); // unproven FX in the test run: marketCap and mcapKlasse are null
+  assert.deepEqual(rowErrs(wfe.validateBoardRow, r), []);
+  assert.deepEqual(rowErrs(wfe.validateBoardRow, { ...r, marketCap: 5e9, mcapKlasse: 'mid' }), []);
+  assert.deepEqual(rowErrs(wfe.validateBoardRow, { ...r, marketCap: 5e9, mcapKlasse: null }), [], 'null next to a size stays legal (guard branch)');
+  assert.ok(rowErrs(wfe.validateBoardRow, { ...r, marketCap: null, mcapKlasse: 'mega' }).some((x) => /mcapKlasse="mega" without marketCap/.test(x)));
+  assert.ok(rowErrs(wfe.validateBoardRow, { ...r, marketCap: 5e9, mcapKlasse: 'mega' }).some((x) => /does not match marketCap 5000000000 \(mid\)/.test(x)));
+  assert.ok(rowErrs(wfe.validateBoardRow, { ...r, marketCap: 0 }).some((x) => /marketCap=0 not > 0/.test(x)));
+  assert.ok(rowErrs(wfe.validateOverviewRow, { ...ovRow(75), mcapKlasse: 'huge' }).some((x) => /mcapKlasse="huge"/.test(x)));
+});
+
 console.log(`\nfindash-export-gate.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
