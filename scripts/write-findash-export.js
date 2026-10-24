@@ -1762,7 +1762,8 @@ function checkScoreBreakdown(r, where, errs) {
       }
     }
   }
-  if (Array.isArray(r.axisBreakdown)) {
+  if (r.axisBreakdown != null && !Array.isArray(r.axisBreakdown)) errs.push(`${where}: axisBreakdown not array|null`);
+  else if (Array.isArray(r.axisBreakdown)) {
     r.axisBreakdown.forEach((a, i) => {
       const pct = a?.pct ?? null;
       if (pct !== null && !(Number.isFinite(pct) && pct >= 0 && pct <= 100)) errs.push(`${where}: axisBreakdown[${i}].pct=${JSON.stringify(pct)} outside [0, 100]`);
@@ -1771,12 +1772,14 @@ function checkScoreBreakdown(r, where, errs) {
 }
 // Per file: the Skalen-Deckel criterion declared at SCORE_MAX (more than 10 rows exactly at 100
 // means the cap masks scale inflation) and, on full boards, a median that stays mid-scale.
+// Master decision 24.10.: the cap count only WARNS. A capped 100 is not a wrong number (G2), and a
+// violation here would stop the whole deploy; the median stays a hard violation.
 const SCORE_AT_MAX_LIMIT = 10;
 const FULL_MEDIAN_RANGE = [20, 80];
-function checkScoreScale(rows, kind, errs, isFullBoard) {
+function checkScoreScale(rows, kind, errs, isFullBoard, file = kind) {
   const scores = rows.map((r) => r && r.score).filter(Number.isFinite).sort((a, b) => a - b);
   const atMax = scores.filter((x) => x === SCORE_MAX).length;
-  if (atMax > SCORE_AT_MAX_LIMIT) errs.push(`${kind}: ${atMax} rows at score ${SCORE_MAX} (limit ${SCORE_AT_MAX_LIMIT}, Skalen-Deckel criterion)`);
+  if (atMax > SCORE_AT_MAX_LIMIT) console.warn(`::warning::${file}: ${atMax} rows at score ${SCORE_MAX} (Skalen-Deckel criterion: at most ${SCORE_AT_MAX_LIMIT}; the cap may mask scale inflation)`);
   if (!isFullBoard || !scores.length) return;
   const median = (scores[(scores.length - 1) >> 1] + scores[scores.length >> 1]) / 2;
   if (median < FULL_MEDIAN_RANGE[0] || median > FULL_MEDIAN_RANGE[1]) errs.push(`${kind}: median score ${median} outside [${FULL_MEDIAN_RANGE.join(', ')}]`);
@@ -2021,7 +2024,7 @@ function validateFile(mk, kind, errs, opts = {}) {
     mk.rows.forEach((r, i) => validateOverviewRow(r, `overview[${i}]`, errs, ranking));
     checkRankSequence(mk.rows, 'overview.rows', errs);     // R2.18 (a)
     checkScoreDescending(mk.rows, 'overview.rows', errs);  // R2.18 (b) — overview.json is globally score-desc
-    checkScoreScale(mk.rows, kind, errs, false);
+    checkScoreScale(mk.rows, kind, errs, false, opts.file);
     return;
   }
   // board file: branch (Pflicht, = filename) + profitable/unprofitable arrays of BoardRow.
@@ -2048,7 +2051,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   checkFeldHomogen(alleZeilen, 'revGrowthBasisLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewValueLegacy', kind, errs);
   checkFeldHomogen(alleZeilen, 'overviewPeriod', kind, errs);
-  checkScoreScale(alleZeilen, kind, errs, opts.deliveryMode === 'full');
+  checkScoreScale(alleZeilen, kind, errs, opts.deliveryMode === 'full', opts.file); // opts.file: label for the warning
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
   checkRankSequence(mk.profitable, `${kind}.profitable`, errs);
@@ -2070,6 +2073,7 @@ function validateExport(outDir = OUT_DIR, opts = {}) {
     if (!mk) { errs.push(`${id}: missing/unreadable`); continue; }
     const full = readJSONOrNull(path.join(outDir, 'full', id + '.json')); // missing full/ is flagged by validateFullExport
     validateFile(mk, id, errs, {
+      file: id + '.json',
       deliveryMode: 'topN',
       cohortCounts: cohortCountsForValidation(counts, id),
       rankings: full ? { profitable: tickerSet(full.profitable), unprofitable: tickerSet(full.unprofitable) } : undefined,
@@ -2078,7 +2082,7 @@ function validateExport(outDir = OUT_DIR, opts = {}) {
   for (const [name, kind] of [['overview.json', 'overview'], ['survival.json', 'survival']]) {
     const mk = readJSONOrNull(path.join(outDir, name));
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
-    validateFile(mk, kind, errs);
+    validateFile(mk, kind, errs, { file: name });
   }
   return errs.concat(provenanceErrors(outDir, PROVENANCE_FILES(), opts.requireProvenance))
              .concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
@@ -2100,6 +2104,7 @@ function validateFullExport(fullDir = FULL_OUT_DIR, countsByBoard) {
     const mk = readJSONOrNull(path.join(fullDir, id + '.json'));
     if (!mk) { raw.push(`${id}: missing/unreadable`); continue; }
     validateFile(mk, id, raw, {
+      file: 'full/' + id + '.json',
       deliveryMode: 'full',
       cohortCounts: cohortCountsForValidation(countsByBoard, id),
     }); // dieselbe Board-Datei-Pruefung + T194 Vollstaendigkeitsbeleg gegen index.counts
@@ -2163,11 +2168,11 @@ function validateQualityExport(qoutDir = QOUT_DIR) {
     if (!mk) { raw.push(`quality/${stem}: missing/unreadable`); continue; }
     // BH-160: forceDiagnostic — this file is KNOWN to be a QC board (came off idx.boards), so
     // boardStatus is pinned to 'diagnostic' here, unlike the HG board-file call below.
-    validateFile(mk, stem, raw, { forceDiagnostic: true }); // reuses board-file check: branch===stem, boardStatus enum, every BoardRow
+    validateFile(mk, stem, raw, { forceDiagnostic: true, file: `quality/${stem}.json` }); // reuses board-file check: branch===stem, boardStatus enum, every BoardRow
   }
   const ov = readJSONOrNull(path.join(qoutDir, 'overview.json'));
   if (!ov) raw.push('quality/overview: missing/unreadable');
-  else validateFile(ov, 'overview', raw); // reuses OverviewRow check
+  else validateFile(ov, 'overview', raw, { file: 'quality/overview.json' }); // reuses OverviewRow check
   return raw.map((e) => (e.startsWith('quality/') ? e : 'quality/' + e));
 }
 
@@ -2216,11 +2221,11 @@ function validateSmallcapExport(scoutDir = SCOUT_DIR) {
     const stem = String(id).replace(/^smallcap-/, '');
     const mk = readJSONOrNull(path.join(scoutDir, stem + '.json'));
     if (!mk) { raw.push(`smallcap/${stem}: missing/unreadable`); continue; }
-    validateFile(mk, stem, raw, { forceDiagnostic: true });
+    validateFile(mk, stem, raw, { forceDiagnostic: true, file: `smallcap/${stem}.json` });
   }
   const ov = readJSONOrNull(path.join(scoutDir, 'overview.json'));
   if (!ov) raw.push('smallcap/overview: missing/unreadable');
-  else validateFile(ov, 'overview', raw);
+  else validateFile(ov, 'overview', raw, { file: 'smallcap/overview.json' });
   return raw.map((e) => (e.startsWith('smallcap/') ? e : 'smallcap/' + e));
 }
 

@@ -175,14 +175,52 @@ test('breakdown: axisBreakdown pct outside [0, 100] trips', () => {
   const r = withBreakdown(boardRow(75), 72.8);
   r.axisBreakdown = [{ key: 'gm', pct: 250, weight: 0.2 }];
   assert.ok(rowErrs(wfe.validateBoardRow, r).some((x) => /axisBreakdown\[0\]\.pct=250/.test(x)));
+  for (const bad of [{ gm: 88.1 }, 'gm', 5]) {
+    r.axisBreakdown = bad;
+    assert.ok(rowErrs(wfe.validateBoardRow, r).some((x) => /axisBreakdown not array\|null/.test(x)), JSON.stringify(bad));
+  }
 });
-test('cap count: 12 rows at 100 trip a board and the overview, 10 rows pass', () => {
-  let e = []; wfe.validateFile(mkHull(board3(Array(12).fill(100))), 'energy', e);
-  assert.ok(e.some((x) => /12 rows at score 100/.test(x)), JSON.stringify(e));
-  e = []; wfe.validateFile(mkOverviewFile(overview3(Array(12).fill(100))), 'overview', e);
-  assert.ok(e.some((x) => /12 rows at score 100/.test(x)), JSON.stringify(e));
-  e = []; wfe.validateFile(mkHull(board3(Array(10).fill(100))), 'energy', e);
+// Master decision 24.10.: more than 10 rows at 100 is a ::warning:: naming the file, never a violation.
+const captureWarnings = (fn) => {
+  const out = [], warn = console.warn; console.warn = (m) => out.push(String(m));
+  try { fn(); } finally { console.warn = warn; }
+  return out;
+};
+// Smallest complete export validateExport accepts (shape as in t194-v1-cap-contract.test.js).
+function writeExport(energyRows, overviewRows) {
+  const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'export-gate-'));
+  fs.mkdirSync(path.join(dir, 'full'));
+  const write = (rel, value) => fs.writeFileSync(path.join(dir, rel), JSON.stringify(value));
+  const counts = Object.fromEntries(wfe.BRANCHES.map((id) => [id, { profitable: id === 'energy' ? energyRows.length : 0, unprofitable: 0 }]));
+  for (const id of wfe.BRANCHES) {
+    for (const mode of ['topN', 'full']) {
+      const mk = { ...mkHull(id === 'energy' ? energyRows : []), branch: id };
+      mk.cohortDelivery = wfe.cohortDeliveryFor(id, mk, mode, counts[id]);
+      write((mode === 'full' ? 'full/' : '') + id + '.json', mk);
+    }
+  }
+  write('overview.json', mkOverviewFile(overviewRows));
+  write('survival.json', mkSurvivalFile([]));
+  write('index.json', { schema: wfe.SCHEMA, generated_at: 'x', coverage: null, generatedFromSnapshots: 0,
+    branches: [...wfe.BRANCHES], boardStatus: Object.fromEntries(wfe.BRANCHES.map((id) => [id, 'core'])),
+    counts, survivalCount: 0, excluded: {} });
+  return dir;
+}
+test('cap count: 12 rows at 100 warn with the file name, never a violation; 10 rows stay silent', () => {
+  let e = [];
+  let w = captureWarnings(() => wfe.validateFile(mkHull(board3(Array(12).fill(100))), 'energy', e, { file: 'energy.json' }));
   assert.deepEqual(e, []);
+  assert.deepEqual(w, ['::warning::energy.json: 12 rows at score 100 (Skalen-Deckel criterion: at most 10; the cap may mask scale inflation)']);
+  e = []; w = captureWarnings(() => wfe.validateFile(mkHull(board3(Array(10).fill(100))), 'energy', e));
+  assert.deepEqual([e, w], [[], []]);
+  // whole export: 12 rows at 100 on the energy board, its full board (median kept mid-scale) and the overview
+  const energy = board3([...Array(12).fill(100), ...spread(28, 60, 5)]);
+  const dir = writeExport(energy, overview3(Array(12).fill(100)));
+  w = captureWarnings(() => { e = wfe.validateExport(dir); });
+  assert.deepEqual(e, [], 'validateExport must return 0 violations for 12 rows at 100');
+  assert.deepEqual(w.map((x) => (x.match(/^::warning::([^:]+): 12 rows at score 100 /) || [])[1]).sort(),
+    ['energy.json', 'full/energy.json', 'overview.json'], JSON.stringify(w));
 });
 test('median: a full board scaled x0.01 trips, the unscaled board passes', () => {
   const scores = spread(40, 95, 5); // median 50
