@@ -50,7 +50,7 @@ function fixtureRun(extra = [], env = {}) {
   fs.mkdirSync(snaps);
   writeSnapshots(snaps);
   const out = path.join(dir, 'out', 'plausibilitaet.json');
-  return { dir, ...run(['--export', path.join(FIX, 'export'), '--snapshots', snaps, '--board-history', path.join(FIX, 'board-history'),
+  return { dir, ...run(['--export', path.join(FIX, 'export'), '--snapshots', snaps, '--board-history', path.join(FIX, 'jahrgaenge'),
     '--out', out, '--gestern', path.join(FIX, 'gestern.json'), ...extra], env) };
 }
 
