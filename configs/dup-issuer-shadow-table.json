@@ -8,7 +8,6 @@
     "Sources and verbatim quotes are supplied by R11-FINAL (2026-09-30); no network re-check was performed in this task.",
     "2026-10-23 (numbers-trust audit 23.10.): circle, strategy, energy-fuels, star-bulk, vinci and the GE leg 1GE.MI were added with sources fetched and quotes checked verbatim on 2026-10-23; vinci's home listing DG.PA is excluded by production, so its legs DG.SW and DG.VI keep their ranks until DG.PA stands in the ranking.",
     "2026-10-24 (numbers-trust audit 23.10.): skydance added with sources fetched and quotes checked verbatim on 2026-10-24; PSKY is the former Nasdaq ticker of the same Class B common stock (listing transferred to the NYSE as SKYD on 2026-10-06), so it is a stale leg of SKYD, not a second class.",
-    "2026-10-24 (plausibility triage 24.10.): grupo-aeromexico gets the home listing AERO.MX (common shares on the BMV), codeKeeps set to AERO.MX as for circle and strategy: the NYSE ADS AERO carries the marker and loses its rank while AERO.MX stands in the same ranking; source fetched and quote checked verbatim on 2026-10-24.",
     "RBI (QSR / QSP.TO) and Molson Coors (TAP-A / TPX.TO) are deliberately absent: economically equivalent exchangeable shares, not secondary listings; TPX.TO class attribution is unproven."
   ],
   "aerovironment": {
@@ -66,15 +65,15 @@
   "grupo-aeromexico": {
     "issuer": "Grupo Aeroméxico",
     "tickers": ["AERO", "AERO.MX"],
-    "codeKeeps": "AERO.MX",
-    "homeListingProposal": "AERO.MX",
+    "codeKeeps": "AERO",
+    "homeListingProposal": null,
     "source": {
-      "url": "https://www.sec.gov/Archives/edgar/data/1561861/000119312526197494/R9.htm",
-      "quote": "Each ADS represents 10 common shares of Grupo Aeroméxico (see Note 26). The ADS began trading on the NYSE and the common shares on the BMV on November 6, 2025, under the ticker symbol “AERO”."
+      "url": "https://ir.aeromexico.com/ir-resources/investor-faqs",
+      "quote": "Mexican Stock Exchange (BMV) under the ticker \"AERO\""
     },
-    "sourceCheckedOn": "2026-10-24",
+    "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "Form 20-F for 2025 (accession 0001193125-26-197494, filed 2026-04-30), note 2(b) basis of preparation. The IPO prospectus 424B1 of 2025-11-05 (https://www.sec.gov/Archives/edgar/data/1561861/000119312525270444/d11281d424b1.htm) states \"Each ADS represents 10 of our shares.\" and \"The ADSs are not required to be and will not be registered in the RNV maintained by the CNBV nor listed on the BMV.\" Home listing AERO.MX (common shares of the Mexican issuer, S.A.B. de C.V.). Since 2026-10-24 (plausibility triage 24.10., set as for circle and strategy) codeKeeps and the home listing are AERO.MX, so the flag marks the NYSE ADS AERO and references AERO.MX; until then codeKeeps was AERO (R11 re-enactment of the production choice), the proposal was open and the flag marked AERO.MX. Previous source (investor FAQ, 2026-09-30, not re-fetchable on 2026-10-24): https://ir.aeromexico.com/ir-resources/investor-faqs, quote \"Mexican Stock Exchange (BMV) under the ticker \"AERO\"\". Live export 2026-10-24: AERO.MX rank 1457 and AERO rank 1459 on industrials profitable (37.5 and 37.4)."
+    "note": "R11 home-listing proposal remains unresolved (offen)."
   },
   "amrize": {
     "issuer": "Amrize",

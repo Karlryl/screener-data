@@ -152,34 +152,6 @@ test('break-once on test data: without these rows the wrong values are back; a m
   assert.deepEqual(liveHashes(), beforeHashes, 'live files unchanged');
 });
 
-// Case group 2 (dup-issuer table): Grupo Aeromexico stood twice on industrials profitable (live export 24.10.2026:
-// AERO.MX rank 1457 at 37.5, the NYSE ADS AERO rank 1459 at 37.4). Home listing AERO.MX (20-F 2025: one ADS = 10 shares).
-const dup = require('../lib/dup-issuer-shadow-table.js');
-test('Aeromexico: the home listing AERO.MX keeps its rank in either tie order, the ADS AERO is marked and unranked', () => {
-  const t = dup.loadDupIssuerShadowTable(), home = dup.homeListingIndex(t), marks = dup.secondaryIndex(t);
-  assert.deepEqual([t['grupo-aeromexico'].codeKeeps, t['grupo-aeromexico'].homeListingProposal, t['grupo-aeromexico'].markFollowsHomeListing], ['AERO.MX', 'AERO.MX', undefined]);
-  assert.deepEqual(marks.get('AERO'), { of: 'AERO.MX', issuer: 'Grupo Aeroméxico', homeListingProposal: 'AERO.MX' });
-  assert.equal(marks.has('AERO.MX'), false);
-  const rankOf = (order, index) => {
-    const ranking = new Set(order); let rank = 0;
-    return Object.fromEntries(order.map(x => [x, dup.dupIssuerRankGrund(x, index, ranking) ? null : ++rank]));
-  };
-  for (const order of [['A', 'AERO.MX', 'AERO', 'B'], ['A', 'AERO', 'AERO.MX', 'B']]) {
-    const r = rankOf(order, home);
-    assert.equal(r.AERO, null, order.join());
-    assert.equal(r['AERO.MX'], 2, order.join());
-    assert.equal(r.B, 3, order.join() + ': the row below moves up one place');
-  }
-  // AERO alone keeps its rank (the firm never vanishes from a ranking).
-  assert.equal(dup.dupIssuerRankGrund('AERO', home, new Set(['AERO', 'B'])), null);
-  // Break-once on a table copy: with the open proposal of the base commit both rows keep a rank.
-  const open = structuredClone(t);
-  Object.assign(open['grupo-aeromexico'], { codeKeeps: 'AERO', homeListingProposal: null });
-  const r = rankOf(['A', 'AERO.MX', 'AERO', 'B'], dup.homeListingIndex(open));
-  assert.deepEqual([r['AERO.MX'], r.AERO], [2, 3]);
-  assert.throws(() => assert.equal(r.AERO, null), assert.AssertionError);
-});
-
 // Case group 3 (G31 hint table, code uebernahme): the shown growth is right but not comparable. Real vendor cells of
 // the run 39918190374 (data day 23.10.2026), reduced to the fields the G31 pair reads. Numbers are not changed.
 const { Module, createRequire } = require('node:module');
