@@ -10391,6 +10391,72 @@
           "note": "stated in CHF thousands; value in CHF. PDF 38, note 5 Other revenue: \"Other revenue 24 8\" (the vendor annual values 24,000 and 8,000 CHF)"
         }
       ]
+    },
+    {
+      "caseId": "infrac.sw-2025-12-31-annualOpInc-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": -6040000,
+      "replacementValue": 76248000,
+      "revision": "2026-10-24-sdumsatz3",
+      "verifiedAt": "2026-10-24",
+      "metricDefinition": "EBIT (operating result before financial result and taxes)",
+      "reason": "Betriebsergebnis korrigiert: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter einen Verlust von 6,0 Mio. CHF. Infracore weist in der Konzernerfolgsrechnung ein Betriebsergebnis (EBIT, nach Abschreibungen und vor Finanzergebnis und Steuern) von 76,2 Mio. CHF aus. Darin enthalten ist der Erfolg aus der Neubewertung der Liegenschaften von 16,2 Mio. CHF; ohne ihn wären es 60,1 Mio. CHF. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/804ef8a5-6235-49b1-a37b-d4d2a895eed0/assets/Infracore_Annual_Report_2025.pdf",
+          "form": "Infracore SA, Annual Report 2025",
+          "published": "2026-03-11",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 28, consolidated income statement (2025, 2024; in thousands of CHF), line EBIT after depreciation and before financial result",
+          "sourceUnit": "CHF thousands",
+          "currency": "CHF",
+          "unit": "currency",
+          "quote": "EBIT 76’248 59’031",
+          "value": 76248000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "note": "EBIT includes the result from revaluation of the investment properties (same page: \"Result from revaluation 14 16’160 5’384\")."
+        }
+      ]
+    },
+    {
+      "caseId": "infrac.sw-2024-12-31-annualOpInc-20261024",
+      "ticker": "INFRAC.SW",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "CHF",
+      "unit": "currency",
+      "expectedBadValue": -6818000,
+      "replacementValue": 59031000,
+      "revision": "2026-10-24-sdumsatz3",
+      "verifiedAt": "2026-10-24",
+      "metricDefinition": "EBIT (operating result before financial result and taxes)",
+      "reason": "Betriebsergebnis korrigiert: Für das Geschäftsjahr 2024 (Ende 31.12.2024) liefert der Anbieter einen Verlust von 6,8 Mio. CHF. Infracore weist in der Konzernerfolgsrechnung ein Betriebsergebnis (EBIT, nach Abschreibungen und vor Finanzergebnis und Steuern) von 59,0 Mio. CHF aus. Darin enthalten ist der Erfolg aus der Neubewertung der Liegenschaften von 5,4 Mio. CHF; ohne ihn wären es 53,6 Mio. CHF. Geprüft am 24.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.infracore.ch/media/document/804ef8a5-6235-49b1-a37b-d4d2a895eed0/assets/Infracore_Annual_Report_2025.pdf",
+          "form": "Infracore SA, Annual Report 2025",
+          "published": "2026-03-11",
+          "verifiedAt": "2026-10-24",
+          "page": "PDF 28, consolidated income statement (2025, 2024; in thousands of CHF), line EBIT after depreciation and before financial result",
+          "sourceUnit": "CHF thousands",
+          "currency": "CHF",
+          "unit": "currency",
+          "quote": "EBIT 76’248 59’031",
+          "value": 59031000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "note": "EBIT includes the result from revaluation of the investment properties (same page: \"Result from revaluation 14 16’160 5’384\")."
+        }
+      ]
     }
   ],
   "quarantines": [
