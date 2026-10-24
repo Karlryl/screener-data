@@ -30,7 +30,10 @@ const CODES = ['wachstum-extrem', 'jahrespaar-abstand', 'quartalspaar-abstand', 
 const SNAPSHOT_CODES = ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt'];
 const JAHR = new Set(['year', 'yearNewerRecord', 'ttm']);
 const QUARTAL = new Set(['quarter', 'halfYear']); // halfYear: H1 vs prior-year H1, same one-year gap as a quarter pair
-const BASIS_WORT = { quarter: 'Quartal', halfYear: 'Halbjahr', year: 'Geschäftsjahr', yearNewerRecord: 'Geschäftsjahr', ttm: 'Zwölfmonatszeitraum' };
+// [noun, accusative article, dative article] per growth basis, for grammatical German reasons.
+const BASIS_WORT = { quarter: ['Quartal', 'das', 'dem'], halfYear: ['Halbjahr', 'das', 'dem'], year: ['Geschäftsjahr', 'das', 'dem'],
+  yearNewerRecord: ['Geschäftsjahr', 'das', 'dem'], ttm: ['Zwölfmonatszeitraum', 'den', 'dem'] };
+const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis PR #41 den Handelsstempel liefert.';
 // Legal-form words removed for the duplicate check. Deliberately looser than the engine's issuerKeyLoose
 // (src/scoring/score.js): a watcher with the engine's own rule would only check itself.
 const RECHTSFORMEN = new Set(['the', 'inc', 'incorporated', 'corp', 'corporation', 'co', 'company', 'ltd', 'limited',
@@ -66,19 +69,21 @@ function normName(name) {
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 function readJsonOrNull(p) { try { return readJson(p); } catch (_) { return null; } }
 
-// Newest board-history vintage strictly before the export day: ticker -> marketCap (pit block, USD).
+// Newest board-history vintage strictly before the export day: ticker -> marketCap (pit block, USD), plus the
+// files of that vintage that did not parse (the caller then reports the check as not run, never a partial 0).
 function vorigerStand(dir, exportTag) {
   if (!dir || !fs.existsSync(dir)) return null;
   const tag = fs.readdirSync(dir).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < exportTag).sort().pop();
   if (!tag) return null;
-  const mcap = new Map();
-  for (const f of fs.readdirSync(path.join(dir, tag)).filter((x) => x.endsWith('.json'))) {
+  const mcap = new Map(), unlesbar = [];
+  for (const f of fs.readdirSync(path.join(dir, tag)).filter((x) => x.endsWith('.json')).sort()) {
     const v = readJsonOrNull(path.join(dir, tag, f));
+    if (v === null) unlesbar.push(f);
     for (const r of [...(v?.cohort?.profitable || []), ...(v?.cohort?.unprofitable || [])]) {
       if (r && r.ticker && posMcap(r.pit?.marketCap)) mcap.set(r.ticker, r.pit.marketCap);
     }
   }
-  return { tag, mcap };
+  return { tag, mcap, unlesbar };
 }
 
 async function ladeGestern(quelle) {
@@ -105,6 +110,7 @@ async function pruefe(opt) {
       hinweise: [`Kein lesbarer Export unter ${path.basename(opt.exportDir)} (index.json fehlt oder nennt keine Boards).`] };
   }
   const exportTag = isoTag(index.generated_at) || generatedAt.slice(0, 10);
+  hinweise.push(KURS_ALT_HINWEIS);
   const zeilen = [];
   for (const board of index.branches) {
     const file = [path.join(opt.exportDir, 'full', board + '.json'), path.join(opt.exportDir, board + '.json')].find((f) => fs.existsSync(f));
@@ -116,7 +122,11 @@ async function pruefe(opt) {
   const faelle = [];
   const fall = (code, z, werte, grund) => faelle.push({ code, ticker: z.r.ticker, name: z.r.name ?? null, board: z.board,
     track: z.track, rank: z.r.rank ?? null, werte, grund });
-  const zeitraum = (r) => `${BASIS_WORT[r.revGrowthBasis] || r.revGrowthBasis} bis ${datum(r.revGrowthPeriodEnd)} gegen bis ${datum(r.revGrowthPriorPeriodEnd)}`;
+  const wort = (r) => BASIS_WORT[r.revGrowthBasis] || ['Zeitraum', 'den', 'dem']; // unlabelled growth: no basis word to show
+  const bis = (r) => [datum(r.revGrowthPeriodEnd), datum(r.revGrowthPriorPeriodEnd)];
+  // "Quartal bis 30.06.2026 gegen Quartal bis 30.06.2025" and "das Quartal bis ... mit dem Quartal bis ...".
+  const zeitraum = (r) => { const [n] = wort(r), [a, b] = bis(r); return `${n} bis ${a} gegen ${n} bis ${b}`; };
+  const vergleich = (r) => { const [n, akk, dat] = wort(r), [a, b] = bis(r); return `${akk} ${n} bis ${a} mit ${dat} ${n} bis ${b}`; };
 
   for (const z of zeilen) {
     const r = z.r;
@@ -130,27 +140,31 @@ async function pruefe(opt) {
     const d = tage(r.revGrowthPeriodEnd, r.revGrowthPriorPeriodEnd);
     if (d !== null && JAHR.has(r.revGrowthBasis) && (d < 334 || d > 397)) {
       fall('jahrespaar-abstand', z, { tage: d, ...periode },
-        `Das Jahreswachstum vergleicht das ${zeitraum(r)}; zwischen beiden Enden liegen ${d} Tage statt 334 bis 397.`);
+        `Das Jahreswachstum vergleicht ${vergleich(r)}; zwischen beiden Enden liegen ${d} Tage statt 334 bis 397.`);
     }
     if (d !== null && QUARTAL.has(r.revGrowthBasis) && (d < 350 || d > 380)) {
       fall('quartalspaar-abstand', z, { tage: d, ...periode },
-        `Das Wachstum vergleicht das ${zeitraum(r)}; zwischen beiden Enden liegen ${d} Tage statt 350 bis 380 (ein Jahr).`);
+        `Das Wachstum vergleicht ${vergleich(r)}; zwischen beiden Enden liegen ${d} Tage statt 350 bis 380 (ein Jahr).`);
     }
     const fehler = [];
-    if (!imBereich(r.score)) fehler.push(`der Score (${r.score ?? 'leer'}) ist keine Zahl zwischen 0 und 100`);
+    if (!imBereich(r.score)) fehler.push(`Der Score (${r.score ?? 'leer'}) ist keine Zahl zwischen 0 und 100.`);
     // scoreShrunk is number|null by contract (docs/findash-export-v1.md); only a present value is judged.
-    if (r.scoreShrunk != null && !imBereich(r.scoreShrunk)) fehler.push(`der bereinigte Score (${r.scoreShrunk}) ist keine Zahl zwischen 0 und 100`);
-    if (!r.rankGrund && !(Number.isInteger(r.rank) && r.rank > 0)) fehler.push(`der Rang (${r.rank ?? 'leer'}) ist keine positive ganze Zahl, obwohl kein Grund für einen fehlenden Rang angegeben ist`);
+    if (r.scoreShrunk != null && !imBereich(r.scoreShrunk)) fehler.push(`Der bereinigte Score (${r.scoreShrunk}) ist keine Zahl zwischen 0 und 100.`);
+    if (!r.rankGrund && !(Number.isInteger(r.rank) && r.rank > 0)) fehler.push(`Der Rang (${r.rank ?? 'leer'}) ist keine positive ganze Zahl, obwohl kein Grund für einen fehlenden Rang angegeben ist.`);
     if (fehler.length) fall('score-grenze', z, { score: r.score ?? null, scoreShrunk: r.scoreShrunk ?? null, rank: r.rank ?? null, rankGrund: r.rankGrund ?? null },
-      `In dieser Zeile ${fehler.join(' und ')}.`);
+      fehler.join(' '));
   }
 
   const zusammenfassung = {};
   // boersenwert-sprung: today's market cap against the newest earlier board-history vintage.
+  // A vintage with an unreadable file or without any market cap gives no count at all (T2): a partial
+  // comparison would read as "no jumps" for the boards it could not see.
   const stand = vorigerStand(opt.boardHistoryDir, exportTag);
-  if (!stand) {
+  if (!stand || stand.unlesbar.length || !stand.mcap.size) {
     zusammenfassung['boersenwert-sprung'] = null;
-    hinweise.push('boersenwert-sprung nicht geprüft: kein Board-Stand vor dem Exporttag gefunden.');
+    hinweise.push(!stand ? 'boersenwert-sprung nicht geprüft: kein Board-Stand vor dem Exporttag gefunden.'
+      : stand.unlesbar.length ? `boersenwert-sprung nicht geprüft: im Board-Stand vom ${datum(stand.tag)} sind ${stand.unlesbar.length} Dateien nicht lesbar (${stand.unlesbar.join(', ')}).`
+        : `boersenwert-sprung nicht geprüft: der Board-Stand vom ${datum(stand.tag)} enthält keinen Börsenwert.`);
   } else {
     for (const z of zeilen) {
       const heute = z.r.marketCap, vorher = stand.mcap.get(z.r.ticker);
@@ -158,7 +172,7 @@ async function pruefe(opt) {
       const faktor = heute / vorher;
       if (faktor > 3 || faktor < 1 / 3) {
         fall('boersenwert-sprung', z, { marketCap: heute, marketCapVorher: vorher, faktor, vergleichsStand: stand.tag },
-          `Börsenwert heute ${fmtMrd(heute)}, im Board-Stand vom ${datum(stand.tag)} ${fmtMrd(vorher)} (Faktor ${zahl.format(faktor)}); ein solcher Sprung kommt oft von einem Aktiensplit oder einer falschen Aktienzahl.`);
+          `Börsenwert ${zahl.format(faktor)}-fach gegenüber dem Stand vom ${datum(stand.tag)} (heute ${fmtMrd(heute)}, damals ${fmtMrd(vorher)}); Ursache prüfen (Handtabelle, Aktiensplit oder Stückzahl).`);
       }
     }
   }
@@ -204,6 +218,13 @@ async function pruefe(opt) {
     for (const c of SNAPSHOT_CODES) zusammenfassung[c] = null;
     hinweise.push(`${SNAPSHOT_CODES.join(', ')} nicht geprüft: kein Snapshot-Ordner.`);
   } else {
+    // The shared reader prints its ::warning:: lines (exchange check, hand-table summaries, partly at process exit)
+    // once more here; they already annotate the export step. Demote them to plain log lines so this reporting step
+    // adds only its own nine class warnings. The watcher's own lines go through console.log and stay untouched.
+    for (const k of ['warn', 'error']) {
+      const original = console[k];
+      console[k] = (...a) => original(...a.map((x) => (typeof x === 'string' ? x.replace(/^::(warning|error)::/, '[prepareSnapshot, schon im Export-Schritt gemeldet] ') : x)));
+    }
     const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
     let ohneDatum = 0, ersterFehler = null;
     for (const z of zeilen) {
@@ -239,6 +260,7 @@ async function pruefe(opt) {
     // Not one snapshot read (e.g. a broken hand table makes every prepareSnapshot throw): the checks did not run (T2).
     if (zeilen.length && !gelesen) for (const c of SNAPSHOT_CODES) zusammenfassung[c] = null;
     if (ohneDatum) hinweise.push(`${ohneDatum} Snapshots ohne Abrufdatum des Börsenwerts; kurs-alt dort nicht geprüft.`);
+    if (gelesen && ohneDatum === gelesen) zusammenfassung['kurs-alt'] = null; // no date anywhere: not run, never 0 (T2)
   }
 
   faelle.sort((a, b) => cmp(a.board, b.board) || cmp(a.track, b.track) || (a.rank ?? Infinity) - (b.rank ?? Infinity) || cmp(a.ticker, b.ticker));

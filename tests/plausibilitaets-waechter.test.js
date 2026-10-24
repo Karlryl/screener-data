@@ -44,15 +44,22 @@ function writeSnapshots(dir) {
   }
 }
 
-function fixtureRun(extra = [], env = {}) {
+// opt.vintages: other board-history folder; opt.snapshot(s): change each snapshot before it is written.
+function fixtureRun(extra = [], env = {}, opt = {}) {
   const dir = tmp();
   const snaps = path.join(dir, 'snapshots');
   fs.mkdirSync(snaps);
   writeSnapshots(snaps);
+  if (opt.snapshot) for (const f of fs.readdirSync(snaps)) {
+    const s = JSON.parse(fs.readFileSync(path.join(snaps, f), 'utf8'));
+    opt.snapshot(s);
+    fs.writeFileSync(path.join(snaps, f), JSON.stringify(s));
+  }
   const out = path.join(dir, 'out', 'plausibilitaet.json');
-  return { dir, ...run(['--export', path.join(FIX, 'export'), '--snapshots', snaps, '--board-history', path.join(FIX, 'jahrgaenge'),
+  return { dir, ...run(['--export', path.join(FIX, 'export'), '--snapshots', snaps, '--board-history', opt.vintages || path.join(FIX, 'jahrgaenge'),
     '--out', out, '--gestern', path.join(FIX, 'gestern.json'), ...extra], env) };
 }
+const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis PR #41 den Handelsstempel liefert.';
 
 const tickers = (report, code) => report.faelle.filter((f) => f.code === code).map((f) => f.ticker).sort();
 
@@ -81,7 +88,10 @@ test('every check lists exactly its positive rows and none of the negative ones'
     const by = (code, t) => report.faelle.find((f) => f.code === code && f.ticker === t);
     // The values and the period behind each finding travel with it, and the German reason names them.
     assert.equal(by('jahrespaar-abstand', 'PW-YEAR').werte.tage, 91);
-    assert.match(by('jahrespaar-abstand', 'PW-YEAR').grund, /30\.06\.2026 gegen bis 31\.03\.2026; zwischen beiden Enden liegen 91 Tage statt 334 bis 397/);
+    assert.equal(by('jahrespaar-abstand', 'PW-YEAR').grund, 'Das Jahreswachstum vergleicht das Geschäftsjahr bis 30.06.2026 mit dem '
+      + 'Geschäftsjahr bis 31.03.2026; zwischen beiden Enden liegen 91 Tage statt 334 bis 397.');
+    assert.match(by('wachstum-extrem', 'PW-GROW').grund, /\(Quartal bis 30\.06\.2026 gegen Quartal bis 30\.06\.2025\)/);
+    assert.ok(report.faelle.every((f) => !/gegen bis /.test(f.grund)), 'no "gegen bis" without a period word');
     assert.equal(by('quartalspaar-abstand', 'PW-QGAP').werte.tage, 456);
     assert.match(by('wachstum-extrem', 'PW-ZERO').grund, /-100 %.*Null des Datenlieferanten/);
     assert.ok(!/Null des Datenlieferanten/.test(by('wachstum-extrem', 'PW-GROW').grund));
@@ -89,6 +99,9 @@ test('every check lists exactly its positive rows and none of the negative ones'
     const sprung = by('boersenwert-sprung', 'PW-SPLIT');
     assert.equal(sprung.werte.vergleichsStand, '2026-10-23', 'newest vintage strictly BEFORE the export day, never the same day');
     assert.equal(sprung.werte.faktor, 5);
+    assert.equal(sprung.grund, 'Börsenwert 5-fach gegenüber dem Stand vom 23.10.2026 (heute 50 Mrd. USD, damals 10 Mrd. USD); '
+      + 'Ursache prüfen (Handtabelle, Aktiensplit oder Stückzahl).', 'neutral reason, no cause asserted');
+    assert.equal(report.hinweise[0], KURS_ALT_HINWEIS, 'what kurs-alt measures stands in every report');
     assert.equal(report.quellen.boardHistoryStand, '2026-10-23');
     assert.deepEqual(by('kurs-alt', 'PW-STALE').werte, { kursAbruf: '2026-10-14', handelstage: 7, exportTag: '2026-10-24' });
     const nullRev = by('umsatz-null-mit-boersenwert', 'PW-NULLREV');
@@ -105,8 +118,8 @@ test('every check lists exactly its positive rows and none of the negative ones'
     assert.deepEqual(bar.werte.zeilen.map((z) => z.board), ['utilities', 'energy']);
     assert.equal(Math.round(bar.werte.abstandPct), 50);
     const score = by('score-grenze', 'PW-SCORE');
-    assert.match(score.grund, /Score \(120\)/);
-    assert.match(score.grund, /Rang \(leer\)/);
+    assert.equal(score.grund, 'Der Score (120) ist keine Zahl zwischen 0 und 100. Der Rang (leer) ist keine positive ganze Zahl, '
+      + 'obwohl kein Grund für einen fehlenden Rang angegeben ist.');
     assert.equal(score.track, 'unprofitable');
     // PW-BAZU has no snapshot: counted and named, not silently skipped.
     assert.equal(report.quellen.snapshotsFehlend, 1);
@@ -132,7 +145,11 @@ test('warnings per finding class, German step summary, never an error annotation
     const warnings = stdout.split('\n').filter((l) => l.startsWith('::warning::Plausibilität'));
     assert.equal(warnings.length, 9, 'one warning per class with at least one case (all nine are hit by the fixture)');
     assert.ok(!/::error::/.test(stdout + stderr), 'the watcher never raises an error annotation');
+    // The shared snapshot reader's own ::warning:: lines are demoted: only the nine class warnings annotate this step.
+    const fremde = (stdout + '\n' + stderr).split(/\r?\n/).filter((l) => l.startsWith('::warning::') && !l.startsWith('::warning::Plausibilität'));
+    assert.deepEqual(fremde, []);
     const md = fs.readFileSync(summary, 'utf8');
+    assert.ok(md.includes('> ' + KURS_ALT_HINWEIS), 'the summary says what kurs-alt measures');
     assert.match(md, /^## Plausibilitäts-Wächter \(nur Meldung, ändert keine Zahl\)/);
     assert.match(md, /\| jahrespaar-abstand \| 1 \|/);
     assert.match(md, /### jahrespaar-abstand \(1\)\n- energy\/profitable, Rang 4, PW-YEAR Year Gap Energy Inc\.: Das Jahreswachstum/);
@@ -188,6 +205,44 @@ test('no snapshot readable at all: the three snapshot checks say null, not 0, an
     assert.equal(r.report.zusammenfassung['wachstum-extrem'], 0, 'export-only checks still ran');
     assert.ok(r.report.hinweise.some((h) => /^Erster Lesefehler eines Snapshots: /.test(h)));
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('vintage unreadable or without any market cap: boersenwert-sprung is null and the hint names the files', () => {
+  const dir = tmp();
+  const runs = [];
+  try {
+    const vintage = (name, files) => {
+      const d = path.join(dir, name, '2026-10-23');
+      fs.mkdirSync(d, { recursive: true });
+      for (const [f, text] of Object.entries(files)) fs.writeFileSync(path.join(d, f), text);
+      return path.join(dir, name);
+    };
+    const good = fs.readFileSync(path.join(FIX, 'jahrgaenge', '2026-10-23', 'energy.json'), 'utf8');
+    const broken = fixtureRun([], {}, { vintages: vintage('broken', { 'energy.json': good, 'utilities.json': '{broken' }) });
+    const empty = fixtureRun([], {}, { vintages: vintage('empty', { 'energy.json': JSON.stringify({ cohort: { profitable: [{ ticker: 'PW-SPLIT', pit: {} }], unprofitable: [] } }) }) });
+    runs.push(broken.dir, empty.dir);
+    for (const r of [broken, empty]) {
+      assert.equal(r.status, 0);
+      assert.equal(r.report.zusammenfassung['boersenwert-sprung'], null, 'not run, never 0 (T2)');
+      assert.equal(r.report.faelle.filter((f) => f.code === 'boersenwert-sprung').length, 0);
+      assert.equal(r.report.zusammenfassung['wachstum-extrem'], 3, 'the other checks still ran');
+    }
+    assert.ok(broken.report.hinweise.includes('boersenwert-sprung nicht geprüft: im Board-Stand vom 23.10.2026 sind 1 Dateien nicht lesbar (utilities.json).'));
+    assert.ok(empty.report.hinweise.includes('boersenwert-sprung nicht geprüft: der Board-Stand vom 23.10.2026 enthält keinen Börsenwert.'));
+  } finally { for (const d of [dir, ...runs]) fs.rmSync(d, { recursive: true, force: true }); }
+});
+
+test('no snapshot carries a quote date: kurs-alt is null, the other snapshot checks still count', () => {
+  const r = fixtureRun([], {}, { snapshot: (s) => { delete s.meta.asOf; delete s.marketCap.asOf; } });
+  try {
+    assert.equal(r.status, 0);
+    assert.equal(r.report.zusammenfassung['kurs-alt'], null, 'not run, never 0 (T2)');
+    assert.equal(r.report.zusammenfassung['umsatz-null-mit-boersenwert'], 2);
+    assert.equal(r.report.zusammenfassung['quartal-gleich-vorjahr'], 1);
+    // 19 = the 20 fixture rows minus PW-BAZU, which has no snapshot; every one of them lost both dates.
+    assert.ok(r.report.hinweise.includes('19 Snapshots ohne Abrufdatum des Börsenwerts; kurs-alt dort nicht geprüft.'));
+    assert.ok(r.report.hinweise.includes(KURS_ALT_HINWEIS));
+  } finally { fs.rmSync(r.dir, { recursive: true, force: true }); }
 });
 
 test('empty export: status kein-export, file written, exit 0', () => {
