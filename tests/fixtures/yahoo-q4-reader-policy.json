@@ -39,6 +39,7 @@
   "scripts/f4-quartalsvergleich.js": { "mode": "exempt", "reason": "Controlled raw quarter-position/date counterfactual, not a daily board reader." },
   "scripts/filter-snapshot-merge.js": { "mode": "exempt", "reason": "Issuer identity fingerprints require identical raw provider series across listing legs; do not publish these values." },
   "scripts/gqs00-freeze.js": { "mode": "exempt", "reason": "Frozen raw-fixture scoring contract must retain the original evidence." },
+  "scripts/plausibilitaets-waechter.js": { "mode": "hook", "hook": "s = prepareSnapshot(readJson(path.join(opt.snapshotsDir, safeSnapshotFilename(z.r.ticker))));", "reason": "Reporting-only plausibility watcher judges the prepared snapshots the export writer shows; it writes only its own report and never changes a published value." },
   "scripts/probe-auflage1-messlauf.js": { "mode": "exempt", "reason": "Read-only raw Yahoo versus SEC evidence measurement." },
   "scripts/probe-datenplausibilitaet.js": { "mode": "exempt", "reason": "Read-only vendor plausibility investigation intentionally measures raw defects." },
   "scripts/probe-dedup-fingerprint.js": { "mode": "exempt", "reason": "Identity diagnostic reads immutable historical board PIT, not current scored inputs." },

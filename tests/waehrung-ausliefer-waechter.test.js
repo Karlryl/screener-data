@@ -175,6 +175,22 @@ check('mapOverviewRow und mapSurvivalRow tragen dieselbe Regel', () => {
   assert.equal(s.marketCap, null); assert.equal(s.marketCapCurrency, 'USD');
 });
 
+// Daylauf 7 (24.10.): the nulled size must take its size class along (same rule as the guard branch).
+check('unproven row loses its size class with its size (mcapKlasse, mcapBand)', () => {
+  const size = { marketCap: 12345678901, mcapBand: 'mid', mcapKlasse: 'large' };
+  const rows = [
+    wx.mapBoardRow({ ticker: 'ZZTESTZZ', score: 50, track: 'profitable', lamps: [], overview: null, name: 'Test AG', ...size }, 0),
+    wx.mapOverviewRow({ ticker: 'ZZTESTZZ', formulaId: 'x', track: 'profitable', score: 1,
+      overviewKind: null, overviewValue: null, overviewCompanion: null, lamps: [], ...size }, 0),
+    wx.mapSurvivalRow({ ticker: 'ZZTESTZZ', runwayQuarters: 4, lamps: [], ...size }, 0),
+  ];
+  for (const r of rows) {
+    assert.equal(r.marketCap, null);
+    assert.equal(r.mcapKlasse, null, 'a nulled market cap must not keep its size class');
+    assert.equal(r.mcapBand, null, 'a nulled market cap must not keep its learned size band');
+  }
+});
+
 check('--check akzeptiert die neuen Felder und faengt einen falschen Wert', () => {
   const basis = { ticker: 'X', score: 1, rank: 1, track: 'profitable', lamps: [], overview: null,
     name: 'X', country: null, region: null, sector: null, marketCap: null, phase: null,

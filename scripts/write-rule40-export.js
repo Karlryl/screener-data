@@ -545,12 +545,18 @@ function sammleKandidaten(opts = {}) {
   const dateien = fs.readdirSync(snapshotsDir).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
   for (const datei of dateien) {
     gelesen++;
-    const ticker = datei.slice(0, -5);
     const snapshot = prepareYahooQ4Snapshot(readJsonOrNull(path.join(snapshotsDir, datei)));
     // Ein UNLESBARER Snapshot ist etwas anderes als ein fehlender: er wird gezaehlt, damit
     // ein kaputter Pull nicht als "kleines Universum" durchgeht.
     if (!snapshot) { abgewiesen.snapshotUnlesbar++; continue; }
     const meta = snapshot.meta || {};
+    // The file name is sanitised (safeSnapshotFilename: CON -> _CON.json, MFRISCO/A-1.MX -> MFRISCO_A-1.MX.json);
+    // the board rows, the rank gate and the issuer dedup key on meta.ticker (sweep 24.10.2026, finding 6).
+    let ticker = meta.ticker;
+    if (typeof ticker !== 'string' || !ticker.trim()) {
+      ticker = datei.slice(0, -5);
+      console.error('::warning::[rule40] ' + datei + ': meta.ticker fehlt, der Ticker wird aus dem Dateinamen gelesen und kann falsch sein.');
+    }
 
     if (require('../lib/market-cap-guard.js').correctedBelowFloor(snapshot) ||
         (meta.marketCapReason && !Number.isFinite(snapshot.marketCap?.value))) {
