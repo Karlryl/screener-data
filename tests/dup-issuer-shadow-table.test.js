@@ -23,7 +23,7 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
     ['GE Aerospace', ['GE', 'GCP.DE', 'GE.VI', '1GE.MI'], 'GE', 'GE'],
     ['Galaxy Digital', ['GLXY', '1GLXY.MI'], 'GLXY', 'GLXY'],
     ['Ascentage Pharma', ['AAPG', '6855.HK'], 'AAPG', null],
-    ['Grupo Aeroméxico', ['AERO', 'AERO.MX'], 'AERO', null],
+    ['Grupo Aeroméxico', ['AERO', 'AERO.MX'], 'AERO.MX', 'AERO.MX'], // triage 24.10.2026: home listing AERO.MX (20-F 2025), codeKeeps as for circle and strategy
     ['Amrize', ['AMRZ', 'AMRZ.SW'], 'AMRZ', null],
     ['AXIA Energia', ['AXIA', 'AXIA3.SA'], 'AXIA', 'AXIA3.SA'],
     ['Copel', ['ELPC', 'CPLE3.SA'], 'ELPC', 'CPLE3.SA'],
@@ -44,7 +44,8 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
   const added = new Set(['circle', 'strategy', 'energy-fuels', 'star-bulk', 'vinci']);
   for (const [id, row] of Object.entries(table)) {
     const day = id === 'skydance' ? '2026-10-24' : null;
-    assert.equal(row.sourceCheckedOn, day || (added.has(id) ? '2026-10-23' : '2026-09-30'));
+    // Triage 24.10.2026: grupo-aeromexico re-checked (new source), entered on 2026-10-06 as before.
+    assert.equal(row.sourceCheckedOn, day || (id === 'grupo-aeromexico' ? '2026-10-24' : added.has(id) ? '2026-10-23' : '2026-09-30'));
     assert.equal(row.enteredOn, day || (added.has(id) ? '2026-10-23' : '2026-10-06'));
   }
   assert.deepEqual(loadFixture(valid()), { example: table.aerovironment });
@@ -55,11 +56,11 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
 test('real table: literal marker per secondary ticker (no other issuer moves)', () => {
   assert.deepEqual(Object.fromEntries([...index].map(([ticker, v]) => [ticker, v.of])), {
     'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',
-    'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
+    AERO: 'AERO.MX', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
     '1GE.MI': 'GE', 'CRCL.SW': 'CRCL', 'MSTR.SW': 'MSTR', 'EF2.AX': 'UUUU', 'SBLK.AT': 'SBLK',
     'DG.PA': 'DG.VI', 'DG.SW': 'DG.VI', PSKY: 'SKYD',
   });
-  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI', 'SKYD']) {
+  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO.MX', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI', 'SKYD']) {
     assert.ok(!index.has(ticker), ticker + ' must stay unmarked');
   }
   const kco = applyDupIssuerShadow({ ticker: 'KCO.DE' }, index);
