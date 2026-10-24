@@ -16,11 +16,11 @@ const row = (ticker, rank, extra = {}) => ({ ticker, name: ticker + ' AG', rank,
   track: 'profitable', score: 50, marketCap: 2e9, mcapBand: 'large', financialDataReasons: ['Quartalswert fehlt: Ende 31.03.2025.'], ...extra });
 
 /** Fixture export: index.json, one full board, one second board (for "any"), and a null-dropping filter feed. */
-function exportTree() {
+function exportTree(generatedAt = DAY + 'T08:43:33.489Z') {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tageslauf-erw-'));
   const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), JSON.stringify(obj)); };
-  write('index.json', { schema: 'findash-export/v1', generated_at: DAY + 'T08:43:33.489Z', branches: ['energy', 'utilities'] });
-  write('full/energy.json', { schema: 'findash-export/v1', profitable: [row('AAA', 7), row('LEG.SW', null), row('DUP', 3)],
+  write('index.json', { schema: 'findash-export/v1', generated_at: generatedAt, branches: ['energy', 'utilities'] });
+  write('full/energy.json', { schema: 'findash-export/v1', profitable: [row('AAA', 7, { zero: 0 }), row('LEG.SW', null), row('DUP', 3)],
     unprofitable: [row('BBB', 12, { track: 'unprofitable', name: 'Same Name AG' }), row('CCC', 40, { track: 'unprofitable', name: 'Same Name AG' })] });
   write('full/utilities.json', { schema: 'findash-export/v1', profitable: [row('DUP', 9)], unprofitable: [] });
   write('filter/universum.json', { schema: 'findash-export/v1', rows: [
@@ -34,8 +34,8 @@ function erwFile(list) {
   fs.writeFileSync(file, JSON.stringify(list));
   return file;
 }
-const verdicts = async (list, exportBase) => {
-  const r = await run({ exportBase: exportBase || exportTree(), erwartungen: erwFile(list), datum: DAY });
+const verdicts = async (list, exportBase, datum) => {
+  const r = await run({ exportBase: exportBase || exportTree(), erwartungen: erwFile(list), datum });
   return { ...r, u: r.report ? r.report.ergebnisse.map(x => x.urteil) : null };
 };
 const cli = (args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
@@ -75,11 +75,12 @@ test('every op fails on contradicting data, exit 1', async () => {
     e({ ticker: 'AAA', feld: 'financialDataReasons', op: 'contains', wert: 'Primärquelle' }),
     e({ ticker: 'AAA', feld: 'financialDataReasons', op: 'contains', muster: '\\d{2}\\.\\d{2}\\.19\\d{2}' }),
     e({ ticker: 'GONE', feld: 'rank', op: 'null' }), // a missing row is not an empty field
+    e({ ticker: 'AAA', feld: 'zero', op: 'null' }), // 0 is a value, never null (T2)
   ];
   const r = await verdicts(list);
   assert.equal(r.code, 1);
   assert.deepEqual(r.u, Array(list.length).fill('nicht erfüllt'));
-  assert.match(r.lines[0], /^0 von 11 Erwartungen erfüllt, 11 nicht erfüllt/);
+  assert.match(r.lines[0], /^0 von 12 Erwartungen erfüllt, 12 nicht erfüllt/);
 });
 
 test('selectors: name, track, "any" needs exactly one row', async () => {
@@ -90,8 +91,9 @@ test('selectors: name, track, "any" needs exactly one row', async () => {
     e({ ticker: 'AAA', board: 'any', feld: 'rank', op: 'eq', wert: 7 }),
     e({ ticker: 'DUP', board: 'any', feld: 'rank', op: 'notNull' }), // ranked on two boards -> fail
     e({ ticker: 'DUP', board: 'any', op: 'present' }),
+    e({ ticker: 'BBB', track: 'profitable', feld: 'rank', op: 'eq', wert: 12 }), // only the track differs -> fail
   ]);
-  assert.deepEqual(r.u, ['nicht erfüllt', 'nicht erfüllt', 'erfüllt', 'erfüllt', 'nicht erfüllt', 'erfüllt']);
+  assert.deepEqual(r.u, ['nicht erfüllt', 'nicht erfüllt', 'erfüllt', 'erfüllt', 'nicht erfüllt', 'erfüllt', 'nicht erfüllt']);
   assert.ok(r.lines.some(l => l.includes('2 Zeilen statt einer')), r.lines.join('\n'));
 });
 
@@ -134,11 +136,25 @@ test('abgelaufen is never failed; gueltigAb in the future is skipped and listed'
   assert.match(r.lines[0], /^1 von 2 Erwartungen erfüllt, 0 nicht erfüllt, 0 nicht messbar, 1 abgelaufen; 1 noch nicht fällig/);
   assert.ok(r.lines.includes('Noch nicht fällig: morgen (ab 2026-10-25)'));
   assert.deepEqual(r.report.nochNichtFaellig, ['morgen']);
+  const g = await verdicts([ // an OR whose rank alternative expired can no longer fail
+    e({ gruppe: 'g', ticker: 'AAA', feld: 'rankGrund', op: 'eq', wert: 'zuWenigBelegteAchsen' }),
+    e({ gruppe: 'g', ticker: 'AAA', feld: 'rank', op: 'between', min: 100, max: 200, gueltigBis: '2026-10-23', gueltigAb: '2026-10-01' }),
+  ]);
+  assert.deepEqual(g.u, ['abgelaufen']);
+  assert.equal(g.code, 0);
 });
 
-test('stale export: a hint names both days', async () => {
-  const r = await run({ exportBase: exportTree(), erwartungen: erwFile([e({ ticker: 'AAA', op: 'present' })]), datum: '2026-10-26' });
-  assert.ok(r.lines.some(l => l.startsWith('Hinweis: Der Export stammt vom 2026-10-24, geprüft wird für den 2026-10-26')), r.lines.join('\n'));
+test('due date is the export data day (Berlin date of generated_at); --datum only overrides it', async () => {
+  const list = [e({ id: 'heute', ticker: 'AAA', op: 'present' }), e({ id: 'morgen', ticker: 'AAA', op: 'present', gueltigAb: '2026-10-25' })];
+  let r = await verdicts(list); // export of 24.10. 10:43 Berlin: 25.10. entry not due, whatever the clock says
+  assert.deepEqual(r.report.nochNichtFaellig, ['morgen']);
+  assert.equal(r.report.datentag, DAY);
+  r = await verdicts(list, exportTree('2026-10-24T22:30:00Z')); // 00:30 Berlin on 25.10.
+  assert.deepEqual(r.report.nochNichtFaellig, []);
+  assert.equal(r.report.datentag, '2026-10-25');
+  r = await verdicts(list, undefined, '2026-10-25');
+  assert.deepEqual(r.report.nochNichtFaellig, []);
+  assert.match(r.lines[0], /Datentag 2026-10-24, geprüft wie am 2026-10-25 per --datum\)\.$/);
 });
 
 test('invalid expectation file is exit 2, naming the entry', async () => {
@@ -150,6 +166,10 @@ test('invalid expectation file is exit 2, naming the entry', async () => {
     [{ op: 'present', ticker: 'AAA', gueltigAb: '24.10.2026' }, /gueltigAb/],
     [{ op: 'present', ticker: 'AAA', board: 'full/energy.json' }, /board/],
     [{ op: 'contains', ticker: 'AAA', feld: 'name' }, /contains braucht/],
+    [{ op: 'contains', ticker: 'AAA', feld: 'name', wert: '' }, /contains braucht einen nicht leeren wert/],
+    [{ op: 'contains', ticker: 'AAA', feld: 'name', muster: '' }, /contains braucht/],
+    [{ op: 'eq', zaehle: 'gm', feld: 'aus', wert: 1, track: 'profitable', board: 'filter/universum' }, /track ist dort nicht erlaubt/],
+    [{ op: 'present', ticker: 'AAA', gueltigAb: '2026-10-24', gueltigBis: '2026-10-23' }, /gueltigBis ungültig oder vor gueltigAb/],
   ]) {
     const r = await verdicts([e(bad)]);
     assert.equal(r.code, 2, JSON.stringify(bad));
@@ -158,26 +178,37 @@ test('invalid expectation file is exit 2, naming the entry', async () => {
   const dup = await verdicts([e({ id: 'x', ticker: 'AAA', op: 'present' }), e({ id: 'x', ticker: 'AAA', op: 'present' })]);
   assert.equal(dup.code, 2);
   assert.match(dup.lines[0], /id doppelt/);
+  const clash = await verdicts([e({ id: 'y', ticker: 'AAA', op: 'present' }), e({ gruppe: 'y', ticker: 'AAA', op: 'present' })]);
+  assert.equal(clash.code, 2);
+  assert.match(clash.lines[0], /gruppe y ist zugleich die id einer Erwartung/);
+  const empty = await verdicts([]);
+  assert.equal(empty.code, 2);
+  assert.equal(empty.lines[0], 'Erwartungsdatei nicht prüfbar: Erwartungsdatei ist leer');
 });
 
 test('CLI exit codes 0 / 1 / 2 and the --out guard', async () => {
   const root = exportTree();
   const ok = erwFile([e({ ticker: 'AAA', feld: 'rank', op: 'eq', wert: 7 })]);
   const bad = erwFile([e({ ticker: 'AAA', feld: 'rank', op: 'eq', wert: 8 })]);
-  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tageslauf-erw-out-')), 'bericht.json');
-  let p = cli(['--export', root, '--erwartungen', ok, '--datum', DAY, '--out', out]);
+  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tageslauf-erw-out-')), 'neu', 'tiefer', 'bericht.json');
+  let p = cli(['--export', root, '--erwartungen', ok, '--out', out]); // --out into a missing directory creates it
   assert.equal(p.status, 0, p.stdout + p.stderr);
   assert.match(p.stdout, /^1 von 1 Erwartungen erfüllt/);
   assert.equal(JSON.parse(fs.readFileSync(out, 'utf8')).zusammenfassung.erfuellt, 1);
-  p = cli(['--export', root, '--erwartungen', bad, '--datum', DAY]);
+  p = cli(['--export', root, '--erwartungen', bad]);
   assert.equal(p.status, 1, p.stdout + p.stderr);
   assert.match(p.stdout, /\| nicht erfüllt \|/);
-  p = cli(['--export', path.join(root, 'fehlt'), '--erwartungen', ok, '--datum', DAY]);
+  p = cli(['--export', path.join(root, 'fehlt'), '--erwartungen', ok]);
   assert.equal(p.status, 2, p.stdout + p.stderr);
   assert.match(p.stdout, /^Export nicht ladbar: /);
+  // One broken or missing board file: only its checks are nicht messbar, the others still run (exit 1).
   fs.writeFileSync(path.join(root, 'full', 'utilities.json'), '{kaputt');
-  p = cli(['--export', root, '--erwartungen', erwFile([e({ ticker: 'AAA', board: 'any', op: 'present' })]), '--datum', DAY]);
-  assert.equal(p.status, 2, 'an unparsable board file is exit 2');
+  p = cli(['--export', root, '--erwartungen', erwFile([e({ ticker: 'AAA', board: 'any', op: 'present' }),
+    e({ ticker: 'AAA', board: 'quality/energy', op: 'present' }), e({ ticker: 'AAA', feld: 'rank', op: 'eq', wert: 7 })])]);
+  assert.equal(p.status, 1, p.stdout + p.stderr);
+  assert.match(p.stdout, /^1 von 3 Erwartungen erfüllt, 0 nicht erfüllt, 2 nicht messbar/);
+  assert.match(p.stdout, /Datei full\/utilities\.json nicht ladbar/);
+  assert.match(p.stdout, /Datei quality\/energy\.json nicht ladbar/);
   p = cli(['--export', root, '--erwartungen', ok, '--datum', DAY, '--out', path.join(root, 'bericht.json')]);
   assert.equal(p.status, 2, '--out into the export tree is refused');
   assert.equal(fs.existsSync(path.join(root, 'bericht.json')), false);
@@ -185,6 +216,8 @@ test('CLI exit codes 0 / 1 / 2 and the --out guard', async () => {
   assert.equal(p.status, 2, '--out onto the expectation file is refused');
   p = cli(['--export', root, '--erwartungen', ok, '--datum', '24.10.2026']);
   assert.equal(p.status, 2);
+  p = cli(['--export', root, '--erwartungen', ok, '--datum']);
+  assert.equal(p.status, 2, '--datum without a value is refused');
 });
 
 test('the committed data-health/erwartungen.json is valid', async () => {
@@ -193,7 +226,7 @@ test('the committed data-health/erwartungen.json is valid', async () => {
   for (const x of list) assert.ok(x.pr > 0 && /^\d{4}-\d{2}-\d{2}$/.test(x.gueltigAb), x.id);
 });
 
-test('https/http base: one fetch per file, HTTP error is exit 2', async () => {
+test('https/http base: one fetch per file; a 404 board is nicht messbar, a 404 index.json is exit 2', async () => {
   const root = exportTree();
   const hits = {};
   const server = http.createServer((req, res) => {
@@ -213,8 +246,12 @@ test('https/http base: one fetch per file, HTTP error is exit 2', async () => {
     assert.equal(r.code, 0, r.lines.join('\n'));
     assert.deepEqual(hits, { '/v1/index.json': 1, '/v1/full/energy.json': 1, '/v1/full/utilities.json': 1 });
     const missing = await verdicts([e({ ticker: 'AAA', board: 'quality/energy', op: 'present' })], base);
-    assert.equal(missing.code, 2);
-    assert.match(missing.lines[0], /quality\/energy\.json: HTTP 404/);
+    assert.equal(missing.code, 1);
+    assert.deepEqual(missing.u, ['nicht messbar']);
+    assert.ok(missing.lines.some(l => l.includes('quality/energy.json: HTTP 404')), missing.lines.join('\n'));
+    const noIndex = await verdicts([e({ ticker: 'AAA', op: 'present' })], base + '/nichts');
+    assert.equal(noIndex.code, 2);
+    assert.match(noIndex.lines[0], /^Export nicht ladbar: index\.json: HTTP 404/);
   } finally {
     server.close();
   }

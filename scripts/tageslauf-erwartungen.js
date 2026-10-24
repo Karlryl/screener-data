@@ -7,10 +7,12 @@
  *   node scripts/tageslauf-erwartungen.js [--export <dir | https base url>] [--erwartungen <file>]
  *                                         [--datum YYYY-MM-DD] [--out <json file>]
  *
- * Defaults: the gh-pages export v1, the committed file, today in Europe/Berlin from the clock.
+ * Defaults: the gh-pages export v1 and the committed file. An entry is due when gueltigAb <= the export's
+ * data day (Europe/Berlin date of index.json generated_at), never the calendar date; --datum overrides that
+ * day (for example to check yesterday's export against today's entries).
  * Exit 0: every due expectation is erfüllt or abgelaufen. Exit 1: at least one is nicht erfüllt or
- * nicht messbar (a missing field is never counted as erfüllt). Exit 2: the export or the expectation
- * file could not be loaded or is invalid.
+ * nicht messbar (a missing field or an unloadable board file is never counted as erfüllt). Exit 2:
+ * index.json could not be loaded, or the expectation file or --datum is invalid.
  *
  * Entry: {id, pr, gueltigAb, gueltigBis?, grund, board, op, feld?, ticker | name | zaehle, track?,
  *         wert?, min?, max?, toleranz?, muster?, gruppe?}
@@ -21,9 +23,11 @@
  *   zaehle  instead of a row: the measured value is the number of rows whose feld equals or contains it.
  *   op     between (min..max) | eq (wert, numeric ± toleranz) | null | notNull | contains (wert as
  *          substring or muster as regex, on a string or any element of an array) | absent | present (row).
- *   gruppe entries sharing it form one expectation; one erfüllt member is enough.
+ *   gruppe entries sharing it form one expectation (name must not be another entry's id); one erfüllt
+ *          member is enough, and once a member is abgelaufen the group can no longer fail.
  *   gueltigAb  first data day the effect is live; later entries are listed as noch nicht fällig.
- *   gueltigBis after it the entry is only reported as abgelaufen, never failed.
+ *   gueltigBis after it the entry is only reported as abgelaufen, never failed (set it on drifting values
+ *          such as rank, market-cap, score or growth ranges).
  */
 const fs = require('fs');
 const path = require('path');
@@ -40,8 +44,8 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MISSING = Symbol('missing');
 const ERFUELLT = 'erfüllt', NICHT = 'nicht erfüllt', NM = 'nicht messbar', ABGELAUFEN = 'abgelaufen';
 
-/** @returns {string} Today's date in Europe/Berlin (YYYY-MM-DD). */
-const berlinToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date());
+/** @param {string} iso Timestamp. @returns {string} Its date in Europe/Berlin (YYYY-MM-DD). */
+const berlinDay = iso => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date(iso));
 
 /**
  * Lazy, cached loader: each export file is read or fetched at most once.
@@ -70,7 +74,10 @@ function loader(base) {
  */
 function validate(list) {
   if (!Array.isArray(list)) throw new Error('Erwartungsdatei ist kein Array');
-  const ids = new Set();
+  if (!list.length) throw new Error('Erwartungsdatei ist leer');
+  const ids = new Set(list.map(e => e && e.id));
+  for (const e of list) if (e && e.gruppe !== undefined && ids.has(e.gruppe)) throw new Error(`Erwartung ${e.id}: gruppe ${e.gruppe} ist zugleich die id einer Erwartung`);
+  ids.clear();
   for (const e of list) {
     const bad = msg => { throw new Error(`Erwartung ${e && e.id}: ${msg}`); };
     if (!e || typeof e.id !== 'string' || !e.id) bad('id fehlt');
@@ -78,20 +85,21 @@ function validate(list) {
     ids.add(e.id);
     if (!Number.isInteger(e.pr)) bad('pr fehlt');
     if (!DATE.test(e.gueltigAb || '')) bad('gueltigAb fehlt');
-    if (e.gueltigBis !== undefined && !DATE.test(e.gueltigBis)) bad('gueltigBis ungültig');
+    if (e.gueltigBis !== undefined && !(DATE.test(e.gueltigBis) && e.gueltigBis >= e.gueltigAb)) bad('gueltigBis ungültig oder vor gueltigAb');
     if (typeof e.grund !== 'string' || !e.grund.trim()) bad('grund fehlt');
     if (typeof e.board !== 'string' || !e.board || e.board.endsWith('.json')) bad('board fehlt oder endet auf .json');
     if (!OPS.includes(e.op)) bad('op unbekannt: ' + e.op);
     const selectors = ['ticker', 'name', 'zaehle'].filter(k => e[k] !== undefined);
     if (selectors.length !== 1) bad('genau eines von ticker, name, zaehle nötig');
     if (e.zaehle !== undefined && !['between', 'eq'].includes(e.op)) bad('zaehle nur mit between oder eq');
+    if (e.zaehle !== undefined && e.track !== undefined) bad('zaehle zählt alle Zeilen, track ist dort nicht erlaubt');
     if (!ROW_OPS.includes(e.op) && (typeof e.feld !== 'string' || !e.feld)) bad('feld fehlt');
     if (e.op === 'between' && !(Number.isFinite(e.min) && Number.isFinite(e.max) && e.min <= e.max)) bad('min/max ungültig');
     if (e.op === 'eq' && !Object.hasOwn(e, 'wert')) bad('wert fehlt');
     if (e.toleranz !== undefined && !(Number.isFinite(e.toleranz) && e.toleranz >= 0 && typeof e.wert === 'number')) bad('toleranz ungültig');
     if (e.op === 'contains') {
-      if (typeof e.muster === 'string') new RegExp(e.muster);
-      else if (typeof e.wert !== 'string') bad('contains braucht wert oder muster');
+      if (typeof e.muster === 'string' && e.muster) new RegExp(e.muster);
+      else if (typeof e.wert !== 'string' || !e.wert || e.muster !== undefined) bad('contains braucht einen nicht leeren wert oder ein nicht leeres muster');
     }
   }
   return list;
@@ -145,7 +153,11 @@ function holds(e, v) {
 async function measure(e, load, index) {
   const files = e.board === 'any' ? index.branches.map(b => 'full/' + b) : [e.board];
   const perFile = [];
-  for (const rel of files) perFile.push({ rel, rows: rowsOf(await load(rel + '.json'), rel) });
+  for (const rel of files) {
+    // A missing or broken board file makes only its own checks nicht messbar; index.json is the only hard stop.
+    try { perFile.push({ rel, rows: rowsOf(await load(rel + '.json'), rel) }); }
+    catch (err) { return { urteil: NM, gemessen: `Datei ${rel}.json nicht ladbar (${err.message})` }; }
+  }
   if (e.zaehle !== undefined) {
     const values = perFile.flatMap(({ rel, rows }) => rows.map(r => read(r, e.feld, rows, rel))).filter(v => v !== MISSING);
     if (!values.length) return { urteil: NM, gemessen: `Feld ${e.feld} fehlt` };
@@ -200,11 +212,11 @@ const cell = s => String(s).replace(/\|/g, '\\|').replace(/\s+/g, ' ');
 
 /**
  * Evaluates every due expectation.
- * @param {{exportBase: string, erwartungen: string, datum: string}} opts
+ * @param {{exportBase: string, erwartungen: string, datum?: string}} opts datum overrides the export's data day.
  * @returns {Promise<{code: number, lines: string[], report: object|null}>}
  */
-async function run({ exportBase, erwartungen, datum }) {
-  if (!DATE.test(datum)) return { code: 2, lines: ['--datum muss YYYY-MM-DD sein: ' + datum], report: null };
+async function run({ exportBase, erwartungen, datum: override }) {
+  if (override !== undefined && !DATE.test(override)) return { code: 2, lines: ['--datum muss YYYY-MM-DD sein: ' + override], report: null };
   let list;
   try {
     list = validate(JSON.parse(fs.readFileSync(erwartungen, 'utf8')));
@@ -212,43 +224,46 @@ async function run({ exportBase, erwartungen, datum }) {
     return { code: 2, lines: ['Erwartungsdatei nicht prüfbar: ' + err.message], report: null };
   }
   const load = loader(exportBase);
-  const due = list.filter(e => e.gueltigAb <= datum);
-  const later = list.filter(e => e.gueltigAb > datum);
-  const checks = new Map(); // gruppe (or id) -> member results, in file order
   let index;
   try {
     index = await load('index.json');
     if (!Array.isArray(index.branches) || !index.branches.length) throw new Error('index.json ohne branches');
     if (!Number.isFinite(Date.parse(index.generated_at))) throw new Error('index.json ohne generated_at');
-    for (const e of due) {
-      const res = e.gueltigBis !== undefined && datum > e.gueltigBis ? { urteil: ABGELAUFEN, gemessen: 'nicht gemessen' } : await measure(e, load, index);
-      const key = e.gruppe ?? e.id;
-      if (!checks.has(key)) checks.set(key, []);
-      checks.get(key).push({ e, ...res });
-    }
   } catch (err) {
     return { code: 2, lines: ['Export nicht ladbar: ' + err.message], report: null };
   }
+  const exportDay = berlinDay(index.generated_at);
+  const datum = override ?? exportDay;
+  const due = list.filter(e => e.gueltigAb <= datum);
+  const later = list.filter(e => e.gueltigAb > datum);
+  const checks = new Map(); // gruppe (or id) -> member results, in file order
+  for (const e of due) {
+    const res = e.gueltigBis !== undefined && datum > e.gueltigBis ? { urteil: ABGELAUFEN, gemessen: 'nicht gemessen' } : await measure(e, load, index);
+    const key = e.gruppe ?? e.id;
+    if (!checks.has(key)) checks.set(key, []);
+    checks.get(key).push({ e, ...res });
+  }
   const results = [...checks.values()].map(members => {
     const u = members.map(m => m.urteil);
-    const urteil = u.includes(ERFUELLT) ? ERFUELLT : u.every(x => x === ABGELAUFEN) ? ABGELAUFEN : u.includes(NM) ? NM : NICHT;
+    // An OR with an expired alternative cannot be failed any more (gueltigBis: never nicht erfüllt).
+    const urteil = u.includes(ERFUELLT) ? ERFUELLT : u.includes(ABGELAUFEN) ? ABGELAUFEN : u.includes(NM) ? NM : NICHT;
     return { id: members.map(m => m.e.id).join(' + '), pr: members[0].e.pr, urteil, members };
   });
   const count = u => results.filter(r => r.urteil === u).length;
-  const exportDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date(index.generated_at));
+  const laterChecks = new Set(later.map(e => e.gruppe ?? e.id)).size; // counted like results: a group is one
   const lines = [
     `${count(ERFUELLT)} von ${results.length} Erwartungen erfüllt, ${count(NICHT)} nicht erfüllt, ${count(NM)} nicht messbar, ` +
-      `${count(ABGELAUFEN)} abgelaufen; ${later.length} noch nicht fällig (Export vom ${index.generated_at}, Prüfdatum ${datum}).`,
+      `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
+      (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
   ];
-  if (exportDay < datum) lines.push(`Hinweis: Der Export stammt vom ${exportDay}, geprüft wird für den ${datum}; der heutige Tageslauf ist vielleicht noch nicht veröffentlicht.`);
   lines.push('', '| Erwartung | gemessen | Urteil | Grund |', '|---|---|---|---|');
   for (const r of results) {
     lines.push(`| ${cell(`PR ${r.pr}: ` + r.members.map(m => describe(m.e)).join(' oder '))} | ${cell(r.members.map(m => fmt(m.gemessen)).join(' / '))} | ${r.urteil} | ${cell(r.members[0].e.grund)} |`);
   }
   if (later.length) lines.push('', 'Noch nicht fällig: ' + later.map(e => `${e.id} (ab ${e.gueltigAb})`).join(', '));
   const report = {
-    datum, export: exportBase, exportGeneratedAt: index.generated_at,
-    zusammenfassung: { erfuellt: count(ERFUELLT), nichtErfuellt: count(NICHT), nichtMessbar: count(NM), abgelaufen: count(ABGELAUFEN), nochNichtFaellig: later.length },
+    datum, datentag: exportDay, export: exportBase, exportGeneratedAt: index.generated_at,
+    zusammenfassung: { erfuellt: count(ERFUELLT), nichtErfuellt: count(NICHT), nichtMessbar: count(NM), abgelaufen: count(ABGELAUFEN), nochNichtFaellig: laterChecks },
     ergebnisse: results.map(r => ({ id: r.id, pr: r.pr, urteil: r.urteil, teile: r.members.map(m => ({ id: m.e.id, urteil: m.urteil, gemessen: m.gemessen })) })),
     nochNichtFaellig: later.map(e => e.id),
   };
@@ -257,11 +272,11 @@ async function run({ exportBase, erwartungen, datum }) {
 }
 
 async function main(argv) {
-  const at = flag => { const i = argv.indexOf(flag); return i >= 0 ? argv[i + 1] : undefined; };
+  const at = flag => { const i = argv.indexOf(flag); return i >= 0 ? (argv[i + 1] ?? '') : undefined; };
   const opts = {
     exportBase: at('--export') || DEFAULT_EXPORT,
     erwartungen: path.resolve(at('--erwartungen') || DEFAULT_ERWARTUNGEN),
-    datum: at('--datum') || berlinToday(),
+    datum: at('--datum'),
   };
   const out = at('--out') && path.resolve(at('--out'));
   const inside = (dir, p) => { const r = path.relative(dir, p); return r === '' || (!r.startsWith('..') && !path.isAbsolute(r)); };
@@ -272,7 +287,10 @@ async function main(argv) {
   }
   const { code, lines, report } = await run(opts);
   console.log(lines.join('\n'));
-  if (out && report) writeJsonAtomic(out, report, { indent: 2 });
+  if (out && report) {
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    writeJsonAtomic(out, report, { indent: 2 });
+  }
   return code;
 }
 
