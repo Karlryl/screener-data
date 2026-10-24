@@ -5,7 +5,8 @@
 // - UWMC: the vendor quarter 2026-06-30 is negative (-112.0 million USD; UWM reports 888.0 million). Withheld without a
 //   replacement value (the other vendor quarters stand on another basis); the shown growth falls back to the year pair.
 // - MPHC.QA: the vendor "revenue" is the equity-method share of results plus interest income of a holding; all five
-//   quarters and the newest year are withheld (the no-gap rule withholds the older years).
+//   quarters and the newest year are withheld (the no-gap rule withholds the older years), and the packet is
+//   quarantined like 402340.KS so the holding is not placed on the survival list as a firm without revenue.
 // - FRNM, ESDS.NS (and ESDS.BO): vendor zeros in revenue and gross profit of the quarter 2026-06-30 are withheld.
 // - ROB.WA: the vendor zero as 2025 revenue is withheld; the stale 2017 to 2015 years go with it (no gap is bridged).
 // - 2855.TW, 6005.TW: the vendor income lines of both brokers stand on another basis. Revenue (and President's operating
@@ -70,6 +71,37 @@ test('MPHC.QA: all revenue quarters and years are withheld; neither -98.4 % nor 
   assert.deepEqual(leg(snap('MPHC.QA')), ['quarter', '2026-06-30', '2025-06-30', -190.4]);
   const reasons = financialReasons(out);
   for (const c of own.filter(c => c.ticker === 'MPHC.QA')) assert.ok(reasons.includes(c.reason), c.caseId);
+});
+
+// Fix round (review of #44): with its revenue withheld the engine put MPHC.QA on the survival list (no-revenue) although
+// it is an equity-method holding. The 402340.KS precedent (quarantine of the packet) takes it off every board.
+test('MPHC.QA: the packet is held as a quarantine; the row is excluded as data-suspect, also from the survival list', () => {
+  const score = require('../src/scoring/score.js'), formulas = require('../src/scoring/formulas/index.js');
+  const q = table.quarantines.find(x => x.ticker === 'MPHC.QA');
+  assert.equal(q.caseId, 'mphc.qa-equity-method-revenue-20261024');
+  assert.equal(q.reasonDate, '2026-10-24');
+  assert.match(q.reason, /\(zweites Quartal 2026, Ende 30\.06\.2026/);
+  assert.ok(q.sources.every(s => s.url.startsWith('https://') && s.quote && s.page));
+  assert.deepEqual(table.quarantines.slice(-1), [q], 'appended after the eleven earlier holds');
+  const scored = cfg => {
+    const r = applyFinancialCases(snap('MPHC.QA'), cfg && { table: cfg });
+    return { r, s: score.scoreUniverse([r.snapshot], formulas)[0] };
+  };
+  const { r, s } = scored();
+  assert.equal(r.snapshot.meta.financialDataIssue.caseId, q.caseId);
+  assert.ok(!r.events.some(e => e.status === 'stale'), 'the exact packet holds without a drift warning');
+  assert.deepEqual([s.action, s.reason, s.score, s.reasonText], ['exclude', 'data-suspect', null, q.reason]);
+  assert.ok(financialReasons(r.snapshot).includes(q.reason));
+  // A drifted anchor keeps the hold and warns; the same packet under another ticker is not held.
+  const drifted = snap('MPHC.QA'); drifted.timeseries.revenueQEnds[0] = '2026-09-30';
+  assert.ok(applyFinancialCases(drifted).events.some(e => e.reasonCode === 'quarantine-fingerprint-changed' && e.caseId === q.caseId));
+  const other = snap('MPHC.QA'); other.meta.ticker = 'UNLISTED';
+  assert.equal(applyFinancialCases(other).snapshot.meta.financialDataIssue, undefined);
+  // Break-once on test data: without the quarantine the holding lands on the survival list as a firm without revenue.
+  const noHold = structuredClone(table); noHold.quarantines = noHold.quarantines.filter(x => x.ticker !== 'MPHC.QA');
+  const without = scored(validateTable(noHold)).s;
+  assert.deepEqual([without.action, without.reason], ['survival', 'no-revenue']);
+  assert.throws(() => assert.equal(without.action, 'exclude'), assert.AssertionError);
 });
 
 test('FRNM and ESDS: the vendor zeros of the quarter 2026-06-30 are withheld, the shown year growth is unchanged', () => {

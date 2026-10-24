@@ -44,7 +44,8 @@ test('all 321 authorized cells (265 quarterly, 56 annual) and eleven held packet
   // 000599.SZ holds: its stored Q2 2025 predates the restatement while Q1 2025 is restated.
   assert.equal(table.cases.length, 400); // P168f adds three Viaplay confirmations and one MFSL annual hold; hand table 18.10.2026 adds 26 cells (BLSH, VCTR, CDR.WA, 000552.SZ); P276 adds 13 (TWE.AX operating income, Kinnevik revenue); 23.10.2026 adds five CIG-C operating-income quarters; 24.10.2026 adds 15 (2498.HK, 300277.SZ, 002379.SZ, EYDAP.AT, MIN.AX), 14 (603993.SS, INFRAC.SW) and two (INFRAC.SW operating income); the triage of 24.10.2026 adds 48 (UWMC one, MPHC.QA six, FRNM two, ESDS.NS two, ROB.WA one, 2855.TW 18, 6005.TW 18).
   assert.equal(table.cases.filter(c => c.periodType === '12M').length, 70); // P168f adds exactly four annual cases to P168e's 40; 18.10.2026 adds the BLSH and VCTR gross-profit holds and two CDR.WA 2023 holds; P276 four TWE.AX operating-income and four Kinnevik revenue years; 24.10.2026 the EYDAP.AT and MIN.AX revenue holds, the two corrected INFRAC.SW revenue years and the two corrected INFRAC.SW operating-income years; the triage of 24.10.2026 eight annual holds (MPHC.QA and ROB.WA revenue; 2855.TW and 6005.TW revenue, gross profit and operating income).
-  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS']);
+  // Triage 24.10.2026 appends MPHC.QA (equity-method holding, 402340.KS precedent; tests/hand-table-triage-20261024.test.js).
+  assert.deepEqual(table.quarantines.map(q => q.ticker), ['BANPU.BK', 'KBDC', 'HOS', 'TYG', 'OLPX', 'HLX', '2670.HK', 'ENGI3.SA', 'Z98.DE', '2637.TW', '402340.KS', 'MPHC.QA']);
   assert.throws(() => validateTable({}), /Invalid/);
   const duplicate = clone(table); duplicate.cases.push(duplicate.cases[0]); assert.throws(() => validateTable(duplicate), /duplicate/);
   const undocumented = clone(table); undocumented.cases[0].sources[0].quote = ''; assert.throws(() => validateTable(undocumented), /Invalid/);
@@ -1449,7 +1450,7 @@ test('period labels keep the 212/11/34 authority prefix and 42 fixture results p
   assert.equal(added.size, 4, 'exactly four P106 cases are new');
   for (const id of added) assert.ok(table.cases.some(c => c.caseId === id), id);
   // P177 refreshes the full digest for its documented HL/CIG-C changes; period labels and coverage remain pinned.
-  const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : table[key]; // P138: +2 appended coverage rows
+  const legacy = key => key === 'cases' ? table.cases.slice(0, 216).filter(c => !added.has(c.caseId)) : key === 'coverage' ? table.coverage.slice(0, 34) : key === 'quarantines' ? table.quarantines.slice(0, 11) : table[key]; // P138: +2 appended coverage rows; the triage of 24.10.2026 appends the MPHC.QA hold as quarantine row 12 (pinned in tests/hand-table-triage-20261024.test.js)
   assert.equal(table.cases.length - legacy('cases').length, added.size + 27 + 4 + 11 + 1 + 2 + 4 + 26 + 12 + 13 + 5 + 15 + 14 + 2 + 48, 'every added case exists'); // P168f appends exactly four annual cases; 18.10.2026 appends 26, the G31 switch twelve holds, P276 13 cells, 23.10.2026 five CIG-C opIncQ cells, 24.10.2026 15, 14 and two cells, the triage of 24.10.2026 48 cells; the legacy prefix is unchanged.
   const legacyFixture = Object.fromEntries(Object.entries(fixture).slice(0, 42));
   for (const [key, count, hash] of [

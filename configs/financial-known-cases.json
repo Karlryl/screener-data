@@ -12476,6 +12476,50 @@
         }
       ],
       "vendorEvidence": "Snapshot of run 36984285974 (2026-10-02): KRW, fx 0.00073595974; revenueQ native (million KRW) 2026-06-30 19609774 = 328,549 + 19,281,225 (매출액 + 지분법이익), 2025-06-30 1837434 = 355,695 + 1,481,739; annualRev newest 10,455,553 vs 매출액 2025 1,411,521. One basis needs Q3 2025 and Q4 2025 restated for the Dreamus sale (decided 29.10.2025, DART 20251029800644); first expected with the 3Q 2026 report."
+    },
+    {
+      "caseId": "mphc.qa-equity-method-revenue-20261024",
+      "ticker": "MPHC.QA",
+      "reason": "Score fehlt: Mesaieed Petrochemical ist eine Holding und bilanziert ihre Gemeinschaftsunternehmen nach der Equity-Methode. Der Anbieter liefert als Umsatz den Ergebnisanteil der Gemeinschaftsunternehmen samt Zinsertrag (zweites Quartal 2026, Ende 30.06.2026: minus 177,6 Mio. QAR; Geschäftsjahr 2025: 549,3 Mio. QAR); einen eigenen Umsatz nennt die Firma nur auf anteiliger Basis (erstes Halbjahr 2026: 605 Mio. QAR). Ohne Umsatz lässt sich kein Firmenscore bilden, und die Firma ist kein Unternehmen ohne Umsatz im Sinn der Überlebensliste. Geprüft am 24.10.2026.",
+      "reasonDate": "2026-10-24",
+      "fingerprint": [
+        {
+          "path": [
+            "timeseries",
+            "revenueQEnds",
+            0
+          ],
+          "expected": "2026-06-30"
+        },
+        {
+          "path": [
+            "meta",
+            "reportingCurrencyOriginal"
+          ],
+          "expected": "QAR"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.mphc.com.qa/media/za2i1rax/mphc-financial-statements-h1-2026-english.pdf",
+          "page": "PDF 5, condensed interim statement of profit or loss (six months 2026, 2025)",
+          "quote": "Share of results from joint ventures 4 (ii) (223,340) 340,317 Interest income 48,143 43,911 (175,197) 384,228",
+          "unit": "QAR thousands"
+        },
+        {
+          "url": "https://mphc.com.qa/media/asoplzqt/mesaieed-petrochemical-holding-company-q-p-s-c-english-december-2025-final.pdf",
+          "page": "PDF 8, statement of profit or loss (2025, 2024)",
+          "quote": "Share of results from joint ventures 4 (ii) 454,119 582,659 Interest income 7 92,052 147,416 Other income (Net) 3,087 4,750 549,258 734,825",
+          "unit": "QAR thousands"
+        },
+        {
+          "url": "https://mphc.com.qa/media/fc1d5c3j/mphc-earnings-press-release-h1-2026-english.pdf",
+          "page": "PDF 1, key financial performance indicators (non-IFRS proportionate consolidation)",
+          "quote": "Revenue (QR million) 605 1,411 -57%",
+          "unit": "QAR millions"
+        }
+      ],
+      "vendorEvidence": "Snapshot of run 39918190374 (2026-10-23): QAR, fx 0.27472526; revenueQ native 2026-06-30 -177,646,000, 2026-03-31 3,000,000, 2025-12-31 17,347,000, 2025-06-30 196,570,000, 2025-03-31 190,308,000; annualRev 2025 549,258,000 and 2024 734,825,000 equal the IFRS subtotal after share of results, interest and other income. The revenue cells are also withheld cell by cell (hand-table cases of revision 2026-10-24-sdtriage)."
     }
   ],
   "periodLabels": [
