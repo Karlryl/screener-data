@@ -14,7 +14,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const { _convertSnapshotToUSD } = require('../pull-yahoo.js');
-const { loadStatementCurrencyTable, statementFactor, statementRowPending, PROVENANCE, TABLE_PATH } = require('../lib/statement-currency-hand-table.js');
+const { loadStatementCurrencyTable, statementFactor, statementRowPending, HOLD_REASON, PROVENANCE, TABLE_PATH } = require('../lib/statement-currency-hand-table.js');
 // P251: convert with the pinned rates of tests/fixtures/fx/, not with whatever the live fx-rates.json says
 // (a stale or missing file drops ARS and falls back to the hard-coded table; the daily pull that refreshes
 // the file runs after this blocking test).
@@ -201,6 +201,85 @@ pruefe('real table: proven rows load, unstamped row snapshot forces one re-pull'
   const after = _convertSnapshotToUSD(snap('EMBJ', 'BRL', 'USD', 7577.5e6, 44128e6));
   assert.strictEqual(statementRowPending(after, t), false);
   assert.strictEqual(statementRowPending(snap('ITUB4.SA', 'BRL', 'BRL', 1, 1), t), false);
+});
+
+// Sweep 24.10. (finding 4): a row whose check inputs are missing fell back to the reporting factor and
+// divided the proven USD statements by the local rate again (measured on this converter before the fix:
+// VALE3.SA 38.40 bn -> 7.58 bn, YPFD.BA 18.28 bn -> 0.012 bn), with only a WARN. Now the statement series
+// are withheld: value null plus a financialMissing marker naming the period (T2, never a replacement 0).
+const heldOk = (cell, period, raw) => {
+  assert.strictEqual(cell.value, null, 'statement value must be withheld, got ' + JSON.stringify(cell));
+  assert.strictEqual(cell.financialMissing.rule, 'statement-currency-unverified');
+  assert.strictEqual(cell.financialMissing.period, period);
+  assert.ok(cell.financialMissing.reason.startsWith(HOLD_REASON), cell.financialMissing.reason);
+  assert.ok(cell.financialMissing.reason.includes(period || 'unbekannt'), 'the hint names its period');
+  assert.deepStrictEqual(cell.financialMissing.originalVendorRow, raw, 'raw vendor row kept for the audit');
+};
+for (const [ticker, currency, annual, quarter] of [
+  ['VALE3.SA', 'BRL', 38403e6, 10498e6], ['EMBJ3.SA', 'BRL', 7577.5e6, 1446.7e6], ['YPFD.BA', 'ARS', 18284e6, 6574e6],
+]) {
+  pruefe('fail closed: ' + ticker + ' without revenueTTM withholds its statement series instead of dividing them', () => {
+    const raw = snap(ticker, currency, currency, annual, 1);
+    delete raw.metrics.revenueTTM;
+    raw.timeseries.revenueQ[0].value = quarter;
+    raw.annual.annualRevEnds = ['2025-12-31', '2024-12-31'];
+    raw.annual.annualRnD = [12e6, null];
+    raw.annual.annualBalance = [{ totalAssets: 8000e6, totalCash: 500e6, totalDebt: null }];
+    raw.annual.annualBalanceEnds = ['2025-12-31'];
+    const s = _convertSnapshotToUSD(structuredClone(raw));
+    assert.ok(/revenueTTM missing/.test(s.meta._statementCcyHandTableStale));
+    assert.strictEqual(s.meta.statementCurrencySource, undefined, 'an unverified row is not a correction');
+    heldOk(s.annual.annualRev[0], '2025-12-31', { value: annual });
+    heldOk(s.annual.annualRev[1], '2024-12-31', { value: 6394.7e6 });
+    heldOk(s.timeseries.revenueQ[0], '2026-03-31', { value: quarter });
+    heldOk(s.annual.annualRnD[0], null, 12e6);
+    assert.strictEqual(s.annual.annualRnD[1], null, 'a vendor gap stays a gap');
+    const bal = s.annual.annualBalance[0];
+    assert.strictEqual(bal.totalAssets, null); assert.strictEqual(bal.totalCash, null); assert.strictEqual(bal.totalDebt, null);
+    assert.strictEqual(bal.financialMissing.period, '2025-12-31');
+    assert.strictEqual(s.annual.annualShares[0].value, 178e6, 'share counts are not money');
+    assert.deepStrictEqual(s.annual.annualRevEnds, raw.annual.annualRevEnds);
+    assert.deepStrictEqual(s.timeseries.revenueQEnds, raw.timeseries.revenueQEnds);
+    assert.strictEqual(statementRowPending(s, loadStatementCurrencyTable()), false, 'no endless re-pull');
+    assert.deepStrictEqual(_convertSnapshotToUSD(structuredClone(s)), s, 'conversion must remain idempotent');
+  });
+}
+
+pruefe('fail closed: a BRL-listed row with financialCurrency missing withholds as well', () => {
+  const s = _convertSnapshotToUSD(snap('VALE3.SA', 'BRL', 'BRL', 38403e6, 218068992000, { ccyAmbiguous: true }));
+  assert.ok(/financialCurrency missing/.test(s.meta._statementCcyHandTableStale));
+  heldOk(s.timeseries.revenueQ[0], '2026-03-31', { value: 1446.7e6 });
+  assert.strictEqual(s.annual.annualRev[0].value, null);
+  assert.ok(close(s.metrics.revenueTTM.value, 218068992000 * s.meta.fxRateApplied), 'financialData still converts');
+});
+
+pruefe('fail closed: MODEC (annual-only row) withholds annual series, quarters keep the JPY factor', () => {
+  const raw = snap('6269.T', 'JPY', 'JPY', 4581232e3, 1);
+  delete raw.metrics.revenueTTM;
+  raw.timeseries.ocfQ = [{ value: 20e9 }, null];
+  const s = _convertSnapshotToUSD(raw);
+  assert.strictEqual(s.annual.annualRev[0].value, null);
+  assert.strictEqual(s.annual.annualRev[0].financialMissing.rule, 'statement-currency-unverified');
+  assert.deepStrictEqual(s.timeseries.ocfQ, [{ value: 20e9 * s.meta.fxRateApplied }, null]);
+});
+
+pruefe('counter case: a reporter without a row and without revenueTTM converts as before', () => {
+  const raw = snap('ITUB4.SA', 'BRL', 'BRL', 7577.5e6, 1);
+  delete raw.metrics.revenueTTM;
+  const s = _convertSnapshotToUSD(raw);
+  assert.ok(close(s.annual.annualRev[0].value, 7577.5e6 * s.meta.fxRateApplied));
+  assert.strictEqual(s.annual.annualRev[0].financialMissing, undefined);
+  assert.strictEqual(s.meta._statementCcyHandTableStale, undefined);
+});
+
+pruefe('statementFactor marks only missing check inputs as hold; a vanished mismatch or other currency does not', () => {
+  const t = loadStatementCurrencyTable();
+  const noTtm = snap('VALE3.SA', 'BRL', 'BRL', 38403e6, 1); delete noTtm.metrics.revenueTTM;
+  assert.strictEqual(statementFactor(noTtm, 'BRL', 0.2, t).hold, true);
+  assert.strictEqual(statementFactor(snap('6269.T', 'JPY', 'JPY', 1, 0), 'JPY', 0.0067, t).series, 'annual');
+  assert.strictEqual(statementFactor(snap('EMBJ', 'EUR', 'USD', 7577.5e6, 44128e6), 'EUR', 1.1, t).hold, undefined);
+  assert.strictEqual(statementFactor(snap('PBR-A', 'BRL', 'USD', 548000e6, 548490e6), 'BRL', 0.2, t).hold, undefined);
+  assert.strictEqual(statementFactor(snap('EMBJ', 'BRL', 'USD', 7577.5e6, 44128e6), 'BRL', 0.2, t).hold, undefined);
 });
 
 console.log('statement-currency-waechter: ' + ok + ' ok, ' + fail + ' fail');

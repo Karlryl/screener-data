@@ -110,5 +110,67 @@ check('ein Shard-Lauf ueber die volle Watchlist feuert NICHT', () => {
     'die Shard-Scheibe gegen das volle Manifest WUERDE feuern - deshalb steht die Pruefung vor dem Sharding');
 });
 
+// Sweep 24.10. (P1): the rule above was right, the run was not. pullAll reset the tag main()
+// had set, and the incremental flush wrote a hard-coded _manifest.json, so a subset run still
+// overwrote the daily manifest (n_total 16046 -> 0) while the log said it stays untouched.
+// These cases run the REAL main() as a child process with an empty list (no ticker, so no
+// network) against a temp fixture folder; the live manifest is hashed before and after.
+const os = require('os');
+const cp = require('child_process');
+const crypto = require('crypto');
+const ROOT = path.join(__dirname, '..');
+const LIVE_MANIFEST = path.join(ROOT, 'snapshots', '_manifest.json');
+const sha = (p) => fs.existsSync(p) ? crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex') : 'absent';
+function runMain(altManifest) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'manifest-teilmenge-'));
+  const out = path.join(tmp, 'snaps');
+  assert.ok(!path.resolve(out).toLowerCase().startsWith(path.resolve(ROOT).toLowerCase()),
+    'fixture folder lies inside the repo: ' + out);
+  fs.mkdirSync(out);
+  if (altManifest !== undefined) fs.writeFileSync(path.join(out, '_manifest.json'), altManifest);
+  const wl = path.join(tmp, 'watchlist.json');
+  fs.writeFileSync(wl, JSON.stringify({ _meta: { version: 'probe' }, stocks: [] }));
+  const r = cp.spawnSync(process.execPath, [path.join(ROOT, 'pull-yahoo.js'), '--watchlist', wl, '--output', out],
+    { cwd: tmp, encoding: 'utf8', timeout: 60000, env: { ...process.env, VOLL_PULL_TICKER: '' } });
+  const log = (r.stdout || '') + (r.stderr || '') + (r.error ? String(r.error) : '');
+  const files = fs.readdirSync(out).sort();
+  const read = (name) => fs.readFileSync(path.join(out, name));
+  return { tmp, status: r.status, log, files, read };
+}
+const liveBefore = sha(LIVE_MANIFEST);
+
+check('subset run: _manifest.json stays byte-identical, the tally goes to _manifest.subset-<version>.json', () => {
+  const alt = Buffer.from(JSON.stringify({ pulled_at: '2026-10-24T06:00:00.000Z', n_total: 16046, n_ok: 15900, partial: false }));
+  const run = runMain(alt);
+  try {
+    assert.strictEqual(run.status, 0, 'main() did not finish (a crash would leave the file untouched vacuously):\n' + run.log);
+    assert.ok(/Pull complete: 0\/0 ok/.test(run.log), 'pullAll did not reach its final write:\n' + run.log);
+    assert.ok(run.read('_manifest.json').equals(alt),
+      '_manifest.json was overwritten: ' + run.read('_manifest.json').toString().slice(0, 120));
+    assert.ok(run.files.includes('_manifest.subset-probe.json'), 'no subset tally written: ' + run.files.join(', '));
+    const tally = JSON.parse(run.read('_manifest.subset-probe.json'));
+    assert.strictEqual(tally.n_total, 0);
+    assert.strictEqual(tally.partial, false, 'the final write, not only the incremental flush, must use the subset path');
+    assert.ok(run.files.includes('_manifest-full.subset-probe.json'), 'full sibling not on the subset path: ' + run.files.join(', '));
+    assert.ok(!run.files.includes('_manifest-full.json'), 'full sibling written to the daily name');
+    assert.ok(/Teilmengen-Lauf: Tagesmanifest bleibt unberuehrt/.test(run.log), 'the final write did not see the subset tag');
+  } finally { fs.rmSync(run.tmp, { recursive: true, force: true }); }
+});
+
+check('no subset (nothing to protect): file names unchanged, _manifest.json is written as before', () => {
+  const run = runMain(undefined);
+  try {
+    assert.strictEqual(run.status, 0, 'main() did not finish:\n' + run.log);
+    assert.ok(run.files.includes('_manifest.json'), 'daily manifest missing: ' + run.files.join(', '));
+    assert.strictEqual(JSON.parse(run.read('_manifest.json')).partial, false);
+    assert.ok(run.files.includes('_manifest-full.json'));
+    assert.deepStrictEqual(run.files.filter((f) => /subset/.test(f)), [], 'a subset file appeared without a subset run');
+  } finally { fs.rmSync(run.tmp, { recursive: true, force: true }); }
+});
+
+check('the live snapshots/_manifest.json was not touched by these runs', () => {
+  assert.strictEqual(sha(LIVE_MANIFEST), liveBefore);
+});
+
 console.log('\nmanifest-teilmenge: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
