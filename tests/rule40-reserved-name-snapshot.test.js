@@ -71,7 +71,7 @@ test('reserved candidate carries meta.ticker, not the sanitised filename (sweep 
   assert.equal(candidate.meta.ticker, 'CON');
   assert.equal(candidate.meta.name, 'CON Inc');
   assert.equal(candidate.snapshot.meta.ticker, 'CON');
-  assert.equal(candidate.onBoard, false, 'no board row exists for the filename ticker');
+  assert.equal(candidate.onBoard, false, 'no board row exists for the ticker CON (taken from meta.ticker)');
   assert.equal(candidate.row, null);
 });
 
