@@ -182,7 +182,7 @@ test('every due entry abgelaufen: the same kind of first line says it is no chec
   const r = await verdicts([e({ ticker: 'AAA', op: 'present', ...old }), e({ ticker: 'GONE', op: 'present', ...old })]);
   assert.equal(r.code, 0);
   assert.deepEqual(r.u, ['abgelaufen', 'abgelaufen']);
-  assert.equal(r.lines[0], 'Hinweis: alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.');
+  assert.equal(r.lines[0], 'Hinweis: Export vom 2026-10-24, alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.');
   assert.match(r.lines[1], /^0 von 2 Erwartungen erfüllt, 0 nicht erfüllt, 0 nicht messbar, 2 abgelaufen/);
   const mixed = await verdicts([e({ ticker: 'AAA', op: 'present', ...old }), e({ ticker: 'AAA', op: 'present' })]);
   assert.ok(!mixed.lines.some(l => l.startsWith('Hinweis:')), mixed.lines.join('\n'));
@@ -210,11 +210,11 @@ test('Erwartung column: German label with the raw field name, unknown fields raw
     '| PR 99: AAA · full/energy · Score (score) = 50,4 ± 0,5 | 50',
     '| PR 99: AAA · full/energy · Größenband (mcapBand) = large | large',
     '| PR 99: LEG.SW · full/energy · Rang-Grund (rankGrund) = dupIssuer | dupIssuer',
-    '| PR 99: AAA · full/energy · Umsatzwachstum (revGrowthYoYPct) belegt | Feld revGrowthYoYPct fehlt',
+    '| PR 99: AAA · full/energy · Umsatzwachstum zum Vorjahr (revGrowthYoYPct) belegt | Feld revGrowthYoYPct fehlt',
     '| PR 99: NOMC · filter/universum · Börsenwert (mc) leer | leer',
     '| PR 99: AAA · filter/universum · Rang (rk) = 7 | 7',
-    '| PR 99: GONE · full/energy · Zeile fehlt (absent) | keine Zeile',
-    '| PR 99: AAA · full/energy · Zeile vorhanden (present) | 1 Zeile(n)',
+    '| PR 99: GONE · full/energy · Zeile fehlt | keine Zeile',
+    '| PR 99: AAA · full/energy · Zeile vorhanden | 1 Zeile(n)',
     '| PR 99: AAA · full/energy · name enthält „AAA“ | AAA AG',
     '| PR 99: Zeilen mit aus = gm-implausible · filter/universum · Anzahl = 2 | 2',
   ]);

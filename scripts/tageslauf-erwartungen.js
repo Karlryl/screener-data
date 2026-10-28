@@ -186,7 +186,7 @@ async function measure(e, load, index) {
 // German labels for the "Erwartung" column; the raw field name follows in parentheses, unknown fields stay raw.
 // rk and mc are the filter feed's short keys for rank and marketCap (docs/findash-export-v1.md).
 const LABELS = { rank: 'Rang', rk: 'Rang', score: 'Score', marketCap: 'Börsenwert', mc: 'Börsenwert',
-  revGrowthYoYPct: 'Umsatzwachstum', rankGrund: 'Rang-Grund', mcapBand: 'Größenband' };
+  revGrowthYoYPct: 'Umsatzwachstum zum Vorjahr', rankGrund: 'Rang-Grund', mcapBand: 'Größenband' };
 const label = f => (Object.hasOwn(LABELS, f) ? `${LABELS[f]} (${f})` : f);
 const USD_FIELDS = new Set(['marketCap', 'mc']); // always USD by contract
 const unitOf = e => (e.zaehle === undefined && USD_FIELDS.has(e.feld) ? ' USD' : '');
@@ -212,8 +212,8 @@ function describe(e) {
     null: () => `${feld} leer`,
     notNull: () => `${feld} belegt`,
     contains: () => `${feld} enthält ${e.muster !== undefined ? 'Muster /' + e.muster + '/' : '„' + e.wert + '“'}`,
-    absent: () => 'Zeile fehlt (absent)',
-    present: () => 'Zeile vorhanden (present)',
+    absent: () => 'Zeile fehlt',
+    present: () => 'Zeile vorhanden',
   }[e.op]();
   return `${who} · ${where} · ${what}`;
 }
@@ -263,7 +263,7 @@ async function run({ exportBase, erwartungen, datum: override }) {
   const lines = [
     // An exit 0 that checked nothing (nothing due, or every due entry expired) must not read like a green result.
     ...(results.length ? [] : [`Hinweis: Export vom ${exportDay}, keine Erwartung fällig; das ist kein Prüfergebnis.`]),
-    ...(results.length && count(ABGELAUFEN) === results.length ? ['Hinweis: alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.'] : []),
+    ...(results.length && count(ABGELAUFEN) === results.length ? [`Hinweis: Export vom ${exportDay}, alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.`] : []),
     `${count(ERFUELLT)} von ${results.length} Erwartungen erfüllt, ${count(NICHT)} nicht erfüllt, ${count(NM)} nicht messbar, ` +
       `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
