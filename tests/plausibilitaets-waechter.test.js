@@ -59,7 +59,7 @@ function fixtureRun(extra = [], env = {}, opt = {}) {
   return { dir, ...run(['--export', path.join(FIX, 'export'), '--snapshots', snaps, '--board-history', opt.vintages || path.join(FIX, 'jahrgaenge'),
     '--out', out, '--gestern', path.join(FIX, 'gestern.json'), ...extra], env) };
 }
-const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis PR #41 den Handelsstempel liefert.';
+const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis der Abruf ein Handelsdatum stempelt.';
 
 const tickers = (report, code) => report.faelle.filter((f) => f.code === code).map((f) => f.ticker).sort();
 
@@ -151,6 +151,7 @@ test('warnings per finding class, German step summary, never an error annotation
     const md = fs.readFileSync(summary, 'utf8');
     assert.ok(md.includes('> ' + KURS_ALT_HINWEIS), 'the summary says what kurs-alt measures');
     assert.match(md, /^## Plausibilitäts-Wächter \(nur Meldung, ändert keine Zahl\)/);
+    assert.ok(md.includes(', Börsenwert-Vergleich mit dem Board-Stand vom 2026-10-23.\n'), 'the header names the vintage the jump check used');
     assert.match(md, /\| jahrespaar-abstand \| 1 \|/);
     assert.match(md, /### jahrespaar-abstand \(1\)\n- energy\/profitable, Rang 4, PW-YEAR Year Gap Energy Inc\.: Das Jahreswachstum/);
     assert.match(md, /- energy\/unprofitable, ohne Rang, PW-SCORE /);
@@ -218,16 +219,24 @@ test('vintage unreadable or without any market cap: boersenwert-sprung is null a
       return path.join(dir, name);
     };
     const good = fs.readFileSync(path.join(FIX, 'jahrgaenge', '2026-10-23', 'energy.json'), 'utf8');
-    const broken = fixtureRun([], {}, { vintages: vintage('broken', { 'energy.json': good, 'utilities.json': '{broken' }) });
+    const summary = path.join(dir, 'summary.md');
+    const broken = fixtureRun([], { GITHUB_STEP_SUMMARY: summary }, { vintages: vintage('broken', { 'energy.json': good, 'utilities.json': '{broken' }) });
+    const two = fixtureRun([], {}, { vintages: vintage('two', { 'energy.json': '{broken', 'utilities.json': '{broken' }) });
     const empty = fixtureRun([], {}, { vintages: vintage('empty', { 'energy.json': JSON.stringify({ cohort: { profitable: [{ ticker: 'PW-SPLIT', pit: {} }], unprofitable: [] } }) }) });
-    runs.push(broken.dir, empty.dir);
-    for (const r of [broken, empty]) {
+    runs.push(broken.dir, two.dir, empty.dir);
+    for (const r of [broken, two, empty]) {
       assert.equal(r.status, 0);
       assert.equal(r.report.zusammenfassung['boersenwert-sprung'], null, 'not run, never 0 (T2)');
       assert.equal(r.report.faelle.filter((f) => f.code === 'boersenwert-sprung').length, 0);
       assert.equal(r.report.zusammenfassung['wachstum-extrem'], 3, 'the other checks still ran');
     }
-    assert.ok(broken.report.hinweise.includes('boersenwert-sprung nicht geprüft: im Board-Stand vom 23.10.2026 sind 1 Dateien nicht lesbar (utilities.json).'));
+    assert.ok(broken.report.hinweise.includes('boersenwert-sprung nicht geprüft: im Board-Stand vom 23.10.2026 ist 1 Datei nicht lesbar (utilities.json).'));
+    assert.ok(two.report.hinweise.includes('boersenwert-sprung nicht geprüft: im Board-Stand vom 23.10.2026 sind 2 Dateien nicht lesbar (energy.json, utilities.json).'));
+    // The step summary header must not name a vintage the jump check did not use.
+    const md = fs.readFileSync(summary, 'utf8');
+    assert.ok(md.includes(', Börsenwert-Vergleich nicht geprüft.\n'), md);
+    assert.ok(!md.includes('Board-Stand vom 2026-10-23'), md);
+    assert.match(md, /\| boersenwert-sprung \| nicht geprüft \|/);
     assert.ok(empty.report.hinweise.includes('boersenwert-sprung nicht geprüft: der Board-Stand vom 23.10.2026 enthält keinen Börsenwert.'));
   } finally { for (const d of [dir, ...runs]) fs.rmSync(d, { recursive: true, force: true }); }
 });

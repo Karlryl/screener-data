@@ -33,7 +33,7 @@ const QUARTAL = new Set(['quarter', 'halfYear']); // halfYear: H1 vs prior-year 
 // [noun, accusative article, dative article] per growth basis, for grammatical German reasons.
 const BASIS_WORT = { quarter: ['Quartal', 'das', 'dem'], halfYear: ['Halbjahr', 'das', 'dem'], year: ['Geschäftsjahr', 'das', 'dem'],
   yearNewerRecord: ['Geschäftsjahr', 'das', 'dem'], ttm: ['Zwölfmonatszeitraum', 'den', 'dem'] };
-const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis PR #41 den Handelsstempel liefert.';
+const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis der Abruf ein Handelsdatum stempelt.';
 // Legal-form words removed for the duplicate check. Deliberately looser than the engine's issuerKeyLoose
 // (src/scoring/score.js): a watcher with the engine's own rule would only check itself.
 const RECHTSFORMEN = new Set(['the', 'inc', 'incorporated', 'corp', 'corporation', 'co', 'company', 'ltd', 'limited',
@@ -163,7 +163,7 @@ async function pruefe(opt) {
   if (!stand || stand.unlesbar.length || !stand.mcap.size) {
     zusammenfassung['boersenwert-sprung'] = null;
     hinweise.push(!stand ? 'boersenwert-sprung nicht geprüft: kein Board-Stand vor dem Exporttag gefunden.'
-      : stand.unlesbar.length ? `boersenwert-sprung nicht geprüft: im Board-Stand vom ${datum(stand.tag)} sind ${stand.unlesbar.length} Dateien nicht lesbar (${stand.unlesbar.join(', ')}).`
+      : stand.unlesbar.length ? `boersenwert-sprung nicht geprüft: im Board-Stand vom ${datum(stand.tag)} ${stand.unlesbar.length === 1 ? 'ist 1 Datei' : `sind ${stand.unlesbar.length} Dateien`} nicht lesbar (${stand.unlesbar.join(', ')}).`
         : `boersenwert-sprung nicht geprüft: der Board-Stand vom ${datum(stand.tag)} enthält keinen Börsenwert.`);
   } else {
     for (const z of zeilen) {
@@ -298,7 +298,10 @@ function zusammenfassen(bericht) {
     z.push(`Status: ${bericht.status}. ${bericht.fehler || (bericht.hinweise || []).join(' ')}`);
     return z.join('\n') + '\n';
   }
-  z.push(`Export vom ${bericht.exportGeneratedAt}, Börsenwert-Vergleich mit dem Board-Stand vom ${bericht.quellen.boardHistoryStand ?? '(keiner)'}.`, '',
+  // The vintage is named only when the jump check ran; otherwise the header says "nicht geprüft" like the table.
+  const vergleich = bericht.zusammenfassung['boersenwert-sprung'] == null ? 'nicht geprüft'
+    : `mit dem Board-Stand vom ${bericht.quellen.boardHistoryStand}`;
+  z.push(`Export vom ${bericht.exportGeneratedAt}, Börsenwert-Vergleich ${vergleich}.`, '',
     '| Prüfung | Fälle |', '| --- | --- |');
   for (const code of CODES) z.push(`| ${code} | ${bericht.zusammenfassung[code] ?? 'nicht geprüft'} |`);
   if (bericht.gestern) z.push('', `Gegenüber gestern: ${bericht.gestern.neu.length} neu, ${bericht.gestern.weg.length} weg.`);

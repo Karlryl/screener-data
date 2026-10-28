@@ -177,6 +177,49 @@ test('nothing due: a prominent first line says it is no check result, exit 0', a
   assert.ok(!due.lines.some(l => l.startsWith('Hinweis:')), due.lines.join('\n'));
 });
 
+test('every due entry abgelaufen: the same kind of first line says it is no check result, exit 0', async () => {
+  const old = { gueltigAb: '2026-10-01', gueltigBis: '2026-10-23' };
+  const r = await verdicts([e({ ticker: 'AAA', op: 'present', ...old }), e({ ticker: 'GONE', op: 'present', ...old })]);
+  assert.equal(r.code, 0);
+  assert.deepEqual(r.u, ['abgelaufen', 'abgelaufen']);
+  assert.equal(r.lines[0], 'Hinweis: Export vom 2026-10-24, alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.');
+  assert.match(r.lines[1], /^0 von 2 Erwartungen erfüllt, 0 nicht erfüllt, 0 nicht messbar, 2 abgelaufen/);
+  const mixed = await verdicts([e({ ticker: 'AAA', op: 'present', ...old }), e({ ticker: 'AAA', op: 'present' })]);
+  assert.ok(!mixed.lines.some(l => l.startsWith('Hinweis:')), mixed.lines.join('\n'));
+});
+
+test('Erwartung column: German label with the raw field name, unknown fields raw, market caps in USD', async () => {
+  const r = await verdicts([
+    e({ ticker: 'AAA', feld: 'marketCap', op: 'between', min: 1e9, max: 3e9 }),
+    e({ ticker: 'AAA', feld: 'rank', op: 'eq', wert: 7 }),
+    e({ ticker: 'AAA', feld: 'score', op: 'eq', wert: 50.4, toleranz: 0.5 }),
+    e({ ticker: 'AAA', feld: 'mcapBand', op: 'eq', wert: 'large' }),
+    e({ ticker: 'LEG.SW', feld: 'rankGrund', op: 'eq', wert: 'dupIssuer' }),
+    e({ ticker: 'AAA', feld: 'revGrowthYoYPct', op: 'notNull' }),
+    e({ ticker: 'NOMC', board: 'filter/universum', feld: 'mc', op: 'null' }),
+    e({ ticker: 'AAA', board: 'filter/universum', feld: 'rk', op: 'eq', wert: 7 }),
+    e({ ticker: 'GONE', op: 'absent' }),
+    e({ ticker: 'AAA', op: 'present' }),
+    e({ ticker: 'AAA', feld: 'name', op: 'contains', wert: 'AAA' }),
+    e({ zaehle: 'gm-implausible', board: 'filter/universum', feld: 'aus', op: 'eq', wert: 2 }),
+  ]);
+  const rows = r.lines.filter(l => l.startsWith('| PR 99: '));
+  assert.deepEqual(rows.map(l => l.split(' | ').slice(0, 2).join(' | ')), [
+    '| PR 99: AAA · full/energy · Börsenwert (marketCap) zwischen 1 Mrd. USD und 3 Mrd. USD | 2 Mrd. USD',
+    '| PR 99: AAA · full/energy · Rang (rank) = 7 | 7',
+    '| PR 99: AAA · full/energy · Score (score) = 50,4 ± 0,5 | 50',
+    '| PR 99: AAA · full/energy · Größenband (mcapBand) = large | large',
+    '| PR 99: LEG.SW · full/energy · Rang-Grund (rankGrund) = dupIssuer | dupIssuer',
+    '| PR 99: AAA · full/energy · Umsatzwachstum zum Vorjahr (revGrowthYoYPct) belegt | Feld revGrowthYoYPct fehlt',
+    '| PR 99: NOMC · filter/universum · Börsenwert (mc) leer | leer',
+    '| PR 99: AAA · filter/universum · Rang (rk) = 7 | 7',
+    '| PR 99: GONE · full/energy · Zeile fehlt | keine Zeile',
+    '| PR 99: AAA · full/energy · Zeile vorhanden | 1 Zeile(n)',
+    '| PR 99: AAA · full/energy · name enthält „AAA“ | AAA AG',
+    '| PR 99: Zeilen mit aus = gm-implausible · filter/universum · Anzahl = 2 | 2',
+  ]);
+});
+
 test('due date is the export data day (Berlin date of generated_at); --datum only overrides it', async () => {
   const list = [e({ id: 'heute', ticker: 'AAA', op: 'present' }), e({ id: 'morgen', ticker: 'AAA', op: 'present', gueltigAb: '2026-10-25' })];
   let r = await verdicts(list); // export of 24.10. 10:43 Berlin: 25.10. entry not due, whatever the clock says
