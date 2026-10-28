@@ -93,6 +93,16 @@ function readMcapBounds() {
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
 const { annualPairsShadow } = require('../lib/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
+// W8 EX-01 (28.10.2026): whether a board's formula splits its cohort into a profitable and an unprofitable
+// track. Read from the formula definition, the same splitMetric switch as src/scoring/score.js trackOf():
+// only 'FCF', 'OpInc' and 'NetIncome' split; 'none' (or absent) puts every row on the profitable track.
+// Never inferred from row counts: an empty unprofitable track of a split board stays a split board.
+const SPLIT_METRICS = Object.freeze(['FCF', 'OpInc', 'NetIncome']);
+/** @param {string[]} ids Board ids as keyed in boardStatus. @param {object} registry Formula registry by id.
+ * @returns {object} {[id]: boolean}, or null for an id without a formula (never guessed). */
+function profitSplitMap(ids, registry) {
+  return Object.fromEntries((ids || []).map((id) => [id, Object.hasOwn(registry, id) ? SPLIT_METRICS.includes(registry[id].splitMetric) : null]));
+}
 let _wachstumsSchranken;
 let _annualPairsBounds = null;
 let _annualPairsBoundsWarned = false;
@@ -358,6 +368,11 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
       Object.defineProperty(this, 'annualPairsShadow', { value, enumerable: true });
       return value;
     },
+    get ffoGrund() { // W8 EX-02, only read for rows with an empty FFO pill
+      const value = ffoGrund(snap);
+      Object.defineProperty(this, 'ffoGrund', { value, enumerable: true });
+      return value;
+    },
     snapFehler,
   };
   // Retain evidence from the very snapshot used above. Defer helper failures,
@@ -448,6 +463,76 @@ function overviewPeriodFor(kind, period) {
     return { basis: 'none', periodEnd: null, priorPeriodEnd: null, reason: 'Zeitraum nicht übermittelt: die Zeile stammt aus einer Rechnung ohne Zeitraumangabe.' };
   }
   return { basis: period.basis, periodEnd: period.periodEnd ?? null, priorPeriodEnd: period.priorPeriodEnd ?? null, reason: period.reason ?? null };
+}
+
+// ---- W8 text additions (28.10.2026): German reasons for two empty display fields, no number changes ----
+// EX-02: the FFO pill (overview kind 'ffo-badge') is empty when growthVerdict('ffo-badge') in
+// src/scoring/overview.js finds no usable pair. ffoGrund walks the same positions (annual net income plus
+// depreciation per position, newest present year, next present year) in the same order of exits and names the
+// exit that left it empty, with the fiscal-year ends involved. It explains only a pill that this snapshot
+// re-derives as empty; anything else is "Grund nicht im Datenstand" (counted, never a guessed reason).
+const { norm } = require('../src/scoring/snapshot.js');
+const { annualPeriodEnds } = require('../lib/annual-pairs.js');
+const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'grundNichtImDatenstand']);
+const _iso = (p) => typeof p === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p);
+const tagDe = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+const gjBis = (iso) => (iso ? `das Geschäftsjahr bis ${tagDe(iso)}` : 'ein Geschäftsjahr ohne gespeichertes Periodenende');
+const FFO_VORNE = 'Die FFO-Näherung (Jahresüberschuss plus Abschreibungen) bleibt leer';
+/** Reason for an empty FFO pill, from the exit of the FFO branch of growthVerdict that left it empty.
+ * @param {object|null} s Prepared snapshot of the row (null when missing or unreadable).
+ * @returns {{code: string, reason: string}} Code from FFO_GRUND_CODES and a German sentence naming the period. */
+function ffoGrund(s) {
+  const nichtImDatenstand = (warum) => ({ code: 'grundNichtImDatenstand', reason: `Grund nicht im Datenstand: ${warum}` });
+  if (!s) return nichtImDatenstand('Zum Datenstand dieses Exports liegt für die Firma kein lesbarer Datensatz vor.');
+  const metric = overviewMetric(s, { specialTrack: 'reit' });
+  if (metric.value !== null) return nichtImDatenstand('Der Datenstand dieses Exports ergibt eine FFO-Näherung, die Rangliste zeigt keine.');
+  const ni = norm(s, 'annualNetIncome'), dep = norm(s, 'annualDepreciation');
+  const values = Array.from({ length: Math.min(ni.length, dep.length) },
+    (_, i) => (ni[i] !== null && dep[i] !== null && Number.isFinite(ni[i] + dep[i]) ? ni[i] + dep[i] : null));
+  const ends = annualPeriodEnds(s, 'annualNetIncome');
+  const newer = values.findIndex(Number.isFinite);
+  const older = values.findIndex((v, i) => i > newer && Number.isFinite(v));
+  let out;
+  if (newer < 0) {
+    const fehlt = !dep.some(Number.isFinite) ? 'die Abschreibungen fehlen beim Anbieter für alle Jahre'
+      : !ni.some(Number.isFinite) ? 'der Jahresüberschuss fehlt für alle Jahre'
+        : 'die beiden Werte liegen nie für dasselbe Geschäftsjahr vor';
+    const datiert = ends.filter(Boolean).sort();
+    const spanne = datiert.length > 1 ? `geprüft wurden die Geschäftsjahre mit Ende zwischen ${tagDe(datiert[0])} und ${tagDe(datiert.at(-1))}`
+      : datiert.length ? `geprüft wurde ${gjBis(datiert[0])}` : 'die Jahreswerte haben kein gespeichertes Periodenende';
+    out = { code: 'keinJahrMitBeidenWerten', reason: `${FFO_VORNE}, weil für kein Geschäftsjahr Jahresüberschuss und Abschreibungen zusammen vorliegen; ${fehlt} (${spanne}).` };
+  } else if (older < 0) {
+    out = { code: 'nurEinJahr', reason: `${FFO_VORNE}, weil Jahresüberschuss und Abschreibungen nur für ${gjBis(ends[newer])} zusammen vorliegen; ein Vorjahr zum Vergleich fehlt.` };
+  } else if (values[older] <= 0) {
+    out = { code: 'vorjahrNichtPositiv', reason: `${FFO_VORNE}, weil der Vorjahreswert für ${gjBis(ends[older])} nicht positiv ist; gegen einen Wert von null oder darunter lässt sich für ${gjBis(ends[newer])} kein Wachstum rechnen.` };
+  } else if (metric.valuePresent === false) {
+    out = { code: 'jahreNichtHintereinander', reason: `${FFO_VORNE}, weil ${gjBis(ends[newer])} und ${gjBis(ends[older])}, die beiden jüngsten Jahre mit beiden Werten, nicht direkt aufeinander folgen.` };
+  } else {
+    return nichtImDatenstand(`Die Prüfung der Jahreswerte für ${gjBis(ends[newer])} findet keinen der bekannten Gründe.`);
+  }
+  // A net-income cell withheld by the financial hand table reaches this branch as a missing value; say so.
+  const gehalten = (s.annual?.annualNetIncome || []).map((row) => row?.financialMissing?.period).filter((p) => _iso(p)).sort().reverse();
+  if (gehalten.length) out.reason += ` Der Jahresüberschuss für ${gjBis(gehalten[0])} ist absichtlich leer, siehe die Hinweise zu den Finanzdaten.`;
+  return out;
+}
+
+// EX-03: the live reason for an empty revGrowthYoYPct is the G31 v1 candidate's own missing reason
+// (lib/g31-recency.js, the same text as g31Shadow.v1.reason, which stays untouched).
+const WACHSTUM_GRUND_FEHLT = 'Grund nicht im Datenstand: Die Wachstumsrechnung dieses Exports nennt für das leere Umsatzwachstum keinen Grund.';
+/** Appends ffoReason and revGrowthReason (absent where they do not apply). The mappers call it right after the growth
+ * fields, so the P88 and G31 shadow keys keep their place at the end of the row.
+ * @param {object} out Mapped board or overview row. @param {*} snapshotStore 'smallcap' or anything else (main).
+ * @returns {object} The same row; no existing key changes. */
+function ergaenzeTextGruende(out, snapshotStore) {
+  const flat = Object.hasOwn(out, 'overviewKind');
+  if ((flat ? out.overviewKind : out.overview?.kind) === 'ffo-badge' && (flat ? out.overviewValue : out.overview.value) === null) {
+    out.ffoReason = snapAbleitungenFuer(out.ticker, snapshotStore === 'smallcap' ? 'smallcap' : 'main').ffoGrund;
+  }
+  if (out.revGrowthYoYPct === null && Object.hasOwn(out, 'g31Shadow')) {
+    const v1 = out.g31Shadow?.v1;
+    out.revGrowthReason = (v1 && v1.pct === null && v1.reason) || (!v1 && out.g31Shadow?.reason) || WACHSTUM_GRUND_FEHLT;
+  }
+  return out;
 }
 
 // Beweis-Frage, bewusst eng: wurde die marketCap dieser Zeile von der HANDELS-Waehrung
@@ -843,7 +928,9 @@ function mapBoardRow(r, i, snapshotStore, marketCapFloor) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
   ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: Belegpunkte neben der Coverage-Behauptung
-  const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
+  // W8: ffoReason/revGrowthReason right after the growth fields, before the P88 and G31 shadow keys (both stay last);
+  // inert (identity) in isolated legacy mappers that lack the helper, like g31Last below.
+  const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow((typeof ergaenzeTextGruende === 'function' ? ergaenzeTextGruende : (row) => row)(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
   return typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
 }
 
@@ -866,7 +953,7 @@ function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
   ergaenzeBelegpunkte(out, snapshotStore); // 29.08.: s. mapBoardRow
-  const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
+  const mapped = applyOverviewHold(ergaenzeMarketCapClassesShadow((typeof ergaenzeTextGruende === 'function' ? ergaenzeTextGruende : (row) => row)(ergaenzeWachstumsBasis(ergaenzeWaehrungsbeleg(out, snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore), snapshotStore === 'smallcap' ? 'smallcap' : 'main'), snapshotStore);
   return typeof g31Last === 'function' ? g31Last(mapped) : mapped; // Optional shadows stay inert in isolated legacy mappers.
 }
 
@@ -1054,6 +1141,7 @@ function buildIndex(coverage, sourceIndex) {
     counts: idx.counts,                              // true cohort counts, not topN
     survivalCount: idx.survivalCount,
     excluded: idx.excluded,
+    profitSplit: profitSplitMap(BRANCHES, require('../src/scoring/formulas')), // W8 EX-01, last key
   };
 }
 
@@ -1256,6 +1344,8 @@ function buildSmallcapIndex(coverage, smallcapDir) {
     counts: idx.counts,
     excluded: idx.excluded,
     coverageFloor: idx.coverageFloor ?? null, // 5.2 Auflage 3: Coverage-Gate-Beleg durchreichen
+    // W8 EX-01: keyed like boardStatus ('smallcap-<sector>'); the small-cap formulas are the HG ones per sector.
+    profitSplit: profitSplitMap(idx.boards, require('../src/scoring/formulas/smallcap')),
   };
 }
 
@@ -1785,6 +1875,30 @@ function checkScoreScale(rows, kind, errs, isFullBoard, file = kind) {
   if (median < FULL_MEDIAN_RANGE[0] || median > FULL_MEDIAN_RANGE[1]) errs.push(`${kind}: median score ${median} outside [${FULL_MEDIAN_RANGE.join(', ')}]`);
 }
 
+// W8: the two reason fields, when present: right shape, and only on a row whose display field is empty.
+function checkTextGruende(r, where, errs) {
+  if (Object.hasOwn(r, 'ffoReason')) {
+    const g = r.ffoReason, flat = Object.hasOwn(r, 'overviewKind');
+    if (!g || typeof g !== 'object' || !FFO_GRUND_CODES.includes(g.code) || typeof g.reason !== 'string' || !g.reason) errs.push(`${where}: ffoReason=${JSON.stringify(g)}`);
+    if ((flat ? r.overviewKind : r.overview?.kind) !== 'ffo-badge' || (flat ? r.overviewValue : r.overview?.value) !== null) errs.push(`${where}: ffoReason on a row without an empty FFO pill`);
+  }
+  if (Object.hasOwn(r, 'revGrowthReason')) {
+    if (typeof r.revGrowthReason !== 'string' || !r.revGrowthReason) errs.push(`${where}: revGrowthReason=${JSON.stringify(r.revGrowthReason)}`);
+    if (r.revGrowthYoYPct !== null) errs.push(`${where}: revGrowthReason with revGrowthYoYPct=${JSON.stringify(r.revGrowthYoYPct)}`);
+  }
+}
+
+// W8 EX-01: profitSplit, when present, must be exactly the formula-derived map for the listed boards.
+function checkProfitSplit(mk, ids, registry, kind, errs) {
+  if (!Object.hasOwn(mk, 'profitSplit')) return;
+  const expected = profitSplitMap(ids, registry);
+  const got = mk.profitSplit;
+  if (!got || typeof got !== 'object' || Array.isArray(got)) { errs.push(`${kind}: profitSplit not an object`); return; }
+  for (const k of new Set([...Object.keys(expected), ...Object.keys(got)])) {
+    if (got[k] !== expected[k]) errs.push(`${kind}: profitSplit.${k}=${JSON.stringify(got[k])}, formula says ${JSON.stringify(expected[k])}`);
+  }
+}
+
 function validateBoardRow(r, where, errs, ranking) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
@@ -1807,6 +1921,7 @@ function validateBoardRow(r, where, errs, ranking) {
   validateGeo(r, where, errs);
   checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
   checkScoreBreakdown(r, where, errs);
+  checkTextGruende(r, where, errs);
 }
 
 function validateOverviewRow(r, where, errs, ranking) {
@@ -1824,6 +1939,7 @@ function validateOverviewRow(r, where, errs, ranking) {
   validateGeo(r, where, errs);
   checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
   checkScoreBreakdown(r, where, errs);
+  checkTextGruende(r, where, errs);
 }
 
 function validateSurvivalRow(r, where, errs) {
@@ -2010,6 +2126,7 @@ function validateFile(mk, kind, errs, opts = {}) {
     else if (opts.requireCohortCounts) validateCohortCounts(mk.counts, 'index', errs);
     if (!Number.isFinite(mk.survivalCount)) errs.push('index: survivalCount');
     if (!mk.excluded || typeof mk.excluded !== 'object') errs.push('index: excluded');
+    checkProfitSplit(mk, BRANCHES, require('../src/scoring/formulas'), 'index', errs);
     return;
   }
   if (kind === 'survival') {
@@ -2204,6 +2321,7 @@ function validateSmallcapIndex(mk, errs) {
   // Coverage-Gates dieses Laufs muss im Export ankommen, sonst ist Auflage 3 nicht nachpruefbar.
   if (!('coverageFloor' in mk)) errs.push(`${kind}: coverageFloor missing`);
   else if (mk.coverageFloor !== null && !Number.isFinite(mk.coverageFloor)) errs.push(`${kind}: coverageFloor not finite|null`);
+  if (Array.isArray(mk.boards)) checkProfitSplit(mk, mk.boards, require('../src/scoring/formulas/smallcap'), kind, errs);
 }
 
 // F-CGPT-040, identisch zu validateQualityExport.
@@ -2489,4 +2607,7 @@ module.exports = {
   // Tag 1401: valueFlags loader seam (tests/value-flags.test.js runs the mappers with a fixture list).
   ladeValueFlags, checkValueFlags,
   ladeMcapClassesRegistry, ergaenzeMarketCapClassesShadow,
+  // W8 (28.10.2026): profit-split marker, FFO reason, live revenue-growth reason (tests/export-w8-*.test.js).
+  profitSplitMap, checkProfitSplit, ffoGrund, FFO_GRUND_CODES, ergaenzeTextGruende, checkTextGruende, WACHSTUM_GRUND_FEHLT,
+  buildIndex, buildSmallcapIndex,
 };
