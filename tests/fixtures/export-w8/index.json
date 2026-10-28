@@ -1,0 +1,109 @@
+{
+ "schema": "findash-export/v1",
+ "generated_at": "2026-10-28T09:51:58.468Z",
+ "coverage": {
+  "status": "degradiert",
+  "degraded": true,
+  "blocked": false,
+  "coverage_pct": 65.2,
+  "generated_at": "2026-10-28T09:44:13.426Z"
+ },
+ "generatedFromSnapshots": 16048,
+ "branches": [
+  "consumer-discretionary",
+  "consumer-staples",
+  "energy",
+  "financials",
+  "health-care",
+  "industrials",
+  "it-services",
+  "materials",
+  "real-estate",
+  "semiconductors",
+  "software-comm-services",
+  "tech-hardware",
+  "utilities"
+ ],
+ "boardStatus": {
+  "consumer-discretionary": "core",
+  "consumer-staples": "diagnostic",
+  "energy": "core",
+  "financials": "core",
+  "health-care": "core",
+  "industrials": "core",
+  "it-services": "diagnostic",
+  "materials": "diagnostic",
+  "real-estate": "diagnostic",
+  "semiconductors": "core",
+  "software-comm-services": "core",
+  "tech-hardware": "diagnostic",
+  "utilities": "core"
+ },
+ "counts": {
+  "consumer-discretionary": {
+   "profitable": 1079,
+   "unprofitable": 98
+  },
+  "consumer-staples": {
+   "profitable": 554,
+   "unprofitable": 0
+  },
+  "energy": {
+   "profitable": 341,
+   "unprofitable": 32
+  },
+  "financials": {
+   "profitable": 449,
+   "unprofitable": 41
+  },
+  "health-care": {
+   "profitable": 689,
+   "unprofitable": 298
+  },
+  "industrials": {
+   "profitable": 1914,
+   "unprofitable": 174
+  },
+  "it-services": {
+   "profitable": 156,
+   "unprofitable": 0
+  },
+  "materials": {
+   "profitable": 1041,
+   "unprofitable": 0
+  },
+  "real-estate": {
+   "profitable": 552,
+   "unprofitable": 0
+  },
+  "semiconductors": {
+   "profitable": 309,
+   "unprofitable": 81
+  },
+  "software-comm-services": {
+   "profitable": 513,
+   "unprofitable": 126
+  },
+  "tech-hardware": {
+   "profitable": 568,
+   "unprofitable": 121
+  },
+  "utilities": {
+   "profitable": 344,
+   "unprofitable": 9
+  }
+ },
+ "survivalCount": 99,
+ "excluded": {
+  "balance-sheet-bank": 738,
+  "data-suspect": 112,
+  "dup-issuer": 3266,
+  "insurer": 310,
+  "mortgage-reit": 12,
+  "no-axes": 7,
+  "no-sector": 78,
+  "non-operating-rev": 174,
+  "non-us": 1552,
+  "telecom": 211
+ }
+}
