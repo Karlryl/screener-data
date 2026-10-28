@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-27T09:20:01.440Z",
+  "generated_at": "2026-10-28T09:52:00.859Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 65,
-    "generated_at": "2026-10-27T09:10:57.617Z"
+    "coverage_pct": 65.2,
+    "generated_at": "2026-10-28T09:44:13.426Z"
   },
   "profitable": [
     {
@@ -16,21 +16,21 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NVEC",
-      "score": 50.7,
+      "score": 43,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.822,
-        "companion": 223.2
+        "value": -0.081,
+        "companion": 19
       },
       "name": "NVE Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 351873888,
+      "marketCap": 366018592,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -41,8 +41,8 @@
       "coverageWeight": 1,
       "cohortN": 1,
       "cohortFallback": true,
-      "scoreBase": 52.2,
-      "scoreShrunk": 50.7,
+      "scoreBase": 29,
+      "scoreShrunk": 43,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -51,7 +51,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 83.3,
+          "pct": 16.7,
           "weight": 1.7
         },
         {
@@ -66,7 +66,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 83.3,
+          "pct": 16.7,
           "weight": 1.6
         },
         {
@@ -85,7 +85,7 @@
           "weight": 0.7
         }
       ],
-      "revGrowthYoYPct": 80.74857436404154,
+      "revGrowthYoYPct": -8.071382475352106,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -96,20 +96,20 @@
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
       "overviewPeriod": {
         "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 80.74857436404154,
+      "revGrowthYoYPctLegacy": -8.071382475352106,
       "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
       "overviewValueLegacy": -0.042,
       "overviewPeriodLegacy": {
         "basis": "year",
@@ -120,16 +120,16 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 80.74857436404154,
+          "pct": -8.071382475352106,
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.8219812150087331,
+        "value": -0.08143326212469038,
         "period": {
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       }
     }
@@ -140,7 +140,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "MRAM",
-      "score": 42.6,
+      "score": 49.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -155,7 +155,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 306566592,
+      "marketCap": 311436608,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -166,8 +166,8 @@
       "coverageWeight": 1,
       "cohortN": 2,
       "cohortFallback": true,
-      "scoreBase": 35.2,
-      "scoreShrunk": 42.6,
+      "scoreBase": 48.3,
+      "scoreShrunk": 49.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -176,7 +176,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 16.7,
+          "pct": 50,
           "weight": 2.3
         },
         {
@@ -191,7 +191,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 16.7,
+          "pct": 50,
           "weight": 1.7
         },
         {
@@ -263,7 +263,7 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LAES",
-      "score": 33.4,
+      "score": 37.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -284,7 +284,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 348642368,
+      "marketCap": 341894432,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -295,8 +295,8 @@
       "coverageWeight": 0.93,
       "cohortN": 2,
       "cohortFallback": true,
-      "scoreBase": 63,
-      "scoreShrunk": 56,
+      "scoreBase": 77,
+      "scoreShrunk": 63,
       "factors": {
         "burn": 0.597,
         "growth": 1,
@@ -305,7 +305,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 83.3,
           "weight": 2.3
         },
         {
@@ -320,7 +320,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 50,
+          "pct": 83.3,
           "weight": 1.7
         },
         {
@@ -348,10 +348,10 @@
         "pctl": 1
       },
       "ath": {
-        "distancePct": -93.1,
+        "distancePct": -92.6,
         "athDate": "2023-05-24",
         "monthsAgo": 41,
-        "lastDate": "2026-10-26"
+        "lastDate": "2026-10-27"
       },
       "qPunkte": 0,
       "qSpanTage": null,
