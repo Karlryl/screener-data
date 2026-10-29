@@ -201,8 +201,13 @@ test('g31Hinweis: checked P268 entry for SAUD3.SA; diagnosis flags; absent on or
   const newer = structuredClone(saud);
   newer.timeseries.revenueQ.unshift({ value: v(saud.timeseries.revenueQ[0]) * 1.02 });
   newer.timeseries.revenueQEnds.unshift('2026-09-30');
-  newer.timeseries.revenueQ.splice(5, 0, { value: v(saud.timeseries.revenueQ[0]) });
-  newer.timeseries.revenueQEnds.splice(5, 0, '2025-09-30');
+  // Adapted for PR "G31: newest complete quarter pair before the annual pair" (sd-p2, 29.10.2026): the probe used to
+  // insert a second 2025-09-30 row next to the stored empty one, so the September quarter never formed a pair and the
+  // fiscal year was shown; under the new rule that shows the June pair again. Filling the stored empty row makes the
+  // September pair the shown one, which is what this check is about.
+  assert.equal(newer.timeseries.revenueQEnds[4], '2025-09-30'); assert.equal(v(newer.timeseries.revenueQ[4]), null);
+  newer.timeseries.revenueQ[4] = { value: v(saud.timeseries.revenueQ[0]) };
+  assert.equal(G.g31Shadow(newer).v1.sourcePeriodEnd, '2026-09-30');
   assert.notEqual(G.g31Hinweis(newer)?.code, 'uebernahme');
   // Ordinary B1-free quarter pair and the fiscal-year fallback: no hint, the value is never changed by a hint.
   assert.equal(G.g31Hinweis(durationSnap('revenueQ', null)), null);
