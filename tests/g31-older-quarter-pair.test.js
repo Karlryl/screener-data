@@ -99,3 +99,47 @@ test('break-once: with the walk disabled the June 2026 pair of 002448.SZ is lost
   assert.equal(G.g31Shadow(snap('002448.SZ')).v1.sourcePeriodEnd, '2026-06-30');
   assert.equal(sha(), before);
 });
+
+// Review I1 (29.10.2026): an unusable exchange store means the check did not run; a CN/TW older pair stays unused.
+const withStore = (cn, fn) => {
+  const keep = X.defaultContext;
+  X.defaultContext = () => ({ stores: { cn, tw: null, warnings: [] }, baseline: { date: null, rows: new Map(), warnings: [] }, warnings: [] });
+  try { return fn(); } finally { X.defaultContext = keep; }
+};
+const shiftedStore = days => {
+  const cn = structuredClone(F.store.cn), shift = t => new Date(Date.parse(t) - days * 864e5).toISOString();
+  for (const src of Object.values(cn.sources)) src.fetchedAt = shift(src.fetchedAt);
+  for (const c of Object.values(cn.companies)) for (const list of Object.values(c.ytd || {}))
+    for (const o of list) for (const conf of o.confirmedBy || []) if (conf.fetchedAt) conf.fetchedAt = shift(conf.fetchedAt);
+  return cn;
+};
+
+test('no exchange store: 002448.SZ and 000595.SZ keep the fiscal year (fail closed)', () => {
+  withStore(null, () => {
+    assert.equal(X.evaluate(X.stripOwn(snap('000595.SZ')), X.defaultContext()).why, 'store-missing');
+    assert.deepEqual([revGrowthLeg(snap('002448.SZ')).basis, revGrowthLeg(snap('002448.SZ')).periodEnd], ['year', '2025-12-31']);
+    const leg = revGrowthLeg(snap('000595.SZ'));
+    assert.deepEqual([leg.basis, leg.periodEnd], ['year', '2025-12-31']); close(leg.pct, 5.976444598488317);
+  });
+});
+
+test('exchange store older than the limit: the older pair stays unused; one day old (inside the limit) it is used', () => {
+  withStore(shiftedStore(10), () => {
+    assert.equal(X.evaluate(X.stripOwn(snap('002448.SZ')), X.defaultContext()).why, 'store-old');
+    assert.deepEqual([revGrowthLeg(snap('002448.SZ')).basis, revGrowthLeg(snap('002448.SZ')).periodEnd], ['year', '2025-12-31']);
+  });
+  withStore(shiftedStore(1), () => assert.equal(revGrowthLeg(snap('002448.SZ')).pct, 28.53102510166723));
+});
+
+test('break-once: without the unusable-store line the stale store admits the 002448.SZ June pair; live source unchanged', () => {
+  const source = fs.readFileSync(GFILE, 'utf8'), lines = source.split(/\r?\n/);
+  const anchor = "    if (res?.category === 'unchecked' && STORE_UNUSABLE.has(res.why)) return true;";
+  assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor');
+  const m = new Module(GFILE, module), req = createRequire(GFILE);
+  m.filename = GFILE; m.paths = module.paths; m.require = req;
+  m._compile(lines.filter(l => l !== anchor).join('\n'), GFILE);
+  const broken = withStore(shiftedStore(10), () => m.exports.g31Shadow(snap('002448.SZ')).v1);
+  assert.throws(() => assert.equal(broken.basis, 'year'), assert.AssertionError);
+  assert.equal(withStore(shiftedStore(10), () => G.g31Shadow(snap('002448.SZ')).v1.basis), 'year');
+  assert.equal(sha(), before);
+});
