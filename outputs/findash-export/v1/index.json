@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-10-28T09:51:58.468Z",
+  "generated_at": "2026-10-29T10:01:05.055Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 65.2,
-    "generated_at": "2026-10-28T09:44:13.426Z"
+    "coverage_pct": 64.9,
+    "generated_at": "2026-10-29T09:53:53.893Z"
   },
-  "generatedFromSnapshots": 16048,
+  "generatedFromSnapshots": 15986,
   "branches": [
     "consumer-discretionary",
     "consumer-staples",
@@ -41,35 +41,35 @@
   },
   "counts": {
     "consumer-discretionary": {
-      "profitable": 1079,
-      "unprofitable": 98
+      "profitable": 1075,
+      "unprofitable": 95
     },
     "consumer-staples": {
-      "profitable": 554,
+      "profitable": 557,
       "unprofitable": 0
     },
     "energy": {
-      "profitable": 341,
-      "unprofitable": 32
+      "profitable": 344,
+      "unprofitable": 33
     },
     "financials": {
-      "profitable": 449,
-      "unprofitable": 41
+      "profitable": 452,
+      "unprofitable": 42
     },
     "health-care": {
-      "profitable": 689,
-      "unprofitable": 298
+      "profitable": 682,
+      "unprofitable": 299
     },
     "industrials": {
-      "profitable": 1914,
-      "unprofitable": 174
+      "profitable": 1902,
+      "unprofitable": 168
     },
     "it-services": {
-      "profitable": 156,
+      "profitable": 154,
       "unprofitable": 0
     },
     "materials": {
-      "profitable": 1041,
+      "profitable": 1022,
       "unprofitable": 0
     },
     "real-estate": {
@@ -77,33 +77,48 @@
       "unprofitable": 0
     },
     "semiconductors": {
-      "profitable": 309,
-      "unprofitable": 81
+      "profitable": 308,
+      "unprofitable": 80
     },
     "software-comm-services": {
-      "profitable": 513,
-      "unprofitable": 126
+      "profitable": 511,
+      "unprofitable": 124
     },
     "tech-hardware": {
-      "profitable": 568,
-      "unprofitable": 121
+      "profitable": 566,
+      "unprofitable": 115
     },
     "utilities": {
-      "profitable": 344,
+      "profitable": 341,
       "unprofitable": 9
     }
   },
-  "survivalCount": 99,
+  "survivalCount": 98,
   "excluded": {
-    "balance-sheet-bank": 738,
-    "data-suspect": 112,
-    "dup-issuer": 3266,
+    "balance-sheet-bank": 739,
+    "data-suspect": 97,
+    "dup-issuer": 3278,
     "insurer": 310,
     "mortgage-reit": 12,
     "no-axes": 7,
-    "no-sector": 78,
-    "non-operating-rev": 174,
-    "non-us": 1552,
-    "telecom": 211
+    "no-sector": 76,
+    "non-operating-rev": 175,
+    "non-us": 1554,
+    "telecom": 209
+  },
+  "profitSplit": {
+    "consumer-discretionary": true,
+    "consumer-staples": false,
+    "energy": true,
+    "financials": true,
+    "health-care": true,
+    "industrials": true,
+    "it-services": false,
+    "materials": false,
+    "real-estate": false,
+    "semiconductors": true,
+    "software-comm-services": true,
+    "tech-hardware": true,
+    "utilities": true
   }
 }
