@@ -3,6 +3,7 @@
 // EFTY, MCTA: Nasdaq trading suspended, last close of 2025-10-03 and 2025-11-11 (EFTY also with the count before the Class B surrender).
 // RMAX, FBRX, NATH, SLP, WEAV: listing ended in a merger, the vendor still multiplies the last price by the last count.
 // RCIT: a shell quoted at 2,262.50 USD by the vendor, 295.8 bn USD with no support in any filing.
+// MSGS, ISSC: retired symbols, the firms trade on as MSGK and IA; the vendor keeps the last price under the old symbol.
 // No current market cap exists for any of them, so these are holds like the delisted ARX.TO, not share-count rows: the field is
 // empty with the reason and the export drops the row. Values are copied from the stored snapshots (small-cap run 40873805484, main run 41027769596).
 // Break-once on test data only: `node tests/hand-table-zahlenjagd-c-20261030.test.js --prove-red` runs the presence check
@@ -27,6 +28,8 @@ const CASES = {
   SLP: { mc: 374159488, shares: 20224838, implied: 20224838, ex: 'NasdaqGS', floor: 300e6, reason: ['06.10.2026', 'Altaris'], quote: 'no longer listed on Nasdaq as of October 6, 2026', reviewBy: '2026-11-30' },
   WEAV: { mc: 595333312, shares: 80450446, implied: 80450446, ex: 'NYSE', floor: 300e6, reason: ['26.10.2026', '23.10.2026', 'Francisco Partners'], quote: 'suspended prior to the opening of trading', reviewBy: '2026-11-30' },
   RCIT: { mc: 295782711296, shares: 130732697, implied: 130732697, ex: 'OTC Markets OTCPK', reason: ['2.262,50 USD', '295,8 Mrd. USD', '21.09.2026'], quote: 'Unsolicited quotations', reviewBy: '2026-11-30' },
+  MSGS: { mc: 9256088576, shares: 19550424, implied: 24079941, ex: 'NYSE', reason: ['26.10.2026', '27.10.2026', 'MSGK'], quote: 'will change from', reviewBy: '2026-11-30' },
+  ISSC: { mc: 443541504, shares: 17899173, implied: 17899173, ex: 'NasdaqGS', floor: 300e6, reason: ['17.08.2026', '18.08.2026', ' IA.'], quote: 'market open on August 18', url: 'https://finviz.com/', reviewBy: '2026-11-30' },
 };
 const packet = (ticker, base = CASES[ticker]) => ({
   identifier: { primary: 'ISIN', value: 'TICKER:' + ticker },
@@ -56,7 +59,7 @@ test('every firm is held with a source, its reason names what happened, and no l
   for (const [t, c] of Object.entries(CASES)) {
     const row = guard.holds[t];
     assert.ok(row && !guard.table[t], t + ': a hold, not a share-count row');
-    assert.ok(row.source.url.startsWith('https://www.sec.gov/') && row.source.quote.includes(c.quote), t + ': source');
+    assert.ok(row.source.url.startsWith(c.url || 'https://www.sec.gov/') && row.source.quote.includes(c.quote), t + ': source');
     for (const part of c.reason) assert.ok(row.reason.includes(part), t + ': ' + part);
     assert.doesNotMatch(row.reason, / [–—-] /, t + ': dash as punctuation');
     assert.equal(row.reasonComplete, true, t);
@@ -97,13 +100,16 @@ test('export: board rows of the held firms are dropped with the reason, a row wi
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('survival: the main-store rows of FBRX and RCIT are dropped with the reason', () => {
+test('survival and full boards: the main-store rows of FBRX, RCIT and MSGS are dropped with the reason, MSGK stays', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hand-table-holds-'));
   try {
-    for (const t of ['FBRX', 'RCIT']) fs.writeFileSync(path.join(dir, t + '.json'), JSON.stringify(packet(t)));
+    for (const t of ['FBRX', 'RCIT', 'MSGS']) fs.writeFileSync(path.join(dir, t + '.json'), JSON.stringify(packet(t)));
+    fs.writeFileSync(path.join(dir, 'MSGK.json'), JSON.stringify(packet('MSGK', { ...CASES.MSGS, mc: 7469115392 })));
     const child = spawnSync(process.execPath, ['-e', `
       const assert=require('node:assert/strict'),writer=require('./scripts/write-findash-export.js');
-      for(const [t,mc] of [['FBRX',1634427392],['RCIT',295782711296]]) assert.equal(writer.mapSurvivalRow({ticker:t,marketCap:mc,score:20},0),null,t);`],
+      for(const [t,mc] of [['FBRX',1634427392],['RCIT',295782711296]]) assert.equal(writer.mapSurvivalRow({ticker:t,marketCap:mc,score:20},0),null,t);
+      assert.equal(writer.mapBoardRow({ticker:'MSGS',marketCap:9256088576,score:72.2,mcapBand:'large'},0),null);
+      assert.equal(writer.mapBoardRow({ticker:'MSGK',marketCap:7469115392,score:72.2,mcapBand:'large'},0).marketCap,7469115392);`],
     { cwd: root, env: { ...process.env, FINDASH_SNAPSHOTS_DIR: dir }, encoding: 'utf8' });
     assert.equal(child.status, 0, child.stdout + child.stderr);
     assert.match(child.stderr, /::error::RCIT: Exportzeile verworfen\./);
