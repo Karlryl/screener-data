@@ -89,7 +89,7 @@ test('Sigma Lithium: USD for 2025 and 2024, the Canadian dollar years withheld, 
   assert.ok(financialReasons(s).some(r => /kanadischen Dollar/.test(r)));
   const old = apply('SGML', without());
   assert.deepEqual(series(old, 'annual', 'annualRev'), [152611950, 208747000, 181231000, 0]);
-  // The vendor year 2025 is the filed figure in another currency, on both lines the same factor.
+  // The vendor year 2025 is the filed figure times one factor on both lines (1.387; the filing prints CAD 1.40 average, 1.37 year end).
   assert.ok(Math.abs(152611950 / 110012000 - 69618140 / 50185000) < 1e-5);
 });
 
