@@ -131,9 +131,9 @@ test('exchange store older than the limit: the older pair stays unused; one day 
   withStore(shiftedStore(1), () => assert.equal(revGrowthLeg(snap('002448.SZ')).pct, 28.53102510166723));
 });
 
-test('break-once: without the unusable-store line the stale store admits the 002448.SZ June pair; live source unchanged', () => {
+test('break-once: without the positive pair-proof line the stale store admits the 002448.SZ June pair; live source unchanged', () => {
   const source = fs.readFileSync(GFILE, 'utf8'), lines = source.split(/\r?\n/);
-  const anchor = "    if (res?.category === 'unchecked' && STORE_UNUSABLE.has(res.why)) return true;";
+  const anchor = "    if (!['agree', 'would-fill'].includes(res?.category) || !res.pairs?.some(p => p.status === 'agree' && p.end === q.sourcePeriodEnd && p.priorEnd === q.sourcePriorPeriodEnd)) return true;";
   assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor');
   const m = new Module(GFILE, module), req = createRequire(GFILE);
   m.filename = GFILE; m.paths = module.paths; m.require = req;

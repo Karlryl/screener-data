@@ -12032,6 +12032,33 @@
           "quote": "19,230,991 100 17,149,090 100; 14,810,845 77 13,349,871 78"
         }
       ]
+    },
+    {
+      "caseId": "pco.wa-2024-09-30-revenueQ",
+      "revision": "2026-10-30-pr49",
+      "verifiedAt": "2026-10-30",
+      "ticker": "PCO.WA",
+      "field": "revenueQ",
+      "period": "2024-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 1486000000,
+      "replacementValue": null,
+      "reason": "Umsatzvergleich zurückgehalten: Das Quartal bis 30.09.2024 enthält laut Pepco FY2024, Seite 21 (\"Pepco Poundland Dealz Group\"), Poundland; das Quartal bis 30.09.2025 schließt Poundland laut FY2025, Seite 6 (\"Poundland is now treated as a discontinued operation\"), aus. Kein geschätzter Ersatz aus gerundeten Segmentzahlen.",
+      "sources": [
+        {
+          "url": "https://www.pepcogroup.eu/wp-content/uploads/2024/12/PCO-FY-2024-Prelim-Results-vFF.pdf",
+          "page": 21,
+          "quote": "Pepco Poundland Dealz Group",
+          "published": "2024-12-10"
+        },
+        {
+          "url": "https://www.pepcogroup.eu/wp-content/uploads/2025/12/PCO-FY-2025-Prelim-Results-vFFF.pdf",
+          "page": 6,
+          "quote": "Poundland is now treated as a discontinued operation",
+          "published": "2025-12-17"
+        }
+      ]
     }
   ],
   "quarantines": [
