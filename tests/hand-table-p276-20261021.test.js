@@ -83,7 +83,7 @@ test('13 sourced cells, appended, only TWE and Kinnevik, no substitute 0', () =>
   // sd-umsatzreihen, the 14 of lane sd-umsatzreihen-2 and the two INFRAC.SW operating-income years of lane
   // sd-umsatzreihen-3, then the 48 cells of lane sd-triage-handtabelle and the 70 of lane sec-abgleich (30.10.2026); nothing else follows them.
   const later = table.cases.slice(first + own.length);
-  assert.deepEqual(later.map(c => c.revision), [...Array(5).fill('2026-10-23-sdcigc'), ...Array(15).fill('2026-10-24-sdumsatz'), ...Array(14).fill('2026-10-24-sdumsatz2'), ...Array(2).fill('2026-10-24-sdumsatz3'), ...Array(48).fill('2026-10-24-sdtriage'), ...Array(70).fill('2026-10-30-secabgleich'), ...Array(35).fill('2026-10-30-sdz1')], 'appended after every earlier case');
+  assert.deepEqual(later.map(c => c.revision), [...Array(5).fill('2026-10-23-sdcigc'), ...Array(15).fill('2026-10-24-sdumsatz'), ...Array(14).fill('2026-10-24-sdumsatz2'), ...Array(2).fill('2026-10-24-sdumsatz3'), ...Array(48).fill('2026-10-24-sdtriage'), ...Array(70).fill('2026-10-30-secabgleich'), ...Array(35).fill('2026-10-30-sdz1'), ...Array(5).fill('2026-10-30-sdb12')], 'appended after every earlier case');
   for (const c of own) {
     assert.equal(c.verifiedAt, '2026-10-21');
     assert.deepEqual(c.listingAliases, listingsFor(c.ticker, c.field).slice(1));

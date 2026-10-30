@@ -87,9 +87,9 @@ test('invalid or missing end at either selected position is undated', () => {
   }
   gated(gp([150, 100], ['2025-12-31']), {}, 'gp', /^Periodenenden fehlen/);
 });
-test('a short or long prior period empties the pair (Daifuku class): distance alone is not enough', () => {
+test('only the selected pair matters, not short or long prior periods', () => {
   for (const prior of ['2024-12-30', '2023-11-01']) {
-    gated(gp([150, 100, 90], ['2025-12-31', '2024-12-31', prior]), {}, 'gp', /^Das Vorjahr bis 31\.12\.2024 endet \d+ Tage nach dem Abschluss/);
+    plain(gp([150, 100, 90], ['2025-12-31', '2024-12-31', prior]), {}, 'gp', 0.5);
   }
 });
 test('normalization preserves invalid values as gaps', () => {

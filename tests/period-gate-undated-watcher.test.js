@@ -1,6 +1,6 @@
 'use strict';
-// Watcher of the undated exception of period gate round 2 (30.10.2026): acceleration and gross profit still count a pair with
-// no end at all, so the export says so on the day a row does. Reads main and small-cap snapshots through the real mapper.
+// Watcher of the sealed-era exception of the period gate (30.10.2026): on a snapshot fetched before 20.08.2026, acceleration and
+// gross profit still count a pair with no end, so the export says so if a live row ever does. Reads main and small-cap rows.
 // Run: node tests/period-gate-undated-watcher.test.js
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
@@ -21,7 +21,8 @@ const { annualPairsShadow } = require('../lib/annual-pairs.js');
 const { produceRankings } = require('../src/scoring/score.js');
 
 const cells = values => values.map(value => ({ value }));
-const snapshot = (ticker, annualRevEnds) => ({ meta: { ticker }, metrics: {}, timeseries: {},
+const OLD = '2026-08-01T00:00:00.000Z', NOW = '2026-10-30T00:00:00.000Z';
+const snapshot = (ticker, annualRevEnds, fetchedAt = OLD) => ({ meta: { ticker, fetchedAt }, metrics: {}, timeseries: {},
   annual: { annualRev: cells([130, 100, 90]), annualGP: cells([65, 50, 45]), ...(annualRevEnds ? { annualRevEnds, annualGPEnds: annualRevEnds } : {}) } });
 const DATED = ['2025-12-31', '2024-12-31', '2023-12-31'];
 const write = (dir, s) => fs.writeFileSync(path.join(dir, s.meta.ticker + '.json'), JSON.stringify(s));
@@ -34,9 +35,10 @@ try {
   check('an undated pair on the axes is named, a dated pair is not', () => {
     assert.deepEqual(W.undatedAxes(annualPairsShadow(snapshot('A'))), ['acceleration', 'grossProfit']);
     assert.deepEqual(W.undatedAxes(annualPairsShadow(snapshot('B', DATED))), []);
+    assert.deepEqual(W.undatedAxes(annualPairsShadow(snapshot('C', undefined, NOW))), [], 'a live undated pair has no value to count');
     assert.deepEqual(W.undatedAxes(null), []);
     // Quarters by position carry the acceleration without any end as well.
-    const quarters = { meta: { ticker: 'Q' }, annual: {}, metrics: {}, timeseries: { revenueQ: cells([120, 110, 105, 102, 100, 90]) } };
+    const quarters = { meta: { ticker: 'Q', fetchedAt: OLD }, annual: {}, metrics: {}, timeseries: { revenueQ: cells([120, 110, 105, 102, 100, 90]) } };
     assert.deepEqual(W.undatedAxes(annualPairsShadow(quarters)), ['acceleration']);
     // A later undated year behind a dated pair stays visible too.
     const mixed = snapshot('M', [DATED[0], DATED[1], null]);

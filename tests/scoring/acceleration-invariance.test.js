@@ -23,7 +23,7 @@
  * Usage:  node tests/scoring/acceleration-invariance.test.js   (Exit 0 gruen / 1 Fehler)
  */
 const assert = require('node:assert/strict');
-const ax = require('../../src/scoring/axes.js');
+const ax = require('../helpers/dated-series.js').datedApi(require('../../src/scoring/axes.js'));
 
 let pass = 0, fail = 0;
 function test(name, fn) {

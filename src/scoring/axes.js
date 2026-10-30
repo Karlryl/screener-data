@@ -31,7 +31,7 @@ const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, j
 const { fcfMarginValid } = require('./engine.js');
 const { g31Variant, g31Shadow, quarterDurations } = require('../../lib/g31-recency.js');
 const { annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
-  checkNewerAnnualPair, checkAnnualAcceleration } = require('../../lib/annual-pairs.js');
+  checkNewerAnnualPair, checkAnnualAcceleration, annualAccelerationGatePasses, axisPairBlocked, sealedEraSnapshot } = require('../../lib/annual-pairs.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 
@@ -239,6 +239,7 @@ function revAcceleration(s, bounds) {
   for (let i = 0; i < rq.length; i++) {
     const v = jahresVergleichIdx(s, 'revenueQ', i);
     if (v === null || v.idx >= rq.length) continue; // kein Jahrespartner -> kein Paar
+    if (v.quelle === 'position' && !sealedEraSnapshot(s)) continue; // Period gate (30.10.2026): no end, no pair
     if (quarterDurations(s, 'revenueQ', i, v.idx).reason) continue; // Period gate (30.10.2026): unequal stored durations
     const a = rq[i], b = rq[v.idx];
     if (a === null || a === undefined || b === null || b === undefined) continue; // Luecke ueberspringen
@@ -249,10 +250,9 @@ function revAcceleration(s, bounds) {
   // Fallback Jahresreihe: drei present Jahre -> zwei Jahres-Wachstumsraten.
   const ar = norm(s, 'annualRev').filter((v) => v !== null && v !== undefined && v > 0);
   if (ar.length >= 3) {
+    if (annualPairRuleEnabled('acceleration') && !annualPairPasses(checkAnnualAcceleration(s))) return null;
     // Period gate (30.10.2026): the same test as growth on both pairs; a blocked pair drops the axis (renorm-on-drop).
-    // ponytail: a pair with no end at all is not judged on the score axes, only on the growth figure: every sealed golden
-    // fixture is undated and verify() needs its score above 100 (278470.KS). 0 such rows on 30.10.; closing it needs a seal decision.
-    if (!annualPairPasses(checkAnnualAcceleration(s))) return null;
+    if (!annualAccelerationGatePasses(s)) return null;
     const neu = clampWinsor(ar[0] / ar[1] - 1, bounds);
     const alt = clampWinsor(ar[1] / ar[2] - 1, bounds);
     if (Number.isFinite(neu) && Number.isFinite(alt)) return neu - alt;
@@ -265,9 +265,9 @@ function gpGrowth(s) {
   const gp = norm(s, 'annualGP');
   const two = adjacentTwoPresent(gp);
   if (!two || two[1] <= 0) return null;
-  // Period gate (24.10.2026, round 2 30.10.2026, lib/annual-pairs.js): a dated pair that is not two full years one
-  // year apart drops the axis (renorm-on-drop). Undated: see revAcceleration.
-  if (!annualPairPasses(checkAnnualPair(s, 'annualGP', 0, 1))) return null;
+  if (annualPairRuleEnabled('growth') && !annualPairPasses(checkAnnualPair(s, 'annualGP', 0, 1))) return null;
+  // Period gate (lib/annual-pairs.js): a pair whose own ends are missing or not one year apart drops the axis (renorm-on-drop).
+  if (axisPairBlocked(s, 'annualGP', 0, 1)) return null;
   const gpYoY = two[0] / two[1] - 1;
   // GM-Trajektorie (Margenpunkt-Delta neu vs. alt), additiver Tilt
   // audit/fix (Court Fall 1, F9): gm-Endpunkte gegen physikalisch unmoegliche Werte guarden.
@@ -407,7 +407,7 @@ function capitalEfficiency(s) {
   const rTwo = adjacentTwoPresent(norm(s, 'annualRev'));
   if (aTwo && aTwo[1] > 0 && rTwo && rTwo[1] > 0) {
     // Period gate (30.10.2026): a penalty of 0 on a blocked revenue pair would reward it (T2), so the axis drops.
-    if (!annualPairPasses(checkAnnualPair(s, 'annualRev', 0, 1))) return null;
+    if (axisPairBlocked(s, 'annualRev', 0, 1)) return null;
     const assetGrowth = aTwo[0] / aTwo[1] - 1;
     const revGrowth = rTwo[0] / rTwo[1] - 1;
     penalty = Math.max(0, assetGrowth - revGrowth);
