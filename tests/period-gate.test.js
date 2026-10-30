@@ -157,13 +157,13 @@ check('a clean one-year pair keeps every value; the penalty and the 3-year CAGR 
   assert.equal(growth3(s), Math.round((Math.cbrt(180 / 80) - 1) * 10000) / 100);
 });
 
-check('capital efficiency: a blocked revenue pair forms no asset-growth penalty', () => {
+check('capital efficiency: a blocked revenue pair drops the axis, no penalty of 0 rewards it (T2)', () => {
   const build = (ends) => ({ meta: {}, timeseries: {}, annual: { annualRev: [100, 90], annualRevEnds: ends, annualOpInc: [20, 18], annualOpIncEnds: ends,
     annualBalance: [{ totalAssets: 300, totalCurrentLiabilities: 50, currentLiabilities: 50 }, { totalAssets: 100, totalCurrentLiabilities: 50, currentLiabilities: 50 }], annualBalanceEnds: ends } });
   const ok = A.capitalEfficiency(build(['2025-12-31', '2024-12-31']));
   const blocked = A.capitalEfficiency(build(['2025-12-31', '2023-12-31']));
-  assert.ok(Number.isFinite(ok) && Number.isFinite(blocked));
-  assert.ok(blocked > ok, `no penalty on the blocked pair: ${blocked} against ${ok}`);
+  assert.ok(Number.isFinite(ok));
+  assert.equal(blocked, null);
 });
 
 check('52/53-week year at 371 days passes, the window edges 334/397 and 350/380 are inclusive', () => {
@@ -225,6 +225,9 @@ for (const [rel, anchor, mutant, probe] of [
     api => assert.equal(api.g31Shadow(dated(91)).v1.pct, null, '91-day pair must be empty')],
   ['../src/scoring/axes.js', "  if (!annualPairPasses(checkAnnualPair(s, 'annualGP', 0, 1))) return null;", '',
     api => assert.equal(api.gpGrowth(dated(730)), null, '730-day GP pair must drop the axis')],
+  ['../src/scoring/axes.js', "    if (!annualPairPasses(checkAnnualPair(s, 'annualRev', 0, 1))) return null;", '',
+    api => assert.equal(api.capitalEfficiency({ meta: {}, timeseries: {}, annual: { annualRev: [100, 90], annualRevEnds: ['2025-12-31', '2023-12-31'], annualOpInc: [20, 18], annualOpIncEnds: ['2025-12-31', '2023-12-31'],
+      annualBalance: [{ totalAssets: 300, totalCurrentLiabilities: 50, currentLiabilities: 50 }, { totalAssets: 100, totalCurrentLiabilities: 50, currentLiabilities: 50 }], annualBalanceEnds: ['2025-12-31', '2023-12-31'] } }), null, 'a blocked pair must drop the axis')],
   ['../src/scoring/axes.js', '    if (!annualPairPasses(checkAnnualAcceleration(s))) return null;', '',
     api => assert.equal(api.revAcceleration(ALK()), null, 'blocked annual pair must drop the axis')],
   ['../src/scoring/axes.js', "    if (quarterDurations(s, 'revenueQ', i, v.idx).reason) continue; // Period gate (30.10.2026): unequal stored durations", '',

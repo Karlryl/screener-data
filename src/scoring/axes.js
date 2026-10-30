@@ -405,8 +405,9 @@ function capitalEfficiency(s) {
   let penalty = 0;
   const aTwo = adjacentTwoPresent(assets);
   const rTwo = adjacentTwoPresent(norm(s, 'annualRev'));
-  // Period gate (30.10.2026): the penalty is yearly, so a revenue pair the gate blocks does not form it.
-  if (aTwo && aTwo[1] > 0 && rTwo && rTwo[1] > 0 && annualPairPasses(checkAnnualPair(s, 'annualRev', 0, 1))) {
+  if (aTwo && aTwo[1] > 0 && rTwo && rTwo[1] > 0) {
+    // Period gate (30.10.2026): a penalty of 0 on a blocked revenue pair would reward it (T2), so the axis drops.
+    if (!annualPairPasses(checkAnnualPair(s, 'annualRev', 0, 1))) return null;
     const assetGrowth = aTwo[0] / aTwo[1] - 1;
     const revGrowth = rTwo[0] / rTwo[1] - 1;
     penalty = Math.max(0, assetGrowth - revGrowth);

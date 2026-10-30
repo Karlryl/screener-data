@@ -144,8 +144,8 @@ test('P99 lock 1: a withheld middle year withholds every older year; newer corre
   assert.equal(revAcceleration({ ...r.snapshot, timeseries:{} }, null),null);
   // Break once: without the lock the older years stay present and the fallback compares across the hole.
   const unlocked=clone(rows); unlocked[2]={value:expected[2]*fx}; unlocked[3]={value:expected[3]*fx};
-  // Period gate (30.10.2026): the dates block the pair across the hole on their own as well, so the axis stays empty; the lock is pinned by the reason codes above.
-  assert.equal(revAcceleration({ ...r.snapshot, annual:{ ...r.snapshot.annual, annualRev:unlocked }, timeseries:{} }, null),null); breaks++;
+  // Without ends: dated, the period gate (30.10.2026) would block the pair across the hole on its own and nothing would break.
+  assert.notEqual(revAcceleration({ ...r.snapshot, annual:{ ...r.snapshot.annual, annualRev:unlocked, annualRevEnds:undefined }, timeseries:{} }, null),null); breaks++;
 });
 test('vendor already delivers the correct value for one year', () => {
   const { revAcceleration } = require('../src/scoring/axes.js');

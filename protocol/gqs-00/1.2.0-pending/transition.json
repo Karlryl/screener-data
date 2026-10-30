@@ -74,7 +74,7 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "8545f3d76609aae12bcfaca543245493c3260ed6126bb1e42f14592ff6541788",
+    "src/scoring/axes.js": "d9479c462d61b85165c75c3791e605554ba7a307d65eba06bdb9c770a6b2a0b8",
     "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
@@ -359,9 +359,9 @@
   "periodGateRound2": {
     "date": "2026-10-30",
     "authority": "Daylauf 10 master brief of 30.10.2026 (formula DRAFT), after Codex's verdict NOT RELEASED on #40: a blocked two-year pair still gave 18.89 points of acceleration and undated pairs still gave 30 % growth. Regelblatt v4 G2 and T2. Formula path: before/after on the same data day, reviewed by the other AI before merge; no court verdict, Karl release or ratification is claimed.",
-    "scope": "lib/annual-pairs.js periodGateReason: a missing period end now gives a German reason (the growth pair is empty), and an annual pair also fails when the prior year's own length, measured to the next distinct stored end, is under 334 days or 398..699 days (the P115 checkEnds verdict, so the Daifuku class is covered; 700+ days is a missing older year and says nothing about the prior year). New annualPairGateReason. src/scoring/axes.js: the P115 verdict is now always on for dated pairs in the revAcceleration annual fallback (both pairs), gpGrowth and the capitalEfficiency asset-growth penalty; the quarterly branch of revAcceleration skips unequal stored durations. Undated pairs are not judged on these three score axes: every sealed golden fixture is undated and verify() requires a score above 100 (278470.KS), so emptying them needs a seal decision; 0 such rows on 30.10.2026. src/scoring/overview.js: the annual and TTM verdicts carry the whole gate including missing ends (G31 arms; the legacy comparison arm is unchanged), an empty value is marked valuePresent false with the gate reason. Outside the seal: lib/g31-recency.js candidate passes the older end and empties undated growth pairs (revGrowthLevel, ruleOfX, growth bonus, shown value), scripts/write-filter-universe.js growth3 requires ends three annual windows apart.",
+    "scope": "lib/annual-pairs.js periodGateReason: a missing period end now gives a German reason (the growth pair is empty), and an annual pair also fails when the prior year's own length, measured to the next distinct stored end, is under 334 days or 398..699 days (the P115 checkEnds verdict, so the Daifuku class is covered; 700+ days is a missing older year and says nothing about the prior year). New annualPairGateReason. src/scoring/axes.js: the P115 verdict is now always on for dated pairs in the revAcceleration annual fallback (both pairs), gpGrowth and capitalEfficiency (a blocked revenue pair drops the axis instead of forming a penalty of 0); the quarterly branch of revAcceleration skips unequal stored durations. Undated pairs are not judged on these three score axes: every sealed golden fixture is undated and verify() requires a score above 100 (278470.KS), so emptying them needs a seal decision; 0 such rows on 30.10.2026, and scripts/write-findash-export.js warns [period-gate-undated] when one appears. src/scoring/overview.js: the annual and TTM verdicts carry the whole gate including missing ends (G31 arms; the legacy comparison arm is unchanged), an empty value is marked valuePresent false with the gate reason. Outside the seal: lib/g31-recency.js candidate passes the older end and empties undated growth pairs (revGrowthLevel, ruleOfX, growth bonus, shown value), scripts/write-filter-universe.js growth3 requires ends three annual windows apart.",
     "sourceSha256LF": {
-      "src/scoring/axes.js": "8545f3d76609aae12bcfaca543245493c3260ed6126bb1e42f14592ff6541788",
+      "src/scoring/axes.js": "d9479c462d61b85165c75c3791e605554ba7a307d65eba06bdb9c770a6b2a0b8",
       "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051"
     },
     "previousPendingSha256LF": {
@@ -370,7 +370,7 @@
     },
     "dependencyFiles": {
       "lib/g31-recency.js": "c70624e2db3ae6f56c90cd7aea14541309aa1098de40662a562a89afac490b18",
-      "lib/annual-pairs.js": "fcc7b52a1d48fb07d0ee80075fa4c035a0ca2b8ea577c6784f04210a456ce3db"
+      "lib/annual-pairs.js": "01d730ac275eee40e805c7b57787dc1b0332e2a633fbfa49eb52d05079152cdd"
     },
     "previousDependencyFiles": {
       "lib/g31-recency.js": "18ba3e5a9a245b25e8c502c8f5f0d3efb032aee3512eefb30578e50dc0a31fda",
@@ -378,7 +378,7 @@
     },
     "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
     "definitionAmendmentAt120Seal": {
-      "axes": "revGrowthLevel (with ruleOfX and the growth bonus): dated and undated pairs; revAcceleration, gpGrowth, capitalEfficiency penalty: dated pairs",
+      "axes": "revGrowthLevel (with ruleOfX and the growth bonus): dated and undated pairs; revAcceleration, gpGrowth, capitalEfficiency: dated pairs",
       "rule": "A revenue growth pair counts only when both ends are dated; a dated pair of any of these axes counts only when its ends lie 334..397 days apart (annual) or 350..380 days apart (quarter, half year, four quarters) and, for an annual pair, the prior year's length to the next distinct stored end is 334..397 days, at least 700 days, or unknown. Otherwise the leg is null (axis drops, renorm-on-drop) and the shown value is empty with a German reason naming the period."
     },
     "goldenImpact": {
@@ -408,6 +408,6 @@
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "c70624e2db3ae6f56c90cd7aea14541309aa1098de40662a562a89afac490b18",
-    "lib/annual-pairs.js": "fcc7b52a1d48fb07d0ee80075fa4c035a0ca2b8ea577c6784f04210a456ce3db"
+    "lib/annual-pairs.js": "01d730ac275eee40e805c7b57787dc1b0332e2a633fbfa49eb52d05079152cdd"
   }
 }
