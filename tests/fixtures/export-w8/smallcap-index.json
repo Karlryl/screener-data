@@ -1,0 +1,102 @@
+{
+ "schema": "findash-export/v1",
+ "generated_at": "2026-10-28T09:52:00.584Z",
+ "coverage": {
+  "status": "degradiert",
+  "degraded": true,
+  "blocked": false,
+  "coverage_pct": 65.2,
+  "generated_at": "2026-10-28T09:44:13.426Z"
+ },
+ "generatedFromSnapshots": 400,
+ "boards": [
+  "smallcap-consumer-discretionary",
+  "smallcap-consumer-staples",
+  "smallcap-energy",
+  "smallcap-financials",
+  "smallcap-health-care",
+  "smallcap-industrials",
+  "smallcap-it-services",
+  "smallcap-materials",
+  "smallcap-real-estate",
+  "smallcap-semiconductors",
+  "smallcap-software-comm-services",
+  "smallcap-utilities"
+ ],
+ "boardStatus": {
+  "smallcap-consumer-discretionary": "diagnostic",
+  "smallcap-consumer-staples": "diagnostic",
+  "smallcap-energy": "diagnostic",
+  "smallcap-financials": "diagnostic",
+  "smallcap-health-care": "diagnostic",
+  "smallcap-industrials": "diagnostic",
+  "smallcap-it-services": "diagnostic",
+  "smallcap-materials": "diagnostic",
+  "smallcap-real-estate": "diagnostic",
+  "smallcap-semiconductors": "diagnostic",
+  "smallcap-software-comm-services": "diagnostic",
+  "smallcap-utilities": "diagnostic"
+ },
+ "counts": {
+  "smallcap-consumer-discretionary": {
+   "profitable": 18,
+   "unprofitable": 11
+  },
+  "smallcap-consumer-staples": {
+   "profitable": 13,
+   "unprofitable": 0
+  },
+  "smallcap-energy": {
+   "profitable": 11,
+   "unprofitable": 6
+  },
+  "smallcap-financials": {
+   "profitable": 9,
+   "unprofitable": 8
+  },
+  "smallcap-health-care": {
+   "profitable": 18,
+   "unprofitable": 35
+  },
+  "smallcap-industrials": {
+   "profitable": 28,
+   "unprofitable": 19
+  },
+  "smallcap-it-services": {
+   "profitable": 4,
+   "unprofitable": 0
+  },
+  "smallcap-materials": {
+   "profitable": 11,
+   "unprofitable": 0
+  },
+  "smallcap-real-estate": {
+   "profitable": 16,
+   "unprofitable": 0
+  },
+  "smallcap-semiconductors": {
+   "profitable": 1,
+   "unprofitable": 2
+  },
+  "smallcap-software-comm-services": {
+   "profitable": 30,
+   "unprofitable": 9
+  },
+  "smallcap-utilities": {
+   "profitable": 4,
+   "unprofitable": 1
+  }
+ },
+ "excluded": {
+  "balance-sheet-bank": 61,
+  "data-suspect": 5,
+  "insurer": 8,
+  "mortgage-reit": 5,
+  "no-revenue": 26,
+  "no-sector": 2,
+  "smallcap-thin-coverage": 26,
+  "telecom": 5,
+  "unrouted": 8
+ },
+ "coverageFloor": 0.58
+}

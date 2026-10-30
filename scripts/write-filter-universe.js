@@ -40,6 +40,10 @@ const text = v => typeof v === 'string' && v.trim() ? v.trim().replace(/\s+/g, '
 const GM_MAX_ABS_PCT = 100;   // gross profit cannot exceed revenue; below -100 % the vendor margin is unverifiable
 const DY_MAX_PCT = 50;        // 25-50 % exists (shipping, special dividends); above 50 % every seen case was a unit/currency error
 const PO_MAX_PCT = 100000;    // unit errors only (BANPU.BK 2,788,100); high real ratios (SLG 15375) stay, findash caps ranking at 100
+// Floor, not ceiling: one year of expected profit at two thirds of the market cap and more. On 30.10.2026 each of the 14 of 21 rows
+// below it with a second-source value was wrong by a factor 2.4 to 561 (ENIC 0.02 vs 11.01); the lowest second-source value is 1.58 (DEC).
+// The floor is not clean: BHC read a true 1.37 on 14.10.2026 and would have been withheld.
+const FPE_MIN = 1.5;
 const EV_FACTOR_MIN = Math.E; // with EV_MARGIN 1.0 a factor inside 1/e..e can never win the balance comparison
 const EV_MARGIN = 1.0;        // one reading must beat the other by a factor e (ln distance 1.0)
 const EV_IMPLAUSIBLE_LN = 1.5; // EV is mcap + debt - cash by definition; beyond a factor e^1.5 it is impossible
@@ -202,6 +206,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     // Same rule as pe: a zero or negative forward P/E is a forecast loss, not the cheapest stock; it stays missing.
     const forward = ratio('forwardPE', mixed);
     const fpe = finite(forward) && forward > 0 ? round(forward) : null;
+    const fpeBad = fpe !== null && fpe < FPE_MIN;
+    if (fpeBad) aus.push('fpe-implausible');
     const netIncome = norm(snapshot, 'annualNetIncome')[0];
     const high = metricVal(snapshot, 'fiftyTwoWeekHigh'), price = snapshot.price?.regularMarketPrice;
     const highRatio = finite(price) && price > 0 && finite(high) && high > 0 ? price / high : null;
@@ -228,7 +234,7 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
       ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
       pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
-      fpe,
+      fpe: fpeBad ? null : fpe,
       ...div, po: poBad || (payout === 0 && (div.dySt === 'zahlt' || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
       fcf: round(usableFcf(snapshot)),
       // The prior gate prevents ruleOfX from silently falling back to growth alone.
@@ -273,6 +279,8 @@ function validateUniverse(feed, bytes) {
     if (!['vorhanden', 'verlust', 'unbekannt', 'waehrung'].includes(row.peSt)
         || (row.pe != null) !== (row.peSt === 'vorhanden') || (row.pe != null && row.pe <= 0)) errors.push(where + ': inconsistent peSt');
     if (row.fpe != null && row.fpe <= 0) errors.push(where + ': non-positive forward P/E');
+    if (row.fpe != null && row.fpe < FPE_MIN) errors.push(where + ': forward P/E below floor');
+    if (row.aus.includes('fpe-implausible') && row.fpe != null) errors.push(where + ': inconsistent fpe reason');
     if (!['zahlt', 'keine', 'unbekannt'].includes(row.dySt)
         || (row.dy != null) !== (row.dySt === 'zahlt') || (row.dy != null && row.dy <= 0)) errors.push(where + ': inconsistent dySt');
     const mixed = row.aus.includes('mischwaehrung');
@@ -381,4 +389,4 @@ function main(argv) {
 }
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
-module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
+module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };

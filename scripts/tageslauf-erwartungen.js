@@ -29,10 +29,19 @@
  *   gueltigAb  first data day the effect is live; later entries are listed as noch nicht fällig.
  *   gueltigBis after it the entry is only reported as abgelaufen, never failed (set it on drifting values
  *          such as rank, market-cap, score or growth ranges).
+ *
+ * Tolerance rule, one for all entries (written 30.10.2026; older entries keep their ranges until they expire).
+ * The script adds no slack of its own: it compares against exactly what the entry states.
+ *   Fixed states (null, notNull, absent, present, a text or code, a count that must stay 0): no tolerance.
+ *   Drifting numbers (rank, market cap, score, growth, a row count): op between, min/max = the value measured
+ *          on the reference day ± 20 %, at least ± 1, and narrower only where the old wrong value would otherwise
+ *          lie inside. gueltigBis at most 7 days after gueltigAb; a renewal recentres on the day it is renewed.
+ *   grund  quotes a number only with the day it was measured, so it never reads as today's value.
  */
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { germanBoards } = require('./tagesdifferenz.js');
 
 const DEFAULT_EXPORT = 'https://raw.githubusercontent.com/Karlryl/screener-data/gh-pages/outputs/findash-export/v1';
 const DEFAULT_ERWARTUNGEN = path.join(__dirname, '..', 'data-health', 'erwartungen.json');
@@ -183,28 +192,49 @@ async function measure(e, load, index) {
   return { urteil: holds(e, v) ? ERFUELLT : NICHT, gemessen: shown };
 }
 
-const fmtNum = v => (Math.abs(v) >= 1e9
+// German labels for the "Erwartung" column; the raw field name follows in parentheses, unknown fields stay raw.
+// rk and mc are the filter feed's short keys for rank and marketCap (docs/findash-export-v1.md).
+const LABELS = { rank: 'Rang', rk: 'Rang', score: 'Score', marketCap: 'Börsenwert', mc: 'Börsenwert',
+  revGrowthYoYPct: 'Umsatzwachstum zum Vorjahr', rankGrund: 'Rang-Grund', mcapBand: 'Größenband',
+  r40Ebitda: 'Rule-of-40-Wert mit EBITDA', financialDataReasons: 'Datenhinweise', aus: 'Ausschluss- oder Warncode',
+  revGrowthBasis: 'Basis des Umsatzwachstums', revGrowthPeriodEnd: 'Periodenende des Umsatzwachstums',
+  revGrowthReason: 'Grund für leeres Umsatzwachstum', 'g31Hinweis.code': 'Prüfhinweis zum Umsatzwachstum',
+  'ffoReason.code': 'Grund für leere FFO-Näherung' };
+const label = f => (Object.hasOwn(LABELS, f) ? `${LABELS[f]} (${f})` : f);
+const UNITS = { marketCap: ' USD', mc: ' USD', revGrowthYoYPct: ' %' }; // market caps are always USD by contract
+const unitOf = e => (e.zaehle === undefined && Object.hasOwn(UNITS, e.feld) ? UNITS[e.feld] : '');
+// Boards by their German name alone (the name maps back to one file); an unknown board stays raw.
+const BOARDS = { any: 'alle Vollboards', 'filter/universum': 'Filter-Universum', 'rule40/overview': 'Rule of 40', survival: germanBoards.survival };
+for (const b of Object.keys(germanBoards)) {
+  if (b === 'survival') continue;
+  BOARDS['full/' + b] = germanBoards[b];
+  BOARDS['quality/' + b] = 'Qualität ' + germanBoards[b];
+}
+const TRACKS = { profitable: 'profitabel', unprofitable: 'nicht profitabel' };
+const named = (map, k) => (Object.hasOwn(map, k) ? map[k] : k);
+const fmtNum = (v, unit = '') => (Math.abs(v) >= 1e9
   ? (v / 1e9).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' Mrd.'
-  : v.toLocaleString('de-DE', { maximumFractionDigits: 2 }));
-/** German display of a measured value. */
-function fmt(v) {
+  : v.toLocaleString('de-DE', { maximumFractionDigits: 2 })) + unit;
+/** German display of a measured value; unit is appended to numbers. */
+function fmt(v, unit = '') {
   if (v === null) return 'leer';
-  if (typeof v === 'number') return fmtNum(v);
-  if (Array.isArray(v)) return v.map(fmt).join(' / ');
+  if (typeof v === 'number') return fmtNum(v, unit);
+  if (Array.isArray(v)) return v.map(x => fmt(x, unit)).join(' / ');
   if (typeof v === 'string') return v;
   return JSON.stringify(v);
 }
 function describe(e) {
-  const who = e.ticker ?? (e.name !== undefined ? `„${e.name}“` : `Zeilen mit ${e.feld} = ${e.zaehle}`);
-  const where = e.board + (e.track ? ' ' + e.track : '');
-  const feld = e.zaehle !== undefined ? 'Anzahl' : e.feld;
+  const who = e.ticker ?? (e.name !== undefined ? `„${e.name}“` : `Zeilen mit ${label(e.feld)} = ${e.zaehle}`);
+  const where = named(BOARDS, e.board) + (e.track ? ' ' + named(TRACKS, e.track) : '');
+  const feld = e.zaehle !== undefined ? 'Anzahl' : label(e.feld);
+  const unit = unitOf(e);
   const what = {
-    between: () => `${feld} zwischen ${fmtNum(e.min)} und ${fmtNum(e.max)}`,
-    eq: () => `${feld} = ${fmt(e.wert)}${e.toleranz ? ' ± ' + fmtNum(e.toleranz) : ''}`,
+    between: () => `${feld} zwischen ${fmtNum(e.min, unit)} und ${fmtNum(e.max, unit)}`,
+    eq: () => `${feld} = ${fmt(e.wert, unit)}${e.toleranz ? ' ± ' + fmtNum(e.toleranz, unit) : ''}`,
     null: () => `${feld} leer`,
     notNull: () => `${feld} belegt`,
     contains: () => `${feld} enthält ${e.muster !== undefined ? 'Muster /' + e.muster + '/' : '„' + e.wert + '“'}`,
-    absent: () => 'Zeile nicht vorhanden',
+    absent: () => 'Zeile fehlt',
     present: () => 'Zeile vorhanden',
   }[e.op]();
   return `${who} · ${where} · ${what}`;
@@ -253,15 +283,16 @@ async function run({ exportBase, erwartungen, datum: override }) {
   const count = u => results.filter(r => r.urteil === u).length;
   const laterChecks = new Set(later.map(e => e.gruppe ?? e.id)).size; // counted like results: a group is one
   const lines = [
-    // An exit 0 that checked nothing must not read like a green result.
+    // An exit 0 that checked nothing (nothing due, or every due entry expired) must not read like a green result.
     ...(results.length ? [] : [`Hinweis: Export vom ${exportDay}, keine Erwartung fällig; das ist kein Prüfergebnis.`]),
+    ...(results.length && count(ABGELAUFEN) === results.length ? [`Hinweis: Export vom ${exportDay}, alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.`] : []),
     `${count(ERFUELLT)} von ${results.length} Erwartungen erfüllt, ${count(NICHT)} nicht erfüllt, ${count(NM)} nicht messbar, ` +
       `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
   ];
   lines.push('', '| Erwartung | gemessen | Urteil | Grund |', '|---|---|---|---|');
   for (const r of results) {
-    lines.push(`| ${cell(`PR ${r.pr}: ` + r.members.map(m => describe(m.e)).join(' oder '))} | ${cell(r.members.map(m => fmt(m.gemessen)).join(' / '))} | ${r.urteil} | ${cell(r.members[0].e.grund)} |`);
+    lines.push(`| ${cell(`PR ${r.pr}: ` + r.members.map(m => describe(m.e)).join(' oder '))} | ${cell(r.members.map(m => fmt(m.gemessen, unitOf(m.e))).join(' / '))} | ${r.urteil} | ${cell(r.members[0].e.grund)} |`);
   }
   if (later.length) lines.push('', 'Noch nicht fällig: ' + later.map(e => `${e.id} (ab ${e.gueltigAb})`).join(', '));
   const report = {

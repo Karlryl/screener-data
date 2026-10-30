@@ -130,6 +130,17 @@ test('ROB.WA: the vendor zero as 2025 revenue and the stale years before it are 
   assert.match(g31Shadow(snap('ROB.WA')).v1.reason, /^Perioden 31\.12\.2025 und 31\.12\.2017 liegen \d+ Tage auseinander/);
 });
 
+test('ROB.WA: the visible hold reason names the annual leg only, because the vendor quarters (repaired on 27.10.2026) now give a quarter growth', () => {
+  const c = own.find(x => x.ticker === 'ROB.WA');
+  const OK = 'aus den Jahreszahlen wird kein Umsatzwachstum berechnet', OLD = 'und das Umsatzwachstum wird nicht berechnet';
+  const pin = reason => { assert.ok(reason.includes(OK)); assert.ok(!reason.includes(OLD)); };
+  pin(c.reason);
+  assert.ok(financialReasons(apply('ROB.WA')).some(r => r === c.reason), 'the pinned text is the one shown on the board');
+  // Break-once on test data: the old sentence in an in-memory copy fails the pin.
+  assert.throws(() => pin(c.reason.replace(OK, 'das Umsatzwachstum wird nicht berechnet')), assert.AssertionError);
+});
+
+
 test('2855.TW and 6005.TW: revenue from the issuer statements in all five quarters, vendor gross profit and annual lines withheld', () => {
   const p = apply('2855.TW');
   assert.deepEqual(native(p, 'timeseries', 'revenueQ'), [12058748000, 5486108000, 4925145000, 4576444000, 2311393000]);

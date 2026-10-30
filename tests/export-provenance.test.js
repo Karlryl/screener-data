@@ -256,7 +256,7 @@ test('p154: all real derived revenue cases export original inputs and reproduce 
   assert.ok(definition);
   const traceKind = require('node:vm').runInNewContext(definition[0] + ';traceKind');
   const cases = financialTable.cases.filter(c => ['revenueQ', 'annualRev'].includes(c.field) && ['difference', 'rounded'].includes(traceKind(c)));
-  assert.equal(cases.length, 36); // P177 adds two derived BYLOT quarters: 21 differences and one issuer-rounded case; 18.10.2026 adds four differences (CDR.WA, 000552.SZ); 24.10.2026 two (300277.SZ), then one difference and three issuer-rounded confirmations (603993.SS); the triage of 24.10.2026 four differences (2855.TW and 6005.TW revenue: Q1 2026 half year minus Q2, Q4 2025 year minus nine months).
+  assert.equal(cases.length, 42); // SEC comparison 30.10.2026 adds four differences (EGY, FTW, SUNC, AHCO); // P177 adds two derived BYLOT quarters: 21 differences and one issuer-rounded case; 18.10.2026 adds four differences (CDR.WA, 000552.SZ); 24.10.2026 two (300277.SZ), then one difference and three issuer-rounded confirmations (603993.SS); the triage of 24.10.2026 four differences (2855.TW and 6005.TW revenue: Q1 2026 half year minus Q2, Q4 2025 year minus nine months).
   for (const c of financialTable.cases.filter(c => ['revenueQ', 'annualRev'].includes(c.field))) {
     const d = p.handTableDerivation(c), kind = traceKind(c);
     if (!cases.includes(c)) { assert.equal(d, null, c.caseId); continue; }

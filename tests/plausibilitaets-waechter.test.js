@@ -34,9 +34,9 @@ function run(args, env = {}) {
 // One snapshot file per export row from the compact fixture (vorlage + sonder), except ohneSnapshot.
 function writeSnapshots(dir) {
   const spec = JSON.parse(fs.readFileSync(path.join(FIX, 'snapshots.json'), 'utf8'));
-  for (const board of ['energy', 'utilities']) {
-    const b = JSON.parse(fs.readFileSync(path.join(FIX, 'export', 'full', board + '.json'), 'utf8'));
-    for (const r of [...b.profitable, ...b.unprofitable]) {
+  for (const file of ['full/energy.json', 'full/utilities.json', 'survival.json']) {
+    const b = JSON.parse(fs.readFileSync(path.join(FIX, 'export', file), 'utf8'));
+    for (const r of [...(b.profitable || []), ...(b.unprofitable || []), ...(b.rows || [])]) {
       if (spec.ohneSnapshot.includes(r.ticker)) continue;
       const s = spec.sonder[r.ticker] || { ...structuredClone(spec.vorlage), meta: { ...spec.vorlage.meta, ticker: r.ticker, name: r.name } };
       fs.writeFileSync(path.join(dir, r.ticker + '.json'), JSON.stringify(s));
@@ -44,12 +44,13 @@ function writeSnapshots(dir) {
   }
 }
 
-// opt.vintages: other board-history folder; opt.snapshot(s): change each snapshot before it is written.
+// opt.vintages: other board-history folder; opt.snapshot(s): change each snapshot before it is written;
+// opt.snapshotsLeer: an empty snapshot folder.
 function fixtureRun(extra = [], env = {}, opt = {}) {
   const dir = tmp();
   const snaps = path.join(dir, 'snapshots');
   fs.mkdirSync(snaps);
-  writeSnapshots(snaps);
+  if (!opt.snapshotsLeer) writeSnapshots(snaps);
   if (opt.snapshot) for (const f of fs.readdirSync(snaps)) {
     const s = JSON.parse(fs.readFileSync(path.join(snaps, f), 'utf8'));
     opt.snapshot(s);
@@ -59,7 +60,7 @@ function fixtureRun(extra = [], env = {}, opt = {}) {
   return { dir, ...run(['--export', path.join(FIX, 'export'), '--snapshots', snaps, '--board-history', opt.vintages || path.join(FIX, 'jahrgaenge'),
     '--out', out, '--gestern', path.join(FIX, 'gestern.json'), ...extra], env) };
 }
-const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis PR #41 den Handelsstempel liefert.';
+const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Handelsdatum; stehende Kurse ausgesetzter Aktien bleiben unsichtbar, bis der Abruf ein Handelsdatum stempelt.';
 
 const tickers = (report, code) => report.faelle.filter((f) => f.code === code).map((f) => f.ticker).sort();
 
@@ -81,8 +82,10 @@ test('every check lists exactly its positive rows and none of the negative ones'
     assert.deepEqual(tickers(report, 'kurs-alt'), ['PW-STALE']);
     assert.deepEqual(tickers(report, 'doppelte-firma'), ['PW-BARU', 'PW-DUPA']);
     assert.deepEqual(tickers(report, 'score-grenze'), ['PW-SCORE']);
+    // Negative rows: PW-SURV-OK (no revenue cell at all), PW-SURV-GAP (vendor gaps, no marker), PW-SURV-MISSING (no snapshot).
+    assert.deepEqual(tickers(report, 'umsatz-gehalten-auf-survival'), ['PW-SURV-CORR', 'PW-SURV-HELD']);
     assert.deepEqual(report.zusammenfassung, { 'wachstum-extrem': 3, 'jahrespaar-abstand': 1, 'quartalspaar-abstand': 1,
-      'umsatz-null-mit-boersenwert': 2, 'quartal-gleich-vorjahr': 1, 'boersenwert-sprung': 1, 'kurs-alt': 1, 'doppelte-firma': 2, 'score-grenze': 1 });
+      'umsatz-null-mit-boersenwert': 2, 'quartal-gleich-vorjahr': 1, 'boersenwert-sprung': 1, 'kurs-alt': 1, 'doppelte-firma': 2, 'score-grenze': 1, 'umsatz-gehalten-auf-survival': 2 });
     assert.deepEqual(report.gekuerzt, {});
 
     const by = (code, t) => report.faelle.find((f) => f.code === code && f.ticker === t);
@@ -121,6 +124,12 @@ test('every check lists exactly its positive rows and none of the negative ones'
     assert.equal(score.grund, 'Der Score (120) ist keine Zahl zwischen 0 und 100. Der Rang (leer) ist keine positive ganze Zahl, '
       + 'obwohl kein Grund für einen fehlenden Rang angegeben ist.');
     assert.equal(score.track, 'unprofitable');
+    const held = by('umsatz-gehalten-auf-survival', 'PW-SURV-HELD');
+    assert.equal(held.board, 'survival');
+    assert.deepEqual(held.werte.zellen, [{ feld: 'annualRev', periodEnd: '2025-12-31' }, { feld: 'revenueQ', periodEnd: '2026-03-31' }]);
+    assert.equal(held.grund, 'Die Firma steht auf der Liste ohne Umsatz, ihr Umsatz ist aber nur zurückgehalten (Jahresumsatz bis 31.12.2025, '
+      + 'Quartalsumsatz bis 31.03.2026); ein zurückgehaltener Wert belegt nicht, dass sie keinen Umsatz hat.');
+    assert.ok(report.hinweise.includes('umsatz-gehalten-auf-survival: 1 Zeile der Survival-Liste ohne lesbaren Snapshot; für sie lief die Prüfung nicht.'));
     // PW-BAZU has no snapshot: counted and named, not silently skipped.
     assert.equal(report.quellen.snapshotsFehlend, 1);
     assert.ok(report.hinweise.some((h) => /1 Boardzeilen ohne lesbaren Snapshot/.test(h)));
@@ -143,14 +152,15 @@ test('warnings per finding class, German step summary, never an error annotation
   try {
     assert.equal(status, 0);
     const warnings = stdout.split('\n').filter((l) => l.startsWith('::warning::Plausibilität'));
-    assert.equal(warnings.length, 9, 'one warning per class with at least one case (all nine are hit by the fixture)');
+    assert.equal(warnings.length, 10, 'one warning per class with at least one case (all ten are hit by the fixture)');
     assert.ok(!/::error::/.test(stdout + stderr), 'the watcher never raises an error annotation');
-    // The shared snapshot reader's own ::warning:: lines are demoted: only the nine class warnings annotate this step.
+    // The shared snapshot reader's own ::warning:: lines are demoted: only the ten class warnings annotate this step.
     const fremde = (stdout + '\n' + stderr).split(/\r?\n/).filter((l) => l.startsWith('::warning::') && !l.startsWith('::warning::Plausibilität'));
     assert.deepEqual(fremde, []);
     const md = fs.readFileSync(summary, 'utf8');
     assert.ok(md.includes('> ' + KURS_ALT_HINWEIS), 'the summary says what kurs-alt measures');
     assert.match(md, /^## Plausibilitäts-Wächter \(nur Meldung, ändert keine Zahl\)/);
+    assert.ok(md.includes(', Börsenwert-Vergleich mit dem Board-Stand vom 2026-10-23.\n'), 'the header names the vintage the jump check used');
     assert.match(md, /\| jahrespaar-abstand \| 1 \|/);
     assert.match(md, /### jahrespaar-abstand \(1\)\n- energy\/profitable, Rang 4, PW-YEAR Year Gap Energy Inc\.: Das Jahreswachstum/);
     assert.match(md, /- energy\/unprofitable, ohne Rang, PW-SCORE /);
@@ -175,7 +185,7 @@ test('cap: at most 200 cases per class, the rest counted in gekuerzt and logged;
     assert.deepEqual(r.report.gekuerzt, { 'wachstum-extrem': 5 });
     assert.equal(r.report.faelle.at(-1).ticker, 'PW-C199', 'the first 200 in board/rank order are kept');
     assert.match(r.stdout, /\[plausi\] wachstum-extrem: 205 Fälle, 5 über der Grenze von 200 nicht gelistet/);
-    for (const code of ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt', 'boersenwert-sprung']) {
+    for (const code of ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt', 'boersenwert-sprung', 'umsatz-gehalten-auf-survival']) {
       assert.equal(r.report.zusammenfassung[code], null, code + ' did not run and must say so (T2: no replacement 0)');
     }
     assert.ok(r.report.hinweise.some((h) => /kein Snapshot-Ordner/.test(h)));
@@ -204,7 +214,18 @@ test('no snapshot readable at all: the three snapshot checks say null, not 0, an
     for (const code of ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt']) assert.equal(r.report.zusammenfassung[code], null, code);
     assert.equal(r.report.zusammenfassung['wachstum-extrem'], 0, 'export-only checks still ran');
     assert.ok(r.report.hinweise.some((h) => /^Erster Lesefehler eines Snapshots: /.test(h)));
+    assert.equal(r.report.zusammenfassung['umsatz-gehalten-auf-survival'], null, 'no survival.json: not run, never 0 (T2)');
+    assert.ok(r.report.hinweise.includes('umsatz-gehalten-auf-survival nicht geprüft: survival.json fehlt oder ist nicht lesbar.'));
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('survival list present but not one of its snapshots readable: the check is null, not 0', () => {
+  const r = fixtureRun([], {}, { snapshotsLeer: true });
+  try {
+    assert.equal(r.status, 0);
+    assert.equal(r.report.zusammenfassung['umsatz-gehalten-auf-survival'], null);
+    assert.ok(r.report.hinweise.includes('umsatz-gehalten-auf-survival: 5 Zeilen der Survival-Liste ohne lesbaren Snapshot; für sie lief die Prüfung nicht.'));
+  } finally { fs.rmSync(r.dir, { recursive: true, force: true }); }
 });
 
 test('vintage unreadable or without any market cap: boersenwert-sprung is null and the hint names the files', () => {
@@ -218,16 +239,24 @@ test('vintage unreadable or without any market cap: boersenwert-sprung is null a
       return path.join(dir, name);
     };
     const good = fs.readFileSync(path.join(FIX, 'jahrgaenge', '2026-10-23', 'energy.json'), 'utf8');
-    const broken = fixtureRun([], {}, { vintages: vintage('broken', { 'energy.json': good, 'utilities.json': '{broken' }) });
+    const summary = path.join(dir, 'summary.md');
+    const broken = fixtureRun([], { GITHUB_STEP_SUMMARY: summary }, { vintages: vintage('broken', { 'energy.json': good, 'utilities.json': '{broken' }) });
+    const two = fixtureRun([], {}, { vintages: vintage('two', { 'energy.json': '{broken', 'utilities.json': '{broken' }) });
     const empty = fixtureRun([], {}, { vintages: vintage('empty', { 'energy.json': JSON.stringify({ cohort: { profitable: [{ ticker: 'PW-SPLIT', pit: {} }], unprofitable: [] } }) }) });
-    runs.push(broken.dir, empty.dir);
-    for (const r of [broken, empty]) {
+    runs.push(broken.dir, two.dir, empty.dir);
+    for (const r of [broken, two, empty]) {
       assert.equal(r.status, 0);
       assert.equal(r.report.zusammenfassung['boersenwert-sprung'], null, 'not run, never 0 (T2)');
       assert.equal(r.report.faelle.filter((f) => f.code === 'boersenwert-sprung').length, 0);
       assert.equal(r.report.zusammenfassung['wachstum-extrem'], 3, 'the other checks still ran');
     }
-    assert.ok(broken.report.hinweise.includes('boersenwert-sprung nicht geprüft: im Board-Stand vom 23.10.2026 sind 1 Dateien nicht lesbar (utilities.json).'));
+    assert.ok(broken.report.hinweise.includes('boersenwert-sprung nicht geprüft: im Board-Stand vom 23.10.2026 ist 1 Datei nicht lesbar (utilities.json).'));
+    assert.ok(two.report.hinweise.includes('boersenwert-sprung nicht geprüft: im Board-Stand vom 23.10.2026 sind 2 Dateien nicht lesbar (energy.json, utilities.json).'));
+    // The step summary header must not name a vintage the jump check did not use.
+    const md = fs.readFileSync(summary, 'utf8');
+    assert.ok(md.includes(', Börsenwert-Vergleich nicht geprüft.\n'), md);
+    assert.ok(!md.includes('Board-Stand vom 2026-10-23'), md);
+    assert.match(md, /\| boersenwert-sprung \| nicht geprüft \|/);
     assert.ok(empty.report.hinweise.includes('boersenwert-sprung nicht geprüft: der Board-Stand vom 23.10.2026 enthält keinen Börsenwert.'));
   } finally { for (const d of [dir, ...runs]) fs.rmSync(d, { recursive: true, force: true }); }
 });
