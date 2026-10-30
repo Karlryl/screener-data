@@ -3439,17 +3439,41 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepSt
   return { ticker: stock.ticker, status: 'missing-market-cap', preserved, observedAt };
 }
 
+// A SmallCap worker's deleted file never reaches the merge store, which then kept the last value
+// above the floor (XNET: 311.7 m USD from 15.10., measured below 300 m on every run since 16.10.).
+// Carry the measured value through the shard artifact instead; the merge applies it to the baseline.
+function writeFloorExitCarrier(outputDir, stock, marketCap, floorUsd, observedAt) {
+  if (process.env.MISSING_CAP_CARRIER !== '1') return;
+  writeFileAtomic(path.join(outputDir, safeSnapshotFilename(stock.ticker)), JSON.stringify({
+    meta: { ticker: stock.ticker, asOf: null, fetchedAt: null, fundamentalsAsOf: null, fundamentalsIncomplete: true },
+    annual: {}, metrics: {}, timeseries: {},
+    marketCap: { ...marketCap, asOf: observedAt, belowFloor: true, floorUsd },
+  }));
+}
+
 // A cold SmallCap worker may not have the baseline that the merge job restores.
 // Apply its explicit null observation to that baseline, rather than replacing
 // financials with the worker's incomplete row or silently retaining an old cap.
 function mergeSmallcapSnapshots(incomingDir, outputDir) {
   fs.mkdirSync(outputDir, { recursive: true });
-  let missing = 0;
+  let missing = 0, floorExits = 0;
   for (const name of fs.readdirSync(incomingDir).filter(n => n.endsWith('.json')).sort()) {
     if (isMetadataSnapshot(name)) continue;
     const raw = fs.readFileSync(path.join(incomingDir, name), 'utf8');
     const incoming = JSON.parse(raw);
-    if (incoming.marketCap && incoming.marketCap.missing === true) {
+    if (incoming.marketCap && incoming.marketCap.belowFloor === true) {
+      const { value, floorUsd, asOf } = incoming.marketCap;
+      const ticker = incoming.meta && incoming.meta.ticker;
+      if (!ticker || safeSnapshotFilename(ticker) !== name || !Number.isFinite(value) || !(value < floorUsd) ||
+          !Number.isFinite(Date.parse(asOf))) throw new Error('Invalid floor-exit observation: ' + name);
+      const target = path.join(outputDir, name);
+      // A carrier only updates an existing baseline; a firm never stored stays absent.
+      if (!fs.existsSync(target)) continue;
+      const stored = JSON.parse(fs.readFileSync(target, 'utf8'));
+      stored.marketCap = incoming.marketCap;
+      writeFileAtomic(target, JSON.stringify(stored));
+      floorExits++;
+    } else if (incoming.marketCap && incoming.marketCap.missing === true) {
       const ticker = incoming.meta && incoming.meta.ticker;
       const at = incoming.marketCap.asOf;
       if (!ticker || safeSnapshotFilename(ticker) !== name || incoming.marketCap.value !== null ||
@@ -3471,7 +3495,7 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
       writeFileAtomic(path.join(outputDir, name), raw);
     }
   }
-  return { missingMarketCaps: missing };
+  return { missingMarketCaps: missing, floorExits };
 }
 
 // F-NEU-01: Nicht-OTC-Snapshots ohne irgendeine belastbare Waehrungsangabe duerfen
@@ -4126,6 +4150,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         delete existing.marketCap.missing;
         existing.marketCap.confidence = 0.9;
       }
+      // A new measurement replaces an earlier floor exit; the check below decides afresh.
+      delete existing.marketCap.belowFloor;
+      delete existing.marketCap.floorUsd;
     }
     if (!Number.isFinite(existing.marketCap && existing.marketCap.value)) {
       throw new Error('price-only refused: converted marketCap is non-finite - full pull decides');
@@ -4154,6 +4181,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         throw new Error('price-only floor: stale snapshot removal failed: ' + deleteFailures[0].error);
       }
       recordSizeExit(stock.ticker, mcapNow, MIN_MCAP, newAsOf, 'price-only');
+      writeFloorExitCarrier(outputDir, stock, existing.marketCap, MIN_MCAP, newAsOf);
       throw new Error('price-only floor: mcap=' + (mcapNow/1e9).toFixed(2) + 'B < $' + formatSizeFloor(MIN_MCAP) + 'B — snapshot removed');
     }
     // Mark mode for downstream visibility
@@ -5278,6 +5306,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           results.push({ ticker: stock.ticker, status: 'failed-delete', reason });
           return;
         }
+        if (mcapVal < MIN_MCAP) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf);
         results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
         return;  // skip this stock
       }
