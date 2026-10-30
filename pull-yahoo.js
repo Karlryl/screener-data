@@ -83,13 +83,13 @@ function _applyAdsHandTable(snap, ticker, price) {
  * @param {object} snap Unconverted snapshot (meta stamped).
  * @param {string} origCurrency Reporting currency the converter uses.
  * @param {number} factor origCurrency -> USD factor.
- * @returns {{factor: number, status: string, series?: string}} Statement factor and optional annual-only scope.
+ * @returns {{factor: number, status: string, series?: string, hold?: boolean}} Statement factor, optional annual-only scope, hold on a stale row.
  */
 function _statementFactor(snap, origCurrency, factor) {
   const r = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE);
   const tk = snap && snap.meta && snap.meta.ticker;
   if (r.status === 'corrected') _log('INFO', `  ${tk}: ${r.series === 'annual' ? 'annual' : 'statement'} series kept in USD (statement-currency hand table), ${origCurrency} factor on financialData${r.series === 'annual' ? ' and quarterly series' : ''}`);
-  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, ${r.hold ? 'row not verifiable' : 'reporting factor used'}: ${r.reason}`);
+  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, ${origCurrency === 'USD' ? 'USD reporting currency, factor 1 kept, nothing withheld' : 'statement series withheld'}: ${r.reason}`);
   return r;
 }
 
@@ -988,6 +988,26 @@ function _resolveTradingFx(q, existing) {
   return { ok: true, factor: fx.factor, factorMajorUnit: fx.factorMajorUnit, provenance: fx.provenance, currency: String(ccy), quelle };
 }
 
+/**
+ * Stores a full pull's own quote the way the price-only path stores it: USD, per-share factor.
+ * Full pulls never stored a price, so the filter feed's distance to the 52-week high stayed empty for
+ * every full-pulled row until its next price-only run (30.10.2026: 3,937 of 15,899 rows). The factor
+ * lookup is the 52-week high's in _skaliereHandelsMetriken, so their ratio holds no FX at all.
+ * No usable quote or factor leaves the field absent. No price.asOf: _priceOnlyUpdate never refreshes it, and
+ * lib/export-provenance.js would read a day-old price time and call a hand-table row not reproducible.
+ * @param {object} snap Converted full-pull snapshot, mutated in place.
+ * @param {*} rawPrice Yahoo quote in its quote unit.
+ * @returns {void}
+ */
+function _stampFullPullPrice(snap, rawPrice) {
+  // The market-cap guard already stored this pull's quote on its hand-table rows.
+  if (Number.isFinite(snap.price?.regularMarketPrice)) return;
+  const fx = _resolveTradingFx(null, snap);
+  if (!fx.ok || !Number.isFinite(rawPrice) || rawPrice <= 0) return;
+  // No price.currency on purpose: region-mapping reads it, and that path stays as it was on a full pull.
+  snap.price = { ...snap.price, regularMarketPrice: rawPrice * fx.factor, currencyUnit: 'USD' };
+}
+
 // Waehrungs-Chunk 1/4 (16.08.2026): den KURS selbst mitstempeln, nicht nur seine Herkunft.
 // Der price-only-Schnellweg rechnet Preis UND marketCap mit dem Handelskurs um, hat das aber
 // nie im Snapshot vermerkt — ein price-only-aufgefrischter Snapshot sah deshalb aus wie einer
@@ -1410,8 +1430,8 @@ function _convertSnapshotToUSD(snap) {
   // MODEC is annual-only: its quarterly series still use the JPY reporting factor. Read the
   // UNSCALED revenueTTM before the metrics loop; omitted series preserves the original all-series scope.
   const stmt = _statementFactor(snap, origCurrency, factor);
-  // Sweep 24.10.: an unverifiable row (financialCurrency or the revenue check missing) withholds its
-  // statement series instead of dividing proven USD statements by the local rate (G2, T2: null + marker).
+  // Sweep 24.10., P301: a row that cannot be confirmed (financialCurrency or the revenue check missing,
+  // another currency, mismatch gone) withholds its statement series instead of scaling them (G2, T2: null + marker).
   if (stmt.hold) {
     const held = holdStatementSeries(snap, stmt.series);
     console.warn(`::warning::${snap.meta.ticker}: statement-currency hand table row not verifiable (${stmt.reason}), ${held} statement values withheld - re-verify configs/statement-currency-hand-table.json`);
@@ -5423,6 +5443,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           }
         }
       }
+      _stampFullPullPrice(canonical, _y(yahoo.price, 'regularMarketPrice'));
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }

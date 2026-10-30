@@ -61,7 +61,7 @@ check('E4: Bestand konsistent (anzahl == faelle.length, keine Duplikate, sortier
   assert.strictEqual(b.anzahl, b.faelle.length);
   assert.strictEqual(new Set(b.faelle).size, b.faelle.length);
   assert.deepStrictEqual(b.faelle, [...b.faelle].sort());
-  assert.strictEqual(b.faelle.length, 167); // P275 adds three sourced net-income cases (TYG, PCT.L, 603822.SS); all 164 previous keys remain.
+  assert.strictEqual(b.faelle.length, 168); // P275 adds three sourced net-income cases (TYG, PCT.L, 603822.SS); P299 adds AMLX gross profit FY2023; all 164 earlier keys remain.
 });
 
 if (fail) { console.log('FAIL: annual-spikes-q1-eichformen (' + fail + ')'); process.exit(1); }
