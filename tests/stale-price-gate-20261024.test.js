@@ -47,7 +47,7 @@ function snap(ticker, { quoteTime, asOf = AS_OF, mcap = 77595885568, px = 9.5 } 
   };
 }
 const LIMIT = guard.STALE_PRICE_WEEKDAYS;
-const reasonFor = (priceDay) => `Letzter Kurs vom ${priceDay}, älter als ${LIMIT} Wochentage (Montag bis Freitag); Börsenwert nicht gezeigt.`;
+const reasonFor = (priceDay) => `Letzter von Yahoo gelieferter Kurs vom ${priceDay}, älter als ${LIMIT} Wochentage (Montag bis Freitag); Börsenwert nicht gezeigt.`;
 
 function expectWithheld(s, priceDay, g = guard) {
   const before = JSON.stringify(s);

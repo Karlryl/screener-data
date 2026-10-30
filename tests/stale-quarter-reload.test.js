@@ -34,7 +34,7 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
   annualResponses = null, summaryResponse = null, pullSource = source, providersByTicker = null,
   newer = true, quarterFails = false, quarterEmpty = false, summaryFails = false, ftsFails = false,
   annualFails = false, annualEmpty = false, quarterlyRows = null, summaryError = 'fixture summary failure', quoteMissing = false,
-  summaryMarketCap = 1e12, quoteMarketCap = 1e12, quotePrice = 100, emptySummary = false,
+  summaryMarketCap = 1e12, quoteMarketCap = 1e12, quotePrice = 100, quoteTime, emptySummary = false,
   manual = [], calendar = {}, env = { STALE_QUARTER_RELOAD: 'local' }, now = NOW } = {}) {
   const base = path.join(root, '_scratch', 'b6-virtual'), out = path.join(base, 'snapshots');
   const files = new Map(), handles = new Map(), calls = [], logs = [], reads = []; let fd = 1000;
@@ -69,7 +69,8 @@ function fixture({ snapshots = [snapshot('OLD')], ranks = {}, cap = DEFAULT.maxP
     if (prop === 'statSync') return p => ({ size: files.get(key(p)).length, mtimeMs: NOW - 86400000 });
     return target[prop];
   } });
-  const quote = { currency: 'USD', regularMarketPrice: quotePrice, marketCap: quoteMarketCap };
+  const quote = { currency: 'USD', regularMarketPrice: quotePrice, marketCap: quoteMarketCap,
+    ...(quoteTime !== undefined ? { regularMarketTime: quoteTime } : {}) };
   class Yahoo {
     async quote(t) { calls.push([t, 'quote']); return quoteMissing ? undefined : quote; }
     async quoteSummary(t) { calls.push([t, 'quoteSummary']); if (summaryFails) throw new Error(summaryError); if (emptySummary) return {}; if (providersByTicker) return providersByTicker[t].summary; if (summaryResponse) return summaryResponse; return { price: { ...quote, marketCap: summaryMarketCap }, financialData: { financialCurrency: 'USD' },

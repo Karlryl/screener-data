@@ -44,7 +44,7 @@ const { loadAdsHandTable, applyAdsHandTable, loadShareCountTable, applyShareCoun
 const ADS_HAND_TABLE = loadAdsHandTable();
 // Tag 1397: issuer share counts for lines Yahoo prices with a wrong count (same two write sites).
 const SHARE_COUNT_TABLE = loadShareCountTable();
-const { applyMarketCapGuard, marketCapFloor, tradingRate, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
+const { applyMarketCapGuard, marketCapFloor, tradingRate, retainStalePriceHold, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
 const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
@@ -3445,6 +3445,7 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepSt
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
     throw new Error('Cannot preserve invalid snapshot for ' + stock.ticker);
   }
+  retainStalePriceHold(snapshot, snapshot, observedAt.slice(0, 10));
   snapshot.marketCap = { value: null, source, confidence: 0, asOf: observedAt, missing: true };
   // Empty responses invalidate size but do not confirm existence. Carry that
   // distinction through cold SmallCap workers to the restored merge baseline.
@@ -3481,9 +3482,19 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
       if (written.marketCap.value !== null || written.marketCap.missing !== true) {
         throw new Error('Missing-cap merge retained a value: ' + ticker);
       }
+      retainStalePriceHold(written, incoming);
+      writeFileAtomic(target, JSON.stringify(written));
       missing++;
     } else {
-      writeFileAtomic(path.join(outputDir, name), raw);
+      const target = path.join(outputDir, name);
+      let previous = null;
+      if (fs.existsSync(target)) {
+        const priorText = fs.readFileSync(target, 'utf8');
+        try { previous = JSON.parse(priorText); }
+        catch (error) { if (error.name !== 'SyntaxError') throw error; }
+      }
+      retainStalePriceHold(incoming, previous);
+      writeFileAtomic(target, JSON.stringify(incoming));
     }
   }
   return { missingMarketCaps: missing };
@@ -4016,6 +4027,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
       existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
+    const previousQuote = { marketCap: { ...existing.marketCap }, meta: { stalePriceHold: existing.meta?.stalePriceHold } };
     const q = suppliedQuote ?? await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
     if (!Number.isFinite(q && q.marketCap)) {
       throw new Error('price-only refused: quote without finite marketCap - full pull decides');
@@ -4211,6 +4223,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // written per pull (and this path the 80%-hit fast-path), pretty-print
     // adds ~30-40% file size + ~5-10× stringify time. Snapshots are read by
     // generators (machine consumers), not humans — no readability cost.
+    retainStalePriceHold(existing, previousQuote, process.env.RUN_DATE_UTC || newAsOf.slice(0, 10));
     writeFileAtomic(fp, JSON.stringify(existing));
     return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
   }
@@ -5444,6 +5457,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
       }
       _stampFullPullPrice(canonical, _y(yahoo.price, 'regularMarketPrice'));
+      // The price-only attempt may have mutated its parsed input before falling back; use the pristine stored text.
+      retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,
+        process.env.RUN_DATE_UTC || asOf.slice(0, 10));
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
