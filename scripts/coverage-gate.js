@@ -75,7 +75,8 @@ function hasAddressableWarning(m) {
 
 function producerAddressable(m, total, warned) {
   if (!m || !isCount(total) || !isCount(m.n_skipped_mcap)) return null;
-  let expected = total - m.n_skipped_mcap;
+  // W7: skips belong to the universe the shards pulled, which the prune step may have shrunk since.
+  let expected = (hasValue(m.n_pulled_universe) ? m.n_pulled_universe : total) - m.n_skipped_mcap;
   if (!isCount(expected)) return null;
   // n_shard_collisions is the producer discriminator: merge manifests always
   // carry it (including zero), while direct pull-yahoo manifests omit it.
@@ -112,8 +113,11 @@ function manifestNumbersSane(m, fallbackTotal = null) {
     'n_missing_mcap',
     'n_skipped_owned',
     'n_shard_collisions',
+    'n_pulled_universe',
   ];
   if (optionalFields.some(field => !optionalCountSane(m[field]))) return false;
+  // Pruning only shrinks the list; a pulled universe below n_total is impossible, not a smaller denominator.
+  if (hasValue(m.n_pulled_universe) && hasTotal && m.n_pulled_universe < m.n_total) return false;
   // The producer emits a boolean. A truthy string/object must not be laundered
   // into manifest_partial=false and silently clear the degradation banner.
   if (hasValue(m.partial) && typeof m.partial !== 'boolean') return false;
@@ -281,6 +285,8 @@ function buildMarker(res, m) {
     // Task 0.12: ehrlicher Nenner + ehrliche Coverage (null bei Legacy-Manifest ohne mcap-Zählung)
     n_addressable: isCount(res.n_addressable) ? res.n_addressable : null,
     honest_coverage_pct: Number.isFinite(res.honest_coverage_pct) ? res.honest_coverage_pct : null,
+    n_failed: markerCount('n_failed'),
+    n_pulled_universe: markerCount('n_pulled_universe'),
     manifest_addressable_warning: !!(trustedManifest && hasAddressableWarning(trustedManifest)),
     // Tag 464: sichtbar machen, WARUM der Nenner kleiner ist als das Universum. Ohne diese
     // Zahl sieht man im Marker nur ein geschrumpftes n_addressable und kann nicht pruefen,

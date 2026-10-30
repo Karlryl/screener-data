@@ -46,6 +46,7 @@ catch (e) { console.error('yahoo-finance2 nicht installiert'); process.exit(1); 
 
 // Tag 133: Additional discovery sources
 const { fetchSecTickers }       = require('./discovery/sec-tickers.js');
+const { aufnahmeTor, torProtokoll } = require('./discovery/aufnahme-tor.js');
 const { fetchFinnhubUniverse }  = require('./discovery/finnhub.js');
 const { fetchWikipediaIndices } = require('./discovery/wikipedia-indices.js');
 // Tag 135: NASDAQ Trader exchange files — all US common stocks, no auth required
@@ -1831,6 +1832,7 @@ async function main() {
   // gefallen, spaetere Loeschungen (Cap, Dead-Registry, ADR-Dedup) haben andere Gruende
   // und gehoeren nicht in dieselbe Akte. Fail-soft — ein Protokoll darf Karls Lauf nie
   // faellen, aber sein Ausfall wird laut (::warning::), nicht still.
+  let ausschlussProtokoll = null;
   try {
     const protokoll = baueAusschlussProtokoll(tvProtokoll, prefilterVerworfen, {
       tor1_TV_PRECUT_USD: parseFloat(process.env.TV_PRECUT_USD || '1.5e9'),
@@ -1845,6 +1847,7 @@ async function main() {
     const ziel = path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json');
     fs.mkdirSync(path.dirname(ziel), { recursive: true });
     writeJsonAtomic(ziel, protokoll);
+    ausschlussProtokoll = protokoll;
     console.log('[entdeckungs-ausschluss] Tor 1 (tv-scanner): ' + protokoll.tor1_tvScannerVorschnitt.maerkte.length +
       ' Maerkte, Schwelle $' + (protokoll.schwellen.tor1_TV_PRECUT_USD / 1e9).toFixed(2) + 'B; ' +
       'Tor 2 (mcap-prefilter): ' + protokoll.tor2_mcapPrefilter.summe + ' Zeilen verworfen, Schwelle $' +
@@ -1886,6 +1889,31 @@ async function main() {
     if (!existing.has(sym)) newTickers.push(info);
   }
   console.log(`\nNew tickers: ${newTickers.length} (already-in: ${allTickers.size - newTickers.length})`);
+
+  // W7 (30.10.2026): new rows need a live Yahoo quote; see discovery/aufnahme-tor.js. Before the
+  // cap, so dead symbols no longer take admission slots. Fail-soft like the protocol above.
+  try {
+    // Same symbols the pull would try: its normalization first, then its TSX class/unit retry.
+    // Required here so a load problem of the pull only skips the gate, not the whole refresh.
+    const { normalizeYahooSymbol, caClassCandidates } = require('./pull-yahoo.js');
+    const tor = await aufnahmeTor(newTickers, (info) => {
+      const sym = normalizeYahooSymbol(toYahooClassShare(info.ticker, _looksUS(info.exchange, info.source)));
+      return [sym, ...caClassCandidates(sym)];
+    });
+    newTickers = tor.admitted;
+    const tor3 = torProtokoll(tor);
+    console.log(`[aufnahme-tor] ${tor3.befragt} neue Kandidaten befragt, ${tor3.aufgenommen} aufgenommen, ` +
+      `abgelehnt: ${JSON.stringify(tor3.jeGrund)}, ungeprueft wegen ${tor.batchFehler} Batch-Fehlern: ${tor.ungeprueft}`);
+    if (tor.befragt > 0 && tor.admitted.length === 0) {
+      console.warn('::warning::[aufnahme-tor] kein einziger Kandidat aufgenommen; Yahoo-Antwort pruefen. Bestand unberuehrt, naechster Lauf fragt neu.');
+    }
+    if (ausschlussProtokoll) {
+      ausschlussProtokoll.tor3_aufnahmeQuote = tor3;
+      writeJsonAtomic(path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json'), ausschlussProtokoll);
+    }
+  } catch (e) {
+    console.warn('::warning::[aufnahme-tor] uebersprungen (' + e.message + '); neue Zeilen laufen ungeprueft in den Deckel.');
+  }
 
   // BH-040: final persistence cap — see capNewTickerAdmission() above for the rationale.
   {
