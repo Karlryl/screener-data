@@ -208,3 +208,30 @@ Nachher bleiben KINV-A.ST, KINV-B.ST, der Umsatz von PCT.L und das gemeinsame Er
 ## Nachtrag P276 am 21.10.2026
 
 Die Handtabelle trägt jetzt die gemeldeten Betriebsergebnisse von Treasury Wine Estates (TWE.AX / TSRYF, „Profit before tax and finance costs“ 736,6 Mio. AUD für das Geschäftsjahr bis 30.06.2025, Nachbarn −1.279,6 und 266,6) und hält den Umsatz von Kinnevik (KINV-A.ST / KINV-B.ST, die Quartale auch bei KNEVF) vollständig zurück (keine Umsatzzeile im Abschluss); Einzelheiten in `docs/financial-corrections.md`, Abschnitt „Handtabelle P276“. Auf dem Artefakt des Laufs 39563364953 (16.121 gelesene Snapshots, Uhr `2026-10-21T12:00:00Z`) meldet der unveränderte Wächter vorher 5 NEU-Werte (4 Ereignisse) und nachher 1 (PCT.L annualRev, 1 Ereignis, erlaubt 5). Die TYG-Sperre bleibt; PCT.L Umsatz bleibt bis zur Methodenentscheidung zu Q1-5 offen.
+
+## Gezielte Aufnahme P299 am 30.10.2026
+
+Grundlage ist das CI-Artefakt `snapshots` des Laufs 41027769596 (15.899 gelesene Snapshots, Daten-Commit `d4a3e7c368`). Der Befehl `--neu-aufnehmen` endet auf dem nativen Bestand mit Exit 1 und schreibt nichts; diese Sperre bleibt. Auf derselben Population hätte eine Gesamtneuaufnahme ohne die Sperre 149 native Identitäten und 112 Schlüssel verloren und PCT.L Umsatz still aufgenommen; bei 0,1 % Wechselkursdrift stünden 52 Ereignisse an, mit dem heutigen Bestand 2. Deshalb gilt wie bei P211, P218 und P275 die gezielte Aufnahme mit nachgelesenen Berichten.
+
+AMLX `annualGP[2]` (Amylyx, Geschäftsjahr 2023, USD) wird als echtes Datenereignis aufgenommen. Die Dreiergruppe −37.262 / 355.345 / 19.237 Tsd. USD für 2024 / 2023 / 2022 ist centgenau Umsatz minus aller Zeilen, die der Emittent als Cost of sales ausweist:
+
+* [10-K FY2024](https://www.sec.gov/Archives/edgar/data/1658551/000095017025031309/R4.htm): `Product revenue, net` 87,371 und 380,786; `Cost of sales` 5,953 und 25,441; `Cost of sales - inventory impairment and loss on firm purchase commitments` 118,680 (2024).
+* [10-K FY2023](https://www.sec.gov/Archives/edgar/data/1658551/000095017024018447/R4.htm): `Product revenue, net` 380,786 und 22,230; `Cost of sales` 25,441 und 2,993.
+
+Die Grenze ist ausdrücklich benannt: Ohne die Abschreibungszeile läge der Bruttogewinn 2024 bei +81.418 Tsd. USD, der Faktor bei 4,4 statt 9,5, und es gäbe keinen Fund. Der Emittent führt die Zeile selbst als Cost of sales; ein Anbieterfehler liegt deshalb nicht vor. Der Wächter meldet künftig genau diese Dreiergruppe nicht mehr. Eine geänderte Zahl, Währung oder Periode läuft wieder als NEU auf.
+
+Nicht aufgenommen: PCT.L `annualRev[2]` bleibt NEU, weil die Methodenfrage P276 Punkt 4 offen ist. 002822.SZ `annualGP[1]` steht nicht in dieser Population: Das Größenaustritts-Verzeichnis nennt 793,9 Mio. USD gegen die Grenze von 800 Mio. USD am 27.10.2026, ein Snapshot fehlt. Kehrt die Aktie zurück, läuft der Fund wieder als NEU auf und belegt ein Ereignis. Auf dem Artefakt vom 24.10. beträgt der Bruttogewinn −652,2 Mio. CNY, Nachbarn −21,7 und 43,1, gleich Umsatz minus Kosten; an der Quelle ist er nicht geprüft.
+
+Bestand 167 → 168 Schlüssel, 149 → 150 native Einträge; Aufnahmedatum und Vergleichspopulation bleiben, weil es keine Gesamtneuaufnahme ist. Damit beginnt auch das Fenster K1 im Zählwerk nicht. Grenzwerte und Wächtercode sind unverändert.
+
+```text
+Vorher:
+Jahres-Ausreisser: 144 in 15899 gelesenen Snapshots · davon NEU: 2
+Zaehlwerk: roh 2 · naiver Set-Key 2 · zwei Relationen 2 · zwei Relationen ohne Sperren 2 (erlaubt 5)
+Exit 0
+
+Nachher:
+Jahres-Ausreisser: 144 in 15899 gelesenen Snapshots · davon NEU: 1
+Zaehlwerk: roh 1 · naiver Set-Key 1 · zwei Relationen 1 · zwei Relationen ohne Sperren 1 (erlaubt 5)
+Exit 0
+```

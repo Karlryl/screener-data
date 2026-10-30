@@ -1,0 +1,9 @@
+{
+  "_why": "Lowest allowed share of rows with a value per field of filter/universum.json, in percent. Measured on the feed of 30.10.2026 minus 5 points (ath, which only 5.5 % of the rows carry: minus a fifth). d52 stood at 75.1 % that day because of the bug this guard was built for: its floor is the share expected after the full-pull price fix, 99.7 %, minus 5. aus lists exclusions, so an empty one is no gap. Checked by scripts/feed-fill-guard.js.",
+  "floors": {
+    "t": 95, "n": 95, "b": 53.7, "sc": 53.7, "rk": 51.5, "c": 95, "rg": 95, "s": 94.2, "mc": 94.4,
+    "g": 93.2, "g3": 89.7, "ps": 91.1, "evs": 84.9, "pe": 53.7, "peSt": 95, "fpe": 47.5, "dy": 69.1,
+    "dySt": 95, "po": 89, "roe": 84.2, "fcf": 52.5, "r40": 45.9, "gm": 85.9, "d52": 94.7, "ath": 4.4,
+    "asOf": 95, "aus": 0
+  }
+}
