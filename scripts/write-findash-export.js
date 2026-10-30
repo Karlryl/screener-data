@@ -1335,7 +1335,7 @@ function buildSmallcapOverview(coverage, smallcapDir) {
   return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/overview') };
 }
 
-// Named firms and reasons behind index.excluded: fell under the floor, got no fresh value, or thin coverage
+// Named firms and reasons behind index.excluded: under the floor, above the band, no fresh value, or thin coverage
 // (the floor is the data-derived p10 of each run, so it moves when firms leave). null = no store.
 function smallcapNamedReasons(coverageFloor) {
   let files;
@@ -1345,7 +1345,7 @@ function smallcapNamedReasons(coverageFloor) {
     .map(f => readJSONOrNull(path.join(SMALLCAP_SNAP_DIR, f))).filter(Boolean);
   if (!rows.length) return null;
   const watchlist = path.join(ROOT, 'watchlist-smallcap.json');
-  const status = smallcapCapStatus(rows, new Set(readJSON(watchlist).stocks.map(s => s.ticker)));
+  const status = smallcapCapStatus(rows, new Set(readJSON(watchlist).stocks.map(s => s.ticker)), require('../src/scoring/smallcap-route.js').MAX_MCAP);
   // The sealed pass only counts these. Same pass again, read-only, to name them; --check compares the count.
   const { loadSmallcapUniverse } = require('../src/scoring/run-screener.js');
   const { scoreUniverse } = require('../src/scoring/score.js');
@@ -2352,7 +2352,7 @@ function validateSmallcapIndex(mk, errs) {
   // Optional, additive: every counted firm carries a stated reason, and the named thin-coverage firms
   // are exactly the ones the sealed pass counted.
   if (mk.namedReasons != null) {
-    for (const k of ['belowFloor', 'noFreshValue', 'thinCoverage']) {
+    for (const k of ['belowFloor', 'aboveBand', 'noFreshValue', 'thinCoverage']) {
       const list = mk.namedReasons[k];
       if (!Array.isArray(list) || list.length !== mk.namedReasons.counts?.[k] || list.some(r => !r.ticker || !r.reasonDe)) errs.push(`${kind}: namedReasons.${k}`);
     }

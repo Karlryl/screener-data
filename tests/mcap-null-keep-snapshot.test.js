@@ -15,7 +15,7 @@ if (process.argv.includes('--break-once')) {
   const sourcePath = path.join(ROOT, 'pull-yahoo.js');
   const hash = () => crypto.createHash('sha256').update(fs.readFileSync(sourcePath)).digest('hex');
   const before = hash();
-  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap', 'metadata-skip', 'no-floor-carrier', 'floor-merge-keeps-stale']) {
+  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap', 'metadata-skip', 'no-floor-carrier', 'floor-merge-keeps-stale', 'zero-cap-carrier', 'carrier-only-with-file']) {
     const r = cp.spawnSync(process.execPath, [__filename], {
       cwd: ROOT, encoding: 'utf8', env: { ...process.env, B5_MUTATION: mutation },
     });
@@ -32,6 +32,8 @@ if (process.argv.includes('--break-once')) {
       'metadata-skip': /colliding shard reports must be ignored before parsing/,
       'no-floor-carrier': /floor exit must leave a carrier for the merge/,
       'floor-merge-keeps-stale': /stale cap must not survive a measured floor exit/,
+      'zero-cap-carrier': /a cap of 0 is no measurement/,
+      'carrier-only-with-file': /floor exit must leave a carrier for the merge/,
     };
     assert.match(r.stderr, expected[mutation]);
     assert.equal(hash(), before, 'live pull-yahoo.js hash changed during break-once');
@@ -73,7 +75,9 @@ Module.prototype._compile = function (source, name) {
     'streak': ['pull-yahoo.js', 'if (snapshot.meta && !keepStreak) delete snapshot.meta.notFoundStreak;', '// mutant: keep the stale not-found streak'],
     'empty-summary-stale-cap': ['pull-yahoo.js', "preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quoteSummary', { keepStreak: true });", '// mutant: leave the old market cap after an empty response'],
     'legacy-prune': ['scripts/prune-watchlist.js', 'if ((entry.added_at || entry.addedAt) && absenceDays > args.pruneNoDataDays)', 'if (absenceDays > args.pruneNoDataDays)'],
-    'no-floor-carrier': ['pull-yahoo.js', "if (process.env.MISSING_CAP_CARRIER !== '1') return;", 'return;'],
+    'no-floor-carrier': ['pull-yahoo.js', "if (process.env.MISSING_CAP_CARRIER !== '1' || !(marketCap.value > 0)) return;", 'return;'],
+    'zero-cap-carrier': ['pull-yahoo.js', "if (process.env.MISSING_CAP_CARRIER !== '1' || !(marketCap.value > 0)) return;", "if (process.env.MISSING_CAP_CARRIER !== '1') return;"],
+    'carrier-only-with-file': ['pull-yahoo.js', 'if (mcapVal < MIN_MCAP) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf);', 'if (mcapVal < MIN_MCAP && _parsedSnapshot) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf);'],
     'floor-merge-keeps-stale': ['pull-yahoo.js', 'stored.marketCap = incoming.marketCap;', '// mutant: the merge keeps the last value above the floor'],
   };
   const regression = regressions[process.env.B5_MUTATION];
@@ -311,9 +315,11 @@ const reviewCases = {
   async floorExit() {
     const inPath = path.join(incoming, filename), storePath = path.join(merged, filename);
     const last = structuredClone(seed); last.marketCap.value = 5e8; // last value above the small-cap floor
-    // Fast path (age 1), full path (age 40), and a fast-path exit whose full pull then fails.
-    for (const [age, mode] of [[1, 'normal'], [40, 'normal'], [1, 'not-found']]) {
+    // Cold worker (the production case, it holds no baseline), then fast path (age 1), full path (age 40),
+    // and a fast-path exit whose full pull then fails.
+    for (const [age, mode, cold] of [[1, 'normal', true], [1, 'normal'], [40, 'normal'], [1, 'not-found']]) {
       reset(age); cap = 1e6; fullMode = mode; process.env.MISSING_CAP_CARRIER = '1';
+      if (cold) files.delete(snapPath);
       await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
       assert(files.has(snapPath), 'floor exit must leave a carrier for the merge');
       assert.equal(read(snapPath).marketCap.belowFloor, true);
@@ -328,6 +334,15 @@ const reviewCases = {
     files.delete(storePath);
     mergeSmallcapSnapshots(incoming, merged);
     assert(!files.has(storePath), 'carrier must not create a store row');
+    // A cap of 0 is no measurement: no carrier on either path, and the merge refuses one.
+    for (const age of [1, 40]) {
+      reset(age); cap = 0; process.env.MISSING_CAP_CARRIER = '1';
+      await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
+      assert(!files.has(snapPath), 'a cap of 0 is no measurement and must leave no carrier');
+    }
+    files.set(inPath, JSON.stringify({ meta: { ticker, fetchedAt: null }, marketCap: { value: 0, floorUsd: 8e8, belowFloor: true, asOf: iso(0) } }));
+    assert.throws(() => mergeSmallcapSnapshots(incoming, merged), /Invalid floor-exit observation/);
+    files.delete(inPath);
     // Failed fetch: no carrier, so the merge leaves the row and its last cap alone.
     reset(40); quoteMode = fullMode = 'not-found'; process.env.MISSING_CAP_CARRIER = '1';
     await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
@@ -338,8 +353,13 @@ const reviewCases = {
     await pullAll({ stocks: [stock] }, out, 0);
     assert.equal(read(snapPath).marketCap.value, 5e9); assert(!Object.hasOwn(read(snapPath).marketCap, 'belowFloor')); assert(!Object.hasOwn(read(snapPath).marketCap, 'floorUsd'));
     // A carrier whose value is not below its floor is a broken input, never a silent write.
-    files.set(inPath, JSON.stringify({ meta: { ticker }, marketCap: { value: 9e8, floorUsd: 8e8, belowFloor: true, asOf: iso(0) } }));
+    files.set(inPath, JSON.stringify({ meta: { ticker, fetchedAt: null }, marketCap: { value: 9e8, floorUsd: 8e8, belowFloor: true, asOf: iso(0) } }));
     assert.throws(() => mergeSmallcapSnapshots(incoming, merged), /Invalid floor-exit observation/);
+    // A full row that still holds the marker is no carrier: it keeps its own fields.
+    const full = structuredClone(seed); full.meta.notFoundStreak = 2; full.marketCap = { value: 1e6, belowFloor: true, floorUsd: 8e8, asOf: iso(0) };
+    files.set(inPath, JSON.stringify(full)); files.set(storePath, JSON.stringify(last));
+    assert.equal(mergeSmallcapSnapshots(incoming, merged).floorExits, 0);
+    assert.equal(read(storePath).meta.notFoundStreak, 2, 'a full row must not lose its streak to the carrier path');
   },
 };
 function runPrune(extra = []) { prune(['node', 'prune', '--watchlist', wlPath, '--snapshots', out, ...extra]); }

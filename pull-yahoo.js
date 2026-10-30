@@ -3439,11 +3439,12 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepSt
   return { ticker: stock.ticker, status: 'missing-market-cap', preserved, observedAt };
 }
 
-// A SmallCap worker's deleted file never reaches the merge store, which then kept the last value
-// above the floor (XNET: 311.7 m USD from 15.10., measured below 300 m on every run since 16.10.).
-// Carry the measured value through the shard artifact instead; the merge applies it to the baseline.
+// A firm under the floor leaves no file in a SmallCap worker's output, so nothing reached the merge and
+// the store kept the last value above the floor (XNET: 311.7 m USD from 15.10., measured below 300 m on
+// every run since 16.10.). Carry the measured value through the shard artifact; the merge applies it to
+// the baseline. A cap of 0 is no measurement (T2): no carrier, the row stays and reads as not fresh.
 function writeFloorExitCarrier(outputDir, stock, marketCap, floorUsd, observedAt) {
-  if (process.env.MISSING_CAP_CARRIER !== '1') return;
+  if (process.env.MISSING_CAP_CARRIER !== '1' || !(marketCap.value > 0)) return;
   writeFileAtomic(path.join(outputDir, safeSnapshotFilename(stock.ticker)), JSON.stringify({
     meta: { ticker: stock.ticker, asOf: null, fetchedAt: null, fundamentalsAsOf: null, fundamentalsIncomplete: true },
     annual: {}, metrics: {}, timeseries: {},
@@ -3461,10 +3462,11 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
     if (isMetadataSnapshot(name)) continue;
     const raw = fs.readFileSync(path.join(incomingDir, name), 'utf8');
     const incoming = JSON.parse(raw);
-    if (incoming.marketCap && incoming.marketCap.belowFloor === true) {
+    // fetchedAt null marks a carrier: a full row that still holds the marker keeps its own fields below.
+    if (incoming.marketCap && incoming.marketCap.belowFloor === true && incoming.meta && incoming.meta.fetchedAt === null) {
       const { value, floorUsd, asOf } = incoming.marketCap;
-      const ticker = incoming.meta && incoming.meta.ticker;
-      if (!ticker || safeSnapshotFilename(ticker) !== name || !Number.isFinite(value) || !(value < floorUsd) ||
+      const ticker = incoming.meta.ticker;
+      if (!ticker || safeSnapshotFilename(ticker) !== name || !(value > 0) || !(value < floorUsd) ||
           !Number.isFinite(Date.parse(asOf))) throw new Error('Invalid floor-exit observation: ' + name);
       const target = path.join(outputDir, name);
       // A carrier only updates an existing baseline; a firm never stored stays absent.
