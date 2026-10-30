@@ -38,10 +38,10 @@ function before() {
 test('the two cases of this lane are in the table, appended last, sourced and traced to the quoted EBIT line', () => {
   const own = table.cases.filter(c => c.revision === REV);
   assert.deepEqual(own.map(c => c.caseId), ids);
-  // Only the 48 rows of lane sd-triage-handtabelle (24.10.2026) follow these two.
+  // Only the 48 rows of lane sd-triage-handtabelle (24.10.2026) and the 64 of lane sec-abgleich (30.10.2026) follow these two.
   const at = table.cases.findIndex(c => c.caseId === ids[0]);
   assert.deepEqual(table.cases.slice(at, at + 2).map(c => c.caseId), ids, 'appended after every earlier case');
-  assert.deepEqual(table.cases.slice(at + 2).map(c => c.revision), Array(48).fill('2026-10-24-sdtriage'), 'only the triage rows follow');
+  assert.deepEqual(table.cases.slice(at + 2).map(c => c.revision), [...Array(48).fill('2026-10-24-sdtriage'), ...Array(64).fill('2026-10-30-secabgleich')], 'only the triage and SEC comparison rows follow');
   assert.equal(table.coverage.some(v => v.ticker === 'INFRAC.SW'), false, 'no quarterly coverage for INFRAC.SW');
   assert.equal(table.cases.some(c => c.ticker === '603993.SS' && c.period === '2026-09-30'), false, 'no CMOC Q3 2026 case');
   // [period, vendor value, EBIT, revaluation result] in CHF; the annual report states thousands of CHF.
