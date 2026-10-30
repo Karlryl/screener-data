@@ -2841,8 +2841,43 @@ jobs:
           fi
           echo "ok: der heutige Stand ist auf main."
 
+  # Feed fill guard (Daylauf 10, 30.10.2026): on 29.10. d52 went empty on a quarter of the rows of the
+  # published filter feed and the run stayed green. Own job behind scoring, like druckenmiller-guard: the
+  # boards are deployed by then, so its red X holds nothing back. It reads the feed from gh-pages through
+  # the API (no CDN delay, so never yesterday's copy), that is what findash really gets. The filter step is
+  # fail-soft: a feed missing there is this job's HTTP 404, a stale one its age check. No npm ci needed.
+  feed-fill-waechter:
+    needs: scoring
+    if: ${{ !cancelled() && needs.scoring.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Check the fill rate of every filter feed field
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "This run publishes nothing, so gh-pages still holds an older feed: nothing to check."
+            exit 0
+          fi
+          curl -fsSL --retry 3 --max-time 120 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github.raw" \
+            -o "$RUNNER_TEMP/universum.json" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/outputs/findash-export/v1/filter/universum.json?ref=gh-pages" || {
+            echo "::error::Der Filter-Feed ist auf gh-pages nicht abrufbar: entweder fehlt er heute, oder die Schnittstelle ist gestoert. Sein Fuellstand ist nicht geprueft."
+            exit 1
+          }
+          node scripts/feed-fill-guard.js --feed "$RUNNER_TEMP/universum.json"
+
   laufstatus:
-    needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard]
+    needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard, feed-fill-waechter]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
