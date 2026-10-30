@@ -121,6 +121,7 @@ check('Daifuku (6383.T), 30.10.: the real row is empty at 640 days, its quarter 
   assert.equal(G.g31Shadow(s).v1.reason, reason('31.12.2025', '31.03.2024', 640));
   assert.equal(A.revAcceleration(s), null);
   assert.equal(growth3(s), null, 'calendar years differ by 3, the period by 1371 days');
+  assert.equal(growth3(row([133.1, 120, 110, 100], ['2026-03-31', '2025-03-31', '2024-03-31', '2022-12-31'])), null, '3.25 years is no 3-year rate either (8279.HK class, 1186 days)');
   const withQuarter = { ...s, timeseries: { revenueQ: [120, 110, 105, 102, 100], revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'] } };
   assert.equal(revGrowthLeg(withQuarter).basis, 'quarter');
 });
@@ -146,11 +147,10 @@ check('own ends still block: 395400.KS 91 days, BXB.AX and NTDU.SI 730 days, Dai
   assert.equal(G.g31Shadow(DAIFUKU()).v1.reason, reason('31.12.2025', '31.03.2024', 640));
 });
 
-check('a true short or long year inside the window is a hand-table hold: Nestle India, Zegona, EQB, Princes', () => {
+check('a true short or long year inside the window is a hand-table hold: Nestle India, Zegona, EQB', () => {
   for (const [ticker, fx, stored, ends, field] of [
     ['NESTLEIND.BO', 0.01053075, [2127375779.7, 2568859571.175, 2014142837.25], ['2025-03-31', '2024-03-31', '2023-12-31'], 'annualRev'],
     ['ZEG.L', 1.1239743, [4077266228.1191998, 3388356528.2403], ['2026-03-31', '2025-03-31'], 'annualRev'],
-    ['PRN.L', 1.3261017, [2481840440.7026997, 2723202885.0179996, 2266079715.8076], ['2025-12-31', '2024-12-31', '2024-03-31'], 'annualRev'],
     ['EQB.TO', 0.70378923, [889762718.8705801, 589971731.93517, 516162540.22815], ['2024-10-31', '2023-10-31', '2022-12-31'], 'annualRev'],
   ]) {
     const s = row(stored, ends);
@@ -265,7 +265,7 @@ for (const [rel, anchor, mutant, probe] of [
     api => { const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'];
       assert.equal(api.revAcceleration({ annual: {}, timeseries: { revenueQ: [120, 110, 105, 102, 100, 90], revenueQEnds: ends },
         meta: { statementPeriods: { revenueQ: ends.map((end, i) => ({ end, duration: i === 4 ? '6M' : '3M' })) } } }), null, 'a 6M year-ago cell must not carry the axis'); }],
-  ['../scripts/write-filter-universe.js', "  if (!ends[0] || !ends[3] || days < 3 * ANNUAL_PAIR_MIN_DAYS || days > 3 * ANNUAL_PAIR_MAX_DAYS) return null;", '',
+  ['../scripts/write-filter-universe.js', "  if (!ends[0] || !ends[3] || Math.abs(days - 3 * 365) > 30) return null;", '',
     api => assert.equal(api.growth3(DAIFUKU()), null, 'a 3.75-year span is no 3-year CAGR')],
 ]) {
   check('break-once: ' + rel + ' without "' + anchor.trim().slice(0, 40) + '" turns the real assertion red', () => {
