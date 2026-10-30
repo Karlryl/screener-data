@@ -823,20 +823,29 @@ jobs:
       # Manifest noch da und wurde hier als frisches Shard-Ergebnis gestaged (Fix
       # neutralisiert). Also zusaetzlich am Step-Ergebnis gaten: alles ausser success
       # nimmt denselben Weg wie "Shard fehlt" (merge zaehlt ihn, partial=true).
+      # P301: a subset run keeps the OLD _manifest.json and writes its tally next to it, so that manifest
+      # is no fresh result either. "Newer than the manifest", not "exists": the shard cache keeps a tally
+      # of an earlier run for good, and a bare existence check would drop this shard every day from then on.
       - name: Stage shard manifest for merge
         if: always()
         run: |
           mkdir -p shard-manifest-out
-          if [ "${{ steps.yahoo_pull.outcome }}" = "success" ] && [ -f snapshots/_manifest.json ]; then
+          subset_tally=""
+          for f in snapshots/_manifest.subset-*.json; do
+            if [ -f "$f" ] && [ "$f" -nt snapshots/_manifest.json ]; then subset_tally="$f"; fi
+          done
+          if [ "${{ steps.yahoo_pull.outcome }}" = "success" ] && [ -f snapshots/_manifest.json ] && [ -z "$subset_tally" ]; then
             cp snapshots/_manifest.json shard-manifest-out/shard-${{ matrix.shard }}.json
             echo "Staged shard-${{ matrix.shard }}.json"
           else
-            echo "no usable manifest for shard ${{ matrix.shard }} (pull outcome=${{ steps.yahoo_pull.outcome }}, timeout before first flush or fail-loud abort) — merge counts it as a missing shard (partial=true)"
+            echo "no usable manifest for shard ${{ matrix.shard }} (pull outcome=${{ steps.yahoo_pull.outcome }}, subset tally=${subset_tally:-none}, timeout before first flush or fail-loud abort) — merge counts it as a missing shard (partial=true)"
           fi
 
       # Shard-Snapshots hochladen — OHNE die Manifeste (Glob-Negation), sonst
       # kollidieren 17 _manifest.json / _manifest-full.json beim merge-multiple-Download
       # (RED-TEAM-2 T1-a). Die Ticker-Snapshots sind disjunkt -> keine echte Kollision.
+      # P301: named exclusions, never _manifest*: the _manifest-size-exits.shard-*.run-*.json reports must
+      # travel, scripts/filter-snapshot-merge.js merges them into today's size exits.
       - name: Upload shard snapshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -846,6 +855,8 @@ jobs:
             snapshots/*.json
             !snapshots/_manifest.json
             !snapshots/_manifest-full.json
+            !snapshots/_manifest.subset-*.json
+            !snapshots/_manifest-full.subset-*.json
           if-no-files-found: warn
           retention-days: 1
 
@@ -2179,7 +2190,7 @@ jobs:
 
       # Plausibility watcher (Daylauf 7, 24.10.2026). REPORTS ONLY: lists implausible board rows of the
       # finished export (growth extremes, period gaps, zero revenue, market-cap jumps against the newest
-      # board-history vintage, duplicates, score bounds) in v1/waechter/plausibilitaet.json, the step
+      # board-history vintage, duplicates, score bounds, withheld revenue on the survival list) in v1/waechter/plausibilitaet.json, the step
       # summary and one ::warning:: per finding class. It changes no number, withholds nothing and must
       # never turn the run red: exit 0 by design, `|| true`, continue-on-error and a timeout on top.
       # The 15-file count gate above counts v1/*.json without recursion, and the Pages deploy copies
