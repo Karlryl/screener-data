@@ -19,7 +19,7 @@ const root = path.resolve(__dirname, '..');
 const live = ['configs/financial-known-cases.json', 'configs/g31-hinweise.json', 'lib/financial-known-cases.js'];
 const liveHashes = () => live.map(f => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, f))).digest('hex'));
 const beforeHashes = liveHashes();
-const REV = '2026-10-30-secabgleich';
+const REV = '2026-10-30-secabgleich'; // Review of #62: Herc gross profit, Janus net income, AHCO Q1 operating income, SUNC hint.
 const FIRMS = ['EGY', 'FTW', 'SUNC', 'HRI', 'AHCO', 'GLXY', 'JAN', 'RDW', 'WWW', 'LINE', 'ANRO'];
 const value = row => (row && typeof row === 'object' ? row.value ?? null : row ?? null);
 const series = (s, c, f) => (s[c][f] || []).map(value);
@@ -27,11 +27,11 @@ const apply = (t, cfg) => applyFinancialCases(structuredClone(fixture[t]), cfg &
 const without = () => { const c = structuredClone(table); c.cases = c.cases.filter(x => x.revision !== REV); c.coverage = c.coverage.filter(v => !['EGY', 'FTW', 'SUNC', 'AHCO'].includes(v.ticker)); return validateTable(c); };
 const growth = s => g31Shadow(s).v1;
 
-test('64 rows of this lane, appended last, all eleven firms, four coverage rows, table valid', () => {
+test('70 rows of this lane, appended last, all eleven firms, four coverage rows, table valid', () => {
   const own = table.cases.filter(c => c.revision === REV);
-  assert.equal(own.length, 64);
+  assert.equal(own.length, 70);
   const at = table.cases.findIndex(c => c.revision === REV);
-  assert.deepEqual(table.cases.slice(at).map(c => c.revision), Array(64).fill(REV), 'nothing follows these rows');
+  assert.deepEqual(table.cases.slice(at).map(c => c.revision), Array(70).fill(REV), 'nothing follows these rows');
   assert.deepEqual([...new Set(own.map(c => c.ticker))].sort(), [...FIRMS].sort());
   assert.deepEqual(table.coverage.filter(v => ['EGY', 'FTW', 'SUNC', 'AHCO'].includes(v.ticker)).map(v => v.ticker + v.coversThrough).sort(),
     ['AHCO2026-06-30', 'EGY2026-06-30', 'FTW2026-06-30', 'SUNC2026-06-30']);
@@ -77,6 +77,12 @@ test('revenue firms: the shown growth is the filed one, the error is back withou
   assert.deepEqual(series(apply('HRI'), 'annual', 'annualRev'), [4376000000, 3568000000, 3282000000, null]);
   assert.deepEqual(series(apply('JAN'), 'annual', 'annualRev'), [603989000, 568475000]);
   assert.deepEqual(series(apply('JAN'), 'annual', 'annualOpInc'), [null, null]);
+  assert.deepEqual(series(apply('JAN'), 'annual', 'annualNetIncome'), [6349000, -50463000]);
+  // Herc: the same 49 M USD sat in the vendor's gross profit; on the filed revenue it would be a mixed basis.
+  assert.deepEqual(series(apply('HRI'), 'timeseries', 'grossProfitQ'), [377000000, 326000000, 403000000, 446000000, null]);
+  assert.deepEqual(series(apply('HRI'), 'annual', 'annualGP').slice(0, 2), [null, null]);
+  const q1 = apply('AHCO').timeseries;
+  assert.equal(value(q1.opIncQ[q1.opIncQEnds.indexOf('2026-03-31')]), null);
 });
 
 test('operating income: filed sign, derived fourth quarter withheld, the lamp follows', () => {
@@ -123,6 +129,7 @@ test('absence: another listing and an untouched firm stay as they are; review hi
   assert.equal(JSON.stringify(applyFinancialCases(c).snapshot.annual), JSON.stringify(control.annual));
   assert.equal(JSON.stringify(applyFinancialCases(c).snapshot.timeseries), JSON.stringify(control.timeseries));
   assert.equal(g31Hinweis(apply('FTW'))?.code, 'uebernahme');
+  assert.equal(g31Hinweis(apply('SUNC'))?.code, 'uebernahme');
   assert.equal(g31Hinweis(apply('EGY')), null);
 });
 

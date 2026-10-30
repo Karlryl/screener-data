@@ -12583,6 +12583,70 @@
       ]
     },
     {
+      "caseId": "hri-2025-06-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 283000000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem um den Verlust von 49 Mio. USD gekürzten Umsatz; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000109/hri-20260630.htm",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 3",
+          "quote": "Total revenues 1,204 1,002 2,343 1,863"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2025-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 1410000000,
+      "replacementValue": null,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem um den Verlust von 49 Mio. USD gekürzten Umsatz; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000050/hri-20251231.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 42",
+          "quote": "Total revenues 4,376 3,568 3,282"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2024-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "annualGP",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 1156000000,
+      "replacementValue": null,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem um den Verlust von 49 Mio. USD gekürzten Umsatz; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000050/hri-20251231.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 42",
+          "quote": "Total revenues 4,376 3,568 3,282"
+        }
+      ]
+    },
+    {
       "caseId": "hri-2025-12-31-annualRev-20261030",
       "revision": "2026-10-30-secabgleich",
       "ticker": "HRI",
@@ -12816,6 +12880,26 @@
           "currency": "USD",
           "unit": "currency",
           "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2026-03-31-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 5489000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Betriebsergebnis fehlt: Der Anbieterwert steht noch auf der Basis mit dem aufgegebenen Diabetesgeschäft; der Umsatz daneben nicht mehr.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Net revenue $ 740,307 $ 657,100 $ 1,420,180 $ 1,301,647"
         }
       ]
     },
@@ -13168,6 +13252,70 @@
       ]
     },
     {
+      "caseId": "jan-2025-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualNetIncome",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -61102000,
+      "replacementValue": 6349000,
+      "metricDefinition": "Net income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresergebnis korrigiert: Der Anbieter führt für 2025 einen Pro-forma-Wert; berichtet sind 6,3 Mio. USD Gewinn.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "form": "424B4",
+          "page": "Summary historical and pro forma financial data",
+          "accession": "0001104659-26-032901",
+          "filed": "2026-03-23",
+          "quote": "Net income (loss) (86,785 ) 6,349 (50,463",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 6349000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "jan-2024-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualNetIncome",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -50463000,
+      "replacementValue": -50463000,
+      "metricDefinition": "Net income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Prospekt überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "form": "424B4",
+          "page": "Summary historical and pro forma financial data",
+          "accession": "0001104659-26-032901",
+          "filed": "2026-03-23",
+          "quote": "Net income (loss) (86,785 ) 6,349 (50,463",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": -50463000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
       "caseId": "jan-2025-12-31-annualOpInc-20261030",
       "revision": "2026-10-30-secabgleich",
       "ticker": "JAN",
@@ -13350,7 +13498,7 @@
       "expectedBadValue": 377737000,
       "replacementValue": null,
       "verifiedAt": "2026-10-30",
-      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergeben sich -81,6 Mio. USD.",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergibt sich -81,6 Mio. USD.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1819810/000181981026000029/rdw-20251231.htm",
@@ -13506,7 +13654,7 @@
       "expectedBadValue": -251500000,
       "replacementValue": null,
       "verifiedAt": "2026-10-30",
-      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergeben sich 48,9 Mio. USD.",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergibt sich 48,9 Mio. USD.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/110471/000162828026012614/www-20260103.htm",
@@ -13654,7 +13802,7 @@
       "expectedBadValue": -295000000,
       "replacementValue": null,
       "verifiedAt": "2026-10-30",
-      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergeben sich 67 Mio. USD.",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergibt sich 67 Mio. USD.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1868159/000186815926000012/line-20251231.htm",
@@ -13802,7 +13950,7 @@
       "expectedBadValue": 115673000,
       "replacementValue": null,
       "verifiedAt": "2026-10-30",
-      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergeben sich ein Verlust.",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergibt sich ein Verlust von 17,1 Mio. USD.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1999480/000199948026000002/alto-20251231.htm",
