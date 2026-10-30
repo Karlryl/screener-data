@@ -172,6 +172,12 @@ check('sealed fixture era: only a fetch date before 20.08.2026 keeps the old und
     assert.equal(P.sealedEraSnapshot(live), false);
     assert.equal(A.revAcceleration(live), null); assert.equal(A.gpGrowth(live), null);
   }
+  // Not a date, not an exception: these all sort before the era's end as text.
+  for (const fetchedAt of ['', ' ', '08/30/2026', '1755000000', '0000']) {
+    const bad = { ...snapshot(null), meta: { fetchedAt } };
+    assert.equal(P.sealedEraSnapshot(bad), false, JSON.stringify(fetchedAt));
+    assert.equal(A.revAcceleration(bad), null); assert.equal(A.gpGrowth(bad), null);
+  }
   const dated = { meta: { fetchedAt: '2026-08-16T00:00:00Z' }, timeseries: {}, annual: { annualRev: [130, 100, 90], annualRevEnds: ['2026-06-30', '2024-06-30', '2023-06-30'] } };
   assert.equal(A.revAcceleration(dated), null, 'the era excuses a missing end, never a wrong one');
   const quarters = fetchedAt => ({ meta: { fetchedAt }, annual: {}, timeseries: { revenueQ: [120, 110, 105, 102, 100, 90] } });
@@ -246,7 +252,7 @@ for (const [rel, anchor, mutant, probe] of [
     api => assert.equal(api.periodGateReason('year', END, null), 'Periodenende des Vorjahres fehlt (Zeitraum bis 30.06.2026); Wachstum nicht gezeigt.')],
   ['../lib/annual-pairs.js', "  if ((_tagesnummer(ends[iNew]) === null || _tagesnummer(ends[iOld]) === null) && sealedEraSnapshot(snapshot)) return false;", '',
     api => assert.equal(api.axisPairBlocked({ meta: { fetchedAt: '2026-08-16T00:00:00Z' }, annual: { annualGP: [65, 50] } }, 'annualGP', 0, 1), false, 'a sealed-era undated pair must pass')],
-  ['../lib/annual-pairs.js', "  return typeof fetchedAt === 'string' && fetchedAt < SEALED_FIXTURE_ERA_END;", '  return true;',
+  ['../lib/annual-pairs.js', "  return _tagesnummer(fetchedAt) !== null && fetchedAt < SEALED_FIXTURE_ERA_END;", '  return true;',
     api => assert.equal(api.sealedEraSnapshot({ meta: {} }), false, 'no fetch date, no exemption')],
   ['../lib/annual-pairs.js', "  return pairs !== null && pairs.every((pair) => pair.zeroIndex < 0 && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld));", '  return pairs !== null;',
     api => assert.equal(api.annualAccelerationGatePasses(ALK()), false)],
