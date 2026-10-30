@@ -264,7 +264,13 @@ pruefe('the hint of a held firm is one text naming its period ends', () => {
   const raw = snap('VALE3.SA', 'BRL', 'BRL', 38403e6, 1);
   delete raw.metrics.revenueTTM;
   raw.annual.annualRevEnds = ['2025-12-31', '2024-12-31'];
-  const reasons = financialReasons(_convertSnapshotToUSD(raw));
+  // Blind review of #58: the two real series without an own *Ends series are index-aligned to revenue.
+  raw.annual.annualCostOfRevenue = [{ value: 30000e6 }, { value: 28000e6 }];
+  raw.timeseries.netIncomeQ = [{ value: 2000e6 }];
+  const s = _convertSnapshotToUSD(raw);
+  heldOk(s.annual.annualCostOfRevenue[1], '2024-12-31', { value: 28000e6 });
+  heldOk(s.timeseries.netIncomeQ[0], '2026-03-31', { value: 2000e6 });
+  const reasons = financialReasons(s);
   assert.deepStrictEqual(reasons, [HOLD_REASON + ' Das betrifft die Perioden mit Ende 31.03.2026, 31.12.2025 und 31.12.2024.']);
   assert.doesNotMatch(reasons[0], /Handtabelle/);
 });
@@ -276,7 +282,7 @@ for (const [ticker, currency, annual, quarter] of [
     delete raw.metrics.revenueTTM;
     raw.timeseries.revenueQ[0].value = quarter;
     raw.annual.annualRevEnds = ['2025-12-31', '2024-12-31'];
-    raw.annual.annualRnD = [12e6, null];
+    raw.annual.annualRnD = [12e6, null, 7e6];
     raw.annual.annualBalance = [{ totalAssets: 8000e6, totalCash: 500e6, totalDebt: null }];
     raw.annual.annualBalanceEnds = ['2025-12-31'];
     const s = _convertSnapshotToUSD(structuredClone(raw));
@@ -285,8 +291,10 @@ for (const [ticker, currency, annual, quarter] of [
     heldOk(s.annual.annualRev[0], '2025-12-31', { value: annual });
     heldOk(s.annual.annualRev[1], '2024-12-31', { value: 6394.7e6 });
     heldOk(s.timeseries.revenueQ[0], '2026-03-31', { value: quarter });
-    heldOk(s.annual.annualRnD[0], null, 12e6);
+    // No own *Ends: the revenue period ends hold where they reach, a cell beyond them stays undated (23 real tickers on 30.10.).
+    heldOk(s.annual.annualRnD[0], '2025-12-31', 12e6);
     assert.strictEqual(s.annual.annualRnD[1], null, 'a vendor gap stays a gap');
+    heldOk(s.annual.annualRnD[2], null, 7e6);
     const bal = s.annual.annualBalance[0];
     assert.strictEqual(bal.totalAssets, null); assert.strictEqual(bal.totalCash, null); assert.strictEqual(bal.totalDebt, null);
     assert.strictEqual(bal.financialMissing.period, '2025-12-31');
