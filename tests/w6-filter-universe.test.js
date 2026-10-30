@@ -352,6 +352,9 @@ test('scan every row for missing source values becoming zero', () => {
     assert.equal(row.aus.includes('gm-implausible'), Number.isFinite(gmValue) && Math.abs(Math.round(gmValue * 100) / 100) > 100, row.t + '.gm reason');
     assert.equal(row.aus.includes('dy-implausible'), Number.isFinite(dyValue) && dyValue > 50 && (dyStatus == null || dyStatus === 'zahlt'), row.t + '.dy reason');
     assert.equal(row.aus.includes('po-implausible'), Number.isFinite(poValue) && (poValue > 100000 || poValue < 0), row.t + '.po reason');
+    const fpeValue = mischVal(source.metrics?.forwardPE, row.aus.includes('mischwaehrung'));
+    assert.equal(row.aus.includes('fpe-implausible'), fpeValue > 0 && Math.round(fpeValue * 100) / 100 < 1.5, row.t + '.fpe reason');
+    if (row.fpe !== undefined) assert.ok(row.fpe >= 1.5, row.t + '.fpe floor');
     if (row.gm !== undefined) assert.ok(Math.abs(row.gm) <= 100, row.t + '.gm ceiling');
     if (row.dy !== undefined) assert.ok(row.dy <= 50, row.t + '.dy ceiling');
     if (row.po !== undefined) assert.ok(row.po >= 0 && row.po <= 100000, row.t + '.po ceiling');
@@ -405,6 +408,33 @@ test('dividend yield above 50 percent is withheld as unknown with a reason; its 
   }
   // A non-payer keeps its real zero payout.
   assert.equal(rowOf(withMetrics({ dividendYield: null, dividendStatus: 'keine', payoutRatio: 0 })).po, 0);
+});
+
+test('forward P/E below the floor is withheld with a reason; true small values stay (30.10.2026)', () => {
+  const one = row => ({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [row] });
+  // Vendor values of 30.10.2026 (AZUL3.SA: 24.10.2026) against the second source: AZUL3.SA none, ENIC 11.01, KYIV 8.29, 4763.TW none, 3697.T 19.79.
+  for (const [name, value] of [['AZUL3.SA', 0.0000009], ['ENIC', 0.01963268], ['KYIV', 0.19332632], ['4763.TW', 0.4474929], ['3697.T', 1.44], ['boundary', 1.49], ['rounds to 1.49', 1.494]]) {
+    const row = rowOf(withMetrics({ forwardPE: value }));
+    assert.equal(row.fpe, undefined, name);
+    assert.ok(row.aus.includes('fpe-implausible'), name + ' reason');
+    assert.deepEqual(validateUniverse(one(row), 1000), [], name + ' valid');
+  }
+  // Second source agrees that these are small: TURSG.IS 2.12, BBAR.BA 1.82, DEC 1.58, BHC 2.12, CLVT 2.44. 1.495 rounds to the shown 1.5.
+  for (const [name, value, shown] of [['boundary', 1.5, 1.5], ['rounds to 1.5', 1.495, 1.5], ['TURSG.IS', 1.59, 1.59], ['BBAR.BA', 1.79, 1.79], ['DEC', 1.97, 1.97], ['BHC', 2.08, 2.08], ['CLVT', 2.27, 2.27]]) {
+    const row = rowOf(withMetrics({ forwardPE: value }));
+    assert.equal(row.fpe, shown, name);
+    assert.ok(!row.aus.includes('fpe-implausible'), name + ' no reason');
+  }
+  // A forecast loss is missing, not implausible.
+  for (const value of [-12, 0]) assert.ok(!rowOf(withMetrics({ forwardPE: value })).aus.includes('fpe-implausible'), 'loss ' + value);
+  // Only fpe and aus move; the trailing P/E of ENIC stays.
+  const enic = rowOf(withMetrics({ forwardPE: 0.01963268, pe: 10.85 }));
+  assert.equal(enic.pe, 10.85);
+  assert.equal(enic.peSt, 'vorhanden');
+  // Validator, both directions.
+  const shown = rowOf(withMetrics({ forwardPE: 15 }));
+  assert.ok(validateUniverse(one({ ...shown, fpe: 1.49 }), 1000).some(e => e.includes('forward P/E below floor')));
+  assert.ok(validateUniverse(one({ ...shown, aus: [...shown.aus, 'fpe-implausible'] }), 1000).some(e => e.includes('inconsistent fpe reason')));
 });
 
 test('payout above 100000 percent or negative is withheld with a reason; high real ratios stay', () => {
@@ -519,12 +549,13 @@ test('validator rejects every outlier ceiling and every reason without its empty
 
 test('contract text names every new reason code', () => {
   const contract = fs.readFileSync(path.join(__dirname, '..', 'docs', 'findash-export-v1.md'), 'utf8');
-  for (const code of ['gm-implausible', 'dy-implausible', 'po-implausible', 'evs-waehrung', 'evs-implausible']) assert.ok(contract.includes(code), code);
+  for (const code of ['gm-implausible', 'dy-implausible', 'po-implausible', 'fpe-implausible', 'evs-waehrung', 'evs-implausible']) assert.ok(contract.includes(code), code);
 });
 
 test('forward P/E is shown only when positive; zero or negative (forecast loss) stays missing and the validator rejects it (24.10.2026)', () => {
   const one = row => ({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [row] });
-  for (const [value, expected] of [[-12, undefined], [0, undefined], [15, 15], [0.001, 0.001]]) {
+  // 0.001 is withheld since the 1.5 floor of 30.10.2026 (it was shown as 0.001 before).
+  for (const [value, expected] of [[-12, undefined], [0, undefined], [15, 15], [0.001, undefined]]) {
     const row = rowOf(withMetrics({ forwardPE: value }));
     assert.equal(row.fpe, expected, 'fpe ' + value);
     assert.deepEqual(validateUniverse(one(row), 1000), [], 'valid row for fpe ' + value);

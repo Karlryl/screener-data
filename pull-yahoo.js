@@ -988,6 +988,26 @@ function _resolveTradingFx(q, existing) {
   return { ok: true, factor: fx.factor, factorMajorUnit: fx.factorMajorUnit, provenance: fx.provenance, currency: String(ccy), quelle };
 }
 
+/**
+ * Stores a full pull's own quote the way the price-only path stores it: USD, per-share factor.
+ * Full pulls never stored a price, so the filter feed's distance to the 52-week high stayed empty for
+ * every full-pulled row until its next price-only run (30.10.2026: 3,937 of 15,899 rows). The factor
+ * lookup is the 52-week high's in _skaliereHandelsMetriken, so their ratio holds no FX at all.
+ * No usable quote or factor leaves the field absent. No price.asOf: _priceOnlyUpdate never refreshes it, and
+ * lib/export-provenance.js would read a day-old price time and call a hand-table row not reproducible.
+ * @param {object} snap Converted full-pull snapshot, mutated in place.
+ * @param {*} rawPrice Yahoo quote in its quote unit.
+ * @returns {void}
+ */
+function _stampFullPullPrice(snap, rawPrice) {
+  // The market-cap guard already stored this pull's quote on its hand-table rows.
+  if (Number.isFinite(snap.price?.regularMarketPrice)) return;
+  const fx = _resolveTradingFx(null, snap);
+  if (!fx.ok || !Number.isFinite(rawPrice) || rawPrice <= 0) return;
+  // No price.currency on purpose: region-mapping reads it, and that path stays as it was on a full pull.
+  snap.price = { ...snap.price, regularMarketPrice: rawPrice * fx.factor, currencyUnit: 'USD' };
+}
+
 // Waehrungs-Chunk 1/4 (16.08.2026): den KURS selbst mitstempeln, nicht nur seine Herkunft.
 // Der price-only-Schnellweg rechnet Preis UND marketCap mit dem Handelskurs um, hat das aber
 // nie im Snapshot vermerkt — ein price-only-aufgefrischter Snapshot sah deshalb aus wie einer
@@ -5403,6 +5423,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           }
         }
       }
+      _stampFullPullPrice(canonical, _y(yahoo.price, 'regularMarketPrice'));
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
