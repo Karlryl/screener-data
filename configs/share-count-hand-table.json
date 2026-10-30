@@ -396,6 +396,104 @@
       },
       "verifiedAt": "2026-10-30",
       "reviewBy": "2026-11-30"
+    },
+    "MCTA": {
+      "validFrom": "2025-11-12",
+      "reason": "Der Handel der Aktie von Charming Medical an der Nasdaq ist seit dem 12.11.2025 ausgesetzt, der letzte Kurs stammt vom 11.11.2025. Einen aktuellen Börsenwert gibt es deshalb nicht.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/2035992/000121390026083325/ea0298998-20f_charming.htm",
+        "quote": "has been suspended or halted since November 12, 2025",
+        "page": "Form 20-F filed 2026-07-30, Item 3 risk factors, about p. 47; same passage: \"the Nasdaq trading halt remains in effect\"",
+        "crossCheck": "Nasdaq halt list https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts read 2026-10-30: code T12 from 2025-11-11 19:50, no resumption date. Share count: proxy in the Form 6-K filed 2026-09-29, https://www.sec.gov/Archives/edgar/data/2035992/000121390026104311/ea030667101ex99-1.htm : \"there were 15,178,000 Class A Shares issued and outstanding\", so the count is right and only the price is old. A Nasdaq notice of 2026-10-29 announcing the delisting for 2026-11-09 was read only in search excerpts of https://www.globenewswire.com/news-release/2026/10/29/3391848/6948/en/charming-medical-limited-notified-of-anticipated-delisting-from-the-nasdaq-stock-market.html (the page refused direct access).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 445,550,176 USD from yahoo_quoteSummary = 29.355 USD x 15,178,000, no price block; small-cap health care unprofitable rank 32"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-16"
+    },
+    "RMAX": {
+      "validFrom": "2026-08-25",
+      "reason": "RE/MAX Holdings ist am 24.08.2026 in der Real REMAX Group aufgegangen, die Aktie wurde an diesem Tag letztmals an der NYSE gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr. Die Nachfolgerin notiert an der Nasdaq als REAX.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/0002136387/000110465926100334/tm2623736d2_8k12b.htm",
+        "quote": "Trading in shares of REMAX Class A Common Stock was halted as of the close of business on August 24, 2026",
+        "page": "Form 8-K12B of Real REMAX Group, date of report 2026-08-24, Item 3.01",
+        "crossCheck": "Same filing, Item 3.01: the shares \"were cancelled and retired and cease to exist\". NYSE filed Form 25 on 2026-08-25.",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 681 M USD = 12.36 USD close of 2026-08-24 x 55,110,157 implied shares; small-cap real estate profitable rank 15"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "FBRX": {
+      "validFrom": "2026-08-27",
+      "reason": "Forte Biosciences wurde von argenx übernommen (Abschluss am 27.08.2026, 77,00 USD je Aktie in bar), die Aktie wurde am 26.08.2026 letztmals gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1419041/000114036126034698/ef20081182_8k.htm",
+        "quote": "on August 27, 2026, Purchaser merged with and into the Company",
+        "page": "Form 8-K filed 2026-08-27, Item 2.01",
+        "crossCheck": "Nasdaq filed Form 25 on 2026-08-27, https://www.sec.gov/Archives/edgar/data/1419041/000135445726000824/primary_doc.xml ; Form 15 of 2026-09-08 reports one holder of record. Last close 76.99 USD on 2026-08-26 from https://query1.finance.yahoo.com/v8/finance/chart/FBRX?range=2y&interval=1d (vendor data).",
+        "vendorValueSeen": "main store of run 41027769596 (2026-10-30): marketCap 1,634,427,392 USD = 76.99 USD x 21,229,087 shares; survival rank 37"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "NATH": {
+      "validFrom": "2026-10-26",
+      "reason": "Nathan's Famous wurde von Smithfield Foods übernommen (Abschluss am 26.10.2026, 102,00 USD je Aktie in bar), die Aktie wurde am 23.10.2026 letztmals gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/69733/000110465926118639/tm2628126d1_8k.htm",
+        "quote": "automatically converted into the right to receive $102.00 in cash",
+        "page": "Form 8-K filed 2026-10-26, Introductory Note; Item 3.01: \"requested that Nasdaq suspend trading\"",
+        "crossCheck": "Nasdaq halt list https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts&haltdate=10232026 : halt on 2026-10-23 at 19:50 with code D, security deletion. Last close 102.05 USD from https://query1.finance.yahoo.com/v8/finance/chart/NATH?range=2y&interval=1d (vendor data).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 417,834,048 USD = 102.05 USD x 4,094,405 shares; small-cap consumer discretionary profitable rank 5, small-cap overview rank 79"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "SLP": {
+      "validFrom": "2026-10-06",
+      "reason": "Simulations Plus wurde von einer Gesellschaft von Altaris übernommen (Abschluss am 06.10.2026, 18,50 USD je Aktie in bar) und ist seither nicht mehr an der Nasdaq notiert. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1023459/000102345926000092/slp-20261006.htm",
+        "quote": "the Company Common Shares are no longer listed on Nasdaq as of October 6, 2026",
+        "page": "Form 8-K filed 2026-10-06, Item 3.01",
+        "crossCheck": "Closing release, Exhibit 99.1: https://www.sec.gov/Archives/edgar/data/1023459/000102345926000092/closingpr.htm . Nasdaq filed Form 25 on 2026-10-06.",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 374 M USD = 18.50 USD x 20,224,838 shares; small-cap health care profitable rank 15, small-cap overview rank 187"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "RCIT": {
+      "validFrom": "2026-02-06",
+      "reason": "Für Reelcause rechnet Yahoo mit einem Kurs von 2.262,50 USD, den kein Beleg stützt, und kommt so auf 295,8 Mrd. USD. Die Firma ist eine Hülle ohne Geschäft, ihre Aktie wird außerbörslich nur vereinzelt gehandelt, und die SEC hat am 21.09.2026 ein Verfahren wegen fehlender Pflichtberichte eröffnet. Einen verlässlichen Börsenwert gibt es deshalb nicht.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/files/litigation/admin/2026/34-106455.pdf",
+        "quote": "Unsolicited quotations for the common stock of RCIT (Symbol: RCIT) are submitted on OTC Link ATS.",
+        "page": "SEC order, Release No. 106455 of 2026-09-21, p. 1",
+        "crossCheck": "Form 10-12G/A filed 2024-02-29, https://www.sec.gov/Archives/edgar/data/2008670/000149315224008352/form10-12ga.htm : \"97,227,646 shares were issued and outstanding as of September 30, 2023\", no revenue line, total assets nil. OTC Markets, read 2026-10-30 by one of two verifiers (the other found the page down for maintenance): market cap 13,073 USD on 2026-10-29, last trade 0.0001 USD. In the Yahoo chart https://query1.finance.yahoo.com/v8/finance/chart/RCIT?range=2y&interval=1d every bar has volume 0.",
+        "vendorValueSeen": "main store of run 41027769596 (2026-10-30): marketCap 295,782,711,296 USD from yahoo_quoteSummary = 2,262.50 USD x 130,732,697 shares; survival rank 94"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "WEAV": {
+      "validFrom": "2026-10-26",
+      "reason": "Weave Communications wurde von einer Gesellschaft von Francisco Partners übernommen (Abschluss am 26.10.2026, 7,40 USD je Aktie in bar), die Aktie wurde am 23.10.2026 letztmals an der NYSE gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1609151/000160915126000120/weav-20261026.htm",
+        "quote": "Trading of the Company Common Stock on NYSE was suspended prior to the opening of trading on the Closing Date.",
+        "page": "Form 8-K filed 2026-10-26, Item 3.01",
+        "crossCheck": "NYSE Form 25 notice of 2026-10-26, https://www.sec.gov/Archives/edgar/data/876661/000087666126000860/ruleprovisionnotice.htm : \"this security was suspended from trading on October 26, 2026\".",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 595,333,312 USD = 7.40 USD x 80,450,446 shares; small-cap health care profitable rank 11, small-cap overview rank 147"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
     }
   }
 }
