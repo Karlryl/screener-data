@@ -83,13 +83,13 @@ function _applyAdsHandTable(snap, ticker, price) {
  * @param {object} snap Unconverted snapshot (meta stamped).
  * @param {string} origCurrency Reporting currency the converter uses.
  * @param {number} factor origCurrency -> USD factor.
- * @returns {{factor: number, status: string, series?: string}} Statement factor and optional annual-only scope.
+ * @returns {{factor: number, status: string, series?: string, hold?: boolean}} Statement factor, optional annual-only scope, hold on a stale row.
  */
 function _statementFactor(snap, origCurrency, factor) {
   const r = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE);
   const tk = snap && snap.meta && snap.meta.ticker;
   if (r.status === 'corrected') _log('INFO', `  ${tk}: ${r.series === 'annual' ? 'annual' : 'statement'} series kept in USD (statement-currency hand table), ${origCurrency} factor on financialData${r.series === 'annual' ? ' and quarterly series' : ''}`);
-  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, ${r.hold ? 'row not verifiable' : 'reporting factor used'}: ${r.reason}`);
+  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, ${origCurrency === 'USD' ? 'USD reporting currency, factor 1 kept, nothing withheld' : 'statement series withheld'}: ${r.reason}`);
   return r;
 }
 
@@ -1410,8 +1410,8 @@ function _convertSnapshotToUSD(snap) {
   // MODEC is annual-only: its quarterly series still use the JPY reporting factor. Read the
   // UNSCALED revenueTTM before the metrics loop; omitted series preserves the original all-series scope.
   const stmt = _statementFactor(snap, origCurrency, factor);
-  // Sweep 24.10.: an unverifiable row (financialCurrency or the revenue check missing) withholds its
-  // statement series instead of dividing proven USD statements by the local rate (G2, T2: null + marker).
+  // Sweep 24.10., P301: a row that cannot be confirmed (financialCurrency or the revenue check missing,
+  // another currency, mismatch gone) withholds its statement series instead of scaling them (G2, T2: null + marker).
   if (stmt.hold) {
     const held = holdStatementSeries(snap, stmt.series);
     console.warn(`::warning::${snap.meta.ticker}: statement-currency hand table row not verifiable (${stmt.reason}), ${held} statement values withheld - re-verify configs/statement-currency-hand-table.json`);
