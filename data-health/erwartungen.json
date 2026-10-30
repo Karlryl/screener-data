@@ -64,7 +64,7 @@
     "min": 71,
     "max": 73,
     "gueltigAb": "2026-10-31",
-    "gueltigBis": "2026-11-03",
+    "gueltigBis": "2026-11-02",
     "grund": "Jio Financial zeigt das Jahreswachstum aus dem Konzernabschluss von etwa +72,0 % statt +136,4 % (Datenstand 30.10.2026)."
   },
   {
@@ -78,7 +78,7 @@
     "min": 60,
     "max": 105,
     "gueltigAb": "2026-10-31",
-    "gueltigBis": "2026-11-03",
+    "gueltigBis": "2026-11-02",
     "grund": "Jio Financial steht auf dem Board Finanzen etwa auf Rang 81 statt 8 (Datenstand 30.10.2026)."
   },
   {
@@ -1920,5 +1920,72 @@
     "op": "contains",
     "wert": "30.06.2026",
     "grund": "Am 30.10.2026 bleibt der ältere Q1-Vergleich sichtbar; der Hinweis benennt ihn und das neuere gespeicherte Q2 ohne gültigen Vorjahresvergleich."
+  },
+  {
+    "id": "pr75-JIOFINBO-r4-wachstum",
+    "pr": 75,
+    "ticker": "JIOFIN.BO",
+    "board": "full/financials",
+    "track": "profitable",
+    "feld": "revGrowthYoYPct",
+    "op": "between",
+    "min": 227.2817816,
+    "max": 227.2817818,
+    "gueltigAb": "2026-11-03",
+    "gueltigBis": "2026-11-06",
+    "grund": "Jio Financial zeigt die belegten Konzernquartale bis 30.06.2026 und 30.06.2025 mit 2.004,47 und 612,46 Crore INR, entsprechend +227,2817817 %. Der Nachlauf auf den Daten vom 30.10.2026 ergibt Rang 21. Die bisherige Rangspanne 60 bis 105 bleibt historisch unverändert; schon main lag mit Rang 45 außerhalb. Gültig ab dem vorgesehenen Einsatz dieser Änderung am 03.11.2026."
+  },
+  {
+    "id": "pr75-JIOFINBO-r4-rang",
+    "pr": 75,
+    "ticker": "JIOFIN.BO",
+    "board": "full/financials",
+    "track": "profitable",
+    "feld": "rank",
+    "op": "between",
+    "gueltigAb": "2026-11-03",
+    "gueltigBis": "2026-11-06",
+    "grund": "Jio Financial zeigt die belegten Konzernquartale bis 30.06.2026 und 30.06.2025 mit 2.004,47 und 612,46 Crore INR, entsprechend +227,2817817 %. Der Nachlauf auf den Daten vom 30.10.2026 ergibt Rang 21. Die bisherige Rangspanne 60 bis 105 bleibt historisch unverändert; schon main lag mit Rang 45 außerhalb. Gültig ab dem vorgesehenen Einsatz dieser Änderung am 03.11.2026.",
+    "min": 17,
+    "max": 25
+  },
+  {
+    "id": "pr75-JIOFINBO-r4-basis",
+    "pr": 75,
+    "ticker": "JIOFIN.BO",
+    "board": "full/financials",
+    "track": "profitable",
+    "feld": "revGrowthBasis",
+    "op": "eq",
+    "wert": "quarter",
+    "gueltigAb": "2026-11-03",
+    "gueltigBis": "2026-11-06",
+    "grund": "Jio Financial zeigt die belegten Konzernquartale bis 30.06.2026 und 30.06.2025 mit 2.004,47 und 612,46 Crore INR, entsprechend +227,2817817 %. Der Nachlauf auf den Daten vom 30.10.2026 ergibt Rang 21. Die bisherige Rangspanne 60 bis 105 bleibt historisch unverändert; schon main lag mit Rang 45 außerhalb. Gültig ab dem vorgesehenen Einsatz dieser Änderung am 03.11.2026."
+  },
+  {
+    "id": "pr75-JIOFINBO-r4-periode",
+    "pr": 75,
+    "ticker": "JIOFIN.BO",
+    "board": "full/financials",
+    "track": "profitable",
+    "feld": "revGrowthPeriodEnd",
+    "op": "eq",
+    "wert": "2026-06-30",
+    "gueltigAb": "2026-11-03",
+    "gueltigBis": "2026-11-06",
+    "grund": "Jio Financial zeigt die belegten Konzernquartale bis 30.06.2026 und 30.06.2025 mit 2.004,47 und 612,46 Crore INR, entsprechend +227,2817817 %. Der Nachlauf auf den Daten vom 30.10.2026 ergibt Rang 21. Die bisherige Rangspanne 60 bis 105 bleibt historisch unverändert; schon main lag mit Rang 45 außerhalb. Gültig ab dem vorgesehenen Einsatz dieser Änderung am 03.11.2026."
+  },
+  {
+    "id": "pr75-JIOFINBO-r4-vorperiode",
+    "pr": 75,
+    "ticker": "JIOFIN.BO",
+    "board": "full/financials",
+    "track": "profitable",
+    "feld": "revGrowthPriorPeriodEnd",
+    "op": "eq",
+    "wert": "2025-06-30",
+    "gueltigAb": "2026-11-03",
+    "gueltigBis": "2026-11-06",
+    "grund": "Jio Financial zeigt die belegten Konzernquartale bis 30.06.2026 und 30.06.2025 mit 2.004,47 und 612,46 Crore INR, entsprechend +227,2817817 %. Der Nachlauf auf den Daten vom 30.10.2026 ergibt Rang 21. Die bisherige Rangspanne 60 bis 105 bleibt historisch unverändert; schon main lag mit Rang 45 außerhalb. Gültig ab dem vorgesehenen Einsatz dieser Änderung am 03.11.2026."
   }
 ]

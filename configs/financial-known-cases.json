@@ -291,6 +291,14 @@
       "ticker": "600292.SS",
       "field": "revenueQ",
       "coversThrough": "2026-06-30"
+    },
+    {
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "revenueQ",
+      "coversThrough": "2026-06-30"
     }
   ],
   "cases": [
@@ -15486,6 +15494,88 @@
           "page": 6,
           "quote": "Poundland is now treated as a discontinued operation",
           "published": "2025-12-17"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2026-06-30-revenueQ-20261030-r4",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "index": 1,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 17947100000,
+      "replacementValue": 20044700000,
+      "revision": "2026-10-30-jio-quarter-r4",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 meldet Jio Financial im Konzernabschluss vom 16.07.2026, PDF-Seite 5, 2.004,47 Crore INR in der Zeile \"Total revenue from operations\". Der Anbieter lässt den Nettogewinn aus der Bewertung zum beizulegenden Zeitwert aus. Die belegten Umsätze von 2.004,47 und 612,46 Crore INR ergeben für das Quartal bis 30.06.2026 ein Wachstum von +227,2818 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_16072026175802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2026",
+          "published": "2026-07-16",
+          "page": "PDF 5 of 14",
+          "quote": "Total revenue from operations 2,004.47 1,018.51 612.46 3,513.26",
+          "sourceUnit": "INR crore",
+          "value": 20044700000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2025-06-30-revenueQ-20261030-r4",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "index": 4,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 4164400000,
+      "replacementValue": 6124600000,
+      "revision": "2026-10-30-jio-quarter-r4",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 meldet Jio Financial im Konzernabschluss vom 16.07.2026, PDF-Seite 5, 612,46 Crore INR in der Zeile \"Total revenue from operations\". Der Anbieter lässt den Nettogewinn aus der Bewertung zum beizulegenden Zeitwert aus. Die belegten Umsätze von 2.004,47 und 612,46 Crore INR ergeben für das Quartal bis 30.06.2026 ein Wachstum von +227,2818 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_16072026175802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2026",
+          "published": "2026-07-16",
+          "page": "PDF 5 of 14",
+          "quote": "Total revenue from operations 2,004.47 1,018.51 612.46 3,513.26",
+          "sourceUnit": "INR crore",
+          "value": 6124600000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_17072025171802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2025",
+          "published": "2025-07-17",
+          "page": "PDF 6",
+          "quote": "Total revenue from operations 612.46",
+          "sourceUnit": "INR crore",
+          "value": 6124600000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "INR",
+          "unit": "currency"
         }
       ]
     }

@@ -38,8 +38,8 @@ const ROWS = { 'IOS.DE': 7, 'JIOFIN.BO': 4, 'ALK.TO': 1, '3471.T': 1, '0097.KL':
 /** Table copy without this lane's rows: the state of the base commit before the change. */
 function before() {
   const copy = structuredClone(table);
-  copy.cases = copy.cases.filter(c => c.revision !== REV);
-  copy.coverage = copy.coverage.filter(v => v.ticker !== '600292.SS');
+  copy.cases = copy.cases.filter(c => c.revision !== REV && c.revision !== '2026-10-30-jio-quarter-r4');
+  copy.coverage = copy.coverage.filter(v => !['600292.SS', 'JIOFIN.BO'].includes(v.ticker));
   return validateTable(copy);
 }
 const AFTER = { 'IOS.DE': ['year', '2025-12-31', '2024-12-31', 5.5], 'JIOFIN.BO': ['year', '2026-03-31', '2025-03-31', 72], '601456.SS': ['year', '2025-12-31', '2024-12-31', 186], '600292.SS': ['quarter', '2026-06-30', '2025-06-30', 24.7] };
@@ -65,7 +65,7 @@ test('35 sourced rows validate; every reason names its period, no substitute 0, 
   }
   // Only SPIC has a quarterly replacement, so only its series carries coverage; newer vendor quarters of the others stay visible.
   assert.deepEqual(own.filter(c => c.periodType === '3M' && c.replacementValue !== null).map(c => c.ticker).filter((t, i, a) => a.indexOf(t) === i), ['600292.SS']);
-  assert.deepEqual(table.coverage.filter(v => Object.keys(ROWS).includes(v.ticker)), [{ ticker: '600292.SS', field: 'revenueQ', coversThrough: '2026-06-30' }]);
+  assert.deepEqual(table.coverage.filter(v => own.some(c => c.ticker === v.ticker && c.periodType === '3M' && c.replacementValue !== null)), [{ ticker: '600292.SS', field: 'revenueQ', coversThrough: '2026-06-30' }]);
 });
 
 test('IOS.DE: the mixed-basis quarters and 2023 are gone, growth falls back to the year pair (+5.5 %), siblings follow', () => {
@@ -88,14 +88,15 @@ test('JIOFIN: filed annual growth is +72.0 % instead of +136.4 %, while the newe
     assert.deepEqual(native(out, 'annual', 'annualGP'), [null, null, null, null], t);
     assert.deepEqual(annualLeg(out), AFTER['JIOFIN.BO'], t);
     assert.deepEqual(leg(previous), ['quarter', '2026-06-30', '2025-06-30', 331], t);
-    assert.deepEqual(leg(out), leg(previous), t + ': the newer quarter remains the leading figure');
+    assert.deepEqual(leg(out), ['quarter', '2026-06-30', '2025-06-30', 227.3], t + ': the filed newer quarter remains the leading figure');
     const previousBonus = g31Shadow(previous).v1.bonusComponents;
     const correctedBonus = g31Shadow(out).v1.bonusComponents;
     assert.equal(correctedBonus.length, 2, t);
     assert.ok(Math.abs(correctedBonus[0] - (35132600000 / 20429100000 - 1)) < 1e-12, t + ': the filed annual input');
-    assert.equal(correctedBonus[1], previousBonus[1], t + ': the quarterly bonus input stays unchanged');
+    assert.ok(Math.abs(correctedBonus[1] - (20044700000 / 6124600000 - 1)) < 1e-12, t + ': the filed quarterly bonus input');
+    assert.ok(Math.abs(previousBonus[1] - (17947100000 / 4164400000 - 1)) < 1e-12, t + ': the vendor quarterly input is reproduced');
     assert.ok(previousBonus[0] > 1.36 && previousBonus[0] < 1.37, t + ': the old annual input is reproduced');
-    assert.deepEqual(native(out, 'timeseries', 'revenueQ'), native(snap(t), 'timeseries', 'revenueQ'), t + ': the quarters stay');
+    assert.deepEqual(native(out, 'timeseries', 'revenueQ'), [null, 20044700000, null, null, 6124600000], t + ': the two verified quarters remain, other quarters carry the mandatory coverage hold');
   }
 });
 
