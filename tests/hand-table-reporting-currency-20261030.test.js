@@ -13,9 +13,12 @@ const { mapYahooToCanonical, _convertSnapshotToUSD } = require('../pull-yahoo.js
 const { rowFor } = require('../scripts/write-bewertung-export.js');
 const { loadReportingCurrencyTable, reportingCurrencyFill, reportingRowPending, PROVENANCE, TABLE_PATH } = require('../lib/reporting-currency-hand-table.js');
 const { pinFx, PINNED_RATES } = require('./fixtures/fx/pin-fx.js');
+const { fixture, snapshot, NOW } = require('./stale-quarter-reload.test.js');
 pinFx();
 
 const root = path.resolve(__dirname, '..');
+const source = fs.readFileSync(path.join(root, 'pull-yahoo.js'), 'utf8');
+const PROBE_LINE = '      if (reportingRowPending(s, REPORTING_CCY_TABLE)) return true;';
 const live = ['configs/reporting-currency-hand-table.json', 'lib/reporting-currency-hand-table.js', 'pull-yahoo.js'];
 const liveHashes = () => live.map(f => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, f))).digest('hex'));
 const beforeHashes = liveHashes();
@@ -99,10 +102,43 @@ test('pending: the stored USD packet forces one full pull, the converted one doe
   const stored = { meta: { ticker: 'PSQL', reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', ccyAmbiguous: true, fxRateApplied: 1, fxConverted: true } };
   assert.equal(reportingRowPending(stored, table), true);
   assert.equal(reportingRowPending(presence('PSQL'), table), false);
-  // ponytail: the probe is private to pullAll; the line is pinned here, the run itself is checked by data-health/erwartungen.json.
-  const src = fs.readFileSync(path.join(root, 'pull-yahoo.js'), 'utf8');
-  const probe = src.slice(src.indexOf('function _existingSnapshotMissingCurrencyNormalization'), src.indexOf('function _rawQuarterEnd'));
-  assert.ok(/if \(reportingRowPending\(s, REPORTING_CCY_TABLE\)\) return true;/.test(probe));
+});
+
+// Real pullAll, virtual files and provider (fixture of tests/stale-quarter-reload.test.js); the break-once target is copied source.
+const pullPsql = (snapshots, pullSource, now = NOW) => {
+  const summaryResponse = { price: { currency: 'USD', marketCap: MC, regularMarketPrice: 5.24, exchangeName: 'NasdaqGM' }, financialData: {},
+    summaryDetail: { marketCap: MC, fiftyTwoWeekHigh: 24.69 }, quoteType: { quoteType: 'EQUITY' }, summaryProfile: { sector: 'Technology', industry: 'Computer Hardware', country: 'France' } };
+  // The fixture's default switches the stale-quarter reload on, which would pull in full for its own reason.
+  return fixture({ snapshots, summaryResponse, pullSource, now, quarterEmpty: true, quotePrice: 5.24, quoteMarketCap: MC, env: { STALE_QUARTER_RELOAD: '' } });
+};
+const storedUsdPacket = () => {
+  const s = snapshot('PSQL');
+  Object.assign(s.meta, { reportingCurrencyOriginal: 'USD', ccyAmbiguous: true, fxRateApplied: 1, fxConverted: true, tradingFxRateApplied: 1, tradingCurrencyAssumed: false });
+  return s;
+};
+
+test('pullAll: the stored USD packet is pulled in full once, stored in EUR, and the next day only priced', async () => {
+  const day1 = pullPsql([storedUsdPacket()], source);
+  const manifest = await day1.run();
+  assert.equal(manifest.results[0].status, 'ok', JSON.stringify(manifest.results[0]));
+  const s = day1.stored('PSQL');
+  assert.equal(s._pullMode, undefined, 'a full pull');
+  assert.equal(s.meta.reportingCurrencyOriginal, 'EUR');
+  assert.equal(s.meta.ccyAmbiguous, false);
+  assert.ok(s.meta.fxRateApplied > 1, 'a rate of 1 would hide the conversion');
+  assert.equal(s.marketCap.value, MC);
+  const day2 = pullPsql([s], source, NOW + 864e5);
+  await day2.run();
+  assert.equal(day2.stored('PSQL')._pullMode, 'price-only', 'no second forced pull');
+});
+
+test('break-once on copied source: without the probe line the packet stays in USD and is only priced', async () => {
+  assert.ok(source.includes(PROBE_LINE), 'probe line not found');
+  const f = pullPsql([storedUsdPacket()], source.replace(PROBE_LINE, ''));
+  await f.run();
+  const s = f.stored('PSQL');
+  assert.equal(s._pullMode, 'price-only');
+  assert.equal(s.meta.reportingCurrencyOriginal, 'USD');
 });
 
 test('table: every row is proven, a USD row or a row without a quote is refused', () => {
