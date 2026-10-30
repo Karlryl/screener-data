@@ -34,9 +34,9 @@ function run(args, env = {}) {
 // One snapshot file per export row from the compact fixture (vorlage + sonder), except ohneSnapshot.
 function writeSnapshots(dir) {
   const spec = JSON.parse(fs.readFileSync(path.join(FIX, 'snapshots.json'), 'utf8'));
-  for (const board of ['energy', 'utilities']) {
-    const b = JSON.parse(fs.readFileSync(path.join(FIX, 'export', 'full', board + '.json'), 'utf8'));
-    for (const r of [...b.profitable, ...b.unprofitable]) {
+  for (const file of ['full/energy.json', 'full/utilities.json', 'survival.json']) {
+    const b = JSON.parse(fs.readFileSync(path.join(FIX, 'export', file), 'utf8'));
+    for (const r of [...(b.profitable || []), ...(b.unprofitable || []), ...(b.rows || [])]) {
       if (spec.ohneSnapshot.includes(r.ticker)) continue;
       const s = spec.sonder[r.ticker] || { ...structuredClone(spec.vorlage), meta: { ...spec.vorlage.meta, ticker: r.ticker, name: r.name } };
       fs.writeFileSync(path.join(dir, r.ticker + '.json'), JSON.stringify(s));
@@ -44,12 +44,13 @@ function writeSnapshots(dir) {
   }
 }
 
-// opt.vintages: other board-history folder; opt.snapshot(s): change each snapshot before it is written.
+// opt.vintages: other board-history folder; opt.snapshot(s): change each snapshot before it is written;
+// opt.snapshotsLeer: an empty snapshot folder.
 function fixtureRun(extra = [], env = {}, opt = {}) {
   const dir = tmp();
   const snaps = path.join(dir, 'snapshots');
   fs.mkdirSync(snaps);
-  writeSnapshots(snaps);
+  if (!opt.snapshotsLeer) writeSnapshots(snaps);
   if (opt.snapshot) for (const f of fs.readdirSync(snaps)) {
     const s = JSON.parse(fs.readFileSync(path.join(snaps, f), 'utf8'));
     opt.snapshot(s);
@@ -81,8 +82,10 @@ test('every check lists exactly its positive rows and none of the negative ones'
     assert.deepEqual(tickers(report, 'kurs-alt'), ['PW-STALE']);
     assert.deepEqual(tickers(report, 'doppelte-firma'), ['PW-BARU', 'PW-DUPA']);
     assert.deepEqual(tickers(report, 'score-grenze'), ['PW-SCORE']);
+    // Negative rows: PW-SURV-OK (no revenue cell at all), PW-SURV-GAP (vendor gaps, no marker), PW-SURV-MISSING (no snapshot).
+    assert.deepEqual(tickers(report, 'umsatz-gehalten-auf-survival'), ['PW-SURV-CORR', 'PW-SURV-HELD']);
     assert.deepEqual(report.zusammenfassung, { 'wachstum-extrem': 3, 'jahrespaar-abstand': 1, 'quartalspaar-abstand': 1,
-      'umsatz-null-mit-boersenwert': 2, 'quartal-gleich-vorjahr': 1, 'boersenwert-sprung': 1, 'kurs-alt': 1, 'doppelte-firma': 2, 'score-grenze': 1 });
+      'umsatz-null-mit-boersenwert': 2, 'quartal-gleich-vorjahr': 1, 'boersenwert-sprung': 1, 'kurs-alt': 1, 'doppelte-firma': 2, 'score-grenze': 1, 'umsatz-gehalten-auf-survival': 2 });
     assert.deepEqual(report.gekuerzt, {});
 
     const by = (code, t) => report.faelle.find((f) => f.code === code && f.ticker === t);
@@ -121,6 +124,12 @@ test('every check lists exactly its positive rows and none of the negative ones'
     assert.equal(score.grund, 'Der Score (120) ist keine Zahl zwischen 0 und 100. Der Rang (leer) ist keine positive ganze Zahl, '
       + 'obwohl kein Grund für einen fehlenden Rang angegeben ist.');
     assert.equal(score.track, 'unprofitable');
+    const held = by('umsatz-gehalten-auf-survival', 'PW-SURV-HELD');
+    assert.equal(held.board, 'survival');
+    assert.deepEqual(held.werte.zellen, [{ feld: 'annualRev', periodEnd: '2025-12-31' }, { feld: 'revenueQ', periodEnd: '2026-03-31' }]);
+    assert.equal(held.grund, 'Die Firma steht auf der Liste ohne Umsatz, ihr Umsatz ist aber nur zurückgehalten (Jahresumsatz bis 31.12.2025, '
+      + 'Quartalsumsatz bis 31.03.2026); ein zurückgehaltener Wert belegt nicht, dass sie keinen Umsatz hat.');
+    assert.ok(report.hinweise.includes('umsatz-gehalten-auf-survival: 1 Zeile der Survival-Liste ohne lesbaren Snapshot; für sie lief die Prüfung nicht.'));
     // PW-BAZU has no snapshot: counted and named, not silently skipped.
     assert.equal(report.quellen.snapshotsFehlend, 1);
     assert.ok(report.hinweise.some((h) => /1 Boardzeilen ohne lesbaren Snapshot/.test(h)));
@@ -143,9 +152,9 @@ test('warnings per finding class, German step summary, never an error annotation
   try {
     assert.equal(status, 0);
     const warnings = stdout.split('\n').filter((l) => l.startsWith('::warning::Plausibilität'));
-    assert.equal(warnings.length, 9, 'one warning per class with at least one case (all nine are hit by the fixture)');
+    assert.equal(warnings.length, 10, 'one warning per class with at least one case (all ten are hit by the fixture)');
     assert.ok(!/::error::/.test(stdout + stderr), 'the watcher never raises an error annotation');
-    // The shared snapshot reader's own ::warning:: lines are demoted: only the nine class warnings annotate this step.
+    // The shared snapshot reader's own ::warning:: lines are demoted: only the ten class warnings annotate this step.
     const fremde = (stdout + '\n' + stderr).split(/\r?\n/).filter((l) => l.startsWith('::warning::') && !l.startsWith('::warning::Plausibilität'));
     assert.deepEqual(fremde, []);
     const md = fs.readFileSync(summary, 'utf8');
@@ -176,7 +185,7 @@ test('cap: at most 200 cases per class, the rest counted in gekuerzt and logged;
     assert.deepEqual(r.report.gekuerzt, { 'wachstum-extrem': 5 });
     assert.equal(r.report.faelle.at(-1).ticker, 'PW-C199', 'the first 200 in board/rank order are kept');
     assert.match(r.stdout, /\[plausi\] wachstum-extrem: 205 Fälle, 5 über der Grenze von 200 nicht gelistet/);
-    for (const code of ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt', 'boersenwert-sprung']) {
+    for (const code of ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt', 'boersenwert-sprung', 'umsatz-gehalten-auf-survival']) {
       assert.equal(r.report.zusammenfassung[code], null, code + ' did not run and must say so (T2: no replacement 0)');
     }
     assert.ok(r.report.hinweise.some((h) => /kein Snapshot-Ordner/.test(h)));
@@ -205,7 +214,18 @@ test('no snapshot readable at all: the three snapshot checks say null, not 0, an
     for (const code of ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt']) assert.equal(r.report.zusammenfassung[code], null, code);
     assert.equal(r.report.zusammenfassung['wachstum-extrem'], 0, 'export-only checks still ran');
     assert.ok(r.report.hinweise.some((h) => /^Erster Lesefehler eines Snapshots: /.test(h)));
+    assert.equal(r.report.zusammenfassung['umsatz-gehalten-auf-survival'], null, 'no survival.json: not run, never 0 (T2)');
+    assert.ok(r.report.hinweise.includes('umsatz-gehalten-auf-survival nicht geprüft: survival.json fehlt oder ist nicht lesbar.'));
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('survival list present but not one of its snapshots readable: the check is null, not 0', () => {
+  const r = fixtureRun([], {}, { snapshotsLeer: true });
+  try {
+    assert.equal(r.status, 0);
+    assert.equal(r.report.zusammenfassung['umsatz-gehalten-auf-survival'], null);
+    assert.ok(r.report.hinweise.includes('umsatz-gehalten-auf-survival: 5 Zeilen der Survival-Liste ohne lesbaren Snapshot; für sie lief die Prüfung nicht.'));
+  } finally { fs.rmSync(r.dir, { recursive: true, force: true }); }
 });
 
 test('vintage unreadable or without any market cap: boersenwert-sprung is null and the hint names the files', () => {

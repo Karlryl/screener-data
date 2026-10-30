@@ -1654,9 +1654,10 @@ Envelope `{schema:"findash-export/v1", generated_at, priceStoreUpdatedAt, cutoff
 - `cutoffDay` is the UTC calendar day of `priceStoreUpdatedAt`. Only bars dated strictly before it are used, so every `d1`
   is earlier than `cutoffDay`; `--check` enforces both.
 - `universeCount` is the number of tickers in `filter/universum.json`; `rows.length` plus the sum of `skipped` equals it.
-- `skipped` always carries all six reasons as integers (zero allowed): `not-in-store`, `fewer-than-two-bars` (the stored series
+- `skipped` always carries all seven reasons as integers (zero allowed): `not-in-store`, `fewer-than-two-bars` (the stored series
   itself has fewer than two bars), `fewer-than-two-finished-bars` (two or more stored bars, but fewer than two before
-  `cutoffDay`), `invalid-date`, `invalid-close`, `dates-not-increasing`.
+  `cutoffDay`), `invalid-date`, `invalid-close`, `dates-not-increasing`, `not-refreshed-at-stamp` (a row would have been possible,
+  but the run of the stamp did not fetch the ticker, see below).
 
 | Key | Type | Meaning and source |
 |---|---|---|
@@ -1686,9 +1687,28 @@ that day: treat it as "no data", not as an old file.
 header of `pull-historical-prices.js`). Every pull rebuilds the whole fetched window of a ticker authoritatively, so the last two
 bars of a series come from one fetch and share one basis: `c1 / c0` is a clean total return.
 
+**A ticker the run of the stamp did not fetch (P303, 30.10.2026).** `cutoffDay` is one day for the whole store, but a failed
+ticker keeps the series of an earlier fetch, whose newest bar may be an intraday value that no later pull corrected. Which tickers
+a run fetched is already on record: the merge step writes `prices/<date>.json` from the runner slices (a failed ticker has no
+entry there), and `git add -A` commits it together with `_meta.json`. The export reads the file named after `cutoffDay`, and a
+ticker that would have a row but is not listed there has none and counts as `not-refreshed-at-stamp`, whatever its dates say. An
+older pair is not promoted, as everywhere in this file. Neither `_meta.json` nor the merge step changed for this.
+The stamp binds to the file by date. When that file is missing, unreadable or empty, or an entry's `pulledOn` is another day, no
+file is built: the failed tickers could not be told from the fresh ones, so the build stops and the workflow step warns. This also
+covers a run across the UTC day boundary (the file carries the frozen run day, the stamp the wall clock of the merge) and a store
+re-stamped by a write outside the merge step on a later day. The price of that day is a missing file, which a consumer reads as "no
+data"; among the 13 merges of 13.10. to 30.10. it did not occur.
+A dead runner stops the merge before file and stamp are written, and the scoring job does not run without all runners. A second
+run on the same day replaces file and stamp in one commit, so what only the first run fetched counts as not fetched.
+Measured on the store of 30.10.2026 (same store, same export generation): the old code reproduces the published file byte for byte
+with 15,804 rows; the new code gives 15,798 rows, all of them and the envelope byte-identical to the old file, and 6 rows
+(2867.TW, 5371.TWO, AAM.SW, ATAD.L, CWAN, QUB.AX, last bars between 02.07. and 23.10.) move to `not-refreshed-at-stamp`. The other
+counts in `skipped` do not change.
+A consumer sees a day without a row and later a `d0` after its last booked `d1`: the span is a gap, by the chain rule above.
+
 **Decision 1, bars that are not consecutive trading days.** They are kept as stored. The row states both dates, and the
-consumer judges the gap (weekend, holiday, a ticker that missed a pull, a stale ticker, or a previous-day bar that Yahoo no
-longer delivers). Replacing the pair by an older "consecutive" one would hide exactly the staleness the dates show. `d1` is
+consumer judges the gap (weekend, holiday, a stale ticker that is still fetched, or a previous-day bar that Yahoo no longer
+delivers). Replacing the pair by an older "consecutive" one would hide exactly the staleness the dates show. `d1` is
 the freshness field.
 
 **Decision 2, a split inside the pair.** Nothing is added to the row: the stored series is split-adjusted as a whole, so `c1 / c0`
@@ -1718,8 +1738,8 @@ ended on the previous weekday (13.10.) for 98.92 % of its rows. Asian tickers lo
 purpose. Only one day pair could be measured because the repository history starts on 13.10.2026.
 
 **Which store.** The scoring job checks out the trigger commit, whose price store is the one of the previous pull (the merge job
-pushes today's store after the trigger). The workflow step therefore reads `prices/history` from the tip of `main` with
-`git fetch` and `git archive` into a temp folder and passes it with `--prices-dir`; the working tree stays untouched because the
+pushes today's store after the trigger). The workflow step therefore reads `prices/history` and the daily files from the tip of
+`main` with `git fetch` and `git archive` into a temp folder and passes it with `--prices-dir`; the working tree stays untouched because the
 board-history step rebases onto `main` later. When the fetch fails the step fails and the file is not written. A parallel
 dispatch run could read the store of another run; the store is consistent in itself and `priceStoreUpdatedAt` names it.
 
@@ -1731,12 +1751,13 @@ equal or reversed dates, a duplicate ticker, a count that does not add up (`rows
 `universeCount` against `universum.json`), a row ticker outside `universum.json`, or a file above **4,000,000 UTF-8 bytes**.
 `--selftest` runs a hand fixture (100 then 102 gives 1.02, a bar of the stamp day is ignored). The build refuses to run when the
 `filter/` folder does not exist (the filter step removes its folder when it fails; this file must not bring it back), when
-`_meta.json` is missing, when a shard file is missing (partial store), or when the shards together hold a different number of
-tickers than `_meta.json` stamps (truncated shard).
+`_meta.json` is missing, when the daily file of the stamp day is missing, unreadable, empty or of another date, when a shard file
+is missing (partial store), or when the shards together hold a different number of tickers than `_meta.json` stamps (truncated shard).
 
 **Fail-soft:** the workflow step "Build and check preisschritt" removes only `preisschritt.json` (and a leftover temp file) when
 fetch, build or check fails; `universum.json`, `bewertung.json`, the boards and the deploy never depend on it.
 
 Tests: `tests/preisschritt-export.test.js` with `tests/fixtures/preisschritt/store-mini.json` (hand fixture, stamp-day, vanished
 previous-day and equal-to-stamp-day cases, tamper variants with their specific error, size cap, idempotence, sort order,
-truncated shard, workflow step order and fail-soft shape).
+truncated shard, failed pull through the real merge step over consecutive runs, second run on the same day, dead runner, stamp
+without its daily file, workflow step order and fail-soft shape).
