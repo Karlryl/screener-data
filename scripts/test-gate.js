@@ -500,10 +500,12 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   let code = 0;
   let anyFailed = false;
   const alleUebersprungen = [];
+  const alleRoten = [];
 
   if (mode === 'blocking' || mode === 'all') {
     const { failed, skipped, internalFailures } = runFiles(blocking, cwd, log);
     alleUebersprungen.push(...skipped);
+    alleRoten.push(...failed, ...internalFailures);
     for (const t of failed) log(`::error::Test failed: ${t} — blocking run before Yahoo pull`);
     for (const t of internalFailures) log(`::error::Interner test-gate-Fehler: ${t} — node:test-Ladeprobe unbrauchbar`);
     if (failed.length || internalFailures.length) {
@@ -516,6 +518,7 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   if (mode === 'report' || mode === 'all') {
     const { failed, skipped, internalFailures } = runFiles(report, cwd, log);
     alleUebersprungen.push(...skipped);
+    alleRoten.push(...failed, ...internalFailures);
     if (failed.length || internalFailures.length) anyFailed = true;
     for (const t of internalFailures) log(`::error::Interner test-gate-Fehler: ${t} — node:test-Ladeprobe unbrauchbar`);
     if (internalFailures.length) code = 1;
@@ -546,6 +549,8 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
       ? `All tests passed — ABER ${alleUebersprungen.length} Datei(en) haben nichts geprueft (siehe UEBERSPRUNGEN).`
       : 'All tests passed.');
   }
+  // Last line of the log: the blocking verdicts stand above the output of the research track.
+  if (alleRoten.length) log(`FAILED FILES (${alleRoten.length}): ${alleRoten.join(', ')}`);
   return { code, lines, skipped: alleUebersprungen };
 }
 
@@ -1017,7 +1022,7 @@ function selftest() {
   check('Pipe-Probe rot (Exit 1 und der Name der roten Datei stehen am Ende)',
     p.status === 1 && fehlend(p.stdout, [...BLOCKING_ALWAYS, rotLaut]).length === 0
     && p.stdout.split('\n').some(l => l.startsWith(`::error::Test failed: ${rotLaut}`))
-    && letzteZeile(p.stdout).startsWith('::error::One or more tests failed')
+    && letzteZeile(p.stdout) === `FAILED FILES (1): ${rotLaut}`
     && !p.stdout.includes('All tests passed'),
     `status=${p.status} bytes=${p.stdout.length} fehlend=${fehlend(p.stdout, [...BLOCKING_ALWAYS, rotLaut]).length}`);
 
