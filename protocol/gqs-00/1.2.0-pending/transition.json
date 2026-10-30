@@ -329,7 +329,7 @@
       "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a"
     },
     "dependencySha256LF": {
-      "lib/g31-recency.js": "a1a1ab8689214b2d8b225c212fbdb0b0b75fc7dec990ad2a8ca462f11daf5d4e"
+      "lib/g31-recency.js": "80f8b96529e6a3664173730d495c0466413d43ba4a3eacf6cbfff10d03b0471e"
     },
     "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
     "goldenImpact": "verify() rebuilds the 25 golden traces unchanged (GQS00-023 and GQS00-024 keep their registered second traces): no golden case has a newest quarter without a valid year-ago pair next to an older valid pair.",
@@ -344,10 +344,15 @@
     "reviewFixR3": {
       "scope": "Skip nonpositive current revenue only in the older-pair fallback. Label a retained older pair when a newer stored quarter cannot form a comparison, preserving checked source hints and all numeric inputs. Extend source-backed holds to proven missing listing aliases. Resolve the in-progress main merge without changing sealed scoring files.",
       "evidence": "tests/g31-pr75-r3.test.js: real 30 October packets; Mediobanca zero guard, seven proved alias listings, Healthgen Q1/Q2 label and age bound, in-memory red/green probes. Codex review completed with the Jio expectation conflict unresolved. Claude review and merge completion remain pending."
+    },
+    "reviewFixR4": {
+      "scope": "A reviewed older pair may be selected only when both operands are numeric hand-table corrections directly supported by filed values for the exact source start/end, duration and native currency. Holds and mixed vendor/filing operands stay closed. Jio June 2026/2025 is verified at 2004.47/612.46 crore INR. No sealed scoring changes.",
+      "evidence": "tests/hand-table-jio-quarter-r4.test.js; 30 October replay and the separately reviewable absent-row fill experiment in .g31-fix-work/bau-bericht-r4.md.",
+      "review": "Builder evidence only; independent Claude review and merge remain pending."
     }
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "a1a1ab8689214b2d8b225c212fbdb0b0b75fc7dec990ad2a8ca462f11daf5d4e",
+    "lib/g31-recency.js": "80f8b96529e6a3664173730d495c0466413d43ba4a3eacf6cbfff10d03b0471e",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
 }
