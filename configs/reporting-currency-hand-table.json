@@ -1,0 +1,16 @@
+{
+  "_doku": [
+    "Reporting-currency hand table (2026-10-30). Read by lib/reporting-currency-hand-table.js inside mapYahooToCanonical (pull-yahoo.js).",
+    "Row = a ticker for which Yahoo omits financialCurrency while the filing proves another currency than the trading currency. Without the row the pull falls back to the trading currency (ccyAmbiguous) and stores the statements under the wrong label: amounts and every ratio against the market cap are off, growth and margins stay right.",
+    "The filled currency then runs through the ordinary conversion like any other foreign filer. A currency Yahoo does deliver always wins; if it differs from the row, the snapshot carries meta._reportingCcyHandTableConflict and a warning asks for a new check."
+  ],
+  "PSQL": {
+    "statementCurrency": "EUR",
+    "issuer": "Pasqal Holding SA",
+    "source": "Der Konzernabschluss steht in Euro; Yahoo nennt keine Berichtswährung, deshalb standen der Umsatz 2025 von 16.468 Tsd. EUR und alle weiteren Beträge als US-Dollar im Datenpaket.",
+    "url": "https://www.sec.gov/Archives/edgar/data/2119292/000121390026101436/ea0304681-02.htm",
+    "page": "Prospekt 424B3 vom 18.09.2026, Anhang 4.7, Seite F-53; Gewinn- und Verlustrechnung Seite F-45",
+    "quote": "consolidated financial statements are presented in euros",
+    "verifiedAt": "2026-10-30"
+  }
+}

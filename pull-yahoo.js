@@ -47,6 +47,8 @@ const SHARE_COUNT_TABLE = loadShareCountTable();
 const { applyMarketCapGuard, marketCapFloor, tradingRate, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
 const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
+const { loadReportingCurrencyTable, reportingCurrencyFill, reportingRowPending } = require('./lib/reporting-currency-hand-table.js');
+const REPORTING_CCY_TABLE = loadReportingCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
 const yahooQ4 = require('./lib/yahoo-q4-known-cases.js');
 /**
@@ -2343,7 +2345,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // making Tag 204 silently dead. ADRs again get the wrong reporting ccy and
   // their financials are mis-FX'd by the ratio of trading-ccy to reporting-ccy.
   // Fix: fall back to financialData.financialCurrency.
-  const _fc = _y(pr, 'financialCurrency') || _y(yahoo.financialData, 'financialCurrency');
+  // A proven hand-table row fills a currency Yahoo omits (PSQL, 30.10.2026: euro statements stood as dollars); a vendor value wins.
+  const _fcFill = reportingCurrencyFill(watchlistEntry.ticker, _y(pr, 'financialCurrency') || _y(yahoo.financialData, 'financialCurrency'), REPORTING_CCY_TABLE);
+  const _fc = _fcFill.currency;
+  if (_fcFill.conflict) console.warn(`::warning::${watchlistEntry.ticker}: reporting-currency hand table: ${_fcFill.conflict}`);
   const _tc = _y(pr, 'currency');
   const _ccyMissingCompletely = [
     _y(pr, 'financialCurrency'),
@@ -2524,6 +2529,8 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       // Tag 206f: Yahoo returned no financialCurrency — we used trading
       // currency as a best-effort proxy. Audit flag for OTC/pink-sheet edge.
       ccyAmbiguous: _ccyAmbiguous,
+      ...(_fcFill.source ? { reportingCurrencySource: _fcFill.source } : {}),
+      ...(_fcFill.conflict ? { _reportingCcyHandTableConflict: _fcFill.conflict } : {}),
       // Tag 219 (audit F5 HIGH): Yahoo ships shares fields in
       // defaultKeyStatistics; the MODULES header lists "sharesOutstanding"
       // but the mapper never extracted it. buyback-yield.js docstring
@@ -3940,6 +3947,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (!hasRev) return false;
       // Statement-currency hand table: a row converted before the row existed -> re-pull once.
       if (statementRowPending(s, STATEMENT_CCY_TABLE)) return true;
+      // Reporting-currency hand table: a row stored under another currency -> re-pull once.
+      if (reportingRowPending(s, REPORTING_CCY_TABLE)) return true;
       // (a) USD reporter: no FX to apply.
       if (m.reportingCurrency === 'USD') return false;
       // (b) explicit Tag 134+ converted marker.
