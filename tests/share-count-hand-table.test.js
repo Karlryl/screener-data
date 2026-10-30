@@ -62,7 +62,8 @@ const WRONG = {
   'LISN.SW': { px: 105231.18462, vendorShares: 1086190, mcap: 114301055775.69977, issuer: 229956 },
   // Snapshots of run 41027769596 (2026-10-30): Fastned at twice its share count, ISA Energia with all classes at the ON price.
   'FAST.AS': { px: 37.01837299, vendorShares: 38933085, mcap: 1441239431.6594176, issuer: 19752877 },
-  'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 559990445 },
+  'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 564711511 },
+  '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561185078 },
 };
 const TABLE = loadShareCountTable();
 const unveraendert = (snap, ticker, table = TABLE) => {

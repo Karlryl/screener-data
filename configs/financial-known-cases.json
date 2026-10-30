@@ -50,7 +50,8 @@
     { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "2855.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "2855.TW", "field": "opIncQ", "coversThrough": "2026-06-30" },
-    { "ticker": "6005.TW", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "6005.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "600292.SS", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -12403,8 +12404,11 @@
       ]
     },
     {
-      "caseId": "601456.ss-2025-12-31-annualRev-20261030",
       "ticker": "601456.SS",
+      "listingAliases": [
+        "1456.HK"
+      ],
+      "caseId": "601456.ss-2025-12-31-annualRev-20261030",
       "field": "annualRev",
       "period": "2025-12-31",
       "periodType": "12M",
@@ -12448,8 +12452,11 @@
       ]
     },
     {
-      "caseId": "601456.ss-2024-12-31-annualRev-20261030",
       "ticker": "601456.SS",
+      "listingAliases": [
+        "1456.HK"
+      ],
+      "caseId": "601456.ss-2024-12-31-annualRev-20261030",
       "field": "annualRev",
       "period": "2024-12-31",
       "periodType": "12M",
@@ -12479,8 +12486,11 @@
       ]
     },
     {
-      "caseId": "601456.ss-2023-12-31-annualRev-20261030",
       "ticker": "601456.SS",
+      "listingAliases": [
+        "1456.HK"
+      ],
+      "caseId": "601456.ss-2023-12-31-annualRev-20261030",
       "field": "annualRev",
       "period": "2023-12-31",
       "periodType": "12M",
@@ -12510,18 +12520,18 @@
       ]
     },
     {
-      "caseId": "600292.ss-2025-06-30-revenueQ-20261030",
+      "caseId": "600292.ss-2026-06-30-revenueQ-20261030",
       "ticker": "600292.SS",
       "field": "revenueQ",
-      "period": "2025-06-30",
+      "period": "2026-06-30",
       "periodType": "3M",
       "currency": "CNY",
       "unit": "currency",
-      "expectedBadValue": 947120333.1,
-      "replacementValue": null,
+      "expectedBadValue": 3580334918.72,
+      "replacementValue": 3580334918.72,
       "revision": "2026-10-30-sdz1",
       "verifiedAt": "2026-10-30",
-      "reason": "Quartalsumsatz fehlt: Für das Quartal bis 30.06.2025 (Ende 30.06.2025) liefert der Anbieter den ursprünglich gemeldeten Wert von 947,1 Mio. CNY ohne die 2025 eingebrachten Wasserkraftfirmen; die neuen Quartale enthalten sie. Rückwirkend angepasst sind es 2.871,9 Mio. CNY (Halbjahr 5.910,1 minus erstes Quartal 3.038,2), das Quartal bis 30.06.2026 läge damit bei rund +24,7 % statt der bisher gezeigten +278 %. Geprüft am 30.10.2026.",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 30.06.2026 stimmt mit dem Abschluss der Firma überein (erstes Halbjahr 2026 minus erstes Quartal 2026). Geprüft am 30.10.2026.",
       "sources": [
         {
           "verifiedAt": "2026-10-30",
@@ -12530,25 +12540,638 @@
           "published": "2026-08-31",
           "page": "p.5 (also p.54)",
           "quote": "营业收入 6,054,966,955.69 5,910,124,990.17 1,825,925,870.56 2.45",
-          "unit": "CNY"
+          "sourceUnit": "CNY",
+          "value": 6054966955.69,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "currency": "CNY",
+          "unit": "currency"
         },
         {
           "verifiedAt": "2026-10-30",
           "url": "https://dataclouds.cninfo.com.cn/shgonggao/hsomarket/2026/20260429/f1804812d6254ad38ac4793fd4dca3aa.PDF",
-          "form": "Q1 2026 report",
+          "form": "SPIC Hydropower, Q1 2026 report",
           "published": "2026-04-29",
           "page": "p.8 (table also p.1)",
           "quote": "一、营业总收入 2,474,632,036.97 3,038,175,647.19",
-          "unit": "CNY"
-        },
+          "sourceUnit": "CNY",
+          "value": 2474632036.97,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "CNY",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2026-03-31-revenueQ-20261030",
+      "ticker": "600292.SS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 2474632036.97,
+      "replacementValue": 2474632036.97,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 31.03.2026 stimmt mit dem Quartalsbericht der Firma überein. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://dataclouds.cninfo.com.cn/shgonggao/hsomarket/2026/20260429/f1804812d6254ad38ac4793fd4dca3aa.PDF",
+          "form": "SPIC Hydropower, Q1 2026 report",
+          "published": "2026-04-29",
+          "page": "p.8 (table also p.1)",
+          "quote": "一、营业总收入 2,474,632,036.97 3,038,175,647.19",
+          "sourceUnit": "CNY",
+          "value": 2474632036.97,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "CNY",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2025-12-31-revenueQ-20261030",
+      "ticker": "600292.SS",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 9216199626.03,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Der gemeldete Wert von 9.216,2 Mio. CNY für das Quartal mit Ende 31.12.2025 ist ein Rest aus dem angepassten Jahreswert minus den noch nicht angepassten neun Monaten, also kein Dreimonatswert. Geprüft am 30.10.2026.",
+      "sources": [
         {
           "verifiedAt": "2026-10-30",
           "url": "https://pdf.dfcfw.com/pdf/H2_AN202604161821274826_1.pdf",
-          "form": "annual report summary 2025, quarterly table",
+          "form": "SPIC Hydropower, annual report summary 2025, quarterly table",
           "published": "2026-04-17",
           "page": "p.5, table 3.2",
           "quote": "营业收入 878,805,537.46 947,120,333.10 1,109,867,672.94 9,216,199,626.03",
           "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2025-06-30-revenueQ-20261030",
+      "ticker": "600292.SS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 947120333.1,
+      "replacementValue": 2871949342.98,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Für das Quartal mit Ende 30.06.2025 liefert der Anbieter den ursprünglich gemeldeten Wert von 947,1 Mio. CNY ohne die 2025 eingebrachten Wasserkraftfirmen, die neuen Quartale enthalten sie. Rückwirkend angepasst sind es 2.871,9 Mio. CNY (Halbjahr 5.910,1 minus erstes Quartal 3.038,2). Das Quartal bis 30.06.2026 wächst damit um +24,7 % statt der bisher gezeigten +278 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-31/1225534361.PDF",
+          "form": "SPIC Hydropower (formerly Yuanda Environmental), half-year report 2026",
+          "published": "2026-08-31",
+          "page": "p.5, restated comparative column",
+          "quote": "营业收入 6,054,966,955.69 5,910,124,990.17 1,825,925,870.56 2.45",
+          "sourceUnit": "CNY",
+          "value": 5910124990.17,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "currency": "CNY",
+          "unit": "currency"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://dataclouds.cninfo.com.cn/shgonggao/hsomarket/2026/20260429/f1804812d6254ad38ac4793fd4dca3aa.PDF",
+          "form": "SPIC Hydropower, Q1 2026 report",
+          "published": "2026-04-29",
+          "page": "p.8, restated comparative column",
+          "quote": "一、营业总收入 2,474,632,036.97 3,038,175,647.19",
+          "sourceUnit": "CNY",
+          "value": 3038175647.19,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "CNY",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2025-03-31-revenueQ-20261030",
+      "ticker": "600292.SS",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 3038175647.19,
+      "replacementValue": 3038175647.19,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal mit Ende 31.03.2025 ist der rückwirkend angepasste Wert aus dem Quartalsbericht 2026. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://dataclouds.cninfo.com.cn/shgonggao/hsomarket/2026/20260429/f1804812d6254ad38ac4793fd4dca3aa.PDF",
+          "form": "SPIC Hydropower, Q1 2026 report",
+          "published": "2026-04-29",
+          "page": "p.8, restated comparative column",
+          "quote": "一、营业总收入 2,474,632,036.97 3,038,175,647.19",
+          "sourceUnit": "CNY",
+          "value": 3038175647.19,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "CNY",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2025-06-30-grossProfitQ-20261030",
+      "ticker": "600292.SS",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 113576333.42,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2025 stammt von vor der Einbringung der Wasserkraftfirmen und ist mit den neuen Quartalen nicht vergleichbar; ein rückwirkend angepasster Wert liegt nicht vor. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-31/1225534361.PDF",
+          "form": "SPIC Hydropower, half-year report 2026",
+          "published": "2026-08-31",
+          "page": "p.5",
+          "quote": "营业收入 6,054,966,955.69 5,910,124,990.17 1,825,925,870.56 2.45",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2025-06-30-opIncQ-20261030",
+      "ticker": "600292.SS",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": -11808697.51,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Der Wert für das Quartal mit Ende 30.06.2025 stammt von vor der Einbringung der Wasserkraftfirmen und ist mit den neuen Quartalen nicht vergleichbar; ein rückwirkend angepasster Wert liegt nicht vor. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-31/1225534361.PDF",
+          "form": "SPIC Hydropower, half-year report 2026",
+          "published": "2026-08-31",
+          "page": "p.5",
+          "quote": "营业收入 6,054,966,955.69 5,910,124,990.17 1,825,925,870.56 2.45",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2025-12-31-grossProfitQ-20261030",
+      "ticker": "600292.SS",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 3247727538.3,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 31.12.2025 ist wie der Umsatz dieses Quartals ein Rest aus angepasstem Jahreswert und nicht angepassten neun Monaten. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://pdf.dfcfw.com/pdf/H2_AN202604161821274826_1.pdf",
+          "form": "SPIC Hydropower, annual report summary 2025, quarterly table",
+          "published": "2026-04-17",
+          "page": "p.5, table 3.2",
+          "quote": "营业收入 878,805,537.46 947,120,333.10 1,109,867,672.94 9,216,199,626.03",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2025-12-31-opIncQ-20261030",
+      "ticker": "600292.SS",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 1628622777.14,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Der Wert für das Quartal mit Ende 31.12.2025 ist wie der Umsatz dieses Quartals ein Rest aus angepasstem Jahreswert und nicht angepassten neun Monaten. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://pdf.dfcfw.com/pdf/H2_AN202604161821274826_1.pdf",
+          "form": "SPIC Hydropower, annual report summary 2025, quarterly table",
+          "published": "2026-04-17",
+          "page": "p.5, table 3.2",
+          "quote": "营业收入 878,805,537.46 947,120,333.10 1,109,867,672.94 9,216,199,626.03",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "600292.ss-2023-12-31-annualRev-20261030",
+      "ticker": "600292.SS",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 4251613495.67,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz fehlt: Das Jahr 2023 (Ende 31.12.2023) steht mit 4.251,6 Mio. CNY noch ohne die eingebrachten Wasserkraftfirmen neben dem angepassten Jahr 2024; ein Vergleich über diese Grenze wäre kein Wachstum. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-31/1225534361.PDF",
+          "form": "SPIC Hydropower, half-year report 2026",
+          "published": "2026-08-31",
+          "page": "p.5",
+          "quote": "营业收入 6,054,966,955.69 5,910,124,990.17 1,825,925,870.56 2.45",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "ios.de-2025-06-30-grossProfitQ-20261030",
+      "ticker": "IOS.DE",
+      "listingAliases": [
+        "IOS.VI"
+      ],
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 210348000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2025 enthält noch das aufgegebene Geschäft AdTech und ist mit den neuen Quartalen nicht vergleichbar. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, quarterly development (Q1 to Q4 2025, Q4 2024)",
+          "quote": "EBIT 79.0 93.1 100.2 83.3 66.6 25.2 %",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, footnote to the table",
+          "quote": "prior -year figures have been restated",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ios.de-2025-09-30-grossProfitQ-20261030",
+      "ticker": "IOS.DE",
+      "listingAliases": [
+        "IOS.VI"
+      ],
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 151484000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.09.2025 passt nicht zu den neu ausgewiesenen Quartalen ohne AdTech und ist nicht vergleichbar. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, quarterly development (Q1 to Q4 2025, Q4 2024)",
+          "quote": "EBIT 79.0 93.1 100.2 83.3 66.6 25.2 %",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, footnote to the table",
+          "quote": "prior -year figures have been restated",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ios.de-2025-06-30-opIncQ-20261030",
+      "ticker": "IOS.DE",
+      "listingAliases": [
+        "IOS.VI"
+      ],
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 106720000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das Quartal mit Ende 30.06.2025 liefert der Anbieter 106,7 Mio. EUR einschließlich AdTech; vergleichbar sind laut Firma 93,1 Mio. EUR. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, quarterly development (Q1 to Q4 2025, Q4 2024)",
+          "quote": "EBIT 79.0 93.1 100.2 83.3 66.6 25.2 %",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, footnote to the table",
+          "quote": "prior -year figures have been restated",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ios.de-2025-09-30-opIncQ-20261030",
+      "ticker": "IOS.DE",
+      "listingAliases": [
+        "IOS.VI"
+      ],
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 68450000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Für das Quartal mit Ende 30.09.2025 liefert der Anbieter 68,5 Mio. EUR; laut Firma sind es 100,2 Mio. EUR. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, quarterly development (Q1 to Q4 2025, Q4 2024)",
+          "quote": "EBIT 79.0 93.1 100.2 83.3 66.6 25.2 %",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, footnote to the table",
+          "quote": "prior -year figures have been restated",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ios.de-2023-12-31-annualRev-20261030",
+      "ticker": "IOS.DE",
+      "listingAliases": [
+        "IOS.VI"
+      ],
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 1423734000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz fehlt: Das Jahr 2023 (Ende 31.12.2023) steht mit 1.423,7 Mio. EUR noch einschließlich AdTech neben dem ohne AdTech neu ausgewiesenen Jahr 2024; ein Vergleich über diese Grenze wäre kein Wachstum. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.ionos-group.com/fileadmin/Publications/Berichte/FY_2025/IONOS_Group_SE_Financial_Statements_2025.pdf",
+          "form": "IONOS Group SE, financial statements 2025",
+          "page": "PDF 20, text below the quarterly table",
+          "quote": "for the fiscal years 2024 and 2025",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2024-03-31-annualRev-20261030",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "annualRev",
+      "period": "2024-03-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 11706000000,
+      "replacementValue": 18538800000,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.03.2024 (Ende 31.03.2024) liefert der Anbieter 11.706,0 Mio. INR; die Firma meldet 18.538,8 Mio. INR. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/annual_reports/AR_24864_JIOFIN_2023_2024_0808202401621.pdf",
+          "form": "Jio Financial Services, annual report 2023-24, consolidated statement of profit and loss",
+          "page": "PDF 192",
+          "quote": "Total revenue from operations 1,853.88 41.63",
+          "sourceUnit": "INR crore",
+          "value": 18538800000,
+          "start": "2023-04-01",
+          "end": "2024-03-31",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2026-03-31-annualGP-20261030",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "annualGP",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 28455200000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbruttogewinn fehlt: Der Wert für das Geschäftsjahr bis 31.03.2026 (Ende 31.03.2026) ist beim Anbieter sein Umsatz minus Kosten, und dieser Umsatz stimmt mit keiner Zeile des Abschlusses überein. Eine Finanzholding weist keinen Bruttogewinn aus. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_17042026181843_JFSLoutcome.pdf",
+          "form": "Jio Financial Services, audited consolidated results",
+          "published": "2026-04-17",
+          "page": "PDF 8 of 22",
+          "quote": "Total revenue from operations 1,018.51 900.90 493.24 3,513.26 2,042.91",
+          "unit": "INR crore"
+        }
+      ]
+    },
+    {
+      "caseId": "601456.ss-2025-12-31-annualGP-20261030",
+      "ticker": "601456.SS",
+      "listingAliases": [
+        "1456.HK"
+      ],
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 5443719000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbruttogewinn fehlt: Der Wert für das Geschäftsjahr 2025 (Ende 31.12.2025) ist beim Anbieter sein Umsatz minus Kosten, und dieser Umsatz stimmt mit keiner Zeile des Abschlusses überein. Ein Wertpapierhaus weist keinen Bruttogewinn aus. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://dataclouds.cninfo.com.cn/shgonggao/hsomarket/2026/20260327/8561d7f013de49c682cf8657681f7eaa.PDF",
+          "form": "Guolian Minsheng Securities, annual report abstract 2025, section 3.1",
+          "published": "2026-03-27",
+          "page": "p.14",
+          "quote": "营业收入 7,673,396,283.93 2,683,134,475.63 185.99 2,955,461,374.61",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "3471.t-2024-07-31-annualRev-20261030",
+      "ticker": "3471.T",
+      "field": "annualRev",
+      "period": "2024-07-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 24258926000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz 2024 (Ende 31.07.2024) zurückgehalten: Der Anbieter liefert das Jahr bis 31.07.2025 nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre (+50,1 %) als Jahreswachstum erschien. Die Firma hat ihre Rechnungsperioden 2024 geändert und meldet für die Periode bis 31.07.2025 über neun Monate 26.382 Mio. JPY, ein Jahresvergleich ist darum nicht belegt. Die Sperre gilt dem Jahr mit Ende 31.07.2024; dieses Jahr und die älteren Jahre bleiben leer, auch wenn der Anbieter später nachliefert, bis die Sperre nach einer erneuten Prüfung aufgehoben wird. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.mflp-r.co.jp/file/ir_library_term-eea91ed153027c1f7d94486c414875222a0a6bd0.pdf",
+          "form": "Mitsui Fudosan Logistics Park, 決算短信 for the period to January 2026",
+          "published": "2026-03-17",
+          "page": "PDF 1",
+          "quote": "2025年７月期 26,382 － 10,501 － 9,318 － 35,250 －",
+          "unit": "JPY millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.mflp-r.co.jp/file/ir_library_term-eea91ed153027c1f7d94486c414875222a0a6bd0.pdf",
+          "form": "same report, note on the period change",
+          "published": "2026-03-17",
+          "page": "PDF 1, note 2",
+          "quote": "2025年７月期（2024年11月１日～2025年７月31日、９か月間）",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "paradeep.ns-2026-03-31-annualRev-20261030",
+      "ticker": "PARADEEP.NS",
+      "listingAliases": [
+        "PARADEEP.BO"
+      ],
+      "field": "annualRev",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 101911729000,
+      "replacementValue": 218263400000,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.03.2026 (Ende 31.03.2026) liefert der Anbieter 101.911,7 Mio. INR, seine eigenen drei vorhandenen Quartale ergeben schon 149.541 Mio. INR. Die Firma meldet 218.263,4 Mio. INR Umsatz aus dem Geschäft. Das Quartalswachstum auf dem Board ist davon nicht betroffen. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_156708_11052026192334_iXBRL_WEB.html",
+          "form": "Paradeep Phosphates, audited results FY26, NSE integrated filing",
+          "published": "2026-05-11",
+          "page": "iXBRL results table, Income section",
+          "quote": "Revenue from operations|4,70,197.00|21,82,634.00",
+          "sourceUnit": "INR lakh",
+          "value": 218263400000,
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "paradeep.ns-2026-03-31-annualGP-20261030",
+      "ticker": "PARADEEP.NS",
+      "listingAliases": [
+        "PARADEEP.BO"
+      ],
+      "field": "annualGP",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": -62362132000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz1",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbruttogewinn fehlt: Der negative Wert für das Geschäftsjahr bis 31.03.2026 (Ende 31.03.2026) folgt aus dem zu kleinen Jahresumsatz des Anbieters und entspricht keiner Zeile des Abschlusses. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_156708_11052026192334_iXBRL_WEB.html",
+          "form": "Paradeep Phosphates, audited results FY26, NSE integrated filing",
+          "published": "2026-05-11",
+          "page": "iXBRL results table, Income section",
+          "quote": "Revenue from operations|4,70,197.00|21,82,634.00",
+          "unit": "INR lakh"
         }
       ]
     }
