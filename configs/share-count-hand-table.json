@@ -382,6 +382,20 @@
       },
       "verifiedAt": "2026-10-24",
       "reviewBy": "2026-11-16"
+    },
+    "EFTY": {
+      "validFrom": "2026-10-01",
+      "reason": "Der Handel der Aktie von Etoiles Capital an der Nasdaq ist seit dem 06.10.2025 ausgesetzt, der letzte Kurs stammt vom 03.10.2025. Yahoo rechnet diesen Kurs zudem mit 20,11 Mio. Aktien, obwohl es nach der Einziehung der B-Aktien nur noch 15,11 Mio. sind. Einen aktuellen Börsenwert gibt es deshalb nicht.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/2058349/000121390026110502/ea0308323-8k12b_etoiles.htm",
+        "quote": "Trading in Etoiles Class A Ordinary Shares has remained suspended since October 6, 2025",
+        "page": "Form 8-K12B filed 2026-10-19, Item 3.01",
+        "crossCheck": "Share count: Form 6-K filed 2026-10-15, https://www.sec.gov/Archives/edgar/data/2058349/000121390026109645/ea0307818-6k_etoiles.htm : 'there were 15,110,000 of the Company's Class A Ordinary Shares and 0 of the Company's Class B Ordinary Shares issued and outstanding' on the record date 2026-09-17. Last traded day and close: https://query1.finance.yahoo.com/v8/finance/chart/EFTY?range=2y&interval=1d, 2025-10-03 at 15.02 USD, no volume since (vendor data).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 302,052,224 USD from yahoo_quoteSummary = 15.02 USD x impliedSharesOutstanding 20,110,000, the Form 20-F cover count of 2025-12-31, no price block; small-cap industrials unprofitable rank 18"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
     }
   }
 }
