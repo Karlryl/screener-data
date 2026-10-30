@@ -50,7 +50,11 @@
     { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "2855.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "2855.TW", "field": "opIncQ", "coversThrough": "2026-06-30" },
-    { "ticker": "6005.TW", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "6005.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "EGY", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "FTW", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "SUNC", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "AHCO", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -12030,6 +12034,1928 @@
           "page": "PDF 10, consolidated statements of comprehensive income: income total and expenses total (2025, 2024)",
           "unit": "TWD thousands",
           "quote": "19,230,991 100 17,149,090 100; 14,810,845 77 13,349,871 78"
+        }
+      ]
+    },
+    {
+      "caseId": "egy-2026-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "EGY",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 177914000,
+      "replacementValue": 135166000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Der 10-Q nennt für April bis Juni 2026 Erlöse von 135,2 Mio. USD, der Anbieter führt 177,9 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462726000051/egy-20260630.htm",
+          "form": "10-Q",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS) (Unaudited); printed page 3",
+          "accession": "0000894627-26-000051",
+          "filed": "2026-08-10",
+          "quote": "Crude oil, natural gas and natural gas liquids sales $ 135,166 $ 96,893 $ 197,765 $ 207,222",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 135166000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "egy-2026-03-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "EGY",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 62599000,
+      "replacementValue": 62599000,
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Quartalsbericht überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462726000027/egy-20260331.htm",
+          "form": "10-Q",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (Unaudited); printed page 3",
+          "accession": "0000894627-26-000027",
+          "filed": "2026-05-11",
+          "quote": "Crude oil, natural gas and natural gas liquids sales $ 62,599 $ 110,329",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 62599000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "egy-2025-12-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "EGY",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 91042000,
+      "replacementValue": 91042000,
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Jahreswert 2025 minus neun Monate ergibt den Anbieterwert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462726000013/egy-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page F-6",
+          "accession": "0000894627-26-000013",
+          "filed": "2026-03-16",
+          "quote": "Crude oil, natural gas and natural gas liquids sales $ 359,272 $ 478,988 $ 455,066",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 359272000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462725000057/egy-20250930.htm",
+          "form": "10-Q",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (Unaudited); printed page 3",
+          "accession": "0000894627-25-000057",
+          "filed": "2025-11-10",
+          "quote": "Crude oil, natural gas and natural gas liquids sales $ 61,007 $ 140,334 $ 268,230 $ 357,267",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": 268230000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "egy-2025-09-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "EGY",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 61007000,
+      "replacementValue": 61007000,
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Quartalsbericht überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462725000057/egy-20250930.htm",
+          "form": "10-Q",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (Unaudited); printed page 3",
+          "accession": "0000894627-25-000057",
+          "filed": "2025-11-10",
+          "quote": "Crude oil, natural gas and natural gas liquids sales $ 61,007 $ 140,334 $ 268,230 $ 357,267",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 61007000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "egy-2025-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "EGY",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 96893000,
+      "replacementValue": 96893000,
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Quartalsbericht überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462726000051/egy-20260630.htm",
+          "form": "10-Q",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS) (Unaudited); printed page 3",
+          "accession": "0000894627-26-000051",
+          "filed": "2026-08-10",
+          "quote": "Crude oil, natural gas and natural gas liquids sales $ 135,166 $ 96,893 $ 197,765 $ 207,222",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 96893000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2026-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 69345000,
+      "replacementValue": 54000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Der Anbieter führt als Quartal den Zeitraum 4. März bis 30. Juni 2026 (69,3 Mio. USD); April bis Juni 2026 sind laut 10-Q 54,0 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+          "form": "10-Q",
+          "page": "Consolidated Statements of Operations (Unaudited); printed page 2",
+          "accession": "0001213900-26-088500",
+          "filed": "2026-08-13",
+          "quote": "Total revenues 54,000 42,623 69,345 35,876 94,565",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 54000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2026-03-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 15346000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Der Anbieter führt nur den Rumpfzeitraum 4. bis 31. März 2026 (15,3 Mio. USD) nach dem Zusammenschluss; ein volles erstes Quartal 2026 ist nicht berichtet.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026057879/ea0289606-10q_presidio.htm",
+          "form": "10-Q",
+          "filed": "2026-05-15",
+          "accession": "0001213900-26-057879",
+          "page": "condensed consolidated statements of operations, successor column 4 to 31 March 2026",
+          "quote": "Total revenues 15,346 35,876 51,942"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2025-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 42623000,
+      "replacementValue": 42623000,
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Vorjahresausweis im 10-Q überein (Vorgängergesellschaft).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+          "form": "10-Q",
+          "page": "Consolidated Statements of Operations (Unaudited); printed page 2",
+          "accession": "0001213900-26-088500",
+          "filed": "2026-08-13",
+          "quote": "Total revenues 54,000 42,623 69,345 35,876 94,565",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 42623000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2025-03-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 51942000,
+      "replacementValue": 51942000,
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Halbjahr 2025 minus zweites Quartal 2025 ergibt den Anbieterwert (Vorgängergesellschaft).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+          "form": "10-Q",
+          "page": "Consolidated Statements of Operations (Unaudited); printed page 2",
+          "accession": "0001213900-26-088500",
+          "filed": "2026-08-13",
+          "quote": "Total revenues 54,000 42,623 69,345 35,876 94,565",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "value": 94565000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+          "form": "10-Q",
+          "page": "Consolidated Statements of Operations (Unaudited); printed page 2",
+          "accession": "0001213900-26-088500",
+          "filed": "2026-08-13",
+          "quote": "Total revenues 54,000 42,623 69,345 35,876 94,565",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 42623000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2025-09-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 42936000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Der Wert der Vorgängergesellschaft für das dritte Quartal 2025 ist nicht gegen einen Firmenbericht geprüft.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+          "form": "10-Q",
+          "page": "Consolidated Statements of Operations (Unaudited); printed page 2",
+          "quote": "Total revenues 54,000 42,623 69,345 35,876 94,565"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2026-06-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 38906000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Wert fehlt: Der Anbieter führt hier den Zeitraum 4. März bis 30. Juni 2026 als Quartal; für April bis Juni 2026 liegt kein Wert dieser Art vor.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+          "page": "Consolidated Statements of Operations (Unaudited); printed page 2",
+          "quote": "Total revenues 54,000 42,623 69,345 35,876 94,565"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2026-03-31-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 8165000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Der Anbieter führt nur den Rumpfzeitraum 4. bis 31. März 2026 (15,3 Mio. USD) nach dem Zusammenschluss; ein volles erstes Quartal 2026 ist nicht berichtet.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026057879/ea0289606-10q_presidio.htm",
+          "page": "statements of operations, successor column 4 to 31 March 2026",
+          "quote": "Total revenues 15,346 35,876 51,942"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2026-06-30-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 7201000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Betriebsergebnis fehlt: Der Anbieter führt 7,2 Mio. USD für den Zeitraum 4. März bis 30. Juni 2026; April bis Juni 2026 sind laut 10-Q 6,1 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+          "page": "Consolidated Statements of Operations (Unaudited); printed page 2",
+          "quote": "Income (loss) from operations 6,062 9,126 7,201 (39,684) 16,553"
+        }
+      ]
+    },
+    {
+      "caseId": "ftw-2026-03-31-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "FTW",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1140000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Der Anbieter führt nur den Rumpfzeitraum 4. bis 31. März 2026 (15,3 Mio. USD) nach dem Zusammenschluss; ein volles erstes Quartal 2026 ist nicht berichtet.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026057879/ea0289606-10q_presidio.htm",
+          "page": "statements of operations, successor column 4 to 31 March 2026",
+          "quote": "Income (loss) from operations 1,140 ( 39,684 ) 7,427"
+        }
+      ]
+    },
+    {
+      "caseId": "sunc-2026-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "SUNC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 28518000000,
+      "replacementValue": 14259000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Der Anbieter führt das Doppelte; der 10-Q nennt für April bis Juni 2026 14.259 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2089661/000208966126000049/sunc-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 5",
+          "accession": "0002089661-26-000049",
+          "filed": "2026-08-06",
+          "quote": "Total revenues 14,259 5,390 24,949 10,569",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 14259000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "sunc-2026-03-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "SUNC",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 10690000000,
+      "replacementValue": 10690000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Halbjahr 2026 minus zweites Quartal 2026 ergibt den Anbieterwert.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2089661/000208966126000049/sunc-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 5",
+          "accession": "0002089661-26-000049",
+          "filed": "2026-08-06",
+          "quote": "Total revenues 14,259 5,390 24,949 10,569",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 24949000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2089661/000208966126000049/sunc-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 5",
+          "accession": "0002089661-26-000049",
+          "filed": "2026-08-06",
+          "quote": "Total revenues 14,259 5,390 24,949 10,569",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 14259000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "sunc-2025-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "SUNC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 10780000000,
+      "replacementValue": 5390000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Der Anbieter führt das Doppelte; der 10-Q nennt für April bis Juni 2025 5.390 Mio. USD (rückwirkend konsolidiertes Sunoco LP).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2089661/000208966126000049/sunc-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 5",
+          "accession": "0002089661-26-000049",
+          "filed": "2026-08-06",
+          "quote": "Total revenues 14,259 5,390 24,949 10,569",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 5390000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "sunc-2026-06-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "SUNC",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 15441000000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem doppelten Umsatz; der 10-Q weist keine eigene Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2089661/000208966126000049/sunc-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 5",
+          "quote": "Total revenues 14,259 5,390 24,949 10,569"
+        }
+      ]
+    },
+    {
+      "caseId": "sunc-2025-06-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "SUNC",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 5805000000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem doppelten Umsatz; der 10-Q weist keine eigene Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2089661/000208966126000049/sunc-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 5",
+          "quote": "Total revenues 14,259 5,390 24,949 10,569"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2025-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 953000000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Der Anbieter zieht vom Umsatz des zweiten Quartals 2025 einen Verlust von 49 Mio. USD ab; der 10-Q nennt 1.002 Mio. USD. Ein Vergleich mit 2026 auf dieser Basis wäre zu hoch.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000109/hri-20260630.htm",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 3",
+          "quote": "Total revenues 1,204 1,002 2,343 1,863"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2025-06-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 283000000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem um den Verlust von 49 Mio. USD gekürzten Umsatz; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000109/hri-20260630.htm",
+          "page": "CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 3",
+          "quote": "Total revenues 1,204 1,002 2,343 1,863"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2025-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 1410000000,
+      "replacementValue": null,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem um den Verlust von 48 Mio. USD gekürzten Jahresumsatz; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000050/hri-20251231.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 42",
+          "quote": "Total revenues 4,376 3,568 3,282"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2024-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "annualGP",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 1156000000,
+      "replacementValue": null,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Der Anbieterwert rechnet mit dem um den Verlust von 194 Mio. USD gekürzten Jahresumsatz; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000050/hri-20251231.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 42",
+          "quote": "Total revenues 4,376 3,568 3,282"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2025-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 4328000000,
+      "replacementValue": 4376000000,
+      "metricDefinition": "Total revenues",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der 10-K nennt 4.376 Mio. USD für 2025, der Anbieter 4.328 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000050/hri-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 42",
+          "accession": "0001364479-26-000050",
+          "filed": "2026-02-17",
+          "quote": "Total revenues 4,376 3,568 3,282",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 4376000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2024-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 3374000000,
+      "replacementValue": 3568000000,
+      "metricDefinition": "Total revenues",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der 10-K nennt 3.568 Mio. USD für 2024, der Anbieter 3.374 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000050/hri-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 42",
+          "accession": "0001364479-26-000050",
+          "filed": "2026-02-17",
+          "quote": "Total revenues 4,376 3,568 3,282",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 3568000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "hri-2023-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "HRI",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 3282000000,
+      "replacementValue": 3282000000,
+      "metricDefinition": "Total revenues",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem 10-K überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1364479/000136447926000050/hri-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 42",
+          "accession": "0001364479-26-000050",
+          "filed": "2026-02-17",
+          "quote": "Total revenues 4,376 3,568 3,282",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 3282000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2026-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 567533000,
+      "replacementValue": 740307000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Der 10-Q nennt für April bis Juni 2026 aus fortgeführtem Geschäft 740,3 Mio. USD, der Anbieter 567,5 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "accession": "0001628280-26-052646",
+          "filed": "2026-08-04",
+          "quote": "Net revenue $ 740,307 $ 657,100 $ 1,420,180 $ 1,301,647",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 740307000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2026-03-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 614322000,
+      "replacementValue": 679873000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Halbjahr 2026 minus zweites Quartal 2026 aus fortgeführtem Geschäft laut 10-Q.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "accession": "0001628280-26-052646",
+          "filed": "2026-08-04",
+          "quote": "Net revenue $ 740,307 $ 657,100 $ 1,420,180 $ 1,301,647",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 1420180000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "accession": "0001628280-26-052646",
+          "filed": "2026-08-04",
+          "quote": "Net revenue $ 740,307 $ 657,100 $ 1,420,180 $ 1,301,647",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 740307000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2025-12-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1469945000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Für dieses Quartal gibt es den Umsatz ohne das aufgegebene Diabetesgeschäft nicht; der Anbieterwert passt zu keiner Basis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828025048944/ahco-20250930.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Net revenue $ 820,314 $ 805,858 $ 2,398,568 $ 2,404,330"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2025-09-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 602630000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Für dieses Quartal gibt es den Umsatz ohne das aufgegebene Diabetesgeschäft nicht; der Anbieterwert passt zu keiner Basis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828025048944/ahco-20250930.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Net revenue $ 820,314 $ 805,858 $ 2,398,568 $ 2,404,330"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2025-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 492670000,
+      "replacementValue": 657100000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Umsatz korrigiert: Der 10-Q nennt für April bis Juni 2025 aus fortgeführtem Geschäft 657,1 Mio. USD, der Anbieter 492,7 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "form": "10-Q",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "accession": "0001628280-26-052646",
+          "filed": "2026-08-04",
+          "quote": "Net revenue $ 740,307 $ 657,100 $ 1,420,180 $ 1,301,647",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 657100000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2026-03-31-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 5489000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Betriebsergebnis fehlt: Der Anbieterwert steht noch auf der Basis mit dem aufgegebenen Diabetesgeschäft; der Umsatz daneben nicht mehr.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Net revenue $ 740,307 $ 657,100 $ 1,420,180 $ 1,301,647"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2026-06-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -68568000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Die Anbieterreihe ist in vier von fünf Quartalen negativ und im vierten Quartal 2025 um ein Vielfaches zu hoch; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Cost of net revenue 636,101 521,312 1,220,342 1,060,281"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2026-03-31-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -93976000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Die Anbieterreihe ist in vier von fünf Quartalen negativ und im vierten Quartal 2025 um ein Vielfaches zu hoch; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Cost of net revenue 636,101 521,312 1,220,342 1,060,281"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2025-12-31-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 795817000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Die Anbieterreihe ist in vier von fünf Quartalen negativ und im vierten Quartal 2025 um ein Vielfaches zu hoch; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Cost of net revenue 636,101 521,312 1,220,342 1,060,281"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2025-09-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -55742000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Die Anbieterreihe ist in vier von fünf Quartalen negativ und im vierten Quartal 2025 um ein Vielfaches zu hoch; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Cost of net revenue 636,101 521,312 1,220,342 1,060,281"
+        }
+      ]
+    },
+    {
+      "caseId": "ahco-2025-06-30-grossProfitQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "AHCO",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -28642000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn fehlt: Die Anbieterreihe ist in vier von fünf Quartalen negativ und im vierten Quartal 2025 um ein Vielfaches zu hoch; der Bericht weist keine Bruttogewinnzeile aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1725255/000162828026052646/ahco-20260630.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS; printed page 4",
+          "quote": "Cost of net revenue 636,101 521,312 1,220,342 1,060,281"
+        }
+      ]
+    },
+    {
+      "caseId": "glxy-2025-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "GLXY",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 83933938900,
+      "replacementValue": 60406728000,
+      "metricDefinition": "Revenues",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der 10-K nennt für 2025 den angegebenen Wert; die Anbieterreihe steht auf einer anderen Basis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000016/glxy-20251231.htm",
+          "form": "10-K",
+          "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
+          "accession": "0001859392-26-000016",
+          "filed": "2026-02-26",
+          "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 60406728000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "glxy-2024-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "GLXY",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 1652495770,
+      "replacementValue": 42596673000,
+      "metricDefinition": "Revenues",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der 10-K nennt für 2024 den angegebenen Wert; die Anbieterreihe steht auf einer anderen Basis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000016/glxy-20251231.htm",
+          "form": "10-K",
+          "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
+          "accession": "0001859392-26-000016",
+          "filed": "2026-02-26",
+          "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 42596673000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "glxy-2023-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "GLXY",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 833604820,
+      "replacementValue": 51626779000,
+      "metricDefinition": "Revenues",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der 10-K nennt für 2023 den angegebenen Wert; die Anbieterreihe steht auf einer anderen Basis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000016/glxy-20251231.htm",
+          "form": "10-K",
+          "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
+          "accession": "0001859392-26-000016",
+          "filed": "2026-02-26",
+          "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 51626779000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "glxy-2025-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "GLXY",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 80767950724.692,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz und passt nicht zum Abschluss (Vorsteuerverlust 2025).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000016/glxy-20251231.htm",
+          "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
+          "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
+        }
+      ]
+    },
+    {
+      "caseId": "glxy-2024-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "GLXY",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 1590163629.5556,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz und passt nicht zum Abschluss (Vorsteuerverlust 2025).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000016/glxy-20251231.htm",
+          "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
+          "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
+        }
+      ]
+    },
+    {
+      "caseId": "glxy-2023-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "GLXY",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "expectedBadValue": 802161246.1896,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz und passt nicht zum Abschluss (Vorsteuerverlust 2025).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000016/glxy-20251231.htm",
+          "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
+          "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
+        }
+      ]
+    },
+    {
+      "caseId": "glxy-2022-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "GLXY",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "expectedBadValue": 552930148.8216,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz und passt nicht zum Abschluss (Vorsteuerverlust 2025).",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000016/glxy-20251231.htm",
+          "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
+          "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
+        }
+      ]
+    },
+    {
+      "caseId": "jan-2025-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 771165000,
+      "replacementValue": 603989000,
+      "metricDefinition": "Resident fees and services",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der Anbieter führt für 2025 den Pro-forma-Wert des Prospekts (771,2 Mio. USD); berichtet sind 604,0 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "form": "424B4",
+          "page": "Summary historical and pro forma financial data",
+          "accession": "0001104659-26-032901",
+          "filed": "2026-03-23",
+          "quote": "Resident fees and services $ 771,165 $ 603,989 $ 568,475",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 603989000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "jan-2024-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 568475000,
+      "replacementValue": 568475000,
+      "metricDefinition": "Resident fees and services",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Prospekt überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "form": "424B4",
+          "page": "Summary historical and pro forma financial data",
+          "accession": "0001104659-26-032901",
+          "filed": "2026-03-23",
+          "quote": "Resident fees and services $ 771,165 $ 603,989 $ 568,475",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 568475000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "jan-2025-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualNetIncome",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -61102000,
+      "replacementValue": 6349000,
+      "metricDefinition": "Net income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresergebnis korrigiert: Der Anbieter führt für 2025 einen Pro-forma-Wert; berichtet sind 6,3 Mio. USD Gewinn.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "form": "424B4",
+          "page": "Summary historical and pro forma financial data",
+          "accession": "0001104659-26-032901",
+          "filed": "2026-03-23",
+          "quote": "Net income (loss) (86,785) 6,349 (50,463)",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 6349000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "jan-2024-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualNetIncome",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -50463000,
+      "replacementValue": -50463000,
+      "metricDefinition": "Net income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Prospekt überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "form": "424B4",
+          "page": "Summary historical and pro forma financial data",
+          "accession": "0001104659-26-032901",
+          "filed": "2026-03-23",
+          "quote": "Net income (loss) (86,785) 6,349 (50,463)",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": -50463000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "jan-2025-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": -93879000,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Anbieterwert für 2025 steht auf Pro-forma-Basis; ein Betriebsergebnis weist der Prospekt nicht gesondert aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "page": "Summary historical and pro forma financial data",
+          "quote": "Resident fees and services $ 771,165 $ 603,989 $ 568,475"
+        }
+      ]
+    },
+    {
+      "caseId": "jan-2024-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "JAN",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": -11075000,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Anbieterwert für 2025 steht auf Pro-forma-Basis; ein Betriebsergebnis weist der Prospekt nicht gesondert aus.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2100805/000110465926032901/tm2533329-13_424b4.htm",
+          "page": "Summary historical and pro forma financial data",
+          "quote": "Resident fees and services $ 771,165 $ 603,989 $ 568,475"
+        }
+      ]
+    },
+    {
+      "caseId": "rdw-2025-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "RDW",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 229677000,
+      "replacementValue": -229677000,
+      "metricDefinition": "Operating income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Redwire mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1819810/000181981026000029/rdw-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 64",
+          "accession": "0001819810-26-000029",
+          "filed": "2026-02-27",
+          "quote": "Operating income (loss) (229,677) (42,200) (15,548)",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": -229677000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "rdw-2024-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "RDW",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 42200000,
+      "replacementValue": -42200000,
+      "metricDefinition": "Operating income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Redwire mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1819810/000181981026000029/rdw-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 64",
+          "accession": "0001819810-26-000029",
+          "filed": "2026-02-27",
+          "quote": "Operating income (loss) (229,677) (42,200) (15,548)",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": -42200000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "rdw-2023-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "RDW",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 15548000,
+      "replacementValue": -15548000,
+      "metricDefinition": "Operating income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Redwire mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1819810/000181981026000029/rdw-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 64",
+          "accession": "0001819810-26-000029",
+          "filed": "2026-02-27",
+          "quote": "Operating income (loss) (229,677) (42,200) (15,548)",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": -15548000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "rdw-2022-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "RDW",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 146448000,
+      "replacementValue": -146448000,
+      "metricDefinition": "Operating income (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Redwire mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1819810/000181981024000025/rdw-20231231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 58",
+          "accession": "0001819810-24-000025",
+          "filed": "2024-03-20",
+          "quote": "Operating income (loss) (15,548) (146,448)",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": -146448000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "rdw-2025-12-31-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "RDW",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 377737000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergeben sich -81,6 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1819810/000181981026000029/rdw-20251231.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 64",
+          "quote": "Operating income (loss) (229,677) (42,200) (15,548)"
+        }
+      ]
+    },
+    {
+      "caseId": "www-2025-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "WWW",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -150200000,
+      "replacementValue": 150200000,
+      "metricDefinition": "Operating profit (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Wolverine World Wide mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/110471/000162828026012614/www-20260103.htm",
+          "form": "10-K",
+          "page": "Consolidated Statements of Operations; printed page 35",
+          "accession": "0001628280-26-012614",
+          "filed": "2026-02-27",
+          "quote": "Operating profit (loss) 150.2 97.5 (66.8)",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 150200000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "printedStart": "2024-12-29",
+          "printedEnd": "2026-01-03"
+        }
+      ]
+    },
+    {
+      "caseId": "www-2024-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "WWW",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -97500000,
+      "replacementValue": 97500000,
+      "metricDefinition": "Operating profit (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Wolverine World Wide mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/110471/000162828026012614/www-20260103.htm",
+          "form": "10-K",
+          "page": "Consolidated Statements of Operations; printed page 35",
+          "accession": "0001628280-26-012614",
+          "filed": "2026-02-27",
+          "quote": "Operating profit (loss) 150.2 97.5 (66.8)",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 97500000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "printedStart": "2023-12-31",
+          "printedEnd": "2024-12-28"
+        }
+      ]
+    },
+    {
+      "caseId": "www-2023-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "WWW",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 66800000,
+      "replacementValue": -66800000,
+      "metricDefinition": "Operating profit (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Wolverine World Wide mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/110471/000162828026012614/www-20260103.htm",
+          "form": "10-K",
+          "page": "Consolidated Statements of Operations; printed page 35",
+          "accession": "0001628280-26-012614",
+          "filed": "2026-02-27",
+          "quote": "Operating profit (loss) 150.2 97.5 (66.8)",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": -66800000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "printedStart": "2023-01-01",
+          "printedEnd": "2023-12-30"
+        }
+      ]
+    },
+    {
+      "caseId": "www-2022-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "WWW",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -208400000,
+      "replacementValue": -208400000,
+      "metricDefinition": "Operating profit (loss)",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem 10-K überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/110471/000011047125000046/www-20241228.htm",
+          "form": "10-K",
+          "page": "Consolidated Statements of Operations; printed page 36",
+          "accession": "0000110471-25-000046",
+          "filed": "2025-02-20",
+          "quote": "Operating profit (loss) 101.0 (68.2) (208.4)",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": -208400000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "printedStart": "2022-01-02",
+          "printedEnd": "2022-12-31"
+        }
+      ]
+    },
+    {
+      "caseId": "www-2025-12-31-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "WWW",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -251500000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergeben sich 48,9 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/110471/000162828026012614/www-20260103.htm",
+          "page": "Consolidated Statements of Operations; printed page 35",
+          "quote": "Operating profit (loss) 150.2 97.5 (66.8)"
+        }
+      ]
+    },
+    {
+      "caseId": "line-2025-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "LINE",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -181000000,
+      "replacementValue": 181000000,
+      "metricDefinition": "Income from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Lineage mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1868159/000186815926000012/line-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 99",
+          "accession": "0001868159-26-000012",
+          "filed": "2026-02-25",
+          "quote": "Income from operations 181 (361) 398",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 181000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "line-2024-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "LINE",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 361000000,
+      "replacementValue": -361000000,
+      "metricDefinition": "Income from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Lineage mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1868159/000186815926000012/line-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 99",
+          "accession": "0001868159-26-000012",
+          "filed": "2026-02-25",
+          "quote": "Income from operations 181 (361) 398",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": -361000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "line-2023-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "LINE",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -398000000,
+      "replacementValue": 398000000,
+      "metricDefinition": "Income from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Lineage mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1868159/000186815926000012/line-20251231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 99",
+          "accession": "0001868159-26-000012",
+          "filed": "2026-02-25",
+          "quote": "Income from operations 181 (361) 398",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 398000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "line-2022-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "LINE",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -297000000,
+      "replacementValue": 297000000,
+      "metricDefinition": "Income from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Lineage mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1868159/000186815925000011/line-20241231.htm",
+          "form": "10-K",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 104",
+          "accession": "0001868159-25-000011",
+          "filed": "2025-02-26",
+          "quote": "Income from operations (361) 398 297",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": 297000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions"
+        }
+      ]
+    },
+    {
+      "caseId": "line-2025-12-31-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "LINE",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": -295000000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergeben sich 67 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1868159/000186815926000012/line-20251231.htm",
+          "page": "CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS); printed page 99",
+          "quote": "Income from operations 181 (361) 398"
+        }
+      ]
+    },
+    {
+      "caseId": "anro-2025-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "ANRO",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 66364000,
+      "replacementValue": -66364000,
+      "metricDefinition": "Loss from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Alto Neuroscience mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1999480/000199948026000002/alto-20251231.htm",
+          "form": "10-K",
+          "page": "consolidated statements of operations",
+          "accession": "0001999480-26-000002",
+          "filed": "2026-03-16",
+          "quote": "Loss from operations (66,364) (68,610)",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": -66364000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "anro-2024-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "ANRO",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 68610000,
+      "replacementValue": -68610000,
+      "metricDefinition": "Loss from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis korrigiert: Der Anbieter führt Alto Neuroscience mit umgekehrtem Vorzeichen.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1999480/000199948026000002/alto-20251231.htm",
+          "form": "10-K",
+          "page": "consolidated statements of operations",
+          "accession": "0001999480-26-000002",
+          "filed": "2026-03-16",
+          "quote": "Loss from operations (66,364) (68,610)",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": -68610000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "anro-2023-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "ANRO",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -37809000,
+      "replacementValue": -37809000,
+      "metricDefinition": "Loss from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem 10-K überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1999480/000199948025000025/alto-20241231.htm",
+          "form": "10-K",
+          "page": "consolidated statements of operations",
+          "accession": "0001999480-25-000025",
+          "filed": "2025-03-20",
+          "quote": "Loss from operations (68,610) (37,809)",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": -37809000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "anro-2022-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "ANRO",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -29192000,
+      "replacementValue": -29192000,
+      "metricDefinition": "Loss from operations",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem 10-K überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1999480/000199948024000010/altoneuroscienceinc-10xk.htm",
+          "form": "10-K",
+          "page": "consolidated statements of operations",
+          "accession": "0001999480-24-000010",
+          "filed": "2024-03-21",
+          "quote": "Loss from operations (37,809) (29,192)",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": -29192000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "anro-2025-12-31-opIncQ-20261030",
+      "revision": "2026-10-30-secabgleich",
+      "ticker": "ANRO",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 115673000,
+      "replacementValue": null,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalswert fehlt: Das vierte Quartal 2025 ist beim Anbieter aus dem Jahreswert mit falschem Vorzeichen gerechnet; aus dem 10-K ergibt sich ein Verlust von 17,1 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1999480/000199948026000002/alto-20251231.htm",
+          "page": "consolidated statements of operations",
+          "quote": "Loss from operations (66,364) (68,610)"
         }
       ]
     }
