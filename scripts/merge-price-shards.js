@@ -160,6 +160,12 @@ function main() {
     process.exit(1);
   }
   const tickerImStore = Object.keys(gesamt).length;
+  // P303: the runner artifacts carry no _meta, so the previous stamp is still the one of the checkout here. `merged` is
+  // exactly what this run fetched: a failed ticker has no entry in its runner's slice and keeps its old bars in the store.
+  const vorher = priceStore.loadMeta(args.prices);
+  if (!priceStore.notFetchedIndex(vorher)) {
+    console.log('::warning::prices/history/_meta.json has no per-ticker fetch days yet; tickers not fetched today go in as "unknown" and get no price step until they are fetched.');
+  }
   // T204: atomar - _meta stempelt den GESAMTEN Store; halb geschrieben behauptet es
   // eine Ticker-Zahl, die zum Store nicht passt.
   writeFileAtomic(priceStore.metaPath(args.prices), JSON.stringify({
@@ -167,6 +173,8 @@ function main() {
     updatedAt: new Date().toISOString(),
     tickerCount: tickerImStore,
     shardsWritten: priceStore.SHARD_COUNT,
+    fetchDay: args.date,
+    notFetched: priceStore.nextNotFetched(gesamt, merged, vorher),
   }));
   log('INFO', `Store vollstaendig: ${tickerImStore} Ticker, _meta ueber den Gesamtstand gestempelt.`);
 

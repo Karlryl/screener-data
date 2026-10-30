@@ -75,6 +75,7 @@ test('rows without two usable bars are left out and counted by reason, never fil
     'invalid-date': 1,                // BADD: 2026-02-30
     'invalid-close': 2,               // ZERO (0), NEGC (negative)
     'dates-not-increasing': 2,        // SAME (equal), BACK (reversed)
+    'not-refreshed-at-stamp': 0,      // make() has no last fetch days; the failed-pull tests below count it
   });
   assert.deepEqual(Object.keys(feed.skipped), SKIP_REASONS);
   assert.equal(feed.universeCount, mini.universe.length);
@@ -185,8 +186,9 @@ function fixtureTree({ generated = generatedAt, universeGenerated = generated, u
   write(path.join(v1Dir, 'filter', 'universum.json'), { schema: 'findash-export/v1', generated_at: universeGenerated, snapshotCount: universe.length, rows: universe.map(t => ({ t, n: 'Name ' + t })) });
   store.saveAll(pricesDir, structuredClone(mini.history));
   // saveAll stamps _meta.json with the wall clock; the fixtures assume the stamp day of `stamp`, so pin it (red from 16.10. on otherwise).
+  // saveAll writes no fetch-day record; here every ticker counts as fetched in the run of the stamp.
   const metaFile = store.metaPath(pricesDir);
-  write(metaFile, { ...JSON.parse(fs.readFileSync(metaFile, 'utf8')), updatedAt: stamp });
+  write(metaFile, { ...JSON.parse(fs.readFileSync(metaFile, 'utf8')), updatedAt: stamp, fetchDay: stamp.slice(0, 10), notFetched: {} });
   return { dir, v1Dir, pricesDir, target: path.join(v1Dir, 'filter', 'preisschritt.json') };
 }
 
@@ -296,6 +298,122 @@ test('CLI checks a real file, rejects a corrupted copy, a foreign generation, a 
   const self = run('--selftest');
   assert.equal(self.status, 0, self.stderr);
   assert.equal(sha(t.target), hash);
+});
+
+// P303, failed pull: the real merge step and the real build on a real sharded store, over consecutive runs. A runner's
+// failed ticker has no entry in its slice and keeps its old bars; the store stamp moves on anyway. The stamp is pinned
+// after each merge because the merge stamps with the wall clock.
+const mergeScript = path.resolve(__dirname, '../scripts/merge-price-shards.js');
+const bars = (...pairs) => pairs.map(([date, close]) => ({ date, close }));
+const failedPullTree = () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'preisschritt-failed-pull-'));
+  const v1Dir = path.join(dir, 'v1'), pricesDir = path.join(dir, 'prices');
+  fs.mkdirSync(path.join(v1Dir, 'filter'), { recursive: true });
+  const universe = ['FRESH', 'FAILS', 'USFAIL'];
+  fs.writeFileSync(path.join(v1Dir, 'index.json'), JSON.stringify({ schema: 'findash-export/v1', generated_at: generatedAt }));
+  fs.writeFileSync(path.join(v1Dir, 'filter', 'universum.json'), JSON.stringify({ schema: 'findash-export/v1', generated_at: generatedAt, rows: universe.map(t => ({ t })) }));
+  return { v1Dir, pricesDir };
+};
+const pullAndMerge = ({ pricesDir }, day, history, fetched, stampAt) => {
+  store.saveAll(pricesDir, history); // what the runners and the overlay leave behind ...
+  return (previousMeta) => {
+    if (previousMeta) fs.writeFileSync(store.metaPath(pricesDir), JSON.stringify(previousMeta)); // ... with the stamp of the checkout, as in the merge job
+    fs.writeFileSync(path.join(pricesDir, day + '.shard-0.json'), JSON.stringify(Object.fromEntries(fetched.map(t => [t, { close: 1, asOf: day, pulledOn: day }]))));
+    const run = spawnSync(process.execPath, [mergeScript, '--prices', pricesDir, '--date', day, '--expected-shards', '1'], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    const meta = { ...store.loadMeta(pricesDir), updatedAt: stampAt };
+    fs.writeFileSync(store.metaPath(pricesDir), JSON.stringify(meta));
+    return { meta, stdout: run.stdout };
+  };
+};
+const stepsOf = ({ pricesDir, v1Dir }) => build({ pricesDir, v1Dir }).feed;
+
+test('a failed pull keeps the unfinished bar out of the file: skipped by name, never booked as a close, all other rows unchanged (P303)', () => {
+  const tree = failedPullTree();
+  // Run of 14.10., all fetched. The EU tickers hold an intraday bar of 14.10., USFAIL has no bar of 14.10. yet (the pull runs before the US open).
+  const day14 = {
+    FRESH: bars(['2026-10-12', 100], ['2026-10-13', 101], ['2026-10-14', 150]),
+    FAILS: bars(['2026-10-12', 200], ['2026-10-13', 202], ['2026-10-14', 300]),
+    USFAIL: bars(['2026-10-12', 50], ['2026-10-13', 51]),
+    SHORT: bars(['2026-10-13', 7]),
+  };
+  const first = pullAndMerge(tree, '2026-10-14', day14, ['FRESH', 'FAILS', 'USFAIL'], '2026-10-14T09:00:00Z')();
+  assert.equal(first.meta.fetchDay, '2026-10-14');
+  // SHORT was not fetched, but under two bars it can never make a step: it costs no bytes in _meta.
+  assert.deepEqual(first.meta.notFetched, {});
+  assert.match(first.stdout, /no per-ticker fetch days yet/, 'a stamp without the record is named once, not passed over');
+  const before = stepsOf(tree);
+  assert.deepEqual(before.rows.map(r => r.t), ['FAILS', 'FRESH', 'USFAIL']);
+  assert.deepEqual(row(before, 'FAILS'), { t: 'FAILS', d0: '2026-10-12', c0: 200, d1: '2026-10-13', c1: 202 });
+
+  // Run of 15.10.: FRESH gets the final close of 14.10. and an intraday bar of 15.10.; FAILS and USFAIL fail and keep their series.
+  const day15 = { ...day14, FRESH: bars(['2026-10-12', 100], ['2026-10-13', 101], ['2026-10-14', 151], ['2026-10-15', 999]) };
+  const second = pullAndMerge(tree, '2026-10-15', day15, ['FRESH'], '2026-10-15T09:00:00Z')(first.meta);
+  assert.equal(second.meta.fetchDay, '2026-10-15');
+  assert.deepEqual(second.meta.notFetched, { '2026-10-14': ['FAILS', 'USFAIL'] }, 'the fetch day survives the merge, per ticker');
+  const failed = stepsOf(tree);
+  assert.equal(failed.skipped['not-refreshed-at-stamp'], 1);
+  // The heart of the guard: 300 is the intraday value of 14.10. and before the stamp day; without the rule it would be booked as the close.
+  assert.equal(row(failed, 'FAILS'), undefined);
+  assert.ok(!JSON.stringify(failed.rows).includes('300'), 'the unfinished bar must not be in the file');
+  // A refreshed ticker moves on as before.
+  assert.deepEqual(row(failed, 'FRESH'), { t: 'FRESH', d0: '2026-10-13', c0: 101, d1: '2026-10-14', c1: 151 });
+  // USFAIL also failed, but its last bar is older than its last fetch and therefore final: same row as yesterday, byte for byte.
+  assert.deepEqual(row(failed, 'USFAIL'), row(before, 'USFAIL'));
+  assert.equal(failed.rows.length + Object.values(failed.skipped).reduce((a, b) => a + b, 0), failed.universeCount);
+  assert.deepEqual(validate(failed, bytesOf(failed), generatedAt, ['FRESH', 'FAILS', 'USFAIL']), []);
+
+  // Run of 16.10.: FAILS still fails: its day stays 14.10., it does not become 15.10. by being carried. USFAIL recovers and leaves the list.
+  const day16 = { ...day15, USFAIL: bars(['2026-10-12', 50], ['2026-10-13', 51], ['2026-10-14', 52], ['2026-10-15', 53]) };
+  const third = pullAndMerge(tree, '2026-10-16', day16, ['FRESH', 'USFAIL'], '2026-10-16T09:00:00Z')(second.meta);
+  assert.deepEqual(third.meta.notFetched, { '2026-10-14': ['FAILS'] });
+  const still = stepsOf(tree);
+  assert.equal(still.skipped['not-refreshed-at-stamp'], 1);
+  assert.deepEqual(row(still, 'USFAIL'), { t: 'USFAIL', d0: '2026-10-14', c0: 52, d1: '2026-10-15', c1: 53 });
+
+  // Run of 17.10.: FAILS recovers: the corrected bar of 14.10. replaces the intraday one, the row comes back and the list is empty.
+  const day17 = { ...day16, FAILS: bars(['2026-10-13', 202], ['2026-10-14', 204], ['2026-10-15', 205], ['2026-10-16', 206]) };
+  const fourth = pullAndMerge(tree, '2026-10-17', day17, ['FRESH', 'FAILS', 'USFAIL'], '2026-10-17T09:00:00Z')(third.meta);
+  assert.deepEqual(fourth.meta.notFetched, {});
+  const back = stepsOf(tree);
+  assert.equal(back.skipped['not-refreshed-at-stamp'], 0);
+  assert.deepEqual(row(back, 'FAILS'), { t: 'FAILS', d0: '2026-10-15', c0: 205, d1: '2026-10-16', c1: 206 });
+});
+
+test('first run: a ticker without a fetch day is neither fresh nor dropped unnamed, and a stamp without the record builds no file (P303)', () => {
+  // The merge of the first run reads a stamp without the record: what it did not fetch goes in as unknown and is skipped by name, whatever its dates say.
+  const tree = failedPullTree();
+  const history = {
+    FRESH: bars(['2026-10-13', 1], ['2026-10-14', 2]),
+    FAILS: bars(['2026-07-01', 3], ['2026-07-02', 4]),
+    USFAIL: bars(['2026-10-13', 5], ['2026-10-14', 6]),
+  };
+  const merge = pullAndMerge(tree, '2026-10-15', history, ['FRESH'], '2026-10-15T09:00:00Z');
+  const oldStamp = store.loadMeta(tree.pricesDir);
+  assert.equal(oldStamp.notFetched, undefined, 'the stamp of saveAll has no record');
+  // Before the first merge with the record: no file and a reason, not a guess.
+  fs.writeFileSync(store.metaPath(tree.pricesDir), JSON.stringify({ ...oldStamp, updatedAt: '2026-10-15T09:00:00Z' }));
+  const target = path.join(tree.v1Dir, 'filter', 'preisschritt.json');
+  assert.throws(() => stepsOf(tree), /no per-ticker fetch days/);
+  assert.equal(fs.existsSync(target), false);
+  const { meta } = merge();
+  assert.deepEqual(meta.notFetched, { [store.UNKNOWN_FETCH_DAY]: ['FAILS', 'USFAIL'] });
+  const feed = stepsOf(tree);
+  assert.deepEqual(feed.rows.map(r => r.t), ['FRESH']);
+  assert.equal(feed.skipped['not-refreshed-at-stamp'], 2);
+  // The next run keeps them unknown rather than dating them to the run before.
+  const next = pullAndMerge(tree, '2026-10-16', history, ['FRESH'], '2026-10-16T09:00:00Z')(meta);
+  assert.deepEqual(next.meta.notFetched, { [store.UNKNOWN_FETCH_DAY]: ['FAILS', 'USFAIL'] });
+  // A write outside the merge step (manual backfill) leaves a stamp without the record: again no file, until the next merge.
+  store.saveDirty(tree.pricesDir, history, new Set(['FRESH']));
+  assert.throws(() => stepsOf(tree), /no per-ticker fetch days/);
+  // A broken record counts as none, on both sides.
+  for (const broken of [{ fetchDay: '2026-10-15' }, { notFetched: {} }, { fetchDay: 'yesterday', notFetched: {} }, { fetchDay: '2026-10-15', notFetched: [] },
+    { fetchDay: '2026-10-15', notFetched: { soon: ['X'] } }, { fetchDay: '2026-10-15', notFetched: { '2026-10-14': 'X' } }]) {
+    assert.equal(store.notFetchedIndex(broken), null, JSON.stringify(broken));
+    assert.deepEqual(store.nextNotFetched({ X: bars(['2026-10-13', 1], ['2026-10-14', 2]) }, {}, broken), { [store.UNKNOWN_FETCH_DAY]: ['X'] });
+  }
+  assert.equal(store.notFetchedIndex(null), null);
 });
 
 // Step order and fail-soft shape of the workflow step, checked on text so that a mutated copy can be shown red.
