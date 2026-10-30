@@ -10,7 +10,7 @@
   "zombie-kein-marktdatum": 6,
   "altbestand-ohne-yahoo": 87,
   "abgeloest-kein-handel": 1,
-  "abgeloest-neues-kuerzel": 6,
+  "abgeloest-neues-kuerzel": 7,
   "zweitnotiz-kurs-steht": 1,
   "uebernommen-oder-gestrichen": 26,
   "zweitlinie-toter-firma": 11
@@ -3190,7 +3190,8 @@
   "WBDI.VI": "zweitlinie-toter-firma",
   "1QRVO.MI": "zweitlinie-toter-firma",
   "B72.DE": "zweitlinie-toter-firma",
-  "QUBHF": "zweitlinie-toter-firma"
+  "QUBHF": "zweitlinie-toter-firma",
+  "AXIA": "abgeloest-neues-kuerzel"
  },
  "nachtrag_2026_10_30": "W7: 87 failed rows without added_at, which the 30-day prune exempts forever, each without a live quote on 30.10. and without a snapshot; plus ARX.TO (last trade 04.09., Shell takeover), PSKY (last trade 22.10., now SKYD), 1WAF.MI (last trade 25.09., home listing WAF.DE). All other dead rows leave through the 30-day prune and stay out through discovery/aufnahme-tor.js.",
  "belege_2026_10_30": {
@@ -3303,8 +3304,8 @@
    "quelle": "https://stockanalysis.com/stocks/orla/"
   },
   "OLA.TO": {
-   "ende": "2026-07-31",
-   "quelle": "https://stockanalysis.com/stocks/orla/"
+   "ende": "2026-08-04",
+   "quelle": "https://www.m-x.ca/f_circulaires_en/103-26_en.pdf"
   },
   "EA": {
    "ende": "2026-08-04",
@@ -3366,6 +3367,11 @@
   "QUBHF": {
    "ende": "2026-08-17",
    "quelle": "https://www.sharecafe.com.au/2026/08/14/qube-holdings-limited-acquisition-by-rubik-australia-pty-limited-finalised/"
+  },
+  "AXIA": {
+   "ende": "2026-08-06",
+   "nachfolger": "AXIA3.SA",
+   "quelle": "https://www.sec.gov/Archives/edgar/data/0001439124/000129281426004079/axia20260805_6k.htm"
   }
  }
 }
