@@ -39,7 +39,7 @@ const text = v => typeof v === 'string' && v.trim() ? v.trim().replace(/\s+/g, '
 const GM_MAX_ABS_PCT = 100;   // gross profit cannot exceed revenue; below -100 % the vendor margin is unverifiable
 const DY_MAX_PCT = 50;        // 25-50 % exists (shipping, special dividends); above 50 % every seen case was a unit/currency error
 const PO_MAX_PCT = 100000;    // unit errors only (BANPU.BK 2,788,100); high real ratios (SLG 15375) stay, findash caps ranking at 100
-// Floor, not ceiling: one year of expected profit at two thirds of the market cap and more. On 30.10.2026 each of the 13 of 21 rows
+// Floor, not ceiling: one year of expected profit at two thirds of the market cap and more. On 30.10.2026 each of the 14 of 21 rows
 // below it with a second-source value was wrong by a factor 2.4 to 561 (ENIC 0.02 vs 11.01); the lowest second-source value is 1.58 (DEC).
 const FPE_MIN = 1.5;
 const EV_FACTOR_MIN = Math.E; // with EV_MARGIN 1.0 a factor inside 1/e..e can never win the balance comparison
