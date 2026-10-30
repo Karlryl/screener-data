@@ -464,7 +464,8 @@ jobs:
       # bei einem systemischen 403/IP-Block. KEINE Ausnahme fuer SEC-Netz-Flakes:
       # das Skript unterscheidet bereits selbst — ein einzelner 404/Netzfehler zaehlt
       # nur grandErrors hoch und laeuft weiter (siehe `cursorContiguous = false`);
-      # einen Ausgang != 0 erreichen nur Korrupt-Cache, TOTAL FAILURE und fehlende
+      # einen Ausgang != 0 erreichen nur Korrupt-Cache, ein beschaedigtes oder nicht
+      # wiederlesbares Archiv (P280), TOTAL FAILURE und fehlende
       # Pflichteingaben. Jedes failure-Outcome darf also rot faerben.
       - name: Pull Insider Form-4 (daily)
         id: pull_form4
@@ -616,7 +617,7 @@ jobs:
           AUSGANG="${{ needs.prep.outputs.pull_form4_outcome }}"
           case "$AUSGANG" in
             failure)
-              echo "::error::INSIDER-PULL GEFALLEN: der Schritt 'Pull Insider Form-4 (daily)' im prep-Job ist mit Exit != 0 geendet. Das Skript bricht NICHT bei einzelnen 404/Netzfehlern ab (die zaehlt es nur und laeuft weiter) — Exit != 0 heisst: external-data/sec-form4-cache.json ist unlesbar (korrupt geschrieben), ODER der Lauf hat NULL Filings bei lauter Fehlern geholt (systemischer SEC-403/IP-Block), ODER watchlist.json / sec-ticker-cik-map.json fehlen, ODER der Schritt lief in sein 30-Minuten-Timeout. In allen Faellen ist der Insider-Cache heute NICHT fortgeschrieben und der Cursor nicht vorgerueckt. Der Tagesdatenlauf haengt nicht daran und ist weitergelaufen. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Pull Insider Form-4 (daily)'."
+              echo "::error::INSIDER-PULL GEFALLEN: der Schritt 'Pull Insider Form-4 (daily)' im prep-Job ist mit Exit != 0 geendet. Das Skript bricht NICHT bei einzelnen 404/Netzfehlern ab (die zaehlt es nur und laeuft weiter) — Exit != 0 heisst: external-data/sec-form4-cache.json ist unlesbar (korrupt geschrieben), ODER das Archiv external-data/archive/sec-form4/ ist beschaedigt oder nicht wiederlesbar (dann wurde nichts beschnitten), ODER der Lauf hat NULL Filings bei lauter Fehlern geholt (systemischer SEC-403/IP-Block), ODER watchlist.json / sec-ticker-cik-map.json fehlen, ODER der Schritt lief in sein 30-Minuten-Timeout. In allen Faellen ist der Insider-Cache heute NICHT fortgeschrieben und der Cursor nicht vorgerueckt. Der Tagesdatenlauf haengt nicht daran und ist weitergelaufen. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Pull Insider Form-4 (daily)'."
               exit 1
               ;;
             cancelled|skipped)
@@ -2247,6 +2248,8 @@ jobs:
       # pushes today's store after the trigger). The step therefore reads prices/history from the tip of main via
       # git archive into a temp folder; the working tree stays untouched (the board-history step rebases onto main
       # later and must not meet modified tracked files). When the fetch fails the file is simply not written.
+      # P303: the daily files prices/<date>.json come along (at most 14, the archive step moves older ones). The merge job
+      # commits them together with the stamp; the export reads the one of the stamp day to see who this run really fetched.
       - name: Build and check preisschritt (additive, fail-soft)
         run: |
           set -o pipefail
@@ -2254,7 +2257,7 @@ jobs:
             store="$RUNNER_TEMP/preisschritt-store" &&
             rm -rf "$store" && mkdir -p "$store" &&
             git fetch --no-tags origin main &&
-            git archive FETCH_HEAD prices/history | tar -x -C "$store" &&
+            git archive FETCH_HEAD prices/history ':(glob)prices/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].json' | tar -x -C "$store" &&
             node scripts/write-preisschritt-export.js --prices-dir "$store/prices" &&
             node scripts/write-preisschritt-export.js --check
           } || { rm -rf outputs/findash-export/v1/filter/preisschritt.json*; echo "::warning::preisschritt.json could not be built or checked; the daily boards are deployed anyway."; false; } || true
