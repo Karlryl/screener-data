@@ -464,7 +464,8 @@ jobs:
       # bei einem systemischen 403/IP-Block. KEINE Ausnahme fuer SEC-Netz-Flakes:
       # das Skript unterscheidet bereits selbst — ein einzelner 404/Netzfehler zaehlt
       # nur grandErrors hoch und laeuft weiter (siehe `cursorContiguous = false`);
-      # einen Ausgang != 0 erreichen nur Korrupt-Cache, TOTAL FAILURE und fehlende
+      # einen Ausgang != 0 erreichen nur Korrupt-Cache, ein beschaedigtes oder nicht
+      # wiederlesbares Archiv (P280), TOTAL FAILURE und fehlende
       # Pflichteingaben. Jedes failure-Outcome darf also rot faerben.
       - name: Pull Insider Form-4 (daily)
         id: pull_form4
@@ -616,7 +617,7 @@ jobs:
           AUSGANG="${{ needs.prep.outputs.pull_form4_outcome }}"
           case "$AUSGANG" in
             failure)
-              echo "::error::INSIDER-PULL GEFALLEN: der Schritt 'Pull Insider Form-4 (daily)' im prep-Job ist mit Exit != 0 geendet. Das Skript bricht NICHT bei einzelnen 404/Netzfehlern ab (die zaehlt es nur und laeuft weiter) — Exit != 0 heisst: external-data/sec-form4-cache.json ist unlesbar (korrupt geschrieben), ODER der Lauf hat NULL Filings bei lauter Fehlern geholt (systemischer SEC-403/IP-Block), ODER watchlist.json / sec-ticker-cik-map.json fehlen, ODER der Schritt lief in sein 30-Minuten-Timeout. In allen Faellen ist der Insider-Cache heute NICHT fortgeschrieben und der Cursor nicht vorgerueckt. Der Tagesdatenlauf haengt nicht daran und ist weitergelaufen. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Pull Insider Form-4 (daily)'."
+              echo "::error::INSIDER-PULL GEFALLEN: der Schritt 'Pull Insider Form-4 (daily)' im prep-Job ist mit Exit != 0 geendet. Das Skript bricht NICHT bei einzelnen 404/Netzfehlern ab (die zaehlt es nur und laeuft weiter) — Exit != 0 heisst: external-data/sec-form4-cache.json ist unlesbar (korrupt geschrieben), ODER das Archiv external-data/archive/sec-form4/ ist beschaedigt oder nicht wiederlesbar (dann wurde nichts beschnitten), ODER der Lauf hat NULL Filings bei lauter Fehlern geholt (systemischer SEC-403/IP-Block), ODER watchlist.json / sec-ticker-cik-map.json fehlen, ODER der Schritt lief in sein 30-Minuten-Timeout. In allen Faellen ist der Insider-Cache heute NICHT fortgeschrieben und der Cursor nicht vorgerueckt. Der Tagesdatenlauf haengt nicht daran und ist weitergelaufen. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Pull Insider Form-4 (daily)'."
               exit 1
               ;;
             cancelled|skipped)

@@ -6,6 +6,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const zlib = require('node:zlib');
+const { spawnSync } = require('node:child_process');
 
 const A = require('../lib/form4-cache-archive.js');
 const F4 = require('../scripts/pull-insider-form4.js');
@@ -226,4 +228,86 @@ test('P280 review: the per-ticker puller checkpoints every 50 processed tickers 
     exit: (c) => { throw new Error('exit ' + c); },
   });
   assert.deepEqual(writes, [50, 51], 'one checkpoint after ticker 50, one after the loop');
+});
+
+test('P280 guard: a damaged archive fails loud, prunes nothing and starts no fresh file', () => {
+  const line = JSON.stringify({ archivedAt: 'x', reason: 'expired', ticker: 'AAA', row: row('A-1', 200) }) + '\n';
+  const good = zlib.gzipSync(Buffer.from(line));
+  const damaged = {
+    empty: Buffer.alloc(0),
+    garbage: Buffer.from('not gzip at all'),
+    truncated: good.subarray(0, good.length - 6),
+    garbageAfterMember: Buffer.concat([good, Buffer.from('xxxx')]),
+    badJsonLine: zlib.gzipSync(Buffer.from('{"ticker":"AAA"\n')),
+  };
+  for (const [name, bytes] of Object.entries(damaged)) {
+    const dir = tmp();
+    const file = A.archiveFileFor(dir, NOW);
+    fs.writeFileSync(file, bytes);
+    const old = row('A-new', 200);
+    const byTicker = { AAA: { transactions: [old] } };
+    assert.throws(() => A.archiveThenCap({ byTicker, baseline: A.snapshotRows(byTicker), archiveDir: dir,
+      lookbackDays: 180, now: NOW }), undefined, name + ': a damaged archive must throw');
+    assert.deepEqual(byTicker.AAA.transactions, [old], name + ': no row may leave the cache');
+    assert.ok(fs.readFileSync(file).equals(bytes), name + ': the damaged file keeps its bytes');
+  }
+});
+
+test('P280 guard: rows behind a zero-padded tail are unreadable, so the read-back refuses the prune', () => {
+  // gunzip silently ignores whatever follows a member when it starts with 0x00. A row
+  // appended behind such a tail is on disk but not restorable; it must not leave the cache.
+  const dir = tmp();
+  const file = A.archiveFileFor(dir, NOW);
+  const line = JSON.stringify({ archivedAt: 'x', reason: 'expired', ticker: 'AAA', row: row('A-1', 200) }) + '\n';
+  const bytes = Buffer.concat([zlib.gzipSync(Buffer.from(line)), Buffer.alloc(8)]);
+  fs.writeFileSync(file, bytes);
+  const old = row('A-new', 200);
+  const byTicker = { AAA: { transactions: [old] } };
+  assert.throws(() => A.archiveThenCap({ byTicker, baseline: A.snapshotRows(byTicker), archiveDir: dir,
+    lookbackDays: 180, now: NOW }), /not restorable/);
+  assert.deepEqual(byTicker.AAA.transactions, [old]);
+  assert.ok(fs.readFileSync(file).subarray(0, bytes.length).equals(bytes), 'the old bytes stay in front');
+});
+
+test('P280 guard: a new month opens a new file and leaves the old month byte-identical', () => {
+  const dir = tmp();
+  const run = (r, now) => A.archiveThenCap({ byTicker: { AAA: { transactions: [r] } }, baseline: new Map(),
+    archiveDir: dir, lookbackDays: 180, now });
+  run(row('A-oct', 200), NOW);
+  const oct = A.archiveFileFor(dir, NOW);
+  const before = fs.readFileSync(oct);
+  const NOV = Date.parse('2026-11-01T08:00:00Z');
+  run(row('A-nov', 250), NOV);
+  assert.equal(path.basename(A.archiveFileFor(dir, NOV)), '2026-11.json.gz');
+  assert.ok(fs.readFileSync(oct).equals(before), 'the closed month is never rewritten');
+  assert.deepEqual(A.readArchive(A.archiveFileFor(dir, NOV)).map(l => l.row.accessionNumber), ['A-nov']);
+});
+
+test('P280 guard: what the prep job archives reaches main (one writer, merge downloads and stages it, not ignored)', () => {
+  const root = path.join(__dirname, '..');
+  const wfDir = path.join(root, '.github', 'workflows');
+  const wf = fs.readFileSync(path.join(wfDir, 'daily-pull.yml'), 'utf8');
+  const job = (name, next) => wf.slice(wf.search(new RegExp('^  ' + name + ':\\r?$', 'm')),
+    wf.search(new RegExp('^  ' + next + ':\\r?$', 'm')));
+  const prep = job('prep', 'entdeckungs-waechter');
+  const merge = job('merge', 'earnings-transport-waechter');
+
+  // A second writer (a shard, another workflow) would need its own archive path to main.
+  const writers = fs.readdirSync(wfDir).filter(f => /\.ya?ml$/.test(f)).flatMap(f =>
+    fs.readFileSync(path.join(wfDir, f), 'utf8').match(/^.*node scripts\/pull-insider-form4[^\s]*.*$/gm) || []);
+  assert.equal(writers.length, 1, 'exactly one workflow step may run a form4 writer: ' + writers.join(' | '));
+  assert.ok(prep.includes(writers[0]), 'the form4 writer must run in the prep job');
+  assert.ok(prep.indexOf('name: Pull Insider Form-4 (daily)') < prep.indexOf('name: prep-state'),
+    'prep-state must be uploaded after the writer ran');
+
+  assert.match(merge, /^ {6}- name: Download prep state\r?\n.*\r?\n {8}with:\r?\n {10}name: prep-state\r?\n {10}path: \.\r?$/m,
+    'the merge job must restore prep-state at the repo root');
+  const commit = merge.slice(merge.indexOf('- name: Commit Snapshots'));
+  assert.match(commit.slice(0, commit.indexOf('\n      - name:', 1)), /^ {10}git add -A\r?$/m,
+    'a narrower git add would lose the archive without any error');
+
+  // A never-tracked month on purpose: check-ignore skips tracked files, and each new month
+  // starts as an untracked file, so an ignore rule would only hit it from that day on.
+  const ignored = spawnSync('git', ['check-ignore', '-q', '--no-index', 'external-data/archive/sec-form4/2099-12.json.gz'], { cwd: root });
+  assert.equal(ignored.status, 1, 'the archive path must not be ignored (exit 1 = not ignored)');
 });
