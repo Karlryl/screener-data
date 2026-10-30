@@ -84,12 +84,13 @@ test('all 21 known wrong rows are checked and withheld (none unchecked); the wit
   // P138: 000688.SZ is now corrected by the hand table, so the exchange check leaves it alone (unchecked, hand-table).
   // G31 switch (P268, 18.10.2026): 000599.SZ's unrestated Q2 2025 is held by the hand table, the same treatment.
   // The other 19 stay withheld; the level examples below use 000564.SZ, the same kind of level mismatch.
-  for (const t of ['000688.SZ', '000599.SZ']) {
+  // Board-top check of 30.10.2026: 600292.SS's pre-merger Q2 2025 is corrected by the hand table, the same treatment.
+  for (const t of ['000688.SZ', '000599.SZ', '600292.SS']) {
     const handOwned = res(snap(t));
     assert.equal(handOwned.category, 'unchecked', t);
     assert.equal(handOwned.why, 'hand-table', t);
   }
-  for (const t of F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ'].includes(t))) {
+  for (const t of F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ', '600292.SS'].includes(t))) {
     const s = snap(t), r = res(s);
     assert.ok(['would-withhold', 'would-withhold-growth'].includes(r.category), t + ' ' + r.category + ' ' + r.why);
     const lvl = r.withhold.find(w => w.level);

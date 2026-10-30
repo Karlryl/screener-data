@@ -178,6 +178,7 @@
     "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,441,239,432 USD / price 37.01837299 USD = 38,933,085 shares; the same snapshot's meta.sharesOutstanding is 19,536,648",
     "reason": "Börsenwert aus 19.752.877 Aktien berechnet: laut Geschäftsbericht 2025 von Fastned 19.552.877 Aktien zum 31.12.2025 plus 200.000 neue Aktien im Februar 2026. Yahoo rechnet mit rund 38,9 Mio. Aktien, also etwa doppelt so vielen. Stand der Aktienzahl 10.02.2026.",
     "source": {
+      "form": "Der Geschäftsbericht 2025 von Fastned nennt auf Seite 195 die Zahl der ausgegebenen Aktien nach der Ausgabe vom Februar 2026.",
       "url": "https://www.fastnedcharging.com/media/myzn5jx0/2025-annual-report-final.pdf",
       "quote": "Total issued shares amount to 19,752,877.",
       "page": "Annual Report 2025, p.195 (subsequent events, issuance of shares); p.184 note 19 (19,552,877 issued at 31.12.2025)",
@@ -199,6 +200,7 @@
     "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 4,355,245,483 USD / price 6.59085415 USD = 660,801,338 shares at the ON price; 703,327,748 is the current ON plus PN total, the count the vendor is expected to move to",
     "reason": "Börsenwert näherungsweise aus 564,7 Mio. Stammaktien-Gegenwerten berechnet: laut ISA Energia 238.170.004 Stammaktien und 465.157.744 Vorzugsaktien (Stand 14.10.2026), die Vorzugsaktien umgerechnet mit den Schlusskursen 24,90 und 35,47 BRL vom 29.10.2026. Yahoo bewertet alle Aktien zum Kurs der Stammaktie, obwohl die Vorzugsaktien rund 30 % tiefer notieren. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
     "source": {
+      "form": "Die Aktionärstabelle auf der Anlegerseite von ISA Energia nennt Stammaktien und Vorzugsaktien (Stand 14.10.2026).",
       "url": "https://ri.isaenergiabrasil.com.br/pt/governanca-corporativa/composicao-acionaria-e-estrutura-societaria",
       "quote": "Total 238.170.004 100,00% 465.157.744 100,00% 703.327.748 100,00%",
       "page": "Composição acionária e estrutura societária, Total row (page updated 14 Oct 2026)",
@@ -210,20 +212,21 @@
     "withholdUnverified": true
   },
   "7911.T": {
-    "shares": 561185078,
-    "sharesAsOf": "2026-06-30",
+    "shares": 589412480,
+    "sharesAsOf": "2026-10-01",
     "validFrom": "2026-10-01",
     "reviewBy": "2026-11-16",
     "wrongShares": [
       280554025
     ],
     "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 3,795,972,378 USD / price 13.53027239 USD = 280,554,025 shares, the pre-split count against a post-split price",
-    "reason": "Börsenwert aus 561.185.078 Aktien berechnet: Stückzahl zum 30.06.2026 laut Toppan (294.706.240 ausgegeben minus 14.113.701 eigene Aktien), mal 2 wegen des Aktiensplits von 1 zu 2 am 1. Oktober 2026. Yahoo rechnet den Kurs nach dem Split noch mit der alten Stückzahl. Spätere Rückkäufe sind nicht erfasst.",
+    "reason": "Börsenwert aus 589.412.480 Aktien berechnet: ausgegebene Aktien zum 01.10.2026 laut Toppan nach dem Aktiensplit von 1 zu 2, einschließlich eigener Aktien (zum 30.06.2026 rund 28 Mio. nach Split). Yahoo rechnet den Kurs nach dem Split noch mit der alten Stückzahl.",
     "source": {
+      "form": "Die Anlegerseite von Toppan nennt die ausgegebenen Aktien zum 01.10.2026 nach dem Aktiensplit von 1 zu 2.",
       "url": "https://www.holdings.toppan.com/ja/ir/stockinfo/status.html",
       "quote": "589,412,480 株（2026年10月1日時点）",
       "page": "Issuer IR page, share status",
-      "unit": "issued shares including treasury after the 1:2 split; treasury 14,113,701 x 2 at 2026-06-30 taken off",
+      "unit": "issued shares including treasury after the 1:2 split; the vendor implied-shares field already carries this count",
       "crossCheck": "Q1 FY3/2027 short earnings report via TDnet mirror https://finance.biggo.jp/news/jpx_tdnet_140120260811517449 : 14,113,701 treasury shares and 294,706,240 issued; split notice https://finance.biggo.jp/news/jpx_tdnet_140120260827527179 (original JPX PDF returned 403)"
     },
     "verifiedAt": "2026-10-30",

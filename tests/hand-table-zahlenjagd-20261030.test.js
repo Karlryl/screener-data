@@ -57,8 +57,7 @@ test('35 sourced rows validate; every reason names its period, no substitute 0, 
   assert.deepEqual(Object.fromEntries(Object.keys(ROWS).map(t => [t, own.filter(c => c.ticker === t).length])), ROWS);
   for (const c of own) {
     assert.ok(c.sources.length && c.sources.every(s => s.url.startsWith('https://') && s.quote && s.page && s.verifiedAt === '2026-10-30'), c.caseId);
-    assert.match(c.reason, /\d{2}\.\d{2}\.\d{4}/, c.caseId + ': the reason names its period end');
-    assert.ok(c.reason.includes(c.period.split('-').reverse().join('.')) || c.reason.startsWith('Jahresumsatz '), c.caseId + ': the period of this cell');
+    assert.ok(c.reason.includes(c.period.split('-').reverse().join('.')), c.caseId + ': the period of this cell');
     assert.match(c.reason, /Geprüft am 30\.10\.2026\.$/, c.caseId);
     assert.doesNotMatch(c.reason, / [–—-] /, c.caseId + ': dash as punctuation');
     assert.notEqual(c.replacementValue, 0, c.caseId + ': never a substitute 0');
@@ -163,7 +162,7 @@ test('a changed vendor value is never replaced by the old correction', () => {
 const CAP = {
   'FAST.AS': { shares: 19752877, usd: 731e6 },
   'ISAE3.SA': { shares: 564711511, usd: 3722e6 },
-  '7911.T': { shares: 561185078, usd: 7593e6 },
+  '7911.T': { shares: 589412480, usd: 7975e6 },
 };
 const withImplied = (t, shares) => { const s = snap(t); s.marketCap.value = s.price.regularMarketPrice * shares; return s; };
 
