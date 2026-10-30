@@ -57,7 +57,7 @@ test('gate: a bare TSX root passes when its class line is alive, under the row\'
   assert.deepEqual(r.rejected.map((x) => x.ticker), ['DEAD.TO']);
 });
 
-test('gate: the first answer of a dead main line does not refuse a live repair symbol', async () => {
+test('gate: a main line that answers with a dead price is refused, its repair symbols are not asked (same as the pull)', async () => {
   const candidatesOf = () => ['OLD', 'NEW'];
   const quote = async (batch) => (batch.includes('NEW') ? [live('NEW')] : [
     { symbol: 'OLD', quoteType: 'EQUITY', regularMarketTime: daysAgo(90), regularMarketPrice: 5 }]);
@@ -92,12 +92,84 @@ test('protocol: every refused row by name, counts by reason', () => {
   assert.equal(p.abgelehnt.length, 2);
 });
 
-test('wiring: refresh-universe runs the gate before the persistence cap, with the pull\'s symbol repairs', () => {
-  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'refresh-universe.js'), 'utf8');
-  const gate = src.indexOf('await aufnahmeTor(');
+// The real path through refresh-universe.js, only Yahoo replaced.
+const { wendeAufnahmeTorAn } = require('../refresh-universe.js');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+
+async function realPath(quote, protokoll = null, pfad = null) {
+  const warnings = [];
+  const realWarn = console.warn, realLog = console.log;
+  console.warn = (m) => warnings.push(String(m));
+  console.log = () => {};
+  try {
+    const kept = await wendeAufnahmeTorAn([
+      { ticker: 'BRK.B', exchange: 'NYSE', source: 'nasdaq-trader' },
+      { ticker: 'ACO.TO', exchange: 'TSX', source: 'tsx' },
+      { ticker: 'ALPEK/A.MX', exchange: 'BMV', source: 'tvmx' },
+      { ticker: 'DEAD.SW', exchange: 'SIX', source: 'tvch' },
+    ], protokoll, pfad, { quote, nowMs: NOW });
+    return { kept: kept.map((i) => i.ticker), warnings };
+  } finally {
+    console.warn = realWarn;
+    console.log = realLog;
+  }
+}
+
+test('real path: refused rows leave the list, Yahoo is asked under the symbols the pull would use', async () => {
+  const asked = new Set();
+  const quote = async (batch) => {
+    batch.forEach((s) => asked.add(s));
+    return ['BRK-B', 'ACO-X.TO', 'ALPEKA.MX'].filter((s) => batch.includes(s)).map(live);
+  };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'w7-tor-'));
+  const pfad = path.join(dir, 'protokoll.json');
+  try {
+    const protokoll = { schwellen: {} };
+    const r = await realPath(quote, protokoll, pfad);
+    assert.deepEqual(r.kept, ['BRK.B', 'ACO.TO', 'ALPEK/A.MX']);
+    assert.ok(asked.has('BRK-B') && !asked.has('BRK.B'), 'US class share in its dash form');
+    assert.ok(asked.has('ACO-X.TO'), 'the TSX class retry of the pull');
+    assert.ok(asked.has('ALPEKA.MX') && !asked.has('ALPEK/A.MX'), 'the normalization of the pull');
+    assert.deepEqual(r.warnings, []);
+    const written = JSON.parse(fs.readFileSync(pfad, 'utf8'));
+    assert.deepEqual(written.tor3_aufnahmeQuote.abgelehnt.map((x) => x.ticker), ['DEAD.SW']);
+    assert.deepEqual(written.schwellen, {}, 'the sections of the first two gates stay');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('real path: a Yahoo outage keeps every candidate and warns loudly', async () => {
+  const r = await realPath(async () => { throw new Error('503'); });
+  assert.equal(r.kept.length, 4);
+  assert.equal(r.warnings.length, 1);
+  assert.match(r.warnings[0], /^::warning::.*4 neue Zeilen ungeprueft/);
+});
+
+test('real path: Yahoo answering nothing refuses all and warns, the existing list is not involved', async () => {
+  const r = await realPath(async () => []);
+  assert.deepEqual(r.kept, []);
+  assert.match(r.warnings.join(' '), /kein einziger Kandidat/);
+});
+
+test('real path: a failed protocol write does not undo the gate and says what happened', async () => {
+  const quote = async (batch) => ['BRK-B'].filter((s) => batch.includes(s)).map(live);
+  const blocked = fs.mkdtempSync(path.join(os.tmpdir(), 'w7-tor-blocked-'));
+  try {
+    // The target is an existing directory, so the atomic rename onto it must fail.
+    const r = await realPath(quote, {}, blocked);
+    assert.deepEqual(r.kept, ['BRK.B']);
+    assert.match(r.warnings.join(' '), /Protokoll nicht geschrieben.*trotzdem gewirkt/);
+  } finally {
+    fs.rmSync(blocked, { recursive: true, force: true });
+  }
+});
+
+test('wiring: main() replaces the new rows with the gate result before the persistence cap', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'refresh-universe.js'), 'utf8');
+  const gate = src.indexOf('newTickers = await wendeAufnahmeTorAn(newTickers,');
   const cap = src.indexOf('capNewTickerAdmission(newTickers, existing.size');
   assert.ok(gate > -1 && cap > -1 && gate < cap, 'the gate must run before the admission cap, otherwise dead symbols take slots');
-  assert.match(src, /tor3_aufnahmeQuote/);
-  assert.match(src, /normalizeYahooSymbol/);
-  assert.match(src, /caClassCandidates/);
 });

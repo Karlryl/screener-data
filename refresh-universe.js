@@ -835,6 +835,42 @@ function baueAusschlussProtokoll(tvProtokoll, prefilterVerworfen, schwellen) {
   };
 }
 
+// W7 (30.10.2026): runs discovery/aufnahme-tor.js on the new rows and returns the ones to keep. Fail-soft: a
+// problem here must not cost the refresh, and every way of passing unchecked is a ::warning::.
+// opts.quote is the test seam for Yahoo. The pull is required here, so its load problems only skip the gate.
+async function wendeAufnahmeTorAn(newTickers, protokoll, protokollPfad, opts = {}) {
+  let tor;
+  try {
+    const { normalizeYahooSymbol, caClassCandidates } = require('./pull-yahoo.js');
+    // Same symbols the pull would try: its normalization first, then its TSX class/unit retry.
+    tor = await aufnahmeTor(newTickers, (info) => {
+      const sym = normalizeYahooSymbol(toYahooClassShare(info.ticker, _looksUS(info.exchange, info.source)));
+      return [sym, ...caClassCandidates(sym)];
+    }, opts);
+  } catch (e) {
+    console.warn('::warning::[aufnahme-tor] uebersprungen (' + e.message + '); neue Zeilen laufen ungeprueft in den Deckel.');
+    return newTickers;
+  }
+  const tor3 = torProtokoll(tor);
+  console.log(`[aufnahme-tor] ${tor3.befragt} neue Kandidaten befragt, ${tor3.aufgenommen} aufgenommen, ` +
+    `abgelehnt: ${JSON.stringify(tor3.jeGrund)}, ungeprueft wegen ${tor.batchFehler} Batch-Fehlern: ${tor.ungeprueft}`);
+  if (tor.ungeprueft > 0) {
+    console.warn('::warning::[aufnahme-tor] ' + tor.ungeprueft + ' neue Zeilen ungeprueft aufgenommen (' + tor.batchFehler + ' Batch-Fehler); tote Symbole koennen zurueckkommen und starten ihre 30-Tage-Uhr neu.');
+  }
+  if (tor.befragt > 0 && tor.admitted.length === 0) {
+    console.warn('::warning::[aufnahme-tor] kein einziger Kandidat aufgenommen; Yahoo-Antwort pruefen. Bestand unberuehrt, naechster Lauf fragt neu.');
+  }
+  if (protokoll) {
+    try {
+      protokoll.tor3_aufnahmeQuote = tor3;
+      writeJsonAtomic(protokollPfad, protokoll);
+    } catch (e) {
+      console.warn('::warning::[aufnahme-tor] Protokoll nicht geschrieben (' + e.message + '); das Tor hat trotzdem gewirkt, die Ablehnungen dieses Laufs sind unbelegt.');
+    }
+  }
+  return tor.admitted;
+}
+
 // BH-040: applyDeadRegistryAndCap() only caps the raw discovery candidate map; existing
 // watchlist rows never go through any cap at all, so the persisted union(existing,
 // newTickers) could grow past MAX_UNIVERSE over time (only prune-watchlist ever shrinks
@@ -1890,30 +1926,8 @@ async function main() {
   }
   console.log(`\nNew tickers: ${newTickers.length} (already-in: ${allTickers.size - newTickers.length})`);
 
-  // W7 (30.10.2026): new rows need a live Yahoo quote; see discovery/aufnahme-tor.js. Before the
-  // cap, so dead symbols no longer take admission slots. Fail-soft like the protocol above.
-  try {
-    // Same symbols the pull would try: its normalization first, then its TSX class/unit retry.
-    // Required here so a load problem of the pull only skips the gate, not the whole refresh.
-    const { normalizeYahooSymbol, caClassCandidates } = require('./pull-yahoo.js');
-    const tor = await aufnahmeTor(newTickers, (info) => {
-      const sym = normalizeYahooSymbol(toYahooClassShare(info.ticker, _looksUS(info.exchange, info.source)));
-      return [sym, ...caClassCandidates(sym)];
-    });
-    newTickers = tor.admitted;
-    const tor3 = torProtokoll(tor);
-    console.log(`[aufnahme-tor] ${tor3.befragt} neue Kandidaten befragt, ${tor3.aufgenommen} aufgenommen, ` +
-      `abgelehnt: ${JSON.stringify(tor3.jeGrund)}, ungeprueft wegen ${tor.batchFehler} Batch-Fehlern: ${tor.ungeprueft}`);
-    if (tor.befragt > 0 && tor.admitted.length === 0) {
-      console.warn('::warning::[aufnahme-tor] kein einziger Kandidat aufgenommen; Yahoo-Antwort pruefen. Bestand unberuehrt, naechster Lauf fragt neu.');
-    }
-    if (ausschlussProtokoll) {
-      ausschlussProtokoll.tor3_aufnahmeQuote = tor3;
-      writeJsonAtomic(path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json'), ausschlussProtokoll);
-    }
-  } catch (e) {
-    console.warn('::warning::[aufnahme-tor] uebersprungen (' + e.message + '); neue Zeilen laufen ungeprueft in den Deckel.');
-  }
+  // W7 (30.10.2026): new rows need a live Yahoo quote. Before the cap, so dead symbols no longer take admission slots.
+  newTickers = await wendeAufnahmeTorAn(newTickers, ausschlussProtokoll, path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json'));
 
   // BH-040: final persistence cap — see capNewTickerAdmission() above for the rationale.
   {
@@ -2107,6 +2121,7 @@ module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   applyForeignPrefilterOutcome,
   baueAusschlussProtokoll,   // Tag 642: Ausschluss-Protokoll beider Entdeckungs-Tore
+  wendeAufnahmeTorAn,  // W7: intake gate, tested through its real path
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   repariereAdrBestand,    // R1-SK-012: ADR-Drop nur gegen echte Watchlist-Zeilen, einzeln pruefbar
   kollabiereYahooDubletten, // R1-SK-010: ein yahoo_symbol = eine Zeile (sonst Board-Dublette)

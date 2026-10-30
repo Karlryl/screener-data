@@ -243,7 +243,7 @@ function finishGood(ok, total, source, m, reasons) {
   if (addressable !== null) {
     honestPct = +(ok / addressable * 100).toFixed(1);
     if (ok / addressable < HONEST_TARGET)
-      reasons.push(`honest-coverage ${honestPct}% < ${HONEST_TARGET * 100}% of addressable ${addressable} (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)`);
+      reasons.push(`honest-coverage ${honestPct}% < ${HONEST_TARGET * 100}% of addressable ${addressable} (abgerufene Zeilen − mcap-skips; Tote bereits ausgetragen, 0.12)`);
   }
   const status = reasons.length ? 'degradiert' : 'ok';
   return { status, reasons, n_ok: ok, n_total: total, source, n_addressable: addressable, honest_coverage_pct: honestPct };

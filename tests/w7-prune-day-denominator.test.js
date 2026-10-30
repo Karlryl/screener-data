@@ -62,9 +62,16 @@ test('a missing shard never certifies a pulled universe', () => {
   assert.equal(m.partial, true);
 });
 
+test('a quarantined shard never certifies a pulled universe', () => {
+  const m = mergeManifests([shard(), { n_ok: 'kaputt' }], 19624, 2);
+  assert.equal(m.n_shards_invalid, 1);
+  assert.equal(m.n_pulled_universe, undefined);
+});
+
 test('a pulled universe below n_total is impossible and is not trusted as a smaller denominator', () => {
   const m = asMerged(mergeManifests([shard()], 19624, 1));
-  assert.equal(manifestNumbersSane({ ...m, n_pulled_universe: 19000 }, 19624), false);
+  // Internally consistent apart from the pulled universe: only the n_pulled_universe < n_total check can refuse it.
+  assert.equal(manifestNumbersSane({ ...m, n_pulled_universe: 19000, n_addressable: 19000 - 5099 - 483, n_ok: 10000, n_full: 3910, n_priceonly: 5929, n_retained: 161 }, 19624), false);
   assert.equal(manifestNumbersSane({ ...m, n_pulled_universe: 'x' }, 19624), false);
 });
 

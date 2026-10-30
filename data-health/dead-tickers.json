@@ -8,7 +8,7 @@
   "kein-listing-fraktional": 545,
   "delisted-kein-yahoo-listing": 1374,
   "zombie-kein-marktdatum": 6,
-  "altbestand-ohne-yahoo": 88,
+  "altbestand-ohne-yahoo": 87,
   "abgeloest-kein-handel": 1,
   "abgeloest-neues-kuerzel": 1,
   "zweitnotiz-kurs-steht": 1
@@ -3058,7 +3058,6 @@
   "YUASF": "schemafail-quote-tot",
   "ZYNE": "schemafail-quote-tot",
   "0011.HK": "altbestand-ohne-yahoo",
-  "1448.HK": "altbestand-ohne-yahoo",
   "3333.HK": "altbestand-ohne-yahoo",
   "3960.HK": "altbestand-ohne-yahoo",
   "AAPC": "altbestand-ohne-yahoo",
@@ -3149,5 +3148,5 @@
   "PSKY": "abgeloest-neues-kuerzel",
   "1WAF.MI": "zweitnotiz-kurs-steht"
  },
- "nachtrag_2026_10_30": "W7: 88 failed rows without added_at, which the 30-day prune exempts forever, each without a live quote on 30.10. and without a snapshot; plus ARX.TO (last trade 04.09., Shell takeover), PSKY (last trade 22.10., now SKYD), 1WAF.MI (last trade 25.09., home listing WAF.DE). All other dead rows leave through the 30-day prune and stay out through discovery/aufnahme-tor.js."
+ "nachtrag_2026_10_30": "W7: 87 failed rows without added_at, which the 30-day prune exempts forever, each without a live quote on 30.10. and without a snapshot; plus ARX.TO (last trade 04.09., Shell takeover), PSKY (last trade 22.10., now SKYD), 1WAF.MI (last trade 25.09., home listing WAF.DE). All other dead rows leave through the 30-day prune and stay out through discovery/aufnahme-tor.js."
 }
