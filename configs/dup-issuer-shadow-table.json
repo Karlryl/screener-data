@@ -8,6 +8,7 @@
     "Sources and verbatim quotes are supplied by R11-FINAL (2026-09-30); no network re-check was performed in this task.",
     "2026-10-23 (numbers-trust audit 23.10.): circle, strategy, energy-fuels, star-bulk, vinci and the GE leg 1GE.MI were added with sources fetched and quotes checked verbatim on 2026-10-23; vinci's home listing DG.PA is excluded by production, so its legs DG.SW and DG.VI keep their ranks until DG.PA stands in the ranking.",
     "2026-10-24 (numbers-trust audit 23.10.): skydance added with sources fetched and quotes checked verbatim on 2026-10-24; PSKY is the former Nasdaq ticker of the same Class B common stock (listing transferred to the NYSE as SKYD on 2026-10-06), so it is a stale leg of SKYD, not a second class.",
+    "2026-10-30 (P290, two reviews, sources re-read): Amrize gets the home listing AMRZ.SW with markFollowsHomeListing, so AMRZ holds no rank when both legs stand in a ranking. Three cases stay out on purpose: Aeromexico (the sources name AERO.MX, but its vendor series would put a wrong 52-week distance and a flat price step on the visible row, see its note); Siltronic and the Madrid leg XAXIA.MC of AXIA (the home legs WAF.DE and AXIA3.SA lose the sealed production dedup in src/scoring/score.js before the export, so this table can neither show them nor remove a rank without hiding the firm).",
     "RBI (QSR / QSP.TO) and Molson Coors (TAP-A / TPX.TO) are deliberately absent: economically equivalent exchangeable shares, not secondary listings; TPX.TO class attribution is unproven."
   ],
   "aerovironment": {
@@ -73,20 +74,21 @@
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal remains unresolved (offen)."
+    "note": "R11 home-listing proposal remains unresolved (offen). Checked 2026-10-30: the sources point to AERO.MX (20-F filed 2026-04-30, Item 9.A: \"The ADSs are listed on the New York Stock Exchange under the symbol \u201cAERO.\u201d The common shares are listed on the Mexican Stock Exchange.\"; each ADS represents ten common shares; https://www.sec.gov/Archives/edgar/data/1561861/000119312526197494/d101275d20f.htm). Held back because the vendor series of AERO.MX is broken: closes flat at 167 MXN with volume 0 through 2026-10-29 against a quote of 28.42 MXN on 2026-10-30, 52-week high 167 MXN. As the visible row it would show a distance of -83.16 % to the 52-week high (AERO: -33.97 %) and a flat price step. Decide once that series is withheld or repaired."
   },
   "amrize": {
     "issuer": "Amrize",
     "tickers": ["AMRZ", "AMRZ.SW"],
     "codeKeeps": "AMRZ",
-    "homeListingProposal": null,
+    "homeListingProposal": "AMRZ.SW",
+    "markFollowsHomeListing": true,
     "source": {
-      "url": "https://investors.amrize.com/resources/faq",
-      "quote": "Amrize shares currently trade on the NYSE and the SIX under the ticker symbol AMRZ."
+      "url": "https://www.six-group.com/sheldon/equity_issuers/v1/equity_issuers.json",
+      "quote": "\"primaryListing\" : true"
     },
-    "sourceCheckedOn": "2026-09-30",
+    "sourceCheckedOn": "2026-10-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal remains unresolved (offen)."
+    "note": "A decision for a true dual listing, not a claim that the NYSE line is secondary. The quote is the Amrize Ltd row (ISIN CH1430134226) of the SIX issuer list behind the column \"Primary Listing*\" on https://www.six-group.com/en/market-data/shares/companies.html, read 2026-10-30; 10 of the 241 issuers there carry false (3M, Abbott, Pepsico), so the SIX line is not a secondary listing. Tie-break: the listing in the country of the registered office; the 10-K for 2025 (https://www.sec.gov/Archives/edgar/data/2035989/000203598926000017/holcim-20251231.htm) gives \"Our principal executive offices are located at Grafenauweg 8, 6300 Zug, Switzerland\" and \"We also have operational headquarters in Chicago.\" No filing names a primary or a secondary listing: the 10-K says \"listed under the symbol \u201cAMRZ\u201d on the New York Stock Exchange and the SIX Swiss Exchange\". Strongest counter-evidence: the 8-K of June 2025 (https://www.sec.gov/Archives/edgar/data/2035989/000114036125023352/ef20050735_8k.htm) has \"to be listed on the New York Stock Exchange, with an additional listing on the SIX Swiss Exchange\". A company document naming a primary listing flips this entry. Earlier source of this row, not re-read: https://investors.amrize.com/resources/faq (both lines trade under AMRZ)."
   },
   "axia-energia": {
     "issuer": "AXIA Energia",
