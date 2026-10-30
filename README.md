@@ -29,7 +29,7 @@ This is a discovery / screener tool. The official score measures quality, never 
 - **`prices`** (sharded): `pull-historical-prices.js`.
 - **`merge`**: merges shard snapshots and manifests, runs the F-12 filter (`scripts/filter-snapshot-merge.js`), the freshness and two-stage coverage gates, commits to `main` and deploys to Pages.
 - **`scoring`**: `src/scoring/run-screener.js`, `scripts/write-findash-export.js`, Pages deploy of the scoring output, then writes and commits the `board-history/` vintage.
-- **Guards:** `entdeckungs-waechter`, `earnings-transport-waechter`, `jahres-ausreisser-waechter`, `druckenmiller-guard`; **`laufstatus`** runs after all jobs and summarises the run.
+- **Guards:** `entdeckungs-waechter`, `earnings-transport-waechter`, `jahres-ausreisser-waechter`, `druckenmiller-guard`, `feed-fill-waechter`; **`laufstatus`** runs after all jobs and summarises the run.
 
 ## Scoring
 
