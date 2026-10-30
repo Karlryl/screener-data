@@ -81,7 +81,7 @@ pruefe('table: the five cases and the two Lindt buyback lines are registered, no
     assert.ok(/^https:\/\//.test(row.source.url) && row.source.quote.trim(), `${t}: source`);
   }
   for (const t of Object.keys(HELD)) assert.ok(guard.holds[t] && guard.holds[t].reason && guard.holds[t].source.quote, `${t}: hold missing`);
-  assert.deepStrictEqual(Object.keys(guard.holds).sort(), ['1WAF.MI', 'ARX.TO', 'ISBTR.IS', 'LISNE.SW', 'LISPE.SW']);
+  assert.deepStrictEqual(Object.keys(guard.holds).sort(), ['1WAF.MI', 'ARX.TO', 'EFTY', 'FBRX', 'ISBTR.IS', 'LISNE.SW', 'LISPE.SW', 'MCTA', 'NATH', 'RCIT', 'RMAX', 'SLP', 'WEAV']);
 });
 
 pruefe('presence: 8035.T, 285A.T and LISN.SW land on price x issuer count with reason', () => {
