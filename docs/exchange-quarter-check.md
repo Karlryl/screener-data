@@ -85,6 +85,14 @@ Both reasons carry `whyText`; `no-own-read` also carries the sorted unique `noDa
 `noData`. German labels: `no-own-read` = "Börsenquelle hat diese Firma noch nie geliefert";
 `store-old` = "Der letzte Abruf der Börsenquelle für diese Firma ist älter als die Frist".
 
+## Fill of an empty newest annual revenue (P288, measured, not wired)
+
+`lib/annual-gap-fill.js` holds the rule (China general only; exchange check's gates; one observation per year;
+vendor prior within the 0.1 % tolerance of the exchange prior, same line; source and notice date on the value).
+`prepareSnapshot` does not call it. `scripts/annual-gap-fill-report.js` measures what a cell fill would move: the
+growth bonus (`robustG`), the filter tab's three-year growth, and, without a quarterly pair, growth, Rule of X and
+rank. Wiring it is therefore a before/after decision, not a data repair.
+
 ## Reason texts (German, `financialDataReasons`)
 
 - level pair: "Quartalsvergleich ausgeblendet: Das Vorjahresquartal des Datenanbieters weicht von der Börsenmeldung ab (vermutlich berichtigte Vorjahreszahlen). Gezeigt wird der Jahreswert."
