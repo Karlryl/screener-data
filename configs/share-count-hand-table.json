@@ -167,6 +167,47 @@
     "verifiedAt": "2026-10-24",
     "withholdUnverified": true
   },
+  "FAST.AS": {
+    "shares": 19752877,
+    "sharesAsOf": "2026-02-10",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2027-03-31",
+    "wrongShares": [
+      38933085
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,441,239,432 USD / price 37.01837299 USD = 38,933,085 shares; the same snapshot's meta.sharesOutstanding is 19,536,648",
+    "reason": "Börsenwert aus 19.752.877 Aktien berechnet: laut Geschäftsbericht 2025 von Fastned 19.552.877 Aktien zum 31.12.2025 plus 200.000 neue Aktien im Februar 2026. Yahoo rechnet mit rund 38,9 Mio. Aktien, also etwa doppelt so vielen. Stand der Aktienzahl 10.02.2026.",
+    "source": {
+      "url": "https://www.fastnedcharging.com/media/myzn5jx0/2025-annual-report-final.pdf",
+      "quote": "Total issued shares amount to 19,752,877.",
+      "page": "Annual Report 2025, p.195 (subsequent events, issuance of shares); p.184 note 19 (19,552,877 issued at 31.12.2025)",
+      "unit": "shares (one class; one depositary receipt per share)",
+      "crossCheck": "Issuer investor relations page on 2026-10-30: capitalisation 654.26M EUR at EUR 32.95, about 19.86M shares"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "ISAE3.SA": {
+    "shares": 559990445,
+    "sharesAsOf": "2026-10-14",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      660801338,
+      703327748
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 4,355,245,483 USD / price 6.59085415 USD = 660,801,338 shares at the ON price; 703,327,748 is the current ON plus PN total, the count the vendor is expected to move to",
+    "reason": "Börsenwert näherungsweise aus 560,0 Mio. Stammaktien-Gegenwerten berechnet: laut ISA Energia 238.170.004 Stammaktien und 465.157.744 Vorzugsaktien (Stand 14.10.2026), die Vorzugsaktien umgerechnet mit dem Kursverhältnis 24,54 zu 35,47 BRL von der Firmenseite am 30.10.2026. Yahoo bewertet alle Aktien zum Kurs der Stammaktie, obwohl die Vorzugsaktien rund 30 % tiefer notieren.",
+    "source": {
+      "url": "https://ri.isaenergiabrasil.com.br/pt/governanca-corporativa/composicao-acionaria-e-estrutura-societaria",
+      "quote": "Total 238.170.004 100,00% 465.157.744 100,00% 703.327.748 100,00%",
+      "page": "Composição acionária e estrutura societária, Total row (page updated 14 Oct 2026)",
+      "unit": "shares: ON 238,170,004 + PN 465,157,744 x (24.54 / 35.47) = 559,990,445 ON equivalents",
+      "crossCheck": "Fato Relevante of 2026-07-23: primary offering of 44,444,444 PN; https://b3.com.br/data/files/36/72/EF/1E/1649F91094DCD8F9AC094EA8/Fato%20Relevante_Isa%20Energia_Preco_23.07.2026.pdf"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
   "_holds": {
     "ISBTR.IS": {
       "validFrom": "2026-10-10",
