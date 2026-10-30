@@ -5,8 +5,8 @@
 // Per filter-universe ticker the last two FINISHED stored daily bars of the price store (prices/history/), so that
 // c1 / c0 is the total return of that step. Finished = dated strictly before the UTC day of the store stamp
 // (priceStoreUpdatedAt): the pulls run during European trading hours, so the bar of the stamp day is an intraday
-// value, and a previous-day bar can still vanish or change at the next pull. A ticker the last pull did not refresh is
-// judged by its own last fetch day (P303, stepFor). Raw numbers only: nothing is ranked, scored or judged here.
+// value, and a previous-day bar can still vanish or change at the next pull. A ticker the run of the stamp did not fetch
+// has no row (P303, fetchedOn). Raw numbers only: nothing is ranked, scored or judged here.
 // It sits next to filter/universum.json and never touches it.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -50,11 +50,11 @@ function tailOf(bars, cutoffDay) {
  * Turn the last two finished bars of one ticker into a row, or name the reason why there is none.
  * The bars are taken exactly as stored, never filled or replaced by older ones. They need not be consecutive trading
  * days: the row states both dates and the consumer judges the gap.
- * A ticker the last pull did not refresh (`lastFetch` set) keeps what its last fetch stored: a bar dated on or after that
- * fetch day may be an intraday value that no later pull corrected, so the store-wide cutoff does not make it finished.
- * When the last fetch day is not on record, no bar of the series can be called finished.
+ * A ticker the run of the stamp did not fetch keeps what an earlier fetch stored: its newest bar may be an intraday value
+ * that no later pull corrected, so the store-wide cutoff does not make it finished. This is checked last, so that only a
+ * ticker that would have had a row changes its count.
  * @param {string} ticker Universe ticker.
- * @param {{total: number, tail: Array<{date: string, close: number}>, lastFetch?: string}|undefined} entry Result of tailOf plus the last fetch day of a ticker not refreshed at the stamp; undefined when the ticker is not in the store.
+ * @param {{total: number, tail: Array<{date: string, close: number}>, notRefreshed?: boolean}|undefined} entry Result of tailOf plus whether the run of the stamp did not fetch the ticker; undefined when the ticker is not in the store.
  * @returns {{row: object}|{skip: string}} Row `{t, d0, c0, d1, c1}` or one of SKIP_REASONS.
  */
 function stepFor(ticker, entry) {
@@ -65,7 +65,7 @@ function stepFor(ticker, entry) {
   if (!d0 || !d1) return { skip: 'invalid-date' };
   if (!goodClose(a.close) || !goodClose(b.close)) return { skip: 'invalid-close' };
   if (!(d1 > d0)) return { skip: 'dates-not-increasing' };
-  if (entry.lastFetch !== undefined && (entry.lastFetch === store.UNKNOWN_FETCH_DAY || d1 >= entry.lastFetch)) return { skip: 'not-refreshed-at-stamp' };
+  if (entry.notRefreshed) return { skip: 'not-refreshed-at-stamp' };
   return { row: { t: ticker, d0, c0: a.close, d1, c1: b.close } };
 }
 
@@ -146,6 +146,25 @@ function universeTickers(v1Dir, index) {
 }
 
 /**
+ * The tickers fetched in the run of a store stamp, from prices/<day>.json: the merge step writes that file from the runner
+ * slices (a failed ticker has no entry) and it is committed together with the stamp. A failed ticker cannot be told from a
+ * fresh one without it, so a missing, unreadable, empty or foreign file stops the build (fail-soft in the workflow).
+ * @param {string} pricesDir Price-store root.
+ * @param {string} day UTC day of the store stamp.
+ * @returns {Set<string>} Tickers fetched by that run.
+ */
+function fetchedOn(pricesDir, day) {
+  const file = path.join(pricesDir, day + '.json');
+  let listed;
+  try { listed = readJson(file); } catch (error) { throw new Error('Daily price file of the stamp day is missing or unreadable: ' + error.message); }
+  const tickers = listed && typeof listed === 'object' && !Array.isArray(listed) ? Object.keys(listed) : [];
+  if (!tickers.length) throw new Error('Daily price file of the stamp day lists no ticker: ' + file);
+  const foreign = tickers.find(t => listed[t]?.pulledOn !== day);
+  if (foreign !== undefined) throw new Error('Daily price file ' + file + ' is of another date: ' + foreign + ' was pulled on ' + listed[foreign]?.pulledOn);
+  return new Set(tickers);
+}
+
+/**
  * Read the finished tails of the given tickers shard by shard (one shard in memory at a time). All 32 shards are read so
  * that their ticker count can be held against `_meta.json` (a truncated shard fails like in the store loader).
  * @param {string} pricesDir Price-store root (holds history/history-NN.json and history/_meta.json).
@@ -159,10 +178,7 @@ function readStore(pricesDir, tickers) {
   const missing = Array.from({ length: store.SHARD_COUNT }, (_, n) => n).filter(n => !fs.existsSync(store.shardPath(pricesDir, n)));
   if (missing.length) throw new Error('Price store is partial: ' + missing.length + ' shard file(s) missing');
   if (!text(meta.updatedAt) || !finite(Date.parse(meta.updatedAt))) throw new Error('Price store stamp is not a date');
-  // Without the record a failed ticker cannot be told from a fresh one: no file (fail-soft in the workflow) rather than a guess.
-  const notFetched = store.notFetchedIndex(meta);
-  if (!notFetched) throw new Error('Price store stamp has no per-ticker fetch days (written before the first merge with them, or by a write outside the merge step)');
-  const cutoffDay = cutoffOf(meta.updatedAt), byShard = new Map();
+  const cutoffDay = cutoffOf(meta.updatedAt), fetched = fetchedOn(pricesDir, cutoffDay), byShard = new Map();
   for (const ticker of tickers) {
     const n = store.shardOf(ticker);
     if (!byShard.has(n)) byShard.set(n, []);
@@ -173,7 +189,7 @@ function readStore(pricesDir, tickers) {
   for (let n = 0; n < store.SHARD_COUNT; n++) {
     const shard = store.loadShard(pricesDir, n);
     stored += Object.keys(shard).length;
-    for (const ticker of byShard.get(n) || []) if (Object.hasOwn(shard, ticker) && Array.isArray(shard[ticker])) entries[ticker] = { ...tailOf(shard[ticker], cutoffDay), lastFetch: notFetched.get(ticker) };
+    for (const ticker of byShard.get(n) || []) if (Object.hasOwn(shard, ticker) && Array.isArray(shard[ticker])) entries[ticker] = { ...tailOf(shard[ticker], cutoffDay), notRefreshed: !fetched.has(ticker) };
   }
   if (stored !== meta.tickerCount) throw new Error('Price store carries ' + stored + ' ticker(s) but _meta.json stamps ' + meta.tickerCount + ' (truncated shard?)');
   return { entries, updatedAt: meta.updatedAt };
@@ -246,4 +262,4 @@ function main(argv) {
 }
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
-module.exports = { cutoffOf, tailOf, stepFor, buildFeed, validate, universeTickers, readStore, build, selfTest, main, ROW_KEYS, SKIP_REASONS, MAX_BYTES };
+module.exports = { cutoffOf, tailOf, stepFor, buildFeed, validate, universeTickers, fetchedOn, readStore, build, selfTest, main, ROW_KEYS, SKIP_REASONS, MAX_BYTES };
