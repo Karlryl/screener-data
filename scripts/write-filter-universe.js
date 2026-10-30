@@ -41,6 +41,7 @@ const DY_MAX_PCT = 50;        // 25-50 % exists (shipping, special dividends); a
 const PO_MAX_PCT = 100000;    // unit errors only (BANPU.BK 2,788,100); high real ratios (SLG 15375) stay, findash caps ranking at 100
 // Floor, not ceiling: one year of expected profit at two thirds of the market cap and more. On 30.10.2026 each of the 14 of 21 rows
 // below it with a second-source value was wrong by a factor 2.4 to 561 (ENIC 0.02 vs 11.01); the lowest second-source value is 1.58 (DEC).
+// The floor is not clean: BHC read a true 1.37 on 14.10.2026 and would have been withheld.
 const FPE_MIN = 1.5;
 const EV_FACTOR_MIN = Math.E; // with EV_MARGIN 1.0 a factor inside 1/e..e can never win the balance comparison
 const EV_MARGIN = 1.0;        // one reading must beat the other by a factor e (ln distance 1.0)

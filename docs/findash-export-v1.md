@@ -1501,7 +1501,7 @@ A positive payout next to `dySt` `keine` stays: the vendor yield field is the un
 A withheld yield sets `dySt` to `unbekannt` and its payout zero stays missing.
 **Forward P/E floor (30.10.2026):** a positive `fpe` that rounds to below 1.5 is withheld, never clipped, and `aus` gets `fpe-implausible`: one year of expected profit would be at least two thirds of
 the market cap. On 30.10.2026 all 14 of the 21 such rows with a second-source value were wrong by a factor 2.4 to 561 (ENIC 0.02 against 11.01), and the lowest second-source value of all checked rows was 1.58, so
-true small values above the floor stay. Wrong values above it remain possible (1911.T 1.87 against 9.33); the feed cannot tell them apart because the pull keeps no forward EPS. Board history and scores do not read this field; this rule is display-only.
+true small values above the floor stay. Wrong values above it remain possible (1911.T 1.87 against 9.33); the feed cannot tell them apart because the pull keeps no forward EPS. A true value can also fall below the floor and is then withheld too: BHC read 1.37 from 14.10. to 29.10.2026 on a forward EPS of about 4.30 USD at a close of 5.89 USD. Board history and scores do not read this field; this rule is display-only.
 `evs` is withheld with `evs-waehrung` when Yahoo built it from an enterprise value in the reporting currency while the pull multiplied it by the
 trading/reporting factor (USD-listed ADR/OTC lines, factor outside 1/e to e, compared against market cap + debt - cash). Otherwise, when the
 latest annual balance gives debt and cash and the vendor EV differs by more than a factor e^1.5 in either direction from every applicable
