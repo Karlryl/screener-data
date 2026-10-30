@@ -329,7 +329,7 @@
       "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a"
     },
     "dependencySha256LF": {
-      "lib/g31-recency.js": "29041b377f5540c3390443c7bf1a608d0a95d6299c9c0116b94df1824a453a5f"
+      "lib/g31-recency.js": "a1a1ab8689214b2d8b225c212fbdb0b0b75fc7dec990ad2a8ca462f11daf5d4e"
     },
     "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
     "goldenImpact": "verify() rebuilds the 25 golden traces unchanged (GQS00-023 and GQS00-024 keep their registered second traces): no golden case has a newest quarter without a valid year-ago pair next to an older valid pair.",
@@ -340,10 +340,14 @@
       "scope": "Require positive exchange evidence for exactly the selected older CN/TW pair and retain the latest known fiscal year end independently of annual growth availability. No older fallback without a dated newest annual row or a valid newer-year record. Hold only Pepco revenueQ 2024-09-30 through the source-backed financial hand table.",
       "evidence": "tests/g31-review-fix.test.js: unchanged ODC and Pepco from run 41027769596; modified A17U.SI snapshot; three real 000595.SZ store gaps; exact positive pair and wrong-pair checks; in-memory break-once mutations and unchanged source hashes.",
       "review": "Builder correction for P305/#49. Independent Claude review remains required; no merge or publication by the builder."
+    },
+    "reviewFixR3": {
+      "scope": "Skip nonpositive current revenue only in the older-pair fallback. Label a retained older pair when a newer stored quarter cannot form a comparison, preserving checked source hints and all numeric inputs. Extend source-backed holds to proven missing listing aliases. Resolve the in-progress main merge without changing sealed scoring files.",
+      "evidence": "tests/g31-pr75-r3.test.js: real 30 October packets; Mediobanca zero guard, seven proved alias listings, Healthgen Q1/Q2 label and age bound, in-memory red/green probes. Codex review completed with the Jio expectation conflict unresolved. Claude review and merge completion remain pending."
     }
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "29041b377f5540c3390443c7bf1a608d0a95d6299c9c0116b94df1824a453a5f",
+    "lib/g31-recency.js": "a1a1ab8689214b2d8b225c212fbdb0b0b75fc7dec990ad2a8ca462f11daf5d4e",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
 }

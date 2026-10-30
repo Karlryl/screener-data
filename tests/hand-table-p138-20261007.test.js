@@ -55,8 +55,8 @@ test('P138 appends exactly ten cells, two coverage entries and two genuine trimm
     { ticker: '000552.SZ', field: 'revenueQ', coversThrough: '2026-06-30' },
     ...['opIncQ', 'grossProfitQ'].map(field => ({ ticker: 'CDR.WA', listingAliases: ['OTGLF'], field, coversThrough: '2026-06-30' }))]); // P177 appends verified BYLOT coverage after the two P138 entries; 18.10.2026 appends CDR.WA (three series) and 000552.SZ; P148 (22.10.2026) appends the MODEC row after these seven.
   for (const [key, count, digest] of [
-    ['cases', 216, '3cf2cd8528d0242838af9c2bfdbe8d13531e1d6c1c63f993c96eec8c09daa82b'], // P177 updates HL recast evidence and two CIG-C fingerprints within this prefix.
-    ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],
+    ['cases', 216, 'b9e241918e1e8a6f0f62306028abb4fa69f851620f4ffa7a0b3e1eb1dcb4afc7'], // R3 adds only proven CIG-C and CMM.AX alias keys in this prefix.
+    ['coverage', 34, '4b09e114c6ef9419097874c60e7e37aa27566bb59fd4c3d4127257b722a2f843'], // R3 adds the same CIG-C aliases to gross-profit coverage.
     ['quarantines', 11, '609406b7d3e5bfd3096867a5c88dae0b937623a70fbc1e5d76e2e4cce9967065'], // 22.10.2026: reasonDate on every hold; TYG re-checked on the FY2025 packet.
     ['periodLabels', 16, '57bb38710653f7db4cfb98a1e1820372f2c628ef22ff4fb5da0637fe44667445'],
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
