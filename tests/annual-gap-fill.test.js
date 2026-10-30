@@ -86,6 +86,51 @@ test('base-mixing risks refuse: other markets, foreign currency, hand-table mark
   assert.equal(annualGapFill(newer, ctx).refuse, 'newer-year-record');
 });
 
+test('quarter-mismatch: a vendor prior-year quarter 7.6 % off the exchange (as at 600169.SS) refuses and names the period', () => {
+  const s = fangbang(), i = s.timeseries.revenueQEnds.indexOf('2025-06-30');
+  s.timeseries.revenueQ[i].value *= 1.076;
+  const r = annualGapFill(s, ctx);
+  assert.equal(r.fill, undefined);
+  assert.equal(r.refuse, 'quarter-mismatch');
+  assert.deepEqual(r.detail.periods, ['2025-06-30']);
+});
+
+test('not-general: a securities firm table refuses, its revenue line is another definition', () => {
+  const broker = structuredClone(ctx);
+  for (const list of Object.values(broker.stores.cn.companies['688020.SS'].ytd)) for (const o of list) o.table = 'SINCOME';
+  const r = annualGapFill(fangbang(), broker);
+  assert.equal(r.fill, undefined);
+  assert.equal(r.refuse, 'not-general');
+});
+
+test('notice-after-snapshot: a report published after the snapshot was fetched refuses', () => {
+  const late = structuredClone(ctx);
+  late.stores.cn.companies['688020.SS'].ytd['2025-12-31'][0].noticeDate = '2026-11-30';
+  const r = annualGapFill(fangbang(), late);
+  assert.equal(r.fill, undefined);
+  assert.equal(r.refuse, 'notice-after-snapshot');
+});
+
+test('no-exchange-value: an annual report row without a revenue figure refuses, on either year', () => {
+  for (const period of ['2025-12-31', '2024-12-31']) {
+    const empty = structuredClone(ctx);
+    const row = empty.stores.cn.companies['688020.SS'].ytd[period][0];
+    row.total = null; row.operate = null;
+    const r = annualGapFill(fangbang(), empty);
+    assert.equal(r.fill, undefined, period);
+    assert.equal(r.refuse, 'no-exchange-value', period);
+  }
+});
+
+test('unit: a prior-year cell in another unit or period type refuses', () => {
+  const thousands = fangbang();
+  thousands.annual.annualRev[1].multiplier = 1000;
+  assert.equal(annualGapFill(thousands, ctx).refuse, 'unit');
+  const quarter = fangbang();
+  quarter.annual.annualRev[1].periodType = '3M';
+  assert.equal(annualGapFill(quarter, ctx).refuse, 'unit');
+});
+
 test('apply changes only the empty cell and leaves its input alone', () => {
   const s = fangbang(), before = structuredClone(s);
   const after = applyAnnualGapFill(s, annualGapFill(s, ctx).fill);
