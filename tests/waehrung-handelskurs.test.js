@@ -365,15 +365,14 @@ check('Spur der Korrektur: mischVerhaeltnisFaktor steht im Snapshot, auch bei Fa
 });
 
 // ---------------------------------------------------------------------------
-// 6) EV reading (30.10.2026): an EV ratio on a mixed-currency row is only kept when it fits the
-//    definition market cap + debt - cash within +/-25 %. Raw numbers below are the stored values of
-//    the 30.10.2026 population divided by that row's stamps (market cap at its pull = P/S x revenue).
+// 6) EV reading (30.10.2026): an EV ratio on a mixed-currency row is only kept when a reading fits the
+//    definition market cap + debt - cash within +/-25 %. Raw numbers are the stored values of the 30.10.2026
+//    population divided by that row's stamps (market cap of its pull = P/S x revenue, stored one = prior).
 // ---------------------------------------------------------------------------
-const JPY = 0.006359705, ARS = 0.00065019506, CNY30 = 0.15013663;
 function adr(ticker, rc, fx, f) {
   py._FX_TO_USD[rc] = fx; py._FX_PROVENANCE[rc] = 'live';
   return {
-    meta: { ticker, reportingCurrency: rc, tradingCurrency: 'USD' },
+    meta: Object.assign({ ticker, reportingCurrency: rc, tradingCurrency: 'USD' }, f.prior ? { evPriorMarketCapUsd: f.prior } : {}),
     marketCap: { value: f.mc },
     metrics: {
       revenueTTM: { value: f.rev / fx }, ebitda: { value: f.ebitda / fx },
@@ -383,20 +382,31 @@ function adr(ticker, rc, fx, f) {
     annual: { annualRev: [f.rev / fx], annualBalance: [{ totalDebt: f.debt / fx, totalCash: f.cash / fx }], annualBalanceEnds: ['2026-03-31'] },
   };
 }
-const kxiay = () => adr('KXIAY', 'JPY', JPY, { mc: 45007671296, rev: 23912394607, ebitda: 15056354600, debt: 6658750445, cash: 2991997127, ev: 6988309725184, evs: 1.858, eve: 2.95 });
-const takeda = () => adr('TAK', 'JPY', JPY, { mc: 63923392512, rev: 29375062823, ebitda: 7945408201, debt: 31047049538, cash: 3784367899, ev: 5139749404672, evs: 1.113, eve: 4.114 });
-// WRD: Yahoo's EV is the USD market cap plus the net cash as a CNY number, so -3.29 bn; the definition is +0.53 bn.
-const wrd = () => adr('WRD', 'CNY', CNY30, { mc: 1486881723, rev: 124737857, ebitda: 10000000, debt: 100000000, cash: 1052172600, ev: -3288915456, evs: -3.959, eve: -32.9 });
+const kxiayF = { mc: 45007673280, rev: 23912394607, ebitda: 15056354600, debt: 6658750445, cash: 2991997127, ev: 6988309725184, evs: 1.858, eve: 2.95 };
+const kxiay = (prior) => adr('KXIAY', 'JPY', 0.0063563897, Object.assign({}, kxiayF, prior ? { prior } : {}));
+const takeda = () => adr('TAK', 'JPY', 0.006359705, { mc: 63923392512, prior: 63923392512, rev: 29375062823, ebitda: 7945408201, debt: 31047049538, cash: 3784367899, ev: 5139749404672, evs: 1.113, eve: 4.114 });
+const hldvf = () => adr('HLDVF', 'HKD', 0.12742586, { mc: 15637900000, prior: 18106787840, rev: 4255004448, ebitda: 850949909, debt: 10050587282, cash: 2828599240, ev: 169514434560, evs: 5.076, eve: 25.38 });
+const ns8u = () => adr('NS8U.SI', 'HKD', 0.12752336, { mc: 1872900000, prior: 1829331200, rev: 1581405623, ebitda: 871960484, debt: 3104473054, cash: 1115847381, ev: 32966574080, evs: 2.658, eve: 4.821 });
+const tgs = () => adr('TGS', 'ARS', 0.00065019506, { mc: 3766816276, prior: 3766816256, rev: 1204548615, ebitda: 663904737, debt: 970104749, cash: 522826092, ev: -493834797056, evs: -0.267, eve: -0.484 });
+const wrd = () => adr('WRD', 'CNY', 0.15013662, { mc: 1486881723, prior: 1434248704, rev: 124737857, ebitda: -252211649, debt: 48683751, cash: 1000856350, ev: -3288915456, evs: -3.959, eve: 1.958 });
+const ypf = () => {
+  // YPF's TTM is ARS, its annual statements are USD (configs/statement-currency-hand-table.json).
+  const s = adr('YPF', 'ARS', 0.00065019506, { mc: 18745110528, prior: 18745110528, rev: 19008347149, ebitda: 6258637904, debt: 0, cash: 0, ev: 12780811845632, evs: 0.437, eve: 1.328 });
+  s.annual.annualRev = [19008347149];
+  s.annual.annualBalance = [{ totalDebt: 10581000000, totalCash: 933000000 }];
+  return s;
+};
 
-check('EV reading: KXIAY fits as reporting currency -> ratios unscaled, EV in USD, price/sales still scaled', () => {
-  const s = kxiay();
+check('EV reading: KXIAY is withheld: its pull market cap disagrees with the stored one, and without that (c) fails too', () => {
+  const s = kxiay(144770252800);
   py._convertSnapshotToUSD(s);
-  assert.equal(s.meta.evCurrencyReading, 'reporting');
-  assert.equal(s.meta.evDefinitionBalanceEnd, '2026-03-31');
-  assert.equal(s.metrics.enterpriseToRevenue.value, 1.858, 'not 292');
-  assert.equal(s.metrics.enterpriseToEbitda.value, 2.95);
-  assert.ok(Math.abs(s.metrics.enterpriseValue.value / 1e9 - 44.44) < 0.05, 'EV ~44.4 bn USD, is ' + s.metrics.enterpriseValue.value / 1e9);
-  assert.ok(Math.abs(s.metrics.priceSales.value - 45007671296 / 23912394607) < 1e-9);
+  assert.equal(s.meta.evCurrencyReading, 'withheld', 'home line 6.35, source 5.90; 1.86 and 292 are both wrong');
+  assert.equal(s.meta.evWithheldReason, 'market-cap-disagree');
+  assert.strictEqual(s.metrics.enterpriseToRevenue, null);
+  assert.equal(s.meta.evPriorMarketCapUsd, undefined, 'the prior market cap is not stored');
+  const ohne = kxiay();
+  py._convertSnapshotToUSD(ohne);
+  assert.equal(ohne.meta.evWithheldReason, 'no-fit', '(c) 3.73 against the definition 2.04');
 });
 
 check('EV reading: BREN.JK fits as trading currency -> ratio scaled as before', () => {
@@ -407,89 +417,147 @@ check('EV reading: BREN.JK fits as trading currency -> ratio scaled as before', 
   assert.equal(s.meta.evWithheldReason, undefined);
 });
 
-check('EV reading: mixed Yahoo EV (TAK) gives neither the old 175 nor the 1.11 of the two-reading test: empty with a reason', () => {
+check('EV reading: mixed Yahoo EV (TAK) -> reading mixed, 3.28 (home line 3.31), neither the old 175 nor the 1.11 of #28', () => {
   const s = takeda();
   py._convertSnapshotToUSD(s);
-  assert.equal(s.meta.evCurrencyReading, 'withheld');
-  assert.equal(s.meta.evWithheldReason, 'no-fit');
-  assert.strictEqual(s.metrics.enterpriseToRevenue, null, 'definition says 3.10; 175 and 1.11 are both wrong');
-  assert.strictEqual(s.metrics.enterpriseToEbitda, null);
+  assert.equal(s.meta.evCurrencyReading, 'mixed');
+  const evMisch = 63923392512 + (5139749404672 - 63923392512) / (1 / 0.006359705);
+  assert.ok(Math.abs(s.metrics.enterpriseValue.value - evMisch) < 1, 'EV = mcap + (EV - mcap) / factor');
+  assert.ok(Math.abs(s.metrics.enterpriseToRevenue.value - 3.28) < 0.01, 'is ' + s.metrics.enterpriseToRevenue.value);
+  assert.ok(Math.abs(s.metrics.enterpriseToEbitda.value - evMisch / 7945408201) < 1e-9);
+  assert.equal(s.metrics.enterpriseToRevenue.source, 'computed:ev-mixed-reading');
+  assert.equal(s.metrics.enterpriseValue.source, 'computed:ev-mixed-reading');
   assert.ok(Math.abs(s.metrics.priceSales.value - 63923392512 / 29375062823) < 1e-9, 'P/S is not an EV ratio');
-  assert.ok(s.metrics.enterpriseValue.value > 0, 'the EV number stays for the data-quality presence weight');
+});
+
+check('EV reading: YPF -> mixed, 1.42 (home line 1.56, source 1.41); the statement hand table puts the balance at factor 1', () => {
+  const s = ypf();
+  py._convertSnapshotToUSD(s);
+  assert.equal(s.meta.statementFxRateApplied, 1, 'table row active');
+  assert.equal(s.meta.evCurrencyReading, 'mixed');
+  assert.ok(Math.abs(s.metrics.enterpriseToRevenue.value - 1.42) < 0.01, 'is ' + s.metrics.enterpriseToRevenue.value);
+  assert.equal(s.annual.annualBalance[0].totalDebt, 10581000000);
+});
+
+check('EV reading: the two rows the review showed wrong under all-reporting stay empty (HLDVF, NS8U.SI)', () => {
+  for (const [s, zeile] of [[hldvf(), 'HLDVF was 5.08, home 8.53'], [ns8u(), 'NS8U.SI was 2.66, source 3.66']]) {
+    py._convertSnapshotToUSD(s);
+    assert.equal(s.meta.evCurrencyReading, 'withheld', zeile);
+    assert.equal(s.meta.evWithheldReason, 'no-fit', zeile);
+    assert.strictEqual(s.metrics.enterpriseToRevenue, null, zeile);
+    assert.strictEqual(s.metrics.enterpriseToEbitda, null, zeile);
+  }
+});
+
+check('EV reading: the all-reporting reading is gone, a row that only it fits stays empty', () => {
+  const s = kxiay();
+  s.marketCap.value = 44360000000; // (mcap + net debt) / factor as EV: the shape #61's first head accepted
+  s.metrics.enterpriseValue.value = (44360000000 + 3666753318) / 0.0063563897;
+  py._convertSnapshotToUSD(s);
+  assert.equal(s.meta.evCurrencyReading, 'withheld');
+});
+
+check('EV reading: (a) comes first where both fit, and keeps the vendor ratio', () => {
+  // Small net debt: as is and as a mixed sum both land near the market cap.
+  const s = adr('BOTH', 'CNY', 0.15, { mc: 10e9, rev: 5e9, ebitda: 1e9, debt: 0.2e9, cash: 0, ev: 10.3e9, evs: 10.3e9 / (5e9 / 0.15), eve: 10.3e9 / (1e9 / 0.15) });
+  py._convertSnapshotToUSD(s);
+  assert.equal(s.meta.evCurrencyReading, 'trading');
+  assert.equal(s.metrics.enterpriseValue.value, 10.3e9);
+  assert.ok(Math.abs(s.metrics.enterpriseToRevenue.value - 10.3e9 / 5e9) < 1e-9);
+});
+
+check('EV reading: below factor 1 only (a) exists: a value only the mixed formula would fit stays empty', () => {
+  const s = brenSnap();
+  s.annual.annualBalance = [{ totalDebt: 2e10, totalCash: 0 }];
+  py._convertSnapshotToUSD(s);
+  assert.equal(s.meta.evCurrencyReading, 'withheld', 'BREN.JK (c) would be 29,310 on the stored row: noise times 18,000');
 });
 
 check('EV reading: a reading that fits on the EV but not on the ratio is not accepted', () => {
-  const s = kxiay();
-  s.metrics.enterpriseToRevenue.value = 1.858 * 1.6; // 2.97 against the definition's 2.04
+  const s = brenSnap();
+  s.metrics.enterpriseToRevenue.value = 766149 * 1.6;
   py._convertSnapshotToUSD(s);
   assert.equal(s.meta.evCurrencyReading, 'withheld');
   assert.strictEqual(s.metrics.enterpriseToRevenue, null);
 });
 
-check('EV reading: tolerance edge, +/-25 % is inside, 26 % is outside', () => {
+check('EV reading: tolerance edge on (c), +/-25 % is inside, 26 % is outside', () => {
   const at = (q) => {
-    const s = kxiay();
-    const def = (45007671296 + 6658750445 - 2991997127) / JPY;
-    s.metrics.enterpriseValue.value = def * q;
-    s.metrics.enterpriseToRevenue.value = def * q / s.metrics.revenueTTM.value;
+    const s = takeda();
+    const f = 1 / 0.006359705, def = 63923392512 + 31047049538 - 3784367899;
+    s.metrics.enterpriseValue.value = 63923392512 + (def * q - 63923392512) * f;
     py._convertSnapshotToUSD(s);
     return s.meta.evCurrencyReading;
   };
-  assert.equal(at(1.249), 'reporting');
-  assert.equal(at(1 / 1.249), 'reporting');
+  assert.equal(at(1.249), 'mixed');
+  assert.equal(at(1 / 1.249), 'mixed');
   assert.equal(at(1.26), 'withheld');
   assert.equal(at(1 / 1.26), 'withheld');
 });
 
-check('EV reading: neither reading fits -> empty', () => {
-  const s = kxiay();
-  s.metrics.enterpriseValue.value = 44.36e9 * Math.sqrt(1 / JPY);
-  py._convertSnapshotToUSD(s);
-  assert.equal(s.meta.evWithheldReason, 'no-fit');
-  assert.strictEqual(s.metrics.enterpriseToRevenue, null);
+check('EV reading: market caps of both sources: within 25 % nothing happens, outside no reading counts, no prior means no check', () => {
+  const mit = (prior) => { const s = takeda(); s.meta.evPriorMarketCapUsd = prior; py._convertSnapshotToUSD(s); return s.meta.evCurrencyReading; };
+  assert.equal(mit(63923392512 * 1.24), 'mixed');
+  assert.equal(mit(63923392512 / 1.24), 'mixed');
+  assert.equal(mit(63923392512 * 1.26), 'withheld');
+  assert.equal(mit(63923392512 / 1.26), 'withheld');
+  const ohne = takeda(); delete ohne.meta.evPriorMarketCapUsd;
+  py._convertSnapshotToUSD(ohne);
+  assert.equal(ohne.meta.evCurrencyReading, 'mixed');
+});
+
+check('EV reading: the full pull hands the stored market cap to the converter', () => {
+  const zeilen = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'pull-yahoo.js'), 'utf8').split(/\r?\n/);
+  const i = zeilen.indexOf('      if (canonical.meta && _parsedSnapshot && _parsedSnapshot.marketCap && _parsedSnapshot.marketCap.value > 0) canonical.meta.evPriorMarketCapUsd = _parsedSnapshot.marketCap.value;');
+  assert.ok(i > 0, 'whole-line anchor');
+  assert.equal(zeilen[i + 1], '      _convertSnapshotToUSDGuarded(canonical, (e) =>', 'directly before the conversion');
 });
 
 check('EV reading: missing balance or missing debt alone -> empty, reason no-balance, never debt 0', () => {
-  const s = kxiay(); delete s.annual.annualBalance;
+  const s = takeda(); delete s.annual.annualBalance;
   py._convertSnapshotToUSD(s);
   assert.equal(s.meta.evWithheldReason, 'no-balance');
   assert.strictEqual(s.metrics.enterpriseToRevenue, null);
-  const d = kxiay(); d.annual.annualBalance[0].totalDebt = null;
+  const d = takeda(); d.annual.annualBalance[0].totalDebt = null;
   py._convertSnapshotToUSD(d);
   assert.equal(d.meta.evWithheldReason, 'no-balance');
 });
 
 check('EV reading: no market cap -> empty; a ratio without an EV -> empty; no EV fields at all -> no verdict', () => {
-  const m = kxiay(); m.marketCap = null;
+  const m = takeda(); m.marketCap = null;
   py._convertSnapshotToUSD(m);
   assert.equal(m.meta.evWithheldReason, 'no-market-cap');
-  const e = kxiay(); e.metrics.enterpriseValue = null;
+  const e = takeda(); e.metrics.enterpriseValue = null;
   py._convertSnapshotToUSD(e);
   assert.equal(e.meta.evWithheldReason, 'no-ev');
   assert.strictEqual(e.metrics.enterpriseToRevenue, null);
-  const n = kxiay(); n.metrics.enterpriseValue = null; n.metrics.enterpriseToRevenue = null; n.metrics.enterpriseToEbitda = null;
+  const n = takeda(); n.metrics.enterpriseValue = null; n.metrics.enterpriseToRevenue = null; n.metrics.enterpriseToEbitda = null;
   py._convertSnapshotToUSD(n);
   assert.equal(n.meta.evCurrencyReading, undefined);
 });
 
-check('EV reading: a negative EV goes through the same check: mixed sum (WRD) empty, real net cash passes', () => {
-  const s = wrd();
-  py._convertSnapshotToUSD(s);
-  assert.equal(s.meta.evCurrencyReading, 'withheld', 'definition is +0.53 bn, Yahoo -3.29 bn');
-  assert.strictEqual(s.metrics.enterpriseToRevenue, null);
-  // Same row as real net cash: market cap 1 bn, cash 3 bn, EV -2.1 bn USD, ratio EV/revenue as a CNY denominator.
-  const fx = CNY30, rev = 1e9;
+check('EV reading: a negative EV goes through the same check: mixed sum that fits (TGS), one that does not (WRD), real net cash', () => {
+  const t = tgs();
+  py._convertSnapshotToUSD(t);
+  assert.equal(t.meta.evCurrencyReading, 'mixed', 'definition 4.21 bn, Yahoo -494 bn');
+  assert.ok(Math.abs(t.metrics.enterpriseToRevenue.value - 2.86) < 0.01, 'source 2.98, is ' + t.metrics.enterpriseToRevenue.value);
+  const w = wrd();
+  py._convertSnapshotToUSD(w);
+  assert.equal(w.meta.evCurrencyReading, 'withheld', '(c) 0.77 bn against the stale definition 0.53 bn: the gate holds even a right value back');
+  assert.strictEqual(w.metrics.enterpriseToRevenue, null);
+  // Real net cash: market cap 1 bn, cash 3 bn, EV -2.1 bn USD.
+  const fx = 0.15, rev = 1e9;
   const n = adr('NETCASH', 'CNY', fx, { mc: 1e9, rev, ebitda: 1e8, debt: 0, cash: 3e9, ev: -2.1e9, evs: -2.1e9 / (rev / fx), eve: -2.1e9 / (1e8 / fx) });
   py._convertSnapshotToUSD(n);
   assert.equal(n.meta.evCurrencyReading, 'trading');
   assert.ok(Math.abs(n.metrics.enterpriseToRevenue.value - (-2.1)) < 1e-9, 'scaled as before, sign kept: ' + n.metrics.enterpriseToRevenue.value);
-  // The positive definition against a negative EV never fits, however close the size.
-  const p = adr('FLIP', 'CNY', fx, { mc: 3e9, rev, ebitda: 1e8, debt: 0, cash: 1e9, ev: -2e9, evs: -2e9 / (rev / fx), eve: -2e9 / (1e8 / fx) });
+  // Far off in the opposite sign of a positive definition: nothing fits.
+  const p = adr('FAR', 'CNY', fx, { mc: 3e9, rev, ebitda: 1e8, debt: 0, cash: 1e9, ev: -30e9, evs: -30e9 / (rev / fx), eve: -30e9 / (1e8 / fx) });
   py._convertSnapshotToUSD(p);
   assert.equal(p.meta.evCurrencyReading, 'withheld');
 });
 
-check('EV reading: a factor inside 1/e..e with a positive EV is not tested; with a negative EV it is', () => {
+check('EV reading: a factor inside 1/e..e with a positive EV is not tested; with a negative EV it is, (c) only above 1', () => {
   const inBand = (ev) => ({
     meta: { ticker: '0020.HK', reportingCurrency: 'CNY', tradingCurrency: 'HKD' },
     marketCap: { value: 56925810688 },
@@ -505,22 +573,11 @@ check('EV reading: a factor inside 1/e..e with a positive EV is not tested; with
   py._convertSnapshotToUSD(neg);
   assert.equal(neg.meta.evCurrencyReading, 'withheld');
   assert.strictEqual(neg.metrics.enterpriseToRevenue, null);
-});
-
-check('EV reading: the statement hand table puts the balance at factor 1 (YPF statements in USD, EV as reporting ARS)', () => {
-  // YPF's TTM is ARS and its annual statements are USD (configs/statement-currency-hand-table.json).
-  const fx = ARS, rev = 19008347149, mc = 18745110528, debt = 10581000000, cash = 933000000;
-  py._FX_TO_USD.ARS = fx; py._FX_PROVENANCE.ARS = 'live';
-  const s = {
-    meta: { ticker: 'YPF', reportingCurrency: 'ARS', tradingCurrency: 'USD' },
-    marketCap: { value: mc },
-    metrics: { revenueTTM: { value: rev / fx }, enterpriseValue: { value: (mc + debt - cash) / fx }, enterpriseToRevenue: { value: (mc + debt - cash) / rev } },
-    annual: { annualRev: [rev], annualBalance: [{ totalDebt: debt, totalCash: cash }] }, // USD
-  };
-  py._convertSnapshotToUSD(s);
-  assert.equal(s.meta.statementFxRateApplied, 1, 'table row active');
-  assert.equal(s.meta.evCurrencyReading, 'reporting');
-  assert.equal(s.annual.annualBalance[0].totalDebt, debt);
+  // Factor 1.25 (reporting 0.8 USD), mixed sum of a real net-cash firm: definition -0.5 bn.
+  const hoch = adr('INBAND', 'EUR', 0.8, { mc: 1e9, rev: 1e9, ebitda: 1e8, debt: 0, cash: 1.5e9, ev: -0.875e9, evs: -0.7, eve: -7 });
+  py._convertSnapshotToUSD(hoch);
+  assert.equal(hoch.meta.evCurrencyReading, 'mixed');
+  assert.ok(Math.abs(hoch.metrics.enterpriseValue.value - (-0.5e9)) < 1, 'is ' + hoch.metrics.enterpriseValue.value);
 });
 
 check('EV reading: factor 1 is untouched and unflagged', () => {

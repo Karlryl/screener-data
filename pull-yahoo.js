@@ -1125,14 +1125,16 @@ const HANDELS_AGGREGAT_METRIKEN = ['enterpriseValue'];
 // einen Konsumenten hat es derzeit nicht.
 const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterpriseToEbitda'];
 // EV reading on mixed-currency rows (30.10.2026, replaces the blanket scaling above for the EV ratios).
-// Yahoo's EV is not always in the trading currency: on the 30.10. population most rows with a factor outside
-// 1/e..e fit market cap as a trading-currency number plus net debt as a reporting-currency number, some fit all
-// reporting currency (KXIAY), few all trading currency (BREN.JK). So every reading is checked against the
-// definition EV = market cap + debt - cash (USD, newest annual balance); only a fit gives a ratio (G2, T2).
-// Tolerance +/-25 %: the same check on factor-1 rows, where the currency cannot be wrong, passes 84.5 % (the
-// annual balance is older than Yahoo's quarter), so a right row can be withheld, but no shown value is further off.
+// Yahoo's EV is often a mixed sum: market cap as a trading-currency number plus net debt as a reporting-currency
+// number. Measured on the 30.10. population against the same firm's factor-1 home line (two factor-1 lines of one
+// firm: 90.7 % within 25 %, median error 1.8 %). Every reading must fit the definition EV = market cap + debt - cash
+// (USD, newest annual balance) or the row stays empty (G2, T2). Order: (a) trading first, it keeps the vendor values
+// and is the closer one where both fit; (c) mixed only for a factor above 1, because below 1 (EV - mcap) / factor
+// multiplies any day gap between EV and market cap (BREN.JK 29,310). "All in reporting currency" is no reading:
+// it fit the definition by leaving the market cap out (15 of 37 within 25 % of the home line, median error 26 %).
+// Tolerance +/-25 %: the definition check on factor-1 rows passes 84.5 %, so a right row can be withheld.
 const EV_FIT_LN = Math.log(1.25);
-const EV_RATIO_METRIKEN = ['enterpriseToRevenue', 'enterpriseToEbitda'];
+const EV_RATIO_NENNER = { enterpriseToRevenue: 'revenueTTM', enterpriseToEbitda: 'ebitda' };
 /**
  * Decides the EV reading of one mixed-currency row. Call after marketCap, EV and revenue are in USD, before the
  * EV ratios are scaled. A factor inside 1/e..e with a positive EV is not tested (outside the tolerance there:
@@ -1140,9 +1142,11 @@ const EV_RATIO_METRIKEN = ['enterpriseToRevenue', 'enterpriseToEbitda'];
  * @param {object} snap Snapshot (annual series still unscaled).
  * @param {number} mischFaktor Trading factor / reporting factor.
  * @param {number} bilanzFaktor Factor X->USD of the unscaled annual balance.
- * @returns {{reading: string, reason?: string, balanceEnd?: string}|null} 'trading' | 'reporting' | 'withheld'; null = not tested.
+ * @param {number} [vorherMcap] Market cap of the stored snapshot (USD, Yahoo's other source). More than the tolerance
+ *   away from this response's: neither is reliable, the definition rests on it, so no reading counts (KXIAY 45 vs 144.8 bn).
+ * @returns {{reading: string, reason?: string, balanceEnd?: string, ev?: number}|null} 'trading' | 'mixed' | 'withheld'; null = not tested.
  */
-function _evLesart(snap, mischFaktor, bilanzFaktor) {
+function _evLesart(snap, mischFaktor, bilanzFaktor, vorherMcap) {
   const num = (m) => (m && typeof m === 'object' ? m.value : m);
   const ev = num(snap.metrics.enterpriseValue), evs = num(snap.metrics.enterpriseToRevenue);
   const hatEv = Number.isFinite(ev), hatEvs = Number.isFinite(evs);
@@ -1150,21 +1154,26 @@ function _evLesart(snap, mischFaktor, bilanzFaktor) {
   if (mischFaktor < Math.E && mischFaktor > 1 / Math.E && !(hatEv && ev <= 0)) return null;
   const mcap = num(snap.marketCap);
   const bil = snap.annual && Array.isArray(snap.annual.annualBalance) ? snap.annual.annualBalance[0] : null;
+  const fit = (a, b) => a * b > 0 && Math.abs(Math.log(a / b)) <= EV_FIT_LN; // same sign only; NaN never fits
   if (!hatEv) return { reading: 'withheld', reason: 'no-ev' };
   if (!(mcap > 0)) return { reading: 'withheld', reason: 'no-market-cap' };
+  if (vorherMcap > 0 && !fit(vorherMcap, mcap)) return { reading: 'withheld', reason: 'market-cap-disagree' };
   if (!bil || !Number.isFinite(bil.totalDebt) || !Number.isFinite(bil.totalCash)) return { reading: 'withheld', reason: 'no-balance' };
   const balanceEnd = (snap.annual.annualBalanceEnds && snap.annual.annualBalanceEnds[0]) || null;
   const soll = mcap + (bil.totalDebt - bil.totalCash) * bilanzFaktor;
-  const sollEvs = soll / num(snap.metrics.revenueTTM);
-  const fit = (a, b) => a * b > 0 && Math.abs(Math.log(a / b)) <= EV_FIT_LN; // same sign only; NaN never fits
+  const umsatz = num(snap.metrics.revenueTTM), sollEvs = soll / umsatz;
   const passt = (evGelesen, evsGelesen) => fit(evGelesen, soll) && (!hatEvs || fit(evsGelesen, sollEvs));
   if (passt(ev, evs * mischFaktor)) return { reading: 'trading', balanceEnd };
-  if (passt(ev / mischFaktor, evs)) return { reading: 'reporting', balanceEnd };
+  const evMisch = mcap + (ev - mcap) / mischFaktor;
+  if (mischFaktor > 1 && passt(evMisch, evMisch / umsatz)) return { reading: 'mixed', ev: evMisch, balanceEnd };
   return { reading: 'withheld', reason: 'no-fit', balanceEnd };
 }
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
 function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor, bilanzFaktor) {
   if (!snap || !snap.metrics) return;
+  // Only for the reading check below, not part of the snapshot.
+  const vorherMcap = snap.meta && snap.meta.evPriorMarketCapUsd;
+  if (snap.meta) delete snap.meta.evPriorMarketCapUsd;
   // fiftyTwoWeekHigh uses the same per-share factor as the price-only path.
   // No usable factor -> null, never an unconverted quote.
   const hoch = snap.metrics.fiftyTwoWeekHigh;
@@ -1187,24 +1196,29 @@ function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor
   // Faktor 1 ist ein vollwertiger Beleg (Handel = Bericht, nichts zu korrigieren).
   if (snap.meta) snap.meta.mischVerhaeltnisFaktor = mischFaktor;
   if (mischFaktor === 1) return;
-  const lesart = _evLesart(snap, mischFaktor, bilanzFaktor);
+  const lesart = _evLesart(snap, mischFaktor, bilanzFaktor, vorherMcap);
   if (lesart && snap.meta) {
     snap.meta.evCurrencyReading = lesart.reading;
     if (lesart.reason) snap.meta.evWithheldReason = lesart.reason;
     if (lesart.balanceEnd) snap.meta.evDefinitionBalanceEnd = lesart.balanceEnd;
   }
-  // The EV ratios of a reporting row are already consistent; the EV itself comes to USD (schema meaning kept).
-  if (lesart && lesart.reading === 'reporting') {
-    snap.metrics.enterpriseValue = Object.assign({}, snap.metrics.enterpriseValue, { value: snap.metrics.enterpriseValue.value / mischFaktor });
+  const QUELLE_MISCH = 'computed:ev-mixed-reading'; // whoever writes the value writes its source
+  if (lesart && lesart.reading === 'mixed') {
+    snap.metrics.enterpriseValue = Object.assign({}, snap.metrics.enterpriseValue, { value: lesart.ev, source: QUELLE_MISCH });
   }
   for (const k of MISCH_VERHAELTNIS_METRIKEN) {
     const m = snap.metrics[k];
     if (m == null) continue;
-    if (lesart && EV_RATIO_METRIKEN.includes(k)) {
+    if (lesart && EV_RATIO_NENNER[k]) {
       // ponytail: a withheld row keeps its EV number: nothing visible reads it, and its presence counts for
       // the data-quality grade that can exclude a row from the ranking (methods/data-quality.js). Null it only together with that weight.
       if (lesart.reading === 'withheld') { snap.metrics[k] = null; continue; }
-      if (lesart.reading === 'reporting') continue;
+      if (lesart.reading === 'mixed') {
+        const nenner = snap.metrics[EV_RATIO_NENNER[k]];
+        const n = nenner && typeof nenner === 'object' ? nenner.value : nenner;
+        snap.metrics[k] = Number.isFinite(n) && n !== 0 ? Object.assign({}, m, { value: lesart.ev / n, source: QUELLE_MISCH }) : null;
+        continue;
+      }
     }
     if (typeof m === 'number') {
       if (Number.isFinite(m)) snap.metrics[k] = m * mischFaktor;
@@ -5239,6 +5253,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Befund A: der Wurf-Fall markiert fail-closed (_convertSnapshotToUSDGuarded), damit
       // das fxConversionFailed-Gate weiter unten greift statt einen halb umgerechneten
       // Snapshot als Erfolg zu schreiben.
+      // ponytail: no age cap on the stored market cap; an old one can only withhold a row until its next full pull.
+      if (canonical.meta && _parsedSnapshot && _parsedSnapshot.marketCap && _parsedSnapshot.marketCap.value > 0) canonical.meta.evPriorMarketCapUsd = _parsedSnapshot.marketCap.value;
       _convertSnapshotToUSDGuarded(canonical, (e) =>
         _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message} — Snapshot wird als fx-unknown verworfen`));
       if (!Number.isFinite(canonical.marketCap && canonical.marketCap.value)) {

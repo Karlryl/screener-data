@@ -459,7 +459,7 @@ test('EV/S built from a reporting-currency enterprise value is withheld (KXIAY),
   assert.ok(!rowOf(base({ 'metrics.enterpriseValue': { value: null } })).aus.includes('evs-waehrung'));
 });
 
-test('EV reading from the pull: withheld keeps an empty field with its reason, a reporting row is shown and no detector fires', () => {
+test('EV reading from the pull: withheld keeps an empty field with its reason, a mixed row is shown and no detector fires', () => {
   const pulled = (reading, evs, ev) => {
     const s = withMetrics({ priceSales: 2.18, enterpriseToRevenue: evs, enterpriseValue: ev, revenueTTM: 29375062823 }, 'TAK');
     Object.assign(s.meta, { reportingCurrency: 'USD', reportingCurrencyOriginal: 'JPY', tradingCurrency: 'USD', tradingCurrencyOriginal: 'USD', mischVerhaeltnisFaktor: 157.24, evCurrencyReading: reading });
@@ -474,8 +474,8 @@ test('EV reading from the pull: withheld keeps an empty field with its reason, a
   assert.equal(h.ps, 2.18);
   assert.deepEqual(h.aus.filter(a => a.startsWith('ev')), ['evs-waehrung']);
   assert.deepEqual(validateUniverse({ schema: make().schema, generated_at: generatedAt, snapshotCount: 1, rows: [h] }, 1000), []);
-  const r = rowOf(pulled('reporting', 3.1, 91.2e9));
-  assert.equal(r.evs, 3.1);
+  const r = rowOf(pulled('mixed', 3.28, 96.4e9));
+  assert.equal(r.evs, 3.28);
   assert.deepEqual(r.aus.filter(a => a.startsWith('ev')), []);
   // A row from before the change has no reading: the detectors still judge it.
   const old = pulled(undefined, 175, 5139749404672);
