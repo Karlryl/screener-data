@@ -167,9 +167,24 @@ test('real path: a failed protocol write does not undo the gate and says what ha
   }
 });
 
+test('real path: a crash inside the gate keeps the candidates, warns and never costs the refresh', async () => {
+  const warnings = [];
+  const realWarn = console.warn;
+  console.warn = (m) => warnings.push(String(m));
+  try {
+    // A row whose fields cannot be read throws while its symbol is built.
+    const input = [{ get ticker() { throw new Error('boom'); } }];
+    const kept = await wendeAufnahmeTorAn(input, null, null, { quote: async () => [], nowMs: NOW });
+    assert.equal(kept, input);
+    assert.match(warnings.join(' '), /^::warning::\[aufnahme-tor\] uebersprungen \(boom\)/);
+  } finally {
+    console.warn = realWarn;
+  }
+});
+
 test('wiring: main() replaces the new rows with the gate result before the persistence cap', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'refresh-universe.js'), 'utf8');
-  const gate = src.indexOf('newTickers = await wendeAufnahmeTorAn(newTickers,');
+  const gate = src.search(/^[ \t]*newTickers = await wendeAufnahmeTorAn\(newTickers,/m); // whole line, a comment must not pass
   const cap = src.indexOf('capNewTickerAdmission(newTickers, existing.size');
   assert.ok(gate > -1 && cap > -1 && gate < cap, 'the gate must run before the admission cap, otherwise dead symbols take slots');
 });
