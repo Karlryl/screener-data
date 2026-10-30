@@ -29,10 +29,19 @@
  *   gueltigAb  first data day the effect is live; later entries are listed as noch nicht fällig.
  *   gueltigBis after it the entry is only reported as abgelaufen, never failed (set it on drifting values
  *          such as rank, market-cap, score or growth ranges).
+ *
+ * Tolerance rule, one for all entries (written 30.10.2026; older entries keep their ranges until they expire).
+ * The script adds no slack of its own: it compares against exactly what the entry states.
+ *   Fixed states (null, notNull, absent, present, a text or code, a count that must stay 0): no tolerance.
+ *   Drifting numbers (rank, market cap, score, growth, a row count): op between, min/max = the value measured
+ *          on the reference day ± 20 %, at least ± 1, and narrower only where the old wrong value would otherwise
+ *          lie inside. gueltigBis at most 7 days after gueltigAb; a renewal recentres on the day it is renewed.
+ *   grund  quotes a number only with the day it was measured, so it never reads as today's value.
  */
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { germanBoards } = require('./tagesdifferenz.js');
 
 const DEFAULT_EXPORT = 'https://raw.githubusercontent.com/Karlryl/screener-data/gh-pages/outputs/findash-export/v1';
 const DEFAULT_ERWARTUNGEN = path.join(__dirname, '..', 'data-health', 'erwartungen.json');
@@ -186,10 +195,23 @@ async function measure(e, load, index) {
 // German labels for the "Erwartung" column; the raw field name follows in parentheses, unknown fields stay raw.
 // rk and mc are the filter feed's short keys for rank and marketCap (docs/findash-export-v1.md).
 const LABELS = { rank: 'Rang', rk: 'Rang', score: 'Score', marketCap: 'Börsenwert', mc: 'Börsenwert',
-  revGrowthYoYPct: 'Umsatzwachstum zum Vorjahr', rankGrund: 'Rang-Grund', mcapBand: 'Größenband' };
+  revGrowthYoYPct: 'Umsatzwachstum zum Vorjahr', rankGrund: 'Rang-Grund', mcapBand: 'Größenband',
+  r40Ebitda: 'Rule-of-40-Wert mit EBITDA', financialDataReasons: 'Datenhinweise', aus: 'Ausschluss- oder Warncode',
+  revGrowthBasis: 'Basis des Umsatzwachstums', revGrowthPeriodEnd: 'Periodenende des Umsatzwachstums',
+  revGrowthReason: 'Grund für leeres Umsatzwachstum', 'g31Hinweis.code': 'Prüfhinweis zum Umsatzwachstum',
+  'ffoReason.code': 'Grund für leere FFO-Näherung' };
 const label = f => (Object.hasOwn(LABELS, f) ? `${LABELS[f]} (${f})` : f);
-const USD_FIELDS = new Set(['marketCap', 'mc']); // always USD by contract
-const unitOf = e => (e.zaehle === undefined && USD_FIELDS.has(e.feld) ? ' USD' : '');
+const UNITS = { marketCap: ' USD', mc: ' USD', revGrowthYoYPct: ' %' }; // market caps are always USD by contract
+const unitOf = e => (e.zaehle === undefined && Object.hasOwn(UNITS, e.feld) ? UNITS[e.feld] : '');
+// Boards by their German name alone (the name maps back to one file); an unknown board stays raw.
+const BOARDS = { any: 'alle Vollboards', 'filter/universum': 'Filter-Universum', 'rule40/overview': 'Rule of 40', survival: germanBoards.survival };
+for (const b of Object.keys(germanBoards)) {
+  if (b === 'survival') continue;
+  BOARDS['full/' + b] = germanBoards[b];
+  BOARDS['quality/' + b] = 'Qualität ' + germanBoards[b];
+}
+const TRACKS = { profitable: 'profitabel', unprofitable: 'nicht profitabel' };
+const named = (map, k) => (Object.hasOwn(map, k) ? map[k] : k);
 const fmtNum = (v, unit = '') => (Math.abs(v) >= 1e9
   ? (v / 1e9).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' Mrd.'
   : v.toLocaleString('de-DE', { maximumFractionDigits: 2 })) + unit;
@@ -203,7 +225,7 @@ function fmt(v, unit = '') {
 }
 function describe(e) {
   const who = e.ticker ?? (e.name !== undefined ? `„${e.name}“` : `Zeilen mit ${label(e.feld)} = ${e.zaehle}`);
-  const where = e.board + (e.track ? ' ' + e.track : '');
+  const where = named(BOARDS, e.board) + (e.track ? ' ' + named(TRACKS, e.track) : '');
   const feld = e.zaehle !== undefined ? 'Anzahl' : label(e.feld);
   const unit = unitOf(e);
   const what = {

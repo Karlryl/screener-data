@@ -20,7 +20,7 @@ function exportTree(generatedAt = DAY + 'T08:43:33.489Z') {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tageslauf-erw-'));
   const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), JSON.stringify(obj)); };
   write('index.json', { schema: 'findash-export/v1', generated_at: generatedAt, branches: ['energy', 'utilities'] });
-  write('full/energy.json', { schema: 'findash-export/v1', profitable: [row('AAA', 7, { zero: 0 }), row('LEG.SW', null), row('DUP', 3), row('NORG', 5, { rankGrund: undefined })],
+  write('full/energy.json', { schema: 'findash-export/v1', profitable: [row('AAA', 7, { zero: 0 }), row('LEG.SW', null), row('DUP', 3, { revGrowthYoYPct: 23.2 }), row('NORG', 5, { rankGrund: undefined })],
     unprofitable: [row('BBB', 12, { track: 'unprofitable', name: 'Same Name AG' }), row('CCC', 40, { track: 'unprofitable', name: 'Same Name AG' })] });
   write('full/utilities.json', { schema: 'findash-export/v1', profitable: [row('DUP', 9)], unprofitable: [] });
   write('filter/universum.json', { schema: 'findash-export/v1', rows: [
@@ -205,19 +205,64 @@ test('Erwartung column: German label with the raw field name, unknown fields raw
   ]);
   const rows = r.lines.filter(l => l.startsWith('| PR 99: '));
   assert.deepEqual(rows.map(l => l.split(' | ').slice(0, 2).join(' | ')), [
-    '| PR 99: AAA · full/energy · Börsenwert (marketCap) zwischen 1 Mrd. USD und 3 Mrd. USD | 2 Mrd. USD',
-    '| PR 99: AAA · full/energy · Rang (rank) = 7 | 7',
-    '| PR 99: AAA · full/energy · Score (score) = 50,4 ± 0,5 | 50',
-    '| PR 99: AAA · full/energy · Größenband (mcapBand) = large | large',
-    '| PR 99: LEG.SW · full/energy · Rang-Grund (rankGrund) = dupIssuer | dupIssuer',
-    '| PR 99: AAA · full/energy · Umsatzwachstum zum Vorjahr (revGrowthYoYPct) belegt | Feld revGrowthYoYPct fehlt',
-    '| PR 99: NOMC · filter/universum · Börsenwert (mc) leer | leer',
-    '| PR 99: AAA · filter/universum · Rang (rk) = 7 | 7',
-    '| PR 99: GONE · full/energy · Zeile fehlt | keine Zeile',
-    '| PR 99: AAA · full/energy · Zeile vorhanden | 1 Zeile(n)',
-    '| PR 99: AAA · full/energy · name enthält „AAA“ | AAA AG',
-    '| PR 99: Zeilen mit aus = gm-implausible · filter/universum · Anzahl = 2 | 2',
+    '| PR 99: AAA · Energie · Börsenwert (marketCap) zwischen 1 Mrd. USD und 3 Mrd. USD | 2 Mrd. USD',
+    '| PR 99: AAA · Energie · Rang (rank) = 7 | 7',
+    '| PR 99: AAA · Energie · Score (score) = 50,4 ± 0,5 | 50',
+    '| PR 99: AAA · Energie · Größenband (mcapBand) = large | large',
+    '| PR 99: LEG.SW · Energie · Rang-Grund (rankGrund) = dupIssuer | dupIssuer',
+    '| PR 99: AAA · Energie · Umsatzwachstum zum Vorjahr (revGrowthYoYPct) belegt | Feld revGrowthYoYPct fehlt',
+    '| PR 99: NOMC · Filter-Universum · Börsenwert (mc) leer | leer',
+    '| PR 99: AAA · Filter-Universum · Rang (rk) = 7 | 7',
+    '| PR 99: GONE · Energie · Zeile fehlt | keine Zeile',
+    '| PR 99: AAA · Energie · Zeile vorhanden | 1 Zeile(n)',
+    '| PR 99: AAA · Energie · name enthält „AAA“ | AAA AG',
+    '| PR 99: Zeilen mit Ausschluss- oder Warncode (aus) = gm-implausible · Filter-Universum · Anzahl = 2 | 2',
   ]);
+});
+
+test('Erwartung column: every board kind and track in German, unknown boards raw, growth in percent', async () => {
+  const r = await verdicts([
+    e({ ticker: 'BBB', track: 'unprofitable', feld: 'rank', op: 'eq', wert: 12 }),
+    e({ ticker: 'AAA', track: 'profitable', op: 'present' }),
+    e({ ticker: 'DUP', board: 'any', op: 'present' }),
+    e({ ticker: 'AAA', board: 'quality/materials', op: 'present' }),
+    e({ ticker: 'AAA', board: 'rule40/overview', op: 'present' }),
+    e({ ticker: 'AAA', board: 'survival', op: 'present' }),
+    e({ ticker: 'AAA', board: 'smallcap/energy', op: 'present' }),
+    e({ ticker: 'DUP', feld: 'revGrowthYoYPct', op: 'between', min: 20, max: 26 }),
+  ]);
+  const rows = r.lines.filter(l => l.startsWith('| PR 99: '));
+  assert.deepEqual(rows.map(l => l.split(' | ')[0]), [
+    '| PR 99: BBB · Energie nicht profitabel · Rang (rank) = 12',
+    '| PR 99: AAA · Energie profitabel · Zeile vorhanden',
+    '| PR 99: DUP · alle Vollboards · Zeile vorhanden',
+    '| PR 99: AAA · Qualität Rohstoffe · Zeile vorhanden',
+    '| PR 99: AAA · Rule of 40 · Zeile vorhanden',
+    '| PR 99: AAA · Überleben · Zeile vorhanden',
+    '| PR 99: AAA · smallcap/energy · Zeile vorhanden',
+    '| PR 99: DUP · Energie · Umsatzwachstum zum Vorjahr (revGrowthYoYPct) zwischen 20 % und 26 %',
+  ]);
+  assert.equal(rows[7].split(' | ')[1], '23,2 %');
+});
+
+test('Erwartung column: every field the committed file checks today has a German label', async () => {
+  const fields = { r40Ebitda: 'Rule-of-40-Wert mit EBITDA', financialDataReasons: 'Datenhinweise', revGrowthBasis: 'Basis des Umsatzwachstums',
+    revGrowthPeriodEnd: 'Periodenende des Umsatzwachstums', revGrowthReason: 'Grund für leeres Umsatzwachstum',
+    'g31Hinweis.code': 'Prüfhinweis zum Umsatzwachstum', 'ffoReason.code': 'Grund für leere FFO-Näherung' };
+  const r = await verdicts(Object.keys(fields).map(feld => e({ ticker: 'AAA', feld, op: 'notNull' })));
+  const rows = r.lines.filter(l => l.startsWith('| PR 99: '));
+  assert.deepEqual(rows.map(l => l.split(' | ')[0]), Object.entries(fields).map(([k, v]) => `| PR 99: AAA · Energie · ${v} (${k}) belegt`));
+});
+
+test('tolerance rule: the script adds no slack, just outside the stated range or an exact eq fails', async () => {
+  const r = await verdicts([ // AAA rank 7, score 50, marketCap 2e9
+    e({ ticker: 'AAA', feld: 'rank', op: 'between', min: 7.01, max: 10 }),
+    e({ ticker: 'AAA', feld: 'rank', op: 'between', min: 1, max: 6.99 }),
+    e({ ticker: 'AAA', feld: 'marketCap', op: 'between', min: 2000000001, max: 3e9 }),
+    e({ ticker: 'AAA', feld: 'score', op: 'eq', wert: 50.01 }),
+  ]);
+  assert.deepEqual(r.u, Array(4).fill('nicht erfüllt'));
+  assert.equal(r.code, 1);
 });
 
 test('due date is the export data day (Berlin date of generated_at); --datum only overrides it', async () => {

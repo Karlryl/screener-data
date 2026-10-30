@@ -418,4 +418,4 @@ if (require.main === module) {
     console.log(paragraph(run(values).summary));
   } catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { differences, newest, classify, tableEvidence, exclusions, membership, load, analyze, run, paragraph, markdown, csv };
+module.exports = { differences, newest, classify, tableEvidence, exclusions, membership, load, analyze, run, paragraph, markdown, csv, germanBoards };
