@@ -62,7 +62,7 @@ test('P138 appends exactly ten cells, two coverage entries and two genuine trimm
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
     '777598d8ca370d980a7c1110c711bc25c40f92ee5dd32cb98c55b73d014c75e0'); // P177 refreshes HL period ends and two CIG-C cells; 22.10.2026 refreshes only TYG (FY2025 packet); 23.10.2026 only the CIG-C opIncQ[0]/[4] fingerprints (with the 1780151ed7 CIG-C packet the prefix hashes to d21d098a...); the full prefix stays pinned.
-  assert.equal(Object.keys(fixtures).length, 94); // SEC comparison 30.10.2026 appends eleven real packets; // P177 appends the real frozen BYLOT packet after the two P138 fixtures; 18.10.2026 appends four 17.10. packets; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST; 24.10.2026 appends five 23.10. packets, then two more (603993.SS, INFRAC.SW), then the seven 23.10. packets of the triage.
+  assert.equal(Object.keys(fixtures).length, 97); // The foreign SEC comparison 30.10.2026 appends AAUC, SGML and NMR; // SEC comparison 30.10.2026 appends eleven real packets; // P177 appends the real frozen BYLOT packet after the two P138 fixtures; 18.10.2026 appends four 17.10. packets; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST; 24.10.2026 appends five 23.10. packets, then two more (603993.SS, INFRAC.SW), then the seven 23.10. packets of the triage.
   assert.equal(hash(fixtures['000688.SZ']), '74c1bfc25c4fe547fb5a3ab14e730095ad46671a8212f92846bd838ff266f408');
   assert.equal(hash(fixtures['GRANULES.NS']), '2205dd5cbaf8ab29e2766e78298b2535404b4364a0de0b0d9b935a5121622483');
 });
