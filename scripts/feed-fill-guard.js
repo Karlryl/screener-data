@@ -12,6 +12,8 @@
  * Exit 1: a field below its floor, a field without a floor, an empty feed, or a feed older than the age limit
  * (a stale file on gh-pages would otherwise keep this guard green). Exit 2: unreadable input.
  * A pull request that deliberately empties a field lowers that floor in the same pull request.
+ * ponytail: fixed floors, about 5 points under the measured share, so a smaller loss stays green and a floor does
+ * not rise with a recovered field. Compare with the previous day's feed if a loss of that size ever matters.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -57,7 +59,7 @@ function main(argv) {
     floors = JSON.parse(fs.readFileSync(value('--floors') ?? DEFAULT_FLOORS, 'utf8')).floors;
     if (!floors || typeof floors !== 'object') throw new Error('floors file without a floors object');
   } catch (error) {
-    console.error('::error::Feed fill guard could not read its input: ' + error.message);
+    console.error('::error::Der Füllstand des Filter-Feeds ist heute nicht geprüft, die Eingabe ist nicht lesbar: ' + error.message);
     return 2;
   }
   const maxAgeHours = Number(value('--max-age-hours') ?? DEFAULT_MAX_AGE_HOURS);

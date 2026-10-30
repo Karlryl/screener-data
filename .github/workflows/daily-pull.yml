@@ -2867,7 +2867,10 @@ jobs:
           fi
           curl -fsSL --retry 3 --max-time 120 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github.raw" \
             -o "$RUNNER_TEMP/universum.json" \
-            "https://api.github.com/repos/${{ github.repository }}/contents/outputs/findash-export/v1/filter/universum.json?ref=gh-pages"
+            "https://api.github.com/repos/${{ github.repository }}/contents/outputs/findash-export/v1/filter/universum.json?ref=gh-pages" || {
+            echo "::error::Der Filter-Feed ist auf gh-pages nicht abrufbar: entweder fehlt er heute, oder die Schnittstelle ist gestoert. Sein Fuellstand ist nicht geprueft."
+            exit 1
+          }
           node scripts/feed-fill-guard.js --feed "$RUNNER_TEMP/universum.json"
 
   laufstatus:

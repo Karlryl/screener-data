@@ -993,7 +993,8 @@ function _resolveTradingFx(q, existing) {
  * Full pulls never stored a price, so the filter feed's distance to the 52-week high stayed empty for
  * every full-pulled row until its next price-only run (30.10.2026: 3,937 of 15,899 rows). The factor
  * lookup is the 52-week high's in _skaliereHandelsMetriken, so their ratio holds no FX at all.
- * No usable quote or factor leaves the field absent: a gap, never an unconverted quote.
+ * No usable quote or factor leaves the field absent. No price.asOf: _priceOnlyUpdate never refreshes it, and
+ * lib/export-provenance.js would read a day-old price time and call a hand-table row not reproducible.
  * @param {object} snap Converted full-pull snapshot, mutated in place.
  * @param {*} rawPrice Yahoo quote in its quote unit.
  * @returns {void}
@@ -1004,8 +1005,7 @@ function _stampFullPullPrice(snap, rawPrice) {
   const fx = _resolveTradingFx(null, snap);
   if (!fx.ok || !Number.isFinite(rawPrice) || rawPrice <= 0) return;
   // No price.currency on purpose: region-mapping reads it, and that path stays as it was on a full pull.
-  snap.price = { ...snap.price, regularMarketPrice: rawPrice * fx.factor, currencyUnit: 'USD',
-    asOf: snap.marketCap?.asOf ?? snap.meta?.asOf };
+  snap.price = { ...snap.price, regularMarketPrice: rawPrice * fx.factor, currencyUnit: 'USD' };
 }
 
 // Waehrungs-Chunk 1/4 (16.08.2026): den KURS selbst mitstempeln, nicht nur seine Herkunft.

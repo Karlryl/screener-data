@@ -21,7 +21,7 @@ function guard(feed, ...args) {
 }
 const fullRow = i => Object.fromEntries(ROW_KEYS.map(key => [key, key === 't' ? 'T' + i : key === 'aus' ? [] : 1]));
 const feedWith = (mutate = () => {}, generated_at = new Date().toISOString()) => {
-  const rows = Array.from({ length: 100 }, (_, i) => { const row = fullRow(i); mutate(row, i); return row; });
+  const rows = Array.from({ length: 1000 }, (_, i) => { const row = fullRow(i); mutate(row, i); return row; });
   return { generated_at, rows };
 };
 
@@ -30,15 +30,15 @@ const green = guard(feedWith());
 assert.equal(green.status, 0, green.stdout + green.stderr);
 
 // Break once: the state of 29.10.2026, d52 gone from a quarter of the rows.
-const quarterGone = guard(feedWith((row, i) => { if (i < 26) delete row.d52; }));
+const quarterGone = guard(feedWith((row, i) => { if (i < 260) delete row.d52; }));
 assert.equal(quarterGone.status, 1, quarterGone.stdout);
 assert.match(quarterGone.stdout, /::error::Das Feld d52 ist nur auf 74,0 %/);
 assert.equal(quarterGone.stdout.split('\n').filter(line => line.startsWith('::error::')).length, 1, 'only the emptied field is named');
 
 // Exactly at the floor is still green, one row below it is red: the comparison, not just the direction.
-const justAtFloor = guard(feedWith((row, i) => { if (i < 6) delete row.d52; }));
+const justAtFloor = guard(feedWith((row, i) => { if (i < 53) delete row.d52; }));
 assert.equal(justAtFloor.status, 0, justAtFloor.stdout);
-const justBelow = guard(feedWith((row, i) => { if (i < 7) delete row.d52; }));
+const justBelow = guard(feedWith((row, i) => { if (i < 54) delete row.d52; }));
 assert.equal(justBelow.status, 1, justBelow.stdout);
 
 // A field the floors do not know, a feed without rows, an old feed and unreadable input are never green.
@@ -63,5 +63,12 @@ assert.ok(JOB_REIHENFOLGE.includes(JOB), 'in JOB_REIHENFOLGE');
 assert.ok(JOB_REIHENFOLGE.indexOf('scoring') < JOB_REIHENFOLGE.indexOf(JOB), 'a data step is named before this guard');
 const others = yml.split('\n').filter(line => /^ {4}needs:/.test(line) && line.includes(JOB));
 assert.equal(others.length, 1, 'only laufstatus waits for this job: ' + others.join(' | '));
+
+// The job reads the published file, and a run that publishes nothing never measures an older feed.
+const job = yml.slice(yml.indexOf(`\n  ${JOB}:\n`), yml.indexOf('\n  laufstatus:\n'));
+const publishCheck = job.indexOf('if [ "$VEROEFFENTLICHEN" != "true" ]; then');
+const fetchFeed = job.indexOf('/contents/outputs/findash-export/v1/filter/universum.json?ref=gh-pages"');
+const runGuard = job.indexOf('node scripts/feed-fill-guard.js --feed "$RUNNER_TEMP/universum.json"');
+assert.ok(publishCheck >= 0 && fetchFeed > publishCheck && runGuard > fetchFeed, 'publish check, then fetch, then guard');
 
 console.log('ok feed-fill-guard');
