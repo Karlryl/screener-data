@@ -1124,8 +1124,46 @@ const HANDELS_AGGREGAT_METRIKEN = ['enterpriseValue'];
 // Handel, EBITDA am Bericht) und kommt mit, damit die Liste nicht wieder auseinanderlaeuft;
 // einen Konsumenten hat es derzeit nicht.
 const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterpriseToEbitda'];
+// EV reading on mixed-currency rows (30.10.2026, replaces the blanket scaling above for the EV ratios).
+// Yahoo's EV is not always in the trading currency: on the 30.10. population most rows with a factor outside
+// 1/e..e fit market cap as a trading-currency number plus net debt as a reporting-currency number, some fit all
+// reporting currency (KXIAY), few all trading currency (BREN.JK). So every reading is checked against the
+// definition EV = market cap + debt - cash (USD, newest annual balance); only a fit gives a ratio (G2, T2).
+// Tolerance +/-25 %: the same check on factor-1 rows, where the currency cannot be wrong, passes 84.5 % (the
+// annual balance is older than Yahoo's quarter), so a right row can be withheld, but no shown value is further off.
+const EV_FIT_LN = Math.log(1.25);
+const EV_RATIO_METRIKEN = ['enterpriseToRevenue', 'enterpriseToEbitda'];
+/**
+ * Decides the EV reading of one mixed-currency row. Call after marketCap, EV and revenue are in USD, before the
+ * EV ratios are scaled. A factor inside 1/e..e with a positive EV is not tested (outside the tolerance there:
+ * 16.4 %, factor-1 rows 15.4 %, 30.10.); a negative EV is tested everywhere and passes only with a negative definition.
+ * @param {object} snap Snapshot (annual series still unscaled).
+ * @param {number} mischFaktor Trading factor / reporting factor.
+ * @param {number} bilanzFaktor Factor X->USD of the unscaled annual balance.
+ * @returns {{reading: string, reason?: string, balanceEnd?: string}|null} 'trading' | 'reporting' | 'withheld'; null = not tested.
+ */
+function _evLesart(snap, mischFaktor, bilanzFaktor) {
+  const num = (m) => (m && typeof m === 'object' ? m.value : m);
+  const ev = num(snap.metrics.enterpriseValue), evs = num(snap.metrics.enterpriseToRevenue);
+  const hatEv = Number.isFinite(ev), hatEvs = Number.isFinite(evs);
+  if (!hatEv && !hatEvs && !Number.isFinite(num(snap.metrics.enterpriseToEbitda))) return null;
+  if (mischFaktor < Math.E && mischFaktor > 1 / Math.E && !(hatEv && ev <= 0)) return null;
+  const mcap = num(snap.marketCap);
+  const bil = snap.annual && Array.isArray(snap.annual.annualBalance) ? snap.annual.annualBalance[0] : null;
+  if (!hatEv) return { reading: 'withheld', reason: 'no-ev' };
+  if (!(mcap > 0)) return { reading: 'withheld', reason: 'no-market-cap' };
+  if (!bil || !Number.isFinite(bil.totalDebt) || !Number.isFinite(bil.totalCash)) return { reading: 'withheld', reason: 'no-balance' };
+  const balanceEnd = (snap.annual.annualBalanceEnds && snap.annual.annualBalanceEnds[0]) || null;
+  const soll = mcap + (bil.totalDebt - bil.totalCash) * bilanzFaktor;
+  const sollEvs = soll / num(snap.metrics.revenueTTM);
+  const fit = (a, b) => a * b > 0 && Math.abs(Math.log(a / b)) <= EV_FIT_LN; // same sign only; NaN never fits
+  const passt = (evGelesen, evsGelesen) => fit(evGelesen, soll) && (!hatEvs || fit(evsGelesen, sollEvs));
+  if (passt(ev, evs * mischFaktor)) return { reading: 'trading', balanceEnd };
+  if (passt(ev / mischFaktor, evs)) return { reading: 'reporting', balanceEnd };
+  return { reading: 'withheld', reason: 'no-fit', balanceEnd };
+}
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
-function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor) {
+function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor, bilanzFaktor) {
   if (!snap || !snap.metrics) return;
   // fiftyTwoWeekHigh uses the same per-share factor as the price-only path.
   // No usable factor -> null, never an unconverted quote.
@@ -1149,9 +1187,25 @@ function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor
   // Faktor 1 ist ein vollwertiger Beleg (Handel = Bericht, nichts zu korrigieren).
   if (snap.meta) snap.meta.mischVerhaeltnisFaktor = mischFaktor;
   if (mischFaktor === 1) return;
+  const lesart = _evLesart(snap, mischFaktor, bilanzFaktor);
+  if (lesart && snap.meta) {
+    snap.meta.evCurrencyReading = lesart.reading;
+    if (lesart.reason) snap.meta.evWithheldReason = lesart.reason;
+    if (lesart.balanceEnd) snap.meta.evDefinitionBalanceEnd = lesart.balanceEnd;
+  }
+  // The EV ratios of a reporting row are already consistent; the EV itself comes to USD (schema meaning kept).
+  if (lesart && lesart.reading === 'reporting') {
+    snap.metrics.enterpriseValue = Object.assign({}, snap.metrics.enterpriseValue, { value: snap.metrics.enterpriseValue.value / mischFaktor });
+  }
   for (const k of MISCH_VERHAELTNIS_METRIKEN) {
     const m = snap.metrics[k];
     if (m == null) continue;
+    if (lesart && EV_RATIO_METRIKEN.includes(k)) {
+      // ponytail: a withheld row keeps its EV number: nothing visible reads it, and its presence counts for
+      // the data-quality grade that can exclude a row from the ranking (methods/data-quality.js). Null it only together with that weight.
+      if (lesart.reading === 'withheld') { snap.metrics[k] = null; continue; }
+      if (lesart.reading === 'reporting') continue;
+    }
     if (typeof m === 'number') {
       if (Number.isFinite(m)) snap.metrics[k] = m * mischFaktor;
     } else if (typeof m === 'object' && 'value' in m && Number.isFinite(m.value)) {
@@ -1216,7 +1270,7 @@ function _applyTradingScale(snap, financialFactor) {
   // financialFactor = 1, EV blieb deshalb voellig unumgerechnet in IDR stehen.
   // Misch-Verhaeltnisse (priceSales, enterpriseToRevenue, ...) haben eine GROESSE im
   // Zaehler (mcap bzw. EV) und eine Berichtsgroesse im Nenner — also der Aggregat-Faktor.
-  _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / financialFactor);
+  _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / financialFactor, financialFactor);
   return { ok: true };
 }
 
@@ -1462,7 +1516,7 @@ function _convertSnapshotToUSD(snap) {
     // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
     // Waehrungs-Chunk 3: derselbe Anwender wie im USD-Zweig (enterpriseValue kam dazu,
     // priceSales wird um das Misch-Verhaeltnis korrigiert).
-    _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / factor);
+    _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / factor, stmt.factor);
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {

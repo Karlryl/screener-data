@@ -35,6 +35,8 @@ function fixture(c, reporting = c.reporting) {
   const snap = py.mapYahooToCanonical(raw, { ticker: c.ticker, yahoo_symbol: c.ticker }, '2026-10-10T09:44:18.451Z');
   snap.annual.annualRev = [{ value: 200e9 }, { value: 150e9 }];
   snap.annual.annualShares = [{ value: 123456789 }];
+  // Mixed-currency case: the EV reading needs a balance that fits the synthetic EV and ratio (net debt 32 % of the cap).
+  if (reporting === 'USD') snap.annual.annualBalance = [{ totalDebt: 0.32 * c.cap * rates[c.major], totalCash: 0 }];
   return snap;
 }
 
