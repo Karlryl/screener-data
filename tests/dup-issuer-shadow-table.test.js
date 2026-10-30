@@ -24,7 +24,8 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
     ['Galaxy Digital', ['GLXY', '1GLXY.MI'], 'GLXY', 'GLXY'],
     ['Ascentage Pharma', ['AAPG', '6855.HK'], 'AAPG', null],
     ['Grupo Aeroméxico', ['AERO', 'AERO.MX'], 'AERO', null],
-    ['Amrize', ['AMRZ', 'AMRZ.SW'], 'AMRZ', 'AMRZ.SW'],
+    // P290 (30.10.2026): decided for the leading listing, see the row's note.
+    ['Amrize', ['AMRZ', 'AMRZ.SW'], 'AMRZ', 'AMRZ'],
     ['AXIA Energia', ['AXIA', 'AXIA3.SA'], 'AXIA', 'AXIA3.SA'],
     ['Copel', ['ELPC', 'CPLE3.SA'], 'ELPC', 'CPLE3.SA'],
     ['Klöckner & Co', ['KCO.VI', 'KCO.DE'], 'KCO.VI', 'KCO.DE'],
@@ -51,16 +52,16 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
   assert.deepEqual(loadFixture(valid()), { example: table.aerovironment });
 });
 
-// Codex review P266 P2-01: literal expectation, independent of markKeeps(). Copel, AXIA and Amrize mark the
+// Codex review P266 P2-01: literal expectation, independent of markKeeps(). Copel and AXIA mark the
 // non-home ADR (markFollowsHomeListing); every other issuer, Kloeckner included, keeps codeKeeps.
 test('real table: literal marker per secondary ticker (no other issuer moves)', () => {
   assert.deepEqual(Object.fromEntries([...index].map(([ticker, v]) => [ticker, v.of])), {
     'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',
-    'AERO.MX': 'AERO', AMRZ: 'AMRZ.SW', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
+    'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
     '1GE.MI': 'GE', 'CRCL.SW': 'CRCL', 'MSTR.SW': 'MSTR', 'EF2.AX': 'UUUU', 'SBLK.AT': 'SBLK',
     'DG.PA': 'DG.VI', 'DG.SW': 'DG.VI', PSKY: 'SKYD',
   });
-  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ.SW', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI', 'SKYD']) {
+  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI', 'SKYD']) {
     assert.ok(!index.has(ticker), ticker + ' must stay unmarked');
   }
   const kco = applyDupIssuerShadow({ ticker: 'KCO.DE' }, index);

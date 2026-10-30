@@ -8,7 +8,7 @@
     "Sources and verbatim quotes are supplied by R11-FINAL (2026-09-30); no network re-check was performed in this task.",
     "2026-10-23 (numbers-trust audit 23.10.): circle, strategy, energy-fuels, star-bulk, vinci and the GE leg 1GE.MI were added with sources fetched and quotes checked verbatim on 2026-10-23; vinci's home listing DG.PA is excluded by production, so its legs DG.SW and DG.VI keep their ranks until DG.PA stands in the ranking.",
     "2026-10-24 (numbers-trust audit 23.10.): skydance added with sources fetched and quotes checked verbatim on 2026-10-24; PSKY is the former Nasdaq ticker of the same Class B common stock (listing transferred to the NYSE as SKYD on 2026-10-06), so it is a stale leg of SKYD, not a second class.",
-    "2026-10-30 (P290, two reviews, sources re-read): Amrize gets the home listing AMRZ.SW with markFollowsHomeListing, so AMRZ holds no rank when both legs stand in a ranking. Three cases stay out on purpose: Aeromexico (the sources name AERO.MX, but its vendor series would put a wrong 52-week distance and a flat price step on the visible row, see its note); Siltronic and the Madrid leg XAXIA.MC of AXIA (the home legs WAF.DE and AXIA3.SA lose the sealed production dedup in src/scoring/score.js before the export, so this table can neither show them nor remove a rank without hiding the firm).",
+    "2026-10-30 (P290): Amrize gets the home listing AMRZ on the company's own wording and the US share of volume, a decision that names neither line formally primary; AMRZ.SW loses its rank when both legs stand in a ranking, the marker stays where it was. A first draft with AMRZ.SW was reversed by blind review: it blanked a correct P/E and EPS list on the visible row and surfaced a mixed-currency EV/Sales. Three cases stay out on purpose: Aeromexico (the sources name AERO.MX, but its vendor series would put a wrong 52-week distance and a flat price step on the visible row, see its note); Siltronic and the Madrid leg XAXIA.MC of AXIA (the home legs WAF.DE and AXIA3.SA lose the sealed production dedup in src/scoring/score.js before the export, so this table can neither show them nor remove a rank without hiding the firm).",
     "RBI (QSR / QSP.TO) and Molson Coors (TAP-A / TPX.TO) are deliberately absent: economically equivalent exchangeable shares, not secondary listings; TPX.TO class attribution is unproven."
   ],
   "aerovironment": {
@@ -80,15 +80,14 @@
     "issuer": "Amrize",
     "tickers": ["AMRZ", "AMRZ.SW"],
     "codeKeeps": "AMRZ",
-    "homeListingProposal": "AMRZ.SW",
-    "markFollowsHomeListing": true,
+    "homeListingProposal": "AMRZ",
     "source": {
-      "url": "https://www.six-group.com/sheldon/equity_issuers/v1/equity_issuers.json",
-      "quote": "\"primaryListing\" : true"
+      "url": "https://www.sec.gov/Archives/edgar/data/2035989/000114036125023352/ef20050735_8k.htm",
+      "quote": "to be listed on the New York Stock Exchange, with an additional listing on the SIX Swiss Exchange"
     },
     "sourceCheckedOn": "2026-10-30",
     "enteredOn": "2026-10-06",
-    "note": "A decision for a true dual listing, not a claim that the NYSE line is secondary. The quote is the Amrize Ltd row (ISIN CH1430134226) of the SIX issuer list behind the column \"Primary Listing*\" on https://www.six-group.com/en/market-data/shares/companies.html, read 2026-10-30; 10 of the 241 issuers there carry false (3M, Abbott, Pepsico), so the SIX line is not a secondary listing. Tie-break: the listing in the country of the registered office; the 10-K for 2025 (https://www.sec.gov/Archives/edgar/data/2035989/000203598926000017/holcim-20251231.htm) gives \"Our principal executive offices are located at Grafenauweg 8, 6300 Zug, Switzerland\" and \"We also have operational headquarters in Chicago.\" No filing names a primary or a secondary listing: the 10-K says \"listed under the symbol \u201cAMRZ\u201d on the New York Stock Exchange and the SIX Swiss Exchange\". Strongest counter-evidence: the 8-K of June 2025 (https://www.sec.gov/Archives/edgar/data/2035989/000114036125023352/ef20050735_8k.htm) has \"to be listed on the New York Stock Exchange, with an additional listing on the SIX Swiss Exchange\". A company document naming a primary listing flips this entry. Earlier source of this row, not re-read: https://investors.amrize.com/resources/faq (both lines trade under AMRZ)."
+    "note": "A decision for the leading listing, not a claim that either line is formally primary: no company document read uses \"primary\" or \"secondary\" for them. Evidence: this 8-K dated 2025-06-23; the Information Statement of June 2025 (https://www.sec.gov/Archives/edgar/data/2035989/000114036125020994/ny20033749x12_ex99-1.htm): \"SIX will have approved the additional listing of Company Shares\" and \"In addition to being listed on NYSE, Company Shares will also be listed on SIX.\"; Yahoo daily volume over 66 trading days to 2026-10-30, median 3.65 m shares in the US against 1.36 m on the SIX, a 73 % US share (the US figure may span all US venues). Against: registered office in Zug, and the SIX issuer list (https://www.six-group.com/sheldon/equity_issuers/v1/equity_issuers.json) carries \"primaryListing\" : true, which only names the SIX rule regime (231 of 241 issuers) and says nothing about the rank against another exchange. The visible row matters too: AMRZ carries P/E and EPS, AMRZ.SW withholds them (CHF price, USD results). A first draft with AMRZ.SW was reversed by blind review on 2026-10-30. A company document naming the SIX as the primary listing flips this entry."
   },
   "axia-energia": {
     "issuer": "AXIA Energia",
