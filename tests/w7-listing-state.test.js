@@ -178,3 +178,42 @@ test('snapshot handoff keeps same-day exits despite the stale scoring checkout',
     (_file, data) => { written = data; }, () => log);
   assert.deepEqual(state.readListingExitManifest('snapshot-artifact', () => written), [], 'real re-entry clears the delivered exit');
 });
+
+test('both registry formats deliver every confirmed source, event date and successor', () => {
+  const w7 = registry.w7_2026_10_30.confirmed;
+  const merged = registry.belege_2026_10_30;
+  assert.equal(Object.keys(merged).length, 43);
+  assert.equal(Object.values(merged).filter(row => row.nachfolger).length, 6);
+  const before = JSON.stringify(registry);
+  const tickers = [...Object.keys(w7), ...Object.keys(merged)];
+  assert.equal(new Set(tickers).size, 57);
+  const plan = state.planListingExits(tickers.map(ticker => ({ ticker })), registry, '2026-11-03');
+  const delivered = state.deliveredListingExits({ listingExits: plan.exits }, plan.stocks);
+  assert.equal(delivered.length, 57);
+  for (const row of delivered) {
+    const evidence = w7[row.ticker] || merged[row.ticker];
+    assert.equal(row.source, evidence.quelle, row.ticker);
+    assert.equal(row.belegDatum, evidence.datum || evidence.ende, row.ticker);
+    assert.equal(row.successor, evidence.nachfolger || null, row.ticker);
+    assert.equal(row.reason, evidence.grund || registry.tickers[row.ticker], row.ticker);
+    assert.equal(row.date, '2026-11-03', 'exit date is distinct from event date');
+    assert.equal(row.status, 'bestaetigt', row.ticker);
+  }
+  assert.equal(JSON.stringify(registry), before, 'source registry must not be rewritten');
+  assert.deepEqual(state.deliveredListingExits({ listingExits: plan.exits }, [{ ticker: 'SCZ.V' }])
+    .filter(row => row.ticker === 'SCZ.V'), [], 're-entry still suppresses an old exit');
+});
+
+test('only superseded PSKY field expectations expire before the new absence check', () => {
+  const expectations = require('../data-health/erwartungen.json');
+  for (const id of ['pr33-PSKY-rang', 'pr33-PSKY-ranggrund']) {
+    const row = expectations.find(entry => entry.id === id);
+    assert.equal(row.gueltigBis, '2026-11-02', id);
+    assert.match(row.grund, /03\.11\.2026/);
+    assert.match(row.grund, /SKYD/);
+  }
+  for (const row of expectations.filter(entry => entry.ticker === '1WAF.MI')) {
+    assert.equal(row.gueltigBis, undefined, row.id + ' must stay active');
+  }
+  assert.equal(expectations.find(row => row.id === 'w7-PSKY-board').gueltigAb, '2026-11-03');
+});

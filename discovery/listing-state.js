@@ -59,13 +59,13 @@ function planListingExits(stocks, registry, date) {
     const ticker = row && row.ticker;
     const mapping = mappings[ticker];
     if (ticker && ((registry.tickers || {})[ticker] || mapping)) {
-      const evidence = mapping || (w7.confirmed || {})[ticker];
+      const evidence = mapping || (w7.confirmed || {})[ticker] || (registry.belege_2026_10_30 || {})[ticker];
       exits.push({ ticker, name: row.name || null, datum: date,
-        grund: evidence ? evidence.grund : registry.tickers[ticker],
+        grund: (evidence && evidence.grund) || registry.tickers[ticker],
         quelle: evidence ? evidence.quelle : 'data-health/dead-tickers.json',
         nachfolger: evidence ? evidence.nachfolger || null : null,
         status: mapping ? 'zuordnung-korrigiert' : evidence ? 'bestaetigt' : 'altbestand',
-        ...(evidence ? { belegDatum: evidence.datum } : { hinweis: 'Alter Registry-Eintrag. Der Anbieterbefund allein belegt kein Delisting.' }),
+        ...(evidence ? { belegDatum: evidence.datum || evidence.ende } : { hinweis: 'Alter Registry-Eintrag. Der Anbieterbefund allein belegt kein Delisting.' }),
       });
       if (mapping && !present.has(mapping.nachfolger)) {
         survivors.push({ ...row, ticker: mapping.nachfolger, yahoo_symbol: mapping.nachfolger });
