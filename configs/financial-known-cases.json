@@ -16208,6 +16208,675 @@
           "sourceUnit": "JPY millions"
         }
       ]
+    },
+    {
+      "caseId": "301297.sz-2025-06-30-revenueQ-20261030",
+      "ticker": "301297.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 226995151.37,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.06.2025 liefert der Anbieter den ursprünglich gemeldeten Wert von 227,0 Mio. CNY vor dem Zusammenschluss unter gemeinsamer Kontrolle, die neuen Quartale enthalten die eingebrachte Firma. Rückwirkend angepasst sind es 716,8 Mio. CNY, das Quartal bis 30.06.2026 läge damit bei rund +15,6 % statt der bisher gezeigten +265 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225497973.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, half-year report 2026",
+          "published": "2026-08-25",
+          "page": "p.7",
+          "quote": "营业收入（元） 1,586,441,325.59 441,216,346.18 1,454,780,830.54 9.05%",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "301297.sz-2025-06-30-grossProfitQ-20261030",
+      "ticker": "301297.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 95625639.51,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2025 stammt von vor dem Zusammenschluss und ist mit den neuen Quartalen nicht vergleichbar. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225497973.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, half-year report 2026",
+          "published": "2026-08-25",
+          "page": "p.7",
+          "quote": "营业收入（元） 1,586,441,325.59 441,216,346.18 1,454,780,830.54 9.05%",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "301297.sz-2025-06-30-opIncQ-20261030",
+      "ticker": "301297.SZ",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 34535301.67,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Der Wert für das Quartal mit Ende 30.06.2025 stammt von vor dem Zusammenschluss und ist mit den neuen Quartalen nicht vergleichbar. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225497973.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, half-year report 2026",
+          "published": "2026-08-25",
+          "page": "p.7",
+          "quote": "营业收入（元） 1,586,441,325.59 441,216,346.18 1,454,780,830.54 9.05%",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "301297.sz-2023-12-31-annualRev-20261030",
+      "ticker": "301297.SZ",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 609165018.43,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz fehlt: Das Jahr 2023 (Ende 31.12.2023) steht mit 609,2 Mio. CNY noch ohne die eingebrachte Firma neben dem angepassten Jahr 2024; ein Vergleich über diese Grenze wäre kein Wachstum. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2025-04-30/1223410770.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, annual report summary 2024",
+          "published": "2025-04-30",
+          "page": "PDF 6, numbers wrap in the table",
+          "quote": "营业收入 780,458,405.25 594,142,567.69 609,165,018.43 28.12% 623,756,348.04",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-06-30-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 17049000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.06.2026 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-06-30-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 8748000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2026 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-03-31-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 18579000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 31.03.2026 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-03-31-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 10374000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 31.03.2026 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 16142000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 31.12.2025 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 5518000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 31.12.2025 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-09-30-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 16152000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.09.2025 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-09-30-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 8377000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.09.2025 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-06-30-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 13085000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.06.2025 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-06-30-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 6005000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2025 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 67452000000,
+      "replacementValue": 80346000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 67.452 Mio. EUR, die Firma meldet 80.346 Mio. EUR. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-03/20260319_179331.pdf",
+          "form": "Enel, press release full year 2025",
+          "published": "2026-03-19",
+          "page": "p.2",
+          "quote": "Revenues: 80,346 million euros (78,947 million euros in 2024, +1.8%)",
+          "sourceUnit": "EUR millions",
+          "value": 80346000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2024-12-31-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 70649000000,
+      "replacementValue": 78947000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2024 (Ende 31.12.2024) liefert der Anbieter 70.649 Mio. EUR, die Firma meldet 78.947 Mio. EUR. Das Jahreswachstum beträgt +1,8 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-03/20260319_179331.pdf",
+          "form": "Enel, press release full year 2025",
+          "published": "2026-03-19",
+          "page": "p.2",
+          "quote": "Revenues: 80,346 million euros (78,947 million euros in 2024, +1.8%)",
+          "sourceUnit": "EUR millions",
+          "value": 78947000000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-annualGP-20261030",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 31592000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbruttogewinn fehlt: Der Wert für das Geschäftsjahr 2025 (Ende 31.12.2025) ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "GGP.L",
+      "listingAliases": [
+        "GGP.AX"
+      ],
+      "caseId": "ggp.l-2026-06-30-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2026-06-30",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 1191232720,
+      "replacementValue": 2259000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 30.06.2026 (Ende 30.06.2026) liefert der Anbieter 1.191,2 Mio. AUD, die Firma meldet 2.259 Mio. AUD. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://bulletin.webull.com/qbd/announcement/20260827/499508552/5a9ba37c92034690f9b1815e1d2065b7.pdf",
+          "form": "Greatland Resources, FY26 results release (ASX, mirror)",
+          "published": "2026-08-27",
+          "page": "p.1, Table 1",
+          "quote": "Sales revenue 2,259 957 136%",
+          "sourceUnit": "AUD millions",
+          "value": 2259000000,
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "currency": "AUD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "GGP.L",
+      "listingAliases": [
+        "GGP.AX"
+      ],
+      "caseId": "ggp.l-2025-06-30-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2025-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 461410740,
+      "replacementValue": 957000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 30.06.2025 (Ende 30.06.2025) liefert der Anbieter 461,4 Mio. AUD, die Firma meldet 957 Mio. AUD, davon nur rund sieben Monate mit der Mine Telfer. Das Wachstum beträgt +136 % statt der bisher gezeigten +158,2 % und enthält diesen Effekt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://bulletin.webull.com/qbd/announcement/20260827/499508552/5a9ba37c92034690f9b1815e1d2065b7.pdf",
+          "form": "Greatland Resources, FY26 results release (ASX, mirror)",
+          "published": "2026-08-27",
+          "page": "p.1, Table 1 and p.7, footnote 3",
+          "quote": "Sales revenue 2,259 957 136%",
+          "sourceUnit": "AUD millions",
+          "value": 957000000,
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "currency": "AUD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "ace.mi-2025-06-30-revenueQ-20261030",
+      "ticker": "ACE.MI",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 359049000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Der Wert von 359,0 Mio. EUR für das Quartal mit Ende 30.06.2025 ist kein Quartal, sondern das Halbjahr ohne Acea Energia minus das erste Quartal mit Acea Energia. Vergleichbar läge das Quartal bis 30.06.2026 bei rund +3,4 % statt der bisher gezeigten +121,4 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1h-2026.pdf",
+          "form": "ACEA, results presentation first half 2026, pro forma without Acea Energia",
+          "page": "p.19",
+          "quote": "1.554.648 ... 1.523.839",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2025/presentazioni/presentazione-risultati-1h-2025.pdf",
+          "form": "ACEA, results presentation first half 2025",
+          "page": "p.22",
+          "quote": "Ricavi ed EBITDA non includono i risultati del perimetro di ACEA Energia",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ace.mi-2025-06-30-opIncQ-20261030",
+      "ticker": "ACE.MI",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 188555000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Der Wert für das Quartal mit Ende 30.06.2025 steht auf derselben gemischten Grundlage wie der Umsatz dieses Quartals. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1h-2026.pdf",
+          "form": "ACEA, results presentation first half 2026, pro forma without Acea Energia",
+          "page": "p.19",
+          "quote": "1.554.648 ... 1.523.839",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2025/presentazioni/presentazione-risultati-1h-2025.pdf",
+          "form": "ACEA, results presentation first half 2025",
+          "page": "p.22",
+          "quote": "Ricavi ed EBITDA non includono i risultati del perimetro di ACEA Energia",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ace.mi-2023-12-31-annualRev-20261030",
+      "ticker": "ACE.MI",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 4487735000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz fehlt: Das Jahr 2023 (Ende 31.12.2023) steht mit 4.487,7 Mio. EUR noch einschließlich Acea Energia neben den Jahren ohne dieses Geschäft; ein Vergleich über diese Grenze wäre kein Wachstum. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1h-2026.pdf",
+          "form": "ACEA, results presentation first half 2026, pro forma without Acea Energia",
+          "page": "p.19",
+          "quote": "1.554.648 ... 1.523.839",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2025/presentazioni/presentazione-risultati-1h-2025.pdf",
+          "form": "ACEA, results presentation first half 2025",
+          "page": "p.22",
+          "quote": "Ricavi ed EBITDA non includono i risultati del perimetro di ACEA Energia",
+          "unit": "text"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -16696,6 +17365,70 @@
         }
       ],
       "vendorEvidence": "Snapshot of run 39918190374 (2026-10-23): QAR, fx 0.27472526; revenueQ native 2026-06-30 -177,646,000, 2026-03-31 3,000,000, 2025-12-31 17,347,000, 2025-06-30 196,570,000, 2025-03-31 190,308,000; annualRev 2025 549,258,000 and 2024 734,825,000 equal the IFRS subtotal after share of results, interest and other income. The revenue cells are also withheld cell by cell (hand-table cases of revision 2026-10-24-sdtriage)."
+    },
+    {
+      "caseId": "5871.tw-lender-basis-20261030",
+      "ticker": "5871.TW",
+      "reason": "Score fehlt: Der Anbieter rechnet bei Chailease, einer Kreditfirma, die Zinserträge aus dem Umsatz heraus und zieht danach Kosten ab, die dazu nicht passen. So zeigte er für das Geschäftsjahr 2025 (Ende 31.12.2025) ein Betriebsergebnis von -9.337,2 Mio. TWD und einen Umsatz von 22.525,9 Mio. TWD; laut Konzernabschluss sind es +27.218,8 Mio. TWD und 97.567,4 Mio. TWD. Die Firma stand dadurch zu Unrecht unter den nicht profitablen Firmen. Geprüft am 30.10.2026.",
+      "reasonDate": "2026-10-30",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "name"
+          ],
+          "expected": "Chailease Holding Company Limited"
+        },
+        {
+          "path": [
+            "meta",
+            "reportingCurrencyOriginal"
+          ],
+          "expected": "TWD"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://mopsov.twse.com.tw/mops/web/ajax_t164sb04?step=2&co_id=5871&year=114&season=04",
+          "form": "Chailease, consolidated statement of comprehensive income, year 114 (2025), MOPS",
+          "page": "consolidated statement of comprehensive income, year 114 season 4",
+          "quote": "營業利益（損失） 27,218,838 27.90 29,910,090 29.24",
+          "unit": "TWD thousands",
+          "verifiedAt": "2026-10-30"
+        }
+      ]
+    },
+    {
+      "caseId": "9941.tw-lender-basis-20261030",
+      "ticker": "9941.TW",
+      "reason": "Score fehlt: Der Anbieter rechnet bei Taiwan Acceptance, einer Kreditfirma, die Zinserträge aus dem Umsatz heraus und zieht danach Kosten ab, die dazu nicht passen. So zeigte er für das Geschäftsjahr 2025 (Ende 31.12.2025) ein Betriebsergebnis von -5.241,0 Mio. TWD und einen Umsatz von 21.085,1 Mio. TWD; laut Konzernabschluss sind es +5.553,4 Mio. TWD und 39.540,2 Mio. TWD. Die Firma stand dadurch zu Unrecht unter den nicht profitablen Firmen. Geprüft am 30.10.2026.",
+      "reasonDate": "2026-10-30",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "name"
+          ],
+          "expected": "Taiwan Acceptance Corporation"
+        },
+        {
+          "path": [
+            "meta",
+            "reportingCurrencyOriginal"
+          ],
+          "expected": "TWD"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://mopsov.twse.com.tw/mops/web/ajax_t164sb04?step=2&co_id=9941&year=114&season=04",
+          "form": "Taiwan Acceptance, consolidated statement of comprehensive income, year 114 (2025), MOPS",
+          "page": "consolidated statement of comprehensive income, year 114 season 4",
+          "quote": "營業利益（損失）| 5,553,411",
+          "unit": "TWD thousands",
+          "verifiedAt": "2026-10-30"
+        }
+      ]
     }
   ],
   "periodLabels": [

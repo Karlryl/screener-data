@@ -56,7 +56,7 @@ const marked = s => serial(s).includes('"exchangeFill"') || /exchange-(pair|annu
 // G31 switch (P268, 18.10.2026): 000599.SZ joins it (its unrestated Q2 2025 cells are held); the level examples use
 // 000564.SZ, the same kind of exchange level mismatch without a hand-table row.
 const T = Object.keys(F.snapshots);
-const noHandTable = T.filter(t => !['000688.SZ', '000599.SZ', '600292.SS'].includes(t)); // 600292.SS: board-top check of 30.10.2026
+const noHandTable = T.filter(t => !['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ'].includes(t)); // 600292.SS and 301297.SZ: board checks of 30.10.2026
 
 test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/main for every fixture snapshot', () => {
   for (const t of noHandTable) {
