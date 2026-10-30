@@ -109,7 +109,8 @@ async function realPath(quote, protokoll = null, pfad = null) {
       { ticker: 'ACO.TO', exchange: 'TSX', source: 'tsx' },
       { ticker: 'ALPEK/A.MX', exchange: 'BMV', source: 'tvmx' },
       { ticker: 'DEAD.SW', exchange: 'SIX', source: 'tvch' },
-    ], protokoll, pfad, { quote, nowMs: NOW });
+    ], protokoll || {}, pfad || 'memory', { quote, nowMs: NOW,
+      ...(pfad ? {} : { writeProtocol: () => {} }) });
     return { kept: kept.map((i) => i.ticker), warnings };
   } finally {
     console.warn = realWarn;
@@ -154,14 +155,14 @@ test('real path: Yahoo answering nothing refuses all and warns, the existing lis
   assert.match(r.warnings.join(' '), /kein einziger Kandidat/);
 });
 
-test('real path: a failed protocol write does not undo the gate and says what happened', async () => {
+test('real path: a failed protocol write cancels every new rejection and says what happened', async () => {
   const quote = async (batch) => ['BRK-B'].filter((s) => batch.includes(s)).map(live);
   const blocked = fs.mkdtempSync(path.join(os.tmpdir(), 'w7-tor-blocked-'));
   try {
     // The target is an existing directory, so the atomic rename onto it must fail.
     const r = await realPath(quote, {}, blocked);
-    assert.deepEqual(r.kept, ['BRK.B']);
-    assert.match(r.warnings.join(' '), /Protokoll nicht geschrieben.*trotzdem gewirkt/);
+    assert.deepEqual(r.kept, ['BRK.B', 'ACO.TO', 'ALPEK/A.MX', 'DEAD.SW']);
+    assert.match(r.warnings.join(' '), /Protokoll nicht geschrieben.*Ablehnungen.*nicht angewendet/);
   } finally {
     fs.rmSync(blocked, { recursive: true, force: true });
   }

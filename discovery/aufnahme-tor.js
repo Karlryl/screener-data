@@ -4,10 +4,11 @@
  * The foreign prefilter keeps a symbol Yahoo stays silent on, and the US sources run without any
  * quote check. Measured on 30.10.: 1,613 of 2,012 failed fetches were rows the 30-day prune removed
  * that same day; discovery would re-add them on the next run. This gate asks Yahoo once per new
- * candidate and refuses rows that cannot produce a snapshot or only carry a dead price.
+ * candidate and temporarily defers rows without usable vendor data.
  *
  * It only decides about candidates that are NOT yet on the watchlist, so no board row can vanish
- * through it, and it applies no size limit. A refused candidate is asked again on the next run.
+ * through it, and it applies no size limit. Deferred candidates are retained in the intake log
+ * and retried independently of discovery. A vendor answer never proves a delisting.
  * A failed batch admits its rows (fail-open, same policy as prefilterByMcap, Bug 16).
  *
  * Measured on all 24,660 rows of 30.10.: quote() stayed silent on 330 rows that are no failed fetch,
@@ -88,24 +89,34 @@ async function aufnahmeTor(candidates, candidatesOf, opts = {}) {
     // No live answer, and at least one symbol was never asked successfully: unknown, not refused.
     if (symbols.some((s) => failedSymbols.has(s) && !answers.has(s))) { ungeprueft++; admitted.push(info); continue; }
     const times = found.map(tradeTime).filter((t) => t !== null);
-    rejected.push({ ticker: info.ticker, quelle: info.source || null, grund: verdicts[0] || 'keine-quote',
+    rejected.push({ ticker: info.ticker,
+      quelle: 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(symbols.join(',')),
+      entdecktDurch: info.source || null, grund: verdicts[0] || 'keine-quote',
+      status: 'vorlaeufig', datum: new Date(nowMs).toISOString().slice(0, 10),
+      wiederaufnahme: 'Die Quote wird im naechsten Entdeckungslauf erneut geprueft. Nutzbare Anbieterdaten erlauben die automatische Wiederaufnahme.',
+      kandidat: { ticker: info.ticker, source: info.source || null, name: info.name || '',
+        exchange: info.exchange || '', sector: info.sector || '', marketCap: info.marketCap ?? null },
       letzterKurs: times.length ? new Date(Math.max(...times)).toISOString().slice(0, 10) : null });
   }
   return { admitted, rejected, befragt: candidates.length, batchFehler, ungeprueft };
 }
 
 // Protocol section for data-health/entdeckungs-ausschluss.json: every refused row by name.
-function torProtokoll(result) {
+function torProtokoll(result, previous = []) {
   const jeGrund = {};
   for (const r of result.rejected) jeGrund[r.grund] = (jeGrund[r.grund] || 0) + 1;
   return {
-    _doc: 'Tor 3: neue Kandidaten ohne lebende Yahoo-Quote kommen nicht auf die Watchlist. ' +
-      'Keine Groessengrenze, kein Eingriff in den Bestand; abgelehnte Zeilen werden beim naechsten Lauf neu gefragt.',
+    _doc: 'Tor 3 stellt Kandidaten mit unzureichenden Anbieterdaten vorlaeufig zurueck. ' +
+      'Das ist kein Delisting. Die gespeicherte Wiedervorlage wird auch ohne erneuten Entdeckungstreffer geprueft. ' +
+      'Keine Groessengrenze und kein Eingriff in den Bestand.',
     befragt: result.befragt,
     aufgenommen: result.admitted.length,
     ungeprueftWegenBatchFehler: result.ungeprueft,
     jeGrund,
     abgelehnt: result.rejected,
+    // Keep recovered retries until the next run sees them in the persisted watchlist.
+    // Otherwise the admission cap could lose a recovered candidate after this write.
+    wiedervorlage: [...new Map([...previous, ...result.rejected].map(row => [row.ticker, row])).values()],
   };
 }
 

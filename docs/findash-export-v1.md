@@ -1763,3 +1763,18 @@ Tests: `tests/preisschritt-export.test.js` with `tests/fixtures/preisschritt/sto
 previous-day and equal-to-stamp-day cases, tamper variants with their specific error, size cap, idempotence, sort order,
 truncated shard, failed pull through the real merge step over consecutive runs, second run on the same day, dead runner, stamp
 without its daily file, workflow step order and fail-soft shape).
+
+## Notierungsabgaenge in `excluded.json` (PR 66, 30.10.2026)
+
+`listingExits` enthaelt protokollierte Bestandsabgaenge durch das Notierungsregister und Kuerzelkorrekturen.
+Jede Zeile hat `ticker`, `date`, `reason`, `source` und `successor` (ohne Nachfolger `null`).
+`datum`, `grund`, `quelle` und `nachfolger` erhalten dieselben Angaben aus dem Aufnahmeprotokoll.
+`belegDatum` nennt den Ereignis- oder Belegtag, `date` den Austragstag. `listingExitCount` zaehlt diese Zeilen.
+Die bestehenden Scoring-Zaehler `counts.zeilen` und `counts.byReason` bleiben davon getrennt.
+Ein wieder aufgenommener Ticker verschwindet aus `listingExits`; der gespeicherte Nachweis bleibt im Aufnahmeprotokoll.
+
+Die Aufnahmepruefung schreibt Anbieterluecken als `vorlaeufig` mit Datum und Wiederaufnahmeweg in
+`data-health/entdeckungs-ausschluss.json`. Die gespeicherte `wiedervorlage` wird im naechsten Lauf auch ohne
+neuen Entdeckungstreffer geprueft. Scheitert das Schreiben, werden die neuen Ablehnungen nicht angewendet.
+Eine fehlende oder veraltete Quote ist kein Delisting-Beleg. Die 74 ungeklärten PR-66-Faelle stehen deshalb
+ausserhalb der dauerhaften Sperrmenge. Die 3.043 aelteren Registry-Eintraege sind damit nicht neu bestaetigt.

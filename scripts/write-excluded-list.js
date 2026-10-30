@@ -60,6 +60,7 @@ const {
 const formulas = require('../src/scoring/formulas/index.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { mergeSizeExits, sizeExitReasonDe, sizeExitRunDay, readSizeExitHistory, validateSizeExitManifest, SIZE_EXITS_FILE } = require('../lib/size-exits.js');
+const { readIntakeLog, deliveredListingExits, readListingExitManifest, LISTING_EXITS_FILE } = require('../discovery/listing-state.js');
 
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -76,6 +77,7 @@ const UNIVERSE_HASH_FILE = path.join(ROOT, 'outputs', 'universe-hash.json');
 // W3/T155 (Rat 29.08., Weg D): Betriebsmodus-Deklaration + versiegeltes Lauf-Artefakt.
 const MODE_FILE = path.join(ROOT, 'configs', 'scoring-mode.json');
 const SEALED_CALIB_FILE = path.join(ROOT, 'outputs', 'calibration.json');
+const INTAKE_LOG_FILE = path.join(ROOT, 'data-health', 'entdeckungs-ausschluss.json');
 
 /**
  * T155/W3 — Pruefsumme ueber die MENGE der bewerteten Ticker.
@@ -433,6 +435,17 @@ function main() {
   // zum doppelten Preis. write-board-history.js liest ihn spaeter aus der Traeger-Datei
   // (daily-pull.yml: dieser Schritt laeuft vor dem Vintage-Schreiber).
   const universeHash = universumsHashVon(universe);
+  // Existing-row exits must survive the watchlist cut before scoring. Keep their counters
+  // separate from scoreUniverse exclusions so the original sum guard retains its meaning.
+  const listingManifest = path.join(ROOT, 'snapshots', LISTING_EXITS_FILE);
+  let listingExits;
+  try { listingExits = readListingExitManifest(listingManifest, fs.readFileSync); }
+  catch (e) {
+    if (e.code !== 'ENOENT') throw e;
+    // Legacy local replays lack the handoff. Snapshot membership, not the pre-run
+    // checkout watchlist, determines whether a listing returned to this scored run.
+    listingExits = deliveredListingExits(readIntakeLog(INTAKE_LOG_FILE, fs.readFileSync), universe.map(row => ({ ticker: row.meta.ticker })));
+  }
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   writeJsonAtomic(OUT_FILE, {
@@ -442,6 +455,8 @@ function main() {
     universeHash,
     counts: { firmen: rows.length, zeilen: legs, byReason, sizeExits: sizeExits.length },
     rows,
+    listingExits,
+    listingExitCount: listingExits.length,
     sizeExitsKnown,
     sizeExits,
   });
