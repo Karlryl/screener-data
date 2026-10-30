@@ -472,6 +472,13 @@ function runFiles(files, cwd, log) {
  * @returns {{code:number, lines:string[]}}
  */
 function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blockingAlways, repoFiles, summaryFile, emit }) {
+  // Run 41069226325: on Linux process.stdout on a pipe is non-blocking (Node makes it blocking only on
+  // Windows). The first write that does not fit is queued, spawnSync of the next file keeps the event
+  // loop from draining it, every later line queues behind it, and the closing process.exit drops the
+  // queue. Blocking writes keep the log live, so a timeout or a crash still shows how far the run came;
+  // process.exitCode alone would only hand over everything at the very end.
+  // ponytail: _handle is a Node internal; should it go away, the pipe probe in the selftest goes red.
+  process.stdout._handle?.setBlocking?.(true);
   const lines = [];
   // `lines` traegt IMMER den Rohtext — alle Proben pruefen darauf und bleiben damit
   // unberuehrt davon, wie die Zeile ausgegeben wird. `emit` faerbt nur die Ausgabe:
