@@ -494,6 +494,34 @@
       },
       "verifiedAt": "2026-10-30",
       "reviewBy": "2026-11-30"
+    },
+    "MSGS": {
+      "validFrom": "2026-10-27",
+      "reason": "MSGS ist das alte Kürzel von MSG Knickerbockers, früher Madison Square Garden Sports. Die Aktie wurde unter diesem Kürzel zuletzt am 26.10.2026 gehandelt, vor der Abspaltung der MSG Rangers, und läuft seit dem 27.10.2026 als MSGK. Maßgeblich ist die Notierung MSGK.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1636519/000119312526409143/d126791d8k.htm",
+        "quote": "the trading symbol for Registrant Class A Common Stock on the NYSE will change from",
+        "page": "Form 8-K filed 2026-09-30, Introductory Note, Name Change",
+        "crossCheck": "Form 8-K filed 2026-10-27, https://www.sec.gov/Archives/edgar/data/1636519/000119312526434274/d178604d8k.htm : distribution of one MSG Rangers share per two shares on 2026-10-26, name change at 11:59 p.m. that day, the cover lists only MSGK. IRS Form 8937, https://s23.q4cdn.com/716592820/files/doc_downloads/spin_off/2026/IRS-Form-8937.pdf p.1: \"The VWAP for MSGK common stock on October 27, 2026 was $301.87.\" The 384.39 USD is the last MSGS close of 2026-10-26 from https://query1.finance.yahoo.com/v8/finance/chart/MSGS?range=1mo&interval=1d (vendor data).",
+        "vendorValueSeen": "main store of run 41027769596 (2026-10-30): marketCap 9,256,088,576 USD from yahoo_quoteSummary = 384.39 USD x 24,079,941 shares, no price block; software and communication services profitable rank 43, one rank below MSGK with the same score 72.2 and 7,469,115,392 USD"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "ISSC": {
+      "validFrom": "2026-08-18",
+      "reason": "ISSC ist das alte Kürzel von Innovative Aerosystems. Die Aktie wurde unter diesem Kürzel zuletzt am 17.08.2026 gehandelt und läuft seit dem 18.08.2026 als IA. Unter ISSC gibt es seitdem keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://finviz.com/news/380843/innovative-aerosystems-to-change-nasdaq-ticker-symbol-to-ia-following-corporate-rebranding",
+        "quote": "effective at the U.S. market open on August 18",
+        "page": "Business Wire release of the issuer of 2026-08-11, first paragraph, wire copy",
+        "crossCheck": "Form 8-K/A filed 2026-10-07, https://www.sec.gov/Archives/edgar/data/836690/000110465926114137/tm2626969d1_8ka.htm : the cover lists IA as trading symbol on the Nasdaq. Form 10-Q filed 2026-08-13, https://www.sec.gov/Archives/edgar/data/836690/000110465926095962/issc-20260630x10q.htm : 17,899,173 shares on the cover. Nasdaq history https://api.nasdaq.com/api/quote/IA/historical : close 24.78 USD on 2026-08-17, 20.77 USD on 2026-10-30 (read by both verifiers).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 443,541,504 USD from yahoo_quoteSummary = 24.78 USD x 17,899,173 shares, no price block; small-cap industrials profitable rank 23"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
     }
   }
 }
