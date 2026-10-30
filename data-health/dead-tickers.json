@@ -4,11 +4,14 @@
  "generated_at": "2026-07-10T10:59:45.001Z",
  "method": "Alle 4209 persistenten Fail-Ticker aus Daily-Pull Run 28998189660 (2026-07-09) klassifiziert: errClass not-found = definitive Yahoo-Ablehnung (Stichprobe 11/11 bestaetigt tot, WebFetch-Gegencheck CADE/CUTR); Fractional-/Reg-A-Serien per Namensmuster (Stichprobe 3/3: 0 Daten auf Yahoo); alle 2537 schema-fail-Ticker einzeln per yahoo-finance2 quote-Probe am 2026-07-10 verifiziert (nur quote-tote/marktdatenlose ausgetragen; lebende bleiben im Universum). Vollreport: reports/fail-ticker-klassen-2026-07-10.md",
  "counts": {
-  "schemafail-quote-tot": 1118,
-  "kein-listing-fraktional": 545,
-  "delisted-kein-yahoo-listing": 1374,
-  "zombie-kein-marktdatum": 6
- },
+    "schemafail-quote-tot": 1118,
+    "kein-listing-fraktional": 545,
+    "delisted-kein-yahoo-listing": 1374,
+    "zombie-kein-marktdatum": 6,
+    "uebernommen-oder-gestrichen": 26,
+    "abgeloest-neues-kuerzel": 6,
+    "zweitlinie-toter-firma": 11
+  },
  "tickers": {
   "AAC": "schemafail-quote-tot",
   "ADHFS": "kein-listing-fraktional",
@@ -3052,6 +3055,230 @@
   "WNS": "delisted-kein-yahoo-listing",
   "XM": "delisted-kein-yahoo-listing",
   "YUASF": "schemafail-quote-tot",
-  "ZYNE": "schemafail-quote-tot"
- }
+  "ZYNE": "schemafail-quote-tot",
+    "CRNX": "uebernommen-oder-gestrichen",
+    "ACVA": "uebernommen-oder-gestrichen",
+    "ATAI": "uebernommen-oder-gestrichen",
+    "CWAN": "uebernommen-oder-gestrichen",
+    "000016.SZ": "uebernommen-oder-gestrichen",
+    "BLFS": "uebernommen-oder-gestrichen",
+    "TALK": "uebernommen-oder-gestrichen",
+    "3480.T": "uebernommen-oder-gestrichen",
+    "SCZ.V": "abgeloest-neues-kuerzel",
+    "QUB.AX": "uebernommen-oder-gestrichen",
+    "SDR.L": "uebernommen-oder-gestrichen",
+    "QRVO": "uebernommen-oder-gestrichen",
+    "EQR": "abgeloest-neues-kuerzel",
+    "8283.T": "uebernommen-oder-gestrichen",
+    "CCO": "uebernommen-oder-gestrichen",
+    "5202.T": "uebernommen-oder-gestrichen",
+    "GBTG": "uebernommen-oder-gestrichen",
+    "AKBM.OL": "uebernommen-oder-gestrichen",
+    "TBPH": "uebernommen-oder-gestrichen",
+    "6486.T": "abgeloest-neues-kuerzel",
+    "KCO.DE": "uebernommen-oder-gestrichen",
+    "LEG": "uebernommen-oder-gestrichen",
+    "BZH": "uebernommen-oder-gestrichen",
+    "7240.T": "abgeloest-neues-kuerzel",
+    "ATKR": "uebernommen-oder-gestrichen",
+    "ORLA": "uebernommen-oder-gestrichen",
+    "OLA.TO": "zweitlinie-toter-firma",
+    "EA": "uebernommen-oder-gestrichen",
+    "1EA.MI": "zweitlinie-toter-firma",
+    "EA.VI": "zweitlinie-toter-firma",
+    "JTC.L": "uebernommen-oder-gestrichen",
+    "JTCPF": "zweitlinie-toter-firma",
+    "AVB": "abgeloest-neues-kuerzel",
+    "AVBC.VI": "zweitlinie-toter-firma",
+    "SES.TO": "uebernommen-oder-gestrichen",
+    "SECYF": "zweitlinie-toter-firma",
+    "WBD": "uebernommen-oder-gestrichen",
+    "1WBD.MI": "zweitlinie-toter-firma",
+    "WBDI.VI": "zweitlinie-toter-firma",
+    "1QRVO.MI": "zweitlinie-toter-firma",
+    "B72.DE": "zweitlinie-toter-firma",
+    "QUBHF": "zweitlinie-toter-firma",
+    "AXIA": "abgeloest-neues-kuerzel"
+  },
+  "nachtrag_2026_10_30": "W7: 43 ended or replaced listings, 32 of them holding a stale board rank; each checked at the exchange or issuer. Entered without the intake gate.",
+  "belege_2026_10_30": {
+    "CRNX": {
+      "ende": "2026-09-01",
+      "quelle": "https://www.boardroomalpha.com/sec/crnx-8-k-2026-09-01-0001140361-26-035195"
+    },
+    "ACVA": {
+      "ende": "2026-10-16",
+      "quelle": "https://www.financialcontent.com/article/bizwire-2026-10-16-copart-completes-acquisition-of-acv"
+    },
+    "ATAI": {
+      "ende": "2026-09-11",
+      "quelle": "https://www.nasdaqtrader.com/TraderNews.aspx?id=ECA2026-633"
+    },
+    "CWAN": {
+      "ende": "2026-06-25",
+      "quelle": "https://www.permira.com/news-and-insights/announcements/clearwater-analytics-completes-84-billion-take-private-acquisition-by-permira-and-warburg-pincus"
+    },
+    "000016.SZ": {
+      "ende": "2026-10-16",
+      "quelle": "https://finance.sina.cn/2026-10-16/detail-inivmiin1674359.d.html"
+    },
+    "BLFS": {
+      "ende": "2026-10-06",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0000834365/000119312526415012/d753652d8k.htm"
+    },
+    "TALK": {
+      "ende": "2026-08-17",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/1803901/000095015726000907/form8-k.htm"
+    },
+    "3480.T": {
+      "ende": "2026-09-02",
+      "quelle": "https://www.jpx.co.jp/english/news/1023/20260810-12.html"
+    },
+    "SCZ.V": {
+      "ende": "2026-09-21",
+      "nachfolger": "SCZ.TO",
+      "quelle": "https://www.tsx.com/en/news/new-company-listings?id=2493"
+    },
+    "QUB.AX": {
+      "ende": "2026-08-17",
+      "quelle": "https://www.sharecafe.com.au/2026/08/14/qube-holdings-limited-acquisition-by-rubik-australia-pty-limited-finalised/"
+    },
+    "SDR.L": {
+      "ende": "2026-10-01",
+      "quelle": "https://pdf.dfcfw.com/pdf/H22_AN202610011830076487_1.pdf"
+    },
+    "QRVO": {
+      "ende": "2026-10-05",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/1604778/000095010326015180/dp254466_8k.htm"
+    },
+    "EQR": {
+      "ende": "2026-08-17",
+      "nachfolger": "VMRK",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0000906107/000114036126033377/ef20080318_ex99-1.htm"
+    },
+    "8283.T": {
+      "ende": "2026-08-10",
+      "quelle": "https://www.jpx.co.jp/english/news/1023/20260715-11.html"
+    },
+    "CCO": {
+      "ende": "2026-10-14",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/1334978/000121390026109385/ea0308422-8k_clear.htm"
+    },
+    "5202.T": {
+      "ende": "2026-09-28",
+      "quelle": "https://www.jpx.co.jp/english/news/1023/20260831-11.html"
+    },
+    "GBTG": {
+      "ende": "2026-09-29",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/1820872/000114036126037931/ef20082602_ex99-1.htm"
+    },
+    "AKBM.OL": {
+      "ende": "2026-10-01",
+      "quelle": "https://www.inderes.se/en/releases/aker-biomarine-last-day-of-trading"
+    },
+    "TBPH": {
+      "ende": "2026-09-23",
+      "quelle": "https://www.nasdaqtrader.com/TraderNews.aspx?id=ECA2026-668"
+    },
+    "6486.T": {
+      "ende": "2026-09-29",
+      "nachfolger": "641A.T",
+      "quelle": "https://www.jpx.co.jp/english/listing/stocks/new/vk0khi0000028oe4-att/10NOKGroup-OutlineEN.pdf"
+    },
+    "KCO.DE": {
+      "ende": "2026-08-12",
+      "quelle": "https://live.deutsche-boerse.com/nachrichten/EQS-Adhoc-Kloeckner---Co-SE-Delisting-wird-nach-Entscheidung-der-Frankfurter-Wertpapierboerse-am-12-August-2026-wirksam-8b76f798-a7f8-435a-83ac-23978a6a455d"
+    },
+    "LEG": {
+      "ende": "2026-08-26",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/58492/000087666126000712/ruleprovisionnotice.htm"
+    },
+    "BZH": {
+      "ende": "2026-10-20",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0000915840/000110465926117198/tm2622398d20_8k.htm"
+    },
+    "7240.T": {
+      "ende": "2026-09-29",
+      "nachfolger": "641A.T",
+      "quelle": "https://www.jpx.co.jp/english/listing/stocks/new/vk0khi0000028oe4-att/10NOKGroup-OutlineEN.pdf"
+    },
+    "ATKR": {
+      "ende": "2026-10-19",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0001666138/000166613826000041/atkr-20261019.htm"
+    },
+    "ORLA": {
+      "ende": "2026-07-31",
+      "quelle": "https://stockanalysis.com/stocks/orla/"
+    },
+    "OLA.TO": {
+      "ende": "2026-08-04",
+      "quelle": "https://www.m-x.ca/f_circulaires_en/103-26_en.pdf"
+    },
+    "EA": {
+      "ende": "2026-08-04",
+      "quelle": "https://www.ea.com/news/ea-announces-completion-of-acquisition"
+    },
+    "1EA.MI": {
+      "ende": "2026-08-04",
+      "quelle": "https://www.ea.com/news/ea-announces-completion-of-acquisition"
+    },
+    "EA.VI": {
+      "ende": "2026-08-04",
+      "quelle": "https://www.ea.com/news/ea-announces-completion-of-acquisition"
+    },
+    "JTC.L": {
+      "ende": "2026-08-20",
+      "quelle": "https://www.jtcgroup.com/news/jtc-acquisition-completes/"
+    },
+    "JTCPF": {
+      "ende": "2026-08-20",
+      "quelle": "https://www.jtcgroup.com/news/jtc-acquisition-completes/"
+    },
+    "AVB": {
+      "ende": "2026-08-17",
+      "nachfolger": "VMRK",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0000906107/000114036126033377/ef20080318_ex99-1.htm"
+    },
+    "AVBC.VI": {
+      "ende": "2026-08-17",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0000906107/000114036126033377/ef20080318_ex99-1.htm"
+    },
+    "SES.TO": {
+      "ende": "2026-09-02",
+      "quelle": "https://pulse2.com/gfl-environmental-completes-acquisition-of-secure-waste-infrastructure/"
+    },
+    "SECYF": {
+      "ende": "2026-09-02",
+      "quelle": "https://pulse2.com/gfl-environmental-completes-acquisition-of-secure-waste-infrastructure/"
+    },
+    "WBD": {
+      "ende": "2026-10-06",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0001437107/000119312526415055/d200872d8k.htm"
+    },
+    "1WBD.MI": {
+      "ende": "2026-10-06",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0001437107/000119312526415055/d200872d8k.htm"
+    },
+    "WBDI.VI": {
+      "ende": "2026-10-06",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0001437107/000119312526415055/d200872d8k.htm"
+    },
+    "1QRVO.MI": {
+      "ende": "2026-10-05",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/1604778/000095010326015180/dp254466_8k.htm"
+    },
+    "B72.DE": {
+      "ende": "2026-09-11",
+      "quelle": "https://www.nasdaqtrader.com/TraderNews.aspx?id=ECA2026-633"
+    },
+    "QUBHF": {
+      "ende": "2026-08-17",
+      "quelle": "https://www.sharecafe.com.au/2026/08/14/qube-holdings-limited-acquisition-by-rubik-australia-pty-limited-finalised/"
+    },
+    "AXIA": {
+      "ende": "2026-08-06",
+      "nachfolger": "AXIA3.SA",
+      "quelle": "https://www.sec.gov/Archives/edgar/data/0001439124/000129281426004079/axia20260805_6k.htm"
+    }
+  }
 }
