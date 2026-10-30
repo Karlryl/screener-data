@@ -83,14 +83,14 @@ test('all 21 known wrong rows are checked and withheld (none unchecked); the wit
   assert.equal(F.mustWithhold.length, 21);
   // P138: 000688.SZ is now corrected by the hand table, so the exchange check leaves it alone (unchecked, hand-table).
   // G31 switch (P268, 18.10.2026): 000599.SZ's unrestated Q2 2025 is held by the hand table, the same treatment.
-  // The other 18 stay withheld; the level examples below use 000564.SZ, the same kind of level mismatch.
+  // 301297.SZ (ranks 11 to 25 of 30.10.2026) likewise. The other 17 stay withheld; the level examples below use 000564.SZ, the same kind of level mismatch.
   // Board-top check of 30.10.2026: 600292.SS's pre-merger Q2 2025 is corrected by the hand table, the same treatment.
-  for (const t of ['000688.SZ', '000599.SZ', '600292.SS']) {
+  for (const t of ['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ']) {
     const handOwned = res(snap(t));
     assert.equal(handOwned.category, 'unchecked', t);
     assert.equal(handOwned.why, 'hand-table', t);
   }
-  for (const t of F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ', '600292.SS'].includes(t))) {
+  for (const t of F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ'].includes(t))) {
     const s = snap(t), r = res(s);
     assert.ok(['would-withhold', 'would-withhold-growth'].includes(r.category), t + ' ' + r.category + ' ' + r.why);
     const lvl = r.withhold.find(w => w.level);
@@ -551,7 +551,7 @@ test('mode switch: active -> off restores every cell; active twice = active once
     assert.equal(serial(run(a, 'active', ctx).snapshot), serial(a), 'idempotent: ' + s.meta.ticker);
     const sh = run(s, 'shadow', ctx); assert.equal(sh.snapshot, s); assert.equal(serial(s), before);
   }
-  assert.ok(changed >= 24, 'active changed ' + changed);
+  assert.ok(changed >= 23, 'active changed ' + changed); // 301297.SZ is hand-owned since 30.10.2026
 });
 
 // ── Break-once (memory-only module copies, whole-line anchors) ───────────────

@@ -82,7 +82,7 @@ test('MPHC.QA: the packet is held as a quarantine; the row is excluded as data-s
   assert.equal(q.reasonDate, '2026-10-24');
   assert.match(q.reason, /\(zweites Quartal 2026, Ende 30\.06\.2026/);
   assert.ok(q.sources.every(s => s.url.startsWith('https://') && s.quote && s.page));
-  assert.deepEqual(table.quarantines.slice(-1), [q], 'appended after the eleven earlier holds');
+  assert.deepEqual(table.quarantines.slice(11, 12), [q], 'appended after the eleven earlier holds');
   const scored = cfg => {
     const r = applyFinancialCases(snap('MPHC.QA'), cfg && { table: cfg });
     return { r, s: score.scoreUniverse([r.snapshot], formulas)[0] };

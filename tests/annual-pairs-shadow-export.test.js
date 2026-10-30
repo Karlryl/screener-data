@@ -148,7 +148,8 @@ check('real writers: every existing row key, value, rank and score is byte-ident
   assert.throws(() => compare(broken), assert.AssertionError);
   compare(out);
   const count = actual.harness;
-  for (const ticker of ['SBR', 'NXP', 'FRU.TO', 'BURE.ST', '688428.SS']) {
+  // 688428.SS left this list on 30.10.2026: its synthetic packet carries no market cap the share-count row of that day knows, so the row is withheld.
+  for (const ticker of ['SBR', 'NXP', 'FRU.TO', 'BURE.ST']) {
     assert.equal(count.reads.get(path.join(count.virtualSnapshots, ticker + '.json')), 1, ticker + ' snapshot read exactly once');
     assert.equal(count.preparations.get(ticker), 1, ticker + ' hand-table overlay exactly once');
     assert.equal(count.shadows.get(ticker), 1, ticker + ' shadow computed exactly once');

@@ -232,6 +232,90 @@
     "verifiedAt": "2026-10-30",
     "withholdUnverified": true
   },
+  "2590.HK": {
+    "shares": 1337286998,
+    "sharesAsOf": "2026-10-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      2214575158
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count",
+    "reason": "Börsenwert aus 1.337.286.998 Aktien berechnet: alle ausgegebenen Aktien laut Geekplus zum 30.10.2026 (Klasse A, gelistete und nicht gelistete Klasse B), einschließlich 55.630.000 eigener Aktien. Yahoo rechnet mit rund 2.215 Mio. Aktien, wofür es keinen Beleg gibt.",
+    "source": {
+      "form": "Die Tagesmeldung von Geekplus an die Hongkonger Börse vom 30.10.2026 und die Monatsmeldung für September 2026 nennen die ausgegebenen Aktien je Klasse.",
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103002515.pdf",
+      "quote": "Closing balance as at (Notes 5 and 6) 30 October 2026  968,520,483  55,630,000  1,024,150,483",
+      "page": "Next Day Disclosure Return p.1, listed class B; monthly return https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100701727.pdf p.2 and pp.3-4",
+      "unit": "shares: class A 218,560,434 + listed class B 1,024,150,483 + unlisted class B 94,576,081",
+      "crossCheck": "Annual report 2025 https://www.hkexnews.hk/listedco/listconews/sehk/2026/0423/2026042303218.pdf note (2): 218,560,434 Class A and 1,118,726,564 Class B"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "688428.SS": {
+    "shares": 860109566,
+    "sharesAsOf": "2026-10-27",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      1767202175
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 6,462,941,472 USD / price 3.65716021 USD = 1,767,202,175 shares, all A and H shares at the Shanghai price",
+    "reason": "Börsenwert näherungsweise aus 860,1 Mio. A-Aktien-Gegenwerten berechnet: laut InnoCare 273.403.904 A-Aktien und 1.496.284.235 H-Aktien, die H-Aktien umgerechnet mit den Schlusskursen vom 30.10.2026 (24,30 CNY und 11,25 HKD). Yahoo bewertet alle Aktien zum Shanghaier Kurs, obwohl die Hongkonger Aktien nur rund 40 % davon kosten. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
+    "source": {
+      "form": "Der Quartalsbericht von InnoCare vom 27.10.2026 nennt auf Seite 4 die ausgegebenen Aktien insgesamt und in Hongkong.",
+      "url": "https://static.cninfo.com.cn/finalpage/2026-10-27/1225623594.PDF",
+      "quote": "公司已发行股份总数为 1,769,688,139 股，其中，于香港已发行股份为 1,496,284,235",
+      "page": "Q3 report p.4",
+      "unit": "shares: A 273,403,904 + H 1,496,284,235 x (11.25 x 0.12746696) / (24.30 x 0.15050042) = 860109566 A equivalents",
+      "priceSource": "https://query1.finance.yahoo.com/v8/finance/chart/688428.SS?range=1mo&interval=1d and https://query1.finance.yahoo.com/v8/finance/chart/9969.HK?range=1mo&interval=1d, closes of 2026-10-30 (vendor data, no issuer quote exists for the ratio)"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "SOFF.OL": {
+    "shares": 82346796,
+    "sharesAsOf": "2026-09-03",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      108605000
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 829,663,826 USD / price 7.63927815 USD = 108,605,000 shares; no filing supports that count",
+    "reason": "Börsenwert aus 82.346.796 Aktien berechnet: ausgegebene Aktien laut Solstad zum 03.09.2026. Yahoo rechnet mit 108,6 Mio. Aktien, wofür es keinen Beleg gibt.",
+    "source": {
+      "form": "Die Einladung von Solstad zur außerordentlichen Hauptversammlung vom 03.09.2026 nennt auf Seite 2 die ausgegebenen Aktien.",
+      "url": "https://www.solstad.com/wp-content/uploads/2026/09/SOFF-EGM-Notice_2026.09.03.pdf",
+      "quote": "Currently, the Company has issued 82,346,796 shares",
+      "page": "EGM notice p.2",
+      "unit": "shares",
+      "crossCheck": "H1 2026 report https://www.solstad.com/wp-content/uploads/2026/07/SOFF-1H26-Report.pdf : average number of shares 82,347 thousand in every column"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "003535.KS": {
+    "shares": 223091000,
+    "sharesAsOf": "2026-10-08",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      318070388
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,373,583,285 USD / price 4.31848829 USD = 318,070,388 shares, all classes at the price of the preferred line",
+    "reason": "Börsenwert näherungsweise aus 223,1 Mio. Gegenwerten dieser Vorzugsaktie berechnet: laut Hanwha Investment & Securities nach der Kapitalerhöhung vom 08.10.2026 263.870.388 Stammaktien, 4.200.000 alte Vorzugsaktien und 50.000.000 neue Vorzugsaktien, bewertet mit den Schlusskursen vom 30.10.2026 (4.025 und 5.760 KRW, die neuen Vorzugsaktien zum Stammaktienkurs). Yahoo bewertet alle Aktien zum Kurs der Vorzugsaktie. Der Wert ist eine Näherung.",
+    "source": {
+      "form": "Der Halbjahresbericht und die Meldung zur Kapitalerhöhung von Hanwha Investment & Securities bei DART nennen die Aktien je Gattung.",
+      "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260930000770",
+      "quote": "신주의 종류와 수 보통주식 (주) 50,000,000 기타주식 (주) 50,000,000",
+      "page": "Major-matters report 2026-09-30, capital increase section, items 1, 6, 9, 12",
+      "unit": "shares: (263,870,388 x 4,025 + 4,200,000 x 5,760 + 50,000,000 x 4,025) / 5,771 KRW = about 223.09 M equivalents",
+      "crossCheck": "Half-year report https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001503 : 유통주식수는 보통주 213,870,388주, 우선주 4,200,000주"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
   "_holds": {
     "ISBTR.IS": {
       "validFrom": "2026-10-10",
