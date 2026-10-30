@@ -985,12 +985,41 @@ function selftest() {
     && path.resolve(path.dirname(path.dirname(leckDir))) === path.resolve(os.tmpdir()),
     `code=${r.code} leckDir=${JSON.stringify(leckDir)}`);
 
+  // 8. Pipe probe (run 41069226325): the real CLI with its stdout on a pipe, several files each far
+  //    over any pipe or socket buffer. Nothing may get lost: the marker of every file, the closing
+  //    line, and in the red run the name of the red file and exit 1. Only Linux can lose it (Node
+  //    makes pipes blocking on Windows). Each child ends by itself, so its own output is complete.
+  const pipeDir = path.join(dir, 'pipe-probe');
+  fs.mkdirSync(path.join(pipeDir, 'tests'), { recursive: true });
+  const lautDatei = (f, exitCode) => fs.writeFileSync(path.join(pipeDir, f),
+    `process.stdout.write(('x'.repeat(99)+'\\n').repeat(4000));console.log('MARKER ${f} 1 ok, 0 fail');process.exitCode=${exitCode};\n`);
+  for (const f of BLOCKING_ALWAYS) lautDatei(f, 0); // the gate's guard demands exactly these names
+  execFileSync('git', ['init', '-q'], { cwd: pipeDir });
+  execFileSync('git', ['add', 'tests'], { cwd: pipeDir });
+  const gateCli = () => spawnSync(process.execPath, [__filename, '--mode=all'],
+    { cwd: pipeDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const fehlend = (out, files) => files.filter(f => !out.includes(`MARKER ${f} `));
+  const letzteZeile = (out) => out.trimEnd().split('\n').pop();
+  let p = gateCli();
+  check('Pipe-Probe gruen (alle Ausgaben und die Schlusszeile kommen an)',
+    p.status === 0 && fehlend(p.stdout, BLOCKING_ALWAYS).length === 0 && letzteZeile(p.stdout) === 'All tests passed.',
+    `status=${p.status} bytes=${p.stdout.length} fehlend=${fehlend(p.stdout, BLOCKING_ALWAYS).length}`);
+  const rotLaut = 'tests/zz-rot.test.js';
+  lautDatei(rotLaut, 1);
+  p = gateCli();
+  check('Pipe-Probe rot (Exit 1 und der Name der roten Datei stehen am Ende)',
+    p.status === 1 && fehlend(p.stdout, [...BLOCKING_ALWAYS, rotLaut]).length === 0
+    && p.stdout.split('\n').some(l => l.startsWith(`::error::Test failed: ${rotLaut}`))
+    && letzteZeile(p.stdout).startsWith('::error::One or more tests failed')
+    && !p.stdout.includes('All tests passed'),
+    `status=${p.status} bytes=${p.stdout.length} fehlend=${fehlend(p.stdout, [...BLOCKING_ALWAYS, rotLaut]).length}`);
+
   fs.rmSync(dir, { recursive: true, force: true });
   if (fails.length) {
     console.log(`::error::test-gate Selftest FAILED: ${fails.join(', ')}`);
     return 1;
   }
-  console.log('test-gate Selftest OK (22 Proben).');
+  console.log('test-gate Selftest OK (24 Proben).');
   return 0;
 }
 
