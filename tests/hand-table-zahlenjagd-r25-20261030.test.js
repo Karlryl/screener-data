@@ -42,10 +42,10 @@ if (process.argv.includes('--prove-red')) {
 
 const own = table.cases.filter(c => c.revision === REV);
 
-test('22 sourced rows validate; every reason names the period of its cell, no substitute 0, no dash as punctuation', () => {
-  assert.equal(own.length, 22);
+test('24 sourced rows validate; every reason names the period of its cell, no substitute 0, no dash as punctuation', () => {
+  assert.equal(own.length, 24);
   const n = t => own.filter(c => c.ticker === t).length;
-  assert.deepEqual(['ENEL.VI', 'ACE.MI', '301297.SZ', 'GGP.L'].map(n), [13, 3, 4, 2]);
+  assert.deepEqual(['ENEL.VI', 'ACE.MI', '301297.SZ', 'GGP.L'].map(n), [13, 3, 4, 4]);
   for (const c of own) {
     assert.ok(c.sources.length && c.sources.every(s => s.url.startsWith('https://') && s.quote && s.page && s.verifiedAt === '2026-10-30'), c.caseId);
     assert.ok(c.reason.includes(c.period.split('-').reverse().join('.')), c.caseId + ': the period of this cell');
@@ -92,6 +92,7 @@ test('Greatland: filed revenue gives +136 % instead of +158.2 %', () => {
   assert.deepEqual(leg(apply('GGP.L', before())), ['year', '2026-06-30', '2025-06-30', 158.2]);
   const out = apply('GGP.L');
   assert.deepEqual(native(out, 'annual', 'annualRev').slice(0, 2), [2259000000, 957000000]);
+  assert.deepEqual(native(out, 'annual', 'annualNetIncome').slice(0, 2), [862000000, 337000000]);
   assert.deepEqual(leg(out), ['year', '2026-06-30', '2025-06-30', 136.1]);
 });
 

@@ -31,7 +31,7 @@ test('70 rows of this lane, appended last, all eleven firms, four coverage rows,
   const own = table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 70);
   const at = table.cases.findIndex(c => c.revision === REV);
-  assert.deepEqual(table.cases.slice(at).map(c => c.revision), [...Array(70).fill(REV), ...Array(35).fill('2026-10-30-sdz1'), ...Array(35).fill('2026-10-30-secabgleich-ausland'), ...Array(22).fill('2026-10-30-sdz2')], 'only the board-top rows of 30.10.2026 follow');
+  assert.deepEqual(table.cases.slice(at).map(c => c.revision), [...Array(70).fill(REV), ...Array(35).fill('2026-10-30-sdz1'), ...Array(35).fill('2026-10-30-secabgleich-ausland'), ...Array(24).fill('2026-10-30-sdz2')], 'only the board-top rows of 30.10.2026 follow');
   assert.deepEqual([...new Set(own.map(c => c.ticker))].sort(), [...FIRMS].sort());
   assert.deepEqual(table.coverage.filter(v => ['EGY', 'FTW', 'SUNC', 'AHCO'].includes(v.ticker)).map(v => v.ticker + v.coversThrough).sort(),
     ['AHCO2026-06-30', 'EGY2026-06-30', 'FTW2026-06-30', 'SUNC2026-06-30']);
