@@ -26,7 +26,7 @@ const q = (arr) => arr.map((value) => ({ value }));
 function snap(revenueQ, revenueQEnds, annualRev, extra = {}) {
   return {
     meta: { ticker: 'TEST' },
-    annual: { annualRev: q(annualRev || []) },
+    annual: { annualRev: q(annualRev || []), annualRevEnds: (annualRev || []).map((_, i) => `${2025 - i}-12-31`) },
     timeseries: Object.assign({ revenueQ: q(revenueQ), ...(revenueQEnds ? { revenueQEnds } : {}) }, extra),
   };
 }
@@ -58,7 +58,9 @@ check('ohne Enden-Reihe: Positionsregel i+4 unveraendert', () => {
   // STRIKT gleich, nicht "nah dran": die Achse rechnet dieselben Operationen in derselben
   // Reihenfolge, also muss auch dasselbe Bitmuster herauskommen. Eine 1e-9-Toleranz haette
   // hier "byte-identisch" behauptet und es nicht geprueft.
-  assert.strictEqual(revGrowthLevel(s), (SZ_WERTE[0] / SZ_WERTE[4] - 1) * 100, 'byte-identisch zur alten Rechnung');
+  withG31Variant('legacy', () => assert.strictEqual(revGrowthLevel(s), (SZ_WERTE[0] / SZ_WERTE[4] - 1) * 100, 'byte-identisch zur alten Rechnung'));
+  // Period gate round 2 (30.10.2026): production shows no number from an undated pair.
+  assert.strictEqual(revGrowthLevel(s), null);
 });
 
 check('Enden vorhanden, aber Position i ohne Datum -> Positionsregel', () => {

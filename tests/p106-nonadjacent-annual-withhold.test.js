@@ -63,7 +63,10 @@ for (const [ticker, ccy, fx, ends, stored, shown] of CASES) {
     test(ticker + ': a delivered 9.5-month short year never yields an annual growth', () => {
       const shortStored = 845603000000 * 0.0063445335;
       const raw = snap(ticker, ccy, fx, [ends[0], '2025-02-28', ...ends.slice(1)], [stored[0], shortStored, ...stored.slice(1)]);
-      assert.equal(Math.round(revGrowthLeg(raw).pct * 10) / 10, 71.5, 'precondition: the unguarded pair would show +71.5 %');
+      // Period gate round 2 (30.10.2026): the gate names the short prior year even without the hand table.
+      assert.equal(Math.round((stored[0] / shortStored - 1) * 1000) / 10, 71.5, 'precondition: the unguarded pair is +71.5 %');
+      assert.equal(revGrowthLeg(raw).pct, null);
+      assert.match(g31Shadow(raw).v1.reason, /^Das Vorjahr bis 28\.02\.2025 endet \d+ Tage nach dem Abschluss/);
       const { snapshot: out } = applyFinancialCases(raw);
       assert.equal(value(out.annual.annualRev[0]), stored[0]);
       for (const i of [1, 2, 3, 4]) assert.equal(value(out.annual.annualRev[i]), null, 'cell ' + i);

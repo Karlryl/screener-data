@@ -31,7 +31,8 @@ test('golden-trace transition: only the registered rebuilt trace passes', () => 
   assert.equal(load((d) => d).verify().canonicalId, 'GQS-00@1.1.0');
   assert.throws(() => load((d) => ({ ...d, goldenTraces: { ...d.goldenTraces, 'GQS00-023': '0'.repeat(64) } })).verify(),
     /not deterministic: 000002\.SZ differs from its sealed AND from its approved pending-transition trace/);
-  assert.throws(() => load(({ goldenTraces, ...rest }) => rest).verify(), /not deterministic: 000002\.SZ/);
+  // Period gate round 2 (30.10.2026) moves 17 golden cases; without the registrations the first of them fails, in fixture order.
+  assert.throws(() => load(({ goldenTraces, ...rest }) => rest).verify(), /not deterministic: ALNY/);
   assert.throws(() => load((d) => ({ ...d, goldenTraces: { ...d.goldenTraces, 'GQS00-999': 'x' } })).verify(), /unbekannten Golden-Fall/);
   assert.equal(sha(), before);
 });

@@ -119,7 +119,8 @@ test('undated quarter gaps stay blocked; missing and invalid dates are never inv
   const s = snapshot(); delete s.timeseries.revenueQEnds;
   assert.equal(G.quarterCandidate(s).pct, null);
   s.timeseries.revenueQ[1] = 100;
-  close(G.quarterCandidate(s).pct, 100); assert.equal(G.quarterCandidate(s).periodEnd, null);
+  // Period gate round 2 (30.10.2026): a gapless undated pair is no pair either.
+  assert.equal(G.quarterCandidate(s).pct, null); assert.match(G.quarterCandidate(s).reason, /^Periodenenden fehlen/); assert.equal(G.quarterCandidate(s).periodEnd, null);
   s.timeseries.revenueQEnds = ['2026-02-30'];
   assert.equal(G.quarterCandidate(s).periodEnd, null);
   s.timeseries.revenueQ[0] = { value: null, financialMissing: { originalVendorRow: { value: 200 } } };

@@ -77,8 +77,9 @@ assert.deepEqual(withAnnualPairRule({ growth: true }, () => counterCheck(firstDu
 const zero = snap('ZERO', 'Zero', [366, 365, 365], [180, 0, 120, 80]);
 const zeroCheck = counterCheck(zero, annualPairsShadow(zero));
 assert.equal(zeroCheck.falseFailures.length, 0);
-assert.equal(zeroCheck.zeroOnly.length, 1);
-assert.equal(zeroCheck.zeroOnly[0].failures[0].code, 'zero-year');
+// Period gate round 2 (30.10.2026): the pair over a reported zero year is empty in production too, so nothing is shadow-only.
+assert.equal(zeroCheck.zeroOnly.length, 0);
+assert.equal(zeroCheck.checked.flatMap(row => row.failures).find(p => p.axis === 'acceleration').code, 'zero-year');
 const missing = snap('NULL', 'Missing', [366, 365, 365], [180, null, 120, 80]);
 assert.equal(isGapless(datedPairs(missing, 'annualRev')), false, 'missing is not zero; present values span the gap');
 assert.equal(counterCheck(missing, annualPairsShadow(missing)).zeroOnly.length, 0);

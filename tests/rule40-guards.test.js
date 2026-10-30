@@ -164,7 +164,8 @@ test('ohne JEDEN lesbaren Zeitraum fliegt die Zeile raus — Anzeige-Regel, nich
   // "Unbekannt" ist nach wie vor nicht "veraltet"; der Frische-Waechter faellt hier kein
   // Urteil. Aber wer nicht sagen kann, ueber welchen Zeitraum eine Zahl spricht, gehoert
   // nicht in eine Rangliste, die einem Profi gezeigt wird — er kann sie nicht nachpruefen.
-  abgewiesenWegen('frischeUnbekannt', {}, { revenueQEnds: [], annualRevEnds: [] });
+  // Period gate round 2 (30.10.2026): without any end there is no growth figure at all, the row goes out one step earlier.
+  abgewiesenWegen('keinWachstum', {}, { revenueQEnds: [], annualRevEnds: [] });
 });
 
 // --- Belegbarkeit ----------------------------------------------------------
@@ -327,7 +328,8 @@ test('leeres juengstes Quartal ueber veralteten Werten wird als veraltet erkannt
 // die es nicht gibt. Erwartet ist jetzt "unbekannt" — nicht "veraltet", und vor allem
 // nicht "frisch".
 test('Quartalsenden ohne jeden Wert belegen keine Frische (frischeUnbekannt)', () => {
-  abgewiesenWegen('frischeUnbekannt', {}, {
+  // Period gate round 2 (30.10.2026): the undated annual pair carries no growth either, the row goes out one step earlier.
+  abgewiesenWegen('keinWachstum', {}, {
     revenueQ: [],
     revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'],
     annualRevEnds: undefined,
@@ -336,9 +338,9 @@ test('Quartalsenden ohne jeden Wert belegen keine Frische (frischeUnbekannt)', (
 
 // G31 (18.10.2026): the anchor is the period of the number shown. An undated quarter pair carries the
 // number but has no period, so the row is not rankable (frischeUnbekannt); pre-G31 the fiscal-year series dated it.
-test('G31: undatiertes Quartalspaar traegt die Zahl ohne Zeitraum -> frischeUnbekannt (vor G31: Jahresreihe)', () => {
+test('Period gate round 2: an undated quarter pair carries no number, the dated fiscal year carries it and dates the row', () => {
   const ohneQuartalsenden = { revenueQEnds: [], annualRevEnds: ['2026-03-31', '2025-03-31', '2024-03-31'] };
-  abgewiesenWegen('frischeUnbekannt', {}, ohneQuartalsenden);
+  drin({}, ohneQuartalsenden);
   require('../lib/g31-recency.js').withG31Variant('legacy', () => drin({}, ohneQuartalsenden));
 });
 

@@ -119,7 +119,9 @@ test('CAGR requires both positive endpoints and preserves missing slots', () => 
   for (const [a, b] of [[null, 100], [100, null], [0, 100], [100, 0], [-100, 100], [100, -100]]) {
     assert.equal(growth3({ annual: { annualRev: [{ value: a }, { value: 9 }, { value: 8 }, { value: b }] } }), null);
   }
-  assert.equal(growth3({ annual: { annualRev: [{ value: 133.1 }, null, null, { value: 100 }] } }), 10);
+  assert.equal(growth3({ annual: { annualRev: [{ value: 133.1 }, null, null, { value: 100 }], annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'] } }), 10);
+  // Period gate round 2 (30.10.2026): no ends, no proven span.
+  assert.equal(growth3({ annual: { annualRev: [{ value: 133.1 }, null, null, { value: 100 }] } }), null);
   assert.equal(growth3({ annual: { annualRev: [{ value: 100 }] } }), null);
   const gapped = structuredClone(snapshots[0]);
   gapped.annual.annualRevEnds[3] = '2020-12-31';

@@ -69,7 +69,7 @@ test('explicit mode off: prepareSnapshot equals the hand-table chain of origin/m
 });
 
 test('prepareSnapshot calls the step: in an active copy the known wrong rows are withheld and fills are applied', () => {
-  const w = quiet(() => q4Active.prepareSnapshot(clone(F.snapshots['000564.SZ'])));
+  const w = quiet(() => q4Active.prepareSnapshot(require('./helpers/dated-series.js').withEnds(clone(F.snapshots['000564.SZ']))));
   assert.ok(w.timeseries.revenueQ.some(c => c?.financialMissing?.reasonCode === 'exchange-pair-mismatch'));
   const f = quiet(() => q4Active.prepareSnapshot(clone(F.snapshots['000002.SZ'])));
   assert.ok(f.timeseries.revenueQ.some(c => c?.exchangeFill));

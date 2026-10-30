@@ -74,14 +74,14 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "ca5100d6f98dd23096c215450e724aa63fe6dfbd41821cfba2c4021199f1b1e9",
+    "src/scoring/axes.js": "8545f3d76609aae12bcfaca543245493c3260ed6126bb1e42f14592ff6541788",
     "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
     "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
-    "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a",
+    "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
     "src/scoring/profit-streak.js": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3",
     "src/scoring/country.js": "95d8b0d3d489786f326f9b764216c66222012449a9b68d630ef651dc574ee7db"
@@ -236,6 +236,21 @@
     "rollback": "Revert the P184 source changes and only the P184 pending hash registration together in a reviewed new commit."
   },
   "goldenTraces": {
+    "GQS00-001": "88a4ce58712e75398e0fa0d45e1509f64ed423daa5778a45505b04354ff71c48",
+    "GQS00-004": "ae7203b27f9cf0da452b7e27ace204c5f878c1a090b57f5b00ff7d68cc213a31",
+    "GQS00-005": "fa9708fc68aea72361d1d246315c6281fcca7c3d80e1899b36af11e85723e7a5",
+    "GQS00-006": "1adfa511dc4920fc9f6200530de7fb3e12f09f64c102fcd4c937677a4e333274",
+    "GQS00-007": "f222895e1d8849f086d491cb497909a35fb4c5c49a9053cf1b0e83b5a8785eae",
+    "GQS00-008": "86e895e6aeadb7971c5202651002a56349e01fb2b903909b92f87ea084745af0",
+    "GQS00-009": "39551bc5181fa48275aebc103937d853faab86a998c2278191ed136b8cab53d0",
+    "GQS00-011": "60e82aa919923d535b85f03a5af68fafdd7ff205b9f0c7a42982e9988bc1df13",
+    "GQS00-013": "90b52fed84ed533b2b3dda0b54c6460e29acccd7a83e7dfcd50bbd52a1b226ee",
+    "GQS00-014": "3391b5c47c9ac54549d6ac21de1a0a51e05ad3d344d34c1ec1a79f1a0470aa31",
+    "GQS00-015": "4c3ab1e4559c59ca58fa22534d158df8c29b518f0c07fa9de80cf6aae41a391c",
+    "GQS00-016": "ba14b7945e56f59628eaf34a4e9b3836d53a725ec54aa4b88bd9ed5318cee816",
+    "GQS00-017": "db2171d872eedd3fa640e9d274834f3d54114ab3dcf62a03a63390b182e601ea",
+    "GQS00-018": "f1502453a17cfae8e299a8c76b12f926bae5901d5b4813283ed2ba28905d3111",
+    "GQS00-020": "e49629097f5e7f57f655b94bc487db9a071c177f7d9c9d35ebfa34c3fec06597",
     "GQS00-023": "6de36e780a8b76de4bb3dc2b5d2a8b1e05145003409fc3a2e6d59fcd52a42f7f",
     "GQS00-024": "53305a4e7264c0ce5afe730780e0ce2be11dbb3967820edb46da187f09cec4cc"
   },
@@ -341,8 +356,58 @@
     "review": "Build registration only (formula draft); the independent Codex review decides the merge. The builder does not merge, publish, initialize or seal.",
     "rollback": "Revert the three source changes and only this periodGate registration with its pending hashes together in a reviewed new commit."
   },
+  "periodGateRound2": {
+    "date": "2026-10-30",
+    "authority": "Daylauf 10 master brief of 30.10.2026 (formula DRAFT), after Codex's verdict NOT RELEASED on #40: a blocked two-year pair still gave 18.89 points of acceleration and undated pairs still gave 30 % growth. Regelblatt v4 G2 and T2. Formula path: before/after on the same data day, reviewed by the other AI before merge; no court verdict, Karl release or ratification is claimed.",
+    "scope": "lib/annual-pairs.js periodGateReason: a missing period end now gives a German reason (the growth pair is empty), and an annual pair also fails when the prior year's own length, measured to the next distinct stored end, is under 334 days or 398..699 days (the P115 checkEnds verdict, so the Daifuku class is covered; 700+ days is a missing older year and says nothing about the prior year). New annualPairGateReason. src/scoring/axes.js: the P115 verdict is now always on for dated pairs in the revAcceleration annual fallback (both pairs), gpGrowth and the capitalEfficiency asset-growth penalty; the quarterly branch of revAcceleration skips unequal stored durations. Undated pairs are not judged on these three score axes: every sealed golden fixture is undated and verify() requires a score above 100 (278470.KS), so emptying them needs a seal decision; 0 such rows on 30.10.2026. src/scoring/overview.js: the annual and TTM verdicts carry the whole gate including missing ends (G31 arms; the legacy comparison arm is unchanged), an empty value is marked valuePresent false with the gate reason. Outside the seal: lib/g31-recency.js candidate passes the older end and empties undated growth pairs (revGrowthLevel, ruleOfX, growth bonus, shown value), scripts/write-filter-universe.js growth3 requires ends three annual windows apart.",
+    "sourceSha256LF": {
+      "src/scoring/axes.js": "8545f3d76609aae12bcfaca543245493c3260ed6126bb1e42f14592ff6541788",
+      "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051"
+    },
+    "previousPendingSha256LF": {
+      "src/scoring/axes.js": "ca5100d6f98dd23096c215450e724aa63fe6dfbd41821cfba2c4021199f1b1e9",
+      "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a"
+    },
+    "dependencyFiles": {
+      "lib/g31-recency.js": "c70624e2db3ae6f56c90cd7aea14541309aa1098de40662a562a89afac490b18",
+      "lib/annual-pairs.js": "fcc7b52a1d48fb07d0ee80075fa4c035a0ca2b8ea577c6784f04210a456ce3db"
+    },
+    "previousDependencyFiles": {
+      "lib/g31-recency.js": "18ba3e5a9a245b25e8c502c8f5f0d3efb032aee3512eefb30578e50dc0a31fda",
+      "lib/annual-pairs.js": "53a83cf210277bfc7fbc6e76d58ee97f49978764f436a7756bd5552ebc6105b7"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "definitionAmendmentAt120Seal": {
+      "axes": "revGrowthLevel (with ruleOfX and the growth bonus): dated and undated pairs; revAcceleration, gpGrowth, capitalEfficiency penalty: dated pairs",
+      "rule": "A revenue growth pair counts only when both ends are dated; a dated pair of any of these axes counts only when its ends lie 334..397 days apart (annual) or 350..380 days apart (quarter, half year, four quarters) and, for an annual pair, the prior year's length to the next distinct stored end is 334..397 days, at least 700 days, or unknown. Otherwise the leg is null (axis drops, renorm-on-drop) and the shown value is empty with a German reason naming the period."
+    },
+    "goldenImpact": {
+      "movedCases": [
+        "GQS00-001 ALNY: unroundedFinal 97.76371040457097 -> 97.7778116176684",
+        "GQS00-004 GRGD.TO: unroundedFinal 96.65780376027406 -> 96.66696129734278",
+        "GQS00-005 ATHERENERG.NS: unroundedFinal 85.77533078523157 -> 86.0430997679118",
+        "GQS00-006 278470.KS: unroundedFinal 100.9676119995497 -> 100.98736116571101",
+        "GQS00-007 CHENNPETRO.NS: unroundedFinal 95.8763787878537 -> 96.39257781854049",
+        "GQS00-008 VNOM: unroundedFinal 73.9659862248346 -> 74.2184298638272",
+        "GQS00-009 GDG.AX: unroundedFinal 68.43847589053581 -> 60.09391475340137",
+        "GQS00-011 8996.TW: unroundedFinal 98.15534957418845 -> 98.19536194598938",
+        "GQS00-013 3317.HK: unroundedFinal 88.83282714469648 -> 69.37805895010756",
+        "GQS00-014 AUGO: unroundedFinal 94.84238470289058 -> 94.96230990482985",
+        "GQS00-015 2548.TW: unroundedFinal 97.2877192778358 -> 97.35136842358513",
+        "GQS00-016 688256.SS: unroundedFinal 96.92877867355537 -> 96.80188778345745",
+        "GQS00-017 688110.SS: unroundedFinal 94.25743328422838 -> 94.86790888840085",
+        "GQS00-018 DAVE: unroundedFinal 98.0783312848482 -> 97.94815526683647",
+        "GQS00-020 002151.SZ: unroundedFinal 81.18392845362443 -> 81.55992503465241",
+        "GQS00-023 000002.SZ: unroundedFinal 27.11143027806941 -> 27.853410053450364",
+        "GQS00-024 000006.SZ: unroundedFinal 14.176033921533993 -> 14.176033921533993"
+      ],
+      "reason": "All golden fixtures carry undated annual lists (sealed 19.08.2026), so their annual revenue growth leg and annual growth-bonus component are empty now; the gross-profit and acceleration axes stay. The sealed traces stay in place; each moved case has exactly one registered second trace."
+    },
+    "review": "Build registration only (formula draft); the independent Codex review decides the merge. The builder does not merge, publish, initialize or seal.",
+    "rollback": "Revert this round and only this periodGateRound2 registration with its pending hashes and golden traces together in a reviewed new commit."
+  },
   "dependencyFiles": {
-    "lib/g31-recency.js": "18ba3e5a9a245b25e8c502c8f5f0d3efb032aee3512eefb30578e50dc0a31fda",
-    "lib/annual-pairs.js": "53a83cf210277bfc7fbc6e76d58ee97f49978764f436a7756bd5552ebc6105b7"
+    "lib/g31-recency.js": "c70624e2db3ae6f56c90cd7aea14541309aa1098de40662a562a89afac490b18",
+    "lib/annual-pairs.js": "fcc7b52a1d48fb07d0ee80075fa4c035a0ca2b8ea577c6784f04210a456ce3db"
   }
 }

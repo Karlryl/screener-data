@@ -1001,10 +1001,11 @@ test('annual readers: INFQ badge, gross-profit growth and annual fallback empty;
     assert.ok(financialReasons(s).some(r => r.startsWith('Jahreszahlen fehlen:')));
   };
   readersInfq(infq());
-  assert.equal(axes.revGrowthLevel(applyFinancialCases(nextQuarter(clone(fixture.INFQ)), { table: noAnnual }).snapshot).toFixed(2), '163.34');
+  assert.equal(axes.revGrowthLevel(require('./helpers/dated-series.js').withEnds(applyFinancialCases(nextQuarter(clone(fixture.INFQ)), { table: noAnnual }).snapshot)).toFixed(2), '163.34');
   assert.throws(() => readersInfq(infq(noAnnual)), assert.AssertionError); breaks++;
   // CARG: 2025/2024 badge and growth unchanged; the margin path starts in 2023 (same basis), not in 2022 with CarOffer.
-  const carg = applyFinancialCases(clone(fixture.CARG)).snapshot, cargOld = applyFinancialCases(clone(fixture.CARG), { table: noAnnual }).snapshot;
+  const { withEnds } = require('./helpers/dated-series.js');
+  const carg = withEnds(applyFinancialCases(clone(fixture.CARG)).snapshot), cargOld = withEnds(applyFinancialCases(clone(fixture.CARG), { table: noAnnual }).snapshot);
   assert.equal(overviewMetric(carg, {}).value, overviewMetric(cargOld, {}).value);
   assert.equal(axes.revAnnualLegYoY(carg), axes.revAnnualLegYoY(cargOld));
   assert.equal(axes.gpGrowth(carg).toFixed(6), (841513 / 727697 - 1 + 841513 / 906980 - 636611 / 698421).toFixed(6));
@@ -1305,9 +1306,10 @@ test('002128.SZ: mixed-basis and misallocated quarters withheld, growth from the
   // Growth: +123.93 % (mixed quarters) -> +0.86 % from the annual leg, labelled "year".
   assert.equal((axes.revGrowthLevel(old)).toFixed(2), '123.93');
   assert.equal(axes.revQuartalsYoY(dt), null);
-  assert.equal(revGrowthLeg(dt).basis, 'year');
-  assert.equal(axes.revGrowthLevel(dt).toFixed(2), (axes.revAnnualYoY(dt) * 100).toFixed(2));
-  assert.equal(axes.revGrowthLevel(dt).toFixed(2), '0.86');
+  const datedDt = require('./helpers/dated-series.js').withEnds(clone(dt)); // period gate round 2: the annual pair needs its ends
+  assert.equal(revGrowthLeg(datedDt).basis, 'year');
+  assert.equal(axes.revGrowthLevel(datedDt).toFixed(2), (axes.revAnnualYoY(datedDt) * 100).toFixed(2));
+  assert.equal(axes.revGrowthLevel(datedDt).toFixed(2), '0.86');
   // Not held: the row is still scored (a hold would remove it instead of showing it with empty fields).
   assert.equal(dt.meta.financialDataIssue, undefined);
   assert.notEqual(score.scoreUniverse([dt], formulas)[0].reason, 'data-suspect');

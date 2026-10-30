@@ -103,7 +103,7 @@ check('die Werte sind nicht alle gleich (faengt einen konstanten Berechnungsfehl
 check('G31: dated pair across an empty quarter row shows the same board growth as its missing-row twin', () => {
   const { revGrowthLevel } = require('../../src/scoring/axes.js');
   const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'];
-  const snap = (q, e) => ({ meta: {}, annual: { annualRev: [{ value: 400 }, { value: 300 }] },
+  const snap = (q, e) => ({ meta: {}, annual: { annualRev: [{ value: 400 }, { value: 300 }], annualRevEnds: ['2025-12-31', '2024-12-31'] },
     timeseries: { revenueQ: q.map((value) => ({ value })), ...(e ? { revenueQEnds: e } : {}) } });
   const gap = snap([120, 110, null, 100, 100], ends);
   const twin = snap([120, 110, 100, 100], ends.filter((_, i) => i !== 2));
