@@ -1451,7 +1451,7 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `mc` | number or absent | USD market capitalization, using the existing currency-evidence guard |
 | `g` | number or absent | Revenue growth in percent, official board value or `revGrowthLevel` |
 | `g3` | number or absent | `(annualRev[0]/annualRev[3])^(1/3)-1`, times 100; both endpoints strictly positive; a known different year interval is withheld |
-| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E; all four are always positive when present (a zero or negative forward P/E, a forecast loss, is omitted like a non-positive `pe`, 24.10.2026) |
+| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E; all four are always positive when present (a zero or negative forward P/E, a forecast loss, is omitted like a non-positive `pe`, 24.10.2026); `fpe` is at least 1.5 when present (`fpe-implausible`, 30.10.2026) |
 | `peSt` | string | `vorhanden`, `verlust`, `unbekannt`, `waehrung`; loss means missing P/E with negative latest annual net income |
 | `dy`, `dySt` | number or absent; string | Dividend yield in percent; `zahlt`, `keine`, `unbekannt` |
 | `po`, `roe`, `gm` | number or absent | Payout ratio, return on equity and gross margin, already stored as percentages |
@@ -1499,6 +1499,9 @@ unverifiable), a dividend yield above 50 % and a payout ratio above 100000 % (un
 `gm-implausible`, `dy-implausible` or `po-implausible`. High real payout ratios (e.g. 15375 %) stay; findash caps payout ranking at 100.
 A positive payout next to `dySt` `keine` stays: the vendor yield field is the unreliable one (most such rows paid per the annual cash flow).
 A withheld yield sets `dySt` to `unbekannt` and its payout zero stays missing.
+**Forward P/E floor (30.10.2026):** a positive `fpe` that rounds to below 1.5 is withheld, never clipped, and `aus` gets `fpe-implausible`: one year of expected profit would be at least two thirds of
+the market cap. On 30.10.2026 all 13 of the 21 such rows with a second-source value were wrong by a factor 2.4 to 561 (ENIC 0.02 against 11.01), and the lowest second-source value of all checked rows was 1.58, so
+true small values above the floor stay. Wrong values above it remain possible (1911.T 1.87 against 9.33); the feed cannot tell them apart because the pull keeps no forward EPS. Board history and scores do not read this field; this rule is display-only.
 `evs` is withheld with `evs-waehrung` when Yahoo built it from an enterprise value in the reporting currency while the pull multiplied it by the
 trading/reporting factor (USD-listed ADR/OTC lines, factor outside 1/e to e, compared against market cap + debt - cash). Otherwise, when the
 latest annual balance gives debt and cash and the vendor EV differs by more than a factor e^1.5 in either direction from every applicable
