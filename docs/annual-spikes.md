@@ -45,6 +45,8 @@ node scripts/annual-spikes-migrate-identity.js <absoluter-Snapshot-Ordner> 2026-
 
 Der erste Befehl prüft ohne Schreiben. Erst nach Prüfung des Ergebnisses schreibt der zweite Befehl die Ergänzungen atomar in die vorhandene Baseline. `--neu-aufnehmen` ist für einen bereits migrierten Bestand gesperrt, weil eine Gesamtneuaufnahme die überprüften Identitäten und ihre Herkunft verlieren würde. Die normale Tagesprüfung schreibt weiterhin nichts und verwendet unverändert den Snapshot-Ordner des Repositorys.
 
+Ein einzelner neuer Fall kommt nicht über `--neu-aufnehmen` in den Bestand (gesperrt, Exit 1), sondern als gezielter, belegter Einzeleintrag: ein Fallschlüssel in `faelle`, die zugehörige native Identität in `nativeIdentitaeten`, `anzahl` nachgezogen und im Feld `hinweis` je Ereignis URL, Originalzitat und Prüfdatum, jeweils nach erneutem Lesen des Originalberichts. Aufnahmedatum, Vergleichspopulation und Grenzwerte bleiben unverändert. So geschehen bei P211, P218, P275 und P299 (Abschnitte unten).
+
 ## Nachweise
 
 `tests/annual-spikes-native-identity-p168.test.js` prüft drei Prozent reine Wechselkursdrift, gleiche USD-Werte bei geändertem Nativwert, fehlende Neuaufnahme, Altformat-Kompatibilität und die absichtliche Rückkehr zum falschen USD-Vergleich in einer temporären Modulkopie. Der letzte Fall muss einen `AssertionError` auslösen. Prüfsummen sichern dabei den unveränderten Live-Wächter und die Baseline ab. Weitere Gegenproben schützen Perioden, Metadaten, Eichfälle, Margenrevisionen, Mehrdeutigkeiten und Ausschlüsse.
@@ -213,7 +215,7 @@ Die Handtabelle trägt jetzt die gemeldeten Betriebsergebnisse von Treasury Wine
 
 Grundlage ist das CI-Artefakt `snapshots` des Laufs 41027769596 (15.899 gelesene Snapshots, Daten-Commit `d4a3e7c368`). Der Befehl `--neu-aufnehmen` endet auf dem nativen Bestand mit Exit 1 und schreibt nichts; diese Sperre bleibt. Auf derselben Population hätte eine Gesamtneuaufnahme ohne die Sperre 149 native Identitäten und 112 Schlüssel verloren und PCT.L Umsatz still aufgenommen; bei 0,1 % Wechselkursdrift stünden 52 Ereignisse an, mit dem heutigen Bestand 2. Deshalb gilt wie bei P211, P218 und P275 die gezielte Aufnahme mit nachgelesenen Berichten.
 
-AMLX `annualGP[2]` (Amylyx, Geschäftsjahr 2023, USD) wird als echtes Datenereignis aufgenommen. Die Dreiergruppe −37.262 / 355.345 / 19.237 Tsd. USD für 2024 / 2023 / 2022 ist centgenau Umsatz minus aller Zeilen, die der Emittent als Cost of sales ausweist:
+AMLX `annualGP[2]` (Amylyx, Geschäftsjahr 2023, USD) wird als echtes Datenereignis aufgenommen. Die Dreiergruppe −37.262 / 355.345 / 19.237 Tsd. USD für 2024 / 2023 / 2022 ist auf den Tausender genau Umsatz minus aller Zeilen, die der Emittent als Cost of sales ausweist:
 
 * [10-K FY2024](https://www.sec.gov/Archives/edgar/data/1658551/000095017025031309/R4.htm): `Product revenue, net` 87,371 und 380,786; `Cost of sales` 5,953 und 25,441; `Cost of sales - inventory impairment and loss on firm purchase commitments` 118,680 (2024).
 * [10-K FY2023](https://www.sec.gov/Archives/edgar/data/1658551/000095017024018447/R4.htm): `Product revenue, net` 380,786 und 22,230; `Cost of sales` 25,441 und 2,993.
