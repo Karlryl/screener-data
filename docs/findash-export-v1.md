@@ -56,6 +56,8 @@ Die 13 Branchen (formulaId): `consumer-discretionary, consumer-staples, energy, 
 | `coverage_pct` | number (finite) | Pflicht |
 | `generated_at` | string (ISO-8601) \| undefined | **OPTIONAL (additiv)**, NICHT im `--check` |
 
+**`coverage.honest_coverage_pct`, `n_addressable`, `n_ok`, `n_total`, `n_failed` (W7, 30.10.2026) — additiv, nullable, kein v2-Bump.** `coverage_pct` ist erfolgreiche Abrufe geteilt durch alle Zeilen und bewegt sich mit der Listengroesse (65,9 % am 23.10., 80,6 % am 30.10. bei weniger Abrufen). `honest_coverage_pct` ist erfolgreiche Abrufe geteilt durch die abrufbaren Zeilen des Laufs, genau die Zahl, gegen die der 90-%-Alarm misst; fuer eine Anzeige ist sie die aussagekraeftige.
+
 **`coverage.generated_at` (Rat Q2-2, 02.09.2026) — additiv, kein v2-Bump (§7 erlaubt neue optionale Felder in v1).** Zeitstempel des Markers SELBST, nicht des Exports: Marker (merge-Job) und Index (scoring-Job) entstehen in ZWEI verschiedenen CI-Jobs, am Stand vom 29.07. ~29 Minuten auseinander. Ohne diesen Wert traegt die eingebettete Marker-Kopie keine eigene Zeit, und der Ruecksetz-Pfad des Consumers (`env.coverage = index.coverage`, findash `data-layer/screener.js:602`) kann einen Marker aus einem FRUEHEREN Lauf nicht von dem dieses Laufs unterscheiden. findash fuehrt genau diesen Vergleich heute schon — aber nur auf der eigenstaendigen `coverage-status.json` (`COVERAGE_STALE_MS` = 6 h, `screener.js:641-648`); die eingebettete Kopie hatte das Feld bisher nicht. **Bewusst NICHT im `--check`:** Karls einziger Alarmkanal darf nicht an einem additiven Anzeigefeld rot werden (dieselbe Begruendung wie bei `revGrowthYoYPct` in §3). Quelle `scripts/write-findash-export.js loadCoverage()`; Waechter `tests/coverage-gate-truth-table.test.js`.
 
 Treibt das Degradiert-Banner im Dashboard. **Faellt `coverage` still weg oder wird `status` kaputt** (real relevant: aktuell `status='degradiert'`, `coverage_pct` 20.1), blockt der Check den Deploy — genau der stille Datenbruch, gegen den §0 den Gate positioniert.
@@ -1761,3 +1763,18 @@ Tests: `tests/preisschritt-export.test.js` with `tests/fixtures/preisschritt/sto
 previous-day and equal-to-stamp-day cases, tamper variants with their specific error, size cap, idempotence, sort order,
 truncated shard, failed pull through the real merge step over consecutive runs, second run on the same day, dead runner, stamp
 without its daily file, workflow step order and fail-soft shape).
+
+## Notierungsabgaenge in `excluded.json` (PR 66, 30.10.2026)
+
+`listingExits` enthaelt protokollierte Bestandsabgaenge durch das Notierungsregister und Kuerzelkorrekturen.
+Jede Zeile hat `ticker`, `date`, `reason`, `source` und `successor` (ohne Nachfolger `null`).
+`datum`, `grund`, `quelle` und `nachfolger` erhalten dieselben Angaben aus dem Aufnahmeprotokoll.
+`belegDatum` nennt den Ereignis- oder Belegtag, `date` den Austragstag. `listingExitCount` zaehlt diese Zeilen.
+Die bestehenden Scoring-Zaehler `counts.zeilen` und `counts.byReason` bleiben davon getrennt.
+Ein wieder aufgenommener Ticker verschwindet aus `listingExits`; der gespeicherte Nachweis bleibt im Aufnahmeprotokoll.
+
+Die Aufnahmepruefung schreibt Anbieterluecken als `vorlaeufig` mit Datum und Wiederaufnahmeweg in
+`data-health/entdeckungs-ausschluss.json`. Die gespeicherte `wiedervorlage` wird im naechsten Lauf auch ohne
+neuen Entdeckungstreffer geprueft. Scheitert das Schreiben, werden die neuen Ablehnungen nicht angewendet.
+Eine fehlende oder veraltete Quote ist kein Delisting-Beleg. Die 74 ungeklärten PR-66-Faelle stehen deshalb
+ausserhalb der dauerhaften Sperrmenge. Die 3.043 aelteren Registry-Eintraege sind damit nicht neu bestaetigt.
