@@ -43,7 +43,7 @@ write(path.join(bh, F.baseline.date, 'real-estate.json'), { generated_at: '2026-
 const before = tree(root);
 const out = path.join(root, 'report', 'exchange-check-shadow.json');
 const run = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'exchange-check-report.js'), '--out', out, '--snapshots', snaps,
-  '--outputs', outputs, '--store', store, '--board-history', bh, '--must-withhold', F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ', '600292.SS'].includes(t)).join(',')], { encoding: 'utf8', timeout: 120000 });
+  '--outputs', outputs, '--store', store, '--board-history', bh, '--must-withhold', F.mustWithhold.filter(t => !['000688.SZ', '000599.SZ', '600292.SS', '301297.SZ'].includes(t)).join(',')], { encoding: 'utf8', timeout: 120000 });
 const R = run.status === 0 ? JSON.parse(fs.readFileSync(out, 'utf8')) : null;
 
 test('runs, writes only --out, inputs byte-identical', () => {
@@ -53,9 +53,9 @@ test('runs, writes only --out, inputs byte-identical', () => {
   assert.equal(R.schema, 'exchange-check-shadow/v1'); assert.equal(R.mode, 'shadow'); assert.equal(R.committedMode, 'fill-only');
   assert.equal(R.inputs.baselineDate, F.baseline.date); assert.deepEqual(R.warnings, []);
 });
-test('the 16 wrong board rows and the 5 risers: 18/18 would-withhold, none unchecked', () => {
-  // P138: 000688.SZ is corrected by the hand table; G31 switch (P268): 000599.SZ is held by it; the board-top check of 30.10.2026 corrects 600292.SS. 18 of the 21 stay.
-  assert.equal(R.mustWithholdPass, '18/18');
+test('the 16 wrong board rows and the 5 risers: 17/17 would-withhold, none unchecked', () => {
+  // P138: 000688.SZ is corrected by the hand table; G31 switch (P268): 000599.SZ is held by it; the board-top check of 30.10.2026 corrects 600292.SS and holds 301297.SZ. 17 of the 21 stay.
+  assert.equal(R.mustWithholdPass, '17/17');
   assert.ok(R.mustWithhold.every(x => x.pass && x.category !== 'unchecked' && x.onBoard));
 });
 test('census: every would-withhold board row is listed with pairs, values and reader effects', () => {
