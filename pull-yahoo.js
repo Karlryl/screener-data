@@ -47,7 +47,7 @@ const SHARE_COUNT_TABLE = loadShareCountTable();
 const { applyMarketCapGuard, marketCapFloor, tradingRate, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
 const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
-const { loadReportingCurrencyTable, reportingCurrencyFill, reportingRowPending } = require('./lib/reporting-currency-hand-table.js');
+const { loadReportingCurrencyTable, reportingCurrencyFill, applyReportingRowHold, reportingRowPending } = require('./lib/reporting-currency-hand-table.js');
 const REPORTING_CCY_TABLE = loadReportingCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
 const yahooQ4 = require('./lib/yahoo-q4-known-cases.js');
@@ -1250,6 +1250,9 @@ function _convertSnapshotToUSD(snap) {
   if (q4Checked !== snap) Object.assign(snap, q4Checked);
   // Corrections also apply to cached USD input; the FX conversion itself stays idempotent.
   if (snap.meta.fxConverted === true) return snap;
+  // Reporting-currency hand table: a vendor conflict or a period past the row's bound proves no currency, so nothing is scaled or shown (G2, T2).
+  const ccyHold = applyReportingRowHold(snap, REPORTING_CCY_TABLE);
+  if (ccyHold) console.warn(`::warning::${snap.meta.ticker}: reporting-currency hand table: ${ccyHold.reason}, ${ccyHold.held} statement values withheld - re-verify configs/reporting-currency-hand-table.json`);
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   if (origCurrency === 'USD') {
     // F-NY-004 (audit 2026-06-08): 'USD' here may be a GUESS — when Yahoo returns
@@ -2345,10 +2348,9 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // making Tag 204 silently dead. ADRs again get the wrong reporting ccy and
   // their financials are mis-FX'd by the ratio of trading-ccy to reporting-ccy.
   // Fix: fall back to financialData.financialCurrency.
-  // A proven hand-table row fills a currency Yahoo omits (PSQL, 30.10.2026: euro statements stood as dollars); a vendor value wins.
+  // A proven hand-table row fills a currency Yahoo omits (PSQL, 30.10.2026: euro statements stood as dollars). The agreeing vendor value wins; another one is stamped and held by the converter.
   const _fcFill = reportingCurrencyFill(watchlistEntry.ticker, _y(pr, 'financialCurrency') || _y(yahoo.financialData, 'financialCurrency'), REPORTING_CCY_TABLE);
   const _fc = _fcFill.currency;
-  if (_fcFill.conflict) console.warn(`::warning::${watchlistEntry.ticker}: reporting-currency hand table: ${_fcFill.conflict}`);
   const _tc = _y(pr, 'currency');
   const _ccyMissingCompletely = [
     _y(pr, 'financialCurrency'),
@@ -3725,6 +3727,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   let n_full_period_regression_blocked = 0;
   const _fullPeriodRegressions = [];
   const manualPeriodRegressionWarnings = new Set();
+  // Firms whose amounts the reporting-currency hand table withheld in this run (scripts/ccy-alarm-gate.js turns the run red).
+  const reportingCcyCounters = () => {
+    const rows = results.filter(r => r && r.reportingCcyHeld).map(r => ({ ticker: r.ticker, reason: r.reportingCcyHeld }))
+      .sort((a, b) => a.ticker.localeCompare(b.ticker));
+    return { n_reporting_ccy_held: rows.length, _reportingCcyHeld: rows };
+  };
   const fullPeriodReasonDe = 'Die neue Yahoo-Antwort enthält ein älteres Berichtsquartal oder Geschäftsjahr als gespeichert. Die bisherigen Fundamentaldaten bleiben erhalten, nur Kurs und Börsenwert wurden aktualisiert.';
   // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
   //
@@ -3858,6 +3866,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ...reloadCounters(),
         n_full_period_regression_blocked,
         _fullPeriodRegressions: _fullPeriodRegressions.slice().sort((a, b) => a.ticker.localeCompare(b.ticker)),
+        ...reportingCcyCounters(),
         _staleQuarterReload: reloadMeta,
         n_skipped_mcap: skippedMcap,
         n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
@@ -3947,7 +3956,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (!hasRev) return false;
       // Statement-currency hand table: a row converted before the row existed -> re-pull once.
       if (statementRowPending(s, STATEMENT_CCY_TABLE)) return true;
-      // Reporting-currency hand table: a row stored under another currency -> re-pull once.
+      // Reporting-currency hand table: a row stored under another currency -> re-pull once; a held packet -> every run.
       if (reportingRowPending(s, REPORTING_CCY_TABLE)) return true;
       // (a) USD reporter: no FX to apply.
       if (m.reportingCurrency === 'USD') return false;
@@ -5363,7 +5372,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (quarterlyFetchedAt) canonical.meta.fundamentalsTimeseriesFetchedAt = quarterlyFetchedAt;
       canonical.meta.fundamentalsTimeseriesClockSource = quarterlyClockSource;
       if (_allFtsSeriesEmpty) canonical.meta.fundamentalsIncomplete = true;
-      if (reloadOnly) {
+      // A held packet goes through both retention guards below: they would keep the old figures without a count.
+      const reportingHold = canonical.meta._reportingCcyHandTableConflict;
+      if (reloadOnly && !reportingHold) {
         const annualEnd = a => (a?.annualRevEnds || []).filter((end, i) => end &&
           Number.isFinite(a.annualRev?.[i]?.value ?? a.annualRev?.[i]) && Date.parse(end) <= Date.now()).sort().pop() || null;
         const priorAnnualEnd = annualEnd(_parsedSnapshot.annual), nextAnnualEnd = annualEnd(canonical.annual);
@@ -5375,7 +5386,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           return await reloadFailed('reported annual or quarterly period regressed');
         }
       }
-      if (reloadOnly && require('./lib/reload-history.js').historyIsThinner(canonical, previousHistory)) {
+      if (reloadOnly && !reportingHold && require('./lib/reload-history.js').historyIsThinner(canonical, previousHistory)) {
         reloadStats.fetch_failed++;
         return await reloadFailed('shared-period fundamentals missing');
       }
@@ -5388,7 +5399,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       }
       // Retaining an old schema or FX envelope would defeat those forced repairs.
       // A summary without finite cap exits earlier via the existing missing-cap path, before this guard.
-      if (!reloadOnly && !staleSchema && !staleCurrency && _parsedSnapshot) { // P137: ordinary full-pull period guard
+      if (!reloadOnly && !staleSchema && !staleCurrency && !reportingHold && _parsedSnapshot) { // P137: ordinary full-pull period guard
         const prior = JSON.parse(_priorSnapshotText);
         const now = Date.now();
         let previousAnnualEnd = _rawAnnualEnd(prior, now);
@@ -5463,6 +5474,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         || (annualBasis && !quarterReload.previousQuarter && !annualOld))) reloadStats.newer++;
       if (annualOld) reloadStats.still_old_yahoo++;
       results.push({ ticker: stock.ticker, status: 'ok', file: filename, revenue: revStr, growth: growthStr, completeness,
+        ...(reportingHold ? { reportingCcyHeld: reportingHold } : {}),
         ...(quarterReload ? { quarterReload } : {}) });
       _log('INFO', `  ✓ ${stock.ticker}: revenue=${revStr}, growth=${growthStr}, sector=${canonical.meta.sector}`);
     } catch (e) {
@@ -5678,6 +5690,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     ...reloadCounters(),
     n_full_period_regression_blocked,
     _fullPeriodRegressions: _fullPeriodRegressions.slice().sort((a, b) => a.ticker.localeCompare(b.ticker)),
+    ...reportingCcyCounters(),
     _staleQuarterReload: reloadMeta,
     // FN-2: derselbe Zaehler maschinenlesbar. Das Protokoll ist die Sichtspur, das
     // Manifest der Vergleichspunkt — ein Vintage-gegen-Vintage-Diff braucht die Zahl als
@@ -5706,6 +5719,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.filter(r => r.status === 'price-only').length, n_retained: okResultsFinal.filter(r => r.status === 'reload-retained').length, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false,
     n_full_period_regression_blocked,
     _fullPeriodRegressions: manifest._fullPeriodRegressions,
+    n_reporting_ccy_held: manifest.n_reporting_ccy_held,
+    _reportingCcyHeld: manifest._reportingCcyHeld,
   };
   slim.yahooQ4HandTable = manifest.yahooQ4HandTable;
   _log('INFO', `full-pull period regression: blocked=${n_full_period_regression_blocked} tickers=${manifest._fullPeriodRegressions.map(r => r.ticker).join(',')}`);
