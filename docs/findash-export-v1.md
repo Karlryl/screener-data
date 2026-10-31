@@ -1510,6 +1510,11 @@ only when the pull factor is below 1, max(market cap + (debt - cash) x factor, 0
 A fit of that second reading with factor >= 1 can be a broken mix of USD market cap and reporting-currency net debt (KAJMF), so it is not
 accepted there; the clean repair is the EV scaling in pull-yahoo.js (follow-up). A row carries at most one of the two codes. Board history keeps the raw
 provider values; this rule is display-only.
+**EV reading at pull (draft 30.10.2026):** on a mixed-currency row with a factor outside 1/e to e, or with a negative EV at any factor, the pull compares
+the EV ratios with market cap + debt - cash (USD, newest annual balance) within plus or minus 25 %. Reading `trading` keeps the scaled vendor ratio; reading
+`mixed` (factor above 1 only) takes the vendor EV as market cap plus net debt as a reporting-currency number and computes EV = market cap + (EV - market cap) / factor,
+ratios from it, source `computed:ev-mixed-reading`. No fit, a missing balance, or a market cap more than 25 % from the stored one leaves the EV ratios empty
+(`withheld`, with `meta.evWithheldReason`), and `aus` gets `evs-waehrung`. Rows from before the change keep the two detectors above until their next full pull.
 
 **52-week high plausibility:** with positive finite price and high, a price/high
 ratio below 0.05 or above 1.20 withholds `d52` and adds `d52-implausible` to `aus`.
