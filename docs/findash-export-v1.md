@@ -1431,6 +1431,13 @@ Jahres zusammen über 125 % (`quartalssumme`). Das sind technische Hinweisgrenze
 festgelegten Ausschlussregeln; der Grund sagt ausdrücklich, dass der Wert weder gesperrt noch gegen
 den Firmenbericht geprüft ist.
 
+Seit 31.10.2026 gibt es einen dritten Code, `abgrenzung`, aus `configs/g31-hinweise.json`, Schlüssel
+`definitionen` (geschrieben von `scripts/write-findash-export.js`): Die Zahl des Anbieters stimmt rechnerisch,
+folgt aber einer Abgrenzung, die der Abschluss der Firma nicht kennt (BURE.ST: Net sales 0, der Anbieter zählt
+Dividenden und Zinsen). Er hängt an der Notierung und nicht an einem Periodenpaar, ein neues Quartal lässt ihn
+also nicht wegfallen. Ein Eintrag aus `entries` oder die Diagnose hat Vorrang. Er ändert keinen Wert, Score oder
+Rang. Rule of 40 und die Überlebensliste tragen ihn nicht.
+
 ## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
 
 This is an additive feed under section 7, with no v2 bump and no change to
