@@ -154,5 +154,47 @@
         }
       ]
     }
+  ],
+  "definitionNote": "Checked definition hints: the vendor figure follows a definition the statement of the firm does not use. Bound to the listing, read by scripts/write-findash-export.js, shown as g31Hinweis. Never a hold and never a changed number.",
+  "definitionen": [
+    {
+      "ticker": "BURE.ST",
+      "code": "abgrenzung",
+      "verifiedAt": "2026-10-31",
+      "reason": "Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus (Geschäftsjahr 2025: Net sales 0). Als Umsatz zählt der Anbieter Dividenden und Zinserträge (2025: 255 plus 13, also 268 Mio. SEK). Das Wachstum sagt deshalb nur, dass mehr Dividenden und Zinsen eingingen, und der Rang sagt nichts über ein wachsendes Geschäft. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://storage.mfn.se/b41125c0-ab2d-4bf3-91e2-1fed9c730f4c/bure2025-en-final.pdf",
+          "form": "Annual Report 2025",
+          "published": "2026-04-14",
+          "page": "PDF 63, statement of comprehensive income, Group",
+          "quote": "Net sales 0 0 Dividends received 2 255 208",
+          "unit": "SEK M"
+        },
+        {
+          "url": "https://storage.mfn.se/b41125c0-ab2d-4bf3-91e2-1fed9c730f4c/bure2025-en-final.pdf",
+          "form": "Annual Report 2025",
+          "published": "2026-04-14",
+          "page": "PDF 73, note 6, Group",
+          "quote": "Interest income 13 33 20 38",
+          "unit": "SEK M"
+        },
+        {
+          "url": "https://storage.mfn.se/a/bure-equity/1bb45fb3-065f-40c9-b9ba-f465299acc3b/bure2026_en.pdf",
+          "form": "Interim Report January to June 2026",
+          "published": "2026-08-20",
+          "page": "PDF 15, statement of comprehensive income, Group",
+          "quote": "Dividends 206 193 237 246 255",
+          "unit": "SEK M"
+        },
+        {
+          "url": "https://storage.mfn.se/a/bure-equity/1bb45fb3-065f-40c9-b9ba-f465299acc3b/bure2026_en.pdf",
+          "form": "Interim Report January to June 2026",
+          "published": "2026-08-20",
+          "page": "PDF 22, note on consolidation principles",
+          "quote": "Bure Equity is an investment entity in accordance with IFRS 10 Consolidated"
+        }
+      ]
+    }
   ]
 }
