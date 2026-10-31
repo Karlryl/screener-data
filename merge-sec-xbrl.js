@@ -199,7 +199,11 @@ function usdUnits(tax, concept) {
 // FY2021 the 2020 operating loss of -8,703 M USD). A missing start proves nothing -> no value.
 // Balance-sheet concepts are instants without start: callers pass { instant: true }, which
 // keeps the old selection unchanged. Regression anchor: tests/sec-annual-period.test.js.
-const isAnnualFact = (x) => ANNUAL_FORMS.includes(x.form) && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val);
+// A key more than one year after the period end names no fiscal year of that period: PRTH carries
+// the Excel serials 43465 and 43830 as fy, which sorted 2018 and 2019 above 2025 once the sanity check
+// stopped rejecting that series by accident; UHT FY2025 capex was the 2023 comparative.
+const keyFitsEnd = (x) => !(x.fy - Number(String(x.end).slice(0, 4)) > 1);
+const isAnnualFact = (x) => ANNUAL_FORMS.includes(x.form) && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val) && keyFitsEnd(x);
 function fyAnchors(tax, concepts) {
   const anchor = new Map();
   for (const c of concepts) {

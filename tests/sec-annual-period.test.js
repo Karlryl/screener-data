@@ -199,6 +199,25 @@ test('union: taxonomy probing uses the same anchor, a comparative alone does not
   assert.equal(extractSecSeries({ facts }).taxonomie, 'ifrs-full');
 });
 
+test('a fiscal key far after the period end is no year: Excel serials never reach the axis (PRTH)', () => {
+  const gaap = tax({
+    Revenues: [row(43830, '2019-01-01', '2019-12-31', 371), row(2025, '2025-01-01', '2025-12-31', 953)],
+    Assets: [{ fy: 43830, end: '2019-12-31', val: 5, form: '10-K', fp: 'FY' }, { fy: 2025, end: '2025-12-31', val: 6, form: '10-K', fp: 'FY' }],
+  });
+  const a = buildAnnual(gaap, {});
+  assert.deepEqual(a._fys, [2025]);
+  assert.deepEqual(a.annualRev, [{ value: 953 }]);
+});
+
+test('a comparative two years behind its key is no value of that key (UHT FY2025 capex)', () => {
+  const rows = [row(2023, '2023-01-01', '2023-12-31', 7), row(2025, '2023-01-01', '2023-12-31', 7)];
+  assert.deepEqual([...annualConcept(tax({ PaymentsToAcquirePropertyPlantAndEquipment: rows }), 'PaymentsToAcquirePropertyPlantAndEquipment').keys()], [2023]);
+});
+
+test('a key one year before the period end stays (52/53-week filers with an early January end, WWW)', () => {
+  assert.equal(annualConcept(tax({ Revenues: [row(2024, '2024-12-29', '2026-01-03', 1874)] }), 'Revenues').get(2024).val, 1874);
+});
+
 // -- looseSanity compares one fiscal year on both sides (Codex verdict P307, 30.10.2026) ---------
 const cells = (...vals) => vals.map((value) => ({ value }));
 
