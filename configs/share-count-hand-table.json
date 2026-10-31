@@ -98,6 +98,224 @@
     "verifiedAt": "2026-10-12",
     "withholdUnverified": true
   },
+  "8035.T": {
+    "shares": 2280791810,
+    "sharesAsOf": "2026-04-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      453967442
+    ],
+    "wrongSharesSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 27,339,565,394 USD / price 60.22362584 USD = 453,967,442 shares (pre-split count); the same snapshot's meta.sharesOutstanding is already post-split (2,271,484,280)",
+    "reason": "Börsenwert aus 2.280.791.810 Aktien berechnet: Stückzahl zum 30.04.2026 laut Tokyo Electron (456.158.362 Aktien ohne eigene Aktien), mal 5 wegen des Aktiensplits von 1 zu 5 am 1. Oktober 2026. Yahoo rechnet den Kurs nach dem Split noch mit der Aktienzahl vor dem Split.",
+    "source": {
+      "url": "https://www.tel.com/news/ir/2026/qncnjq00000000na-att/20260529_002_e.pdf",
+      "quote": "Number of outstanding shares (Excluding treasury stock): 456,158,362 shares",
+      "page": "Notice regarding the Establishment of a Share Repurchase Facility, May 29, 2026, page 2 (Possession of treasury stock as of April 30, 2026)",
+      "unit": "shares outstanding excluding treasury stock, 456,158,362 before the split x 5 = 2,280,791,810",
+      "splitSource": "https://www.tel.com/news/ir/2026/qncnjq00000000ld-att/20260529_001_e.pdf",
+      "splitQuote": "Each share of common stock owned by shareholders listed or recorded in the closing register of shareholders on the record date of Wednesday, September 30, 2026, will be split into 5 shares.",
+      "crossCheck": "Same split notice: Total number of issued shares after stock split 2,340,163,665 shares (incl. treasury stock); repurchases under the facility since May lower the count by at most 37.5 million post-split shares (1.6 %), inside the 3 % tolerance",
+      "form": "Mitteilung zum Aktienrückkauf vom 29.05.2026 mit Bestand eigener Aktien und Mitteilung zum Aktiensplit vom 29.05.2026"
+    },
+    "verifiedAt": "2026-10-24",
+    "withholdUnverified": true
+  },
+  "285A.T": {
+    "shares": 1644045264,
+    "sharesAsOf": "2026-06-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      532635175
+    ],
+    "wrongSharesSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 43,259,141,449 USD / price 81.2172074 USD = 532,635,175 shares (pre-split count); meta.sharesOutstanding 1,597,515,021 = 3 x 532,505,007",
+    "reason": "Börsenwert aus 1.644.045.264 Aktien berechnet: Stückzahl zum 30.06.2026 laut Kioxia (548.015.088 Aktien), mal 3 wegen des Aktiensplits von 1 zu 3 am 1. Oktober 2026. Yahoo rechnet den Kurs nach dem Split noch mit der Aktienzahl vor dem Split.",
+    "source": {
+      "url": "https://fs2.magicalir.net/tdnet/2026/285A/20260731505278.pdf",
+      "quote": "Total outstanding shares after stock split 1,644,045,264 shares",
+      "page": "Notice Regarding Stock Split and According Partial Amendment to Articles of Incorporation, July 31, 2026, page 1, section 1 (2) ii",
+      "unit": "shares (issued as of 2026-06-30 x 3; treasury shares 450 before the split)",
+      "splitQuote": "split at a ratio of 3 to 1, with September 30, 2026 as the record date",
+      "crossCheck": "Earnings release Q1 FY2026 (Kioxia, filed on SGX): issued shares 548,015,088 and treasury shares 450 as of June 30, 2026",
+      "form": "Mitteilung zum Aktiensplit vom 31.07.2026 (TDnet, Kioxia Holdings)"
+    },
+    "verifiedAt": "2026-10-24",
+    "withholdUnverified": true
+  },
+  "LISN.SW": {
+    "shares": 229956,
+    "sharesAsOf": "2026-06-15",
+    "validFrom": "2026-06-15",
+    "reviewBy": "2027-03-15",
+    "wrongShares": [
+      1086190
+    ],
+    "wrongSharesSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 114,301,055,776 USD / registered-share price 105,231.18462 USD = 1,086,190 (registered shares plus participation certificates counted one for one)",
+    "reason": "Börsenwert aus 133.437 Namenaktien und 965.188 Partizipationsscheinen berechnet: Stückzahl zum 15.06.2026 laut Lindt & Sprüngli (Handelsregister vom 28.04.2026 abzüglich der im Juni gelöschten Papiere). Zehn Partizipationsscheine zählen laut Statuten wie eine Namenaktie. Bewertet wird mit dem Kurs der Namenaktie, der Wert ist daher eine Näherung auf etwa 1 bis 2 Prozent. Yahoo zählte jeden Partizipationsschein wie eine Namenaktie.",
+    "source": {
+      "url": "https://www.lindt-spruengli.com/media/tqrgcc3i/sbb-2026-2029_buyback_notice_30_april_2026.pdf",
+      "quote": "The share capital of Lindt & Sprüngli entered in the Commercial Register on 28 April 2026 amounts to CHF 13,390,500 and is divided into 133,905 registered shares, each with a nominal value of CHF 100. The participation capital of Lindt & Sprüngli entered in the Commercial Register on 28 April 2026 amounts to CHF 9,890,280 and is divided into 989,028 participation certificates, each with a nominal value of CHF 10.",
+      "cancellationQuote": "Of these, 468 registered shares and 23,840 participation certificates are expected to be cancelled in June 2026 in connection with the capital reduction resolved on 16 April 2026.",
+      "page": "Buyback notice of 30 April 2026, pages 1 and 2",
+      "unit": "registered-share equivalents: 133,437 registered shares + 965,188 participation certificates / 10 = 229,955.8, rounded to 229,956",
+      "parValueSource": "https://www.lindt-spruengli.com/media/zlda3ndp/statuten_e_050326.pdf",
+      "parValueQuote": "The participation certificates are entitled, in proportion to their par value, to the same portion of the balance sheet proceeds, interim dividends, repayments of the statutory capital reserve and liquidation proceeds of the Company as the registered shares",
+      "crossCheck": "Lindt capital-structure page (lindt-eshopglobal.com/investors/share-information/capital-structure): total capital as per June 15, 2026 split into 133,437 registered shares and 965,188 participation certificates. Two-price value on 2026-10-23 (133,437 x 105,231.18 + 965,188 x 10,182.88 USD) = 23.87 bn USD; this row gives 24.20 bn USD (+1.4 %)",
+      "form": "Rückkaufinserat vom 30.04.2026 mit Handelsregisterstand und Statuten vom 05.03.2026, Artikel 4 Absatz 2"
+    },
+    "verifiedAt": "2026-10-24",
+    "withholdUnverified": true
+  },
+  "FAST.AS": {
+    "shares": 19752877,
+    "sharesAsOf": "2026-02-10",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2027-03-31",
+    "wrongShares": [
+      38933085
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,441,239,432 USD / price 37.01837299 USD = 38,933,085 shares; the same snapshot's meta.sharesOutstanding is 19,536,648",
+    "reason": "Börsenwert aus 19.752.877 Aktien berechnet: laut Geschäftsbericht 2025 von Fastned 19.552.877 Aktien zum 31.12.2025 plus 200.000 neue Aktien im Februar 2026. Yahoo rechnet mit rund 38,9 Mio. Aktien, also etwa doppelt so vielen. Stand der Aktienzahl 10.02.2026.",
+    "source": {
+      "form": "Der Geschäftsbericht 2025 von Fastned nennt auf Seite 195 die Zahl der ausgegebenen Aktien nach der Ausgabe vom Februar 2026.",
+      "url": "https://www.fastnedcharging.com/media/myzn5jx0/2025-annual-report-final.pdf",
+      "quote": "Total issued shares amount to 19,752,877.",
+      "page": "Annual Report 2025, p.195 (subsequent events, issuance of shares); p.184 note 19 (19,552,877 issued at 31.12.2025)",
+      "unit": "shares (one class; one depositary receipt per share)",
+      "crossCheck": "Issuer investor relations page on 2026-10-30: capitalisation 654.26M EUR at EUR 32.95, about 19.86M shares"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "ISAE3.SA": {
+    "shares": 564711511,
+    "sharesAsOf": "2026-10-14",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      660801338,
+      703327748
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 4,355,245,483 USD / price 6.59085415 USD = 660,801,338 shares at the ON price; 703,327,748 is the current ON plus PN total, the count the vendor is expected to move to",
+    "reason": "Börsenwert näherungsweise aus 564,7 Mio. Stammaktien-Gegenwerten berechnet: laut ISA Energia 238.170.004 Stammaktien und 465.157.744 Vorzugsaktien (Stand 14.10.2026), die Vorzugsaktien umgerechnet mit den Schlusskursen 24,90 und 35,47 BRL vom 29.10.2026. Yahoo bewertet alle Aktien zum Kurs der Stammaktie, obwohl die Vorzugsaktien rund 30 % tiefer notieren. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
+    "source": {
+      "form": "Die Aktionärstabelle auf der Anlegerseite von ISA Energia nennt Stammaktien und Vorzugsaktien (Stand 14.10.2026).",
+      "url": "https://ri.isaenergiabrasil.com.br/pt/governanca-corporativa/composicao-acionaria-e-estrutura-societaria",
+      "quote": "Total 238.170.004 100,00% 465.157.744 100,00% 703.327.748 100,00%",
+      "page": "Composição acionária e estrutura societária, Total row (page updated 14 Oct 2026)",
+      "unit": "shares: ON 238,170,004 + PN 465,157,744 x (24.90 / 35.47) = 564,711,511 ON equivalents",
+      "priceSource": "https://query1.finance.yahoo.com/v8/finance/chart/ISAE4.SA?range=1mo&interval=1d and https://query1.finance.yahoo.com/v8/finance/chart/ISAE3.SA?range=1mo&interval=1d, closes of 2026-10-29: 24.90 and 35.47 BRL (vendor data, no issuer quote exists for the ratio)",
+      "crossCheck": "Fato Relevante of 2026-07-23: primary offering of 44,444,444 PN; https://b3.com.br/data/files/36/72/EF/1E/1649F91094DCD8F9AC094EA8/Fato%20Relevante_Isa%20Energia_Preco_23.07.2026.pdf"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "7911.T": {
+    "shares": 589412480,
+    "sharesAsOf": "2026-10-01",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-11-16",
+    "wrongShares": [
+      280554025
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 3,795,972,378 USD / price 13.53027239 USD = 280,554,025 shares, the pre-split count against a post-split price",
+    "reason": "Börsenwert aus 589.412.480 Aktien berechnet: ausgegebene Aktien zum 01.10.2026 laut Toppan nach dem Aktiensplit von 1 zu 2, einschließlich eigener Aktien (zum 30.06.2026 rund 28 Mio. nach Split). Yahoo rechnet den Kurs nach dem Split noch mit der alten Stückzahl.",
+    "source": {
+      "form": "Die Anlegerseite von Toppan nennt die ausgegebenen Aktien zum 01.10.2026 nach dem Aktiensplit von 1 zu 2.",
+      "url": "https://www.holdings.toppan.com/ja/ir/stockinfo/status.html",
+      "quote": "589,412,480 株（2026年10月1日時点）",
+      "page": "Issuer IR page, share status",
+      "unit": "issued shares including treasury after the 1:2 split; the vendor implied-shares field already carries this count",
+      "crossCheck": "Q1 FY3/2027 short earnings report via TDnet mirror https://finance.biggo.jp/news/jpx_tdnet_140120260811517449 : 14,113,701 treasury shares and 294,706,240 issued; split notice https://finance.biggo.jp/news/jpx_tdnet_140120260827527179 (original JPX PDF returned 403)"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "2590.HK": {
+    "shares": 1337286998,
+    "sharesAsOf": "2026-10-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      2214575158
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count",
+    "reason": "Börsenwert aus 1.337.286.998 Aktien berechnet: alle ausgegebenen Aktien laut Geekplus zum 30.10.2026 (Klasse A, gelistete und nicht gelistete Klasse B), einschließlich 55.630.000 eigener Aktien. Yahoo rechnet mit rund 2.215 Mio. Aktien, wofür es keinen Beleg gibt.",
+    "source": {
+      "form": "Die Tagesmeldung von Geekplus an die Hongkonger Börse vom 30.10.2026 und die Monatsmeldung für September 2026 nennen die ausgegebenen Aktien je Klasse.",
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103002515.pdf",
+      "quote": "Closing balance as at (Notes 5 and 6) 30 October 2026  968,520,483  55,630,000  1,024,150,483",
+      "page": "Next Day Disclosure Return p.1, listed class B; monthly return https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100701727.pdf p.2 and pp.3-4",
+      "unit": "shares: class A 218,560,434 + listed class B 1,024,150,483 + unlisted class B 94,576,081",
+      "crossCheck": "Annual report 2025 https://www.hkexnews.hk/listedco/listconews/sehk/2026/0423/2026042303218.pdf note (2): 218,560,434 Class A and 1,118,726,564 Class B"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "688428.SS": {
+    "shares": 860109566,
+    "sharesAsOf": "2026-10-27",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      1767202175
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 6,462,941,472 USD / price 3.65716021 USD = 1,767,202,175 shares, all A and H shares at the Shanghai price",
+    "reason": "Börsenwert näherungsweise aus 860,1 Mio. A-Aktien-Gegenwerten berechnet: laut InnoCare 273.403.904 A-Aktien und 1.496.284.235 H-Aktien, die H-Aktien umgerechnet mit den Schlusskursen vom 30.10.2026 (24,30 CNY und 11,25 HKD). Yahoo bewertet alle Aktien zum Shanghaier Kurs, obwohl die Hongkonger Aktien nur rund 40 % davon kosten. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
+    "source": {
+      "form": "Der Quartalsbericht von InnoCare vom 27.10.2026 nennt auf Seite 4 die ausgegebenen Aktien insgesamt und in Hongkong.",
+      "url": "https://static.cninfo.com.cn/finalpage/2026-10-27/1225623594.PDF",
+      "quote": "公司已发行股份总数为 1,769,688,139 股，其中，于香港已发行股份为 1,496,284,235",
+      "page": "Q3 report p.4",
+      "unit": "shares: A 273,403,904 + H 1,496,284,235 x (11.25 x 0.12746696) / (24.30 x 0.15050042) = 860109566 A equivalents",
+      "priceSource": "https://query1.finance.yahoo.com/v8/finance/chart/688428.SS?range=1mo&interval=1d and https://query1.finance.yahoo.com/v8/finance/chart/9969.HK?range=1mo&interval=1d, closes of 2026-10-30 (vendor data, no issuer quote exists for the ratio)"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "SOFF.OL": {
+    "shares": 82346796,
+    "sharesAsOf": "2026-09-03",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      108605000
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 829,663,826 USD / price 7.63927815 USD = 108,605,000 shares; no filing supports that count",
+    "reason": "Börsenwert aus 82.346.796 Aktien berechnet: ausgegebene Aktien laut Solstad zum 03.09.2026. Yahoo rechnet mit 108,6 Mio. Aktien, wofür es keinen Beleg gibt.",
+    "source": {
+      "form": "Die Einladung von Solstad zur außerordentlichen Hauptversammlung vom 03.09.2026 nennt auf Seite 2 die ausgegebenen Aktien.",
+      "url": "https://www.solstad.com/wp-content/uploads/2026/09/SOFF-EGM-Notice_2026.09.03.pdf",
+      "quote": "Currently, the Company has issued 82,346,796 shares",
+      "page": "EGM notice p.2",
+      "unit": "shares",
+      "crossCheck": "H1 2026 report https://www.solstad.com/wp-content/uploads/2026/07/SOFF-1H26-Report.pdf : average number of shares 82,347 thousand in every column"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
+  "003535.KS": {
+    "shares": 223091000,
+    "sharesAsOf": "2026-10-08",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      318070388
+    ],
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,373,583,285 USD / price 4.31848829 USD = 318,070,388 shares, all classes at the price of the preferred line",
+    "reason": "Börsenwert näherungsweise aus 223,1 Mio. Gegenwerten dieser Vorzugsaktie berechnet: laut Hanwha Investment & Securities nach der Kapitalerhöhung vom 08.10.2026 263.870.388 Stammaktien, 4.200.000 alte Vorzugsaktien und 50.000.000 neue Vorzugsaktien, bewertet mit den Schlusskursen vom 30.10.2026 (4.025 und 5.760 KRW, die neuen Vorzugsaktien zum Stammaktienkurs). Yahoo bewertet alle Aktien zum Kurs der Vorzugsaktie. Der Wert ist eine Näherung.",
+    "source": {
+      "form": "Der Halbjahresbericht und die Meldung zur Kapitalerhöhung von Hanwha Investment & Securities bei DART nennen die Aktien je Gattung.",
+      "url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260930000770",
+      "quote": "신주의 종류와 수 보통주식 (주) 50,000,000 기타주식 (주) 50,000,000",
+      "page": "Major-matters report 2026-09-30, capital increase section, items 1, 6, 9, 12",
+      "unit": "shares: (263,870,388 x 4,025 + 4,200,000 x 5,760 + 50,000,000 x 4,025) / 5,771 KRW = about 223.09 M equivalents",
+      "crossCheck": "Half-year report https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260813001503 : 유통주식수는 보통주 213,870,388주, 우선주 4,200,000주"
+    },
+    "verifiedAt": "2026-10-30",
+    "withholdUnverified": true
+  },
   "_holds": {
     "ISBTR.IS": {
       "validFrom": "2026-10-10",
@@ -109,6 +327,201 @@
       },
       "verifiedAt": "2026-10-12",
       "reviewBy": "2026-11-16"
+    },
+    "LISNE.SW": {
+      "validFrom": "2026-05-04",
+      "reason": "LISNE ist die zweite Handelslinie für den Rückkauf von Namenaktien, auf der nur Lindt & Sprüngli kauft. Yahoo bewertet sie mit allen Namenaktien und Partizipationsscheinen zum Kurs der Namenaktie; maßgeblich ist die Notierung LISN.SW.",
+      "source": {
+        "url": "https://www.lindt-spruengli.com/media/tqrgcc3i/sbb-2026-2029_buyback_notice_30_april_2026.pdf",
+        "quote": "CH1192548399",
+        "page": "Buyback notice of 30 April 2026, page 4, table 'Securities numbers, ISINs and ticker symbols': the ISIN cell of the row 'Registered share of CHF 100 nominal value (Buyback on separate trading line)', ticker cell LISNE",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 113,459,289,045 USD / price 104,623.61427 USD = 1,084,452"
+      },
+      "verifiedAt": "2026-10-24",
+      "reviewBy": "2027-03-15"
+    },
+    "LISPE.SW": {
+      "validFrom": "2026-05-04",
+      "reason": "LISPE ist die zweite Handelslinie für den Rückkauf von Partizipationsscheinen, auf der nur Lindt & Sprüngli kauft. Yahoo bewertet sie mit einer Stückzahl, die weder zu den Partizipationsscheinen noch zum Gesamtkapital passt; maßgeblich ist die Notierung LISN.SW.",
+      "source": {
+        "url": "https://www.lindt-spruengli.com/media/tqrgcc3i/sbb-2026-2029_buyback_notice_30_april_2026.pdf",
+        "quote": "CH1192548407",
+        "page": "Buyback notice of 30 April 2026, page 4, table 'Securities numbers, ISINs and ticker symbols': the ISIN cell of the row 'Participation certificate of CHF 10 nominal value (Buyback on separate trading line)', ticker cell LISPE",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 111,182,869,577 USD / price 10,195.030473 USD = 10,905,595"
+      },
+      "verifiedAt": "2026-10-24",
+      "reviewBy": "2027-03-15"
+    },
+    "1WAF.MI": {
+      "validFrom": "2026-10-05",
+      "reason": "Der Kurs der Mailänder Zweitnotiz war am 23.10.2026 drei Wochen alt (83,20 Euro vom 2. Oktober), die Heimatbörse Xetra stand am selben Tag bei 58,90 Euro. Maßgeblich ist die Notierung WAF.DE.",
+      "source": {
+        "url": "https://www.siltronic.com/en/investors/information-on-the-share.html",
+        "quote": "The Siltronic AG share has been listed on the Regulated Market (Prime Standard) of the Frankfurt Stock Exchange",
+        "page": "Issuer page 'Facts and figures': ISIN DE000WAF3001, 'Stock exchanges' Frankfurt Stock Exchange (the only exchange named; Milan is not listed by the issuer), 33,000,000 no-par-value registered shares",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): 1WAF.MI price 93.17952384 USD / tradingFx 1.1199462 = 83.20 EUR, marketCap 3,074,924,287 USD; WAF.DE (Xetra) price 65.96483118 USD = 58.90 EUR, marketCap 2,176,839,536 USD; both 33,000,000 shares",
+        "secondSource": {
+          "url": "https://www.borsaitaliana.it/borsa/azioni/global-equity-market/dati-completi.html?isin=DE000WAF3001&lang=en&mic=BGEM",
+          "quote": "Reference Close | 83.20 - 26/10/02 5:45:00 PM",
+          "note": "Captured on 2026-10-23 before the Milan close; the live page later shows Reference Close 56.55 - 26/10/23. The stored vendor snapshot of 2026-10-23 holds the same 83.20 EUR for 1WAF.MI against 58.90 EUR on Xetra."
+        }
+      },
+      "verifiedAt": "2026-10-24",
+      "reviewBy": "2026-11-16"
+    },
+    "ARX.TO": {
+      "validFrom": "2026-09-05",
+      "reason": "ARC Resources wurde von Shell übernommen (Abschluss am 02.09.2026) und am 04.09.2026 von der Börse Toronto genommen. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.arcresources.com/news-releases/arc-resources-ltd-announces-closing-of-acquisition-by-shell-plc/",
+        "quote": "It is anticipated that the ARC Shares will be delisted from trading on the Toronto Stock Exchange (\"TSX\") at the close of trading two trading days after the closing of the transactions under the Arrangement Agreement.",
+        "page": "News release of September 2, 2026",
+        "crossCheck": "https://www.stockwatch.com/News/Item/Z-C!ARX-3860678/C/ARX (TSX bulletin, 2026-09-03): ARC Resources Ltd. will be delisted at the close on Sept. 4, 2026",
+        "vendorValueSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 13,695,515,225 USD from yahoo_quoteSummary, no price block; the filter export carries asOf 2026-09-04"
+      },
+      "verifiedAt": "2026-10-24",
+      "reviewBy": "2026-11-16"
+    },
+    "EFTY": {
+      "validFrom": "2026-10-01",
+      "reason": "Der Handel der Aktie von Etoiles Capital an der Nasdaq ist seit dem 06.10.2025 ausgesetzt, der letzte Kurs stammt vom 03.10.2025. Yahoo rechnet diesen Kurs zudem mit 20,11 Mio. Aktien, obwohl es nach der Einziehung der B-Aktien nur noch 15,11 Mio. sind. Einen aktuellen Börsenwert gibt es deshalb nicht.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/2058349/000121390026110502/ea0308323-8k12b_etoiles.htm",
+        "quote": "Trading in Etoiles Class A Ordinary Shares has remained suspended since October 6, 2025",
+        "page": "Form 8-K12B filed 2026-10-19, Item 3.01",
+        "crossCheck": "Share count: Form 6-K filed 2026-10-15, https://www.sec.gov/Archives/edgar/data/2058349/000121390026109645/ea0307818-6k_etoiles.htm : 'there were 15,110,000 of the Company's Class A Ordinary Shares and 0 of the Company's Class B Ordinary Shares issued and outstanding' on the record date 2026-09-17. Last traded day and close: https://query1.finance.yahoo.com/v8/finance/chart/EFTY?range=2y&interval=1d, 2025-10-03 at 15.02 USD, no volume since (vendor data).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 302,052,224 USD from yahoo_quoteSummary = 15.02 USD x impliedSharesOutstanding 20,110,000, the Form 20-F cover count of 2025-12-31, no price block; small-cap industrials unprofitable rank 18"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "MCTA": {
+      "validFrom": "2025-11-12",
+      "reason": "Der Handel der Aktie von Charming Medical an der Nasdaq ist seit dem 12.11.2025 ausgesetzt, der letzte Kurs stammt vom 11.11.2025. Einen aktuellen Börsenwert gibt es deshalb nicht.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/2035992/000121390026083325/ea0298998-20f_charming.htm",
+        "quote": "has been suspended or halted since November 12, 2025",
+        "page": "Form 20-F filed 2026-07-30, Item 3 risk factors, about p. 47; same passage: \"the Nasdaq trading halt remains in effect\"",
+        "crossCheck": "Nasdaq halt list https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts read 2026-10-30: code T12 from 2025-11-11 19:50, no resumption date. Share count: proxy in the Form 6-K filed 2026-09-29, https://www.sec.gov/Archives/edgar/data/2035992/000121390026104311/ea030667101ex99-1.htm : \"there were 15,178,000 Class A Shares issued and outstanding\", so the count is right and only the price is old. A Nasdaq notice of 2026-10-29 announcing the delisting for 2026-11-09 was read only in search excerpts of https://www.globenewswire.com/news-release/2026/10/29/3391848/6948/en/charming-medical-limited-notified-of-anticipated-delisting-from-the-nasdaq-stock-market.html (the page refused direct access).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 445,550,176 USD from yahoo_quoteSummary = 29.355 USD x 15,178,000, no price block; small-cap health care unprofitable rank 32"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-16"
+    },
+    "RMAX": {
+      "validFrom": "2026-08-25",
+      "reason": "RE/MAX Holdings ist am 24.08.2026 in der Real REMAX Group aufgegangen, die Aktie wurde an diesem Tag letztmals an der NYSE gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr. Die Nachfolgerin notiert an der Nasdaq als REAX.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/0002136387/000110465926100334/tm2623736d2_8k12b.htm",
+        "quote": "Trading in shares of REMAX Class A Common Stock was halted as of the close of business on August 24, 2026",
+        "page": "Form 8-K12B of Real REMAX Group, date of report 2026-08-24, Item 3.01",
+        "crossCheck": "Same filing, Item 3.01: the shares \"were cancelled and retired and cease to exist\". NYSE filed Form 25 on 2026-08-25.",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 681 M USD = 12.36 USD close of 2026-08-24 x 55,110,157 implied shares; small-cap real estate profitable rank 15"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "FBRX": {
+      "validFrom": "2026-08-27",
+      "reason": "Forte Biosciences wurde von argenx übernommen (Abschluss am 27.08.2026, 77,00 USD je Aktie in bar), die Aktie wurde am 26.08.2026 letztmals gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1419041/000114036126034698/ef20081182_8k.htm",
+        "quote": "on August 27, 2026, Purchaser merged with and into the Company",
+        "page": "Form 8-K filed 2026-08-27, Item 2.01",
+        "crossCheck": "Nasdaq filed Form 25 on 2026-08-27, https://www.sec.gov/Archives/edgar/data/1419041/000135445726000824/primary_doc.xml ; Form 15 of 2026-09-08 reports one holder of record. Last close 76.99 USD on 2026-08-26 from https://query1.finance.yahoo.com/v8/finance/chart/FBRX?range=2y&interval=1d (vendor data).",
+        "vendorValueSeen": "main store of run 41027769596 (2026-10-30): marketCap 1,634,427,392 USD = 76.99 USD x 21,229,087 shares; survival rank 37"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "NATH": {
+      "validFrom": "2026-10-26",
+      "reason": "Nathan's Famous wurde von Smithfield Foods übernommen (Abschluss am 26.10.2026, 102,00 USD je Aktie in bar), die Aktie wurde am 23.10.2026 letztmals gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/69733/000110465926118639/tm2628126d1_8k.htm",
+        "quote": "automatically converted into the right to receive $102.00 in cash",
+        "page": "Form 8-K filed 2026-10-26, Introductory Note; Item 3.01: \"requested that Nasdaq suspend trading\"",
+        "crossCheck": "Nasdaq halt list https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts&haltdate=10232026 : halt on 2026-10-23 at 19:50 with code D, security deletion. Last close 102.05 USD from https://query1.finance.yahoo.com/v8/finance/chart/NATH?range=2y&interval=1d (vendor data).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 417,834,048 USD = 102.05 USD x 4,094,405 shares; small-cap consumer discretionary profitable rank 5, small-cap overview rank 79"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "SLP": {
+      "validFrom": "2026-10-06",
+      "reason": "Simulations Plus wurde von einer Gesellschaft von Altaris übernommen (Abschluss am 06.10.2026, 18,50 USD je Aktie in bar) und ist seither nicht mehr an der Nasdaq notiert. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1023459/000102345926000092/slp-20261006.htm",
+        "quote": "the Company Common Shares are no longer listed on Nasdaq as of October 6, 2026",
+        "page": "Form 8-K filed 2026-10-06, Item 3.01",
+        "crossCheck": "Closing release, Exhibit 99.1: https://www.sec.gov/Archives/edgar/data/1023459/000102345926000092/closingpr.htm . Nasdaq filed Form 25 on 2026-10-06.",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 374 M USD = 18.50 USD x 20,224,838 shares; small-cap health care profitable rank 15, small-cap overview rank 187"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "RCIT": {
+      "validFrom": "2026-02-06",
+      "reason": "Für Reelcause rechnet Yahoo mit einem Kurs von 2.262,50 USD, den kein Beleg stützt, und kommt so auf 295,8 Mrd. USD. Die Firma ist eine Hülle ohne Geschäft, ihre Aktie wird außerbörslich nur vereinzelt gehandelt, und die SEC hat am 21.09.2026 ein Verfahren wegen fehlender Pflichtberichte eröffnet. Einen verlässlichen Börsenwert gibt es deshalb nicht.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/files/litigation/admin/2026/34-106455.pdf",
+        "quote": "Unsolicited quotations for the common stock of RCIT (Symbol: RCIT) are submitted on OTC Link ATS.",
+        "page": "SEC order, Release No. 106455 of 2026-09-21, p. 1",
+        "crossCheck": "Form 10-12G/A filed 2024-02-29, https://www.sec.gov/Archives/edgar/data/2008670/000149315224008352/form10-12ga.htm : \"97,227,646 shares were issued and outstanding as of September 30, 2023\", no revenue line, total assets nil. OTC Markets, read 2026-10-30 by one of two verifiers (the other found the page down for maintenance): market cap 13,073 USD on 2026-10-29, last trade 0.0001 USD. In the Yahoo chart https://query1.finance.yahoo.com/v8/finance/chart/RCIT?range=2y&interval=1d every bar has volume 0.",
+        "vendorValueSeen": "main store of run 41027769596 (2026-10-30): marketCap 295,782,711,296 USD from yahoo_quoteSummary = 2,262.50 USD x 130,732,697 shares; survival rank 94"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "WEAV": {
+      "validFrom": "2026-10-26",
+      "reason": "Weave Communications wurde von einer Gesellschaft von Francisco Partners übernommen (Abschluss am 26.10.2026, 7,40 USD je Aktie in bar), die Aktie wurde am 23.10.2026 letztmals an der NYSE gehandelt. Seitdem gibt es keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1609151/000160915126000120/weav-20261026.htm",
+        "quote": "Trading of the Company Common Stock on NYSE was suspended prior to the opening of trading on the Closing Date.",
+        "page": "Form 8-K filed 2026-10-26, Item 3.01",
+        "crossCheck": "NYSE Form 25 notice of 2026-10-26, https://www.sec.gov/Archives/edgar/data/876661/000087666126000860/ruleprovisionnotice.htm : \"this security was suspended from trading on October 26, 2026\".",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 595,333,312 USD = 7.40 USD x 80,450,446 shares; small-cap health care profitable rank 11, small-cap overview rank 147"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "MSGS": {
+      "validFrom": "2026-10-27",
+      "reason": "MSGS ist das alte Kürzel von MSG Knickerbockers, früher Madison Square Garden Sports. Die Aktie wurde unter diesem Kürzel zuletzt am 26.10.2026 gehandelt, vor der Abspaltung der MSG Rangers, und läuft seit dem 27.10.2026 als MSGK. Maßgeblich ist die Notierung MSGK.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://www.sec.gov/Archives/edgar/data/1636519/000119312526409143/d126791d8k.htm",
+        "quote": "the trading symbol for Registrant Class A Common Stock on the NYSE will change from",
+        "page": "Form 8-K filed 2026-09-30, Introductory Note, Name Change",
+        "crossCheck": "Form 8-K filed 2026-10-27, https://www.sec.gov/Archives/edgar/data/1636519/000119312526434274/d178604d8k.htm : distribution of one MSG Rangers share per two shares on 2026-10-26, name change at 11:59 p.m. that day, the cover lists only MSGK. IRS Form 8937, https://s23.q4cdn.com/716592820/files/doc_downloads/spin_off/2026/IRS-Form-8937.pdf p.1: \"The VWAP for MSGK common stock on October 27, 2026 was $301.87.\" The 384.39 USD is the last MSGS close of 2026-10-26 from https://query1.finance.yahoo.com/v8/finance/chart/MSGS?range=1mo&interval=1d (vendor data).",
+        "vendorValueSeen": "main store of run 41027769596 (2026-10-30): marketCap 9,256,088,576 USD from yahoo_quoteSummary = 384.39 USD x 24,079,941 shares, no price block; software and communication services profitable rank 43, one rank below MSGK with the same score 72.2 and 7,469,115,392 USD"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
+    },
+    "ISSC": {
+      "validFrom": "2026-08-18",
+      "reason": "ISSC ist das alte Kürzel von Innovative Aerosystems. Die Aktie wurde unter diesem Kürzel zuletzt am 17.08.2026 gehandelt und läuft seit dem 18.08.2026 als IA. Unter ISSC gibt es seitdem keinen aktuellen Kurs und keinen Börsenwert mehr.",
+      "reasonComplete": true,
+      "source": {
+        "url": "https://finviz.com/news/380843/innovative-aerosystems-to-change-nasdaq-ticker-symbol-to-ia-following-corporate-rebranding",
+        "quote": "effective at the U.S. market open on August 18",
+        "page": "Business Wire release of the issuer of 2026-08-11, first paragraph, wire copy",
+        "crossCheck": "Form 8-K/A filed 2026-10-07, https://www.sec.gov/Archives/edgar/data/836690/000110465926114137/tm2626969d1_8ka.htm : the cover lists IA as trading symbol on the Nasdaq. Form 10-Q filed 2026-08-13, https://www.sec.gov/Archives/edgar/data/836690/000110465926095962/issc-20260630x10q.htm : 17,899,173 shares on the cover. Nasdaq history https://api.nasdaq.com/api/quote/IA/historical : close 24.78 USD on 2026-08-17, 20.77 USD on 2026-10-30 (read by both verifiers).",
+        "vendorValueSeen": "small-cap store of run 40873805484, used by the export of 2026-10-30: marketCap 443,541,504 USD from yahoo_quoteSummary = 24.78 USD x 17,899,173 shares, no price block; small-cap industrials profitable rank 23"
+      },
+      "verifiedAt": "2026-10-30",
+      "reviewBy": "2026-11-30"
     }
   }
 }

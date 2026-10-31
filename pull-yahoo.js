@@ -45,7 +45,7 @@ const ADS_HAND_TABLE = loadAdsHandTable();
 // Tag 1397: issuer share counts for lines Yahoo prices with a wrong count (same two write sites).
 const SHARE_COUNT_TABLE = loadShareCountTable();
 const { applyMarketCapGuard, marketCapFloor, tradingRate, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
-const { loadStatementCurrencyTable, statementFactor, statementRowPending } = require('./lib/statement-currency-hand-table.js');
+const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
 const yahooQ4 = require('./lib/yahoo-q4-known-cases.js');
@@ -83,13 +83,13 @@ function _applyAdsHandTable(snap, ticker, price) {
  * @param {object} snap Unconverted snapshot (meta stamped).
  * @param {string} origCurrency Reporting currency the converter uses.
  * @param {number} factor origCurrency -> USD factor.
- * @returns {{factor: number, status: string, series?: string}} Statement factor and optional annual-only scope.
+ * @returns {{factor: number, status: string, series?: string, hold?: boolean}} Statement factor, optional annual-only scope, hold on a stale row.
  */
 function _statementFactor(snap, origCurrency, factor) {
   const r = statementFactor(snap, origCurrency, factor, STATEMENT_CCY_TABLE);
   const tk = snap && snap.meta && snap.meta.ticker;
   if (r.status === 'corrected') _log('INFO', `  ${tk}: ${r.series === 'annual' ? 'annual' : 'statement'} series kept in USD (statement-currency hand table), ${origCurrency} factor on financialData${r.series === 'annual' ? ' and quarterly series' : ''}`);
-  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, reporting factor used: ${r.reason}`);
+  else if (r.status === 'stale') _log('WARN', `  ${tk}: statement-currency hand table row STALE, ${origCurrency === 'USD' ? 'USD reporting currency, factor 1 kept, nothing withheld' : 'statement series withheld'}: ${r.reason}`);
   return r;
 }
 
@@ -168,6 +168,14 @@ function istTeilmengenLauf(anzahlListe, bekanntesNTotal) {
 }
 let _manifestSubsetTag = null;   // gesetzt in main(), gelesen an der Schreibstelle
 let _manifestSchutzUmgangen = null;  // Grund, falls das Altmanifest nicht lesbar war
+// Sweep 24.10.: ONE path rule for every slim-manifest write. The incremental flush wrote a
+// hard-coded _manifest.json and overwrote the daily manifest on a subset run, while the log
+// said it stays untouched. Guard: tests/manifest-teilmenge.test.js runs the real main().
+function _slimManifestPath(outputDir) {
+  return path.join(outputDir, _manifestSubsetTag
+    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
+    : '_manifest.json');
+}
 const _sizeExits = new Map();
 let _sizeExitSnapshotTickers = new Set();
 let _sizeExitCheckpoint = null;
@@ -980,6 +988,26 @@ function _resolveTradingFx(q, existing) {
   return { ok: true, factor: fx.factor, factorMajorUnit: fx.factorMajorUnit, provenance: fx.provenance, currency: String(ccy), quelle };
 }
 
+/**
+ * Stores a full pull's own quote the way the price-only path stores it: USD, per-share factor.
+ * Full pulls never stored a price, so the filter feed's distance to the 52-week high stayed empty for
+ * every full-pulled row until its next price-only run (30.10.2026: 3,937 of 15,899 rows). The factor
+ * lookup is the 52-week high's in _skaliereHandelsMetriken, so their ratio holds no FX at all.
+ * No usable quote or factor leaves the field absent. No price.asOf: _priceOnlyUpdate never refreshes it, and
+ * lib/export-provenance.js would read a day-old price time and call a hand-table row not reproducible.
+ * @param {object} snap Converted full-pull snapshot, mutated in place.
+ * @param {*} rawPrice Yahoo quote in its quote unit.
+ * @returns {void}
+ */
+function _stampFullPullPrice(snap, rawPrice) {
+  // The market-cap guard already stored this pull's quote on its hand-table rows.
+  if (Number.isFinite(snap.price?.regularMarketPrice)) return;
+  const fx = _resolveTradingFx(null, snap);
+  if (!fx.ok || !Number.isFinite(rawPrice) || rawPrice <= 0) return;
+  // No price.currency on purpose: region-mapping reads it, and that path stays as it was on a full pull.
+  snap.price = { ...snap.price, regularMarketPrice: rawPrice * fx.factor, currencyUnit: 'USD' };
+}
+
 // Waehrungs-Chunk 1/4 (16.08.2026): den KURS selbst mitstempeln, nicht nur seine Herkunft.
 // Der price-only-Schnellweg rechnet Preis UND marketCap mit dem Handelskurs um, hat das aber
 // nie im Snapshot vermerkt — ein price-only-aufgefrischter Snapshot sah deshalb aus wie einer
@@ -1402,6 +1430,12 @@ function _convertSnapshotToUSD(snap) {
   // MODEC is annual-only: its quarterly series still use the JPY reporting factor. Read the
   // UNSCALED revenueTTM before the metrics loop; omitted series preserves the original all-series scope.
   const stmt = _statementFactor(snap, origCurrency, factor);
+  // Sweep 24.10., P301: a row that cannot be confirmed (financialCurrency or the revenue check missing,
+  // another currency, mismatch gone) withholds its statement series instead of scaling them (G2, T2: null + marker).
+  if (stmt.hold) {
+    const held = holdStatementSeries(snap, stmt.series);
+    console.warn(`::warning::${snap.meta.ticker}: statement-currency hand table row not verifiable (${stmt.reason}), ${held} statement values withheld - re-verify configs/statement-currency-hand-table.json`);
+  }
   const scaleAnnual = (item) => scaleTradingBy(item, stmt.factor);
   const scaleQuarter = (item) => scaleTradingBy(item, stmt.series === 'annual' ? factor : stmt.factor);
 
@@ -3582,10 +3616,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _fundamentalsRefreshDeferred = 0;
   // TASK 0.11: reset the silent-error counters so each pullAll reports its own tally.
   _lampErrors = 0;
-  // JS-Review 19.09.: geteilten Zustand hier aufraeumen wie die Zaehler daneben. (Beim ersten
-  // Versuch landete diese Zeile in _recordGpZeroCoding — also in einer Funktion, die JE ZEILE
-  // laeuft und den Schutz mitten im Lauf abgeraeumt haette. Anker war mehrdeutig.)
-  _manifestSubsetTag = null; _manifestSchutzUmgangen = null;
+  // Sweep 24.10.: _manifestSubsetTag and _manifestSchutzUmgangen are NOT reset here. main()
+  // decides them before calling pullAll; the reset that stood here (JS-Review 19.09.) wiped
+  // the subset tag on every run, so both manifest writes went to _manifest.json. Direct
+  // pullAll callers (tests) never set them, so nothing leaks between runs.
   _sizeExits.clear();
   _sizeExitCheckpoint = null;
   _sizeExitSnapshotTickers = new Set(watchlist.stocks.filter(stock =>
@@ -3674,9 +3708,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const results = [];
   // Persist each removal: timed-out shards still upload their surviving snapshots.
   // The frozen manifest contract pins the missing-cap counter on every _manifest report.
-  _sizeExitCheckpoint = () => writeFileAtomic(sizeExitPath, JSON.stringify({
+  // complete stays false until finishPull marks an exit-0 pull (P155 b: merge's sizeExitsKnown).
+  _sizeExitCheckpoint = (complete = false) => writeFileAtomic(sizeExitPath, JSON.stringify({
     n_missing_mcap: results.filter(r => r && r.status === 'missing-market-cap').length,
     sizeExits: mergeSizeExits([[..._sizeExits.values()]]),
+    complete,
   }));
   const failures = [];
   let n_full_period_regression_blocked = 0;
@@ -3828,7 +3864,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized },
         partial: true
       };
-      const mPath = path.join(outputDir, '_manifest.json');
+      const mPath = _slimManifestPath(outputDir);   // same rule as the final write
       writeFileAtomic(mPath, JSON.stringify(slim));
     } catch (e) {
       _manifestCheckpointErrors++;
@@ -5387,6 +5423,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           }
         }
       }
+      _stampFullPullPrice(canonical, _y(yahoo.price, 'regularMarketPrice'));
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
@@ -5666,9 +5703,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _log('INFO', `${reload.REASON}: selected=${reloadStats.selected}, pulled=${reloadStats.pulled}, newer=${reloadStats.newer}, still-old-yahoo=${reloadStats.still_old_yahoo}, skipped-cap=${reloadStats.skipped_cap}, fetch-failed=${reloadStats.fetch_failed}, reload-failed=${reloadStats.reload_failed}, no-quarter=${reloadStats.no_quarter}`);
   _log('INFO', `Missing-market-cap observations: ${manifest.n_missing_mcap} (not counted as successful pulls)`);
   // Tag 189: factored into writeFileAtomic helper.
-  const slimPath = path.join(outputDir, _manifestSubsetTag
-    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
-    : '_manifest.json');
+  const slimPath = _slimManifestPath(outputDir);
   if (_manifestSubsetTag) {
     _log('WARN', 'Teilmengen-Lauf: Tagesmanifest bleibt unberuehrt, Bilanz nach ' + path.basename(slimPath));
   }
@@ -5913,6 +5948,16 @@ async function main() {
   }
 
   const manifest = await pullAll(watchlist, args.output, args.rateLimit);
+  process.exit(finishPull(manifest));
+}
+
+/**
+ * Decide the pull's exit code; only an exit-0 pull marks its size-exit report complete,
+ * so the merge can tell a finished shard from an aborted or failed one (P155 b).
+ * @param {object} manifest Manifest returned by pullAll, with results, failures, n_total and n_failed.
+ * @returns {number} Process exit code, 0 for success and 1 for failure.
+ */
+function finishPull(manifest) {
   // Tag 147: threshold is relative to "attempted" (excludes skipped-mcap which never
   // hit the network). Counting skipped-mcap in n_total inflated the denominator and
   // made the 75% guard meaningless for large universes with many micro-cap tickers.
@@ -5930,9 +5975,11 @@ async function main() {
   const mapperBugCount = (manifest.failures || []).filter(f => f.errClass === 'mapper-bug').length;
   if (mapperBugCount > 0) {
     _log('ERROR', `MAPPER-BUG: ${mapperBugCount} TypeError/ReferenceError in mapYahooToCanonical — programming error, not transient Yahoo failure`);
-    process.exit(1);
+    return 1;
   }
-  process.exit(failRatio > 0.75 ? 1 : 0);
+  if (failRatio > 0.75) return 1;
+  _sizeExitCheckpoint(true);
+  return 0;
 }
 
 // TASK 0.9 (Pull-Diät): pure decision fn — did this ticker report earnings since
@@ -6088,7 +6135,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
   countSkippedMcap,
-  recordSizeExit,
+  recordSizeExit, finishPull,
   preserveSnapshotForMissingCurrency,
   // Tag 466: Ueberspring-Entscheidung der Small-Cap-Eigentumsgrenze — an ihr haengt, ob
   // Aufsteiger im Hauptboard sichtbar sind. Waechter: tests/smallcap-eigentumsgrenze.test.js

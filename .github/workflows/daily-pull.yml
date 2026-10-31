@@ -20,15 +20,20 @@ on:
       # 12.482 Snapshots aufgenommen -> 75 Schein-Neuzugaenge, Lauf rot, scoring
       # uebersprungen.
       #
-      # ⚠ DIESER INPUT IST GESPERRT und schaltet nichts frei (Sperre unten, :1607).
+      # ⚠ DIESER INPUT IST GESPERRT und schaltet nichts frei (Sperre im Schritt
+      # "Neuaufnahme-Sperre" weiter unten).
       # Der CI-Weg ist BEWUSST ohne Commit-Schritt (ENTSCHIED 12:40 vom 29.08.) —
       # ein Commit-Schritt hier waere ein dritter main-Schreiber im Rennen mit
-      # scoring. Der entschiedene Weg ist der EINMAL-AKT LOKAL gegen ein
+      # scoring. Der damals (vor P168) entschiedene Weg war der EINMAL-AKT LOKAL gegen ein
       # heruntergeladenes CI-Artefakt (Weg C, ENTSCHIED 113 / RA6), Write-Ziel genau
       # data-health/annual-spikes-baseline.json, committet vom Ausfuehrenden.
-      # PFLICHT dabei: unmittelbar danach derselbe Befehl OHNE Flag gegen dieselbe
-      # Population — der Verankerungslauf selbst prueft nichts
-      # (watch-annual-spikes.js:400 kehrt vor :411/:419/:429 zurueck), RA8.
+      # Seit P168 verweigert `--neu-aufnehmen` den nativen Bestand (Exit 1, schreibt
+      # nichts). Ein neuer Bestandseintrag kommt als gezielter, belegter Einzeleintrag;
+      # wie, steht in docs/annual-spikes.md.
+      # Fuer den damaligen Weg galt als PFLICHT: unmittelbar danach derselbe Befehl OHNE
+      # Flag gegen dieselbe Population — der Verankerungslauf selbst prueft nichts (der
+      # --neu-aufnehmen-Zweig in watch-annual-spikes.js kehrt vor der Populations-Wache
+      # und den Ausreisser-Toren zurueck), RA8.
       spikes_neu_aufnehmen:
         description: 'Jahres-Ausreisser-Bestand auf der CI-Population neu aufnehmen (nur bewusst!)'
         type: boolean
@@ -464,7 +469,8 @@ jobs:
       # bei einem systemischen 403/IP-Block. KEINE Ausnahme fuer SEC-Netz-Flakes:
       # das Skript unterscheidet bereits selbst — ein einzelner 404/Netzfehler zaehlt
       # nur grandErrors hoch und laeuft weiter (siehe `cursorContiguous = false`);
-      # einen Ausgang != 0 erreichen nur Korrupt-Cache, TOTAL FAILURE und fehlende
+      # einen Ausgang != 0 erreichen nur Korrupt-Cache, ein beschaedigtes oder nicht
+      # wiederlesbares Archiv (P280), TOTAL FAILURE und fehlende
       # Pflichteingaben. Jedes failure-Outcome darf also rot faerben.
       - name: Pull Insider Form-4 (daily)
         id: pull_form4
@@ -524,6 +530,9 @@ jobs:
         timeout-minutes: 2
         run: node scripts/prepare-stale-quarter-ranks.js
 
+      # P280: external-data/archive/sec-form4/ travels WITH the form4 cache. The puller
+      # archives rows before it trims them; without the archive in this artifact the merge
+      # job would commit the trimmed cache and the archived rows would die with the runner.
       - name: Upload prep state (watchlist + fx + earnings + insider)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -534,6 +543,7 @@ jobs:
             earnings-calendar.json
             outputs/stale-quarter-ranks.json
             external-data/sec-form4-cache.json
+            external-data/archive/sec-form4/
             data-health/entdeckungs-ausschluss.json
           if-no-files-found: warn
           retention-days: 1
@@ -612,7 +622,7 @@ jobs:
           AUSGANG="${{ needs.prep.outputs.pull_form4_outcome }}"
           case "$AUSGANG" in
             failure)
-              echo "::error::INSIDER-PULL GEFALLEN: der Schritt 'Pull Insider Form-4 (daily)' im prep-Job ist mit Exit != 0 geendet. Das Skript bricht NICHT bei einzelnen 404/Netzfehlern ab (die zaehlt es nur und laeuft weiter) — Exit != 0 heisst: external-data/sec-form4-cache.json ist unlesbar (korrupt geschrieben), ODER der Lauf hat NULL Filings bei lauter Fehlern geholt (systemischer SEC-403/IP-Block), ODER watchlist.json / sec-ticker-cik-map.json fehlen, ODER der Schritt lief in sein 30-Minuten-Timeout. In allen Faellen ist der Insider-Cache heute NICHT fortgeschrieben und der Cursor nicht vorgerueckt. Der Tagesdatenlauf haengt nicht daran und ist weitergelaufen. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Pull Insider Form-4 (daily)'."
+              echo "::error::INSIDER-PULL GEFALLEN: der Schritt 'Pull Insider Form-4 (daily)' im prep-Job ist mit Exit != 0 geendet. Das Skript bricht NICHT bei einzelnen 404/Netzfehlern ab (die zaehlt es nur und laeuft weiter) — Exit != 0 heisst: external-data/sec-form4-cache.json ist unlesbar (korrupt geschrieben), ODER das Archiv external-data/archive/sec-form4/ ist beschaedigt oder nicht wiederlesbar (dann wurde nichts beschnitten), ODER der Lauf hat NULL Filings bei lauter Fehlern geholt (systemischer SEC-403/IP-Block), ODER watchlist.json / sec-ticker-cik-map.json fehlen, ODER der Schritt lief in sein 30-Minuten-Timeout. Der Insider-Cache ist fuer diesen Lauf NICHT fortgeschrieben und der Cursor nicht vorgerueckt (holt ein Lauf mehrere Tage nach, kann ein frueherer Tag schon geschrieben sein, bevor ein spaeterer scheitert; dabei geht nichts verloren). Der Tagesdatenlauf haengt nicht daran und ist weitergelaufen. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Pull Insider Form-4 (daily)'."
               exit 1
               ;;
             cancelled|skipped)
@@ -818,20 +828,29 @@ jobs:
       # Manifest noch da und wurde hier als frisches Shard-Ergebnis gestaged (Fix
       # neutralisiert). Also zusaetzlich am Step-Ergebnis gaten: alles ausser success
       # nimmt denselben Weg wie "Shard fehlt" (merge zaehlt ihn, partial=true).
+      # P301: a subset run keeps the OLD _manifest.json and writes its tally next to it, so that manifest
+      # is no fresh result either. "Newer than the manifest", not "exists": the shard cache keeps a tally
+      # of an earlier run for good, and a bare existence check would drop this shard every day from then on.
       - name: Stage shard manifest for merge
         if: always()
         run: |
           mkdir -p shard-manifest-out
-          if [ "${{ steps.yahoo_pull.outcome }}" = "success" ] && [ -f snapshots/_manifest.json ]; then
+          subset_tally=""
+          for f in snapshots/_manifest.subset-*.json; do
+            if [ -f "$f" ] && [ "$f" -nt snapshots/_manifest.json ]; then subset_tally="$f"; fi
+          done
+          if [ "${{ steps.yahoo_pull.outcome }}" = "success" ] && [ -f snapshots/_manifest.json ] && [ -z "$subset_tally" ]; then
             cp snapshots/_manifest.json shard-manifest-out/shard-${{ matrix.shard }}.json
             echo "Staged shard-${{ matrix.shard }}.json"
           else
-            echo "no usable manifest for shard ${{ matrix.shard }} (pull outcome=${{ steps.yahoo_pull.outcome }}, timeout before first flush or fail-loud abort) — merge counts it as a missing shard (partial=true)"
+            echo "no usable manifest for shard ${{ matrix.shard }} (pull outcome=${{ steps.yahoo_pull.outcome }}, subset tally=${subset_tally:-none}, timeout before first flush or fail-loud abort) — merge counts it as a missing shard (partial=true)"
           fi
 
       # Shard-Snapshots hochladen — OHNE die Manifeste (Glob-Negation), sonst
       # kollidieren 17 _manifest.json / _manifest-full.json beim merge-multiple-Download
       # (RED-TEAM-2 T1-a). Die Ticker-Snapshots sind disjunkt -> keine echte Kollision.
+      # P301: named exclusions, never _manifest*: the _manifest-size-exits.shard-*.run-*.json reports must
+      # travel, scripts/filter-snapshot-merge.js merges them into today's size exits.
       - name: Upload shard snapshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -841,6 +860,8 @@ jobs:
             snapshots/*.json
             !snapshots/_manifest.json
             !snapshots/_manifest-full.json
+            !snapshots/_manifest.subset-*.json
+            !snapshots/_manifest-full.subset-*.json
           if-no-files-found: warn
           retention-days: 1
 
@@ -1850,9 +1871,9 @@ jobs:
       # Deshalb bleibt dieser Weg zu — nicht weil etwas ungeklaert ist, sondern weil
       # die Antwort „nicht hier" lautet. Drei Gruende tragen die Sperre gleichzeitig:
       # (1) kein Commit-Schritt in diesem Job -> der Write verschwaende mit dem Runner;
-      # (2) der Input ist nirgends interpoliert (:1617) -> das Flag erreicht das Skript
+      # (2) der Input ist nirgends interpoliert -> das Flag erreicht das Skript
       #     ohnehin nie, ein Dispatch liefe gruen und taete NICHTS (stiller Fehlschlag);
-      # (3) unter nur_rechnen=true ist VEROEFFENTLICHEN=false (:75) -> ein nach dem
+      # (3) unter nur_rechnen=true ist VEROEFFENTLICHEN=false (siehe dort) -> ein nach dem
       #     Hausmuster gebauter Commit-Schritt schaltete sich selbst ab.
       # Die Sperre bleibt darum stehen: sie faengt genau den stillen Fehlschlag,
       # gegen den dieser ganze Umbau laeuft.
@@ -2172,6 +2193,18 @@ jobs:
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check
 
+      # Plausibility watcher (Daylauf 7, 24.10.2026). REPORTS ONLY: lists implausible board rows of the
+      # finished export (growth extremes, period gaps, zero revenue, market-cap jumps against the newest
+      # board-history vintage, duplicates, score bounds, withheld revenue on the survival list) in v1/waechter/plausibilitaet.json, the step
+      # summary and one ::warning:: per finding class. It changes no number, withholds nothing and must
+      # never turn the run red: exit 0 by design, `|| true`, continue-on-error and a timeout on top.
+      # The 15-file count gate above counts v1/*.json without recursion, and the Pages deploy copies
+      # `../outputs/findash-export/v1/.` completely, so waechter/ rides along.
+      - name: Plausibility watcher (reporting only)
+        continue-on-error: true
+        timeout-minutes: 3
+        run: node scripts/plausibilitaets-waechter.js || true
+
       # Rule-of-40-Brett (Vertrag §14). Es liest den FERTIGEN v1-Export und die Snapshots und
       # schreibt NUR den Unterordner v1/rule40/ — der Haupt-Export ist zu diesem Zeitpunkt schon
       # geschrieben UND durch das Vertragstor oben gegangen.
@@ -2231,6 +2264,8 @@ jobs:
       # pushes today's store after the trigger). The step therefore reads prices/history from the tip of main via
       # git archive into a temp folder; the working tree stays untouched (the board-history step rebases onto main
       # later and must not meet modified tracked files). When the fetch fails the file is simply not written.
+      # P303: the daily files prices/<date>.json come along (at most 14, the archive step moves older ones). The merge job
+      # commits them together with the stamp; the export reads the one of the stamp day to see who this run really fetched.
       - name: Build and check preisschritt (additive, fail-soft)
         run: |
           set -o pipefail
@@ -2238,7 +2273,7 @@ jobs:
             store="$RUNNER_TEMP/preisschritt-store" &&
             rm -rf "$store" && mkdir -p "$store" &&
             git fetch --no-tags origin main &&
-            git archive FETCH_HEAD prices/history | tar -x -C "$store" &&
+            git archive FETCH_HEAD prices/history ':(glob)prices/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].json' | tar -x -C "$store" &&
             node scripts/write-preisschritt-export.js --prices-dir "$store/prices" &&
             node scripts/write-preisschritt-export.js --check
           } || { rm -rf outputs/findash-export/v1/filter/preisschritt.json*; echo "::warning::preisschritt.json could not be built or checked; the daily boards are deployed anyway."; false; } || true
@@ -2822,8 +2857,43 @@ jobs:
           fi
           echo "ok: der heutige Stand ist auf main."
 
+  # Feed fill guard (Daylauf 10, 30.10.2026): on 29.10. d52 went empty on a quarter of the rows of the
+  # published filter feed and the run stayed green. Own job behind scoring, like druckenmiller-guard: the
+  # boards are deployed by then, so its red X holds nothing back. It reads the feed from gh-pages through
+  # the API (no CDN delay, so never yesterday's copy), that is what findash really gets. The filter step is
+  # fail-soft: a feed missing there is this job's HTTP 404, a stale one its age check. No npm ci needed.
+  feed-fill-waechter:
+    needs: scoring
+    if: ${{ !cancelled() && needs.scoring.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Check the fill rate of every filter feed field
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "This run publishes nothing, so gh-pages still holds an older feed: nothing to check."
+            exit 0
+          fi
+          curl -fsSL --retry 3 --max-time 120 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github.raw" \
+            -o "$RUNNER_TEMP/universum.json" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/outputs/findash-export/v1/filter/universum.json?ref=gh-pages" || {
+            echo "::error::Der Filter-Feed ist auf gh-pages nicht abrufbar: entweder fehlt er heute, oder die Schnittstelle ist gestoert. Sein Fuellstand ist nicht geprueft."
+            exit 1
+          }
+          node scripts/feed-fill-guard.js --feed "$RUNNER_TEMP/universum.json"
+
   laufstatus:
-    needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard]
+    needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard, feed-fill-waechter]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10

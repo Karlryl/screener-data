@@ -35,6 +35,17 @@ const round = v => {
   return rounded === 0 && v !== 0 ? Number(v.toPrecision(2)) : rounded;
 };
 const text = v => typeof v === 'string' && v.trim() ? v.trim().replace(/\s+/g, ' ') : null;
+// Plausibility ceilings (G2/T2: a value beyond them is withheld with a reason, never clipped or replaced).
+const GM_MAX_ABS_PCT = 100;   // gross profit cannot exceed revenue; below -100 % the vendor margin is unverifiable
+const DY_MAX_PCT = 50;        // 25-50 % exists (shipping, special dividends); above 50 % every seen case was a unit/currency error
+const PO_MAX_PCT = 100000;    // unit errors only (BANPU.BK 2,788,100); high real ratios (SLG 15375) stay, findash caps ranking at 100
+// Floor, not ceiling: one year of expected profit at two thirds of the market cap and more. On 30.10.2026 each of the 14 of 21 rows
+// below it with a second-source value was wrong by a factor 2.4 to 561 (ENIC 0.02 vs 11.01); the lowest second-source value is 1.58 (DEC).
+// The floor is not clean: BHC read a true 1.37 on 14.10.2026 and would have been withheld.
+const FPE_MIN = 1.5;
+const EV_FACTOR_MIN = Math.E; // with EV_MARGIN 1.0 a factor inside 1/e..e can never win the balance comparison
+const EV_MARGIN = 1.0;        // one reading must beat the other by a factor e (ln distance 1.0)
+const EV_IMPLAUSIBLE_LN = 1.5; // EV is mcap + debt - cash by definition; beyond a factor e^1.5 it is impossible
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const snapshotFiles = dir => fs.readdirSync(dir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).sort();
 
@@ -53,7 +64,9 @@ function growth3(snapshot) {
 function dividend(snapshot) {
   const value = metricVal(snapshot, 'dividendYield');
   const status = snapshot.metrics?.dividendStatus?.value;
-  if (finite(value) && value > 0 && (status == null || status === 'zahlt')) return { dy: round(value), dySt: 'zahlt' };
+  if (finite(value) && value > 0 && (status == null || status === 'zahlt')) {
+    return value > DY_MAX_PCT ? { dy: null, dySt: 'unbekannt', implausible: true } : { dy: round(value), dySt: 'zahlt' };
+  }
   // Old nulls cannot prove that summaryDetail answered.
   return { dy: null, dySt: status === 'keine' && value == null ? 'keine' : 'unbekannt' };
 }
@@ -65,11 +78,67 @@ function mixedCurrency(meta) {
   return Boolean(reporting && trading && reporting !== trading);
 }
 
+/**
+ * Detect an EV/S that Yahoo built from an enterprise value in the REPORTING currency while the pull multiplied it
+ * by the trading/reporting factor (USD-listed ADR/OTC lines of JPY, CNY, KRW, ARS ... reporters, e.g. KXIAY 292).
+ * Evidence: the vendor EV is compared with mcap + debt - cash from the latest annual balance, once as is and once
+ * times the pull factor; the better reading wins only by a clear margin (T5). Without balance data the EV/mcap
+ * ratio decides when it is implausible as is but plausible divided by the factor.
+ * @param {object} snapshot Prepared snapshot.
+ * @returns {boolean} True when the EV/S must be withheld.
+ */
+function evInReportingCurrency(snapshot) {
+  const factor = snapshot.meta?.mischVerhaeltnisFaktor, mcap = snapshot.marketCap?.value, ev = metricVal(snapshot, 'enterpriseValue');
+  if (!(factor > 0) || !(factor >= EV_FACTOR_MIN || factor <= 1 / EV_FACTOR_MIN) || !(mcap > 0) || !(ev > 0)) return false;
+  const debt = norm(snapshot, 'annualBalance', 'totalDebt')[0], cash = norm(snapshot, 'annualBalance', 'totalCash')[0];
+  if (finite(debt) && finite(cash)) {
+    const check = Math.max(mcap + debt - cash, 0.1 * mcap);
+    return Math.abs(Math.log(ev / (check * factor))) < Math.abs(Math.log(ev / check)) - EV_MARGIN;
+  }
+  const q = ev / mcap;
+  return (q < 0.1 || q > 10) && q / factor >= 0.1 && q / factor <= 10;
+}
+
+/**
+ * Detect an enterprise value that fits no reading (KAJMF EV/mcap 23): with balance data the vendor EV must lie within a
+ * factor e^1.5 of mcap + debt - cash, or, for factor < 1 (HCLTECH.NS: balance in INR, EV in USD), of
+ * mcap + (debt - cash) * factor. Checked only after evInReportingCurrency did not fire.
+ * @param {object} snapshot Prepared snapshot.
+ * @returns {boolean} True when the EV/S must be withheld as implausible.
+ */
+function evImplausible(snapshot) {
+  const mcap = snapshot.marketCap?.value, ev = metricVal(snapshot, 'enterpriseValue');
+  const debt = norm(snapshot, 'annualBalance', 'totalDebt')[0], cash = norm(snapshot, 'annualBalance', 'totalCash')[0];
+  if (!(mcap > 0) || !(ev > 0) || !finite(debt) || !finite(cash)) return false;
+  const far = check => Math.abs(Math.log(ev / Math.max(check, 0.1 * mcap))) > EV_IMPLAUSIBLE_LN;
+  const factor = snapshot.meta?.mischVerhaeltnisFaktor;
+  // ponytail: with factor >= 1 a check3 fit can be USD mcap plus reporting-currency net debt (KAJMF); real fix is EV scaling in pull-yahoo.js.
+  return far(mcap + debt - cash) && !(factor > 0 && factor < 1 && !far(mcap + (debt - cash) * factor));
+}
+
 function usableFcf(snapshot) {
   const margin = metricVal(snapshot, 'fcfMarginTTM');
   return !snapshot.meta?.fcfMarginTTMSuppressed
     && margin <= r40.MAX_FCF_MARGIN_PCT
     && fcfMarginValid(margin, norm(snapshot, 'annualFCF'), norm(snapshot, 'annualOCF')) ? margin : null;
+}
+
+/**
+ * Sales multiples are shown only when positive and computed on positive revenue (T2).
+ * Yahoo divides market cap and EV by trailing revenue. Holding companies that book fair-value losses
+ * as revenue (Kinnevik, Exor, Reinet) get a negative divisor: P/S turns negative and EV/S takes the
+ * wrong sign (positive when EV is negative too). A non-positive EV/S on positive revenue means EV <= 0.
+ * @param {object} snapshot Prepared snapshot.
+ * @param {boolean} withheld Currency verdict that already withholds both ratios.
+ * @returns {{ps: number|null, evs: number|null, reason: string|null}} Shown values and the presence reason.
+ */
+function salesMultiples(snapshot, withheld) {
+  const ps = mischVal(snapshot.metrics?.priceSales, withheld), evs = mischVal(snapshot.metrics?.enterpriseToRevenue, withheld);
+  if (ps === null && evs === null) return { ps: null, evs: null, reason: null };
+  const revenue = metricVal(snapshot, 'revenueTTM');
+  // ponytail: revenue exactly 0 is treated as a placeholder (T2), only a negative divisor proves the sign.
+  if ((revenue !== null && revenue < 0) || (ps !== null && ps <= 0)) return { ps: null, evs: null, reason: 'umsatz-negativ' };
+  return { ps: round(ps), evs: evs !== null && evs > 0 ? round(evs) : null, reason: evs !== null && evs <= 0 ? 'ev-negativ' : null };
 }
 
 function usableRule40(snapshot, generatedAt) {
@@ -122,8 +191,19 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     if (board?.rankGrund) aus.push(board.rankGrund);
     const salesMixed = mischVerhaeltnisUnkorrigiert(meta);
     const ratio = (name, withheld) => mischVal(snapshot.metrics?.[name], withheld);
+    const sales = salesMultiples(snapshot, salesMixed);
+    if (sales.reason) aus.push(sales.reason);
+    const evsCurrency = sales.evs !== null && evInReportingCurrency(snapshot);
+    if (evsCurrency) aus.push('evs-waehrung');
+    const evsBad = sales.evs !== null && !evsCurrency && evImplausible(snapshot);
+    if (evsBad) aus.push('evs-implausible');
     const trailing = ratio('pe', mixed);
     const pe = finite(trailing) && trailing > 0 ? round(trailing) : null;
+    // Same rule as pe: a zero or negative forward P/E is a forecast loss, not the cheapest stock; it stays missing.
+    const forward = ratio('forwardPE', mixed);
+    const fpe = finite(forward) && forward > 0 ? round(forward) : null;
+    const fpeBad = fpe !== null && fpe < FPE_MIN;
+    if (fpeBad) aus.push('fpe-implausible');
     const netIncome = norm(snapshot, 'annualNetIncome')[0];
     const high = metricVal(snapshot, 'fiftyTwoWeekHigh'), price = snapshot.price?.regularMarketPrice;
     const highRatio = finite(price) && price > 0 && finite(high) && high > 0 ? price / high : null;
@@ -133,8 +213,14 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     const metricDates = Object.values(snapshot.metrics || {}).map(m => m?.asOf);
     const dates = [meta.fundamentalsAsOf || meta.asOf, ...metricDates, ath?.lastDate]
       .filter(d => typeof d === 'string' && finite(Date.parse(d))).sort((a, b) => Date.parse(a) - Date.parse(b));
-    const div = dividend(snapshot), payout = metricVal(snapshot, 'payoutRatio');
+    const { implausible: dyBad, ...div } = dividend(snapshot), payout = metricVal(snapshot, 'payoutRatio');
     const grossMargin = metricVal(snapshot, 'grossMargin');
+    const gmBad = finite(grossMargin) && Math.abs(round(grossMargin)) > GM_MAX_ABS_PCT;
+    // Only a negative payout or a unit error is withheld; the vendor yield, not the payout, is the broken field (000059.SZ).
+    const poBad = finite(payout) && (payout > PO_MAX_PCT || payout < 0);
+    if (gmBad) aus.push('gm-implausible');
+    if (dyBad) aus.push('dy-implausible');
+    if (poBad) aus.push('po-implausible');
     return Object.fromEntries(Object.entries({
       t: ticker, n: text(board?.name ?? meta.name), b: official?.branch ?? null,
       sc: finite(board?.score) ? board.score : null, rk: finite(board?.rank) ? board.rank : null,
@@ -142,15 +228,14 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       mc: meta.marketCapReason || marketCapCases[ticker] ? (finite(snapshot.marketCap?.value) ? round(snapshot.marketCap.value) : null) : board ? (finite(board.marketCap) ? board.marketCap : null)
         : (beurteileWaehrungsbeleg(meta).ok ? round(snapshot.marketCap?.value) : null),
       g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
-      ps: round(ratio('priceSales', salesMixed)),
-      evs: round(ratio('enterpriseToRevenue', salesMixed)),
+      ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
       pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
-      fpe: round(ratio('forwardPE', mixed)),
-      ...div, po: payout === 0 && div.dySt === 'zahlt' ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
+      fpe: fpeBad ? null : fpe,
+      ...div, po: poBad || (payout === 0 && (div.dySt === 'zahlt' || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
       fcf: round(usableFcf(snapshot)),
       // The prior gate prevents ruleOfX from silently falling back to growth alone.
       r40: eligible.has(snapshot) ? round(ruleOfX(snapshot, 1, true, growthBounds)) : null,
-      gm: grossMargin === 0 ? null : round(grossMargin),
+      gm: grossMargin === 0 || gmBad ? null : round(grossMargin),
       // A slightly newer price may exceed the high; implausible scale differences stay missing.
       d52: highRatio !== null && !highImplausible ? round(Math.min(0, (highRatio - 1) * 100)) : null,
       ath: round(ath?.distancePct), asOf: dates.length ? new Date(dates[0]).toISOString().slice(0, 10) : null,
@@ -189,12 +274,26 @@ function validateUniverse(feed, bytes) {
     if (row.b != null && row.sc == null) errors.push(where + ': board without score');
     if (!['vorhanden', 'verlust', 'unbekannt', 'waehrung'].includes(row.peSt)
         || (row.pe != null) !== (row.peSt === 'vorhanden') || (row.pe != null && row.pe <= 0)) errors.push(where + ': inconsistent peSt');
+    if (row.fpe != null && row.fpe <= 0) errors.push(where + ': non-positive forward P/E');
+    if (row.fpe != null && row.fpe < FPE_MIN) errors.push(where + ': forward P/E below floor');
+    if (row.aus.includes('fpe-implausible') && row.fpe != null) errors.push(where + ': inconsistent fpe reason');
     if (!['zahlt', 'keine', 'unbekannt'].includes(row.dySt)
         || (row.dy != null) !== (row.dySt === 'zahlt') || (row.dy != null && row.dy <= 0)) errors.push(where + ': inconsistent dySt');
     const mixed = row.aus.includes('mischwaehrung');
     if (mixed !== (row.peSt === 'waehrung') || (mixed && ['pe', 'fpe'].some(k => row[k] != null))) errors.push(where + ': currency guard');
     if (row.po === 0 && row.dySt === 'zahlt') errors.push(where + ': placeholder payout');
     if (row.gm === 0) errors.push(where + ': placeholder gross margin');
+    if (row.gm != null && Math.abs(row.gm) > GM_MAX_ABS_PCT) errors.push(where + ': gross margin beyond ceiling');
+    if (row.aus.includes('gm-implausible') && row.gm != null) errors.push(where + ': inconsistent gm reason');
+    if (row.dy != null && row.dy > DY_MAX_PCT) errors.push(where + ': dividend yield beyond ceiling');
+    if (row.aus.includes('dy-implausible') && (row.dy != null || row.dySt !== 'unbekannt')) errors.push(where + ': inconsistent dy reason');
+    if (row.po != null && (row.po > PO_MAX_PCT || row.po < 0)) errors.push(where + ': payout beyond ceiling');
+    if (row.aus.includes('po-implausible') && row.po != null) errors.push(where + ': inconsistent po reason');
+    if (row.aus.includes('evs-waehrung') && row.evs != null) errors.push(where + ': inconsistent ev currency reason');
+    if (row.aus.includes('evs-implausible') && (row.evs != null || row.aus.includes('evs-waehrung'))) errors.push(where + ': inconsistent ev implausible reason');
+    if (['ps', 'evs'].some(k => row[k] != null && row[k] <= 0)) errors.push(where + ': non-positive sales multiple');
+    if (row.aus.includes('umsatz-negativ') && (row.ps != null || row.evs != null)) errors.push(where + ': sales multiple on negative revenue');
+    if (row.aus.includes('ev-negativ') && row.evs != null) errors.push(where + ': inconsistent ev reason');
     if (row.d52 != null && (row.d52 < -100 || row.d52 > 0)) errors.push(where + ': invalid d52');
     if (row.aus.includes('d52-implausible') && row.d52 != null) errors.push(where + ': inconsistent d52 reason');
     if (row.fcf != null && row.fcf > r40.MAX_FCF_MARGIN_PCT) errors.push(where + ': invalid fcf');
@@ -286,4 +385,4 @@ function main(argv) {
 }
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
-module.exports = { buildUniverse, growth3, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
+module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };

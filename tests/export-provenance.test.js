@@ -256,7 +256,7 @@ test('p154: all real derived revenue cases export original inputs and reproduce 
   assert.ok(definition);
   const traceKind = require('node:vm').runInNewContext(definition[0] + ';traceKind');
   const cases = financialTable.cases.filter(c => ['revenueQ', 'annualRev'].includes(c.field) && ['difference', 'rounded'].includes(traceKind(c)));
-  assert.equal(cases.length, 26); // P177 adds two derived BYLOT quarters: 21 differences and one issuer-rounded case; 18.10.2026 adds four differences (CDR.WA, 000552.SZ).
+  assert.equal(cases.length, 42); // SEC comparison 30.10.2026 adds four differences (EGY, FTW, SUNC, AHCO); // P177 adds two derived BYLOT quarters: 21 differences and one issuer-rounded case; 18.10.2026 adds four differences (CDR.WA, 000552.SZ); 24.10.2026 two (300277.SZ), then one difference and three issuer-rounded confirmations (603993.SS); the triage of 24.10.2026 four differences (2855.TW and 6005.TW revenue: Q1 2026 half year minus Q2, Q4 2025 year minus nine months).
   for (const c of financialTable.cases.filter(c => ['revenueQ', 'annualRev'].includes(c.field))) {
     const d = p.handTableDerivation(c), kind = traceKind(c);
     if (!cases.includes(c)) { assert.equal(d, null, c.caseId); continue; }
@@ -888,8 +888,11 @@ function writerFixtures() {
   const hg = mod.exports, source = path.join(root, 'outputs', 'hypergrowth');
   const out = path.join(root, 'outputs', 'findash-export', 'v1');
   fs.mkdirSync(path.join(source, 'full'), { recursive: true }); fs.mkdirSync(snapDir, { recursive: true });
-  const snap = snapshot(); fs.writeFileSync(path.join(snapDir, 'TEST.json'), JSON.stringify(snap));
-  const row = fixture40.boardZeile({ ticker: 'TEST', marketCap: 0, revGrowthYoYPct: p.captureSnapshot(snap).leg.pct,
+  // Daylauf 7 (24.10.): the export gate rejects a zero size, a size class that does not match the size
+  // and a score its breakdown does not explain, so the shipped row carries a large-cap size and
+  // scoreShrunk 78.4 (78.4 * 1.02 = 80.0, the fixture score).
+  const snap = snapshot(); snap.marketCap.value = 5e10; fs.writeFileSync(path.join(snapDir, 'TEST.json'), JSON.stringify(snap));
+  const row = fixture40.boardZeile({ ticker: 'TEST', marketCap: 5e10, scoreShrunk: 78.4, revGrowthYoYPct: p.captureSnapshot(snap).leg.pct,
     ipoRecency: 'mature', profitStreak: null });
   const counts = {};
   for (const branch of hg.BRANCHES) {

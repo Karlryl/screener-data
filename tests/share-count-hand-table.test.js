@@ -55,6 +55,21 @@ const WRONG = {
   ABTC: { px: 8.48, vendorShares: 121819713, mcap: 1033031104, issuer: 72819713 },
   ANDG: { px: 54.4, vendorShares: 18540410, mcap: 1008598336, issuer: 112887382 },
   JBS: { px: 12.029999732971191, vendorShares: 3289363863, mcap: 39571046400, issuer: 1070929187 },
+  // Snapshots of run 39918190374 (2026-10-23), USD price after conversion: pre-split counts after the
+  // 1:5 (TEL) and 1:3 (Kioxia) splits of 2026-10-01, and Lindt registered + participation counted 1:1.
+  '8035.T': { px: 60.22362584, vendorShares: 453967442, mcap: 27339565394.16052, issuer: 2280791810 },
+  '285A.T': { px: 81.2172074, vendorShares: 532635175, mcap: 43259141448.56342, issuer: 1644045264 },
+  'LISN.SW': { px: 105231.18462, vendorShares: 1086190, mcap: 114301055775.69977, issuer: 229956 },
+  // Snapshots of run 41027769596 (2026-10-30): Fastned at twice its share count, ISA Energia with all classes at the ON price,
+  // Toppan with the pre-split count against a post-split price.
+  'FAST.AS': { px: 37.01837299, vendorShares: 38933085, mcap: 1441239431.6594176, issuer: 19752877 },
+  'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 564711511 },
+  '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 589412480 },
+  // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
+  '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1337286998 },
+  '688428.SS': { px: 3.657160206, vendorShares: 1767202175, mcap: 6462941472.097403, issuer: 860109566 },
+  'SOFF.OL': { px: 7.639278149, vendorShares: 108605000, mcap: 829663826.409513, issuer: 82346796 },
+  '003535.KS': { px: 4.318488288, vendorShares: 318070388, mcap: 1373583284.875775, issuer: 223091000 },
 };
 const TABLE = loadShareCountTable();
 const unveraendert = (snap, ticker, table = TABLE) => {

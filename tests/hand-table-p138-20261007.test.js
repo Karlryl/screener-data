@@ -50,19 +50,19 @@ if (process.env.P138_RED_CASE) {
 
 test('P138 appends exactly ten cells, two coverage entries and two genuine trimmed packets', () => {
   assert.deepEqual(table.cases.slice(233, 243).map(c => c.caseId), cells.map(idFor)); // P138: +10 after the nine P129 and eight P47 cases (216 + 9 + 8); P140 appends its four cases after index 243
-  assert.deepEqual(table.coverage.slice(34), [...['000688.SZ', 'GRANULES.NS', 'BYLOT.AT'].map(ticker =>
+  assert.deepEqual(table.coverage.slice(34, 41), [...['000688.SZ', 'GRANULES.NS', 'BYLOT.AT'].map(ticker =>
     ({ ticker, field: 'revenueQ', coversThrough: '2026-06-30' })), { ticker: 'CDR.WA', listingAliases: ['OTGLF'], field: 'revenueQ', coversThrough: '2026-06-30' },
     { ticker: '000552.SZ', field: 'revenueQ', coversThrough: '2026-06-30' },
-    ...['opIncQ', 'grossProfitQ'].map(field => ({ ticker: 'CDR.WA', listingAliases: ['OTGLF'], field, coversThrough: '2026-06-30' }))]); // P177 appends verified BYLOT coverage after the two P138 entries; 18.10.2026 appends CDR.WA (three series) and 000552.SZ.
+    ...['opIncQ', 'grossProfitQ'].map(field => ({ ticker: 'CDR.WA', listingAliases: ['OTGLF'], field, coversThrough: '2026-06-30' }))]); // P177 appends verified BYLOT coverage after the two P138 entries; 18.10.2026 appends CDR.WA (three series) and 000552.SZ; P148 (22.10.2026) appends the MODEC row after these seven.
   for (const [key, count, digest] of [
     ['cases', 216, '3cf2cd8528d0242838af9c2bfdbe8d13531e1d6c1c63f993c96eec8c09daa82b'], // P177 updates HL recast evidence and two CIG-C fingerprints within this prefix.
     ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],
-    ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],
+    ['quarantines', 11, '609406b7d3e5bfd3096867a5c88dae0b937623a70fbc1e5d76e2e4cce9967065'], // 22.10.2026: reasonDate on every hold; TYG re-checked on the FY2025 packet.
     ['periodLabels', 16, '57bb38710653f7db4cfb98a1e1820372f2c628ef22ff4fb5da0637fe44667445'],
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
-    '1c61b93d34b5c283b345d911be792a7160f8c4d5bdfd348dd9a83dc3252cfaf9'); // P177 refreshes HL period ends and two CIG-C cells; the full prefix stays pinned.
-  assert.equal(Object.keys(fixtures).length, 69); // P177 appends the real frozen BYLOT packet after the two P138 fixtures; 18.10.2026 appends four 17.10. packets; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST.
+    '777598d8ca370d980a7c1110c711bc25c40f92ee5dd32cb98c55b73d014c75e0'); // P177 refreshes HL period ends and two CIG-C cells; 22.10.2026 refreshes only TYG (FY2025 packet); 23.10.2026 only the CIG-C opIncQ[0]/[4] fingerprints (with the 1780151ed7 CIG-C packet the prefix hashes to d21d098a...); the full prefix stays pinned.
+  assert.equal(Object.keys(fixtures).length, 112); // The foreign SEC comparison 30.10.2026 appends AAUC, SGML and NMR; // SEC comparison 30.10.2026 appends eleven real packets; // P177 appends the real frozen BYLOT packet after the two P138 fixtures; 18.10.2026 appends four 17.10. packets; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST; 24.10.2026 appends five 23.10. packets, then two more (603993.SS, INFRAC.SW), then the seven 23.10. packets of the triage.
   assert.equal(hash(fixtures['000688.SZ']), '74c1bfc25c4fe547fb5a3ab14e730095ad46671a8212f92846bd838ff266f408');
   assert.equal(hash(fixtures['GRANULES.NS']), '2205dd5cbaf8ab29e2766e78298b2535404b4364a0de0b0d9b935a5121622483');
 });

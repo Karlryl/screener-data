@@ -75,6 +75,7 @@ test('rows without two usable bars are left out and counted by reason, never fil
     'invalid-date': 1,                // BADD: 2026-02-30
     'invalid-close': 2,               // ZERO (0), NEGC (negative)
     'dates-not-increasing': 2,        // SAME (equal), BACK (reversed)
+    'not-refreshed-at-stamp': 0,      // make() has no fetched list; the failed-pull tests below count it
   });
   assert.deepEqual(Object.keys(feed.skipped), SKIP_REASONS);
   assert.equal(feed.universeCount, mini.universe.length);
@@ -185,8 +186,10 @@ function fixtureTree({ generated = generatedAt, universeGenerated = generated, u
   write(path.join(v1Dir, 'filter', 'universum.json'), { schema: 'findash-export/v1', generated_at: universeGenerated, snapshotCount: universe.length, rows: universe.map(t => ({ t, n: 'Name ' + t })) });
   store.saveAll(pricesDir, structuredClone(mini.history));
   // saveAll stamps _meta.json with the wall clock; the fixtures assume the stamp day of `stamp`, so pin it (red from 16.10. on otherwise).
-  const metaFile = store.metaPath(pricesDir);
+  // The daily file of the stamp day lists every stored ticker: here all of them were fetched in the run of the stamp.
+  const metaFile = store.metaPath(pricesDir), stampDay = cutoffOf(stamp);
   write(metaFile, { ...JSON.parse(fs.readFileSync(metaFile, 'utf8')), updatedAt: stamp });
+  write(path.join(pricesDir, stampDay + '.json'), Object.fromEntries(Object.keys(mini.history).map(t => [t, { pulledOn: stampDay }])));
   return { dir, v1Dir, pricesDir, target: path.join(v1Dir, 'filter', 'preisschritt.json') };
 }
 
@@ -298,6 +301,131 @@ test('CLI checks a real file, rejects a corrupted copy, a foreign generation, a 
   assert.equal(sha(t.target), hash);
 });
 
+// P303, failed pull: the real merge step and the real build on a real sharded store, over consecutive runs. A runner's
+// failed ticker has no entry in its slice and keeps its old bars; the store stamp moves on anyway. The stamp is pinned
+// after each merge because the merge stamps with the wall clock.
+const mergeScript = path.resolve(__dirname, '../scripts/merge-price-shards.js');
+const bars = (...pairs) => pairs.map(([date, close]) => ({ date, close }));
+const failedPullTree = () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'preisschritt-failed-pull-'));
+  const v1Dir = path.join(dir, 'v1'), pricesDir = path.join(dir, 'prices');
+  fs.mkdirSync(path.join(v1Dir, 'filter'), { recursive: true });
+  const universe = ['FRESH', 'FAILS', 'USFAIL'];
+  fs.writeFileSync(path.join(v1Dir, 'index.json'), JSON.stringify({ schema: 'findash-export/v1', generated_at: generatedAt }));
+  fs.writeFileSync(path.join(v1Dir, 'filter', 'universum.json'), JSON.stringify({ schema: 'findash-export/v1', generated_at: generatedAt, rows: universe.map(t => ({ t })) }));
+  return { v1Dir, pricesDir, target: path.join(v1Dir, 'filter', 'preisschritt.json') };
+};
+const slice = (pricesDir, day, n, fetched) => fs.writeFileSync(path.join(pricesDir, day + '.shard-' + n + '.json'),
+  JSON.stringify(Object.fromEntries(fetched.map(t => [t, { close: 1, asOf: day, pulledOn: day }]))));
+const runMerge = (pricesDir, day, shards) => spawnSync(process.execPath, [mergeScript, '--prices', pricesDir, '--date', day, '--expected-shards', String(shards)], { encoding: 'utf8' });
+const pullAndMerge = ({ pricesDir }, day, history, fetched, stampAt) => {
+  store.saveAll(pricesDir, history); // what the runners and the overlay leave behind
+  slice(pricesDir, day, 0, fetched);
+  const run = runMerge(pricesDir, day, 1);
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  fs.writeFileSync(store.metaPath(pricesDir), JSON.stringify({ ...store.loadMeta(pricesDir), updatedAt: stampAt }));
+};
+const stepsOf = ({ pricesDir, v1Dir }) => build({ pricesDir, v1Dir }).feed;
+
+test('a failed pull keeps the unfinished bar out of the file: skipped by name, never booked as a close, all other rows unchanged (P303)', () => {
+  const tree = failedPullTree();
+  // Run of 14.10., all fetched. The EU tickers hold an intraday bar of 14.10., USFAIL has no bar of 14.10. yet (the pull runs before the US open).
+  const day14 = {
+    FRESH: bars(['2026-10-12', 100], ['2026-10-13', 101], ['2026-10-14', 150]),
+    FAILS: bars(['2026-10-12', 200], ['2026-10-13', 202], ['2026-10-14', 300]),
+    USFAIL: bars(['2026-10-12', 50], ['2026-10-13', 51]),
+  };
+  pullAndMerge(tree, '2026-10-14', day14, ['FRESH', 'FAILS', 'USFAIL'], '2026-10-14T09:00:00Z');
+  const before = stepsOf(tree);
+  assert.deepEqual(before.rows.map(r => r.t), ['FAILS', 'FRESH', 'USFAIL']);
+  assert.equal(before.skipped['not-refreshed-at-stamp'], 0);
+
+  // Run of 15.10.: FRESH gets the final close of 14.10. and an intraday bar of 15.10.; FAILS and USFAIL fail and keep their series.
+  const day15 = { ...day14, FRESH: bars(['2026-10-12', 100], ['2026-10-13', 101], ['2026-10-14', 151], ['2026-10-15', 999]) };
+  pullAndMerge(tree, '2026-10-15', day15, ['FRESH'], '2026-10-15T09:00:00Z');
+  const failed = stepsOf(tree);
+  assert.equal(failed.skipped['not-refreshed-at-stamp'], 2);
+  // The heart of the guard: 300 is the intraday value of 14.10. and before the stamp day; without the rule it would be booked as the close.
+  assert.equal(row(failed, 'FAILS'), undefined);
+  assert.ok(!JSON.stringify(failed.rows).includes('300'), 'the unfinished bar must not be in the file');
+  // The rule asks only whether the run fetched the ticker, not whether its last bar could be intraday.
+  assert.equal(row(failed, 'USFAIL'), undefined);
+  // A refreshed ticker moves on as before.
+  assert.deepEqual(failed.rows, [{ t: 'FRESH', d0: '2026-10-13', c0: 101, d1: '2026-10-14', c1: 151 }]);
+  assert.equal(failed.rows.length + Object.values(failed.skipped).reduce((a, b) => a + b, 0), failed.universeCount);
+  assert.deepEqual(validate(failed, bytesOf(failed), generatedAt, ['FRESH', 'FAILS', 'USFAIL']), []);
+
+  // Run of 16.10.: FAILS still fails and stays out, however many days pass. USFAIL recovers.
+  const day16 = { ...day15, USFAIL: bars(['2026-10-12', 50], ['2026-10-13', 51], ['2026-10-14', 52], ['2026-10-15', 53]) };
+  pullAndMerge(tree, '2026-10-16', day16, ['FRESH', 'USFAIL'], '2026-10-16T09:00:00Z');
+  const still = stepsOf(tree);
+  assert.equal(still.skipped['not-refreshed-at-stamp'], 1);
+  assert.equal(row(still, 'FAILS'), undefined);
+  assert.deepEqual(row(still, 'USFAIL'), { t: 'USFAIL', d0: '2026-10-14', c0: 52, d1: '2026-10-15', c1: 53 });
+
+  // Run of 17.10.: FAILS recovers: the corrected bar of 14.10. replaces the intraday one and the row comes back.
+  const day17 = { ...day16, FAILS: bars(['2026-10-13', 202], ['2026-10-14', 204], ['2026-10-15', 205], ['2026-10-16', 206]) };
+  pullAndMerge(tree, '2026-10-17', day17, ['FRESH', 'FAILS', 'USFAIL'], '2026-10-17T09:00:00Z');
+  const back = stepsOf(tree);
+  assert.equal(back.skipped['not-refreshed-at-stamp'], 0);
+  assert.deepEqual(row(back, 'FAILS'), { t: 'FAILS', d0: '2026-10-15', c0: 205, d1: '2026-10-16', c1: 206 });
+
+  // A second run on the same day replaces the daily file with the stamp: what only the first run fetched counts as not refreshed.
+  pullAndMerge(tree, '2026-10-17', day17, ['FRESH', 'USFAIL'], '2026-10-17T11:00:00Z');
+  const rerun = stepsOf(tree);
+  assert.equal(rerun.skipped['not-refreshed-at-stamp'], 1);
+  assert.equal(row(rerun, 'FAILS'), undefined);
+});
+
+test('the stamp binds to the daily file by date: missing, unreadable, empty or foreign builds no file and names why (P303)', () => {
+  const history = { FRESH: bars(['2026-10-13', 1], ['2026-10-14', 2]), FAILS: bars(['2026-10-13', 3], ['2026-10-14', 4]) };
+  const ready = stampAt => { const tree = failedPullTree(); pullAndMerge(tree, '2026-10-15', history, ['FRESH', 'FAILS'], stampAt); return tree; };
+  const refused = (tree, expected) => {
+    assert.throws(() => stepsOf(tree), expected);
+    assert.equal(fs.existsSync(tree.target), false);
+    const run = spawnSync(process.execPath, [script, '--prices-dir', tree.pricesDir, '--v1-dir', tree.v1Dir], { encoding: 'utf8' });
+    assert.equal(run.status, 1, 'the workflow step sees the failure');
+    assert.match(run.stderr, expected);
+    assert.equal(fs.existsSync(tree.target), false);
+  };
+  // Control: the same store builds.
+  assert.equal(stepsOf(ready('2026-10-15T09:00:00Z')).rows.length, 2);
+  const daily = tree => path.join(tree.pricesDir, '2026-10-15.json');
+  // A run across the UTC day boundary: frozen run day 15.10., stamp 16.10., no daily file of 16.10. The file of 15.10. is not taken instead.
+  refused(ready('2026-10-16T00:30:00Z'), /missing or unreadable/);
+  const gone = ready('2026-10-15T09:00:00Z'); fs.rmSync(daily(gone));
+  refused(gone, /missing or unreadable/);
+  const torn = ready('2026-10-15T09:00:00Z'); fs.writeFileSync(daily(torn), '{"FRESH":');
+  refused(torn, /missing or unreadable/);
+  for (const nothing of ['{}', '[]', 'null', '5']) {
+    const empty = ready('2026-10-15T09:00:00Z'); fs.writeFileSync(daily(empty), nothing);
+    refused(empty, /lists no ticker/);
+  }
+  // A file under the right name whose content is of another run day.
+  const foreign = ready('2026-10-15T09:00:00Z');
+  fs.writeFileSync(daily(foreign), JSON.stringify({ FRESH: { pulledOn: '2026-10-15' }, FAILS: { pulledOn: '2026-10-14' } }));
+  refused(foreign, /of another date: FAILS was pulled on 2026-10-14/);
+  const noDay = ready('2026-10-15T09:00:00Z');
+  fs.writeFileSync(daily(noDay), JSON.stringify({ FRESH: { close: 1 } }));
+  refused(noDay, /of another date/);
+});
+
+test('a dead runner writes neither the daily file nor a stamp, so no unfetched ticker can look fresh (P303)', () => {
+  const tree = failedPullTree();
+  const history = { FRESH: bars(['2026-10-13', 1], ['2026-10-14', 2]), FAILS: bars(['2026-10-13', 3], ['2026-10-14', 4]) };
+  pullAndMerge(tree, '2026-10-14', history, ['FRESH', 'FAILS'], '2026-10-14T09:00:00Z');
+  const metaBefore = fs.readFileSync(store.metaPath(tree.pricesDir), 'utf8');
+  // Two runners expected, only the slice of one arrived.
+  slice(tree.pricesDir, '2026-10-15', 0, ['FRESH']);
+  const run = runMerge(tree.pricesDir, '2026-10-15', 2);
+  assert.equal(run.status, 1);
+  assert.match(run.stdout, /Preis-Ausschnitt fehlt/);
+  assert.equal(fs.existsSync(path.join(tree.pricesDir, '2026-10-15.json')), false);
+  assert.equal(fs.readFileSync(store.metaPath(tree.pricesDir), 'utf8'), metaBefore);
+  // The store stays on the stamp of the last good run and its own daily file.
+  assert.equal(stepsOf(tree).priceStoreUpdatedAt, '2026-10-14T09:00:00Z');
+});
+
 // Step order and fail-soft shape of the workflow step, checked on text so that a mutated copy can be shown red.
 function workflowErrors(yaml) {
   const text = yaml.replace(/\r\n/g, '\n'), errors = [];
@@ -316,6 +444,7 @@ function workflowErrors(yaml) {
   if (!/write-preisschritt-export\.js --prices-dir "\$store\/prices"/.test(body) || !/write-preisschritt-export\.js --check/.test(body)) errors.push('must build and then check');
   if (body.indexOf('write-preisschritt-export.js --prices-dir') > body.indexOf('write-preisschritt-export.js --check')) errors.push('check must follow the build');
   if (!/git archive FETCH_HEAD prices\/history/.test(body) || !/git fetch --no-tags origin main/.test(body)) errors.push('must read the store of the main tip, not the stale trigger checkout');
+  if (!/git archive FETCH_HEAD prices\/history ':\(glob\)prices\/\[0-9\]\[0-9\]\[0-9\]\[0-9\]-\[0-9\]\[0-9\]-\[0-9\]\[0-9\]\.json'/.test(body)) errors.push('must bring the daily files of the same commit as the stamp (P303)');
   if (/git (checkout|reset|pull|rebase|merge)/.test(run.join('\n'))) errors.push('must not touch the working tree');
   if (!run.some(l => /rm -rf outputs\/findash-export\/v1\/filter\/preisschritt\.json\*/.test(l))) errors.push('failure must remove only preisschritt.json*');
   if (run.some(l => /rm -rf outputs\/findash-export\/v1\/filter(?!\/preisschritt)/.test(l))) errors.push('must never remove the filter folder or other files');
@@ -341,6 +470,7 @@ test('workflow: the step runs after bewertung, before the public-tree guard and 
     'cleanup removed': y => y.replace('rm -rf outputs/findash-export/v1/filter/preisschritt.json*;', ''),
     'cleanup widens to the filter folder': y => y.replace('rm -rf outputs/findash-export/v1/filter/preisschritt.json*;', 'rm -rf outputs/findash-export/v1/filter;'),
     'stale trigger checkout read instead of main tip': y => y.replace('git archive FETCH_HEAD prices/history', 'git archive HEAD prices/history'),
+    'daily files of the stamp not brought along': y => y.replace(/git archive FETCH_HEAD prices\/history ':\(glob\)[^']*'/, 'git archive FETCH_HEAD prices/history'),
     'working tree touched': y => y.replace('git fetch --no-tags origin main &&', 'git fetch --no-tags origin main && git checkout FETCH_HEAD -- prices/history &&'),
     'build reads the old trigger checkout': y => y.replace('--prices-dir "$store/prices"', '--prices-dir prices'),
     'check dropped': y => y.replace(/ &&\r?\n\s*node scripts\/write-preisschritt-export\.js --check/, ''),

@@ -6,6 +6,9 @@
     "codeKeeps records R11's re-enactment of the current production selection rule, not a decision about the true primary listing. Every other listed ticker is marked, even when codeKeeps is absent from the board.",
     "homeListingProposal is R11 information only; it moves the flag only where markFollowsHomeListing is true; unresolved proposals are null.",
     "Sources and verbatim quotes are supplied by R11-FINAL (2026-09-30); no network re-check was performed in this task.",
+    "2026-10-23 (numbers-trust audit 23.10.): circle, strategy, energy-fuels, star-bulk, vinci and the GE leg 1GE.MI were added with sources fetched and quotes checked verbatim on 2026-10-23; vinci's home listing DG.PA is excluded by production, so its legs DG.SW and DG.VI keep their ranks until DG.PA stands in the ranking.",
+    "2026-10-24 (numbers-trust audit 23.10.): skydance added with sources fetched and quotes checked verbatim on 2026-10-24; PSKY is the former Nasdaq ticker of the same Class B common stock (listing transferred to the NYSE as SKYD on 2026-10-06), so it is a stale leg of SKYD, not a second class.",
+    "2026-10-30 (P290): Amrize gets the home listing AMRZ on the company's own wording and the US share of volume, a decision that names neither line formally primary; AMRZ.SW loses its rank when both legs stand in a ranking, the marker stays where it was. A first draft with AMRZ.SW was reversed by blind review: it blanked a correct P/E and EPS list on the visible row and surfaced a mixed-currency EV/Sales. Three cases stay out on purpose: Aeromexico (the sources name AERO.MX, but its vendor series would put a wrong 52-week distance and a flat price step on the visible row, see its note); Siltronic and the Madrid leg XAXIA.MC of AXIA (the home legs WAF.DE and AXIA3.SA lose the sealed production dedup in src/scoring/score.js before the export, so this table can neither show them nor remove a rank without hiding the firm).",
     "RBI (QSR / QSP.TO) and Molson Coors (TAP-A / TPX.TO) are deliberately absent: economically equivalent exchangeable shares, not secondary listings; TPX.TO class attribution is unproven."
   ],
   "aerovironment": {
@@ -23,7 +26,7 @@
   },
   "ge-aerospace": {
     "issuer": "GE Aerospace",
-    "tickers": ["GE", "GCP.DE", "GE.VI"],
+    "tickers": ["GE", "GCP.DE", "GE.VI", "1GE.MI"],
     "codeKeeps": "GE",
     "homeListingProposal": "GE",
     "source": {
@@ -32,7 +35,7 @@
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "US ISIN US3696043013. GE.VI has been excluded by production as dup-issuer since 2026-09-30; retained here in case it returns."
+    "note": "US ISIN US3696043013. GE.VI has been excluded by production as dup-issuer since 2026-09-30; retained here in case it returns. 1GE.MI added 2026-10-23 (numbers-trust audit 23.10.: GE rank 236 and 1GE.MI rank 235 on industrials profitable, both 70.4); source checked 2026-10-23: https://www.borsaitaliana.it/borsa/azioni/global-equity-market/scheda/US3696043013-BGEM.html?lang=it, quote \"Azioni Ge Aerospace: quotazioni in tempo reale | US3696043013\", field \"Codice Alfanumerico\" 1GE (Global Equity Market)."
   },
   "galaxy-digital": {
     "issuer": "Galaxy Digital",
@@ -71,20 +74,20 @@
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal remains unresolved (offen)."
+    "note": "R11 home-listing proposal remains unresolved (offen). Checked 2026-10-30: the sources point to AERO.MX (20-F filed 2026-04-30, Item 9.A: \"The ADSs are listed on the New York Stock Exchange under the symbol \u201cAERO.\u201d The common shares are listed on the Mexican Stock Exchange.\"; each ADS represents ten common shares; https://www.sec.gov/Archives/edgar/data/1561861/000119312526197494/d101275d20f.htm). Held back because the vendor series of AERO.MX is broken: closes flat at 167 MXN with volume 0 through 2026-10-29 against a quote of 28.42 MXN on 2026-10-30, 52-week high 167 MXN. As the visible row it would show a distance of -83.16 % to the 52-week high (AERO: -33.97 %) and a flat price step. Decide once that series is withheld or repaired."
   },
   "amrize": {
     "issuer": "Amrize",
     "tickers": ["AMRZ", "AMRZ.SW"],
     "codeKeeps": "AMRZ",
-    "homeListingProposal": null,
+    "homeListingProposal": "AMRZ",
     "source": {
-      "url": "https://investors.amrize.com/resources/faq",
-      "quote": "Amrize shares currently trade on the NYSE and the SIX under the ticker symbol AMRZ."
+      "url": "https://www.sec.gov/Archives/edgar/data/2035989/000114036125023352/ef20050735_8k.htm",
+      "quote": "to be listed on the New York Stock Exchange, with an additional listing on the SIX Swiss Exchange"
     },
-    "sourceCheckedOn": "2026-09-30",
+    "sourceCheckedOn": "2026-10-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal remains unresolved (offen)."
+    "note": "A decision for the leading listing, not a claim that either line is formally primary: no company document read uses \"primary\" or \"secondary\" for them. Evidence: this 8-K dated 2025-06-23; the Information Statement of June 2025 (https://www.sec.gov/Archives/edgar/data/2035989/000114036125020994/ny20033749x12_ex99-1.htm): \"SIX will have approved the additional listing of Company Shares\" and \"In addition to being listed on NYSE, Company Shares will also be listed on SIX.\"; Yahoo daily volume over 66 trading days to 2026-10-30, median 3.65 m shares in the US against 1.36 m on the SIX, a 73 % US share (the US figure may span all US venues). Against: registered office in Zug, and the SIX issuer list (https://www.six-group.com/sheldon/equity_issuers/v1/equity_issuers.json) carries \"primaryListing\" : true, which only names the SIX rule regime (231 of 241 issuers) and says nothing about the rank against another exchange. The visible row matters too: AMRZ carries P/E and EPS, AMRZ.SW withholds them (CHF price, USD results). A first draft with AMRZ.SW was reversed by blind review on 2026-10-30. A company document naming the SIX as the primary listing flips this entry."
   },
   "axia-energia": {
     "issuer": "AXIA Energia",
@@ -126,5 +129,83 @@
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
     "note": "R11 home-listing proposal: KCO.DE (95% confidence); the flag still references KCO.VI."
+  },
+  "circle": {
+    "issuer": "Circle Internet Group",
+    "tickers": ["CRCL", "CRCL.SW"],
+    "codeKeeps": "CRCL",
+    "homeListingProposal": "CRCL",
+    "source": {
+      "url": "https://www.six-group.com/fqs/ref.json?select=ShortName,ISIN,ValorSymbol,PortalSegment&where=ValorSymbol=CRCL",
+      "quote": "CIRCLE INT.GRP A DL-,0001"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "SIX Swiss Exchange reference data list CRCL with the US ISIN US1725731079 (class A common stock of the US issuer); home-listing proposal CRCL (NYSE). Numbers-trust audit 23.10.: CRCL and CRCL.SW both 63.2 on financials unprofitable."
+  },
+  "strategy": {
+    "issuer": "Strategy",
+    "tickers": ["MSTR", "MSTR.SW"],
+    "codeKeeps": "MSTR",
+    "homeListingProposal": "MSTR",
+    "source": {
+      "url": "https://www.six-group.com/fqs/ref.json?select=ShortName,ISIN,ValorSymbol,PortalSegment&where=ValorSymbol=MSTR",
+      "quote": "STRATEGY     A NEW DL-001"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "SIX Swiss Exchange reference data list MSTR with the US ISIN US5949724083 (class A common stock of the US issuer); home-listing proposal MSTR (Nasdaq). Numbers-trust audit 23.10.: MSTR and MSTR.SW both 35.3 on software-comm-services unprofitable."
+  },
+  "energy-fuels": {
+    "issuer": "Energy Fuels",
+    "tickers": ["UUUU", "EF2.AX"],
+    "codeKeeps": "UUUU",
+    "homeListingProposal": "UUUU",
+    "source": {
+      "url": "https://investors.energyfuels.com/2026-08-28-Energy-Fuels-Completes-Acquisition-of-Australian-Strategic-Materials",
+      "quote": "Energy Fuels trades its CHESS Depositary Interests (CDIs) on the ASX Limited under the trading symbol \"EF2.\""
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "EF2.AX is a CDI (1:1) on the ASX, not a separate share class; the same release names the common shares on the NYSE American (UUUU) and the TSX (EFR). Home-listing proposal UUUU. Numbers-trust audit 23.10.: EF2.AX and UUUU both 34.6 on energy unprofitable."
+  },
+  "star-bulk": {
+    "issuer": "Star Bulk Carriers",
+    "tickers": ["SBLK", "SBLK.AT"],
+    "codeKeeps": "SBLK",
+    "homeListingProposal": "SBLK",
+    "source": {
+      "url": "https://www.euronext.com/en/about/media/euronext-press-releases/star-bulk-carriers-corp-lists-euronext",
+      "quote": "on its listing on Euronext Athens (ticker code: SBLK)"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "Parallel listing on Euronext Athens since 2026-09-15 (same release: admission of the existing shares); the company's announcement of 2026-09-04 names the common shares listed on the Nasdaq Global Select Market since December 2007. Home-listing proposal SBLK."
+  },
+  "vinci": {
+    "issuer": "Vinci",
+    "tickers": ["DG.PA", "DG.SW", "DG.VI"],
+    "codeKeeps": "DG.VI",
+    "homeListingProposal": "DG.PA",
+    "source": {
+      "url": "https://www.vinci.com/en/finance/share/stock-data",
+      "quote": "Euronext Paris (compartment A)"
+    },
+    "sourceCheckedOn": "2026-10-23",
+    "enteredOn": "2026-10-23",
+    "note": "ISIN FR0000125486 on the issuer page. Legs checked 2026-10-23: SIX reference data https://www.six-group.com/fqs/ref.json?select=ShortName,ISIN,ValorSymbol,PortalSegment&where=ValorSymbol=DG (\"VINCI S.A. INH.   EO 2,50\", FR0000125486) and https://www.wienerborse.at/aktien-global-market/vinci-sa-FR0000125486/ (\"VINCI SA\"). codeKeeps DG.VI: production excluded DG.PA as dup-issuer on 2026-10-23 and keeps DG.VI; while DG.PA is not in the ranking, DG.SW and DG.VI keep their ranks (rule: home listing must stand in the same ranking)."
+  },
+  "skydance": {
+    "issuer": "Skydance Corporation",
+    "tickers": ["SKYD", "PSKY"],
+    "codeKeeps": "SKYD",
+    "homeListingProposal": "SKYD",
+    "source": {
+      "url": "https://www.sec.gov/Archives/edgar/data/2041610/000110465926113913/tm2626659d7_8k.htm",
+      "quote": "changed the ticker symbol for the Class B Common Stock from “PSKY” to “SKYD”"
+    },
+    "sourceCheckedOn": "2026-10-24",
+    "enteredOn": "2026-10-24",
+    "note": "Form 8-K of 2026-10-06 (accession 0001104659-26-113913, CIK 2041610, f/k/a Paramount Skydance Corporation): on 2026-10-06 the Class B listing moved from Nasdaq to the NYSE and the ticker changed from PSKY to SKYD, at the closing of the Warner Bros. Discovery merger. Form 25 of 2026-10-05 (accession 0001104659-26-113696) withdraws the Class B common stock from Nasdaq. In the snapshot of run 39918190374 (2026-10-23) the vendor still serves PSKY with the pre-closing count (sharesOutstanding 1,093,020,754 = the Class B count as of 2026-10-02 in the 424B5 of 2026-10-05) and a price of 9.775 USD against 7.79 USD on SKYD; SKYD (NYSE) is the home listing. Numbers-trust audit 23.10.: PSKY rank 313 and SKYD rank 314 on software-comm-services profitable, both 45.4."
   }
 }

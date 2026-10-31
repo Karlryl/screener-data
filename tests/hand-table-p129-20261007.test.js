@@ -56,14 +56,15 @@ test('P129 manifest pins every cell and preserves all original authority and fix
   for (const [key, count, digest] of [
     ['cases', 216, '3cf2cd8528d0242838af9c2bfdbe8d13531e1d6c1c63f993c96eec8c09daa82b'], // P177 updates HL recast evidence and two CIG-C fingerprints within this prefix.
     ['coverage', 34, '5aec87031a1f8531b556329f38852ea6fa01c33370cde601c9267595610cf490'],
-    ['quarantines', 11, '04d5d37834c47fb1d95e468102a07c3b4a42b3fcf91a0f892754685443ef5b89'],
+    ['quarantines', 11, '609406b7d3e5bfd3096867a5c88dae0b937623a70fbc1e5d76e2e4cce9967065'], // 22.10.2026: reasonDate on every hold; TYG re-checked on the FY2025 packet.
     ['periodLabels', 16, '57bb38710653f7db4cfb98a1e1820372f2c628ef22ff4fb5da0637fe44667445'],
   ]) assert.equal(hash(table[key].slice(0, count)), digest, key + ' untouched');
   assert.equal(hash(Object.fromEntries(Object.entries(fixtures).slice(0, 45))),
-    '1c61b93d34b5c283b345d911be792a7160f8c4d5bdfd348dd9a83dc3252cfaf9'); // P177 refreshes HL period ends and two CIG-C cells; the full prefix stays pinned.
-  assert.equal(table.coverage.length, 41, 'no coverage expansion without a fully verified quarterly series'); // P177 adds the verified BYLOT quarterly series; 18.10.2026 the fully verified CDR.WA (three) and 000552.SZ series.
+    '777598d8ca370d980a7c1110c711bc25c40f92ee5dd32cb98c55b73d014c75e0'); // P177 refreshes HL period ends and two CIG-C cells; 22.10.2026 refreshes only TYG (FY2025 packet); 23.10.2026 only the CIG-C opIncQ[0]/[4] fingerprints (with the 1780151ed7 CIG-C packet the prefix hashes to d21d098a...); the full prefix stays pinned.
+  assert.equal(table.coverage.length, 55, 'no coverage expansion without a fully verified quarterly series'); // P177 adds the verified BYLOT quarterly series; 18.10.2026 the fully verified CDR.WA (three) and 000552.SZ series; P148 (22.10.2026) the all-null MODEC revenue hold, the only series covered without a verified value. 23.10.2026 appends the verified CIG-C opIncQ series as row 43; 24.10.2026 the fully verified 2498.HK and 300277.SZ revenue series as rows 44 and 45, then 603993.SS as row 46; the triage of 24.10.2026 the fully verified 2855.TW revenue and operating-profit series and the 6005.TW revenue series as rows 47 to 49.
+  assert.deepEqual(table.coverage[41], { ticker: '6269.T', field: 'revenueQ', coversThrough: '2026-06-30' }, 'P148: MODEC alone carries all-null series authority');
   assert.equal(table.periodLabels.length, 16, 'GRGD labels stay open; no ineffective live row');
-  assert.equal(Object.keys(fixtures).length, 69); // P177 appends the real frozen BYLOT packet for its five new quarterly cases; 18.10.2026 appends BLSH, CDR.WA, OTGLF and 000552.SZ; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST.
+  assert.equal(Object.keys(fixtures).length, 112); // The foreign SEC comparison 30.10.2026 appends AAUC, SGML and NMR; // SEC comparison 30.10.2026 appends eleven real packets; // P177 appends the real frozen BYLOT packet for its five new quarterly cases; 18.10.2026 appends BLSH, CDR.WA, OTGLF and 000552.SZ; the G31 switch appends 000599.SZ (P268); P276 appends KINV-A.ST; 24.10.2026 appends 2498.HK, 300277.SZ, 002379.SZ, EYDAP.AT and MIN.AX, then 603993.SS and INFRAC.SW, then the seven triage packets (UWMC, MPHC.QA, FRNM, ESDS.NS, ROB.WA, 2855.TW, 6005.TW).
   assert.equal(table.cases.slice(216, 225).filter(c => c.periodType === '12M').every(c => c.ticker === 'AIAI' && c.replacementValue === null), true,
     'no annual replacement from the #431 waiting list');
 });
@@ -103,11 +104,11 @@ test('retained withholds select source-verified annual pairs or an empty growth'
   assert.deepEqual(revGrowthLeg(modec), revGrowthLeg(fixtures['6269.T']));
 });
 
-test('P129 authorizes only named withholds and cannot reintroduce the rejected quarterly coverage', () => {
+test('P129 authorizes only named withholds; the MODEC coverage row (P148) is the one explicit all-null exception', () => {
   const additions = table.cases.slice(216, 225);
   assert.ok(additions.every(row => row.replacementValue === null));
   assert.deepEqual([...new Set(additions.map(row => row.ticker))].sort(), ['1ANE.MI', '6269.T', 'AIAI', 'AJBU.SI', 'MAD.AX']);
-  assert.equal(table.coverage.length, 41); // P177 adds verified BYLOT coverage without changing any P129 withhold; 18.10.2026 adds CDR.WA (three) and 000552.SZ.
+  assert.equal(table.coverage.length, 55); // The foreign SEC comparison 30.10.2026 adds the fully verified NMR series; // The board-top check of 30.10.2026 adds the verified 600292.SS revenue series. SEC comparison 30.10.2026 adds four fully verified revenue series (EGY, FTW, SUNC, AHCO); // P177 adds verified BYLOT coverage without changing any P129 withhold; 18.10.2026 adds CDR.WA (three) and 000552.SZ; P148 adds the all-null MODEC hold as coverage row 42. 23.10.2026 appends the verified CIG-C opIncQ series as row 43; 24.10.2026 2498.HK and 300277.SZ as rows 44 and 45, then 603993.SS as row 46; the triage of 24.10.2026 2855.TW (two) and 6005.TW as rows 47 to 49.
   for (const [ticker, current, prior, currency] of [
     ['AJBU.SI', 441362000, 310287000, 'SGD'], ['1ANE.MI', 2925000000, 3048000000, 'EUR'],
   ]) {

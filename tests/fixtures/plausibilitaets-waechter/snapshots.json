@@ -1,0 +1,81 @@
+{
+  "_note": "The test writes one snapshot file per export row: `sonder` where named, otherwise `vorlage` with meta.ticker set. PW-BAZU gets no file. PW-OK's quote was fetched 4 trading days before the export (negative), PW-STALE's 7 (positive).",
+  "vorlage": {
+    "meta": { "ticker": null, "name": "Fixture", "asOf": "2026-10-24T07:00:00.000Z" },
+    "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+    "timeseries": {
+      "revenueQ": [{ "value": 110 }, { "value": 100 }, { "value": 90 }, { "value": 80 }, { "value": 70 }],
+      "revenueQEnds": ["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30", "2025-06-30"]
+    },
+    "annual": { "annualRev": [{ "value": 400 }, { "value": 300 }], "annualRevEnds": ["2025-12-31", "2024-12-31"] }
+  },
+  "ohneSnapshot": ["PW-BAZU", "PW-SURV-MISSING"],
+  "sonder": {
+    "PW-SURV-OK": {
+      "meta": { "ticker": "PW-SURV-OK", "name": "Genuine Pre Revenue Inc.", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" }
+    },
+    "PW-SURV-GAP": {
+      "meta": { "ticker": "PW-SURV-GAP", "name": "Vendor Gap Inc.", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "timeseries": { "revenueQ": [{ "value": null }, null], "revenueQEnds": ["2026-03-31", "2025-12-31"] },
+      "annual": { "annualRev": [{ "value": null }], "annualRevEnds": ["2025-12-31"] }
+    },
+    "PW-SURV-HELD": {
+      "meta": { "ticker": "PW-SURV-HELD", "name": "Held Revenue SA", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "timeseries": { "revenueQ": [{ "value": null, "financialMissing": { "rule": "statement-currency-unverified", "period": "2026-03-31", "reason": "Fixture" } }], "revenueQEnds": ["2026-03-31"] },
+      "annual": { "annualRev": [{ "value": null, "financialMissing": { "rule": "statement-currency-unverified", "period": "2025-12-31", "reason": "Fixture" } }], "annualRevEnds": ["2025-12-31"] }
+    },
+    "PW-SURV-CORR": {
+      "meta": { "ticker": "PW-SURV-CORR", "name": "Corrected To Empty Holding", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "annual": { "annualRev": [{ "value": null, "financialCorrection": { "caseId": "fixture", "reason": "Fixture" } }], "annualRevEnds": ["2025-12-31"] }
+    },
+    "PW-OK": {
+      "meta": { "ticker": "PW-OK", "name": "Okay Energy Corp", "asOf": "2026-10-19T07:00:00.000Z" },
+      "marketCap": { "value": 10000000000, "source": "yahoo_quote", "asOf": "2026-10-19T07:00:00.000Z" },
+      "timeseries": {
+        "revenueQ": [{ "value": 110 }, { "value": 100 }, { "value": 90 }, { "value": 80 }, { "value": 70 }],
+        "revenueQEnds": ["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30", "2025-06-30"]
+      },
+      "annual": { "annualRev": [{ "value": 400 }, { "value": 300 }], "annualRevEnds": ["2025-12-31", "2024-12-31"] }
+    },
+    "PW-ZERO": {
+      "meta": { "ticker": "PW-ZERO", "name": "Zero Energy Inc.", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "timeseries": {
+        "revenueQ": [{ "value": 0 }, { "value": 100 }, { "value": 90 }, { "value": 80 }, { "value": 70 }],
+        "revenueQEnds": ["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30", "2025-06-30"]
+      },
+      "annual": { "annualRev": [{ "value": 400 }, { "value": 300 }], "annualRevEnds": ["2025-12-31", "2024-12-31"] }
+    },
+    "PW-NULLREV": {
+      "meta": { "ticker": "PW-NULLREV", "name": "Null Revenue Energy Inc.", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "timeseries": {
+        "revenueQ": [{ "value": 110 }, { "value": 100 }, { "value": 90 }, { "value": 80 }, { "value": 70 }],
+        "revenueQEnds": ["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30", "2025-06-30"]
+      },
+      "annual": { "annualRev": [{ "value": null }, { "value": 300 }], "annualRevEnds": ["2025-12-31", "2024-12-31"] }
+    },
+    "PW-SAME": {
+      "meta": { "ticker": "PW-SAME", "name": "Same Quarter Energy Inc.", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "timeseries": {
+        "revenueQ": [{ "value": 70 }, { "value": 100 }, { "value": 90 }, { "value": 80 }, { "value": 70 }],
+        "revenueQEnds": ["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30", "2025-06-30"]
+      },
+      "annual": { "annualRev": [{ "value": 400 }, { "value": 300 }], "annualRevEnds": ["2025-12-31", "2024-12-31"] }
+    },
+    "PW-STALE": {
+      "meta": { "ticker": "PW-STALE", "name": "Stale Quote Energy Inc.", "asOf": "2026-10-14T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-14T07:00:00.000Z" },
+      "timeseries": {
+        "revenueQ": [{ "value": 110 }, { "value": 100 }, { "value": 90 }, { "value": 80 }, { "value": 70 }],
+        "revenueQEnds": ["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30", "2025-06-30"]
+      },
+      "annual": { "annualRev": [{ "value": 400 }, { "value": 300 }], "annualRevEnds": ["2025-12-31", "2024-12-31"] }
+    }
+  }
+}

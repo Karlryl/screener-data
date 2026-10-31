@@ -78,12 +78,13 @@
     "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
-    "src/scoring/lamps.js": "e6d6b62d69859a6d67cf91ffa97489f6abf17713c63ff6b63d9a10f23c7866a6",
+    "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
     "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
     "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
-    "src/scoring/profit-streak.js": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3"
+    "src/scoring/profit-streak.js": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3",
+    "src/scoring/country.js": "95d8b0d3d489786f326f9b764216c66222012449a9b68d630ef651dc574ee7db"
   },
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
@@ -96,7 +97,8 @@
     "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch).",
     "src/scoring/router.js": "P160 2026-10-11: F-13 pairs annual net income and revenue at the newest jointly finite index for the asset-manager zero-gross-profit gate. P205 2026-10-12: apply the existing size floor only to source-backed market-cap hand-table cases before routing. QH and 3018.TW leave the same-day universe; no formula or weight changed. Explicit P205 fix brief; independent release review by Claude remains required. See ergebnisse/P205/vorher-nachher.md.",
     "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak.",
-    "src/scoring/smallcap-route.js": "P205 2026-10-12: route(s, MIN_MCAP) applies the existing 300M floor to source-backed hand-table cases; no formula or weight change."
+    "src/scoring/smallcap-route.js": "P205 2026-10-12: route(s, MIN_MCAP) applies the existing 300M floor to source-backed hand-table cases; no formula or weight change.",
+    "src/scoring/country.js": "Daylauf 6 2026-10-23 (PR #29): COUNTRY_TO_REGION gains 18 countries observed in meta.country (Bulgaria, Czech Republic, Hungary, Iceland, Liechtenstein, Lithuania, Malta, Romania, Slovenia, Russia -> Europe; Cambodia, Macau, Mongolia, Kazakhstan -> Asia; Gabon, Mauritius -> Africa; Bahamas, Barbados, British Virgin Islands -> North America). Display and filter only: region is attached to rows (score.js rowMeta) and read by the findash region filter and the filter feed column rg; no score, rank, routing, calibration, formula, weight or threshold reads it."
   },
   "nichtBeruehrt": [
     "protocol/gqs-00/1.1.0/ und protocol/gqs-00/1.0.0/ (byte-identisch erhalten)",
@@ -289,6 +291,30 @@
       "evidence": "tests/g31-p267.test.js, tests/scoring/gqs00-freeze.test.js, tests/g31-umschaltung.test.js, tests/g31-aktualitaet-p184.test.js; Vorher/Nachher docs/g31-umschaltung-vorher-nachher-2026-10-17.md (recomputed on the same 17.10.2026 replay).",
       "review": "Build registration only; the independent Codex re-review decides the merge."
     }
+  },
+  "handTableSourceLamps": {
+    "date": "2026-10-22",
+    "authority": "Daylauf 5 lane sd-twe-lampe master order: TWE.AX kept the lamp Betriebsergebnis aus Yahoo-Bereinigung after hand table P276 (Tag 1473); a display-only correction of a wrong label under Regelblatt G2; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only the lamps.js fingerprint. opIncYahooAdjusted is false when every shown annualOpInc value is a hand-table issuer value of configs/financial-known-cases.json: a correction marker of a numeric annualOpInc case, or a confirmed cell at a case period of this listing whose value equals replacementValue x envelope factor (period ends only through annualPeriodEnds() of lib/annual-pairs.js, never a raw *Ends field: A10 substrate guard). opIncSynthetisch is unchanged (it stays with the K2 gate). Neither lamp is in DATA_SUSPECT_LAMPS; no score, rank, routing, calibration, formula, weight or threshold change.",
+    "file": "src/scoring/lamps.js",
+    "sourceSha256LF": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
+    "previousPendingSha256LF": "e6d6b62d69859a6d67cf91ffa97489f6abf17713c63ff6b63d9a10f23c7866a6",
+    "goldenImpact": "verify() rebuilds the 25 golden traces unchanged; lamps carry no weight in them.",
+    "evidence": "tests/opinc-source-lamp-hand-table.test.js (red on the previous lamps.js, green after), tests/scoring/gqs00-freeze.test.js (red after the source edit before this entry, green afterwards). Before/after: 131 packet objects of tests/fixtures (with the HL.SW alias) change opIncYahooAdjusted on TWE.AX, TSRYF, HL and HL.SW only, no other lamp; the VPLAY-A.ST packet of the guard (one corrected, three confirmed cells) loses it too; 15,044 local snapshots of 29.08. (undated annualOpInc): 0 lamp changes.",
+    "review": "Build registration only; independent review decides the merge."
+  },
+  "regionTableCountries": {
+    "date": "2026-10-23",
+    "authority": "Daylauf 6 master order after the guard-coverage audit of 23.10.2026 (waechter-abdeckung-2026-10-22.md, finding 8): 15 countries missing in the region table left 23 firms with a country but no region, silently absent from the findash region filter. Karl wish W7 (firms found correctly); small decision, Claude decides.",
+    "scope": "Only the country.js fingerprint. 18 countries added to COUNTRY_TO_REGION; canonCountry and the alias table unchanged. Region is display and filter metadata; nothing in scoring, ranking, routing or calibration reads it.",
+    "file": "src/scoring/country.js",
+    "sourceSha256LF": "95d8b0d3d489786f326f9b764216c66222012449a9b68d630ef651dc574ee7db",
+    "previousSealedSha256LF": "76aa5d374068a117964bbe6b2a3c542e26f369cea611d8a8e3259be74e657b69",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "goldenImpact": "verify() rebuilds the 25 golden traces unchanged; region carries no weight.",
+    "evidence": "tests/country-regions.test.js (red on the sealed country.js, green after), tests/scoring/country.test.js, tests/scoring/gqs00-freeze.test.js (red after the source edit before this entry, green afterwards). Before/after on the live export of 23.10.2026: 23 rows gain a region (Europe 15, Asia 4, North America 2, Africa 2), no other row changes.",
+    "review": "Blind Sonnet review MERGE 90 % (blindpruefung-pr29-2026-10-23.md); this registration added by the master after the seal test turned PR Check red.",
+    "rollback": "Revert the country.js change and only this regionTableCountries registration."
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
