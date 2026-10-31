@@ -329,7 +329,7 @@
       "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a"
     },
     "dependencySha256LF": {
-      "lib/g31-recency.js": "80f8b96529e6a3664173730d495c0466413d43ba4a3eacf6cbfff10d03b0471e"
+      "lib/g31-recency.js": "9222fd23847a49fd148806ca335ac33d658f513078cd09f05c7c543906fda067"
     },
     "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
     "goldenImpact": "verify() rebuilds the 25 golden traces unchanged (GQS00-023 and GQS00-024 keep their registered second traces): no golden case has a newest quarter without a valid year-ago pair next to an older valid pair.",
@@ -349,10 +349,15 @@
       "scope": "A reviewed older pair may be selected only when both operands are numeric hand-table corrections directly supported by filed values for the exact source start/end, duration and native currency. Holds and mixed vendor/filing operands stay closed. Jio June 2026/2025 is verified at 2004.47/612.46 crore INR. No sealed scoring changes.",
       "evidence": "tests/hand-table-jio-quarter-r4.test.js; 30 October replay and the separately reviewable absent-row fill experiment in .g31-fix-work/bau-bericht-r4.md.",
       "review": "Builder evidence only; independent Claude review and merge remain pending."
+    },
+    "reviewFixR5": {
+      "scope": "Admit one more checked hint code (bilanzierungswechsel) in the hint table validator; diagnostic text only, no value, score or rank changes. Hints for 603991.SS (September quarter), DNO.OL, ETERNAL.BO, ETERNAL.NS and 002077.SZ live in configs/g31-hinweise.json.",
+      "evidence": "tests/g31-hinweise-pr75-r5.test.js: real packets of the 31.10.2026 run, in-memory red probes; replay of 31.10.2026 on a fixed data day.",
+      "review": "Builder evidence only; independent review and merge remain pending."
     }
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "80f8b96529e6a3664173730d495c0466413d43ba4a3eacf6cbfff10d03b0471e",
+    "lib/g31-recency.js": "9222fd23847a49fd148806ca335ac33d658f513078cd09f05c7c543906fda067",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
 }

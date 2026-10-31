@@ -222,8 +222,8 @@ test('g31Hinweis: checked P268 entry for SAUD3.SA; diagnosis flags; absent on or
 
 test('hint table: every entry carries listing, exact ends, code, reason and quoted source; malformed tables fail loudly', () => {
   const t = require('../configs/g31-hinweise.json');
-  assert.equal(G.loadHinweisTable(t).length, 13); // SEC comparison 30.10.2026 adds the FTW and SUNC takeover hints; // 24.10.2026 adds the 300277.SZ merger hint (lane sd-umsatzreihen); the triage of 24.10.2026 five hints (603991.SS, JOBY for the June and the September quarter, QUBT, 000656.SZ).
-  assert.deepEqual(t.entries.map(e => e.ticker).sort(), ['000656.SZ', '002289.SZ', '002993.SZ', '300277.SZ', '603991.SS', '688507.SS', 'FTW', 'JOBY', 'JOBY', 'QUBT', 'RHLD', 'SAUD3.SA', 'SUNC']);
+  assert.equal(G.loadHinweisTable(t).length, 18); // PR #75 round 5 adds 603991.SS for September, DNO.OL, ETERNAL.BO, ETERNAL.NS and 002077.SZ; SEC comparison 30.10.2026 adds the FTW and SUNC takeover hints; // 24.10.2026 adds the 300277.SZ merger hint (lane sd-umsatzreihen); the triage of 24.10.2026 five hints (603991.SS, JOBY for the June and the September quarter, QUBT, 000656.SZ).
+  assert.deepEqual(t.entries.map(e => e.ticker).sort(), ['000656.SZ', '002077.SZ', '002289.SZ', '002993.SZ', '300277.SZ', '603991.SS', '603991.SS', '688507.SS', 'DNO.OL', 'ETERNAL.BO', 'ETERNAL.NS', 'FTW', 'JOBY', 'JOBY', 'QUBT', 'RHLD', 'SAUD3.SA', 'SUNC']);
   assert.ok(!t.entries.some(e => e.ticker === '000599.SZ'), '000599.SZ is a wrong value: hand table, not a hint');
   for (const bad of [e => { e.periodEnd = '2026-02-30'; }, e => { e.code = 'sperre'; }, e => { e.sources = []; },
     e => { e.sources[0].quote = ''; }, e => { e.reason = ''; }]) {

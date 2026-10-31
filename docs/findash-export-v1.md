@@ -1420,7 +1420,7 @@ Quartalspaare als `3M/3M` gespeichert; `halfYear` kam nicht vor.
 keinen Wert, keinen Score und keinen Rang; falsche Werte hält allein die Handtabelle
 (`configs/financial-known-cases.json`). Er steht nur, wo der Snapshot die angezeigte Umsatzzahl
 reproduziert. Zuerst gilt ein geprüfter Eintrag aus `configs/g31-hinweise.json` für genau diese
-Notierung und genau diese beiden Quellenenden (`code` `uebernahme` oder `saisonbasis`, Grund mit
+Notierung und genau diese beiden Quellenenden (`code` `uebernahme`, `saisonbasis` oder `bilanzierungswechsel`, Grund mit
 Prüfdatum, Quelle mit Seite und Zitat); zeigt das Board ein neueres Paar, entfällt er von selbst. Sonst
 wird nur ein neu zugelassenes datiertes Paar mit leerer Zwischenzeile gegen das passende volle
 Geschäftsjahr derselben Einheit und Währung geprüft: neuester Wert über 75 % des Jahresumsatzes
