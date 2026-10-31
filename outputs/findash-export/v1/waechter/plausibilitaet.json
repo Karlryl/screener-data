@@ -1,24 +1,25 @@
 {
  "schema": "plausibilitaets-waechter/v1",
- "generatedAt": "2026-10-30T10:11:48.996Z",
- "exportGeneratedAt": "2026-10-30T10:11:30.798Z",
+ "generatedAt": "2026-10-31T09:47:27.325Z",
+ "exportGeneratedAt": "2026-10-31T09:47:03.115Z",
  "status": "ok",
  "quellen": {
-  "boardZeilen": 9327,
-  "snapshotsGelesen": 9327,
+  "boardZeilen": 9269,
+  "snapshotsGelesen": 9269,
   "snapshotsFehlend": 0,
-  "boardHistoryStand": "2026-10-29"
+  "boardHistoryStand": "2026-10-30"
  },
  "zusammenfassung": {
   "wachstum-extrem": 31,
-  "jahrespaar-abstand": 5,
+  "jahrespaar-abstand": 3,
   "quartalspaar-abstand": 0,
   "umsatz-null-mit-boersenwert": 164,
   "quartal-gleich-vorjahr": 1,
-  "boersenwert-sprung": 0,
+  "boersenwert-sprung": 1,
   "kurs-alt": 0,
-  "doppelte-firma": 4,
-  "score-grenze": 0
+  "doppelte-firma": 3,
+  "score-grenze": 0,
+  "umsatz-gehalten-auf-survival": 0
  },
  "faelle": [
   {
@@ -27,12 +28,12 @@
    "name": "THOR Industries, Inc.",
    "board": "consumer-discretionary",
    "track": "profitable",
-   "rank": 556,
+   "rank": 568,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-07-31",
-    "marketCap": 3799849216
+    "marketCap": 3814301184
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.07.2026) steht im Datensatz leer, der Börsenwert aber bei 3,8 Mrd. USD."
   },
@@ -47,24 +48,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1170618055.4207232
+    "marketCap": 1170762882.3369215
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
-  },
-  {
-   "code": "umsatz-null-mit-boersenwert",
-   "ticker": "4689.T",
-   "name": "LY Corporation",
-   "board": "consumer-discretionary",
-   "track": "profitable",
-   "rank": null,
-   "werte": {
-    "feld": "annualRev",
-    "wert": null,
-    "periodEnd": "2026-03-31",
-    "marketCap": 21948995336.65665
-   },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.03.2026) steht im Datensatz leer, der Börsenwert aber bei 21,9 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -72,12 +58,12 @@
    "name": "Bohai Automotive Systems CO., LTD.",
    "board": "consumer-discretionary",
    "track": "unprofitable",
-   "rank": 9,
+   "rank": 8,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 909545209.1066163
+    "marketCap": 908246587.6507238
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -87,29 +73,44 @@
    "name": "Brilliance China Automotive Holdings Limited",
    "board": "consumer-discretionary",
    "track": "unprofitable",
-   "rank": 65,
+   "rank": 63,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2018-03-31",
-    "marketCap": 1083632154.5510912
+    "marketCap": 1083766219.7165055
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2018) steht im Datensatz als 0, der Börsenwert aber bei 1,1 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
-   "ticker": "E5H.SI",
-   "name": "Golden Agri-Resources Ltd",
+   "ticker": "P8Z.SI",
+   "name": "Bumitama Agri Ltd.",
    "board": "consumer-staples",
    "track": "profitable",
-   "rank": 135,
+   "rank": 31,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
-    "periodEnd": "2025-03-31",
-    "marketCap": 2780045240.1879044
+    "periodEnd": "2018-12-31",
+    "marketCap": 2063164445.196288
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2025) steht im Datensatz als 0, der Börsenwert aber bei 2,8 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2018) steht im Datensatz als 0, der Börsenwert aber bei 2,1 Mrd. USD."
+  },
+  {
+   "code": "boersenwert-sprung",
+   "ticker": "600962.SS",
+   "name": "SDIC Zhonglu Fruit Juice Co.,Ltd.",
+   "board": "consumer-staples",
+   "track": "profitable",
+   "rank": 136,
+   "werte": {
+    "marketCap": 2657046962.168463,
+    "marketCapVorher": 860287177.7547264,
+    "faktor": 3.0885581360204872,
+    "vergleichsStand": "2026-10-30"
+   },
+   "grund": "Börsenwert 3,1-fach gegenüber dem Stand vom 30.10.2026 (heute 2,7 Mrd. USD, damals 0,9 Mrd. USD); Ursache prüfen (Handtabelle, Aktiensplit oder Stückzahl)."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -117,12 +118,12 @@
    "name": "Uni-President China Holdings Ltd",
    "board": "consumer-staples",
    "track": "profitable",
-   "rank": 199,
+   "rank": 198,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2025-06-30",
-    "marketCap": 4313734494.533222
+    "marketCap": 4314268182.580531
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2025) steht im Datensatz als 0, der Börsenwert aber bei 4,3 Mrd. USD."
   },
@@ -132,12 +133,12 @@
    "name": "Smoore International Holdings Limited",
    "board": "consumer-staples",
    "track": "profitable",
-   "rank": 210,
+   "rank": 209,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-06-30",
-    "marketCap": 6552445433.792757
+    "marketCap": 6553256091.428987
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz als 0, der Börsenwert aber bei 6,6 Mrd. USD."
   },
@@ -147,14 +148,14 @@
    "name": "AGT Food and Ingredients Inc.",
    "board": "consumer-staples",
    "track": "profitable",
-   "rank": 222,
+   "rank": 221,
    "werte": {
     "feld": "annualRev",
     "wert": 0,
     "periodEnd": "2025-12-31",
-    "marketCap": 958417755.7234688
+    "marketCap": 941911280.0689714
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz als 0, der Börsenwert aber bei 1 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz als 0, der Börsenwert aber bei 0,9 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -162,12 +163,12 @@
    "name": "China Resources Beer (Holdings) Company Limited",
    "board": "consumer-staples",
    "track": "profitable",
-   "rank": 361,
+   "rank": 356,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2015-06-30",
-    "marketCap": 8174950953.183477
+    "marketCap": 8175962344.500346
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2015) steht im Datensatz als 0, der Börsenwert aber bei 8,2 Mrd. USD."
   },
@@ -177,14 +178,14 @@
    "name": "The Campbell's Company",
    "board": "consumer-staples",
    "track": "profitable",
-   "rank": 379,
+   "rank": 375,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-07-31",
-    "marketCap": 6262928384
+    "marketCap": 6388187136
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.07.2026) steht im Datensatz leer, der Börsenwert aber bei 6,3 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.07.2026) steht im Datensatz leer, der Börsenwert aber bei 6,4 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -192,12 +193,12 @@
    "name": "Saudi Fisheries Company",
    "board": "consumer-staples",
    "track": "profitable",
-   "rank": 520,
+   "rank": 516,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1105288490.1999617
+    "marketCap": 1105317939.6949248
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,1 Mrd. USD."
   },
@@ -212,9 +213,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1359930259.96416
+    "marketCap": 1348442938.9831681
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,3 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -227,9 +228,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 19796262912
+    "marketCap": 20086691840
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 19,8 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 20,1 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -237,27 +238,27 @@
    "name": "MODEC, Inc.",
    "board": "energy",
    "track": "profitable",
-   "rank": 139,
+   "rank": 137,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 3462850976.4683366
+    "marketCap": 3456717416.6397715
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 3,5 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
-   "ticker": "PDN.AX",
+   "ticker": "PDN.TO",
    "name": "Paladin Energy Ltd",
    "board": "energy",
    "track": "profitable",
-   "rank": 168,
+   "rank": 167,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2024-06-30",
-    "marketCap": 2360719563.47735
+    "marketCap": 2437207801.5957756
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2024) steht im Datensatz als 0, der Börsenwert aber bei 2,4 Mrd. USD."
   },
@@ -267,12 +268,12 @@
    "name": "China Aviation Oil (Singapore) Corporation Ltd",
    "board": "energy",
    "track": "profitable",
-   "rank": 217,
+   "rank": 215,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2017-03-31",
-    "marketCap": 821614878.3020673
+    "marketCap": 821402684.7563264
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2017) steht im Datensatz als 0, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -287,9 +288,9 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 87052396066.65216
+    "marketCap": 86955381864.69458
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 87,1 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 87 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -297,12 +298,12 @@
    "name": "Ampol Limited",
    "board": "energy",
    "track": "profitable",
-   "rank": 271,
+   "rank": 270,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2024-12-31",
-    "marketCap": 6415502607.041126
+    "marketCap": 6417759805.111787
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2024) steht im Datensatz als 0, der Börsenwert aber bei 6,4 Mrd. USD."
   },
@@ -312,12 +313,12 @@
    "name": "Teekay Corporation Ltd.",
    "board": "energy",
    "track": "profitable",
-   "rank": 324,
+   "rank": 322,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2024-12-31",
-    "marketCap": 1306601344
+    "marketCap": 1303093760
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2024) steht im Datensatz als 0, der Börsenwert aber bei 1,3 Mrd. USD."
   },
@@ -327,12 +328,12 @@
    "name": "ASX Limited",
    "board": "financials",
    "track": "profitable",
-   "rank": 86,
+   "rank": 82,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2012-06-30",
-    "marketCap": 9176986107.029606
+    "marketCap": 9180214891.52305
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2012) steht im Datensatz als 0, der Börsenwert aber bei 9,2 Mrd. USD."
   },
@@ -342,14 +343,14 @@
    "name": "Old Mutual Limited",
    "board": "financials",
    "track": "profitable",
-   "rank": 103,
+   "rank": 99,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2007-06-30",
-    "marketCap": 3461390207.538905
+    "marketCap": 3421608582.312886
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2007) steht im Datensatz als 0, der Börsenwert aber bei 3,5 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2007) steht im Datensatz als 0, der Börsenwert aber bei 3,4 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -357,14 +358,14 @@
    "name": "Paragon Banking Group PLC",
    "board": "financials",
    "track": "profitable",
-   "rank": 198,
+   "rank": 195,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2010-09-30",
-    "marketCap": 1768162878.9614592
+    "marketCap": 1722798115.1055362
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2010) steht im Datensatz als 0, der Börsenwert aber bei 1,8 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2010) steht im Datensatz als 0, der Börsenwert aber bei 1,7 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -372,7 +373,7 @@
    "name": "Bitmine Immersion Technologies, Inc.",
    "board": "financials",
    "track": "profitable",
-   "rank": 256,
+   "rank": 254,
    "werte": {
     "revGrowthYoYPct": 2167.787524366472,
     "revGrowthBasis": "quarter",
@@ -392,9 +393,24 @@
     "feld": "annualRev",
     "wert": 0,
     "periodEnd": "2025-12-31",
-    "marketCap": 4335286221.703414
+    "marketCap": 4329096429.652869
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz als 0, der Börsenwert aber bei 4,3 Mrd. USD."
+  },
+  {
+   "code": "wachstum-extrem",
+   "ticker": "002939.SZ",
+   "name": "China Great Wall Securities Co.,Ltd.",
+   "board": "financials",
+   "track": "profitable",
+   "rank": null,
+   "werte": {
+    "revGrowthYoYPct": -100,
+    "revGrowthBasis": "year",
+    "revGrowthPeriodEnd": "2025-12-31",
+    "revGrowthPriorPeriodEnd": "2024-12-31"
+   },
+   "grund": "Umsatzwachstum -100 % (Geschäftsjahr bis 31.12.2025 gegen Geschäftsjahr bis 31.12.2024) liegt außerhalb von -95 % bis +1.000 %; -100 % ist fast immer eine Null des Datenlieferanten."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -407,7 +423,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 2682338093.5195365
+    "marketCap": 2671890328.3152323
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 2,7 Mrd. USD."
   },
@@ -422,7 +438,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 3460906018.007613
+    "marketCap": 3465507894.4479637
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 3,5 Mrd. USD."
   },
@@ -437,13 +453,13 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 2320882440.590459
+    "marketCap": 2311842553.014518
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 2,3 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
-   "ticker": "EDELWEISS.NS",
+   "ticker": "EDELWEISS.BO",
    "name": "Edelweiss Financial Services Limited",
    "board": "financials",
    "track": "profitable",
@@ -452,13 +468,13 @@
     "feld": "annualRev",
     "wert": 0,
     "periodEnd": "2023-03-31",
-    "marketCap": 1212158215.9712255
+    "marketCap": 1208223182.8620822
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.03.2023) steht im Datensatz als 0, der Börsenwert aber bei 1,2 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
-   "ticker": "HUDCO.BO",
+   "ticker": "HUDCO.NS",
    "name": "Housing and Urban Development Corporation Limited",
    "board": "financials",
    "track": "profitable",
@@ -467,7 +483,7 @@
     "feld": "annualRev",
     "wert": 0,
     "periodEnd": "2025-03-31",
-    "marketCap": 3014224529.282335
+    "marketCap": 3016449360.4704094
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.03.2025) steht im Datensatz als 0, der Börsenwert aber bei 3 Mrd. USD."
   },
@@ -497,7 +513,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 4407743488
+    "marketCap": 4357343232
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 4,4 Mrd. USD."
   },
@@ -507,7 +523,7 @@
    "name": "Sharplink, Inc.",
    "board": "financials",
    "track": "unprofitable",
-   "rank": 3,
+   "rank": 2,
    "werte": {
     "revGrowthYoYPct": 1553.945480631277,
     "revGrowthBasis": "quarter",
@@ -517,19 +533,46 @@
    "grund": "Umsatzwachstum +1.553,9 % (Quartal bis 30.06.2026 gegen Quartal bis 30.06.2025) liegt außerhalb von -95 % bis +1.000 %."
   },
   {
+   "code": "doppelte-firma",
+   "ticker": "GLXY",
+   "name": "Galaxy Digital",
+   "board": "financials",
+   "track": "unprofitable",
+   "rank": 6,
+   "werte": {
+    "zeilen": [
+     {
+      "ticker": "GLXY",
+      "board": "financials",
+      "track": "unprofitable",
+      "rank": 6,
+      "marketCap": 9428757504
+     },
+     {
+      "ticker": "1GLXY.MI",
+      "board": "financials",
+      "track": "profitable",
+      "rank": 66,
+      "marketCap": 13735576558.749287
+     }
+    ]
+   },
+   "grund": "2 Zeilen mit Rang tragen nach Bereinigung denselben Namen: GLXY (financials, Rang 6, 9,4 Mrd. USD), 1GLXY.MI (financials, Rang 66, 13,7 Mrd. USD); vermutlich dieselbe Firma doppelt im Board."
+  },
+  {
    "code": "umsatz-null-mit-boersenwert",
    "ticker": "UWMC",
    "name": "UWM Holdings Corporation",
    "board": "financials",
    "track": "unprofitable",
-   "rank": 20,
+   "rank": 19,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 2394372608
+    "marketCap": 2522929664
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 2,4 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 2,5 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -552,12 +595,12 @@
    "name": "Sunshine Lake Pharma Co., Ltd.",
    "board": "health-care",
    "track": "profitable",
-   "rank": 38,
+   "rank": 36,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2018-12-31",
-    "marketCap": 2921317369.7726054
+    "marketCap": 2921678790.2922544
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2018) steht im Datensatz als 0, der Börsenwert aber bei 2,9 Mrd. USD."
   },
@@ -567,12 +610,12 @@
    "name": "Corporativo Fragua, S.A.B. de C.V.",
    "board": "health-care",
    "track": "profitable",
-   "rank": 219,
+   "rank": 221,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-06-30",
-    "marketCap": 2138208297.2542157
+    "marketCap": 2138099566.6351473
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz als 0, der Börsenwert aber bei 2,1 Mrd. USD."
   },
@@ -582,7 +625,7 @@
    "name": "Septerna, Inc.",
    "board": "health-care",
    "track": "profitable",
-   "rank": 238,
+   "rank": 237,
    "werte": {
     "revGrowthYoYPct": 22375.63025210084,
     "revGrowthBasis": "quarter",
@@ -602,7 +645,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1388028550.4212377
+    "marketCap": 1386046764.7563572
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
   },
@@ -612,7 +655,7 @@
    "name": "Protagonist Therapeutics, Inc.",
    "board": "health-care",
    "track": "profitable",
-   "rank": 590,
+   "rank": 586,
    "werte": {
     "revGrowthYoYPct": 3749.170573386224,
     "revGrowthBasis": "quarter",
@@ -632,7 +675,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 898130101.4105906
+    "marketCap": 896847778.1041766
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -647,7 +690,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-04-30",
-    "marketCap": 1232791403.3107765
+    "marketCap": 1230607826.8647406
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.04.2026) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
@@ -662,7 +705,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-08-31",
-    "marketCap": 2912415821.694296
+    "marketCap": 2939873654.1485467
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.08.2025) steht im Datensatz leer, der Börsenwert aber bei 2,9 Mrd. USD."
   },
@@ -677,7 +720,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 2018014191.3540096
+    "marketCap": 2000206052.5708802
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 2 Mrd. USD."
   },
@@ -702,7 +745,7 @@
    "name": "Metis TechBio Co., Ltd.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 5,
+   "rank": 6,
    "werte": {
     "revGrowthYoYPct": 6985.02024291498,
     "revGrowthBasis": "year",
@@ -737,7 +780,7 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1083955712
+    "marketCap": 1056433600
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,1 Mrd. USD."
   },
@@ -747,14 +790,14 @@
    "name": "Freenome, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 28,
+   "rank": 29,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1381766016
+    "marketCap": 1340936192
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,3 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -762,29 +805,14 @@
    "name": "Tango Therapeutics, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 39,
+   "rank": 40,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 3798791680
+    "marketCap": 3830827520
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 3,8 Mrd. USD."
-  },
-  {
-   "code": "wachstum-extrem",
-   "ticker": "CRNX",
-   "name": "Crinetics Pharmaceuticals Inc",
-   "board": "health-care",
-   "track": "unprofitable",
-   "rank": 61,
-   "werte": {
-    "revGrowthYoYPct": 2336.27546071775,
-    "revGrowthBasis": "quarter",
-    "revGrowthPeriodEnd": "2026-06-30",
-    "revGrowthPriorPeriodEnd": "2025-06-30"
-   },
-   "grund": "Umsatzwachstum +2.336,3 % (Quartal bis 30.06.2026 gegen Quartal bis 30.06.2025) liegt außerhalb von -95 % bis +1.000 %."
   },
   {
    "code": "wachstum-extrem",
@@ -792,7 +820,7 @@
    "name": "Verastem, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 63,
+   "rank": 65,
    "werte": {
     "revGrowthYoYPct": 1775.4328497894246,
     "revGrowthBasis": "quarter",
@@ -807,14 +835,14 @@
    "name": "Taysha Gene Therapies, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 108,
+   "rank": 106,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1375017472
+    "marketCap": 1345692544
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,3 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -822,14 +850,14 @@
    "name": "Immunome, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 168,
+   "rank": 162,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 2158277120
+    "marketCap": 2148836608
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 2,2 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 2,1 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -837,7 +865,7 @@
    "name": "Vir Biotechnology, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 183,
+   "rank": 179,
    "werte": {
     "revGrowthYoYPct": 23075.072744907855,
     "revGrowthBasis": "quarter",
@@ -852,14 +880,14 @@
    "name": "Odyssey Therapeutics, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 249,
+   "rank": 246,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 953000576
+    "marketCap": 939063680
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 0,9 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -867,7 +895,7 @@
    "name": "Celldex Therapeutics, Inc.",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 254,
+   "rank": 249,
    "werte": {
     "revGrowthYoYPct": -96.98630136986301,
     "revGrowthBasis": "quarter",
@@ -882,12 +910,12 @@
    "name": "Silence Therapeutics plc",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 263,
+   "rank": 258,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1231619840
+    "marketCap": 1228509696
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
@@ -897,7 +925,7 @@
    "name": "Silence Therapeutics plc",
    "board": "health-care",
    "track": "unprofitable",
-   "rank": 263,
+   "rank": 258,
    "werte": {
     "revGrowthYoYPct": -98.70775347912524,
     "revGrowthBasis": "year",
@@ -917,7 +945,7 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1461530154.8812401
+    "marketCap": 1460107139.8775764
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,5 Mrd. USD."
   },
@@ -932,7 +960,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1033449565.2991488
+    "marketCap": 1033813168.9803878
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1 Mrd. USD."
   },
@@ -947,7 +975,7 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2025-06-30",
-    "marketCap": 912676812.5321215
+    "marketCap": 895486865.6344268
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2025) steht im Datensatz leer, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -962,9 +990,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 7796444672
+    "marketCap": 7580217344
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 7,8 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 7,6 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -977,9 +1005,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 3088251904
+    "marketCap": 3027510016
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 3,1 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 3 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -1007,7 +1035,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1376261760
+    "marketCap": 1372618496
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
   },
@@ -1022,7 +1050,7 @@
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-03-31",
-    "marketCap": 1376261760
+    "marketCap": 1372618496
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2026) steht im Datensatz als 0, der Börsenwert aber bei 1,4 Mrd. USD."
   },
@@ -1037,9 +1065,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1773684992
+    "marketCap": 1748687744
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,8 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,7 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1052,9 +1080,9 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1773684992
+    "marketCap": 1748687744
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,8 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,7 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -1082,9 +1110,9 @@
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-12-31",
-    "marketCap": 1721957632
+    "marketCap": 1598160128
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2021) steht im Datensatz als 0, der Börsenwert aber bei 1,7 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2021) steht im Datensatz als 0, der Börsenwert aber bei 1,6 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -1112,9 +1140,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1371758720
+    "marketCap": 1334840704
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,3 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1127,7 +1155,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 3545404160
+    "marketCap": 3498461440
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 3,5 Mrd. USD."
   },
@@ -1142,7 +1170,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1161554304
+    "marketCap": 1201856128
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
@@ -1157,13 +1185,13 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1161554304
+    "marketCap": 1201856128
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
-   "ticker": "TUBI.VI",
+   "ticker": "TUB.BR",
    "name": "Financière de Tubize SA",
    "board": "health-care",
    "track": "unprofitable",
@@ -1187,7 +1215,7 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 3635389952
+    "marketCap": 3622800640
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 3,6 Mrd. USD."
   },
@@ -1197,27 +1225,27 @@
    "name": "Fuji Corporation",
    "board": "industrials",
    "track": "profitable",
-   "rank": 19,
+   "rank": 21,
    "werte": {
     "zeilen": [
      {
       "ticker": "6134.T",
       "board": "industrials",
       "track": "profitable",
-      "rank": 19,
-      "marketCap": 3333361316.4255643
+      "rank": 21,
+      "marketCap": 3327457114.597805
      },
      {
       "ticker": "8278.T",
       "board": "consumer-discretionary",
       "track": "profitable",
-      "rank": 883,
-      "marketCap": 1099784768.1989837
+      "rank": 890,
+      "marketCap": 1097836779.180648
      }
     ],
-    "abstandPct": 203.09215155655443
+    "abstandPct": 203.09215155655437
    },
-   "grund": "Derselbe Name steht auf 2 Boards mit Börsenwerten, die 203,1 % auseinanderliegen: 6134.T (industrials, Rang 19, 3,3 Mrd. USD), 8278.T (consumer-discretionary, Rang 883, 1,1 Mrd. USD)."
+   "grund": "Derselbe Name steht auf 2 Boards mit Börsenwerten, die 203,1 % auseinanderliegen: 6134.T (industrials, Rang 21, 3,3 Mrd. USD), 8278.T (consumer-discretionary, Rang 890, 1,1 Mrd. USD)."
   },
   {
    "code": "wachstum-extrem",
@@ -1225,7 +1253,7 @@
    "name": "Sigma Advanced Systems Limited",
    "board": "industrials",
    "track": "profitable",
-   "rank": 53,
+   "rank": 59,
    "werte": {
     "revGrowthYoYPct": 7078.451830683366,
     "revGrowthBasis": "quarter",
@@ -1236,31 +1264,16 @@
   },
   {
    "code": "umsatz-null-mit-boersenwert",
-   "ticker": "1AST.DE",
-   "name": "ASTA Energy Solutions AG",
-   "board": "industrials",
-   "track": "profitable",
-   "rank": 193,
-   "werte": {
-    "feld": "annualRev",
-    "wert": 0,
-    "periodEnd": "2024-12-31",
-    "marketCap": 800528612.9524096
-   },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2024) steht im Datensatz als 0, der Börsenwert aber bei 0,8 Mrd. USD."
-  },
-  {
-   "code": "umsatz-null-mit-boersenwert",
    "ticker": "MAD.AX",
    "name": "Mader Group Limited",
    "board": "industrials",
    "track": "profitable",
-   "rank": 322,
+   "rank": 341,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2023-06-30",
-    "marketCap": 844576703.956224
+    "marketCap": 844873855.5628031
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2023) steht im Datensatz leer, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -1270,14 +1283,14 @@
    "name": "Rolls-Royce Holdings plc",
    "board": "industrials",
    "track": "profitable",
-   "rank": 369,
+   "rank": 391,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2014-12-31",
-    "marketCap": 138042903399.56656
+    "marketCap": 136183008889.67824
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2014) steht im Datensatz als 0, der Börsenwert aber bei 138 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2014) steht im Datensatz als 0, der Börsenwert aber bei 136,2 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1285,12 +1298,12 @@
    "name": "Taiyuan Heavy Industry Co., Ltd.",
    "board": "industrials",
    "track": "profitable",
-   "rank": 413,
+   "rank": 437,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1063475015.9569715
+    "marketCap": 1061956618.1250662
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,1 Mrd. USD."
   },
@@ -1300,12 +1313,12 @@
    "name": "Dynagreen Environmental Protection Group Co., Ltd.",
    "board": "industrials",
    "track": "profitable",
-   "rank": 534,
+   "rank": 578,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-03-31",
-    "marketCap": 1703051001.6472063
+    "marketCap": 1700619436.3450367
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2026) steht im Datensatz als 0, der Börsenwert aber bei 1,7 Mrd. USD."
   },
@@ -1315,12 +1328,12 @@
    "name": "Veidekke ASA",
    "board": "industrials",
    "track": "profitable",
-   "rank": 547,
+   "rank": 580,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 3098207174.3114653
+    "marketCap": 3096008998.7163095
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 3,1 Mrd. USD."
   },
@@ -1330,12 +1343,12 @@
    "name": "Sany Heavy Equipment International Holdings Company Limited",
    "board": "industrials",
    "track": "profitable",
-   "rank": 578,
+   "rank": 624,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-06-30",
-    "marketCap": 2738229098.4225993
+    "marketCap": 2738567867.5662436
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz als 0, der Börsenwert aber bei 2,7 Mrd. USD."
   },
@@ -1345,29 +1358,14 @@
    "name": "Toyota Tsusho Corporation",
    "board": "industrials",
    "track": "profitable",
-   "rank": 594,
+   "rank": 651,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-09-30",
-    "marketCap": 40383950636.845634
+    "marketCap": 40312420738.78529
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2026) steht im Datensatz als 0, der Börsenwert aber bei 40,4 Mrd. USD."
-  },
-  {
-   "code": "umsatz-null-mit-boersenwert",
-   "ticker": "TREL-B.ST",
-   "name": "Trelleborg AB (publ)",
-   "board": "industrials",
-   "track": "profitable",
-   "rank": 655,
-   "werte": {
-    "feld": "annualRev",
-    "wert": null,
-    "periodEnd": "2025-12-31",
-    "marketCap": 10246401063.955988
-   },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 10,2 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2026) steht im Datensatz als 0, der Börsenwert aber bei 40,3 Mrd. USD."
   },
   {
    "code": "jahrespaar-abstand",
@@ -1375,7 +1373,7 @@
    "name": "Brambles Limited",
    "board": "industrials",
    "track": "profitable",
-   "rank": 772,
+   "rank": 790,
    "werte": {
     "tage": 730,
     "revGrowthBasis": "year",
@@ -1390,12 +1388,12 @@
    "name": "SITC International Holdings Company Limited",
    "board": "industrials",
    "track": "profitable",
-   "rank": 878,
+   "rank": 908,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2015-03-31",
-    "marketCap": 16544686627.545414
+    "marketCap": 16546733508.620451
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2015) steht im Datensatz als 0, der Börsenwert aber bei 16,5 Mrd. USD."
   },
@@ -1405,29 +1403,14 @@
    "name": "Grenergy Renovables, S.A.",
    "board": "industrials",
    "track": "profitable",
-   "rank": 923,
+   "rank": 921,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-06-30",
-    "marketCap": 2040723077.659597
+    "marketCap": 2012366668.5993216
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz als 0, der Börsenwert aber bei 2 Mrd. USD."
-  },
-  {
-   "code": "umsatz-null-mit-boersenwert",
-   "ticker": "300018.SZ",
-   "name": "Wuhan Zhongyuan Huadian Science & Technology Co.,Ltd.",
-   "board": "industrials",
-   "track": "profitable",
-   "rank": 1052,
-   "werte": {
-    "feld": "annualRev",
-    "wert": null,
-    "periodEnd": "2025-12-31",
-    "marketCap": 822301777.1572531
-   },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,8 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1435,41 +1418,41 @@
    "name": "Acciona, S.A.",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1245,
+   "rank": 1244,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-06-30",
-    "marketCap": 12669436717.645006
+    "marketCap": 12629825774.452326
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2021) steht im Datensatz als 0, der Börsenwert aber bei 12,7 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2021) steht im Datensatz als 0, der Börsenwert aber bei 12,6 Mrd. USD."
   },
   {
    "code": "doppelte-firma",
-   "ticker": "AERO.MX",
-   "name": "Grupo Aeroméxico, S.A.B. de C.V.",
+   "ticker": "AERO",
+   "name": "Grupo Aeromexico, S.A.B. de C.V",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1414,
+   "rank": 1379,
    "werte": {
     "zeilen": [
-     {
-      "ticker": "AERO.MX",
-      "board": "industrials",
-      "track": "profitable",
-      "rank": 1414,
-      "marketCap": 2373420847.7014627
-     },
      {
       "ticker": "AERO",
       "board": "industrials",
       "track": "profitable",
-      "rank": 1416,
-      "marketCap": 2364927232
+      "rank": 1379,
+      "marketCap": 2324527616
+     },
+     {
+      "ticker": "AERO.MX",
+      "board": "industrials",
+      "track": "profitable",
+      "rank": 1380,
+      "marketCap": 2337281366.3833294
      }
     ]
    },
-   "grund": "2 Zeilen mit Rang tragen nach Bereinigung denselben Namen: AERO.MX (industrials, Rang 1414, 2,4 Mrd. USD), AERO (industrials, Rang 1416, 2,4 Mrd. USD); vermutlich dieselbe Firma doppelt im Board."
+   "grund": "2 Zeilen mit Rang tragen nach Bereinigung denselben Namen: AERO (industrials, Rang 1379, 2,3 Mrd. USD), AERO.MX (industrials, Rang 1380, 2,3 Mrd. USD); vermutlich dieselbe Firma doppelt im Board."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1477,59 +1460,44 @@
    "name": "Zhejiang Expressway Co., Ltd.",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1423,
+   "rank": 1424,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2025-06-30",
-    "marketCap": 4702623373.455195
+    "marketCap": 4703205174.186926
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2025) steht im Datensatz als 0, der Börsenwert aber bei 4,7 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
-   "ticker": "AYV.PA",
+   "ticker": "AYV.VI",
    "name": "Ayvens",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1444,
+   "rank": 1450,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-09-30",
-    "marketCap": 7879851134.520423
+    "marketCap": 7781304101.165926
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2026) steht im Datensatz als 0, der Börsenwert aber bei 7,9 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2026) steht im Datensatz als 0, der Börsenwert aber bei 7,8 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
-   "ticker": "ACKB.BR",
+   "ticker": "ACKB.VI",
    "name": "Ackermans & Van Haaren NV",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1549,
+   "rank": 1553,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2009-12-31",
-    "marketCap": 9570988799.814657
+    "marketCap": 9628114288.789606
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2009) steht im Datensatz als 0, der Börsenwert aber bei 9,6 Mrd. USD."
-  },
-  {
-   "code": "umsatz-null-mit-boersenwert",
-   "ticker": "2128.HK",
-   "name": "China Lesso Group Holdings Limited",
-   "board": "industrials",
-   "track": "profitable",
-   "rank": 1613,
-   "werte": {
-    "feld": "revenueQ",
-    "wert": 0,
-    "periodEnd": "2022-06-30",
-    "marketCap": 1148265188.262789
-   },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2022) steht im Datensatz als 0, der Börsenwert aber bei 1,1 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1537,14 +1505,29 @@
    "name": "Tiandi Science & Technology Co.Ltd",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1634,
+   "rank": 1560,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 3126754113.8330827
+    "marketCap": 3122289827.7933464
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 3,1 Mrd. USD."
+  },
+  {
+   "code": "umsatz-null-mit-boersenwert",
+   "ticker": "2128.HK",
+   "name": "China Lesso Group Holdings Limited",
+   "board": "industrials",
+   "track": "profitable",
+   "rank": 1615,
+   "werte": {
+    "feld": "revenueQ",
+    "wert": 0,
+    "periodEnd": "2022-06-30",
+    "marketCap": 1148407249.7194905
+   },
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2022) steht im Datensatz als 0, der Börsenwert aber bei 1,1 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1552,12 +1535,12 @@
    "name": "Aker ASA",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1648,
+   "rank": 1639,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-06-30",
-    "marketCap": 9325250366.070211
+    "marketCap": 9340820993.532347
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2021) steht im Datensatz als 0, der Börsenwert aber bei 9,3 Mrd. USD."
   },
@@ -1567,12 +1550,12 @@
    "name": "2020 Bulkers Ltd.",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1671,
+   "rank": 1673,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1199318045.7679155
+    "marketCap": 1175931297.0395198
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
@@ -1582,14 +1565,29 @@
    "name": "Southern Cross Electrical Engineering Limited",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1677,
+   "rank": 1678,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2015-06-30",
-    "marketCap": 857558904.5373696
+    "marketCap": 857860623.7359053
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2015) steht im Datensatz als 0, der Börsenwert aber bei 0,9 Mrd. USD."
+  },
+  {
+   "code": "umsatz-null-mit-boersenwert",
+   "ticker": "300277.SZ",
+   "name": "Hangzhou Turbine Power Group Co., Ltd.",
+   "board": "industrials",
+   "track": "profitable",
+   "rank": 1699,
+   "werte": {
+    "feld": "revenueQ",
+    "wert": null,
+    "periodEnd": "2026-09-30",
+    "marketCap": 2504864621.479035
+   },
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2026) steht im Datensatz leer, der Börsenwert aber bei 2,5 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1597,12 +1595,12 @@
    "name": "Pacific Basin Shipping Limited",
    "board": "industrials",
    "track": "profitable",
-   "rank": 1830,
+   "rank": 1814,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2022-06-30",
-    "marketCap": 2374608780.1778994
+    "marketCap": 2374902562.8213654
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2022) steht im Datensatz als 0, der Börsenwert aber bei 2,4 Mrd. USD."
   },
@@ -1617,7 +1615,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1927884855.328768
+    "marketCap": 1925132278.972416
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,9 Mrd. USD."
   },
@@ -1632,9 +1630,24 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-06-30",
-    "marketCap": 3370022736.316334
+    "marketCap": 3370439669.9166307
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2025) steht im Datensatz leer, der Börsenwert aber bei 3,4 Mrd. USD."
+  },
+  {
+   "code": "umsatz-null-mit-boersenwert",
+   "ticker": "300018.SZ",
+   "name": "Wuhan Zhongyuan Huadian Science & Technology Co.,Ltd.",
+   "board": "industrials",
+   "track": "profitable",
+   "rank": null,
+   "werte": {
+    "feld": "annualRev",
+    "wert": null,
+    "periodEnd": "2025-12-31",
+    "marketCap": 821127719.2650855
+   },
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,8 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1647,7 +1660,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1095299540.9933517
+    "marketCap": 1093735705.056092
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,1 Mrd. USD."
   },
@@ -1662,9 +1675,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-06-30",
-    "marketCap": 1100694016
+    "marketCap": 1151582336
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2025) steht im Datensatz leer, der Börsenwert aber bei 1,1 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2025) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1677,9 +1690,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 46515707904
+    "marketCap": 46173294592
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 46,5 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 46,2 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1692,9 +1705,24 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 2643744788.5404673
+    "marketCap": 2635479131.0397696
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 2,6 Mrd. USD."
+  },
+  {
+   "code": "umsatz-null-mit-boersenwert",
+   "ticker": "TREL-B.ST",
+   "name": "Trelleborg AB (publ)",
+   "board": "industrials",
+   "track": "profitable",
+   "rank": null,
+   "werte": {
+    "feld": "annualRev",
+    "wert": null,
+    "periodEnd": "2025-12-31",
+    "marketCap": 10176317552.675062
+   },
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 10,2 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -1717,14 +1745,29 @@
    "name": "Beijing Capital International Airport Company Limited",
    "board": "industrials",
    "track": "unprofitable",
-   "rank": 83,
+   "rank": 82,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2025-03-31",
-    "marketCap": 805497730.4643993
+    "marketCap": 805597385.3020877
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2025) steht im Datensatz als 0, der Börsenwert aber bei 0,8 Mrd. USD."
+  },
+  {
+   "code": "umsatz-null-mit-boersenwert",
+   "ticker": "ATVK",
+   "name": "GlobalTek Ventures, Inc.",
+   "board": "industrials",
+   "track": "unprofitable",
+   "rank": 132,
+   "werte": {
+    "feld": "annualRev",
+    "wert": null,
+    "periodEnd": "2025-12-31",
+    "marketCap": 1824083328
+   },
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,8 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1737,7 +1780,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 801498448.4456141
+    "marketCap": 800354092.9242009
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -1767,7 +1810,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1430379623.4035327
+    "marketCap": 1430882880.9538789
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
   },
@@ -1782,7 +1825,7 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1432640144.4292607
+    "marketCap": 1433998253.657846
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,4 Mrd. USD."
   },
@@ -1797,24 +1840,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-06-30",
-    "marketCap": 5408355328
+    "marketCap": 5417199616
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2025) steht im Datensatz leer, der Börsenwert aber bei 5,4 Mrd. USD."
-  },
-  {
-   "code": "jahrespaar-abstand",
-   "ticker": "ALK.TO",
-   "name": "Alkane Resources Ltd",
-   "board": "materials",
-   "track": "profitable",
-   "rank": 2,
-   "werte": {
-    "tage": 730,
-    "revGrowthBasis": "year",
-    "revGrowthPeriodEnd": "2026-06-30",
-    "revGrowthPriorPeriodEnd": "2024-06-30"
-   },
-   "grund": "Das Jahreswachstum vergleicht das Geschäftsjahr bis 30.06.2026 mit dem Geschäftsjahr bis 30.06.2024; zwischen beiden Enden liegen 730 Tage statt 334 bis 397."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1822,12 +1850,12 @@
    "name": "Regis Resources Limited",
    "board": "materials",
    "track": "profitable",
-   "rank": 34,
+   "rank": 36,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2016-12-31",
-    "marketCap": 3334870177.049088
+    "marketCap": 3336043500.9475584
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2016) steht im Datensatz als 0, der Börsenwert aber bei 3,3 Mrd. USD."
   },
@@ -1842,7 +1870,7 @@
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-06-30",
-    "marketCap": 40766805448.93796
+    "marketCap": 40771849050.21259
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz als 0, der Börsenwert aber bei 40,8 Mrd. USD."
   },
@@ -1852,12 +1880,12 @@
    "name": "West China Cement Limited",
    "board": "materials",
    "track": "profitable",
-   "rank": 164,
+   "rank": 161,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2020-06-30",
-    "marketCap": 1246363434.3633714
+    "marketCap": 1246517632.3717017
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2020) steht im Datensatz als 0, der Börsenwert aber bei 1,2 Mrd. USD."
   },
@@ -1867,41 +1895,14 @@
    "name": "SOL S.p.A.",
    "board": "materials",
    "track": "profitable",
-   "rank": 278,
+   "rank": 273,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 6146225722.912768
+    "marketCap": 6056118496.241869
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 6,1 Mrd. USD."
-  },
-  {
-   "code": "doppelte-firma",
-   "ticker": "AMRZ",
-   "name": "Amrize Ltd",
-   "board": "materials",
-   "track": "profitable",
-   "rank": 364,
-   "werte": {
-    "zeilen": [
-     {
-      "ticker": "AMRZ",
-      "board": "materials",
-      "track": "profitable",
-      "rank": 364,
-      "marketCap": 22757576704
-     },
-     {
-      "ticker": "AMRZ.SW",
-      "board": "materials",
-      "track": "profitable",
-      "rank": 365,
-      "marketCap": 22591259205.580803
-     }
-    ]
-   },
-   "grund": "2 Zeilen mit Rang tragen nach Bereinigung denselben Namen: AMRZ (materials, Rang 364, 22,8 Mrd. USD), AMRZ.SW (materials, Rang 365, 22,6 Mrd. USD); vermutlich dieselbe Firma doppelt im Board."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -1909,12 +1910,12 @@
    "name": "Robertet SA",
    "board": "materials",
    "track": "profitable",
-   "rank": 381,
+   "rank": 390,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2025-06-30",
-    "marketCap": 1882275749.505229
+    "marketCap": 1862335404.2761216
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2025) steht im Datensatz als 0, der Börsenwert aber bei 1,9 Mrd. USD."
   },
@@ -1924,12 +1925,12 @@
    "name": "China XLX Fertiliser Ltd.",
    "board": "materials",
    "track": "profitable",
-   "rank": 513,
+   "rank": 534,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2011-09-30",
-    "marketCap": 1519073974.1048832
+    "marketCap": 1519261911.4070015
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2011) steht im Datensatz als 0, der Börsenwert aber bei 1,5 Mrd. USD."
   },
@@ -1939,12 +1940,12 @@
    "name": "China Hongqiao Group Limited",
    "board": "materials",
    "track": "profitable",
-   "rank": 519,
+   "rank": 540,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2014-09-30",
-    "marketCap": 25147662120.31447
+    "marketCap": 25111878003.19574
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2014) steht im Datensatz als 0, der Börsenwert aber bei 25,1 Mrd. USD."
   },
@@ -1954,12 +1955,12 @@
    "name": "China Rare Earth Nonferrous Metals Co.,Ltd.",
    "board": "materials",
    "track": "profitable",
-   "rank": 545,
+   "rank": 561,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 2668398472.33663
+    "marketCap": 2664588612.777861
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 2,7 Mrd. USD."
   },
@@ -1969,12 +1970,12 @@
    "name": "GuoCheng Mining CO.,LTD",
    "board": "materials",
    "track": "profitable",
-   "rank": 575,
+   "rank": 596,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-09-30",
-    "marketCap": 3372658681.2924724
+    "marketCap": 3367843300.0633955
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2026) steht im Datensatz leer, der Börsenwert aber bei 3,4 Mrd. USD."
   },
@@ -1984,12 +1985,12 @@
    "name": "Xinyi Glass Holdings Limited",
    "board": "materials",
    "track": "profitable",
-   "rank": 580,
+   "rank": 607,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2022-06-30",
-    "marketCap": 4568416890.609336
+    "marketCap": 4568982087.538524
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2022) steht im Datensatz als 0, der Börsenwert aber bei 4,6 Mrd. USD."
   },
@@ -1999,7 +2000,7 @@
    "name": "Gunnison Copper Corp.",
    "board": "materials",
    "track": "profitable",
-   "rank": 791,
+   "rank": 783,
    "werte": {
     "revGrowthYoYPct": 18941.935483870966,
     "revGrowthBasis": "quarter",
@@ -2010,18 +2011,33 @@
   },
   {
    "code": "umsatz-null-mit-boersenwert",
+   "ticker": "603993.SS",
+   "name": "CMOC Group Limited",
+   "board": "materials",
+   "track": "profitable",
+   "rank": 836,
+   "werte": {
+    "feld": "revenueQ",
+    "wert": null,
+    "periodEnd": "2026-09-30",
+    "marketCap": 43888239140.6936
+   },
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2026) steht im Datensatz leer, der Börsenwert aber bei 43,9 Mrd. USD."
+  },
+  {
+   "code": "umsatz-null-mit-boersenwert",
    "ticker": "SSMR",
    "name": "Sunshine Silver Mining & Refining Company",
    "board": "materials",
    "track": "profitable",
-   "rank": 920,
+   "rank": 896,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1902940288
+    "marketCap": 1764962688
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,9 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,8 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -2034,7 +2050,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 2927376705.4645658
+    "marketCap": 2923197084.527493
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 2,9 Mrd. USD."
   },
@@ -2049,7 +2065,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 5606478444.461752
+    "marketCap": 5607172068.637531
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 5,6 Mrd. USD."
   },
@@ -2064,7 +2080,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 7003355909.40246
+    "marketCap": 7004222352.931758
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 7 Mrd. USD."
   },
@@ -2079,7 +2095,7 @@
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2019-06-30",
-    "marketCap": 7003355909.40246
+    "marketCap": 7004222352.931758
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2019) steht im Datensatz als 0, der Börsenwert aber bei 7 Mrd. USD."
   },
@@ -2094,7 +2110,7 @@
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2015-12-31",
-    "marketCap": 1085555887.8336
+    "marketCap": 1085937824.3404799
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2015) steht im Datensatz als 0, der Börsenwert aber bei 1,1 Mrd. USD."
   },
@@ -2124,9 +2140,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1053697024
+    "marketCap": 1034881024
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,1 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -2139,7 +2155,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1046253910.1632
+    "marketCap": 1009605079.3239628
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1 Mrd. USD."
   },
@@ -2154,7 +2170,7 @@
     "feld": "annualRev",
     "wert": 0,
     "periodEnd": "2025-12-31",
-    "marketCap": 934172544
+    "marketCap": 860904064
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz als 0, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -2169,9 +2185,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1609280000
+    "marketCap": 1530073984
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,6 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,5 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -2184,9 +2200,9 @@
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2023-06-30",
-    "marketCap": 1609280000
+    "marketCap": 1530073984
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2023) steht im Datensatz als 0, der Börsenwert aber bei 1,6 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2023) steht im Datensatz als 0, der Börsenwert aber bei 1,5 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -2214,24 +2230,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1045660339.0270976
+    "marketCap": 993994263.9000703
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1 Mrd. USD."
-  },
-  {
-   "code": "umsatz-null-mit-boersenwert",
-   "ticker": "SGLD",
-   "name": "Scorpio Gold Corporation",
-   "board": "materials",
-   "track": "profitable",
-   "rank": null,
-   "werte": {
-    "feld": "revenueQ",
-    "wert": null,
-    "periodEnd": "2026-06-30",
-    "marketCap": 1201189760
-   },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -2244,7 +2245,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 904921744.6254592
+    "marketCap": 858897878.4490649
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -2259,9 +2260,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-03-31",
-    "marketCap": 14599503092.699627
+    "marketCap": 14656518847.110645
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.03.2026) steht im Datensatz leer, der Börsenwert aber bei 14,6 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.03.2026) steht im Datensatz leer, der Börsenwert aber bei 14,7 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -2274,7 +2275,7 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2021-03-31",
-    "marketCap": 4535004191.198208
+    "marketCap": 4533832962.871296
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2021) steht im Datensatz leer, der Börsenwert aber bei 4,5 Mrd. USD."
   },
@@ -2284,7 +2285,7 @@
    "name": "Hotel101 Global Holdings Corp.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 22,
+   "rank": 21,
    "werte": {
     "revGrowthYoYPct": 1177.667637050263,
     "revGrowthBasis": "year",
@@ -2295,26 +2296,11 @@
   },
   {
    "code": "jahrespaar-abstand",
-   "ticker": "3471.T",
-   "name": "Mitsui Fudosan Logistics Park Inc.",
-   "board": "real-estate",
-   "track": "profitable",
-   "rank": 23,
-   "werte": {
-    "tage": 730,
-    "revGrowthBasis": "year",
-    "revGrowthPeriodEnd": "2026-07-31",
-    "revGrowthPriorPeriodEnd": "2024-07-31"
-   },
-   "grund": "Das Jahreswachstum vergleicht das Geschäftsjahr bis 31.07.2026 mit dem Geschäftsjahr bis 31.07.2024; zwischen beiden Enden liegen 730 Tage statt 334 bis 397."
-  },
-  {
-   "code": "jahrespaar-abstand",
    "ticker": "395400.KS",
    "name": "SK Reits Co., Ltd.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 51,
+   "rank": 50,
    "werte": {
     "tage": 91,
     "revGrowthBasis": "year",
@@ -2329,12 +2315,12 @@
    "name": "SK Reits Co., Ltd.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 51,
+   "rank": 50,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-06-30",
-    "marketCap": 1184842170.419164
+    "marketCap": 1183688551.9461896
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz als 0, der Börsenwert aber bei 1,2 Mrd. USD."
   },
@@ -2344,12 +2330,12 @@
    "name": "UOL Group Limited",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 65,
+   "rank": 64,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2022-12-31",
-    "marketCap": 5241293354.487092
+    "marketCap": 5239939717.095015
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2022) steht im Datensatz als 0, der Börsenwert aber bei 5,2 Mrd. USD."
   },
@@ -2359,12 +2345,12 @@
    "name": "Vital Healthcare Property Trust",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 100,
+   "rank": 99,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2018-09-30",
-    "marketCap": 830036828.8838145
+    "marketCap": 827465406.3182541
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2018) steht im Datensatz als 0, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -2374,7 +2360,7 @@
    "name": "Cham Swiss Properties AG",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 107,
+   "rank": 108,
    "werte": {
     "revGrowthYoYPct": 1592.2090729783035,
     "revGrowthBasis": "year",
@@ -2389,12 +2375,12 @@
    "name": "Robyg S.A.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 121,
+   "rank": 122,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 830325233.1312435
+    "marketCap": 813259651.9405056
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -2404,7 +2390,7 @@
    "name": "Run Long Construction Co., Ltd.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 142,
+   "rank": 141,
    "werte": {
     "revGrowthYoYPct": 18520.98108435639,
     "revGrowthBasis": "quarter",
@@ -2419,12 +2405,12 @@
    "name": "Mirvac Group",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 159,
+   "rank": 156,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2013-12-31",
-    "marketCap": 5090698447.396761
+    "marketCap": 5092489533.055611
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2013) steht im Datensatz als 0, der Börsenwert aber bei 5,1 Mrd. USD."
   },
@@ -2434,7 +2420,7 @@
    "name": "UDR, Inc.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 177,
+   "rank": 174,
    "werte": {
     "wert": 425399000,
     "periodEnd": "2026-06-30",
@@ -2448,12 +2434,12 @@
    "name": "Starhill Global Real Estate Investment Trust",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 289,
+   "rank": 284,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-12-31",
-    "marketCap": 900040393.1031553
+    "marketCap": 908896886.8883456
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2021) steht im Datensatz als 0, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -2463,12 +2449,12 @@
    "name": "The Macerich Company",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 292,
+   "rank": 287,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 7172188160
+    "marketCap": 7181039104
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 7,2 Mrd. USD."
   },
@@ -2478,12 +2464,12 @@
    "name": "Vicinity Centres",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 323,
+   "rank": 316,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2013-12-31",
-    "marketCap": 7998828043.999334
+    "marketCap": 8001642311.3037615
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2013) steht im Datensatz als 0, der Börsenwert aber bei 8 Mrd. USD."
   },
@@ -2493,12 +2479,12 @@
    "name": "Region Group",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 352,
+   "rank": 347,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2013-12-31",
-    "marketCap": 1863979667.5781376
+    "marketCap": 1864635480.7804875
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2013) steht im Datensatz als 0, der Börsenwert aber bei 1,9 Mrd. USD."
   },
@@ -2508,12 +2494,12 @@
    "name": "Keppel REIT",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 370,
+   "rank": 364,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-12-31",
-    "marketCap": 3177606352.765645
+    "marketCap": 3176785691.4354177
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2021) steht im Datensatz als 0, der Börsenwert aber bei 3,2 Mrd. USD."
   },
@@ -2523,7 +2509,7 @@
    "name": "Jinke Property Group Co., Ltd.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 394,
+   "rank": 387,
    "werte": {
     "revGrowthYoYPct": -95.98290423373325,
     "revGrowthBasis": "quarter",
@@ -2538,14 +2524,14 @@
    "name": "Swiss Prime Site AG",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 416,
+   "rank": 407,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2017-12-31",
-    "marketCap": 12581319719.31812
+    "marketCap": 12542119190.942207
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2017) steht im Datensatz als 0, der Börsenwert aber bei 12,6 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2017) steht im Datensatz als 0, der Börsenwert aber bei 12,5 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -2553,12 +2539,12 @@
    "name": "CapitaLand Integrated Commercial Trust",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 417,
+   "rank": 408,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-12-31",
-    "marketCap": 14071376026.807093
+    "marketCap": 14067741896.935015
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2021) steht im Datensatz als 0, der Börsenwert aber bei 14,1 Mrd. USD."
   },
@@ -2568,7 +2554,7 @@
    "name": "NTT DC REIT",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 433,
+   "rank": 425,
    "werte": {
     "tage": 730,
     "revGrowthBasis": "year",
@@ -2583,12 +2569,12 @@
    "name": "Poly Developments and Holdings Group Co., Ltd.",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 449,
+   "rank": 443,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 9728406327.97315
+    "marketCap": 9714516400.278896
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 9,7 Mrd. USD."
   },
@@ -2598,12 +2584,12 @@
    "name": "CapitaLand China Trust",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 460,
+   "rank": 454,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-12-31",
-    "marketCap": 825424653.7358849
+    "marketCap": 818334732.3278848
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2021) steht im Datensatz als 0, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -2613,12 +2599,12 @@
    "name": "Ho Bee Land Limited",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 494,
+   "rank": 489,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2018-12-31",
-    "marketCap": 987633209.7928193
+    "marketCap": 987378139.6885505
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.12.2018) steht im Datensatz als 0, der Börsenwert aber bei 1 Mrd. USD."
   },
@@ -2628,12 +2614,12 @@
    "name": "Seazen Group Limited",
    "board": "real-estate",
    "track": "profitable",
-   "rank": 501,
+   "rank": 495,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2021-03-31",
-    "marketCap": 1292287630.448558
+    "marketCap": 1292447510.121943
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2021) steht im Datensatz als 0, der Börsenwert aber bei 1,3 Mrd. USD."
   },
@@ -2648,7 +2634,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 12475765184.546078
+    "marketCap": 12477308665.436813
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 12,5 Mrd. USD."
   },
@@ -2663,7 +2649,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 5561580053.523333
+    "marketCap": 5562268122.9449625
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 5,6 Mrd. USD."
   },
@@ -2678,7 +2664,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-08-31",
-    "marketCap": 1722640188.0839784
+    "marketCap": 1719588969.094624
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.08.2026) steht im Datensatz leer, der Börsenwert aber bei 1,7 Mrd. USD."
   },
@@ -2693,7 +2679,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-08-31",
-    "marketCap": 1241821463.1693518
+    "marketCap": 1239621892.2688117
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.08.2026) steht im Datensatz leer, der Börsenwert aber bei 1,2 Mrd. USD."
   },
@@ -2708,7 +2694,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-08-31",
-    "marketCap": 3047163549.756621
+    "marketCap": 3041766274.48637
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.08.2026) steht im Datensatz leer, der Börsenwert aber bei 3 Mrd. USD."
   },
@@ -2723,7 +2709,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-08-31",
-    "marketCap": 928826311.6375655
+    "marketCap": 927181132.0466768
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.08.2026) steht im Datensatz leer, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -2738,7 +2724,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-08-31",
-    "marketCap": 3115296983.641948
+    "marketCap": 3109779027.321343
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.08.2026) steht im Datensatz leer, der Börsenwert aber bei 3,1 Mrd. USD."
   },
@@ -2753,7 +2739,7 @@
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2026-03-31",
-    "marketCap": 965345156.5651201
+    "marketCap": 964714033.6808832
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 31.03.2026) steht im Datensatz leer, der Börsenwert aber bei 1 Mrd. USD."
   },
@@ -2763,12 +2749,12 @@
    "name": "AEM Holdings Ltd.",
    "board": "semiconductors",
    "track": "profitable",
-   "rank": 155,
+   "rank": 157,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2023-09-30",
-    "marketCap": 1863842576.4281857
+    "marketCap": 1863357205.4730752
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2023) steht im Datensatz als 0, der Börsenwert aber bei 1,9 Mrd. USD."
   },
@@ -2783,7 +2769,7 @@
     "feld": "annualRev",
     "wert": 0,
     "periodEnd": "2025-12-31",
-    "marketCap": 3297154755.680076
+    "marketCap": 3284312266.2068715
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz als 0, der Börsenwert aber bei 3,3 Mrd. USD."
   },
@@ -2793,12 +2779,12 @@
    "name": "ProSiebenSat.1 Media SE",
    "board": "software-comm-services",
    "track": "profitable",
-   "rank": 446,
+   "rank": 443,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 834972344.1000576
+    "marketCap": 832361806.4079168
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -2813,7 +2799,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 3015664017.959076
+    "marketCap": 3011358343.036846
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 3 Mrd. USD."
   },
@@ -2823,29 +2809,14 @@
    "name": "Infleqtion, Inc.",
    "board": "software-comm-services",
    "track": "unprofitable",
-   "rank": 16,
+   "rank": 18,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2024-12-31",
-    "marketCap": 2125117056
+    "marketCap": 2001170688
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2024) steht im Datensatz leer, der Börsenwert aber bei 2,1 Mrd. USD."
-  },
-  {
-   "code": "umsatz-null-mit-boersenwert",
-   "ticker": "HQ",
-   "name": "Horizon Quantum Holdings Ltd.",
-   "board": "software-comm-services",
-   "track": "unprofitable",
-   "rank": 93,
-   "werte": {
-    "feld": "revenueQ",
-    "wert": null,
-    "periodEnd": "2026-06-30",
-    "marketCap": 826852224
-   },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 0,8 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2024) steht im Datensatz leer, der Börsenwert aber bei 2 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -2853,7 +2824,7 @@
    "name": "Xingyun Technology Co., Ltd.",
    "board": "software-comm-services",
    "track": "unprofitable",
-   "rank": 115,
+   "rank": 114,
    "werte": {
     "revGrowthYoYPct": 5556.936043249559,
     "revGrowthBasis": "quarter",
@@ -2868,12 +2839,12 @@
    "name": "Dynamic Holding Co., Ltd.",
    "board": "tech-hardware",
    "track": "profitable",
-   "rank": 101,
+   "rank": 102,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1047753868.3705918
+    "marketCap": 1043672844.2688634
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1 Mrd. USD."
   },
@@ -2883,12 +2854,12 @@
    "name": "Changchun UP Optotech Co.,Ltd.",
    "board": "tech-hardware",
    "track": "profitable",
-   "rank": 273,
+   "rank": 274,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 1264564690.4798925
+    "marketCap": 1262759182.8229017
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 1,3 Mrd. USD."
   },
@@ -2898,12 +2869,12 @@
    "name": "Venture Corporation Limited",
    "board": "tech-hardware",
    "track": "profitable",
-   "rank": 414,
+   "rank": 416,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2024-06-30",
-    "marketCap": 3384053059.3086467
+    "marketCap": 3389927333.2391934
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2024) steht im Datensatz als 0, der Börsenwert aber bei 3,4 Mrd. USD."
   },
@@ -2918,7 +2889,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 1470576554.0798464
+    "marketCap": 1467971801.7130167
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 1,5 Mrd. USD."
   },
@@ -2933,9 +2904,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-06-30",
-    "marketCap": 5251271984.853811
+    "marketCap": 5192367908.861953
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 5,3 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 5,2 Mrd. USD."
   },
   {
    "code": "wachstum-extrem",
@@ -2978,7 +2949,7 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 871606812.8003174
+    "marketCap": 870362358.6523852
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 0,9 Mrd. USD."
   },
@@ -3003,41 +2974,14 @@
    "name": "Terna S.p.A.",
    "board": "utilities",
    "track": "profitable",
-   "rank": 74,
+   "rank": 73,
    "werte": {
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 21520307307.057972
+    "marketCap": 21529163286.11758
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 21,5 Mrd. USD."
-  },
-  {
-   "code": "doppelte-firma",
-   "ticker": "AXIA",
-   "name": "AXIA Energia",
-   "board": "utilities",
-   "track": "profitable",
-   "rank": 87,
-   "werte": {
-    "zeilen": [
-     {
-      "ticker": "AXIA",
-      "board": "utilities",
-      "track": "profitable",
-      "rank": 87,
-      "marketCap": 23290886144
-     },
-     {
-      "ticker": "XAXIA.MC",
-      "board": "utilities",
-      "track": "profitable",
-      "rank": 99,
-      "marketCap": 22158008878.143078
-     }
-    ]
-   },
-   "grund": "2 Zeilen mit Rang tragen nach Bereinigung denselben Namen: AXIA (utilities, Rang 87, 23,3 Mrd. USD), XAXIA.MC (utilities, Rang 99, 22,2 Mrd. USD); vermutlich dieselbe Firma doppelt im Board."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -3045,12 +2989,12 @@
    "name": "China Datang Corporation Renewable Power Co., Limited",
    "board": "utilities",
    "track": "profitable",
-   "rank": 221,
+   "rank": 222,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2025-09-30",
-    "marketCap": 825169329.0989977
+    "marketCap": 825271417.6741068
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2025) steht im Datensatz als 0, der Börsenwert aber bei 0,8 Mrd. USD."
   },
@@ -3060,14 +3004,14 @@
    "name": "Corporación Acciona Energías Renovables, S.A.",
    "board": "utilities",
    "track": "profitable",
-   "rank": 234,
+   "rank": 233,
    "werte": {
     "feld": "revenueQ",
     "wert": null,
     "periodEnd": "2022-09-30",
-    "marketCap": 8055573589.902848
+    "marketCap": 8030387871.313664
    },
-   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2022) steht im Datensatz leer, der Börsenwert aber bei 8,1 Mrd. USD."
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2022) steht im Datensatz leer, der Börsenwert aber bei 8 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -3075,12 +3019,12 @@
    "name": "CGN Power Co., Ltd.",
    "board": "utilities",
    "track": "profitable",
-   "rank": 260,
+   "rank": 258,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2026-06-30",
-    "marketCap": 36404453028.290886
+    "marketCap": 36352475838.68092
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz als 0, der Börsenwert aber bei 36,4 Mrd. USD."
   },
@@ -3090,12 +3034,12 @@
    "name": "China Suntien Green Energy Corporation Limited",
    "board": "utilities",
    "track": "profitable",
-   "rank": 303,
+   "rank": 304,
    "werte": {
     "feld": "revenueQ",
     "wert": 0,
     "periodEnd": "2022-09-30",
-    "marketCap": 4484286434.2528
+    "marketCap": 4477883904.1536
    },
    "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.09.2022) steht im Datensatz als 0, der Börsenwert aber bei 4,5 Mrd. USD."
   },
@@ -3110,9 +3054,24 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 6938153390.023966
+    "marketCap": 6939011766.806159
    },
    "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 6,9 Mrd. USD."
+  },
+  {
+   "code": "umsatz-null-mit-boersenwert",
+   "ticker": "ENEL.VI",
+   "name": "Enel SpA",
+   "board": "utilities",
+   "track": "profitable",
+   "rank": null,
+   "werte": {
+    "feld": "revenueQ",
+    "wert": null,
+    "periodEnd": "2026-06-30",
+    "marketCap": 103514298850.1631
+   },
+   "grund": "Der neueste Quartalsumsatz (Zeitraum bis 30.06.2026) steht im Datensatz leer, der Börsenwert aber bei 103,5 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -3125,9 +3084,9 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2026-03-31",
-    "marketCap": 13340674286.54162
+    "marketCap": 13371397401.987074
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.03.2026) steht im Datensatz leer, der Börsenwert aber bei 13,3 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.03.2026) steht im Datensatz leer, der Börsenwert aber bei 13,4 Mrd. USD."
   },
   {
    "code": "umsatz-null-mit-boersenwert",
@@ -3140,47 +3099,113 @@
     "feld": "annualRev",
     "wert": null,
     "periodEnd": "2025-12-31",
-    "marketCap": 4987132928
+    "marketCap": 4696945664
    },
-   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 5 Mrd. USD."
+   "grund": "Der neueste Jahresumsatz (Zeitraum bis 31.12.2025) steht im Datensatz leer, der Börsenwert aber bei 4,7 Mrd. USD."
   }
  ],
  "gekuerzt": {},
  "gestern": {
   "quelle": "https://raw.githubusercontent.com/Karlryl/screener-data/gh-pages/outputs/findash-export/v1/waechter/plausibilitaet.json",
-  "exportGeneratedAt": "2026-10-29T10:01:05.055Z",
+  "exportGeneratedAt": "2026-10-30T10:11:30.798Z",
   "neu": [
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "P8Z.SI"
+   },
+   {
+    "code": "boersenwert-sprung",
+    "ticker": "600962.SS"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "PDN.TO"
+   },
+   {
+    "code": "wachstum-extrem",
+    "ticker": "002939.SZ"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "EDELWEISS.BO"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "HUDCO.NS"
+   },
+   {
+    "code": "doppelte-firma",
+    "ticker": "GLXY"
+   },
+   {
+    "code": "wachstum-extrem",
+    "ticker": "TUB.BR"
+   },
+   {
+    "code": "doppelte-firma",
+    "ticker": "AERO"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "AYV.VI"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "ACKB.VI"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "300277.SZ"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "ATVK"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "603993.SS"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "ENEL.VI"
+   }
+  ],
+  "weg": [
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "4689.T"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "E5H.SI"
+   },
    {
     "code": "umsatz-null-mit-boersenwert",
     "ticker": "PDN.AX"
    },
    {
     "code": "umsatz-null-mit-boersenwert",
-    "ticker": "ENI.VI"
+    "ticker": "EDELWEISS.NS"
+   },
+   {
+    "code": "umsatz-null-mit-boersenwert",
+    "ticker": "HUDCO.BO"
    },
    {
     "code": "wachstum-extrem",
-    "ticker": "NRIX"
+    "ticker": "CRNX"
    },
    {
     "code": "wachstum-extrem",
     "ticker": "TUBI.VI"
    },
    {
-    "code": "wachstum-extrem",
-    "ticker": "SIGMAADV.NS"
-   },
-   {
     "code": "umsatz-null-mit-boersenwert",
     "ticker": "1AST.DE"
    },
    {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "RRU.DE"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "8015.T"
+    "code": "doppelte-firma",
+    "ticker": "AERO.MX"
    },
    {
     "code": "umsatz-null-mit-boersenwert",
@@ -3191,16 +3216,16 @@
     "ticker": "ACKB.BR"
    },
    {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "ESDS.BO"
-   },
-   {
     "code": "jahrespaar-abstand",
     "ticker": "ALK.TO"
    },
    {
+    "code": "doppelte-firma",
+    "ticker": "AMRZ"
+   },
+   {
     "code": "umsatz-null-mit-boersenwert",
-    "ticker": "000688.SZ"
+    "ticker": "SGLD"
    },
    {
     "code": "jahrespaar-abstand",
@@ -3208,93 +3233,11 @@
    },
    {
     "code": "umsatz-null-mit-boersenwert",
-    "ticker": "SPSN.VI"
+    "ticker": "HQ"
    },
    {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "8954.T"
-   }
-  ],
-  "weg": [
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "PDN.TO"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "002128.SZ"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "BWO.OL"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "2190.HK"
-   },
-   {
-    "code": "wachstum-extrem",
-    "ticker": "TUB.BR"
-   },
-   {
-    "code": "wachstum-extrem",
-    "ticker": "SIGMAADV.BO"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "1AST.VI"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "RR.L"
-   },
-   {
-    "code": "jahrespaar-abstand",
-    "ticker": "6383.T"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "ACKB.VI"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "600525.SS"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "ESDS.NS"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "ODC"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "CYL.AX"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "600683.SS"
-   },
-   {
-    "code": "wachstum-extrem",
-    "ticker": "600683.SS"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "SPSN.SW"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "6890.T"
-   },
-   {
-    "code": "umsatz-null-mit-boersenwert",
-    "ticker": "6920.T"
-   },
-   {
-    "code": "wachstum-extrem",
-    "ticker": "301050.SZ"
+    "code": "doppelte-firma",
+    "ticker": "AXIA"
    }
   ]
  },
