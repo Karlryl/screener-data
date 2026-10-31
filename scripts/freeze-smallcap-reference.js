@@ -26,7 +26,8 @@ const storeHash = crypto.createHash('sha256');
 for (const name of fs.readdirSync(store).sort()) storeHash.update(name).update(fs.readFileSync(path.join(store, name)));
 fs.writeFileSync(out, JSON.stringify({
   schema: 'smallcap-reference/v1', version: arg('version'), dataDay: arg('data-day'), sourceRun: arg('run'), renewBy: arg('renew-by'),
-  storeSha256: storeHash.digest('hex'), watchlistSha256: crypto.createHash('sha256').update(fs.readFileSync(SMALLCAP_WATCHLIST_PATH)).digest('hex'),
+  // The committed form of the watchlist, whatever line ending this checkout has.
+  storeSha256: storeHash.digest('hex'), watchlistSha256: crypto.createHash('sha256').update(fs.readFileSync(SMALLCAP_WATCHLIST_PATH, 'utf8').replace(/\r\n/g, '\n')).digest('hex'),
   coverageFloor, calibration: live.calibration,
 }) + '\n');
 
