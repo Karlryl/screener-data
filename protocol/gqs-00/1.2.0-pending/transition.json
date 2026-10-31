@@ -283,7 +283,7 @@
         "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
       },
       "dependencyFiles": {
-        "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
+        "lib/g31-recency.js": "c542ab861af2bbdaec208a4c5993cc7a553a8c80df91a4d51dac10e38734cc00",
         "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
       },
       "dependencyRule": "scripts/gqs00-freeze.js verify(): while this transition is open, every path in REQUIRED_DEPENDENCIES must be registered under dependencyFiles and match its hash; historical source hashes stay untouched. P267 round 2: lib/annual-pairs.js (dated fiscal-year ends and pair checks read by the selection) is a required dependency too.",
@@ -316,8 +316,15 @@
     "review": "Blind Sonnet review MERGE 90 % (blindpruefung-pr29-2026-10-23.md); this registration added by the master after the seal test turned PR Check red.",
     "rollback": "Revert the country.js change and only this regionTableCountries registration."
   },
+  "secQuarterFill": {
+    "date": "2026-10-31",
+    "scope": "lib/g31-recency.js quarterCandidate reads meta.secQuarterFill, a read-time record of a filed SEC quarter the vendor lacks (lib/exchange-quarter-check.js, policy usFill). Only the shared growth leg moves; no file under src/scoring changes and the vendor series stays untouched.",
+    "goldenImpact": "None: golden snapshots carry no such record.",
+    "review": "Build registration only; Codex decides on the draft.",
+    "rollback": "Set usFill to false in configs/exchange-quarter-policy.json, or revert the source change and this registration together."
+  },
   "dependencyFiles": {
-    "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
+    "lib/g31-recency.js": "c542ab861af2bbdaec208a4c5993cc7a553a8c80df91a4d51dac10e38734cc00",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
 }
