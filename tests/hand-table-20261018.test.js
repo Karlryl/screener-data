@@ -182,7 +182,7 @@ test('board effect: CD Projekt on one basis, 000552.SZ on the adjusted pair, gro
   for (const [t, raw] of [['BLSH', fixtures.BLSH], ['VCTR', fixtures.VCTR], ['VCTR', vctrDated]]) {
     const old = applyFinancialCases(raw, { table: before }).snapshot, out = applyFinancialCases(raw).snapshot;
     assert.ok(gpGrowth(old) !== null || t === 'VCTR' && raw === fixtures.VCTR, t + ' vendor GP growth axis before');
-    assert.notEqual(overviewMetric(old, { gpClass: 'real' }).value, null, t + ' vendor GP growth shown before');
+    assert.ok(overviewMetric(old, { gpClass: 'real' }).value !== null || t === 'VCTR' && raw === fixtures.VCTR, t + ' vendor GP growth shown before');
     assert.equal(gpGrowth(out), null);
     assert.equal(overviewMetric(out, { gpClass: 'real' }).value, null);
     assert.ok(out.annual.annualGP.every(r => r === null || value(r) === null), t + ': every vendor GP year withheld (no gaps)');

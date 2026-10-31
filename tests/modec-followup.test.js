@@ -39,7 +39,7 @@ test('MODEC alone adds explicit all-null series authority', () => {
 
 test('next and later vendor quarters stay empty through the real loader', () => {
   for(const period of ['2026-09-30','2026-12-31','2027-03-31','2028-09-30']) {
-    const s = addQuarter(period), original = JSON.stringify(s);
+    const s = require(path.join(root,'tests/helpers/dated-series.js')).withEnds(addQuarter(period)), original = JSON.stringify(s);
     const out = prepareSnapshot(s,{atPull:true});
     assert.equal(value(out.timeseries.revenueQ[0]),null,period);
     assert.equal(out.timeseries.revenueQ[0].financialMissing.reasonCode,'period-after-coverage');

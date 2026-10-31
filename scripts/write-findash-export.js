@@ -161,8 +161,30 @@ function mitFcfSchatten(formulaId) {
   return (row) => g31Last(Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) }));
 }
 
+// Period gate round 2 (30.10.2026): a pair with no end at all empties revenue growth, but the acceleration and
+// gross-profit axes still count it, because every sealed golden fixture is undated. 0 such rows on 30.10.; this watcher says
+// so on the day it changes. ponytail: exported rows only, a small-cap firm outside the export stays unseen.
+const _undatedAxisTickers = new Set();
+/** Score axes that run on an undated pair. @param {object|null} shadow annualPairsShadow of one snapshot. @returns {string[]} Axis names. */
+function undatedAxes(shadow) {
+  return ['acceleration', 'grossProfit'].filter((axis) => shadow?.[axis]?.code === 'undated' && shadow[axis].today !== null);
+}
+/** Warning line of the watcher. @param {Iterable<string>} tickers Tickers counted. @returns {string|null} ::warning:: line, or null when none. */
+function undatedAxisWarning(tickers) {
+  const list = [...tickers].sort();
+  if (!list.length) return null;
+  return `::warning::[period-gate-undated] ${list.length} Zeilen: Beschleunigung oder Bruttogewinn zaehlen ein Paar ohne Periodenende in den Score (Wachstum ist leer): ${list.slice(0, 20).join(', ')}`;
+}
+// Small-cap rows carry no annualPairsShadow, so their count reads the snapshot's derivation; no row field is added.
+function zaehleUndatiertSmallcap(row) {
+  if (undatedAxes(snapAbleitungenFuer(row.ticker, smallcapGrowthSource()).annualPairsShadow).length) _undatedAxisTickers.add(row.ticker);
+  return row;
+}
+
 function mitAnnualPairsSchatten(row) {
-  return Object.assign(row, { annualPairsShadow: snapAbleitungenFuer(row.ticker).annualPairsShadow });
+  const annualPairsShadow = snapAbleitungenFuer(row.ticker).annualPairsShadow;
+  if (undatedAxes(annualPairsShadow).length) _undatedAxisTickers.add(row.ticker);
+  return Object.assign(row, { annualPairsShadow });
 }
 
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -1322,8 +1344,8 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean).map(zaehleUndatiertSmallcap), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean).map(zaehleUndatiertSmallcap), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
@@ -1455,6 +1477,8 @@ function build(seam = {}) {
   // die Annahme des Waechters — dann ist Abbruch (rotes X) richtiger als ein Board, dem
   // stumm die halbe Groessenspalte fehlt.
   const bilanz = waehrungsWaechterAbschluss();
+  const undatiert = undatedAxisWarning(_undatedAxisTickers);
+  if (undatiert) console.warn(undatiert);
   if (_wachstumOhneEtikett > 0) {
     console.warn('::warning::Wachstums-Etikett: ' + _wachstumOhneEtikett + ' Zeilen ohne revGrowthBasis — '
       + 'ihr revGrowthYoYPct liess sich aus keinem Snapshot nachrechnen, die Felder bleiben null statt zu raten.');
@@ -2575,7 +2599,8 @@ if (require.main === module) {
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot,
+  annualPairsShadowForSnapshot, undatedAxes, undatedAxisWarning, buildSmallcapBoard,
+  undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.

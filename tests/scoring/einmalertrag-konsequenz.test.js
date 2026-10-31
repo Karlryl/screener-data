@@ -32,7 +32,8 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { scoreUniverse, produceRankings } = require('../../src/scoring/score.js');
+const { datedApi } = require('../helpers/dated-series.js');
+const { scoreUniverse, produceRankings } = datedApi(require('../../src/scoring/score.js'));
 const { evaluateLamps } = require('../../src/scoring/lamps.js');
 const formulas = require('../../src/scoring/formulas/index.js');
 

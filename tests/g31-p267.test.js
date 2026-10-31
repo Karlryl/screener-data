@@ -175,13 +175,13 @@ test('durations: 3M/3M quarter, 6M/6M half year, 6M/3M no pair, unassignable met
   assert.deepEqual(errs, []);
   // Break-once in memory: without the duration conflict line a 3M quarter against a 12M year-ago cell is a quarter again.
   const gfile = path.join(ROOT, 'lib/g31-recency.js'), gs = fs.readFileSync(gfile, 'utf8');
-  const anchor = "  if (durations[0] && durations[1] && durations[0] !== durations[1]) return missing('Die beiden Werte umfassen unterschiedlich lange Zeiträume.');";
+  const anchor = "  if (durations[0] && durations[1] && durations[0] !== durations[1]) return { reason: 'Die beiden Werte umfassen unterschiedlich lange Zeiträume.', duration: null };";
   assert.equal(gs.split(anchor).length, 2, 'exact unique anchor');
   assert.equal(G.quarterCandidate(durationSnap('revenueQ', ['3M', '3M', '3M', '3M', '12M'])).pct, null);
   const broken = compile(gfile, gs.replace(anchor, ''));
   assert.throws(() => assert.equal(broken.quarterCandidate(durationSnap('revenueQ', ['3M', '3M', '3M', '3M', '12M'])).pct, null), assert.AssertionError);
   // Break-once (P267-r3): without the half-year line one 6M next to an unknown duration is labelled a half year again.
-  const half = "  if ((durations[0] === '6M') !== (durations[1] === '6M')) return missing('Die Dauer eines der beiden Werte ist nicht gespeichert; ein Halbjahresvergleich ist nicht belegt.');";
+  const half = "  if ((durations[0] === '6M') !== (durations[1] === '6M')) return { reason: 'Die Dauer eines der beiden Werte ist nicht gespeichert; ein Halbjahresvergleich ist nicht belegt.', duration: null };";
   assert.equal(gs.split(half).length, 2, 'exact unique anchor');
   const brokenHalf = compile(gfile, gs.replace(half, ''));
   assert.throws(() => assert.equal(brokenHalf.quarterCandidate(durationSnap('revenueQ', ['6M', null, null, null, null])).pct, null), assert.AssertionError);
@@ -278,10 +278,12 @@ test('r2 P2-1: Rule of 40 keeps a held GP value held, including its shadow (main
   const row = W.mapBoardRow(ranked, 0, 'main');
   assert.equal(row.g31OverviewShadow.value, null);
   const unheld = G.g31Export(s);
-  assert.ok(Number.isFinite(unheld.g31Overview.gp.value), 'the own derivation alone would show a value');
+  assert.equal(unheld.g31Overview.gp.value, null, 'period gate round 2: the undated pair is empty in the own derivation too');
+  // A dated twin's own derivation shows a value; the hold must win over it.
+  const shown = { ...unheld, g31Overview: { ...unheld.g31Overview, gp: { ...unheld.g31Overview.gp, value: 0.282 } } };
   const { baueZeilen } = require('../scripts/write-rule40-export.js');
   const out = baueZeilen([{ ticker: 'PGHL.BO', row, onBoard: true, branch: 'health-care', wachstumRoh: 30, fcfMarginPct: 30,
-    ebitdaMarginPct: null, marketCap: 1e10, industry: 'Biotechnology', ...unheld }]).rows[0];
+    ebitdaMarginPct: null, marketCap: 1e10, industry: 'Biotechnology', ...shown }]).rows[0];
   assert.equal(out.overviewValue, null);
   assert.equal(out.overviewPeriod.basis, 'none'); assert.equal(out.overviewValueLegacy, null); assert.equal(out.overviewPeriodLegacy, null);
   assert.equal(out.g31OverviewShadow.value, null, 'the held shadow is not refilled');
@@ -291,7 +293,7 @@ test('r2 P2-1: Rule of 40 keeps a held GP value held, including its shadow (main
   assert.equal(rs.split(anchor).length, 2, 'exact unique anchor');
   const broken = compile(rfile, rs.replace(anchor, 'k.g31Overview?.[ov.kind] ?? null;'));
   const bad = broken.baueZeilen([{ ticker: 'PGHL.BO', row, onBoard: true, branch: 'health-care', wachstumRoh: 30, fcfMarginPct: 30,
-    ebitdaMarginPct: null, marketCap: 1e10, industry: 'Biotechnology', ...unheld }]).rows[0];
+    ebitdaMarginPct: null, marketCap: 1e10, industry: 'Biotechnology', ...shown }]).rows[0];
   assert.throws(() => assert.equal(bad.g31OverviewShadow.value, null), assert.AssertionError);
 });
 

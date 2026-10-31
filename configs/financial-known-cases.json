@@ -17017,6 +17017,90 @@
           "unit": "text"
         }
       ]
+    },
+    {
+      "periodType": "12M",
+      "unit": "currency",
+      "replacementValue": null,
+      "revision": "2026-10-30-sdb12",
+      "verifiedAt": "2026-10-30",
+      "caseId": "zeg.l-2025-03-31-annualRev-20261030",
+      "ticker": "ZEG.L",
+      "listingAliases": [
+        "ZEGLF"
+      ],
+      "field": "annualRev",
+      "period": "2025-03-31",
+      "index": 1,
+      "currency": "EUR",
+      "expectedBadValue": 3014621000,
+      "reason": "Jahresumsatz bis 31.03.2025 zurückgehalten: Der Zeitraum umfasst wegen des geänderten Geschäftsjahres 15 Monate, davon 10 Monate Vodafone Spanien; ein Vergleich mit den zwölf Monaten bis 31.03.2026 ist kein Jahresvergleich.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.investegate.co.uk/announcement/rns/zegona-communications--zeg/fy25-q1-26-results-a-transformational-year-/8981287",
+          "form": "Zegona Communications, FY25 and Q1 26 results, RNS 16.07.2025",
+          "page": "announcement text",
+          "quote": "This report includes 15 months results for Zegona Communications plc",
+          "unit": "EUR"
+        }
+      ]
+    },
+    {
+      "periodType": "12M",
+      "unit": "currency",
+      "replacementValue": null,
+      "revision": "2026-10-30-sdb12",
+      "verifiedAt": "2026-10-30",
+      "caseId": "nestleind.bo-2024-03-31-annualRev-20261030",
+      "ticker": "NESTLEIND.BO",
+      "listingAliases": [
+        "NESTLEIND.NS"
+      ],
+      "field": "annualRev",
+      "period": "2024-03-31",
+      "index": 1,
+      "currency": "INR",
+      "expectedBadValue": 243938900000,
+      "reason": "Jahresumsatz bis 31.03.2024 zurückgehalten: Der Zeitraum umfasst wegen des geänderten Geschäftsjahres 15 Monate; ein Vergleich mit den zwölf Monaten bis 31.03.2025 ist kein Jahresvergleich.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.nestle.in/sites/g/files/pydnoa451/files/2024-04/BSENSEFinallettersigned.pdf",
+          "form": "Nestle India, letter to BSE and NSE with the audited results for the fifteen months to 31.03.2024",
+          "page": "PDF pages 3 (revenue from operations 243,938.9) and 7 (period)",
+          "quote": "the current financial year of the Company will be for a period of 15 months commencing",
+          "unit": "INR millions"
+        }
+      ]
+    },
+    {
+      "periodType": "12M",
+      "unit": "currency",
+      "replacementValue": null,
+      "revision": "2026-10-30-sdb12",
+      "verifiedAt": "2026-10-30",
+      "caseId": "eqb.to-2023-10-31-annualRev-20261030",
+      "ticker": "EQB.TO",
+      "listingAliases": [
+        "EQGPF"
+      ],
+      "field": "annualRev",
+      "period": "2023-10-31",
+      "index": 2,
+      "currency": "CAD",
+      "expectedBadValue": 838279000,
+      "reason": "Jahresumsatz bis 31.10.2023 zurückgehalten: Das Geschäftsjahr umfasst wegen der Umstellung nur zehn Monate; ein Vergleich mit den zwölf Monaten bis 31.10.2024 ist kein Jahresvergleich.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.newswire.ca/news-releases/eqb-delivers-record-annual-earnings-and-increases-dividend-5-sequentially-as-fiscal-year-changes-to-align-with-industry-833389363.html",
+          "form": "EQB earnings release, 07.12.2023",
+          "page": "release text",
+          "quote": "To effect this changeover, fiscal year 2023 (\"FY23\") is for the ten month-period from January 1, 2023 to October 31, 2023.",
+          "unit": "CAD millions"
+        }
+      ]
     }
   ],
   "quarantines": [

@@ -22,6 +22,14 @@ function withheld(s, opts, kind) {
   assert.equal(result.valuePresent, false);
   assert.equal(result.reason, REASON);
 }
+// Period gate round 2 (30.10.2026): empty, marked as absent, with the gate's own reason.
+function gated(s, opts, kind, pattern) {
+  const result = ov.overviewMetric(s, opts);
+  assert.equal(result.kind, kind);
+  assert.equal(result.value, null);
+  assert.equal(result.valuePresent, false);
+  assert.match(result.reason, pattern);
+}
 function plain(s, opts, kind, value) {
   const result = ov.overviewMetric(s, opts);
   assert.equal(result.kind, kind);
@@ -48,8 +56,8 @@ test('7827.TW pattern: undated revenue gap is not annual growth', () => {
     { gpClass: 'degenerate' }, 'revenue-badge');
 });
 
-test('adjacent object values without dates keep the old object shape', () => {
-  plain(gp([{ value: 150 }, { value: 100 }]), {}, 'gp', 0.5);
+test('adjacent object values without dates are empty with the gate reason', () => {
+  gated(gp([{ value: 150 }, { value: 100 }]), {}, 'gp', /^Periodenenden fehlen/);
 });
 test('dated adjacent fiscal years keep the number and object shape', () => {
   plain(gp([150, 100], ENDS.slice(0, 2)), {}, 'gp', 0.5);
@@ -74,10 +82,10 @@ test('leading missing values retain the selected pair positions and dates', () =
 });
 test('invalid or missing end at either selected position is undated', () => {
   for (const missing of [null, undefined, 'invalid', '2024-02-30']) {
-    plain(gp([150, 100], [missing, '2023-12-31']), {}, 'gp', 0.5);
-    plain(gp([150, 100], ['2025-12-31', missing]), {}, 'gp', 0.5);
+    gated(gp([150, 100], [missing, '2023-12-31']), {}, 'gp', /^Periodenende des neueren Werts fehlt \(Vorjahr bis 31\.12\.2023\)/);
+    gated(gp([150, 100], ['2025-12-31', missing]), {}, 'gp', /^Periodenende des Vorjahres fehlt \(Zeitraum bis 31\.12\.2025\)/);
   }
-  plain(gp([150, 100], ['2025-12-31']), {}, 'gp', 0.5);
+  gated(gp([150, 100], ['2025-12-31']), {}, 'gp', /^Periodenenden fehlen/);
 });
 test('only the selected pair matters, not short or long prior periods', () => {
   for (const prior of ['2024-12-30', '2023-11-01']) {
@@ -118,7 +126,7 @@ test('REIT: dates come from NetIncome, not Depreciation or GP', () => {
     annualNetIncomeEnds: ['2025-12-31', '2023-12-31'], annualDepreciationEnds: ENDS.slice(0, 2) } };
   withheld(s, { specialTrack: 'reit' }, 'ffo-badge');
   s.annual.annualNetIncomeEnds = [null, '2023-12-31'];
-  plain(s, { specialTrack: 'reit' }, 'ffo-badge', 0.5);
+  gated(s, { specialTrack: 'reit' }, 'ffo-badge', /^Periodenende des neueren Werts fehlt/);
 });
 test('REIT: unequal component lengths leave a plain null without a second pair', () => {
   plain({ annual: { annualNetIncome: [100, 50], annualDepreciation: [100] } },
@@ -135,7 +143,7 @@ for (const [field, opts, kind] of [
       [[100, null, 0], null], [[100, null, -10], null],
       [[null, 100, null], null], [[null, null], null], [[], null],
     ]) {
-      const annual = { [field]: values };
+      const annual = { [field]: values, [field + 'Ends']: ENDS.slice(0, values.length) };
       if (kind === 'ffo-badge') annual.annualDepreciation = values.map(() => 0);
       plain({ annual }, opts, kind, value);
     }
@@ -176,7 +184,7 @@ test('public growth APIs return null, never a verdict object', () => {
     assert.equal(ov.yoyAnnual(s, 'annualGP'), null);
     assert.equal(ov.grossProfitGrowthYoY(s), null);
   }
-  assert.equal(ov.yoyAnnual(gp([100, 100]), 'annualGP'), 0);
+  assert.equal(ov.yoyAnnual(gp([100, 100], ENDS.slice(0, 2)), 'annualGP'), 0);
 });
 
 console.log(`\noverview-adjacent-years.test.js: ${pass} ok, ${fail} fail`);

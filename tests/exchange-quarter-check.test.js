@@ -29,7 +29,7 @@ const ctxOf = (store = F.store, baseline = F.baseline) => ({
   stores: { cn: store.cn, tw: store.tw, warnings: [] },
   baseline: { date: baseline.date, rows: new Map(Object.entries(baseline.rows)), warnings: [] } });
 const CTX = ctxOf();
-const snap = t => clone(F.snapshots[t]);
+const snap = t => require('./helpers/dated-series.js').withEnds(clone(F.snapshots[t]));
 const run = (s, mode = 'shadow', ctx = CTX) => X.applyExchangeCheck(s, { mode, context: ctx });
 const res = (s, ctx) => run(s, 'shadow', ctx).result;
 const ytd = (store, t, p) => store.cn.companies[t].ytd[p].at(-1);

@@ -90,12 +90,13 @@ test('JIOFIN: filed revenue replaces three years, growth +72.0 % instead of +136
 });
 
 test('ALK.TO and 3471.T: the two-year pair is withheld, no growth number remains, the reason says why', () => {
-  assert.deepEqual(leg(apply('ALK.TO', before())), ['year', '2026-06-30', '2024-06-30', 443.2]);
+  // Period gate (#72): the two-year vendor pair is empty even without the hand table.
+  assert.deepEqual(leg(apply('ALK.TO', before())), ['none', null, null, null]);
   const alk = apply('ALK.TO');
   assert.deepEqual(native(alk, 'annual', 'annualRev'), [939676000, null, null, null]);
   assert.deepEqual(leg(alk), ['none', null, null, null]);
   assert.ok(financialReasons(alk).some(r => r.includes('+256,7 %')));
-  assert.deepEqual(leg(apply('3471.T', before())), ['year', '2026-07-31', '2024-07-31', 50.1]);
+  assert.deepEqual(leg(apply('3471.T', before())), ['none', null, null, null]);
   const mflp = apply('3471.T');
   assert.deepEqual(native(mflp, 'annual', 'annualRev'), [36417496000, null, null, null]);
   assert.deepEqual(leg(mflp), ['none', null, null, null]);
