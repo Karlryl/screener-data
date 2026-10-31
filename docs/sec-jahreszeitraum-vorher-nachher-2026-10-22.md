@@ -3,7 +3,7 @@
 > SEC-Jahreswerte kommen nur noch aus ganzen Geschäftsjahren; auf denselben Eingangsdaten ändern sich genau die 71 historischen Zellen, die DL26 erwartet hat, und kein einziger Wachstumswert auf den Boards.
 > - Kodak 2017 bekommt seinen Jahresumsatz von 1.531 Mio. USD zurück (bisher verdrängt durch ein Quartal von 414 Mio. USD); DBD 2023 und EXE 2021 bleiben leer, statt Vorjahreszahlen zu zeigen.
 > - Board-Nachrechnung 21.10.2026: Profitabilitätsgruppe, Gewinnstufe und Umsatzwachstum unverändert, keine Zu- oder Abgänge in einer Liste. Sichtbar bewegt sich vor allem Teva in der vollständigen Liste Gesundheit, profitabel: Rang 503 → 667, Score 37,8 → 10,8.
-> - Wirksam wird die Regel erst mit dem nächsten SEC-Monatslauf nach dem Merge (planmäßig 01.11.2026, 09:00 Uhr MEZ).
+> - Wirksam wird die Regel erst mit dem nächsten SEC-Monatslauf nach dem Merge (der Lauf vom 01.11.2026 läuft noch nach der alten Regel).
 
 # SEC-Jahreswerte nur aus ganzen Geschäftsjahren (F-02): vorher und nachher
 
@@ -97,3 +97,18 @@ Der Monatslauf startet am Sonntag, 01.11.2026, um 08:00 UTC (09:00 Uhr MEZ). Er 
 - Die Gewinnserie nennt eine Lücke als „letzten Verlust“ (zum Beispiel Johnson & Johnson 2011); das ist bestehendes Verhalten der Anzeige und nicht Teil dieser Änderung.
 
 Messwerkzeuge und Rohausgaben liegen außerhalb des Repos unter `C:/Users/Anwender/.codex/t/daylauf5/sd-sec-annual-work/` (`measure.js`, `measure.json`, `arm.sh`, `compare-arms.js`, `cmp-8fe-before-after.json`).
+
+## Nachtrag 31.10.2026: Korrektur nach der Codex-Prüfung und Messung eines Monatslaufs
+
+Korrigiert wurden drei Punkte. Die Umsatzkonzepte teilen sich je Geschäftsjahr ein Periodenende, ein Ersatzwert muss also auf demselben Ende liegen. Die Plausibilitätsprüfung vergleicht nur noch Werte desselben Jahres; eine bereinigte Lücke im neuesten Jahr wird durchgelassen und blockiert die Erneuerung nicht mehr. Ein Geschäftsjahres-Schlüssel, der mehr als ein Jahr hinter dem Periodenende liegt, zählt nicht als Jahr (bei PRTH stehen dort die Excel-Zahlen 43465 und 43830). Kodak 2017 (1.531 Mio. USD) und Lumentum 2019 (1.565,3 Mio. USD) bleiben unverändert.
+
+Gemessen wurde der Datenstand des Tageslaufs vom 31.10.2026 mit den SEC-Rohdaten vom 29.10.2026. Die Nachrechnung ohne Änderung trifft den veröffentlichten Stand in allen 9.269 Board-Zeilen, 1.300 Qualitätszeilen, 474 Rule-of-40-Zeilen und 446 Small-Cap-Zeilen. Der reine Codetausch ändert nichts, weil die Tagesrechnung die gespeicherten SEC-Reihen liest.
+
+| Vergleich auf demselben Datentag | Geänderte Board-Zeilen von 9.269 | Scores | Ränge | Small-Cap-Zeilen von 446 |
+|---|---:|---:|---:|---:|
+| Monatslauf alte Regel gegen veröffentlichten Stand | 232 | 83 | 182 | 0 |
+| Monatslauf neue Regel gegen Monatslauf alte Regel | 588 | 47 | 562 | 149 |
+
+Von den 47 Scores ändern sich vier um mindestens einen Punkt: VISN 56,1 auf 22,6, TEVA 38,1 auf 10,9, RGEN 32,8 auf 43,7, GPGI 5,5 auf 8,4. Von den 562 Rängen bewegen sich 550 um einen Platz, fünf um mindestens fünf Plätze. Umsatzwachstum, Wachstumsbasis, Perioden und Übersichtswerte bleiben in allen Zeilen gleich.
+
+Offen für die Prüfung: VISN fällt, weil die wie eingereicht gemeldete Reihe den Verkauf von Geschäftsteilen als Umsatzrückgang zeigt und damit den Zyklus-Dämpfer auf 0,4 setzt. Das ist eine Methodenfrage und hier nicht entschieden. Außerdem erneuert ein Monatslauf nur ausgewählte Firmen; 212 von 253 und 292 von 351 Einträgen bleiben unberührt, darunter 34 Firmen mit 92 Zellen, die nach der neuen Regel leer wären.
