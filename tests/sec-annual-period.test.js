@@ -21,6 +21,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { extractSecSeries, annualConcept, annualRevUnion, buildAnnual } = require('../merge-sec-xbrl.js');
+const { looseSanity } = require('../scripts/build-secannual.js');
 const CASES = require('./fixtures/sec-annual-period-cases.json');
 
 function quiet(fn) {
@@ -157,4 +158,76 @@ test('amendments and non-USD units stay excluded', () => {
     EUR: [row(2023, '2023-01-01', '2023-12-31', 2)],
   } } };
   assert.equal(annualConcept(gaap, 'Revenues').size, 0);
+});
+
+// -- Revenue union: one period end across all revenue concepts (Codex verdict P307, 30.10.2026) --
+const STUB_2023 = row(2023, '2023-08-12', '2023-12-31', 100);
+const COMPARATIVE_2022 = row(2023, '2022-01-01', '2022-12-31', 400);
+
+test('union: a comparative year of another concept never fills the rejected stub year', () => {
+  const gaap = tax({ RevenueFromContractWithCustomerExcludingAssessedTax: [STUB_2023], Revenues: [COMPARATIVE_2022] });
+  assert.equal(quiet(() => annualRevUnion(gaap, 'SWITCH')).value.has(2023), false);
+  const a = quiet(() => buildAnnual(gaap, {}, 'SWITCH')).value;
+  assert.equal(a.annualRev[a._fys.indexOf(2023)]?.value ?? null, null, 'the 2022 value must not appear under FY2023');
+});
+
+test('union: a full year of another concept on the same period end replaces the stub', () => {
+  const gaap = tax({
+    RevenueFromContractWithCustomerExcludingAssessedTax: [STUB_2023],
+    Revenues: [row(2023, '2023-01-01', '2023-12-31', 900)],
+  });
+  const m = quiet(() => annualRevUnion(gaap, 'SAME-END')).value;
+  assert.equal(m.get(2023).val, 900);
+  assert.equal(m.get(2023).end, '2023-12-31');
+});
+
+test('union: a prior-year value of the higher-priority concept neither wins nor conflicts', () => {
+  const gaap = tax({
+    RevenueFromContractWithCustomerExcludingAssessedTax: [row(2023, '2022-01-01', '2022-12-31', 900)],
+    Revenues: [row(2023, '2023-01-01', '2023-12-31', 100)],
+  });
+  const { value, warnings } = quiet(() => annualRevUnion(gaap, 'PRIOR'));
+  assert.equal(value.get(2023).val, 100, 'FY2023 is the value that ends in 2023');
+  assert.deepEqual(warnings, [], 'two different years are no concept conflict');
+});
+
+test('union: taxonomy probing uses the same anchor, a comparative alone does not make a newer year', () => {
+  const facts = {
+    'us-gaap': tax({ RevenueFromContractWithCustomerExcludingAssessedTax: [row(2025, '2025-08-12', '2025-12-31', 1)], Revenues: [row(2025, '2024-01-01', '2024-12-31', 2)] }),
+    'ifrs-full': tax({ Revenue: [row(2024, '2024-01-01', '2024-12-31', 3, { form: '20-F' })] }),
+  };
+  assert.equal(extractSecSeries({ facts }).taxonomie, 'ifrs-full');
+});
+
+// -- looseSanity compares one fiscal year on both sides (Codex verdict P307, 30.10.2026) ---------
+const cells = (...vals) => vals.map((value) => ({ value }));
+
+test('stub year with a full prior year: the gap stays and the sanity check lets it through', () => {
+  const gaap = tax({
+    OperatingIncomeLoss: [STUB_2023, row(2022, '2022-01-01', '2022-12-31', -100)],
+    Assets: [{ fy: 2023, end: '2023-12-31', val: 1000, form: '10-K', fp: 'FY', accn: 'A-2023' }],
+  });
+  const a = buildAnnual(gaap, {});
+  assert.deepEqual(a.annualOpInc, cells(null, -100), 'the stub is no annual value');
+  assert.equal(looseSanity(cells(100), a.annualOpInc, [], []), true, 'Yahoo 100 is no evidence against the -100 of the year before');
+});
+
+test('sanity: a sign conflict in the same year still rejects, also behind a leading gap', () => {
+  assert.equal(looseSanity(cells(50), cells(-50), [], []), false);
+  assert.equal(looseSanity(cells(100, 90), cells(null, -100), [], []), false);
+});
+
+test('sanity: a revenue scale of two different years is no conflict', () => {
+  assert.equal(looseSanity([], [], cells(1000), cells(null, 300)), true);
+  assert.equal(looseSanity([], [], cells(1000, 950), cells(null, 300)), false, 'same position, factor > 2');
+});
+
+test('sanity: a proven offset decides which year the operating income is compared with', () => {
+  const yRev = cells(500, 480, 460), sRev = cells(530, 500, 480, 460); // SEC is one year ahead
+  assert.equal(looseSanity(cells(50), cells(-10, 50), yRev, sRev), true, 'the loss belongs to the newer SEC year');
+  assert.equal(looseSanity(cells(50), cells(10, -50), yRev, sRev), false, 'same year, opposite sign');
+});
+
+test('sanity: a leading Yahoo gap is not skipped either', () => {
+  assert.equal(looseSanity(cells(null, 50), cells(-40, 50), [], []), true);
 });
