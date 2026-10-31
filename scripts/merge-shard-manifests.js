@@ -186,7 +186,14 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
   const isShardPartial = (m) => m.partial !== false;
   const anyShardPartial = present.some(isShardPartial);
   const missingShards = expected - observed.length;
-  const hd = honestDenominator(fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
+  // W7 (30.10.2026): the prune step runs before this merge, so fullUniverseSize can be smaller than the
+  // universe the shards pulled, while their skip counters still count the pruned rows. On 30.10. that gave
+  // 19624 - 5099 - 483 = 14042 < n_ok and blanked the honest coverage. The skips belong to the pulled
+  // universe: shard n_total (already without owned names) plus the owned names. Older shards keep the old path.
+  const pulledKnown = missingShards === 0 && invalidShards === 0 && present.length > 0
+    && present.every(m => Number.isSafeInteger(m.n_total) && m.n_total >= 0);
+  const pulledUniverse = pulledKnown ? sum('n_total') + sum('n_skipped_owned') : null;
+  const hd = honestDenominator(pulledUniverse ?? fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
   const merged = {
     pulled_at: new Date().toISOString(),
     watchlist_version: (present.find(m => m.watchlist_version != null) || {}).watchlist_version,
@@ -216,6 +223,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     // (belegt-tote Ticker sind schon aus der Watchlist ausgetragen, dead-tickers.json).
     // Tag 464: minus der von der Small-Cap-Liste besessenen Namen (s. o.).
     n_addressable: hd.n_addressable,
+    n_pulled_universe: pulledUniverse ?? undefined,
     // nur gesetzt, wenn der Abzug verworfen wurde — run() macht daraus ein ::warning::
     _addressable_warnung: hd.grund || undefined,
     n_failed: sum('n_failed'),
