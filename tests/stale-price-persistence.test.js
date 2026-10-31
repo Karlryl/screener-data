@@ -45,13 +45,14 @@ function compileGuard(source) {
   m.paths = Module._nodeModulePaths(path.dirname(guardFile)); m._compile(source, guardFile);
   return m.exports;
 }
-async function pull(s, {full = false, stamp, missing = false, corrupt = false, source = pullSource} = {}) {
+async function pull(s, {full = false, stamp, missing = false, corrupt = false, stored, source = pullSource} = {}) {
   const summaryResponse = { price: {currency:'USD', regularMarketPrice:100, marketCap:1e12, ...(stamp ? {regularMarketTime:stamp}: {})},
     summaryDetail:{marketCap:1e12}, financialData:{financialCurrency:'USD'}, quoteType:{quoteType:'EQUITY'},
     summaryProfile:{sector:'Technology', industry:'Software'} };
   const f = fixture({snapshots:[s], now:NOW, env, pullSource:source, manual:full ? ['OLD']:[],
     summaryResponse, emptySummary:missing, quoteMarketCap:missing ? null : 1e12, quoteTime:stamp});
   if (corrupt) f.files.set(path.join(f.out,'OLD.json'),Buffer.from('{broken'));
+  if (stored) f.files.set(path.join(f.out,'OLD.json'),Buffer.from(JSON.stringify(stored)));
   const result = await f.run();
   if (!missing) assert.equal(result.results[0]?.status, full ? 'ok' : 'price-only', JSON.stringify({result,logs:f.logs.slice(-5)}));
   return f.stored('OLD');
@@ -73,6 +74,8 @@ function merged(previous, incoming, source = pullSource) {
   m.exports.mergeSmallcapSnapshots('virtual-in','virtual-out');
   return JSON.parse(files.get('virtual-out/OLD.json'));
 }
+const DAMAGED_HOLDS = [{},{priceDay:'kein Datum'},{priceDay:'2026-02-45'},{priceDay:'2099-01-01'},{priceDay:7},true,[],'x',1];
+const DAMAGED_METAS = [[],'kaputt',7,true];
 const checks = {
   async repair(source = pullSource) {
     const fresh=await pull(seed(),{full:true,stamp:FRESH,corrupt:true,source});
@@ -135,10 +138,87 @@ const checks = {
     const fresh=merged('corrupt',seed(FRESH),source);
     assert.equal(guard.prepareMarketCap(fresh).marketCap.value,1e12);
   },
+  // A damaged hold still withholds an unproven value, names no invented day, and never blocks a proven quote.
+  async damagedHold(g = guard) {
+    for (const hold of DAMAGED_HOLDS) {
+      const s=seed(null); s.meta.stalePriceHold=structuredClone(hold);
+      const reason=withheld(s,g).meta.marketCapReason;
+      assert.match(reason,/nicht lesbar/,JSON.stringify(hold));
+      assert.doesNotMatch(reason,/undefined|NaN|\d{2}\.\d{2}\.\d{4}/,JSON.stringify(hold));
+      const again=seed(null); again.meta.stalePriceHold=structuredClone(hold);
+      g.retainStalePriceHold(again,s,'2026-10-30');
+      assert.deepEqual(JSON.parse(JSON.stringify(again.meta.stalePriceHold)),{priceDay:null},'hold not normalised: '+JSON.stringify(hold));
+      withheld(again,g);
+      const dated=seed(null); dated.meta.stalePriceHold=structuredClone(hold);
+      g.retainStalePriceHold(dated,seed(),'2026-10-30');
+      assert.deepEqual(dated.meta.stalePriceHold,{priceDay:'2026-10-02'},'readable evidence lost');
+      const proven=seed(FRESH); proven.meta.stalePriceHold=structuredClone(hold);
+      assert.equal(g.prepareMarketCap(proven).marketCap.value,1e12,'damaged hold blocked a current stamp');
+      g.retainStalePriceHold(proven,s,'2026-10-30'); assert.equal(proven.meta.stalePriceHold,undefined);
+    }
+    const stamped=seed('2026-02-45T10:00:00.000Z');
+    assert.equal(g.priceAge(stamped),null,'an impossible stamp counted as a date');
+  },
+  async damagedHoldPull(source = pullSource) {
+    for (const hold of DAMAGED_HOLDS) for (const prior of [seed(),seed(null)]) {
+      prior.meta.stalePriceHold=structuredClone(hold);
+      const fresh=await pull(seed(),{full:true,stamp:FRESH,stored:prior,source});
+      assert.equal(fresh.meta.stalePriceHold,undefined); assert.equal(guard.prepareMarketCap(fresh).marketCap.value,1e12);
+      withheld(await pull(seed(),{full:true,stored:prior,source}));
+      withheld(await pull(seed(),{stored:prior,source}));
+    }
+  },
+  // meta has to stay a plain object, otherwise the hold vanishes in JSON.stringify (array) or throws (string).
+  async damagedMeta(g = guard) {
+    for (const meta of DAMAGED_METAS) {
+      const next=seed(null); next.meta=structuredClone(meta);
+      assert.deepEqual(g.retainStalePriceHold(next,seed(),'2026-10-30'),{priceDay:'2026-10-02'});
+      assert.deepEqual(JSON.parse(JSON.stringify(next)).meta.stalePriceHold,{priceDay:'2026-10-02'},'hold lost on save: '+JSON.stringify(meta));
+      const old=seed(); old.meta=structuredClone(meta);
+      const out=g.applyStalePriceGate(old,7,'2026-10-30'); assert.equal(out.status,'withheld');
+      const saved=JSON.parse(JSON.stringify(old));
+      assert.deepEqual(saved.meta.stalePriceHold,{priceDay:'2026-10-02'}); assert.match(saved.meta.marketCapReason,/Yahoo/);
+      const untouched=seed(null); untouched.meta=structuredClone(meta);
+      assert.equal(g.retainStalePriceHold(untouched,null,'2026-10-30'),null);
+      assert.deepEqual(untouched.meta,meta,'meta without evidence must stay as found');
+    }
+  },
+  async damagedMetaPull(source = pullSource) {
+    for (const meta of DAMAGED_METAS) {
+      const prior=seed(); prior.meta=structuredClone(meta);
+      const missing=await pull(seed(),{full:true,missing:true,stored:prior,source});
+      assert.deepEqual(missing.meta.stalePriceHold,{priceDay:'2026-10-02'},'hold lost on save: '+JSON.stringify(meta));
+      withheld(await pull(seed(),{full:true,stored:{...missing,meta:{...missing.meta,ticker:'OLD'},annual:{},timeseries:{}},source}));
+    }
+  },
+  // No expiry: only a current Yahoo stamp brings the value back, and every reason says so without claiming an end of trading.
+  async noExpiry(g = guard) {
+    const held=withheld(seed(),g);
+    let s=held;
+    for (const today of ['2026-11-30','2027-10-30','2030-01-02']) {
+      const next=seed(null); g.retainStalePriceHold(next,s,today);
+      assert.deepEqual(next.meta.stalePriceHold,{priceDay:'2026-10-02'});
+      s=withheld(next,g);
+    }
+    const reasons=[held.meta.marketCapReason,s.meta.marketCapReason];
+    const damaged=seed(null); damaged.meta.stalePriceHold={}; reasons.push(withheld(damaged,g).meta.marketCapReason);
+    for (const reason of reasons) {
+      assert.match(reason,/sobald Yahoo einen aktuellen Kurs liefert/,reason);
+      assert.match(reason,/kein Handelsende/,reason);
+    }
+    const back=seed('2030-01-02T08:00:00.000Z'); g.retainStalePriceHold(back,s,'2030-01-02');
+    assert.equal(back.meta.stalePriceHold,undefined);
+    assert.equal(g.applyStalePriceGate(back,7,'2030-01-02').status,'fresh');
+  },
 };
 const breaks = {
   state: () => compileGuard(breakLine(guardSource,'  if (hold) (snapshot.meta ??= {}).stalePriceHold = { ...hold };','  if (false) (snapshot.meta ??= {}).stalePriceHold = { ...hold };')),
-  reason: () => compileGuard(breakLine(guardSource,'    `Letzter von Yahoo gelieferter Kurs vom ${germanDate(age.priceDay)}, älter als ${limit} Wochentage (Montag bis Freitag); Börsenwert nicht gezeigt.`);','    `Letzter Kurs vom ${germanDate(age.priceDay)}; Börsenwert nicht gezeigt.`);')),
+  reason: () => compileGuard(breakLine(guardSource,'    `Letzter von Yahoo gelieferter Kurs vom ${germanDate(age.priceDay)}, älter als ${limit} Wochentage (Montag bis Freitag). ${STALE_PRICE_RETURN}`);','    `Letzter Kurs vom ${germanDate(age.priceDay)}; Börsenwert nicht gezeigt.`);')),
+  damagedHold: () => compileGuard(breakLine(guardSource,'const heldDay = (hold, today) => { const d = realDay(hold?.priceDay); return d && d <= today ? d : null; };','const heldDay = hold => hold?.priceDay;')),
+  damagedHoldPull: () => breakLine(pullSource,'      retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,','      void (canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,'),
+  damagedMeta: () => compileGuard(breakLine(guardSource,"  return meta && typeof meta === 'object' && !Array.isArray(meta) ? meta : (snapshot.meta = {});",'  return meta ?? (snapshot.meta = {});')),
+  damagedMetaPull: () => breakLine(pullSource,'  retainStalePriceHold(snapshot, snapshot, observedAt.slice(0, 10));',''),
+  noExpiry: () => compileGuard(breakLine(guardSource,"const STALE_PRICE_RETURN = 'Der Börsenwert wird nicht gezeigt und kommt von selbst zurück, sobald Yahoo einen aktuellen Kurs liefert. Ein veralteter Kurs allein belegt kein Handelsende.';","const STALE_PRICE_RETURN = 'Börsenwert nicht gezeigt.';")),
   price: () => breakLine(pullSource,'    retainStalePriceHold(existing, previousQuote, process.env.RUN_DATE_UTC || newAsOf.slice(0, 10));',''),
   full: () => breakLine(pullSource,'      retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,','      void (canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,'),
   missing: () => breakLine(pullSource,'  retainStalePriceHold(snapshot, snapshot, observedAt.slice(0, 10));',''),
