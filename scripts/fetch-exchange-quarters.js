@@ -43,6 +43,10 @@
  *   Before every write the new store is checked against the old one (assertAppendOnly): an old
  *   observation that would be lost or changed throws and nothing is written. Writes are atomic.
  *
+ *   USA      SEC companyfacts, one request per firm whose vendor series misses a newer quarter (usCandidates),
+ *            read by the SEC quarter fill in lib/exchange-quarter-check.js -> external-data/exchange-quarters/us.json.
+ *            Only on --market=us; 10 failures in a row, or at least 5 failures that are more than 20 % of the calls -> abort.
+ *
  * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw] [--dry-run] [--force-cn] [--tw-cap=600]
  *   --dry-run   fetch and check everything, write nothing (branch runs of the workflow)
  *   --force-cn  run the China pass even when the weekly cadence would skip it
@@ -56,6 +60,9 @@ const { fetchJson } = require(path.join(ROOT, 'lib/fetch-retry.js'));
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 const { holeBericht, secucodeFuerYahoo, istEchterACode } = require(path.join(ROOT, 'scripts/build-cnannual.js'));
 const S = require(path.join(ROOT, 'lib/exchange-quarter-store.js'));
+const { pitSingleQuarters, openStore, REV_CONCEPTS } = require(path.join(ROOT, 'lib/sec-pit.js'));
+const { assertSecContact } = require(path.join(ROOT, 'lib/sec-user-agent.js'));
+const { RATE_DELAY_MS } = require(path.join(ROOT, 'lib/sec-rate-limit.js'));
 
 const USER_AGENT = 'screener-data exchange-quarters fetch';
 const PAUSE_MS = 1500;
@@ -367,6 +374,104 @@ async function runTaiwan(ctx) {
   return summary;
 }
 
+// ── United States (SEC quarter fill) ──────────────────────────────────────────
+const SEC_CONCEPTS = [...REV_CONCEPTS, 'RevenuesNetOfInterestExpense'];
+const SEC_CAP = 600;                      // SEC requests per run; the measured queue on 31.10.2026 is 273 firms
+const SEC_REREAD_MS = 7 * DAY_MS;         // a firm whose newest quarter the store already holds is read once a week
+const SEC_KEEP_DAYS = 820;                // nine quarters: the shown pair plus the vendor's five for the agreement check
+const SEC_STALE_DAYS = 200;               // no quarter for this long: a candidate even when the vendor names no newer one
+const SEC_ABOUT = 'Single-quarter revenue in USD from SEC companyfacts (us-gaap, forms 10-Q and 10-K), one group per concept. '
+  + 'Reported three-month facts, or derived from cumulative values with the derivation stated. Append-only. Only firms whose '
+  + 'vendor series misses a newer quarter. Written by scripts/fetch-exchange-quarters.js, read by lib/exchange-quarter-check.js.';
+const dayOf = (iso) => Date.parse(tag(iso) + 'T00:00:00Z') / DAY_MS;
+
+/** US firms in USD whose vendor series probably misses a filed quarter. @param {string[]} dirs snapshot folders @param {string} today YYYY-MM-DD @returns {Array<{ticker:string,mrq:string|null}>} */
+function usCandidates(dirs, today) {
+  const out = new Map();
+  for (const dir of dirs) {
+    for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).sort() : []) {
+      if (!f.endsWith('.json') || f.startsWith('_')) continue;
+      const s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')), m = s.meta || {};
+      if (!m.ticker || m.country !== 'United States' || out.has(m.ticker)) continue;
+      if ((m.fxConverted === true ? m.reportingCurrencyOriginal : m.reportingCurrency) !== 'USD' || (m.fxConverted === true && m.fxRateApplied !== 1)) continue;
+      const ends = s.timeseries?.revenueQEnds || [], rows = s.timeseries?.revenueQ || [];
+      const newest = ends.filter((e, i) => Number.isFinite(rows[i] && typeof rows[i] === 'object' ? rows[i].value : rows[i])).sort().pop();
+      if (!newest) continue;
+      const mrq = tag(m.mostRecentQuarter) || null;
+      if ((mrq && dayOf(mrq) - dayOf(newest) > 15) || dayOf(today) - dayOf(newest) > SEC_STALE_DAYS) out.set(m.ticker, { ticker: m.ticker, mrq });
+    }
+  }
+  return [...out.values()];
+}
+
+async function runUs(ctx) {
+  const file = path.join(ctx.dir, 'us.json');
+  const prev = loadStore(file, 'US');
+  const next = prev ? clone(prev) : { schemaVersion: 1, market: 'US', currency: 'USD', unit: 1, about: SEC_ABOUT, sources: {}, companies: {} };
+  const now = ctx.now(), fetchedAt = now.toISOString(), today = fetchedAt.slice(0, 10), src = 'sec-' + stamp(fetchedAt);
+  const cutoff = new Date(now.getTime() - SEC_KEEP_DAYS * DAY_MS).toISOString().slice(0, 10);
+  // Today's SEC list first (a listing younger than the committed map), the committed map for firms that left the list.
+  const cikMap = { ...ctx.cikMap, ...await ctx.secTickers() };
+  const cikOf = (t) => cikMap[t]?.cik || cikMap[t.replace(/-/g, '.')]?.cik || cikMap[t.replace(/\./g, '-')]?.cik || null;
+  const st = { candidates: 0, due: 0, calls: 0, ok: 0, noCik: 0, noFacts: 0, failed: 0, skippedCap: 0 };
+  const failures = [];
+  let inARow = 0;
+  const all = usCandidates(ctx.snapshotDirs, today);
+  st.candidates = all.length;
+  const due = all.filter(({ ticker, mrq }) => {
+    const c = next.companies[ticker];
+    if (!c) return true;
+    const newest = Object.values(c).filter((g) => g && typeof g === 'object').flatMap((g) => Object.keys(g)).filter((k) => /^\d{4}-/.test(k)).sort().pop();
+    const holdsMrq = !mrq || (newest && dayOf(mrq) - dayOf(newest) <= 15);
+    return !(holdsMrq && now.getTime() - Date.parse(c.noData?.readAt || 0) < SEC_REREAD_MS);
+  });
+  st.due = due.length;
+  for (const { ticker } of due) {
+    if (st.calls >= ctx.secCap) { st.skippedCap += 1; continue; }
+    const cik = cikOf(ticker);
+    if (!cik) { st.noCik += 1; continue; }
+    st.calls += 1;
+    let facts;
+    try { facts = await ctx.secFacts(cik); inARow = 0; }
+    catch (e) {
+      st.failed += 1; inARow += 1; failures.push(ticker + ': ' + e.message);
+      if (inARow >= 10) throw new Error('SEC: 10 failures in a row (last: ' + failures.slice(-3).join(' | ') + ')');
+      continue;
+    }
+    const c = next.companies[ticker] || (next.companies[ticker] = { cik });
+    c.noData = { readAt: fetchedAt };
+    if (!facts) { st.noFacts += 1; continue; }
+    st.ok += 1;
+    for (const concept of SEC_CONCEPTS) {
+      const rows = facts.facts?.['us-gaap']?.[concept]?.units?.USD;
+      for (const q of pitSingleQuarters(rows, { asOf: today })) {
+        if (q.end < cutoff) break;
+        const { end, ...fresh } = q;
+        const group = c[concept] || (c[concept] = {});
+        S.mergeObservation(group[end] || (group[end] = []), fresh, { src, fetchedAt, updateDate: q.filed });
+      }
+    }
+  }
+  if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
+  if (st.calls) next.sources[src] = { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };
+  S.assertAppendOnly(prev, next);
+  const text = S.serialiseStore(next);
+  if (!ctx.dryRun) writeFileAtomic(file, text);
+  const summary = { market: 'US', src, ...st, companies: Object.keys(next.companies).length, bytes: Buffer.byteLength(text), written: !ctx.dryRun };
+  ctx.log('US: ' + JSON.stringify(summary));
+  if (failures.length) ctx.log('US failures: ' + failures.slice(0, 20).join(' | '));
+  return summary;
+}
+
+// SEC identity and pace come from the project's own settings; the contact is read from the environment at request time.
+function secFactsFetcher(fetcher) {
+  return async (cik) => {
+    const url = 'https://data.sec.gov/api/xbrl/companyfacts/CIK' + cik + '.json';
+    try { return await fetcher(url, { headers: { 'User-Agent': assertSecContact(), Accept: 'application/json' }, pauseMs: RATE_DELAY_MS }); }
+    catch (e) { if (/HTTP 404/.test(e.message)) return null; throw e; }
+  };
+}
+
 async function main(opts = {}) {
   const ctx = {
     fetchJson: opts.fetchJson || fetchJson,
@@ -378,6 +483,12 @@ async function main(opts = {}) {
     forceCn: !!opts.forceCn,
     cnCap: opts.cnCap || CN_CAP,
     twCap: opts.twCap || TW_CAP,
+    secCap: opts.secCap || SEC_CAP,
+    snapshotDirs: opts.snapshotDirs || [path.join(ROOT, 'snapshots'), path.join(ROOT, 'snapshots-smallcap')],
+    cikMap: opts.cikMap || (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'external-data', 'sec-ticker-cik-map.json'), 'utf8')).byTicker; } catch (_) { return null; } })(),
+    secFacts: opts.secFacts || secFactsFetcher(opts.fetchJson || fetchJson),
+    secEndpoint: opts.secEndpoint || 'https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json',
+    secTickers: opts.secTickers || (async () => Object.fromEntries(await require(path.join(ROOT, 'discovery/sec-tickers.js')).fetchSecTickers())),
     log: opts.log || ((m) => console.log(m)),
   };
   const markets = opts.markets || ['cn', 'tw'];
@@ -385,7 +496,7 @@ async function main(opts = {}) {
   const results = [];
   let exitCode = 0;
   for (const m of markets) {
-    try { results.push(await (m === 'cn' ? runChina(ctx) : runTaiwan(ctx))); }
+    try { results.push(await (m === 'cn' ? runChina(ctx) : m === 'us' ? runUs(ctx) : runTaiwan(ctx))); }
     catch (e) {
       exitCode = 1;
       results.push({ market: m.toUpperCase(), aborted: e.message });
@@ -397,7 +508,13 @@ async function main(opts = {}) {
 
 if (require.main === module) {
   const arg = (name) => { const a = process.argv.find((x) => x.startsWith('--' + name + '=')); return a ? a.split('=')[1] : null; };
+  // --sec-zip with --cik-file reads local SEC files instead of asking SEC (backfill, before/after); --now fixes the clock of that read.
+  const zip = arg('sec-zip') ? openStore(arg('sec-zip')) : null;
   main({
+    ...(zip ? { secFacts: async (cik) => zip.factsForCik(Number(cik)), secEndpoint: 'companyfacts.zip',
+      secTickers: async () => Object.fromEntries(Object.values(JSON.parse(fs.readFileSync(arg('cik-file'), 'utf8'))).map((r) => [String(r.ticker).toUpperCase(), { cik: String(r.cik_str).padStart(10, '0') }])) } : {}),
+    ...(arg('now') ? { now: () => new Date(arg('now')) } : {}),
+    ...(arg('snapshots') ? { snapshotDirs: arg('snapshots').split(',') } : {}),
     markets: arg('market') ? arg('market').split(',') : undefined,
     dryRun: process.argv.includes('--dry-run'),
     forceCn: process.argv.includes('--force-cn'),

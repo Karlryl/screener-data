@@ -29,10 +29,13 @@ concurrency:
 
 permissions:
   contents: write
+  actions: read  # the US pass reads the snapshot artifacts of the daily and the small-cap pull
 
 # ZWEIG-WACHE (see tests/zweig-wache.test.js): only refs/heads/main may publish.
+# SEC_CONTACT: the same repo secret as daily-pull and monthly-sec-xbrl; the contact never stands in a file.
 env:
   VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+  SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
 
 jobs:
   fetch:
@@ -51,6 +54,46 @@ jobs:
             node scripts/fetch-exchange-quarters.js
           else
             node scripts/fetch-exchange-quarters.js --dry-run --force-cn --tw-cap=40
+          fi
+
+      # SEC quarter fill: asks SEC only for US firms whose vendor series misses a newer quarter. A missing
+      # artifact leaves no candidates and the store as it is; the fill never depends on this run.
+      - name: Find latest snapshot artifacts
+        id: find_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pair in "daily=daily-pull.yml" "small=smallcap-pull.yml"; do
+            RUN_ID=$(gh run list --repo "${{ github.repository }}" --workflow "${pair#*=}" --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
+            echo "${pair%%=*}=$RUN_ID" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Restore snapshots (daily pull)
+        if: steps.find_runs.outputs.daily != ''
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: snapshots
+          path: snapshots
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_runs.outputs.daily }}
+
+      - name: Restore snapshots (small-cap pull)
+        if: steps.find_runs.outputs.small != ''
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: smallcap-store-merged
+          path: snapshots-smallcap
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_runs.outputs.small }}
+
+      - name: Fetch SEC quarters (US)
+        run: |
+          if [ "$VEROEFFENTLICHEN" = "true" ]; then
+            node scripts/fetch-exchange-quarters.js --market=us
+          else
+            node scripts/fetch-exchange-quarters.js --market=us --dry-run
           fi
 
       # Runs after a red fetch too: each market is written atomically and only when it passed all
