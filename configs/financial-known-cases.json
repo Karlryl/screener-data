@@ -55,7 +55,8 @@
     { "ticker": "FTW", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "SUNC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "AHCO", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "600292.SS", "field": "revenueQ", "coversThrough": "2026-06-30" }
+    { "ticker": "600292.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "NMR", "field": "revenueQ", "coversThrough": "2026-09-30" }
   ],
   "cases": [
     {
@@ -15108,6 +15109,1914 @@
           "unit": "INR lakh"
         }
       ]
+    },
+    {
+      "caseId": "aauc-2025-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 730382000,
+      "replacementValue": 1331824000,
+      "metricDefinition": "Revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der Anbieter hat die Jahre 2025 und 2024 vertauscht; der 40-F nennt für das Jahr 2025 1.331,8 Mio. USD, der Anbieter führt dort 730,4 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Revenue 7 $ 1,331,824 $ 730,382",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 1331824000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2024-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 1331824000,
+      "replacementValue": 730382000,
+      "metricDefinition": "Revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der Anbieter hat die Jahre 2025 und 2024 vertauscht; der 40-F nennt für das Jahr 2024 730,4 Mio. USD, der Anbieter führt dort 1.331,8 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Revenue 7 $ 1,331,824 $ 730,382",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 730382000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2023-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 655691000,
+      "replacementValue": 655691000,
+      "metricDefinition": "Revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Abschluss für 2024 überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000110465925053139/tm2514599d1_ex99-33.htm",
+          "form": "40FR12B",
+          "page": "Exhibit 99.33, consolidated statement of loss",
+          "accession": "0001104659-25-053139",
+          "filed": "2025-05-28",
+          "quote": "Revenue 7 $ 730,382 $ 655,691",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 655691000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2022-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualRev",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 669551000,
+      "replacementValue": 669551000,
+      "metricDefinition": "Revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Abschluss für 2023 überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000110465925053139/tm2514599d1_ex99-2.htm",
+          "form": "40FR12B",
+          "page": "Exhibit 99.2, consolidated statements of (loss) earnings",
+          "accession": "0001104659-25-053139",
+          "filed": "2025-05-28",
+          "quote": "Revenue 8 $ 655,691 $ 669,551",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": 669551000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2025-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 220234000,
+      "replacementValue": 506542000,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn korrigiert: Der Anbieter hat die Jahre 2025 und 2024 vertauscht; der 40-F nennt für das Jahr 2025 506,5 Mio. USD, der Anbieter führt dort 220,2 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Gross profit $ 506,542 $ 220,234",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 506542000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2024-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualGP",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 506542000,
+      "replacementValue": 220234000,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "Bruttogewinn korrigiert: Der Anbieter hat die Jahre 2025 und 2024 vertauscht; der 40-F nennt für das Jahr 2024 220,2 Mio. USD, der Anbieter führt dort 506,5 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Gross profit $ 506,542 $ 220,234",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 220234000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2023-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualGP",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 106790000,
+      "replacementValue": 106790000,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Abschluss für 2024 überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000110465925053139/tm2514599d1_ex99-33.htm",
+          "form": "40FR12B",
+          "page": "Exhibit 99.33, consolidated statement of loss",
+          "accession": "0001104659-25-053139",
+          "filed": "2025-05-28",
+          "quote": "Gross profit $ 220,234 $ 106,790",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 106790000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2022-12-31-annualGP-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualGP",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 129403000,
+      "replacementValue": 129403000,
+      "metricDefinition": "Gross profit",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Abschluss für 2023 überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000110465925053139/tm2514599d1_ex99-2.htm",
+          "form": "40FR12B",
+          "page": "Exhibit 99.2, consolidated statements of (loss) earnings",
+          "accession": "0001104659-25-053139",
+          "filed": "2025-05-28",
+          "quote": "Gross profit $ 106,790 $ 129,403",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": 129403000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2025-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualNetIncome",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -115632000,
+      "replacementValue": -51847000,
+      "metricDefinition": "Earnings attributable to shareholders of the company",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresergebnis korrigiert: Der Anbieter hat die Jahre 2025 und 2024 vertauscht; der 40-F nennt für das Jahr 2025 einen Verlust der Aktionäre von 51,8 Mio. USD, der Anbieter führt dort einen Verlust von 115,6 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Shareholders of the Company $ (51,847) $ (115,632)",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": -51847000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2024-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualNetIncome",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -51847000,
+      "replacementValue": -115632000,
+      "metricDefinition": "Earnings attributable to shareholders of the company",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresergebnis korrigiert: Der Anbieter hat die Jahre 2025 und 2024 vertauscht; der 40-F nennt für das Jahr 2024 einen Verlust der Aktionäre von 115,6 Mio. USD, der Anbieter führt dort einen Verlust von 51,8 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Shareholders of the Company $ (51,847) $ (115,632)",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": -115632000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2023-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualNetIncome",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -208482000,
+      "replacementValue": -208482000,
+      "metricDefinition": "Earnings attributable to shareholders of the company",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Abschluss für 2024 überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000110465925053139/tm2514599d1_ex99-33.htm",
+          "form": "40FR12B",
+          "page": "Exhibit 99.33, consolidated statement of loss",
+          "accession": "0001104659-25-053139",
+          "filed": "2025-05-28",
+          "quote": "Shareholders of the Company $ (115,632 ) $ (208,482 )",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": -208482000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2022-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualNetIncome",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -7421000,
+      "replacementValue": -7421000,
+      "metricDefinition": "Earnings attributable to shareholders of the company",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Abschluss für 2023 überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000110465925053139/tm2514599d1_ex99-2.htm",
+          "form": "40FR12B",
+          "page": "Exhibit 99.2, consolidated statements of (loss) earnings",
+          "accession": "0001104659-25-053139",
+          "filed": "2025-05-28",
+          "quote": "Shareholders of the Company $ (208,482 ) $ (7,421 )",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": -7421000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2025-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "expectedBadValue": 128880000,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Anbieter hat auch hier die Jahre 2025 und 2024 vertauscht; der Abschluss weist keine Zeile Betriebsergebnis aus, und der Anbieterwert von 128,9 und 364,9 Mio. USD steht so in keinem Bericht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Net earnings before finance costs and income tax $ 263,903 $ 13,910",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 263903000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "aauc-2024-12-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "AAUC",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "expectedBadValue": 364923000,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Anbieter hat auch hier die Jahre 2025 und 2024 vertauscht; der Abschluss weist keine Zeile Betriebsergebnis aus, und der Anbieterwert von 128,9 und 364,9 Mio. USD steht so in keinem Bericht.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1993344/000162828026022512/aaue-20251231_d2.htm",
+          "form": "40-F",
+          "page": "Consolidated statements of earnings (loss), page 7",
+          "accession": "0001628280-26-022512",
+          "filed": "2026-04-01",
+          "quote": "Net earnings before finance costs and income tax $ 263,903 $ 13,910",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 13910000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "sgml-2025-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "SGML",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 152611950,
+      "replacementValue": 110012000,
+      "metricDefinition": "Net sales revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der Anbieter führt 152,6 Mio. USD, das ist der Berichtswert mal 1,387, wohl ein Kurs zum kanadischen Dollar; der 40-F nennt 110,0 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1848309/000129281426001908/ex99-3.htm",
+          "form": "40-F",
+          "page": "Exhibit 99.3, consolidated statements of loss",
+          "accession": "0001292814-26-001908",
+          "filed": "2026-03-30",
+          "quote": "Net sales revenue 24 110,012 151,352",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 110012000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "sgml-2024-12-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "SGML",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 208747000,
+      "replacementValue": 151352000,
+      "metricDefinition": "Net sales revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der Anbieter führt 208,7 Mio., den Wert in kanadischen Dollar aus dem Bericht für 2024, als US-Dollar; der 40-F für 2025 nennt 151,4 Mio. USD. Ältere Jahre gibt es nur in kanadischen Dollar, sie bleiben leer.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1848309/000129281426001908/ex99-3.htm",
+          "form": "40-F",
+          "page": "Exhibit 99.3, consolidated statements of loss",
+          "accession": "0001292814-26-001908",
+          "filed": "2026-03-30",
+          "quote": "Net sales revenue 24 110,012 151,352",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 151352000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "sgml-2025-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "SGML",
+      "field": "annualNetIncome",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -69618140,
+      "replacementValue": -50185000,
+      "metricDefinition": "Net loss",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresergebnis korrigiert: Der Anbieter führt einen Verlust von 69,6 Mio. USD, das ist der Berichtswert mal 1,387, wohl ein Kurs zum kanadischen Dollar; der 40-F nennt 50,2 Mio. USD.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1848309/000129281426001908/ex99-3.htm",
+          "form": "40-F",
+          "page": "Exhibit 99.3, consolidated statements of loss",
+          "accession": "0001292814-26-001908",
+          "filed": "2026-03-30",
+          "quote": "Net loss for the year (50,185 ) (51,396 )",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": -50185000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "sgml-2024-12-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "SGML",
+      "field": "annualNetIncome",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -69981000,
+      "replacementValue": -51396000,
+      "metricDefinition": "Net loss",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresergebnis korrigiert: Der Anbieter führt einen Verlust von 70,0 Mio., den Wert in kanadischen Dollar aus dem Bericht für 2024, als US-Dollar; der 40-F für 2025 nennt 51,4 Mio. USD. Ältere Jahre gibt es nur in kanadischen Dollar, sie bleiben leer.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1848309/000129281426001908/ex99-3.htm",
+          "form": "40-F",
+          "page": "Exhibit 99.3, consolidated statements of loss",
+          "accession": "0001292814-26-001908",
+          "filed": "2026-03-30",
+          "quote": "Net loss for the year (50,185 ) (51,396 )",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": -51396000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2026-03-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualRev",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 2167713000000,
+      "replacementValue": 2167713000000,
+      "metricDefinition": "Net revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Nettoumsatz im 20-F überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net revenue 1,562,000 1,892,485 2,167,713",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "value": 2167713000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2025-03-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualRev",
+      "period": "2025-03-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 665643000000,
+      "replacementValue": 1892485000000,
+      "metricDefinition": "Net revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der Anbieter führt 665,6 Mrd. JPY, ein Wert, der zu keiner Zeile des Berichts passt; der 20-F nennt einen Nettoumsatz von 1.892,5 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net revenue 1,562,000 1,892,485 2,167,713",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "value": 1892485000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2024-03-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualRev",
+      "period": "2024-03-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 4157294000000,
+      "replacementValue": 1562000000000,
+      "metricDefinition": "Net revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Der Anbieter führt den Gesamtertrag vor Zinsaufwand (4.157,3 Mrd. JPY); der 20-F nennt einen Nettoumsatz von 1.562,0 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net revenue 1,562,000 1,892,485 2,167,713",
+          "start": "2023-04-01",
+          "end": "2024-03-31",
+          "value": 1562000000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2023-03-31-annualRev-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualRev",
+      "period": "2023-03-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 1335577000000,
+      "replacementValue": 1335577000000,
+      "metricDefinition": "Net revenue",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem Nettoumsatz in der Fünfjahresübersicht des 20-F überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Item 5, selected financial data, five years",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net revenue 1,363,890 1,335,577 1,562,000 1,892,485 2,167,713",
+          "start": "2022-04-01",
+          "end": "2023-03-31",
+          "value": 1335577000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2026-03-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualNetIncome",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 362129000000,
+      "replacementValue": 362129000000,
+      "metricDefinition": "Net income attributable to NHI shareholders",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem 20-F überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net income attributable to NHI shareholders ¥ 165,863 ¥ 340,736 ¥ 362,129",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "value": 362129000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2025-03-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualNetIncome",
+      "period": "2025-03-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 132675000000,
+      "replacementValue": 340736000000,
+      "metricDefinition": "Net income attributable to NHI shareholders",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresergebnis korrigiert: Der Anbieter führt 132,7 Mrd. JPY, ein Wert, der zu keiner Zeile des Berichts passt; der 20-F nennt für die Aktionäre 340,7 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net income attributable to NHI shareholders ¥ 165,863 ¥ 340,736 ¥ 362,129",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "value": 340736000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2024-03-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualNetIncome",
+      "period": "2024-03-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 165863000000,
+      "replacementValue": 165863000000,
+      "metricDefinition": "Net income attributable to NHI shareholders",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit dem 20-F überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net income attributable to NHI shareholders ¥ 165,863 ¥ 340,736 ¥ 362,129",
+          "start": "2023-04-01",
+          "end": "2024-03-31",
+          "value": 165863000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2023-03-31-annualNetIncome-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualNetIncome",
+      "period": "2023-03-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 92786000000,
+      "replacementValue": 92786000000,
+      "metricDefinition": "Net income attributable to NHI shareholders",
+      "verifiedAt": "2026-10-30",
+      "reason": "bestätigt: Anbieterwert stimmt mit der Fünfjahresübersicht des 20-F überein.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Item 5, selected financial data, five years",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Net income attributable to NHI shareholders ¥ 142,996 ¥ 92,786 ¥ 165,863 ¥ 340,736 ¥ 362,129",
+          "start": "2022-04-01",
+          "end": "2023-03-31",
+          "value": 92786000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2026-03-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualOpInc",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "JPY",
+      "expectedBadValue": 667763989650,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz; der 20-F weist keine solche Zeile aus, nur das Vorsteuerergebnis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Income before income taxes 273,850 471,964 539,821",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "value": 539821000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2025-03-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualOpInc",
+      "period": "2025-03-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "expectedBadValue": 205051326150,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz; der 20-F weist keine solche Zeile aus, nur das Vorsteuerergebnis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Income before income taxes 273,850 471,964 539,821",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "value": 471964000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2024-03-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualOpInc",
+      "period": "2024-03-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "JPY",
+      "expectedBadValue": 1280654416700,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz; der 20-F weist keine solche Zeile aus, nur das Vorsteuerergebnis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Consolidated statements of income, page F-9",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Income before income taxes 273,850 471,964 539,821",
+          "start": "2023-04-01",
+          "end": "2024-03-31",
+          "value": 273850000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2023-03-31-annualOpInc-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "annualOpInc",
+      "period": "2023-03-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "JPY",
+      "expectedBadValue": 411424494850,
+      "replacementValue": null,
+      "metricDefinition": "Operating income",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbetriebsergebnis fehlt: Der Wert ist nur Anbietermarge mal Anbieterumsatz; der 20-F weist keine solche Zeile aus, nur das Vorsteuerergebnis.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526277134/d116282d20f.htm",
+          "form": "20-F",
+          "page": "Item 5, selected financial data, five years",
+          "accession": "0001193125-26-277134",
+          "filed": "2026-06-22",
+          "quote": "Income before income taxes 226,623 149,474 273,850 471,964 539,821",
+          "start": "2022-04-01",
+          "end": "2023-03-31",
+          "value": 149474000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2026-09-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 537134000000,
+      "replacementValue": 607476000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Der Anbieter zieht vom Nettoumsatz die Provisionen und Maklergebühren ab (537,1 Mrd. JPY); der Bericht nennt für Juli bis September 2026 607,5 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526434996/d167700d6k.htm",
+          "form": "6-K",
+          "page": "Consolidated Statements of Income, Quarterly Comparatives",
+          "accession": "0001193125-26-434996",
+          "filed": "2026-10-28",
+          "quote": "Net revenue 523,315 515,462 551,755 577,181 686,714 607,476",
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "value": 607476000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2026-06-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 612379000000,
+      "replacementValue": 686714000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Der Anbieter zieht vom Nettoumsatz die Provisionen und Maklergebühren ab (612,4 Mrd. JPY); der Bericht nennt für April bis Juni 2026 686,7 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526434996/d167700d6k.htm",
+          "form": "6-K",
+          "page": "Consolidated Statements of Income, Quarterly Comparatives",
+          "accession": "0001193125-26-434996",
+          "filed": "2026-10-28",
+          "quote": "Net revenue 523,315 515,462 551,755 577,181 686,714 607,476",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 686714000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2026-03-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 397388000000,
+      "replacementValue": 577181000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Der Anbieter führt 397,4 Mrd. JPY, ein Wert, der zu keiner Zeile des Berichts passt; der Bericht nennt für Januar bis März 2026 577,2 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526434996/d167700d6k.htm",
+          "form": "6-K",
+          "page": "Consolidated Statements of Income, Quarterly Comparatives",
+          "accession": "0001193125-26-434996",
+          "filed": "2026-10-28",
+          "quote": "Net revenue 523,315 515,462 551,755 577,181 686,714 607,476",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 577181000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2025-12-31-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 497758000000,
+      "replacementValue": 551755000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Der Anbieter zieht vom Nettoumsatz die Provisionen und Maklergebühren ab (497,8 Mrd. JPY); der Bericht nennt für Oktober bis Dezember 2025 551,8 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526434996/d167700d6k.htm",
+          "form": "6-K",
+          "page": "Consolidated Statements of Income, Quarterly Comparatives",
+          "accession": "0001193125-26-434996",
+          "filed": "2026-10-28",
+          "quote": "Net revenue 523,315 515,462 551,755 577,181 686,714 607,476",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 551755000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "nmr-2025-09-30-revenueQ-20261030",
+      "revision": "2026-10-30-secabgleich-ausland",
+      "ticker": "NMR",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 468271000000,
+      "replacementValue": 515462000000,
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Der Anbieter zieht vom Nettoumsatz die Provisionen und Maklergebühren ab (468,3 Mrd. JPY); der Bericht nennt für Juli bis September 2025 515,5 Mrd. JPY.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1163653/000119312526434996/d167700d6k.htm",
+          "form": "6-K",
+          "page": "Consolidated Statements of Income, Quarterly Comparatives",
+          "accession": "0001193125-26-434996",
+          "filed": "2026-10-28",
+          "quote": "Net revenue 523,315 515,462 551,755 577,181 686,714 607,476",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 515462000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "301297.sz-2025-06-30-revenueQ-20261030",
+      "ticker": "301297.SZ",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 226995151.37,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.06.2025 liefert der Anbieter den ursprünglich gemeldeten Wert von 227,0 Mio. CNY vor dem Zusammenschluss unter gemeinsamer Kontrolle, die neuen Quartale enthalten die eingebrachte Firma. Die Firma meldet für das erste Halbjahr 2026 gegen das rückwirkend angepasste Vorjahr +9,05 %; rechnerisch läge das Quartal bis 30.06.2026 mit den Erstquartalen des Anbieters bei rund +15,6 % statt der bisher gezeigten +265 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225497973.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, half-year report 2026",
+          "published": "2026-08-25",
+          "page": "p.7",
+          "quote": "营业收入（元） 1,586,441,325.59 441,216,346.18 1,454,780,830.54 9.05%",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "301297.sz-2025-06-30-grossProfitQ-20261030",
+      "ticker": "301297.SZ",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 95625639.51,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2025 stammt von vor dem Zusammenschluss und ist mit den neuen Quartalen nicht vergleichbar. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225497973.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, half-year report 2026",
+          "published": "2026-08-25",
+          "page": "p.7",
+          "quote": "营业收入（元） 1,586,441,325.59 441,216,346.18 1,454,780,830.54 9.05%",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "301297.sz-2025-06-30-opIncQ-20261030",
+      "ticker": "301297.SZ",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 34535301.67,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Der Wert für das Quartal mit Ende 30.06.2025 stammt von vor dem Zusammenschluss und ist mit den neuen Quartalen nicht vergleichbar. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-25/1225497973.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, half-year report 2026",
+          "published": "2026-08-25",
+          "page": "p.7",
+          "quote": "营业收入（元） 1,586,441,325.59 441,216,346.18 1,454,780,830.54 9.05%",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "caseId": "301297.sz-2023-12-31-annualRev-20261030",
+      "ticker": "301297.SZ",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 609165018.43,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz fehlt: Das Jahr 2023 (Ende 31.12.2023) steht mit 609,2 Mio. CNY noch ohne die eingebrachte Firma neben dem angepassten Jahr 2024; ein Vergleich über diese Grenze wäre kein Wachstum. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://static.cninfo.com.cn/finalpage/2025-04-30/1223410770.PDF",
+          "form": "Ferrotec (An Hui) Technology Development, annual report summary 2024",
+          "published": "2025-04-30",
+          "page": "PDF 6, numbers wrap in the table",
+          "quote": "营业收入 780,458,405.25 594,142,567.69 609,165,018.43 28.12% 623,756,348.04",
+          "unit": "CNY"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-06-30-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 17049000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.06.2026 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-05/20260507_183589.pdf",
+          "form": "Enel, press release first quarter 2026",
+          "published": "2026-05-07",
+          "page": "p.2",
+          "quote": "Revenues: 20,588 million euros (22,074 million euros in the first quarter of 2025, -6.7%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-06-30-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 8748000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2026 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-03-31-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 18579000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 31.03.2026 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-05/20260507_183589.pdf",
+          "form": "Enel, press release first quarter 2026",
+          "published": "2026-05-07",
+          "page": "p.2",
+          "quote": "Revenues: 20,588 million euros (22,074 million euros in the first quarter of 2025, -6.7%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2026-03-31-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 10374000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 31.03.2026 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 16142000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 31.12.2025 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-05/20260507_183589.pdf",
+          "form": "Enel, press release first quarter 2026",
+          "published": "2026-05-07",
+          "page": "p.2",
+          "quote": "Revenues: 20,588 million euros (22,074 million euros in the first quarter of 2025, -6.7%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 5518000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 31.12.2025 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-09-30-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 16152000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.09.2025 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-05/20260507_183589.pdf",
+          "form": "Enel, press release first quarter 2026",
+          "published": "2026-05-07",
+          "page": "p.2",
+          "quote": "Revenues: 20,588 million euros (22,074 million euros in the first quarter of 2025, -6.7%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-09-30-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 8377000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.09.2025 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-06-30-revenueQ-20261030",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 13085000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Für das Quartal mit Ende 30.06.2025 liefert der Anbieter einen Wert, der zu keiner Zeile des Abschlusses passt; für das erste Halbjahr 2026 meldet Enel 40.919 Mio. EUR bei +0,3 %, das Quartal bis 30.06.2026 läge bei rund +8,5 % statt der bisher gezeigten +30,3 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-05/20260507_183589.pdf",
+          "form": "Enel, press release first quarter 2026",
+          "published": "2026-05-07",
+          "page": "p.2",
+          "quote": "Revenues: 20,588 million euros (22,074 million euros in the first quarter of 2025, -6.7%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-06-30-grossProfitQ-20261030",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 6005000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbruttogewinn fehlt: Der Wert für das Quartal mit Ende 30.06.2025 ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 67452000000,
+      "replacementValue": 80346000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 67.452 Mio. EUR, die Firma meldet 80.346 Mio. EUR. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-03/20260319_179331.pdf",
+          "form": "Enel, press release full year 2025",
+          "published": "2026-03-19",
+          "page": "p.2",
+          "quote": "Revenues: 80,346 million euros (78,947 million euros in 2024, +1.8%)",
+          "sourceUnit": "EUR millions",
+          "value": 80346000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2024-12-31-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 70649000000,
+      "replacementValue": 78947000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2024 (Ende 31.12.2024) liefert der Anbieter 70.649 Mio. EUR, die Firma meldet 78.947 Mio. EUR. Das Jahreswachstum beträgt +1,8 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-03/20260319_179331.pdf",
+          "form": "Enel, press release full year 2025",
+          "published": "2026-03-19",
+          "page": "p.2",
+          "quote": "Revenues: 80,346 million euros (78,947 million euros in 2024, +1.8%)",
+          "sourceUnit": "EUR millions",
+          "value": 78947000000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "ENEL.VI",
+      "listingAliases": [
+        "ENEL.MI",
+        "ENEL.SW",
+        "ENL.DE"
+      ],
+      "caseId": "enel.vi-2025-12-31-annualGP-20261030",
+      "field": "annualGP",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 31592000000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresbruttogewinn fehlt: Der Wert für das Geschäftsjahr 2025 (Ende 31.12.2025) ruht auf demselben Anbieterumsatz, der zu keiner Zeile des Abschlusses passt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-07/20260730_187538.pdf",
+          "form": "Enel, press release first half 2026",
+          "published": "2026-07-30",
+          "page": "p.2",
+          "quote": "Revenues: 40,919 million euros (40,816 million euros in the first half of 2025, +0.3%)",
+          "unit": "EUR millions"
+        }
+      ]
+    },
+    {
+      "ticker": "GGP.L",
+      "listingAliases": [
+        "GGP.AX"
+      ],
+      "caseId": "ggp.l-2026-06-30-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2026-06-30",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 1191232720,
+      "replacementValue": 2259000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 30.06.2026 (Ende 30.06.2026) liefert der Anbieter 1.191,2 Mio. AUD, die Firma meldet 2.259 Mio. AUD. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://bulletin.webull.com/qbd/announcement/20260827/499508552/5a9ba37c92034690f9b1815e1d2065b7.pdf",
+          "form": "Greatland Resources, FY26 results release (ASX, mirror)",
+          "published": "2026-08-27",
+          "page": "p.1, Table 1",
+          "quote": "Sales revenue 2,259 957 136%",
+          "sourceUnit": "AUD millions",
+          "value": 2259000000,
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "currency": "AUD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "GGP.L",
+      "listingAliases": [
+        "GGP.AX"
+      ],
+      "caseId": "ggp.l-2025-06-30-annualRev-20261030",
+      "field": "annualRev",
+      "period": "2025-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 461410740,
+      "replacementValue": 957000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 30.06.2025 (Ende 30.06.2025) liefert der Anbieter 461,4 Mio. AUD, die Firma meldet 957 Mio. AUD, davon nur rund sieben Monate mit der Mine Telfer. Das Wachstum beträgt +136 % statt der bisher gezeigten +158,2 % und enthält diesen Effekt. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://bulletin.webull.com/qbd/announcement/20260827/499508552/5a9ba37c92034690f9b1815e1d2065b7.pdf",
+          "form": "Greatland Resources, FY26 results release (ASX, mirror)",
+          "published": "2026-08-27",
+          "page": "p.1, Table 1 and p.7, footnote 3",
+          "quote": "Sales revenue 2,259 957 136%",
+          "sourceUnit": "AUD millions",
+          "value": 957000000,
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "currency": "AUD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "GGP.L",
+      "listingAliases": [
+        "GGP.AX"
+      ],
+      "caseId": "ggp.l-2026-06-30-annualNetIncome-20261030",
+      "field": "annualNetIncome",
+      "period": "2026-06-30",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 454712880,
+      "replacementValue": 862000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresüberschuss korrigiert: Für das Geschäftsjahr bis 30.06.2026 (Ende 30.06.2026) liefert der Anbieter 454,7 Mio. AUD auf derselben falschen Grundlage wie den Umsatz, die Firma meldet 862 Mio. AUD. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://bulletin.webull.com/qbd/announcement/20260827/499508552/5a9ba37c92034690f9b1815e1d2065b7.pdf",
+          "form": "Greatland Resources, FY26 results release (ASX, mirror)",
+          "published": "2026-08-27",
+          "page": "p.1, Table 1",
+          "quote": "NPAT 862 337 156%",
+          "sourceUnit": "AUD millions",
+          "value": 862000000,
+          "start": "2025-07-01",
+          "end": "2026-06-30",
+          "currency": "AUD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "ticker": "GGP.L",
+      "listingAliases": [
+        "GGP.AX"
+      ],
+      "caseId": "ggp.l-2025-06-30-annualNetIncome-20261030",
+      "field": "annualNetIncome",
+      "period": "2025-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 162545180,
+      "replacementValue": 337000000,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresüberschuss korrigiert: Für das Geschäftsjahr bis 30.06.2025 (Ende 30.06.2025) liefert der Anbieter 162,5 Mio. AUD auf derselben falschen Grundlage wie den Umsatz, die Firma meldet 337 Mio. AUD. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://bulletin.webull.com/qbd/announcement/20260827/499508552/5a9ba37c92034690f9b1815e1d2065b7.pdf",
+          "form": "Greatland Resources, FY26 results release (ASX, mirror)",
+          "published": "2026-08-27",
+          "page": "p.1, Table 1",
+          "quote": "NPAT 862 337 156%",
+          "sourceUnit": "AUD millions",
+          "value": 337000000,
+          "start": "2024-07-01",
+          "end": "2025-06-30",
+          "currency": "AUD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "ace.mi-2025-06-30-revenueQ-20261030",
+      "ticker": "ACE.MI",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 359049000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz fehlt: Der Wert von 359,0 Mio. EUR für das Quartal mit Ende 30.06.2025 ist kein Quartal, sondern das Halbjahr ohne Acea Energia minus das erste Quartal mit Acea Energia. Vergleichbar läge das Quartal bis 30.06.2026 bei rund +3,4 % statt der bisher gezeigten +121,4 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1h-2026.pdf",
+          "form": "ACEA, results presentation first half 2026, pro forma without Acea Energia",
+          "page": "p.19",
+          "quote": "1.554.648 ... 1.523.839",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1q-2026.pdf",
+          "form": "ACEA, results presentation first quarter 2026, pro forma",
+          "published": "2026-05-14",
+          "page": "p.18",
+          "quote": "734.881 ... 730.778",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2025/presentazioni/presentazione-risultati-1h-2025.pdf",
+          "form": "ACEA, results presentation first half 2025",
+          "page": "p.7 and p.8",
+          "quote": "Ricavi ed EBITDA non includono i risultati del perimetro di ACEA Energia",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ace.mi-2025-06-30-opIncQ-20261030",
+      "ticker": "ACE.MI",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 188555000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsbetriebsergebnis fehlt: Der Wert für das Quartal mit Ende 30.06.2025 steht auf derselben gemischten Grundlage wie der Umsatz dieses Quartals. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1h-2026.pdf",
+          "form": "ACEA, results presentation first half 2026, pro forma without Acea Energia",
+          "page": "p.19",
+          "quote": "1.554.648 ... 1.523.839",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1q-2026.pdf",
+          "form": "ACEA, results presentation first quarter 2026, pro forma",
+          "published": "2026-05-14",
+          "page": "p.18",
+          "quote": "734.881 ... 730.778",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2025/presentazioni/presentazione-risultati-1h-2025.pdf",
+          "form": "ACEA, results presentation first half 2025",
+          "page": "p.7 and p.8",
+          "quote": "Ricavi ed EBITDA non includono i risultati del perimetro di ACEA Energia",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "ace.mi-2023-12-31-annualRev-20261030",
+      "ticker": "ACE.MI",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 4487735000,
+      "replacementValue": null,
+      "revision": "2026-10-30-sdz2",
+      "verifiedAt": "2026-10-30",
+      "reason": "Jahresumsatz fehlt: Das Jahr 2023 (Ende 31.12.2023) steht mit 4.487,7 Mio. EUR noch einschließlich Acea Energia neben den Jahren ohne dieses Geschäft; ein Vergleich über diese Grenze wäre kein Wachstum. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1h-2026.pdf",
+          "form": "ACEA, results presentation first half 2026, pro forma without Acea Energia",
+          "page": "p.19",
+          "quote": "1.554.648 ... 1.523.839",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2026/presentazioni/presentazione-risultati-1q-2026.pdf",
+          "form": "ACEA, results presentation first quarter 2026, pro forma",
+          "published": "2026-05-14",
+          "page": "p.18",
+          "quote": "734.881 ... 730.778",
+          "unit": "EUR thousands"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.acea.it/content/dam/acea-corporate/pdf/it/investitori/2025/presentazioni/presentazione-risultati-1h-2025.pdf",
+          "form": "ACEA, results presentation first half 2025",
+          "page": "p.7 and p.8",
+          "quote": "Ricavi ed EBITDA non includono i risultati del perimetro di ACEA Energia",
+          "unit": "text"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -15596,6 +17505,70 @@
         }
       ],
       "vendorEvidence": "Snapshot of run 39918190374 (2026-10-23): QAR, fx 0.27472526; revenueQ native 2026-06-30 -177,646,000, 2026-03-31 3,000,000, 2025-12-31 17,347,000, 2025-06-30 196,570,000, 2025-03-31 190,308,000; annualRev 2025 549,258,000 and 2024 734,825,000 equal the IFRS subtotal after share of results, interest and other income. The revenue cells are also withheld cell by cell (hand-table cases of revision 2026-10-24-sdtriage)."
+    },
+    {
+      "caseId": "5871.tw-lender-basis-20261030",
+      "ticker": "5871.TW",
+      "reason": "Score fehlt: Der Anbieter rechnet bei Chailease, einer Kreditfirma, die Zinserträge aus dem Umsatz heraus und zieht danach Kosten ab, die dazu nicht passen. So zeigte er für das Geschäftsjahr 2025 (Ende 31.12.2025) ein Betriebsergebnis von -9.337,2 Mio. TWD und einen Umsatz von 22.525,9 Mio. TWD; laut Konzernabschluss sind es +27.218,8 Mio. TWD und 97.567,4 Mio. TWD. Die Firma stand dadurch zu Unrecht unter den nicht profitablen Firmen. Geprüft am 30.10.2026.",
+      "reasonDate": "2026-10-30",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "name"
+          ],
+          "expected": "Chailease Holding Company Limited"
+        },
+        {
+          "path": [
+            "meta",
+            "reportingCurrencyOriginal"
+          ],
+          "expected": "TWD"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://mopsov.twse.com.tw/server-java/t164sb01?step=1&CO_ID=5871&SYEAR=2025&SSEASON=4&REPORT_ID=C",
+          "form": "Chailease, consolidated statement of comprehensive income, year 114 (2025), MOPS",
+          "page": "consolidated statement of comprehensive income, year 114 season 4",
+          "quote": "營業利益（損失）Net operating income (loss) 27,218,838 29,910,090",
+          "unit": "TWD thousands",
+          "verifiedAt": "2026-10-30"
+        }
+      ]
+    },
+    {
+      "caseId": "9941.tw-lender-basis-20261030",
+      "ticker": "9941.TW",
+      "reason": "Score fehlt: Der Anbieter rechnet bei Taiwan Acceptance, einer Kreditfirma, die Zinserträge aus dem Umsatz heraus und zieht danach Kosten ab, die dazu nicht passen. So zeigte er für das Geschäftsjahr 2025 (Ende 31.12.2025) ein Betriebsergebnis von -5.241,0 Mio. TWD und einen Umsatz von 21.085,1 Mio. TWD; laut Konzernabschluss sind es +5.553,4 Mio. TWD und 39.540,2 Mio. TWD. Die Firma stand dadurch zu Unrecht unter den nicht profitablen Firmen. Geprüft am 30.10.2026.",
+      "reasonDate": "2026-10-30",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "name"
+          ],
+          "expected": "Taiwan Acceptance Corporation"
+        },
+        {
+          "path": [
+            "meta",
+            "reportingCurrencyOriginal"
+          ],
+          "expected": "TWD"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://mopsov.twse.com.tw/server-java/t164sb01?step=1&CO_ID=9941&SYEAR=2025&SSEASON=4&REPORT_ID=C",
+          "form": "Taiwan Acceptance, consolidated statement of comprehensive income, year 114 (2025), MOPS",
+          "page": "consolidated statement of comprehensive income, year 114 season 4",
+          "quote": "營業利益（損失）Net operating income (loss) 5,553,411 6,293,612",
+          "unit": "TWD thousands",
+          "verifiedAt": "2026-10-30"
+        }
+      ]
     }
   ],
   "periodLabels": [

@@ -486,7 +486,7 @@ function basisGueltig(basis, anzahlSnapshots) {
       ok: false,
       grund: 'Der Ausreisser-Bestand nennt nicht, auf wie vielen Snapshots er aufgenommen wurde '
         + '(Feld snapshotsBeiAufnahme). Damit ist nicht pruefbar, ob er zur heutigen Population passt — '
-        + 'einmal IM CI mit --neu-aufnehmen erneuern.',
+        + 'den Bestand erneuern (--neu-aufnehmen ist fuer den nativen Bestand gesperrt, Vorgehen siehe docs/annual-spikes.md).',
     };
   }
   const abweichung = Math.abs(anzahlSnapshots - beiAufnahme) / beiAufnahme;
@@ -496,11 +496,11 @@ function basisGueltig(basis, anzahlSnapshots) {
       grund: `Der Ausreisser-Bestand ist UNGUELTIG, nicht die Funde: aufgenommen auf ${beiAufnahme} `
         + `Snapshots, dieser Lauf hat ${anzahlSnapshots} (${(abweichung * 100).toFixed(0)} % Abweichung). `
         + 'Ein Bestand aus einer anderen Population kann nicht sagen, was neu ist. Heilung: '
-        + '"node scripts/watch-annual-spikes.js --neu-aufnehmen" gegen eine CI-POPULATION laufen '
-        + 'lassen — im CI oder lokal gegen ein heruntergeladenes CI-Artefakt '
-        + '("gh run download <RUN_ID> -n snapshots -D snapshots"); NIEMALS gegen das lokale '
-        + 'snapshots/ (gitignored, nur Schutt alter Laeufe). Danach PFLICHT: derselbe Befehl OHNE '
-        + 'Flag gegen dieselbe Population — der Verankerungslauf prueft sich selbst nicht.',
+        + 'nicht ueber "--neu-aufnehmen" (fuer den nativen Bestand seit P168 gesperrt, Exit 1); '
+        + 'Vorgehen fuer einen gezielten, belegten Eintrag siehe docs/annual-spikes.md. Immer '
+        + 'nur gegen eine CI-POPULATION arbeiten — im CI oder lokal gegen ein heruntergeladenes '
+        + 'CI-Artefakt ("gh run download <RUN_ID> -n snapshots -D snapshots"); NIEMALS gegen '
+        + 'das lokale snapshots/ (gitignored, nur Schutt alter Laeufe).',
     };
   }
   return { ok: true, grund: '' };
@@ -994,6 +994,8 @@ function main(jetzt = new Date(), meldendBis = null) {
   // lokale snapshots/. Entschiedener Weg seit 30.08.2026 (ENTSCHIED 113 / RA6): Einmal-Akt
   // LOKAL gegen das Artefakt, Commit durch den Ausfuehrenden — der CI-Job hat bewusst
   // keinen Commit-Schritt (ENTSCHIED 12:40 vom 29.08.).
+  // Seit P168 wirft baueNeuenBestand auf dem nativen Bestand; ein neuer Eintrag kommt
+  // als gezielter, belegter Einzeleintrag (docs/annual-spikes.md).
   // ⚠ DIESER ZWEIG PRUEFT NICHTS: das `return datenExit` unten kehrt VOR der
   // Populations-Wache und VOR beiden Ausreisser-Toren zurueck. Deshalb ist ein
   // flagfreier Kontrolllauf gegen dieselbe Population PFLICHT (RA8), bevor der
