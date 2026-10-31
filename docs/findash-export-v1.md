@@ -1420,7 +1420,7 @@ Quartalspaare als `3M/3M` gespeichert; `halfYear` kam nicht vor.
 keinen Wert, keinen Score und keinen Rang; falsche Werte hält allein die Handtabelle
 (`configs/financial-known-cases.json`). Er steht nur, wo der Snapshot die angezeigte Umsatzzahl
 reproduziert. Zuerst gilt ein geprüfter Eintrag aus `configs/g31-hinweise.json` für genau diese
-Notierung und genau diese beiden Quellenenden (`code` `uebernahme` oder `saisonbasis`, Grund mit
+Notierung und genau diese beiden Quellenenden (`code` `uebernahme`, `saisonbasis` oder `bilanzierungswechsel`, Grund mit
 Prüfdatum, Quelle mit Seite und Zitat); zeigt das Board ein neueres Paar, entfällt er von selbst. Sonst
 wird nur ein neu zugelassenes datiertes Paar mit leerer Zwischenzeile gegen das passende volle
 Geschäftsjahr derselben Einheit und Währung geprüft: neuester Wert über 75 % des Jahresumsatzes
@@ -1469,7 +1469,7 @@ with at least one exclusion code in `aus`. This feed has no own ranking.
 | `mc` | number or absent | USD market capitalization, using the existing currency-evidence guard |
 | `g` | number or absent | Revenue growth in percent, official board value or `revGrowthLevel` |
 | `g3` | number or absent | `(annualRev[0]/annualRev[3])^(1/3)-1`, times 100; both endpoints strictly positive; a known different year interval is withheld |
-| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E; all four are always positive when present (a zero or negative forward P/E, a forecast loss, is omitted like a non-positive `pe`, 24.10.2026) |
+| `ps`, `evs`, `pe`, `fpe` | number or absent | Price/sales, EV/revenue, trailing and forward P/E; all four are always positive when present (a zero or negative forward P/E, a forecast loss, is omitted like a non-positive `pe`, 24.10.2026); `fpe` is at least 1.5 when present (`fpe-implausible`, 30.10.2026) |
 | `peSt` | string | `vorhanden`, `verlust`, `unbekannt`, `waehrung`; loss means missing P/E with negative latest annual net income |
 | `dy`, `dySt` | number or absent; string | Dividend yield in percent; `zahlt`, `keine`, `unbekannt` |
 | `po`, `roe`, `gm` | number or absent | Payout ratio, return on equity and gross margin, already stored as percentages |
@@ -1517,6 +1517,9 @@ unverifiable), a dividend yield above 50 % and a payout ratio above 100000 % (un
 `gm-implausible`, `dy-implausible` or `po-implausible`. High real payout ratios (e.g. 15375 %) stay; findash caps payout ranking at 100.
 A positive payout next to `dySt` `keine` stays: the vendor yield field is the unreliable one (most such rows paid per the annual cash flow).
 A withheld yield sets `dySt` to `unbekannt` and its payout zero stays missing.
+**Forward P/E floor (30.10.2026):** a positive `fpe` that rounds to below 1.5 is withheld, never clipped, and `aus` gets `fpe-implausible`: one year of expected profit would be at least two thirds of
+the market cap. On 30.10.2026 all 14 of the 21 such rows with a second-source value were wrong by a factor 2.4 to 561 (ENIC 0.02 against 11.01), and the lowest second-source value of all checked rows was 1.58, so
+true small values above the floor stay. Wrong values above it remain possible (1911.T 1.87 against 9.33); the feed cannot tell them apart because the pull keeps no forward EPS. A true value can also fall below the floor and is then withheld too: BHC read 1.37 from 14.10. to 29.10.2026 on a forward EPS of about 4.30 USD at a close of 5.89 USD. Board history and scores do not read this field; this rule is display-only.
 `evs` is withheld with `evs-waehrung` when Yahoo built it from an enterprise value in the reporting currency while the pull multiplied it by the
 trading/reporting factor (USD-listed ADR/OTC lines, factor outside 1/e to e, compared against market cap + debt - cash). Otherwise, when the
 latest annual balance gives debt and cash and the vendor EV differs by more than a factor e^1.5 in either direction from every applicable
@@ -1669,9 +1672,10 @@ Envelope `{schema:"findash-export/v1", generated_at, priceStoreUpdatedAt, cutoff
 - `cutoffDay` is the UTC calendar day of `priceStoreUpdatedAt`. Only bars dated strictly before it are used, so every `d1`
   is earlier than `cutoffDay`; `--check` enforces both.
 - `universeCount` is the number of tickers in `filter/universum.json`; `rows.length` plus the sum of `skipped` equals it.
-- `skipped` always carries all six reasons as integers (zero allowed): `not-in-store`, `fewer-than-two-bars` (the stored series
+- `skipped` always carries all seven reasons as integers (zero allowed): `not-in-store`, `fewer-than-two-bars` (the stored series
   itself has fewer than two bars), `fewer-than-two-finished-bars` (two or more stored bars, but fewer than two before
-  `cutoffDay`), `invalid-date`, `invalid-close`, `dates-not-increasing`.
+  `cutoffDay`), `invalid-date`, `invalid-close`, `dates-not-increasing`, `not-refreshed-at-stamp` (a row would have been possible,
+  but the run of the stamp did not fetch the ticker, see below).
 
 | Key | Type | Meaning and source |
 |---|---|---|
@@ -1701,9 +1705,28 @@ that day: treat it as "no data", not as an old file.
 header of `pull-historical-prices.js`). Every pull rebuilds the whole fetched window of a ticker authoritatively, so the last two
 bars of a series come from one fetch and share one basis: `c1 / c0` is a clean total return.
 
+**A ticker the run of the stamp did not fetch (P303, 30.10.2026).** `cutoffDay` is one day for the whole store, but a failed
+ticker keeps the series of an earlier fetch, whose newest bar may be an intraday value that no later pull corrected. Which tickers
+a run fetched is already on record: the merge step writes `prices/<date>.json` from the runner slices (a failed ticker has no
+entry there), and `git add -A` commits it together with `_meta.json`. The export reads the file named after `cutoffDay`, and a
+ticker that would have a row but is not listed there has none and counts as `not-refreshed-at-stamp`, whatever its dates say. An
+older pair is not promoted, as everywhere in this file. Neither `_meta.json` nor the merge step changed for this.
+The stamp binds to the file by date. When that file is missing, unreadable or empty, or an entry's `pulledOn` is another day, no
+file is built: the failed tickers could not be told from the fresh ones, so the build stops and the workflow step warns. This also
+covers a run across the UTC day boundary (the file carries the frozen run day, the stamp the wall clock of the merge) and a store
+re-stamped by a write outside the merge step on a later day. The price of that day is a missing file, which a consumer reads as "no
+data"; among the 13 merges of 13.10. to 30.10. it did not occur.
+A dead runner stops the merge before file and stamp are written, and the scoring job does not run without all runners. A second
+run on the same day replaces file and stamp in one commit, so what only the first run fetched counts as not fetched.
+Measured on the store of 30.10.2026 (same store, same export generation): the old code reproduces the published file byte for byte
+with 15,804 rows; the new code gives 15,798 rows, all of them and the envelope byte-identical to the old file, and 6 rows
+(2867.TW, 5371.TWO, AAM.SW, ATAD.L, CWAN, QUB.AX, last bars between 02.07. and 23.10.) move to `not-refreshed-at-stamp`. The other
+counts in `skipped` do not change.
+A consumer sees a day without a row and later a `d0` after its last booked `d1`: the span is a gap, by the chain rule above.
+
 **Decision 1, bars that are not consecutive trading days.** They are kept as stored. The row states both dates, and the
-consumer judges the gap (weekend, holiday, a ticker that missed a pull, a stale ticker, or a previous-day bar that Yahoo no
-longer delivers). Replacing the pair by an older "consecutive" one would hide exactly the staleness the dates show. `d1` is
+consumer judges the gap (weekend, holiday, a stale ticker that is still fetched, or a previous-day bar that Yahoo no longer
+delivers). Replacing the pair by an older "consecutive" one would hide exactly the staleness the dates show. `d1` is
 the freshness field.
 
 **Decision 2, a split inside the pair.** Nothing is added to the row: the stored series is split-adjusted as a whole, so `c1 / c0`
@@ -1733,8 +1756,8 @@ ended on the previous weekday (13.10.) for 98.92 % of its rows. Asian tickers lo
 purpose. Only one day pair could be measured because the repository history starts on 13.10.2026.
 
 **Which store.** The scoring job checks out the trigger commit, whose price store is the one of the previous pull (the merge job
-pushes today's store after the trigger). The workflow step therefore reads `prices/history` from the tip of `main` with
-`git fetch` and `git archive` into a temp folder and passes it with `--prices-dir`; the working tree stays untouched because the
+pushes today's store after the trigger). The workflow step therefore reads `prices/history` and the daily files from the tip of
+`main` with `git fetch` and `git archive` into a temp folder and passes it with `--prices-dir`; the working tree stays untouched because the
 board-history step rebases onto `main` later. When the fetch fails the step fails and the file is not written. A parallel
 dispatch run could read the store of another run; the store is consistent in itself and `priceStoreUpdatedAt` names it.
 
@@ -1746,12 +1769,13 @@ equal or reversed dates, a duplicate ticker, a count that does not add up (`rows
 `universeCount` against `universum.json`), a row ticker outside `universum.json`, or a file above **4,000,000 UTF-8 bytes**.
 `--selftest` runs a hand fixture (100 then 102 gives 1.02, a bar of the stamp day is ignored). The build refuses to run when the
 `filter/` folder does not exist (the filter step removes its folder when it fails; this file must not bring it back), when
-`_meta.json` is missing, when a shard file is missing (partial store), or when the shards together hold a different number of
-tickers than `_meta.json` stamps (truncated shard).
+`_meta.json` is missing, when the daily file of the stamp day is missing, unreadable, empty or of another date, when a shard file
+is missing (partial store), or when the shards together hold a different number of tickers than `_meta.json` stamps (truncated shard).
 
 **Fail-soft:** the workflow step "Build and check preisschritt" removes only `preisschritt.json` (and a leftover temp file) when
 fetch, build or check fails; `universum.json`, `bewertung.json`, the boards and the deploy never depend on it.
 
 Tests: `tests/preisschritt-export.test.js` with `tests/fixtures/preisschritt/store-mini.json` (hand fixture, stamp-day, vanished
 previous-day and equal-to-stamp-day cases, tamper variants with their specific error, size cap, idempotence, sort order,
-truncated shard, workflow step order and fail-soft shape).
+truncated shard, failed pull through the real merge step over consecutive runs, second run on the same day, dead runner, stamp
+without its daily file, workflow step order and fail-soft shape).
