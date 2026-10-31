@@ -12,6 +12,7 @@ const { norm } = require('../src/scoring/snapshot.js');
 const { annualPeriodEnds, _tagesnummer, withAnnualPairRule, annualPairsShadow, checkAnnualPair, checkAnnualAcceleration,
   nextDistinctAnnualIndex, ANNUAL_PAIR_MIN_DAYS, ANNUAL_PAIR_MAX_DAYS } = require('../lib/annual-pairs.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
+const axesFns = require('../src/scoring/axes.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeReportArtifact } = require('./f4-quartalsvergleich.js');
 
@@ -145,8 +146,10 @@ function counterCheck(snapshot, shadow) {
     const row = { ticker: snapshot.meta.ticker, field, failures };
     checked.push(row);
     const intentionalDuplicate = p => {
+      // The shadow's own record predicate (annualPairsShadow), independent of the period gate of 24.10.2026,
+      // which empties a short record pair before revGrowthLeg could name its basis.
       if (p.code !== 'short-period' || (p.axis === 'growth'
-        && withAnnualPairRule({ growth: false }, () => revGrowthLeg(snapshot).basis) === 'yearNewerRecord')) return false;
+        && axesFns.revQuartalsYoY(snapshot) === null && axesFns.annualLegNewerYear(snapshot) !== null)) return false;
       const pair = p.axis === 'acceleration' ? checkAnnualAcceleration(snapshot) : { iNew: 0, iOld: 1 };
       return pair.iOld < nextDistinctAnnualIndex(values, ends, pair.iNew);
     };
