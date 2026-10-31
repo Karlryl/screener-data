@@ -758,28 +758,74 @@ function lampeBNachruesten(scResults, universe) {
   return gefeuert;
 }
 
-function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR) {
+// Fixed reference of the small-cap pass (method change, PR #81): the coverage floor and the score calibration
+// come from configs/smallcap-reference.json, not from the rows of this run. Learned per run, one firm's measured
+// floor exit moved the p10 and the cohort bases and with them firms that had no error of their own (31.10.: RM, VEL,
+// CASS, FTW off the boards, 147 other scores moved). A firm's own new numbers still change its own score.
+// Renewal only with scripts/freeze-smallcap-reference.js and its own before and after, see docs/size-exits.md.
+const SMALLCAP_REFERENCE_PATH = path.join(ROOT, 'configs', 'smallcap-reference.json');
+
+/**
+ * Load the versioned fixed reference of the small-cap pass; a broken one stops the pass instead of learning live.
+ * @param {string} [file] Reference file.
+ * @returns {{version: string, dataDay: string, renewBy: string, coverageFloor: number, calibration: object}} The reference.
+ */
+function loadSmallcapReference(file = SMALLCAP_REFERENCE_PATH) {
+  const reference = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const { version, dataDay, renewBy, coverageFloor, calibration } = reference;
+  if (![version, dataDay, renewBy].every((x) => typeof x === 'string' && x) || !(coverageFloor > 0 && coverageFloor <= 1) ||
+      typeof coverageFloor !== 'number' || !calibration || typeof calibration !== 'object') {
+    throw new Error(`[run-screener] Small-cap reference invalid: ${file}`);
+  }
+  return reference;
+}
+
+/**
+ * Score a small-cap universe against the fixed calibration; the one option set of the pass and its readers.
+ * @param {object[]} universe Small-cap snapshots.
+ * @param {object} reference Result of loadSmallcapReference.
+ * @returns {object[]} scoreUniverse rows.
+ */
+function scoreSmallcapUniverse(universe, reference) {
+  return scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false, refCalibration: reference.calibration });
+}
+
+// Drift only where a distribution can carry it: an axis no firm of the reference ever filled cannot be compared, and
+// below MIN_COHORT_N the cohort is scored on its parent basis and a single firm would already read as drift.
+function smallcapReferenceDrift(live, calibration) {
+  const big = Object.entries(calibration.cohortBases).filter(([, base]) => base.n >= MIN_COHORT_N);
+  const filled = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => Array.isArray(v) && v.some(Number.isFinite)));
+  return calibrationDrift(live, {
+    cohortBases: Object.fromEntries(big.map(([key, base]) => [key, { axes: filled(base.axes) }])),
+    gDistByCohort: filled(Object.fromEntries(big.map(([key]) => [key, calibration.gDistByCohort[key]]))),
+  });
+}
+
+function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR, reference = loadSmallcapReference()) {
   clearStaleQualityIndex(scOutDir);
-  const scResults = scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false });
+  const scResults = scoreSmallcapUniverse(universe, reference);
 
   // (a) Lampe B kohorten-scoped nachruesten.
   const lampeB = lampeBNachruesten(scResults, universe);
   console.log(`[run-screener] Small-Cap Lampe B (shareCountDilution): ${lampeB} Namen`);
 
-  // (b) Coverage-Gate: Floor aus der coverageWeight-Verteilung DIESES Laufs (data-abgeleitet, kein
-  // fester Achsen-Count). Ungescorte/nicht-routete Zeilen bleiben unberuehrt (Filter oben: route+score).
+  // (b) Coverage-Gate: fixed floor of the reference. The p10 of this run is only reported next to it and
+  // decides nothing. Ungescorte/nicht-routete Zeilen bleiben unberuehrt (Filter oben: route+score).
   const routedScored = scResults.filter((e) => e.action === 'route' && e.score !== null);
   const covSamples = routedScored.map((e) => e.coverageWeight).filter(Number.isFinite);
-  const covFloor = quantile(covSamples, SMALLCAP_COVERAGE_FLOOR_PCTL);
+  const covFloorLive = quantile(covSamples, SMALLCAP_COVERAGE_FLOOR_PCTL);
+  const covFloor = reference.coverageFloor;
   let thinCoverageExcluded = 0;
-  if (covFloor !== null) {
-    for (const e of routedScored) {
-      if (Number.isFinite(e.coverageWeight) && e.coverageWeight < covFloor) {
-        e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'smallcap-thin-coverage';
-        thinCoverageExcluded++;
-      }
+  for (const e of routedScored) {
+    if (Number.isFinite(e.coverageWeight) && e.coverageWeight < covFloor) {
+      e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'smallcap-thin-coverage';
+      thinCoverageExcluded++;
     }
   }
+  // Reports when the reference has to be renewed, changes nothing itself.
+  const drift = smallcapReferenceDrift(scResults.calibrationLive, reference.calibration);
+  const renewalDue = !drift.ok || new Date().toISOString().slice(0, 10) > reference.renewBy;
+  if (renewalDue) console.warn(`::warning:: [run-screener] Small-cap reference ${reference.version} is due for renewal: maxKS ${drift.maxKs.toFixed(3)} (limit ${drift.ksThreshold}), ${drift.drifted.length} axes drifted, renew by ${reference.renewBy}.`);
 
   const scRanked = produceRankings(scResults, { topN: topN || 100 });
   const counts = {};
@@ -810,10 +856,13 @@ function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR) {
     boardStatus: boardStatusMap,
     counts: sortKeys(counts),
     excluded: sortKeys(scRanked.excluded),
-    coverageFloor: covFloor, // 5.2 Auflage 3: Beleg-Wert des data-abgeleiteten Coverage-Floors dieses Laufs
+    coverageFloor: covFloor, // 5.2 Auflage 3: Beleg-Wert des Coverage-Floors dieses Laufs, fest aus der Referenz
+    coverageFloorLive: covFloorLive,
+    reference: { version: reference.version, dataDay: reference.dataDay, renewBy: reference.renewBy, coverageFloor: reference.coverageFloor,
+      renewalDue, drift: { maxKs: Math.round(drift.maxKs * 1000) / 1000, ksThreshold: drift.ksThreshold, axesDrifted: drift.drifted.length } },
   });
   // Auflage 3 Zaehl-Beleg: explizit ins Run-Log (nicht nur implizit in excluded.'smallcap-thin-coverage').
-  console.log(`[run-screener] Small-Cap-Board (DIAGNOSTIC): ${boardIds.length} Boards, Coverage-Floor p${SMALLCAP_COVERAGE_FLOOR_PCTL * 100}=${covFloor === null ? 'n/a' : covFloor.toFixed(3)}, thin-coverage-excludiert=${thinCoverageExcluded} -> ${scOutDir}`);
+  console.log(`[run-screener] Small-Cap-Board (DIAGNOSTIC): ${boardIds.length} Boards, Coverage-Floor fest=${covFloor.toFixed(3)} (Referenz ${reference.version}, p${SMALLCAP_COVERAGE_FLOOR_PCTL * 100} dieses Laufs=${covFloorLive === null ? 'n/a' : covFloorLive.toFixed(3)}), thin-coverage-excludiert=${thinCoverageExcluded} -> ${scOutDir}`);
 }
 
 // H-B-Guard: entfernt AUSSCHLIESSLICH ein evtl. stales outputs/quality/index.json, bevor der
@@ -887,4 +936,4 @@ module.exports = { loadUniverse, loadSmallcapUniverse, readScoringSnapshot, run,
   assertParseFailAnteil, MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE,  // T565-H1
   MIN_PARSE_FAIL_FAELLE_SMALLCAP, COVERAGE_FLOOR_RATIO_ONDISK,          // T569-F1/F4
   baselineFuer, naechstesHochwasser,                                    // T565-M2
-  floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };
+  floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, loadSmallcapReference, scoreSmallcapUniverse, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };

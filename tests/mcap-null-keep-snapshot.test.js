@@ -15,7 +15,7 @@ if (process.argv.includes('--break-once')) {
   const sourcePath = path.join(ROOT, 'pull-yahoo.js');
   const hash = () => crypto.createHash('sha256').update(fs.readFileSync(sourcePath)).digest('hex');
   const before = hash();
-  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap', 'metadata-skip', 'no-floor-carrier', 'floor-merge-keeps-stale', 'zero-cap-carrier', 'carrier-only-with-file']) {
+  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap', 'metadata-skip', 'no-floor-carrier', 'floor-merge-keeps-stale', 'zero-cap-carrier', 'carrier-only-with-file', 'carrier-from-clock', 'fast-path-no-stamp', 'full-path-no-stamp', 'fast-path-no-currency']) {
     const r = cp.spawnSync(process.execPath, [__filename], {
       cwd: ROOT, encoding: 'utf8', env: { ...process.env, B5_MUTATION: mutation },
     });
@@ -34,6 +34,10 @@ if (process.argv.includes('--break-once')) {
       'floor-merge-keeps-stale': /stale cap must not survive a measured floor exit/,
       'zero-cap-carrier': /a cap of 0 is no measurement/,
       'carrier-only-with-file': /floor exit must leave a carrier for the merge/,
+      'carrier-from-clock': /carrier names the quote it measured/,
+      'fast-path-no-stamp': /floor exit must leave a carrier for the merge/,
+      'full-path-no-stamp': /floor exit must leave a carrier for the merge/,
+      'fast-path-no-currency': /floor exit must leave a carrier for the merge/,
     };
     assert.match(r.stderr, expected[mutation]);
     assert.equal(hash(), before, 'live pull-yahoo.js hash changed during break-once');
@@ -52,6 +56,9 @@ const writeEvents = [];
 let nextFd = 900000, now = Date.parse('2026-09-27T00:00:00.000Z');
 let cap = null, quoteCalls = 0, fullCalls = 0, ftsCalls = 0;
 let quoteMode = 'normal', fullMode = 'normal', fullCap, quoteCurrency = 'USD';
+// Friday's close: the clock of this test stands on Sunday 27.09., a normal prior-day quote.
+const PRIOR_CLOSE = '2026-09-25T20:00:01.000Z';
+let quoteTime = PRIOR_CLOSE;
 const ticker = process.env.B5_HISTORICAL === '1' ? '300475.SZ' : 'B5FIX';
 const filename = ticker + '.json';
 const snapPath = path.join(out, filename);
@@ -75,10 +82,15 @@ Module.prototype._compile = function (source, name) {
     'streak': ['pull-yahoo.js', 'if (snapshot.meta && !keepStreak) delete snapshot.meta.notFoundStreak;', '// mutant: keep the stale not-found streak'],
     'empty-summary-stale-cap': ['pull-yahoo.js', "preserveMissingMarketCap(outputDir, stock, new Date().toISOString(), 'yahoo_quoteSummary', { keepStreak: true });", '// mutant: leave the old market cap after an empty response'],
     'legacy-prune': ['scripts/prune-watchlist.js', 'if ((entry.added_at || entry.addedAt) && absenceDays > args.pruneNoDataDays)', 'if (absenceDays > args.pruneNoDataDays)'],
-    'no-floor-carrier': ['pull-yahoo.js', "if (process.env.MISSING_CAP_CARRIER !== '1' || !(marketCap.value > 0)) return;", 'return;'],
-    'zero-cap-carrier': ['pull-yahoo.js', "if (process.env.MISSING_CAP_CARRIER !== '1' || !(marketCap.value > 0)) return;", "if (process.env.MISSING_CAP_CARRIER !== '1') return;"],
-    'carrier-only-with-file': ['pull-yahoo.js', 'if (mcapVal < MIN_MCAP) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf);', 'if (mcapVal < MIN_MCAP && _parsedSnapshot) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf);'],
+    'no-floor-carrier': ['pull-yahoo.js', "if (process.env.MISSING_CAP_CARRIER !== '1') return;", 'return;'],
+    'zero-cap-carrier': ['pull-yahoo.js', 'const fault = floorExitFault(carried, floorUsd);', 'const fault = null;'],
+    'carrier-only-with-file': ['pull-yahoo.js', 'if (mcapVal < MIN_MCAP) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf,', 'if (mcapVal < MIN_MCAP && _parsedSnapshot) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf,'],
     'floor-merge-keeps-stale': ['pull-yahoo.js', 'stored.marketCap = incoming.marketCap;', '// mutant: the merge keeps the last value above the floor'],
+    // The state before this fix: the pull clock stands in for the quote time.
+    'carrier-from-clock': ['pull-yahoo.js', 'regularMarketTime: quoteStamp(quote.time),', 'regularMarketTime: observedAt,'],
+    'fast-path-no-stamp': ['pull-yahoo.js', '{ time: q.regularMarketTime, currency: q.currency, rawValue: q.marketCap }', '{ currency: q.currency, rawValue: q.marketCap }'],
+    'full-path-no-stamp': ['pull-yahoo.js', "{ time: _y(yahoo.price, 'regularMarketTime'), currency:", '{ currency:'],
+    'fast-path-no-currency': ['pull-yahoo.js', '{ time: q.regularMarketTime, currency: q.currency, rawValue: q.marketCap }', '{ time: q.regularMarketTime, rawValue: q.marketCap }'],
   };
   const regression = regressions[process.env.B5_MUTATION];
   if (regression && name === path.join(ROOT, regression[0])) {
@@ -131,7 +143,7 @@ class FakeYahoo {
     if (quoteMode === 'undefined') return undefined;
     if (quoteMode === 'empty') return {};
     if (quoteMode === 'not-found') throw new Error('Quote not found for symbol');
-    return { symbol: ticker, currency: quoteCurrency, regularMarketPrice: 120, ...(cap === undefined ? {} : { marketCap: cap }) };
+    return { symbol: ticker, currency: quoteCurrency, regularMarketPrice: 120, regularMarketTime: quoteTime, ...(cap === undefined ? {} : { marketCap: cap }) };
   }
   async quoteSummary() {
     fullCalls++;
@@ -139,7 +151,7 @@ class FakeYahoo {
     if (fullMode === 'empty') return {};
     if (fullMode === 'undefined') return undefined;
     if (fullMode === 'empty-modules') return { price: {}, summaryDetail: {} };
-    return { price: { symbol: ticker, currency: 'USD', marketCap: fullCap === undefined ? cap : fullCap, regularMarketPrice: 120 }, financialData: { financialCurrency: 'USD' }, summaryProfile: { sector: 'Technology', industry: 'Semiconductors', country: 'United States' } };
+    return { price: { symbol: ticker, currency: 'USD', marketCap: fullCap === undefined ? cap : fullCap, regularMarketPrice: 120, regularMarketTime: quoteTime }, financialData: { financialCurrency: 'USD' }, summaryProfile: { sector: 'Technology', industry: 'Semiconductors', country: 'United States' } };
   }
   async fundamentalsTimeSeries() {
     ftsCalls++;
@@ -154,6 +166,8 @@ Module._load = function (req, parent, ...rest) {
   } };
   return load.call(this, req, parent, ...rest);
 };
+// Carriers exist only on small-cap workers, which run with this floor (smallcap-pull.yml), and the merge checks it.
+process.env.MIN_MCAP_USD = String(require('../configs/market-cap-floors.json').smallcapUsd);
 const { pullAll, mergeSmallcapSnapshots } = require('../pull-yahoo.js');
 const { main: prune } = require('../scripts/prune-watchlist.js');
 // Turn prune's fail-closed CLI exit into a guard failure rather than losing the
@@ -181,7 +195,7 @@ const cache = JSON.stringify({ _cacheVersion: 2, cachedAt: iso(40), payload: { r
 const read = p => JSON.parse(files.get(p));
 function reset(age = 1) {
   files.clear(); writes.length = unlinks.length = 0; quoteCalls = fullCalls = ftsCalls = 0;
-  writeEvents.length = 0; quoteMode = fullMode = 'normal'; fullCap = undefined; quoteCurrency = 'USD';
+  writeEvents.length = 0; quoteMode = fullMode = 'normal'; fullCap = undefined; quoteCurrency = 'USD'; quoteTime = PRIOR_CLOSE;
   delete process.env.MISSING_CAP_CARRIER;
   const s = structuredClone(seed); s.meta.asOf = iso(age);
   files.set(snapPath, JSON.stringify(s)); files.set(cachePath, cache);
@@ -323,6 +337,9 @@ const reviewCases = {
       await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
       assert(files.has(snapPath), 'floor exit must leave a carrier for the merge');
       assert.equal(read(snapPath).marketCap.belowFloor, true);
+      assert.equal(read(snapPath).marketCap.regularMarketTime, PRIOR_CLOSE, 'carrier names the quote it measured');
+      assert.equal(read(snapPath).marketCap.asOf, iso(0), 'carrier keeps the pull clock apart from the quote time');
+      assert.deepEqual(read(snapPath).marketCap.usdOrigin, { currency: 'USD', rawValue: 1e6, factor: 1, rateSource: 'identity' }, 'carrier says how the value became USD');
       assert.deepEqual(read(snapPath).annual, {}, 'carrier carries no financials');
       files.set(inPath, files.get(snapPath)); files.set(storePath, JSON.stringify(last));
       assert.equal(mergeSmallcapSnapshots(incoming, merged).floorExits, 1);
@@ -340,23 +357,41 @@ const reviewCases = {
       await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
       assert(!files.has(snapPath), 'a cap of 0 is no measurement and must leave no carrier');
     }
-    files.set(inPath, JSON.stringify({ meta: { ticker, fetchedAt: null }, marketCap: { value: 0, floorUsd: 8e8, belowFloor: true, asOf: iso(0) } }));
+    files.set(inPath, JSON.stringify({ meta: { ticker, fetchedAt: null }, marketCap: { value: 0, floorUsd: 3e8, belowFloor: true, asOf: iso(0) } }));
     assert.throws(() => mergeSmallcapSnapshots(incoming, merged), /Invalid floor-exit observation/);
     files.delete(inPath);
+    // A quote that proves nothing about today: no carrier on any path, so nothing reaches the merge and the row keeps
+    // its last value. Old, in the future, without a time, and a time of 0, on the cold, fast and full path.
+    for (const bad of ['2001-01-01T00:00:00.000Z', '2030-01-01T00:00:00.000Z', undefined, 0]) {
+      for (const [age, cold] of [[1, true], [1, false], [40, false]]) {
+        reset(age); cap = 1e6; quoteTime = bad; process.env.MISSING_CAP_CARRIER = '1';
+        if (cold) files.delete(snapPath);
+        await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
+        assert(!files.has(snapPath), 'a stale quote must leave no carrier: ' + bad);
+      }
+    }
+    // A quote from the last 7 weekdays still counts: Friday 18.09. on Sunday 27.09. is 5 weekdays.
+    reset(1); cap = 1e6; quoteTime = '2026-09-18T20:00:01.000Z'; process.env.MISSING_CAP_CARRIER = '1';
+    await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
+    assert(files.has(snapPath), 'a week-old close must still leave a carrier');
+    // Without a named currency in the fast path's own answer the value has no USD origin: the full pull decides.
+    reset(1); cap = 1e6; fullMode = 'not-found'; quoteCurrency = undefined; process.env.MISSING_CAP_CARRIER = '1';
+    await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
+    assert(!(files.has(snapPath) && read(snapPath).marketCap.belowFloor), 'a quote without a currency must leave no carrier');
     // Failed fetch: no carrier, so the merge leaves the row and its last cap alone.
     reset(40); quoteMode = fullMode = 'not-found'; process.env.MISSING_CAP_CARRIER = '1';
     await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
     assert.equal(read(snapPath).marketCap.value, seed.marketCap.value); assert(!Object.hasOwn(read(snapPath).marketCap, 'belowFloor'));
     // Back above the floor: a new measurement clears the marker.
-    reset(1); const s = read(snapPath); s.marketCap = { value: 1e6, source: 'yahoo_quote', asOf: iso(1), belowFloor: true, floorUsd: 8e8 };
+    reset(1); const s = read(snapPath); s.marketCap = { value: 1e6, source: 'yahoo_quote', asOf: iso(1), belowFloor: true, floorUsd: 3e8 };
     files.set(snapPath, JSON.stringify(s)); cap = 5e9;
     await pullAll({ stocks: [stock] }, out, 0);
     assert.equal(read(snapPath).marketCap.value, 5e9); assert(!Object.hasOwn(read(snapPath).marketCap, 'belowFloor')); assert(!Object.hasOwn(read(snapPath).marketCap, 'floorUsd'));
     // A carrier whose value is not below its floor is a broken input, never a silent write.
-    files.set(inPath, JSON.stringify({ meta: { ticker, fetchedAt: null }, marketCap: { value: 9e8, floorUsd: 8e8, belowFloor: true, asOf: iso(0) } }));
+    files.set(inPath, JSON.stringify({ meta: { ticker, fetchedAt: null }, marketCap: { value: 9e8, floorUsd: 3e8, belowFloor: true, asOf: iso(0) } }));
     assert.throws(() => mergeSmallcapSnapshots(incoming, merged), /Invalid floor-exit observation/);
     // A full row that still holds the marker is no carrier: it keeps its own fields.
-    const full = structuredClone(seed); full.meta.notFoundStreak = 2; full.marketCap = { value: 1e6, belowFloor: true, floorUsd: 8e8, asOf: iso(0) };
+    const full = structuredClone(seed); full.meta.notFoundStreak = 2; full.marketCap = { value: 1e6, belowFloor: true, floorUsd: 3e8, asOf: iso(0) };
     files.set(inPath, JSON.stringify(full)); files.set(storePath, JSON.stringify(last));
     assert.equal(mergeSmallcapSnapshots(incoming, merged).floorExits, 0);
     assert.equal(read(storePath).meta.notFoundStreak, 2, 'a full row must not lose its streak to the carrier path');
@@ -434,7 +469,8 @@ async function run() {
   for (const name of metadataNames) files.delete(path.join(incoming, name));
   assert.equal(mergeSmallcapSnapshots(incoming, merged).missingMarketCaps, 1, 'metadata absent must work too');
   files.set(path.join(incoming, 'BROKEN.json'), '{"marketCap":');
-  assert.throws(() => mergeSmallcapSnapshots(incoming, merged), SyntaxError, 'malformed company JSON must still fail');
+  // The merge refuses it before its first write, and names the file and the count.
+  assert.throws(() => mergeSmallcapSnapshots(incoming, merged), /nothing written: 1 invalid of \d+ rows\. Unreadable small-cap row: BROKEN\.json/, 'malformed company JSON must still fail');
   files.delete(path.join(incoming, 'BROKEN.json'));
   print('PASS F1 R2 collision ignored; metadata absent, malformed company, reserved ticker and null-cap controls');
   const workflow = sourceRead(path.join(ROOT, '.github/workflows/smallcap-pull.yml'), 'utf8').replace(/\r\n/g, '\n');

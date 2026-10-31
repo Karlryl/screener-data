@@ -36,7 +36,7 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // unchanged — only the on-disk filename differs.
 // audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
 const { safeSnapshotFilename, isMetadataSnapshot } = require('./lib/snapshot-fs.js');
-const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitRunTag, pruneSizeExitReports } = require('./lib/size-exits.js');
+const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitRunTag, pruneSizeExitReports, quoteStamp, floorExitFault } = require('./lib/size-exits.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 // T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
@@ -478,6 +478,8 @@ function _applyCurrencyConsistencyGuard(canonical) {
 // configs/market-cap-floors.json. Explicit MIN_MCAP_USD overrides remain supported.
 // Used by BOTH the price-only floor and the full-pull floor.
 const MIN_MCAP_USD = marketCapFloor(process.env);
+// The small-cap merge job runs without MIN_MCAP_USD; its store has this floor.
+const SMALLCAP_FLOOR_USD = require('./configs/market-cap-floors.json').smallcapUsd;
 
 // audit fix BH-047: a single not-found response (transient 404 / momentarily-empty
 // fundamentals) must not permanently delist a ticker — the very next daily
@@ -3443,13 +3445,53 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepSt
 // the store kept the last value above the floor (XNET: 311.7 m USD from 15.10., measured below 300 m on
 // every run since 16.10.). Carry the measured value through the shard artifact; the merge applies it to
 // the baseline. A cap of 0 is no measurement (T2): no carrier, the row stays and reads as not fresh.
-function writeFloorExitCarrier(outputDir, stock, marketCap, floorUsd, observedAt) {
-  if (process.env.MISSING_CAP_CARRIER !== '1' || !(marketCap.value > 0)) return;
+// The carrier names Yahoo's own quote time and how the value became USD (quote: this response's time, currency
+// and raw cap; only the response itself proves its currency). Without that proof no carrier: the row keeps its
+// last value and reads as not fresh, a stale or unconverted quote never takes a firm off a board.
+function writeFloorExitCarrier(outputDir, stock, marketCap, floorUsd, observedAt, quote) {
+  if (process.env.MISSING_CAP_CARRIER !== '1') return;
+  const fx = _fxFactorFor(quote.currency);
+  const carried = { ...marketCap, asOf: observedAt, belowFloor: true, floorUsd, regularMarketTime: quoteStamp(quote.time),
+    usdOrigin: fx && { currency: String(quote.currency), rawValue: quote.rawValue, factor: fx.factorMajorUnit, rateSource: fx.provenance } };
+  const fault = floorExitFault(carried, floorUsd);
+  if (fault) { _log('WARN', `  ${stock.ticker}: floor exit without carrier, ${fault}`); return; }
   writeFileAtomic(path.join(outputDir, safeSnapshotFilename(stock.ticker)), JSON.stringify({
     meta: { ticker: stock.ticker, asOf: null, fetchedAt: null, fundamentalsAsOf: null, fundamentalsIncomplete: true },
     annual: {}, metrics: {}, timeseries: {},
-    marketCap: { ...marketCap, asOf: observedAt, belowFloor: true, floorUsd },
+    marketCap: carried,
   }));
+}
+
+// fetchedAt null marks a carrier: a full row that still holds the marker keeps its own fields.
+const isFloorExitCarrier = row => !!(row.marketCap && row.marketCap.belowFloor === true && row.meta && row.meta.fetchedAt === null);
+
+// One invalid row refuses the whole merge before the first write, with the count in the job's error line.
+// What stays: a disk failure during the writes leaves earlier files written (each write is atomic per file). The
+// job then fails and its store is thrown away, because the cache and artifact steps require
+// steps.merge_smallcap.outcome == 'success' (pinned in tests/mcap-null-keep-snapshot.test.js).
+function assertSmallcapObservations(incomingDir, outputDir) {
+  const names = fs.readdirSync(incomingDir).filter(n => n.endsWith('.json') && !isMetadataSnapshot(n));
+  const faults = [];
+  for (const name of names) {
+    try {
+      const incoming = JSON.parse(fs.readFileSync(path.join(incomingDir, name), 'utf8'));
+      const ticker = incoming.meta && incoming.meta.ticker;
+      const nameFits = !!ticker && safeSnapshotFilename(ticker) === name;
+      if (isFloorExitCarrier(incoming)) {
+        const fault = nameFits ? floorExitFault(incoming.marketCap, SMALLCAP_FLOOR_USD) : 'ticker and file name differ';
+        if (fault) faults.push(`Invalid floor-exit observation: ${name} (${fault})`);
+      } else if (incoming.marketCap && incoming.marketCap.missing === true) {
+        if (!nameFits || incoming.marketCap.value !== null || !Number.isFinite(Date.parse(incoming.marketCap.asOf))) faults.push('Invalid missing-cap observation: ' + name);
+      } else continue;
+      // Both observations merge into the stored row, so a broken stored row has to surface here as well.
+      const target = path.join(outputDir, name);
+      if (fs.existsSync(target)) JSON.parse(fs.readFileSync(target, 'utf8'));
+    } catch (error) { faults.push(`Unreadable small-cap row: ${name} (${error.message})`); }
+  }
+  if (!faults.length) return;
+  const message = `Small-cap merge refused, nothing written: ${faults.length} invalid of ${names.length} rows. ${faults.slice(0, 20).join('; ')}`;
+  console.error('::error::' + message);
+  throw new Error(message);
 }
 
 // A cold SmallCap worker may not have the baseline that the merge job restores.
@@ -3457,17 +3499,13 @@ function writeFloorExitCarrier(outputDir, stock, marketCap, floorUsd, observedAt
 // financials with the worker's incomplete row or silently retaining an old cap.
 function mergeSmallcapSnapshots(incomingDir, outputDir) {
   fs.mkdirSync(outputDir, { recursive: true });
+  assertSmallcapObservations(incomingDir, outputDir);
   let missing = 0, floorExits = 0;
   for (const name of fs.readdirSync(incomingDir).filter(n => n.endsWith('.json')).sort()) {
     if (isMetadataSnapshot(name)) continue;
     const raw = fs.readFileSync(path.join(incomingDir, name), 'utf8');
     const incoming = JSON.parse(raw);
-    // fetchedAt null marks a carrier: a full row that still holds the marker keeps its own fields below.
-    if (incoming.marketCap && incoming.marketCap.belowFloor === true && incoming.meta && incoming.meta.fetchedAt === null) {
-      const { value, floorUsd, asOf } = incoming.marketCap;
-      const ticker = incoming.meta.ticker;
-      if (!ticker || safeSnapshotFilename(ticker) !== name || !(value > 0) || !(value < floorUsd) ||
-          !Number.isFinite(Date.parse(asOf))) throw new Error('Invalid floor-exit observation: ' + name);
+    if (isFloorExitCarrier(incoming)) {
       const target = path.join(outputDir, name);
       // A carrier only updates an existing baseline; a firm never stored stays absent.
       if (!fs.existsSync(target)) continue;
@@ -3478,8 +3516,6 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
     } else if (incoming.marketCap && incoming.marketCap.missing === true) {
       const ticker = incoming.meta && incoming.meta.ticker;
       const at = incoming.marketCap.asOf;
-      if (!ticker || safeSnapshotFilename(ticker) !== name || incoming.marketCap.value !== null ||
-          !Number.isFinite(Date.parse(at))) throw new Error('Invalid missing-cap observation: ' + name);
       const target = path.join(outputDir, name);
       if (fs.existsSync(target)) {
         preserveMissingMarketCap(outputDir, { ticker }, at, incoming.marketCap.source,
@@ -4183,7 +4219,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         throw new Error('price-only floor: stale snapshot removal failed: ' + deleteFailures[0].error);
       }
       recordSizeExit(stock.ticker, mcapNow, MIN_MCAP, newAsOf, 'price-only');
-      writeFloorExitCarrier(outputDir, stock, existing.marketCap, MIN_MCAP, newAsOf);
+      writeFloorExitCarrier(outputDir, stock, existing.marketCap, MIN_MCAP, newAsOf, { time: q.regularMarketTime, currency: q.currency, rawValue: q.marketCap });
       throw new Error('price-only floor: mcap=' + (mcapNow/1e9).toFixed(2) + 'B < $' + formatSizeFloor(MIN_MCAP) + 'B — snapshot removed');
     }
     // Mark mode for downstream visibility
@@ -5308,7 +5344,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           results.push({ ticker: stock.ticker, status: 'failed-delete', reason });
           return;
         }
-        if (mcapVal < MIN_MCAP) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf);
+        if (mcapVal < MIN_MCAP) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf,
+          { time: _y(yahoo.price, 'regularMarketTime'), currency: _y(yahoo.price, 'currency'), rawValue: _y(yahoo.summaryDetail, 'marketCap') ?? _y(yahoo.price, 'marketCap') });
         results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
         return;  // skip this stock
       }

@@ -1336,7 +1336,7 @@ function buildSmallcapOverview(coverage, smallcapDir) {
 }
 
 // Named firms and reasons behind index.excluded: under the floor, above the band, no fresh value, or thin coverage
-// (the floor is the data-derived p10 of each run, so it moves when firms leave). null = no store.
+// (the fixed floor of configs/smallcap-reference.json). null = no store.
 function smallcapNamedReasons(coverageFloor) {
   let files;
   try { files = fs.readdirSync(SMALLCAP_SNAP_DIR); }
@@ -1347,13 +1347,11 @@ function smallcapNamedReasons(coverageFloor) {
   const watchlist = path.join(ROOT, 'watchlist-smallcap.json');
   const status = smallcapCapStatus(rows, new Set(readJSON(watchlist).stocks.map(s => s.ticker)), require('../src/scoring/smallcap-route.js').MAX_MCAP);
   // The sealed pass only counts these. Same pass again, read-only, to name them; --check compares the count.
-  const { loadSmallcapUniverse } = require('../src/scoring/run-screener.js');
-  const { scoreUniverse } = require('../src/scoring/score.js');
-  const { smallcapRoute } = require('../src/scoring/smallcap-route.js');
-  const thin = scoreUniverse(loadSmallcapUniverse(SMALLCAP_SNAP_DIR, watchlist), require('../src/scoring/formulas/smallcap'), { classify: smallcapRoute, growthBoost: false })
+  const { loadSmallcapUniverse, loadSmallcapReference, scoreSmallcapUniverse } = require('../src/scoring/run-screener.js');
+  const thin = scoreSmallcapUniverse(loadSmallcapUniverse(SMALLCAP_SNAP_DIR, watchlist), loadSmallcapReference())
     .filter(e => e.action === 'route' && e.score !== null && e.coverageWeight < coverageFloor)
     .map(e => ({ ticker: e.ticker, name: e.name ?? null, coverageWeight: e.coverageWeight, coverageFloor,
-      reasonDe: `Zu wenig belegte Kennzahlen: Abdeckung ${String(e.coverageWeight).replace('.', ',')} unter der Grenze ${coverageFloor.toFixed(3).replace('.', ',')} dieses Laufs.` }))
+      reasonDe: `Zu wenig belegte Kennzahlen: Abdeckung ${String(e.coverageWeight).replace('.', ',')} unter der festen Grenze ${coverageFloor.toFixed(3).replace('.', ',')}.` }))
     .sort((a, b) => (a.ticker < b.ticker ? -1 : 1));
   return { ...status, counts: { ...status.counts, thinCoverage: thin.length }, thinCoverage: thin };
 }
@@ -1370,6 +1368,8 @@ function buildSmallcapIndex(coverage, smallcapDir) {
     counts: idx.counts,
     excluded: idx.excluded,
     coverageFloor: idx.coverageFloor ?? null, // 5.2 Auflage 3: Coverage-Gate-Beleg durchreichen
+    coverageFloorLive: idx.coverageFloorLive ?? null, // p10 of this run next to the fixed floor; decides nothing
+    reference: idx.reference ?? null, // version, drift and renewal state of the fixed reference
     // W8 EX-01: keyed like boardStatus ('smallcap-<sector>'); the small-cap formulas are the HG ones per sector.
     profitSplit: profitSplitMap(idx.boards, require('../src/scoring/formulas/smallcap')),
     namedReasons: smallcapNamedReasons(idx.coverageFloor),
@@ -2358,6 +2358,10 @@ function validateSmallcapIndex(mk, errs) {
     }
     const counted = mk.excluded?.['smallcap-thin-coverage'] ?? 0;
     if (mk.namedReasons.counts?.thinCoverage !== counted) errs.push(`${kind}: namedReasons.thinCoverage=${mk.namedReasons.counts?.thinCoverage}, excluded says ${counted}`);
+  }
+  // Optional, additive: the floor in force is the one of the fixed reference, never a value of this run.
+  if (mk.reference != null && (typeof mk.reference.version !== 'string' || mk.reference.coverageFloor !== mk.coverageFloor)) {
+    errs.push(`${kind}: reference ${mk.reference.version} floor ${mk.reference.coverageFloor}, coverageFloor says ${mk.coverageFloor}`);
   }
 }
 

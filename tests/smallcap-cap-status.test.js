@@ -14,6 +14,7 @@ const MUTANTS = {
   // Whole line of each guard, whatever the line ending.
   'export-guard': [/^ *: snap\?\.marketCap\?\.belowFloor === true \? `Gemessener Börsenwert .*`  ?: null,(?=\r?$)/m, '      : null,', /floor exit must not reach a board/],
   'check-guard': [/^ *if \(mk\.namedReasons != null\) \{(?=\r?$)/m, '  if (false) {', /--check must catch a wrong reason list/],
+  'reference-guard': [/^ *if \(mk\.reference != null && .*\{(?=\r?$)/m, '  if (false) {', /--check must catch a floor that left the fixed reference/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -56,11 +57,14 @@ const store = [
   row('NOCAP', { value: null, missing: true, asOf: fresh }),
   row('ORPHAN', { value: 9e8, asOf: old }),
   row('BACKUP', { value: 4e8, asOf: fresh, belowFloor: true, floorUsd: 3e8 }),
+  row('STAMPED', { value: 2.4e8, asOf: fresh, belowFloor: true, floorUsd: 3e8, regularMarketTime: '2026-10-28T20:00:01.000Z' }),
 ];
-const status = smallcapCapStatus(store, new Set(['FRESH', 'EXIT', 'HIGH', 'STALE', 'NOCAP', 'BACKUP']), 8e8);
-assert.deepEqual(status.counts, { belowFloor: 1, aboveBand: 1, noFreshValue: 2 });
-assert.deepEqual(status.belowFloor, [{ ticker: 'EXIT', name: 'EXIT Inc', marketCapUsd: 2.3e8, floorUsd: 3e8, date: '2026-10-29',
-  reasonDe: 'unter der Größengrenze von 0,3 Mrd. USD am 29.10.2026' }]);
+const status = smallcapCapStatus(store, new Set(['FRESH', 'EXIT', 'HIGH', 'STALE', 'NOCAP', 'BACKUP', 'STAMPED']), 8e8);
+assert.deepEqual(status.counts, { belowFloor: 2, aboveBand: 1, noFreshValue: 2 });
+assert.deepEqual(status.belowFloor[0], { ticker: 'EXIT', name: 'EXIT Inc', marketCapUsd: 2.3e8, floorUsd: 3e8, date: '2026-10-29',
+  reasonDe: 'unter der Größengrenze von 0,3 Mrd. USD am 29.10.2026' });
+assert.deepEqual(status.belowFloor[1], { ticker: 'STAMPED', name: 'STAMPED Inc', marketCapUsd: 2.4e8, floorUsd: 3e8, date: '2026-10-28',
+  reasonDe: 'unter der Größengrenze von 0,3 Mrd. USD am 28.10.2026' }, 'the reason names the day of the quote, not the pull clock');
 assert.equal(status.aboveBand[0].reasonDe, 'über der Obergrenze von 0,8 Mrd. USD am 29.10.2026');
 assert.deepEqual(status.noFreshValue.map(r => [r.ticker, r.marketCapUsd, r.date]), [['NOCAP', null, '2026-10-29'], ['STALE', 3.1e8, '2026-10-15']]);
 assert.match(status.noFreshValue[1].reasonDe, /Kein frischer Wert seit dem 15\.10\.2026, der letzte bekannte Börsenwert bleibt stehen/);
@@ -96,7 +100,7 @@ console.log = log; console.warn = warn; console.error = original;
 assert.equal(noStore, null, 'no store means no statement'); assert.equal(emptyStore, null, 'an empty store means no statement');
 assert.deepEqual(filled.belowFloor.map(r => r.ticker), [b]);
 assert.deepEqual(filled.thinCoverage.map(r => r.ticker), [a], 'the scored firm under the coverage floor must be named');
-assert.equal(filled.counts.thinCoverage, 1); assert.match(filled.thinCoverage[0].reasonDe, /^Zu wenig belegte Kennzahlen: Abdeckung [\d,]+ unter der Grenze 1,010 dieses Laufs\.$/);
+assert.equal(filled.counts.thinCoverage, 1); assert.match(filled.thinCoverage[0].reasonDe, /^Zu wenig belegte Kennzahlen: Abdeckung [\d,]+ unter der festen Grenze 1,010\.$/);
 console.log('PASS named reasons on a real small store: none without a store, floor exit and thin coverage named');
 assert.equal(dropped, null, 'floor exit must not reach a board');
 assert.equal(control.ticker, a);
@@ -120,3 +124,15 @@ broke('row without a reason', c => { delete c.belowFloor[0].reasonDe; });
 broke('missing list', c => { delete c.aboveBand; });
 broke('thin coverage against the sealed count', () => {}, { 'smallcap-thin-coverage': 2 });
 console.log('PASS --check catches a wrong count, a row without a reason, a missing list and a drift against the sealed count');
+
+// --check: the floor in force is the floor of the fixed reference.
+const checkReference = (coverageFloor, reference) => {
+  const errs = [];
+  writer.validateSmallcapIndex({ excluded: {}, coverageFloor, reference }, errs);
+  return errs.filter(e => e.includes('reference'));
+};
+assert.deepEqual(checkReference(0.58, { version: 'x', coverageFloor: 0.58 }), [], 'matching reference must pass');
+assert.deepEqual(checkReference(0.58, null), [], 'an older export without a reference stays legal');
+assert.equal(checkReference(0.6, { version: 'x', coverageFloor: 0.58 }).length, 1, '--check must catch a floor that left the fixed reference');
+assert.equal(checkReference(0.58, { coverageFloor: 0.58 }).length, 1, '--check must catch a floor that left the fixed reference: no version');
+console.log('PASS --check binds the floor in force to the fixed reference');
