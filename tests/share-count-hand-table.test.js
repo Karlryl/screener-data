@@ -64,7 +64,7 @@ const WRONG = {
   // Toppan with the pre-split count against a post-split price.
   'FAST.AS': { px: 37.01837299, vendorShares: 38933085, mcap: 1441239431.6594176, issuer: 19752877 },
   'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 564711511 },
-  '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 589412480 },
+  '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561108010 },
   // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
   '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1337286998 },
   '688428.SS': { px: 3.657160206, vendorShares: 1767202175, mcap: 6462941472.097403, issuer: 860109566 },

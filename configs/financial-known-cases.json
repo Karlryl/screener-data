@@ -14126,6 +14126,31 @@
       ]
     },
     {
+      "caseId": "alk.to-2024-06-30-annualGP-20261031",
+      "ticker": "ALK.TO",
+      "field": "annualGP",
+      "period": "2024-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 70085000,
+      "replacementValue": null,
+      "revision": "2026-10-31-erw31",
+      "verifiedAt": "2026-10-31",
+      "reason": "Bruttogewinn 2024 (Ende 30.06.2024) zurückgehalten: Der Anbieter liefert das Geschäftsjahr 2025 unter dieser Notierung nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre (+623,8 %) als Jahreswachstum in den Score einging. Die Sperre gilt dem Jahr mit Ende 30.06.2024; dieses Jahr und die älteren Jahre bleiben leer, auch wenn der Anbieter 2025 später nachliefert, bis die Sperre nach einer erneuten Prüfung aufgehoben wird. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-31",
+          "url": "https://investors.alkres.com/annualreport/2026/109/",
+          "form": "Alkane Resources, annual report 2026, financial performance table: the fiscal year 2025 exists at the issuer and is the prior year of 2026",
+          "page": "annual report page 109",
+          "quote": "Revenue 935,822 262,362 673,460 256.7%",
+          "unit": "AUD thousands"
+        }
+      ]
+    },
+    {
       "caseId": "0097.kl-2025-12-31-annualOpInc-20261030",
       "ticker": "0097.KL",
       "field": "annualOpInc",
@@ -15038,6 +15063,41 @@
         },
         {
           "verifiedAt": "2026-10-30",
+          "url": "https://www.mflp-r.co.jp/file/ir_library_term-eea91ed153027c1f7d94486c414875222a0a6bd0.pdf",
+          "form": "same report, note on the period change",
+          "published": "2026-03-17",
+          "page": "PDF 1, note 2",
+          "quote": "2025年７月期（2024年11月１日～2025年７月31日、９か月間）",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "3471.t-2024-07-31-annualGP-20261031",
+      "ticker": "3471.T",
+      "field": "annualGP",
+      "period": "2024-07-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 12206983000,
+      "replacementValue": null,
+      "revision": "2026-10-31-erw31",
+      "verifiedAt": "2026-10-31",
+      "reason": "Bruttogewinn 2024 (Ende 31.07.2024) zurückgehalten: Der Anbieter liefert das Jahr bis 31.07.2025 nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre (+65,1 %) als Jahreswachstum in den Score einging. Die Firma hat ihre Rechnungsperioden 2024 geändert und meldet für die Periode bis 31.07.2025 nur neun Monate, ein Jahresvergleich ist darum nicht belegt. Die Sperre gilt dem Jahr mit Ende 31.07.2024; dieses Jahr und die älteren Jahre bleiben leer, auch wenn der Anbieter später nachliefert, bis die Sperre nach einer erneuten Prüfung aufgehoben wird. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-31",
+          "url": "https://www.mflp-r.co.jp/file/ir_library_term-eea91ed153027c1f7d94486c414875222a0a6bd0.pdf",
+          "form": "Mitsui Fudosan Logistics Park, 決算短信 for the period to January 2026",
+          "published": "2026-03-17",
+          "page": "PDF 1",
+          "quote": "2025年７月期 26,382 － 10,501 － 9,318 － 35,250 －",
+          "unit": "JPY millions"
+        },
+        {
+          "verifiedAt": "2026-10-31",
           "url": "https://www.mflp-r.co.jp/file/ir_library_term-eea91ed153027c1f7d94486c414875222a0a6bd0.pdf",
           "form": "same report, note on the period change",
           "published": "2026-03-17",
