@@ -1,4 +1,16 @@
 [
+  {"id":"pr75-601456SS-rang","pr":75,"ticker":"601456.SS","board":"full/financials","track":"profitable","feld":"rank","op":"between","min":11,"max":17,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Guolian Minsheng steht mit PR #75 auf dem Board Finanzen auf Rang 14 (Nachrechnung auf dem Datenstand 31.10.2026, Vortag Rang 13); die Wachstumszahl von +186,0 % ändert sich nicht, die Firma rückt nur durch ihre Nachbarn. Löst das Fenster von pr73-601456SS-rang ab."},
+  {"id":"pr75-688765SS-zeitraum","pr":75,"ticker":"688765.SS","board":"any","feld":"revGrowthPeriodEnd","op":"eq","wert":"2026-09-30","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Healthgen zeigt mit der Börsenablage das Quartal bis 30.09.2026 statt des älteren Märzquartals (Datenstand 31.10.2026). Löst die beiden Hinweis-Erwartungen pr75-r3-healthgen-label ab."},
+  {"id":"pr75-688765SS-wachstum","pr":75,"ticker":"688765.SS","board":"any","feld":"revGrowthYoYPct","op":"between","min":30,"max":45,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Healthgen wächst im Quartal bis 30.09.2026 um +37,49 % (9,56 gegen 6,95 Mio. CNY, Datenstand 31.10.2026), nicht mehr um die +132,39 % des Märzquartals."},
+  {"id":"pr75-603991SS-zeitraum","pr":75,"ticker":"603991.SS","board":"full/semiconductors","track":"unprofitable","feld":"revGrowthPeriodEnd","op":"eq","wert":"2026-09-30","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Leading Semiconductor zeigt das Umsatzwachstum des Quartals bis 30.09.2026, dessen Vorjahreswert die Börsenablage liefert (Datenstand 31.10.2026)."},
+  {"id":"pr75-603991SS-hinweis-code","pr":75,"ticker":"603991.SS","board":"full/semiconductors","track":"unprofitable","feld":"g31Hinweis.code","op":"eq","wert":"uebernahme","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Der Sprung von +2.331,85 % (Datenstand 31.10.2026) trägt den Hinweis auf die Übernahme, gebunden an das Septemberquartal."},
+  {"id":"pr75-603991SS-hinweis-aami","pr":75,"ticker":"603991.SS","board":"full/semiconductors","track":"unprofitable","feld":"g31Hinweis.reason","op":"contains","wert":"AAMI","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Der Hinweis nennt die neu konsolidierte Tochter AAMI, wie es der Quartalsbericht auf PDF-Seite 3 als Hauptgrund angibt."},
+  {"id":"pr75-DNOOL-hinweis","pr":75,"gruppe":"pr75-DNOOL-hinweis-zeitraum","ticker":"DNO.OL","board":"full/energy","track":"profitable","feld":"g31Hinweis.reason","op":"contains","wert":"Sval","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"DNO trägt am Quartal bis 30.06.2026 den Hinweis, dass Sval im Vorjahresquartal erst ab dem 01.06.2025 enthalten ist."},
+  {"id":"pr75-DNOOL-anderer-zeitraum","pr":75,"gruppe":"pr75-DNOOL-hinweis-zeitraum","ticker":"DNO.OL","board":"full/energy","track":"profitable","feld":"revGrowthPeriodEnd","op":"contains","muster":"^(?!2026-06-30$)","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Der Sval-Hinweis gilt nur für das Quartal bis 30.06.2026; zeigt das Board ein anderes Paar, entfällt er zu Recht."},
+  {"id":"pr75-ETERNAL-hinweis","pr":75,"gruppe":"pr75-ETERNAL-hinweis-zeitraum","name":"Eternal Limited","board":"full/consumer-discretionary","track":"unprofitable","feld":"g31Hinweis.code","op":"eq","wert":"bilanzierungswechsel","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Eternal trägt am Quartal bis 30.06.2026 auf beiden indischen Notierungen den Hinweis auf die geänderte Umsatzerfassung."},
+  {"id":"pr75-ETERNAL-anderer-zeitraum","pr":75,"gruppe":"pr75-ETERNAL-hinweis-zeitraum","name":"Eternal Limited","board":"full/consumer-discretionary","track":"unprofitable","feld":"revGrowthPeriodEnd","op":"contains","muster":"^(?!2026-06-30$)","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Der Hinweis gilt nur für das Quartal bis 30.06.2026; zeigt das Board ein anderes Paar, entfällt er zu Recht."},
+  {"id":"pr75-002077SZ-hinweis","pr":75,"gruppe":"pr75-002077SZ-hinweis-zeitraum","ticker":"002077.SZ","board":"full/real-estate","track":"profitable","feld":"g31Hinweis.reason","op":"contains","wert":"Konzernumfang","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Dagang trägt am Quartal bis 30.06.2026 den Hinweis auf Verkauf und Zukauf von Konzerngesellschaften."},
+  {"id":"pr75-002077SZ-anderer-zeitraum","pr":75,"gruppe":"pr75-002077SZ-hinweis-zeitraum","ticker":"002077.SZ","board":"full/real-estate","track":"profitable","feld":"revGrowthPeriodEnd","op":"contains","muster":"^(?!2026-06-30$)","gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Der Hinweis gilt nur für das Quartal bis 30.06.2026; zeigt das Board ein anderes Paar, entfällt er zu Recht."},
   {
     "id": "pr49-PCOWA-wachstum",
     "pr": 49,
@@ -75,7 +87,7 @@
   {"id":"pr73-3471T-wachstum","pr":73,"ticker":"3471.T","board":"full/real-estate","track":"profitable","feld":"revGrowthYoYPct","op":"null","gueltigAb":"2026-10-31","gueltigBis":"2026-11-03","grund":"Bei Mitsui Fudosan Logistics Park bleibt das Umsatzwachstum leer; +50,1 % war ein Zweijahresvergleich (Datenstand 30.10.2026)."},
   {"id":"pr73-3471T-rang","pr":73,"ticker":"3471.T","board":"full/real-estate","track":"profitable","feld":"rank","op":"between","min":150,"max":215,"gueltigAb":"2026-10-31","gueltigBis":"2026-11-03","grund":"Mitsui Fudosan Logistics Park steht auf dem Immobilien-Board etwa auf Rang 183 statt 23 (Datenstand 30.10.2026)."},
   {"id":"pr73-601456SS-wachstum","pr":73,"ticker":"601456.SS","board":"full/financials","track":"profitable","feld":"revGrowthYoYPct","op":"between","min":185,"max":187,"gueltigAb":"2026-10-31","gueltigBis":"2026-11-03","grund":"Guolian Minsheng zeigt das Jahreswachstum aus dem Abschluss von etwa +186,0 % statt +107,2 % (Datenstand 30.10.2026)."},
-  {"id":"pr73-601456SS-rang","pr":73,"ticker":"601456.SS","board":"full/financials","track":"profitable","feld":"rank","op":"between","min":14,"max":36,"gueltigAb":"2026-10-31","gueltigBis":"2026-11-03","grund":"Guolian Minsheng steht auf dem Board Finanzen etwa auf Rang 24 statt 7 (Datenstand 30.10.2026)."},
+  {"id":"pr73-601456SS-rang","pr":73,"ticker":"601456.SS","board":"full/financials","track":"profitable","feld":"rank","op":"between","min":14,"max":36,"gueltigAb":"2026-10-31","gueltigBis":"2026-11-02","grund":"Guolian Minsheng steht auf dem Board Finanzen etwa auf Rang 24 statt 7 (Datenstand 30.10.2026)."},
   {"id":"pr73-600292SS-wachstum-quartal","pr":73,"gruppe":"pr73-600292SS-wachstum","ticker":"600292.SS","board":"full/utilities","track":"profitable","feld":"revGrowthYoYPct","op":"between","min":24,"max":25.5,"gueltigAb":"2026-10-31","gueltigBis":"2026-11-03","grund":"SPIC Hydropower zeigt das Quartalswachstum bis 30.06.2026 von etwa +24,7 % gegen das rückwirkend angepasste Vorjahresquartal statt +278 % (Datenstand 30.10.2026)."},
   {"id":"pr73-600292SS-wachstum-jahr","pr":73,"gruppe":"pr73-600292SS-wachstum","ticker":"600292.SS","board":"full/utilities","track":"profitable","feld":"revGrowthYoYPct","op":"between","min":-17,"max":-15,"gueltigAb":"2026-10-31","gueltigBis":"2026-11-03","grund":"Liefert der Anbieter schon das dritte Quartal 2026, bleibt es ungeprüft leer, und SPIC Hydropower zeigt das Jahreswachstum 2025 von etwa minus 15,9 %; das ist dann ebenfalls richtig (Datenstand 30.10.2026)."},
   {"id":"pr73-600292SS-rang-quartal","pr":73,"gruppe":"pr73-600292SS-rang","ticker":"600292.SS","board":"full/utilities","track":"profitable","feld":"rank","op":"between","min":20,"max":55,"gueltigAb":"2026-10-31","gueltigBis":"2026-11-03","grund":"SPIC Hydropower steht auf dem Versorger-Board etwa auf Rang 35 statt 5 (Datenstand 30.10.2026)."},
@@ -576,7 +588,7 @@
   {
     "pr": 75,
     "gueltigAb": "2026-10-30",
-    "gueltigBis": "2026-11-06",
+    "gueltigBis": "2026-11-02",
     "id": "pr75-r3-healthgen-label-31032026",
     "ticker": "688765.SS",
     "board": "any",
@@ -588,7 +600,7 @@
   {
     "pr": 75,
     "gueltigAb": "2026-10-30",
-    "gueltigBis": "2026-11-06",
+    "gueltigBis": "2026-11-02",
     "id": "pr75-r3-healthgen-label-30062026",
     "ticker": "688765.SS",
     "board": "any",
