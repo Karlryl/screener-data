@@ -52,6 +52,7 @@
   "scripts/rank-ic.js": { "mode": "exempt", "reason": "Forward evaluation consumes frozen PIT history; historical observations remain immutable." },
   "scripts/reconcile-smallcap.js": { "mode": "hook", "hook": "const r = route(prepareSnapshot(snapshot));", "reason": "Quarter-dependent route reasons must agree with the scoring input." },
   "scripts/score-digest.js": { "mode": "exempt", "reason": "Explicit raw-input scoring differential research, not a production loader." },
+  "scripts/freeze-smallcap-reference.js": { "mode": "hook", "hook": "loadSmallcapUniverse(store)", "reason": "The fixed small-cap reference learns from the corrected Smallcap scoring loader." },
   "scripts/t135-paritaetsluecke.js": { "mode": "hook", "hook": "rs.loadSmallcapUniverse(snap, watchlist)", "reason": "Both comparison arms use the corrected Smallcap scoring loader." },
   "scripts/t140-perioden-enden-gegenprobe.js": { "mode": "exempt", "reason": "Historical PIT period comparison must not rewrite vintage evidence." },
   "scripts/t196-enden-zensus.js": { "mode": "exempt", "reason": "Historical PIT date coverage uses frozen arrays, not current snapshot values." },

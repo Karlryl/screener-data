@@ -266,7 +266,8 @@ function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null
 // dem HKD-Handelskurs skalierte Groesse, +16,6 %, ohne jede Spur.
 // REGEL (Karl): eine Zeile OHNE nachgewiesene Handelskurs-Umrechnung wird auf null
 // gesetzt statt ausgeliefert — eine fehlende Groesse ist harmlos, eine falsche nicht.
-const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { safeSnapshotFilename, isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+const { smallcapCapStatus } = require('../lib/size-exits.js');
 const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { revGrowthLeg, REV_GROWTH_BASES, isoTag } = require('../lib/rev-growth-basis.js');
@@ -347,7 +348,9 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     marketCapGuard: snap && (snap.meta?.marketCapReason || marketCapGuard.table[ticker]) ? snap.marketCap : null,
     marketCapRejected: !snap && (marketCapGuard.table[ticker] || marketCapGuard.holds[ticker])
       ? 'Börsenwert nach Größenabgang ohne aktuellen Snapshot.'
-      : snap?.meta?.marketCapReason && !Number.isFinite(snap.marketCap?.value) ? snap.meta.marketCapReason : null,
+      : snap?.meta?.marketCapReason && !Number.isFinite(snap.marketCap?.value) ? snap.meta.marketCapReason
+      // Guard: a measured floor exit never reaches a board, whatever the router's band says today.
+      : snap?.marketCap?.belowFloor === true ? `Gemessener Börsenwert ${snap.marketCap.value} USD liegt unter der Mindestgröße ${snap.marketCap.floorUsd} USD.` : null,
     correctedMarketCap: marketCapGuard.table[ticker] ? snap?.marketCap?.value : null,
     overviewHold: overviewGrowthHold(ticker, snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
@@ -1332,6 +1335,27 @@ function buildSmallcapOverview(coverage, smallcapDir) {
   return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/overview') };
 }
 
+// Named firms and reasons behind index.excluded: under the floor, above the band, no fresh value, or thin coverage
+// (the fixed floor of configs/smallcap-reference.json). null = no store.
+function smallcapNamedReasons(coverageFloor) {
+  let files;
+  try { files = fs.readdirSync(SMALLCAP_SNAP_DIR); }
+  catch (e) { if (e.code === 'ENOENT') return null; throw e; }
+  const rows = files.filter(f => f.endsWith('.json') && !isMetadataSnapshot(f))
+    .map(f => readJSONOrNull(path.join(SMALLCAP_SNAP_DIR, f))).filter(Boolean);
+  if (!rows.length) return null;
+  const watchlist = path.join(ROOT, 'watchlist-smallcap.json');
+  const status = smallcapCapStatus(rows, new Set(readJSON(watchlist).stocks.map(s => s.ticker)), require('../src/scoring/smallcap-route.js').MAX_MCAP);
+  // The sealed pass only counts these. Same pass again, read-only, to name them; --check compares the count.
+  const { loadSmallcapUniverse, loadSmallcapReference, scoreSmallcapUniverse } = require('../src/scoring/run-screener.js');
+  const thin = scoreSmallcapUniverse(loadSmallcapUniverse(SMALLCAP_SNAP_DIR, watchlist), loadSmallcapReference())
+    .filter(e => e.action === 'route' && e.score !== null && e.coverageWeight < coverageFloor)
+    .map(e => ({ ticker: e.ticker, name: e.name ?? null, coverageWeight: e.coverageWeight, coverageFloor,
+      reasonDe: `Zu wenig belegte Kennzahlen: Abdeckung ${String(e.coverageWeight).replace('.', ',')} unter der festen Grenze ${coverageFloor.toFixed(3).replace('.', ',')}.` }))
+    .sort((a, b) => (a.ticker < b.ticker ? -1 : 1));
+  return { ...status, counts: { ...status.counts, thinCoverage: thin.length }, thinCoverage: thin };
+}
+
 function buildSmallcapIndex(coverage, smallcapDir) {
   const idx = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'index.json'));
   return {
@@ -1344,8 +1368,11 @@ function buildSmallcapIndex(coverage, smallcapDir) {
     counts: idx.counts,
     excluded: idx.excluded,
     coverageFloor: idx.coverageFloor ?? null, // 5.2 Auflage 3: Coverage-Gate-Beleg durchreichen
+    coverageFloorLive: idx.coverageFloorLive ?? null, // p10 of this run next to the fixed floor; decides nothing
+    reference: idx.reference ?? null, // version, drift and renewal state of the fixed reference
     // W8 EX-01: keyed like boardStatus ('smallcap-<sector>'); the small-cap formulas are the HG ones per sector.
     profitSplit: profitSplitMap(idx.boards, require('../src/scoring/formulas/smallcap')),
+    namedReasons: smallcapNamedReasons(idx.coverageFloor),
   };
 }
 
@@ -2326,6 +2353,20 @@ function validateSmallcapIndex(mk, errs) {
   if (!('coverageFloor' in mk)) errs.push(`${kind}: coverageFloor missing`);
   else if (mk.coverageFloor !== null && !Number.isFinite(mk.coverageFloor)) errs.push(`${kind}: coverageFloor not finite|null`);
   if (Array.isArray(mk.boards)) checkProfitSplit(mk, mk.boards, require('../src/scoring/formulas/smallcap'), kind, errs);
+  // Optional, additive: every counted firm carries a stated reason, and the named thin-coverage firms
+  // are exactly the ones the sealed pass counted.
+  if (mk.namedReasons != null) {
+    for (const k of ['belowFloor', 'aboveBand', 'noFreshValue', 'thinCoverage']) {
+      const list = mk.namedReasons[k];
+      if (!Array.isArray(list) || list.length !== mk.namedReasons.counts?.[k] || list.some(r => !r.ticker || !r.reasonDe)) errs.push(`${kind}: namedReasons.${k}`);
+    }
+    const counted = mk.excluded?.['smallcap-thin-coverage'] ?? 0;
+    if (mk.namedReasons.counts?.thinCoverage !== counted) errs.push(`${kind}: namedReasons.thinCoverage=${mk.namedReasons.counts?.thinCoverage}, excluded says ${counted}`);
+  }
+  // Optional, additive: the floor in force is the one of the fixed reference, never a value of this run.
+  if (mk.reference != null && (typeof mk.reference.version !== 'string' || mk.reference.coverageFloor !== mk.coverageFloor)) {
+    errs.push(`${kind}: reference ${mk.reference.version} floor ${mk.reference.coverageFloor}, coverageFloor says ${mk.coverageFloor}`);
+  }
 }
 
 // F-CGPT-040, identisch zu validateQualityExport.

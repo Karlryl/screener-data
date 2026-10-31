@@ -56,7 +56,7 @@ function main() {
     for (const track of ['profitable', 'unprofitable']) {
       const b = (board[track] || []).map((r) => r.ticker);
       const prod = productionCohortRanking(uVerify, smallcapFormulas, id, track, null,
-        { classify: smallcapRoute, growthBoost: false }).map((r) => r.ticker);
+        { classify: smallcapRoute, growthBoost: false, refCalibration: rs.loadSmallcapReference().calibration }).map((r) => r.ticker);
       const bSet = new Set(b), pSet = new Set(prod);
       const fehlt = b.filter((t) => !pSet.has(t));                   // auf dem Board, nicht im Primitiv
       // Ueberhang = Namen, die das Primitiv VOR dem letzten Board-Namen fuehrt, das Board aber nicht.
