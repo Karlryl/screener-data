@@ -47,11 +47,11 @@ if (process.argv.includes('--prove-red')) {
 
 const own = table.cases.filter(c => c.revision === REV);
 
-test('16 sourced rows validate, two coverage rows, every reason names its period, no substitute 0, no dash as punctuation', () => {
-  assert.equal(own.length, 16);
-  assert.deepEqual(FIRMS.map(t => own.filter(c => c.ticker === t).length), [8, 8]);
+test('19 sourced rows validate, two coverage rows, every reason names its period, no substitute 0, no dash as punctuation', () => {
+  assert.equal(own.length, 19);
+  assert.deepEqual(FIRMS.map(t => own.filter(c => c.ticker === t).length), [8, 11]);
   assert.deepEqual(table.coverage.filter(v => FIRMS.includes(v.ticker)).map(v => v.ticker + v.field + v.coversThrough), ['BRBIrevenueQ2026-06-30', 'GAUopIncQ2026-06-30']);
-  assert.ok(table.cases.slice(-16).every(c => c.revision === REV), 'appended last');
+  assert.ok(table.cases.slice(-19).every(c => c.revision === REV), 'appended last');
   const de = p => p.split('-').reverse().join('.');
   for (const c of own) {
     assert.ok(c.replacementValue !== 0 && c.replacementValue !== null, c.caseId);
@@ -70,7 +70,7 @@ test('the quotes print the replacement values', () => {
     ['brbi-2025-09-30-revenueQ-20261031', '133,287'], ['brbi-2025-12-31-revenueQ-20261031', '531,380'], ['brbi-2025-12-31-revenueQ-20261031', '400,062'],
     ['brbi-2025-12-31-annualRev-20261031', '531,380'], ['brbi-2024-12-31-annualRev-20261031', '581,219'], ['brbi-2023-12-31-annualRev-20261031', '435,813'], ['gau-2026-06-30-opIncQ-20261031', '90,368'],
     ['gau-2026-03-31-opIncQ-20261031', '66,256'], ['gau-2025-12-31-opIncQ-20261031', '43,915'], ['gau-2025-09-30-opIncQ-20261031', ' 176 '], ['gau-2025-06-30-opIncQ-20261031', '19,118'],
-    ['gau-2025-03-31-opIncQ-20261031', '(26,327)'], ['gau-2025-12-31-annualOpInc-20261031', '36,543'], ['gau-2024-12-31-annualOpInc-20261031', '20,486']]) k(id, n);
+    ['gau-2025-03-31-opIncQ-20261031', '(26,327)'], ['gau-2025-12-31-annualOpInc-20261031', '36,543'], ['gau-2024-12-31-annualOpInc-20261031', '20,486'], ['gau-2023-12-31-annualOpInc-20261031', '20,122'], ['gau-2022-12-31-annualOpInc-20261031', '39,419'], ['gau-2021-12-31-annualOpInc-20261031', '(60,576)']]) k(id, n);
 });
 
 test('BRBI: the shown growth is the filed one, the vendor cell is the sum the statement prints in two lines, the error is back without the rows', () => {
@@ -98,7 +98,7 @@ test('GAU: every cell on the filed line, the year reconciles to the thousand, th
   assert.equal(value(was.timeseries.opIncQ[3]), 38375000 - 729000, 'Q3 2025 is the first filing before the hedges moved, less accretion');
   const out = apply('GAU');
   assert.deepEqual(out.timeseries.opIncQ.map(value), [90368000, 66256000, 43915000, 176000, 19118000, -26327000]);
-  assert.deepEqual(out.annual.annualOpInc.map(value), [36543000, 20486000, null, null, null]);
+  assert.deepEqual(out.annual.annualOpInc.map(value), [36543000, 20486000, 20122000, 39419000, -60576000], "the older years are the filed line, as the vendor has them");
   assert.equal(opIncYahooAdjusted(out), false, 'all shown years are issuer cells');
   assert.deepEqual(out.timeseries.revenueQ.map(value), was.timeseries.revenueQ.map(value));
   assert.deepEqual(out.annual.annualGP.map(value), was.annual.annualGP.map(value));

@@ -30,7 +30,7 @@ test('35 rows of this lane, appended last, one coverage row, every source comple
   const own = table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 35);
   const at = table.cases.findIndex(c => c.revision === REV);
-  assert.deepEqual(table.cases.slice(at).map(c => c.revision), [...Array(35).fill(REV), ...Array(24).fill('2026-10-30-sdz2'), ...Array(16).fill('2026-10-31-sdabgr')], 'only the rows of ranks 11 to 25 follow');
+  assert.deepEqual(table.cases.slice(at).map(c => c.revision), [...Array(35).fill(REV), ...Array(24).fill('2026-10-30-sdz2'), ...Array(19).fill('2026-10-31-sdabgr')], 'only the rows of ranks 11 to 25 follow');
   assert.deepEqual([...new Set(own.map(c => c.ticker))].sort(), [...FIRMS].sort());
   assert.deepEqual(table.coverage.filter(v => FIRMS.includes(v.ticker)), [{ ticker: 'NMR', field: 'revenueQ', coversThrough: '2026-09-30' }]);
   for (const c of own) {

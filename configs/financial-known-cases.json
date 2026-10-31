@@ -17556,6 +17556,105 @@
           "sourceUnit": "USD thousands"
         }
       ]
+    },
+    {
+      "caseId": "gau-2023-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 20122000,
+      "replacementValue": 20122000,
+      "metricDefinition": "Income (loss) from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Geschäftsjahr 2023 (Ende 31.12.2023) stimmen die 20,1 Mio. USD des Anbieters mit dem Abschluss überein. Bis März 2024 hielt die Firma die Mine nur als Beteiligung, die Zahl ist deshalb kaum mit den Jahren danach vergleichbar. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326000916/exhibit99-2.htm",
+          "form": "6-K exhibit 99.2, management's discussion and analysis, years ended December 31, 2025 and 2024",
+          "accession": "0001062993-26-000916",
+          "filed": "2026-02-13",
+          "page": "Review of FY 2025 consolidated financial results, table of years 2025, 2024 and 2023",
+          "quote": "Income from operations and joint venture 36,543 20,486 20,122",
+          "verifiedAt": "2026-10-31",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 20122000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2022-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 39419000,
+      "replacementValue": 39419000,
+      "metricDefinition": "Income (loss) from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Geschäftsjahr 2022 (Ende 31.12.2022) stimmen die 39,4 Mio. USD des Anbieters mit dem Abschluss überein. Bis März 2024 hielt die Firma die Mine nur als Beteiligung, die Zahl ist deshalb kaum mit den Jahren danach vergleichbar. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299323007899/R3.htm",
+          "form": "40-F for 2022, financial report page R3, audited consolidated statements of operations",
+          "accession": "0001062993-23-007899",
+          "filed": "2023-03-29",
+          "page": "R3, column Dec. 31, 2022",
+          "quote": "Income (loss) from operations and joint venture 39,419 (60,576)",
+          "verifiedAt": "2026-10-31",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": 39419000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2021-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2021-12-31",
+      "periodType": "12M",
+      "index": 4,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -60576000,
+      "replacementValue": -60576000,
+      "metricDefinition": "Income (loss) from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Geschäftsjahr 2021 (Ende 31.12.2021) stimmen die -60,6 Mio. USD des Anbieters mit dem Abschluss überein. Bis März 2024 hielt die Firma die Mine nur als Beteiligung, die Zahl ist deshalb kaum mit den Jahren danach vergleichbar. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299323007899/R3.htm",
+          "form": "40-F for 2022, financial report page R3, audited consolidated statements of operations",
+          "accession": "0001062993-23-007899",
+          "filed": "2023-03-29",
+          "page": "R3, column Dec. 31, 2021",
+          "quote": "Income (loss) from operations and joint venture 39,419 (60,576)",
+          "verifiedAt": "2026-10-31",
+          "start": "2021-01-01",
+          "end": "2021-12-31",
+          "value": -60576000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
     }
   ],
   "quarantines": [
