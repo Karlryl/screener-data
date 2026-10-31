@@ -24,10 +24,12 @@ function test(name, fn) {
 }
 
 // Gleiches Fixture-Muster wie tests/scoring/bh-b12-sec.test.js.
+const jahrVor = (end) => String(Number(end.slice(0, 4)) - 1) + end.slice(4);
 function gaapFixture(rows) {
   const gaap = {};
   for (const [concept, facts] of Object.entries(rows)) {
-    gaap[concept] = { units: { USD: facts.map((f) => Object.assign({ form: '10-K', fp: 'FY' }, f)) } };
+    // F-02: annual duration facts need a full-year period; synthetic rows span the year before `end`.
+    gaap[concept] = { units: { USD: facts.map((f) => Object.assign({ form: '10-K', fp: 'FY', start: jahrVor(f.end) }, f)) } };
   }
   return gaap;
 }

@@ -147,6 +147,21 @@ function besterVersatz(yRevArr, sRevArr) {
 }
 
 /**
+ * F-02 (Codex verdict P307, 30.10.2026): the newest pair that sits on ONE fiscal year. newestPresent()
+ * per side skipped a leading gap and compared two different years: Yahoo 100 of the current year
+ * against the SEC -100 of the year before rejected a series whose stub year had just become a gap,
+ * and the name then kept its old entry with the stub value. Without a proven offset, position i means
+ * the same year on both sides, the same assumption the old newest-only check made at position 0.
+ */
+function neuestesPaar(yArr, sArr, off) {
+  const y = plainMitLuecken(yArr), s = plainMitLuecken(sArr);
+  for (let i = 0; i < y.length; i++) {
+    if (Number.isFinite(y[i]) && Number.isFinite(s[i + off])) return [y[i], s[i + off]];
+  }
+  return null;
+}
+
+/**
  * T174: die Umsatz-Skalen-Wache zieht ueber die GANZE Reihe statt nur ueber das juengste
  * Jahr. Anlass T168/CWCO: die falsche Tag-Wahl (IncludingAssessedTax vor Revenues) stand
  * in den VORJAHREN und war fuer eine newest-only-Wache unsichtbar.
@@ -158,11 +173,12 @@ function besterVersatz(yRevArr, sRevArr) {
  * REV_CONCEPTS-Umsortierung.
  */
 function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
-  const yOp = newestPresent(yOpArr), sOp = newestPresent(sOpArr);
-  if (yOp !== null && sOp !== null && Math.sign(yOp) !== Math.sign(sOp) && yOp !== 0 && sOp !== 0) return false;
-  const yR = newestPresent(yRevArr), sR = newestPresent(sRevArr);
-  if (yR !== null && sR !== null && yR > 0 && sR > 0) { if (Math.max(yR, sR) / Math.min(yR, sR) > 2) return false; }
   const vs = besterVersatz(yRevArr, sRevArr);
+  const off = vs.off === null ? 0 : vs.off;
+  const op = neuestesPaar(yOpArr, sOpArr, off);
+  if (op && Math.sign(op[0]) !== Math.sign(op[1]) && op[0] !== 0 && op[1] !== 0) return false;
+  const rev = neuestesPaar(yRevArr, sRevArr, off);
+  if (rev && rev[0] > 0 && rev[1] > 0 && Math.max(rev[0], rev[1]) / Math.min(rev[0], rev[1]) > 2) return false;
   if (vs.lage !== 'unaufgeloest') {
     const y = plainMitLuecken(yRevArr), s = plainMitLuecken(sRevArr);
     for (let i = 0; i < y.length; i++) {

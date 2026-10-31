@@ -54,6 +54,8 @@
 // (FY2017 ist nur im 20-F/A getaggt) — 7 statt 8 Jahre. Ein fehlendes Altjahr ist der
 // billigere Fehler als eine still geaenderte Regel fuer 5.000 US-Namen.
 const ANNUAL_FORMS = ['10-K', '20-F', '40-F'];
+// F-02 (DL26, 22.10.2026): one definition of "a full year" in the repo, 330-380 elapsed days.
+const { isAnnualPoint } = require('./lib/sec-pit.js');
 
 // --- SEC-Konzept-Namen (us-gaap) --------------------------------------------
 // Umsatz wechselt das Konzept ueber die Jahre -> Prioritaets-Union (aktuelles zuerst).
@@ -186,10 +188,34 @@ function usdUnits(tax, concept) {
 
 // Annual (Volljahr): Jahresbericht-Form (ANNUAL_FORMS) & fp 'FY', dedupe je fy
 // (neueste 'end' gewinnt). -> Map fy -> {val, end}
-function annualConcept(tax, concept) {
+//
+// F-02 (DL26, 22.10.2026): form and fp 'FY' do not make a period a year. A 10-K also carries
+// fourth quarters, single months, successor stubs and since-inception totals under the same fy
+// key (16 of 129 locally cached filers; Kodak FY2017 kept a 414 M USD quarter as "annual"
+// revenue, which then voided its real 1,531 M USD year in annualRevUnion). Duration concepts
+// therefore keep a value only if it is a full year (isAnnualPoint) AND ends on the period end
+// the old rule picked for that fy (the anchor). No full year at the anchor -> no value: an
+// older comparative year must not move into the gap (DBD FY2023 would show 2022 revenue, EXE
+// FY2021 the 2020 operating loss of -8,703 M USD). A missing start proves nothing -> no value.
+// Balance-sheet concepts are instants without start: callers pass { instant: true }, which
+// keeps the old selection unchanged. Regression anchor: tests/sec-annual-period.test.js.
+// A key more than one year after the period end names no fiscal year of that period: PRTH carries
+// the Excel serials 43465 and 43830 as fy, which sorted 2018 and 2019 above 2025 once the sanity check
+// stopped rejecting that series by accident; UHT FY2025 capex was the 2023 comparative.
+const keyFitsEnd = (x) => !(x.fy - Number(String(x.end).slice(0, 4)) > 1);
+const isAnnualFact = (x) => ANNUAL_FORMS.includes(x.form) && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val) && keyFitsEnd(x);
+function fyAnchors(tax, concepts) {
+  const anchor = new Map();
+  for (const c of concepts) {
+    for (const x of usdUnits(tax, c)) if (isAnnualFact(x) && (!anchor.has(x.fy) || x.end > anchor.get(x.fy))) anchor.set(x.fy, x.end);
+  }
+  return anchor;
+}
+function annualConcept(tax, concept, { instant = false, anchor = fyAnchors(tax, [concept]) } = {}) {
   const out = new Map();
   for (const x of usdUnits(tax, concept)) {
-    if (ANNUAL_FORMS.includes(x.form) && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val)) {
+    if (isAnnualFact(x)) {
+      if (!instant && (x.end !== anchor.get(x.fy) || !isAnnualPoint(x))) continue;
       const prev = out.get(x.fy);
       // BH-007: keep accn (filing identity) alongside the value so callers can
       // verify two concepts for the same fy actually came from the same 10-K.
@@ -214,8 +240,18 @@ function annualConcept(tax, concept) {
 // einen falschen Umsatz lautlos in jede Wachstumsachse zu speisen.
 // revConcepts: Prioritaets-Liste der GESAMTUMSATZ-Konzepte der gewaehlten Taxonomie
 // (Default us-gaap — die bestehenden Aufrufer/Tests bleiben unveraendert).
+//
+// F-02 (Codex verdict P307, 30.10.2026): the revenue concepts share ONE anchor per fy. A value of
+// another concept may replace a rejected stub only on the same period end. With one anchor per
+// concept, a comparative year of the next concept moved into the gap: stub 12.08.-31.12.2023 under
+// the first tag, full year 2022 under the second tag, both with fy 2023, gave FY2023 = revenue 2022.
+// Kodak FY2017 and Lumentum FY2019 replace a quarter on the same end and stay as they are.
+function revConceptMaps(tax, revConcepts) {
+  const anchor = fyAnchors(tax, revConcepts);
+  return revConcepts.map((c) => annualConcept(tax, c, { anchor }));
+}
 function annualRevUnion(gaap, ticker, revConcepts = REV_CONCEPTS) {
-  const maps = revConcepts.map((c) => annualConcept(gaap, c));
+  const maps = revConceptMaps(gaap, revConcepts);
   const fySet = new Set();
   for (const m of maps) for (const fy of m.keys()) fySet.add(fy);
   const out = new Map();
@@ -294,8 +330,8 @@ function buildAnnual(tax, dei = {}, ticker, konzepte = TAXONOMIEN['us-gaap']) {
   const ocf = annualConcept(tax, konzepte.ocf);
   const capex = annualConcept(tax, konzepte.capex);
   const gp = annualConcept(tax, konzepte.gp);
-  const assets = annualConcept(tax, konzepte.assets);
-  const curliab = annualConcept(tax, konzepte.curliab);
+  const assets = annualConcept(tax, konzepte.assets, { instant: true });
+  const curliab = annualConcept(tax, konzepte.curliab, { instant: true });
 
   // gemeinsame fy-Achse = Union ueber die Serien; numerisch absteigend (newest-first).
   const fySet = new Set();
@@ -358,9 +394,8 @@ function buildAnnual(tax, dei = {}, ticker, konzepte = TAXONOMIEN['us-gaap']) {
 // naechste Drift-Stelle. `null` = diese Taxonomie liefert kein einziges Jahr.
 function neuestesJahr(tax, konzepte) {
   let max = null;
-  for (const c of [...konzepte.rev, konzepte.opinc, konzepte.netinc, konzepte.ocf, konzepte.assets]) {
-    for (const fy of annualConcept(tax, c).keys()) if (max === null || fy > max) max = fy;
-  }
+  const maps = [...revConceptMaps(tax, konzepte.rev), ...[konzepte.opinc, konzepte.netinc, konzepte.ocf].map((c) => annualConcept(tax, c)), annualConcept(tax, konzepte.assets, { instant: true })];
+  for (const m of maps) for (const fy of m.keys()) if (max === null || fy > max) max = fy;
   return max;
 }
 

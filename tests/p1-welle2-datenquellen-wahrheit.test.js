@@ -94,7 +94,7 @@ test('S4-SEC-004: SEC-200-HTML wird vor der Persistenz abgewiesen', () => {
 // ── S4-SEC-002 ─────────────────────────────────────────────────────────────────
 // Wahrheits-Semantik: bei identischem Perioden-Ende gewinnt die SPAETER eingereichte
 // Fassung (die Korrektur), unabhaengig von der Reihenfolge im SEC-Array.
-const secZeile = (filed, accn, val) => ({ form: '10-K', fp: 'FY', fy: 2025, end: '2025-12-31', filed, accn, val });
+const secZeile = (filed, accn, val) => ({ form: '10-K', fp: 'FY', fy: 2025, start: '2025-01-01', end: '2025-12-31', filed, accn, val });
 test('S4-SEC-002: gleiches Periodenende nimmt die spaeter eingereichte Korrektur', () => {
   const vorwaerts = { Revenue: { units: { USD: [secZeile('2026-02-01', 'orig', 10), secZeile('2026-03-15', 'restated', 12)] } } };
   const r1 = annualConcept(vorwaerts, 'Revenue').get(2025);
