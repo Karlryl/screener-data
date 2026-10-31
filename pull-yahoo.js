@@ -47,7 +47,7 @@ const SHARE_COUNT_TABLE = loadShareCountTable();
 const { applyMarketCapGuard, marketCapFloor, tradingRate, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
 const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
-const { loadReportingCurrencyTable, reportingCurrencyFill, applyReportingRowHold, reportingRowPending } = require('./lib/reporting-currency-hand-table.js');
+const { loadReportingCurrencyTable, reportingCurrencyFill, applyReportingRowHold, reportingRowPending, keepHoldClock, holdRow, heldCounters } = require('./lib/reporting-currency-hand-table.js');
 const REPORTING_CCY_TABLE = loadReportingCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
 const yahooQ4 = require('./lib/yahoo-q4-known-cases.js');
@@ -3727,12 +3727,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   let n_full_period_regression_blocked = 0;
   const _fullPeriodRegressions = [];
   const manualPeriodRegressionWarnings = new Set();
-  // Firms whose amounts the reporting-currency hand table withheld in this run (scripts/ccy-alarm-gate.js turns the run red).
-  const reportingCcyCounters = () => {
-    const rows = results.filter(r => r && r.reportingCcyHeld).map(r => ({ ticker: r.ticker, reason: r.reportingCcyHeld }))
-      .sort((a, b) => a.ticker.localeCompare(b.ticker));
-    return { n_reporting_ccy_held: rows.length, _reportingCcyHeld: rows };
-  };
+  // Firms held by the reporting-currency hand table, from the kept or newly written state: a failed retry stays in the count.
+  // scripts/ccy-alarm-gate.js reports them with exit 0; a hold never stops the boards.
+  const reportingCcyHeld = new Map();
+  const reportingCcyCounters = () => heldCounters([...reportingCcyHeld]
+    .filter(([ticker]) => fs.existsSync(path.join(outputDir, safeSnapshotFilename(ticker))))
+    .map(([ticker, meta]) => holdRow(ticker, meta, new Date().toISOString().slice(0, 10))));
   const fullPeriodReasonDe = 'Die neue Yahoo-Antwort enthält ein älteres Berichtsquartal oder Geschäftsjahr als gespeichert. Die bisherigen Fundamentaldaten bleiben erhalten, nur Kurs und Börsenwert wurden aktualisiert.';
   // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
   //
@@ -4283,6 +4283,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           _log('WARN', `snapshot parse failed for ${stock.ticker} (→ no-cache, re-fetch): ${e && e.message}`);
         }
       }
+      if (_parsedSnapshot?.meta?._reportingCcyHold) reportingCcyHeld.set(stock.ticker, _parsedSnapshot.meta);
       const staleSchema = youngEnough
         ? _existingSnapshotMissingTag211lFields(_parsedSnapshot)
         : false;
@@ -5374,6 +5375,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (_allFtsSeriesEmpty) canonical.meta.fundamentalsIncomplete = true;
       // A held packet goes through both retention guards below: they would keep the old figures without a count.
       const reportingHold = canonical.meta._reportingCcyHandTableConflict;
+      if (reportingHold) keepHoldClock(canonical.meta, _parsedSnapshot && _parsedSnapshot.meta);
       if (reloadOnly && !reportingHold) {
         const annualEnd = a => (a?.annualRevEnds || []).filter((end, i) => end &&
           Number.isFinite(a.annualRev?.[i]?.value ?? a.annualRev?.[i]) && Date.parse(end) <= Date.now()).sort().pop() || null;
@@ -5449,6 +5451,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
         catch (e) { _log('WARN', 'FTS cache write failed for ' + stock.ticker + ': ' + e.message); }
       }
+      if (canonical.meta._reportingCcyHold) reportingCcyHeld.set(stock.ticker, canonical.meta); else reportingCcyHeld.delete(stock.ticker);
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
       // P1-Fix Tag 13: data-completeness pro Stock loggen, damit downstream-Filter
@@ -5474,7 +5477,6 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         || (annualBasis && !quarterReload.previousQuarter && !annualOld))) reloadStats.newer++;
       if (annualOld) reloadStats.still_old_yahoo++;
       results.push({ ticker: stock.ticker, status: 'ok', file: filename, revenue: revStr, growth: growthStr, completeness,
-        ...(reportingHold ? { reportingCcyHeld: reportingHold } : {}),
         ...(quarterReload ? { quarterReload } : {}) });
       _log('INFO', `  ✓ ${stock.ticker}: revenue=${revStr}, growth=${growthStr}, sector=${canonical.meta.sector}`);
     } catch (e) {
@@ -5719,8 +5721,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.filter(r => r.status === 'price-only').length, n_retained: okResultsFinal.filter(r => r.status === 'reload-retained').length, ..._selectorCounters(), ...reloadCounters(), _staleQuarterReload: reloadMeta, n_skipped_mcap: manifest.n_skipped_mcap, n_missing_mcap: manifest.n_missing_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false,
     n_full_period_regression_blocked,
     _fullPeriodRegressions: manifest._fullPeriodRegressions,
-    n_reporting_ccy_held: manifest.n_reporting_ccy_held,
-    _reportingCcyHeld: manifest._reportingCcyHeld,
+    ...reportingCcyCounters(),
   };
   slim.yahooQ4HandTable = manifest.yahooQ4HandTable;
   _log('INFO', `full-pull period regression: blocked=${n_full_period_regression_blocked} tickers=${manifest._fullPeriodRegressions.map(r => r.ticker).join(',')}`);

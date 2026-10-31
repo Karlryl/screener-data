@@ -4,7 +4,8 @@
 // Runs the real mapper, the real converter, the real pull and the real valuation row on the figures of the snapshot of data day 30.10.2026 (run 41027769596).
 // Presence: EUR is filled, amounts convert once, the USD market cap stays, the ratios against it are withheld by the existing currency rule.
 // Hold (Codex P316, 31.10.2026): a vendor currency against the row, or a period past the row's bound, proves no currency at all.
-// The amounts are withheld, the run counts the firm and goes red, and the next run checks again.
+// The amounts are withheld and the next run checks again. The run counts the firm by type, with an owner and a fixed deadline, and
+// goes on with exit 0: a hold never stops the boards (master decision on P316 round 2). After the deadline: an alarm, still held.
 // Absence: another ticker without a row and a currency Yahoo does deliver behave as before.
 // Break-once on test data only: `node tests/hand-table-reporting-currency-20261030.test.js --prove-red` runs the presence check
 // on a ticker without a row and must exit 1. No wall clock; live files are hashed before and after.
@@ -75,7 +76,7 @@ function assertHeld(s, why) {
   for (const field of ['totalEquity', 'totalAssets', 'totalDebt']) assert.equal(s.annual.annualBalance[0][field], null, field);
   assert.equal(s.metrics.revenueTTM, null);
   assert.equal(s.marketCap.value, MC);
-  assert.equal(rowFor(s), null, 'no earnings, cash-flow or book yield');
+  assert.deepEqual(rowFor(s), { t: 'PSQL', ohne: 'waehrung-ungeprueft' }, 'no yield and no earnings per share');
 }
 
 if (process.argv.includes('--prove-red')) { presence('AIIR'); process.exit(0); }
@@ -124,7 +125,8 @@ test('vendor conflict: USD or a third currency holds the amounts and warns', () 
     assert.equal(out.annual.annualRev[0].financialMissing.originalVendorRow.value, 16468000, 'the vendor value stays readable for the check');
     assert.match(out.annual.annualRev[0].financialMissing.staleReason, new RegExp(`${vendor} != row EUR`));
     assert.equal(out.marketCap.value, MC);
-    assert.equal(rowFor(out), null);
+    assert.deepEqual(rowFor(out), { t: 'PSQL', ohne: 'waehrung-ungeprueft' });
+    assert.deepEqual(out.meta._reportingCcyHold, { type: 'conflict', owner: 'Claude-Tageslauf-Master', firstSeen: '2026-10-30', pruefungBis: '2026-11-06' });
     assert.ok(seen.some(m => /::warning::PSQL: reporting-currency hand table/.test(m)), vendor);
     assert.equal(reportingRowPending(out, loadReportingCurrencyTable()), true, 'a held packet is checked again on the next run');
   }
@@ -145,6 +147,7 @@ test('period bound: a filled row vouches only up to its bound', () => {
   assert.equal(out.annual.annualRev[0].value, null);
   assert.equal(out.annual.annualRev[1].value, null, 'the whole packet, a currency change restates the older years too');
   assert.match(out.meta._reportingCcyHandTableConflict, /statement period 2026-12-31 after row bound/);
+  assert.deepEqual(out.meta._reportingCcyHold, { type: 'new-period', owner: 'Claude-Tageslauf-Master', firstSeen: '2026-10-30', pruefungBis: '2026-11-13' });
   // At the bound, or with the bound moved after a new check, the row vouches.
   const atBound = mapped('PSQL');
   atBound.annual.annualRevEnds = [bound, '2025-12-31'];
@@ -183,12 +186,12 @@ const annualResponses = {
     { date: '2025-12-31', totalAssets: 187824000, totalDebt: 112804000, currentAssets: 103980000, totalEquity: -4415000, stockholdersEquity: -4415000 },
   ],
 };
-const pullPsql = (snapshots, pullSource, { now = NOW, financialCurrency, env = { STALE_QUARTER_RELOAD: '' }, responses = annualResponses, quarterEmpty = true, manual = [] } = {}) => {
+const pullPsql = (snapshots, pullSource, { now = NOW, financialCurrency, env = { STALE_QUARTER_RELOAD: '' }, responses = annualResponses, quarterEmpty = true, manual = [], quarterlyRows = null, summaryFails = false, earningsHistory = null } = {}) => {
   const summaryResponse = { price: { currency: 'USD', marketCap: MC, regularMarketPrice: 5.24, exchangeName: 'NasdaqGM' },
-    financialData: { totalRevenue: 16468000, ...(financialCurrency ? { financialCurrency } : {}) },
+    financialData: { totalRevenue: 16468000, ...(financialCurrency ? { financialCurrency } : {}) }, ...(earningsHistory ? { earningsHistory } : {}),
     summaryDetail: { marketCap: MC, fiftyTwoWeekHigh: 24.69 }, quoteType: { quoteType: 'EQUITY' }, summaryProfile: { sector: 'Technology', industry: 'Computer Hardware', country: 'France' } };
   // The fixture's default switches the stale-quarter reload on, which would pull in full for its own reason.
-  return fixture({ snapshots, summaryResponse, pullSource, now, annualResponses: responses, quarterEmpty, quotePrice: 5.24, quoteMarketCap: MC, env, manual });
+  return fixture({ snapshots, summaryResponse, pullSource, now, annualResponses: responses, quarterEmpty, quarterlyRows, summaryFails, quotePrice: 5.24, quoteMarketCap: MC, env, manual });
 };
 // The same figures in the stored shape: the fixture's statement cache is built from them, so a pull within its age reads them too.
 const statementRows = (rows, field) => rows.slice().reverse().map(r => ({ value: r[field] }));
@@ -253,7 +256,10 @@ test('pullAll: Yahoo adds USD on the euro figures: held, counted on every run, f
   assert.equal(m1.results[0].status, 'ok', JSON.stringify(m1.results[0]));
   assertHeld(day1.stored('PSQL'), /USD != row EUR/);
   assert.equal(m1.n_reporting_ccy_held, 1);
-  assert.deepEqual(plain(m1._reportingCcyHeld), [{ ticker: 'PSQL', reason: day1.stored('PSQL').meta._reportingCcyHandTableConflict }]);
+  assert.deepEqual(plain(m1._reportingCcyHeld), [{ ticker: 'PSQL', type: 'conflict', reason: day1.stored('PSQL').meta._reportingCcyHandTableConflict,
+    owner: 'Claude-Tageslauf-Master', firstSeen: day1.stored('PSQL').meta._reportingCcyHold.firstSeen, pruefungBis: day1.stored('PSQL').meta._reportingCcyHold.pruefungBis, overdue: false }]);
+  assert.equal(m1.n_reporting_ccy_conflicts, 1);
+  assert.equal(m1.n_reporting_ccy_new_periods, 0);
   const slim = slimManifest(day1);
   assert.equal(slim.n_reporting_ccy_held, 1, 'the committed manifest carries the count');
   assert.deepEqual(slim._reportingCcyHeld, plain(m1._reportingCcyHeld));
@@ -263,12 +269,14 @@ test('pullAll: Yahoo adds USD on the euro figures: held, counted on every run, f
   assert.equal(day2.stored('PSQL')._pullMode, undefined, 'a full pull, not price-only');
   assertHeld(day2.stored('PSQL'), /USD != row EUR/);
   assert.equal(m2.n_reporting_ccy_held, 1);
+  assert.deepEqual(day2.stored('PSQL').meta._reportingCcyHold, day1.stored('PSQL').meta._reportingCcyHold, 'the deadline does not restart');
   // Yahoo is silent again: the row vouches, the hold is gone, nothing is left over.
   const day3 = nextRun(day2, { now: NOW + 2 * 864e5 });
   const m3 = await day3.run();
   const freed = day3.stored('PSQL');
   assert.equal(m3.n_reporting_ccy_held, 0);
   assert.equal(freed.meta._reportingCcyHandTableConflict, undefined);
+  assert.equal(freed.meta._reportingCcyHold, undefined);
   assert.equal(freed.meta.reportingCurrencyOriginal, 'EUR');
   assert.ok(close(freed.annual.annualRev[0].value, 16468000 * freed.meta.fxRateApplied));
   assert.deepEqual(rowFor(freed), { t: 'PSQL', ohne: 'waehrung-ungeprueft' });
@@ -286,6 +294,80 @@ test('history: a held packet takes no old figures; the same test data without th
   const unstamped = plain(held);
   delete unstamped.meta._reportingCcyHandTableConflict;
   assert.equal(preserveReloadHistory(unstamped, stored).annual.annualBalance[0].totalEquity, -4415000, 'the condition is what keeps the wrong balance out');
+});
+
+const runGate = manifest => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'reporting-ccy-gate-'));
+  try {
+    fs.mkdirSync(path.join(dir, 'snapshots'));
+    fs.writeFileSync(path.join(dir, 'snapshots', '_manifest.json'), JSON.stringify(manifest));
+    const r = spawnSync(process.execPath, [GATE], { cwd: dir, encoding: 'utf8' });
+    return { status: r.status, out: (r.stdout || '') + (r.stderr || '') };
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+};
+
+const LATER = Date.parse('2026-10-31T09:00:00Z');
+const QUARTERS = [{ date: '2026-06-30', totalRevenue: 4872000, grossProfit: 1000000, netIncome: -10000000, operatingIncome: -9000000 },
+  { date: '2026-09-30', totalRevenue: 5000000, grossProfit: 2000000, netIncome: -8000000, operatingIncome: -7000000 }];
+const mergedGate = run => runGate(mergeManifests([slimManifest(run)], 1, 1));
+
+test('new quarter past the bound, Yahoo silent: exit 0 with the row held, deadline fixed, after 14 days an alarm and still held', async () => {
+  const proven = pullPsql([storedUsdPacket()], source);
+  await proven.run();
+  const q = { financialCurrency: undefined, quarterEmpty: false, quarterlyRows: QUARTERS };
+  const day1 = pullPsql([proven.stored('PSQL')], source, { ...q, now: LATER });
+  const m1 = await day1.run();
+  assertHeld(day1.stored('PSQL'), /statement period 2026-09-30 after row bound 2026-06-30/);
+  assert.equal(m1.n_reporting_ccy_new_periods, 1);
+  assert.equal(m1.n_reporting_ccy_conflicts, 0);
+  assert.equal(day1.Y.finishPull(m1), 0);
+  const gate = mergedGate(day1);
+  assert.equal(gate.status, 0, gate.out);
+  assert.match(gate.out, /^::warning::PSQL: /m);
+  assert.doesNotMatch(gate.out, /::error::/);
+  const hold = day1.stored('PSQL').meta._reportingCcyHold;
+  assert.deepEqual([hold.type, hold.firstSeen, hold.pruefungBis], ['new-period', '2026-10-31', '2026-11-14']);
+  const day15 = nextRun(day1, { ...q, now: LATER + 15 * 864e5 });
+  const m15 = await day15.run();
+  assertHeld(day15.stored('PSQL'), /after row bound/);
+  assert.deepEqual(day15.stored('PSQL').meta._reportingCcyHold, hold, 'the deadline does not restart');
+  assert.equal(m15._reportingCcyHeld[0].overdue, true);
+  assert.equal(m15.n_reporting_ccy_overdue, 1);
+  const alarm = mergedGate(day15);
+  assert.equal(alarm.status, 0, alarm.out);
+  assert.match(alarm.out, /^::error::ALARM an Karl.*PSQL/m);
+});
+
+test('a real conflict has the shorter deadline: exit 0, alarm after 7 days, still held', async () => {
+  const day1 = pullPsql([await packetWithoutRow()], source, { financialCurrency: 'USD' });
+  await day1.run();
+  assert.equal(mergedGate(day1).status, 0);
+  const day8 = nextRun(day1, { now: NOW + 8 * 864e5, financialCurrency: 'USD' });
+  await day8.run();
+  assertHeld(day8.stored('PSQL'), /USD != row EUR/);
+  const alarm = mergedGate(day8);
+  assert.equal(alarm.status, 0, alarm.out);
+  assert.match(alarm.out, /^::error::ALARM an Karl.*PSQL/m);
+});
+
+test('earnings per share of a held firm do not escape through the valuation row', async () => {
+  const earningsHistory = { history: [{ quarter: '2026-06-30', epsActual: -0.2, epsEstimate: -0.1 }] };
+  const f = pullPsql([await packetWithoutRow()], source, { financialCurrency: 'USD', earningsHistory });
+  await f.run();
+  assert.match(JSON.stringify(f.stored('PSQL').external.earningsHistory), /-0\.2/, 'the vendor row reached the snapshot');
+  assert.deepEqual(rowFor(f.stored('PSQL')), { t: 'PSQL', ohne: 'waehrung-ungeprueft' });
+});
+
+test('a failed retry keeps the held firm in the count, from the kept state', async () => {
+  const day1 = pullPsql([await packetWithoutRow()], source, { financialCurrency: 'USD' });
+  await day1.run();
+  const day2 = nextRun(day1, { now: NOW + 864e5, summaryFails: true });
+  const m2 = await day2.run();
+  assert.equal(m2.n_failed, 1, 'the retry did fail');
+  assert.equal(m2.n_reporting_ccy_held, 1);
+  assert.equal(m2._reportingCcyHeld[0].type, 'conflict');
+  assert.equal(slimManifest(day2).n_reporting_ccy_held, 1);
+  assertHeld(day2.stored('PSQL'), /USD != row EUR/);
 });
 
 test('pullAll: EUR from Yahoo needs no bound and frees a held packet', async () => {
@@ -332,13 +414,12 @@ test('pullAll: a period past the bound with Yahoo still silent is held and count
   assert.equal(m.n_reporting_ccy_held, 1);
 });
 
-test('break-once on copied source: without the hold the wrong dollars and yields come back', async () => {
+test('break-once on copied source: without the hold the wrong dollars come back', async () => {
   assert.ok(source.includes(HOLD_LINE), 'hold line not found');
   const f = pullPsql([await packetWithoutRow()], source.replace(HOLD_LINE, '  const ccyHold = null;'), { financialCurrency: 'USD' });
   await f.run();
-  const s = f.stored('PSQL'), row = rowFor(s);
+  const s = f.stored('PSQL');
   assert.equal(s.annual.annualRev[0].value, 16468000);
-  assert.deepEqual([row.ep, row.cp, row.bp], [-8.3, -2.18, -0.4]);
   assert.throws(() => assertHeld(s, /USD != row EUR/));
 });
 
@@ -351,28 +432,24 @@ test('break-once on copied source: without the probe line the packet stays in US
   assert.equal(s.meta.reportingCurrencyOriginal, 'USD');
 });
 
-const runGate = manifest => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'reporting-ccy-gate-'));
-  try {
-    fs.mkdirSync(path.join(dir, 'snapshots'));
-    fs.writeFileSync(path.join(dir, 'snapshots', '_manifest.json'), JSON.stringify(manifest));
-    const r = spawnSync(process.execPath, [GATE], { cwd: dir, encoding: 'utf8' });
-    return { status: r.status, out: (r.stdout || '') + (r.stderr || '') };
-  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
-};
-
-test('visibility: the merge adds the shards up and the data-run gate turns red on a held firm', () => {
+test('visibility: the merge adds the shards up by type, the data-run gate warns with exit 0 and stays hard only for a missing currency', () => {
+  const row = { ticker: 'PSQL', type: 'conflict', reason: 'USD != row EUR', owner: 'Claude-Tageslauf-Master', firstSeen: '2026-10-30', pruefungBis: '2026-11-06', overdue: false };
   const shard = rows => ({ n_ok: 1, n_full: 1, n_priceonly: 0, n_failed: 0, n_total: 1, n_reporting_ccy_held: rows.length, _reportingCcyHeld: rows });
-  const merged = mergeManifests([shard([{ ticker: 'PSQL', reason: 'USD != row EUR' }]), shard([])], 2, 2);
+  const merged = mergeManifests([shard([row]), shard([])], 2, 2);
   assert.equal(merged.n_reporting_ccy_held, 1);
-  assert.deepEqual(merged._reportingCcyHeld, [{ ticker: 'PSQL', reason: 'USD != row EUR' }]);
-  const red = runGate(merged);
-  assert.equal(red.status, 1, red.out);
-  assert.match(red.out, /^::error::1 Firmen/m);
+  assert.equal(merged.n_reporting_ccy_conflicts, 1);
+  assert.equal(merged.n_reporting_ccy_new_periods, 0);
+  assert.equal(merged.n_reporting_ccy_overdue, 0);
+  assert.deepEqual(merged._reportingCcyHeld, [row]);
+  const held = runGate(merged);
+  assert.equal(held.status, 0, held.out);
+  assert.match(held.out, /^::warning::PSQL: /m);
   assert.equal(runGate({ n_reporting_ccy_held: 0, _reportingCcyHeld: [] }).status, 0);
   const invalid = runGate({ n_reporting_ccy_held: 'x' });
-  assert.equal(invalid.status, 1);
-  assert.match(invalid.out, /^::error::Invalid n_reporting_ccy_held\b/m);
+  assert.equal(invalid.status, 0, 'not even a broken count of held firms stops the boards');
+  assert.match(invalid.out, /^::warning::Invalid n_reporting_ccy_held\b/m);
+  assert.equal(runGate({ n_ccy_missing_completely: 1, n_reporting_ccy_held: 0 }).status, 1, 'the other currency alarm stays hard');
+  assert.equal(mergeManifests([shard([{ ...row, type: 'other' }])], 1, 1).n_shards_invalid, 1, 'a stable type or an invalid shard');
   // A shard whose count disagrees with its rows must not pass as a valid shard.
   const broken = mergeManifests([{ ...shard([]), n_reporting_ccy_held: 1 }], 1, 1);
   assert.equal(broken.n_shards_invalid, 1);
