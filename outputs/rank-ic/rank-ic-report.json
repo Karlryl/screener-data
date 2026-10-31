@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-30T10:13:18.733Z",
+  "generatedAt": "2026-10-31T09:49:13.963Z",
   "spec": "Ledger 2.8 §1–§4/§8; raw∧residual je Board×Horizont; Schwellen 28d>0,03 und 84d>0,05; BY je eingefrorener Manifestgeneration",
-  "vintagesTotal": 58,
+  "vintagesTotal": 59,
   "vintagesExcluded": [
     "2026-07-14",
     "2026-07-15",
@@ -179,6 +179,26 @@
       "date": "2026-10-30",
       "board": "utilities",
       "reason": "gate-suspect: p99-delta-exceeds-threshold"
+    },
+    {
+      "date": "2026-10-31",
+      "board": "consumer-discretionary",
+      "reason": "gate-suspect: p99-delta-exceeds-threshold"
+    },
+    {
+      "date": "2026-10-31",
+      "board": "financials",
+      "reason": "gate-suspect: p99-delta-exceeds-threshold"
+    },
+    {
+      "date": "2026-10-31",
+      "board": "industrials",
+      "reason": "gate-suspect: p99-delta-exceeds-threshold"
+    },
+    {
+      "date": "2026-10-31",
+      "board": "materials",
+      "reason": "gate-suspect: p99-delta-exceeds-threshold"
     }
   ],
   "boards": {
@@ -204,8 +224,8 @@
             {
               "date": "2026-09-05",
               "n": 1198,
-              "icRaw": -0.03227197963994412,
-              "icResid": -0.01738022630116035,
+              "icRaw": -0.03241986785329709,
+              "icResid": -0.017414903094639594,
               "nResid": 939,
               "quota": {
                 "ok": 1192,
@@ -220,17 +240,17 @@
           "nPoints": 2,
           "pendingWindows": 1,
           "nEff": 2,
-          "mde": 0.0447,
-          "meanICRaw": -0.0502,
-          "meanICResid": -0.0333,
+          "mde": 0.0445,
+          "meanICRaw": -0.0503,
+          "meanICResid": -0.0334,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": -0.0502,
-            "hi": -0.0502
+            "lo": -0.0503,
+            "hi": -0.0503
           },
           "ci90Resid": {
-            "lo": -0.0333,
-            "hi": -0.0333
+            "lo": -0.0334,
+            "hi": -0.0334
           },
           "verdict": "unterpowert — kein Urteil (N_eff<8)"
         },
@@ -239,7 +259,7 @@
             {
               "date": "2026-08-05",
               "n": 1089,
-              "icRaw": -0.0504024847203629,
+              "icRaw": -0.05035338685530425,
               "icResid": -0.0429326960242737,
               "nResid": 996,
               "quota": {
@@ -285,7 +305,8 @@
       },
       "datesExcluded": [
         "2026-10-29",
-        "2026-10-30"
+        "2026-10-30",
+        "2026-10-31"
       ]
     },
     "consumer-staples": {
@@ -324,7 +345,7 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
           "mde": 0.1172,
           "meanICRaw": 0.0157,
@@ -430,7 +451,7 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
           "mde": 0.1375,
           "meanICRaw": -0.0158,
@@ -522,8 +543,8 @@
             {
               "date": "2026-09-05",
               "n": 401,
-              "icRaw": 0.03347439691130699,
-              "icResid": 0.020891232743401083,
+              "icRaw": 0.031564413642877695,
+              "icResid": 0.017731057280065646,
               "nResid": 322,
               "quota": {
                 "ok": 401,
@@ -538,17 +559,17 @@
           "nPoints": 2,
           "pendingWindows": 1,
           "nEff": 2,
-          "mde": 0.0248,
-          "meanICRaw": 0.0435,
-          "meanICResid": 0.0462,
+          "mde": 0.0272,
+          "meanICRaw": 0.0425,
+          "meanICResid": 0.0446,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": 0.0435,
-            "hi": 0.0435
+            "lo": 0.0425,
+            "hi": 0.0425
           },
           "ci90Resid": {
-            "lo": 0.0462,
-            "hi": 0.0462
+            "lo": 0.0446,
+            "hi": 0.0446
           },
           "verdict": "unterpowert — kein Urteil (N_eff<8)"
         },
@@ -557,8 +578,8 @@
             {
               "date": "2026-08-05",
               "n": 346,
-              "icRaw": 0.07408965393384885,
-              "icResid": 0.09195703804433024,
+              "icRaw": 0.07318663385747487,
+              "icResid": 0.09071958647517613,
               "nResid": 281,
               "quota": {
                 "ok": 341,
@@ -574,16 +595,16 @@
           "pendingWindows": 1,
           "nEff": 1,
           "mde": null,
-          "meanICRaw": 0.0741,
-          "meanICResid": 0.092,
+          "meanICRaw": 0.0732,
+          "meanICResid": 0.0907,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": 0.0741,
-            "hi": 0.0741
+            "lo": 0.0732,
+            "hi": 0.0732
           },
           "ci90Resid": {
-            "lo": 0.092,
-            "hi": 0.092
+            "lo": 0.0907,
+            "hi": 0.0907
           },
           "verdict": "unterpowert — kein Urteil (N_eff<8)"
         }
@@ -603,7 +624,8 @@
       },
       "datesExcluded": [
         "2026-10-02",
-        "2026-10-29"
+        "2026-10-29",
+        "2026-10-31"
       ]
     },
     "health-care": {
@@ -628,7 +650,7 @@
             {
               "date": "2026-09-05",
               "n": 1005,
-              "icRaw": 0.019415177613358234,
+              "icRaw": 0.01954011086500882,
               "icResid": 0.02488652975904645,
               "nResid": 728,
               "quota": {
@@ -642,9 +664,9 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
-          "mde": 0.0406,
+          "mde": 0.0405,
           "meanICRaw": 0.0358,
           "meanICResid": 0.034,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
@@ -663,7 +685,7 @@
             {
               "date": "2026-08-05",
               "n": 920,
-              "icRaw": 0.021636819778821165,
+              "icRaw": 0.021720067922594843,
               "icResid": 0.010002002536675068,
               "nResid": 808,
               "quota": {
@@ -680,12 +702,12 @@
           "pendingWindows": 1,
           "nEff": 1,
           "mde": null,
-          "meanICRaw": 0.0216,
+          "meanICRaw": 0.0217,
           "meanICResid": 0.01,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": 0.0216,
-            "hi": 0.0216
+            "lo": 0.0217,
+            "hi": 0.0217
           },
           "ci90Resid": {
             "lo": 0.01,
@@ -734,8 +756,8 @@
             {
               "date": "2026-09-05",
               "n": 2147,
-              "icRaw": 0.022329334571215404,
-              "icResid": 0.0340582429663611,
+              "icRaw": 0.022559027681660175,
+              "icResid": 0.034198762343062815,
               "nResid": 1638,
               "quota": {
                 "ok": 2143,
@@ -750,13 +772,13 @@
           "nPoints": 2,
           "pendingWindows": 1,
           "nEff": 2,
-          "mde": 0.1698,
-          "meanICRaw": -0.0459,
+          "mde": 0.17,
+          "meanICRaw": -0.0458,
           "meanICResid": -0.0188,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": -0.0459,
-            "hi": -0.0459
+            "lo": -0.0458,
+            "hi": -0.0458
           },
           "ci90Resid": {
             "lo": -0.0188,
@@ -769,8 +791,8 @@
             {
               "date": "2026-08-05",
               "n": 2026,
-              "icRaw": -0.13760080854138548,
-              "icResid": -0.0828310973854867,
+              "icRaw": -0.13750123479688123,
+              "icResid": -0.08283318996283937,
               "nResid": 1858,
               "quota": {
                 "ok": 2001,
@@ -786,12 +808,12 @@
           "pendingWindows": 1,
           "nEff": 1,
           "mde": null,
-          "meanICRaw": -0.1376,
+          "meanICRaw": -0.1375,
           "meanICResid": -0.0828,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": -0.1376,
-            "hi": -0.1376
+            "lo": -0.1375,
+            "hi": -0.1375
           },
           "ci90Resid": {
             "lo": -0.0828,
@@ -816,7 +838,8 @@
       "datesExcluded": [
         "2026-10-07",
         "2026-10-29",
-        "2026-10-30"
+        "2026-10-30",
+        "2026-10-31"
       ]
     },
     "it-services": {
@@ -855,7 +878,7 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
           "mde": 0.1103,
           "meanICRaw": 0.136,
@@ -1030,7 +1053,8 @@
       "datesExcluded": [
         "2026-10-14",
         "2026-10-29",
-        "2026-10-30"
+        "2026-10-30",
+        "2026-10-31"
       ]
     },
     "real-estate": {
@@ -1069,7 +1093,7 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
           "mde": 0.1618,
           "meanICRaw": -0.0087,
@@ -1176,7 +1200,7 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
           "mde": 0.083,
           "meanICRaw": 0.007,
@@ -1283,7 +1307,7 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
           "mde": 0.1435,
           "meanICRaw": -0.0235,
@@ -1389,7 +1413,7 @@
             }
           ],
           "nPoints": 0,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 0,
           "mde": null,
           "meanICRaw": null,
@@ -1466,8 +1490,8 @@
             {
               "date": "2026-09-05",
               "n": 699,
-              "icRaw": 0.05701926703039861,
-              "icResid": 0.0704662130675678,
+              "icRaw": 0.05701833592461113,
+              "icResid": 0.07052516743293011,
               "nResid": 502,
               "quota": {
                 "ok": 698,
@@ -1480,7 +1504,7 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
           "mde": 0.0403,
           "meanICRaw": 0.0408,
@@ -1501,8 +1525,8 @@
             {
               "date": "2026-08-05",
               "n": 672,
-              "icRaw": 0.004114619472114562,
-              "icResid": 0.05082211306804702,
+              "icRaw": 0.004118277263144769,
+              "icResid": 0.05080663327681352,
               "nResid": 607,
               "quota": {
                 "ok": 665,
@@ -1573,8 +1597,8 @@
             {
               "date": "2026-09-05",
               "n": 356,
-              "icRaw": 0.014706111168027846,
-              "icResid": 0.018808964816773816,
+              "icRaw": 0.014296911748005675,
+              "icResid": 0.018229980791729015,
               "nResid": 297,
               "quota": {
                 "ok": 355,
@@ -1587,19 +1611,19 @@
             }
           ],
           "nPoints": 2,
-          "pendingWindows": 1,
+          "pendingWindows": 2,
           "nEff": 2,
-          "mde": 0.0644,
-          "meanICRaw": -0.0112,
-          "meanICResid": 0.0271,
+          "mde": 0.0639,
+          "meanICRaw": -0.0114,
+          "meanICResid": 0.0268,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": -0.0112,
-            "hi": -0.0112
+            "lo": -0.0114,
+            "hi": -0.0114
           },
           "ci90Resid": {
-            "lo": 0.0271,
-            "hi": 0.0271
+            "lo": 0.0268,
+            "hi": 0.0268
           },
           "verdict": "unterpowert — kein Urteil (N_eff<8)"
         },
@@ -1659,7 +1683,7 @@
       ]
     }
   },
-  "newestPriceDate": "2026-10-29",
+  "newestPriceDate": "2026-10-30",
   "schemaVersion": 2,
   "families": [
     {
@@ -2090,7 +2114,8 @@
           "2026-07-29",
           "2026-08-03",
           "2026-10-29",
-          "2026-10-30"
+          "2026-10-30",
+          "2026-10-31"
         ]
       },
       {
@@ -2144,7 +2169,8 @@
           "2026-07-29",
           "2026-08-03",
           "2026-10-02",
-          "2026-10-29"
+          "2026-10-29",
+          "2026-10-31"
         ]
       },
       {
@@ -2181,7 +2207,8 @@
           "2026-08-03",
           "2026-10-07",
           "2026-10-29",
-          "2026-10-30"
+          "2026-10-30",
+          "2026-10-31"
         ]
       },
       {
@@ -2219,7 +2246,8 @@
           "2026-08-03",
           "2026-10-14",
           "2026-10-29",
-          "2026-10-30"
+          "2026-10-30",
+          "2026-10-31"
         ]
       },
       {
