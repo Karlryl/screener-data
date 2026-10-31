@@ -34,8 +34,9 @@
  * The script adds no slack of its own: it compares against exactly what the entry states.
  *   Fixed states (null, notNull, absent, present, a text or code, a count that must stay 0): no tolerance.
  *   Drifting numbers (rank, market cap, score, growth, a row count): op between, min/max = the value measured
- *          on the reference day ± 20 %, at least ± 1, and narrower only where the old wrong value would otherwise
- *          lie inside. gueltigBis at most 7 days after gueltigAb; a renewal recentres on the day it is renewed.
+ *          on the reference day ± 20 %, at least ± 1, and narrower only where the old wrong value or a failure named
+ *          with its measured value in grund would otherwise lie inside. gueltigBis at most 7 days after gueltigAb; a
+ *          renewal recentres on the day it is renewed.
  *   grund  quotes a number only with the day it was measured, so it never reads as today's value.
  */
 const fs = require('fs');

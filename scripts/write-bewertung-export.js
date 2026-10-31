@@ -85,6 +85,8 @@ function rowFor(snapshot) {
   if (!ticker) throw new Error('Snapshot without ticker');
   // A quarantined data packet shows no value at all (same rule as write-excluded-list.js).
   if (meta.financialDataIssue) return { t: ticker, ohne: 'datenpaket-gesperrt' };
+  // Reporting-currency hand table holds the firm: no ratio, and no quarterly earnings per share either, whose currency is just as open.
+  if (meta._reportingCcyHandTableConflict) return { t: ticker, ohne: 'waehrung-ungeprueft' };
   const annual = snapshot.annual || {}, mc = snapshot.marketCap?.value;
   // Market-cap based ratios need the same currency proof as the filter feed; the other figures do not use it.
   const priced = beurteileWaehrungsbeleg(meta).ok && finite(mc) && mc > 0;
