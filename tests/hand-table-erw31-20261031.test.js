@@ -43,7 +43,7 @@ const tableBefore = () => {
 };
 
 if (process.argv.includes('--prove-red')) {
-  // The state before this change: the row with the issued count withholds, and gross profit stays a two-year pair.
+  // The state before this change: the row with the issued count withholds. The gross-profit direction is proven in the test below, against the table before this change.
   const s = toppan31();
   assert.equal(applyShareCountTable(s, '7911.T', VENDOR_31.px, { '7911.T': OLD_ROW }).status, 'confirmed');
   console.log('hand-table-erw31-20261031: --prove-red did NOT fire');
@@ -206,6 +206,14 @@ test('Enel, 3471.T, Jio: an empty rank passes only with its reason, the old pred
   const row = rank => ({ ticker: 'JIOFIN.BO', name: 'Jio Financial Services Limited', track: 'profitable', rank });
   assert.deepEqual(await verdicts(jio, 'financials', [row(43)]), ['erfüllt']);
   for (const wrong of [8, 81]) assert.deepEqual(await verdicts(jio, 'financials', [row(wrong)]), ['nicht erfüllt'], String(wrong));
+});
+
+test('3471.T from the next run: one axis, score under the old value, reason shown; the state of 31.10.2026 fails all three', async () => {
+  const ids = e => /^pr\d+-3471T-(achsen|score|hinweis)$/.test(e.id);
+  const row = extra => ({ ticker: '3471.T', track: 'profitable', ...extra });
+  const reason = 'Bruttogewinn 2024 (Ende 31.07.2024) zurückgehalten: ...';
+  assert.deepEqual(await verdicts(ids, 'real-estate', [row({ coverageAxes: '1/7', score: 50.1, financialDataReasons: [reason] })]), ['erfüllt', 'erfüllt', 'erfüllt']);
+  assert.deepEqual(await verdicts(ids, 'real-estate', [row({ coverageAxes: '2/7', score: 58.2, financialDataReasons: ['Jahresumsatz 2024 ...'] })]), ['nicht erfüllt', 'nicht erfüllt', 'nicht erfüllt']);
 });
 
 test('firms below the size floor end on 31.10.2026 and are no longer measured on Tuesday', async () => {
