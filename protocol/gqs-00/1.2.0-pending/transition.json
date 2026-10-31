@@ -316,8 +316,29 @@
     "review": "Blind Sonnet review MERGE 90 % (blindpruefung-pr29-2026-10-23.md); this registration added by the master after the seal test turned PR Check red.",
     "rollback": "Revert the country.js change and only this regionTableCountries registration."
   },
+  "g31OlderQuarterPair": {
+    "date": "2026-10-29",
+    "authority": "Karl's decision G31 of 11.10.2026 (Regelblatt v4: the boards show per firm the newest reported numbers, labelled with their period; recency goes before one uniform period; implemented via the formula path with Vorher/Nachher). Daylauf 9 build brief sd-p2 of 29.10.2026 after the read-only repro of the 28.10./29.10. basis switch (324 rows from the quarter to 30.06.2026 to fiscal year 2025). A formula change with visible board numbers: draft PR, no merge before the independent Codex review.",
+    "scope": "lib/g31-recency.js (a registered productive dependency outside src/scoring), plus two non-scoring consumers that assumed the quarter pair starts at index 0: lib/exchange-quarter-check.js reads growth through withoutOlderPair (its mode, categories, level fallback and reason texts stay those of the index-0 selection) and lib/export-provenance.js cites the cells of the shown pair. No file under src/scoring changes. quarterCandidate takes an optional start position (default 0, so the grossProfitQ overview candidate is unchanged). g31Shadow: when the newest quarter has no valid year-ago pair, the next older quarter with a dated partner that quarterCandidate accepts (currency, duration, gap rule unchanged) replaces it, but only when its source end is not before the annual candidate's end and the exchange cross-check (evaluate(), mode unchanged) would withhold no quarter of the company and actually ran (an evaluation failure, or for CN/TW listings a missing, unreadable or too old exchange store: store-missing, store-old, store-entry-invalid, also keeps the annual candidate; review I1), and only when no quarterly revenue cell carries a hand-table or exchange-check marker (financialMissing, financialCorrection, yahooQ4Correction): such series were reviewed for the index-0 selection only (G2); otherwise the index-0 result stands, bonus components included. The withG31Variant('legacy', fn) arm is unchanged. No weight, threshold, calibration policy or annual-pair switch changes.",
+    "definitionAmendment": {
+      "axis": "revGrowthLevel",
+      "formula": "100 * winsor(current/prior - 1) of the newest valid candidate: the newest quarter that has a valid dated year-ago quarter, against that quarter (undated: only the newest quarter with the positional partner and no empty quarter in between), or the validated fiscal-year pair (a valid annualLegNewerYear record, else annualRev[0]/annualRev[1]); the candidate with the later valid period end wins, an equal end keeps the quarter. An older quarter pair is used only when the newest quarter has no valid pair, the exchange check ran on a usable store (CN/TW) and would withhold no quarter of the company, and no quarterly revenue cell carries a hand-table or exchange-check marker.",
+      "inherits": "ruleOfX, the growth bonus (revYoYComponents = [validated annual candidate, selected quarter candidate]), the Rule40 base and freshness gates, revGrowthYoYPct with its period label, overview.value for revenue-badge and g31Hinweis follow the selected pair."
+    },
+    "previousDependencySha256LF": {
+      "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a"
+    },
+    "dependencySha256LF": {
+      "lib/g31-recency.js": "a999177374f5151ea8f3bd9dd472680026ba6e4f0f6ab97d496d477277c4c14d"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "goldenImpact": "verify() rebuilds the 25 golden traces unchanged (GQS00-023 and GQS00-024 keep their registered second traces): no golden case has a newest quarter without a valid year-ago pair next to an older valid pair.",
+    "evidence": "tests/g31-older-quarter-pair.test.js (real cells of the 29.10.2026 run with a fixed cut of the exchange store: 002448.SZ 28.53102510166723 %, 603991.SS 1983.58 %, 000595.SZ held on the fiscal year by the exchange check, 000423.SZ unchanged, A17U.SI older pair before the fiscal year, no store and a store older than the limit keep the fiscal year; break-once red with the walk disabled and with the unusable-store line removed, green after); tests/g31-p267.test.js, tests/exchange-quarter-check.test.js and tests/export-w8-rev-growth-reason.test.js (pins of the old index-0-only selection for exactly this case adapted, each with a comment naming this change); tests/scoring/gqs00-freeze.test.js. Before/after with the production writer on the snapshots of run 40842302694 (29.10.2026; the before run reproduces the published export on all 9,431 rows for growth, score and rank): 419 rows change growth (438 rows with an older pair minus 17 held by the exchange check and 2 with hand-table cells in the quarterly series), 308 of the 324 rows that switched to fiscal year 2025 on 29.10. get their 28.10. value back; on the snapshots of run 40657077252 (28.10.2026) 77 rows change.",
+    "review": "Build registration only; the independent blind Codex review on Sunday 01.11.2026 decides the merge. The builder does not merge, publish, initialize or seal.",
+    "rollback": "Revert the lib/g31-recency.js change and only this g31OlderQuarterPair registration with the dependency hash together in a reviewed new commit."
+  },
   "dependencyFiles": {
-    "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
+    "lib/g31-recency.js": "a999177374f5151ea8f3bd9dd472680026ba6e4f0f6ab97d496d477277c4c14d",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
 }
