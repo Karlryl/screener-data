@@ -188,10 +188,11 @@ check('native pull then actual FX conversion then read preserves values and prov
   };
   const stmt=require('../lib/statement-currency-hand-table.js');
   // Execute the real converter without importing the network client's startup code.
-  const convert=Function('yahooQ4','statementFactor','STATEMENT_CCY_TABLE','FX_TO_USD','FX_SOURCE',
+  const convert=Function('yahooQ4','statementFactor','STATEMENT_CCY_TABLE','FX_TO_USD','FX_SOURCE','applyReportingRowHold','REPORTING_CCY_TABLE',
     'const FX_PROVENANCE={INR:"live"}, FX_PROVENANCE_HARDCODED="fallback-hardcoded", FX_MARKER_HARDCODED="hardcoded-fallback";\n'+
     ['_isValidFxRate','_statementFactor','_skaliereHandelsMetriken','_convertSnapshotToUSD'].map(extract).join('\n')+'\nreturn _convertSnapshotToUSD;')(
-      require('../lib/yahoo-q4-known-cases.js'),stmt.statementFactor,stmt.loadStatementCurrencyTable(),{INR:fx},raw.meta.fxRateSourceReporting);
+      require('../lib/yahoo-q4-known-cases.js'),stmt.statementFactor,stmt.loadStatementCurrencyTable(),{INR:fx},raw.meta.fxRateSourceReporting,
+      require('../lib/reporting-currency-hand-table.js').applyReportingRowHold,{});
   const native=apply(input).snapshot;
   assert.equal(value(native.annual.annualRev[0]),cases[0].replacementValue);
   assert.equal(native.meta.financialStatementScale?.caseId,rule.caseId);
