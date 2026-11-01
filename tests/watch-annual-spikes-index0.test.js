@@ -100,6 +100,22 @@ test('scanSnapshots: index-0 findings go to `neueste`, never to `funde`; inner a
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('berichtsWerte: a statement-currency row reads its own stamp, not the general factor (P282, EMBJ of 30.10.2026)', () => {
+  // Real stamps: statements in USD at 1, other metrics BRL at 0.19929053. The general factor made 38,022.4 M "BRL" out of 7,577.5 M USD.
+  const meta = { ticker: 'EMBJ', fxConverted: true, reportingCurrency: 'USD', reportingCurrencyOriginal: 'BRL', fxRateApplied: 0.19929053 };
+  const s = { meta: { ...meta, statementCurrencyOriginal: 'USD', statementFxRateApplied: 1, statementCurrencySource: 'hand-table:statement-currency' },
+    annual: { annualRevEnds: ['2025-12-31', '2024-12-31'] } };
+  assert.deepEqual(W.berichtsWerte(s, 'annualRev', { wert: 7577500000, rechts: 100000000 }),
+    { waehrung: 'USD', wert: 7577500000, vorjahr: 100000000, ende: '2025-12-31', endeVorjahr: '2024-12-31' });
+  // Absence: without the stamp the general factor still applies, as before.
+  const plain = W.berichtsWerte({ meta, annual: { annualRevEnds: ['2025-12-31', '2024-12-31'] } }, 'annualRev', { wert: 7577500000, rechts: 100000000 });
+  assert.equal(plain.waehrung, 'BRL');
+  assert.ok(Math.abs(plain.wert - 7577500000 / 0.19929053) < 1);
+  // A broken stamp is no evidence: it falls back to the general stamps, never to a factor of its own.
+  const broken = W.berichtsWerte({ meta: { ...meta, statementCurrencyOriginal: 'USD', statementFxRateApplied: 0 }, annual: {} }, 'annualRev', { wert: 100, rechts: 50 });
+  assert.equal(broken.waehrung, 'BRL');
+});
+
 // ── The report (pure) ─────────────────────────────────────────────────────────────
 const fund = (ticker, reihe, wert, rechts, extra = {}) => ({ ticker, reihe, index: 0, wert, links: null, rechts,
   bericht: { waehrung: 'EUR', wert: wert / 2, vorjahr: rechts / 2, ende: '2025-12-31', endeVorjahr: '2024-12-31' }, ...extra });
