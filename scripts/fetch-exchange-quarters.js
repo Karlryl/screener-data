@@ -11,7 +11,8 @@
  *            row 營業收入合計 (general) or 收益合計 (securities/futures)
  *            -> external-data/exchange-quarters/tw.json
  *
- * NOTHING READS THE STORE YET. No board number can change through this script.
+ * lib/exchange-quarter-check.js reads the stores at read time (configs/exchange-quarter-policy.json), so what this
+ * script writes can move a board number in the next daily run.
  *
  * Precedent and owner decision: scripts/build-cnannual.js lines 19-21 (Eastmoney, owner decision of
  * 19.08.2026 "voll nutzen wie jede andere Quelle"). Only the columns and periods the guard and the
@@ -462,6 +463,7 @@ async function runUs(ctx) {
       }
     }
   }
+  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run (the queue runs by file name, small caps last).');
   if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
   // A run with nothing due stamps the store as well: the age warning in lib/exchange-quarter-check.js reads this list.
   next.sources[src] ??= { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };

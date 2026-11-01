@@ -208,6 +208,7 @@ test('store concepts of the writer and of the reader are the same list', () => {
   assert.match(src, /const SEC_CONCEPTS = \[\.\.\.REV_CONCEPTS, 'RevenuesNetOfInterestExpense'\]/);
   assert.deepEqual(SEC_CONCEPTS, [...require('../lib/sec-pit.js').REV_CONCEPTS, 'RevenuesNetOfInterestExpense']);
 });
+test('every market checks append-only before it writes', () => assert.equal(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'fetch-exchange-quarters.js'), 'utf8').match(/^ {2}S\.assertAppendOnly\(prev, next\);\r?$/gm).length, 3));
 test('no personal contact or literal SEC identity in the writer; it reads SEC_CONTACT through the project helper', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'fetch-exchange-quarters.js'), 'utf8');
   assert.match(src, /'User-Agent': assertSecContact\(\)/);
@@ -275,6 +276,33 @@ test('whatever the distance to the fiscal year, a row uses the fill throughout o
     if (f) { assert.equal(leg.basis, 'quarter', 'offset ' + offset); assert.equal(leg.periodEnd, '2026-06-30'); assert.equal(g31Shadow(s).v1.bonusComponents.at(-1), 200606e6 / 167702e6 - 1); }
   }
 });
+// The commonest case of the rule: no annual record, the row without the fill shows the plain fiscal year.
+const addDays = (iso, days) => new Date(Date.parse(iso + 'T00:00:00Z') + days * 864e5).toISOString().slice(0, 10);
+const withYear = offset => {
+  const end = addDays('2026-06-30', offset);
+  return { ...snapshot(), annual: { annualRev: [{ value: 800000e6 }, { value: 716924e6 }], annualRevEnds: [end, addDays(end, -365)] } };
+};
+test('plain fiscal year without a record: truly newer means no fill at all, within the tolerance the quarter leads', () => {
+  for (const offset of [92, 16, 15, 3, 0, -1]) {
+    const raw = withYear(offset), end = addDays('2026-06-30', offset), where = 'offset ' + offset;
+    assert.equal(revGrowthLeg(raw).basis, 'year', where);
+    const { snapshot: s, result } = run(raw);
+    const leg = revGrowthLeg(s), hint = /SEC-Bericht/.test(financialReasons(s).join(' '));
+    if (offset > 15) {
+      assert.equal(result.why, 'annual-newer', where);
+      assert.equal(s.meta.secQuarterFill, undefined, where);
+      assert.deepEqual([leg.basis, leg.periodEnd], ['year', end], where);
+      assert.equal(hint, false, where);
+      assert.equal(X.exchangeRecord(s), null, where);
+      assert.deepEqual(g31Shadow(s).v1.bonusComponents, g31Shadow(raw).v1.bonusComponents, where);
+    } else {
+      assert.deepEqual([leg.basis, leg.periodEnd, leg.sourcePeriodEnd], ['quarter', '2026-06-30', offset > 0 ? end : '2026-06-30'], where);
+      assert.equal(hint, true, where);
+      assert.equal(X.exchangeRecord(s).filled[0].period, '2026-06-30', where);
+      assert.equal(g31Shadow(s).v1.bonusComponents.at(-1), 200606e6 / 167702e6 - 1, where);
+    }
+  }
+});
 test('an older fiscal year leaves the source end on the fill', () => {
   assert.equal(run(snapshot()).snapshot.meta.secQuarterFill.sourceEnd, '2026-06-30');
   assert.equal(run(withRecord(-1)).snapshot.meta.secQuarterFill.sourceEnd, '2026-06-30');
@@ -337,6 +365,7 @@ test('store age only warns: 2 days in the season, 8 days outside, judged by the 
   const outsideOld = at('2026-12-09T00:01:00.000Z', '2026-12-01T00:00:00.000Z');
   expectFill(outsideOld);
   assert.match(outsideOld.result.storeWarning, /8\.0 days old at the data day \(limit 8\)/);
+  for (const [asOf, written] of [['2026-10-15T00:00:00.000Z', '2026-10-12T00:00:00.000Z'], ['2026-11-20T00:00:00.000Z', '2026-11-17T00:00:00.000Z']]) assert.match(at(asOf, written).result.storeWarning, /3\.0 days old at the data day \(limit 2\)/);
   const unknown = run(snapshot(), { ...store(), sources: {} });
   expectFill(unknown);
   assert.match(unknown.result.storeWarning, /is of unknown age/);
@@ -424,6 +453,19 @@ test('due: weekly while the held quarter is at most 91 days old, then every day,
   assert.equal(await at('2026-10-01T20:00:00Z'), 0, 'same calendar day');
   assert.equal(await at('2026-10-02T13:47:00Z'), 1, 'next day');
 });
+test('due: a firm lacking the quarter the vendor names is read every day; within 15 days of that end it holds it', async () => {
+  // The vendor names 31.03.2026 and stands at 31.12.2025; the store was read yesterday, the held quarter is at most 91 days old, so only the named quarter can make the firm due.
+  const asked = async held => {
+    const { base, dir, calls } = tempStoreRun();
+    addSnap(base, 'AMZNX.json', usSnap('AMZNX', { mostRecentQuarter: '2026-03-31T00:00:00.000Z' }, ENDS.slice(1)));
+    fs.writeFileSync(path.join(dir, 'us.json'), JSON.stringify({ schemaVersion: 1, market: 'US', currency: 'USD', unit: 1, about: 'x', sources: {}, companies: { AMZNX: { cik: '0001018724', noData: { readAt: '2026-03-31T13:47:00.000Z' }, Revenues: { [held]: obs(1e9, held) } } } }));
+    await main({ ...base, now: () => new Date('2026-04-01T13:47:00Z') });
+    return calls.length;
+  };
+  assert.equal(await asked('2025-12-31'), 1, 'one quarter behind');
+  assert.equal(await asked('2026-03-15'), 1, '16 days from the named end');
+  assert.equal(await asked('2026-03-16'), 0, '15 days from the named end');
+});
 test('a run with nothing due still stamps the store, so the age check does not fire on a quiet firm list', async () => {
   const { base, dir, calls } = tempStoreRun();
   await main({ ...base, now: () => new Date('2026-08-15T13:47:00Z') });
@@ -457,11 +499,16 @@ test('failures: at least 5 that are more than 20 % of the calls abort and write 
 });
 test('cap: requests stop at the cap and the rest is counted; the production cap is 600', async () => {
   const { base } = tempStoreRun();
-  const calls = [], lines = [];
-  await main({ ...base, secTickers: manyFirms(base, 5), secCap: 2, log: m => lines.push(m), secFacts: async c => { calls.push(c); return null; } });
+  const calls = [], lines = [], secTickers = manyFirms(base, 5);
+  const capped = await main({ ...base, secTickers, secCap: 2, log: m => lines.push(m), secFacts: async c => { calls.push(c); return null; } });
   assert.equal(calls.length, 2);
   assert.equal(JSON.parse(lines.find(l => l.startsWith('US: ')).slice(4)).skippedCap, 4, 'six due (five firms and FRESH by age), two asked');
   assert.match(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'fetch-exchange-quarters.js'), 'utf8'), /^const SEC_CAP = 600; /m);
+  assert.equal(capped.exitCode, 0, 'a warning, no behaviour change');
+  assert.match(lines.join(' '), /::warning::exchange-quarters US: SEC cap of 2 reached, 4 due firms were not asked in this run/);
+  const free = [];
+  await main({ ...base, secTickers, log: m => free.push(m), secFacts: async () => null });
+  assert.doesNotMatch(free.join(' '), /SEC cap/);
 });
 test('cutoff: quarters older than 820 days are not stored', async () => {
   const { base, dir } = tempStoreRun();
@@ -518,6 +565,7 @@ test('one folder without snapshots: a warning, the other folder still works', as
   assert.equal(calls.length, 1);
   assert.match(lines.join(' '), /::warning::exchange-quarters US: no snapshot file in .*never-restored/);
   assert.deepEqual(JSON.parse(lines.find(l => l.startsWith('US: ')).slice(4)).filesRead, [3, 0]);
+  const reversed = []; await main({ ...base, snapshotDirs: [path.join(dir, 'never-restored'), ...base.snapshotDirs], log: m => reversed.push(m) }); assert.deepEqual(JSON.parse(reversed.find(l => l.startsWith('US: ')).slice(4)).filesRead, [0, 3]);
 });
 test('workflow: every US step and the commit run after a red China or Taiwan step; a branch run stays a dry run', () => {
   const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'exchange-quarters.yml'), 'utf8').replace(/\r\n/g, '\n');
