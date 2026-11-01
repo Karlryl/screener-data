@@ -500,8 +500,8 @@ function overviewPeriodFor(kind, period) {
 // exit that left it empty, with the fiscal-year ends involved. It explains only a pill that this snapshot
 // re-derives as empty; anything else is "Grund nicht im Datenstand" (counted, never a guessed reason).
 const { norm } = require('../src/scoring/snapshot.js');
-const { annualPeriodEnds } = require('../lib/annual-pairs.js');
-const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'grundNichtImDatenstand']);
+const { annualPeriodEnds, staleReason } = require('../lib/annual-pairs.js');
+const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'jahreVeraltet', 'grundNichtImDatenstand']);
 const _iso = (p) => typeof p === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p);
 const tagDe = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 const gjBis = (iso) => (iso ? `das Geschäftsjahr bis ${tagDe(iso)}` : 'ein Geschäftsjahr ohne gespeichertes Periodenende');
@@ -533,6 +533,8 @@ function ffoGrund(s) {
     out = { code: 'nurEinJahr', reason: `${FFO_VORNE}, weil Jahresüberschuss und Abschreibungen nur für ${gjBis(ends[newer])} zusammen vorliegen; ein Vorjahr zum Vergleich fehlt.` };
   } else if (values[older] <= 0) {
     out = { code: 'vorjahrNichtPositiv', reason: `${FFO_VORNE}, weil der Vorjahreswert für ${gjBis(ends[older])} nicht positiv ist; gegen einen Wert von null oder darunter lässt sich für ${gjBis(ends[newer])} kein Wachstum rechnen.` };
+  } else if (metric.valuePresent === false && staleReason('year', ends[newer])) {
+    out = { code: 'jahreVeraltet', reason: `${FFO_VORNE}, weil ${gjBis(ends[newer])} mehr als 550 Tage vor dem Datenstand endet; Periodenstand veraltet.` };
   } else if (metric.valuePresent === false) {
     out = { code: 'jahreNichtHintereinander', reason: `${FFO_VORNE}, weil ${gjBis(ends[newer])} und ${gjBis(ends[older])}, die beiden jüngsten Jahre mit beiden Werten, nicht direkt aufeinander folgen.` };
   } else {

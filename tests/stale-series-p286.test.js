@@ -180,6 +180,17 @@ test('every shown or fed annual figure has the age limit: overview pair, three-y
   assert.equal(P.annualPairGateReason(pkt({}, annual('2024-12-31')), 'annualRev', 0, 1), null);
 });
 
+test('an FFO pill emptied by age says so: the two years do follow each other', () => {
+  const { ffoGrund } = require('../scripts/write-findash-export.js');
+  const reit = newest => ({ meta: { ticker: 'XX' }, timeseries: {}, annual: { annualNetIncome: cells([50, 40]), annualNetIncomeEnds: [newest, yearBefore(newest)], annualDepreciation: [10, 10] } });
+  withDay(DAY, () => {
+    const g = ffoGrund(reit('2024-12-31'));
+    assert.equal(g.code, 'jahreVeraltet');
+    assert.match(g.reason, /Geschäftsjahr bis 31\.12\.2024 mehr als 550 Tage vor dem Datenstand/);
+    assert.equal(ffoGrund(reit('2025-12-31')).code, 'grundNichtImDatenstand', 'a fresh pair has a value');
+  });
+});
+
 test('acceleration: a vendor zero or a gap at position 0 does not hide an old anchor', () => {
   withDay(DAY, () => {
     const hidden = lead => pkt({}, { annualRev: cells([lead, 130, 100, 90]), annualRevEnds: ['2025-12-31', '2018-12-31', '2017-12-31', '2016-12-31'] });
