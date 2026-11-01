@@ -507,5 +507,7 @@
   {"id":"w7-ARXTO-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"ARX.TO","board":"filter/universum","op":"absent","grund":"ARC Resources ist nach der belegten abgeschlossenen Shell-Uebernahme ausgetragen. Der Grund bleibt in der Ausschlussliste erhalten."},
   {"id":"w7-PSKY-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"PSKY","board":"filter/universum","op":"absent","grund":"Die seit dem 06.10.2026 durch SKYD ersetzte Notierung PSKY ist ausgetragen. Quelle und Nachfolger bleiben in der Ausschlussliste erhalten."},
   {"id":"w7-PSKY-board","pr":66,"gueltigAb":"2026-11-03","ticker":"PSKY","board":"any","op":"absent","grund":"PSKY steht auf keinem Vollboard mehr, die Firma läuft unter SKYD."},
-  {"id":"w7-SKYD-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"SKYD","board":"filter/universum","op":"present","grund":"Paramount Skydance bleibt unter SKYD im Filter-Feed."}
+  {"id":"w7-SKYD-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"SKYD","board":"filter/universum","op":"present","grund":"Paramount Skydance bleibt unter SKYD im Filter-Feed."},
+  {"id": "pr90-KMX-gewinnliste", "pr": 90, "gueltigAb": "2026-11-03", "ticker": "KMX", "track": "profitable", "board": "full/consumer-discretionary", "op": "present", "grund": "CarMax steht auf der Liste der profitablen Firmen; das Betriebsergebnis des Anbieters ist leer, weil die Firma keins ausweist."},
+  {"id": "pr90-KMX-verlustliste", "pr": 90, "gueltigAb": "2026-11-03", "ticker": "KMX", "track": "unprofitable", "board": "full/consumer-discretionary", "op": "absent", "grund": "CarMax steht nicht mehr unter den unprofitablen Firmen (am 31.10.2026 Rang 25)."}
 ]
