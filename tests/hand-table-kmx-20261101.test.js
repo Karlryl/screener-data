@@ -1,10 +1,13 @@
 'use strict';
-// CarMax (council of 01.11.2026 on the operating income of the quality score). The firm prints no operating income line.
-// The vendor's annual figure (-409.8 M USD for fiscal 2026) stands in no report and leaves out CarMax Auto Finance income,
-// so a firm with net earnings in every year sat on the unprofitable list with the lamp "unprofit", rank 25 on 31.10.2026.
-// The cells are withheld; the list then follows net income, the rule for an empty newest year. Pretax income is another
-// figure and does not fill them. Real packet of the daily run of 31.10.2026 (tests/fixtures/hand-table-kmx.json).
-// Every probe changes an in-memory copy; the live table is hashed before and after.
+// Holds of 01.11.2026, each from a printed filing, on rows a home-listing rule would show.
+// CarMax (council of 01.11.2026 on the operating income of the quality score): the firm prints no operating income line,
+// and the vendor's figure stands in no report and cannot be rebuilt from printed lines, so a firm with net earnings in every
+// year sat on the unprofitable list with the lamp "unprofit", rank 25 on 31.10.2026. Pretax income is another figure.
+// China Shenhua: the vendor's June 2026 quarter is the half year on the new consolidation scope minus the first quarter on the
+// old one, so it is no quarter: +73.6 % against a filed +7.9 % for the half year.
+// Delivery Hero: three vendor quarters differ from the ones the firm reports on all four listings.
+// Real packets of the daily run of 31.10.2026 (tests/fixtures/hand-table-kmx.json). Every probe changes an in-memory copy;
+// the live table is hashed before and after.
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const { applyFinancialCases, table } = require('../lib/financial-known-cases.js');
@@ -34,7 +37,7 @@ test('the four years are withheld, each with a printed source, and none is fille
   assert.deepEqual(s.annual.annualOpInc.map(value), [null, null, null, null]);
 });
 
-test('the row leaves the unprofitable list and loses the lamp; net income decides', () => {
+test('the row leaves the unprofitable list and loses the lamp; net income decides the list', () => {
   const raw = structuredClone(fixture.KMX);
   assert.equal(track(raw), 'unprofitable', 'precondition: the vendor series puts a profitable firm on the unprofitable list');
   assert.ok(evaluateLamps(raw).active.includes('unprofit'));
@@ -59,27 +62,53 @@ test('a changed vendor value releases nothing into the cell silently', () => {
   assert.equal(value(s.annual.annualOpInc[0]), null);
 });
 
-// China Shenhua: the prior-year quarter stands on the old consolidation scope, so the pair showed +73.6 % against a filed +7.9 %.
-test('Shenhua: the mixed pair is gone on both listings, growth falls back to the fiscal year', () => {
-  for (const t of ['1088.HK', '601088.SS']) {
-    assert.ok(g31Shadow(applyFinancialCases(structuredClone(fixture[t]), { table: { ...structuredClone(table), cases: table.cases.filter((c) => c.caseId !== '1088.hk-2025-06-30-revenueQ-20261101') } }).snapshot).v1.periodEnd >= '2025-12-31');
-    const leg = g31Shadow(applyFinancialCases(structuredClone(fixture[t])).snapshot).v1;
-    assert.equal(leg.basis, 'year', t);
-    assert.equal(leg.periodEnd, '2025-12-31', t);
+test('every reason names its period', () => {
+  const own = table.cases.filter((c) => c.revision === '2026-11-01-sdheimat');
+  assert.equal(own.length, 10);
+  for (const c of own) {
+    const [y, m, d] = c.period.split('-');
+    assert.ok(c.reason.includes(`${d}.${m}.${y}`), c.caseId);
+    assert.equal(c.replacementValue, null, 'a hold, never a substitute: ' + c.caseId);
   }
+});
+
+test('Shenhua: the mixed cell is gone from the listing that showed it; the A share keeps its exchange check', () => {
   const before = g31Shadow(structuredClone(fixture['1088.HK'])).v1;
   assert.equal(before.periodEnd, '2026-06-30', 'precondition: the vendor pair exists');
   assert.ok(Math.abs(before.pct - 73.6) < 0.1);
+  const s = applyFinancialCases(structuredClone(fixture['1088.HK'])).snapshot;
+  const leg = g31Shadow(s).v1;
+  assert.equal(leg.basis, 'year');
+  assert.equal(leg.periodEnd, '2025-12-31');
+  for (const f of ['revenueQ', 'grossProfitQ', 'opIncQ']) {
+    assert.equal(value(s.timeseries[f][s.timeseries[f + 'Ends'].indexOf('2026-06-30')]), null, f);
+  }
+  const a = structuredClone(fixture['601088.SS']);
+  assert.deepEqual(applyFinancialCases(a).snapshot.timeseries, a.timeseries, 'no row on 601088.SS');
 });
 
-// Delivery Hero: the prior-year quarter differs from the one the firm compares with (3,530.1 against the vendor's 3,736).
-test('Delivery Hero: the wrong +16.4 % is gone; a single correct quarter needs a coverage row, so the cell stays empty', () => {
-  const before = g31Shadow(structuredClone(fixture['DHER.SW'])).v1;
-  assert.equal(before.periodEnd, '2026-09-30');
-  assert.ok(Math.abs(before.pct - 16.4) < 0.2, 'precondition: ' + before.pct);
-  const leg = g31Shadow(applyFinancialCases(structuredClone(fixture['DHER.SW'])).snapshot).v1;
-  assert.notEqual(leg.periodEnd, '2026-09-30');
-  assert.notEqual(Math.round(leg.pct), 16);
+test('Delivery Hero: all four listings lose the wrong quarters and show the right fiscal year', () => {
+  assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.SW'])).v1.pct - 16.4) < 0.2, 'precondition');
+  assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.DE'])).v1.pct - 20.8) < 0.2, 'precondition');
+  for (const [t, ticker] of [['DHER.DE', 'DHER.DE'], ['DHER.SW', 'DHER.SW'], ['DHER.SW', 'DHER.VI'], ['DHER.SW', '1DHER.MI']]) {
+    const raw = structuredClone(fixture[t]); raw.meta.ticker = ticker;
+    const leg = g31Shadow(applyFinancialCases(raw).snapshot).v1;
+    assert.equal(leg.periodEnd, '2025-12-31', ticker);
+    assert.ok(Math.abs(leg.pct - 14.35) < 0.1, ticker + ' ' + leg.pct);
+  }
+});
+
+// Pinned on purpose: a dated annual series keeps a new year in front. CarMax's next report (about April 2027) needs its own row;
+// until then the expectations pr90-KMX-* turn red, because the firm would fall back on the unprofitable list.
+test('a new fiscal year in front is not held by these rows', () => {
+  const next = structuredClone(fixture.KMX);
+  next.annual.annualOpInc.unshift({ value: -380000000 });
+  next.annual.annualOpIncEnds.unshift('2027-02-28');
+  next.annual.annualRev.unshift({ value: 26000000000 });
+  next.annual.annualRevEnds.unshift('2027-02-28');
+  const s = applyFinancialCases(next).snapshot;
+  assert.equal(value(s.annual.annualOpInc[0]), -380000000);
+  assert.equal(value(s.annual.annualOpInc[1]), null);
 });
 
 test('the live table is unchanged by this test', () => {
