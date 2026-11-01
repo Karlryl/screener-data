@@ -76,6 +76,7 @@ const { readValueFlags } = require('../lib/value-open-items.js');
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
 const { annualPairsShadowForSnapshot } = require('./write-findash-export.js');
 const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
+const { shownGrowthMonth } = require('../lib/home-listing.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -648,11 +649,11 @@ function sammleKandidaten(opts = {}) {
     catch (error) { provenanceError = error; }
     kandidaten.push({
       ticker,
-      // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen) und
-      // marketCap. Die vollen Snapshots von 7.500 Namen im Speicher zu halten waere teuer
-      // und unnoetig — issuerKeyLoose/isUS/isUsPrimaryListing/fxSuspect lesen meta,
-      // mcapOf liest s.marketCap.
-      snapshot: { meta, marketCap: snapshot.marketCap },
+      // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen),
+      // marketCap und der zeigbare Monat (P290). Die vollen Snapshots von 7.500 Namen im
+      // Speicher zu halten waere teuer und unnoetig — issuerKeyLoose/isUS/isUsPrimaryListing/
+      // fxSuspect/homeListingRank lesen meta, mcapOf liest s.marketCap.
+      snapshot: { meta, marketCap: snapshot.marketCap, shownGrowthMonth: shownGrowthMonth(snapshot) },
       row: auchAufBrett ? auchAufBrett.row : null,
       branch: auchAufBrett ? auchAufBrett.branch : r.formulaId,
       // Track ohne Brett-Zeile aus dem Vorzeichen der (hier per G0-G2 belegten) Marge —
@@ -688,7 +689,7 @@ function sammleKandidaten(opts = {}) {
   // (PLTR, PLTR.SW, PLTR.VI, PLTR.WA, PTX.DE, 1PLTR.MI) — und zwar mit ZWEI verschiedenen
   // r40-Werten (127,9 und 118,3), weil die Beine unterschiedlich gute Daten tragen.
   // Gewinner-Regel wie im Scoring: US-Primaerlisting, dann US-Domizil, dann FX-Vertrauen,
-  // dann groesste marketCap, dann Ticker.
+  // dann neuester zeigbarer Zeitraum, belegte Heimatnotierung, groesste marketCap (P290).
   const verloren = new Set();
   for (const gruppe of issuerDedupGroups(kandidaten)) {
     if (gruppe.length < 2) continue;

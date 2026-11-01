@@ -1314,8 +1314,9 @@ function namensherkunftBucket(meta) {
 /**
  * Reiner Kern (kein I/O): Zeilen -> die Tages-Zaehlung. `zeilen` traegt je Eintrag den
  * vorberechneten Bucket und einen SCHLANKEN Snapshot ({meta, marketCap}) — genau die Felder,
- * die `issuerDedupGroups`/`issuerDedupComparator` lesen (issuerKeyLoose/isUsPrimaryListing/
- * isUS/fxSuspect/mcapOf greifen ausschliesslich auf `meta` und `marketCap.value` zu).
+ * die `issuerDedupGroups`/`issuerDedupComparator` hier lesen (issuerKeyLoose/isUsPrimaryListing/
+ * isUS/fxSuspect/mcapOf greifen auf `meta` und `marketCap.value` zu; P290 liest zusaetzlich die
+ * Berichtsperioden, die ein schlanker Snapshot nicht traegt: die Zaehlung sieht sie als gleich leer).
  */
 function namensherkunftZaehlen(zeilen) {
   const verteilung = Object.fromEntries(NAMENSHERKUNFT_BUCKETS.map((b) => [b, 0]));

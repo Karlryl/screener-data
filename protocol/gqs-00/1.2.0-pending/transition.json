@@ -75,7 +75,7 @@
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
     "src/scoring/axes.js": "74832aa2597aaa3dc63172fa70598ce17e37f5164fba5bb5ba75aa3e1cd214ef",
-    "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
+    "src/scoring/score.js": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
@@ -89,7 +89,7 @@
   "sourceFilesBegruendung": {
     "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
     "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso; Tag 1391 2026-10-01: the annual growth leg (revGrowthLevel fallback and the annual component of revYoYComponents) reads a recorded strictly newer fiscal year (meta.annualRevNewerYear) only when no quarterly year-over-year pair exists. See annualNewerYearGrowthLeg. P115 2026-10-07: four annual-pair sites consult the default-off lib/annual-pairs.js rule; only its shadow runs enable it, with no production value change (see annualPairsShadow). G31 switch 2026-10-18: production runs the v1 arm of lib/g31-recency.js (newest labelled quarter or validated fiscal year); the pre-G31 code is the legacy arm for the comparison export (see g31Switch).",
-    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair.",
+    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS; F2 2026-09-29: explicit source-backed wrong-issuer packet hold and its visible reason. No formula changes. See f2KnownCaseInputRepair. P290 2026-11-01: issuerDedupComparator prefers the newest shown growth period, then the evidenced home listing, then the old market-cap order; issuerDedupComparatorOld keeps the old rule as the visible comparison for at most four weeks. See p290HomeListing.",
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
@@ -282,7 +282,31 @@
         "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a",
         "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
       },
-      "dependencyFiles": {
+      "p290HomeListing": {
+    "date": "2026-11-01",
+    "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only which listing of one issuer represents it. The first three comparator keys (US primary, US domicile, no FX suspicion) stay first. No weight, axis, split or formula changes; all rows keep their inputs, percentiles move only through the changed population.",
+    "file": "src/scoring/score.js",
+    "sourceSha256LF": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
+    "previousSha256LF": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "dependency": "lib/home-listing.js (dependencyFiles), which reads configs/home-listing.json and the sourced homeListingProposal of configs/dup-issuer-shadow-table.json and calls g31Shadow.",
+    "goldenImpact": "No golden case changes: a golden fixture is a single listing, so the comparator never runs on it."
+  },
+  "p290HomeListing": {
+    "date": "2026-11-01",
+    "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only which listing of one issuer represents it. The first three comparator keys (US primary, US domicile, no FX suspicion) stay first. No weight, axis, split or formula changes; all rows keep their inputs, percentiles move only through the changed population.",
+    "file": "src/scoring/score.js",
+    "sourceSha256LF": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
+    "previousSha256LF": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "dependency": "lib/home-listing.js (dependencyFiles), which reads configs/home-listing.json and the sourced homeListingProposal of configs/dup-issuer-shadow-table.json and calls g31Shadow.",
+    "goldenImpact": "No golden case changes: a golden fixture is a single listing, so the comparator never runs on it."
+  },
+  "dependencyFiles": {
+    "lib/home-listing.js": "dba56b150d0379a0a48164639895af8e33cff5cabca5e7480663365e54e271cb",
+    "lib/home-listing.js": "0e6e9fa7d1ffedd2ebf909b76dd0e6a2994e6408da120787742082dc3c2d7719",
         "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
         "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
       },

@@ -17,7 +17,7 @@ function loadFixture(value) {
 }
 const valid = () => ({ _doku: ['Skipped documentation'], example: structuredClone(table.aerovironment) });
 
-test('real table pins all fifteen issuers, all tickers and the recorded choices', () => {
+test('real table pins all twenty issuers, all tickers and the recorded choices', () => {
   assert.deepEqual(Object.values(table).map((r) => [r.issuer, r.tickers, r.codeKeeps, r.homeListingProposal]), [
     ['AeroVironment', ['AVAV', 'AVAV.SW'], 'AVAV', 'AVAV'],
     ['GE Aerospace', ['GE', 'GCP.DE', 'GE.VI', '1GE.MI'], 'GE', 'GE'],
@@ -28,23 +28,31 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
     ['Amrize', ['AMRZ', 'AMRZ.SW'], 'AMRZ', 'AMRZ'],
     ['AXIA Energia', ['AXIA', 'AXIA3.SA'], 'AXIA', 'AXIA3.SA'],
     ['Copel', ['ELPC', 'CPLE3.SA'], 'ELPC', 'CPLE3.SA'],
-    ['Klöckner & Co', ['KCO.VI', 'KCO.DE'], 'KCO.VI', 'KCO.DE'],
+    // P290 (01.11.2026): the dedup keeps the home listing now, so the recorded choice of Kloeckner and Vinci moved with it.
+    ['Klöckner & Co', ['KCO.VI', 'KCO.DE'], 'KCO.DE', 'KCO.DE'],
     // Numbers-trust audit 23.10.2026: legs the name-only duplicate check missed.
     ['Circle Internet Group', ['CRCL', 'CRCL.SW'], 'CRCL', 'CRCL'],
     ['Strategy', ['MSTR', 'MSTR.SW'], 'MSTR', 'MSTR'],
     ['Energy Fuels', ['UUUU', 'EF2.AX'], 'UUUU', 'UUUU'],
     ['Star Bulk Carriers', ['SBLK', 'SBLK.AT'], 'SBLK', 'SBLK'],
-    ['Vinci', ['DG.PA', 'DG.SW', 'DG.VI'], 'DG.VI', 'DG.PA'],
+    // P290 (01.11.2026): the first row entered for the dedup itself, from the issuer's sentence on its principal market.
+    ['ASML Holding N.V.', ['ASML.AS', '1ASML.MI', 'ASME.DE', 'ASML.SW', 'ASML.VI', 'ASML.WA'], 'ASML.AS', 'ASML.AS'],
+    // P290: found wrong by the source check of the country table (Metlen), or a class with crossing market caps.
+    ['Metlen Energy & Metals PLC', ['MTLN.L', 'MTLN.AT', 'X4Z.DE'], 'MTLN.L', 'MTLN.L'],
+    ['Orion Oyj', ['ORNBV.HE', 'ORNAV.HE', '1ORNBV.MI'], 'ORNBV.HE', 'ORNBV.HE'],
+    ['Metsä Board Oyj', ['METSB.HE', 'METSA.HE'], 'METSB.HE', 'METSB.HE'],
+    ['Modern Times Group MTG AB', ['MTG-B.ST', 'MTG-A.ST'], 'MTG-B.ST', 'MTG-B.ST'],
+    ['Vinci', ['DG.PA', 'DG.SW', 'DG.VI'], 'DG.PA', 'DG.PA'],
     // Numbers-trust audit 23.10.2026, entered 24.10.: PSKY is the former Nasdaq ticker of SKYD (8-K of 2026-10-06).
     ['Skydance Corporation', ['SKYD', 'PSKY'], 'SKYD', 'SKYD'],
   ]);
   const tickers = Object.values(table).flatMap((r) => r.tickers);
   assert.equal(new Set(tickers).size, tickers.length);
-  assert.equal(index.size, 18); // GE has three secondaries; GE.VI is currently absent.
+  assert.equal(index.size, 29); // 18 before P290, ASML's five other legs, Metlen 2, Orion 2, Metsae Board 1, MTG 1. GE has three secondaries; GE.VI is currently absent.
   for (const ticker of ['QSR', 'QSP.TO', 'TAP-A', 'TPX.TO']) assert.ok(!tickers.includes(ticker));
   const added = new Set(['circle', 'strategy', 'energy-fuels', 'star-bulk', 'vinci']);
   for (const [id, row] of Object.entries(table)) {
-    const day = id === 'skydance' ? '2026-10-24' : null;
+    const day = id === 'skydance' ? '2026-10-24' : ['asml-holding', 'metlen', 'orion', 'metsa-board', 'mtg'].includes(id) ? '2026-11-01' : null;
     // Amrize: decided on 2026-10-30 from a re-read source; the row itself dates from 2026-10-06.
     assert.equal(row.sourceCheckedOn, day || (id === 'amrize' ? '2026-10-30' : added.has(id) ? '2026-10-23' : '2026-09-30'));
     assert.equal(row.enteredOn, day || (added.has(id) ? '2026-10-23' : '2026-10-06'));
@@ -57,15 +65,17 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
 test('real table: literal marker per secondary ticker (no other issuer moves)', () => {
   assert.deepEqual(Object.fromEntries([...index].map(([ticker, v]) => [ticker, v.of])), {
     'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',
-    'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
+    'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.VI': 'KCO.DE',
     '1GE.MI': 'GE', 'CRCL.SW': 'CRCL', 'MSTR.SW': 'MSTR', 'EF2.AX': 'UUUU', 'SBLK.AT': 'SBLK',
-    'DG.PA': 'DG.VI', 'DG.SW': 'DG.VI', PSKY: 'SKYD',
+    'DG.VI': 'DG.PA', 'DG.SW': 'DG.PA', PSKY: 'SKYD',
+    '1ASML.MI': 'ASML.AS', 'ASME.DE': 'ASML.AS', 'ASML.SW': 'ASML.AS', 'ASML.VI': 'ASML.AS', 'ASML.WA': 'ASML.AS',
+    'MTLN.AT': 'MTLN.L', 'X4Z.DE': 'MTLN.L', 'ORNAV.HE': 'ORNBV.HE', '1ORNBV.MI': 'ORNBV.HE', 'METSA.HE': 'METSB.HE', 'MTG-A.ST': 'MTG-B.ST',
   });
-  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.VI', 'SKYD']) {
+  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.DE', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.PA', 'SKYD', 'ASML.AS', 'MTLN.L', 'ORNBV.HE', 'METSB.HE', 'MTG-B.ST']) {
     assert.ok(!index.has(ticker), ticker + ' must stay unmarked');
   }
-  const kco = applyDupIssuerShadow({ ticker: 'KCO.DE' }, index);
-  assert.deepEqual(kco.dupIssuer, { of: 'KCO.VI', issuer: 'Klöckner & Co', basis: 'hand-table:dup-issuer-shadow' });
+  const kco = applyDupIssuerShadow({ ticker: 'KCO.VI' }, index);
+  assert.deepEqual(kco.dupIssuer, { of: 'KCO.DE', issuer: 'Klöckner & Co', basis: 'hand-table:dup-issuer-shadow' });
 });
 
 test('missing file and invalid JSON fail loudly', () => {

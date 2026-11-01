@@ -1,0 +1,163 @@
+'use strict';
+/**
+ * P290: fixed home listing with an allowed fallback in the one issuer comparator that scoring, calibration, the
+ * Rule-of-40 export and the excluded list share. The fallback is the point: stability must not cost a firm its newest
+ * shown period, and a listing that only looks newer (no year-ago partner, revenue padded with 0) must not win.
+ *
+ * Standalone runner, no network. Run: node tests/home-listing.test.js
+ */
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { issuerDedupComparator, issuerDedupComparatorOld, issuerDedupGroups } = require('../src/scoring/score.js');
+const { homeListingRank, shownGrowthMonth, loadHomeListingTable, NOT_HOME, SECONDARY_BOARD, SOURCED_HOME } = require('../lib/home-listing.js');
+const { buildExcludedList } = require('../scripts/write-excluded-list.js');
+
+let pass = 0, fail = 0;
+function test(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.stack); }
+}
+
+const JUNE = { values: [120, 110, 105, 100, 90], ends: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'] };
+const SEPT = { values: [130, 120, 110, 105, 100], ends: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30'] };
+function leg(ticker, country, mcap, series = JUNE, name = 'Firm N.V.') {
+  return { ticker, snapshot: {
+    meta: { ticker, name, country, exchangeName: 'X', tradingCurrency: 'EUR', reportingCurrencyOriginal: 'EUR' },
+    marketCap: { value: mcap },
+    timeseries: { revenueQ: series.values.map((value) => ({ value })), revenueQEnds: series.ends },
+    annual: { annualRev: [{ value: 400 }, { value: 380 }], annualRevEnds: ['2025-12-31', '2024-12-31'] },
+  } };
+}
+const first = (legs) => [...legs].sort(issuerDedupComparator)[0].ticker;
+const permutations = (a) => (a.length < 2 ? [a] : a.flatMap((x, i) => permutations([...a.slice(0, i), ...a.slice(i + 1)]).map((p) => [x, ...p])));
+
+test('the sourced home listing beats a dearer mirror line (ASML, 711 against 608 bn USD)', () => {
+  assert.equal(first([leg('1ASML.MI', 'Netherlands', 711e9), leg('ASML.VI', 'Netherlands', 606e9), leg('ASML.AS', 'Netherlands', 608e9)]), 'ASML.AS');
+  assert.equal(homeListingRank('ASML.AS', 'Netherlands'), SOURCED_HOME);
+});
+
+test('the rule before P290 would have chosen Milan: the comparison in excluded.json measures a real difference', () => {
+  const legs = [leg('1ASML.MI', 'Netherlands', 711e9), leg('ASML.AS', 'Netherlands', 608e9)];
+  assert.equal([...legs].sort(issuerDedupComparatorOld)[0].ticker, '1ASML.MI');
+});
+
+test('fallback: a home listing with an older shown period gives way, and returns when its reload caught up', () => {
+  assert.equal(first([leg('ASML.AS', 'Netherlands', 608e9, JUNE), leg('1ASML.MI', 'Netherlands', 711e9, SEPT)]), '1ASML.MI');
+  assert.equal(first([leg('ASML.AS', 'Netherlands', 608e9, SEPT), leg('1ASML.MI', 'Netherlands', 711e9, SEPT)]), 'ASML.AS');
+});
+
+test('a newer quarter without its year-ago partner does not count (BESI.VI: 22 to 252 in the first draft)', () => {
+  const noPartner = { values: [130, 120, 110], ends: ['2026-09-30', '2026-06-30', '2026-03-31'] };
+  const home = leg('BESI.AS', 'Netherlands', 13e9, JUNE), other = leg('BESI.VI', 'Netherlands', 14e9, noPartner);
+  assert.equal(shownGrowthMonth(other.snapshot), '2025-12'); // only the annual pair remains
+  assert.equal(shownGrowthMonth(home.snapshot), '2026-06');
+  assert.equal(first([other, home]), 'BESI.AS');
+});
+
+test('a revenue of 0 is no report (3993.HK: 0 for 2026-09-30 would show -100 %)', () => {
+  const zero = { values: [0, 120, 110, 105, 100], ends: SEPT.ends };
+  const shadow = leg('3993.HK', 'China', 33e9, zero), home = leg('603993.SS', 'China', 43e9, JUNE);
+  assert.equal(shownGrowthMonth(shadow.snapshot), '');
+  assert.equal(first([shadow, home]), '603993.SS');
+});
+
+test('no period at all: the listing with a shown period wins, whatever the home rank', () => {
+  const empty = leg('RNO.PA', 'France', 10e9); empty.snapshot.timeseries = {}; empty.snapshot.annual = {};
+  assert.equal(shownGrowthMonth(empty.snapshot), '');
+  assert.equal(first([empty, leg('RNL.DE', 'France', 9e9)]), 'RNL.DE');
+});
+
+test('a sourced row beats the country table and the ticker order (Metlen in London, Orion B)', () => {
+  assert.equal(first([leg('MTLN.AT', 'Greece', 8e9), leg('MTLN.L', 'Greece', 7e9), leg('X4Z.DE', 'Greece', 9e9)]), 'MTLN.L');
+  assert.equal(first([leg('ORNAV.HE', 'Finland', 15.7e9), leg('ORNBV.HE', 'Finland', 15.6e9)]), 'ORNBV.HE');
+});
+
+test('India: NSE before BSE whatever the market caps say, in either direction', () => {
+  assert.equal(first([leg('TCS.BO', 'India', 101e9), leg('TCS.NS', 'India', 100e9)]), 'TCS.NS');
+  assert.equal(first([leg('TCS.BO', 'India', 100e9), leg('TCS.NS', 'India', 101e9)]), 'TCS.NS');
+});
+
+test('share classes on the home exchange stay put when their market caps cross', () => {
+  assert.equal(first([leg('AAK-A.ST', 'Sweden', 15.6e9), leg('AAK-B.ST', 'Sweden', 15.7e9)]), 'AAK-A.ST');
+  assert.equal(first([leg('AAK-A.ST', 'Sweden', 15.7e9), leg('AAK-B.ST', 'Sweden', 15.6e9)]), 'AAK-A.ST');
+});
+
+test('US primary stays first (Bug 7): a home exchange never beats it', () => {
+  const adr = leg('ELPC', 'Brazil', 1e9); adr.snapshot.meta.exchangeName = 'NYSE';
+  assert.equal(first([leg('CPLE3.SA', 'Brazil', 2e9), adr]), 'ELPC');
+  assert.ok(homeListingRank('CPLE3.SA', 'Brazil') < NOT_HOME);
+});
+
+test('a suspect currency on the home listing keeps it out', () => {
+  const suspect = leg('SHEL.AS', 'Netherlands', 2e9); suspect.snapshot.meta.reportingCurrencyOriginal = 'USD';
+  assert.equal(first([suspect, leg('R6C.DE', 'Netherlands', 1e9)]), 'R6C.DE');
+});
+
+test('no evidenced home: the old rule (market cap), with mirror boards last', () => {
+  assert.equal(homeListingRank('APAM.AS', 'Luxembourg'), NOT_HOME);
+  assert.equal(homeListingRank('1APAM.MI', 'Luxembourg'), SECONDARY_BOARD);
+  assert.equal(homeListingRank('APAM.VI', 'Luxembourg'), SECONDARY_BOARD);
+  assert.equal(first([leg('APAM.AS', 'Luxembourg', 2e9), leg('APAM.PA', 'Luxembourg', 3e9)]), 'APAM.PA');
+  assert.equal(first([leg('1APAM.MI', 'Luxembourg', 9e9), leg('APAM.AS', 'Luxembourg', 2e9), leg('APAM.VI', 'Luxembourg', 8e9)]), 'APAM.AS');
+});
+
+test('Austrian and Italian shares are home on their own boards', () => {
+  assert.equal(homeListingRank('EBS.VI', 'Austria'), 0);
+  assert.equal(homeListingRank('ENI.MI', 'Italy'), 0);
+  assert.equal(homeListingRank('1NBA.MI', 'Germany'), SECONDARY_BOARD);
+  assert.equal(homeListingRank('ABC.MI', 'Germany'), NOT_HOME); // Only the 1-prefixed Milan lines are the mirror segment.
+});
+
+test('the order is total: every input order gives the same winner (scoring and calibration sort separately)', () => {
+  const legs = [leg('1FOO.MI', 'Germany', 9e9), leg('FOO.VI', 'Germany', 8e9), leg('FOO.DE', 'Germany', 7e9, SEPT), leg('FOO.SW', 'Germany', 10e9), leg('FOO.PA', 'Germany', 6e9, SEPT)];
+  for (const p of permutations(legs)) assert.equal(first(p), 'FOO.DE');
+  const classes = [leg('A.ST', 'Sweden', 3e9), leg('B.ST', 'Sweden', 5e9), leg('C.DE', 'Sweden', 4e9)];
+  for (const p of permutations(classes)) assert.deepEqual([...p].sort(issuerDedupComparator).map((e) => e.ticker), ['A.ST', 'B.ST', 'C.DE']);
+});
+
+test('a slim snapshot (meta and market cap only, as in the name count of the merge step) neither throws nor flips', () => {
+  const slim = (t, c, m) => ({ ticker: t, snapshot: { meta: { ticker: t, name: 'Firm', country: c }, marketCap: { value: m } } });
+  assert.equal(first([slim('FOO.VI', 'Germany', 2e9), slim('FOO.DE', 'Germany', 1e9)]), 'FOO.DE');
+});
+
+test('excluded.json names the fallback, its reason and the old rule', () => {
+  const home = leg('ASML.AS', 'Netherlands', 608e9, JUNE), other = leg('1ASML.MI', 'Netherlands', 711e9, SEPT);
+  const us = leg('GFL', 'United States', 1e9, JUNE, 'GFL Inc'); us.snapshot.meta.exchangeName = 'NYSE';
+  const usAbroad = leg('GFL.TO', 'United States', 2e9, JUNE, 'GFL Inc');
+  const sw = leg('NESN.SW', 'Switzerland', 200e9, JUNE, 'Nestle SA'), de = leg('NESR.DE', 'Switzerland', 201e9, JUNE, 'Nestle SA');
+  const universe = [home, other, us, usAbroad, sw, de].map((e) => e.snapshot);
+  const row = (e, action, reason) => ({ ticker: e.ticker, action, reason, score: null, lamps: [] });
+  const results = [row(home, 'exclude', 'dup-issuer'), row(other, 'route'), row(us, 'route'), row(usAbroad, 'exclude', 'dup-issuer'), row(sw, 'route'), row(de, 'exclude', 'dup-issuer')];
+  const { homeListing } = buildExcludedList(results, universe, []);
+  assert.deepEqual(homeListing.fallbacks, [{ issuer: 'Firm N.V.', shown: '1ASML.MI', home: 'ASML.AS', reason: 'aeltererZeitraum', shownMonth: '2026-09', homeMonth: '2026-06' }]);
+  assert.deepEqual(homeListing.oldRuleDiffers, [{ shown: 'NESN.SW', oldRule: 'NESR.DE' }]);
+});
+
+test('excluded.json names a home listing that never reached the contest', () => {
+  const home = leg('FOO.DE', 'Germany', 2e9), other = leg('FOO.VI', 'Germany', 3e9);
+  const results = [{ ticker: 'FOO.DE', action: 'exclude', reason: 'data-suspect', score: null, lamps: [] }, { ticker: 'FOO.VI', action: 'route', score: null, lamps: [] }];
+  const { homeListing } = buildExcludedList(results, [home.snapshot, other.snapshot], []);
+  assert.equal(issuerDedupGroups([home, other]).length, 1);
+  assert.equal(homeListing.fallbacks.length, 1);
+  assert.equal(homeListing.fallbacks[0].reason, 'data-suspect');
+});
+
+test('the table fails loud when it is malformed, and the committed one loads', () => {
+  const { exchanges, boards } = loadHomeListingTable();
+  assert.deepEqual(exchanges.get('India'), ['.NS', '.BO']);
+  assert.deepEqual(exchanges.get('China'), ['.SS', '.SZ', '.HK']);
+  assert.ok(!exchanges.has('United States'), 'US listings are settled by the first comparator keys');
+  assert.equal(boards.get('.VI').homeCountry, 'Austria');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'home-listing-'));
+  const file = path.join(dir, 'bad.json');
+  for (const bad of [{}, { exchangesByCountry: { India: 'NS' }, secondaryBoards: { '.VI': { homeCountry: 'Austria', tickerPrefix: '' } } },
+    { exchangesByCountry: { India: ['NS'] }, secondaryBoards: { '.VI': { homeCountry: 'Austria', tickerPrefix: '' } } },
+    { exchangesByCountry: { India: ['.NS'] }, secondaryBoards: { VI: { homeCountry: 'Austria', tickerPrefix: '' } } }]) {
+    fs.writeFileSync(file, JSON.stringify(bad));
+    assert.throws(() => loadHomeListingTable(file));
+  }
+});
+
+console.log(`\nhome-listing.test.js: ${pass} ok, ${fail} fail`);
+process.exit(fail ? 1 : 0);

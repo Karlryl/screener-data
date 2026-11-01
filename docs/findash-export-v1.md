@@ -1773,6 +1773,13 @@ previous-day and equal-to-stamp-day cases, tamper variants with their specific e
 truncated shard, failed pull through the real merge step over consecutive runs, second run on the same day, dead runner, stamp
 without its daily file, workflow step order and fail-soft shape).
 
+## Heimatnotierung in `excluded.json` (P290, draft)
+
+`homeListing.fallbacks` nennt jede Firma, die nicht auf ihrer Heimatnotierung steht: `issuer`, `shown`, `home`, `reason`, `shownMonth`, `homeMonth`.
+`reason` ist `aeltererZeitraum` (die Heimatnotierung zeigt ein aelteres Wachstum oder keins), `fxVerdacht` oder der Ausschlussgrund der Heimatnotierung (zum Beispiel `data-suspect`). Sobald die Heimatnotierung nachgeladen ist, steht die Firma von selbst wieder dort.
+`homeListing.oldRuleDiffers` nennt mit `shown` und `oldRule`, wo die Regel vor P290 eine andere Notierung gezeigt haette. Dieser Vergleich bleibt hoechstens vier Wochen.
+Die Auswahl der Notierung: US-Hauptnotierung, US-Sitz, kein Waehrungsverdacht, neuester zeigbarer Zeitraum, belegte Heimatnotierung (`configs/dup-issuer-shadow-table.json`, dann `configs/home-listing.json`), zuletzt Boersenwert.
+
 ## Notierungsabgaenge in `excluded.json` (PR 66, 30.10.2026)
 
 `listingExits` enthaelt protokollierte Bestandsabgaenge durch das Notierungsregister und Kuerzelkorrekturen.

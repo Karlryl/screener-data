@@ -55,9 +55,11 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { loadUniverse } = require('../src/scoring/run-screener.js');
 const {
-  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator,
+  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator, issuerDedupComparatorOld,
 } = require('../src/scoring/score.js');
+const { isUS } = require('../src/scoring/router.js');
 const formulas = require('../src/scoring/formulas/index.js');
+const { homeListingRank, shownGrowthMonth, NOT_HOME } = require('../lib/home-listing.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { mergeSizeExits, sizeExitReasonDe, sizeExitRunDay, readSizeExitHistory, validateSizeExitManifest, SIZE_EXITS_FILE } = require('../lib/size-exits.js');
 const { readIntakeLog, deliveredListingExits, readListingExitManifest, LISTING_EXITS_FILE } = require('../discovery/listing-state.js');
@@ -226,6 +228,7 @@ function buildExcludedList(results, universe, exits = [], options = {}) {
   rows.sort(nachWachstum);
 
   const raus = alle.filter(istRaus);
+  const homeListing = homeListingReport(gruppen);
   const byReason = {};
   for (const e of raus) { const k = grundVon(e); byReason[k] = (byReason[k] || 0) + 1; }
 
@@ -233,7 +236,34 @@ function buildExcludedList(results, universe, exits = [], options = {}) {
   const sizeExits = mergeSizeExits([exits]).filter(r => !present.has(r.ticker))
     .filter(r => options.referenceDay === undefined || (r.date <= options.referenceDay && Date.parse(options.referenceDay) - Date.parse(r.date) <= 30 * 86400000))
     .map(r => ({ ...r, reasonDe: sizeExitReasonDe(r) }));
-  return { rows, legs: raus.length, byReason, sizeExits };
+  return { rows, legs: raus.length, byReason, sizeExits, homeListing };
+}
+
+/**
+ * P290: names every firm that does not show its home listing and why (a US listing first is the rule, not a fallback),
+ * and every firm the rule before P290 would have shown on another listing.
+ * @param {Array<Array<object>>} gruppen Issuer groups with snapshots.
+ * @returns {{fallbacks: Array<object>, oldRuleDiffers: Array<object>}} Sorted by ticker.
+ */
+function homeListingReport(gruppen) {
+  const fallbacks = [], oldRuleDiffers = [];
+  const country = (e) => e.snapshot && e.snapshot.meta && e.snapshot.meta.country;
+  const rank = (e) => homeListingRank(e.ticker, country(e));
+  for (const g of gruppen) {
+    const shown = g.find((e) => !istRaus(e));
+    const legs = g.filter((e) => !istRaus(e) || e.reason === 'dup-issuer');
+    if (!shown || !shown.snapshot) continue;
+    const old = [...legs].sort(issuerDedupComparatorOld)[0];
+    if (old.ticker !== shown.ticker) oldRuleDiffers.push({ shown: shown.ticker, oldRule: old.ticker });
+    if (isUS(shown.snapshot)) continue;
+    const home = [...g].filter((e) => e.snapshot && rank(e) < NOT_HOME).sort((a, b) => rank(a) - rank(b) || (a.ticker < b.ticker ? -1 : 1))[0];
+    if (!home || home.ticker === shown.ticker || rank(home) >= rank(shown)) continue;
+    const shownMonth = shownGrowthMonth(shown.snapshot), homeMonth = shownGrowthMonth(home.snapshot);
+    const reason = istRaus(home) && home.reason !== 'dup-issuer' ? home.reason : homeMonth < shownMonth ? 'aeltererZeitraum' : 'fxVerdacht';
+    fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: home.ticker, reason, shownMonth: shownMonth || null, homeMonth: homeMonth || null });
+  }
+  const byShown = (a, b) => (a.shown < b.shown ? -1 : a.shown > b.shown ? 1 : 0);
+  return { fallbacks: fallbacks.sort(byShown), oldRuleDiffers: oldRuleDiffers.sort(byShown) };
 }
 
 /**
@@ -419,7 +449,7 @@ function main() {
     exits = readSizeExitHistory(undefined, fs).exits;
     referenceDay = sizeExitRunDay();
   }
-  const { rows, legs, byReason, sizeExits } = buildExcludedList(results, universe, exits, { referenceDay });
+  const { rows, legs, byReason, sizeExits, homeListing } = buildExcludedList(results, universe, exits, { referenceDay });
 
   const fehler = pruefeSummen(byReason, readExcludedCounter(INDEX_FILE));
   if (fehler.length) {
@@ -455,6 +485,7 @@ function main() {
     universeHash,
     counts: { firmen: rows.length, zeilen: legs, byReason, sizeExits: sizeExits.length },
     rows,
+    homeListing,
     listingExits,
     listingExitCount: listingExits.length,
     sizeExitsKnown,

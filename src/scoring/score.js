@@ -25,6 +25,7 @@ const { profitStreakOf } = require('./profit-streak.js'); // Task 4.5: belegte G
 // data-suspect-Gate. Der persistierte _quality.grade ist stale (alle aus der Zeit VOR dem
 // revenueTTM-criticalMissing-Floor) -> der grade-D-Arm war praktisch tot.
 const { gradeSnapshot, GRADE_THRESHOLDS } = require('../../methods/data-quality.js');
+const { homeListingRank, shownGrowthMonth, NOT_HOME } = require('../../lib/home-listing.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
 
@@ -324,14 +325,31 @@ function issuerDedupGroups(entries) {
 // `node scripts/probe-issuer-branchenkonflikt.js <CI-Snapshot-Ordner>`. Steigt die Zahl der
 // echten Faelle, ist der Mehrheitsentscheid der naechste Schritt — mit der Auflage, dass
 // Beine OHNE Branche nicht mitstimmen duerfen (sonst gewinnt „keine Branche" per Anzahl).
-function issuerDedupComparator(a, b) {
+function issuerDedupFirstKeys(a, b) {
   const pa = isUsPrimaryListing((a.snapshot && a.snapshot.meta) || {}) ? 1 : 0;
   const pb = isUsPrimaryListing((b.snapshot && b.snapshot.meta) || {}) ? 1 : 0;
   if (pa !== pb) return pb - pa;                        // US-PRIMAER-gelistetes Bein zuerst (Listing, nicht Domizil)
   const ua = isUS(a.snapshot) ? 1 : 0, ub = isUS(b.snapshot) ? 1 : 0;
   if (ua !== ub) return ub - ua;                        // dann US-Domizil
   const fa = fxSuspect(a.snapshot) ? 1 : 0, fb = fxSuspect(b.snapshot) ? 1 : 0;
-  if (fa !== fb) return fa - fb;                        // FX-suspekte marketCap deprioritisieren (vertrauenswuerdig zuerst)
+  return fa - fb;                                       // FX-suspekte marketCap deprioritisieren (vertrauenswuerdig zuerst)
+}
+// The rule before P290, kept only as the visible comparison (excluded.json homeListing); at most four weeks after go-live.
+function issuerDedupComparatorOld(a, b) {
+  return issuerDedupFirstKeys(a, b) || mcapOf(b.snapshot) - mcapOf(a.snapshot) || cmpTicker(a.ticker, b.ticker);
+}
+function issuerDedupComparator(a, b) {
+  const first = issuerDedupFirstKeys(a, b);
+  if (first) return first;
+  // P290: fixed home listing with an allowed fallback (lib/home-listing.js). First the newest period the board can show, so
+  // stability never costs data: a home listing with an older growth period, or none, gives way until its reload catches up.
+  // Then the home listing. Share classes on one home exchange go by ticker: their market caps cross daily, their statements agree.
+  const qa = shownGrowthMonth(a.snapshot), qb = shownGrowthMonth(b.snapshot);
+  if (qa !== qb) return qa > qb ? -1 : 1;
+  const ha = homeListingRank(a.ticker, a.snapshot && a.snapshot.meta && a.snapshot.meta.country);
+  const hb = homeListingRank(b.ticker, b.snapshot && b.snapshot.meta && b.snapshot.meta.country);
+  if (ha !== hb) return ha - hb;
+  if (ha < NOT_HOME) return cmpTicker(a.ticker, b.ticker);
   const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
   if (ma !== mb) return mb - ma;                        // dann groesste marketCap
   return cmpTicker(a.ticker, b.ticker);                 // dann stabiler Ticker-Tie-Break (deterministisch)
@@ -949,8 +967,8 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // US-ADR (Stufe-1, USD/SEC) + Heimatboerse (Stufe-2), z.B. ASML+ASML.AS, TSM+2330.TW, SHOP+SHOP.TO,
   // BABA+9988.HK. Beide Beine wuerden dieselbe Firma DOPPELT in Topf/Kohorte/Sektor-Tab zeigen und
   // die Perzentile verzerren. Pro Emittent (normalisierter meta.name) genau EIN Bein behalten:
-  // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS), sonst hoechste marketCap, dann Ticker-Tie-
-  // Break (deterministisch). Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
+  // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS), sonst das Heimat-Bein mit dem neuesten Bericht
+  // (P290, issuerDedupComparator), zuletzt hoechste marketCap. Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
   // sodass ein bereits gegatetes Bein nicht "gewinnt"; greift nur auf Output-sichtbare route/survival.
   // Zeichensetzungs-tolerant gruppieren (s. Kommentar an issuerKeyLoose) — ueber die
   // gemeinsame Funktion, damit die Kalibrierung garantiert dieselbe Population sieht.
@@ -971,11 +989,10 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // mit mindestens zwei Jahren Abstand im ersten Handelstag, davon SECHS in der Uebersicht —
     // und alle sechs mit der juengeren Notierung (ZEAL.VI, UMI.VI, SBMO.VI, LUG.ST, CEPU, SVM).
     //
-    // GEHEILT WIRD HIER NUR DAS DATUM, nicht die Auswahl des Siegers. Der Comparator bleibt
-    // unangetastet: seine Reihenfolge hat belegte Gruende (Bug 7, GFL vs GFL.TO), und ein
-    // Eingriff traefe alle 2.646 mehrbeinigen Gruppen statt der gemessenen sechs. Das
-    // Boersendebuet der FIRMA ist dagegen das frueheste ihrer Notierungen — unabhaengig
-    // davon, welches Bein die besseren Kursdaten liefert.
+    // GEHEILT WIRD HIER NUR DAS DATUM. Die Auswahl des Siegers regelt seit P290 der Comparator
+    // (Heimat-Bein vor marketCap), seine ersten Schluessel bleiben (Bug 7, GFL vs GFL.TO). Das
+    // Boersendebuet der FIRMA ist das frueheste ihrer Notierungen — unabhaengig davon,
+    // welches Bein die besseren Kursdaten liefert.
     const erstnotizen = group
       .map((g) => g.snapshot && g.snapshot.meta && g.snapshot.meta.firstTradeDate)
       .filter((d) => typeof d === 'string' && d.length >= 4)
@@ -1556,7 +1573,7 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   // spiegelt PASS 1; eine zweite Kopie wuerde genau die Drift erzeugen, die die Datei bewacht).
   EINMALERTRAG_BLIND, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
-  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
+  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerDedupComparatorOld, issuerKey, issuerKeyLoose, issuerDedupGroups,
   // Tag 584 (VSXY/VSCO): fuer scripts/probe-issuer-strict-key-punct.js — der STRENGE Schluessel
   // selbst, damit die Kanonisierungs-Messung nicht dieselbe Logik ein zweites Mal nachbaut.
   issuerKeyStrengOhneGattung,

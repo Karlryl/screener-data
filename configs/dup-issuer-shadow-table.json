@@ -120,7 +120,7 @@
   "kloeckner-co": {
     "issuer": "Klöckner & Co",
     "tickers": ["KCO.VI", "KCO.DE"],
-    "codeKeeps": "KCO.VI",
+    "codeKeeps": "KCO.DE",
     "homeListingProposal": "KCO.DE",
     "source": {
       "url": "https://www.wienerborse.at/aktien-global-market/kloeckner-co-se-DE000KC01000/",
@@ -128,7 +128,7 @@
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal: KCO.DE (95% confidence); the flag still references KCO.VI."
+    "note": "R11 home-listing proposal: KCO.DE (95% confidence). P290 (2026-11-01): the dedup itself now keeps KCO.DE, so the flag follows it."
   },
   "circle": {
     "issuer": "Circle Internet Group",
@@ -182,10 +182,75 @@
     "enteredOn": "2026-10-23",
     "note": "Parallel listing on Euronext Athens since 2026-09-15 (same release: admission of the existing shares); the company's announcement of 2026-09-04 names the common shares listed on the Nasdaq Global Select Market since December 2007. Home-listing proposal SBLK."
   },
+  "asml-holding": {
+    "issuer": "ASML Holding N.V.",
+    "tickers": ["ASML.AS", "1ASML.MI", "ASME.DE", "ASML.SW", "ASML.VI", "ASML.WA"],
+    "codeKeeps": "ASML.AS",
+    "homeListingProposal": "ASML.AS",
+    "source": {
+      "url": "https://investor.asml.com/share-information",
+      "quote": "The principal trading market of our ordinary shares is Euronext Amsterdam."
+    },
+    "sourceCheckedOn": "2026-11-01",
+    "enteredOn": "2026-11-01",
+    "note": "P290. The daily contest kept 1ASML.MI on all ten data days of P290-flips although its USD market cap stood 11 to 17 % above Amsterdam's (711.3 against 608.0 bn USD on 2026-10-31). The Nasdaq line is not in the universe. Until ASML.AS shows the September quarter, Milan stays as the fallback (lib/home-listing.js)."
+  },
+  "metlen": {
+    "issuer": "Metlen Energy & Metals PLC",
+    "tickers": ["MTLN.L", "MTLN.AT", "X4Z.DE"],
+    "codeKeeps": "MTLN.L",
+    "homeListingProposal": "MTLN.L",
+    "source": {
+      "url": "https://www.metlen.com/news/press-releases/metlen-begins-trading-on-the-london-stock-exchange/",
+      "quote": "the LSE will be METLEN's primary listing venue"
+    },
+    "sourceCheckedOn": "2026-11-01",
+    "enteredOn": "2026-11-01",
+    "note": "P290. Yahoo gives Greece as the country, so the country table alone would keep Athens; the issuer moved its primary listing to London on 2025-08-04."
+  },
+  "orion": {
+    "issuer": "Orion Oyj",
+    "tickers": ["ORNBV.HE", "ORNAV.HE", "1ORNBV.MI"],
+    "codeKeeps": "ORNBV.HE",
+    "homeListingProposal": "ORNBV.HE",
+    "source": {
+      "url": "https://www.orionpharma.com/492a14/globalassets/investors/reports-and-presentations/2024/orion-financial-statement-release-2024.pdf",
+      "quote": "1,761,742 of Orion's A shares and 54,904,940 B shares were traded"
+    },
+    "sourceCheckedOn": "2026-11-01",
+    "enteredOn": "2026-11-01",
+    "note": "P290. Two classes on Helsinki with crossing market caps (ORNAV.HE and ORNBV.HE swapped twice in P290-flips, rank 58 to 13 to 60); the B share is the traded class."
+  },
+  "metsa-board": {
+    "issuer": "Metsä Board Oyj",
+    "tickers": ["METSB.HE", "METSA.HE"],
+    "codeKeeps": "METSB.HE",
+    "homeListingProposal": "METSB.HE",
+    "source": {
+      "url": "https://metsaboardannualreport.metsagroup.com/view/230548215/148-149/",
+      "quote": "Average daily trading volume, no. of shares"
+    },
+    "sourceCheckedOn": "2026-11-01",
+    "enteredOn": "2026-11-01",
+    "note": "P290. Issuer annual review 2023: the B share averages 466,223 shares a day, the A share 2,132."
+  },
+  "mtg": {
+    "issuer": "Modern Times Group MTG AB",
+    "tickers": ["MTG-B.ST", "MTG-A.ST"],
+    "codeKeeps": "MTG-B.ST",
+    "homeListingProposal": "MTG-B.ST",
+    "source": {
+      "url": "https://www.mtg.com/press-releases/changed-number-of-shares-of-each-class-in-modern-times-group-mtg-ab/",
+      "quote": "391,806 Class A shares and 122,917,479 Class B shares"
+    },
+    "sourceCheckedOn": "2026-11-01",
+    "enteredOn": "2026-11-01",
+    "note": "P290. The A share is 0.3 % of the shares; the B share is the traded class."
+  },
   "vinci": {
     "issuer": "Vinci",
     "tickers": ["DG.PA", "DG.SW", "DG.VI"],
-    "codeKeeps": "DG.VI",
+    "codeKeeps": "DG.PA",
     "homeListingProposal": "DG.PA",
     "source": {
       "url": "https://www.vinci.com/en/finance/share/stock-data",

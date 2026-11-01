@@ -186,7 +186,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     }
     if (meta.marketCapReason && (!board || !finite(snapshot.marketCap?.value))) aus.push(meta.marketCapReason);
     if (r40.datenSuspekt(snapshot)) aus.push('data-suspect');
-    if (board?.dupIssuer) aus.push('dup-issuer');
+    // P290: a marked row that holds a rank is the firm's only row in its ranking (fallback, home listing older), so nothing replaces it.
+    if (board?.dupIssuer && !Number.isInteger(board.rank)) aus.push('dup-issuer');
     if (mixed) aus.push('mischwaehrung');
     if (board?.rankGrund) aus.push(board.rankGrund);
     const salesMixed = mischVerhaeltnisUnkorrigiert(meta);
