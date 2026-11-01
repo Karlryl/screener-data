@@ -1776,7 +1776,8 @@ without its daily file, workflow step order and fail-soft shape).
 ## Heimatnotierung in `excluded.json` (P290, draft)
 
 `homeListing.fallbacks` nennt jede Firma, die nicht auf ihrer Heimatnotierung steht: `issuer`, `shown`, `home`, `reason`, `shownMonth`, `homeMonth`.
-`reason` ist `aeltererZeitraum` (die Heimatnotierung zeigt ein aelteres Wachstum oder keins), `fxVerdacht` oder der Ausschlussgrund der Heimatnotierung (zum Beispiel `data-suspect`). Sobald die Heimatnotierung nachgeladen ist, steht die Firma von selbst wieder dort.
+`reason` ist `aeltererZeitraum` (die Heimatnotierung zeigt ein aelteres Wachstum oder keins), `fxVerdacht`, `keineHeimatnotierung` (die Firma hat keine Heimatnotierung im Bestand, `home` ist null) oder der Ausschlussgrund der Heimatnotierung (zum Beispiel `data-suspect`). Sobald beide Notierungen denselben Zeitraum zeigen, steht die Firma von selbst wieder auf der Heimatnotierung.
+`homeListing.counts` nennt `firmsWithHomeTable` und `onHomeListing`; faellt der Anteil unter die Haelfte, warnt der Lauf.
 `homeListing.oldRuleDiffers` nennt mit `shown` und `oldRule`, wo die Regel vor P290 eine andere Notierung gezeigt haette. Dieser Vergleich bleibt hoechstens vier Wochen.
 Die Auswahl der Notierung: US-Hauptnotierung, US-Sitz, kein Waehrungsverdacht, neuester zeigbarer Zeitraum, belegte Heimatnotierung (`configs/dup-issuer-shadow-table.json`, dann `configs/home-listing.json`), zuletzt Boersenwert.
 

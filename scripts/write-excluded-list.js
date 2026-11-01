@@ -59,7 +59,7 @@ const {
 } = require('../src/scoring/score.js');
 const { isUS } = require('../src/scoring/router.js');
 const formulas = require('../src/scoring/formulas/index.js');
-const { homeListingRank, shownGrowthMonth, NOT_HOME } = require('../lib/home-listing.js');
+const { homeListingRank, shownGrowthMonth, hasHomeExchange, NOT_HOME } = require('../lib/home-listing.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { mergeSizeExits, sizeExitReasonDe, sizeExitRunDay, readSizeExitHistory, validateSizeExitManifest, SIZE_EXITS_FILE } = require('../lib/size-exits.js');
 const { readIntakeLog, deliveredListingExits, readListingExitManifest, LISTING_EXITS_FILE } = require('../discovery/listing-state.js');
@@ -243,10 +243,11 @@ function buildExcludedList(results, universe, exits = [], options = {}) {
  * P290: names every firm that does not show its home listing and why (a US listing first is the rule, not a fallback),
  * and every firm the rule before P290 would have shown on another listing.
  * @param {Array<Array<object>>} gruppen Issuer groups with snapshots.
- * @returns {{fallbacks: Array<object>, oldRuleDiffers: Array<object>}} Sorted by ticker.
+ * @returns {{counts: object, fallbacks: Array<object>, oldRuleDiffers: Array<object>}} Sorted by ticker.
  */
 function homeListingReport(gruppen) {
   const fallbacks = [], oldRuleDiffers = [];
+  const counts = { firmsWithHomeTable: 0, onHomeListing: 0 };
   const country = (e) => e.snapshot && e.snapshot.meta && e.snapshot.meta.country;
   const rank = (e) => homeListingRank(e.ticker, country(e));
   for (const g of gruppen) {
@@ -255,15 +256,21 @@ function homeListingReport(gruppen) {
     if (!shown || !shown.snapshot) continue;
     const old = [...legs].sort(issuerDedupComparatorOld)[0];
     if (old.ticker !== shown.ticker) oldRuleDiffers.push({ shown: shown.ticker, oldRule: old.ticker });
-    if (isUS(shown.snapshot)) continue;
+    if (isUS(shown.snapshot) || !hasHomeExchange(country(shown))) continue;
+    counts.firmsWithHomeTable++;
+    if (rank(shown) < NOT_HOME) counts.onHomeListing++;
     const home = [...g].filter((e) => e.snapshot && rank(e) < NOT_HOME).sort((a, b) => rank(a) - rank(b) || (a.ticker < b.ticker ? -1 : 1))[0];
-    if (!home || home.ticker === shown.ticker || rank(home) >= rank(shown)) continue;
+    if (!home) {
+      if (rank(shown) >= NOT_HOME) fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: null, reason: 'keineHeimatnotierung', shownMonth: shownGrowthMonth(shown.snapshot) || null, homeMonth: null });
+      continue;
+    }
+    if (home.ticker === shown.ticker || rank(home) >= rank(shown)) continue;
     const shownMonth = shownGrowthMonth(shown.snapshot), homeMonth = shownGrowthMonth(home.snapshot);
     const reason = istRaus(home) && home.reason !== 'dup-issuer' ? home.reason : homeMonth < shownMonth ? 'aeltererZeitraum' : 'fxVerdacht';
     fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: home.ticker, reason, shownMonth: shownMonth || null, homeMonth: homeMonth || null });
   }
   const byShown = (a, b) => (a.shown < b.shown ? -1 : a.shown > b.shown ? 1 : 0);
-  return { fallbacks: fallbacks.sort(byShown), oldRuleDiffers: oldRuleDiffers.sort(byShown) };
+  return { counts, fallbacks: fallbacks.sort(byShown), oldRuleDiffers: oldRuleDiffers.sort(byShown) };
 }
 
 /**
@@ -451,6 +458,10 @@ function main() {
   }
   const { rows, legs, byReason, sizeExits, homeListing } = buildExcludedList(results, universe, exits, { referenceDay });
 
+  // P290: a vanished meta.country would silently put every firm back on the old order. About 80 % sit on their home listing.
+  if (homeListing.counts.firmsWithHomeTable >= 100 && homeListing.counts.onHomeListing < 0.5 * homeListing.counts.firmsWithHomeTable) {
+    console.warn(`::warning::[excluded-list] Heimatnotierung: nur ${homeListing.counts.onHomeListing} von ${homeListing.counts.firmsWithHomeTable} Firmen stehen auf ihr.`);
+  }
   const fehler = pruefeSummen(byReason, readExcludedCounter(INDEX_FILE));
   if (fehler.length) {
     throw new Error('[excluded-list] Summen-Wache gebrochen — die Liste deckt sich nicht mit den Zaehlern:\n  '

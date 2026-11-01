@@ -61,7 +61,7 @@ test('real table pins all twenty issuers, all tickers and the recorded choices',
 });
 
 // Codex review P266 P2-01: literal expectation, independent of markKeeps(). Copel and AXIA mark the
-// non-home ADR (markFollowsHomeListing); every other issuer, Kloeckner included, keeps codeKeeps.
+// non-home ADR (markFollowsHomeListing); every other issuer keeps codeKeeps.
 test('real table: literal marker per secondary ticker (no other issuer moves)', () => {
   assert.deepEqual(Object.fromEntries([...index].map(([ticker, v]) => [ticker, v.of])), {
     'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',

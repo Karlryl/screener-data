@@ -194,6 +194,8 @@ function mcapKlasseOf(mc) {
   return 'mega';
 }
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
+// P290: steps of 10 % keep the comparison a total order; a per-pair threshold would not be transitive.
+const mcapStep = (s) => (mcapOf(s) > 0 ? Math.round(Math.log(mcapOf(s)) / Math.log(1.1)) : -Infinity);
 // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
 // dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
 // untrustworthy marketCap -> im Dedup-Tie-Break deprioritisieren. Konjunktion (ccy-Divergenz UND
@@ -342,14 +344,15 @@ function issuerDedupComparator(a, b) {
   const first = issuerDedupFirstKeys(a, b);
   if (first) return first;
   // P290: fixed home listing with an allowed fallback (lib/home-listing.js). First the newest period the board can show, so
-  // stability never costs data: a home listing with an older growth period, or none, gives way until its reload catches up.
-  // Then the home listing. Share classes on one home exchange go by ticker: their market caps cross daily, their statements agree.
+  // stability never costs data: a home listing with an older growth period, or none, gives way while another listing shows newer.
+  // Then the home listing. Share classes on one home exchange: the clearly larger line, else the ticker. Near-equal market caps
+  // cross daily, and their statements agree.
   const qa = shownGrowthMonth(a.snapshot), qb = shownGrowthMonth(b.snapshot);
   if (qa !== qb) return qa > qb ? -1 : 1;
   const ha = homeListingRank(a.ticker, a.snapshot && a.snapshot.meta && a.snapshot.meta.country);
   const hb = homeListingRank(b.ticker, b.snapshot && b.snapshot.meta && b.snapshot.meta.country);
   if (ha !== hb) return ha - hb;
-  if (ha < NOT_HOME) return cmpTicker(a.ticker, b.ticker);
+  if (ha < NOT_HOME) return mcapStep(b.snapshot) - mcapStep(a.snapshot) || cmpTicker(a.ticker, b.ticker);
   const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
   if (ma !== mb) return mb - ma;                        // dann groesste marketCap
   return cmpTicker(a.ticker, b.ticker);                 // dann stabiler Ticker-Tie-Break (deterministisch)
@@ -967,8 +970,8 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // US-ADR (Stufe-1, USD/SEC) + Heimatboerse (Stufe-2), z.B. ASML+ASML.AS, TSM+2330.TW, SHOP+SHOP.TO,
   // BABA+9988.HK. Beide Beine wuerden dieselbe Firma DOPPELT in Topf/Kohorte/Sektor-Tab zeigen und
   // die Perzentile verzerren. Pro Emittent (normalisierter meta.name) genau EIN Bein behalten:
-  // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS), sonst das Heimat-Bein mit dem neuesten Bericht
-  // (P290, issuerDedupComparator), zuletzt hoechste marketCap. Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
+  // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS). P290: then the newest shown period, then the home listing, last the
+  // market cap (issuerDedupComparator). Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
   // sodass ein bereits gegatetes Bein nicht "gewinnt"; greift nur auf Output-sichtbare route/survival.
   // Zeichensetzungs-tolerant gruppieren (s. Kommentar an issuerKeyLoose) — ueber die
   // gemeinsame Funktion, damit die Kalibrierung garantiert dieselbe Population sieht.
@@ -989,10 +992,8 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // mit mindestens zwei Jahren Abstand im ersten Handelstag, davon SECHS in der Uebersicht —
     // und alle sechs mit der juengeren Notierung (ZEAL.VI, UMI.VI, SBMO.VI, LUG.ST, CEPU, SVM).
     //
-    // GEHEILT WIRD HIER NUR DAS DATUM. Die Auswahl des Siegers regelt seit P290 der Comparator
-    // (Heimat-Bein vor marketCap), seine ersten Schluessel bleiben (Bug 7, GFL vs GFL.TO). Das
-    // Boersendebuet der FIRMA ist das frueheste ihrer Notierungen — unabhaengig davon,
-    // welches Bein die besseren Kursdaten liefert.
+    // ONLY THE DATE IS HEALED HERE. The winner is the comparator's choice (P290), whose first keys stay (Bug 7, GFL vs GFL.TO).
+    // The firm's debut is the earliest of its listings, whichever leg wins.
     const erstnotizen = group
       .map((g) => g.snapshot && g.snapshot.meta && g.snapshot.meta.firstTradeDate)
       .filter((d) => typeof d === 'string' && d.length >= 4)

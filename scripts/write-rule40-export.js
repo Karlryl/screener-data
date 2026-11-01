@@ -649,10 +649,8 @@ function sammleKandidaten(opts = {}) {
     catch (error) { provenanceError = error; }
     kandidaten.push({
       ticker,
-      // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen),
-      // marketCap und der zeigbare Monat (P290). Die vollen Snapshots von 7.500 Namen im
-      // Speicher zu halten waere teuer und unnoetig — issuerKeyLoose/isUS/isUsPrimaryListing/
-      // fxSuspect/homeListingRank lesen meta, mcapOf liest s.marketCap.
+      // Only what the issuer dedup needs: meta, market cap and the shown month (P290). Holding the full snapshots of
+      // 7,500 names would be costly and pointless: the comparator reads meta and marketCap and takes the month as given.
       snapshot: { meta, marketCap: snapshot.marketCap, shownGrowthMonth: shownGrowthMonth(snapshot) },
       row: auchAufBrett ? auchAufBrett.row : null,
       branch: auchAufBrett ? auchAufBrett.branch : r.formulaId,
@@ -688,8 +686,7 @@ function sammleKandidaten(opts = {}) {
   // dieser Weg ist es nicht. Ohne das stand Palantir am Stand 2026-08-29 sechsmal im Brett
   // (PLTR, PLTR.SW, PLTR.VI, PLTR.WA, PTX.DE, 1PLTR.MI) — und zwar mit ZWEI verschiedenen
   // r40-Werten (127,9 und 118,3), weil die Beine unterschiedlich gute Daten tragen.
-  // Gewinner-Regel wie im Scoring: US-Primaerlisting, dann US-Domizil, dann FX-Vertrauen,
-  // dann neuester zeigbarer Zeitraum, belegte Heimatnotierung, groesste marketCap (P290).
+  // The winner rule of scoring: US primary, US domicile, FX trust, newest shown period, evidenced home listing, market cap (P290).
   const verloren = new Set();
   for (const gruppe of issuerDedupGroups(kandidaten)) {
     if (gruppe.length < 2) continue;

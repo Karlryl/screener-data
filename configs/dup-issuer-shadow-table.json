@@ -128,7 +128,7 @@
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal: KCO.DE (95% confidence). P290 (2026-11-01): the dedup itself now keeps KCO.DE, so the flag follows it."
+    "note": "R11 home-listing proposal: KCO.DE (95% confidence). P290 (2026-11-01): the dedup prefers KCO.DE, so the flag follows it. On 2026-10-31 KCO.DE has no snapshot and KCO.VI shows with the flag; the filter feed keeps such a row visible."
   },
   "circle": {
     "issuer": "Circle Internet Group",
@@ -188,12 +188,12 @@
     "codeKeeps": "ASML.AS",
     "homeListingProposal": "ASML.AS",
     "source": {
-      "url": "https://investor.asml.com/share-information",
-      "quote": "The principal trading market of our ordinary shares is Euronext Amsterdam."
+      "url": "https://www.sec.gov/Archives/edgar/data/937966/000093796623000014/asml-20221231.htm",
+      "quote": "The principal trading market of our ordinary shares is Euronext Amsterdam (trading symbol: ASML)"
     },
     "sourceCheckedOn": "2026-11-01",
     "enteredOn": "2026-11-01",
-    "note": "P290. The daily contest kept 1ASML.MI on all ten data days of P290-flips although its USD market cap stood 11 to 17 % above Amsterdam's (711.3 against 608.0 bn USD on 2026-10-31). The Nasdaq line is not in the universe. Until ASML.AS shows the September quarter, Milan stays as the fallback (lib/home-listing.js)."
+    "note": "P290. The daily contest kept 1ASML.MI on all ten data days of P290-flips although its USD market cap stood 11 to 17 % above Amsterdam's (711.3 against 608.0 bn USD on 2026-10-31). The Nasdaq line is not in the universe. Until ASML.AS shows the September quarter, Milan stays as the fallback (lib/home-listing.js). The same sentence stands on investor.asml.com/share-information, read on 2026-11-01 through a search tool; that page refuses scripted requests."
   },
   "metlen": {
     "issuer": "Metlen Energy & Metals PLC",
@@ -228,11 +228,11 @@
     "homeListingProposal": "METSB.HE",
     "source": {
       "url": "https://metsaboardannualreport.metsagroup.com/view/230548215/148-149/",
-      "quote": "Average daily trading volume, no. of shares"
+      "quote": "466,223"
     },
     "sourceCheckedOn": "2026-11-01",
     "enteredOn": "2026-11-01",
-    "note": "P290. Issuer annual review 2023: the B share averages 466,223 shares a day, the A share 2,132."
+    "note": "P290. Issuer annual review 2023, row average daily trading volume: the B share 466,223 shares, the A share 2,132."
   },
   "mtg": {
     "issuer": "Modern Times Group MTG AB",

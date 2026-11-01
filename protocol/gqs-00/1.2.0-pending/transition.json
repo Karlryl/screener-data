@@ -75,7 +75,7 @@
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
     "src/scoring/axes.js": "74832aa2597aaa3dc63172fa70598ce17e37f5164fba5bb5ba75aa3e1cd214ef",
-    "src/scoring/score.js": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
+    "src/scoring/score.js": "47e32097ee40e653a87ebc5f74de6181d621ffe53695d7c6d6202d8efd88b895",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
@@ -282,31 +282,7 @@
         "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a",
         "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
       },
-      "p290HomeListing": {
-    "date": "2026-11-01",
-    "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
-    "scope": "Only which listing of one issuer represents it. The first three comparator keys (US primary, US domicile, no FX suspicion) stay first. No weight, axis, split or formula changes; all rows keep their inputs, percentiles move only through the changed population.",
-    "file": "src/scoring/score.js",
-    "sourceSha256LF": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
-    "previousSha256LF": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
-    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
-    "dependency": "lib/home-listing.js (dependencyFiles), which reads configs/home-listing.json and the sourced homeListingProposal of configs/dup-issuer-shadow-table.json and calls g31Shadow.",
-    "goldenImpact": "No golden case changes: a golden fixture is a single listing, so the comparator never runs on it."
-  },
-  "p290HomeListing": {
-    "date": "2026-11-01",
-    "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
-    "scope": "Only which listing of one issuer represents it. The first three comparator keys (US primary, US domicile, no FX suspicion) stay first. No weight, axis, split or formula changes; all rows keep their inputs, percentiles move only through the changed population.",
-    "file": "src/scoring/score.js",
-    "sourceSha256LF": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
-    "previousSha256LF": "2cccfb1ca86201693aef22d021bdd8c1e8faeefde986248b54e85cf50c590e90",
-    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
-    "dependency": "lib/home-listing.js (dependencyFiles), which reads configs/home-listing.json and the sourced homeListingProposal of configs/dup-issuer-shadow-table.json and calls g31Shadow.",
-    "goldenImpact": "No golden case changes: a golden fixture is a single listing, so the comparator never runs on it."
-  },
-  "dependencyFiles": {
-    "lib/home-listing.js": "dba56b150d0379a0a48164639895af8e33cff5cabca5e7480663365e54e271cb",
-    "lib/home-listing.js": "0e6e9fa7d1ffedd2ebf909b76dd0e6a2994e6408da120787742082dc3c2d7719",
+      "dependencyFiles": {
         "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
         "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
       },
@@ -340,7 +316,20 @@
     "review": "Blind Sonnet review MERGE 90 % (blindpruefung-pr29-2026-10-23.md); this registration added by the master after the seal test turned PR Check red.",
     "rollback": "Revert the country.js change and only this regionTableCountries registration."
   },
+  "p290HomeListing": {
+    "date": "2026-11-01",
+    "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
+    "scope": "Only which listing of one issuer represents it. The first three comparator keys (US primary, US domicile, no FX suspicion) stay first. No weight, axis, split or formula changes; all rows keep their inputs, percentiles move only through the changed population.",
+    "file": "src/scoring/score.js",
+    "sourceSha256LF": "47e32097ee40e653a87ebc5f74de6181d621ffe53695d7c6d6202d8efd88b895",
+    "previousSealedSha256LF": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "dependencies": "lib/home-listing.js and configs/home-listing.json are registered in dependencyFiles and required. The sourced homeListingProposal rows of configs/dup-issuer-shadow-table.json are a hand table outside the fingerprint, like the other hand tables.",
+    "goldenImpact": "verify() rebuilds the golden traces: 0 score and 0 rank mismatches. A golden fixture is a single listing, so the comparator never decides there."
+  },
   "dependencyFiles": {
+    "configs/home-listing.json": "3bb0c2155fd156dbecc25af39b4904f4797e7303a3c3c2e82384da4fca634d92",
+    "lib/home-listing.js": "536377319a8dc01fa853d3c8314cfdadc8cd5132b547a134163b718d54a43c61",
     "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   }
