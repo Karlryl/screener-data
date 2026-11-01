@@ -30,7 +30,7 @@ test('35 rows of this lane, appended last, one coverage row, every source comple
   const own = table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 35);
   const at = table.cases.findIndex(c => c.revision === REV);
-  assert.deepEqual(table.cases.slice(at).map(c => c.revision), [...Array(35).fill(REV), ...Array(24).fill('2026-10-30-sdz2'), ...Array(2).fill('2026-10-31-erw31'), ...Array(19).fill('2026-10-31-sdabgr'), ...Array(10).fill('2026-11-01-sdheimat')], 'only the rows of ranks 11 to 25, the check of 31.10.2026 and the definition rows of 31.10.2026 follow');
+  assert.deepEqual(table.cases.slice(at).map(c => c.revision), [...Array(35).fill(REV), ...Array(24).fill('2026-10-30-sdz2'), ...Array(2).fill('2026-10-31-erw31'), ...Array(19).fill('2026-10-31-sdabgr'), ...Array(10).fill('2026-11-01-sdheimat'), '2026-10-30-pr49', ...Array(2).fill('2026-10-30-jio-quarter-r4')], 'only the rows of ranks 11 to 25, the check of 31.10.2026 and the definition rows of 31.10.2026 follow');
   assert.deepEqual([...new Set(own.map(c => c.ticker))].sort(), [...FIRMS].sort());
   assert.deepEqual(table.coverage.filter(v => FIRMS.includes(v.ticker)), [{ ticker: 'NMR', field: 'revenueQ', coversThrough: '2026-09-30' }]);
   for (const c of own) {
@@ -124,15 +124,16 @@ test('another fx rate on a later run keeps the yen cells valid; a new vendor qua
   const after = applyFinancialCases(s).snapshot;
   assert.equal(value(after.annual.annualRev[1]), 1892485e6 * rate);
   assert.equal(value(after.timeseries.revenueQ[0]), 607476e6 * rate);
-  // The next quarter is not verified: withheld with the coverage code, growth falls back to the fiscal year.
+  // The next quarter is not verified: withheld with the coverage code, growth falls back to the newest pair with both quarters from the filing (PR #49).
   const next = structuredClone(fixture.NMR), ts = next.timeseries;
   ts.revenueQ = [{ value: 3e9 }, ...ts.revenueQ]; ts.revenueQEnds = ['2026-12-31', ...ts.revenueQEnds];
   const held = applyFinancialCases(next).snapshot;
   assert.equal(value(held.timeseries.revenueQ[0]), null);
   assert.equal(held.timeseries.revenueQ[0].financialMissing.reasonCode, 'period-after-coverage');
   const leg = growth(held);
-  assert.equal(leg.basis, 'year');
-  assert.ok(Math.abs(leg.pct - 14.54) < 0.01, String(leg.pct));
+  assert.equal(leg.basis, 'quarter');
+  assert.equal(leg.sourcePeriodEnd, '2026-09-30');
+  assert.ok(Math.abs(leg.pct - 17.85) < 0.01, String(leg.pct));
   // A new vendor year in front of a replaced series: the whole series goes empty until it is checked (no mixed scale).
   const fresh = structuredClone(fixture.AAUC);
   fresh.annual.annualRev = [{ value: 2e9 }, ...fresh.annual.annualRev]; fresh.annual.annualRevEnds = ['2026-12-31', ...fresh.annual.annualRevEnds];
