@@ -23,6 +23,9 @@
  *          must then exist exactly once across them).
  *   ticker | name  selects exactly one row (track narrows it); 0 or several rows fail a value check.
  *   zaehle  instead of a row: the measured value is the number of rows whose feld equals or contains it.
+ *          A row whose feld is absent makes the count nicht messbar, unless the entry sets optional: true,
+ *          for a field the export carries only on some rows (ffoReason, revGrowthReason). Then such a row
+ *          does not count, but a field that is gone from every row stays nicht messbar.
  *   op     between (min..max) | eq (wert, numeric ± toleranz) | null | notNull | contains (wert as
  *          substring or muster as regex, on a string or any element of an array) | absent | present (row).
  *   gruppe entries sharing it form one expectation (name must not be another entry's id): erfüllt if any
@@ -106,6 +109,7 @@ function validate(list) {
     if (selectors.length !== 1) bad('genau eines von ticker, name, zaehle nötig');
     if (e.zaehle !== undefined && !['between', 'eq'].includes(e.op)) bad('zaehle nur mit between oder eq');
     if (e.zaehle !== undefined && e.track !== undefined) bad('zaehle zählt alle Zeilen, track ist dort nicht erlaubt');
+    if (e.optional !== undefined && (e.optional !== true || e.zaehle === undefined)) bad('optional nur als true und nur mit zaehle');
     if (!ROW_OPS.includes(e.op) && (typeof e.feld !== 'string' || !e.feld)) bad('feld fehlt');
     if (e.op === 'between' && !(Number.isFinite(e.min) && Number.isFinite(e.max) && e.min <= e.max)) bad('min/max ungültig');
     if (e.op === 'eq' && !Object.hasOwn(e, 'wert')) bad('wert fehlt');
@@ -172,8 +176,11 @@ async function measure(e, load, index) {
     catch (err) { return { urteil: NM, gemessen: `Datei ${rel}.json nicht ladbar (${err.message})` }; }
   }
   if (e.zaehle !== undefined) {
-    const values = perFile.flatMap(({ rel, rows }) => rows.map(r => read(r, e.feld, rows, rel))).filter(v => v !== MISSING);
+    const all = perFile.flatMap(({ rel, rows }) => rows.map(r => read(r, e.feld, rows, rel)));
+    const values = all.filter(v => v !== MISSING);
     if (!values.length) return { urteil: NM, gemessen: `Feld ${e.feld} fehlt` };
+    // P282: an unknown value must not leave the base; a column that fails on some rows would read as a clean count.
+    if (values.length < all.length && e.optional !== true) return { urteil: NM, gemessen: `Feld ${e.feld} fehlt an ${all.length - values.length} von ${all.length} Zeilen` };
     const n = values.filter(v => (Array.isArray(v) ? v.includes(e.zaehle) : v === e.zaehle)).length;
     return { urteil: holds(e, n) ? ERFUELLT : NICHT, gemessen: n };
   }
