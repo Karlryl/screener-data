@@ -17715,6 +17715,110 @@
           "sourceUnit": "USD thousands"
         }
       ]
+    },
+    {
+      "caseId": "kmx-2026-02-28-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2026-02-28",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -409757000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-409,8 Mio. USD) steht in keinem Bericht und lässt die Finanzierungssparte CarMax Auto Finance weg; die Firma verdiente vor Steuern 383,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
+          "form": "10-K fiscal 2026",
+          "published": "2026-04-15",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes 383,433"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2025-02-28-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2025-02-28",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -220520000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-220,5 Mio. USD) steht in keinem Bericht und lässt die Finanzierungssparte CarMax Auto Finance weg; die Firma verdiente vor Steuern 669,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
+          "form": "10-K fiscal 2026",
+          "published": "2026-04-15",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes 669,360"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2024-02-29-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2024-02-29",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -205719000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-205,7 Mio. USD) steht in keinem Bericht und lässt die Finanzierungssparte CarMax Auto Finance weg; die Firma verdiente vor Steuern 641,6 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
+          "form": "10-K fiscal 2026",
+          "published": "2026-04-15",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes 641,595"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2023-02-28-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2023-02-28",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -310946000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-310,9 Mio. USD) steht in keinem Bericht und lässt die Finanzierungssparte CarMax Auto Finance weg; die Firma verdiente vor Steuern 636,8 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001025000024/R2.htm",
+          "form": "10-K fiscal 2025",
+          "published": "2025-04-11",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Net earnings 484,762; Income tax provision 152,042"
+        }
+      ]
     }
   ],
   "quarantines": [
