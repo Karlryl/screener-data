@@ -1899,6 +1899,8 @@ jobs:
   # ============================================================================
   scoring:
     needs: [prep, pull, prices, merge]
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }} # P286, P287: the data day of the age rule in lib/annual-pairs.js
     if: ${{ !cancelled() && needs.prep.result == 'success' && needs.pull.result == 'success' && needs.prices.result == 'success' && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15

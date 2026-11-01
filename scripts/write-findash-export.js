@@ -639,7 +639,7 @@ function belegPunkte(timeseries) {
   const ends = Array.isArray(timeseries.revenueQEnds)
     ? timeseries.revenueQEnds.map((d) => Date.parse(d)).filter((t) => Number.isFinite(t))
     : [];
-  const qSpanTage = ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
+  const qSpanTage = qPunkte !== 0 && ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
   return { qPunkte, qSpanTage };
 }
 

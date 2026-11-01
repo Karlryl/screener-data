@@ -463,8 +463,30 @@
     "review": "Build registration only (formula draft); the independent Codex review decides the merge.",
     "rollback": "Revert this round and only this registration with its dependency hashes together in a reviewed new commit."
   },
+  "staleSeriesP286P287": {
+    "date": "2026-11-01",
+    "authority": "Daylauf 11 lane sd-g31 (formula DRAFT for Codex): packages P286 and P287, verdict ergebnisse/P286/urteil.md and Claude's positions p286 and p287; the before and after with scores and ranks that the verdict could not measure.",
+    "scope": "lib/annual-pairs.js: a dated quarterly series whose newest value lies more than 365 days before the data day counts as not present (maskStaleQuarterSeries, called last in prepareSnapshot, never at the pull); each series on its own ends, an undated series has an unknown age and stays. A growth pair ends after 365 days (quarter, half year, four quarters) or 550 days (year), measured on its younger end (staleReason, in the candidate funnel of lib/g31-recency.js, so an older pair of PR #75 cannot reopen it). A stale newest annual pair drops gross profit, annual acceleration and the capital-efficiency penalty pair through axisPairBlocked; the year-ago partner and the older pair of the acceleration are never judged for age. The data day is RUN_DATE_UTC, set on the scoring job; without it (tests, tools, the sealed proof) no age rule applies, and a sealed fixture is exempt. scripts/write-findash-export.js: a row with no quarter point shows no quarter span.",
+    "definitionAmendmentAt120Seal": {
+      "axes": "revGrowthLevel (with ruleOfX and the growth bonus), revAcceleration, gpGrowth, capitalEfficiency, marginTrajectory through the masked quarters",
+      "rule": "A value older than the limit before the data day is no current figure: the leg is null (axis drops, renorm-on-drop), the raw row stays in the marker, nothing is replaced by 0."
+    },
+    "dependencySha256LF": {
+      "lib/g31-recency.js": "af6385081518f595cb10b6e631e6123cf1ed59d0c365799f0d3428e6828eba7b",
+      "lib/annual-pairs.js": "c92894ba9c4fed9f2ddc88539f4c37ab370c849c707827153bf0fedb9cff76c8"
+    },
+    "previousDependencySha256LF": {
+      "lib/g31-recency.js": "82fbf3c5153a4384ceeeaa928fa7fa5ae21a47ecdffe89e9cb6d810df338b4e1",
+      "lib/annual-pairs.js": "b856e00e617e8cc92c410120f4bcbed3bf977d025c78fb7ecdd8c4e01bb38bbb"
+    },
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "goldenImpact": "None: verify() runs without RUN_DATE_UTC, and sealed fixtures are exempt by identity.",
+    "evidence": "tests/stale-series-p286.test.js with in-memory break-once; before and after on the data day 31.10.2026 in the PR text.",
+    "review": "Build registration only (formula draft); the independent Codex review decides the merge.",
+    "rollback": "Revert this round and only this registration with its dependency hashes together in a reviewed new commit."
+  },
   "dependencyFiles": {
-    "lib/g31-recency.js": "82fbf3c5153a4384ceeeaa928fa7fa5ae21a47ecdffe89e9cb6d810df338b4e1",
-    "lib/annual-pairs.js": "b856e00e617e8cc92c410120f4bcbed3bf977d025c78fb7ecdd8c4e01bb38bbb"
+    "lib/g31-recency.js": "af6385081518f595cb10b6e631e6123cf1ed59d0c365799f0d3428e6828eba7b",
+    "lib/annual-pairs.js": "c92894ba9c4fed9f2ddc88539f4c37ab370c849c707827153bf0fedb9cff76c8"
   }
 }
