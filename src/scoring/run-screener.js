@@ -790,15 +790,48 @@ function scoreSmallcapUniverse(universe, reference) {
   return scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false, refCalibration: reference.calibration });
 }
 
-// Drift only where a distribution can carry it: an axis no firm of the reference ever filled cannot be compared, and
-// below MIN_COHORT_N the cohort is scored on its parent basis and a single firm would already read as drift.
-function smallcapReferenceDrift(live, calibration) {
-  const big = Object.entries(calibration.cohortBases).filter(([, base]) => base.n >= MIN_COHORT_N);
-  const filled = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => Array.isArray(v) && v.some(Number.isFinite)));
-  return calibrationDrift(live, {
-    cohortBases: Object.fromEntries(big.map(([key, base]) => [key, { axes: filled(base.axes) }])),
-    gDistByCohort: filled(Object.fromEntries(big.map(([key]) => [key, calibration.gDistByCohort[key]]))),
-  });
+/**
+ * Compare a run with the fixed reference on exactly the bases its scores read (score.js, PASS 2): a cohort of at least
+ * MIN_COHORT_N firms on its own frozen basis, a thinner one on parentBasis, the union of all tracks of its formula.
+ * Reports only, changes no score. An axis no firm of the reference ever filled cannot be compared. Where even the union
+ * is below MIN_COHORT_N a single firm would already read as drift, and a big cohort new since the reference scores on
+ * itself: both are named, not skipped. Growth distributions stay out: growthBoost is off here, they enter no score.
+ * @param {{cohortBases: object}} live calibrationLive of the run.
+ * @param {object} reference Result of loadSmallcapReference.
+ * @returns {object} The result of calibrationDrift, plus watched (the frozen bases it compared, by cohort or formula)
+ *   and notMonitored (group, firms in the reference, reasonDe; sorted by group).
+ */
+function smallcapReferenceDrift(live, reference) {
+  const frozen = reference.calibration.cohortBases;
+  const filled = (axes) => Object.fromEntries(Object.entries(axes).filter(([, v]) => Array.isArray(v) && v.some(Number.isFinite)));
+  const tracks = (bases, formula) => Object.keys(bases).filter((key) => key.startsWith(formula + '|'));
+  // The union parentBasis builds, on both sides: every track of the formula, each axis concatenated.
+  const pooled = (bases, formula) => {
+    const axes = {};
+    for (const key of tracks(bases, formula)) {
+      for (const [axis, values] of Object.entries(bases[key].axes)) if (Array.isArray(values)) axes[axis] = (axes[axis] || []).concat(values);
+    }
+    return { axes };
+  };
+  const day = reference.dataDay.split('-').reverse().join('.');
+  const watched = {}, watchedLive = {}, notMonitored = {};
+  for (const key of new Set([...Object.keys(frozen), ...Object.keys(live.cohortBases)])) {
+    const formula = key.split('|')[0];
+    const own = (frozen[key] ? frozen[key].n : live.cohortBases[key].n) >= MIN_COHORT_N; // the n score.js decides on
+    const group = own ? key : formula;
+    const firms = own ? (frozen[key] ? frozen[key].n : 0) : tracks(frozen, formula).reduce((sum, k) => sum + frozen[k].n, 0);
+    if (firms < MIN_COHORT_N) {
+      notMonitored[group] = { group, firms, reasonDe: firms
+        ? `Nur ${firms} Firmen in der Referenz vom ${day}, zu wenige für eine Abweichungsprüfung.`
+        : `In der Referenz vom ${day} nicht enthalten, daher keine Abweichungsprüfung.` };
+      continue;
+    }
+    const basis = (bases) => (own ? bases[key] : pooled(bases, formula));
+    watched[group] = { axes: filled(basis(frozen).axes) };
+    watchedLive[group] = basis(live.cohortBases);
+  }
+  return { ...calibrationDrift({ cohortBases: watchedLive }, { cohortBases: watched }), watched,
+    notMonitored: Object.keys(notMonitored).sort().map((group) => notMonitored[group]) };
 }
 
 function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR, reference = loadSmallcapReference()) {
@@ -823,7 +856,7 @@ function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR, reference 
     }
   }
   // Reports when the reference has to be renewed, changes nothing itself.
-  const drift = smallcapReferenceDrift(scResults.calibrationLive, reference.calibration);
+  const drift = smallcapReferenceDrift(scResults.calibrationLive, reference);
   const renewalDue = !drift.ok || new Date().toISOString().slice(0, 10) > reference.renewBy;
   if (renewalDue) console.warn(`::warning:: [run-screener] Small-cap reference ${reference.version} is due for renewal: maxKS ${drift.maxKs.toFixed(3)} (limit ${drift.ksThreshold}), ${drift.drifted.length} axes drifted, renew by ${reference.renewBy}.`);
 
@@ -859,7 +892,7 @@ function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR, reference 
     coverageFloor: covFloor, // 5.2 Auflage 3: Beleg-Wert des Coverage-Floors dieses Laufs, fest aus der Referenz
     coverageFloorLive: covFloorLive,
     reference: { version: reference.version, dataDay: reference.dataDay, renewBy: reference.renewBy, coverageFloor: reference.coverageFloor,
-      renewalDue, drift: { maxKs: Math.round(drift.maxKs * 1000) / 1000, ksThreshold: drift.ksThreshold, axesDrifted: drift.drifted.length } },
+      renewalDue, drift: { maxKs: Math.round(drift.maxKs * 1000) / 1000, ksThreshold: drift.ksThreshold, axesDrifted: drift.drifted.length }, notMonitored: drift.notMonitored },
   });
   // Auflage 3 Zaehl-Beleg: explizit ins Run-Log (nicht nur implizit in excluded.'smallcap-thin-coverage').
   console.log(`[run-screener] Small-Cap-Board (DIAGNOSTIC): ${boardIds.length} Boards, Coverage-Floor fest=${covFloor.toFixed(3)} (Referenz ${reference.version}, p${SMALLCAP_COVERAGE_FLOOR_PCTL * 100} dieses Laufs=${covFloorLive === null ? 'n/a' : covFloorLive.toFixed(3)}), thin-coverage-excludiert=${thinCoverageExcluded} -> ${scOutDir}`);
@@ -936,4 +969,4 @@ module.exports = { loadUniverse, loadSmallcapUniverse, readScoringSnapshot, run,
   assertParseFailAnteil, MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE,  // T565-H1
   MIN_PARSE_FAIL_FAELLE_SMALLCAP, COVERAGE_FLOOR_RATIO_ONDISK,          // T569-F1/F4
   baselineFuer, naechstesHochwasser,                                    // T565-M2
-  floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, loadSmallcapReference, scoreSmallcapUniverse, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };
+  floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, loadSmallcapReference, scoreSmallcapUniverse, smallcapReferenceDrift, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };

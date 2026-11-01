@@ -17,6 +17,12 @@ const MUTANTS = {
     '  return scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false });', /a floor exit must not move another firm's score/],
   'live-floor': [/^  const covFloor = reference\.coverageFloor;(?=\r?$)/m, '  const covFloor = covFloorLive;', /a floor exit must not move the coverage floor/],
   'reference-not-reported': [/^    reference: \{ version: reference\.version, .*(?=\r?$)/m, '    reference: { version: reference.version,', /the export must name the reference in force/],
+  // The state before this fix: a thin cohort is skipped although the score reads its union.
+  'thin-cohort-unwatched': [/^    if \(firms < MIN_COHORT_N\) \{(?=\r?$)/m, '    if (!own || firms < MIN_COHORT_N) {', /the pooled basis of a thin cohort must be watched/],
+  'union-of-one-track': [/^    for \(const key of tracks\(bases, formula\)\) \{(?=\r?$)/m, '    for (const key of tracks(bases, formula).slice(0, 1)) {', /the watched union must be the basis the score reads/],
+  'groups-not-exported': [/^      renewalDue, drift: \{ maxKs: .*(?=\r?$)/m, '      renewalDue, drift: { maxKs: Math.round(drift.maxKs * 1000) / 1000, ksThreshold: drift.ksThreshold, axesDrifted: drift.drifted.length } },', /the export must name the reference in force/],
+  'group-not-named': [/^    notMonitored: Object\.keys\(notMonitored\)\.sort\(\)\.map\(\(group\) => notMonitored\[group\]\) \};(?=\r?$)/m, '    notMonitored: [] };', /a group too small to watch must be named/],
+  'growth-watched': [/^  return \{ \.\.\.calibrationDrift\(\{ cohortBases: watchedLive \}, \{ cohortBases: watched \}\), watched,(?=\r?$)/m, '  return { ...calibrationDrift({ cohortBases: watchedLive, gDistByCohort: live.gDistByCohort }, { cohortBases: watched, gDistByCohort: reference.calibration.gDistByCohort }), watched,', /growth distributions enter no score here/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -42,8 +48,9 @@ Module.prototype._compile = function (source, name) {
   return compile.call(this, source, name);
 };
 
-const { runSmallcapPass, loadSmallcapReference, SMALLCAP_COVERAGE_FLOOR_PCTL } = require(RS);
+const { runSmallcapPass, loadSmallcapReference, scoreSmallcapUniverse, smallcapReferenceDrift, SMALLCAP_COVERAGE_FLOOR_PCTL } = require(RS);
 const { scoreUniverse, quantile } = require('../src/scoring/score.js');
+const { q } = require('../src/scoring/engine.js');
 const { smallcapRoute } = require('../src/scoring/smallcap-route.js');
 const formulas = require('../src/scoring/formulas/smallcap');
 
@@ -89,7 +96,7 @@ const without = (o, set) => Object.fromEntries(Object.entries(o).filter(([t]) =>
 const before = pass(universe());
 assert(before.rows.size > 15, 'test data: the board must hold most firms');
 assert.equal(before.index.coverageFloor, reference.coverageFloor);
-assert.deepEqual(before.index.reference, { version: 'test.1', dataDay: '2026-10-29', renewBy: '2999-01-01', coverageFloor: reference.coverageFloor, renewalDue: false, drift: { maxKs: 0, ksThreshold: 0.15, axesDrifted: 0 } }, 'the export must name the reference in force');
+assert.deepEqual(before.index.reference, { version: 'test.1', dataDay: '2026-10-29', renewBy: '2999-01-01', coverageFloor: reference.coverageFloor, renewalDue: false, drift: { maxKs: 0, ksThreshold: 0.15, axesDrifted: 0 }, notMonitored: [] }, 'the export must name the reference in force');
 assert.equal(before.index.coverageFloorLive, reference.coverageFloor, 'on its own data the live floor equals the frozen one');
 
 for (const [name, set] of [['full-coverage firms', exits], ['thinnest firms', exitsThin]]) {
@@ -130,6 +137,69 @@ assert(driftRun.index.reference.drift.maxKs > 0.15 && driftRun.index.reference.d
 assert(warnings.some(w => w.includes('due for renewal')));
 console.log('PASS the renewal notice fires on age and on drift and changes no number');
 
+// The notice watches the bases the score reads. Two thin tracks of one formula score on their union of 18 firms.
+const losing = (i) => { const s = firm(i); s.annual.annualOpInc = [-8e7 - i * 1e6, -6e7, -4e7, -2e7]; return s; };
+const tracksOf = (profitable, unprofitable) => [...Array.from({ length: profitable }, (_, i) => firm(i)), ...Array.from({ length: unprofitable }, (_, i) => losing(i + profitable))];
+const olderDividedBy100 = (u) => {
+  for (const s of u) {
+    s.annual.annualRev = s.annual.annualRev.map((v, i) => (i ? v / 100 : v));
+    s.timeseries.revenueQ = s.timeseries.revenueQ.map((x, i) => (i >= 4 ? { value: x.value / 100 } : x));
+  }
+  return u;
+};
+const referenceOf = (u) => JSON.parse(JSON.stringify({ version: 'test.2', dataDay: '2026-10-29', renewBy: '2999-01-01', coverageFloor: 0.01, calibration: scoreUniverse(u, formulas, { classify: smallcapRoute, growthBoost: false }).calibration }));
+const liveOf = (u, ref) => scoreSmallcapUniverse(u, ref).calibrationLive;
+const FORMULA = 'smallcap-semiconductors';
+
+const thinRef = referenceOf(tracksOf(10, 8));
+assert.deepEqual(Object.values(thinRef.calibration.cohortBases).map((b) => b.n).sort((a, b) => a - b), [8, 10], 'test data: two thin tracks');
+const calm = pass(tracksOf(10, 8), thinRef);
+assert.equal(calm.index.reference.renewalDue, false); assert.equal(calm.index.reference.drift.maxKs, 0); assert.deepEqual(calm.index.reference.notMonitored, [], 'the pooled basis of a thin cohort must be watched');
+assert.deepEqual(Object.keys(smallcapReferenceDrift(liveOf(tracksOf(10, 8), thinRef), thinRef).watched), [FORMULA]);
+warnings.length = 0;
+const pooledStress = pass(olderDividedBy100(tracksOf(10, 8)), thinRef);
+assert.equal(pooledStress.index.reference.renewalDue, true, 'the pooled basis of a thin cohort must be watched');
+assert(pooledStress.index.reference.drift.maxKs > 0.15 && pooledStress.index.reference.drift.axesDrifted > 0, 'the pooled basis of a thin cohort must be watched');
+assert(warnings.some((w) => w.includes('due for renewal')));
+assert.equal(pooledStress.rows.size, 18, 'test data: every firm stands on a board');
+const scoredStress = scoreSmallcapUniverse(olderDividedBy100(tracksOf(10, 8)), thinRef);
+for (const e of scoredStress) assert.equal(pooledStress.rows.get(e.ticker).score, Math.round(e.score * 10) / 10, 'the notice must not move a score: ' + e.ticker);
+
+// The union rebuilt here is the one parentBasis hands the score: same percentile on every axis of every firm.
+const watchedUnion = smallcapReferenceDrift(scoredStress.calibrationLive, thinRef).watched[FORMULA].axes;
+let comparedAxes = 0;
+for (const key of Object.keys(thinRef.calibration.cohortBases)) {
+  scoredStress.filter((e) => e.formulaId + '|' + e.track === key).forEach((e, i) => {
+    for (const { key: axis, pct } of pooledStress.rows.get(e.ticker).axisBreakdown) {
+      const own = q(scoredStress.calibrationLive.cohortBases[key].axes[axis][i], watchedUnion[axis] ?? []);
+      assert.equal(pct, own === null ? null : Math.round(own * 10) / 10, `the watched union must be the basis the score reads: ${e.ticker} ${axis}`);
+      if (pct !== null) comparedAxes++;
+    }
+  });
+}
+assert(comparedAxes > 50, 'test data: percentiles really compared, ' + comparedAxes);
+console.log('PASS a thin cohort is watched on the union its score reads, the notice fires and moves no score');
+
+// Growth distributions enter no score with growthBoost off, so they ring no alarm either.
+const growthMoved = structuredClone(thinRef);
+for (const key of Object.keys(growthMoved.calibration.gDistByCohort)) growthMoved.calibration.gDistByCohort[key] = growthMoved.calibration.gDistByCohort[key].map((g) => g + 5);
+const growthRun = pass(tracksOf(10, 8), growthMoved);
+assert.equal(growthRun.index.reference.renewalDue, false, 'growth distributions enter no score here');
+assert.deepEqual(scores(growthRun.rows), scores(calm.rows), 'growth distributions enter no score here');
+console.log('PASS growth distributions stay out of the notice because they stay out of the score');
+
+// Below 15 firms even together: no alarm from one firm, and the export says so.
+const tinyRef = referenceOf(tracksOf(5, 3));
+const tiny = pass(olderDividedBy100(tracksOf(5, 3)), tinyRef).index.reference;
+assert.deepEqual(tiny.notMonitored, [{ group: FORMULA, firms: 8, reasonDe: 'Nur 8 Firmen in der Referenz vom 29.10.2026, zu wenige für eine Abweichungsprüfung.' }], 'a group too small to watch must be named');
+assert.equal(tiny.renewalDue, false, 'a group nobody watches rings no alarm');
+// A track new since the reference: thin, it scores on the frozen union, which is watched; big, it scores on itself.
+const oneTrack = referenceOf(tracksOf(20, 0));
+const thinNew = smallcapReferenceDrift(liveOf(tracksOf(20, 3), oneTrack), oneTrack);
+assert.deepEqual(Object.keys(thinNew.watched).sort(), [FORMULA, FORMULA + '|profitable']); assert.deepEqual(thinNew.notMonitored, []);
+assert.deepEqual(pass(tracksOf(20, 16), oneTrack).index.reference.notMonitored, [{ group: FORMULA + '|unprofitable', firms: 0, reasonDe: 'In der Referenz vom 29.10.2026 nicht enthalten, daher keine Abweichungsprüfung.' }], 'a group too small to watch must be named: new and big');
+console.log('PASS a group that cannot be watched is named: too small together, or new and scored on itself');
+
 // The file itself: a broken one stops the pass, the versioned one stays what its before and after measured.
 const bad = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'sc-reference-bad-')), 'r.json');
 for (const broken of [{ ...reference, coverageFloor: '0.58' }, { ...reference, coverageFloor: 0 }, { ...reference, coverageFloor: 1.5 }, { ...reference, version: '' }, { ...reference, calibration: null }, { ...reference, renewBy: undefined }]) {
@@ -147,4 +217,18 @@ assert.equal(real.calibration.schema, 'calibration/v4');
 assert.match(real.storeSha256, /^[0-9a-f]{64}$/);
 for (const key of Object.keys(real.calibration.cohortBases)) assert(formulas[key.split('|')[0]], 'reference cohort without a formula: ' + key);
 assert.doesNotThrow(() => scoreUniverse(universe(), formulas, { classify: smallcapRoute, growthBoost: false, refCalibration: real.calibration }), 'the versioned reference must fit the current formulas');
-console.log('PASS a broken reference stops the pass; the versioned one is 2026-10-31.1 with floor 0,58 and fits the formulas');
+// What the notice watches on the versioned reference. Counted: 9 cohorts of at least 15 firms on their own basis, 4 formulas
+// with a thin track on their union, 4 formulas of 23 firms together below 15 each. A renewal changes these lines.
+const watchReal = smallcapReferenceDrift(real.calibration, real);
+assert.equal(watchReal.maxKs, 0, 'the reference against itself');
+assert.deepEqual(Object.keys(watchReal.watched).filter((k) => !k.includes('|')).sort(), ['smallcap-consumer-discretionary', 'smallcap-energy', 'smallcap-financials', 'smallcap-software-comm-services']);
+assert.equal(Object.keys(watchReal.watched).filter((k) => k.includes('|')).length, 9);
+assert.deepEqual(watchReal.notMonitored.map((g) => [g.group, g.firms]), [['smallcap-it-services', 3], ['smallcap-materials', 12], ['smallcap-semiconductors', 3], ['smallcap-utilities', 5]]);
+// Energy: 11 and 6 firms, both tracks thin, 17 together. Only that union can see them move.
+const energyMoved = structuredClone(real.calibration);
+for (const track of ['profitable', 'unprofitable']) {
+  const axes = energyMoved.cohortBases['smallcap-energy|' + track].axes;
+  axes.revGrowthLevel = axes.revGrowthLevel.map((v) => (Number.isFinite(v) ? v + 1000 : v));
+}
+assert(smallcapReferenceDrift(energyMoved, real).drifted.some((d) => d.cohort === 'smallcap-energy' && d.axis === 'revGrowthLevel' && d.ks > 0.15), 'the pooled basis of a thin cohort must be watched: energy');
+console.log('PASS a broken reference stops the pass; the versioned one is 2026-10-31.1 with floor 0,58 and fits the formulas; its watched and unwatched groups are pinned');

@@ -15,7 +15,7 @@ if (process.argv.includes('--break-once')) {
   const sourcePath = path.join(ROOT, 'pull-yahoo.js');
   const hash = () => crypto.createHash('sha256').update(fs.readFileSync(sourcePath)).digest('hex');
   const before = hash();
-  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap', 'metadata-skip', 'no-floor-carrier', 'floor-merge-keeps-stale', 'zero-cap-carrier', 'carrier-only-with-file', 'carrier-from-clock', 'fast-path-no-stamp', 'full-path-no-stamp', 'fast-path-no-currency']) {
+  for (const mutation of ['stale-cap', 'watchlist-age', 'survival-leak', 'fast-null-final', 'placeholder', 'streak', 'legacy-prune', 'empty-summary-stale-cap', 'metadata-skip', 'no-floor-carrier', 'floor-merge-keeps-stale', 'zero-cap-carrier', 'carrier-only-with-file', 'carrier-from-clock', 'fast-path-no-stamp', 'full-path-no-stamp', 'fast-path-no-currency', 'fast-path-stamp-first', 'full-path-stamp-first']) {
     const r = cp.spawnSync(process.execPath, [__filename], {
       cwd: ROOT, encoding: 'utf8', env: { ...process.env, B5_MUTATION: mutation },
     });
@@ -38,6 +38,8 @@ if (process.argv.includes('--break-once')) {
       'fast-path-no-stamp': /floor exit must leave a carrier for the merge/,
       'full-path-no-stamp': /floor exit must leave a carrier for the merge/,
       'fast-path-no-currency': /floor exit must leave a carrier for the merge/,
+      'fast-path-stamp-first': /a live quote must leave a carrier/,
+      'full-path-stamp-first': /a live quote must leave a carrier/,
     };
     assert.match(r.stderr, expected[mutation]);
     assert.equal(hash(), before, 'live pull-yahoo.js hash changed during break-once');
@@ -58,7 +60,7 @@ let cap = null, quoteCalls = 0, fullCalls = 0, ftsCalls = 0;
 let quoteMode = 'normal', fullMode = 'normal', fullCap, quoteCurrency = 'USD';
 // Friday's close: the clock of this test stands on Sunday 27.09., a normal prior-day quote.
 const PRIOR_CLOSE = '2026-09-25T20:00:01.000Z';
-let quoteTime = PRIOR_CLOSE;
+let quoteTime = PRIOR_CLOSE, liveQuote = false;
 const ticker = process.env.B5_HISTORICAL === '1' ? '300475.SZ' : 'B5FIX';
 const filename = ticker + '.json';
 const snapPath = path.join(out, filename);
@@ -92,6 +94,14 @@ Module.prototype._compile = function (source, name) {
     'full-path-no-stamp': ['pull-yahoo.js', "{ time: _y(yahoo.price, 'regularMarketTime'), currency:", '{ currency:'],
     'fast-path-no-currency': ['pull-yahoo.js', '{ time: q.regularMarketTime, currency: q.currency, rawValue: q.marketCap }', '{ time: q.regularMarketTime, rawValue: q.marketCap }'],
   };
+  // The pull clock taken before the answer instead of after it; in memory, two places each.
+  const stampFirst = {
+    'fast-path-stamp-first': [['const q = suppliedQuote ?? await _gatedQuote(', 'const stampedFirst = new Date().toISOString(); const q = suppliedQuote ?? await _gatedQuote('], ['const newAsOf = new Date().toISOString();', 'const newAsOf = stampedFirst;']],
+    'full-path-stamp-first': [['try { yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker); }', 'const stampedFirst = new Date().toISOString(); try { yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker); }'], ['const asOf = new Date().toISOString();', 'const asOf = stampedFirst;']],
+  }[process.env.B5_MUTATION];
+  if (stampFirst && name === path.join(ROOT, 'pull-yahoo.js')) {
+    for (const [from, to] of stampFirst) { assert(source.includes(from), 'mutation anchor missing'); source = source.replace(from, to); }
+  }
   const regression = regressions[process.env.B5_MUTATION];
   if (regression && name === path.join(ROOT, regression[0])) {
     assert(source.includes(regression[1]), 'mutation anchor missing');
@@ -137,16 +147,18 @@ global.Date = class extends RealDate { constructor(...a) { super(...(a.length ? 
 const silent = () => {};
 const print = console.log.bind(console);
 console.log = console.warn = console.error = silent;
+// A live quote: the market is open, the answer takes 90 s with its retries and is dated when it arrives.
+const answerArrives = () => { if (liveQuote) { now += 90000; quoteTime = new RealDate(now).toISOString(); } };
 class FakeYahoo {
   async quote() {
-    quoteCalls++;
+    quoteCalls++; answerArrives();
     if (quoteMode === 'undefined') return undefined;
     if (quoteMode === 'empty') return {};
     if (quoteMode === 'not-found') throw new Error('Quote not found for symbol');
     return { symbol: ticker, currency: quoteCurrency, regularMarketPrice: 120, regularMarketTime: quoteTime, ...(cap === undefined ? {} : { marketCap: cap }) };
   }
   async quoteSummary() {
-    fullCalls++;
+    fullCalls++; answerArrives();
     if (fullMode === 'not-found') throw new Error('Quote not found for symbol');
     if (fullMode === 'empty') return {};
     if (fullMode === 'undefined') return undefined;
@@ -195,7 +207,7 @@ const cache = JSON.stringify({ _cacheVersion: 2, cachedAt: iso(40), payload: { r
 const read = p => JSON.parse(files.get(p));
 function reset(age = 1) {
   files.clear(); writes.length = unlinks.length = 0; quoteCalls = fullCalls = ftsCalls = 0;
-  writeEvents.length = 0; quoteMode = fullMode = 'normal'; fullCap = undefined; quoteCurrency = 'USD'; quoteTime = PRIOR_CLOSE;
+  writeEvents.length = 0; quoteMode = fullMode = 'normal'; fullCap = undefined; quoteCurrency = 'USD'; quoteTime = PRIOR_CLOSE; liveQuote = false;
   delete process.env.MISSING_CAP_CARRIER;
   const s = structuredClone(seed); s.meta.asOf = iso(age);
   files.set(snapPath, JSON.stringify(s)); files.set(cachePath, cache);
@@ -374,6 +386,16 @@ const reviewCases = {
     reset(1); cap = 1e6; quoteTime = '2026-09-18T20:00:01.000Z'; process.env.MISSING_CAP_CARRIER = '1';
     await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;
     assert(files.has(snapPath), 'a week-old close must still leave a carrier');
+    // A live quote on the cold, fast and full path: both stamp the pull clock after the answer, so it is no future quote.
+    const beforeLive = now;
+    for (const [age, mode, cold] of [[1, 'normal', true], [1, 'not-found'], [40, 'normal']]) {
+      reset(age); cap = 1e6; fullMode = mode; liveQuote = true; process.env.MISSING_CAP_CARRIER = '1';
+      if (cold) files.delete(snapPath);
+      await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER; liveQuote = false;
+      assert(files.has(snapPath), 'a live quote must leave a carrier');
+      assert(read(snapPath).marketCap.regularMarketTime <= read(snapPath).marketCap.asOf, 'a live quote lies before the pull clock');
+    }
+    now = beforeLive;
     // Without a named currency in the fast path's own answer the value has no USD origin: the full pull decides.
     reset(1); cap = 1e6; fullMode = 'not-found'; quoteCurrency = undefined; process.env.MISSING_CAP_CARRIER = '1';
     await pullAll({ stocks: [stock] }, out, 0); delete process.env.MISSING_CAP_CARRIER;

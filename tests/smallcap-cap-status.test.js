@@ -15,6 +15,7 @@ const MUTANTS = {
   'export-guard': [/^ *: snap\?\.marketCap\?\.belowFloor === true \? `Gemessener Börsenwert .*`  ?: null,(?=\r?$)/m, '      : null,', /floor exit must not reach a board/],
   'check-guard': [/^ *if \(mk\.namedReasons != null\) \{(?=\r?$)/m, '  if (false) {', /--check must catch a wrong reason list/],
   'reference-guard': [/^ *if \(mk\.reference != null && .*\{(?=\r?$)/m, '  if (false) {', /--check must catch a floor that left the fixed reference/],
+  'not-monitored-guard': [/^ *if \(notMonitored != null && .*;(?=\r?$)/m, '', /--check must catch a group named without its reason/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -135,4 +136,10 @@ assert.deepEqual(checkReference(0.58, { version: 'x', coverageFloor: 0.58 }), []
 assert.deepEqual(checkReference(0.58, null), [], 'an older export without a reference stays legal');
 assert.equal(checkReference(0.6, { version: 'x', coverageFloor: 0.58 }).length, 1, '--check must catch a floor that left the fixed reference');
 assert.equal(checkReference(0.58, { coverageFloor: 0.58 }).length, 1, '--check must catch a floor that left the fixed reference: no version');
-console.log('PASS --check binds the floor in force to the fixed reference');
+const withGroups = notMonitored => checkReference(0.58, { version: 'x', coverageFloor: 0.58, notMonitored });
+assert.deepEqual(withGroups([{ group: 'smallcap-materials', firms: 12, reasonDe: 'Nur 12 Firmen.' }]), [], 'a named group must pass');
+assert.deepEqual(withGroups([]), [], 'nothing unwatched must pass');
+for (const bad of [[{ group: 'smallcap-materials', firms: 12 }], [{ firms: 12, reasonDe: 'x' }], [{ group: 'x', reasonDe: 'x' }], 'smallcap-materials']) {
+  assert.equal(withGroups(bad).length, 1, '--check must catch a group named without its reason: ' + JSON.stringify(bad));
+}
+console.log('PASS --check binds the floor in force to the fixed reference and every unwatched group to its reason');
