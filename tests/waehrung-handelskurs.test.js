@@ -397,6 +397,39 @@ const ypf = () => {
   return s;
 };
 
+// Codex P308: both Yahoo sources carry the same wrong count at AZBLY (ADR price x ordinary shares, 9.16 bn USD; about 4.6 bn is right, the home line 6845.T shows EV/S 2.28).
+// So they agree, the reading passes on the wrong market cap and would show 4.59. The hand table holds that line before anything is shown.
+const azbly = () => adr('AZBLY', 'JPY', 0.006317558, { mc: 9155931136, prior: 9155931136, rev: 1896549967, ebitda: 353000000, debt: 62474331, cash: 601785305, ev: -62402064384, evs: -0.208, eve: -1.116 });
+check('EV reading: AZBLY: the reading alone would show a wrong 4.59; the hold of the hand table leaves market cap and ratios empty, also in the filter', () => {
+  const guard = require('../lib/market-cap-guard.js');
+  const { buildUniverse } = require('../scripts/write-filter-universe.js');
+  const s = azbly();
+  py._convertSnapshotToUSD(s);
+  assert.equal(s.meta.evCurrencyReading, 'mixed', 'the two sources agree, the definition fits on the wrong market cap');
+  assert.ok(Math.abs(s.metrics.enterpriseToRevenue.value - 4.59) < 0.02, String(s.metrics.enterpriseToRevenue.value));
+  assert.ok(guard.holds.AZBLY, 'the hold of the hand table is what closes this');
+  const out = guard.prepareMarketCap(s);
+  assert.equal(out.marketCap.value, null);
+  assert.equal(out.metrics.enterpriseToRevenue, null);
+  assert.equal(out.metrics.enterpriseValue, null);
+  assert.equal(out.metrics.priceSales, null);
+  const row = buildUniverse({ snapshots: [out], boards: new Map(), excluded: new Map(), generatedAt: '2026-10-30T10:11:30.798Z' }).rows[0];
+  assert.equal(row.mc, undefined);
+  assert.equal(row.evs, undefined, 'no wrong EV/S in the filter');
+  assert.equal(row.ps, undefined);
+  // Break-once on test data: the same row under a ticker without a hold keeps the wrong number; only the table closes it.
+  const other = azbly(); other.meta.ticker = 'AZBLX';
+  py._convertSnapshotToUSD(other);
+  assert.ok(Math.abs(guard.prepareMarketCap(other).metrics.enterpriseToRevenue.value - 4.59) < 0.02);
+  // Kioxia: 292.30 never returns on the ADR, whatever the reading says.
+  const k = kxiay(144770252800);
+  py._convertSnapshotToUSD(k);
+  k.meta.ticker = 'KXIAY';
+  const kOut = guard.prepareMarketCap(k);
+  assert.equal(kOut.metrics.enterpriseToRevenue, null);
+  assert.equal(kOut.metrics.priceSales, null);
+});
+
 check('EV reading: KXIAY is withheld: its pull market cap disagrees with the stored one, and without that (c) fails too', () => {
   const s = kxiay(144770252800);
   py._convertSnapshotToUSD(s);
