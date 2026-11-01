@@ -138,7 +138,9 @@ check('newer-year record uses its own ends and stored prior length, without repl
   const s = snap();
   s.meta.annualRevNewerYear = { end: '2027-12-31', priorEnd: '2025-12-31', revenue: 360, priorRevenue: 180, priorStored: 180 };
   const record = A.annualLegNewerYear(s);
-  assert.equal(revGrowthLeg(s).basis, 'yearNewerRecord');
+  // Period gate (24.10.2026): the 730-day record is empty in production too, not only under the P115 switch.
+  assert.equal(revGrowthLeg(s).basis, 'none');
+  assert.equal(revGrowthLeg(s).pct, null);
   assert.equal(P.annualPairsShadow(s).growth.code, 'missing-year');
   P.withAnnualPairRule({ growth: true }, () => {
     assert.equal(A.annualLegNewerYear(s), record, 'the validity check itself is unchanged');
@@ -167,7 +169,9 @@ check('gross profit judges its own pair only, not the margin trajectory', () => 
 });
 
 check('parts a and b are independent, rawAxisValue uses null without score plumbing', () => {
-  const s = pairSnapshot(731); s.annual.annualGPEnds = s.annual.annualRevEnds;
+  // A 365-day pair with a 150-day prior year: only P115's prior-length check rejects it. The former 731-day pair is
+  // emptied by the always-on period gate (24.10.2026) under every switch setting and could no longer show independence.
+  const s = pairSnapshot(365, 150); s.annual.annualGPEnds = s.annual.annualRevEnds;
   P.withAnnualPairRule({ growth: true }, () => {
     assert.equal(A.revGrowthLevel(s), null); assert.equal(A.gpGrowth(s), null);
     assert.equal(A.revAcceleration(s), 0.30000000000000004);
@@ -250,7 +254,8 @@ check('all verdicts carry German reasons, raw values, dates and no fake zero', (
 });
 
 check('restore after throw, nested overrides, thenable and throwing then getter', () => {
-  const s = pairSnapshot(731), before = JSON.stringify(s);
+  // Rejected only by P115's prior-length check, so the switch state stays observable under the period gate (24.10.2026).
+  const s = pairSnapshot(365, 150), before = JSON.stringify(s);
   assert.throws(() => P.withAnnualPairRule(all, () => { throw new Error('probe'); }), /probe/);
   assert.equal(P.annualPairRuleEnabled('growth'), false);
   P.withAnnualPairRule({ growth: true }, () => {

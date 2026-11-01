@@ -31,7 +31,7 @@ const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, j
 const { fcfMarginValid } = require('./engine.js');
 const { g31Variant, g31Shadow } = require('../../lib/g31-recency.js');
 const { annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
-  checkNewerAnnualPair, checkAnnualAcceleration } = require('../../lib/annual-pairs.js');
+  checkNewerAnnualPair, checkAnnualAcceleration, annualPeriodEnds, periodGateReason } = require('../../lib/annual-pairs.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 
@@ -262,6 +262,9 @@ function gpGrowth(s) {
   const two = adjacentTwoPresent(gp);
   if (!two || two[1] <= 0) return null;
   if (annualPairRuleEnabled('growth') && !annualPairPasses(checkAnnualPair(s, 'annualGP', 0, 1))) return null;
+  // Period gate (24.10.2026, lib/annual-pairs.js): the two GP years must end 334..397 days apart; a 91-day
+  // "year" or a two-year jump drops the axis (renorm-on-drop). Undated pairs are not judged.
+  if (periodGateReason('year', ...annualPeriodEnds(s, 'annualGP').slice(0, 2))) return null;
   const gpYoY = two[0] / two[1] - 1;
   // GM-Trajektorie (Margenpunkt-Delta neu vs. alt), additiver Tilt
   // audit/fix (Court Fall 1, F9): gm-Endpunkte gegen physikalisch unmoegliche Werte guarden.
