@@ -65,13 +65,18 @@ test('the count of rows is pinned; a row cannot leave together with its fixture'
   assert.deepEqual([...corrected].sort(), CORRECTED_LIST);
   assert.equal(Object.keys(guard.holds).filter(t => snapshots[t]).length, HELD_COUNT, 'every fixture hold is in the table');
   // Yahoo's next count must still be recognised at Hua Hong, whose count changed in September.
-  assert.equal(guard.table['688347.SS'].wrongShares.length, 2);
-  for (const t of corrected) assert.equal(guard.table[t].reviewBy, t === 'GLXY' ? '2027-03-15' : '2026-12-31', t);
+  assert.ok(guard.table['688347.SS'].wrongShares.includes(1928494794), 'A 598,518,392 + H 1,329,976,402');
+  for (const t of corrected) assert.equal(guard.table[t].reviewBy, '2026-12-31', t);
 });
 
 test('a reason names the checked value, so a changed number in the fixture or the row goes red', () => {
   const de = x => (x / 1e9).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   for (const t of held) assert.ok(guard.holds[t].reason.includes(de(snapshots[t].expect.usd)), t + ': ' + de(snapshots[t].expect.usd));
+  // A corrected reason names its count, in millions or to the share.
+  for (const t of corrected) {
+    const n = guard.table[t].shares, r = guard.table[t].reason;
+    assert.ok(r.includes((n / 1e6).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })) || r.includes(n.toLocaleString('de-DE')), t);
+  }
 });
 
 test('a held line shows no market cap and no ratio built on it, and says why', () => {

@@ -659,7 +659,7 @@
     "shares": 388479988,
     "sharesAsOf": "2026-09-30",
     "validFrom": "2026-10-01",
-    "reviewBy": "2027-03-15",
+    "reviewBy": "2026-12-31",
     "wrongShares": [
       589297344
     ],
@@ -1016,10 +1016,12 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Galaxy Digital.",
         "url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000108/glxy-20260930xpressrelease.htm",
-        "quote": "2,000,000,000 shares authorized and 191,883,290 issued and outstanding",
+        "quote": "2,000,000,000 shares authorized and 191,883,290 issued and outstanding | 500,000,000 shares authorized and 196,596,698 issued and outstanding",
         "page": "10 (Exhibit 99.1 to 8-K of 2026-10-27, condensed balance sheet, Equity); page 12 ownership table",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 13,735,576,559 USD, price 23.3083966625 USD, 589,297,357 shares implied",
-        "crossCheck": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000108/glxy-20260930xpressrelease.htm about 9-10 (Consolidated Statements of Financial Position in the Q3 2026 earnings release, 8-K of 2026-10-27; HTML, pages counted from the footer numbers): Class A common stock, $0.001 par value; 2,000,000,000 shares authorized and 191,883,290 issued and outstanding"
+        "crossCheck": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000108/glxy-20260930xpressrelease.htm about 9-10 (Consolidated Statements of Financial Position in the Q3 2026 earnings release, 8-K of 2026-10-27; HTML, pages counted from the footer numbers): Class A common stock, $0.001 par value; 2,000,000,000 shares authorized and 191,883,290 issued and outstanding",
+        "otherSources": "",
+        "checkerNote": "Shown 13.74bn is 2.2 times the value the filing supports: 388,479,988 Class A plus paired Class B shares x USD 16.00 is 6.22bn, and Class A alone is 3.07bn; no document I read supports the roughly 860 million shares the shown value would need. The 10-Q cover (2026-08-07) had Class A 194,292,392 and Class B 196,596,698; I used the newer 30.09. figures."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1034,7 +1036,9 @@
         "quote": "Converted to 34,700,000 shares",
         "page": "2 (footnote 2) and 27 (number of ordinary shares in thousands: 34,700); issuer page https://www.sma.de/en/investor-relations/share says Number of Shares 34.7 million",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,353,757,219 USD, price 67.831621425 USD, 34,699,999 shares implied",
-        "crossCheck": "https://ir-api.eqs.com/storage/ir/5f245e/documents/745c65be-65be-489c-8012-80cbb3235fe1/DE000A0DJ6J9-Q2-2026-EQ-E-00.pdf 27 (printed page 8, income statement; also page 2 footnote and page 29 balance sheet share capital 34,700 thousand EUR): Number of ordinary shares (in thousands) 34,700"
+        "crossCheck": "https://ir-api.eqs.com/storage/ir/5f245e/documents/745c65be-65be-489c-8012-80cbb3235fe1/DE000A0DJ6J9-Q2-2026-EQ-E-00.pdf 27 (printed page 8, income statement; also page 2 footnote and page 29 balance sheet share capital 34,700 thousand EUR): Number of ordinary shares (in thousands) 34,700",
+        "otherSources": "",
+        "checkerNote": "Shown 2.35bn is 27 % above 1.85bn (34.7 million shares x EUR 47.58 x 1.1183); it would need a share price of about EUR 60.6, while the 30.10. closes were EUR 47.58 (Xetra) and 47.62 (Milan reference). The half-year report states no treasury shares."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1049,7 +1053,9 @@
         "quote": "the total number of Infineon shares issued was 1,305,921,137",
         "page": "8 and 31",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 93,240,116,708 USD, price 71.750781774 USD, 1,299,499,663 shares implied",
-        "crossCheck": "https://www.infineon.com/about/investor/infineon-share/dividend web page (dividend section; text refers to the AGM of 19 Feb 2026): The number of shares issued remained unchanged at 1,305,921,137. This figure includes 2,421,478 shares owned by the Company"
+        "crossCheck": "https://www.infineon.com/about/investor/infineon-share/dividend web page (dividend section; text refers to the AGM of 19 Feb 2026): The number of shares issued remained unchanged at 1,305,921,137. This figure includes 2,421,478 shares owned by the Company",
+        "otherSources": "",
+        "checkerNote": "Shown 93.24bn is 27 % above 73.47bn (1,299,499,659 shares outside treasury x EUR 50.56 x 1.1183) and implies about EUR 64.2 per share against closes of EUR 50.56 (Xetra) and 50.36 (Milan reference). The count is from the 31.03.2026 half-year report (the June report was not found); using all 1,305,921,137 issued shares gives 73.84bn (+26.3 %), so the verdict does not change."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1064,7 +1070,9 @@
         "quote": "The Company held 304.779 treasury shares per 30.04.2026",
         "page": "HTML, section VI Total number of shares and voting rights (EQS notice of 2026-05-11); issuer page https://ams-osram.com/about-us/investor-relations/share-capital still shows 99,844,394 as of 2024-09-24",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,945,291,441 USD, price 29.58910235 USD, 99,539,736 shares implied",
-        "crossCheck": "https://ams-osram.com/documents/d/ams-osram/ams-osram-en-hy-report-2026 23 (Note 9 Equity, half-year report 2026): the share capital of ams-OSRAM AG consisted of 99,844,394 no-par value bearer shares"
+        "crossCheck": "https://ams-osram.com/documents/d/ams-osram/ams-osram-en-hy-report-2026 23 (Note 9 Equity, half-year report 2026): the share capital of ams-OSRAM AG consisted of 99,844,394 no-par value bearer shares",
+        "otherSources": "",
+        "checkerNote": "Shown 2.95bn is 31 % above 2.25bn (99,539,615 shares x CHF 18.61 x 1.2142); the Vienna line at EUR 20.80 gives 2.32bn (+27.4 %), so the verdict holds on either line. The shown value implies about EUR 26.5 per share against EUR 20.80 (Vienna), about EUR 20.2 (SIX) and EUR 20.40 (Milan reference)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1079,7 +1087,9 @@
         "quote": "1,129,930,393",
         "page": "22 (Capital markets, trading data)",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,997,075,503 USD, price 2.6524428216000002 USD, 1,129,930,296 shares implied",
-        "crossCheck": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_H1_2026_financials_presentation.pdf 58 (Share information): Number of shares, base for share KPI calculations (excluding suspended voting rights) 1,129,451,330 (As of 25.08.2026)"
+        "crossCheck": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_H1_2026_financials_presentation.pdf 58 (Share information): Number of shares, base for share KPI calculations (excluding suspended voting rights) 1,129,451,330 (As of 25.08.2026)",
+        "otherSources": "",
+        "checkerNote": "Shown 3.00bn is 64 % above 1.83bn, which takes out the 407 million own shares (about 27 %, 12 points of them held through TLG with voting rights suspended) that the H1 report removes for its per-share figures; counting all 1,537,025,609 issued shares gives 2.49bn (shown +20.5 %, which would be within the limit). The price fell from EUR 2.20 on 2026-07-30 to 1.449, and the Swiss line has not traded since 2026-07-03."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1094,7 +1104,9 @@
         "quote": "As at March 31, 2026, the Group held no treasury shares.",
         "page": "68 (also 67 and 73)",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 9,174,603,828 USD, price 236.15453385 USD, 38,850,001 shares implied",
-        "crossCheck": "https://ats.net/en/download/annual-report-2025-26/?wpdmdl=61788&refresh=6a2ab8f2121681781184754 244 (annual report 2025/26, Outstanding shares / Treasury shares): The number of shares issued amounts to 38,850,000 as at March 31, 2026"
+        "crossCheck": "https://ats.net/en/download/annual-report-2025-26/?wpdmdl=61788&refresh=6a2ab8f2121681781184754 244 (annual report 2025/26, Outstanding shares / Treasury shares): The number of shares issued amounts to 38,850,000 as at March 31, 2026",
+        "otherSources": "",
+        "checkerNote": "Shown 9.17bn is 57 % above 5.84bn (38,850,000 shares x EUR 134.40 x 1.1183) and implies about EUR 211 per share; the stock fell 13 % on 30.10. (EUR 155.00 to 134.40) and Borsa Italiana shows -34.55 % over one month. The count is from the annual report to 31.03.2026; I did not read a later change."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1109,7 +1121,9 @@
         "quote": "erhöht sich dadurch um 10 % auf 167.901.915 auf den Inhaber lautende Stückaktien",
         "page": "HTML (EQS ad hoc DEUTZ AG, Koeln, 15 September 2026; new shares trading from 18 September 2026); earlier count 152,638,105 in Annual Report 2025, PDF page 30 and 72, https://www.deutz.com/fileadmin/contents/global/investoren/financial_reports/2025/EN/20260326_DEUTZ_FY2025_Annual_Report_en_sec.pdf",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,440,470,376 USD, price 14.535095718 USD, 167,901,913 shares implied",
-        "crossCheck": "https://www.deutz.com/en/investor-relations/mandatory-announcements/ad-hoc-disclosure/ web page, ad hoc of 2026-09-15: This increases the share capital of DEUTZ AG by 10% to 167,901,915 no-par-value bearer shares."
+        "crossCheck": "https://www.deutz.com/en/investor-relations/mandatory-announcements/ad-hoc-disclosure/ web page, ad hoc of 2026-09-15: This increases the share capital of DEUTZ AG by 10% to 167,901,915 no-par-value bearer shares.",
+        "otherSources": "",
+        "checkerNote": "Shown 2.44bn is 38 % above 1.77bn (167,901,915 shares x EUR 9.44 x 1.1183); even on the old 152,638,105 shares the value would be 1.61bn (shown +51 %). No treasury shares are stated for 2026 in what I read (Annual Report 2025, PDF page 231: no treasury shares bought in 2025 or 2024), and the Swiss line has not traded since 2026-08-28."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1124,7 +1138,9 @@
         "quote": "zerlegt in 73.374.542 Stückaktien, erhöht. Die Gesamtzahl der Stimmrechte beträgt daher nunmehr 73.374.542",
         "page": "HTML (EQS voting rights notice, field 9 Sonstige Kommentare)",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,115,856,724 USD, price 15.207682038 USD, 73,374,543 shares implied",
-        "crossCheck": "https://www.wienerborse.at/en/news/vienna-stock-exchange-news/lenzing-increase-number-of-shares-10232026/ web page (exchange notice of 2026-10-21): New number of shares 73,374,542"
+        "crossCheck": "https://www.wienerborse.at/en/news/vienna-stock-exchange-news/lenzing-increase-number-of-shares-10232026/ web page (exchange notice of 2026-10-21): New number of shares 73,374,542",
+        "otherSources": "",
+        "checkerNote": "Shown 1.12bn is 26 % above 0.89bn (73,374,542 shares x EUR 10.80 x 1.1183), close to the limit; on the old count of 38,618,180 shares the value would be 0.47bn, so the share count matters and the capital increase of 22.10. is the reason the count changed. The price fell from EUR 25.05 on 2026-07-30 to 10.80, and the Milan line has no recent trade (Borsa Italiana reference close EUR 10.98)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1139,7 +1155,9 @@
         "quote": "Volvo Cars holds 14,857,458 treasury shares of series B",
         "page": "13 (notice is signed Gothenburg in February 2026; the date 2026-02-25 is the publication date given by a search result, not read by me)",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,313,265,576 USD, price 1.4548905797 USD, 2,964,666,646 shares implied",
-        "crossCheck": "https://vp272.alertir.com/afw/files/press/volvocar/202610228842-1.pdf 24 (Q3 2026 report, earnings per share table): Weighted average number of ordinary shares outstanding, basic1) 2,966,404,146"
+        "crossCheck": "https://vp272.alertir.com/afw/files/press/volvocar/202610228842-1.pdf 24 (Q3 2026 report, earnings per share table): Weighted average number of ordinary shares outstanding, basic1) 2,966,404,146",
+        "otherSources": "",
+        "checkerNote": "Shown 4.31bn is 25.5 % above 3.43bn (2,964,666,721 shares outside treasury x SEK 11.405 x 0.10158), which is borderline: counting the treasury shares gives 3.45bn (+24.9 %), and the Q3 report's weighted average of 2,966,404,146 shares gives +25.4 %. The shown value implies about SEK 14.3 per share against the close of SEK 11.405."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1154,7 +1172,9 @@
         "quote": "divided into 107,532,804 Class A shares and 468,810,974 Class B shares",
         "page": "1 (press release Conversion of Shares, 2026-09-30)",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,609,076,487 USD, price 4.5623046114 USD, 571,876,871 shares implied",
-        "crossCheck": "https://news.cision.com/husqvarna-group/r/conversion-of-shares,c4402276 web page (statutory notice of 2026-09-30 17:30): divided into 107,532,804 Class A shares and 468,810,974 Class B shares"
+        "crossCheck": "https://news.cision.com/husqvarna-group/r/conversion-of-shares,c4402276 web page (statutory notice of 2026-09-30 17:30): divided into 107,532,804 Class A shares and 468,810,974 Class B shares",
+        "otherSources": "https://mb.cision.com/Main/996/4412543/4328797.pdf 18 (Note 9 Number of shares, interim report January-September 2026); registered total on page 1 of the press release above: All repurchased B-shares are included in a third party share swap agreement.",
+        "checkerNote": "Shown 2.61bn is 41 % above 1.85bn (107,532,804 A shares x SEK 31.90 plus 464,344,062 B shares x SEK 31.80, x 0.10158; adding the repurchased B shares gives 1.86bn). The shown value is within 3 % of the stale Milan quote of EUR 4.182 x about 572 million shares x 1.1183, while Borsa Italiana's own reference close is EUR 2.87 and the home-market B price converts to about EUR 2.89."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1241,9 +1261,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 000550.SZ.",
         "url": "https://static.cninfo.com.cn/finalpage/2026-08-24/1225490929.PDF",
-        "quote": "p.25: \"1、人民币普通股 518,463,160\" (unrestricted A) + \"1、其他内资持股 750,840\" (restricted A) = 519,214,000; p.26: \"回购专用证券账户持有公司股份 8,632,078 股\" deducted (class of the repurchase account not named; inferred A because cost 170,214,887 CNY / 8,632,078 = 19.7 CNY per share)",
+        "quote": "p.25: \"1、人民币普通股 518,463,160\" (unrestricted A) + \"1、其他内资持股 750,840\" (restricted A) = 519,214,000; p.26: \"回购专用证券账户持有公司股份 8,632,078 股\" deducted (class of the repurchase account not named; inferred A because cost 170,214,887 CNY / 8,632,078 = 19.7 CNY per share) | \"2、境内上市的外资股 344,000,000 39.85%\"; total \"三、股份总数 863,214,000 100.00%\"",
         "page": "25 and 26",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,041,024,577 USD, price 1.2059866258 USD, 863,214,031 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,041,024,577 USD, price 1.2059866258 USD, 863,214,031 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown = B price 9.46 HKD (1.206 USD) x all 863,214,000 shares = 1.04 bn, reproduced within 0.1 %. True = 510.58 m A shares x 15.35 CNY (1.18 bn USD) + 344 m B shares x 9.46 HKD (0.41 bn USD); the A share is 91 % dearer than the B share in USD (2.30 vs 1.21). Q3 report (SZSE, 2026-09-30, page 6, same cninfo folder 2026-10-23/1225616613.PDF) still shows \"股本 863,214,000.00\" and \"减：库存股 170,214,887.00\", i.e. no change since the half-year report; the A/B split comes from the half-year report only."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1257,7 +1279,9 @@
         "url": "https://www.sec.gov/Archives/edgar/data/50863/000005086326000191/intc-20260926.htm",
         "quote": "the registrant had outstanding 5,315 million shares of common stock",
         "page": "1 (cover page)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 202,166,126,040 USD, price 38.244819 USD, 5,286,104,924 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 202,166,126,040 USD, price 38.244819 USD, 5,286,104,924 shares implied",
+        "otherSources": "https://www.hkex.com.hk/eng/services/trading/securities/securitieslists/ListOfSecurities.xlsx sheet 1, row of stock code 04335: 04335 | INTEL-T | Equity | Trading Only Securities | 10 | US4581401001 | HKD",
+        "checkerNote": "Intel fell 28.6 % on 2026-10-30 to 65.76 USD (second source stockanalysis.com confirms, 455.6 m shares traded) after its Q3 report; the shown 202.17 bn matches about 5.3 bn shares times the stale Hong Kong quote of 300 HKD (38.2 USD), which has not traded since a 20-share trade on 2026-09-23. True value 349.5 bn USD."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1269,9 +1293,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 600690.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201288.pdf",
-        "quote": "A-Shares of RMB1 each (listed on Shanghai Stock Exchange) ... 6,110,504,936 ... 67,981,989 ... 6,178,486,925 (issued excl. treasury 6,110,504,936; treasury 67,981,989)",
+        "quote": "A-Shares of RMB1 each (listed on Shanghai Stock Exchange) ... 6,110,504,936 ... 67,981,989 ... 6,178,486,925 (issued excl. treasury 6,110,504,936; treasury 67,981,989) | D-Shares of RMB1 each (listed on Frankfurt Stock Exchange) ... 271,013,973 (treasury 0)",
         "page": "3",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 19,163,618,091 USD, price 2.04354623098 USD, 9,377,628,849 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 19,163,618,091 USD, price 2.04354623098 USD, 9,377,628,849 shares implied",
+        "otherSources": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103001970.pdf 1: Closing balance as at (Notes 5 and 6) 30 October 2026 2,849,037,266 (monthly return of 2026-09-30, page 3: 2,853,587,266; 150,000 shares bought back on 2026-10-30 are not yet cancelled and still inside the count)",
+        "checkerNote": "The shown value is about all 9.23 bn shares (A 6.11 bn plus D 0.27 bn plus H 2.85 bn) times the Xetra D-share price (9,230,556,175 x 1.8302 EUR = 18.89 bn USD at 1.1183, the shown 19.16 implies an EURUSD of 1.134), so the A and H shares are priced at the D line (2.05 USD) instead of 3.11 USD (A) and 2.54 USD (H). True value 26.83 bn USD: A 19.03 + H 7.24 + D 0.55 bn USD."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1283,9 +1309,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 600690.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201288.pdf",
-        "quote": "A-Shares of RMB1 each (listed on Shanghai Stock Exchange) ... 6,110,504,936 ... 67,981,989 ... 6,178,486,925 (issued excl. treasury 6,110,504,936; treasury 67,981,989)",
+        "quote": "A-Shares of RMB1 each (listed on Shanghai Stock Exchange) ... 6,110,504,936 ... 67,981,989 ... 6,178,486,925 (issued excl. treasury 6,110,504,936; treasury 67,981,989) | D-Shares of RMB1 each (listed on Frankfurt Stock Exchange) ... 271,013,973 (treasury 0)",
         "page": "3",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 19,056,817,268 USD, price 2.032157218 USD, 9,377,629,398 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 19,056,817,268 USD, price 2.032157218 USD, 9,377,629,398 shares implied",
+        "otherSources": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103001970.pdf 1: Closing balance as at (Notes 5 and 6) 30 October 2026 2,849,037,266 (monthly return of 2026-09-30, page 3: 2,853,587,266; 150,000 shares bought back on 2026-10-30 are not yet cancelled and still inside the count)",
+        "checkerNote": "Same construction as the Xetra row: about all 9.23 bn shares times the Vienna D-share quote of 1.82 EUR (implied EURUSD 1.1345), so A and H shares are priced at the D line. True value 26.83 bn USD; the Vienna quote itself last traded on 2026-10-09 and moves with Xetra."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1297,9 +1325,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 600012.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100202531.pdf",
-        "quote": "Balance at close of the month 1,165,600,000 0 1,165,600,000",
+        "quote": "Balance at close of the month 1,165,600,000 0 1,165,600,000 | Balance at close of the month 542,991,889 0 542,991,889",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,169,911,552 USD, price 1.27 USD, 1,708,591,773 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,169,911,552 USD, price 1.27 USD, 1,708,591,773 shares implied",
+        "otherSources": "",
+        "checkerNote": "Treasury shares: 0 in both classes. A shares 1,165,600,000 x 17.87 CNY / 6.661 = 3.13 bn USD; H shares 542,991,889 x 16.71 HKD / 7.8457 = 1.16 bn USD; sum 4.28 bn. The shown 2.17 bn equals the 19-month-old OTC quote 1.27 USD x 1,708,591,889 total shares, i.e. about half of the true value."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1313,7 +1343,9 @@
         "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
         "quote": "\"已發行普通股數或TDR原股發行股數\":\"392670107\"",
         "page": "JSON record with 公司代號 3017 (TWSE open data, 出表日期 1151031 = 2026-10-31)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,587,663,872 USD, price 21.877 USD, 392,543,030 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,587,663,872 USD, price 21.877 USD, 392,543,030 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is the 392.67 m shares times the stale OTC quote of 21.877 USD (= 8.59 bn). The Taiwan line closed at 3,095 TWD (95.0 USD), so the true value is about four times higher."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1327,7 +1359,9 @@
         "url": "https://www2.jpx.co.jp/disc/68450/140120260730503442.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 541,372,736株 ... 期末自己株式数 38,935,424株 (2027年３月期１Ｑ)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 9,155,931,136 USD, price 18.41 USD, 497,334,662 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 9,155,931,136 USD, price 18.41 USD, 497,334,662 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is about 497.6M ordinary shares times the ADR quote USD 18.41, which treats one ADR as one ordinary share although one ADR is about two. The only ADR trade in six months was 100 ADR on 2026-05-13. The Tokyo close of JPY 1,493.5 times 496.0M shares gives USD 4.69bn, so shown is about 1.95 times too high."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1339,9 +1373,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 2590.HK.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100701727.pdf",
-        "quote": "Balance at close of the month 218,560,434 0 218,560,434",
+        "quote": "Balance at close of the month 218,560,434 0 218,560,434 | Balance at close of the month 94,576,081 0 94,576,081",
         "page": "3",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 7,008,466,944 USD, price 13 USD, 539,112,842 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 7,008,466,944 USD, price 13 USD, 539,112,842 shares implied",
+        "otherSources": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103002515.pdf 1: Closing balance as at (Notes 5 and 6) 30 October 2026 968,520,483 55,630,000 1,024,150,483",
+        "checkerNote": "Total 1,281,656,998 shares excluding 55,630,000 treasury shares (registered capital 1,337,286,998 = 218,560,434 + 1,024,150,483 + 94,576,081, monthly return page 3). All classes priced at the H share close, 1,281,656,998 x 6.08 HKD / 7.8457 = 993 m USD. Shown 7.01 bn is about 7 times too high; the H share has fallen from 23.50 HKD (2026-02-26, the last day the ADR traded) to 6.08 HKD, so the ADR quote of 13.0 USD is a stale price from February."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1355,7 +1391,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201919.pdf",
         "quote": "Balance at close of the month 6,982,937,817 0 6,982,937,817",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,418,234,624 USD, price 0.2031 USD, 6,982,937,587 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,418,234,624 USD, price 0.2031 USD, 6,982,937,587 shares implied",
+        "otherSources": "",
+        "checkerNote": "Treasury shares: 0 (HKEX monthly return for September 2026). True value is 6,982,937,817 x 0.945 HKD / 7.8457 = 841.1 m USD; the shown 1.42 bn is about 69 % too high and is probably based on the stale OTC quote (0.187 USD, last trade 2025-12-26) instead of the live HK price."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1369,7 +1407,9 @@
         "url": "https://www2.jpx.co.jp/disc/17210/140120260806512594.pdf",
         "quote": "期末自己株式数 2027年３月期１Ｑ 2,859,056株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,857,276,160 USD, price 25 USD, 114,291,046 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,857,276,160 USD, price 25 USD, 114,291,046 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the stale OTC quote of 25.00 USD times about 114.4 m shares; the Tokyo line closed at 5,558 JPY (35.22 USD), so the true value is 4.06 bn USD and the shown value is 29.5 % too low. Treasury count includes the shares held by the ESOP trust (as the report states) and the company bought back 655 thousand shares in the quarter."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1381,9 +1421,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 688009.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000702.pdf",
-        "quote": "A shares (Sci-tech Innovation Board of the Shanghai Stock Exchange) ... 8,621,018,000 (treasury 0)",
+        "quote": "A shares (Sci-tech Innovation Board of the Shanghai Stock Exchange) ... 8,621,018,000 (treasury 0) | Stock code (if listed) 03969 ... H shares ... 1,968,801,000 (treasury 0)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,912,616,960 USD, price 0.4639 USD, 10,589,818,840 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,912,616,960 USD, price 0.4639 USD, 10,589,818,840 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is all 10,589,819,000 shares (A plus H) times the stale OTC price 0.4639 USD (implied 0.4636); the A shares trade at 0.737 USD and the H shares at 0.378 USD, so the true value is 7.10 bn USD (A 6.35 + H 0.74). The HKEX return was submitted on 2026-09-30 for the month ended 2026-09-30."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1397,7 +1439,9 @@
         "url": "https://www2.jpx.co.jp/disc/66220/140120260803507027.pdf",
         "quote": "期末発行済株式数（自己株式を含む) 24,903,291株 ... 期末自己株式数 1,295,315株 (2027年３月期１Ｑ)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,216,931,328 USD, price 10.31 USD, 118,034,076 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,216,931,328 USD, price 10.31 USD, 118,034,076 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is 118.0M post-split shares times a placeholder OTC quote of USD 10.31 with no trade in three months. The Tokyo close of JPY 2,402 is USD 15.22 per share, so true value is USD 1.80bn and shown is 32 % too low."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1411,7 +1455,9 @@
         "url": "https://www2.jpx.co.jp/disc/95130/140120261029560126.pdf",
         "quote": "2027年３月期中間期 176,337,900株 || 2027年３月期中間期 294,342株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,708,767,488 USD, price 15.39 USD, 176,008,284 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,708,767,488 USD, price 15.39 USD, 176,008,284 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the stale OTC quote 15.39 USD times about 176m shares. Tokyo parity is 25.82 USD per share, which gives 4.55 bn USD."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1423,9 +1469,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 000063.SZ.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700832.pdf",
-        "quote": "Balance at close of the month 755,502,534 0 755,502,534 (number of issued shares excl. treasury 755,502,534; treasury 0)",
+        "quote": "Balance at close of the month 755,502,534 0 755,502,534 (number of issued shares excl. treasury 755,502,534; treasury 0) | Balance at close of the month 3,999,372,942 28,659,411 4,028,032,353 (issued excl. treasury / treasury / total)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 11,747,862,896 USD, price 2.45589549505 USD, 4,783,535,342 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 11,747,862,896 USD, price 2.45589549505 USD, 4,783,535,342 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown = Vienna quote 2.1995 EUR (2.46 USD, never traded) x all 4,783,534,887 shares (A+H) = 11.77 bn, reproduced within 0.2 %. True value = 3,999,372,942 A shares (excl. 28,659,411 treasury) x 27.36 CNY (16.43 bn USD) + 755,502,534 H shares x 19.33 HKD (1.86 bn USD); the A shares are priced at the Shenzhen close, which is about 67 % above the H price in USD (4.11 vs 2.46 USD). No newer filing than the 30 Sep 2026 monthly return; the 14 Oct 2026 HKEX item is a bond issue, not shares."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1439,7 +1487,9 @@
         "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
         "quote": "\"已發行普通股數或TDR原股發行股數\":\"14075746497\"",
         "page": "JSON record with 公司代號 2317 (TWSE open data, 出表日期 1151031 = 2026-10-31)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 49,119,178,752 USD, price 6.98 USD, 7,037,131,626 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 49,119,178,752 USD, price 6.98 USD, 7,037,131,626 shares implied",
+        "otherSources": "https://depositaryreceipts.citi.com/adr/common/file.aspx?idf=7071 1: GDS Ratio: 2 Shares to 1 ADS",
+        "checkerNote": "The shown 49.12 bn is close to half the ordinary shares (7.04 bn, the GDR-equivalent count) times 6.98 USD, which is not the GDR close of 14.90 USD (6.98 is the regularMarketPrice field Yahoo gave for this line; my inference). True value counts all 14.076 bn ordinary shares at the Taiwan close of 245.5 TWD; 2 x 245.5 TWD = 15.08 USD per GDR agrees with the 14.90 close."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1453,7 +1503,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100701118.pdf",
         "quote": "Balance at close of the month 5,203,082,528 0 5,203,082,528",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,139,637,248 USD, price 1.18 USD, 5,203,082,414 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,139,637,248 USD, price 1.18 USD, 5,203,082,414 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown 6.14 bn is not reproducible: OTC close 0.927 USD (unchanged since the 2026-08-17 trade) x 5.203 bn shares = 4.82 bn; 6.14 bn implies 1.18 USD per share. True = 5.203 bn shares x 6.19 HKD (0.789 USD) = 4.11 bn, so the shown value is 50 % too high. No newer share filing than the 30 Sep 2026 return."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1467,7 +1519,9 @@
         "url": "https://housefoods-group.com/newsrelease/pdf/260804_kessan.pdf",
         "quote": "期末自己株式数 2027年３月期１Ｑ 2,420,314株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,701,245,824 USD, price 19.36 USD, 87,874,268 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,701,245,824 USD, price 19.36 USD, 87,874,268 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the stale OTC quote of 19.36 USD times about 87.8 m shares; the Tokyo line closed at 4,650 JPY (29.47 USD), so the true value is 2.64 bn USD and the shown value is 35.7 % too low. The shown share count is 2 % below the stated net count of 89.68 m at 30.06.2026; the cause is not established. Treasury count includes 281,600 shares of the employee trust (as the report states)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1481,7 +1535,9 @@
         "url": "https://www2.jpx.co.jp/disc/82420/081220260728500805_tse-qcedjpsm-82420-20260804382420-ixbrl.htm",
         "quote": "2027年３月期１Ｑ 125,201,396 株 || 2027年３月期１Ｑ 11,725,144 株",
         "page": "1 (cover, section 4 shares)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,114,776,064 USD, price 10 USD, 111,477,606 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,114,776,064 USD, price 10 USD, 111,477,606 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the stale OTC quote of 10.0 USD (no trade in three months) times about 111m shares. The Tokyo line at 2,782 JPY is 17.63 USD per share, which gives 2.00 bn USD for 113.5m shares."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1495,7 +1551,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103000910.pdf",
         "quote": "Closing balance as at (Notes 5 and 6) 30 October 2026 3,221,640,876 0 3,221,640,876",
         "page": "1",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 821,467,392 USD, price 0.255 USD, 3,221,440,753 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 821,467,392 USD, price 0.255 USD, 3,221,440,753 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown 0.82 bn is not reproducible: OTC close 0.3552 USD x 3.2216 bn shares = 1.14 bn; 0.82 bn implies 0.2545 USD per share. True = 3,221,640,876 shares x 3.09 HKD (0.394 USD) = 1.27 bn, so the shown value is 35 % too low. 600,000 shares bought back on 2026-10-28 to 30 are not yet cancelled and remain in the count (page 2; 0.02 %); no treasury shares."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1509,7 +1567,9 @@
         "url": "https://www.izumi.co.jp/corp/ir/pdf/2027/2702_2qkessan.pdf",
         "quote": "2027年２月期中間期 214,995,600株 || 2027年２月期中間期 4,791,625株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,736,479,232 USD, price 27.29 USD, 210,204,442 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,736,479,232 USD, price 27.29 USD, 210,204,442 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is 27.29 USD (Yahoo quote dated 2026-10-08, no volume; Yahoo's own chart for this line ends at 8.39) times about 210m shares. Tokyo parity is 5.97 USD per share, so the OTC quote looks like an old price from before the 3-for-1 split of 2026-03-01 (inference), applied to the post-split count."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1523,7 +1583,9 @@
         "url": "https://www2.jpx.co.jp/disc/50160/140120260805510453.pdf",
         "quote": "① 期末発行済株式数 (自己株式を含む) 2027年３月期１Ｑ 953,183,210株 || ② 期末自己株式数 2027年３月期１Ｑ 2,288,019株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 36,637,388,800 USD, price 41 USD, 893,594,849 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 36,637,388,800 USD, price 41 USD, 893,594,849 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is the ADR close (41.00 USD) times about 893.7 million ordinary shares (derived), which ignores that one ADR is two shares and uses a share count lower than the 950.9 million net shares reported; the Tokyo line closed at 2,955 JPY = 18.73 USD per share. Issued shares rose from 928,463,102 (31.03.2026) to 953,183,210 (30.06.2026); no later share-count filing found."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1537,7 +1599,9 @@
         "url": "https://www2.jpx.co.jp/disc/90090/081220260727500417_tse-qcedjpsm-90090-20260731390090-ixbrl.htm",
         "quote": "2027年３月期１Ｑ 517,233,555 株 || 2027年３月期１Ｑ 34,994,337 株",
         "page": "1 (cover, section 4 shares)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,023,640,064 USD, price 6.27 USD, 482,239,245 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,023,640,064 USD, price 6.27 USD, 482,239,245 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the stale OTC quote 6.27 USD times about 482m shares. Tokyo parity is 8.98 USD per share, which gives 4.33 bn USD; the same true value applies to the ADR row KERCY."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1551,7 +1615,9 @@
         "url": "https://www2.jpx.co.jp/disc/90090/081220260727500417_tse-qcedjpsm-90090-20260731390090-ixbrl.htm",
         "quote": "2027年３月期１Ｑ 517,233,555 株 || 2027年３月期１Ｑ 34,994,337 株",
         "page": "1 (cover, section 4 shares)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,622,437,376 USD, price 17.88 USD, 482,239,227 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,622,437,376 USD, price 17.88 USD, 482,239,227 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the ADR quote 17.88 USD (last quote 2026-03-26) times the full ordinary share count of about 482m, so the 2-to-1 ratio was ignored. Half the ADR price times the ordinary count gives about 4.3 bn USD, in line with the Tokyo-based 4.33 bn."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1565,7 +1631,9 @@
         "url": "https://www.kobebussan.co.jp/upload/ir/IRNews/992/992_20260911.pdf",
         "quote": "期末自己株式数 2026年10月期３Ｑ 51,774,459株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,345,995,264 USD, price 24.1 USD, 221,825,530 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,345,995,264 USD, price 24.1 USD, 221,825,530 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the OTC quote of 24.10 USD (a single 100-share trade on 2025-11-12) times 222.0 m shares; the Tokyo line closed at 2,933 JPY (18.59 USD), so the true value is 4.12 bn USD and the shown value is 29.8 % too high. Treasury shares are 51.77 m (19 % of issued, incl. 275,200 trust shares); the shown value uses the net count, so it is not a gross-count effect. Fiscal year ends in October, latest report is Q3 to 31.07.2026."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1579,7 +1647,9 @@
         "url": "https://www2.jpx.co.jp/disc/65250/140120260806511194.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 238,115,614株 ... 期末自己株式数 4,558,425株 (2027年３月期１Ｑ)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 12,868,785,152 USD, price 55.14 USD, 233,383,844 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 12,868,785,152 USD, price 55.14 USD, 233,383,844 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is about 233.4M shares times the OTC quote USD 55.14 (last real trade 2026-10-14, 200 shares), against a Tokyo-implied USD 43.85. True value is USD 10.22bn (USD 10.24bn with the unadjusted 2026-06-30 count); the gap of 25.9 % (25.7 %) is only just beyond the limit."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1593,7 +1663,9 @@
         "url": "https://www2.jpx.co.jp/disc/88480/081220260804509007_tse-qcedjpsm-88480-20260807388480-ixbrl.htm",
         "quote": "2027年3月期1Ｑ 334,415,678 株 || 2027年3月期1Ｑ 16,672,664 株",
         "page": "1 (cover, section 4 shares)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,487,037,184 USD, price 4.68 USD, 317,742,988 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,487,037,184 USD, price 4.68 USD, 317,742,988 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the OTC quote 4.68 USD (last trade 2026-09-14) times about 318m shares; Tokyo parity is 6.27 USD, which gives 1.99 bn USD. Deviation of -25.2 % is only just beyond the 25 % line (the shown value is rounded, so -24.9 to -25.4 %), and the shares are as of 2026-06-30."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1607,7 +1679,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700724.pdf",
         "quote": "Balance at close of the month 3,994,515,953 0 3,994,515,953",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,078,519,296 USD, price 0.27 USD, 3,994,515,911 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,078,519,296 USD, price 0.27 USD, 3,994,515,911 shares implied",
+        "otherSources": "",
+        "checkerNote": "Treasury shares: 0. True value 3,994,515,953 x 1.585 HKD / 7.8457 = 807.0 m USD; shown 1.08 bn equals the stale OTC quote 0.27 USD x 3.99 bn shares, about 34 % above the live HK value."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1621,7 +1695,9 @@
         "url": "https://www.mgc.co.jp/ir/files/2608071.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 2027年３月期１Ｑ 211,686,599株 || 期末自己株式数 2027年３月期１Ｑ 16,694,901株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,308,984,320 USD, price 32.35 USD, 195,022,699 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,308,984,320 USD, price 32.35 USD, 195,022,699 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is the stale ADR close (32.35 USD, no trade in 3 months, bid/ask near 20.11/24.46) times about 195.1 million shares (derived), while the Tokyo close is 22.45 USD per share. The firm's stock information page (https://www.mgc.co.jp/ir/stockinfo/stock.html, as of 2026年9月30日現在) still gives 211,686,599 issued shares (発行済株式総数) and states 当社は、自己株式を16,661千株保有しております (rounded to thousands), i.e. a net count 0.02 % higher."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1635,7 +1711,9 @@
         "url": "https://www2.jpx.co.jp/disc/22690/140120260804508801.pdf",
         "quote": "期末自己株式数 2027年３月期１Ｑ 11,102,262株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,491,615,744 USD, price 20.2518 USD, 271,166,797 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,491,615,744 USD, price 20.2518 USD, 271,166,797 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the stale OTC quote of 20.25 USD times 271.1 m shares; the Tokyo line closed at 4,308 JPY (27.30 USD; close confirmed by Nikkei and 96ut.com), so the true value is 7.40 bn USD and the shown value is 25.8 % too low, only just beyond the 25 % line. No buyback since 2024, only small treasury disposals for share incentives after 30.06.2026."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1649,7 +1727,9 @@
         "url": "https://www2.jpx.co.jp/disc/39940/140120261015551566.pdf",
         "quote": "243,721",
         "page": "3",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,484,244,480 USD, price 26.76 USD, 55,465,040 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,484,244,480 USD, price 26.76 USD, 55,465,040 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the OTC quote of 26.76 USD (a single 5,000-share trade on 2026-06-30) times 55.3 m shares; the Tokyo line closed at 6,855 JPY (43.44 USD), so the true value is 2.41 bn USD and the shown value is 38.6 % too low. Fiscal year ends in November, latest report is Q3 to 31.08.2026."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1663,7 +1743,9 @@
         "url": "https://www2.jpx.co.jp/disc/53330/140120261029559885.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 285,993,496株 ... 期末自己株式数 4,415,126株 (2027年３月期中間期)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 10,440,214,528 USD, price 37.09 USD, 281,483,271 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 10,440,214,528 USD, price 37.09 USD, 281,483,271 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is 281.6M shares times the OTC quote USD 37.09 (last real trade 2026-10-05, 100 shares), which is about 27 % above the Tokyo-implied USD 29.23. True value from the Tokyo close JPY 4,613 is USD 8.23bn; the gap is only just beyond the 25 % limit."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1677,7 +1759,9 @@
         "url": "https://www2.jpx.co.jp/disc/53340/140120261029559539.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 398,495,440株 ... 期末自己株式数 9,179,704株 / 2026年10月１日付で普通株式１株につき２株の割合で株式分割",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 20,126,806,016 USD, price 51.7 USD, 389,299,923 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 20,126,806,016 USD, price 51.7 USD, 389,299,923 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is the post-split share count (389.3M) times USD 51.70, the unadjusted pre-split price of the last real trade on 2026-08-28 (Yahoo shows that day as 25.85 after split adjustment). The Tokyo post-split close of JPY 3,451 gives USD 8.51bn, so shown is about 2.4 times too high."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1691,7 +1775,9 @@
         "url": "https://www2.jpx.co.jp/disc/42720/140120260729502368.pdf",
         "quote": "期末発行済株式数（自己株式を含む) 2027年３月期１Ｑ 148,700,000株 || 期末自己株式数 2027年３月期１Ｑ 1,449,578株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,212,142,336 USD, price 8.44 USD, 143,618,760 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,212,142,336 USD, price 8.44 USD, 143,618,760 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value matches the stale OTC close (8.44 USD, no trade in 3 months) times about 143.4 million shares (derived), which is close to the count after the ongoing buyback; the Tokyo close is 12.67 USD. Buyback continues: TDnet status notices give cumulative purchases of 1,244,100 shares at 2026-06-30 (https://www2.jpx.co.jp/disc/42720/140120260706588053.pdf) and 4,918,600 at 2026-09-30 (https://www2.jpx.co.jp/disc/42720/140120261006546391.pdf), so the real net count at 30.10. is about 3.7 mi"
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1705,7 +1791,9 @@
         "url": "https://www2.jpx.co.jp/disc/15150/140120260806511980.pdf",
         "quote": "期末自己株式数 2027年３月期１Ｑ 2,522,877株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,430,787,072 USD, price 31.7644 USD, 76,525,515 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,430,787,072 USD, price 31.7644 USD, 76,525,515 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the stale OTC quote of 31.76 USD times about 76.5 m shares; the Tokyo line closed at 2,718 JPY (17.22 USD), so the true value is 1.33 bn USD and the shown value is 82 % too high. TDnet buyback notice of 2026-10-01 (cumulative 2,156,400 shares bought since April) implies about 76.5 m net shares at 2026-09-30 (derived, not stated), which would lower the true value to about 1.32 bn USD; the stated 30.06.2026 count is used above."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1719,7 +1807,9 @@
         "url": "https://www2.jpx.co.jp/disc/31860/140120261002545461.pdf",
         "quote": "期末自己株式数 2026年11月期３Ｑ 2,455,962株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,811,640,064 USD, price 23.11 USD, 78,392,041 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,811,640,064 USD, price 23.11 USD, 78,392,041 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the OTC quote of 23.11 USD (last trade 900 shares on 2026-04-06) times 78.3 m shares; the Tokyo line closed at 2,455 JPY (15.56 USD), so the true value is 1.22 bn USD and the shown value is 48 % too high. Fiscal year ends in November, latest report is Q3 to 31.08.2026; the treasury count includes 2,261,400 shares held by the E-Ship trust (as the report states)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1733,7 +1823,9 @@
         "url": "https://www2.jpx.co.jp/disc/47680/140120261029559748.pdf",
         "quote": "① 期末発行済株式数（自己株式を含む) 2026年12月期３Ｑ 380,004,240株 || ② 期末自己株式数 2026年12月期３Ｑ 803,061株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 7,584,023,552 USD, price 20 USD, 379,201,178 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 7,584,023,552 USD, price 20 USD, 379,201,178 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value matches the stale OTC close (20.00 USD, no trade in 3 months) times about 379.0 million shares (derived), while the Tokyo close is 27.58 USD. Count is from the Q3 tanshin dated 2026-10-30."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1747,7 +1839,9 @@
         "url": "https://www2.jpx.co.jp/disc/27260/140120261005546065.pdf",
         "quote": "期末自己株式数 2027年２月期中間期 12,051,494株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,107,584,768 USD, price 12.18 USD, 173,036,516 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,107,584,768 USD, price 12.18 USD, 173,036,516 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the stale OTC quote of 12.18 USD times about 173.2 m shares; the Tokyo line closed at 1,500 JPY (9.51 USD), so the true value is 1.64 bn USD and the shown value is 28.3 % too high. Close to the line: counting treasury shares too (185.1 m shares) the gap would be 19.9 %, but net shares are used as the brief requires. Fiscal year ends in February, latest report is the half-year to 31.08.2026."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1759,9 +1853,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 601857.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1005/2026100500962.pdf",
-        "quote": "The A Shares are listed on the Shanghai Stock Exchange ... 161,922,077,818 (treasury 0)",
+        "quote": "The A Shares are listed on the Shanghai Stock Exchange ... 161,922,077,818 (treasury 0) | Stock code (if listed) 00857 ... 21,098,900,000 (treasury 0)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 250,029,225,371 USD, price 1.36612327265 USD, 183,020,983,814 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 250,029,225,371 USD, price 1.36612327265 USD, 183,020,983,814 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is all 183,020,977,818 shares (A plus H) times the Vienna price 1.2235 EUR (= 250.4 bn USD), so the A shares (2.078 USD, 88.5 % of the count) are priced at the H level (1.379 USD); true value 365.53 bn USD (A 336.44 + H 29.10). The Vienna close on 2026-10-30 has no volume and sits 10 % above the last trade of 2026-10-08."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1775,7 +1871,9 @@
         "url": "https://www2.jpx.co.jp/disc/18930/140120260807515027.pdf",
         "quote": "期末自己株式数 2027年３月期１Ｑ 15,669,314株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,411,019,264 USD, price 12.618 USD, 270,329,629 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,411,019,264 USD, price 12.618 USD, 270,329,629 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the OTC quote of 12.62 USD (a single 400-share trade on 2026-06-30) times 270.3 m shares; the Tokyo line closed at 1,354 JPY (8.58 USD), so the true value is 2.32 bn USD and the shown value is 47 % too high. Treasury count includes the BBT trust shares (as the report states); the company keeps buying back, so the current net count may be lower."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1789,7 +1887,9 @@
         "url": "https://www.insage.com.my/Upload/Docs/PMETAL/PMETAL_2026FYE_Q2.pdf",
         "quote": "of ordinary shares ('000) 8,239,619",
         "page": "20",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,239,617,536 USD, price 1 USD, 8,239,617,536 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,239,617,536 USD, price 1 USD, 8,239,617,536 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown 8.24 bn is the 8.24 bn shares times the OTC quote of 1.00 USD from a single 6,300-share trade on 2026-09-28. The Malaysian line closed at 6.95 MYR (1.71 USD)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1803,7 +1903,9 @@
         "url": "https://biva.mx/storage/data-rs-cnbv/ReporteTrimestral_PINFRA_2026_3_121390-261022-4c8446b6_1792704038788.pdf",
         "quote": "429,539,581",
         "page": "224 (issued) and 226 (repurchased)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,291,127,552 USD, price 11.45 USD, 374,770,965 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,291,127,552 USD, price 11.45 USD, 374,770,965 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown 4.29 bn is the net share count (429,539,581 issued minus 54,836,138 repurchased = 374.7 m) times the stale OTC quote of 11.45 USD, while the Mexican lines closed at 304.87 MXN (series *) and 215.00 MXN (series L). Counting all 429.5 m shares would not change the verdict (the true value would then be 6.7 bn USD)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1815,9 +1917,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 601298.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700938.pdf",
-        "quote": "Listed on Shanghai Stock Exchange ... 5,392,075,000 (treasury 0)",
+        "quote": "Listed on Shanghai Stock Exchange ... 5,392,075,000 (treasury 0) | Stock code (if listed) 06198 ... 1,099,025,000 (treasury 0)",
         "page": "3",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,671,923,200 USD, price 0.8738 USD, 6,491,100,023 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,671,923,200 USD, price 0.8738 USD, 6,491,100,023 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is all 6,491,100,000 shares (A plus H) times the stale OTC price 0.8738 USD (implied 0.8735), which is the H-line level of 2025-08, while the A shares trade at 1.503 USD and the H shares at 1.006 USD today; true value 9.21 bn USD (A 8.10 + H 1.11)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1831,7 +1935,9 @@
         "url": "https://www.sumibe.co.jp/ir/library/result/files/2026/0803_01.pdf",
         "quote": "① 期末発行済株式数 (自己株式を含む) 2027年３月期１Ｑ 88,249,856株 || ② 期末自己株式数 2027年３月期１Ｑ 514,439株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,569,586,560 USD, price 17.89 USD, 87,735,414 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,569,586,560 USD, price 17.89 USD, 87,735,414 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is the ADR close (17.89 USD, last trade 15.10.) times about 87.8 million ordinary shares (derived), which ignores that one ADR is only a third of a share; one ordinary share is worth 51.39 USD on the Tokyo line. No share-count change found in TDnet filings after the Q1 tanshin (2026-08-03)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1845,7 +1951,9 @@
         "url": "https://www.sumibe.co.jp/ir/library/result/files/2026/0803_01.pdf",
         "quote": "① 期末発行済株式数 (自己株式を含む) 2027年３月期１Ｑ 88,249,856株 || ② 期末自己株式数 2027年３月期１Ｑ 514,439株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,209,361,664 USD, price 36.58 USD, 87,735,420 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,209,361,664 USD, price 36.58 USD, 87,735,420 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value matches the stale OTC close (36.58 USD, no trade in 3 months) times about 87.8 million shares (derived), while the Tokyo close is 51.39 USD. No share-count change found in TDnet filings after the Q1 tanshin (2026-08-03)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1857,9 +1965,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 601607.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100202641.pdf",
-        "quote": "Stock code (if listed) 601607 ... 2,789,289,105 (treasury 0)",
+        "quote": "Stock code (if listed) 601607 ... 2,789,289,105 (treasury 0) | Stock code (if listed) 02607 ... 919,072,704 (treasury 0)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,414,208,512 USD, price 1.46 USD, 3,708,361,995 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,414,208,512 USD, price 1.46 USD, 3,708,361,995 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value is all 3,708,361,809 shares (A plus H) times the stale OTC price 1.46 USD (implied 1.4589); the A shares trade at 2.480 USD and the H shares at 1.416 USD, so the true value is 8.22 bn USD (A 6.92 + H 1.30)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1873,7 +1983,9 @@
         "url": "https://market.sec.or.th/public/idisc/Download?FILEID=dat/news/202608/0021FIN050820261718490061E.zip",
         "quote": "298,000,000 ordinary shares of Baht 10 each",
         "page": "file FINANCIAL_STATEMENTS.XLS in the zip (balance sheet, issued and paid-up capital line)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,790,293,888 USD, price 4.55 USD, 393,471,184 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,790,293,888 USD, price 4.55 USD, 393,471,184 shares implied",
+        "otherSources": "",
+        "checkerNote": "The Thai line closed at 151 THB (4.48 USD), so 298 m shares are worth 1.33 bn USD. I could not reconstruct the shown 1.79 bn (298 m x the OTC quote of 4.55 USD would be 1.36 bn); it is 34 % too high either way."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1887,7 +1999,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1005/2026100500527.pdf",
         "quote": "Balance at close of the month 7,101,805,366 0 7,101,805,366",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,349,343,104 USD, price 0.19 USD, 7,101,805,811 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,349,343,104 USD, price 0.19 USD, 7,101,805,811 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown = stale OTC close 0.19 USD x 7,101,805,366 shares = 1.35 bn, reproduced. True = same shares x 1.135 HKD (0.145 USD) = 1.03 bn; the OTC price is 31 % above the HK price, so the shown value is 31 % too high. No newer share filing than the 30 Sep 2026 return."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1899,9 +2013,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 600031.SS.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700820.pdf",
-        "quote": "Balance at close of the month 8,435,770,624 38,619,413 8,474,390,037",
+        "quote": "Balance at close of the month 8,435,770,624 38,619,413 8,474,390,037 | Balance at close of the month 720,614,400 0 720,614,400",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 86,823,837,696 USD, price 9.4425 USD, 9,195,005,316 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 86,823,837,696 USD, price 9.4425 USD, 9,195,005,316 shares implied",
+        "otherSources": "",
+        "checkerNote": "A shares excluding 38,619,413 treasury shares: 8,435,770,624 x 17.76 CNY / 6.661 = 22.49 bn USD; H shares 720,614,400 x 15.63 HKD / 7.8457 = 1.44 bn USD; sum 23.93 bn. The shown 86.82 bn equals the ADR quote 9.4425 USD x 9,195,004,437 ordinary shares (A plus H), i.e. an ADR price (4 shares per ADR) applied to the share count; it is 3.6 times too high."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1915,7 +2031,9 @@
         "url": "https://www2.jpx.co.jp/disc/90690/081220260812517958_tse-qcedjpsm-90690-20260812390690-ixbrl.htm",
         "quote": "2027年３月期１Ｑ 175,692,457 株 || 2027年３月期１Ｑ 7,951,807 株",
         "page": "1 (cover, section 4 shares)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,898,358,016 USD, price 11.35 USD, 167,256,213 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,898,358,016 USD, price 11.35 USD, 167,256,213 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the stale OTC quote 11.35 USD times about 167m shares. Tokyo parity is 15.39 USD per share, which gives 2.58 bn USD."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1929,7 +2047,9 @@
         "url": "https://www2.jpx.co.jp/disc/44430/140120261008548227.pdf",
         "quote": "① 期末発行済株式数 (自己株式を含む) 2027年5月期1Ｑ 126,906,104株 || ② 期末自己株式数 2027年5月期1Ｑ 1,474,346株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,099,112,064 USD, price 8.77 USD, 125,326,347 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,099,112,064 USD, price 8.77 USD, 125,326,347 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value matches the stale OTC close (8.77 USD, no trade in 3 months) times about 125.4 million shares (derived), while the Tokyo close is 13.83 USD. Fiscal year ends in May, so the newest count is at 31.08.2026 (tanshin of 2026-10-09); the buyback ended 2026-06-19."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1941,9 +2061,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 0020.HK.",
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1020/2026102001457.pdf",
-        "quote": "Closing balance as at (Notes 5 and 6) 20 October 2026 41,746,450,821 0 41,746,450,821",
+        "quote": "Closing balance as at (Notes 5 and 6) 20 October 2026 41,746,450,821 0 41,746,450,821 | Closing balance as at (Notes 5 and 6) 20 October 2026 509,844,373 0 509,844,373",
         "page": "1",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,443,318,272 USD, price 0.2 USD, 42,216,591,360 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 8,443,318,272 USD, price 0.2 USD, 42,216,591,360 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown = stale OTC close 0.20 USD x all 42,256,295,194 shares (Class A + B) = 8.45 bn, reproduced within 0.2 %. True value uses the Hong Kong close 1.105 HKD (0.141 USD): 5.88 bn for Class B + 0.07 bn for the unlisted Class A. The OTC price is 42 % above the HK price. Class B rose from 41,706,746,330 (30 Sep, monthly return page 2) by 39,704,491 RSU shares on 2026-10-20."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1957,7 +2079,9 @@
         "url": "https://storage.mfn.se/816a0496-a1e6-4c84-971c-a26f9dd595cd/scatec-asa-share-capital-increase-registered-with-the-norwegian-register-of-business-enterprises.pdf",
         "quote": "divided by 159,917,275 shares",
         "page": "1",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,013,822,336 USD, price 12.6 USD, 159,827,170 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,013,822,336 USD, price 12.6 USD, 159,827,170 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown 2.01 bn is 159.9 m shares times the stale OTC quote of 12.60 USD (about 116 NOK). The Oslo line closed at 84.65 NOK (9.16 USD) after dropping 24 % on 2026-10-22, so the OTC quote is stale and too high."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1971,7 +2095,9 @@
         "url": "https://www2.jpx.co.jp/disc/52320/140120260803507511.pdf",
         "quote": "期末発行済株式数 (自己株式を含む) 32,068,117株 ... 期末自己株式数 361,745株 (2027年３月期１Ｑ)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,084,193,792 USD, price 32.44 USD, 95,073,791 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,084,193,792 USD, price 32.44 USD, 95,073,791 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is the post-split share count (95.1M) times a stale OTC quote of USD 32.44 from the last real trade on 2026-09-04 (200 shares), which is still a pre-split-level price. The Tokyo post-split close of JPY 1,760 gives USD 1.06bn, so shown is about 2.9 times too high."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1985,7 +2111,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201278.pdf",
         "quote": "Balance at close of the month 1,502,835,997 386,400 1,503,222,397",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 11,481,666,560 USD, price 7.64 USD, 1,502,835,937 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 11,481,666,560 USD, price 7.64 USD, 1,502,835,937 shares implied",
+        "otherSources": "",
+        "checkerNote": "Issued shares excluding treasury 1,502,835,997 (treasury 386,400, total 1,503,222,397). True value 1,502,835,997 x 38.30 HKD / 7.8457 = 7.34 bn USD; shown 11.48 bn is about 56 % too high (stale OTC quote 6.775 USD from 2026-03-20 is far from the live HK price of 4.88 USD)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -1999,7 +2127,9 @@
         "url": "https://www.toyota-boshoku.com/jp/company/_assets/upload/2027_2nd_connection.pdf",
         "quote": "8,949,621株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,573,193,984 USD, price 20 USD, 178,659,699 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,573,193,984 USD, price 20 USD, 178,659,699 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals the OTC quote of 20.00 USD (a single 150-share trade on 2026-02-11) times 178.5 m shares; the Tokyo line closed at 2,020.5 JPY (12.80 USD), so the true value is 2.29 bn USD and the shown value is 56 % too high. The count comes from the IFRS half-year report to 30.09.2026 filed 2026-10-29."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2013,7 +2143,9 @@
         "url": "https://www2.jpx.co.jp/disc/72820/140120261027556722.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 588,070,735株 ... 期末自己株式数 1,765,330株 (2027年３月期中間期)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,104,836,352 USD, price 3.59 USD, 586,305,391 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,104,836,352 USD, price 3.59 USD, 586,305,391 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is 586.3M post-split shares times a stale OTC quote of USD 3.59 with no trade in three months. The Tokyo post-split close of JPY 981.4 is USD 6.22 per share, so true value is USD 3.65bn and shown is 42 % too low."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2027,7 +2159,9 @@
         "url": "https://market.sec.or.th/public/idisc/Download?FILEID=dat/news/202608/0450FIN030820261200560154E.zip",
         "quote": "2026: 4,255,132,696 ordinary shares, par value at Baht 0.25 per share",
         "page": "file FINANCIAL_STATEMENTS.XLSX (BS sheet) and NOTES.DOCX note 13 in the zip",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,900,604,288 USD, price 0.43 USD, 4,420,009,972 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,900,604,288 USD, price 0.43 USD, 4,420,009,972 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown 1.90 bn equals the pre-cancellation count of 4,455,132,696 shares times the stale OTC quote of 0.43 USD, while only 3.855 bn shares are outstanding after 200 m were cancelled and 400 m sit in treasury. With treasury shares counted (4.255 bn) the deviation would be +18.5 % and the verdict would flip to right; I excluded treasury as the brief says."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2041,7 +2175,9 @@
         "url": "https://www2.jpx.co.jp/disc/94010/081220260805510400_tse-qcedjpsm-94010-20260806394010-ixbrl.htm",
         "quote": "2027年３月期１Ｑ 161,091,065 株 || 2027年３月期１Ｑ 7,024,476 株",
         "page": "1 (cover, section 4 shares)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,449,910,272 USD, price 16.09 USD, 152,262,913 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,449,910,272 USD, price 16.09 USD, 152,262,913 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the stale OTC quote 16.09 USD times about 152m shares. Tokyo parity is 38.94 USD per share, which gives 6.00 bn USD; the treasury figure includes shares held by two employee and director trusts."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2055,7 +2191,9 @@
         "url": "https://www2.jpx.co.jp/disc/32890/140120260805510485.pdf",
         "quote": "期末自己株式数 2027年３月期１Ｑ 6,599,668株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,687,405,824 USD, price 5.17 USD, 713,231,301 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,687,405,824 USD, price 5.17 USD, 713,231,301 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value equals Yahoo's meta quote of 5.17 USD times 713.7 m shares; the last real OTC trade was 7.875 USD on 2026-09-28 and Tokyo closed at 1,230 JPY (7.79 USD), so the true value is 5.56 bn USD and the shown value is 33.6 % too low. Treasury count includes the shares held by the two trusts (as the report states)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2069,7 +2207,9 @@
         "url": "https://www2.jpx.co.jp/disc/75640/140120260731504866.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 81,846,816株 ... 期末自己株式数 233,688株 (2027年３月期１Ｑ)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,265,341,184 USD, price 40.01 USD, 81,613,126 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,265,341,184 USD, price 40.01 USD, 81,613,126 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is 81.6M shares times a stale OTC quote of USD 40.01 with no trade in three months, against a Tokyo-implied USD 31.12. True value is USD 2.54bn and shown is 28.8 % too high."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2083,7 +2223,9 @@
         "url": "https://www.westportsholdings.com/wp-content/uploads/2026/Westports%202Q2026%20Announcement2Bursa.pdf",
         "quote": "the total enlarged number of issued shares is 3,436,466,968 shares",
         "page": "10",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,588,973,312 USD, price 0.75 USD, 3,451,964,416 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,588,973,312 USD, price 0.75 USD, 3,451,964,416 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown 2.59 bn is the share count times the stale OTC quote of 0.75 USD (about 3.45 bn x 0.75). The Malaysian line closed at 6.85 MYR (1.69 USD), so the OTC quote is less than half of the real price."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2097,7 +2239,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100202589.pdf",
         "quote": "Balance at close of the month 1,131,839,264 0 1,131,839,264",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 9,561,951,232 USD, price 8.6 USD, 1,111,854,794 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 9,561,951,232 USD, price 8.6 USD, 1,111,854,794 shares implied",
+        "otherSources": "",
+        "checkerNote": "Treasury shares: 0, no next day disclosure return after the September monthly return. True value 1,131,839,264 x 48.76 HKD / 7.8457 = 7.03 bn USD (OTC price 6.17 USD gives 6.98 bn, consistent); the shown 9.56 bn is about 36 % too high and corresponds to no price of the last three months, so its basis is unknown."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2111,7 +2255,9 @@
         "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103001372.pdf",
         "quote": "Closing balance as at (Notes 5 and 6) 30 October 2026 2,825,881,395 0 2,825,881,395",
         "page": "1",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,615,508,096 USD, price 0.5911 USD, 2,733,053,791 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,615,508,096 USD, price 0.5911 USD, 2,733,053,791 shares implied",
+        "otherSources": "",
+        "checkerNote": "Treasury shares: 0. The count of 2,825,881,395 includes 10,784,410 scrip-dividend shares issued on 30 Oct 2026 (next day disclosure return); the September monthly return (https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201119.pdf, page 2, 2,815,096,985) gives 1,264.8 m USD, same verdict. Only just beyond the 25 % limit: shown 1.62 bn is about 28 % too high, probably the stale OTC quote 0.5911 USD x 2.815 bn shares = 1.66 bn."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2125,7 +2271,9 @@
         "url": "https://www2.jpx.co.jp/disc/98610/140120261008547781.pdf",
         "quote": "2027年2月期中間期 65,129,558株 || 2027年2月期中間期 1,063,830株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,095,585,920 USD, price 17 USD, 64,446,231 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,095,585,920 USD, price 17 USD, 64,446,231 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown value is the stale OTC quote 17.00 USD times about 64.7m shares. Tokyo parity is 28.55 USD per share, which gives 1.83 bn USD."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2139,7 +2287,9 @@
         "url": "https://www2.jpx.co.jp/disc/42050/140120261028558516.pdf",
         "quote": "期末発行済株式数（自己株式を含む） 2027年３月期中間期 209,251,256株 || 期末自己株式数 2027年３月期中間期 17,710,345株",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,789,080,576 USD, price 9.35 USD, 191,345,516 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,789,080,576 USD, price 9.35 USD, 191,345,516 shares implied",
+        "otherSources": "",
+        "checkerNote": "The shown value matches the stale OTC close (9.35 USD, no trade in 3 months) times about 191.4 million shares (derived), while the Tokyo close is 13.48 USD. Count is from the half-year tanshin of 2026-10-29; the treasury figure includes shares held by the BBT-RS share-grant trust."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2153,7 +2303,9 @@
         "url": "https://www2.jpx.co.jp/disc/75500/140120260805510591.pdf",
         "quote": "期末発行済株式数（自己株式を含む) 160,733,225株 ... 期末自己株式数 4,271,016株 (2027年３月期１Ｑ)",
         "page": "2",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 9,021,611,008 USD, price 57.66 USD, 156,462,210 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 9,021,611,008 USD, price 57.66 USD, 156,462,210 shares implied",
+        "otherSources": "",
+        "checkerNote": "Shown is 156.5M shares times a stale OTC quote of USD 57.66 with no trade in three months, against a Tokyo-implied USD 79.59. True value of the ordinary shares is USD 12.45bn and shown is 27.6 % too low; the unlisted Class A preferred and bond-type class shares (hybrid funding, callable from 2028) are not counted and their weight was not determined."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2165,9 +2317,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Caisse Régionale de Crédit Agricole Mutuel Alpes Provence.",
         "url": "https://ml-eu.globenewswire.com/Resource/Download/9e2a4451-b93f-4d94-8565-dd96c8f9efc7",
-        "quote": "735 titres sur 689 264 émis",
+        "quote": "735 titres sur 689 264 émis | Le nombre de titres auto-détenus au 30/06/2026 s’élève à 16 948 | Certificats Coopératifs d'associés (CCA) ... 1 873 852 | Parts sociales ... 4 889 269 ... 65,61%",
         "page": "43 and 93",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 61,796,543,322 USD, price 120.85752597599999 USD, 511,317,295 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 61,796,543,322 USD, price 120.85752597599999 USD, 511,317,295 shares implied",
+        "otherSources": "",
+        "checkerNote": "The line is a CCI: 689,264 certificates exist (672,316 outside the bank's own holding) and 1,873,852 CCA with the same dividend are held by SACAM Mutualisation, so CCI plus CCA at the CCI close of 108.24 EUR is about 0.31 bn USD (CCI alone about 0.08 bn; the unlisted parts sociales at nominal 15.25 EUR would add 0.08 bn). The shown 61.80 bn cannot be reproduced and is about 200 times too high."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2177,11 +2331,13 @@
       "reason": "Yahoo nennt für diese Zweitnotierung von Advanced Micro Devices, Inc. 109,25 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung AMD am 30.10.2026 ergeben sich rund 824,07 Mrd. USD. Maßgeblich ist die Notierung AMD.",
       "reasonComplete": true,
       "source": {
-        "form": "Die Unterlage nennt die Aktienzahl von Advanced Micro Devices, Inc..",
+        "form": "Die Unterlage nennt die Aktienzahl von Advanced Micro Devices, Inc.",
         "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000123/amd-20260627.htm",
         "quote": "number of shares outstanding of the registrant's common stock, $0.01 par value per share, as of July 29, 2026 ... 1,632,475,042",
         "page": "1 (cover); also XBRL dei EntityCommonStockSharesOutstanding at data.sec.gov, accession 0000002488-26-000123",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 109,252,366,952 USD, price 9.30365722 USD, 11,742,948,431 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 109,252,366,952 USD, price 9.30365722 USD, 11,742,948,431 shares implied",
+        "otherSources": "https://cdr.cibc.com/en/cdr-directory CDR Directory, no date shown on the page: Advanced Micro Devices CDR (CAD Hedged) AMD 0.01844708",
+        "checkerNote": "The CDR is only a hedged receipt on AMD shares, so the firm is worth 1,632,475,042 shares x 504.80 USD = 824 bn USD; the shown 109.25 bn implies only about 67 USD per share. The CDR price of 13.00 CAD fits the ratio (504.80 x 1.39864 x 0.01844708 = 13.02). The SEC page was read through a page fetcher because www.sec.gov blocks direct downloads."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2195,7 +2351,9 @@
         "url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000041/cifr-20260630.htm",
         "quote": "As of August 3, 2026, the registrant had 415,030,722 shares of Common Stock, $0.001 par value per share, outstanding.",
         "page": "1 (cover; also XBRL dei, accession 0001819989-26-000041)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,522,043,643 USD, price 15.7146047726 USD, 415,030,714 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,522,043,643 USD, price 15.7146047726 USD, 415,030,714 shares implied",
+        "otherSources": "https://www.sec.gov/Archives/edgar/data/1819989/000119312526424297/d313847d8k.htm Items 1.01 and 3.02: approximately 40.7 million shares of the Company’s common stock",
+        "checkerNote": "One class of common stock, about 455.7m shares (415.03m on 3 Aug plus about 40.7m issued in October; later sales, if any, are not in the documents read) x 7.29 USD = 3.32 bn USD; on the 3 Aug count alone it is 3.03 bn, so wrong either way. Shown 6.52 bn implies roughly 14 to 16 USD per share, no recent price; the Milan close of 6.689 EUR (7.48 USD) matches the US price."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2209,7 +2367,9 @@
         "url": "https://www.sec.gov/Archives/edgar/data/50863/000005086326000191/intc-20260926.htm",
         "quote": "As of October 23, 2026, the registrant had outstanding 5,315 million shares of common stock.",
         "page": "1 (cover; also XBRL dei, accession 0000050863-26-000191)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 643,057,878,693 USD, price 121.103171354 USD, 5,310,000,320 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 643,057,878,693 USD, price 121.103171354 USD, 5,310,000,320 shares implied",
+        "otherSources": "",
+        "checkerNote": "Intel had 5,315 million shares on 23 Oct 2026; at 65.76 USD (down 28.6 % on 30 Oct) the firm is worth 349.5 bn USD. Shown 643.06 bn implies about 121 USD per share, far above the 92.07 USD of 29 Oct; the Milan close of 58.06 EUR (64.9 USD) matches the US price."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2221,9 +2381,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Syensqo SA.",
         "url": "https://live.euronext.com/sites/default/files/company_press_releases/attachments/2026/05/07/cpr01_notified_20260507%20Share%20cancellation.pdf",
-        "quote": "New total number of shares and voting rights (= denominator): 103,286,902",
+        "quote": "New total number of shares and voting rights (= denominator): 103,286,902 | Syensqo SA currently holds 1,320,376 own shares.",
         "page": "1",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 930,954,432 USD, price 9.13 USD, 101,966,531 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 930,954,432 USD, price 9.13 USD, 101,966,531 shares implied",
+        "otherSources": "https://www.sec.gov/Archives/edgar/data/2004340/000119380526000107/e665140_ex99-a.htm form of receipt (read through a page fetcher): Each American Depositary Share represents the right to receive one-tenth (1/10) of one ordinary share of Syensqo SA",
+        "checkerNote": "Syensqo has 101,966,526 shares outstanding after own shares (count of 7 May 2026, later buybacks not checked) x 76.45 EUR = 8.72 bn USD. Shown 0.93 bn is the ADR price of 29 Oct (9.13 USD) times the share count, forgetting that one ADS is a tenth of a share; the ADR close of 8.50 USD fits 0.1 x 76.45 EUR."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2237,7 +2399,9 @@
         "url": "https://web.ksei.co.id/services/registered-securities/shares/lc/TPIA",
         "quote": "86,511,545,092 (Total)",
         "page": "web page of the Indonesian central securities depository, field 'Number of Securities' (the 'as of' field is blank)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 45,540,851,712 USD, price 0.5267 USD, 86,464,499,168 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 45,540,851,712 USD, price 0.5267 USD, 86,464,499,168 shares implied",
+        "otherSources": "",
+        "checkerNote": "86.51 bn shares x 1,280 IDR (Jakarta close) = 6.13 bn USD. Shown 45.5 bn is the stale OTC quote 0.5267 USD x about 86.4 bn shares, about 7 times too high (the Jakarta price is 0.071 USD); the KSEI page gives no date and treasury shares from the 2026 buyback were not confirmed."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2247,11 +2411,13 @@
       "reason": "Yahoo nennt für diese Zweitnotierung von Ariston Holding N.V. 6,54 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung ARIS.MI am 30.10.2026 ergeben sich rund 1,42 Mrd. USD. Maßgeblich ist die Notierung ARIS.MI.",
       "reasonComplete": true,
       "source": {
-        "form": "Die Unterlage nennt die Aktienzahl von Ariston Holding N.V..",
+        "form": "Die Unterlage nennt die Aktienzahl von Ariston Holding N.V.",
         "url": "https://www.aristongroup.com/content/dam/aristoninvestors/documents/reports/Ariston%20Group_Half-Year%20Report%202026.pdf",
-        "quote": "comprising 125,505,005 ordinary shares and 22,095,194 non-listed ordinary shares",
+        "quote": "comprising 125,505,005 ordinary shares and 22,095,194 non-listed ordinary shares | Multiple voting shares confer economic rights equal to the ordinary shares | 5,090,244 ... 1.36%",
         "page": "51",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,540,758,528 USD, price 17.7975 USD, 367,509,961 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 6,540,758,528 USD, price 17.7975 USD, 367,509,961 shares implied",
+        "otherSources": "https://www.sec.gov/Archives/edgar/data/2044984/000119380524001385/e664035_ex99-a.htm form of receipt (read through a page fetcher): Each American Depositary Share represents four (4) shares of common stock of Ariston Holding N.V.",
+        "checkerNote": "372,600,199 shares less 5,090,244 own shares = 367,509,955 x 3.466 EUR = 1.42 bn USD. Shown 6.54 bn is the stale ADS price 17.80 USD used as a per-share price x 367.5m shares, although one ADS is four shares; the share count itself (including the 225m multiple voting shares) is right."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2261,11 +2427,13 @@
       "reason": "Yahoo nennt für diese Zweitnotierung von Yamato Kogyo Co., Ltd. 1,03 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 5444.T am 30.10.2026 ergeben sich rund 4,63 Mrd. USD. Maßgeblich ist die Notierung 5444.T.",
       "reasonComplete": true,
       "source": {
-        "form": "Die Unterlage nennt die Aktienzahl von Yamato Kogyo Co., Ltd..",
+        "form": "Die Unterlage nennt die Aktienzahl von Yamato Kogyo Co., Ltd.",
         "url": "https://www2.jpx.co.jp/disc/54440/081220260730502919_tse-qcedjpsm-54440-20260731354440-ixbrl.htm",
-        "quote": "期末発行済株式数（自己株式を含む) 2027年３月期１Ｑ 62,000,000 株",
+        "quote": "期末発行済株式数（自己株式を含む) 2027年３月期１Ｑ 62,000,000 株 | 期末自己株式数 2027年３月期１Ｑ 2,247,590 株",
         "page": "summary section (4) 発行済株式数 (HTML document, no page numbers)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,033,716,608 USD, price 17.3 USD, 59,752,405 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 1,033,716,608 USD, price 17.3 USD, 59,752,405 shares implied",
+        "otherSources": "https://www.sec.gov/Archives/edgar/data/2107946/000119380526000090/e665126_ex99-a.htm form of receipt (read through a page fetcher): Each American Depositary Share represents one-fifth (1/5) of one (1) share of common stock of Yamato Kogyo Co. Ltd",
+        "checkerNote": "59,752,410 shares outstanding x 12,240 JPY = 4.63 bn USD. Shown 1.03 bn is the one-off ADR trade price 17.30 USD x 59.75m shares, ignoring that one ADS is only a fifth of a share (and the price is eight months old)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2277,9 +2445,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von LEM Holding SA.",
         "url": "https://www.lem.com/en/file/14822/download",
-        "quote": "is divided into 1,140,000 fully paid-up registered shares",
+        "quote": "is divided into 1,140,000 fully paid-up registered shares | On 31 March 2026, LEM HOLDING SA held 1,474 treasury shares.",
         "page": "27",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,901,715,456 USD, price 2548.66 USD, 1,138,526 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,901,715,456 USD, price 2548.66 USD, 1,138,526 shares implied",
+        "otherSources": "https://www.lem.com/en/file/14937/download 3: capital-actions de LEM HOLDING SA de CHF 570'000 divisé en 1'140'000 actions nominatives",
+        "checkerNote": "1,138,526 shares outstanding x 604 CHF = 0.83 bn USD. Shown 2.90 bn is the stale OTC quote 2,548.66 USD x 1.14m shares, 3.5 times too high; the company announced a strategic options review on 26 May 2026."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2289,11 +2459,13 @@
       "reason": "Yahoo nennt für diese Zweitnotierung von Eutelsat Communications S.A. 5,52 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung ETL.PA am 30.10.2026 ergeben sich rund 2,37 Mrd. USD. Maßgeblich ist die Notierung ETL.PA.",
       "reasonComplete": true,
       "source": {
-        "form": "Die Unterlage nennt die Aktienzahl von Eutelsat Communications S.A..",
+        "form": "Die Unterlage nennt die Aktienzahl von Eutelsat Communications S.A.",
         "url": "https://www.eutelsat.com/system/files/2026-10/DOC_EUTELSAT_Document-Enregistrement-Universel_2025-26_FR_231026.pdf",
-        "quote": "1 178 308 106 euros, divisé en 1 178 308 106 actions ordinaires",
+        "quote": "1 178 308 106 euros, divisé en 1 178 308 106 actions ordinaires | le Groupe détient 487 995 actions propres",
         "page": "330",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,523,497,861 USD, price 4.68959358 USD, 1,177,820,160 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,523,497,861 USD, price 4.68959358 USD, 1,177,820,160 shares implied",
+        "otherSources": "https://www.eutelsat.com/system/files/2026-03/DOC_Investors_droits-de-vote_EN-FR_16122025.pdf 1: 1.178.308.106",
+        "checkerNote": "1,177,820,111 shares outstanding x 1.80 EUR (Paris) = 2.37 bn USD. Shown 5.5 bn is the unmoving London quote 4.20 EUR x 1.178 bn shares, 2.3 times too high; Paris traded between 1.77 and 2.03 EUR in the same days."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2303,11 +2475,13 @@
       "reason": "Yahoo nennt für diese Zweitnotierung von Almonty Industries Inc. 5,25 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung ALM am 30.10.2026 ergeben sich rund 2,51 Mrd. USD. Maßgeblich ist die Notierung ALM.",
       "reasonComplete": true,
       "source": {
-        "form": "Die Unterlage nennt die Aktienzahl von Almonty Industries Inc..",
+        "form": "Die Unterlage nennt die Aktienzahl von Almonty Industries Inc.",
         "url": "https://www.sec.gov/Archives/edgar/data/1670061/000149315226037264/ex99-3.htm",
         "quote": "As of the date of this MD&A, there were 288,480,750 common shares outstanding (including CDIs).",
         "page": "MD&A (Form 6-K exhibit 99.3, read through a page fetcher)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,252,666,014 USD, price 18.208029528684094 USD, 288,480,750 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,252,666,014 USD, price 18.208029528684094 USD, 288,480,750 shares implied",
+        "otherSources": "https://investorpa.com/announcement-pdf/20260828/334778.pdf 1 (copy of the ASX announcement of 28 Aug 2026): the Company will be removed from the official list at close of trading on 1 September 2026 || https://in.marketscreener.com/quote/stock/ALMONTY-INDUSTRIES-INC-9062503/news/Almonty-Industries-Statement-of-CDIs-on-issue-AII-40657695/ monthly ASX CDI statement (vendor copy): AII : CHESS DEPOSITARY INTERESTS 1:1",
+        "checkerNote": "288,480,750 shares (CDIs counted 1:1) x 8.70 USD (Nasdaq close) = 2.51 bn USD; shown 5.3 bn is more than double. The ASX CDIs were suspended on 28 Aug and removed on 1 Sep 2026, so the line should be dropped from the board; treasury shares are not stated in the document."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2321,7 +2495,9 @@
         "url": "https://www.vfb.be/Media/Default/pdf/20260630-Rapport-semestriel-2026-complet-NL.pdf",
         "quote": "44.512.598 aandelen",
         "page": "4",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,516,858,897 USD, price 123.9392589 USD, 44,512,602 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 5,516,858,897 USD, price 123.9392589 USD, 44,512,602 shares implied",
+        "otherSources": "",
+        "checkerNote": "44,512,598 shares x 229.80 EUR (Brussels close) = 11.44 bn USD; the company's own report gives a market value of 10.28 bn EUR at 30 June 2026 (231 EUR per share), which fits. Shown 5.5 bn is about half and cannot be reproduced even from the stale Milan quote (that would be 12.3 bn USD); the report mentions no own shares."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
@@ -2333,9 +2509,11 @@
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Weibo Corporation.",
         "url": "https://www.sec.gov/Archives/edgar/data/1595761/000110465926047217/wb-20251231x20f.htm",
-        "quote": "157,727,834 Class A ordinary shares and 87,822,024 Class B ordinary shares",
+        "quote": "157,727,834 Class A ordinary shares and 87,822,024 Class B ordinary shares | there were 245,549,858 ordinary shares outstanding, par value US$0.00025 per share",
         "page": "1 (cover, read through a page fetcher)",
-        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,537,684,992 USD, price 14.4 USD, 245,672,569 shares implied"
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,537,684,992 USD, price 14.4 USD, 245,672,569 shares implied",
+        "otherSources": "",
+        "checkerNote": "245,549,858 shares (157.7m Class A plus 87.8m Class B at the Class A price) x 6.21 USD (WB; the Hong Kong line gives 6.16 USD) = 1.52 bn USD. Shown 3.54 bn is the stale OTC quote 14.40 USD x 245.55m shares, 2.3 times too high; the Q2 2026 basic weighted share count of 239.5m hints at a few million treasury shares not deducted here (verdict unaffected)."
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
