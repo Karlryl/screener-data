@@ -135,7 +135,7 @@ Dieselben Eingaben wie am 31.10.2026: Snapshots des Tageslaufs 41184535364, Smal
 | Serie endet offen an einer Lücke, Langhistorie / Boards | 0 / 0 | 0 / 0 | 107 / 104 |
 | keine Serie, weil das neueste Jahr fehlt, Langhistorie / Boards | 0 / 0 | 0 / 0 | 30 / 27 |
 
-Die Zahl echter Verlustsätze auf den Boards bleibt zwischen geprüftem Stand und diesem Stand gleich (1.070 Ticker). Von den 27 Board-Tickern ohne Serie haben 17 ältere Gewinnzahlen, dort fehlt nur das neueste Jahr. Bei den übrigen 10 fehlt jede Gewinnzahl: AMH, DOW, FOXA, TRIN, NTST, KD, ARX, PSKY, Q, XNDU.
+Die Zahl echter Verlustsätze auf den Boards bleibt zwischen geprüftem Stand und diesem Stand gleich (1.070 Ticker). Von den 27 Board-Tickern ohne Serie haben 17 mindestens eine ältere Gewinnzahl. Bei den übrigen 10 fehlt jede Gewinnzahl: AMH, DOW, FOXA, TRIN, NTST, KD, ARX, PSKY, Q, XNDU.
 
 | Firma | Geprüfter Stand | Dieser Stand |
 |---|---|---|
