@@ -18,6 +18,9 @@ const MUTANTS = {
   'not-monitored-guard': [/^ *if \(notMonitored != null && .*;(?=\r?$)/m, '', /--check must catch a group named without its reason/],
   // The state before this fix: raw store rows decide.
   'held-row-listed': [/^ *const listable = new Set\(.*;(?=\r?$)/m, '  const listable = new Set(readJSON(watchlist).stocks.map(s => s.ticker));', /a row a guard holds must not be listed/],
+  'any-empty-value-held': [/^ *const held = new Set\(.*;(?=\r?$)/m, '  const held = new Set(rows.filter(row => { const seen = marketCapGuard.prepareMarketCap(row); return !Number.isFinite(seen.marketCap?.value); }).map(row => row.meta?.ticker));', /an empty value without a guard stays listed/],
+  'table-instead-of-reader': [/^ *const held = new Set\(.*;(?=\r?$)/m, '  const held = new Set(rows.filter(row => marketCapGuard.holds[row.meta?.ticker] || marketCapGuard.table[row.meta?.ticker]).map(row => row.meta?.ticker));', /a hold not yet valid stays listed/],
+  'held-rows-lose-their-clock': [/^ *const status = smallcapCapStatus\(rows, listable, .*;(?=\r?$)/m, "  const status = smallcapCapStatus(rows.filter(row => !held.has(row.meta?.ticker)), listable, require('../src/scoring/smallcap-route.js').MAX_MCAP);", /the clock of a held row still counts for the newest day/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -103,19 +106,32 @@ const dropped = mapped(b), control = mapped(a);
 // clock behind the store's newest day would say "the last value stays". The control row has no guard and the same clock.
 const { holds } = require('../lib/market-cap-guard.js');
 const onList = wl.map(s => s.ticker);
-const [heldBehind, heldEmpty] = onList.filter(t => holds[t] && holds[t].validFrom <= old.slice(0, 10));
-const plainBehind = onList.find(t => t !== a && t !== b && !holds[t]);
-fs.writeFileSync(path.join(dir, heldBehind + '.json'), JSON.stringify({ ...scored(heldBehind, 4e8), marketCap: { value: 4e8, source: 'yahoo_quote', asOf: old } }));
-fs.writeFileSync(path.join(dir, heldEmpty + '.json'), JSON.stringify({ ...scored(heldEmpty, null), marketCap: { value: null, missing: true, asOf: fresh } }));
-fs.writeFileSync(path.join(dir, plainBehind + '.json'), JSON.stringify({ ...scored(plainBehind, 4e8), marketCap: { value: 4e8, source: 'yahoo_quote', asOf: old } }));
+const [heldBehind, heldEmpty, notYetValid, heldNewest] = onList.filter(t => holds[t] && holds[t].validFrom <= old.slice(0, 10));
+const [plainBehind, plainEmpty] = onList.filter(t => t !== a && t !== b && !holds[t]);
+const putRow = (t, marketCap) => fs.writeFileSync(path.join(dir, t + '.json'), JSON.stringify({ ...scored(t, marketCap.value), marketCap }));
+putRow(heldBehind, { value: 4e8, source: 'yahoo_quote', asOf: old });
+putRow(heldEmpty, { value: null, missing: true, asOf: fresh });
+putRow(plainBehind, { value: 4e8, source: 'yahoo_quote', asOf: old });
+// No guard, empty value: the pull really delivered none, so the row stays. A hold before its validFrom holds nothing yet.
+putRow(plainEmpty, { value: null, missing: true, asOf: fresh });
+putRow(notYetValid, { value: 4e8, source: 'yahoo_quote', asOf: new Date(Date.parse(holds[notYetValid].validFrom) - 86400000).toISOString() });
 const guarded = index(1.01).namedReasons;
+// A held row alone carries the newest day: its pull happened that day, so the firms behind it have no fresh value.
+putRow(heldNewest, { value: null, missing: true, asOf: '2026-10-30T12:00:00.000Z' });
+const clockKept = index(1.01).namedReasons;
 console.log = log; console.warn = warn; console.error = original;
-assert(heldBehind && heldEmpty && plainBehind, 'test data: two hand holds and a plain row on the real watchlist');
+assert(heldBehind && heldEmpty && notYetValid && heldNewest && plainBehind && plainEmpty, 'test data: four hand holds and two plain rows on the real watchlist');
 const listed = ['belowFloor', 'aboveBand', 'noFreshValue', 'thinCoverage'].flatMap(k => guarded[k]).map(r => r.ticker);
 assert(!listed.includes(heldBehind), 'a row a guard holds must not be listed: pull clock behind the newest day');
 assert(!listed.includes(heldEmpty), 'a row a guard holds must not be listed: no value in the store');
-assert.deepEqual(guarded.noFreshValue.map(r => r.ticker), [plainBehind], 'a row no guard holds stays listed');
-console.log('PASS a row a guard holds stands in no list, a row with the same clock and no guard stays');
+const stale = names => names.noFreshValue.map(r => r.ticker);
+assert(stale(guarded).includes(plainEmpty), 'an empty value without a guard stays listed');
+assert(stale(guarded).includes(notYetValid), 'a hold not yet valid stays listed');
+assert.deepEqual(stale(guarded), [plainBehind, plainEmpty, notYetValid].sort(), 'a row no guard holds stays listed');
+assert(!stale(guarded).includes(a), 'test data: this row is not behind the newest day yet');
+assert(stale(clockKept).includes(a), 'the clock of a held row still counts for the newest day');
+assert(!stale(clockKept).includes(heldNewest), 'a row a guard holds must not be listed: it carries the newest day');
+console.log('PASS a row a guard holds stands in no list and its clock still counts; an empty value without a guard, a hold not yet valid and a row with the same clock stay');
 assert.equal(noStore, null, 'no store means no statement'); assert.equal(emptyStore, null, 'an empty store means no statement');
 assert.deepEqual(filled.belowFloor.map(r => r.ticker), [b]);
 assert.deepEqual(filled.thinCoverage.map(r => r.ticker), [a], 'the scored firm under the coverage floor must be named');
