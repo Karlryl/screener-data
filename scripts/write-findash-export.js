@@ -2358,9 +2358,9 @@ function validateSmallcapExport(scoutDir = SCOUT_DIR, snapDir = SMALLCAP_SNAP_DI
     return raw; // smallcap/ absent -> optional, no breach
   }
   validateSmallcapIndex(idx, raw);
-  // The names must be exactly the withheld rows of the store: a row dropped from the list would vanish without a trace.
-  const withheld = Array.isArray(idx.withheldMarketCaps) ? smallcapWithheldMarketCaps(snapDir, watchlistPath) : null;
-  const nameList = rows => rows.map(r => r?.ticker).join(' ');
+  // The names must be exactly the withheld rows of the store: a row dropped from the list, or the whole list, would vanish without a trace.
+  const withheld = smallcapWithheldMarketCaps(snapDir, watchlistPath);
+  const nameList = rows => (Array.isArray(rows) ? rows : []).map(r => r?.ticker).join(' ');
   if (withheld && nameList(withheld) !== nameList(idx.withheldMarketCaps)) raw.push(`smallcap/index: withheldMarketCaps names [${nameList(idx.withheldMarketCaps)}], the store withholds [${nameList(withheld)}]`);
   const boards = Array.isArray(idx.boards) ? idx.boards : [];
   for (const id of boards) {

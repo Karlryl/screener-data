@@ -255,6 +255,15 @@ const checks = {
   async runDayFull(source = pullSource) {
     for (const runDate of BAD_RUN_DAYS) { const next=await pull(seed(),{full:true,runDate,source}); assert.deepEqual(next.meta.stalePriceHold,{priceDay:'2026-10-02'},'released by '+runDate); withheld(next); }
   },
+  // A valid RUN_DATE_UTC is the reference day in both directions, whatever the clock says (fixture clock: 30.10.).
+  async runDayValid(source = pullSource) {
+    for (const full of [false,true]) {
+      const earlier=await pull(seed(),{full,stamp:OLD,runDate:'2026-10-05',source});
+      assert.equal(earlier.meta.stalePriceHold,undefined,'valid earlier run day ignored: 02.10. is one weekday before it');
+      const later=await pull(seed(FRESH),{full,stamp:FRESH,runDate:'2026-11-20',source});
+      assert.deepEqual(later.meta.stalePriceHold,{priceDay:'2026-10-30'},'valid later run day ignored: 30.10. is 15 weekdays before it');
+    }
+  },
   // Every break below has to apply: a stale anchor would prove a check red for the wrong reason.
   async anchors() {
     for (const name of Object.keys(breaks)) { assert.ok(checks[name],'break without a check: '+name); breaks[name](); }
@@ -282,6 +291,7 @@ const breaks = {
   limitCurrent: () => compileGuard(breakLine(guardSource,'  const provenCurrent = Number.isFinite(snapshot?.marketCap?.value) && current && current.priceDay <= today && current.age <= STALE_PRICE_WEEKDAYS;','  const provenCurrent = Number.isFinite(snapshot?.marketCap?.value) && current && current.priceDay <= today && current.age < STALE_PRICE_WEEKDAYS;')),
   runDayPrice: () => breakLine(pullSource,'    retainStalePriceHold(existing, previousQuote, _holdRunDay(newAsOf));','    retainStalePriceHold(existing, previousQuote, process.env.RUN_DATE_UTC || newAsOf.slice(0, 10));'),
   runDayFull: () => breakLine(pullSource,'        _holdRunDay(asOf));','        process.env.RUN_DATE_UTC || asOf.slice(0, 10));'),
+  runDayValid: () => breakLine(pullSource,'const _holdRunDay = asOf => sizeExitRunDay(process.env, () => Date.parse(asOf));','const _holdRunDay = asOf => asOf.slice(0, 10);'),
 };
 (async () => {
   const broken = process.argv.find(a => a.startsWith('--prove-red='))?.split('=')[1];

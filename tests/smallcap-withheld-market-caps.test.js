@@ -6,10 +6,10 @@
 // The main store names such rows in excluded.json. smallcap/index.json now carries them next to its counters.
 // This test runs the REAL guard, the REAL scoring loader and the REAL export functions on a small store in a temp folder:
 //   presence  - stale stamp, known hold without a stamp and a hand hold are named with ticker, name and German reason
-//   absence   - a current stamp, no stamp, a row without a value and a stale row off the watchlist are not named
+//   absence   - a current stamp, no stamp, a row without a value, a shown value with its own reason and a stale row off the watchlist are not named
 //   no store  - null, because the pass then ran on the main store and excluded.json names its rows
 //   wiring    - buildSmallcapIndex writes the field next to excluded
-//   check     - a row dropped from the list, an added row, a blank reason and a missing name key turn --check red
+//   check     - a row dropped from the list, an added row, the list removed or null, a blank reason and a missing name key turn --check red
 // Break-once runs on every start: the export source is compiled in memory with one whole line replaced (nothing is written,
 // the live file is hashed before and after) and the presence or the check above has to fail for its own reason.
 process.env.RUN_DATE_UTC = '2026-10-31';
@@ -34,7 +34,7 @@ const row = (ticker, stamp, extra = {}) => ({
   meta: { ticker, name: `${ticker} Inc.`, tradingCurrency: 'USD', tradingCurrencyOriginal: 'USD', reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD',
     fxConverted: true, tradingFxRateApplied: 1, fxRateApplied: 1, priceCurrency: 'USD', asOf: AS_OF, ...extra.meta },
   marketCap: { value: 5e8, source: 'yahoo_quoteSummary', confidence: 0.9, asOf: AS_OF, ...(stamp ? { regularMarketTime: stamp } : {}), ...extra.marketCap },
-  price: { regularMarketPrice: 10, currencyUnit: 'USD', currency: 'USD' }, metrics: {}, annual: {}, timeseries: {},
+  price: { regularMarketPrice: 10, currencyUnit: 'USD', currency: 'USD', ...extra.price }, metrics: {}, annual: {}, timeseries: {},
 });
 function store(rows, authorized = rows.map(r => r.meta.ticker)) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sc-withheld-'));
@@ -62,14 +62,19 @@ function check(name, fn) {
   catch (e) { failed++; console.error('FAIL ' + name + ': ' + e.message); }
 }
 
+// A hand correction: the value is shown and carries its own reason, so a reason alone must not put a row on the list.
+const SHOWN_WITH_REASON = () => row('8035.T', FRESH, { meta: { tradingCurrency: 'JPY', tradingCurrencyOriginal: 'JPY', reportingCurrencyOriginal: 'JPY', tradingFxRateApplied: 0.00636748, fxRateApplied: 0.00636748 },
+  marketCap: { value: 27339565394.16052 }, price: { regularMarketPrice: 60.22362584, currency: 'JPY' } });
 const FIXTURE = () => store([
   row('AAA', STALE), row('BBB', null, { meta: { stalePriceHold: { priceDay: '2026-09-15' } } }), row(HAND_HOLD, FRESH),
-  row('DDD', FRESH), row('EEE', null), row('FFF', null, { marketCap: { value: null, missing: true } }), row('OFFLIST', STALE),
-], ['AAA', 'BBB', HAND_HOLD, 'DDD', 'EEE', 'FFF']);
+  row('DDD', FRESH), row('EEE', null), row('FFF', null, { marketCap: { value: null, missing: true } }), row('OFFLIST', STALE), SHOWN_WITH_REASON(),
+], ['AAA', 'BBB', HAND_HOLD, 'DDD', 'EEE', 'FFF', '8035.T']);
 
 function presence(writer = W) {
   const { snapDir, watchlistPath } = FIXTURE();
   const rows = writer.smallcapWithheldMarketCaps(snapDir, watchlistPath);
+  const shown = guard.prepareMarketCap(SHOWN_WITH_REASON());
+  assert.ok(shown.meta.marketCapReason && Number.isFinite(shown.marketCap.value), 'fixture: a shown value with its own reason');
   assert.deepEqual(rows.map(r => r.ticker), ['AAA', HAND_HOLD, 'BBB'], 'names');
   const by = Object.fromEntries(rows.map(r => [r.ticker, r]));
   assert.equal(by.AAA.name, 'AAA Inc.');
@@ -91,7 +96,8 @@ check('wiring: buildSmallcapIndex carries the list next to the counters, and the
   try {
     // The store folder is read once at load: a fresh compile of the unchanged source picks up the test store.
     const writer = compiled('function buildSmallcapIndex(coverage, smallcapDir) {', 'function buildSmallcapIndex(coverage, smallcapDir) {');
-    const source = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/export-w8/smallcap-index.json'), 'utf8'));
+    // The counters of this store, not of the fixture's run: the contract binds named rows to their counter.
+    const source = { ...JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/export-w8/smallcap-index.json'), 'utf8')), excluded: { 'smallcap-mcap-missing': 1 } };
     fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(source));
     const out = writer.buildSmallcapIndex(source.coverage, dir);
     assert.deepEqual(out.withheldMarketCaps.map(r => r.ticker), [onWatchlist]);
@@ -107,9 +113,9 @@ check('wiring: buildSmallcapIndex carries the list next to the counters, and the
 });
 
 // The contract gate on a real file: a list that differs from what the store withholds is a breach.
-function gateErrors(names, writer = W, overrides = {}) {
-  const { dir, snapDir, watchlistPath } = FIXTURE();
-  const list = names === undefined ? undefined : names.map(t => ({ ticker: t, name: t + ' Inc.', reasonDe: 'Grund.', ...overrides }));
+function gateErrors(names, writer = W, overrides = {}, fixture = FIXTURE) {
+  const { dir, snapDir, watchlistPath } = fixture();
+  const list = names == null ? names : names.map(t => ({ ticker: t, name: t + ' Inc.', reasonDe: 'Grund.', ...overrides }));
   const source = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/export-w8/smallcap-index.json'), 'utf8'));
   fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify({ ...source, schema: W.SCHEMA, ...(list === undefined ? {} : { withheldMarketCaps: list }) }));
   return writer.validateSmallcapExport(dir, snapDir, watchlistPath).filter(e => e.includes('withheldMarketCaps'));
@@ -123,13 +129,21 @@ check('counter-proof: a withheld row dropped from the list, or a row added to it
   assert.match(gateErrors(['AAA', HAND_HOLD]).join(), /the store withholds \[AAA ARX\.TO BBB\]/);
   assert.match(gateErrors([...RIGHT, 'DDD']).join(), /names \[AAA ARX\.TO BBB DDD\]/);
 });
-check('counter-proof: a blank reason, a missing ticker or a missing name key turn the check red; null and absence stay legal', () => {
+check('counter-proof: the list removed or null turns the check red while the store withholds rows; legal with nothing withheld or without a store', () => {
+  assert.match(gateErrors(undefined).join(), /the store withholds \[AAA ARX\.TO BBB\]/);
+  assert.match(gateErrors(null).join(), /the store withholds \[AAA ARX\.TO BBB\]/);
+  const clean = () => store([row('DDD', FRESH)]);
+  assert.deepEqual(gateErrors(undefined, W, {}, clean), [], 'an older export, nothing withheld');
+  assert.deepEqual(gateErrors(null, W, {}, clean), []);
+  const noStore = () => ({ ...clean(), snapDir: path.join(os.tmpdir(), 'sc-withheld-does-not-exist-' + process.pid) });
+  assert.deepEqual(gateErrors(undefined, W, {}, noStore), [], 'no store to compare with');
+});
+check('counter-proof: a blank reason, a missing ticker or a missing name key turn the check red; null and absence are no shape fault', () => {
   const run = list => { const errs = []; W.validateSmallcapIndex({ ...JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/export-w8/smallcap-index.json'), 'utf8')), schema: W.SCHEMA, withheldMarketCaps: list }, errs); return errs.filter(e => e.includes('withheldMarketCaps')); };
   for (const bad of [[{ ticker: 'A', name: 'A', reasonDe: ' ' }], [{ name: 'A', reasonDe: 'Grund.' }], [{ ticker: 'A', reasonDe: 'Grund.' }], [{ ticker: 'A', name: 'A' }], [null], 'x'])
     assert.equal(run(bad).length, 1, JSON.stringify(bad));
   assert.deepEqual(run(null), []);
   assert.deepEqual(run([]), []);
-  assert.deepEqual(gateErrors(undefined), [], 'an older export without the field still passes');
 });
 
 check('break-once: without the filter line the presence check fails for its names', () => {
