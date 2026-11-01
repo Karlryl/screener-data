@@ -1416,7 +1416,9 @@ function loadCoverage(file = COVERAGE) {
   return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct,
     generated_at: m.generated_at, honest_coverage_pct: m.honest_coverage_pct ?? null,
     n_addressable: m.n_addressable ?? null, n_ok: m.n_ok ?? null, n_total: m.n_total ?? null,
-    n_failed: m.n_failed ?? null };
+    n_failed: m.n_failed ?? null,
+    // P316 finding 1: firms whose statements stay empty, with deadline and owner; the run check turns an overdue row into Karl's alarm.
+    reporting_ccy_held: Array.isArray(m.reporting_ccy_held) ? m.reporting_ccy_held : null };
 }
 
 // seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI

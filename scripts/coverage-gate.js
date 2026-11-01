@@ -254,6 +254,18 @@ function finishGood(ok, total, source, m, reasons) {
 // PURE (no disk) so the selftest can assert the contract for every status class.
 // Carries the 0.9 pull-mix (n_full/n_priceonly — matching pull-yahoo's manifest keys)
 // through to the dashboard consumer.
+// P316 finding 1 (01.11.2026): this marker reaches the published status, the export hull and the run check, so a held
+// reporting currency travels with it. Display only: status, exit code and deploy never read it, a held firm must not stop
+// the boards. null means unknown (no trusted manifest), which status already reports on its own.
+function reportingCcyHeld(m) {
+  const rows = m && m._reportingCcyHeld;
+  if (!Array.isArray(rows)) return null;
+  // A lost shard may hold the firm: an empty list from a partial run says nothing.
+  if (m.partial === true && !rows.length) return null;
+  return rows.filter(r => r && typeof r === 'object').map(({ ticker, type, owner, firstSeen, pruefungBis, overdue, reason }) => (
+    { ticker, type, owner, firstSeen, pruefungBis, overdue: overdue === true, reason }));
+}
+
 function buildMarker(res, m) {
   const coveragePct = res.n_total > 0 ? +(res.n_ok / res.n_total * 100).toFixed(1) : 0;
   // Invalid manifests are classified through a visible file-count fallback. Never
@@ -294,6 +306,7 @@ function buildMarker(res, m) {
     n_skipped_mcap: markerCount('n_skipped_mcap'),
     n_missing_mcap: missingMcap,
     n_skipped_owned: markerCount('n_skipped_owned'),
+    reporting_ccy_held: reportingCcyHeld(trustedManifest),
     source: res.source,
     reasons,
     manifest_partial: !!(trustedManifest && trustedManifest.partial === true)

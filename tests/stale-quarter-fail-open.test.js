@@ -157,7 +157,7 @@ function replaceOnce(source, anchor, replacement) {
   return source.replace(anchor, replacement);
 }
 function withoutOrdinaryGuard() {
-  return replaceOnce(pullSource, '      if (!reloadOnly && !staleSchema && !staleCurrency && _parsedSnapshot) { // P137: ordinary full-pull period guard',
+  return replaceOnce(pullSource, '      if (!reloadOnly && !staleSchema && !staleCurrency && !reportingHold && _parsedSnapshot) { // P137: ordinary full-pull period guard',
     '      if (false) { // P137: ordinary full-pull period guard disabled in memory');
 }
 function changedLeaves(a, b, prefix = '') {
