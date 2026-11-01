@@ -247,21 +247,28 @@ function buildExcludedList(results, universe, exits = [], options = {}) {
  */
 function homeListingReport(gruppen) {
   const fallbacks = [], oldRuleDiffers = [];
-  const counts = { firmsWithHomeTable: 0, onHomeListing: 0 };
+  const counts = { firmsWithHomeTable: 0, onHomeListing: 0, multiListed: 0, multiListedOnHome: 0, multiListedWithoutCountry: 0 };
   const country = (e) => e.snapshot && e.snapshot.meta && e.snapshot.meta.country;
-  const rank = (e) => homeListingRank(e.ticker, country(e));
   for (const g of gruppen) {
     const shown = g.find((e) => !istRaus(e));
+    // A leg without a country still is the home of its group's firm (GF.SW next to GEFI.VI).
+    const rank = (e) => homeListingRank(e.ticker, country(e) || (shown && country(shown)));
     const legs = g.filter((e) => !istRaus(e) || e.reason === 'dup-issuer');
     if (!shown || !shown.snapshot) continue;
     const old = [...legs].sort(issuerDedupComparatorOld)[0];
     if (old.ticker !== shown.ticker) oldRuleDiffers.push({ shown: shown.ticker, oldRule: old.ticker });
+    const several = legs.length >= 2 && !isUS(shown.snapshot);
+    if (several && !country(shown)) counts.multiListedWithoutCountry++;
     if (isUS(shown.snapshot) || !hasHomeExchange(country(shown))) continue;
     counts.firmsWithHomeTable++;
     if (rank(shown) < NOT_HOME) counts.onHomeListing++;
+    if (several) {
+      counts.multiListed++;
+      if (rank(shown) < NOT_HOME) counts.multiListedOnHome++;
+    }
     const home = [...g].filter((e) => e.snapshot && rank(e) < NOT_HOME).sort((a, b) => rank(a) - rank(b) || (a.ticker < b.ticker ? -1 : 1))[0];
     if (!home) {
-      if (rank(shown) >= NOT_HOME) fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: null, reason: 'keineHeimatnotierung', shownMonth: shownGrowthMonth(shown.snapshot) || null, homeMonth: null });
+      if (rank(shown) >= NOT_HOME) fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: null, reason: 'keineLandesnotierungInGruppe', shownMonth: shownGrowthMonth(shown.snapshot) || null, homeMonth: null });
       continue;
     }
     if (home.ticker === shown.ticker || rank(home) >= rank(shown)) continue;
@@ -271,6 +278,18 @@ function homeListingReport(gruppen) {
   }
   const byShown = (a, b) => (a.shown < b.shown ? -1 : a.shown > b.shown ? 1 : 0);
   return { counts, fallbacks: fallbacks.sort(byShown), oldRuleDiffers: oldRuleDiffers.sort(byShown) };
+}
+
+/**
+ * P290: a vanished meta.country or a broken table would silently put every firm back on the old order. Counts only firms outside
+ * the US with more than one listing, since a single listing cannot leave its home; 1,180 of 1,459 stood on it on 31.10.2026.
+ * @param {object} counts The counts of homeListingReport.
+ * @returns {?string} The warning, or null.
+ */
+function homeListingWarning(counts) {
+  const all = counts.multiListed + counts.multiListedWithoutCountry;
+  if (all < 100 || counts.multiListedOnHome >= 0.5 * all) return null;
+  return `Heimatnotierung: nur ${counts.multiListedOnHome} von ${all} mehrfach notierten Firmen stehen auf ihr, ${counts.multiListedWithoutCountry} ohne Land.`;
 }
 
 /**
@@ -458,10 +477,8 @@ function main() {
   }
   const { rows, legs, byReason, sizeExits, homeListing } = buildExcludedList(results, universe, exits, { referenceDay });
 
-  // P290: a vanished meta.country would silently put every firm back on the old order. About 80 % sit on their home listing.
-  if (homeListing.counts.firmsWithHomeTable >= 100 && homeListing.counts.onHomeListing < 0.5 * homeListing.counts.firmsWithHomeTable) {
-    console.warn(`::warning::[excluded-list] Heimatnotierung: nur ${homeListing.counts.onHomeListing} von ${homeListing.counts.firmsWithHomeTable} Firmen stehen auf ihr.`);
-  }
+  const heimatWarnung = homeListingWarning(homeListing.counts);
+  if (heimatWarnung) console.warn(`::warning::[excluded-list] ${heimatWarnung}`);
   const fehler = pruefeSummen(byReason, readExcludedCounter(INDEX_FILE));
   if (fehler.length) {
     throw new Error('[excluded-list] Summen-Wache gebrochen — die Liste deckt sich nicht mit den Zaehlern:\n  '
@@ -520,7 +537,7 @@ function main() {
 }
 
 module.exports = {
-  buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, universumsHash, universumsHashVon,
+  buildExcludedList, homeListingWarning, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, universumsHash, universumsHashVon,
   liesModusDeklaration, pruefeModusUmgebung, vergleicheLinealSkalare, kanonisch, LINEAL_SKALARE,
   SCHEMA, OUT_FILE, INDEX_FILE, UNIVERSE_HASH_FILE, MODE_FILE, SEALED_CALIB_FILE,
 };

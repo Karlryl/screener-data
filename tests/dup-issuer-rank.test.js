@@ -55,7 +55,7 @@ test('the real table: decided and open issuers exist; only Copel and AXIA move t
     const issuer = tableById[id];
     assert.notEqual(issuer.homeListingProposal, issuer.codeKeeps, `${id}: recorded codeKeeps is the non-home listing`);
   }
-  // Master decision 18.10.2026: no other issuer's marker is set against codeKeeps. Since P290 (01.11.2026) the dedup itself keeps KCO.DE.
+  // Master decision 18.10.2026: no other issuer's marker is set against codeKeeps. Since P290 (01.11.2026) the dedup itself keeps the home listing.
   assert.deepEqual(Object.keys(tableById).filter((id) => tableById[id].markFollowsHomeListing === true), ['axia-energia', 'copel']);
 });
 
@@ -190,8 +190,8 @@ test('exported rows carry the literal markers for Copel, AXIA and Kloeckner', ()
   assert.deepEqual(marker('ELPC'), { of: 'CPLE3.SA', issuer: 'Copel', basis });
   assert.equal(marker('AXIA3.SA'), 'none');
   assert.deepEqual(marker('AXIA'), { of: 'AXIA3.SA', issuer: 'AXIA Energia', basis });
-  assert.equal(marker('KCO.DE'), 'none', 'P290: the dedup keeps the home listing, so the marker sits on KCO.VI');
-  assert.deepEqual(marker('KCO.VI'), { of: 'KCO.DE', issuer: 'Klöckner & Co', basis });
+  assert.equal(marker('KCO.VI'), 'none', 'P290: KCO.DE ended, so KCO.VI is the home and carries no marker');
+  assert.deepEqual(marker('KCO.DE'), { of: 'KCO.VI', issuer: 'Klöckner & Co', basis });
 });
 
 // P290: both directions. The kept listing alone (17.10. situation), and a marked fallback that holds the firm's only rank.
@@ -212,12 +212,24 @@ test('filter feed: a marked listing that lost its rank to the home listing stays
   const template = filterSnapshots.find((s) => s.meta.ticker === 'PAY');
   const snapshots = ['KCO.DE', 'KCO.VI'].map((ticker) => ({ ...structuredClone(template), meta: { ...template.meta, ticker } }));
   const feed = buildUniverse({ snapshots, boards: new Map(out.map((r) => [r.ticker, { branch: 'materials', row: r }])), generatedAt: '2026-10-17T14:47:00Z' }).rows;
-  assert.ok(feed.find((r) => r.t === 'KCO.VI').aus.includes('dup-issuer'));
-  assert.ok(!feed.find((r) => r.t === 'KCO.DE').aus.includes('dup-issuer'));
+  assert.ok(feed.find((r) => r.t === 'KCO.DE').aus.includes('dup-issuer'));
+  assert.ok(!feed.find((r) => r.t === 'KCO.VI').aus.includes('dup-issuer'));
 });
 
-test('a non-home listing alone keeps its rank (Kloeckner: KCO.DE not in the ranking)', () => {
-  for (const ticker of ['KCO.VI', 'ELPC', 'AVAV.SW']) {
+test('filter feed: with an open home both rows keep their rank, and the marked one stays out by default', () => {
+  const out = board(rows(['AERO', 'AERO.MX']));
+  const marked = out.find((r) => r.dupIssuer);
+  assert.ok(marked && Number.isInteger(marked.rank), 'precondition: an open home keeps every rank');
+  assert.ok(Number.isInteger(pick(out, marked.dupIssuer.of).rank), 'precondition: the row it points at holds a rank');
+  const template = filterSnapshots.find((s) => s.meta.ticker === 'PAY');
+  const snapshots = out.map((r) => ({ ...structuredClone(template), meta: { ...template.meta, ticker: r.ticker } }));
+  const feed = buildUniverse({ snapshots, boards: new Map(out.map((r) => [r.ticker, { branch: 'materials', row: r }])), generatedAt: '2026-10-17T14:47:00Z' }).rows;
+  assert.ok(feed.find((r) => r.t === marked.ticker).aus.includes('dup-issuer'));
+  assert.ok(!feed.find((r) => r.t === marked.dupIssuer.of).aus.includes('dup-issuer'));
+});
+
+test('a non-home listing alone keeps its rank (Kloeckner: KCO.VI not in the ranking)', () => {
+  for (const ticker of ['KCO.DE', 'ELPC', 'AVAV.SW']) {
     const [r] = board(rows([ticker]));
     assert.equal(r.rank, 1, `${ticker}: the firm must not vanish from a ranking without its home listing`);
     assert.equal(r.rankGrund, null);

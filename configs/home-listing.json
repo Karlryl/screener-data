@@ -1,5 +1,5 @@
 {
-  "_doku": "P290. exchangesByCountry: the home exchanges of an issuer's country (meta.country, Yahoo's head office), in the fixed order the dedup prefers them. A sourced homeListingProposal in dup-issuer-shadow-table.json goes first. A country missing here has no evidenced home; its listings keep the old order (market cap). secondaryBoards: suffixes that only mirror shares already listed elsewhere; they lose to any other listing of a foreign issuer.",
+  "_doku": "P290. exchangesByCountry: the home exchanges of an issuer's country (meta.country, Yahoo's head office), in the fixed order the dedup prefers them. A sourced homeListingProposal in dup-issuer-shadow-table.json goes first. A country missing here has no evidenced home; among equal periods its listings go by market cap, mirror boards last. secondaryBoards: suffixes that only mirror shares already listed elsewhere; they lose to any other listing of a foreign issuer.",
   "exchangesByCountry": {
     "Argentina": [".BA"],
     "Australia": [".AX"],

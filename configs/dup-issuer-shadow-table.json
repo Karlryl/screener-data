@@ -120,15 +120,15 @@
   "kloeckner-co": {
     "issuer": "Klöckner & Co",
     "tickers": ["KCO.VI", "KCO.DE"],
-    "codeKeeps": "KCO.DE",
-    "homeListingProposal": "KCO.DE",
+    "codeKeeps": "KCO.VI",
+    "homeListingProposal": "KCO.VI",
     "source": {
       "url": "https://www.wienerborse.at/aktien-global-market/kloeckner-co-se-DE000KC01000/",
       "quote": "KLOECKNER + CO SE"
     },
     "sourceCheckedOn": "2026-09-30",
     "enteredOn": "2026-10-06",
-    "note": "R11 home-listing proposal: KCO.DE (95% confidence). P290 (2026-11-01): the dedup prefers KCO.DE, so the flag follows it. On 2026-10-31 KCO.DE has no snapshot and KCO.VI shows with the flag; the filter feed keeps such a row visible."
+    "note": "R11 home-listing proposal was KCO.DE (95% confidence). P290 (2026-11-01): KCO.DE ended on 2026-08-12 (data-health/dead-tickers.json), so KCO.VI, the only live line, is both the kept row and the home; a stale KCO.DE snapshot must not win."
   },
   "circle": {
     "issuer": "Circle Internet Group",

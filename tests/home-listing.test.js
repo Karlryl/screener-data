@@ -12,7 +12,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { issuerDedupComparator, issuerDedupComparatorOld, issuerDedupGroups } = require('../src/scoring/score.js');
 const { homeListingRank, shownGrowthMonth, loadHomeListingTable, NOT_HOME, SECONDARY_BOARD, SOURCED_HOME } = require('../lib/home-listing.js');
-const { buildExcludedList } = require('../scripts/write-excluded-list.js');
+const { buildExcludedList, homeListingWarning } = require('../scripts/write-excluded-list.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -78,7 +78,7 @@ test('India: NSE before BSE whatever the market caps say, in either direction', 
   assert.equal(first([leg('TCS.BO', 'India', 100e9), leg('TCS.NS', 'India', 101e9)]), 'TCS.NS');
 });
 
-test('share classes on the home exchange stay put when their market caps cross, and the clearly larger line wins', () => {
+test('share classes on the home exchange stay put when their market caps cross inside a 10 % step, and a line a step larger wins', () => {
   assert.equal(first([leg('AAK-A.ST', 'Sweden', 20.0e9), leg('AAK-B.ST', 'Sweden', 20.1e9)]), 'AAK-A.ST');
   assert.equal(first([leg('AAK-A.ST', 'Sweden', 20.1e9), leg('AAK-B.ST', 'Sweden', 20.0e9)]), 'AAK-A.ST');
   assert.equal(first([leg('CBE.PA', 'France', 1.46e9), leg('RBT.PA', 'France', 1.86e9)]), 'RBT.PA', 'Robertet: a thin line by ticker order lost 21 % of the market cap');
@@ -142,7 +142,7 @@ test('excluded.json names a home listing that never reached the contest', () => 
   assert.equal(issuerDedupGroups([home, other]).length, 1);
   assert.equal(homeListing.fallbacks.length, 1);
   assert.equal(homeListing.fallbacks[0].reason, 'data-suspect');
-  assert.deepEqual(homeListing.counts, { firmsWithHomeTable: 1, onHomeListing: 0 });
+  assert.deepEqual(homeListing.counts, { firmsWithHomeTable: 1, onHomeListing: 0, multiListed: 0, multiListedOnHome: 0, multiListedWithoutCountry: 0 });
 });
 
 test('excluded.json names a firm with no home listing in the universe, and leaves out what has no home table', () => {
@@ -151,8 +151,25 @@ test('excluded.json names a firm with no home listing in the universe, and leave
   const us = leg('BBB', 'United States', 3e9, JUNE, 'Plain Inc'), us2 = leg('BBB.VI', 'United States', 2e9, JUNE, 'Plain Inc'); us.snapshot.meta.exchangeName = 'NYSE';
   const results = [mirror, other, offshore, offshore2, us, us2].map((e, i) => ({ ticker: e.ticker, action: i % 2 ? 'exclude' : 'route', reason: i % 2 ? 'dup-issuer' : undefined, score: null, lamps: [] }));
   const { homeListing } = buildExcludedList(results, [mirror, other, offshore, offshore2, us, us2].map((e) => e.snapshot), []);
-  assert.deepEqual(homeListing.fallbacks, [{ issuer: 'Bechtle AG', shown: 'BC8.VI', home: null, reason: 'keineHeimatnotierung', shownMonth: '2026-06', homeMonth: null }]);
-  assert.deepEqual(homeListing.counts, { firmsWithHomeTable: 1, onHomeListing: 0 });
+  assert.deepEqual(homeListing.fallbacks, [{ issuer: 'Bechtle AG', shown: 'BC8.VI', home: null, reason: 'keineLandesnotierungInGruppe', shownMonth: '2026-06', homeMonth: null }]);
+  assert.deepEqual(homeListing.counts, { firmsWithHomeTable: 1, onHomeListing: 0, multiListed: 1, multiListedOnHome: 0, multiListedWithoutCountry: 0 });
+});
+
+test('the home-listing warning fires when the country vanishes or the firms leave their home, and not on the measured share', () => {
+  const firms = (country, a, b) => Array.from({ length: 200 }, (_, i) => [leg(`F${i}${a}`, country, 3e9, JUNE, `Firm ${i}`), leg(`F${i}${b}`, country, 2e9, JUNE, `Firm ${i}`)]).flat();
+  const counts = (entries) => {
+    const results = entries.map((e, i) => ({ ticker: e.ticker, action: i % 2 ? 'exclude' : 'route', reason: i % 2 ? 'dup-issuer' : undefined, score: null, lamps: [] }));
+    return buildExcludedList(results, entries.map((e) => e.snapshot), []).homeListing.counts;
+  };
+  const home = counts(firms('Germany', '.DE', '.VI'));
+  assert.equal(home.multiListedOnHome, 200);
+  assert.equal(homeListingWarning(home), null);
+  const noCountry = counts(firms(undefined, '.DE', '.VI'));
+  assert.deepEqual(noCountry, { firmsWithHomeTable: 0, onHomeListing: 0, multiListed: 0, multiListedOnHome: 0, multiListedWithoutCountry: 200 });
+  assert.match(homeListingWarning(noCountry), /0 von 200 .* 200 ohne Land/);
+  assert.match(homeListingWarning({ multiListed: 200, multiListedOnHome: 99, multiListedWithoutCountry: 0 }), /99 von 200/);
+  assert.equal(homeListingWarning({ multiListed: 1459, multiListedOnHome: 1180, multiListedWithoutCountry: 0 }), null, 'the share of 31.10.2026');
+  assert.equal(homeListingWarning({ multiListed: 50, multiListedOnHome: 0, multiListedWithoutCountry: 0 }), null, 'too few to judge');
 });
 
 test('the old-rule comparison counts only listings that reached the contest', () => {

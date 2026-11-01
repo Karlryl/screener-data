@@ -28,8 +28,8 @@ test('real table pins all twenty issuers, all tickers and the recorded choices',
     ['Amrize', ['AMRZ', 'AMRZ.SW'], 'AMRZ', 'AMRZ'],
     ['AXIA Energia', ['AXIA', 'AXIA3.SA'], 'AXIA', 'AXIA3.SA'],
     ['Copel', ['ELPC', 'CPLE3.SA'], 'ELPC', 'CPLE3.SA'],
-    // P290 (01.11.2026): the dedup keeps the home listing now, so the recorded choice of Kloeckner and Vinci moved with it.
-    ['Klöckner & Co', ['KCO.VI', 'KCO.DE'], 'KCO.DE', 'KCO.DE'],
+    // P290 (01.11.2026): KCO.DE ended on 2026-08-12, so KCO.VI is the home. Vinci's recorded choice moved with the dedup.
+    ['Klöckner & Co', ['KCO.VI', 'KCO.DE'], 'KCO.VI', 'KCO.VI'],
     // Numbers-trust audit 23.10.2026: legs the name-only duplicate check missed.
     ['Circle Internet Group', ['CRCL', 'CRCL.SW'], 'CRCL', 'CRCL'],
     ['Strategy', ['MSTR', 'MSTR.SW'], 'MSTR', 'MSTR'],
@@ -65,17 +65,17 @@ test('real table pins all twenty issuers, all tickers and the recorded choices',
 test('real table: literal marker per secondary ticker (no other issuer moves)', () => {
   assert.deepEqual(Object.fromEntries([...index].map(([ticker, v]) => [ticker, v.of])), {
     'AVAV.SW': 'AVAV', 'GCP.DE': 'GE', 'GE.VI': 'GE', '1GLXY.MI': 'GLXY', '6855.HK': 'AAPG',
-    'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.VI': 'KCO.DE',
+    'AERO.MX': 'AERO', 'AMRZ.SW': 'AMRZ', AXIA: 'AXIA3.SA', ELPC: 'CPLE3.SA', 'KCO.DE': 'KCO.VI',
     '1GE.MI': 'GE', 'CRCL.SW': 'CRCL', 'MSTR.SW': 'MSTR', 'EF2.AX': 'UUUU', 'SBLK.AT': 'SBLK',
     'DG.VI': 'DG.PA', 'DG.SW': 'DG.PA', PSKY: 'SKYD',
     '1ASML.MI': 'ASML.AS', 'ASME.DE': 'ASML.AS', 'ASML.SW': 'ASML.AS', 'ASML.VI': 'ASML.AS', 'ASML.WA': 'ASML.AS',
     'MTLN.AT': 'MTLN.L', 'X4Z.DE': 'MTLN.L', 'ORNAV.HE': 'ORNBV.HE', '1ORNBV.MI': 'ORNBV.HE', 'METSA.HE': 'METSB.HE', 'MTG-A.ST': 'MTG-B.ST',
   });
-  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.DE', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.PA', 'SKYD', 'ASML.AS', 'MTLN.L', 'ORNBV.HE', 'METSB.HE', 'MTG-B.ST']) {
+  for (const ticker of ['AVAV', 'GE', 'GLXY', 'AAPG', 'AERO', 'AMRZ', 'AXIA3.SA', 'CPLE3.SA', 'KCO.VI', 'CRCL', 'MSTR', 'UUUU', 'SBLK', 'DG.PA', 'SKYD', 'ASML.AS', 'MTLN.L', 'ORNBV.HE', 'METSB.HE', 'MTG-B.ST']) {
     assert.ok(!index.has(ticker), ticker + ' must stay unmarked');
   }
-  const kco = applyDupIssuerShadow({ ticker: 'KCO.VI' }, index);
-  assert.deepEqual(kco.dupIssuer, { of: 'KCO.DE', issuer: 'Klöckner & Co', basis: 'hand-table:dup-issuer-shadow' });
+  const kco = applyDupIssuerShadow({ ticker: 'KCO.DE' }, index);
+  assert.deepEqual(kco.dupIssuer, { of: 'KCO.VI', issuer: 'Klöckner & Co', basis: 'hand-table:dup-issuer-shadow' });
 });
 
 test('missing file and invalid JSON fail loudly', () => {
@@ -145,4 +145,12 @@ test('applicator adds only the exact marker, preserving every unrelated value by
   assert.strictEqual(applyDupIssuerShadow(unknown, index), unknown);
   assert.equal(JSON.stringify(unknown), bytes);
   assert.equal(JSON.stringify(table), tableBefore);
+});
+
+test('no sourced home names a listing that ended', () => {
+  const dead = JSON.parse(fs.readFileSync(path.join(__dirname, '../data-health/dead-tickers.json'), 'utf8')).tickers;
+  assert.ok(dead['KCO.DE'], 'precondition: the ended listing is on the list');
+  const rows = Object.entries(table).filter(([, r]) => r.homeListingProposal);
+  assert.ok(rows.length >= 10);
+  assert.deepEqual(rows.filter(([, r]) => dead[r.homeListingProposal]).map(([id]) => id), []);
 });

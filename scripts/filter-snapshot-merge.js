@@ -1327,7 +1327,7 @@ function namensherkunftZaehlen(zeilen) {
   for (const g of gruppen) {
     if (g.length < 2) continue;
     mehrbeinGruppen++;
-    // Genau die Produktions-Sortierung. Kopie statt in-place, damit der Aufrufer-Zustand
+    // Die Produktions-Sortierung; ohne gezeigten Monat faellt ihr Zeitraum-Schluessel weg (siehe Kopfkommentar). Kopie statt in-place, damit der Aufrufer-Zustand
     // unberuehrt bleibt — diese Messung darf nichts bewegen, auch keine Array-Reihenfolge.
     const sieger = [...g].sort(issuerDedupComparator)[0];
     const q = sieger && sieger.snapshot && sieger.snapshot.meta ? sieger.snapshot.meta.nameSource : undefined;

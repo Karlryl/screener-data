@@ -303,7 +303,7 @@ function issuerDedupGroups(entries) {
 // US-Primaerboerse, kein Auslands-Suffix), NICHT das domizil-basierte isUS. Ein Toronto-Bein mit
 // country='United States' bekam sonst denselben isUS=1-Rang wie das NYSE-Bein, und fxSuspect
 // deprioritisierte danach ausgerechnet das echte US-Primaerbein (GFL vs GFL.TO). Danach isUS
-// (Domizil), fxSuspect, marketCap, Ticker-Tie-Break. Erwartet: GFL schlaegt GFL.TO; BAM/CMOC unveraendert.
+// (Domizil), fxSuspect; danach seit P290 Zeitraum und Heimatnotierung (issuerDedupComparator). Erwartet: GFL schlaegt GFL.TO; BAM/CMOC unveraendert.
 // MESSUNG 27.07. (Tag 465) — „waehlt der Sieger die falsche Branchenformel?"
 // Anlass: derselbe Emittent traegt bei Yahoo je nach Boersenplatz eine andere Branche. Weil
 // hier genau EIN Bein ueberlebt, entscheidet dieser Vergleich mit darueber, gegen welche
@@ -345,8 +345,8 @@ function issuerDedupComparator(a, b) {
   if (first) return first;
   // P290: fixed home listing with an allowed fallback (lib/home-listing.js). First the newest period the board can show, so
   // stability never costs data: a home listing with an older growth period, or none, gives way while another listing shows newer.
-  // Then the home listing. Share classes on one home exchange: the clearly larger line, else the ticker. Near-equal market caps
-  // cross daily, and their statements agree.
+  // Then the home listing. Share classes on one home exchange: the line a 10 % market-cap step larger, else the ticker. Near-equal
+  // market caps cross daily and their statements agree; lines at a step boundary can still swap (3 of 123 flips on 27.-31.10.2026).
   const qa = shownGrowthMonth(a.snapshot), qb = shownGrowthMonth(b.snapshot);
   if (qa !== qb) return qa > qb ? -1 : 1;
   const ha = homeListingRank(a.ticker, a.snapshot && a.snapshot.meta && a.snapshot.meta.country);
