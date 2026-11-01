@@ -519,7 +519,7 @@
   {
     "pr": 75,
     "gueltigAb": "2026-10-30",
-    "gueltigBis": "2026-11-06",
+    "gueltigBis": "2026-11-04",
     "id": "pr75-r3-MBMI-growth",
     "ticker": "MB.MI",
     "board": "filter/universum",
@@ -532,7 +532,7 @@
   {
     "pr": 75,
     "gueltigAb": "2026-10-30",
-    "gueltigBis": "2026-11-06",
+    "gueltigBis": "2026-11-04",
     "id": "pr75-r3-MBVI-growth",
     "ticker": "MB.VI",
     "board": "filter/universum",
@@ -545,7 +545,7 @@
   {
     "pr": 75,
     "gueltigAb": "2026-10-30",
-    "gueltigBis": "2026-11-06",
+    "gueltigBis": "2026-11-04",
     "id": "pr75-r3-MDIBF-growth",
     "ticker": "MDIBF",
     "board": "filter/universum",
@@ -662,5 +662,15 @@
   {"id":"w7-ARXTO-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"ARX.TO","board":"filter/universum","op":"absent","grund":"ARC Resources ist nach der belegten abgeschlossenen Shell-Uebernahme ausgetragen. Der Grund bleibt in der Ausschlussliste erhalten."},
   {"id":"w7-PSKY-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"PSKY","board":"filter/universum","op":"absent","grund":"Die seit dem 06.10.2026 durch SKYD ersetzte Notierung PSKY ist ausgetragen. Quelle und Nachfolger bleiben in der Ausschlussliste erhalten."},
   {"id":"w7-PSKY-board","pr":66,"gueltigAb":"2026-11-03","ticker":"PSKY","board":"any","op":"absent","grund":"PSKY steht auf keinem Vollboard mehr, die Firma läuft unter SKYD."},
-  {"id":"w7-SKYD-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"SKYD","board":"filter/universum","op":"present","grund":"Paramount Skydance bleibt unter SKYD im Filter-Feed."}
+  {"id":"w7-SKYD-liste","pr":66,"gueltigAb":"2026-11-03","ticker":"SKYD","board":"filter/universum","op":"present","grund":"Paramount Skydance bleibt unter SKYD im Filter-Feed."},
+  {"id":"pr72-PRNL-board","pr":72,"ticker":"PRN.L","board":"full/consumer-staples","op":"absent","gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Princes Group steht nicht mehr auf dem Board Basiskonsum: Der Anbieter stellt das gesetzliche Jahr 2025 (1.871,5 Mio. GBP) neben das Pro-forma-Jahr 2024 (2.053,5 Mio. GBP); die Zeile trug minus 8,9 % und Rang 486 (nachgerechnet auf den Daten vom 31.10.2026)."},
+  {"id":"pr72-BXBAX-wachstum","pr":72,"ticker":"BXB.AX","board":"full/industrials","track":"profitable","feld":"revGrowthYoYPct","op":"null","gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Bei Brambles bleibt das Wachstum leer, weil das gespeicherte Paar 730 Tage umfasst (30.06.2026 gegen 30.06.2024), kein Jahrespaar (nachgerechnet am 31.10.2026)."},
+  {"id":"pr72-395400KS-board","pr":72,"ticker":"395400.KS","board":"full/real-estate","op":"absent","gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"SK Reits verlässt das Immobilien-Board, weil sein Jahrespaar nur 91 Tage auseinanderliegt und keine andere Achse trägt; die Zeile steht mit Grund in der Ausschlussliste (nachgerechnet am 31.10.2026)."},
+  {"id":"pr72-MBMI-growth","pr":72,"ticker":"MB.MI","board":"filter/universum","feld":"g","op":"null","gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Bei Mediobanca bleibt das Wachstum leer, weil die Jahre 31.12.2025 und 30.06.2024 549 Tage auseinanderliegen; +1,47 % war kein Jahrespaar."},
+  {"id":"pr72-MBVI-growth","pr":72,"ticker":"MB.VI","board":"filter/universum","feld":"g","op":"null","gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Bei Mediobanca bleibt das Wachstum leer, weil die Jahre 31.12.2025 und 30.06.2024 549 Tage auseinanderliegen; +1,47 % war kein Jahrespaar."},
+  {"id":"pr72-MDIBF-growth","pr":72,"ticker":"MDIBF","board":"filter/universum","feld":"g","op":"null","gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Bei Mediobanca bleibt das Wachstum leer, weil die Jahre 31.12.2025 und 30.06.2024 549 Tage auseinanderliegen; +1,47 % war kein Jahrespaar."},
+  {"id":"pr72-1729HK-wachstum","pr":72,"ticker":"1729.HK","board":"full/industrials","track":"profitable","feld":"revGrowthYoYPct","op":"between","min":67.4,"max":68.5,"gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Time Interconnect behält +67,95 % aus den vollen Jahren 2025 und 2024: Das fehlende ältere Stummeljahr macht ein belegtes volles Jahrespaar nicht leer (nachgerechnet am 31.10.2026)."},
+  {"id":"pr72-8279HK-wachstum","pr":72,"ticker":"8279.HK","board":"full/consumer-discretionary","track":"unprofitable","feld":"revGrowthYoYPct","op":"between","min":23.1,"max":24.2,"gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Agtech behält +23,67 % aus den vollen Jahren bis März 2026 und März 2025: Das fehlende ältere Stummeljahr macht ein belegtes volles Jahrespaar nicht leer (nachgerechnet am 31.10.2026)."},
+  {"id":"pr72-ARYNSW-wachstum","pr":72,"ticker":"ARYN.SW","board":"full/consumer-staples","track":"profitable","feld":"revGrowthYoYPct","op":"between","min":0.8,"max":1.8,"gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Aryzta behält +1,31 % aus den vollen Jahren 2025 und 2024: Das fehlende ältere Stummeljahr macht ein belegtes volles Jahrespaar nicht leer (nachgerechnet am 31.10.2026)."},
+  {"id":"pr72-SIGAX-wachstum","pr":72,"ticker":"SIG.AX","board":"full/health-care","track":"profitable","feld":"revGrowthYoYPct","op":"between","min":80.0,"max":81.0,"gueltigAb":"2026-11-05","gueltigBis":"2026-11-12","grund":"Sigma Healthcare behält +80,53 % aus den vollen Jahren bis Juni 2026 und Juni 2025: Das fehlende ältere Stummeljahr macht ein belegtes volles Jahrespaar nicht leer (nachgerechnet am 31.10.2026)."}
 ]
