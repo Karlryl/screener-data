@@ -18620,6 +18620,34 @@
           "verifiedAt": "2026-11-01"
         }
       ]
+    },
+    {
+      "caseId": "hubg-withdrawn-statements-20261101",
+      "ticker": "HUBG",
+      "reason": "Score fehlt: Hub Group hat im Mai 2026 mitgeteilt, dass die Abschlüsse der Jahre 2024 (Ende 31.12.2024) und 2023 (Ende 31.12.2023) wesentlich falsch sind und nicht mehr gelten; ein Jahresabschluss 2025 ist bis zum 01.11.2026 nicht eingereicht. Die Jahres- und Bewertungszahlen des Anbieters ruhen auf diesen Abschlüssen, deshalb lässt sich kein Firmenscore bilden. Geprüft am 01.11.2026.",
+      "reasonDate": "2026-11-01",
+      "fingerprint": [
+        { "path": ["meta", "name"], "expected": "Hub Group, Inc." },
+        { "path": ["meta", "reportingCurrency"], "expected": "USD" }
+      ],
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0000940942/000119312526218141/d146211d8k.htm",
+          "form": "Hub Group, Inc., Form 8-K of 12.05.2026, Item 4.02 Non-Reliance on Previously Issued Financial Statements",
+          "page": "Item 4.02",
+          "quote": "were in each case materially misstated and should no longer be relied upon",
+          "unit": "text",
+          "verifiedAt": "2026-11-01"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/940942/000119312526086687/d16550dnt10k.htm",
+          "form": "Hub Group, Inc., Form NT 10-K for the year ended 31.12.2025, filed 03.03.2026",
+          "page": "Part III",
+          "quote": "because it requires additional time to restate the Q1 2025 Financial Statements",
+          "unit": "text",
+          "verifiedAt": "2026-11-01"
+        }
+      ]
     }
   ],
   "periodLabels": [

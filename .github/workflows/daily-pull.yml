@@ -2430,8 +2430,8 @@ jobs:
           # audit BH-156: `date -u +%F` unmittelbar vor dem Aufruf gestempelt — deckt
           # sich mit write-board-history.js' eigenem isoDay(Date.now()) (kein --date
           # uebergeben, das Skript nutzt also dieselbe Wanduhr). Als Output verfuegbar
-          # fuer den Commit-Step unten (praeziser als das Stunden-alte RUN_DATE_UTC,
-          # das dieser Job gar nicht sieht).
+          # fuer den Commit-Step unten (praeziser als das Stunden-alte RUN_DATE_UTC
+          # dieses Jobs).
           echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
           set +e
           node scripts/write-board-history.js

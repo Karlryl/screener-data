@@ -30,7 +30,9 @@ const quarters = (newest, values = [120, 110, 105, 102, 100, 90]) => {
   ends[4] = yearBefore(ends[0]); ends[5] = yearBefore(ends[1]);
   return { revenueQ: cells(values), revenueQEnds: ends };
 };
-const pkt = (timeseries, annual = {}) => ({ meta: { ticker: 'XX' }, timeseries, annual });
+// Annual revenue by default: without any, the revenue series stays as the proof of revenue (see its own test).
+const ANNUAL = { annualRev: cells([130, 100]), annualRevEnds: ['2025-12-31', '2024-12-31'] };
+const pkt = (timeseries, annual = ANNUAL) => ({ meta: { ticker: 'XX' }, timeseries, annual });
 const rows = (s, f) => s.timeseries[f].map(r => (r && typeof r === 'object' ? r.value : r));
 
 test('quarterly series: 365 days behind still counts, 366 days do not, each cell empty with a dated reason and the vendor row kept', () => {
@@ -148,6 +150,75 @@ test('prepareSnapshot applies it, the pull path does not', () => {
     assert.deepEqual(rows(prepareSnapshot(structuredClone(raw)), 'revenueQ'), [null, null, null, null, null, null]);
     assert.deepEqual(rows(prepareSnapshot(structuredClone(raw), { atPull: true }), 'revenueQ'), [120, 110, 105, 102, 100, 90], 'stored data stay as delivered');
   });
+});
+
+test('a stale series is no proof of "no revenue": without annual revenue the cells stay and the firm is not routed to the list without revenue', () => {
+  const { isPreRevenue } = require('../src/scoring/router.js');
+  withDay(DAY, () => {
+    const noAnnual = pkt(quarters('2014-12-31'), { annualRev: cells([null, null]), annualRevEnds: ['2025-12-31', '2020-12-31'] });
+    const out = P.maskStaleQuarterSeries(noAnnual);
+    assert.equal(out, noAnnual, 'the revenue series stays');
+    assert.equal(isPreRevenue(out), false);
+    assert.equal(G.g31Shadow(out).v1.pct, null, 'and shows no growth');
+    const withAnnual = pkt(quarters('2014-12-31'), { annualRev: cells([130, 100]), annualRevEnds: ['2025-12-31', '2024-12-31'] });
+    assert.deepEqual(rows(P.maskStaleQuarterSeries(withAnnual), 'revenueQ'), [null, null, null, null, null, null], 'annual revenue proves it, the old quarters go');
+    const noGuard = mutant('lib/annual-pairs.js', "    if (field === 'revenueQ' && !norm(snapshot, 'annualRev').some((v) => Number.isFinite(v) && v !== 0)) continue;", '');
+    assert.equal(isPreRevenue(noGuard.maskStaleQuarterSeries(noAnnual)), true, 'break-once: the firm would land on the list without revenue');
+  });
+});
+
+test('every shown or fed annual figure has the age limit: overview pair, three-year rate; a fresh one passes', () => {
+  const { growth3 } = require('../scripts/write-filter-universe.js');
+  const annual = (newest) => ({ annualRev: cells([133, 121, 110, 100]), annualRevEnds: [0, 1, 2, 3].map(i => `${+newest.slice(0, 4) - i}${newest.slice(4)}`) });
+  withDay(DAY, () => {
+    assert.equal(P.annualPairGateReason(pkt({}, annual('2025-12-31')), 'annualRev', 0, 1), null);
+    assert.match(P.annualPairGateReason(pkt({}, annual('2024-12-31')), 'annualRev', 0, 1), /Periodenstand veraltet/);
+    assert.notEqual(growth3(pkt({}, annual('2025-12-31'))), null);
+    assert.equal(growth3(pkt({}, annual('2024-12-31'))), null);
+  });
+  assert.notEqual(growth3(pkt({}, annual('2024-12-31'))), null, 'no data day, no age rule');
+  assert.equal(P.annualPairGateReason(pkt({}, annual('2024-12-31')), 'annualRev', 0, 1), null);
+});
+
+test('acceleration: a vendor zero or a gap at position 0 does not hide an old anchor', () => {
+  withDay(DAY, () => {
+    const hidden = lead => pkt({}, { annualRev: cells([lead, 130, 100, 90]), annualRevEnds: ['2025-12-31', '2018-12-31', '2017-12-31', '2016-12-31'] });
+    assert.equal(P.annualAccelerationGatePasses(hidden(0)), false);
+    assert.equal(P.annualAccelerationGatePasses(hidden(null)), false);
+    assert.equal(A.revAcceleration(hidden(null)), null);
+    const noGuard = mutant('lib/annual-pairs.js', "  if (!sealedEraSnapshot(snapshot) && staleReason('axis', annualPeriodEnds(snapshot, 'annualRev')[pairs[0].iNew])) return false;", '');
+    assert.equal(noGuard.annualAccelerationGatePasses(hidden(null)), true, 'break-once: the years 2018 to 2016 would feed the axis');
+  });
+});
+
+test('the reload planner reads what the vendor delivered, the masked view never hides a stored quarter from it', () => {
+  const { latestReportedQuarter } = require('../lib/stale-quarter-reload.js');
+  const raw = pkt(quarters('2018-03-31'));
+  const now = Date.parse(DAY + 'T12:00:00Z');
+  assert.equal(withDay(DAY, () => latestReportedQuarter(structuredClone(raw), now)), '2018-03-31');
+  assert.equal(withDay(null, () => latestReportedQuarter(structuredClone(raw), now)), '2018-03-31');
+});
+
+test('Hub Group: the withdrawn statements hold the packet, a drifted name stays held and says so', () => {
+  const { applyFinancialCases, table } = require('../lib/financial-known-cases.js');
+  const hubg = name => ({ meta: { ticker: 'HUBG', name, reportingCurrency: 'USD' }, timeseries: {}, annual: { annualRev: cells([3946390000, 4202585000]), annualRevEnds: ['2024-12-31', '2023-12-31'] } });
+  const { snapshot, events } = applyFinancialCases(hubg('Hub Group, Inc.'));
+  assert.equal(snapshot.meta.financialDataIssue?.caseId, 'hubg-withdrawn-statements-20261101');
+  assert.ok(!events.some(e => e.status === 'stale'));
+  assert.ok(applyFinancialCases(hubg('Hub Group')).events.some(e => e.status === 'stale'));
+  assert.ok(table.quarantines.find(q => q.ticker === 'HUBG').sources.every(s => s.url.startsWith('https://www.sec.gov/')));
+});
+
+test('a run on Actions without a data day says the age rule is off', () => {
+  const { ageRuleOffWarning } = require('../scripts/write-findash-export.js');
+  const keep = process.env.GITHUB_ACTIONS;
+  try {
+    process.env.GITHUB_ACTIONS = 'true';
+    assert.match(withDay(null, () => ageRuleOffWarning()), /^::warning::\[age-rule-off\]/);
+    assert.equal(withDay(DAY, () => ageRuleOffWarning()), null);
+    delete process.env.GITHUB_ACTIONS;
+    assert.equal(withDay(null, () => ageRuleOffWarning()), null, 'local tools stay quiet');
+  } finally { if (keep === undefined) delete process.env.GITHUB_ACTIONS; else process.env.GITHUB_ACTIONS = keep; }
 });
 
 test('the scoring job carries the frozen run date', () => {

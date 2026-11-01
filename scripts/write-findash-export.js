@@ -91,7 +91,7 @@ function readMcapBounds() {
 // Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
 // nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
-const { annualPairsShadow, sealedEraSnapshot } = require('../lib/annual-pairs.js');
+const { annualPairsShadow, dataDay, sealedEraSnapshot } = require('../lib/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
 // W8 EX-01 (28.10.2026): whether a board's formula splits its cohort into a profitable and an unprofitable
 // track. Read from the formula definition, the same splitMetric switch as src/scoring/score.js trackOf():
@@ -170,6 +170,10 @@ function undatedAxisWarning(tickers) {
   const list = [...tickers].sort();
   if (!list.length) return null;
   return `::warning::[period-gate-undated] ${list.length} Zeilen: versiegelter Prueffall auf einem Board, seine Score-Achsen duerfen ein Paar ohne Periodenende zaehlen (Wachstum ist leer): ${list.slice(0, 20).join(', ')}`;
+}
+/** P286: without a data day the age rule is off; a run on Actions says so instead of staying silent. @returns {string|null} ::warning:: line, or null when none. */
+function ageRuleOffWarning() {
+  return process.env.GITHUB_ACTIONS && !dataDay() ? '::warning::[age-rule-off] Export ohne RUN_DATE_UTC: Die Altersregel fuer veraltete Reihen gilt in diesem Lauf nicht.' : null;
 }
 // Small-cap rows carry no annualPairsShadow, so their count reads the snapshot's derivation; no row field is added.
 function zaehleUndatiertSmallcap(row) {
@@ -1487,6 +1491,7 @@ function build(seam = {}) {
   const bilanz = waehrungsWaechterAbschluss();
   const undatiert = undatedAxisWarning(_undatedAxisTickers);
   if (undatiert) console.warn(undatiert);
+  if (ageRuleOffWarning()) console.warn(ageRuleOffWarning());
   if (_wachstumOhneEtikett > 0) {
     console.warn('::warning::Wachstums-Etikett: ' + _wachstumOhneEtikett + ' Zeilen ohne revGrowthBasis — '
       + 'ihr revGrowthYoYPct liess sich aus keinem Snapshot nachrechnen, die Felder bleiben null statt zu raten.');
@@ -2607,7 +2612,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot, undatedAxisWarning, buildSmallcapBoard,
+  annualPairsShadowForSnapshot, undatedAxisWarning, ageRuleOffWarning, buildSmallcapBoard,
   undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js

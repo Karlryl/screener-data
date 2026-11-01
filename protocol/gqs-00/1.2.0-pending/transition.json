@@ -471,14 +471,14 @@
   "staleSeriesP286P287": {
     "date": "2026-11-01",
     "authority": "Daylauf 11 lane sd-g31 (formula DRAFT for Codex): packages P286 and P287, verdict ergebnisse/P286/urteil.md and Claude's positions p286 and p287; the before and after with scores and ranks that the verdict could not measure.",
-    "scope": "lib/annual-pairs.js: a dated quarterly series whose newest value lies more than 365 days before the data day counts as not present (maskStaleQuarterSeries, called last in prepareSnapshot, never at the pull); each series on its own ends, an undated series has an unknown age and stays. A growth pair ends after 365 days (quarter, half year, four quarters) or 550 days (year), measured on its younger end (staleReason, in the candidate funnel of lib/g31-recency.js, so an older pair of PR #75 cannot reopen it). An annual anchor more than 730 days back drops gross profit, annual acceleration and the capital-efficiency penalty pair through axisPairBlocked, longer than the 550 days of the shown figure while the vendor lacks FY2025 for about 87 board rows (gap fill #57); the year-ago partner and the older pair of the acceleration are never judged for age. The data day is RUN_DATE_UTC, set on the scoring job; without it (tests, tools, the sealed proof) no age rule applies, and a sealed fixture is exempt. scripts/write-findash-export.js: a row with no quarter point shows no quarter span.",
+    "scope": "lib/annual-pairs.js: a dated quarterly series whose newest value lies more than 365 days before the data day counts as not present (maskStaleQuarterSeries, called last in prepareSnapshot, never at the pull); each series on its own ends, an undated series has an unknown age and stays. A growth pair ends after 365 days (quarter, half year, four quarters) or 550 days (year), measured on its younger end (staleReason, in the candidate funnel of lib/g31-recency.js, so an older pair of PR #75 cannot reopen it). An annual anchor more than 730 days back drops gross profit, annual acceleration and the capital-efficiency penalty pair through axisPairBlocked, longer than the 550 days of the shown figure while the vendor lacks FY2025 for about 87 board rows (gap fill #57); the year-ago partner and the older pair of the acceleration are never judged for age. The data day is RUN_DATE_UTC, set on the scoring job; without it (tests, tools, the sealed proof) no age rule applies, and a sealed fixture is exempt. scripts/write-findash-export.js: a row with no quarter point shows no quarter span. Blind review of 01.11.2026: without any annual revenue the stale revenue series stays, because the sealed router reads empty revenue as a firm without revenue (EYDAP.AT, OBX); the annual pair of the overview and the three-year rate of the filter feed take the 550 days; acceleration judges the age at the first used year, also below a vendor zero or a gap (AGTF.TO); the plausibility watcher skips cells marked series-stale; the reload planner reads the unmasked view; netIncomeQ left the list, no series carries its own ends. A sealed fixture is exempt from the mask, the axes and the overview pair, not from the growth funnel, which sees no snapshot; the test gate runs without a data day. Hub Group is held by a quarantine row: the firm withdrew its 2024 and 2023 statements and the rule would lift it 512 places.",
     "definitionAmendmentAt120Seal": {
       "axes": "revGrowthLevel (with ruleOfX and the growth bonus), revAcceleration, gpGrowth, capitalEfficiency, marginTrajectory through the masked quarters",
       "rule": "A value older than the limit before the data day is no current figure: the leg is null (axis drops, renorm-on-drop), the raw row stays in the marker, nothing is replaced by 0."
     },
     "dependencySha256LF": {
       "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f",
-      "lib/annual-pairs.js": "cf0464887c4cb7e92cb89ff568fc72aa0f52391b076921c5c099fd51ab31c7bf"
+      "lib/annual-pairs.js": "a2cd6c664992c6b4606d25ba71e5dca39c8c7a23dfe467579d415b02801046f8"
     },
     "previousDependencySha256LF": {
       "lib/g31-recency.js": "82fbf3c5153a4384ceeeaa928fa7fa5ae21a47ecdffe89e9cb6d810df338b4e1",
@@ -492,6 +492,6 @@
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f",
-    "lib/annual-pairs.js": "cf0464887c4cb7e92cb89ff568fc72aa0f52391b076921c5c099fd51ab31c7bf"
+    "lib/annual-pairs.js": "a2cd6c664992c6b4606d25ba71e5dca39c8c7a23dfe467579d415b02801046f8"
   }
 }

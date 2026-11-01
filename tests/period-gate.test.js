@@ -258,7 +258,7 @@ for (const [rel, anchor, mutant, probe] of [
     api => assert.equal(api.axisPairBlocked({ meta: { ticker: 'STB.OL', fetchedAt: '2026-08-16T12:41:39.603Z' }, annual: { annualGP: [65, 50] } }, 'annualGP', 0, 1), false, 'a sealed fixture with an undated pair must pass')],
   ['../lib/annual-pairs.js', "  return SEALED_FIXTURES.has(`${snapshot?.meta?.ticker}|${snapshot?.meta?.fetchedAt}`);", '  return true;',
     api => assert.equal(api.sealedEraSnapshot({ meta: { ticker: 'NONFIXTURE', fetchedAt: '2026-08-19T00:00:00Z' } }), false, 'no fixture, no exemption')],
-  ['../lib/annual-pairs.js', "  return pairs !== null && pairs.every((pair) => pair.zeroIndex < 0 && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld));", '  return pairs !== null;',
+  ['../lib/annual-pairs.js', "  return pairs.every((pair) => pair.zeroIndex < 0 && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld));", '  return true;',
     api => assert.equal(api.annualAccelerationGatePasses(ALK()), false)],
   ['../lib/g31-recency.js', '  if (gate) return missing(gate);', '',
     api => assert.equal(api.g31Shadow(dated(91)).v1.pct, null, '91-day pair must be empty')],

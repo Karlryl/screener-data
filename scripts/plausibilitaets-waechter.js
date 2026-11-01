@@ -238,6 +238,7 @@ async function pruefe(opt) {
       for (const [feld, endenFeld, wort] of [['annualRev', s.annual?.annualRevEnds, 'Jahresumsatz'], ['revenueQ', s.timeseries?.revenueQEnds, 'Quartalsumsatz']]) {
         const reihe = norm(s, feld);
         if (!reihe.length || (reihe[0] !== 0 && reihe[0] !== null) || !posMcap(z.r.marketCap)) continue;
+        if ((feld === 'annualRev' ? s.annual : s.timeseries)?.[feld]?.[0]?.financialMissing?.reasonCode === 'series-stale') continue; // P286: an expired series, not an empty quarter
         const ende = Array.isArray(endenFeld) ? endenFeld[0] ?? null : null;
         fall('umsatz-null-mit-boersenwert', z, { feld, wert: reihe[0], periodEnd: ende, marketCap: z.r.marketCap },
           `Der neueste ${wort} (Zeitraum bis ${datum(ende)}) steht im Datensatz ${reihe[0] === 0 ? 'als 0' : 'leer'}, der Börsenwert aber bei ${fmtMrd(z.r.marketCap)}.`);
