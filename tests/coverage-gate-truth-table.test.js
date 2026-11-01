@@ -105,6 +105,8 @@ test('Q2-2: loadCoverage carries generated_at out of the marker', () => {
     assert.deepEqual(cov, {
       status: 'degradiert', degraded: true, blocked: false, coverage_pct: 20.1,
       generated_at: '2026-09-02T19:44:15.000Z',
+      // W7 (30.10.2026), additive: this marker has no honest pair, so null, never a replacement 0.
+      honest_coverage_pct: null, n_addressable: null, n_ok: 6088, n_total: 30228, n_failed: null,
     });
     // Absent marker stays null — the export still builds (diagnostic passenger).
     assert.equal(loadCoverage(path.join(dir, 'does-not-exist.json')), null);

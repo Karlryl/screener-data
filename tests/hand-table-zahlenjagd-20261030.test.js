@@ -162,7 +162,7 @@ test('a changed vendor value is never replaced by the old correction', () => {
 const CAP = {
   'FAST.AS': { shares: 19752877, usd: 731e6 },
   'ISAE3.SA': { shares: 564711511, usd: 3722e6 },
-  '7911.T': { shares: 589412480, usd: 7975e6 },
+  '7911.T': { shares: 561108010, usd: 7592e6 }, // without treasury shares since the check of 31.10.2026
 };
 const withImplied = (t, shares) => { const s = snap(t); s.marketCap.value = s.price.regularMarketPrice * shares; return s; };
 

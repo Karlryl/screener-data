@@ -10,7 +10,7 @@
 // Real vendor packets: BRBI and GAU in tests/fixtures/financial-known-cases.json, BURE.ST in tests/fixtures/hand-table-abgrenzung-20261031.json. Every red probe changes an in-memory copy only; live
 // files are hashed before and after. Break-once on test data: `node tests/hand-table-abgrenzung-20261031.test.js --prove-red` must exit 1.
 const test = require('node:test'), assert = require('node:assert/strict');
-const fs = require('node:fs'), os = require('node:os'), path = require('node:path'), crypto = require('node:crypto');
+const fs = require('node:fs'), os = require('node:os'), path = require('node:path'), crypto = require('node:crypto'), Module = require('node:module');
 process.env.FINDASH_SNAPSHOTS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'abgrenzung-20261031-'));
 const { applyFinancialCases, financialReasons, validateTable, table } = require('../lib/financial-known-cases.js');
 const { g31Shadow } = require('../lib/g31-recency.js');
@@ -132,6 +132,22 @@ test('BURE.ST: no number moves, the hint is on the row, with any growth, and onl
   assert.match(hint.reason, /Net sales 0/);
   assert.equal(W.mapBoardRow({ ...row, revGrowthYoYPct: 12.5 }, 1, 'main').g31Hinweis.code, 'abgrenzung', 'a definition does not depend on the shown pair');
   assert.equal(W.mapBoardRow({ ...row, ticker: '_NO_HINT' }, 2, 'main').g31Hinweis, null);
+});
+
+test('documented order: the diagnosis on the shown pair outranks the definition hint; the swapped order fails', () => {
+  const file = path.join(root, 'scripts/write-findash-export.js'), src = fs.readFileSync(file, 'utf8');
+  const recency = require('../lib/g31-recency.js'), real = recency.g31Export;
+  const load = code => { const m = new Module(file, module); m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file)); m._compile(code, file); return m.exports; };
+  const s = applyFinancialCases(snap('BURE.ST')).snapshot;
+  fs.writeFileSync(path.join(process.env.FINDASH_SNAPSHOTS_DIR, safeSnapshotFilename('BURE.ST')), JSON.stringify(snap('BURE.ST')));
+  const row = { ticker: 'BURE.ST', score: 76.6, revGrowthYoYPct: axes.revGrowthLevel(s), overview: { kind: 'gp', value: 0.061, companion: 162.8 } };
+  const ORDER = '(passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null';
+  assert.ok(src.includes(ORDER), 'anchor');
+  recency.g31Export = snapshot => ({ ...real(snapshot), g31Hinweis: { code: 'aktuell-gross', reason: 'diagnosis' } });
+  try {
+    assert.equal(load(src).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'aktuell-gross');
+    assert.equal(load(src.replace(ORDER, 'DEFINITION_HINTS.get(out.ticker) ?? (passt ? derivations.g31Hinweis : null) ?? null')).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'abgrenzung', 'the swapped order is what this test must catch');
+  } finally { recency.g31Export = real; }
 });
 
 test('definition table: one row, checked code, quoted sources, plain German; lib/g31-recency.js does not read it', () => {
