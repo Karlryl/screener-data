@@ -8,7 +8,7 @@ const fs = require('node:fs'), path = require('node:path'), os = require('node:o
 const { Module, createRequire } = require('node:module');
 const X = require('../lib/exchange-quarter-check.js');
 const { revGrowthLeg } = require('../lib/rev-growth-basis.js');
-const { withG31Variant } = require('../lib/g31-recency.js');
+const { withG31Variant, withoutOlderPair } = require('../lib/g31-recency.js');
 const axes = require('../src/scoring/axes.js');
 const { norm } = require('../src/scoring/snapshot.js');
 const F = require('./fixtures/exchange-quarter-check.json');
@@ -291,7 +291,11 @@ test('November replay: Q3-2025 counts only when confirmed after the Q3-2026 noti
   const leg = revGrowthLeg(a);
   assert.equal(leg.basis, 'quarter'); assert.equal(leg.periodEnd, '2026-09-30'); assert.equal(leg.priorPeriodEnd, '2025-09-30');
   assert.ok(Math.abs(leg.pct - (60000000000 / r.fill.nativeValue - 1) * 100) < 1e-9);
-  assert.equal(revGrowthLeg(yes.s).basis, 'year', 'without the fill the gap blocks the quarterly leg');
+  // Adapted for PR "G31: newest complete quarter pair before the annual pair" (sd-p2, 29.10.2026): without the fill the
+  // September quarter has no partner. The index-0 selection, which this check judges, then falls back to the fiscal year;
+  // the shown growth may now take the older June pair instead, whose verdict reads the live exchange store and is pinned
+  // with a fixture store in tests/g31-older-quarter-pair.test.js.
+  assert.equal(withoutOlderPair(() => revGrowthLeg(yes.s)).basis, 'year', 'without the fill the gap blocks the quarterly leg');
 });
 test('drift: the vendor later delivers Q3-2025 with a different value -> withheld as the year-ago partner and counted', () => {
   const { s, ctx } = november(true), k = s.timeseries.revenueQEnds.indexOf('2025-09-30');
@@ -333,10 +337,10 @@ test('F5 October: a delivered Q3-2025 off the exchange value outside the level p
   assert.equal(serial(X.stripOwn(a)), serial(s), 'strip restores');
   // Growth already on the annual leg before (level partner empty): withheld, but no annual check and no growth withhold.
   const y = clone(s); y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
-  assert.equal(revGrowthLeg(y).basis, 'year');
+  assert.equal(withoutOlderPair(() => revGrowthLeg(y)).basis, 'year');
   const ry = res(y);
   assert.equal(ry.category, 'would-withhold'); assert.equal(ry.growth, null);
-  assert.equal(revGrowthLeg(run(clone(y), 'active').snapshot).pct, revGrowthLeg(y).pct, 'growth figure unchanged');
+  assert.equal(withoutOlderPair(() => revGrowthLeg(run(clone(y), 'active').snapshot).pct), withoutOlderPair(() => revGrowthLeg(y).pct), 'annual growth figure unchanged');
   // A broker's level gap is definition, never a fill-period mismatch.
   const br = clone(F.store); for (const list of Object.values(br.cn.companies['000002.SZ'].ytd)) for (const o of list) o.table = 'SINCOME';
   assert.ok(!res(clone(s), ctxOf(br)).withhold.some(x => x.fillPeriod));

@@ -35,7 +35,7 @@
     { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30", "listingAliases": ["CIG", "CMIG3.SA"] },
     { "ticker": "000688.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "GRANULES.NS", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "BYLOT.AT", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -44,10 +44,10 @@
     { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "grossProfitQ", "coversThrough": "2026-06-30" },
     { "ticker": "6269.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30", "listingAliases": ["CIG", "CMIG3.SA"] },
     { "ticker": "2498.HK", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "300277.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30", "listingAliases": ["3993.HK"] },
     { "ticker": "2855.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "2855.TW", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "6005.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -56,7 +56,8 @@
     { "ticker": "SUNC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "AHCO", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "600292.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "NMR", "field": "revenueQ", "coversThrough": "2026-09-30" }
+    { "ticker": "NMR", "field": "revenueQ", "coversThrough": "2026-09-30" },
+    { "ticker": "JIOFIN.BO", "listingAliases": ["JIOFIN.NS"], "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -152,7 +153,9 @@
     {
       "caseId": "ysn.de-2026-06-30-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2026-06-30",
       "periodType": "3M",
@@ -171,7 +174,9 @@
     {
       "caseId": "ysn.de-2025-09-30-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2025-09-30",
       "periodType": "3M",
@@ -190,7 +195,9 @@
     {
       "caseId": "ysn.de-2025-06-30-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2025-06-30",
       "periodType": "3M",
@@ -209,7 +216,9 @@
     {
       "caseId": "ysn.de-2025-03-31-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2025-03-31",
       "periodType": "3M",
@@ -395,7 +404,10 @@
     {
       "caseId": "pdn.ax-2017-03-31-grossProfitQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "grossProfitQ",
       "period": "2017-03-31",
       "periodType": "3M",
@@ -419,7 +431,10 @@
     {
       "caseId": "pdn.ax-2016-12-31-grossProfitQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "grossProfitQ",
       "period": "2016-12-31",
       "periodType": "3M",
@@ -443,7 +458,10 @@
     {
       "caseId": "pdn.ax-2016-06-30-grossProfitQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "grossProfitQ",
       "period": "2016-06-30",
       "periodType": "3M",
@@ -462,7 +480,10 @@
     {
       "caseId": "pdn.ax-2016-12-31-revenueQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "revenueQ",
       "period": "2016-12-31",
       "periodType": "3M",
@@ -5680,7 +5701,11 @@
       ],
       "revision": "2026-10-11-p177",
       "verifiedAt": "2026-10-02",
-      "legacyNativeHoldRevision": "2026-10-02i"
+      "legacyNativeHoldRevision": "2026-10-02i",
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
+      ]
     },
     {
       "caseId": "cig-c-2026-03-31-grossProfitQ",
@@ -5712,6 +5737,10 @@
           "value": 1952136000,
           "derivation": "Q1 2026 on the restated basis of the 2Q26 ITR = six months 2026 minus Q2 2026 = 1,768,103 thousand BRL (the 1Q26 ITR filed 1,712,453 before the reclassification of note 2.4)"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -5750,6 +5779,10 @@
           "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
           "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -5778,6 +5811,10 @@
           "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
           "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -5811,7 +5848,11 @@
       ],
       "revision": "2026-10-11-p177",
       "verifiedAt": "2026-10-02",
-      "legacyNativeHoldRevision": "2026-10-02i"
+      "legacyNativeHoldRevision": "2026-10-02i",
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
+      ]
     },
     {
       "caseId": "obm.ax-2024-06-30-annualRev-nonadjacent",
@@ -5857,6 +5898,9 @@
           "end": "2025-06-30",
           "value": 505892000
         }
+      ],
+      "listingAliases": [
+        "CRNLF"
       ]
     },
     {
@@ -5968,7 +6012,9 @@
     {
       "caseId": "1ane.mi-2022-09-30-revenueQ-p129",
       "ticker": "1ANE.MI",
-      "listingAliases": ["ANE.MC"],
+      "listingAliases": [
+        "ANE.MC"
+      ],
       "field": "revenueQ",
       "period": "2022-09-30",
       "periodType": "3M",
@@ -7128,7 +7174,9 @@
     {
       "caseId": "p168d-mfsl-2024-03-31-annualRev",
       "ticker": "MFSL.BO",
-      "listingAliases": ["MFSL.NS"],
+      "listingAliases": [
+        "MFSL.NS"
+      ],
       "field": "annualRev",
       "period": "2024-03-31",
       "periodType": "12M",
@@ -9039,7 +9087,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2026-06-30",
@@ -9075,7 +9124,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2026-03-31",
@@ -9111,7 +9161,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2025-12-31",
@@ -9147,7 +9198,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2025-06-30",
@@ -9183,7 +9235,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2025-03-31",
@@ -9244,6 +9297,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.829.246 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9287,6 +9344,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 3.272.251 3.217.460",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9330,6 +9391,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.641.050 49.627 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9362,6 +9427,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.641.050 49.627 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9394,6 +9463,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.641.050 49.627 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9979,6 +10052,9 @@
           "start": "2026-01-01",
           "end": "2026-03-31"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10009,6 +10085,9 @@
           "start": "2025-10-01",
           "end": "2025-12-31"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10039,6 +10118,9 @@
           "start": "2025-07-01",
           "end": "2025-09-30"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10069,6 +10151,9 @@
           "start": "2025-04-01",
           "end": "2025-06-30"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10105,6 +10190,9 @@
           "quote": "其中：营业成本 51,206,864,207.84 35,730,514,956.58",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10141,6 +10229,9 @@
           "quote": "其中：营业成本 113,530,810,246.03 127,476,334,514.65",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10177,6 +10268,9 @@
           "quote": "135,319,885,598.22 104,184,032,395.96 94,772,503,770.20 74,727,331,950.71",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10213,6 +10307,9 @@
           "quote": "其中：营业成本 51,206,864,207.84 35,730,514,956.58",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -13035,6 +13132,9 @@
           "unit": "currency",
           "sourceUnit": "USD thousands"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13067,6 +13167,9 @@
           "unit": "currency",
           "sourceUnit": "USD thousands"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13099,6 +13202,9 @@
           "unit": "currency",
           "sourceUnit": "USD thousands"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13121,6 +13227,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13143,6 +13252,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13165,6 +13277,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13187,6 +13302,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -17019,6 +17137,175 @@
       ]
     },
     {
+      "caseId": "alk.to-2024-06-30-annualGP-20261031",
+      "ticker": "ALK.TO",
+      "field": "annualGP",
+      "period": "2024-06-30",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "AUD",
+      "unit": "currency",
+      "expectedBadValue": 70085000,
+      "replacementValue": null,
+      "revision": "2026-10-31-erw31",
+      "verifiedAt": "2026-10-31",
+      "reason": "Bruttogewinn 2024 (Ende 30.06.2024) zurückgehalten: Der Anbieter liefert das Geschäftsjahr 2025 unter dieser Notierung nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre (+623,8 %) als Jahreswachstum in den Score einging. Die Sperre gilt dem Jahr mit Ende 30.06.2024; dieses Jahr und die älteren Jahre bleiben leer, auch wenn der Anbieter 2025 später nachliefert, bis die Sperre nach einer erneuten Prüfung aufgehoben wird. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-31",
+          "url": "https://investors.alkres.com/annualreport/2026/109/",
+          "form": "Alkane Resources, annual report 2026, financial performance table: the fiscal year 2025 exists at the issuer and is the prior year of 2026",
+          "page": "annual report page 109",
+          "quote": "Revenue 935,822 262,362 673,460 256.7%",
+          "unit": "AUD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "3471.t-2024-07-31-annualGP-20261031",
+      "ticker": "3471.T",
+      "field": "annualGP",
+      "period": "2024-07-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 12206983000,
+      "replacementValue": null,
+      "revision": "2026-10-31-erw31",
+      "verifiedAt": "2026-10-31",
+      "reason": "Bruttogewinn 2024 (Ende 31.07.2024) zurückgehalten: Der Anbieter liefert das Jahr bis 31.07.2025 nicht und stellt 2024 direkt neben 2026, so dass ein Wachstum über zwei Jahre (+65,1 %) als Jahreswachstum in den Score einging. Die Firma hat ihre Rechnungsperioden 2024 geändert und meldet für die Periode bis 31.07.2025 nur neun Monate, ein Jahresvergleich ist darum nicht belegt. Die Sperre gilt dem Jahr mit Ende 31.07.2024; dieses Jahr und die älteren Jahre bleiben leer, auch wenn der Anbieter später nachliefert, bis die Sperre nach einer erneuten Prüfung aufgehoben wird. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-31",
+          "url": "https://www.mflp-r.co.jp/file/ir_library_term-eea91ed153027c1f7d94486c414875222a0a6bd0.pdf",
+          "form": "Mitsui Fudosan Logistics Park, 決算短信 for the period to January 2026",
+          "published": "2026-03-17",
+          "page": "PDF 1",
+          "quote": "2025年７月期 26,382 － 10,501 － 9,318 － 35,250 －",
+          "unit": "JPY millions"
+        },
+        {
+          "verifiedAt": "2026-10-31",
+          "url": "https://www.mflp-r.co.jp/file/ir_library_term-eea91ed153027c1f7d94486c414875222a0a6bd0.pdf",
+          "form": "same report, note on the period change",
+          "published": "2026-03-17",
+          "page": "PDF 1, note 2",
+          "quote": "2025年７月期（2024年11月１日～2025年７月31日、９か月間）",
+          "unit": "text"
+        }
+      ]
+    },
+    {
+      "caseId": "pco.wa-2024-09-30-revenueQ",
+      "revision": "2026-10-30-pr49",
+      "verifiedAt": "2026-10-30",
+      "ticker": "PCO.WA",
+      "field": "revenueQ",
+      "period": "2024-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 1486000000,
+      "replacementValue": null,
+      "reason": "Umsatzvergleich zurückgehalten: Das Quartal bis 30.09.2024 enthält laut Pepco FY2024, Seite 21 (\"Pepco Poundland Dealz Group\"), Poundland; das Quartal bis 30.09.2025 schließt Poundland laut FY2025, Seite 6 (\"Poundland is now treated as a discontinued operation\"), aus. Kein geschätzter Ersatz aus gerundeten Segmentzahlen.",
+      "sources": [
+        {
+          "url": "https://www.pepcogroup.eu/wp-content/uploads/2024/12/PCO-FY-2024-Prelim-Results-vFF.pdf",
+          "page": 21,
+          "quote": "Pepco Poundland Dealz Group",
+          "published": "2024-12-10"
+        },
+        {
+          "url": "https://www.pepcogroup.eu/wp-content/uploads/2025/12/PCO-FY-2025-Prelim-Results-vFFF.pdf",
+          "page": 6,
+          "quote": "Poundland is now treated as a discontinued operation",
+          "published": "2025-12-17"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2026-06-30-revenueQ-20261030-r4",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "index": 1,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 17947100000,
+      "replacementValue": 20044700000,
+      "revision": "2026-10-30-jio-quarter-r4",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 meldet Jio Financial im Konzernabschluss vom 16.07.2026, PDF-Seite 5, 2.004,47 Crore INR in der Zeile \"Total revenue from operations\". Der Anbieter lässt den Nettogewinn aus der Bewertung zum beizulegenden Zeitwert aus. Die belegten Umsätze von 2.004,47 und 612,46 Crore INR ergeben für das Quartal bis 30.06.2026 ein Wachstum von +227,2818 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_16072026175802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2026",
+          "published": "2026-07-16",
+          "page": "PDF 5 of 14",
+          "quote": "Total revenue from operations 2,004.47 1,018.51 612.46 3,513.26",
+          "sourceUnit": "INR crore",
+          "value": 20044700000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2025-06-30-revenueQ-20261030-r4",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "index": 4,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 4164400000,
+      "replacementValue": 6124600000,
+      "revision": "2026-10-30-jio-quarter-r4",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 meldet Jio Financial im Konzernabschluss vom 16.07.2026, PDF-Seite 5, 612,46 Crore INR in der Zeile \"Total revenue from operations\". Der Anbieter lässt den Nettogewinn aus der Bewertung zum beizulegenden Zeitwert aus. Die belegten Umsätze von 2.004,47 und 612,46 Crore INR ergeben für das Quartal bis 30.06.2026 ein Wachstum von +227,2818 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_16072026175802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2026",
+          "published": "2026-07-16",
+          "page": "PDF 5 of 14",
+          "quote": "Total revenue from operations 2,004.47 1,018.51 612.46 3,513.26",
+          "sourceUnit": "INR crore",
+          "value": 6124600000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_17072025171802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2025",
+          "published": "2025-07-17",
+          "page": "PDF 6",
+          "quote": "Total revenue from operations 612.46",
+          "sourceUnit": "INR crore",
+          "value": 6124600000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
       "periodType": "12M",
       "unit": "currency",
       "replacementValue": null,
@@ -17651,6 +17938,48 @@
           "quote": "營業利益（損失）Net operating income (loss) 5,553,411 6,293,612",
           "unit": "TWD thousands",
           "verifiedAt": "2026-10-30"
+        }
+      ]
+    },
+    {
+      "caseId": "prn.l-statutory-against-pro-forma-20261101",
+      "ticker": "PRN.L",
+      "reason": "Score fehlt: Princes Group weist für das Geschäftsjahr 2025 (Ende 31.12.2025) gesetzlich 1.871,5 Mio. GBP Umsatz aus; für 2024 gibt es gesetzlich nur neun Monate (1.275,2 Mio. GBP) und eine Pro-forma-Rechnung über zwölf Monate (2.053,5 Mio. GBP). Der Anbieter stellt die gesetzliche Zahl 2025 neben die Pro-forma-Zahl 2024, daraus entstand das falsche Minus von 8,9 %. Dasselbe gilt für Bruttogewinn (380,6 gegen 338,4 Mio. GBP) und Betriebsergebnis (76,0 gegen 17,4 Mio. GBP). Vergleichbar wären pro forma 1.919,3 gegen 2.053,5 Mio. GBP, also minus 6,5 %. Ohne vergleichbares Vorjahr lässt sich kein Firmenscore bilden. Geprüft am 01.11.2026.",
+      "reasonDate": "2026-11-01",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "name"
+          ],
+          "expected": "Princes Group plc"
+        },
+        {
+          "path": [
+            "meta",
+            "reportingCurrencyOriginal"
+          ],
+          "expected": "GBP"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://princesgroupinvestors.com/wp-content/uploads/2026/04/51553_Princes_AR25-WEB.pdf",
+          "form": "Princes Group plc, annual report 2025, Table 1 2025 pro forma reconciliation",
+          "page": "Chief Financial Officer's statement, alternative performance measures, Table 1",
+          "quote": "Revenue from contracts with customers 1,871,531 76,413 13,426 (42,050) 1,919,319 2,053,539",
+          "unit": "GBP thousands",
+          "published": "2026-04",
+          "verifiedAt": "2026-11-01"
+        },
+        {
+          "url": "https://princesgroupinvestors.com/wp-content/uploads/2026/03/Princes-Group-FY-2025.pdf",
+          "form": "Princes Group plc, FY 2025 preliminary results presentation, statutory income statement",
+          "page": "statutory income statement",
+          "quote": "Revenue from contracts with customers 1,871,531 1,275,223",
+          "unit": "GBP thousands",
+          "published": "2026-03-31",
+          "verifiedAt": "2026-11-01"
         }
       ]
     }
@@ -18393,6 +18722,9 @@
           "unit": "USD thousands",
           "quote": "Loss from operations ( 633,715 ) ( 232,455 ) ( 157,754 )"
         }
+      ],
+      "listingAliases": [
+        "1IONQ.MI"
       ]
     }
   ]

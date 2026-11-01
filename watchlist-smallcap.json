@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 491,
+    "count": 486,
     "partial": false
   },
   "stocks": [
@@ -989,14 +989,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "OSPN",
-      "yahoo_symbol": "OSPN",
-      "name": "OneSpan Inc. - Common Stock",
-      "marketCapUsd": 571663296,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "BMM",
       "yahoo_symbol": "BMM",
       "name": "Blue Moon Metals Inc. - Common Shares",
@@ -1041,14 +1033,6 @@
       "yahoo_symbol": "FLGT",
       "name": "Fulgent Genetics, Inc. - Common Stock",
       "marketCapUsd": 564604352,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "PRME",
-      "yahoo_symbol": "PRME",
-      "name": "Prime Medicine, Inc. - Common Stock",
-      "marketCapUsd": 563526464,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -1613,14 +1597,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "KIDS",
-      "yahoo_symbol": "KIDS",
-      "name": "OrthoPediatrics Corp. - Common Stock",
-      "marketCapUsd": 500600512,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "TWI",
       "yahoo_symbol": "TWI",
       "name": "Titan International, Inc. (DE) Common Stock",
@@ -1729,14 +1705,6 @@
       "yahoo_symbol": "RZLT",
       "name": "Rezolute, Inc. - Common Stock (NV)",
       "marketCapUsd": 490127968,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "GDYN",
-      "yahoo_symbol": "GDYN",
-      "name": "Grid Dynamics Holdings, Inc. - Class A Common Stock",
-      "marketCapUsd": 490048704,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -2265,14 +2233,6 @@
       "yahoo_symbol": "CLFD",
       "name": "Clearfield, Inc. - Common Stock",
       "marketCapUsd": 435134528,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "PACB",
-      "yahoo_symbol": "PACB",
-      "name": "Pacific Biosciences of California, Inc. - Common Stock",
-      "marketCapUsd": 434842368,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -3941,17 +3901,32 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-10-24T10:39:20.676Z",
+  "lastReconcile": "2026-10-31T11:58:15.514Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "ASC",
+      "ticker": "OSPN",
       "grund": "band-austritt-oben",
-      "mcap": 818263040
+      "mcap": 946720256
     },
     {
-      "ticker": "VSTM",
+      "ticker": "PRME",
       "grund": "band-austritt-oben",
-      "mcap": 909256960
+      "mcap": 856098752
+    },
+    {
+      "ticker": "KIDS",
+      "grund": "band-austritt-oben",
+      "mcap": 806030400
+    },
+    {
+      "ticker": "GDYN",
+      "grund": "band-austritt-oben",
+      "mcap": 1073744896
+    },
+    {
+      "ticker": "PACB",
+      "grund": "band-austritt-oben",
+      "mcap": 809714112
     }
   ]
 }

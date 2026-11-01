@@ -91,7 +91,7 @@ function readMcapBounds() {
 // Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
 // nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
-const { annualPairsShadow } = require('../lib/annual-pairs.js');
+const { annualPairsShadow, sealedEraSnapshot } = require('../lib/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
 // W8 EX-01 (28.10.2026): whether a board's formula splits its cohort into a profitable and an unprofitable
 // track. Read from the formula definition, the same splitMetric switch as src/scoring/score.js trackOf():
@@ -161,29 +161,25 @@ function mitFcfSchatten(formulaId) {
   return (row) => g31Last(Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) }));
 }
 
-// Period gate round 2 (30.10.2026): a pair with no end at all empties revenue growth, but the acceleration and
-// gross-profit axes still count it, because every sealed golden fixture is undated. 0 such rows on 30.10.; this watcher says
-// so on the day it changes. ponytail: exported rows only, a small-cap firm outside the export stays unseen.
+// Period gate round 2 (30.10.2026): a pair with no end at all empties revenue growth. The score axes excuse it only on the 25
+// sealed golden fixtures (lib/annual-pairs.js), so a fixture on a live board means a restored store; this watcher says so,
+// whichever axis it reaches. ponytail: exported rows only, a small-cap firm outside the export stays unseen.
 const _undatedAxisTickers = new Set();
-/** Score axes that run on an undated pair. @param {object|null} shadow annualPairsShadow of one snapshot. @returns {string[]} Axis names. */
-function undatedAxes(shadow) {
-  return ['acceleration', 'grossProfit'].filter((axis) => shadow?.[axis]?.code === 'undated' && shadow[axis].today !== null);
-}
 /** Warning line of the watcher. @param {Iterable<string>} tickers Tickers counted. @returns {string|null} ::warning:: line, or null when none. */
 function undatedAxisWarning(tickers) {
   const list = [...tickers].sort();
   if (!list.length) return null;
-  return `::warning::[period-gate-undated] ${list.length} Zeilen: Beschleunigung oder Bruttogewinn zaehlen ein Paar ohne Periodenende in den Score (Wachstum ist leer): ${list.slice(0, 20).join(', ')}`;
+  return `::warning::[period-gate-undated] ${list.length} Zeilen: versiegelter Prueffall auf einem Board, seine Score-Achsen duerfen ein Paar ohne Periodenende zaehlen (Wachstum ist leer): ${list.slice(0, 20).join(', ')}`;
 }
 // Small-cap rows carry no annualPairsShadow, so their count reads the snapshot's derivation; no row field is added.
 function zaehleUndatiertSmallcap(row) {
-  if (undatedAxes(snapAbleitungenFuer(row.ticker, smallcapGrowthSource()).annualPairsShadow).length) _undatedAxisTickers.add(row.ticker);
+  if (snapAbleitungenFuer(row.ticker, smallcapGrowthSource()).sealedFixture) _undatedAxisTickers.add(row.ticker);
   return row;
 }
 
 function mitAnnualPairsSchatten(row) {
-  const annualPairsShadow = snapAbleitungenFuer(row.ticker).annualPairsShadow;
-  if (undatedAxes(annualPairsShadow).length) _undatedAxisTickers.add(row.ticker);
+  const { annualPairsShadow, sealedFixture } = snapAbleitungenFuer(row.ticker);
+  if (sealedFixture) _undatedAxisTickers.add(row.ticker);
   return Object.assign(row, { annualPairsShadow });
 }
 
@@ -363,6 +359,7 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
   }
   catch (e) { snap = null; snapFehler = e && e.code === 'ENOENT' ? 'no-snapshot' : 'snapshot-unreadable'; } // P87: Grund nur fuer fcfShadow
   const abl = {
+    sealedFixture: sealedEraSnapshot(snap),
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
@@ -1428,8 +1425,12 @@ function buildSmallcap(coverage, opts = {}) {
 function loadCoverage(file = COVERAGE) {
   const m = readJSONOrNull(file);
   if (!m) return null;
+  // W7 (30.10.2026): coverage_pct is rows fetched over all rows and moves with list size (65.9 % on
+  // 23.10., 80.6 % on 30.10. with fewer fetches). The honest pair is what the 90 % alarm reads; additive.
   return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct,
-    generated_at: m.generated_at };
+    generated_at: m.generated_at, honest_coverage_pct: m.honest_coverage_pct ?? null,
+    n_addressable: m.n_addressable ?? null, n_ok: m.n_ok ?? null, n_total: m.n_total ?? null,
+    n_failed: m.n_failed ?? null };
 }
 
 // seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI
@@ -2599,7 +2600,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot, undatedAxes, undatedAxisWarning, buildSmallcapBoard,
+  annualPairsShadowForSnapshot, undatedAxisWarning, buildSmallcapBoard,
   undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
