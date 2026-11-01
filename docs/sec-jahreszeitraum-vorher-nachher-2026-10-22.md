@@ -2,7 +2,7 @@
 >
 > SEC-Jahreswerte kommen nur noch aus ganzen Geschäftsjahren und eine Lücke in der Gewinnserie gilt nicht mehr als Verlustjahr; auf dem Datenstand vom 31.10.2026 ändern sich 588 von 9.269 Board-Zeilen (47 Scores, 562 Ränge) und kein einziger Wachstumswert.
 > - Kodak 2017 bekommt seinen Jahresumsatz von 1.531 Mio. USD zurück (bisher verdrängt durch ein Quartal von 414 Mio. USD); DBD 2023 und EXE 2021 bleiben leer, statt Vorjahreszahlen zu zeigen.
-> - Am stärksten bewegt sich VISN (Score 56,1 auf 22,6, Rang 201 auf 530), danach Teva (Score 38,1 auf 10,9, Rang 496 auf 654). Der falsche Satz „Davor steht ein Verlustjahr“ verschwindet bei allen 110 Board-Tickern, die ihn heute tragen.
+> - Am stärksten bewegt sich VISN (Score 56,1 auf 22,6, Rang 201 auf 530), danach Teva (Score 38,1 auf 10,9, Rang 496 auf 654). Der falsche Verlustsatz verschwindet bei allen 110 Board-Tickern, die ihn heute tragen; damit der neue Erklärsatz überall stimmt, gehören zwei Textzeilen in findash zu diesem Merge.
 > - Die Korrektur der Gewinnserie wirkt mit dem ersten Tageslauf nach dem Merge, die Jahresregel erst mit dem nächsten SEC-Monatslauf nach dem Merge oder einem Handstart (Nachtrag 01.11.2026).
 
 # SEC-Jahreswerte nur aus ganzen Geschäftsjahren (F-02): vorher und nachher
@@ -121,9 +121,9 @@ Dieselben Eingaben wie am 31.10.2026: Snapshots des Tageslaufs 41184535364, Smal
 
 ### Was geändert ist
 
-1. **Eine Lücke ist kein Verlustjahr.** Endet die Serie ab dem zweiten Jahr an einer Lücke, steht dort „mind. N Jahre“ und der Hinweis, dass die Serie bis zum Anfang der verfügbaren Daten reicht. Fehlt das neueste Jahr, gibt es keine Serie. Ein echtes Verlustjahr bleibt, wie es war. findash muss dafür nicht geändert werden, die Export-Prüfung und die Rule-of-40-Prüfung sind auf dem neuen Stand grün.
+1. **Eine Lücke ist kein Verlustjahr.** Endet die Serie ab dem zweiten Jahr an einer Lücke, steht dort „mind. N Jahre“ und der Hinweis, dass die Serie bis zum Anfang der verfügbaren Daten reicht. Fehlt das neueste Jahr, gibt es keine Serie. Ein echtes Verlustjahr bleibt, wie es war. Für die Form der Daten muss findash nicht geändert werden, die Export-Prüfung und die Rule-of-40-Prüfung sind auf dem neuen Stand grün. Der Erklärsatz in findash stimmt aber nicht überall, siehe den Abschnitt „Was findash an diesen Tickern schreibt“.
 2. **Fast dasselbe Periodenende.** Ein ganzes Jahr, das höchstens 7 Tage vor dem Periodenende endet, zählt als dasselbe Ende. Das betrifft Penguin 2020 (28.08. gegen 31.08.) und Kohl's 2019 (01.02. gegen 02.02.2020). Die übrigen zehn Treffer liegen 18 Tage oder mehr entfernt und bleiben leer.
-3. **Prüfung ohne Vergleich wird sichtbar.** Beide Builder schreiben eine Zeile `sanityNothingCompared`. Heute trifft das 8 von 448 angenommenen Namen: ASTL, CSHR, FDUS, GLAD, ILPT, SLRC, VEL, XRN.
+3. **Prüfung ohne Vergleich wird sichtbar.** Jeder Builder schreibt seine eigene Zeile. Auf den eingefrorenen Kandidaten liest sie beim Hauptspeicher `sanityNothingCompared=0/204` und bei Small-Cap `sanityNothingCompared=8/257` mit den Namen ASTL, CSHR, FDUS, GLAD, ILPT, SLRC, VEL, XRN. Die Builder-Protokolle des Laufs vom 31.10. nennen als Nenner 205 und 256, ein echter Lauf kann also um eins abweichen. Das Urteil der Prüfung ändert sich dadurch nicht.
 
 ### Gewinnserie, Ebene Ticker
 
@@ -135,7 +135,7 @@ Dieselben Eingaben wie am 31.10.2026: Snapshots des Tageslaufs 41184535364, Smal
 | Serie endet offen an einer Lücke, Langhistorie / Boards | 0 / 0 | 0 / 0 | 107 / 104 |
 | keine Serie, weil das neueste Jahr fehlt, Langhistorie / Boards | 0 / 0 | 0 / 0 | 30 / 27 |
 
-Die Zahl echter Verlustsätze auf den Boards bleibt zwischen geprüftem Stand und diesem Stand gleich (1.070 Ticker).
+Die Zahl echter Verlustsätze auf den Boards bleibt zwischen geprüftem Stand und diesem Stand gleich (1.070 Ticker). Von den 27 Board-Tickern ohne Serie haben 17 ältere Gewinnzahlen, dort fehlt nur das neueste Jahr. Bei den übrigen 10 fehlt jede Gewinnzahl: AMH, DOW, FOXA, TRIN, NTST, KD, ARX, PSKY, Q, XNDU.
 
 | Firma | Geprüfter Stand | Dieser Stand |
 |---|---|---|
@@ -148,6 +148,21 @@ Die Zahl echter Verlustsätze auf den Boards bleibt zwischen geprüftem Stand un
 | Penguin Solutions (PENG) | 6 Jahre, Verlustjahr 2020 | mind. 10 Jahre (Jahreswerte 2020 zurück) |
 | Surgery Partners (SGRY) | 8 Jahre, Verlustjahr 2017 | mind. 8 Jahre |
 | Brookfield Asset Management (BAM) | 3 Jahre, Verlustjahr 2022 | mind. 3 Jahre |
+
+### Was findash an diesen Tickern schreibt
+
+„Mind. N Jahre“ ist überall wahr. Der Erklärsatz daneben stimmt nicht überall, gemessen über alle 9.269 Board-Zeilen:
+
+| Satz in findash | Nächster Tageslauf | Nach einem Neubau der Speicher |
+|---|---:|---:|
+| „Die Serie reicht bis zum Anfang der verfügbaren Daten“, obwohl hinter der Lücke weitere Zahlen stehen | 29 | 38 |
+| davon ist die erste Zahl hinter der Lücke negativ | 8 | 11 |
+| davon steht irgendwo dahinter eine negative Zahl | 9 | 14 |
+| „Für dieses Unternehmen liegt keine solche Historie vor“, obwohl Zahlen da sind | 15 | 17 |
+
+Die 44 Ticker des nächsten Tageslaufs tragen heute alle einen falschen Verlustsatz, dort senkt dieser PR also die Schwere. Von den 55 Tickern nach einem Neubau tragen ihn heute dieselben 44, auf dem geprüften Stand `b588f529cd` wären es alle 55. Bei den übrigen 11 entsteht der ungenaue Halbsatz erst durch den Neubau: UTZ, CRC, SDRL, CHRD, VAL und DBD nennen heute ein Verlustjahr mit negativem Wert, SF, SGRY und ESI zeigen heute „mind. N Jahre“ ohne Zahlen dahinter, ASST und WOLF heute „aktuell nicht“. Bei DBD, CHRD und SDRL steht das Verlustjahr von heute dann hinter der Lücke und wird nicht mehr genannt (DBD 2022 minus 211,7 Mio. USD).
+
+Zwei Textzeilen in `profitStreakErklaerung` gehören zu diesem Merge. Sie liegen bei der findash-Lane, dieser PR ändert findash nicht, und ein neues Feld ist dafür nicht nötig.
 
 ### Board-Zeilen
 
@@ -187,10 +202,16 @@ Ein Handstart auf main baut die drei Speicher mit der neuen Regel neu. Auf den e
 
 - **Vergleichsjahre unter dem nächsten Schlüssel (alte Regel):** 29 Zellen bei 23 Tickern unter den angenommenen Namen, Bruttogewinn nicht mitgezählt, sechs davon im neuesten Jahr. Beim Umsatz 2025 von ATVK, MAZE und IMSR steht der Wert von 2024, bei MAZE 167,5 Mio. USD mit Periodenende 31.12.2024; bei MTC, PHOE und XMAX steckt die Investition des Vorjahres im freien Cashflow. Ein Anker über den ganzen Abschluss träfe in der Langhistorie alle 47 solcher Zellen, aber auch 39 weitere (auf diesem Stand 40), meist richtige, etwa APD 2018 und FUL 2022.
 - **Späteres Jahr unter älterem Schlüssel (alte Regel):** Bei Federal Realty und Wolverine trägt der 10-K für 2025 den Schlüssel 2024; unter 2024 steht der Wert von 2025 (1.279,0 und 1.874,3 Mio. USD). In der Langhistorie sind es 218 Zellen bei Umsatz, Betriebs- und Nettoergebnis. Der Test zu WWW begründet das mit 52/53-Wochen-Jahren, Federal Realty hat aber ein Kalenderjahr.
-- **Füllbare Zellen:** 184 der 1.220 geleerten Zellen (auf diesem Stand 184 von 1.215) ließen sich aus derselben SEC-Datei füllen, weil dort unter dem nächsten Schlüssel eine ganze Jahreszeile mit demselben Periodenende steht (J&J 2011, Stifel 2011, Paycom 2014). Damit kämen laut Blindprüfung 9 der 22 geänderten Gewinnserien auf ihren alten Stand. `annualFiled` müsste dann das spätere Einreichungsdatum tragen.
+- **Füllbare Zellen:** 184 der 1.220 geleerten Zellen (auf diesem Stand 184 von 1.215) ließen sich aus derselben SEC-Datei füllen, weil dort unter dem nächsten Schlüssel eine ganze Jahreszeile mit demselben Periodenende steht (J&J 2011, Stifel 2011, Paycom 2014). Damit kämen auf diesem Stand 4 von 26 geänderten Gewinnserien auf ihren alten Stand: JNJ, SF, PAYC, NESR. `annualFiled` müsste dann das spätere Einreichungsdatum tragen.
 - **MBUU:** Score 50,5 auf 25,2, Rang 7 auf 16, ohne jede Datenänderung bei MBUU. Die Small-Cap-Stichprobe steigt von 252 auf 253, die gelernte Schwelle sinkt von 0,41937 auf 0,41834, und das ist genau der Rückgang von MBUU. Das kann jeder Monatslauf bei jedem Namen auslösen.
 - **VISN, Formelfrage:** Score 56,1 auf 22,6. Die gelernte Schwelle liegt bei 14,7 %, auch die vergleichbare Reihe aus dem 10-K 2025 fällt von 1.863,8 auf 1.382,6 Mio. USD (25,8 %). Der Faktor 0,4 entsteht also in beiden Fällen und kommt aus den Vorzeichenwechseln im Betriebsergebnis (Zählwert 3). Die Erklärung über den Verkauf von Geschäftsteilen allein trägt nicht. Ob die Formel so bleibt, gehört auf den Formel-Weg.
 - **Monatslauf erneuert nur ausgewählte Firmen:** Im Hauptspeicher bleiben 57 Einträge nicht erneuert; bei nicht erneuerten Einträgen wären 19 Speichereinträge bei 18 Tickern mit 59 Zellen nach der neuen Regel leer.
-- **Neu gemessen, nicht Teil des Auftrags:** Bei 102 Tickern der Langhistorie läuft die gezählte Serie über ein Geschäftsjahr, das auf der Jahresachse ganz fehlt. Das ist keine Lücke im Sinn dieser Korrektur und erzeugt keinen Verlustsatz, „ununterbrochen“ ist dort aber nicht belegt. Außerdem liest findash bei den 27 Board-Tickern ohne Serie „liegt keine solche Historie vor“, obwohl nur das neueste Jahr fehlt.
+- **Neu gemessen, nicht Teil des Auftrags:** Bei 102 Tickern der Langhistorie läuft die gezählte Serie über ein Geschäftsjahr, das auf der Jahresachse ganz fehlt. Das ist keine Lücke im Sinn dieser Korrektur und erzeugt keinen Verlustsatz, „ununterbrochen“ ist dort aber nicht belegt.
+- **Giftify 2023, Vorgänger-Zeitraum durch die 7-Tage-Regel:** Das 10-K trennt Vorgänger (01.01. bis 29.12.2023, Umsatz 86,7 Mio. USD) und Nachfolger (30.12. bis 31.12.2023, Umsatz 0,48 Mio. USD). Der Anker ist der kurze Nachfolger-Zeitraum, die Regel nimmt den Vorgänger mit 362 Tagen. Das Nettoergebnis steht damit bei minus 0,12 statt zusammen minus 5,14 Mio. USD. Giftify steht nicht im Universum (keine Zeile in der Langhistorie, kein Snapshot vom 31.10., kein Eintrag in `watchlist.json`), also bewegt das heute nichts. Vorschlag der Blindprüfung: In den richtigen Fällen überlappt die Ankerzeile das ganze Jahr, bei Giftify beginnt sie am Tag danach; diese eine Bedingung würde den Fall trennen.
+- **Test „an unreadable period end is no value“:** Er wird nur rot, wenn Periodenprüfung und Endprüfung zugleich aus sind (nachgestellt: je eine aus Exit 0, beide aus Exit 1). Die beiden Prüfungen sichern einander ab, Schaden hat das keinen.
+
+### Vorhersagen für den Tageslauf
+
+`data-health/erwartungen.json` trägt 13 Einträge mit `pr: 20` und `gueltigAb` 2026-11-05 für KIM, CCK, MPLX, SF, WELL, AMH und RCL. Sie gelten für den Stand nach dem Merge ohne Handstart und bleiben auch nach einem Neubau wahr. Gegen die Exporte der Vergleichsarme geprüft sind heute 5 von 13 erfüllt, im nächsten Tageslauf und nach einem Neubau je 13 von 13.
 
 Messwerkzeuge und Rohausgaben dieses Nachtrags: `C:/Users/Anwender/.codex/t/daylauf10/sd-f02-work/bau01/`.
