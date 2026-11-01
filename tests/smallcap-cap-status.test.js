@@ -16,6 +16,8 @@ const MUTANTS = {
   'check-guard': [/^ *if \(mk\.namedReasons != null\) \{(?=\r?$)/m, '  if (false) {', /--check must catch a wrong reason list/],
   'reference-guard': [/^ *if \(mk\.reference != null && .*\{(?=\r?$)/m, '  if (false) {', /--check must catch a floor that left the fixed reference/],
   'not-monitored-guard': [/^ *if \(notMonitored != null && .*;(?=\r?$)/m, '', /--check must catch a group named without its reason/],
+  // The state before this fix: raw store rows decide.
+  'held-row-listed': [/^ *const listable = new Set\(.*;(?=\r?$)/m, '  const listable = new Set(readJSON(watchlist).stocks.map(s => s.ticker));', /a row a guard holds must not be listed/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -97,7 +99,23 @@ const filled = index(1.01).namedReasons;
 // The export guard on the real mapper, same two directions.
 const mapped = t => writer.mapBoardRow(boardZeile({ ticker: t, name: t, score: 50, marketCap: 4e8, ipoRecency: 'mature', profitStreak: null, coverageAxes: '7/7', track: 'profitable', revGrowthYoYPct: null }), 0, 'smallcap', 3e8);
 const dropped = mapped(b), control = mapped(a);
+// A row a guard holds shows no value, so no list may say anything about its size or its last value. Read raw, a pull
+// clock behind the store's newest day would say "the last value stays". The control row has no guard and the same clock.
+const { holds } = require('../lib/market-cap-guard.js');
+const onList = wl.map(s => s.ticker);
+const [heldBehind, heldEmpty] = onList.filter(t => holds[t] && holds[t].validFrom <= old.slice(0, 10));
+const plainBehind = onList.find(t => t !== a && t !== b && !holds[t]);
+fs.writeFileSync(path.join(dir, heldBehind + '.json'), JSON.stringify({ ...scored(heldBehind, 4e8), marketCap: { value: 4e8, source: 'yahoo_quote', asOf: old } }));
+fs.writeFileSync(path.join(dir, heldEmpty + '.json'), JSON.stringify({ ...scored(heldEmpty, null), marketCap: { value: null, missing: true, asOf: fresh } }));
+fs.writeFileSync(path.join(dir, plainBehind + '.json'), JSON.stringify({ ...scored(plainBehind, 4e8), marketCap: { value: 4e8, source: 'yahoo_quote', asOf: old } }));
+const guarded = index(1.01).namedReasons;
 console.log = log; console.warn = warn; console.error = original;
+assert(heldBehind && heldEmpty && plainBehind, 'test data: two hand holds and a plain row on the real watchlist');
+const listed = ['belowFloor', 'aboveBand', 'noFreshValue', 'thinCoverage'].flatMap(k => guarded[k]).map(r => r.ticker);
+assert(!listed.includes(heldBehind), 'a row a guard holds must not be listed: pull clock behind the newest day');
+assert(!listed.includes(heldEmpty), 'a row a guard holds must not be listed: no value in the store');
+assert.deepEqual(guarded.noFreshValue.map(r => r.ticker), [plainBehind], 'a row no guard holds stays listed');
+console.log('PASS a row a guard holds stands in no list, a row with the same clock and no guard stays');
 assert.equal(noStore, null, 'no store means no statement'); assert.equal(emptyStore, null, 'an empty store means no statement');
 assert.deepEqual(filled.belowFloor.map(r => r.ticker), [b]);
 assert.deepEqual(filled.thinCoverage.map(r => r.ticker), [a], 'the scored firm under the coverage floor must be named');

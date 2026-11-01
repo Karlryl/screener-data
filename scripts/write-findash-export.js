@@ -1345,7 +1345,11 @@ function smallcapNamedReasons(coverageFloor) {
     .map(f => readJSONOrNull(path.join(SMALLCAP_SNAP_DIR, f))).filter(Boolean);
   if (!rows.length) return null;
   const watchlist = path.join(ROOT, 'watchlist-smallcap.json');
-  const status = smallcapCapStatus(rows, new Set(readJSON(watchlist).stocks.map(s => s.ticker)), require('../src/scoring/smallcap-route.js').MAX_MCAP);
+  // A row a guard holds shows no value, so no sentence about its size or its last value is true of it. The reader the
+  // scoring pass uses decides, whichever guard holds the row; its pull clock still counts for the store's newest day.
+  const held = new Set(rows.filter(row => { const seen = marketCapGuard.prepareMarketCap(row); return seen.meta?.marketCapReason && !Number.isFinite(seen.marketCap?.value); }).map(row => row.meta?.ticker));
+  const listable = new Set(readJSON(watchlist).stocks.map(s => s.ticker).filter(t => !held.has(t)));
+  const status = smallcapCapStatus(rows, listable, require('../src/scoring/smallcap-route.js').MAX_MCAP);
   // The sealed pass only counts these. Same pass again, read-only, to name them; --check compares the count.
   const { loadSmallcapUniverse, loadSmallcapReference, scoreSmallcapUniverse } = require('../src/scoring/run-screener.js');
   const thin = scoreSmallcapUniverse(loadSmallcapUniverse(SMALLCAP_SNAP_DIR, watchlist), loadSmallcapReference())
