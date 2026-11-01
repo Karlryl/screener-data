@@ -195,6 +195,34 @@ test('cap: at most 200 cases per class, the rest counted in gekuerzt and logged;
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('a count over part of the boards says so: expected, read and vollstaendig, in the file and the summary (P282)', () => {
+  const dir = tmp();
+  try {
+    const exp = path.join(dir, 'export');
+    fs.mkdirSync(path.join(exp, 'full'), { recursive: true });
+    const row = (ticker, g) => ({ rank: 1, rankGrund: null, ticker, name: ticker, country: 'United States', marketCap: 1e9, score: 50, scoreShrunk: 50, revGrowthYoYPct: g,
+      revGrowthBasis: 'quarter', revGrowthPeriodEnd: '2026-06-30', revGrowthPriorPeriodEnd: '2025-06-30' });
+    fs.writeFileSync(path.join(exp, 'index.json'), JSON.stringify({ generated_at: '2026-10-24T08:00:00Z', branches: ['energy', 'utilities'] }));
+    fs.writeFileSync(path.join(exp, 'full', 'energy.json'), JSON.stringify({ branch: 'energy', profitable: [row('QUIET', 5)], unprofitable: [] }));
+    const go = (name) => { const out = path.join(dir, name + '.json'), summary = path.join(dir, name + '.md');
+      const r = run(['--export', exp, '--snapshots', path.join(dir, 'none'), '--board-history', path.join(dir, 'none'), '--out', out, '--gestern', path.join(dir, 'none.json')], { GITHUB_STEP_SUMMARY: summary });
+      return { ...r, summary: fs.readFileSync(summary, 'utf8') }; };
+    const partial = go('partial');
+    assert.equal(partial.status, 0, 'still report-only');
+    assert.equal(partial.report.status, 'ok');
+    assert.equal(partial.report.vollstaendig, false);
+    assert.deepEqual([partial.report.quellen.boardsErwartet, partial.report.quellen.boardsGelesen], [2, 1]);
+    assert.equal(partial.report.zusammenfassung['wachstum-extrem'], 0, 'the zero stays, the flag qualifies it');
+    assert.match(partial.summary, /Teilzählung: nur 1 von 2 Boards gelesen/);
+    fs.writeFileSync(path.join(exp, 'full', 'utilities.json'), JSON.stringify({ branch: 'utilities', profitable: [row('LOUD', 10000)], unprofitable: [] }));
+    const complete = go('complete');
+    assert.equal(complete.report.vollstaendig, true);
+    assert.equal(complete.report.quellen.boardsGelesen, 2);
+    assert.equal(complete.report.zusammenfassung['wachstum-extrem'], 1, 'the partial zero hid this row');
+    assert.doesNotMatch(complete.summary, /Teilzählung/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('no snapshot readable at all: the three snapshot checks say null, not 0, and the first read error is named', () => {
   const dir = tmp();
   try {
