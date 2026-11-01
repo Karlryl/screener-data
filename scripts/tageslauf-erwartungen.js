@@ -11,7 +11,9 @@
  * data day (Europe/Berlin date of index.json generated_at), never the calendar date; --datum overrides that
  * day (for example to check yesterday's export against today's entries).
  * Exit 0: every due expectation is erfüllt or abgelaufen. Exit 1: at least one is nicht erfüllt or
- * nicht messbar (a missing field or an unloadable board file is never counted as erfüllt). Exit 2:
+ * nicht messbar (a missing field or an unloadable board file is never counted as erfüllt), or a held
+ * reporting currency is past its deadline (index.json coverage.reporting_ccy_held, Karl's alarm, independent
+ * of the entries, which expire after 7 days while a hold does not). Exit 2:
  * index.json could not be loaded, or the expectation file or --datum is invalid.
  *
  * Entry: {id, pr, gueltigAb, gueltigBis?, grund, board, op, feld?, ticker | name | zaehle, track?,
@@ -283,7 +285,11 @@ async function run({ exportBase, erwartungen, datum: override }) {
   });
   const count = u => results.filter(r => r.urteil === u).length;
   const laterChecks = new Set(later.map(e => e.gruppe ?? e.id)).size; // counted like results: a group is one
+  const held = Array.isArray(index.coverage?.reporting_ccy_held) ? index.coverage.reporting_ccy_held : [];
+  const heldLine = r => `${r.overdue ? 'ALARM an Karl, Frist überschritten. ' : 'Warnung. '}Berichtswährung von ${r.ticker} nicht bestätigt (${r.type === 'conflict' ? 'Widerspruch des Anbieters' : 'neue Periode'}): Die Abschlusszahlen stehen leer, die Boards laufen weiter. Zuständig ${r.owner}, seit ${r.firstSeen}, Prüfung bis ${r.pruefungBis}.`;
   const lines = [
+    ...held.filter(r => r.overdue).map(heldLine),
+    ...held.filter(r => !r.overdue).map(heldLine),
     // An exit 0 that checked nothing (nothing due, or every due entry expired) must not read like a green result.
     ...(results.length ? [] : [`Hinweis: Export vom ${exportDay}, keine Erwartung fällig; das ist kein Prüfergebnis.`]),
     ...(results.length && count(ABGELAUFEN) === results.length ? [`Hinweis: Export vom ${exportDay}, alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.`] : []),
@@ -301,8 +307,9 @@ async function run({ exportBase, erwartungen, datum: override }) {
     zusammenfassung: { erfuellt: count(ERFUELLT), nichtErfuellt: count(NICHT), nichtMessbar: count(NM), abgelaufen: count(ABGELAUFEN), nochNichtFaellig: laterChecks },
     ergebnisse: results.map(r => ({ id: r.id, pr: r.pr, urteil: r.urteil, teile: r.members.map(m => ({ id: m.e.id, urteil: m.urteil, gemessen: m.gemessen })) })),
     nochNichtFaellig: later.map(e => e.id),
+    berichtswaehrungGehalten: held,
   };
-  const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN);
+  const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN) && !held.some(r => r.overdue);
   return { code: ok ? 0 : 1, lines, report };
 }
 
