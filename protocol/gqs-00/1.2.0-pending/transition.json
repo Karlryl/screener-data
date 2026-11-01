@@ -419,7 +419,7 @@
       "lib/g31-recency.js": "3dc7b9dab4568e639ea22eec6565688e00a88abeaa6b4e4c71837bec0133098a"
     },
     "dependencySha256LF": {
-      "lib/g31-recency.js": "9222fd23847a49fd148806ca335ac33d658f513078cd09f05c7c543906fda067"
+      "lib/g31-recency.js": "3f8125b27f32d0bc05240321bd4f13946ad8c81a5dbe93e68906d1112d0d9061"
     },
     "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
     "goldenImpact": "verify() rebuilds the 25 golden traces unchanged (GQS00-023 and GQS00-024 keep their registered second traces): no golden case has a newest quarter without a valid year-ago pair next to an older valid pair.",
@@ -444,6 +444,11 @@
       "scope": "Admit one more checked hint code (bilanzierungswechsel) in the hint table validator; diagnostic text only, no value, score or rank changes. Hints for 603991.SS (September quarter), DNO.OL, ETERNAL.BO, ETERNAL.NS and 002077.SZ live in configs/g31-hinweise.json.",
       "evidence": "tests/g31-hinweise-pr75-r5.test.js: real packets of the 31.10.2026 run, in-memory red probes; replay of 31.10.2026 on a fixed data day.",
       "review": "Builder evidence only; independent review and merge remain pending."
+    },
+    "reviewFixR6": {
+      "scope": "Blind number review of 01.11.2026: a firm with sector Financial Services outside the exchange check takes an older pair only when both operands are filed hand-table values; the vendor's quarterly line at lenders is often not the reported revenue (8 of 10 Indian rows). New hint code einmaleffekt and ten checked hint rows for six firms (002980.SZ, OFSS, JIOFIN, CIPLA, SONACOMS, ADANIPOWER), one per listing. The older-pair hint now says the vendor data lack the comparison. No formula elsewhere moves.",
+      "evidence": "tests/g31-pr75-r6.test.js: real packets of the 31.10.2026 run, in-memory red probes; replay of 31.10.2026 on a fixed data day.",
+      "review": "Builder evidence only; narrow independent re-check and merge remain pending."
     }
   },
   "periodGateRound3OnPr75": {
@@ -451,7 +456,7 @@
     "authority": "Daylauf 11 lane sd-g31 (formula DRAFT for Codex): the period gate rebased on PR #75, with the two findings of Codex's verdict on eccc09b32c that blocked it.",
     "scope": "lib/annual-pairs.js: sealedEraSnapshot excuses an undated pair only on the 25 sealed golden fixtures, identified by ticker and fetch time to the millisecond; the date rule is gone, an old snapshot that is no fixture gets no exception. lib/g31-recency.js: quarterCandidate takes the position argument of #75 and the duration test of this gate together; older pairs from #75 pass the same gate. scripts/write-findash-export.js: the watcher [period-gate-undated] counts a fixture on a board, whichever axis it reaches, capital efficiency included. No golden trace moves.",
     "dependencySha256LF": {
-      "lib/g31-recency.js": "82fbf3c5153a4384ceeeaa928fa7fa5ae21a47ecdffe89e9cb6d810df338b4e1",
+      "lib/g31-recency.js": "dba91800159d571012f9bd42c41fab0aba9cc257bc21f019cdc017a22da6a57e",
       "lib/annual-pairs.js": "b856e00e617e8cc92c410120f4bcbed3bf977d025c78fb7ecdd8c4e01bb38bbb"
     },
     "previousDependencySha256LF": {
@@ -464,7 +469,7 @@
     "rollback": "Revert this round and only this registration with its dependency hashes together in a reviewed new commit."
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "82fbf3c5153a4384ceeeaa928fa7fa5ae21a47ecdffe89e9cb6d810df338b4e1",
+    "lib/g31-recency.js": "dba91800159d571012f9bd42c41fab0aba9cc257bc21f019cdc017a22da6a57e",
     "lib/annual-pairs.js": "b856e00e617e8cc92c410120f4bcbed3bf977d025c78fb7ecdd8c4e01bb38bbb"
   }
 }
