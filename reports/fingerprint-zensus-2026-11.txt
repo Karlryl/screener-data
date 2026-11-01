@@ -1,0 +1,23 @@
+O1-Fingerabdruck-Zensus ueber /home/runner/work/screener-data/screener-data/snapshots (Ebene: snapshot.timeseries, auf Melde-Waehrung zurueckgerechnet)
+  Snapshots .................... 15826
+  ohne brauchbaren FX-Kurs ..... 0
+  belastbar (>=4 Umsatzquartale) ... 13637
+  Fingerabdruck-Klassen (>=2) .. 2516
+  davon divergente issuerKeyLoose 16
+  davon mit Mailaender Bein .... 833
+     davon divergent ........... 5
+  MELDEPFLICHTIG (§6.5) ........ 3
+
+Meldepflichtig = divergente Emittenten-Schluessel UND (Aktienzahl-Abstand > 20 % ODER verschiedenes Land).
+Das ist die Drift-Spur, nicht das Tor: dieses Skript entscheidet nichts.
+
+── Meldepflichtige Klassen ────────────────────────────────────────
+  AERO + AERO.MX
+      Namen: "Grupo Aeroméxico, S.A.B. de C.V." / "Grupo Aeromexico, S.A.B. de C.V"
+      Land: Mexico  Aktienzahl-Abstand: 0.900
+  CPLE3.SA + ELPC
+      Namen: "Companhia Paranaense de Energia - COPEL" / "Companhia Paranaense de Energia"
+      Land: Brazil  Aktienzahl-Abstand: 0.750
+  PSKY + SKYD
+      Namen: "Paramount Skydance Corp" / "Skydance Corporation"
+      Land: United States  Aktienzahl-Abstand: 0.782
