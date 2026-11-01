@@ -43,6 +43,16 @@ test('the packet is quarantined with a dated German reason and two sources', () 
   for (const s of q.sources) assert.match(s.url, /^https:\/\/princesgroupinvestors\.com\//);
 });
 
+test('the filter feed shows no growth from the held packet; the same packet without the row shows the mixed figure', () => {
+  const { buildUniverse } = require('../scripts/write-filter-universe.js');
+  const rowOf = s => buildUniverse({ snapshots: [s], excluded: new Map([['PRN.L', ['data-suspect']]]), generatedAt: '2026-11-01T00:00:00.000Z' }).rows[0];
+  const held = rowOf(applyFinancialCases(packet()).snapshot);
+  assert.equal(held.t, 'PRN.L');
+  assert.equal(Object.hasOwn(held, 'g'), false);
+  assert.equal(Object.hasOwn(held, 'g3'), false);
+  assert.equal(rowOf(packet()).g, -8.86);
+});
+
 test('another firm with this ticker prefix or name is untouched; a drifted name stays held and says so', () => {
   const other = applyFinancialCases({ ...packet(), meta: { ...packet().meta, ticker: 'PRN.AX', name: 'Perenti Limited', reportingCurrencyOriginal: 'AUD' } });
   assert.equal(other.snapshot.meta.financialDataIssue, undefined);

@@ -231,7 +231,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       c: text(board?.country ?? geo.country), rg: text(board?.region ?? geo.region), s: text(board?.sector ?? meta.sector),
       mc: meta.marketCapReason || marketCapCases[ticker] ? (finite(snapshot.marketCap?.value) ? round(snapshot.marketCap.value) : null) : board ? (finite(board.marketCap) ? board.marketCap : null)
         : (beurteileWaehrungsbeleg(meta).ok ? round(snapshot.marketCap?.value) : null),
-      g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
+      // G2, PR #72 review: a quarantined packet has no comparable year and its reason says so (PRN.L -8.86, 402340.KS +967); no growth from it.
+      g: board ? round(board.revGrowthYoYPct) : meta.financialDataIssue ? null : round(revGrowthLevel(snapshot)), g3: meta.financialDataIssue ? null : growth3(snapshot),
       ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
       pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
       fpe: fpeBad ? null : fpe,
