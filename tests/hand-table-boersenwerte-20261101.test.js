@@ -23,6 +23,8 @@ const packet = t => { const { expect, ...s } = structuredClone(snapshots[t]); re
 const entries = Object.entries(snapshots);
 const held = entries.filter(([, s]) => s.expect.kind === 'hold').map(([t]) => t);
 const corrected = entries.filter(([, s]) => s.expect.kind === 'correct').map(([t]) => t);
+const HELD_COUNT = 104;
+const CORRECTED_LIST = ["001289.SZ","0019.HK","1766.HK","1787.HK","600188.SS","600685.SS","600688.SS","600871.SS","600938.SS","600956.SS","601869.SS","688185.SS","688347.SS","688385.SS","688981.SS","GLXY"];
 
 function expectWithheld(t, s = packet(t)) {
   const out = guard.prepareMarketCap(s);
@@ -56,6 +58,20 @@ test('every row is in the table, sourced, dated and in plain German', () => {
     assert.doesNotMatch(row.reason, /[–—]| - |kauf|verkauf/i, t + ': dash as punctuation or a trading word');
     assert.match(row.reason, /(\d{2}\.\d{2}\.\d{4})/, t + ': names its day');
   }
+});
+
+test('the count of rows is pinned; a row cannot leave together with its fixture', () => {
+  assert.equal(held.length, HELD_COUNT);
+  assert.deepEqual([...corrected].sort(), CORRECTED_LIST);
+  assert.equal(Object.keys(guard.holds).filter(t => snapshots[t]).length, HELD_COUNT, 'every fixture hold is in the table');
+  // Yahoo's next count must still be recognised at Hua Hong, whose count changed in September.
+  assert.equal(guard.table['688347.SS'].wrongShares.length, 2);
+  for (const t of corrected) assert.equal(guard.table[t].reviewBy, t === 'GLXY' ? '2027-03-15' : '2026-12-31', t);
+});
+
+test('a reason names the checked value, so a changed number in the fixture or the row goes red', () => {
+  const de = x => (x / 1e9).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  for (const t of held) assert.ok(guard.holds[t].reason.includes(de(snapshots[t].expect.usd)), t + ': ' + de(snapshots[t].expect.usd));
 });
 
 test('a held line shows no market cap and no ratio built on it, and says why', () => {

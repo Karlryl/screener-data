@@ -611,6 +611,28 @@
     "verifiedAt": "2026-11-01",
     "withholdUnverified": true
   },
+  "1766.HK": {
+    "shares": 39817324643,
+    "sharesAsOf": "2026-09-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      28698864190
+    ],
+    "wrongSharesSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 19,372,337,593 USD, price 0.6750210553499999 USD, 28,698,864,190 shares implied",
+    "reason": "Börsenwert näherungsweise aus 39.817,3 Mio. H-Aktien-Gegenwerten berechnet: laut CRRC 4.371.066.040 H-Aktien und 24.327.798.048 A-Aktien, die A-Aktien umgerechnet mit den Schlusskursen vom 30.10.2026 (5,30 HKD und 6,55 CNY). Yahoo bewertet alle Aktien zum Hongkonger Kurs, obwohl die Shanghaier Aktien rund 146 % davon kosten. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
+    "source": {
+      "form": "Die Monatsmeldung von CRRC an die Hongkonger Börse nennt die A- und H-Aktien.",
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000660.pdf",
+      "quote": "Stock code (if listed) 01766 ... Total number of issued shares ... 4,371,066,040 ... Number of treasury shares ... 0 | Stock code (if listed) 601766 ... 24,327,798,048 ... Number of treasury shares ... 0",
+      "page": "2",
+      "unit": "shares: H 4371066040 + A 24327798048 x (6.55 x 0.150128) / (5.295 x 0.127458) = 39817324643 H equivalents",
+      "crossCheck": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000660.pdf 2 (HKEX Monthly Return FF301 for the month ended 30 September 2026, section II.2, treasury shares 0): 24,327,798,048",
+      "priceSource": "https://query1.finance.yahoo.com/v8/finance/chart/1766.HK?range=1mo&interval=1d and https://query1.finance.yahoo.com/v8/finance/chart/601766.SS?range=1mo&interval=1d, closes of 2026-10-30 (vendor data)"
+    },
+    "verifiedAt": "2026-11-01",
+    "withholdUnverified": true
+  },
   "0019.HK": {
     "shares": 1183568546,
     "sharesAsOf": "2026-09-30",
@@ -620,7 +642,7 @@
       3627920515
     ],
     "wrongSharesSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 49,209,703,299 USD, price 13.564162472 USD, 3,627,920,515 shares implied",
-    "reason": "Börsenwert näherungsweise aus 1.183,6 Mio. A-Aktien-Gegenwerten berechnet: laut Swire Pacific 778.988.000 A-Aktien und 2.848.932.500 B-Aktien, die B-Aktien umgerechnet mit den Schlusskursen vom 30.10.2026 (106,40 und 15,11 HKD). Yahoo bewertet alle Aktien zum Kurs der A-Aktie, obwohl eine B-Aktie nur ein Fünftel der Rechte einer A-Aktie trägt. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
+    "reason": "Börsenwert näherungsweise aus 1.183,6 Mio. A-Aktien-Gegenwerten berechnet: laut Swire Pacific 778.988.000 A-Aktien und 2.848.932.500 B-Aktien, die B-Aktien umgerechnet mit den Schlusskursen vom 30.10.2026 (106,40 und 15,11 HKD). Yahoo bewertet alle Aktien zum Kurs der A-Aktie, obwohl einer B-Aktie außer beim gleichen Stimmrecht nur ein Fünftel der Ansprüche einer A-Aktie zusteht. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
     "source": {
       "form": "Die Monatsmeldung von Swire Pacific an die Hongkonger Börse nennt die A- und B-Aktien.",
       "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201734.pdf",
@@ -637,7 +659,7 @@
     "shares": 388479988,
     "sharesAsOf": "2026-09-30",
     "validFrom": "2026-10-01",
-    "reviewBy": "2026-11-16",
+    "reviewBy": "2027-03-15",
     "wrongShares": [
       589297344
     ],
@@ -1019,7 +1041,7 @@
     },
     "1IFX.MI": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo rechnet für diese Zweitnotierung von Infineon mit einem alten Kurs von 71,75 USD und kommt auf 93,24 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 73,59 Mrd. USD. Maßgeblich ist die Notierung IFX.DE.",
+      "reason": "Yahoo rechnet für diese Zweitnotierung von Infineon mit einem alten Kurs von 71,75 USD und kommt auf 93,24 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 73,47 Mrd. USD. Maßgeblich ist die Notierung IFX.DE.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Infineon.",
@@ -1109,7 +1131,7 @@
     },
     "1VOLC.MI": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo rechnet für diese Zweitnotierung von Volvo Car mit einem alten Kurs von 1,45 USD und kommt auf 4,31 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 3,44 Mrd. USD. Maßgeblich ist die Notierung VOLCAR-B.ST.",
+      "reason": "Yahoo rechnet für diese Zweitnotierung von Volvo Car mit einem alten Kurs von 1,45 USD und kommt auf 4,31 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 3,43 Mrd. USD. Maßgeblich ist die Notierung VOLCAR-B.ST.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Volvo Car.",
@@ -1124,7 +1146,7 @@
     },
     "1HUSQ.MI": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo rechnet für diese Zweitnotierung von Husqvarna mit einem alten Kurs von 4,56 USD und kommt auf 2,61 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 1,86 Mrd. USD. Maßgeblich ist die Notierung HUSQ-B.ST.",
+      "reason": "Yahoo rechnet für diese Zweitnotierung von Husqvarna mit einem alten Kurs von 4,56 USD und kommt auf 2,61 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 1,85 Mrd. USD. Maßgeblich ist die Notierung HUSQ-B.ST.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Husqvarna.",
@@ -1410,7 +1432,7 @@
     },
     "HHPD.L": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Zweitnotierung von Hon Hai Precision Industry Co., Ltd 49,12 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 2317.TW am 30.10.2026 ergeben sich rund 106,09 Mrd. USD. Maßgeblich ist die Notierung 2317.TW.",
+      "reason": "Yahoo nennt für diese Zweitnotierung von Hon Hai Precision Industry Co., Ltd 49,12 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 2317.TW am 30.10.2026 ergeben sich rund 106,11 Mrd. USD. Maßgeblich ist die Notierung 2317.TW.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 2317.TW.",
@@ -1774,7 +1796,7 @@
     },
     "PYYIF": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Zweitnotierung von Promotora y Operadora de Infraestructura, S. A. B. de C. V 4,29 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung PINFRA.MX am 30.10.2026 ergeben sich rund 5,83 Mrd. USD. In den drei Monaten bis 30.10.2026 zeigt Yahoo hier keinen Handel. Maßgeblich ist die Notierung PINFRA.MX.",
+      "reason": "Yahoo nennt für diese Zweitnotierung von Promotora y Operadora de Infraestructura, S. A. B. de C. V 4,29 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung PINFRA.MX am 30.10.2026 ergeben sich rund 5,84 Mrd. USD. In den drei Monaten bis 30.10.2026 zeigt Yahoo hier keinen Handel. Maßgeblich ist die Notierung PINFRA.MX.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung PINFRA.MX.",
@@ -2054,7 +2076,7 @@
     },
     "WSTTF": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Zweitnotierung von Westports Holdings Berhad 2,59 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 5246.KL am 30.10.2026 ergeben sich rund 5,82 Mrd. USD. In den drei Monaten bis 30.10.2026 zeigt Yahoo hier keinen Handel. Maßgeblich ist die Notierung 5246.KL.",
+      "reason": "Yahoo nennt für diese Zweitnotierung von Westports Holdings Berhad 2,59 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 5246.KL am 30.10.2026 ergeben sich rund 5,80 Mrd. USD. In den drei Monaten bis 30.10.2026 zeigt Yahoo hier keinen Handel. Maßgeblich ist die Notierung 5246.KL.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 5246.KL.",
@@ -2138,7 +2160,7 @@
     },
     "CRAP.PA": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Notierung von Caisse Régionale de Crédit Agricole Mutuel Alpes Provence 61,80 Mrd. USD; laut den Berichten der Firma sind es am 30.10.2026 rund 0,35 Mrd. USD. Ein verlässlicher Wert aus dem Anbieter ist nicht belegt.",
+      "reason": "Yahoo nennt für diese Notierung von Caisse Régionale de Crédit Agricole Mutuel Alpes Provence 61,80 Mrd. USD; laut den Berichten der Firma sind es am 30.10.2026 rund 0,31 Mrd. USD. Ein verlässlicher Wert aus dem Anbieter ist nicht belegt.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Caisse Régionale de Crédit Agricole Mutuel Alpes Provence.",
@@ -2166,7 +2188,7 @@
     },
     "1CIFR.MI": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Zweitnotierung von Cipher Digital Inc. (formerly Cipher Mining) 6,52 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung CIFR am 30.10.2026 ergeben sich rund 3,17 Mrd. USD. Maßgeblich ist die Notierung CIFR.",
+      "reason": "Yahoo nennt für diese Zweitnotierung von Cipher Digital Inc. (formerly Cipher Mining) 6,52 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung CIFR am 30.10.2026 ergeben sich rund 3,32 Mrd. USD. Maßgeblich ist die Notierung CIFR.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Cipher Digital Inc. (formerly Cipher Mining).",
@@ -2320,7 +2342,7 @@
     },
     "KXIAY": {
       "validFrom": "2026-10-01",
-      "reason": "Das Kurs-Umsatz-Verhältnis dieser ADR-Zeile von Kioxia steht bei 1,88, richtig sind etwa 5,7 wie an der Heimatbörse: Der Börsenwert aus dem letzten vollen Abruf passt nicht zum Umsatz. Am 30.10.2026 ist die Firma rund 138,36 Mrd. USD wert. Maßgeblich ist die Notierung 285A.T.",
+      "reason": "Das Kurs-Umsatz-Verhältnis dieser ADR-Zeile von Kioxia steht bei 1,88, richtig sind etwa 5,7 wie an der Heimatbörse: Der Börsenwert aus dem letzten vollen Abruf passt nicht zum Umsatz. Am 30.10.2026 ist die Firma rund 136,40 Mrd. USD wert. Maßgeblich ist die Notierung 285A.T.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl von Kioxia Holdings.",
