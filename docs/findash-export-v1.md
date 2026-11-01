@@ -1451,6 +1451,13 @@ Weg nicht. Etikett, Wertung, Wachstumsbonus, Rule of 40 und `g31Hinweis` folgen 
 Vergleichsfelder `*Legacy` behalten die bisherige Rechnung. Vorher/Nachher und Begründung stehen im
 Pull Request „G31: newest complete quarter pair before the annual pair“.
 
+Die Auffüllung aus dem Börsenbestand wirkt auch auf die Achse `revAcceleration`, ohne dass sich ihre Formel ändert: Eine eingefügte
+Quartalszeile gibt der Firma ein zweites datiertes Vorjahrespaar, und ab zwei Paaren rechnet die Achse über Quartale statt über Jahre.
+Am Datentag 31.10.2026 trifft das 336 von 340 aufgefüllten Zeilen, und es erklärt den größeren Teil ihrer Rangsprünge: BYD steigt allein
+durch das Wachstum von Rang 970 auf 888, mit der Achse auf 363; Ganfeng fällt trotz +109 % von 379 auf 680, weil das Quartal davor noch
+stärker wuchs. Bei einer leeren Zelle, die der Börsenbestand füllt, galt das schon vorher (rund 300 Firmen). Jede weitere Auffüllung kann
+solche Sprünge auslösen. Ob der Quartalsmaßstab mit nur zwei Paaren gut ist, ist eine eigene Formelfrage.
+
 ## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
 
 This is an additive feed under section 7, with no v2 bump and no change to
