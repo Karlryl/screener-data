@@ -77,7 +77,7 @@ function check(libSource, mergeSource) {
   const report = '_manifest-size-exits.shard-0.run-123456-2.json';
   const manifestPath = path.join(output, h.SIZE_EXITS_FILE);
   const logs = [];
-  const ctx = { ...h, fs: io, path, console: { log: s => logs.push(s) }, writeFileAtomic: atomic,
+  const ctx = { ...h, LISTING_EXITS_FILE: require('../discovery/listing-state.js').LISTING_EXITS_FILE, writeListingExitManifest: () => {}, watchlistPfad: 'watchlist.json', wl: { stocks: [] }, fs: io, path, console: { log: s => logs.push(s) }, writeFileAtomic: atomic,
     argv: ['node', 'filter-snapshot-merge.js', '--size-exits-history', historyPath],
     process: { env: { GITHUB_RUN_ID: '123456', GITHUB_RUN_ATTEMPT: '2', RUN_DATE_UTC: '2026-10-08', SHARD_COUNT: '1' } },
     eingang: incoming, ziel: output, files: [report, 'AAPL.json'], uebernehmen: [report, 'AAPL.json'] };

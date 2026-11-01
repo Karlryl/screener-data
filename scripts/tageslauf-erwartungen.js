@@ -11,7 +11,9 @@
  * data day (Europe/Berlin date of index.json generated_at), never the calendar date; --datum overrides that
  * day (for example to check yesterday's export against today's entries).
  * Exit 0: every due expectation is erfüllt or abgelaufen. Exit 1: at least one is nicht erfüllt or
- * nicht messbar (a missing field or an unloadable board file is never counted as erfüllt). Exit 2:
+ * nicht messbar (a missing field or an unloadable board file is never counted as erfüllt), or a held
+ * reporting currency is past its deadline (index.json coverage.reporting_ccy_held, Karl's alarm, independent
+ * of the entries, which expire after 7 days while a hold does not). Exit 2:
  * index.json could not be loaded, or the expectation file or --datum is invalid.
  *
  * Entry: {id, pr, gueltigAb, gueltigBis?, grund, board, op, feld?, ticker | name | zaehle, track?,
@@ -21,6 +23,9 @@
  *          must then exist exactly once across them).
  *   ticker | name  selects exactly one row (track narrows it); 0 or several rows fail a value check.
  *   zaehle  instead of a row: the measured value is the number of rows whose feld equals or contains it.
+ *          A row whose feld is absent makes the count nicht messbar, unless the entry sets optional: true,
+ *          for a field the export carries only on some rows (ffoReason, revGrowthReason). Then such a row
+ *          does not count, but a field that is gone from every row stays nicht messbar.
  *   op     between (min..max) | eq (wert, numeric ± toleranz) | null | notNull | contains (wert as
  *          substring or muster as regex, on a string or any element of an array) | absent | present (row).
  *   gruppe entries sharing it form one expectation (name must not be another entry's id): erfüllt if any
@@ -34,8 +39,9 @@
  * The script adds no slack of its own: it compares against exactly what the entry states.
  *   Fixed states (null, notNull, absent, present, a text or code, a count that must stay 0): no tolerance.
  *   Drifting numbers (rank, market cap, score, growth, a row count): op between, min/max = the value measured
- *          on the reference day ± 20 %, at least ± 1, and narrower only where the old wrong value would otherwise
- *          lie inside. gueltigBis at most 7 days after gueltigAb; a renewal recentres on the day it is renewed.
+ *          on the reference day ± 20 %, at least ± 1, and narrower only where the old wrong value or a failure named
+ *          with its measured value in grund would otherwise lie inside. gueltigBis at most 7 days after gueltigAb; a
+ *          renewal recentres on the day it is renewed.
  *   grund  quotes a number only with the day it was measured, so it never reads as today's value.
  */
 const fs = require('fs');
@@ -103,6 +109,7 @@ function validate(list) {
     if (selectors.length !== 1) bad('genau eines von ticker, name, zaehle nötig');
     if (e.zaehle !== undefined && !['between', 'eq'].includes(e.op)) bad('zaehle nur mit between oder eq');
     if (e.zaehle !== undefined && e.track !== undefined) bad('zaehle zählt alle Zeilen, track ist dort nicht erlaubt');
+    if (e.optional !== undefined && (e.optional !== true || e.zaehle === undefined)) bad('optional nur als true und nur mit zaehle');
     if (!ROW_OPS.includes(e.op) && (typeof e.feld !== 'string' || !e.feld)) bad('feld fehlt');
     if (e.op === 'between' && !(Number.isFinite(e.min) && Number.isFinite(e.max) && e.min <= e.max)) bad('min/max ungültig');
     if (e.op === 'eq' && !Object.hasOwn(e, 'wert')) bad('wert fehlt');
@@ -169,8 +176,11 @@ async function measure(e, load, index) {
     catch (err) { return { urteil: NM, gemessen: `Datei ${rel}.json nicht ladbar (${err.message})` }; }
   }
   if (e.zaehle !== undefined) {
-    const values = perFile.flatMap(({ rel, rows }) => rows.map(r => read(r, e.feld, rows, rel))).filter(v => v !== MISSING);
+    const all = perFile.flatMap(({ rel, rows }) => rows.map(r => read(r, e.feld, rows, rel)));
+    const values = all.filter(v => v !== MISSING);
     if (!values.length) return { urteil: NM, gemessen: `Feld ${e.feld} fehlt` };
+    // P282: an unknown value must not leave the base; a column that fails on some rows would read as a clean count.
+    if (values.length < all.length && e.optional !== true) return { urteil: NM, gemessen: `Feld ${e.feld} fehlt an ${all.length - values.length} von ${all.length} Zeilen` };
     const n = values.filter(v => (Array.isArray(v) ? v.includes(e.zaehle) : v === e.zaehle)).length;
     return { urteil: holds(e, n) ? ERFUELLT : NICHT, gemessen: n };
   }
@@ -282,13 +292,20 @@ async function run({ exportBase, erwartungen, datum: override }) {
   });
   const count = u => results.filter(r => r.urteil === u).length;
   const laterChecks = new Set(later.map(e => e.gruppe ?? e.id)).size; // counted like results: a group is one
+  // undefined: an export without the coverage block says nothing. null: the run itself did not know, no all-clear.
+  const heldRaw = index.coverage === undefined ? undefined : Array.isArray(index.coverage?.reporting_ccy_held) ? index.coverage.reporting_ccy_held : null;
+  const held = heldRaw || [];
+  const heldLine = r => `${r.overdue ? 'ALARM an Karl, Frist überschritten. ' : 'Warnung. '}Berichtswährung von ${r.ticker} nicht bestätigt (${r.type === 'conflict' ? 'Widerspruch des Anbieters' : 'neue Periode'}): Die Abschlusszahlen stehen leer, die Boards laufen weiter. Zuständig ${r.owner}, seit ${r.firstSeen}, Prüfung bis ${r.pruefungBis}.`;
   const lines = [
+    ...held.filter(r => r.overdue).map(heldLine),
+    ...held.filter(r => !r.overdue).map(heldLine),
     // An exit 0 that checked nothing (nothing due, or every due entry expired) must not read like a green result.
     ...(results.length ? [] : [`Hinweis: Export vom ${exportDay}, keine Erwartung fällig; das ist kein Prüfergebnis.`]),
     ...(results.length && count(ABGELAUFEN) === results.length ? [`Hinweis: Export vom ${exportDay}, alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.`] : []),
     `${count(ERFUELLT)} von ${results.length} Erwartungen erfüllt, ${count(NICHT)} nicht erfüllt, ${count(NM)} nicht messbar, ` +
       `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
+    ...(heldRaw === null ? ['Hinweis: Ob Firmen wegen einer unbestätigten Berichtswährung gehalten sind, ist für diesen Export unbekannt; das ist keine Entwarnung.'] : []),
   ];
   lines.push('', '| Erwartung | gemessen | Urteil | Grund |', '|---|---|---|---|');
   for (const r of results) {
@@ -300,8 +317,9 @@ async function run({ exportBase, erwartungen, datum: override }) {
     zusammenfassung: { erfuellt: count(ERFUELLT), nichtErfuellt: count(NICHT), nichtMessbar: count(NM), abgelaufen: count(ABGELAUFEN), nochNichtFaellig: laterChecks },
     ergebnisse: results.map(r => ({ id: r.id, pr: r.pr, urteil: r.urteil, teile: r.members.map(m => ({ id: m.e.id, urteil: m.urteil, gemessen: m.gemessen })) })),
     nochNichtFaellig: later.map(e => e.id),
+    berichtswaehrungGehalten: heldRaw ?? null,
   };
-  const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN);
+  const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN) && !held.some(r => r.overdue);
   return { code: ok ? 0 : 1, lines, report };
 }
 

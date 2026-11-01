@@ -22,6 +22,7 @@ function writer(apply = shadow.applyDupIssuerShadow, loader = shadow.loadDupIssu
       if (id === '../lib/non-operating-classes.js') return require('../../lib/non-operating-classes.js'); // P89 shadow lookup, real module
       if (id === '../lib/market-cap-guard.js') return require('../../lib/market-cap-guard.js');
       // P184 is additive; isolate its helpers while exercising the real duplicate mapper.
+      if (id === '../configs/g31-hinweise.json') return { definitionen: [] }; // Definition hints stay inert in this fixture.
       if (id === '../lib/g31-recency.js') return { g31Export: () => ({ g31Shadow: null, g31Overview: {} }), g31Variant: () => null, g31Last: row => row };
       return { displayFor: () => null, financialReasons: () => [], safeSnapshotFilename: (ticker) => ticker + '.json', overviewGrowthHold: () => null }; // P186 hold stays inert in this fixture
     },
