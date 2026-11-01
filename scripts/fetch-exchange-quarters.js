@@ -46,6 +46,7 @@
  *   USA      SEC companyfacts, one request per firm whose vendor series misses a newer quarter (usCandidates),
  *            read by the SEC quarter fill in lib/exchange-quarter-check.js -> external-data/exchange-quarters/us.json.
  *            Only on --market=us; 10 failures in a row, or at least 5 failures that are more than 20 % of the calls -> abort.
+ *            A run that read no snapshot file at all aborts too (exit 1): a missing fill is otherwise invisible.
  *
  * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw] [--dry-run] [--force-cn] [--tw-cap=600]
  *   --dry-run   fetch and check everything, write nothing (branch runs of the workflow)
@@ -63,6 +64,7 @@ const S = require(path.join(ROOT, 'lib/exchange-quarter-store.js'));
 const { pitSingleQuarters, openStore, REV_CONCEPTS } = require(path.join(ROOT, 'lib/sec-pit.js'));
 const { assertSecContact } = require(path.join(ROOT, 'lib/sec-user-agent.js'));
 const { RATE_DELAY_MS } = require(path.join(ROOT, 'lib/sec-rate-limit.js'));
+const { isMetadataSnapshot } = require(path.join(ROOT, 'lib/snapshot-fs.js'));
 
 const USER_AGENT = 'screener-data exchange-quarters fetch';
 const PAUSE_MS = 1500;
@@ -377,20 +379,23 @@ async function runTaiwan(ctx) {
 // ── United States (SEC quarter fill) ──────────────────────────────────────────
 const SEC_CONCEPTS = [...REV_CONCEPTS, 'RevenuesNetOfInterestExpense'];
 const SEC_CAP = 600;                      // SEC requests per run; the measured queue on 31.10.2026 is 273 firms
-const SEC_REREAD_MS = 7 * DAY_MS;         // a firm whose newest quarter the store already holds is read once a week
+const SEC_REREAD_MS = 7 * DAY_MS;         // a firm whose newest quarter the store already holds is read once a week ...
+const SEC_DAILY_AFTER_DAYS = 91;          // ... and every day once that quarter ended longer ago than this: a new filing can then exist
 const SEC_KEEP_DAYS = 820;                // nine quarters: the shown pair plus the vendor's five for the agreement check
 const SEC_STALE_DAYS = 200;               // no quarter for this long: a candidate even when the vendor names no newer one
-const SEC_ABOUT = 'Single-quarter revenue in USD from SEC companyfacts (us-gaap, forms 10-Q and 10-K), one group per concept. '
+const SEC_ABOUT = 'Single-quarter revenue in USD from SEC companyfacts (us-gaap, forms 10-Q, 10-K, 10-KT and their amendments), one group per concept. '
   + 'Reported three-month facts, or derived from cumulative values with the derivation stated. Append-only. Only firms whose '
   + 'vendor series misses a newer quarter. Written by scripts/fetch-exchange-quarters.js, read by lib/exchange-quarter-check.js.';
 const dayOf = (iso) => Date.parse(tag(iso) + 'T00:00:00Z') / DAY_MS;
 
-/** US firms in USD whose vendor series probably misses a filed quarter. @param {string[]} dirs snapshot folders @param {string} today YYYY-MM-DD @returns {Array<{ticker:string,mrq:string|null}>} */
+/** US firms in USD whose vendor series probably misses a filed quarter. @param {string[]} dirs snapshot folders @param {string} today YYYY-MM-DD @returns {{list:Array<{ticker:string,mrq:string|null}>,filesRead:number[]}} candidates and the snapshot files read per folder */
 function usCandidates(dirs, today) {
   const out = new Map();
-  for (const dir of dirs) {
+  const filesRead = dirs.map(() => 0);
+  for (const [d, dir] of dirs.entries()) {
     for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).sort() : []) {
-      if (!f.endsWith('.json') || f.startsWith('_')) continue;
+      if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+      filesRead[d] += 1;
       const s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')), m = s.meta || {};
       if (!m.ticker || m.country !== 'United States' || out.has(m.ticker)) continue;
       if ((m.fxConverted === true ? m.reportingCurrencyOriginal : m.reportingCurrency) !== 'USD' || (m.fxConverted === true && m.fxRateApplied !== 1)) continue;
@@ -401,7 +406,7 @@ function usCandidates(dirs, today) {
       if ((mrq && dayOf(mrq) - dayOf(newest) > 15) || dayOf(today) - dayOf(newest) > SEC_STALE_DAYS) out.set(m.ticker, { ticker: m.ticker, mrq });
     }
   }
-  return [...out.values()];
+  return { list: [...out.values()], filesRead };
 }
 
 async function runUs(ctx) {
@@ -410,20 +415,25 @@ async function runUs(ctx) {
   const next = prev ? clone(prev) : { schemaVersion: 1, market: 'US', currency: 'USD', unit: 1, about: SEC_ABOUT, sources: {}, companies: {} };
   const now = ctx.now(), fetchedAt = now.toISOString(), today = fetchedAt.slice(0, 10), src = 'sec-' + stamp(fetchedAt);
   const cutoff = new Date(now.getTime() - SEC_KEEP_DAYS * DAY_MS).toISOString().slice(0, 10);
+  const { list: all, filesRead } = usCandidates(ctx.snapshotDirs, today);
+  // No snapshot means no candidate: the fill would fall asleep and the boards fall back to the older vendor quarter without a word.
+  if (!filesRead.some(Boolean)) throw new Error('no snapshot file read in ' + ctx.snapshotDirs.join(', ') + ': the snapshot artifacts are missing, no firm could be checked against SEC');
+  ctx.snapshotDirs.forEach((dir, d) => { if (!filesRead[d]) ctx.log('::warning::exchange-quarters US: no snapshot file in ' + dir + ', its firms were not checked'); });
   // Today's SEC list first (a listing younger than the committed map), the committed map for firms that left the list.
   const cikMap = { ...ctx.cikMap, ...await ctx.secTickers() };
   const cikOf = (t) => cikMap[t]?.cik || cikMap[t.replace(/-/g, '.')]?.cik || cikMap[t.replace(/\./g, '-')]?.cik || null;
   const st = { candidates: 0, due: 0, calls: 0, ok: 0, noCik: 0, noFacts: 0, failed: 0, skippedCap: 0 };
   const failures = [];
   let inARow = 0;
-  const all = usCandidates(ctx.snapshotDirs, today);
   st.candidates = all.length;
   const due = all.filter(({ ticker, mrq }) => {
     const c = next.companies[ticker];
     if (!c) return true;
     const newest = Object.values(c).filter((g) => g && typeof g === 'object').flatMap((g) => Object.keys(g)).filter((k) => /^\d{4}-/.test(k)).sort().pop();
     const holdsMrq = !mrq || (newest && dayOf(mrq) - dayOf(newest) <= 15);
-    return !(holdsMrq && now.getTime() - Date.parse(c.noData?.readAt || 0) < SEC_REREAD_MS);
+    const readAt = c.noData?.readAt || 0;
+    const readRecently = newest && dayOf(today) - dayOf(newest) > SEC_DAILY_AFTER_DAYS ? tag(readAt) === today : now.getTime() - Date.parse(readAt) < SEC_REREAD_MS;
+    return !(holdsMrq && readRecently);
   });
   st.due = due.length;
   for (const { ticker } of due) {
@@ -453,11 +463,12 @@ async function runUs(ctx) {
     }
   }
   if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
-  if (st.calls) next.sources[src] = { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };
+  // A run with nothing due stamps the store as well: the age check in lib/exchange-quarter-check.js reads this list.
+  next.sources[src] ??= { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };
   S.assertAppendOnly(prev, next);
   const text = S.serialiseStore(next);
   if (!ctx.dryRun) writeFileAtomic(file, text);
-  const summary = { market: 'US', src, ...st, companies: Object.keys(next.companies).length, bytes: Buffer.byteLength(text), written: !ctx.dryRun };
+  const summary = { market: 'US', src, filesRead, ...st, companies: Object.keys(next.companies).length, bytes: Buffer.byteLength(text), written: !ctx.dryRun };
   ctx.log('US: ' + JSON.stringify(summary));
   if (failures.length) ctx.log('US failures: ' + failures.slice(0, 20).join(' | '));
   return summary;

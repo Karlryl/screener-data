@@ -39,7 +39,7 @@ const quarters = (over = {}) => {
   return { ...q, ...over };
 };
 const store = (group = quarters(), concept = 'RevenueFromContractWithCustomerExcludingAssessedTax') => ({
-  schemaVersion: 1, market: 'US', currency: 'USD', sources: {}, companies: { AMZNX: { cik: '0001018724', [concept]: group } } });
+  schemaVersion: 1, market: 'US', currency: 'USD', sources: { s: { fetchedAt: '2026-10-30T13:40:00.000Z' } }, companies: { AMZNX: { cik: '0001018724', [concept]: group } } });
 const run = (s, st = store(), options = {}) => X.applyExchangeCheck(s, { mode: 'fill-only', usFill: true, context: { stores: { us: st }, baseline: { rows: new Map() } }, ...options });
 const whyOf = (s, st) => { const r = run(s, st); assert.equal(r.snapshot.meta.secQuarterFill, undefined, 'must not fill'); return r.result.why; };
 
@@ -171,7 +171,8 @@ function tempStoreRun(extra = {}) {
   fs.writeFileSync(path.join(snaps, 'ABROAD.json'), JSON.stringify({ ...snapshot(), meta: { ...snapshot().meta, ticker: 'ABROAD', country: 'Germany', mostRecentQuarter: '2026-06-30T00:00:00.000Z' } }));
   const calls = [];
   const secFacts = async (cik) => { calls.push(cik); return { facts: { 'us-gaap': { Revenues: { units: { USD: [fact('2026-04-01', '2026-06-30', 200606e6, '2026-07-31'), fact('2025-04-01', '2025-06-30', 167702e6, '2026-07-31')] } } } } }; };
-  const base = { markets: ['us'], dir, tickers: [], priority: new Map(), log: () => {}, snapshotDirs: [snaps], secFacts, secTickers: async () => ({ AMZNX: { cik: '0001018724' } }), cikMap: {}, now: () => new Date('2026-10-31T13:47:00Z'), ...extra };
+  // ABROAD has a real CIK, so only the country filter keeps it out; FRESH has none and stays out of the requests here (see the 200-day test).
+  const base = { markets: ['us'], dir, tickers: [], priority: new Map(), log: () => {}, snapshotDirs: [snaps], secFacts, secTickers: async () => ({ AMZNX: { cik: '0001018724' }, ABROAD: { cik: '0000000099' } }), cikMap: {}, now: () => new Date('2026-10-31T13:47:00Z'), ...extra };
   return { base, dir, calls };
 }
 test('store: asks SEC only for US firms that miss a quarter, writes append-only, re-reads a satisfied firm weekly', async () => {
@@ -211,6 +212,291 @@ test('no personal contact or literal SEC identity in the writer; it reads SEC_CO
   assert.match(src, /'User-Agent': assertSecContact\(\)/);
   assert.match(src, /pauseMs: RATE_DELAY_MS/);
   assert.doesNotMatch(src, /[\w.]+@[\w.]+\.\w+/);
+});
+
+// ── Annual record against the fill: a row uses the fill throughout or not at all ──
+// MSC Industrial, real numbers of 31.10.: the 10-K ends the year on 29.08.2026, the vendor's record on 31.08.2026.
+const MSC_ENDS = ['2026-05-31', '2026-02-28', '2025-11-30', '2025-08-31', '2025-05-31'];
+const MSC_VALUES = [1047083000, 917774000, 965684000, 978175000, 971145000];
+const msc = () => ({
+  meta: { ticker: 'AMZNX', fxConverted: true, reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', fxRateApplied: 1, asOf: '2026-10-31T09:02:36.214Z', fetchedAt: '2026-10-24T07:52:45.051Z',
+    annualRevNewerYear: { end: '2026-08-31', revenue: 4009703000, priorEnd: '2025-08-31', priorRevenue: 3769521000, currency: 'USD', source: 'quoteSummary', priorStored: 3769521000 } },
+  timeseries: { revenueQ: MSC_VALUES.map(value => ({ value })), revenueQEnds: [...MSC_ENDS] },
+  annual: { annualRev: [{ value: 3769521000 }, { value: 3820951000 }], annualRevEnds: ['2025-08-31', '2024-08-31'] },
+  metrics: {}, marketCap: {},
+});
+const mscStore = () => {
+  const q = { '2026-08-29': obs(1079162000, '2026-10-22', { form: '10-K', days: 91, derivation: 'year-minus-9M' }) };
+  MSC_ENDS.forEach((e, i) => { q[e] = obs(MSC_VALUES[i], '2026-07-01'); });
+  return store(q);
+};
+test('same period end: MSC (29.08. at SEC, 31.08. at the vendor) shows the quarter, and its hint and record are true', () => {
+  const before = revGrowthLeg(msc());
+  assert.equal(before.basis, 'yearNewerRecord');
+  const { snapshot: s, result } = run(msc(), mscStore());
+  assert.equal(result.category, 'sec-fill');
+  const leg = revGrowthLeg(s);
+  assert.equal(leg.basis, 'quarter');
+  assert.equal(leg.periodEnd, '2026-08-29', 'the label stays the filed end');
+  assert.equal(leg.sourcePeriodEnd, '2026-08-31', 'the computational end is the one of the same fiscal period at the vendor');
+  assert.equal(Math.round(leg.pct * 10) / 10, 10.3);
+  assert.equal(axes.revGrowthLevel(s), leg.pct);
+  assert.match(financialReasons(s).join(' '), /Umsatz des Quartals bis 29\.08\.2026/);
+  assert.equal(X.exchangeRecord(s).filled[0].period, '2026-08-29');
+  const cap = captureSnapshot(s).revenueInputs ?? captureSnapshot(s).inputs;
+  assert.equal(cap[0].sourceType, 'filing', 'the shown number is explained by the filing');
+  assert.equal(cap[0].periodEnd, '2026-08-29');
+});
+// Amazon's fill ends 30.06.2026; the fiscal year of the record ends `offset` days after that.
+const withRecord = offset => {
+  const end = new Date(Date.parse('2026-06-30T00:00:00Z') + offset * 864e5).toISOString().slice(0, 10);
+  const priorEnd = (Number(end.slice(0, 4)) - 1) + end.slice(4), older = (Number(end.slice(0, 4)) - 2) + end.slice(4);
+  const raw = snapshot({ meta: { annualRevNewerYear: { end, revenue: 800000e6, priorEnd, priorRevenue: 716924e6, currency: 'USD', source: 'quoteSummary', priorStored: 716924e6 } } });
+  return { ...raw, annual: { annualRev: [{ value: 716924e6 }, { value: 637959e6 }], annualRevEnds: [priorEnd, older] } };
+};
+test('a fiscal year truly newer than the fill: no fill, no hint, no record, no bonus input', () => {
+  const raw = withRecord(92);
+  const { snapshot: s, result } = run(raw);
+  assert.equal(result.why, 'annual-newer');
+  assert.equal(s.meta.secQuarterFill, undefined);
+  assert.equal(revGrowthLeg(s).basis, 'yearNewerRecord');
+  assert.doesNotMatch(financialReasons(s).join(' '), /SEC-Bericht/);
+  assert.equal(X.exchangeRecord(s), null);
+  assert.deepEqual(g31Shadow(s).v1.bonusComponents, g31Shadow(raw).v1.bonusComponents);
+});
+test('whatever the distance to the fiscal year, a row uses the fill throughout or not at all; the bound is the end tolerance', () => {
+  for (const offset of [-30, -1, 0, 1, 2, 15, 16, 60]) {
+    const { snapshot: s } = run(withRecord(offset));
+    const f = s.meta.secQuarterFill, leg = revGrowthLeg(s), hint = /SEC-Bericht/.test(financialReasons(s).join(' '));
+    assert.equal(!!f, offset <= 15, 'offset ' + offset);
+    assert.equal(hint, !!f, 'hint at offset ' + offset);
+    assert.equal(!!X.exchangeRecord(s), !!f, 'record at offset ' + offset);
+    if (f) { assert.equal(leg.basis, 'quarter', 'offset ' + offset); assert.equal(leg.periodEnd, '2026-06-30'); assert.equal(g31Shadow(s).v1.bonusComponents.at(-1), 200606e6 / 167702e6 - 1); }
+  }
+});
+test('an older fiscal year leaves the source end on the fill', () => {
+  assert.equal(run(snapshot()).snapshot.meta.secQuarterFill.sourceEnd, '2026-06-30');
+  assert.equal(run(withRecord(-1)).snapshot.meta.secQuarterFill.sourceEnd, '2026-06-30');
+  assert.equal(run(withRecord(0)).snapshot.meta.secQuarterFill.sourceEnd, '2026-06-30');
+  assert.equal(run(withRecord(2)).snapshot.meta.secQuarterFill.sourceEnd, '2026-07-02');
+});
+
+// ── Length of the pair in the hint ───────────────────────────────────────────
+test('the hint names the days when the two periods differ by more than 3 days (Campbell: 91 against 98), otherwise not', () => {
+  const text = (days, priorDays) => run(snapshot(), store(quarters({ '2026-06-30': obs(200606e6, '2026-07-31', { days }), '2025-06-30': obs(167702e6, '2026-05-01', { days: priorDays }) }))).snapshot.meta.secQuarterFill.reason;
+  assert.match(text(91, 98), /verschieden lang: 91 Tage gegen 98 Tage im Vorjahr/);
+  assert.match(text(94, 90), /94 Tage gegen 90 Tage/);
+  assert.doesNotMatch(text(93, 90), /verschieden lang/);
+  assert.doesNotMatch(text(91, 91), /verschieden lang/);
+});
+
+// ── Guards of evaluateUs ─────────────────────────────────────────────────────
+test('hand tables keep authority: a listed ticker, a correction marker, a foreign withheld marker', () => {
+  const firstCell = extra => snapshot({ timeseries: { revenueQ: VALUES.map((value, i) => (i === 0 ? { value, ...extra } : { value })), revenueQEnds: [...ENDS] } });
+  for (const marker of [{ financialCorrection: { reason: 'x' } }, { yahooQ4Correction: { reason: 'x' } }, { financialMissing: { reasonCode: 'hand', reason: 'x' } }]) {
+    assert.equal(whyOf(firstCell(marker)), 'hand-table', JSON.stringify(marker));
+  }
+  const listed = require('../configs/financial-known-cases.json').cases[0].ticker;
+  const st = store();
+  assert.equal(whyOf(snapshot({ meta: { ticker: listed } }), { ...st, companies: { [listed]: st.companies.AMZNX } }), 'hand-table');
+});
+test('no fill: a vendor row with another unit or currency; a series whose ends do not fit', () => {
+  const firstCell = extra => snapshot({ timeseries: { revenueQ: VALUES.map((value, i) => (i === 0 ? { value, ...extra } : { value })), revenueQEnds: [...ENDS] } });
+  assert.equal(whyOf(firstCell({ currency: 'EUR' })), 'unit');
+  assert.equal(whyOf(firstCell({ multiplier: 1000 })), 'unit');
+  assert.equal(whyOf(firstCell({ periodType: '6M' })), 'unit');
+  assert.equal(whyOf(snapshot({ timeseries: { revenueQ: VALUES.map(value => ({ value })), revenueQEnds: ENDS.slice(1) } })), 'vendor-series');
+  assert.equal(whyOf(snapshot({ timeseries: { revenueQ: [], revenueQEnds: [] } })), 'vendor-series');
+});
+test('the board-history entry names period, value, source and filing date', () => {
+  assert.deepEqual(X.exchangeRecord(run(snapshot()).snapshot), { filled: [{ field: 'revenueQ', period: '2026-06-30', nativeValue: 200606e6,
+    source: 'SEC 10-Q RevenueFromContractWithCustomerExcludingAssessedTax', dataDate: '2026-07-31', originalVendorValue: null, derivation: 'reported-3M' }], withheld: [] });
+  assert.equal(X.exchangeRecord(snapshot()), null);
+});
+test('the policy needs usFill as a boolean', () => {
+  assert.equal(X.policy.usFill, true);
+  const { usFill, ...without } = X.policy;
+  for (const bad of [without, { ...X.policy, usFill: 'yes' }, { ...X.policy, usFill: 1 }]) assert.throws(() => X.validatePolicy(bad), /Invalid exchange-quarter policy/);
+  assert.equal(X.validatePolicy({ ...X.policy, usFill: false }).usFill, false);
+});
+
+// ── Store age ────────────────────────────────────────────────────────────────
+test('store age: 2 days in the season, 8 days outside, judged by the data day; no run at all is old', () => {
+  const at = (asOf, written = '2026-10-30T13:40:00.000Z') => run(snapshot({ meta: { asOf } }), { ...store(), sources: { s: { fetchedAt: written } } });
+  assert.equal(at('2026-11-01T13:40:00.000Z').result.category, 'sec-fill');
+  const old = at('2026-11-01T13:41:00.000Z');
+  assert.equal(old.result.why, 'store-old');
+  assert.equal(old.snapshot.meta.secQuarterFill, undefined);
+  assert.equal(at('2026-12-09T00:00:00.000Z', '2026-12-01T00:00:00.000Z').result.category, 'sec-fill');
+  assert.equal(at('2026-12-09T00:01:00.000Z', '2026-12-01T00:00:00.000Z').result.why, 'store-old');
+  assert.equal(whyOf(snapshot(), { ...store(), sources: {} }), 'store-old');
+});
+
+// ── Derivation ───────────────────────────────────────────────────────────────
+test('single quarters: a year with only two known quarters forms no fourth', () => {
+  const y = fact('2025-01-01', '2025-12-31', 400, '2026-02-20', '10-K');
+  const q1 = fact('2025-01-01', '2025-03-31', 90, '2025-05-01'), q2 = fact('2025-04-01', '2025-06-30', 100, '2025-08-01'), q3 = fact('2025-07-01', '2025-09-30', 100, '2025-11-01');
+  assert.equal(pitSingleQuarters([y, q1, q2]).some(x => x.end === '2025-12-31'), false);
+  assert.equal(pitSingleQuarters([y, q1, q2, q3]).some(x => x.end === '2025-12-31'), true);
+});
+
+// ── Store writer: candidates ─────────────────────────────────────────────────
+const usSnap = (ticker, meta = {}, ends = ENDS) => ({ ...snapshot(), meta: { ...snapshot().meta, ticker, country: 'United States', mostRecentQuarter: '2026-06-30T00:00:00.000Z', ...meta }, timeseries: { revenueQ: ends.map(() => ({ value: 1e9 })), revenueQEnds: [...ends] } });
+const addSnap = (base, file, s) => fs.writeFileSync(path.join(base.snapshotDirs[0], file), typeof s === 'string' ? s : JSON.stringify(s));
+test('candidates: a snapshot file with the reserved-name prefix is a real firm, metadata files are not read', async () => {
+  const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+  const { base, calls } = tempStoreRun();
+  assert.equal(safeSnapshotFilename('CON'), '_CON.json');
+  addSnap(base, safeSnapshotFilename('CON'), usSnap('CON'));
+  addSnap(base, '_manifest.json', 'not json');
+  addSnap(base, '_last_good_disk.json', 'not json');
+  const r = await main({ ...base, secTickers: async () => ({ AMZNX: { cik: '0001018724' }, CON: { cik: '0001234567' } }) });
+  assert.equal(r.exitCode, 0);
+  assert.deepEqual([...calls].sort(), ['0001018724', '0001234567']);
+});
+test('candidates: only USD statements, no converted figures', async () => {
+  const { base, calls } = tempStoreRun();
+  addSnap(base, 'EUROX.json', usSnap('EUROX', { reportingCurrencyOriginal: 'EUR', fxRateApplied: 1.1 }));
+  addSnap(base, 'RATEX.json', usSnap('RATEX', { reportingCurrencyOriginal: 'USD', fxRateApplied: 1.1 }));
+  addSnap(base, 'CADX.json', usSnap('CADX', { fxConverted: false, reportingCurrency: 'CAD', reportingCurrencyOriginal: undefined }));
+  addSnap(base, 'USDX.json', usSnap('USDX', { fxConverted: false, reportingCurrency: 'USD' }));
+  const cik = { AMZNX: { cik: '0001018724' }, EUROX: { cik: '0000000001' }, RATEX: { cik: '0000000002' }, CADX: { cik: '0000000003' }, USDX: { cik: '0000000004' } };
+  await main({ ...base, secTickers: async () => cik });
+  assert.deepEqual(calls.sort(), ['0000000004', '0001018724']);
+});
+test('candidates: no vendor quarter for more than 200 days counts without a newer quarter named', async () => {
+  // FRESH: the vendor names 31.03.2026 and has it, so only the age can make it a candidate.
+  const ask = async now => {
+    const { base, calls } = tempStoreRun();
+    fs.rmSync(path.join(base.snapshotDirs[0], 'AMZNX.json'));
+    await main({ ...base, secTickers: async () => ({ FRESH: { cik: '0000000005' } }), now: () => new Date(now) });
+    return calls.length;
+  };
+  assert.equal(await ask('2026-10-17T13:47:00Z'), 0, '200 days');
+  assert.equal(await ask('2026-10-18T13:47:00Z'), 1, '201 days');
+});
+
+// ── Store writer: when a firm is due ─────────────────────────────────────────
+test('due: weekly while the held quarter is at most 91 days old, then every day, never twice a day', async () => {
+  const { base, calls } = tempStoreRun();
+  const at = async iso => { const n = calls.length; await main({ ...base, now: () => new Date(iso) }); return calls.length - n; };
+  // The held quarter ends 30.06.2026.
+  assert.equal(await at('2026-08-15T13:47:00Z'), 1, 'first read');
+  assert.equal(await at('2026-08-21T13:47:00Z'), 0, 'six days later, 52 days after the quarter');
+  assert.equal(await at('2026-08-22T13:47:00Z'), 1, 'seven days later');
+  assert.equal(await at('2026-09-24T13:47:00Z'), 1, 'over a week later');
+  assert.equal(await at('2026-09-29T13:47:00Z'), 0, 'five days later, exactly 91 days after the quarter');
+  assert.equal(await at('2026-09-30T13:47:00Z'), 1, 'six days later, 92 days after the quarter');
+  assert.equal(await at('2026-10-01T09:00:00Z'), 1, 'next calendar day, under 24 hours later');
+  assert.equal(await at('2026-10-01T20:00:00Z'), 0, 'same calendar day');
+  assert.equal(await at('2026-10-02T13:47:00Z'), 1, 'next day');
+});
+test('a run with nothing due still stamps the store, so the age check does not fire on a quiet firm list', async () => {
+  const { base, dir, calls } = tempStoreRun();
+  await main({ ...base, now: () => new Date('2026-08-15T13:47:00Z') });
+  await main({ ...base, now: () => new Date('2026-08-16T13:47:00Z') });
+  assert.equal(calls.length, 1);
+  const s = JSON.parse(fs.readFileSync(path.join(dir, 'us.json'), 'utf8'));
+  assert.deepEqual(Object.values(s.sources).map(x => [x.fetchedAt, x.calls]), [['2026-08-15T13:47:00.000Z', 1], ['2026-08-16T13:47:00.000Z', 0]]);
+});
+
+// ── Store writer: limits and failures ────────────────────────────────────────
+const manyFirms = (base, n) => {
+  const cik = {};
+  for (let i = 0; i < n; i++) { const t = 'F' + String(i).padStart(3, '0'); cik[t] = { cik: String(i + 1).padStart(10, '0') }; addSnap(base, t + '.json', usSnap(t)); }
+  fs.rmSync(path.join(base.snapshotDirs[0], 'AMZNX.json'));
+  return async () => cik;
+};
+test('failures: at least 5 that are more than 20 % of the calls abort and write nothing; fewer pass', async () => {
+  const failing = async n => {
+    const { base, dir } = tempStoreRun();
+    let call = 0;
+    const secTickers = manyFirms(base, n);
+    const lines = [];
+    const r = await main({ ...base, secTickers, log: m => lines.push(m), secFacts: async () => { if (++call <= 5) throw new Error('HTTP 503'); return null; } });
+    return { code: r.exitCode, written: fs.existsSync(path.join(dir, 'us.json')), text: lines.join(' ') };
+  };
+  const red = await failing(24);
+  assert.deepEqual([red.code, red.written], [1, false]);
+  assert.match(red.text, /5 of 24 calls failed \(more than 20 %\)/);
+  const green = await failing(25);
+  assert.deepEqual([green.code, green.written], [0, true]);
+});
+test('cap: requests stop at the cap and the rest is counted; the production cap is 600', async () => {
+  const { base } = tempStoreRun();
+  const calls = [], lines = [];
+  await main({ ...base, secTickers: manyFirms(base, 5), secCap: 2, log: m => lines.push(m), secFacts: async c => { calls.push(c); return null; } });
+  assert.equal(calls.length, 2);
+  assert.equal(JSON.parse(lines.find(l => l.startsWith('US: ')).slice(4)).skippedCap, 4, 'six due (five firms and FRESH by age), two asked');
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'scripts', 'fetch-exchange-quarters.js'), 'utf8'), /^const SEC_CAP = 600; /m);
+});
+test('cutoff: quarters older than 820 days are not stored', async () => {
+  const { base, dir } = tempStoreRun();
+  const rows = [fact('2024-05-04', '2024-08-03', 100, '2024-09-01'), fact('2024-05-01', '2024-07-31', 200, '2024-09-01'), fact('2026-04-01', '2026-06-30', 300, '2026-07-31')];
+  // 31.10.2026 minus 820 days is 02.08.2024.
+  await main({ ...base, secFacts: async () => ({ facts: { 'us-gaap': { Revenues: { units: { USD: rows } } } } }) });
+  assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(dir, 'us.json'), 'utf8')).companies.AMZNX.Revenues).sort(), ['2024-08-03', '2026-06-30']);
+});
+test('real request path: 404 means no data, other errors count as failures, the contact goes into the header', async () => {
+  const had = process.env.SEC_CONTACT;
+  process.env.SEC_CONTACT = 'screener-data test contact@example.com';
+  try {
+    const go = async message => {
+      const { base, dir } = tempStoreRun();
+      const seen = [], lines = [];
+      const r = await main({ ...base, secFacts: undefined, log: m => lines.push(m), fetchJson: async (url, o) => { seen.push([url, o]); throw new Error(message); } });
+      return { r, seen, summary: JSON.parse(lines.find(l => l.startsWith('US: ')).slice(4)), store: JSON.parse(fs.readFileSync(path.join(dir, 'us.json'), 'utf8')) };
+    };
+    const missing = await go('HTTP 404');
+    assert.equal(missing.r.exitCode, 0);
+    assert.deepEqual([missing.summary.noFacts, missing.summary.failed], [1, 0]);
+    assert.ok(missing.store.companies.AMZNX.noData.readAt, 'a firm without data is remembered');
+    assert.match(missing.seen[0][0], /^https:\/\/data\.sec\.gov\/api\/xbrl\/companyfacts\/CIK0001018724\.json$/);
+    assert.equal(missing.seen[0][1].headers['User-Agent'], process.env.SEC_CONTACT);
+    const broken = await go('HTTP 503');
+    assert.deepEqual([broken.summary.noFacts, broken.summary.failed], [0, 1]);
+    assert.equal(broken.store.companies.AMZNX, undefined);
+  } finally { if (had === undefined) delete process.env.SEC_CONTACT; else process.env.SEC_CONTACT = had; }
+});
+
+// ── A run without snapshots ──────────────────────────────────────────────────
+test('no snapshot file at all: red with a clear message, the store stays, the other market still runs', async () => {
+  const { base, dir } = tempStoreRun();
+  await main(base);
+  const before = fs.readFileSync(path.join(dir, 'us.json'), 'utf8');
+  const empty = path.join(dir, 'empty');
+  fs.mkdirSync(empty);
+  fs.writeFileSync(path.join(empty, '_manifest.json'), '{}');
+  const lines = [], folders = [empty, path.join(dir, 'never-restored')];
+  const r = await main({ ...base, snapshotDirs: folders, log: m => lines.push(m), now: () => new Date('2026-11-01T13:47:00Z') });
+  assert.equal(r.exitCode, 1);
+  assert.match(lines.join(' '), /::error::exchange-quarters US aborted, store not written: no snapshot file read in /);
+  assert.equal(fs.readFileSync(path.join(dir, 'us.json'), 'utf8'), before);
+  const both = await main({ ...base, markets: ['us', 'tw'], snapshotDirs: folders, fetchJson: async () => { throw new Error('no call expected'); } });
+  assert.equal(both.exitCode, 1);
+  assert.equal(both.results.find(x => x.market === 'TW').written, true);
+  assert.equal(both.results.find(x => x.market === 'US').aborted.startsWith('no snapshot file read'), true);
+});
+test('one folder without snapshots: a warning, the other folder still works', async () => {
+  const { base, dir, calls } = tempStoreRun();
+  const lines = [];
+  const r = await main({ ...base, snapshotDirs: [...base.snapshotDirs, path.join(dir, 'never-restored')], log: m => lines.push(m) });
+  assert.equal(r.exitCode, 0);
+  assert.equal(calls.length, 1);
+  assert.match(lines.join(' '), /::warning::exchange-quarters US: no snapshot file in .*never-restored/);
+  assert.deepEqual(JSON.parse(lines.find(l => l.startsWith('US: ')).slice(4)).filesRead, [3, 0]);
+});
+test('workflow: every US step and the commit run after a red China or Taiwan step; a branch run stays a dry run', () => {
+  const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'exchange-quarters.yml'), 'utf8').replace(/\r\n/g, '\n');
+  const steps = yml.split(/\n(?=      - )/);
+  for (const name of ['Find latest snapshot artifacts', 'Restore snapshots (daily pull)', 'Restore snapshots (small-cap pull)', 'Fetch SEC quarters (US)', 'Commit store + push']) {
+    const step = steps.find(s => s.startsWith('      - name: ' + name + '\n'));
+    assert.ok(step, name);
+    assert.match(step, /^ {8}if: \$\{\{ !cancelled\(\)( && steps\.find_runs\.outputs\.(daily|small) != '')? \}\}$/m, name);
+  }
+  const us = steps.find(s => s.startsWith('      - name: Fetch SEC quarters (US)\n'));
+  assert.match(us, /^ {12}node scripts\/fetch-exchange-quarters\.js --market=us --dry-run$/m);
+  assert.match(us, /^ {10}if \[ "\$VEROEFFENTLICHEN" = "true" \]; then$/m);
 });
 
 (async () => {

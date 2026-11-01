@@ -2,7 +2,7 @@
 "market":"US",
 "currency":"USD",
 "unit":1,
-"about":"Single-quarter revenue in USD from SEC companyfacts (us-gaap, forms 10-Q and 10-K), one group per concept. Reported three-month facts, or derived from cumulative values with the derivation stated. Append-only. Only firms whose vendor series misses a newer quarter. Written by scripts/fetch-exchange-quarters.js, read by lib/exchange-quarter-check.js.",
+"about":"Single-quarter revenue in USD from SEC companyfacts (us-gaap, forms 10-Q, 10-K, 10-KT and their amendments), one group per concept. Reported three-month facts, or derived from cumulative values with the derivation stated. Append-only. Only firms whose vendor series misses a newer quarter. Written by scripts/fetch-exchange-quarters.js, read by lib/exchange-quarter-check.js.",
 "sources":{
 "sec-20261030T134000Z":{"fetchedAt":"2026-10-30T13:40:00.000Z","endpoint":"companyfacts.zip","calls":220,"ok":219,"noFacts":1,"failed":0}
 },

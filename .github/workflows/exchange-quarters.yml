@@ -14,7 +14,7 @@ name: Exchange Quarters
 # this run, so a run cancelled while pending in the shared main-push group loses nothing: the next
 # run picks up the same queue. Every write is atomic and checked append-only before it happens.
 #
-# Branch runs (workflow_dispatch on a feature branch) use --dry-run: the full China pass and at most
+# Branch runs (workflow_dispatch on a feature branch) use --dry-run: the US pass, the full China pass and at most
 # 40 Taiwan calls, all checks run, nothing is written or committed (runner reachability check, S4).
 on:
   schedule:
@@ -56,10 +56,12 @@ jobs:
             node scripts/fetch-exchange-quarters.js --dry-run --force-cn --tw-cap=40
           fi
 
-      # SEC quarter fill: asks SEC only for US firms whose vendor series misses a newer quarter. A missing
-      # artifact leaves no candidates and the store as it is; the fill never depends on this run.
+      # SEC quarter fill: asks SEC only for US firms whose vendor series misses a newer quarter. These steps run after a
+      # red China or Taiwan step too. Both artifacts missing: the US step ends red and the store stays as it is, because
+      # a fill that falls asleep is otherwise invisible. The boards never depend on this run; the commit step still runs.
       - name: Find latest snapshot artifacts
         id: find_runs
+        if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -69,7 +71,7 @@ jobs:
           done
 
       - name: Restore snapshots (daily pull)
-        if: steps.find_runs.outputs.daily != ''
+        if: ${{ !cancelled() && steps.find_runs.outputs.daily != '' }}
         continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -79,7 +81,7 @@ jobs:
           run-id: ${{ steps.find_runs.outputs.daily }}
 
       - name: Restore snapshots (small-cap pull)
-        if: steps.find_runs.outputs.small != ''
+        if: ${{ !cancelled() && steps.find_runs.outputs.small != '' }}
         continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -89,6 +91,7 @@ jobs:
           run-id: ${{ steps.find_runs.outputs.small }}
 
       - name: Fetch SEC quarters (US)
+        if: ${{ !cancelled() }}
         run: |
           if [ "$VEROEFFENTLICHEN" = "true" ]; then
             node scripts/fetch-exchange-quarters.js --market=us
