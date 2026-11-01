@@ -282,7 +282,7 @@ function homeListingReport(gruppen) {
 
 /**
  * P290: a vanished meta.country or a broken table would silently put every firm back on the old order. Counts only firms outside
- * the US with more than one listing, since a single listing cannot leave its home; 1,180 of 1,459 stood on it on 31.10.2026.
+ * the US with more than one listing, since a single listing cannot leave its home; 1,182 of 1,209 stood on it on 31.10.2026.
  * @param {object} counts The counts of homeListingReport.
  * @returns {?string} The warning, or null.
  */

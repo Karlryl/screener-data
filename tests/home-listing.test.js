@@ -168,7 +168,7 @@ test('the home-listing warning fires when the country vanishes or the firms leav
   assert.deepEqual(noCountry, { firmsWithHomeTable: 0, onHomeListing: 0, multiListed: 0, multiListedOnHome: 0, multiListedWithoutCountry: 200 });
   assert.match(homeListingWarning(noCountry), /0 von 200 .* 200 ohne Land/);
   assert.match(homeListingWarning({ multiListed: 200, multiListedOnHome: 99, multiListedWithoutCountry: 0 }), /99 von 200/);
-  assert.equal(homeListingWarning({ multiListed: 1459, multiListedOnHome: 1180, multiListedWithoutCountry: 0 }), null, 'the share of 31.10.2026');
+  assert.equal(homeListingWarning({ multiListed: 1209, multiListedOnHome: 1182, multiListedWithoutCountry: 0 }), null, 'the share of 31.10.2026');
   assert.equal(homeListingWarning({ multiListed: 50, multiListedOnHome: 0, multiListedWithoutCountry: 0 }), null, 'too few to judge');
 });
 
