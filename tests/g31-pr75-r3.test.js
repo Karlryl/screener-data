@@ -26,8 +26,11 @@ for(const ticker of ['MB.MI','MB.VI','MDIBF'])test(`${ticker}: older zero is ski
   // Period gate (PR #72): the stored years end 549 days apart, so no annual figure stands in; never -100 percent from the older zero.
   const good=G.g31Shadow(s).v1;assert.equal(good.basis,'none');assert.equal(good.pct,null);assert.match(good.reason,/549 Tage auseinander/);
   assert.equal(G.quarterCandidate(s,'revenueQ',1).pct,-100,'the general candidate contract is unchanged');
-  const broken=mutant(zeroLine,'').g31Shadow(s).v1;assert.equal(broken.pct,-100);
+  // Round 6: a lender never reaches this line without filed operands, so the zero guard is probed on the same packet as a non-lender.
+  const other={...s,meta:{...s.meta,sector:'Industrials'}};
+  const broken=mutant(zeroLine,'').g31Shadow(other).v1;assert.equal(broken.pct,-100);
   assert.throws(()=>assert.equal(broken.basis,'none'),assert.AssertionError);
+  assert.equal(G.g31Shadow(other).v1.basis,'none');
   s.timeseries.revenueQ[1].value=-1;assert.equal(G.g31Shadow(s).v1.basis,'none');
   s.timeseries.revenueQ[1].value=0;assert.equal(JSON.stringify(s),original);
   assert.equal(G.g31Shadow(s).v1.basis,'none');
@@ -44,7 +47,11 @@ test('1KINV.MI: only the proved quarterly aliases close the false +174.28 percen
   const table=structuredClone(H.table);
   for(const c of table.cases)c.listingAliases=c.listingAliases?.filter(a=>a!=='1KINV.MI');
   const broken=G.g31Shadow(H.applyFinancialCases(raw,{table}).snapshot).v1;
-  close(broken.pct,174.2811501597444);assert.throws(()=>assert.equal(broken.pct,null),assert.AssertionError);
+  // Round 6: Kinnevik is in Financial Services, so without the aliases the unchecked pair stays closed by the lender guard too;
+  // the alias path itself is probed on the same packet as a non-lender.
+  const brokenOther=G.g31Shadow({...H.applyFinancialCases(raw,{table}).snapshot,meta:{...raw.meta,sector:'Industrials'}}).v1;
+  close(brokenOther.pct,174.2811501597444);assert.throws(()=>assert.equal(brokenOther.pct,null),assert.AssertionError);
+  assert.equal(broken.pct,null);
   assert.equal(G.g31Shadow(H.applyFinancialCases(raw).snapshot).v1.pct,null);
 });
 
@@ -100,7 +107,7 @@ for(const alias of [...new Set(F.aliasAdditions.map(x=>x.alias))])test(`${alias}
 test('Healthgen keeps Q1 growth and bonus but labels the newer stored Q2 comparison gap',()=>withStore(()=>{
   const s=prepareSnapshot(snap('688765.SS')),leg=G.g31Shadow(s).v1;
   close(leg.pct,132.39157760203946);assert.equal(leg.sourcePeriodEnd,'2026-03-31');assert.equal(leg.sourcePriorPeriodEnd,'2025-03-31');assert.equal(leg.reason,null);
-  const hint=G.g31Hinweis(s);assert.equal(hint.code,'aelteres-quartalspaar');assert.match(hint.reason,/ältere.*31\.03\.2026/);assert.match(hint.reason,/neuere.*30\.06\.2026.*kein gültiger Vorjahresvergleich/);
+  const hint=G.g31Hinweis(s);assert.equal(hint.code,'aelteres-quartalspaar');assert.match(hint.reason,/ältere.*31\.03\.2026/);assert.match(hint.reason,/neuere.*30\.06\.2026.*fehlt in den Anbieterdaten ein gültiger Vorjahresvergleich/);
   const broken=mutant("  const newestEnd = iso(periodEnds(s, 'revenueQ')[0]);",'  const newestEnd = null;');
   assert.equal(broken.g31Hinweis(s),null);assert.throws(()=>assert.ok(broken.g31Hinweis(s)),assert.AssertionError);
   assert.deepEqual(broken.g31Shadow(s).v1,leg,'label does not change any numeric input, source period or bonus');
