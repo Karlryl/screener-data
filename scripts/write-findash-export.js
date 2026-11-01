@@ -1406,8 +1406,12 @@ function buildSmallcap(coverage, opts = {}) {
 function loadCoverage(file = COVERAGE) {
   const m = readJSONOrNull(file);
   if (!m) return null;
+  // W7 (30.10.2026): coverage_pct is rows fetched over all rows and moves with list size (65.9 % on
+  // 23.10., 80.6 % on 30.10. with fewer fetches). The honest pair is what the 90 % alarm reads; additive.
   return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct,
-    generated_at: m.generated_at };
+    generated_at: m.generated_at, honest_coverage_pct: m.honest_coverage_pct ?? null,
+    n_addressable: m.n_addressable ?? null, n_ok: m.n_ok ?? null, n_total: m.n_total ?? null,
+    n_failed: m.n_failed ?? null };
 }
 
 // seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI

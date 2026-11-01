@@ -97,11 +97,11 @@ test('delivery expectations preserve historical bounds and pin the filed pair an
   const expectations = require('../data-health/erwartungen.json');
   for (const [id, min, max, feld, grund] of [
     ['pr73-JIOFINBO-wachstum', 71, 73, 'revGrowthYoYPct', 'Jio Financial zeigt das Jahreswachstum aus dem Konzernabschluss von etwa +72,0 % statt +136,4 % (Datenstand 30.10.2026).'],
-    ['pr73-JIOFINBO-rang', 60, 105, 'rank', 'Jio Financial steht auf dem Board Finanzen etwa auf Rang 81 statt 8 (Datenstand 30.10.2026).'],
+    ['pr73-JIOFINBO-rang', 34, 52, 'rank', 'Jio Financial steht auf dem Board Finanzen etwa auf Rang 43 (gemessen am 31.10.2026, Spanne plus minus 20 %). Die Vorabrechnung nannte mit Rang 81 die Listenposition samt der 29 gesperrten Zeilen darüber; falsch war Rang 8.'],
   ]) assert.deepEqual(expectations.find(e => e.id === id), { id, pr: 73, name: 'Jio Financial Services Limited', board: 'full/financials', track: 'profitable', feld, op: 'between', min, max, gueltigAb: '2026-10-31', gueltigBis: '2026-11-02', grund });
   const own = expectations.filter(e => e.id.startsWith('pr75-JIOFINBO-r4-'));
   assert.equal(own.length, 5);
-  assert.ok(own.every(e => e.gueltigAb === '2026-11-03' && e.ticker === 'JIOFIN.BO'));
+  assert.ok(own.every(e => e.gueltigAb === '2026-11-03' && e.name === 'Jio Financial Services Limited' && !e.ticker)); // the shown listing changes daily
   const growth = own.find(e => e.feld === 'revGrowthYoYPct');
   assert.ok(growth.min <= pct && growth.max >= pct && growth.max - growth.min < 1e-6);
   const rank = own.find(e => e.feld === 'rank');

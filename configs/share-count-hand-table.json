@@ -2,7 +2,7 @@
   "_doku": [
     "Share-count hand table (Tag 1397, W2 2026-10-02). Read by lib/ads-hand-table.js at both marketCap write sites of pull-yahoo.js, after the ADS table.",
     "Row = a USD line whose Yahoo marketCap uses a wrong share count. implied = Yahoo marketCap / quote price.",
-    "implied within 3 % of shares: confirmed, untouched. Within 3 % of a wrongShares entry: marketCap = price x shares, stamped 'hand-table:shares', derived Yahoo fields blanked.",
+    "implied within 3 % of shares or of an alsoRightShares entry: confirmed, untouched. Within 3 % of a wrongShares entry: marketCap = price x shares, stamped 'hand-table:shares', derived Yahoo fields blanked. alsoRightShares is for a firm with two defensible counts, such as issued shares with and without treasury shares; it never is a correction target.",
     "Anything else: Yahoo value kept, meta._shareCountHandTableStale stamped, ::warning:: in the pull log, price-only refused - re-verify, then fix or remove the row.",
     "Admission: issuer filing quote for the count (url, quote, unit shares) and the wrong count read from a stored vendor snapshot. Corrected values below the pull's MIN_MCAP floor leave the universe like any other small line.",
     "reviewBy: latest due date of the next periodic filing (10-Q for the quarter ended 2026-09-30: 45 days, next business day). A row cannot see new issuance by itself: once the marketCap data day is past reviewBy, the pull raises ::warning:: every run and still applies the row, until the count is re-verified and reviewBy moved.",
@@ -212,24 +212,32 @@
     "withholdUnverified": true
   },
   "7911.T": {
-    "shares": 589412480,
-    "sharesAsOf": "2026-10-01",
+    "shares": 561108010,
+    "alsoRightShares": [
+      589412480
+    ],
+    "sharesAsOf": "2026-09-30",
     "validFrom": "2026-10-01",
     "reviewBy": "2026-11-16",
     "wrongShares": [
       280554025
     ],
-    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 3,795,972,378 USD / price 13.53027239 USD = 280,554,025 shares, the pre-split count against a post-split price",
-    "reason": "Börsenwert aus 589.412.480 Aktien berechnet: ausgegebene Aktien zum 01.10.2026 laut Toppan nach dem Aktiensplit von 1 zu 2, einschließlich eigener Aktien (zum 30.06.2026 rund 28 Mio. nach Split). Yahoo rechnet den Kurs nach dem Split noch mit der alten Stückzahl.",
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 3,795,972,378 USD / price 13.53027239 USD = 280,554,025 shares, the pre-split count against a post-split price. Board history: about 589 million shares until at least 2026-10-24 (7.99 bn USD), about 280.5 million on 2026-10-27 to 2026-10-30. Snapshot of run 41184535364 (2026-10-31): Yahoo value 7,578,497,557 USD / price 13.50630695 USD = 561,108,050 shares, 40 shares from this row. Both 561 and 589 million are right counts, so both confirm.",
+    "reason": "Börsenwert aus 561.108.010 Aktien ohne eigene Aktien berechnet: 589.412.480 ausgegebene Aktien zum 01.10.2026 laut Toppan nach dem Aktiensplit von 1 zu 2, abzüglich der eigenen Aktien vom 30.09.2026 (14.152.235 vor dem Split einschließlich der Aktien im Treuhandbestand, also 28.304.470 danach). Yahoo rechnet den Kurs nach dem Split noch mit der alten Stückzahl.",
     "source": {
-      "form": "Die Anlegerseite von Toppan nennt die ausgegebenen Aktien zum 01.10.2026 nach dem Aktiensplit von 1 zu 2.",
+      "form": "Die Anlegerseite von Toppan nennt die ausgegebenen Aktien zum 01.10.2026 nach dem Aktiensplit von 1 zu 2; der Bericht über den Aktienrückkauf vom 15.10.2026 nennt die eigenen Aktien zum 30.09.2026.",
       "url": "https://www.holdings.toppan.com/ja/ir/stockinfo/status.html",
       "quote": "589,412,480 株（2026年10月1日時点）",
       "page": "Issuer IR page, share status",
-      "unit": "issued shares including treasury after the 1:2 split; the vendor implied-shares field already carries this count",
-      "crossCheck": "Q1 FY3/2027 short earnings report via TDnet mirror https://finance.biggo.jp/news/jpx_tdnet_140120260811517449 : 14,113,701 treasury shares and 294,706,240 issued; split notice https://finance.biggo.jp/news/jpx_tdnet_140120260827527179 (original JPX PDF returned 403)"
+      "unit": "shares outstanding excluding treasury: 589,412,480 issued after the 1:2 split minus 2 x (13,947,987 treasury + 204,248 ESOP trust shares of 30.09.2026) = 561,108,010. alsoRightShares: 589,412,480 is the issued count including treasury, which Yahoo used until at least 2026-10-24 and on which Japanese quote pages state the market cap",
+      "treasurySource": "https://companydata.tsujigawa.com/edinet-document/S100Z7BC/",
+      "treasuryQuote": "保有自己株式数には、株式付与ESOP信託が保有する当社株式204,248株を含めておりません",
+      "treasuryPage": "Share buyback status report for September 2026, EDINET document S100Z7BC, filed 2026-10-15 (mirror), section 2: issued 294,706,240, treasury held 13,947,987, both before the split",
+      "splitSource": "https://finance.biggo.jp/news/jpx_tdnet_140120260827527179",
+      "splitQuote": "株式分割後の発行済株式総数 | 589,412,480 株",
+      "crossCheck": "Split notice of 2026-08-27: record date 2026-09-30, effective 2026-10-01, issued 294,706,240 before the split (TDnet mirror; the original PDF returned 403 or not found). Q1 FY3/2027 short report https://finance.biggo.jp/news/jpx_tdnet_140120260811517449 : 14,113,701 treasury including ESOP on 30.06.2026, which gives 561,185,078, 0.014 % away. Yahoo Finance Japan on 2026-10-30 https://finance.yahoo.co.jp/quote/7911.T states the market cap on 589,412,480 shares. Buyback continues (4,582,500 of 14,000,000 pre-split shares and 21.8 of 50 bn JPY by 30.09.2026): the yen limit leaves about 2.4 % of the shares by May 2027, inside the 3 % tolerance."
     },
-    "verifiedAt": "2026-10-30",
+    "verifiedAt": "2026-10-31",
     "withholdUnverified": true
   },
   "2590.HK": {

@@ -46,6 +46,8 @@ catch (e) { console.error('yahoo-finance2 nicht installiert'); process.exit(1); 
 
 // Tag 133: Additional discovery sources
 const { fetchSecTickers }       = require('./discovery/sec-tickers.js');
+const { aufnahmeTor, torProtokoll } = require('./discovery/aufnahme-tor.js');
+const { readIntakeLog, retryCandidates, mapListingCandidates, planListingExits, mergeListingExits, intakeCandidates } = require('./discovery/listing-state.js');
 const { fetchFinnhubUniverse }  = require('./discovery/finnhub.js');
 const { fetchWikipediaIndices } = require('./discovery/wikipedia-indices.js');
 // Tag 135: NASDAQ Trader exchange files — all US common stocks, no auth required
@@ -832,6 +834,60 @@ function baueAusschlussProtokoll(tvProtokoll, prefilterVerworfen, schwellen) {
       summe: pf.length,
     },
   };
+}
+
+// W7 (30.10.2026): runs discovery/aufnahme-tor.js on the new rows and returns the ones to keep. Fail-soft: a
+// problem here must not cost the refresh, and every way of passing unchecked is a ::warning::.
+// opts.quote is the test seam for Yahoo. The pull is required here, so its load problems only skip the gate.
+async function wendeAufnahmeTorAn(newTickers, protokoll, protokollPfad, opts = {}) {
+  let tor;
+  try {
+    const { normalizeYahooSymbol, caClassCandidates } = require('./pull-yahoo.js');
+    // Same symbols the pull would try: its normalization first, then its TSX class/unit retry.
+    tor = await aufnahmeTor(newTickers, (info) => {
+      const sym = normalizeYahooSymbol(toYahooClassShare(info.ticker, _looksUS(info.exchange, info.source)));
+      return [sym, ...caClassCandidates(sym)];
+    }, opts);
+  } catch (e) {
+    console.warn('::warning::[aufnahme-tor] uebersprungen (' + e.message + '); neue Zeilen laufen ungeprueft in den Deckel.');
+    return newTickers;
+  }
+  const previous = protokoll && protokoll.tor3_aufnahmeQuote;
+  const tor3 = torProtokoll(tor, previous && (previous.wiedervorlage || previous.abgelehnt) || []);
+  console.log(`[aufnahme-tor] ${tor3.befragt} neue Kandidaten befragt, ${tor3.aufgenommen} aufgenommen, ` +
+    `abgelehnt: ${JSON.stringify(tor3.jeGrund)}, ungeprueft wegen ${tor.batchFehler} Batch-Fehlern: ${tor.ungeprueft}`);
+  if (tor.ungeprueft > 0) {
+    console.warn('::warning::[aufnahme-tor] ' + tor.ungeprueft + ' neue Zeilen ungeprueft aufgenommen (' + tor.batchFehler + ' Batch-Fehler); tote Symbole koennen zurueckkommen und starten ihre 30-Tage-Uhr neu.');
+  }
+  if (tor.befragt > 0 && tor.admitted.length === 0) {
+    console.warn('::warning::[aufnahme-tor] kein einziger Kandidat aufgenommen; Yahoo-Antwort pruefen. Bestand unberuehrt, naechster Lauf fragt neu.');
+  }
+  try {
+    if (!protokoll || !protokollPfad) throw new Error('Kein schreibbares Aufnahmeprotokoll vorhanden');
+    const next = { ...protokoll, tor3_aufnahmeQuote: tor3 };
+    (opts.writeProtocol || writeJsonAtomic)(protokollPfad, next);
+    Object.assign(protokoll, next);
+  } catch (e) {
+    if (tor.rejected.length) console.warn('::warning::[aufnahme-tor] Protokoll nicht geschrieben (' + e.message + '); die neuen Ablehnungen dieses Laufs werden nicht angewendet. Alle Kandidaten gehen in die Aufnahmepruefung zurueck.');
+    return newTickers;
+  }
+  return tor.admitted;
+}
+
+// Persist every existing-row exit before changing the in-memory watchlist.
+function wendeListingRegisterAn(stocks, registry, protokoll, protokollPfad, opts = {}) {
+  const plan = planListingExits(stocks, registry, new Date(opts.nowMs ?? Date.now()).toISOString().slice(0, 10));
+  if (!plan.exits.length) return { stocks, exits: [] };
+  try {
+    if (!protokoll || !protokollPfad) throw new Error('Kein schreibbares Aufnahmeprotokoll vorhanden');
+    const next = { ...protokoll, listingExits: mergeListingExits(protokoll.listingExits || [], plan.exits) };
+    (opts.writeProtocol || writeJsonAtomic)(protokollPfad, next);
+    Object.assign(protokoll, next);
+    return plan;
+  } catch (e) {
+    console.warn('::warning::[listing-register] Protokoll nicht geschrieben (' + e.message + '); Bestandszeilen bleiben erhalten.');
+    return { stocks, exits: [] };
+  }
 }
 
 // BH-040: applyDeadRegistryAndCap() only caps the raw discovery candidate map; existing
@@ -1831,7 +1887,11 @@ async function main() {
   // gefallen, spaetere Loeschungen (Cap, Dead-Registry, ADR-Dedup) haben andere Gruende
   // und gehoeren nicht in dieselbe Akte. Fail-soft — ein Protokoll darf Karls Lauf nie
   // faellen, aber sein Ausfall wird laut (::warning::), nicht still.
+  let ausschlussProtokoll = null;
+  const ausschlussPfad = path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json');
+  let vorherigesProtokoll = {};
   try {
+    vorherigesProtokoll = readIntakeLog(ausschlussPfad);
     const protokoll = baueAusschlussProtokoll(tvProtokoll, prefilterVerworfen, {
       tor1_TV_PRECUT_USD: parseFloat(process.env.TV_PRECUT_USD || '1.5e9'),
       tor2_MCAP_PREFILTER_MIN_USD: parseFloat(process.env.MCAP_PREFILTER_MIN_USD || '2e9'),
@@ -1842,9 +1902,14 @@ async function main() {
       // nur melden, wenn wirklich gesetzt, sonst ehrlich null.
       abruf_MIN_MCAP_USD: process.env.MIN_MCAP_USD ? parseFloat(process.env.MIN_MCAP_USD) : null,
     });
-    const ziel = path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json');
+    protokoll.listingExits = mergeListingExits(vorherigesProtokoll.listingExits || [], []);
+    const pending = vorherigesProtokoll.tor3_aufnahmeQuote || {};
+    protokoll.tor3_aufnahmeQuote = { wiedervorlage: (pending.wiedervorlage || pending.abgelehnt || [])
+      .filter(row => !existing.has(row.ticker)) };
+    const ziel = ausschlussPfad;
     fs.mkdirSync(path.dirname(ziel), { recursive: true });
     writeJsonAtomic(ziel, protokoll);
+    ausschlussProtokoll = protokoll;
     console.log('[entdeckungs-ausschluss] Tor 1 (tv-scanner): ' + protokoll.tor1_tvScannerVorschnitt.maerkte.length +
       ' Maerkte, Schwelle $' + (protokoll.schwellen.tor1_TV_PRECUT_USD / 1e9).toFixed(2) + 'B; ' +
       'Tor 2 (mcap-prefilter): ' + protokoll.tor2_mcapPrefilter.summe + ' Zeilen verworfen, Schwelle $' +
@@ -1866,10 +1931,17 @@ async function main() {
   // (b) noch vorhandene tote Bestandszeilen werden unten in-place entfernt.
   // Fail-open: fehlende/kaputte Registry = leere Registry (kein Austrag).
   let deadRegistry = {};
+  let listingRegistry = {};
   try {
     const reg = JSON.parse(fs.readFileSync(path.join(__dirname, 'data-health', 'dead-tickers.json'), 'utf8'));
-    if (reg && reg.tickers && typeof reg.tickers === 'object') deadRegistry = reg.tickers;
+    if (reg && reg.tickers && typeof reg.tickers === 'object') { deadRegistry = reg.tickers; listingRegistry = reg; }
   } catch (e) { console.warn('  dead-tickers-Registry nicht lesbar (' + e.message + ') — kein Austrag.'); }
+
+  // Keep saved retries outside the raw candidate cap; the final admission cap still applies.
+  const retryRows = retryCandidates(listingRegistry, vorherigesProtokoll, wlRaw.stocks);
+  const mappedCandidates = mapListingCandidates([...allTickers.values()], listingRegistry);
+  allTickers.clear();
+  for (const info of mappedCandidates) allTickers.set(info.ticker, info);
 
   // FIX 1 (Karl-Audit univ-cap): Austrag + Cap sind order-sensitive (s. Kommentar an der
   // Funktionsdefinition oben) — deshalb EIN Aufruf statt zwei separater Bloecke.
@@ -1885,7 +1957,11 @@ async function main() {
   for (const [sym, info] of allTickers) {
     if (!existing.has(sym)) newTickers.push(info);
   }
+  newTickers = intakeCandidates(newTickers, retryRows, existing);
   console.log(`\nNew tickers: ${newTickers.length} (already-in: ${allTickers.size - newTickers.length})`);
+
+  // W7 (30.10.2026): new rows need a live Yahoo quote. Before the cap, so dead symbols no longer take admission slots.
+  newTickers = await wendeAufnahmeTorAn(newTickers, ausschlussProtokoll, path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json'));
 
   // BH-040: final persistence cap — see capNewTickerAdmission() above for the rationale.
   {
@@ -2029,13 +2105,10 @@ async function main() {
   // Task 0.12 (b): tote Bestandszeilen austragen (in-place-Repair, analog ADR-Dedup).
   // Snapshots bleiben unangetastet — der 0.8-Boersen-Waechter zaehlt Snapshots,
   // nicht Watchlist-Zeilen, und kippt dadurch nicht.
-  let deadDropped = 0;
-  if (Object.keys(deadRegistry).length > 0) {
-    const before012 = wlRaw.stocks.length;
-    wlRaw.stocks = wlRaw.stocks.filter(s => !(s && s.ticker && deadRegistry[String(s.ticker).toUpperCase()]));
-    deadDropped = before012 - wlRaw.stocks.length;
-    if (deadDropped) console.log('  Dead-Registry: ' + deadDropped + ' tote Bestandszeilen ausgetragen (0.12).');
-  }
+  const listingPlan = wendeListingRegisterAn(wlRaw.stocks, listingRegistry, ausschlussProtokoll, ausschlussPfad);
+  wlRaw.stocks = listingPlan.stocks;
+  const deadDropped = listingPlan.exits.length;
+  if (deadDropped) console.log('  Listing-Register: ' + deadDropped + ' Bestandszeilen mit protokolliertem Grund entfernt oder zugeordnet.');
 
   // audit/fix (A2 2026-06-26): gate the write on an actual change. With the early-return
   // removed above, a run that discovered nothing new AND repaired nothing must still leave the
@@ -2079,6 +2152,8 @@ module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   applyForeignPrefilterOutcome,
   baueAusschlussProtokoll,   // Tag 642: Ausschluss-Protokoll beider Entdeckungs-Tore
+  wendeAufnahmeTorAn,  // W7: intake gate, tested through its real path
+  wendeListingRegisterAn,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   repariereAdrBestand,    // R1-SK-012: ADR-Drop nur gegen echte Watchlist-Zeilen, einzeln pruefbar
   kollabiereYahooDubletten, // R1-SK-010: ein yahoo_symbol = eine Zeile (sonst Board-Dublette)
