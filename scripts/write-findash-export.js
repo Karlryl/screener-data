@@ -1332,6 +1332,18 @@ function buildSmallcapOverview(coverage, smallcapDir) {
   return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/overview') };
 }
 
+// A row the market-cap guard withholds (stale Yahoo quote message or hand hold) only raises a counter in index.excluded,
+// so its reason would reach nobody. The main store has excluded.json for this; here the names stand next to the counters.
+// Same reader as the scoring pass, so both agree on which rows are withheld. null = no small-cap store (the pass then
+// ran on the main store, and excluded.json names its rows).
+function smallcapWithheldMarketCaps(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = path.join(ROOT, 'watchlist-smallcap.json')) {
+  const universe = require('../src/scoring/run-screener.js').loadSmallcapUniverse(snapDir, watchlistPath);
+  if (!universe) return null;
+  return universe.filter(s => s.meta.marketCapReason && !Number.isFinite(s.marketCap?.value))
+    .map(s => ({ ticker: s.meta.ticker, name: s.meta.name ?? null, reasonDe: s.meta.marketCapReason }))
+    .sort((a, b) => (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
+}
+
 function buildSmallcapIndex(coverage, smallcapDir) {
   const idx = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'index.json'));
   return {
@@ -1343,6 +1355,7 @@ function buildSmallcapIndex(coverage, smallcapDir) {
     boardStatus: idx.boardStatus,
     counts: idx.counts,
     excluded: idx.excluded,
+    withheldMarketCaps: smallcapWithheldMarketCaps(), // additive: the named rows behind the counters above
     coverageFloor: idx.coverageFloor ?? null, // 5.2 Auflage 3: Coverage-Gate-Beleg durchreichen
     // W8 EX-01: keyed like boardStatus ('smallcap-<sector>'); the small-cap formulas are the HG ones per sector.
     profitSplit: profitSplitMap(idx.boards, require('../src/scoring/formulas/smallcap')),
@@ -2317,6 +2330,8 @@ function validateSmallcapIndex(mk, errs) {
   }
   if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
   if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
+  // Optional, additive: a named row says who and why; null means no small-cap store.
+  if (mk.withheldMarketCaps != null && (!Array.isArray(mk.withheldMarketCaps) || mk.withheldMarketCaps.some(r => !r?.ticker || typeof r.reasonDe !== 'string' || !r.reasonDe.trim() || !('name' in r)))) errs.push(`${kind}: withheldMarketCaps`);
   // 5.2 Auflage 3: coverageFloor ist Pflicht (nullable) — der Beleg-Wert des data-abgeleiteten
   // Coverage-Gates dieses Laufs muss im Export ankommen, sonst ist Auflage 3 nicht nachpruefbar.
   if (!('coverageFloor' in mk)) errs.push(`${kind}: coverageFloor missing`);
@@ -2325,7 +2340,7 @@ function validateSmallcapIndex(mk, errs) {
 }
 
 // F-CGPT-040, identisch zu validateQualityExport.
-function validateSmallcapExport(scoutDir = SCOUT_DIR) {
+function validateSmallcapExport(scoutDir = SCOUT_DIR, snapDir = SMALLCAP_SNAP_DIR, watchlistPath = path.join(ROOT, 'watchlist-smallcap.json')) {
   const raw = [];
   const idxPath = path.join(scoutDir, 'index.json');
   const idx = readJSONOrNull(idxPath);
@@ -2334,6 +2349,10 @@ function validateSmallcapExport(scoutDir = SCOUT_DIR) {
     return raw; // smallcap/ absent -> optional, no breach
   }
   validateSmallcapIndex(idx, raw);
+  // The names must be exactly the withheld rows of the store: a row dropped from the list would vanish without a trace.
+  const withheld = Array.isArray(idx.withheldMarketCaps) ? smallcapWithheldMarketCaps(snapDir, watchlistPath) : null;
+  const nameList = rows => rows.map(r => r?.ticker).join(' ');
+  if (withheld && nameList(withheld) !== nameList(idx.withheldMarketCaps)) raw.push(`smallcap/index: withheldMarketCaps names [${nameList(idx.withheldMarketCaps)}], the store withholds [${nameList(withheld)}]`);
   const boards = Array.isArray(idx.boards) ? idx.boards : [];
   for (const id of boards) {
     const stem = String(id).replace(/^smallcap-/, '');
@@ -2609,5 +2628,5 @@ module.exports = {
   ladeMcapClassesRegistry, ergaenzeMarketCapClassesShadow,
   // W8 (28.10.2026): profit-split marker, FFO reason, live revenue-growth reason (tests/export-w8-*.test.js).
   profitSplitMap, checkProfitSplit, ffoGrund, FFO_GRUND_CODES, ergaenzeTextGruende, checkTextGruende, WACHSTUM_GRUND_FEHLT,
-  buildIndex, buildSmallcapIndex,
+  buildIndex, buildSmallcapIndex, smallcapWithheldMarketCaps,
 };

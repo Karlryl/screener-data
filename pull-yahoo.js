@@ -45,6 +45,7 @@ const ADS_HAND_TABLE = loadAdsHandTable();
 // Tag 1397: issuer share counts for lines Yahoo prices with a wrong count (same two write sites).
 const SHARE_COUNT_TABLE = loadShareCountTable();
 const { applyMarketCapGuard, marketCapFloor, tradingRate, retainStalePriceHold, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
+const { sizeExitRunDay } = require('./lib/size-exits.js');
 const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
 // Validate before any pull or per-ticker FX catch can run.
@@ -1588,6 +1589,10 @@ function _quoteTime(v) {
   const ms = v instanceof Date ? v.getTime() : typeof v === 'number' ? (v < 1e11 ? v * 1000 : v) : typeof v === 'string' ? Date.parse(v) : NaN;
   return Number.isFinite(ms) && ms > 0 ? new Date(ms).toISOString() : null;
 }
+
+// Reference day of a stale-price hold: the workflow day when it is a real day, else this pull's own clock day. A raw
+// malformed RUN_DATE_UTC counted no age, so a known stale value lost its hold and was shown again.
+const _holdRunDay = asOf => sizeExitRunDay(process.env, () => Date.parse(asOf));
 
 // bug-fix (audit 2026-06-21): trim only TRAILING nulls, preserving interior null years so sibling
 // annual arrays stay positionally aligned (methods zip annualRev[i] with annualOpInc[i]/annualFCF[i]
@@ -4223,7 +4228,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // written per pull (and this path the 80%-hit fast-path), pretty-print
     // adds ~30-40% file size + ~5-10× stringify time. Snapshots are read by
     // generators (machine consumers), not humans — no readability cost.
-    retainStalePriceHold(existing, previousQuote, process.env.RUN_DATE_UTC || newAsOf.slice(0, 10));
+    retainStalePriceHold(existing, previousQuote, _holdRunDay(newAsOf));
     writeFileAtomic(fp, JSON.stringify(existing));
     return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
   }
@@ -5459,7 +5464,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       _stampFullPullPrice(canonical, _y(yahoo.price, 'regularMarketPrice'));
       // The price-only attempt may have mutated its parsed input before falling back; use the pristine stored text.
       retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,
-        process.env.RUN_DATE_UTC || asOf.slice(0, 10));
+        _holdRunDay(asOf));
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }

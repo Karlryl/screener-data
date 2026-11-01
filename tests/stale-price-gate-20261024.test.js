@@ -47,7 +47,8 @@ function snap(ticker, { quoteTime, asOf = AS_OF, mcap = 77595885568, px = 9.5 } 
   };
 }
 const LIMIT = guard.STALE_PRICE_WEEKDAYS;
-const reasonFor = (priceDay) => `Letzter von Yahoo gelieferter Kurs vom ${priceDay}, älter als ${LIMIT} Wochentage (Montag bis Freitag). Der Börsenwert wird nicht gezeigt und kommt von selbst zurück, sobald Yahoo einen aktuellen Kurs liefert. Ein veralteter Kurs allein belegt kein Handelsende.`;
+// It is the quote message that is old, daily closes may be newer (31.10.: 886 of 1,162 held rows): the text has to say exactly that.
+const reasonFor = (priceDay) => `Letzte Kursmeldung von Yahoo vom ${priceDay}, älter als ${LIMIT} Wochentage (Montag bis Freitag). Der Börsenwert wird nicht gezeigt und kommt von selbst zurück, sobald Yahoo eine aktuelle Kursmeldung liefert. Tageskurse können neuer sein, und eine alte Kursmeldung allein belegt kein Handelsende.`;
 
 function expectWithheld(s, priceDay, g = guard) {
   const before = JSON.stringify(s);
@@ -60,7 +61,9 @@ function expectWithheld(s, priceDay, g = guard) {
   assert.strictEqual(out.marketCap.yahooValue, s.marketCap.value, 'vendor value not kept');
   assert.strictEqual(out.meta.marketCapReason, reasonFor(priceDay));
   for (const f of ['priceSales', 'enterpriseValue', 'enterpriseToRevenue', 'enterpriseToEbitda']) assert.strictEqual(out.metrics[f], null, f + ' not blanked');
-  assert.strictEqual(out.metrics.forwardPE, 11.2, 'unrelated metric touched');
+  // Forward P/E hangs on the price as well and is not blanked. Which price-derived filter fields should leave with the value
+  // is an open method point (PR text); this pin keeps today's behaviour visible until it is decided.
+  assert.strictEqual(out.metrics.forwardPE, 11.2, 'forward P/E changed: price-derived, but kept until the open point is decided');
   // The two board exits every reader uses: export/filter/rule40 drop on reason + empty value, scoring on missing + empty value.
   assert.ok(out.meta.marketCapReason && !Number.isFinite(out.marketCap.value), 'export exit predicate');
   assert.ok(out.marketCap.missing === true && !Number.isFinite(out.marketCap.value), 'scoring exit predicate');
@@ -75,13 +78,13 @@ function expectUntouched(s) {
 // The real guard compiled in memory with exactly its gate line switched to "always fresh" (nothing is written).
 const GUARD_FILE = path.join(__dirname, '..', 'lib', 'market-cap-guard.js');
 const GATE_LINE = "  if (age.age <= limit) return { status: 'fresh' };";
-function sabotagedGuard() {
+function sabotagedGuard(line = GATE_LINE, replacement = "  return { status: 'fresh' };") {
   const lines = fs.readFileSync(GUARD_FILE, 'utf8').replace(/\r\n/g, '\n').split('\n');
-  assert.strictEqual(lines.filter((l) => l === GATE_LINE).length, 1, 'gate line anchor must hit exactly one whole line');
+  assert.strictEqual(lines.filter((l) => l === line).length, 1, 'gate line anchor must hit exactly one whole line');
   const m = new Module(GUARD_FILE, module);
   m.filename = GUARD_FILE;
   m.paths = Module._nodeModulePaths(path.dirname(GUARD_FILE));
-  m._compile(lines.map((l) => (l === GATE_LINE ? "  return { status: 'fresh' };" : l)).join('\n'), GUARD_FILE);
+  m._compile(lines.map((l) => (l === line ? replacement : l)).join('\n'), GUARD_FILE);
   return m.exports;
 }
 const WBD_STALE = () => snap('WBD', { quoteTime: '2026-10-05T20:00:01.000Z' });
@@ -153,14 +156,24 @@ pruefe('robust: a stale snapshot without meta is withheld and gets meta with the
   assert.strictEqual(s.marketCap.value, null);
 });
 
-pruefe('precedence: hand-table holds ARX.TO and 1WAF.MI keep their own reason on a stale quote', () => {
+// One reason, the hand-table one: compared whole, so any stale wording added beside it fails, whatever its words are.
+function handHoldKeepsItsOwnReason(g = guard) {
   for (const [t, q] of [['ARX.TO', '2026-09-04T20:00:01.000Z'], ['1WAF.MI', '2026-09-25T07:55:05.000Z']]) {
-    const out = guard.prepareMarketCap(snap(t, { quoteTime: q }));
+    const out = g.prepareMarketCap(snap(t, { quoteTime: q }));
     assert.strictEqual(out.marketCap.source, 'hand-table:market-cap-hold', t + ': gate overwrote the hand-table hold');
     assert.ok(out.meta.marketCapReason.startsWith('Börsenwert nicht verlässlich: ' + guard.holds[t].reason), t + ': reason');
-    assert.ok(!out.meta.marketCapReason.includes('Letzter Kurs vom'), t + ': two reasons');
+    const own = 'Börsenwert nicht verlässlich: ' + guard.holds[t].reason + (guard.holds[t].reasonComplete === true ? '' : ' Ein aktueller vergleichbarer Wert ist noch nicht belegt.');
+    assert.strictEqual(out.meta.marketCapReason, own, t + ': two reasons');
     assert.strictEqual(out.marketCap.value, null);
   }
+}
+
+pruefe('precedence: hand-table holds ARX.TO and 1WAF.MI keep their own reason on a stale quote', () => handHoldKeepsItsOwnReason());
+
+pruefe('break-once harness: a hand hold that also carries the stale reason fails the precedence check', () => {
+  const twoReasons = sabotagedGuard('  applyMarketCapGuard(copy);',
+    "  applyMarketCapGuard(copy); if (copy.marketCap?.source === 'hand-table:market-cap-hold') copy.meta.marketCapReason += ' Letzte Kursmeldung von Yahoo vom 01.10.2026.';");
+  assert.throws(() => handHoldKeepsItsOwnReason(twoReasons), /two reasons/);
 });
 
 pruefe('precedence: a hand-table correction on a stale quote is emptied with the one stale reason', () => {

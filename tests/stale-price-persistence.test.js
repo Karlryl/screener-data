@@ -45,11 +45,11 @@ function compileGuard(source) {
   m.paths = Module._nodeModulePaths(path.dirname(guardFile)); m._compile(source, guardFile);
   return m.exports;
 }
-async function pull(s, {full = false, stamp, missing = false, corrupt = false, stored, source = pullSource} = {}) {
+async function pull(s, {full = false, stamp, missing = false, corrupt = false, stored, source = pullSource, quarterlyRows = null, runDate = env.RUN_DATE_UTC} = {}) {
   const summaryResponse = { price: {currency:'USD', regularMarketPrice:100, marketCap:1e12, ...(stamp ? {regularMarketTime:stamp}: {})},
     summaryDetail:{marketCap:1e12}, financialData:{financialCurrency:'USD'}, quoteType:{quoteType:'EQUITY'},
     summaryProfile:{sector:'Technology', industry:'Software'} };
-  const f = fixture({snapshots:[s], now:NOW, env, pullSource:source, manual:full ? ['OLD']:[],
+  const f = fixture({snapshots:[s], now:NOW, env:{...env, RUN_DATE_UTC:runDate}, pullSource:source, manual:full ? ['OLD']:[], quarterlyRows,
     summaryResponse, emptySummary:missing, quoteMarketCap:missing ? null : 1e12, quoteTime:stamp});
   if (corrupt) f.files.set(path.join(f.out,'OLD.json'),Buffer.from('{broken'));
   if (stored) f.files.set(path.join(f.out,'OLD.json'),Buffer.from(JSON.stringify(stored)));
@@ -76,6 +76,8 @@ function merged(previous, incoming, source = pullSource) {
 }
 const DAMAGED_HOLDS = [{},{priceDay:'kein Datum'},{priceDay:'2026-02-45'},{priceDay:'2099-01-01'},{priceDay:7},true,[],'x',1];
 const DAMAGED_METAS = [[],'kaputt',7,true];
+const LATER = '2026-11-20T08:00:00.000Z', AT_LIMIT = '2026-10-21T20:00:00.000Z', PAST_LIMIT = '2026-10-20T20:00:00.000Z';
+const BAD_RUN_DAYS = ['31.10.2026','2026-13-45','gestern'];
 const checks = {
   async repair(source = pullSource) {
     const fresh=await pull(seed(),{full:true,stamp:FRESH,corrupt:true,source});
@@ -98,7 +100,7 @@ const checks = {
     g.retainStalePriceHold(missing,next,'2026-10-30'); assert.ok(missing.meta.stalePriceHold,'missing value erased hold');
   },
   async reason(g = guard) {
-    assert.match(withheld(seed(),g).meta.marketCapReason,/Letzter von Yahoo gelieferter Kurs vom 02\.10\.2026/);
+    assert.match(withheld(seed(),g).meta.marketCapReason,/^Letzte Kursmeldung von Yahoo vom 02\.10\.2026, /);
   },
   async price(source = pullSource) {
     const next=await pull(seed(),{source}); withheld(next); assert.equal(next.marketCap.regularMarketTime,undefined);
@@ -202,36 +204,96 @@ const checks = {
     }
     const reasons=[held.meta.marketCapReason,s.meta.marketCapReason];
     const damaged=seed(null); damaged.meta.stalePriceHold={}; reasons.push(withheld(damaged,g).meta.marketCapReason);
+    assert.match(reasons[1],/^Zuletzt als veraltet belegte Kursmeldung von Yahoo vom 02\.10\.2026; eine aktuelle Kursmeldung von Yahoo fehlt\. /);
+    assert.match(reasons[2],/^Ein früherer Vermerk über eine veraltete Kursmeldung von Yahoo ist nicht lesbar; eine aktuelle Kursmeldung von Yahoo fehlt\. /);
     for (const reason of reasons) {
-      assert.match(reason,/sobald Yahoo einen aktuellen Kurs liefert/,reason);
+      assert.match(reason,/sobald Yahoo eine aktuelle Kursmeldung liefert/,reason);
+      assert.match(reason,/Tageskurse können neuer sein/,reason);
+      assert.doesNotMatch(reason,/Letzter von Yahoo|Yahoo-Kurs|einen aktuellen Kurs/,'old wording: '+reason);
       assert.match(reason,/kein Handelsende/,reason);
     }
     const back=seed('2030-01-02T08:00:00.000Z'); g.retainStalePriceHold(back,s,'2030-01-02');
     assert.equal(back.meta.stalePriceHold,undefined);
     assert.equal(g.applyStalePriceGate(back,7,'2030-01-02').status,'fresh');
   },
+  // The stamp also travels through the replacement path of a period regress (12 rows on 31.10.).
+  async regress(source = pullSource) {
+    const old = () => { const s=snapshot('OLD','2026-06-30','2026-10-29T10:00:00Z'); s.meta.asOf=FRESH; s.meta.fetchedAt=s.meta.fundamentalsAsOf='2026-08-01T10:00:00Z'; return s; };
+    const quarterlyRows=[{date:'2025-12-31',totalRevenue:90,grossProfit:30,operatingIncome:15,netIncome:8},{date:'2026-03-31',totalRevenue:100,grossProfit:40,operatingIncome:20,netIncome:10}];
+    const stale=await pull(old(),{stamp:OLD,quarterlyRows,source});
+    assert.ok(stale.meta.fundamentalsRetainedReason,'fixture left the period-regress path');
+    assert.equal(stale.marketCap.regularMarketTime,OLD,'stamp lost on the replacement path');
+    assert.deepEqual(stale.meta.stalePriceHold,{priceDay:'2026-10-02'}); withheld(stale);
+    const fresh=await pull(old(),{stamp:FRESH,quarterlyRows,source});
+    assert.equal(fresh.marketCap.regularMarketTime,FRESH); assert.equal(guard.prepareMarketCap(fresh).marketCap.value,1e12);
+  },
+  // A stamp after the run day proves no current quote, in either function.
+  async futureRetain(g = guard) {
+    assert.deepEqual(g.retainStalePriceHold(seed(LATER),seed(),'2026-10-30'),{priceDay:'2026-10-02'},'future stamp released the hold');
+  },
+  async futureGate(g = guard) {
+    const held=seed(LATER); held.meta.stalePriceHold={priceDay:'2026-10-02'};
+    assert.equal(g.applyStalePriceGate(held,7,'2026-10-30').status,'withheld','future stamp released the hold');
+    assert.match(held.meta.marketCapReason,/vom 02\.10\.2026/);
+  },
+  // 7 weekdays before Friday 30.10. is the limit: 21.10. is still current, 20.10. is not.
+  async limitPrior(g = guard) {
+    assert.equal(g.priceAge(seed(AT_LIMIT),100,'2026-10-30').age,7); assert.equal(g.priceAge(seed(PAST_LIMIT),100,'2026-10-30').age,8);
+    assert.equal(g.retainStalePriceHold(seed(null),seed(AT_LIMIT),'2026-10-30'),null,'a prior quote at the limit is no staleness');
+    assert.deepEqual(g.retainStalePriceHold(seed(null),seed(PAST_LIMIT),'2026-10-30'),{priceDay:'2026-10-20'});
+  },
+  async limitCurrent(g = guard) {
+    const at=seed(AT_LIMIT); at.meta.stalePriceHold={priceDay:'2026-10-02'};
+    assert.equal(g.retainStalePriceHold(at,null,'2026-10-30'),null,'a current quote at the limit releases the hold');
+    const past=seed(PAST_LIMIT); past.meta.stalePriceHold={priceDay:'2026-10-02'};
+    assert.deepEqual(g.retainStalePriceHold(past,null,'2026-10-30'),{priceDay:'2026-10-20'});
+  },
+  // A malformed RUN_DATE_UTC never releases a known stale hold; the clock day of the pull takes over.
+  async runDayPrice(source = pullSource) {
+    for (const runDate of BAD_RUN_DAYS) { const next=await pull(seed(),{runDate,source}); assert.deepEqual(next.meta.stalePriceHold,{priceDay:'2026-10-02'},'released by '+runDate); withheld(next); }
+  },
+  async runDayFull(source = pullSource) {
+    for (const runDate of BAD_RUN_DAYS) { const next=await pull(seed(),{full:true,runDate,source}); assert.deepEqual(next.meta.stalePriceHold,{priceDay:'2026-10-02'},'released by '+runDate); withheld(next); }
+  },
+  // Every break below has to apply: a stale anchor would prove a check red for the wrong reason.
+  async anchors() {
+    for (const name of Object.keys(breaks)) { assert.ok(checks[name],'break without a check: '+name); breaks[name](); }
+  },
 };
 const breaks = {
-  state: () => compileGuard(breakLine(guardSource,'  if (hold) (snapshot.meta ??= {}).stalePriceHold = { ...hold };','  if (false) (snapshot.meta ??= {}).stalePriceHold = { ...hold };')),
-  reason: () => compileGuard(breakLine(guardSource,'    `Letzter von Yahoo gelieferter Kurs vom ${germanDate(age.priceDay)}, älter als ${limit} Wochentage (Montag bis Freitag). ${STALE_PRICE_RETURN}`);','    `Letzter Kurs vom ${germanDate(age.priceDay)}; Börsenwert nicht gezeigt.`);')),
+  state: () => compileGuard(breakLine(guardSource,'  if (hold) metaOf(snapshot).stalePriceHold = { ...hold };','  if (false) metaOf(snapshot).stalePriceHold = { ...hold };')),
+  reason: () => compileGuard(breakLine(guardSource,'    `Letzte Kursmeldung von Yahoo vom ${germanDate(age.priceDay)}, älter als ${limit} Wochentage (Montag bis Freitag). ${STALE_PRICE_RETURN}`);','    `Letzter von Yahoo gelieferter Kurs vom ${germanDate(age.priceDay)}, älter als ${limit} Wochentage (Montag bis Freitag). ${STALE_PRICE_RETURN}`);')),
   damagedHold: () => compileGuard(breakLine(guardSource,'const heldDay = (hold, today) => { const d = realDay(hold?.priceDay); return d && d <= today ? d : null; };','const heldDay = hold => hold?.priceDay;')),
   damagedHoldPull: () => breakLine(pullSource,'      retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,','      void (canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,'),
   damagedMeta: () => compileGuard(breakLine(guardSource,"  return meta && typeof meta === 'object' && !Array.isArray(meta) ? meta : (snapshot.meta = {});",'  return meta ?? (snapshot.meta = {});')),
   damagedMetaPull: () => breakLine(pullSource,'  retainStalePriceHold(snapshot, snapshot, observedAt.slice(0, 10));',''),
-  noExpiry: () => compileGuard(breakLine(guardSource,"const STALE_PRICE_RETURN = 'Der Börsenwert wird nicht gezeigt und kommt von selbst zurück, sobald Yahoo einen aktuellen Kurs liefert. Ein veralteter Kurs allein belegt kein Handelsende.';","const STALE_PRICE_RETURN = 'Börsenwert nicht gezeigt.';")),
-  price: () => breakLine(pullSource,'    retainStalePriceHold(existing, previousQuote, process.env.RUN_DATE_UTC || newAsOf.slice(0, 10));',''),
+  noExpiry: () => compileGuard(breakLine(guardSource,"const STALE_PRICE_RETURN = 'Der Börsenwert wird nicht gezeigt und kommt von selbst zurück, sobald Yahoo eine aktuelle Kursmeldung liefert. Tageskurse können neuer sein, und eine alte Kursmeldung allein belegt kein Handelsende.';","const STALE_PRICE_RETURN = 'Der Börsenwert wird nicht gezeigt und kommt von selbst zurück, sobald Yahoo einen aktuellen Kurs liefert. Ein veralteter Kurs allein belegt kein Handelsende.';")),
+  price: () => breakLine(pullSource,'    retainStalePriceHold(existing, previousQuote, _holdRunDay(newAsOf));',''),
   full: () => breakLine(pullSource,'      retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,','      void (canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,'),
   missing: () => breakLine(pullSource,'  retainStalePriceHold(snapshot, snapshot, observedAt.slice(0, 10));',''),
   merge: () => breakLine(pullSource,'      retainStalePriceHold(incoming, previous);',''),
   carrier: () => breakLine(pullSource,'      retainStalePriceHold(written, incoming);',''),
   repair: () => breakLine(pullSource,'      retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,','      retainStalePriceHold(canonical, _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,'),
   mergeRepair: () => breakLine(pullSource,"        catch (error) { if (error.name !== 'SyntaxError') throw error; }",'        catch (error) { throw error; }'),
+  regress: () => breakLine(pullSource,"              regularMarketTime: _y(yahoo.price, 'regularMarketTime'),",''),
+  futureRetain: () => compileGuard(breakLine(guardSource,'  const provenCurrent = Number.isFinite(snapshot?.marketCap?.value) && current && current.priceDay <= today && current.age <= STALE_PRICE_WEEKDAYS;','  const provenCurrent = Number.isFinite(snapshot?.marketCap?.value) && current && current.age <= STALE_PRICE_WEEKDAYS;')),
+  futureGate: () => compileGuard(breakLine(guardSource,'  if (known && (!age || age.priceDay > today)) {','  if (known && !age) {')),
+  limitPrior: () => compileGuard(breakLine(guardSource,'  const knownDay = known.map(h => heldDay(h, today)).find(Boolean) ?? (prior?.age > STALE_PRICE_WEEKDAYS ? prior.priceDay : null);','  const knownDay = known.map(h => heldDay(h, today)).find(Boolean) ?? (prior?.age >= STALE_PRICE_WEEKDAYS ? prior.priceDay : null);')),
+  limitCurrent: () => compileGuard(breakLine(guardSource,'  const provenCurrent = Number.isFinite(snapshot?.marketCap?.value) && current && current.priceDay <= today && current.age <= STALE_PRICE_WEEKDAYS;','  const provenCurrent = Number.isFinite(snapshot?.marketCap?.value) && current && current.priceDay <= today && current.age < STALE_PRICE_WEEKDAYS;')),
+  runDayPrice: () => breakLine(pullSource,'    retainStalePriceHold(existing, previousQuote, _holdRunDay(newAsOf));','    retainStalePriceHold(existing, previousQuote, process.env.RUN_DATE_UTC || newAsOf.slice(0, 10));'),
+  runDayFull: () => breakLine(pullSource,'        _holdRunDay(asOf));','        process.env.RUN_DATE_UTC || asOf.slice(0, 10));'),
 };
 (async () => {
   const broken = process.argv.find(a => a.startsWith('--prove-red='))?.split('=')[1];
   const only = process.argv.find(a => a.startsWith('--only='))?.split('=')[1];
   try {
-    if (broken) { assert.ok(checks[broken]); await checks[broken](breaks[broken]()); }
+    if (broken) {
+      assert.ok(checks[broken]);
+      // Exit 2, not 1: a break that does not apply is a broken harness, never a check proven red.
+      let sabotaged;
+      try { sabotaged = breaks[broken](); } catch (e) { console.error('HARNESS BROKEN, check not run: '+e.message); process.exitCode=2; return; }
+      await checks[broken](sabotaged);
+    }
     else for (const [name, fn] of Object.entries(checks)) { if (!only || only === name) { await fn(); console.log('PASS '+name); } }
   } finally { for (const [p,h] of hashes) assert.equal(sha(p),h,'live source changed'); }
 })().catch(e => { console.error(e); process.exitCode=1; });
