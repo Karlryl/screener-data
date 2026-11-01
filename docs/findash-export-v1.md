@@ -1422,7 +1422,7 @@ Quartalspaare als `3M/3M` gespeichert; `halfYear` kam nicht vor.
 keinen Wert, keinen Score und keinen Rang; falsche Werte hält allein die Handtabelle
 (`configs/financial-known-cases.json`). Er steht nur, wo der Snapshot die angezeigte Umsatzzahl
 reproduziert. Zuerst gilt ein geprüfter Eintrag aus `configs/g31-hinweise.json` für genau diese
-Notierung und genau diese beiden Quellenenden (`code` `uebernahme`, `saisonbasis` oder `bilanzierungswechsel`, Grund mit
+Notierung und genau diese beiden Quellenenden (`code` `uebernahme`, `saisonbasis`, `bilanzierungswechsel` oder `einmaleffekt`, Grund mit
 Prüfdatum, Quelle mit Seite und Zitat); zeigt das Board ein neueres Paar, entfällt er von selbst. Sonst
 wird nur ein neu zugelassenes datiertes Paar mit leerer Zwischenzeile gegen das passende volle
 Geschäftsjahr derselben Einheit und Währung geprüft: neuester Wert über 75 % des Jahresumsatzes
@@ -1442,8 +1442,10 @@ späteres Ende des Geschäftsjahres gewinnt, ein gleiches Ende behält das Quart
 (`lib/exchange-quarter-check.js`, Modus unverändert) bei dieser Firma ein Quartal zurückhalten, weil Anbieter
 und Börsenmeldung nicht übereinstimmen, bleibt das Geschäftsjahr (G2); dasselbe gilt, wenn die Prüfung nicht
 laufen kann, weil der Börsenbestand fehlt, unlesbar ist oder älter als die Frist ist (in der Berichtssaison
-zwei Tage), oder wenn die Handtabelle in der Quartalsreihe eine Zelle zurückhält oder ersetzt (solche Reihen
-wurden nur für das neueste Quartal geprüft). Die Börsenprüfung selbst rechnet weiter mit der bisherigen Auswahl, damit ihre Rückfallregel und
+zwei Tage). Das Geschäftsjahr bleibt auch, wenn die Handtabelle in der Quartalsreihe eine Zelle zurückhält oder ersetzt
+und bei Firmen im Sektor `Financial Services` außerhalb des Börsenabgleichs, deren Quartalszeile beim Anbieter oft nicht der
+gemeldete Umsatz ist (Prüfung vom 01.11.2026: 8 von 10 indischen Finanzzeilen); in beiden Fällen geht das ältere Paar nur, wenn
+beide Werte aus dem Bericht belegt sind. Die Börsenprüfung selbst rechnet weiter mit der bisherigen Auswahl, damit ihre Rückfallregel und
 ihre Begründungstexte stimmen. Undatierte Reihen gehen diesen
 Weg nicht. Etikett, Wertung, Wachstumsbonus, Rule of 40 und `g31Hinweis` folgen dem gezeigten Paar; die
 Vergleichsfelder `*Legacy` behalten die bisherige Rechnung. Vorher/Nachher und Begründung stehen im
