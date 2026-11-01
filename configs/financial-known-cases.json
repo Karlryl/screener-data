@@ -17819,6 +17819,66 @@
           "quote": "Net earnings 484,762; Income tax provision 152,042"
         }
       ]
+    },
+    {
+      "caseId": "1088.hk-2025-06-30-revenueQ-20261101",
+      "ticker": "1088.HK",
+      "listingAliases": [
+        "601088.SS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 68524000000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Vorjahresquartal fehlt: Der Anbieterwert für das Quartal mit Ende 30.06.2025 (68,5 Mrd. CNY) steht auf dem alten Konsolidierungskreis, das Quartal mit Ende 30.06.2026 auf dem neuen. Das ergäbe +73,6 %; die Firma meldet für das Halbjahr +7,9 % gegen den angepassten Vorjahreswert und nennt kein angepasstes Einzelquartal. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
+          "form": "China Shenhua, interim results announcement 2026",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-11-01",
+          "page": "Financial highlights",
+          "quote": "Revenue RMB million 189,338 175,423 138,109 7.9",
+          "unit": "CNY millions"
+        }
+      ]
+    },
+    {
+      "caseId": "dher.de-2025-09-30-revenueQ-20261101",
+      "ticker": "DHER.DE",
+      "listingAliases": [
+        "DHER.SW"
+      ],
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 3736100000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Vorjahresquartal fehlt: Für das Quartal mit Ende 30.09.2025 führt der Anbieter 3,74 Mrd. EUR, die Firma vergleicht ihr drittes Quartal 2026 mit 3,53 Mrd. EUR. Das ergäbe +16,4 % statt der gemeldeten +23,2 %. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.deliveryhero.com/media/document/b511d445-e95f-4bc5-aa0b-3834fb0b9784/assets/DE000A2E4K43-Q3-2026-EQ-E-00.pdf",
+          "form": "Delivery Hero, Q3 2026 statement",
+          "published": "2026-10-29",
+          "verifiedAt": "2026-11-01",
+          "page": "Group revenue, Q3 2025 and Q3 2026",
+          "quote": "Revenue Group 3,530.1 4,347.9 23.2",
+          "value": 3530100000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
     }
   ],
   "quarantines": [

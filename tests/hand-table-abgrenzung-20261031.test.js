@@ -51,7 +51,7 @@ test('19 sourced rows validate, two coverage rows, every reason names its period
   assert.equal(own.length, 19);
   assert.deepEqual(FIRMS.map(t => own.filter(c => c.ticker === t).length), [8, 11]);
   assert.deepEqual(table.coverage.filter(v => FIRMS.includes(v.ticker)).map(v => v.ticker + v.field + v.coversThrough), ['BRBIrevenueQ2026-06-30', 'GAUopIncQ2026-06-30']);
-  assert.ok(table.cases.slice(-23, -4).every(c => c.revision === REV), 'appended behind the earlier rows; only the four CarMax holds of 01.11.2026 follow');
+  assert.ok(table.cases.slice(-25, -6).every(c => c.revision === REV), 'appended behind the earlier rows; only the six rows of 01.11.2026 follow');
   const de = p => p.split('-').reverse().join('.');
   for (const c of own) {
     assert.ok(c.replacementValue !== 0 && c.replacementValue !== null, c.caseId);

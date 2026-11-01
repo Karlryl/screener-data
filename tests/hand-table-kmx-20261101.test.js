@@ -12,7 +12,8 @@ const { evaluateLamps } = require('../src/scoring/lamps.js');
 const { trackOf } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { route } = require('../src/scoring/router.js');
-const fixture = require('./fixtures/hand-table-kmx.json');
+const { g31Shadow } = require('../lib/g31-recency.js');
+const fixture = require('./fixtures/hand-table-kmx.json').snapshots;
 
 const root = path.resolve(__dirname, '..');
 const liveFile = path.join(root, 'configs/financial-known-cases.json');
@@ -56,6 +57,29 @@ test('a changed vendor value releases nothing into the cell silently', () => {
   moved.annual.annualOpInc[0] = { value: 123000000 };
   const s = applyFinancialCases(moved).snapshot;
   assert.equal(value(s.annual.annualOpInc[0]), null);
+});
+
+// China Shenhua: the prior-year quarter stands on the old consolidation scope, so the pair showed +73.6 % against a filed +7.9 %.
+test('Shenhua: the mixed pair is gone on both listings, growth falls back to the fiscal year', () => {
+  for (const t of ['1088.HK', '601088.SS']) {
+    assert.ok(g31Shadow(applyFinancialCases(structuredClone(fixture[t]), { table: { ...structuredClone(table), cases: table.cases.filter((c) => c.caseId !== '1088.hk-2025-06-30-revenueQ-20261101') } }).snapshot).v1.periodEnd >= '2025-12-31');
+    const leg = g31Shadow(applyFinancialCases(structuredClone(fixture[t])).snapshot).v1;
+    assert.equal(leg.basis, 'year', t);
+    assert.equal(leg.periodEnd, '2025-12-31', t);
+  }
+  const before = g31Shadow(structuredClone(fixture['1088.HK'])).v1;
+  assert.equal(before.periodEnd, '2026-06-30', 'precondition: the vendor pair exists');
+  assert.ok(Math.abs(before.pct - 73.6) < 0.1);
+});
+
+// Delivery Hero: the prior-year quarter differs from the one the firm compares with (3,530.1 against the vendor's 3,736).
+test('Delivery Hero: the wrong +16.4 % is gone; a single correct quarter needs a coverage row, so the cell stays empty', () => {
+  const before = g31Shadow(structuredClone(fixture['DHER.SW'])).v1;
+  assert.equal(before.periodEnd, '2026-09-30');
+  assert.ok(Math.abs(before.pct - 16.4) < 0.2, 'precondition: ' + before.pct);
+  const leg = g31Shadow(applyFinancialCases(structuredClone(fixture['DHER.SW'])).snapshot).v1;
+  assert.notEqual(leg.periodEnd, '2026-09-30');
+  assert.notEqual(Math.round(leg.pct), 16);
 });
 
 test('the live table is unchanged by this test', () => {
