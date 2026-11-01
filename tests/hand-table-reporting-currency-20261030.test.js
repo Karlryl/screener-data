@@ -459,11 +459,12 @@ test('visibility: the merge adds the shards up by type, the data-run gate warns 
   assert.match(source.slice(from, source.indexOf('\n  }', from)), /\.\.\.reportingCcyCounters\(\)/);
 });
 
-test('the deadline alarm reaches the regular status: marker, export hull and run check name firm, deadline and owner; nothing stops', async () => {
+test('the deadline alarm reaches the regular status: marker, export hull and run check name firm, deadline and owner; nothing stops', async t => {
   const gate = require('../scripts/coverage-gate.js'), { run } = require('../scripts/tageslauf-erwartungen.js'), { loadCoverage } = require('../scripts/write-findash-export.js');
   const healthy = { n_ok: 12000, n_full: 2000, n_priceonly: 10000, n_failed: 0, n_total: 15000, n_skipped_mcap: 2500 };
   const row = (type, pruefungBis, overdue) => ({ ticker: 'PSQL', type, reason: 'USD != row EUR', owner: 'Claude-Tageslauf-Master', firstSeen: '2026-10-30', pruefungBis, overdue });
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ccy-alarm-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const check = async (manifest, buildMarker = gate.buildMarker) => {
     const res = gate.classify(manifest, 15000, 12000);
     const marker = buildMarker(res, manifest);
@@ -477,7 +478,9 @@ test('the deadline alarm reaches the regular status: marker, export hull and run
     return { marker, ...await run({ exportBase: exportDir, erwartungen }) };
   };
 
-  const overdue = await check({ ...healthy, n_reporting_ccy_held: 1, _reportingCcyHeld: [row('new-period', '2026-11-13', true)] });
+  // The counters as the real merge writes them, so the status cannot hide behind a field only a real manifest has.
+  const late = { ...healthy, n_reporting_ccy_held: 1, n_reporting_ccy_conflicts: 0, n_reporting_ccy_new_periods: 1, n_reporting_ccy_overdue: 1, _reportingCcyHeld: [row('new-period', '2026-11-13', true)] };
+  const overdue = await check(late);
   assert.equal(overdue.marker.status, 'ok', 'a held firm is no coverage failure');
   assert.equal(overdue.marker.degraded, false);
   assert.equal(overdue.marker.blocked, false);
@@ -499,15 +502,40 @@ test('the deadline alarm reaches the regular status: marker, export hull and run
   const legacy = await check(healthy);
   assert.equal(legacy.marker.reporting_ccy_held, null, 'a manifest without the field is unknown, not none');
   assert.equal(legacy.code, 0);
-  assert.equal((await check({ n_ok: 'x', _reportingCcyHeld: [row('conflict', '2026-11-20', true)] })).marker.reporting_ccy_held, null, 'an untrusted manifest carries no rows');
+  assert.match(legacy.lines.join('\n'), /Hinweis: Ob Firmen wegen einer unbestätigten Berichtswährung gehalten sind, ist für diesen Export unbekannt/);
+  assert.equal(legacy.report.berichtswaehrungGehalten, null, 'unknown stays unknown in the report, not an empty list');
+  assert.doesNotMatch(none.lines.join('\n'), /unbekannt/);
+  const untrusted = await check({ n_ok: 'x', _reportingCcyHeld: [row('conflict', '2026-11-20', true)] });
+  assert.equal(untrusted.marker.reporting_ccy_held, null, 'an untrusted manifest carries no rows');
+  assert.match(untrusted.lines.join('\n'), /unbekannt/);
+  // A lost shard may hold the firm: empty from a partial run is unknown; a row it did see is still reported.
+  const partial = { ...healthy, partial: true };
+  assert.equal(gate.buildMarker(gate.classify({ ...partial, n_reporting_ccy_held: 0, _reportingCcyHeld: [] }, 15000, 12000), { ...partial, n_reporting_ccy_held: 0, _reportingCcyHeld: [] }).reporting_ccy_held, null);
+  assert.equal(gate.buildMarker(gate.classify({ ...partial, _reportingCcyHeld: [row('conflict', '2026-11-20', true)] }, 15000, 12000), { ...partial, _reportingCcyHeld: [row('conflict', '2026-11-20', true)] }).reporting_ccy_held.length, 1);
 
   // Break-once on test data: a marker without the field, as before this repair, reaches nobody; the check stays green.
-  const silent = await check({ ...healthy, n_reporting_ccy_held: 1, _reportingCcyHeld: [row('new-period', '2026-11-13', true)] }, (res, m) => { const { reporting_ccy_held, ...rest } = gate.buildMarker(res, m); return rest; });
+  const silent = await check(late, (res, m) => { const { reporting_ccy_held, ...rest } = gate.buildMarker(res, m); return rest; });
   assert.equal(silent.code, 0);
   assert.doesNotMatch(silent.lines.join('\n'), /ALARM/);
 
   // The workflow may never turn this into a stop: the collecting gate keeps exit 0 on the overdue row, the coverage step reads no field of it.
-  assert.equal(runGate({ ...healthy, n_reporting_ccy_held: 1, _reportingCcyHeld: [row('new-period', '2026-11-13', true)] }).status, 0);
+  assert.equal(runGate(late).status, 0);
+  // The coverage step as the real process: same exit and same status with and without the overdue row, the marker carries it.
+  const step = manifest => {
+    const cwd = fs.mkdtempSync(path.join(dir, 'step-'));
+    fs.mkdirSync(path.join(cwd, 'snapshots'));
+    fs.writeFileSync(path.join(cwd, 'snapshots', '_manifest.json'), JSON.stringify(manifest));
+    fs.writeFileSync(path.join(cwd, 'watchlist.json'), JSON.stringify({ stocks: Array.from({ length: 15000 }, (_, i) => ({ ticker: 'T' + i })) }));
+    const r = spawnSync(process.execPath, [path.join(root, 'scripts', 'coverage-gate.js')], { cwd, encoding: 'utf8' });
+    return { status: r.status, marker: JSON.parse(fs.readFileSync(path.join(cwd, 'outputs', 'coverage-status.json'), 'utf8')) };
+  };
+  const withRow = step(late), withoutRow = step({ ...healthy, n_reporting_ccy_held: 0, n_reporting_ccy_conflicts: 0, n_reporting_ccy_new_periods: 0, n_reporting_ccy_overdue: 0, _reportingCcyHeld: [] });
+  assert.equal(withRow.status, 0, 'an overdue row never fails the coverage step');
+  assert.equal(withRow.status, withoutRow.status);
+  for (const k of ['status', 'degraded', 'blocked']) assert.equal(withRow.marker[k], withoutRow.marker[k], k);
+  assert.deepEqual(withRow.marker.reasons, withoutRow.marker.reasons);
+  assert.equal(withRow.marker.status, 'ok');
+  assert.deepEqual(withRow.marker.reporting_ccy_held, [row('new-period', '2026-11-13', true)]);
   const gateSource = fs.readFileSync(path.join(root, 'scripts', 'coverage-gate.js'), 'utf8');
   assert.equal(gateSource.split('reporting_ccy_held').length - 1, 1, 'written once, read by no status branch');
 });

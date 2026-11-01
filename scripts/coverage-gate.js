@@ -260,6 +260,8 @@ function finishGood(ok, total, source, m, reasons) {
 function reportingCcyHeld(m) {
   const rows = m && m._reportingCcyHeld;
   if (!Array.isArray(rows)) return null;
+  // A lost shard may hold the firm: an empty list from a partial run says nothing.
+  if (m.partial === true && !rows.length) return null;
   return rows.filter(r => r && typeof r === 'object').map(({ ticker, type, owner, firstSeen, pruefungBis, overdue, reason }) => (
     { ticker, type, owner, firstSeen, pruefungBis, overdue: overdue === true, reason }));
 }

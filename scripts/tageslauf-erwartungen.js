@@ -285,7 +285,9 @@ async function run({ exportBase, erwartungen, datum: override }) {
   });
   const count = u => results.filter(r => r.urteil === u).length;
   const laterChecks = new Set(later.map(e => e.gruppe ?? e.id)).size; // counted like results: a group is one
-  const held = Array.isArray(index.coverage?.reporting_ccy_held) ? index.coverage.reporting_ccy_held : [];
+  // undefined: an export without the coverage block says nothing. null: the run itself did not know, no all-clear.
+  const heldRaw = index.coverage === undefined ? undefined : Array.isArray(index.coverage?.reporting_ccy_held) ? index.coverage.reporting_ccy_held : null;
+  const held = heldRaw || [];
   const heldLine = r => `${r.overdue ? 'ALARM an Karl, Frist überschritten. ' : 'Warnung. '}Berichtswährung von ${r.ticker} nicht bestätigt (${r.type === 'conflict' ? 'Widerspruch des Anbieters' : 'neue Periode'}): Die Abschlusszahlen stehen leer, die Boards laufen weiter. Zuständig ${r.owner}, seit ${r.firstSeen}, Prüfung bis ${r.pruefungBis}.`;
   const lines = [
     ...held.filter(r => r.overdue).map(heldLine),
@@ -296,6 +298,7 @@ async function run({ exportBase, erwartungen, datum: override }) {
     `${count(ERFUELLT)} von ${results.length} Erwartungen erfüllt, ${count(NICHT)} nicht erfüllt, ${count(NM)} nicht messbar, ` +
       `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
+    ...(heldRaw === null ? ['Hinweis: Ob Firmen wegen einer unbestätigten Berichtswährung gehalten sind, ist für diesen Export unbekannt; das ist keine Entwarnung.'] : []),
   ];
   lines.push('', '| Erwartung | gemessen | Urteil | Grund |', '|---|---|---|---|');
   for (const r of results) {
@@ -307,7 +310,7 @@ async function run({ exportBase, erwartungen, datum: override }) {
     zusammenfassung: { erfuellt: count(ERFUELLT), nichtErfuellt: count(NICHT), nichtMessbar: count(NM), abgelaufen: count(ABGELAUFEN), nochNichtFaellig: laterChecks },
     ergebnisse: results.map(r => ({ id: r.id, pr: r.pr, urteil: r.urteil, teile: r.members.map(m => ({ id: m.e.id, urteil: m.urteil, gemessen: m.gemessen })) })),
     nochNichtFaellig: later.map(e => e.id),
-    berichtswaehrungGehalten: held,
+    berichtswaehrungGehalten: heldRaw ?? null,
   };
   const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN) && !held.some(r => r.overdue);
   return { code: ok ? 0 : 1, lines, report };
