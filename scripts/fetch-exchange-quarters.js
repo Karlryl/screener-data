@@ -463,7 +463,7 @@ async function runUs(ctx) {
     }
   }
   if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
-  // A run with nothing due stamps the store as well: the age check in lib/exchange-quarter-check.js reads this list.
+  // A run with nothing due stamps the store as well: the age warning in lib/exchange-quarter-check.js reads this list.
   next.sources[src] ??= { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };
   S.assertAppendOnly(prev, next);
   const text = S.serialiseStore(next);

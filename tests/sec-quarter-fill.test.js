@@ -3,6 +3,7 @@
 // vendor lacks reaches only the growth leg, on the vendor's own definition, in USD, with period, length and derivation proven.
 const assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const X = require('../lib/exchange-quarter-check.js');
 const { pitSingleQuarters } = require('../lib/sec-pit.js');
 const { g31Shadow } = require('../lib/g31-recency.js');
@@ -321,15 +322,47 @@ test('the policy needs usFill as a boolean', () => {
 });
 
 // ── Store age ────────────────────────────────────────────────────────────────
-test('store age: 2 days in the season, 8 days outside, judged by the data day; no run at all is old', () => {
+test('store age only warns: 2 days in the season, 8 days outside, judged by the data day; the fill stays in every case', () => {
   const at = (asOf, written = '2026-10-30T13:40:00.000Z') => run(snapshot({ meta: { asOf } }), { ...store(), sources: { s: { fetchedAt: written } } });
-  assert.equal(at('2026-11-01T13:40:00.000Z').result.category, 'sec-fill');
+  const expectFill = r => { assert.equal(r.result.category, 'sec-fill'); assert.equal(r.result.why, null); assert.equal(r.snapshot.meta.secQuarterFill.end, '2026-06-30'); };
+  const fresh = at('2026-11-01T13:40:00.000Z');
+  expectFill(fresh);
+  assert.equal(fresh.result.storeWarning, undefined);
   const old = at('2026-11-01T13:41:00.000Z');
-  assert.equal(old.result.why, 'store-old');
-  assert.equal(old.snapshot.meta.secQuarterFill, undefined);
-  assert.equal(at('2026-12-09T00:00:00.000Z', '2026-12-01T00:00:00.000Z').result.category, 'sec-fill');
-  assert.equal(at('2026-12-09T00:01:00.000Z', '2026-12-01T00:00:00.000Z').result.why, 'store-old');
-  assert.equal(whyOf(snapshot(), { ...store(), sources: {} }), 'store-old');
+  expectFill(old);
+  assert.match(old.result.storeWarning, /^SEC store us\.json is 2\.0 days old at the data day \(limit 2\): .*The fills stay/);
+  const outside = at('2026-12-09T00:00:00.000Z', '2026-12-01T00:00:00.000Z');
+  expectFill(outside);
+  assert.equal(outside.result.storeWarning, undefined);
+  const outsideOld = at('2026-12-09T00:01:00.000Z', '2026-12-01T00:00:00.000Z');
+  expectFill(outsideOld);
+  assert.match(outsideOld.result.storeWarning, /8\.0 days old at the data day \(limit 8\)/);
+  const unknown = run(snapshot(), { ...store(), sources: {} });
+  expectFill(unknown);
+  assert.match(unknown.result.storeWarning, /is of unknown age/);
+});
+test('a store of 01.08. keeps its fills and the daily path carries one warning with the age; a fresh store carries none', () => {
+  const prepare = written => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sec-q-age-'));
+    fs.writeFileSync(path.join(dir, 'us.json'), JSON.stringify({ ...store(), sources: { s: { fetchedAt: written } } }));
+    fs.writeFileSync(path.join(dir, 'snap.json'), JSON.stringify(snapshot()));
+    // The production step in a process of its own: the warning goes out once per process and the context is process-wide.
+    const code = `const hand = require(${JSON.stringify(path.join(__dirname, '..', 'lib', 'yahoo-q4-known-cases.js'))});
+      const raw = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'));
+      hand.prepareSnapshot(raw);
+      const { revGrowthLeg } = require(${JSON.stringify(path.join(__dirname, '..', 'lib', 'rev-growth-basis.js'))});
+      console.log(JSON.stringify(revGrowthLeg(hand.prepareSnapshot(raw))));`;
+    const r = spawnSync(process.execPath, ['-e', code, path.join(dir, 'snap.json')], { env: { ...process.env, EXCHANGE_QUARTERS_DIR: dir }, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    const leg = JSON.parse(r.stdout.trim().split('\n').pop());
+    assert.deepEqual([leg.basis, leg.sourcePeriodEnd], ['quarter', '2026-06-30'], 'the fill stays');
+    return r.stderr.split('\n').filter(l => l.includes('SEC store us.json'));
+  };
+  const old = prepare('2026-08-01T00:00:00.000Z');
+  assert.equal(old.length, 1, 'one warning per process');
+  // Snapshot data day 31.10.2026 09:03 UTC, 91.4 days after the store; in the season the limit is 2 days.
+  assert.match(old[0], /^::warning::\[exchange-check\] SEC store us\.json is 91\.4 days old at the data day \(limit 2\): /);
+  assert.deepEqual(prepare('2026-10-30T13:40:00.000Z'), []);
 });
 
 // ── Derivation ───────────────────────────────────────────────────────────────
