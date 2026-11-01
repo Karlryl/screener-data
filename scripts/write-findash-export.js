@@ -1332,18 +1332,6 @@ function buildSmallcapOverview(coverage, smallcapDir) {
   return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map((r, i) => mapOverviewRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/overview') };
 }
 
-// A row the market-cap guard withholds (stale Yahoo quote message or hand hold) only raises a counter in index.excluded,
-// so its reason would reach nobody. The main store has excluded.json for this; here the names stand next to the counters.
-// Same reader as the scoring pass, so both agree on which rows are withheld. null = no small-cap store (the pass then
-// ran on the main store, and excluded.json names its rows).
-function smallcapWithheldMarketCaps(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = path.join(ROOT, 'watchlist-smallcap.json')) {
-  const universe = require('../src/scoring/run-screener.js').loadSmallcapUniverse(snapDir, watchlistPath);
-  if (!universe) return null;
-  return universe.filter(s => s.meta.marketCapReason && !Number.isFinite(s.marketCap?.value))
-    .map(s => ({ ticker: s.meta.ticker, name: s.meta.name ?? null, reasonDe: s.meta.marketCapReason }))
-    .sort((a, b) => (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
-}
-
 function buildSmallcapIndex(coverage, smallcapDir) {
   const idx = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'index.json'));
   return {
@@ -1360,6 +1348,18 @@ function buildSmallcapIndex(coverage, smallcapDir) {
     // W8 EX-01: keyed like boardStatus ('smallcap-<sector>'); the small-cap formulas are the HG ones per sector.
     profitSplit: profitSplitMap(idx.boards, require('../src/scoring/formulas/smallcap')),
   };
+}
+
+// A row the market-cap guard withholds (stale Yahoo quote message or hand hold) only raises a counter in index.excluded,
+// so its reason would reach nobody. The main store has excluded.json for this; here the names stand next to the counters.
+// Same reader as the scoring pass, so both agree on which rows are withheld. null = no small-cap store (the pass then
+// ran on the main store, and excluded.json names its rows).
+function smallcapWithheldMarketCaps(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = path.join(ROOT, 'watchlist-smallcap.json')) {
+  const universe = require('../src/scoring/run-screener.js').loadSmallcapUniverse(snapDir, watchlistPath);
+  if (!universe) return null;
+  return universe.filter(s => s.meta.marketCapReason && !Number.isFinite(s.marketCap?.value))
+    .map(s => ({ ticker: s.meta.ticker, name: s.meta.name ?? null, reasonDe: s.meta.marketCapReason }))
+    .sort((a, b) => (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
 }
 
 // Identische Frische-Regel wie qualityExportMode (F-CGPT-024) — der Small-Cap-Pass
