@@ -23,6 +23,11 @@ const MUTANTS = {
   'groups-not-exported': [/^      renewalDue, drift: \{ maxKs: .*(?=\r?$)/m, '      renewalDue, drift: { maxKs: Math.round(drift.maxKs * 1000) / 1000, ksThreshold: drift.ksThreshold, axesDrifted: drift.drifted.length } },', /the export must name the reference in force/],
   'group-not-named': [/^    notMonitored: Object\.keys\(notMonitored\)\.sort\(\)\.map\(\(group\) => notMonitored\[group\]\) \};(?=\r?$)/m, '    notMonitored: [] };', /a group too small to watch must be named/],
   'growth-watched': [/^  return \{ \.\.\.calibrationDrift\(\{ cohortBases: watchedLive \}, \{ cohortBases: watched \}\), watched,(?=\r?$)/m, '  return { ...calibrationDrift({ cohortBases: watchedLive, gDistByCohort: live.gDistByCohort }, { cohortBases: watched, gDistByCohort: reference.calibration.gDistByCohort }), watched,', /growth distributions enter no score here/],
+  // The decision on the group size, which the score takes on the frozen n and at exactly 15 firms.
+  'own-by-live-n': [/^    const own = \(frozen\[key\] \? frozen\[key\]\.n : live\.cohortBases\[key\]\.n\) >= MIN_COHORT_N; .*(?=\r?$)/m, '    const own = (live.cohortBases[key] ? live.cohortBases[key].n : frozen[key].n) >= MIN_COHORT_N;', /the decision reads the frozen n: a big cohort that shrank/],
+  'own-above-15-only': [/^    const own = \(frozen\[key\] \? frozen\[key\]\.n : live\.cohortBases\[key\]\.n\) >= MIN_COHORT_N; .*(?=\r?$)/m, '    const own = (frozen[key] ? frozen[key].n : live.cohortBases[key].n) > MIN_COHORT_N;', /exactly 15 firms in one cohort read their own basis/],
+  'small-group-up-to-15': [/^    if \(firms < MIN_COHORT_N\) \{(?=\r?$)/m, '    if (firms <= MIN_COHORT_N) {', /exactly 15 firms in one cohort read their own basis/],
+  'firms-counted-live': [/^    const firms = own \? .*(?=\r?$)/m, '    const firms = own ? (frozen[key] ? frozen[key].n : 0) : tracks(live.cohortBases, formula).reduce((sum, k) => sum + live.cohortBases[k].n, 0);', /a union of 17 in the reference with 11 in the run stays watched/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -188,7 +193,7 @@ assert.equal(growthRun.index.reference.renewalDue, false, 'growth distributions 
 assert.deepEqual(scores(growthRun.rows), scores(calm.rows), 'growth distributions enter no score here');
 console.log('PASS growth distributions stay out of the notice because they stay out of the score');
 
-// Below 15 firms even together: no alarm from one firm, and the export says so.
+// Below 15 firms even together: the group rings no alarm, whatever moves in it, and the export says so.
 const tinyRef = referenceOf(tracksOf(5, 3));
 const tiny = pass(olderDividedBy100(tracksOf(5, 3)), tinyRef).index.reference;
 assert.deepEqual(tiny.notMonitored, [{ group: FORMULA, firms: 8, reasonDe: 'Nur 8 Firmen in der Referenz vom 29.10.2026, zu wenige für eine Abweichungsprüfung.' }], 'a group too small to watch must be named');
@@ -199,6 +204,19 @@ const thinNew = smallcapReferenceDrift(liveOf(tracksOf(20, 3), oneTrack), oneTra
 assert.deepEqual(Object.keys(thinNew.watched).sort(), [FORMULA, FORMULA + '|profitable']); assert.deepEqual(thinNew.notMonitored, []);
 assert.deepEqual(pass(tracksOf(20, 16), oneTrack).index.reference.notMonitored, [{ group: FORMULA + '|unprofitable', firms: 0, reasonDe: 'In der Referenz vom 29.10.2026 nicht enthalten, daher keine Abweichungsprüfung.' }], 'a group too small to watch must be named: new and big');
 console.log('PASS a group that cannot be watched is named: too small together, or new and scored on itself');
+
+// The decision itself, on plain numbers. The score decides on the frozen n, so the notice has to, at the exact limit too.
+const counted = (o) => Object.fromEntries(Object.entries(o).map(([key, n]) => [key, { n, axes: { a: Array.from({ length: n }, (_, i) => i) } }]));
+const decide = (liveN, frozenN) => {
+  const d = smallcapReferenceDrift({ cohortBases: counted(liveN) }, { dataDay: '2026-10-31', calibration: { cohortBases: counted(frozenN) } });
+  return { watched: Object.keys(d.watched).sort(), named: d.notMonitored.map((g) => g.group + ':' + g.firms) };
+};
+assert.deepEqual(decide({ 'f|profitable': 15 }, { 'f|profitable': 15 }), { watched: ['f|profitable'], named: [] }, 'exactly 15 firms in one cohort read their own basis');
+assert.deepEqual(decide({ 'f|profitable': 10, 'f|unprofitable': 5 }, { 'f|profitable': 10, 'f|unprofitable': 5 }), { watched: ['f'], named: [] }, 'exactly 15 firms together are watched on their union');
+assert.deepEqual(decide({ 'f|profitable': 14, 'f|unprofitable': 8 }, { 'f|profitable': 16, 'f|unprofitable': 8 }), { watched: ['f', 'f|profitable'], named: [] }, 'the decision reads the frozen n: a big cohort that shrank keeps its own basis');
+assert.deepEqual(decide({ 'f|profitable': 20, 'f|unprofitable': 5 }, { 'f|profitable': 10, 'f|unprofitable': 5 }), { watched: ['f'], named: [] }, 'the decision reads the frozen n: a thin cohort that grew stays on the union');
+assert.deepEqual(decide({ 'f|profitable': 8, 'f|unprofitable': 3 }, { 'f|profitable': 11, 'f|unprofitable': 6 }), { watched: ['f'], named: [] }, 'a union of 17 in the reference with 11 in the run stays watched');
+console.log('PASS the watch decision follows the frozen n like the score, at exactly 15 firms too');
 
 // The file itself: a broken one stops the pass, the versioned one stays what its before and after measured.
 const bad = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'sc-reference-bad-')), 'r.json');

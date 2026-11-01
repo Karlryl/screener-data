@@ -793,9 +793,10 @@ function scoreSmallcapUniverse(universe, reference) {
 /**
  * Compare a run with the fixed reference on exactly the bases its scores read (score.js, PASS 2): a cohort of at least
  * MIN_COHORT_N firms on its own frozen basis, a thinner one on parentBasis, the union of all tracks of its formula.
- * Reports only, changes no score. An axis no firm of the reference ever filled cannot be compared. Where even the union
- * is below MIN_COHORT_N a single firm would already read as drift, and a big cohort new since the reference scores on
- * itself: both are named, not skipped. Growth distributions stay out: growthBoost is off here, they enter no score.
+ * Reports only, changes no score. An axis no firm of the reference ever filled cannot be compared. A union below
+ * MIN_COHORT_N falls under the minimum size the score uses too (one firm alone crosses the threshold only up to 6
+ * values), and a big cohort new since the reference scores on itself: both are named, not skipped. Growth distributions
+ * stay out: growthBoost is off here, they enter no score.
  * @param {{cohortBases: object}} live calibrationLive of the run.
  * @param {object} reference Result of loadSmallcapReference.
  * @returns {object} The result of calibrationDrift, plus watched (the frozen bases it compared, by cohort or formula)

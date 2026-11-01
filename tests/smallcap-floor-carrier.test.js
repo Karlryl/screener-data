@@ -20,6 +20,7 @@ const MUTANTS = {
   // The state before this fix: only the days are compared.
   'future-by-day-only': [LIB, /^  if \(Date\.parse\(quoted\) > Date\.parse\(observed\) .*;(?=\r?$)/m, "  if (quoted.slice(0, 10) > observed.slice(0, 10)) return 'quote is later than the observation';", /a quote later on the same day must be refused/],
   'no-room-for-two-clocks': [LIB, /^  if \(Date\.parse\(quoted\) > Date\.parse\(observed\) .*;(?=\r?$)/m, "  if (quoted > observed) return 'quote is later than the observation';", /a live quote must pass/],
+  'room-without-its-end': [LIB, /^  if \(Date\.parse\(quoted\) > Date\.parse\(observed\) .*;(?=\r?$)/m, "  if (Date.parse(quoted) >= Date.parse(observed) + FLOOR_EXIT_CLOCK_SKEW_MS) return 'quote is later than the observation';", /the minute of room includes its end/],
   'no-usd-origin': [LIB, /^  if \(!origin \|\| typeof origin\.currency .*;(?=\r?$)/m, '  if (!origin) return null;', /a missing USD origin must be refused/],
   'unproven-rate': [LIB, /^  if \(isUsd \? origin\.factor .*;(?=\r?$)/m, '', /an unproven rate must be refused/],
   'value-not-following': [LIB, /^  if \(Math\.abs\(origin\.rawValue .*;(?=\r?$)/m, '', /a value that does not follow from its quote must be refused/],
@@ -84,6 +85,8 @@ assert.match(floorExitFault(cap({ asOf: '2026-10-30T12:00:00.000Z', regularMarke
 assert.equal(floorExitFault(cap({ asOf: '2026-10-30T14:30:05.900Z', regularMarketTime: '2026-10-30T14:30:03.000Z' }), FLOOR), null, 'a live quote must pass: seconds before the clock');
 assert.equal(floorExitFault(cap({ asOf: '2026-10-30T14:30:05.000Z', regularMarketTime: '2026-10-30T14:30:05.000Z' }), FLOOR), null, 'a live quote must pass: same second');
 assert.equal(floorExitFault(cap({ asOf: '2026-10-30T14:30:05.000Z', regularMarketTime: '2026-10-30T14:30:35.000Z' }), FLOOR), null, 'a live quote must pass: two clocks');
+assert.equal(floorExitFault(cap({ asOf: '2026-10-30T14:30:05.000Z', regularMarketTime: '2026-10-30T14:31:05.000Z' }), FLOOR), null, 'the minute of room includes its end');
+assert.match(floorExitFault(cap({ asOf: '2026-10-30T14:30:05.000Z', regularMarketTime: '2026-10-30T14:31:05.001Z' }), FLOOR) ?? '', /later than/, 'a quote later on the same day must be refused: one millisecond past the room');
 console.log('PASS quote age: prior-day close and weekend pass, the limit is exact, old, missing and future quotes are refused, also later on the same day; a live quote passes');
 
 const stale79 = require('../lib/market-cap-guard.js').STALE_PRICE_WEEKDAYS;
