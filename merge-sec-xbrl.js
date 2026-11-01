@@ -197,12 +197,21 @@ function usdUnits(tax, concept) {
 // the old rule picked for that fy (the anchor). No full year at the anchor -> no value: an
 // older comparative year must not move into the gap (DBD FY2023 would show 2022 revenue, EXE
 // FY2021 the 2020 operating loss of -8,703 M USD). A missing start proves nothing -> no value.
-// Balance-sheet concepts are instants without start: callers pass { instant: true }, which
-// keeps the old selection unchanged. Regression anchor: tests/sec-annual-period.test.js.
+// Balance-sheet concepts are instants without start: callers pass { instant: true }, which skips the
+// full-year and anchor checks. The key check below still applies to them, so instants under a key
+// that names no fiscal year go as well (PRTH balance under 43465 and 43830); every other instant
+// keeps the old selection. Regression anchor: tests/sec-annual-period.test.js.
 // A key more than one year after the period end names no fiscal year of that period: PRTH carries
 // the Excel serials 43465 and 43830 as fy, which sorted 2018 and 2019 above 2025 once the sanity check
 // stopped rejecting that series by accident; UHT FY2025 capex was the 2023 comparative.
 const keyFitsEnd = (x) => !(x.fy - Number(String(x.end).slice(0, 4)) > 1);
+// The anchor is the latest end under a key, and a fourth quarter can be tagged a few days after the
+// fiscal year end: Penguin FY2020 full year to 2020-08-28, quarter to 2020-08-31; Kohl's FY2019
+// 2020-02-01 against 2020-02-02. A full year ending within 7 days before the anchor is the same end.
+// The other ten hits among 2,347 filers lie 18 days or more away (predecessor periods at WFRD and
+// PIII, DJCO 2014, ABTC 2020) and stay empty. Blind review 31.10.2026.
+const SAME_END_TOLERANCE_DAYS = 7;
+const sameFiscalEnd = (end, anchor) => (Date.parse(anchor) - Date.parse(end)) / 86400000 <= SAME_END_TOLERANCE_DAYS;
 const isAnnualFact = (x) => ANNUAL_FORMS.includes(x.form) && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val) && keyFitsEnd(x);
 function fyAnchors(tax, concepts) {
   const anchor = new Map();
@@ -215,7 +224,7 @@ function annualConcept(tax, concept, { instant = false, anchor = fyAnchors(tax, 
   const out = new Map();
   for (const x of usdUnits(tax, concept)) {
     if (isAnnualFact(x)) {
-      if (!instant && (x.end !== anchor.get(x.fy) || !isAnnualPoint(x))) continue;
+      if (!instant && (!sameFiscalEnd(x.end, anchor.get(x.fy)) || !isAnnualPoint(x))) continue;
       const prev = out.get(x.fy);
       // BH-007: keep accn (filing identity) alongside the value so callers can
       // verify two concepts for the same fy actually came from the same 10-K.

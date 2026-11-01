@@ -200,15 +200,28 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
 // Nenner `geprueft` = alle Namen, die die Wache gesehen haben; die Quote N/geprueft ist die Aussage.
 function sanityMitZaehler(zaehler, tk, yOpArr, sOpArr, yRevArr, sRevArr) {
   zaehler.geprueft = (zaehler.geprueft || 0) + 1;
-  if (besterVersatz(yRevArr, sRevArr).lage === 'unaufgeloest') {
+  const vs = besterVersatz(yRevArr, sRevArr);
+  if (vs.lage === 'unaufgeloest') {
     zaehler.versatzUnaufgeloest = (zaehler.versatzUnaufgeloest || 0) + 1;
     (zaehler.unaufgeloestNamen = zaehler.unaufgeloestNamen || []).push(tk);
+  }
+  // F-02 (blind review 31.10.2026): a name with no common year for revenue or operating income passes
+  // without any comparison. That is intended (a cleaned leading gap must not block a refresh), but it
+  // must be visible in the log: 8 of 448 accepted names on 31.10.2026.
+  const off = vs.off === null ? 0 : vs.off;
+  if (!neuestesPaar(yOpArr, sOpArr, off) && !neuestesPaar(yRevArr, sRevArr, off)) {
+    zaehler.nothingCompared = (zaehler.nothingCompared || 0) + 1;
+    (zaehler.nothingComparedNames = zaehler.nothingComparedNames || []).push(tk);
   }
   return looseSanity(yOpArr, sOpArr, yRevArr, sRevArr);
 }
 function zaehlerZeile(zaehler) {
   const n = zaehler.versatzUnaufgeloest || 0;
   return `versatzUnaufgeloest=${n}/${zaehler.geprueft || 0}` + (n ? ` (Ganzserie aus, newest-only: ${zaehler.unaufgeloestNamen.join(',')})` : '');
+}
+function nothingComparedLine(zaehler) {
+  const n = zaehler.nothingCompared || 0;
+  return `sanityNothingCompared=${n}/${zaehler.geprueft || 0}` + (n ? ` (no common year for revenue or operating income: ${zaehler.nothingComparedNames.join(',')})` : '');
 }
 
 // BH-009 fix: fail closed on a fully-missing series. newestPresent() returns
@@ -331,6 +344,7 @@ async function run() {
   writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
   console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} parseErr=${parseErr} ${zaehlerZeile(versatzZaehler)}`);
+  console.log(nothingComparedLine(versatzZaehler));
 }
 
 // BH-036-adjacent hardening (in-scope, minimal): guard direct execution so
@@ -340,4 +354,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, besterVersatz, sanityMitZaehler, zaehlerZeile, yahooOpIncOf, plain, plainMitLuecken, loadUniverse, ladeMergeBasis };
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, besterVersatz, sanityMitZaehler, zaehlerZeile, nothingComparedLine, yahooOpIncOf, plain, plainMitLuecken, loadUniverse, ladeMergeBasis };

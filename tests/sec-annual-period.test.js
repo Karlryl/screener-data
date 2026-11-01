@@ -10,18 +10,20 @@
  *
  * Rule: a duration value is accepted only if it is a full year (lib/sec-pit.js isAnnualPoint,
  * 330-380 elapsed days) AND ends on the period end the old rule picked for that concept and fiscal
- * key. Otherwise the cell stays empty. A bare day filter is not enough: for DBD FY2023 and EXE
- * FY2021 it would relabel the prior-year comparative (DBD 3,460.7 M USD revenue of 2022, EXE
- * -8,703 M USD operating income of 2020) as the current year. Balance-sheet values (instants)
- * are unchanged.
+ * key, or within 7 days before it. Otherwise the cell stays empty. A bare day filter is not enough:
+ * for DBD FY2023 and EXE FY2021 it would relabel the prior-year comparative (DBD 3,460.7 M USD revenue
+ * of 2022, EXE -8,703 M USD operating income of 2020) as the current year. Balance-sheet values
+ * (instants) keep their selection, except under a fiscal key that names no fiscal year (PRTH).
  *
  * Real cases: tests/fixtures/sec-annual-period-cases.json (trimmed SEC companyfacts, provenance
  * in each `_source`). Usage: node tests/sec-annual-period.test.js
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { extractSecSeries, annualConcept, annualRevUnion, buildAnnual } = require('../merge-sec-xbrl.js');
-const { looseSanity } = require('../scripts/build-secannual.js');
+const { looseSanity, sanityMitZaehler, nothingComparedLine } = require('../scripts/build-secannual.js');
 const CASES = require('./fixtures/sec-annual-period-cases.json');
 
 function quiet(fn) {
@@ -249,4 +251,88 @@ test('sanity: a proven offset decides which year the operating income is compare
 
 test('sanity: a leading Yahoo gap is not skipped either', () => {
   assert.equal(looseSanity(cells(null, 50), cells(-40, 50), [], []), true);
+});
+
+// -- Anchor tolerance: nearly the same period end (blind review 31.10.2026) ----------------------
+test('PENG FY2020: a quarter tagged 3 days after the year end no longer voids the full year', () => {
+  const k = extract('PENG');
+  assert.equal(k.at('annualRev', 2020), 1122377000, '2019-08-31..2020-08-28, not the 297 M USD quarter');
+  assert.equal(k.at('annualOpInc', 2020), 41330000);
+  assert.equal(k.at('annualNetIncome', 2020), -1143000);
+});
+
+test('KSS FY2019: one day between full year and quarter is the same period end', () => {
+  const k = extract('KSS');
+  assert.equal(k.at('annualRev', 2019), 19974000000);
+  assert.equal(k.at('annualNetIncome', 2019), 691000000);
+});
+
+test('WFRD FY2019 and PIII FY2021: predecessor periods 18 and 29 days before the end stay empty', () => {
+  const w = extract('WFRD'), p = extract('PIII');
+  for (const f of ['annualOpInc', 'annualOCF']) assert.equal(w.at(f, 2019), null, `WFRD ${f}`);
+  for (const f of ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualOCF']) assert.equal(p.at(f, 2021), null, `PIII ${f}`);
+});
+
+test('tolerance limit: 7 days before the anchor is the same end, 8 days are not', () => {
+  const quarterEnd = row(2020, '2020-10-01', '2020-12-31', 30);
+  const pick = (end) => annualConcept(tax({ Revenues: [row(2020, '2020-01-01', end, 90), quarterEnd] }), 'Revenues').get(2020);
+  assert.equal(pick('2020-12-24').val, 90);
+  assert.equal(pick('2020-12-24').end, '2020-12-24', 'the row keeps its own period end');
+  assert.equal(pick('2020-12-23'), undefined);
+});
+
+test('tolerance: a full year on the anchor beats a full year just before it, in either array order', () => {
+  const near = row(2020, '2020-01-01', '2020-12-28', 1), exact = row(2020, '2020-01-02', '2020-12-31', 2);
+  for (const rows of [[near, exact], [exact, near]]) assert.equal(annualConcept(tax({ Revenues: rows }), 'Revenues').get(2020).val, 2);
+});
+
+test('tolerance: an unreadable period end is no value', () => {
+  assert.equal(annualConcept(tax({ Revenues: [row(2020, '2020-01-01', 'kaputt', 1)] }), 'Revenues').size, 0);
+});
+
+// -- Taxonomy probing keeps instants (surviving mutation of the blind review 31.10.2026) ---------
+test('taxonomy probing counts a balance-sheet instant: the newest year may come from assets alone', () => {
+  const facts = {
+    'us-gaap': tax({ Revenues: [row(2024, '2024-01-01', '2024-12-31', 1)] }),
+    'ifrs-full': tax({
+      Revenue: [row(2024, '2024-01-01', '2024-12-31', 1, { form: '20-F' })],
+      Assets: [{ fy: 2025, end: '2025-12-31', val: 5, form: '20-F', fp: 'FY', accn: 'A-2025' }],
+    }),
+  };
+  assert.equal(extractSecSeries({ facts }).taxonomie, 'ifrs-full');
+});
+
+// -- Counter for a sanity check that compared nothing (blind review 31.10.2026) ------------------
+test('counter: a name with no common year is counted and named, the verdict stays', () => {
+  const z = {};
+  assert.equal(sanityMitZaehler(z, 'NONE', cells(50), cells(null, -40), [], []), true);
+  assert.equal(z.nothingCompared, 1);
+  assert.equal(nothingComparedLine(z), 'sanityNothingCompared=1/1 (no common year for revenue or operating income: NONE)');
+});
+
+test('counter: one comparable pair on either side is a comparison', () => {
+  const z = {};
+  assert.equal(sanityMitZaehler(z, 'OP', cells(50), cells(40), [], []), true);
+  assert.equal(sanityMitZaehler(z, 'REV', [], [], cells(100), cells(120)), true);
+  assert.equal(z.nothingCompared || 0, 0);
+  assert.equal(nothingComparedLine(z), 'sanityNothingCompared=0/2');
+});
+
+test('counter: a pair that exists only at the proven offset is a comparison', () => {
+  const z = {};
+  assert.equal(sanityMitZaehler(z, 'OFF', [], [], cells(500, null, 480), cells(null, 500, null, 480)), true);
+  assert.equal(z.nothingCompared || 0, 0);
+});
+
+test('counter: a rejected name was compared and is not counted', () => {
+  const z = {};
+  assert.equal(sanityMitZaehler(z, 'REJ', cells(50), cells(-50), [], []), false);
+  assert.equal(z.nothingCompared || 0, 0);
+});
+
+test('both builders print the counter line', () => {
+  for (const f of ['build-secannual.js', 'build-secannual-smallcap.js']) {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'scripts', f), 'utf8');
+    assert.match(src, /^ {2}console\.log\(nothingComparedLine\(versatzZaehler\)\);\r?$/m, f);
+  }
 });
