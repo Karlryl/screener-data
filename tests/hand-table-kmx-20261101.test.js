@@ -55,11 +55,12 @@ test('red without the rows: a table without them leaves the firm where it was', 
   assert.equal(track(s), 'unprofitable');
 });
 
-test('a changed vendor value releases nothing into the cell silently', () => {
+test('a changed vendor value keeps the cell empty and reports it', () => {
   const moved = structuredClone(fixture.KMX);
   moved.annual.annualOpInc[0] = { value: 123000000 };
-  const s = applyFinancialCases(moved).snapshot;
+  const { snapshot: s, events } = applyFinancialCases(moved);
   assert.equal(value(s.annual.annualOpInc[0]), null);
+  assert.ok(events.some((e) => e.reasonCode === 'annual-value-changed'), 'the change is reported');
 });
 
 test('every reason names its period', () => {
@@ -72,19 +73,21 @@ test('every reason names its period', () => {
   }
 });
 
-test('Shenhua: the mixed cell is gone from the listing that showed it; the A share keeps its exchange check', () => {
+test('Shenhua: the mixed cell is gone from both listings; the A share shows what it showed', () => {
   const before = g31Shadow(structuredClone(fixture['1088.HK'])).v1;
   assert.equal(before.periodEnd, '2026-06-30', 'precondition: the vendor pair exists');
   assert.ok(Math.abs(before.pct - 73.6) < 0.1);
-  const s = applyFinancialCases(structuredClone(fixture['1088.HK'])).snapshot;
-  const leg = g31Shadow(s).v1;
-  assert.equal(leg.basis, 'year');
-  assert.equal(leg.periodEnd, '2025-12-31');
-  for (const f of ['revenueQ', 'grossProfitQ', 'opIncQ']) {
-    assert.equal(value(s.timeseries[f][s.timeseries[f + 'Ends'].indexOf('2026-06-30')]), null, f);
+  assert.equal(g31Shadow(structuredClone(fixture['601088.SS'])).v1.periodEnd, '2025-12-31', 'precondition: the A share showed the year before these rows');
+  for (const t of ['1088.HK', '601088.SS']) {
+    const s = applyFinancialCases(structuredClone(fixture[t])).snapshot;
+    const leg = g31Shadow(s).v1;
+    assert.equal(leg.basis, 'year', t);
+    assert.equal(leg.periodEnd, '2025-12-31', t);
+    assert.ok(Math.abs(leg.pct + 13.2) < 0.1, t + ' ' + leg.pct);
+    for (const f of ['revenueQ', 'grossProfitQ', 'opIncQ']) {
+      assert.equal(value(s.timeseries[f][s.timeseries[f + 'Ends'].indexOf('2026-06-30')]), null, t + ' ' + f);
+    }
   }
-  const a = structuredClone(fixture['601088.SS']);
-  assert.deepEqual(applyFinancialCases(a).snapshot.timeseries, a.timeseries, 'no row on 601088.SS');
 });
 
 test('Delivery Hero: all four listings lose the wrong quarters and show the right fiscal year', () => {
@@ -98,8 +101,9 @@ test('Delivery Hero: all four listings lose the wrong quarters and show the righ
   }
 });
 
-// Pinned on purpose: a dated annual series keeps a new year in front. CarMax's next report (about April 2027) needs its own row;
-// until then the expectations pr90-KMX-* turn red, because the firm would fall back on the unprofitable list.
+// Pinned on purpose: a dated annual series keeps a new year in front. CarMax's next report (about April 2027) needs its own row.
+// The expectations pr90-KMX-* turn red only if that year shows a loss, because the firm then falls back on the unprofitable list;
+// a small vendor profit would stand unnoticed, which four loss years make unlikely.
 test('a new fiscal year in front is not held by these rows', () => {
   const next = structuredClone(fixture.KMX);
   next.annual.annualOpInc.unshift({ value: -380000000 });
