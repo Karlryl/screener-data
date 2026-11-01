@@ -117,7 +117,7 @@ Offen für die Prüfung: VISN fällt, weil die wie eingereicht gemeldete Reihe d
 
 ## Nachtrag 01.11.2026: Korrektur nach der Blindprüfung vom 31.10.2026
 
-Dieselben Eingaben wie am 31.10.2026: Snapshots des Tageslaufs 41184535364, Small-Cap-Bestand des Laufs 41054766868, Übergabe des Tageslaufs, SEC-Archiv mit Einträgen bis 29.10.2026, Datenstand `b0fdec8f8f`. Neu ist, dass auch die Langhistorie je Regel neu gebaut wurde; sie liefert die Gewinnserie. Die späteren Commits auf main (Tag 1511 bis 1513) sind nicht Teil dieser Nachrechnung.
+Dieselben Eingaben wie am 31.10.2026: Snapshots des Tageslaufs 41184535364, Small-Cap-Bestand des Laufs 41054766868, Übergabe des Tageslaufs, SEC-Archiv mit Einträgen bis 29.10.2026, Datenstand `b0fdec8f8f`. Neu ist, dass auch die Langhistorie je Regel neu gebaut wurde; sie liefert die Gewinnserie. Die späteren Commits auf main (ab Tag 1511) sind nicht Teil dieser Nachrechnung.
 
 ### Was geändert ist
 
