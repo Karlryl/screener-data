@@ -1,0 +1,19 @@
+{
+  "_doku": [
+    "Reporting-currency hand table (2026-10-30, hold since 2026-10-31). Read by lib/reporting-currency-hand-table.js inside mapYahooToCanonical and _convertSnapshotToUSD (pull-yahoo.js).",
+    "Row = a ticker for which Yahoo omits financialCurrency while the filing proves another currency than the trading currency. Without the row the pull falls back to the trading currency (ccyAmbiguous) and stores the statements under the wrong label: amounts and every ratio against the market cap are off, growth and margins stay right.",
+    "The filled currency then runs through the ordinary conversion like any other foreign filer. A currency Yahoo delivers and that agrees with the row wins and needs no bound.",
+    "A row proves its currency up to provenThrough, the newest statement period the quoted filing covers. If Yahoo names another currency, or delivers an amount for a later period while still naming none, all reporting-currency amounts are withheld (financialMissing, meta._reportingCcyHandTableConflict), the firm is re-pulled every run and counted in the manifest with its type (conflict or new-period), owner, firstSeen and pruefungBis (7 days for a conflict, 14 for a new period). A hold never stops the run: scripts/ccy-alarm-gate.js warns with exit 0, and past pruefungBis it raises an alarm for Karl, still exit 0 and still held. To end it: read the new report, then move provenThrough with its source, or change or remove the row."
+  ],
+  "PSQL": {
+    "statementCurrency": "EUR",
+    "issuer": "Pasqal Holding SA",
+    "source": "Der Konzernabschluss steht in Euro; Yahoo nennt keine Berichtswährung, deshalb standen der Umsatz 2025 von 16.468 Tsd. EUR und alle weiteren Beträge als US-Dollar im Datenpaket.",
+    "url": "https://www.sec.gov/Archives/edgar/data/2119292/000121390026101436/ea0304681-02.htm",
+    "page": "Prospekt 424B3 vom 18.09.2026, Anhang 4.7, Seite F-53; Gewinn- und Verlustrechnung Seite F-46",
+    "quote": "consolidated financial statements are presented in euros",
+    "verifiedAt": "2026-10-30",
+    "provenThrough": "2026-06-30",
+    "provenThroughSource": "Halbjahresabschluss im 6-K vom 24.09.2026, Exhibit 99.3, Seiten 2 und 3: \"In € thousand\" zum 30.06.2026, Umsatz 4.872 Tsd. EUR im ersten Halbjahr; https://www.sec.gov/Archives/edgar/data/2119292/000121390026102831/ea030634601ex99-3.htm"
+  }
+}

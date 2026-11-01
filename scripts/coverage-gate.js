@@ -75,7 +75,8 @@ function hasAddressableWarning(m) {
 
 function producerAddressable(m, total, warned) {
   if (!m || !isCount(total) || !isCount(m.n_skipped_mcap)) return null;
-  let expected = total - m.n_skipped_mcap;
+  // W7: skips belong to the universe the shards pulled, which the prune step may have shrunk since.
+  let expected = (hasValue(m.n_pulled_universe) ? m.n_pulled_universe : total) - m.n_skipped_mcap;
   if (!isCount(expected)) return null;
   // n_shard_collisions is the producer discriminator: merge manifests always
   // carry it (including zero), while direct pull-yahoo manifests omit it.
@@ -112,8 +113,11 @@ function manifestNumbersSane(m, fallbackTotal = null) {
     'n_missing_mcap',
     'n_skipped_owned',
     'n_shard_collisions',
+    'n_pulled_universe',
   ];
   if (optionalFields.some(field => !optionalCountSane(m[field]))) return false;
+  // Pruning only shrinks the list; a pulled universe below n_total is impossible, not a smaller denominator.
+  if (hasValue(m.n_pulled_universe) && hasTotal && m.n_pulled_universe < m.n_total) return false;
   // The producer emits a boolean. A truthy string/object must not be laundered
   // into manifest_partial=false and silently clear the degradation banner.
   if (hasValue(m.partial) && typeof m.partial !== 'boolean') return false;
@@ -239,7 +243,7 @@ function finishGood(ok, total, source, m, reasons) {
   if (addressable !== null) {
     honestPct = +(ok / addressable * 100).toFixed(1);
     if (ok / addressable < HONEST_TARGET)
-      reasons.push(`honest-coverage ${honestPct}% < ${HONEST_TARGET * 100}% of addressable ${addressable} (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)`);
+      reasons.push(`honest-coverage ${honestPct}% < ${HONEST_TARGET * 100}% of addressable ${addressable} (abgerufene Zeilen − mcap-skips; Tote bereits ausgetragen, 0.12)`);
   }
   const status = reasons.length ? 'degradiert' : 'ok';
   return { status, reasons, n_ok: ok, n_total: total, source, n_addressable: addressable, honest_coverage_pct: honestPct };
@@ -250,6 +254,18 @@ function finishGood(ok, total, source, m, reasons) {
 // PURE (no disk) so the selftest can assert the contract for every status class.
 // Carries the 0.9 pull-mix (n_full/n_priceonly — matching pull-yahoo's manifest keys)
 // through to the dashboard consumer.
+// P316 finding 1 (01.11.2026): this marker reaches the published status, the export hull and the run check, so a held
+// reporting currency travels with it. Display only: status, exit code and deploy never read it, a held firm must not stop
+// the boards. null means unknown (no trusted manifest), which status already reports on its own.
+function reportingCcyHeld(m) {
+  const rows = m && m._reportingCcyHeld;
+  if (!Array.isArray(rows)) return null;
+  // A lost shard may hold the firm: an empty list from a partial run says nothing.
+  if (m.partial === true && !rows.length) return null;
+  return rows.filter(r => r && typeof r === 'object').map(({ ticker, type, owner, firstSeen, pruefungBis, overdue, reason }) => (
+    { ticker, type, owner, firstSeen, pruefungBis, overdue: overdue === true, reason }));
+}
+
 function buildMarker(res, m) {
   const coveragePct = res.n_total > 0 ? +(res.n_ok / res.n_total * 100).toFixed(1) : 0;
   // Invalid manifests are classified through a visible file-count fallback. Never
@@ -281,6 +297,8 @@ function buildMarker(res, m) {
     // Task 0.12: ehrlicher Nenner + ehrliche Coverage (null bei Legacy-Manifest ohne mcap-Zählung)
     n_addressable: isCount(res.n_addressable) ? res.n_addressable : null,
     honest_coverage_pct: Number.isFinite(res.honest_coverage_pct) ? res.honest_coverage_pct : null,
+    n_failed: markerCount('n_failed'),
+    n_pulled_universe: markerCount('n_pulled_universe'),
     manifest_addressable_warning: !!(trustedManifest && hasAddressableWarning(trustedManifest)),
     // Tag 464: sichtbar machen, WARUM der Nenner kleiner ist als das Universum. Ohne diese
     // Zahl sieht man im Marker nur ein geschrumpftes n_addressable und kann nicht pruefen,
@@ -288,6 +306,7 @@ function buildMarker(res, m) {
     n_skipped_mcap: markerCount('n_skipped_mcap'),
     n_missing_mcap: missingMcap,
     n_skipped_owned: markerCount('n_skipped_owned'),
+    reporting_ccy_held: reportingCcyHeld(trustedManifest),
     source: res.source,
     reasons,
     manifest_partial: !!(trustedManifest && trustedManifest.partial === true)

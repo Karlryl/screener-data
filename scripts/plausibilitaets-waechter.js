@@ -113,10 +113,12 @@ async function pruefe(opt) {
   const exportTag = isoTag(index.generated_at) || generatedAt.slice(0, 10);
   hinweise.push(KURS_ALT_HINWEIS);
   const zeilen = [];
+  let boardsGelesen = 0;
   for (const board of index.branches) {
     const file = [path.join(opt.exportDir, 'full', board + '.json'), path.join(opt.exportDir, board + '.json')].find((f) => fs.existsSync(f));
     if (!file) { hinweise.push(`Board ${board}: keine Datei im Export, nicht geprüft.`); continue; }
     const b = readJson(file); // a broken board file is a crash: status 'fehler', never a silent skip
+    boardsGelesen++;
     for (const track of ['profitable', 'unprofitable']) for (const r of b[track] || []) zeilen.push({ r, board, track });
   }
 
@@ -314,7 +316,10 @@ async function pruefe(opt) {
       neu: [...heute].filter((k) => !vorher.has(k)).map(paar), weg: [...vorher].filter((k) => !heute.has(k)).map(paar) };
   }
   return { schema: SCHEMA, generatedAt, exportGeneratedAt: index.generated_at ?? null, status: 'ok',
-    quellen: { boardZeilen: zeilen.length, snapshotsGelesen: gelesen, snapshotsFehlend: fehlend, boardHistoryStand: stand ? stand.tag : null },
+    quellen: { boardZeilen: zeilen.length, snapshotsGelesen: gelesen, snapshotsFehlend: fehlend, boardHistoryStand: stand ? stand.tag : null,
+      boardsErwartet: index.branches.length, boardsGelesen },
+    // P282: 0 cases over part of the boards is no clean result, and a reader of the JSON must see that without the hints.
+    vollstaendig: boardsGelesen === index.branches.length,
     zusammenfassung, faelle: gelistet, gekuerzt, gestern, hinweise };
 }
 
@@ -327,6 +332,7 @@ function zusammenfassen(bericht) {
   // The vintage is named only when the jump check ran; otherwise the header says "nicht geprüft" like the table.
   const vergleich = bericht.zusammenfassung['boersenwert-sprung'] == null ? 'nicht geprüft'
     : `mit dem Board-Stand vom ${bericht.quellen.boardHistoryStand}`;
+  if (!bericht.vollstaendig) z.push(`Teilzählung: nur ${bericht.quellen.boardsGelesen} von ${bericht.quellen.boardsErwartet} Boards gelesen, die Zahlen unten gelten nur für diese.`, '');
   z.push(`Export vom ${bericht.exportGeneratedAt}, Börsenwert-Vergleich ${vergleich}.`, '',
     '| Prüfung | Fälle |', '| --- | --- |');
   for (const code of CODES) z.push(`| ${code} | ${bericht.zusammenfassung[code] ?? 'nicht geprüft'} |`);
