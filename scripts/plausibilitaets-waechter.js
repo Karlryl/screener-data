@@ -26,8 +26,9 @@ const SCHEMA = 'plausibilitaets-waechter/v1';
 const CAP = 200;
 const GESTERN_URL = 'https://raw.githubusercontent.com/Karlryl/screener-data/gh-pages/outputs/findash-export/v1/waechter/plausibilitaet.json';
 const CODES = ['wachstum-extrem', 'jahrespaar-abstand', 'quartalspaar-abstand', 'umsatz-null-mit-boersenwert',
-  'quartal-gleich-vorjahr', 'boersenwert-sprung', 'kurs-alt', 'doppelte-firma', 'score-grenze'];
+  'quartal-gleich-vorjahr', 'boersenwert-sprung', 'kurs-alt', 'doppelte-firma', 'score-grenze', 'umsatz-gehalten-auf-survival'];
 const SNAPSHOT_CODES = ['umsatz-null-mit-boersenwert', 'quartal-gleich-vorjahr', 'kurs-alt'];
+const SURVIVAL_CODE = 'umsatz-gehalten-auf-survival';
 const JAHR = new Set(['year', 'yearNewerRecord', 'ttm']);
 const QUARTAL = new Set(['quarter', 'halfYear']); // halfYear: H1 vs prior-year H1, same one-year gap as a quarter pair
 // [noun, accusative article, dative article] per growth basis, for grammatical German reasons.
@@ -112,10 +113,12 @@ async function pruefe(opt) {
   const exportTag = isoTag(index.generated_at) || generatedAt.slice(0, 10);
   hinweise.push(KURS_ALT_HINWEIS);
   const zeilen = [];
+  let boardsGelesen = 0;
   for (const board of index.branches) {
     const file = [path.join(opt.exportDir, 'full', board + '.json'), path.join(opt.exportDir, board + '.json')].find((f) => fs.existsSync(f));
     if (!file) { hinweise.push(`Board ${board}: keine Datei im Export, nicht geprüft.`); continue; }
     const b = readJson(file); // a broken board file is a crash: status 'fehler', never a silent skip
+    boardsGelesen++;
     for (const track of ['profitable', 'unprofitable']) for (const r of b[track] || []) zeilen.push({ r, board, track });
   }
 
@@ -215,12 +218,12 @@ async function pruefe(opt) {
   // Snapshot checks: the same prepared snapshot the export writer reads (hand tables applied).
   let gelesen = 0, fehlend = 0;
   if (!opt.snapshotsDir || !fs.existsSync(opt.snapshotsDir)) {
-    for (const c of SNAPSHOT_CODES) zusammenfassung[c] = null;
-    hinweise.push(`${SNAPSHOT_CODES.join(', ')} nicht geprüft: kein Snapshot-Ordner.`);
+    for (const c of [...SNAPSHOT_CODES, SURVIVAL_CODE]) zusammenfassung[c] = null;
+    hinweise.push(`${SNAPSHOT_CODES.join(', ')}, ${SURVIVAL_CODE} nicht geprüft: kein Snapshot-Ordner.`);
   } else {
     // The shared reader prints its ::warning:: lines (exchange check, hand-table summaries, partly at process exit)
     // once more here; they already annotate the export step. Demote them to plain log lines so this reporting step
-    // adds only its own nine class warnings. The watcher's own lines go through console.log and stay untouched.
+    // adds only its own class warnings. The watcher's own lines go through console.log and stay untouched.
     for (const k of ['warn', 'error']) {
       const original = console[k];
       console[k] = (...a) => original(...a.map((x) => (typeof x === 'string' ? x.replace(/^::(warning|error)::/, '[prepareSnapshot, schon im Export-Schritt gemeldet] ') : x)));
@@ -261,6 +264,31 @@ async function pruefe(opt) {
     if (zeilen.length && !gelesen) for (const c of SNAPSHOT_CODES) zusammenfassung[c] = null;
     if (ohneDatum) hinweise.push(`${ohneDatum} Snapshots ohne Abrufdatum des Börsenwerts; kurs-alt dort nicht geprüft.`);
     if (gelesen && ohneDatum === gelesen) zusammenfassung['kurs-alt'] = null; // no date anywhere: not run, never 0 (T2)
+
+    // umsatz-gehalten-auf-survival (P301): the sealed router reads a withheld revenue cell as a gap, so a firm whose
+    // whole revenue is withheld would stand on the list of firms without revenue. Checked on the published list, not
+    // on route(): MPHC.QA is routed there too, but the data-suspect gate keeps it off the list.
+    const survival = readJsonOrNull(path.join(opt.exportDir, 'survival.json'));
+    if (!Array.isArray(survival?.rows)) {
+      zusammenfassung[SURVIVAL_CODE] = null;
+      hinweise.push(`${SURVIVAL_CODE} nicht geprüft: survival.json fehlt oder ist nicht lesbar.`);
+    } else {
+      let unlesbar = 0;
+      for (const r of survival.rows) {
+        let s;
+        try { s = prepareSnapshot(readJson(path.join(opt.snapshotsDir, safeSnapshotFilename(r.ticker)))); }
+        catch (_) { unlesbar++; continue; }
+        const gehalten = [['annual', 'annualRev', 'Jahresumsatz'], ['timeseries', 'revenueQ', 'Quartalsumsatz']].flatMap(([bund, feld, wort]) => {
+          const enden = s[bund]?.[feld + 'Ends'] || [];
+          return (s[bund]?.[feld] || []).flatMap((c, i) => (c && c.value == null && (c.financialMissing || c.financialCorrection)
+            ? [{ feld, periodEnd: enden[i] ?? null, text: `${wort} bis ${datum(enden[i])}` }] : []));
+        });
+        if (gehalten.length) fall(SURVIVAL_CODE, { r, board: 'survival', track: 'survival' }, { zellen: gehalten.map(({ feld, periodEnd }) => ({ feld, periodEnd })) },
+          `Die Firma steht auf der Liste ohne Umsatz, ihr Umsatz ist aber nur zurückgehalten (${gehalten.map((g) => g.text).join(', ')}); ein zurückgehaltener Wert belegt nicht, dass sie keinen Umsatz hat.`);
+      }
+      if (unlesbar) hinweise.push(`${SURVIVAL_CODE}: ${unlesbar === 1 ? '1 Zeile' : unlesbar + ' Zeilen'} der Survival-Liste ohne lesbaren Snapshot; für sie lief die Prüfung nicht.`);
+      if (survival.rows.length && unlesbar === survival.rows.length) zusammenfassung[SURVIVAL_CODE] = null; // not run, never 0 (T2)
+    }
   }
 
   faelle.sort((a, b) => cmp(a.board, b.board) || cmp(a.track, b.track) || (a.rank ?? Infinity) - (b.rank ?? Infinity) || cmp(a.ticker, b.ticker));
@@ -288,7 +316,10 @@ async function pruefe(opt) {
       neu: [...heute].filter((k) => !vorher.has(k)).map(paar), weg: [...vorher].filter((k) => !heute.has(k)).map(paar) };
   }
   return { schema: SCHEMA, generatedAt, exportGeneratedAt: index.generated_at ?? null, status: 'ok',
-    quellen: { boardZeilen: zeilen.length, snapshotsGelesen: gelesen, snapshotsFehlend: fehlend, boardHistoryStand: stand ? stand.tag : null },
+    quellen: { boardZeilen: zeilen.length, snapshotsGelesen: gelesen, snapshotsFehlend: fehlend, boardHistoryStand: stand ? stand.tag : null,
+      boardsErwartet: index.branches.length, boardsGelesen },
+    // P282: 0 cases over part of the boards is no clean result, and a reader of the JSON must see that without the hints.
+    vollstaendig: boardsGelesen === index.branches.length,
     zusammenfassung, faelle: gelistet, gekuerzt, gestern, hinweise };
 }
 
@@ -301,6 +332,7 @@ function zusammenfassen(bericht) {
   // The vintage is named only when the jump check ran; otherwise the header says "nicht geprüft" like the table.
   const vergleich = bericht.zusammenfassung['boersenwert-sprung'] == null ? 'nicht geprüft'
     : `mit dem Board-Stand vom ${bericht.quellen.boardHistoryStand}`;
+  if (!bericht.vollstaendig) z.push(`Teilzählung: nur ${bericht.quellen.boardsGelesen} von ${bericht.quellen.boardsErwartet} Boards gelesen, die Zahlen unten gelten nur für diese.`, '');
   z.push(`Export vom ${bericht.exportGeneratedAt}, Börsenwert-Vergleich ${vergleich}.`, '',
     '| Prüfung | Fälle |', '| --- | --- |');
   for (const code of CODES) z.push(`| ${code} | ${bericht.zusammenfassung[code] ?? 'nicht geprüft'} |`);

@@ -323,9 +323,10 @@ test('JOB_REIHENFOLGE ist GENAU diese Prioritaet (sie bestimmt failed_job)', () 
   // geaendert — der Ledger-Waechter des Druckenmiller-Moduls ist ein eigener Job hinter
   // scoring, damit sein rotes X den Board-Deploy nicht anhaelt. Er steht ganz HINTEN bei
   // den nicht-blockierenden Diagnose-Waechtern; die Regel bleibt unberuehrt.
+  // 30.10.2026 (Daylauf 10): 'feed-fill-waechter' dazu, ein neuer Waechter-Job hinter scoring; steht ganz HINTEN, Regel unberuehrt.
   assert.deepEqual(JOB_REIHENFOLGE,
     ['prep', 'quarter-candidates', 'quarter-selection', 'pull', 'prices', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter',
-      'jahres-ausreisser-waechter', 'druckenmiller-guard'],
+      'jahres-ausreisser-waechter', 'druckenmiller-guard', 'feed-fill-waechter'],
     'die Prioritaets-Reihenfolge hat sich geaendert. Sie entscheidet, welcher Job im Banner als '
     + 'Ursache steht: die Kettenglieder zuerst, die nicht-blockierenden Diagnose-'
     + 'Waechter dahinter. Steht ein Waechter vorn, meldet der Marker bei einem Doppelausfall den '

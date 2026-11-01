@@ -109,8 +109,9 @@ const SELECTOR_COUNTERS = ['n_sel_young_enough', 'n_sel_young_and_stale',
   'n_sel_not_young_but_stale', 'n_sel_not_young_unknown'];
 const { COUNTERS: QUARTER_RELOAD_COUNTERS, REASON: QUARTER_RELOAD_REASON } = require('../lib/stale-quarter-reload.js');
 const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_missing_mcap', 'n_skipped_owned', 'n_ccy_missing_completely',
-  'n_full_period_regression_blocked',
+  'n_full_period_regression_blocked', 'n_reporting_ccy_held', 'n_reporting_ccy_conflicts', 'n_reporting_ccy_new_periods', 'n_reporting_ccy_overdue',
   ...SELECTOR_COUNTERS, ...QUARTER_RELOAD_COUNTERS];
+const { heldCounters, REVIEW_DAYS } = require('../lib/reporting-currency-hand-table.js');
 const Q4_COUNTERS = ['observed', 'corrected', 'missing', 'stale', 'alreadyCorrected'];
 
 function isPlainObject(value) {
@@ -155,6 +156,14 @@ function hasValidShardCounters(manifest) {
       seen.add(r.ticker);
     }
   }
+  if (Object.hasOwn(manifest, 'n_reporting_ccy_held') || Object.hasOwn(manifest, '_reportingCcyHeld')) {
+    const rows = manifest._reportingCcyHeld;
+    const day = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    if (!Array.isArray(rows) || manifest.n_reporting_ccy_held !== rows.length || !rows.every(r => isPlainObject(r)
+        && typeof r.ticker === 'string' && r.ticker.trim() && typeof r.reason === 'string' && r.reason.trim()
+        && Object.hasOwn(REVIEW_DAYS, r.type) && typeof r.owner === 'string' && r.owner.trim()
+        && day(r.firstSeen) && day(r.pruefungBis) && typeof r.overdue === 'boolean')) return false;
+  }
   const retained = manifest.n_retained ?? 0;
   if (!Number.isSafeInteger(retained) || retained < 0) return false;
   const classified = manifest.n_full + manifest.n_priceonly + retained;
@@ -186,7 +195,14 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
   const isShardPartial = (m) => m.partial !== false;
   const anyShardPartial = present.some(isShardPartial);
   const missingShards = expected - observed.length;
-  const hd = honestDenominator(fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
+  // W7 (30.10.2026): the prune step runs before this merge, so fullUniverseSize can be smaller than the
+  // universe the shards pulled, while their skip counters still count the pruned rows. On 30.10. that gave
+  // 19624 - 5099 - 483 = 14042 < n_ok and blanked the honest coverage. The skips belong to the pulled
+  // universe: shard n_total (already without owned names) plus the owned names. Older shards keep the old path.
+  const pulledKnown = missingShards === 0 && invalidShards === 0 && present.length > 0
+    && present.every(m => Number.isSafeInteger(m.n_total) && m.n_total >= 0);
+  const pulledUniverse = pulledKnown ? sum('n_total') + sum('n_skipped_owned') : null;
+  const hd = honestDenominator(pulledUniverse ?? fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
   const merged = {
     pulled_at: new Date().toISOString(),
     watchlist_version: (present.find(m => m.watchlist_version != null) || {}).watchlist_version,
@@ -197,6 +213,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_retained: sum('n_retained'),
     n_full_period_regression_blocked: sum('n_full_period_regression_blocked'),
     _fullPeriodRegressions: present.flatMap(m => m._fullPeriodRegressions || []).sort((a, b) => a.ticker.localeCompare(b.ticker)),
+    ...heldCounters(present.flatMap(m => m._reportingCcyHeld || [])),
     n_skipped_mcap: sum('n_skipped_mcap'),
     n_missing_mcap: sum('n_missing_mcap'),
     n_ccy_missing_completely: sum('n_ccy_missing_completely'),
@@ -216,6 +233,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     // (belegt-tote Ticker sind schon aus der Watchlist ausgetragen, dead-tickers.json).
     // Tag 464: minus der von der Small-Cap-Liste besessenen Namen (s. o.).
     n_addressable: hd.n_addressable,
+    n_pulled_universe: pulledUniverse ?? undefined,
     // nur gesetzt, wenn der Abzug verworfen wurde — run() macht daraus ein ::warning::
     _addressable_warnung: hd.grund || undefined,
     n_failed: sum('n_failed'),
@@ -361,11 +379,14 @@ function run() {
   const blocked = merged.n_full_period_regression_blocked;
   const firstTickers = merged._fullPeriodRegressions.slice(0, 10).map(r => r.ticker).join(',');
   console.log(`full-pull period regression: blocked=${blocked} tickers=${firstTickers || '-'}${blocked > 10 ? ` (+${blocked - 10} more)` : ''}`);
+  const heldTickers = merged._reportingCcyHeld.map(r => r.ticker).join(',');
+  console.log(`reporting-currency hand table: held=${merged.n_reporting_ccy_held} conflicts=${merged.n_reporting_ccy_conflicts} new-periods=${merged.n_reporting_ccy_new_periods} overdue=${merged.n_reporting_ccy_overdue} tickers=${heldTickers || '-'}`);
   if (typeof process.env.GITHUB_STEP_SUMMARY === 'string' && process.env.GITHUB_STEP_SUMMARY.length > 0) {
     const summary = blocked === 0 ? 'Vollabruf-Periodenschutz: keine Firma gehalten.'
       : `Vollabruf-Periodenschutz: ${blocked} Firmen blieben auf ihren gespeicherten Fundamentaldaten, weil die neue Yahoo-Antwort ein älteres Berichtsquartal oder Geschäftsjahr lieferte. Erste ${Math.min(blocked, 10)}: ${firstTickers}.`
         + (blocked > 10 ? ` Weitere ${blocked - 10} stehen im Manifest unter _fullPeriodRegressions.` : '');
-    try { fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n' + summary + '\n', 'utf8'); }
+    const heldSummary = merged._reportingCcyHeld.map(r => `\n${r.overdue ? 'ALARM an Karl, Frist überschritten. ' : ''}Berichtswährung von ${r.ticker} nicht bestätigt (${r.type === 'conflict' ? 'Widerspruch des Anbieters' : 'neue Periode'}): Die Abschlusszahlen stehen leer. Zuständig ${r.owner}, seit ${r.firstSeen}, Prüfung bis ${r.pruefungBis}.\n`).join('');
+    try { fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n' + summary + '\n' + heldSummary, 'utf8'); }
     catch (error) { console.warn('::warning::Could not append full-pull period summary to GITHUB_STEP_SUMMARY: ' + error.message); }
   }
   // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr

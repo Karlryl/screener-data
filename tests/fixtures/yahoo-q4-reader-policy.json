@@ -11,6 +11,7 @@
   "lib/newest-qtr-guard.js": { "mode": "exempt", "reason": "Raw vendor anomaly observation before FX; preserves evidence of vendor shape, changes no values." },
   "lib/reload-history.js": { "mode": "upstream", "reason": "Pull supplies a Q4-prepared prior and a hand-table-prepared current snapshot; Q4 gaps, financial false-value corrections and withheld cells in the current snapshot are authoritative and never refilled; raw cache comparisons only preserve provider evidence." },
   "lib/rev-growth-basis.js": { "mode": "upstream", "reason": "Pure label helper; both callers (write-findash-export.js, write-rule40-export.js) pass snapshots already through prepareYahooQ4Snapshot." },
+  "lib/statement-currency-hand-table.js": { "mode": "upstream", "reason": "Pull converter only, after the native correction: revenueQEnds is read as the period label of a withheld cell; quarterly amounts are only withheld with their raw vendor row kept, never used as a value." },
   "lib/stale-quarter-reload.js": { "mode": "hook", "hook": "snapshot = prepareSnapshot(snapshot);", "reason": "Quarter presence must use corrected values and known gaps." },
   "lib/value-open-items.js": { "mode": "upstream", "reason": "Pure comparison of pit blocks (Tag 1398 open-items list); today's values come from write-board-history.js buildBoardVintage (hooked reader), stored ones are frozen PIT history." },
   "lib/yahoo-q4-known-cases.js": { "mode": "exempt", "reason": "Correction authority itself must compare original provider fingerprints." },

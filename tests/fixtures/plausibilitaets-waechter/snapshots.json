@@ -9,8 +9,29 @@
     },
     "annual": { "annualRev": [{ "value": 400 }, { "value": 300 }], "annualRevEnds": ["2025-12-31", "2024-12-31"] }
   },
-  "ohneSnapshot": ["PW-BAZU"],
+  "ohneSnapshot": ["PW-BAZU", "PW-SURV-MISSING"],
   "sonder": {
+    "PW-SURV-OK": {
+      "meta": { "ticker": "PW-SURV-OK", "name": "Genuine Pre Revenue Inc.", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" }
+    },
+    "PW-SURV-GAP": {
+      "meta": { "ticker": "PW-SURV-GAP", "name": "Vendor Gap Inc.", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "timeseries": { "revenueQ": [{ "value": null }, null], "revenueQEnds": ["2026-03-31", "2025-12-31"] },
+      "annual": { "annualRev": [{ "value": null }], "annualRevEnds": ["2025-12-31"] }
+    },
+    "PW-SURV-HELD": {
+      "meta": { "ticker": "PW-SURV-HELD", "name": "Held Revenue SA", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "timeseries": { "revenueQ": [{ "value": null, "financialMissing": { "rule": "statement-currency-unverified", "period": "2026-03-31", "reason": "Fixture" } }], "revenueQEnds": ["2026-03-31"] },
+      "annual": { "annualRev": [{ "value": null, "financialMissing": { "rule": "statement-currency-unverified", "period": "2025-12-31", "reason": "Fixture" } }], "annualRevEnds": ["2025-12-31"] }
+    },
+    "PW-SURV-CORR": {
+      "meta": { "ticker": "PW-SURV-CORR", "name": "Corrected To Empty Holding", "asOf": "2026-10-24T07:00:00.000Z" },
+      "marketCap": { "value": 2000000000, "source": "yahoo_quote", "asOf": "2026-10-24T07:00:00.000Z" },
+      "annual": { "annualRev": [{ "value": null, "financialCorrection": { "caseId": "fixture", "reason": "Fixture" } }], "annualRevEnds": ["2025-12-31"] }
+    },
     "PW-OK": {
       "meta": { "ticker": "PW-OK", "name": "Okay Energy Corp", "asOf": "2026-10-19T07:00:00.000Z" },
       "marketCap": { "value": 10000000000, "source": "yahoo_quote", "asOf": "2026-10-19T07:00:00.000Z" },

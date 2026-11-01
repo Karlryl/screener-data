@@ -125,6 +125,8 @@ const JOB_REIHENFOLGE = [
   // mitgenommen. Er steht am ENDE bei den Diagnose-Waechtern und nie vor merge/scoring:
   // faellt er zusammen mit einem Datenschritt aus, soll im Banner der Datenschritt stehen.
   'druckenmiller-guard',
+  // 30.10.2026 (Daylauf 10): fill rate of the published filter feed, own job behind scoring for the same reason.
+  'feed-fill-waechter',
 ];
 const OPTIONAL_PLANNING_JOBS = new Set(['quarter-candidates', 'quarter-selection']);
 

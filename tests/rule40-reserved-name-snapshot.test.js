@@ -117,7 +117,10 @@ test('sanitised filenames: board row, score and rank gate follow meta.ticker; a 
   assert.equal(warnings.filter(w => w.startsWith('::warning::[rule40] NOMETA.json: meta.ticker fehlt')).length, 1, warnings.join(' | '));
   assert.equal(warnings.some(w => w.includes('CIE_B.MX') || w.includes('AAA.json')), false, 'only the snapshot without meta.ticker warns');
   // The published board row carries the board's score and name.
-  W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+  // W.build reads NOMETA again and repeats the warning pinned above; only that line stays out of the test output.
+  console.error = (...args) => { if (!args.join(' ').startsWith('::warning::[rule40] NOMETA.json')) error(...args); };
+  try { W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir }); }
+  finally { console.error = error; }
   const rows = JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8')).rows;
   assert.equal(rows.some(r => r.ticker.includes('_')), false, 'no row may carry a sanitised ticker');
   const row = rows.find(r => r.ticker === 'CIE/B.MX');

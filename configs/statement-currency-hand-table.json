@@ -4,8 +4,8 @@
     "Row = a ticker whose Yahoo financialCurrency (right for financialData: revenueTTM, ebitda) is NOT the currency of its statement series (annual.*, timeseries.*).",
     "Petrobras and Embraer file their statements in US dollars; Yahoo labels the company BRL, so the pull divided USD figures by the BRL rate again (~5x too small).",
     "The statement series then get factor 1 (USD) instead of the BRL factor ONLY while the error is visible: Yahoo still says yahooFinancialCurrency",
-    "AND latest annual revenue / revenueTTM is nearer the reporting FX factor than 1 (USD statements next to a BRL TTM). Otherwise nothing changes and the snapshot carries meta._statementCcyHandTableStale.",
-    "Exception (sweep 24.10.): when the check inputs are missing (financialCurrency, latest annual revenue or revenueTTM) the row is neither confirmed nor ruled out, so on a non-USD reporting currency the statement series are withheld (value null plus financialMissing, German hint with the period) instead of converted with the reporting factor.",
+    "AND latest annual revenue / revenueTTM is nearer the reporting FX factor than 1 (USD statements next to a BRL TTM). Otherwise the snapshot carries meta._statementCcyHandTableStale.",
+    "In that case (sweep 24.10., P301: check inputs missing, another Yahoo currency, mismatch gone) the row is neither confirmed nor ruled out, so on a non-USD reporting currency the statement series are withheld (value null plus financialMissing, German hint with the period) instead of converted with the reporting factor. An annual-only row withholds annual.* only, except on another Yahoo currency, which withholds its quarters too.",
     "Same-issuer legs carry the byte-identical raw statement series (checked on CI run 36227380588), so one filing proves every leg of the issuer.",
     "Optional series: annual restricts the USD correction to annual.*; omitted means annual.* and timeseries.*. MODEC quarters remain JPY."
   ],

@@ -24,7 +24,8 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
     ['Galaxy Digital', ['GLXY', '1GLXY.MI'], 'GLXY', 'GLXY'],
     ['Ascentage Pharma', ['AAPG', '6855.HK'], 'AAPG', null],
     ['Grupo Aeroméxico', ['AERO', 'AERO.MX'], 'AERO', null],
-    ['Amrize', ['AMRZ', 'AMRZ.SW'], 'AMRZ', null],
+    // P290 (30.10.2026): decided for the leading listing, see the row's note.
+    ['Amrize', ['AMRZ', 'AMRZ.SW'], 'AMRZ', 'AMRZ'],
     ['AXIA Energia', ['AXIA', 'AXIA3.SA'], 'AXIA', 'AXIA3.SA'],
     ['Copel', ['ELPC', 'CPLE3.SA'], 'ELPC', 'CPLE3.SA'],
     ['Klöckner & Co', ['KCO.VI', 'KCO.DE'], 'KCO.VI', 'KCO.DE'],
@@ -44,7 +45,8 @@ test('real table pins all fifteen issuers, all tickers and the recorded choices'
   const added = new Set(['circle', 'strategy', 'energy-fuels', 'star-bulk', 'vinci']);
   for (const [id, row] of Object.entries(table)) {
     const day = id === 'skydance' ? '2026-10-24' : null;
-    assert.equal(row.sourceCheckedOn, day || (added.has(id) ? '2026-10-23' : '2026-09-30'));
+    // Amrize: decided on 2026-10-30 from a re-read source; the row itself dates from 2026-10-06.
+    assert.equal(row.sourceCheckedOn, day || (id === 'amrize' ? '2026-10-30' : added.has(id) ? '2026-10-23' : '2026-09-30'));
     assert.equal(row.enteredOn, day || (added.has(id) ? '2026-10-23' : '2026-10-06'));
   }
   assert.deepEqual(loadFixture(valid()), { example: table.aerovironment });

@@ -472,6 +472,13 @@ function runFiles(files, cwd, log) {
  * @returns {{code:number, lines:string[]}}
  */
 function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blockingAlways, repoFiles, summaryFile, emit }) {
+  // Run 41069226325: on Linux process.stdout on a pipe is non-blocking (Node makes it blocking only on
+  // Windows). The first write that does not fit is queued, spawnSync of the next file keeps the event
+  // loop from draining it, every later line queues behind it, and the closing process.exit drops the
+  // queue. Blocking writes keep the log live, so a timeout or a crash still shows how far the run came;
+  // process.exitCode alone would only hand over everything at the very end.
+  // ponytail: _handle is a Node internal; should it go away, the pipe probe in the selftest goes red.
+  process.stdout._handle?.setBlocking?.(true);
   const lines = [];
   // `lines` traegt IMMER den Rohtext — alle Proben pruefen darauf und bleiben damit
   // unberuehrt davon, wie die Zeile ausgegeben wird. `emit` faerbt nur die Ausgabe:
@@ -493,10 +500,12 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   let code = 0;
   let anyFailed = false;
   const alleUebersprungen = [];
+  const alleRoten = [];
 
   if (mode === 'blocking' || mode === 'all') {
     const { failed, skipped, internalFailures } = runFiles(blocking, cwd, log);
     alleUebersprungen.push(...skipped);
+    alleRoten.push(...failed, ...internalFailures);
     for (const t of failed) log(`::error::Test failed: ${t} — blocking run before Yahoo pull`);
     for (const t of internalFailures) log(`::error::Interner test-gate-Fehler: ${t} — node:test-Ladeprobe unbrauchbar`);
     if (failed.length || internalFailures.length) {
@@ -509,6 +518,7 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   if (mode === 'report' || mode === 'all') {
     const { failed, skipped, internalFailures } = runFiles(report, cwd, log);
     alleUebersprungen.push(...skipped);
+    alleRoten.push(...failed, ...internalFailures);
     if (failed.length || internalFailures.length) anyFailed = true;
     for (const t of internalFailures) log(`::error::Interner test-gate-Fehler: ${t} — node:test-Ladeprobe unbrauchbar`);
     if (internalFailures.length) code = 1;
@@ -539,6 +549,8 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
       ? `All tests passed — ABER ${alleUebersprungen.length} Datei(en) haben nichts geprueft (siehe UEBERSPRUNGEN).`
       : 'All tests passed.');
   }
+  // Last line of the log: the blocking verdicts stand above the output of the research track.
+  if (alleRoten.length) log(`FAILED FILES (${alleRoten.length}): ${alleRoten.join(', ')}`);
   return { code, lines, skipped: alleUebersprungen };
 }
 
@@ -985,12 +997,41 @@ function selftest() {
     && path.resolve(path.dirname(path.dirname(leckDir))) === path.resolve(os.tmpdir()),
     `code=${r.code} leckDir=${JSON.stringify(leckDir)}`);
 
+  // 8. Pipe probe (run 41069226325): the real CLI with its stdout on a pipe, several files each far
+  //    over any pipe or socket buffer. Nothing may get lost: the marker of every file, the closing
+  //    line, and in the red run the name of the red file and exit 1. Only Linux can lose it (Node
+  //    makes pipes blocking on Windows). Each child ends by itself, so its own output is complete.
+  const pipeDir = path.join(dir, 'pipe-probe');
+  fs.mkdirSync(path.join(pipeDir, 'tests'), { recursive: true });
+  const lautDatei = (f, exitCode) => fs.writeFileSync(path.join(pipeDir, f),
+    `process.stdout.write(('x'.repeat(99)+'\\n').repeat(4000));console.log('MARKER ${f} 1 ok, 0 fail');process.exitCode=${exitCode};\n`);
+  for (const f of BLOCKING_ALWAYS) lautDatei(f, 0); // the gate's guard demands exactly these names
+  execFileSync('git', ['init', '-q'], { cwd: pipeDir });
+  execFileSync('git', ['add', 'tests'], { cwd: pipeDir });
+  const gateCli = () => spawnSync(process.execPath, [__filename, '--mode=all'],
+    { cwd: pipeDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const fehlend = (out, files) => files.filter(f => !out.includes(`MARKER ${f} `));
+  const letzteZeile = (out) => out.trimEnd().split('\n').pop();
+  let p = gateCli();
+  check('Pipe-Probe gruen (alle Ausgaben und die Schlusszeile kommen an)',
+    p.status === 0 && fehlend(p.stdout, BLOCKING_ALWAYS).length === 0 && letzteZeile(p.stdout) === 'All tests passed.',
+    `status=${p.status} bytes=${p.stdout.length} fehlend=${fehlend(p.stdout, BLOCKING_ALWAYS).length}`);
+  const rotLaut = 'tests/zz-rot.test.js';
+  lautDatei(rotLaut, 1);
+  p = gateCli();
+  check('Pipe-Probe rot (Exit 1 und der Name der roten Datei stehen am Ende)',
+    p.status === 1 && fehlend(p.stdout, [...BLOCKING_ALWAYS, rotLaut]).length === 0
+    && p.stdout.split('\n').some(l => l.startsWith(`::error::Test failed: ${rotLaut}`))
+    && letzteZeile(p.stdout) === `FAILED FILES (1): ${rotLaut}`
+    && !p.stdout.includes('All tests passed'),
+    `status=${p.status} bytes=${p.stdout.length} fehlend=${fehlend(p.stdout, [...BLOCKING_ALWAYS, rotLaut]).length}`);
+
   fs.rmSync(dir, { recursive: true, force: true });
   if (fails.length) {
     console.log(`::error::test-gate Selftest FAILED: ${fails.join(', ')}`);
     return 1;
   }
-  console.log('test-gate Selftest OK (22 Proben).');
+  console.log('test-gate Selftest OK (24 Proben).');
   return 0;
 }
 

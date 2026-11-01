@@ -11,7 +11,9 @@
  * data day (Europe/Berlin date of index.json generated_at), never the calendar date; --datum overrides that
  * day (for example to check yesterday's export against today's entries).
  * Exit 0: every due expectation is erfüllt or abgelaufen. Exit 1: at least one is nicht erfüllt or
- * nicht messbar (a missing field or an unloadable board file is never counted as erfüllt). Exit 2:
+ * nicht messbar (a missing field or an unloadable board file is never counted as erfüllt), or a held
+ * reporting currency is past its deadline (index.json coverage.reporting_ccy_held, Karl's alarm, independent
+ * of the entries, which expire after 7 days while a hold does not). Exit 2:
  * index.json could not be loaded, or the expectation file or --datum is invalid.
  *
  * Entry: {id, pr, gueltigAb, gueltigBis?, grund, board, op, feld?, ticker | name | zaehle, track?,
@@ -21,6 +23,9 @@
  *          must then exist exactly once across them).
  *   ticker | name  selects exactly one row (track narrows it); 0 or several rows fail a value check.
  *   zaehle  instead of a row: the measured value is the number of rows whose feld equals or contains it.
+ *          A row whose feld is absent makes the count nicht messbar, unless the entry sets optional: true,
+ *          for a field the export carries only on some rows (ffoReason, revGrowthReason). Then such a row
+ *          does not count, but a field that is gone from every row stays nicht messbar.
  *   op     between (min..max) | eq (wert, numeric ± toleranz) | null | notNull | contains (wert as
  *          substring or muster as regex, on a string or any element of an array) | absent | present (row).
  *   gruppe entries sharing it form one expectation (name must not be another entry's id): erfüllt if any
@@ -29,10 +34,20 @@
  *   gueltigAb  first data day the effect is live; later entries are listed as noch nicht fällig.
  *   gueltigBis after it the entry is only reported as abgelaufen, never failed (set it on drifting values
  *          such as rank, market-cap, score or growth ranges).
+ *
+ * Tolerance rule, one for all entries (written 30.10.2026; older entries keep their ranges until they expire).
+ * The script adds no slack of its own: it compares against exactly what the entry states.
+ *   Fixed states (null, notNull, absent, present, a text or code, a count that must stay 0): no tolerance.
+ *   Drifting numbers (rank, market cap, score, growth, a row count): op between, min/max = the value measured
+ *          on the reference day ± 20 %, at least ± 1, and narrower only where the old wrong value or a failure named
+ *          with its measured value in grund would otherwise lie inside. gueltigBis at most 7 days after gueltigAb; a
+ *          renewal recentres on the day it is renewed.
+ *   grund  quotes a number only with the day it was measured, so it never reads as today's value.
  */
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { germanBoards } = require('./tagesdifferenz.js');
 
 const DEFAULT_EXPORT = 'https://raw.githubusercontent.com/Karlryl/screener-data/gh-pages/outputs/findash-export/v1';
 const DEFAULT_ERWARTUNGEN = path.join(__dirname, '..', 'data-health', 'erwartungen.json');
@@ -94,6 +109,7 @@ function validate(list) {
     if (selectors.length !== 1) bad('genau eines von ticker, name, zaehle nötig');
     if (e.zaehle !== undefined && !['between', 'eq'].includes(e.op)) bad('zaehle nur mit between oder eq');
     if (e.zaehle !== undefined && e.track !== undefined) bad('zaehle zählt alle Zeilen, track ist dort nicht erlaubt');
+    if (e.optional !== undefined && (e.optional !== true || e.zaehle === undefined)) bad('optional nur als true und nur mit zaehle');
     if (!ROW_OPS.includes(e.op) && (typeof e.feld !== 'string' || !e.feld)) bad('feld fehlt');
     if (e.op === 'between' && !(Number.isFinite(e.min) && Number.isFinite(e.max) && e.min <= e.max)) bad('min/max ungültig');
     if (e.op === 'eq' && !Object.hasOwn(e, 'wert')) bad('wert fehlt');
@@ -160,8 +176,11 @@ async function measure(e, load, index) {
     catch (err) { return { urteil: NM, gemessen: `Datei ${rel}.json nicht ladbar (${err.message})` }; }
   }
   if (e.zaehle !== undefined) {
-    const values = perFile.flatMap(({ rel, rows }) => rows.map(r => read(r, e.feld, rows, rel))).filter(v => v !== MISSING);
+    const all = perFile.flatMap(({ rel, rows }) => rows.map(r => read(r, e.feld, rows, rel)));
+    const values = all.filter(v => v !== MISSING);
     if (!values.length) return { urteil: NM, gemessen: `Feld ${e.feld} fehlt` };
+    // P282: an unknown value must not leave the base; a column that fails on some rows would read as a clean count.
+    if (values.length < all.length && e.optional !== true) return { urteil: NM, gemessen: `Feld ${e.feld} fehlt an ${all.length - values.length} von ${all.length} Zeilen` };
     const n = values.filter(v => (Array.isArray(v) ? v.includes(e.zaehle) : v === e.zaehle)).length;
     return { urteil: holds(e, n) ? ERFUELLT : NICHT, gemessen: n };
   }
@@ -186,10 +205,23 @@ async function measure(e, load, index) {
 // German labels for the "Erwartung" column; the raw field name follows in parentheses, unknown fields stay raw.
 // rk and mc are the filter feed's short keys for rank and marketCap (docs/findash-export-v1.md).
 const LABELS = { rank: 'Rang', rk: 'Rang', score: 'Score', marketCap: 'Börsenwert', mc: 'Börsenwert',
-  revGrowthYoYPct: 'Umsatzwachstum zum Vorjahr', rankGrund: 'Rang-Grund', mcapBand: 'Größenband' };
+  revGrowthYoYPct: 'Umsatzwachstum zum Vorjahr', rankGrund: 'Rang-Grund', mcapBand: 'Größenband',
+  r40Ebitda: 'Rule-of-40-Wert mit EBITDA', financialDataReasons: 'Datenhinweise', aus: 'Ausschluss- oder Warncode',
+  revGrowthBasis: 'Basis des Umsatzwachstums', revGrowthPeriodEnd: 'Periodenende des Umsatzwachstums',
+  revGrowthReason: 'Grund für leeres Umsatzwachstum', 'g31Hinweis.code': 'Prüfhinweis zum Umsatzwachstum',
+  'ffoReason.code': 'Grund für leere FFO-Näherung' };
 const label = f => (Object.hasOwn(LABELS, f) ? `${LABELS[f]} (${f})` : f);
-const USD_FIELDS = new Set(['marketCap', 'mc']); // always USD by contract
-const unitOf = e => (e.zaehle === undefined && USD_FIELDS.has(e.feld) ? ' USD' : '');
+const UNITS = { marketCap: ' USD', mc: ' USD', revGrowthYoYPct: ' %' }; // market caps are always USD by contract
+const unitOf = e => (e.zaehle === undefined && Object.hasOwn(UNITS, e.feld) ? UNITS[e.feld] : '');
+// Boards by their German name alone (the name maps back to one file); an unknown board stays raw.
+const BOARDS = { any: 'alle Vollboards', 'filter/universum': 'Filter-Universum', 'rule40/overview': 'Rule of 40', survival: germanBoards.survival };
+for (const b of Object.keys(germanBoards)) {
+  if (b === 'survival') continue;
+  BOARDS['full/' + b] = germanBoards[b];
+  BOARDS['quality/' + b] = 'Qualität ' + germanBoards[b];
+}
+const TRACKS = { profitable: 'profitabel', unprofitable: 'nicht profitabel' };
+const named = (map, k) => (Object.hasOwn(map, k) ? map[k] : k);
 const fmtNum = (v, unit = '') => (Math.abs(v) >= 1e9
   ? (v / 1e9).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' Mrd.'
   : v.toLocaleString('de-DE', { maximumFractionDigits: 2 })) + unit;
@@ -203,7 +235,7 @@ function fmt(v, unit = '') {
 }
 function describe(e) {
   const who = e.ticker ?? (e.name !== undefined ? `„${e.name}“` : `Zeilen mit ${label(e.feld)} = ${e.zaehle}`);
-  const where = e.board + (e.track ? ' ' + e.track : '');
+  const where = named(BOARDS, e.board) + (e.track ? ' ' + named(TRACKS, e.track) : '');
   const feld = e.zaehle !== undefined ? 'Anzahl' : label(e.feld);
   const unit = unitOf(e);
   const what = {
@@ -260,13 +292,20 @@ async function run({ exportBase, erwartungen, datum: override }) {
   });
   const count = u => results.filter(r => r.urteil === u).length;
   const laterChecks = new Set(later.map(e => e.gruppe ?? e.id)).size; // counted like results: a group is one
+  // undefined: an export without the coverage block says nothing. null: the run itself did not know, no all-clear.
+  const heldRaw = index.coverage === undefined ? undefined : Array.isArray(index.coverage?.reporting_ccy_held) ? index.coverage.reporting_ccy_held : null;
+  const held = heldRaw || [];
+  const heldLine = r => `${r.overdue ? 'ALARM an Karl, Frist überschritten. ' : 'Warnung. '}Berichtswährung von ${r.ticker} nicht bestätigt (${r.type === 'conflict' ? 'Widerspruch des Anbieters' : 'neue Periode'}): Die Abschlusszahlen stehen leer, die Boards laufen weiter. Zuständig ${r.owner}, seit ${r.firstSeen}, Prüfung bis ${r.pruefungBis}.`;
   const lines = [
+    ...held.filter(r => r.overdue).map(heldLine),
+    ...held.filter(r => !r.overdue).map(heldLine),
     // An exit 0 that checked nothing (nothing due, or every due entry expired) must not read like a green result.
     ...(results.length ? [] : [`Hinweis: Export vom ${exportDay}, keine Erwartung fällig; das ist kein Prüfergebnis.`]),
     ...(results.length && count(ABGELAUFEN) === results.length ? [`Hinweis: Export vom ${exportDay}, alle fälligen Erwartungen sind abgelaufen; das ist kein Prüfergebnis.`] : []),
     `${count(ERFUELLT)} von ${results.length} Erwartungen erfüllt, ${count(NICHT)} nicht erfüllt, ${count(NM)} nicht messbar, ` +
       `${count(ABGELAUFEN)} abgelaufen; ${laterChecks} noch nicht fällig (Export vom ${index.generated_at}, Datentag ${exportDay}` +
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
+    ...(heldRaw === null ? ['Hinweis: Ob Firmen wegen einer unbestätigten Berichtswährung gehalten sind, ist für diesen Export unbekannt; das ist keine Entwarnung.'] : []),
   ];
   lines.push('', '| Erwartung | gemessen | Urteil | Grund |', '|---|---|---|---|');
   for (const r of results) {
@@ -278,8 +317,9 @@ async function run({ exportBase, erwartungen, datum: override }) {
     zusammenfassung: { erfuellt: count(ERFUELLT), nichtErfuellt: count(NICHT), nichtMessbar: count(NM), abgelaufen: count(ABGELAUFEN), nochNichtFaellig: laterChecks },
     ergebnisse: results.map(r => ({ id: r.id, pr: r.pr, urteil: r.urteil, teile: r.members.map(m => ({ id: m.e.id, urteil: m.urteil, gemessen: m.gemessen })) })),
     nochNichtFaellig: later.map(e => e.id),
+    berichtswaehrungGehalten: heldRaw ?? null,
   };
-  const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN);
+  const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN) && !held.some(r => r.overdue);
   return { code: ok ? 0 : 1, lines, report };
 }
 

@@ -106,6 +106,61 @@ test('Copel and AXIA: the home row keeps its rank and carries no marker, the ADR
   assert.deepEqual(check(out), []);
 });
 
+// P290 (30.10.2026): the declared home leg must be the leg the reader sees, whatever the score order:
+// exactly that leg ranked and unmarked, every other leg unranked and marked with that home leg.
+test('a declared home leg is the shown leg in either score order', () => {
+  // Marker kept on codeKeeps by decision and home legs that stand in no ranking today; they cannot pass yet.
+  const notShownYet = ['Klöckner & Co', 'Vinci'];
+  const covered = decided.filter((issuer) => !notShownYet.includes(issuer.issuer));
+  assert.equal(covered.length, decided.length - notShownYet.length, 'the exception names real rows');
+  assert.ok(covered.some((issuer) => issuer.homeListingProposal === 'AMRZ'), 'Amrize is covered');
+  for (const issuer of covered) {
+    for (const tickers of [issuer.tickers, [...issuer.tickers].reverse()]) {
+      const out = board(rows(['A', ...tickers, 'B']));
+      const shown = out.filter((r) => issuerOf.get(r.ticker) === issuer && r.rank !== null && !Object.hasOwn(r, 'dupIssuer'));
+      assert.deepEqual(shown.map((r) => r.ticker), [issuer.homeListingProposal], tickers.join(','));
+      for (const ticker of issuer.tickers.filter((t) => t !== issuer.homeListingProposal)) {
+        assert.equal(pick(out, ticker).rank, null, ticker);
+        assert.equal(pick(out, ticker).rankGrund, 'dupIssuer', ticker);
+        assert.equal(pick(out, ticker).dupIssuer?.of, issuer.homeListingProposal, ticker);
+      }
+      assert.equal(pick(out, 'B').rank, 3, 'the row below moves up one place');
+      assert.deepEqual(check(out), []);
+    }
+  }
+});
+
+// Literal, independent of the table's own fields, on the row the reader actually gets: the filter's visible row.
+test('Amrize: AMRZ is the visible row with rank and P/E, AMRZ.SW is hidden without a rank', () => {
+  const hiddenByDefault = ['data-suspect', 'dup-issuer'];
+  for (const order of [['AMRZ', 'AMRZ.SW'], ['AMRZ.SW', 'AMRZ']]) {
+    const out = board(order.map((t) => row(t, 54.1)));
+    assert.equal(pick(out, 'AMRZ').rank, 1, order.join(','));
+    assert.equal(pick(out, 'AMRZ').rankGrund, null);
+    assert.ok(!Object.hasOwn(pick(out, 'AMRZ'), 'dupIssuer'));
+    assert.equal(pick(out, 'AMRZ.SW').rank, null);
+    assert.equal(pick(out, 'AMRZ.SW').rankGrund, 'dupIssuer');
+    assert.equal(pick(out, 'AMRZ.SW').score, 54.1, 'score stays visible');
+    assert.deepEqual(pick(out, 'AMRZ.SW').dupIssuer, { of: 'AMRZ', issuer: 'Amrize', basis: 'hand-table:dup-issuer-shadow' });
+    const template = filterSnapshots.find((s) => s.meta.ticker === 'PAY');
+    const snapshots = order.map((t) => {
+      const snapshot = structuredClone(template);
+      snapshot.meta.ticker = t;
+      snapshot.metrics.pe = { value: 18.28 };
+      return snapshot;
+    });
+    const boards = new Map(out.map((r) => [r.ticker, { branch: 'materials', row: r }]));
+    const feed = buildUniverse({ snapshots, boards, generatedAt: '2026-10-17T14:47:00Z' }).rows;
+    const visible = feed.find((r) => r.t === 'AMRZ'), hidden = feed.find((r) => r.t === 'AMRZ.SW');
+    assert.ok(!visible.aus.some((a) => hiddenByDefault.includes(a)), JSON.stringify(visible.aus));
+    assert.equal(visible.rk, 1);
+    assert.equal(visible.pe, 18.28);
+    assert.equal(visible.peSt, 'vorhanden');
+    assert.ok(hidden.aus.includes('dup-issuer') && hidden.aus.includes('dupIssuer'), JSON.stringify(hidden.aus));
+    assert.equal(hidden.rk, undefined);
+  }
+});
+
 test('filter feed: the home row of Copel and AXIA stays visible with its rank, the ADR row is hidden by default', () => {
   // findash filter contract (web/src/lib/filter-vertrag.json hiddenReasons) hides these reasons by default.
   const hiddenByDefault = ['data-suspect', 'dup-issuer'];
