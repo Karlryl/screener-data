@@ -394,6 +394,11 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
 // Small-Cap-Zeilen sind aus snapshots-smallcap/ gerechnet (run-screener.js SMALLCAP_SNAP_DIR).
 const SMALLCAP_SNAP_DIR = process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots-smallcap');
 let _wachstumOhneEtikett = 0;
+// Checked definition hints (configs/g31-hinweise.json, key definitionen; 31.10.2026): the vendor's revenue follows a
+// definition the firm's own statement does not use, so the number is right but says something else. Bound to the listing,
+// not to a period, because the next quarter does not change the definition. Display only: no value, score or rank reads it.
+// ponytail: no fingerprint on the vendor packet; a firm that changes its reporting needs its row re-checked by hand.
+const DEFINITION_HINTS = new Map(require('../configs/g31-hinweise.json').definitionen.map(d => [d.ticker, { code: d.code, reason: d.reason }]));
 function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   let derivations = snapAbleitungenFuer(out.ticker, snapshotStore);
   const wert = out.revGrowthYoYPct;
@@ -408,7 +413,7 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     out.g31Shadow = derivations.g31Shadow;
     out.g31OverviewShadow = derivations.g31Overview[out.overview?.kind || out.overviewKind] ?? null;
     // P267 rule 1: review hint for a newly admitted B1 pair, only where this snapshot reproduces the shown growth.
-    out.g31Hinweis = passt ? derivations.g31Hinweis ?? null : null;
+    out.g31Hinweis = (passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null;
   }
   if (!passt) _wachstumOhneEtikett++;
   out.revGrowthBasis = passt ? leg.basis : null;
@@ -1419,8 +1424,12 @@ function buildSmallcap(coverage, opts = {}) {
 function loadCoverage(file = COVERAGE) {
   const m = readJSONOrNull(file);
   if (!m) return null;
+  // W7 (30.10.2026): coverage_pct is rows fetched over all rows and moves with list size (65.9 % on
+  // 23.10., 80.6 % on 30.10. with fewer fetches). The honest pair is what the 90 % alarm reads; additive.
   return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct,
-    generated_at: m.generated_at };
+    generated_at: m.generated_at, honest_coverage_pct: m.honest_coverage_pct ?? null,
+    n_addressable: m.n_addressable ?? null, n_ok: m.n_ok ?? null, n_total: m.n_total ?? null,
+    n_failed: m.n_failed ?? null };
 }
 
 // seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI

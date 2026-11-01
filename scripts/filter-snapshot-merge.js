@@ -35,6 +35,7 @@ const path = require('path');
 const { safeSnapshotFilename, isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+const { writeListingExitManifest, LISTING_EXITS_FILE } = require('../discovery/listing-state.js');
 const { mergeSizeExits, sizeExitRunTag, currentRunReports, incompleteShards, sizeExitRunDay, sizeExitsHistoryPath, readSizeExitHistory, updateSizeExitHistory, SIZE_EXITS_FILE, SIZE_EXIT_SHARD_PATTERN } = require('../lib/size-exits.js');
 // U2-BO/NS (s. WURZEL_ZWILLING unten): der Emittenten-Schluessel wird IMPORTIERT, nie nachgebaut.
 // Lesen aus src/scoring/** ist ausdruecklich erlaubt; das GQS-Siegel bindet nur AENDERUNGEN dort.
@@ -2190,12 +2191,16 @@ function run(argv) {
   const exits = sizeExitFiles.length ? updateSizeExitHistory(sizeExits, runDate, { historyPath, fs, writeFileAtomic })
     : readSizeExitHistory(historyPath, fs).exits;
   for (const f of uebernehmen) {
-    if (f === SIZE_EXITS_FILE || SIZE_EXIT_SHARD_PATTERN.test(f)) continue;
+    if (f === SIZE_EXITS_FILE || f === LISTING_EXITS_FILE || SIZE_EXIT_SHARD_PATTERN.test(f)) continue;
     fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
   }
   if (sizeExitTag && !missingShards) console.log(`::warning::[size-exits] SHARD_COUNT missing or invalid (${process.env.SHARD_COUNT}). Current size exits are unknown.`);
   else if (sizeExitTag && !known) console.log(`[size-exits] No successful pull report for shard(s) ${missingShards.join(', ')} of ${process.env.SHARD_COUNT}. Current size exits are unknown.`);
   writeFileAtomic(path.join(ziel, SIZE_EXITS_FILE), JSON.stringify({ schema: 'size-exits/v2', known, runDate, exits }));
+  // The scoring job checks out the pre-run commit. Ship the current intake evidence and
+  // membership decision inside its existing snapshot artifact, not through that checkout.
+  writeListingExitManifest(path.join(path.dirname(path.resolve(watchlistPfad)), 'data-health', 'entdeckungs-ausschluss.json'),
+    wl.stocks, ziel, runDate, writeFileAtomic);
 
   // DAS EINZIGE LOCH IM AUSSCHLUSS: dieser Schritt KOPIERT nur, er raeumt das Ziel nicht ab.
   // In CI ist das folgenlos (frischer Runner, `snapshots/` ist gitignoriert und existiert

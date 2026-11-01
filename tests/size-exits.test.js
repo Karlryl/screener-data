@@ -346,7 +346,7 @@ async function run() {
   assert(start >= 0 && end > start, 'real merge block missing');
   const mergeBlock = '{\n' + filterSource.slice(start, end) + '\n}';
   const context = { fs, path, process, console, argv: ['--size-exits-history', historyPath], eingang: incoming, ziel: merged, files: fs.readdirSync(incoming),
-    uebernehmen: fs.readdirSync(incoming), writeFileAtomic: atomic, ...helpers };
+    uebernehmen: fs.readdirSync(incoming), writeFileAtomic: atomic, ...helpers, LISTING_EXITS_FILE: require('../discovery/listing-state.js').LISTING_EXITS_FILE, writeListingExitManifest: () => {}, watchlistPfad: 'watchlist.json', wl: { stocks: [] } };
   vm.runInNewContext(mergeBlock, context);
   assert(files.has(path.join(merged, SIZE_EXITS_FILE)), 'shard merge must write the consolidated report');
   const retry = buildSizeExit('RETRY', 1, 8e8, iso(0), 'full-pull');
