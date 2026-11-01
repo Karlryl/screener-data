@@ -106,7 +106,7 @@ test('growth pairs: a quarter pair ends after 365 days, an annual pair after 550
   });
 });
 
-test('axes: an annual pair too old drops gross profit and acceleration; a fresh pair keeps them, its older pair is not judged for age', () => {
+test('axes: an annual anchor more than 730 days back drops gross profit and acceleration; a fresh pair keeps them, its older pair is not judged for age', () => {
   withDay(DAY, () => {
     const end = i => yearsBack(minusDays(100), i);
     const yearsBack = (iso, i) => `${+iso.slice(0, 4) - i}${iso.slice(4)}`;
@@ -117,6 +117,11 @@ test('axes: an annual pair too old drops gross profit and acceleration; a fresh 
     const stale = pkt({}, annual('2024-06-30'));
     assert.equal(A.gpGrowth(stale), null);
     assert.equal(A.revAcceleration(stale), null);
+    // Between the two limits: FY2024 is no shown growth figure any more, but its axes stay until the vendor's FY2025 gap is filled (#57).
+    const gap = pkt({}, annual('2024-12-31'));
+    assert.notEqual(A.gpGrowth(gap), null);
+    assert.equal(G.g31Shadow(gap).v1.pct, null);
+    assert.match(G.g31Shadow(gap).v1.reason, /Periodenstand veraltet/);
   });
 });
 
@@ -175,7 +180,7 @@ test('break-once: the limit, the series test and the axis anchor each fail when 
     assert.notEqual(limit.staleReason('quarter', minusDays(10)), null, 'a fresh pair would be called stale');
     const series = mutant('lib/annual-pairs.js', '    if (today - _tagesnummer(newest) <= STALE_DAYS.quarter) continue;', '');
     assert.deepEqual(rows(series.maskStaleQuarterSeries(pkt(quarters(minusDays(30)))), 'revenueQ'), [null, null, null, null, null, null], 'a fresh series would be emptied');
-    const noAnchor = mutant('lib/annual-pairs.js', "  if (iNew === 0 && !sealedEraSnapshot(snapshot) && staleReason('year', ends[0])) return true; // P287: only the newest anchor is judged for age", '');
+    const noAnchor = mutant('lib/annual-pairs.js', "  if (iNew === 0 && !sealedEraSnapshot(snapshot) && staleReason('axis', ends[0])) return true; // P287: only the newest anchor is judged for age", '');
     const stale = pkt({}, { annualGP: cells([65, 50]), annualGPEnds: ['2024-06-30', '2023-06-30'] });
     assert.equal(noAnchor.axisPairBlocked(stale, 'annualGP', 0, 1), false, 'an old pair would feed the axis');
     assert.equal(P.axisPairBlocked(stale, 'annualGP', 0, 1), true);
