@@ -48,6 +48,8 @@ const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { germanBoards } = require('./tagesdifferenz.js');
+const { fristen } = require('../lib/handtabellen-fristen.js');
+const { SHARES_TABLE_PATH: SHARES_TABLE } = require('../lib/ads-hand-table.js');
 
 const DEFAULT_EXPORT = 'https://raw.githubusercontent.com/Karlryl/screener-data/gh-pages/outputs/findash-export/v1';
 const DEFAULT_ERWARTUNGEN = path.join(__dirname, '..', 'data-health', 'erwartungen.json');
@@ -256,7 +258,7 @@ const cell = s => String(s).replace(/\|/g, '\\|').replace(/\s+/g, ' ');
  * @param {{exportBase: string, erwartungen: string, datum?: string}} opts datum overrides the export's data day.
  * @returns {Promise<{code: number, lines: string[], report: object|null}>}
  */
-async function run({ exportBase, erwartungen, datum: override }) {
+async function run({ exportBase, erwartungen, datum: override, tabelle }) {
   if (override !== undefined && !DATE.test(override)) return { code: 2, lines: ['--datum muss YYYY-MM-DD sein: ' + override], report: null };
   let list;
   try {
@@ -307,6 +309,15 @@ async function run({ exportBase, erwartungen, datum: override }) {
       (override !== undefined && override !== exportDay ? `, geprüft wie am ${override} per --datum` : '') + ').',
     ...(heldRaw === null ? ['Hinweis: Ob Firmen wegen einer unbestätigten Berichtswährung gehalten sind, ist für diesen Export unbekannt; das ist keine Entwarnung.'] : []),
   ];
+  // Report only: deadlines of the share-count hand table never change the exit code (a missing filter feed says so, it is no all-clear).
+  let fristReport = null;
+  try {
+    const tab = tabelle ?? JSON.parse(fs.readFileSync(SHARES_TABLE, 'utf8'));
+    fristReport = fristen({ tabelle: tab, universum: (await load('filter/universum.json')).rows, datum });
+    lines.push(...fristReport.zeilen);
+  } catch (err) {
+    lines.push('Hinweis: Die Fristen der Handtabelle der Aktienzahlen sind nicht prüfbar (' + err.message + '); das ist keine Entwarnung.');
+  }
   lines.push('', '| Erwartung | gemessen | Urteil | Grund |', '|---|---|---|---|');
   for (const r of results) {
     lines.push(`| ${cell(`PR ${r.pr}: ` + r.members.map(m => describe(m.e)).join(' oder '))} | ${cell(r.members.map(m => fmt(m.gemessen, unitOf(m.e))).join(' / '))} | ${r.urteil} | ${cell(r.members[0].e.grund)} |`);
@@ -318,6 +329,7 @@ async function run({ exportBase, erwartungen, datum: override }) {
     ergebnisse: results.map(r => ({ id: r.id, pr: r.pr, urteil: r.urteil, teile: r.members.map(m => ({ id: m.e.id, urteil: m.urteil, gemessen: m.gemessen })) })),
     nochNichtFaellig: later.map(e => e.id),
     berichtswaehrungGehalten: heldRaw ?? null,
+    handtabellenFristen: fristReport && { faellt: fristReport.faellt.map(f => ({ ticker: f.ticker, reviewBy: f.reviewBy })), leerVorFrist: fristReport.leerVorFrist, ungueltig: fristReport.ungueltig },
   };
   const ok = results.every(r => r.urteil === ERFUELLT || r.urteil === ABGELAUFEN) && !held.some(r => r.overdue);
   return { code: ok ? 0 : 1, lines, report };
