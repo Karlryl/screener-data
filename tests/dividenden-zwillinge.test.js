@@ -26,10 +26,10 @@ test('only firms with at least two yields count: no yield, a zero yield and a si
 });
 
 test('a feed in which no row carries a yield is "not checkable", never zero firms', () => {
-  for (const universum of [[], [{ t: 'A', n: 'Alpha' }, { t: 'B', n: 'Alpha' }], [r('A', 'Alpha', 0), r('B', 'Alpha', null)]]) {
+  for (const universum of [[], [{ t: 'A', n: 'Alpha' }, { t: 'B', n: 'Alpha' }], [r('A', 'Alpha', 0), r('B', 'Alpha', null)], [r('A', undefined, 5), r('B', undefined, 1)]]) {
     const x = dividendenZwillinge({ universum });
     assert.equal(x.firmen, null);
-    assert.match(x.zeilen[0], /keine der \d+ Zeilen eine Rendite \(Feld dy\); der Vergleich der Notierungen ist nicht prüfbar, das ist keine Entwarnung/);
+    assert.match(x.zeilen[0], /keine der \d+ Zeilen zugleich einen Firmennamen \(Feld n\) und eine Rendite \(Feld dy\); der Vergleich der Notierungen ist nicht prüfbar, das ist keine Entwarnung/);
   }
 });
 
@@ -41,7 +41,7 @@ test('two pairs inside the factor are counted as checked: the zero case names ho
 
 test('the line explains the legitimate classes (preferred shares, A and H shares) and the NSE and BSE case', () => {
   const x = dividendenZwillinge({ universum: [r('A', 'Alpha', 1), r('A2', 'Alpha', 5)] });
-  assert.match(x.zeilen[0], /Vorzugsaktien.*chinesischen A- und H-Aktien.*NSE und BSE/);
+  assert.match(x.zeilen[0], /Vorzugsaktien.*chinesischen A- und H-Aktien ist die Dividende je Aktie gleich.*NSE und BSE/);
 });
 
 test('names match without regard to case and spaces; a row without a name is skipped', () => {
