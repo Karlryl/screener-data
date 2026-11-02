@@ -32,11 +32,17 @@ test('a duplicate-only second listing with a value may take over: named with its
   assert.match(r.zeilen[0], new RegExp(`Alpha AG \\(AAA; Energie Rang 4; fällt vom Board, es sei denn, die Zweitnotiz AAB übernimmt, das ist nicht geprüft \\(deren Frist: ${plus(40).split('-').reverse().join('\\.')}\\)\\)`));
 });
 
-test('no replacement is named for a sibling that cannot take over: expiring, hold, no value, a second exclusion code, or already on a board', () => {
+test('no replacement is named for a sibling that cannot take over: expiring, hold, no value, an OTC or suspect-data code, or already on a board', () => {
   const r = fristen({ datum: DATUM, tabelle: tabelle({ AAA: tr(plus(10), { withholdUnverified: true }), R1: tr(plus(12), { withholdUnverified: true }) }, { R6: hold(plus(60)) }),
     universum: [u('AAA', 'Alpha AG', { b: 'energy', rk: 4, mc: 3e9, aus: [] }), u('R1', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer'] }), u('R2', 'Alpha AG', { aus: ['dup-issuer'] }),
-      u('R3', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer', 'non-us'] }), u('R4', 'Alpha AG', { mc: 1e9, b: 'energy', rk: 9, aus: [] }), u('R5', 'Alpha AG', { mc: 1e9, aus: ['non-us'] }), u('R6', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer'] })] });
+      u('R3', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer', 'non-us'] }), u('R4', 'Alpha AG', { mc: 1e9, b: 'energy', rk: 9, aus: ['dup-issuer'] }), u('R7', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer', 'data-suspect'] }), u('R5', 'Alpha AG', { mc: 1e9, aus: ['non-us'] }), u('R6', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer'] })] });
   assert.doesNotMatch(r.zeilen.join('\n'), /es sei denn/);
+});
+
+test('a second listing that carries dup-issuer plus a marker the scoring ignores (mischwaehrung) can still take over', () => {
+  const r = fristen({ datum: DATUM, tabelle: tabelle({ AAA: tr(plus(10), { withholdUnverified: true }) }),
+    universum: [u('AAA', 'Alpha AG', { b: 'energy', rk: 4, mc: 3e9, aus: [] }), u('AAB', 'Alpha AG', { mc: 3.1e9, aus: ['dup-issuer', 'mischwaehrung'] })] });
+  assert.match(r.zeilen[0], /es sei denn, die Zweitnotiz AAB übernimmt/);
 });
 
 test('a firm that is on no board says so; a ticker the export does not know is named as it is', () => {
