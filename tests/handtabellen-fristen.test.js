@@ -22,21 +22,28 @@ test('a withholding row inside the window: firm, board, rank and "fällt vom Boa
     universum: [u('AAA', 'Alpha AG', { b: 'energy', rk: 4, mc: 3e9, aus: [] }), u('AAAF', 'Alpha AG', { mc: 3.1e9, aus: ['non-us'] })] });
   assert.equal(r.faellt.length, 1);
   assert.equal(r.zeilen.length, 1);
-  assert.match(r.zeilen[0], new RegExp(`^Frist ${plus(10).split('-').reverse().join('\\.')} \\(in 10 Tagen\\): .*ab dem Datentag ${plus(11).split('-').reverse().join('\\.')} leer`));
+  assert.match(r.zeilen[0], new RegExp(`^Frist ${plus(10).split('-').reverse().join('\\.')} \\(in 10 Tagen\\): .*ab dem Datentag ${plus(11).split('-').reverse().join('\\.')} leer, ohne dass Karl dazu eine weitere Meldung bekommt`));
   assert.match(r.zeilen[0], /Alpha AG \(AAA; Energie Rang 4; fällt vom Board\)/);
 });
 
-test('a second listing with a value and no exclusion code keeps the firm on the board, and names its own deadline', () => {
+test('a duplicate-only second listing with a value may take over: named with its own deadline and marked unchecked, the firm still falls', () => {
   const r = fristen({ datum: DATUM, tabelle: tabelle({ AAA: tr(plus(10), { withholdUnverified: true }), AAB: tr(plus(40), { withholdUnverified: true }) }),
-    universum: [u('AAA', 'Alpha AG', { b: 'energy', rk: 4, mc: 3e9, aus: [] }), u('AAB', 'Alpha AG', { mc: 3.1e9, aus: [] })] });
-  assert.match(r.zeilen[0], new RegExp(`Alpha AG \\(AAA; Energie Rang 4; bleibt über AAB bis zu dessen Frist ${plus(40).split('-').reverse().join('\\.')}\\)`));
+    universum: [u('AAA', 'Alpha AG', { b: 'energy', rk: 4, mc: 3e9, aus: [] }), u('AAB', 'Alpha AG', { mc: 3.1e9, aus: ['dup-issuer'] })] });
+  assert.match(r.zeilen[0], new RegExp(`Alpha AG \\(AAA; Energie Rang 4; fällt vom Board, es sei denn, die Zweitnotiz AAB übernimmt, das ist nicht geprüft \\(deren Frist: ${plus(40).split('-').reverse().join('\\.')}\\)\\)`));
+});
+
+test('no replacement is named for a sibling that cannot take over: expiring, hold, no value, a second exclusion code, or already on a board', () => {
+  const r = fristen({ datum: DATUM, tabelle: tabelle({ AAA: tr(plus(10), { withholdUnverified: true }), R1: tr(plus(12), { withholdUnverified: true }) }, { R6: hold(plus(60)) }),
+    universum: [u('AAA', 'Alpha AG', { b: 'energy', rk: 4, mc: 3e9, aus: [] }), u('R1', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer'] }), u('R2', 'Alpha AG', { aus: ['dup-issuer'] }),
+      u('R3', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer', 'non-us'] }), u('R4', 'Alpha AG', { mc: 1e9, b: 'energy', rk: 9, aus: [] }), u('R5', 'Alpha AG', { mc: 1e9, aus: ['non-us'] }), u('R6', 'Alpha AG', { mc: 1e9, aus: ['dup-issuer'] })] });
+  assert.doesNotMatch(r.zeilen.join('\n'), /es sei denn/);
 });
 
 test('a firm that is on no board says so; a ticker the export does not know is named as it is', () => {
   const r = fristen({ datum: DATUM, tabelle: tabelle({ AAA: tr(plus(5), { withholdUnverified: true }), ZZZ: tr(plus(5), { withholdUnverified: true }) }),
     universum: [u('AAA', 'Alpha AG', { mc: 3e9, aus: ['dup-issuer'] })] });
   assert.match(r.zeilen[0], /Alpha AG \(AAA; steht auf keinem Board\)/);
-  assert.match(r.zeilen[0], /ZZZ \(ZZZ; steht auf keinem Board\)/);
+  assert.match(r.zeilen[0], /ZZZ \(nicht im Export, Boardfolge nicht feststellbar\)/);
 });
 
 test('window: 30 days ahead is in, 31 is out; a passed deadline is listed as exceeded', () => {
@@ -52,7 +59,19 @@ test('holds and non-withholding rows are counted as "ohne Folge", never as falli
     universum: [u('KEEP', 'Keep AG', { b: 'energy', rk: 2, mc: 1e9, aus: [] })] });
   assert.equal(r.faellt.length, 0);
   assert.equal(r.zeilen.length, 1);
-  assert.match(r.zeilen[0], /ohne Folge für die Boards: 2 Zeilen mit ohnehin leerem Börsenwert \(H1, H2\), nur eine Pull-Warnung; 1 Zeile, die nach der Frist weiter gelten \(KEEP\)/);
+  assert.match(r.zeilen[0], /ohne Folge für die Boards: 2 Zeilen mit ohnehin leerem Börsenwert \(H1, H2\), nur ein Hinweis im Protokoll des Datenabrufs; 1 Zeile, die nach der Frist weiter gilt \(KEEP\), nur ein Hinweis im Protokoll des Datenabrufs/);
+});
+
+test('plural: two rows that keep applying read "gelten"', () => {
+  const r = fristen({ datum: DATUM, tabelle: tabelle({ K1: tr(plus(3)), K2: tr(plus(4)) }), universum: [] });
+  assert.match(r.zeilen[0], /2 Zeilen, die nach der Frist weiter gelten \(K1, K2\)/);
+});
+
+test('an impossible calendar date is invalid, for reviewBy and for the data day', () => {
+  const r = fristen({ datum: DATUM, tabelle: tabelle({ X: tr('2026-11-31', { withholdUnverified: true }) }), universum: [] });
+  assert.deepEqual(r.ungueltig, ['X']);
+  assert.equal(r.faellt.length, 0);
+  assert.throws(() => fristen({ datum: '2026-13-03', tabelle: tabelle({}), universum: [] }), /calendar date/);
 });
 
 test('a missing or malformed reviewBy is a warning line, never silently skipped', () => {
