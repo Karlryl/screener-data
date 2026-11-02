@@ -87,7 +87,7 @@ test('through the daily expectation script: the lines appear, the exit code stay
   const tab = tabelle({ AAA: tr(plus(5), { withholdUnverified: true }) });
   const without = await run({ exportBase: root, erwartungen: erw, tabelle: tab });
   assert.equal(without.code, 0);
-  assert.ok(without.lines.some(l => l.startsWith('Hinweis: Die Fristen der Handtabelle der Aktienzahlen sind nicht prüfbar')), without.lines.join('\n'));
+  assert.ok(without.lines.some(l => l.startsWith('Hinweis: Die Fristen der Handtabelle der Aktienzahlen und die Dividendenrenditen der Zwillingsnotierungen sind nicht prüfbar')), without.lines.join('\n'));
   write('filter/universum.json', { rows: [{ t: 'AAA', n: 'Alpha AG', b: 'energy', rk: 4, mc: 2e9, aus: [] }] });
   const withFeed = await run({ exportBase: root, erwartungen: erw, tabelle: tab });
   assert.equal(withFeed.code, 0, withFeed.lines.join('\n'));
