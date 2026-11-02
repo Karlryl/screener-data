@@ -394,7 +394,7 @@ test('https/http base: one fetch per file; a 404 board is nicht messbar, a 404 i
       e({ ticker: 'DUP', board: 'any', op: 'present' }),
     ], base + '/');
     assert.equal(r.code, 0, r.lines.join('\n'));
-    assert.deepEqual(hits, { '/v1/index.json': 1, '/v1/full/energy.json': 1, '/v1/full/utilities.json': 1 });
+    assert.deepEqual(hits, { '/v1/index.json': 1, '/v1/full/energy.json': 1, '/v1/full/utilities.json': 1, '/v1/filter/universum.json': 1 }); // the deadline report reads the filter feed once
     const missing = await verdicts([e({ ticker: 'AAA', board: 'quality/energy', op: 'present' })], base);
     assert.equal(missing.code, 1);
     assert.deepEqual(missing.u, ['nicht messbar']);
