@@ -59,6 +59,21 @@ concurrency:
 jobs:
   pull:
     runs-on: ubuntu-latest
+    # Run 41317263548 (2026-11-01, schedule) went red at "Commit manifest": a hand start (run 41316536068)
+    # overlapped it, pushed its own external-data/sec-xbrl/_manifest.json first, and the scheduled run's
+    # rebase conflicted on that file all three attempts (a text conflict on a regenerated file never
+    # resolves by retrying). The workflow-level group above cannot serialize them: a hand start must stay
+    # outside 'main-push' so it cannot cancel another workflow's pending scheduled run. So the publishing
+    # job of this workflow queues behind a running one on main, and its Checkout below names `ref: github.ref`
+    # so it fetches the branch tip when the job starts, i.e. AFTER the first run's push (without `ref`,
+    # actions/checkout pins github.sha, the commit current when the run was created, and the queued run
+    # would rebuild its manifest on the old base and collide again). Runs on other refs (dry runs,
+    # VEROEFFENTLICHEN false) get their own group and never wait.
+    # cancel-in-progress stays false: a running publisher must never be cut off half way. Guard:
+    # tests/monthly-sec-concurrency.test.js
+    concurrency:
+      group: ${{ github.ref == 'refs/heads/main' && 'monthly-sec-xbrl-main' || format('monthly-sec-xbrl-{0}', github.run_id) }}
+      cancel-in-progress: false
     timeout-minutes: 210  # BH-004: +60min for "Build sec-secannual"; Tag 432: +60min for the small-cap variant
     steps:
       # Tag 232c-24 (audit F-CI-006 MEDIUM): drift correction from daily-pull.
@@ -70,6 +85,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref }}  # tip of the branch at job start, not the run's creation commit (see the job's concurrency note)
           fetch-depth: 0  # F-CI-006 / F-CI-004: full history for reliable rebase
 
       - name: Setup Node
