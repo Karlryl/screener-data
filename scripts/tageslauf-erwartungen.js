@@ -315,7 +315,7 @@ async function run({ exportBase, erwartungen, datum: override, tabelle }) {
   const reports = { fristen: null, dividenden: null };
   const notice = (what, err) => lines.push(`Hinweis: ${what} nicht prüfbar (${err.message}); das ist keine Entwarnung.`);
   let universum = null;
-  try { universum = (await load('filter/universum.json')).rows; if (!Array.isArray(universum)) throw new Error('filter/universum.json ohne rows'); }
+  try { const rows = (await load('filter/universum.json')).rows; if (!Array.isArray(rows)) throw new Error('filter/universum.json ohne rows'); universum = rows; }
   catch (err) { notice('Die Fristen der Handtabelle der Aktienzahlen und die Dividendenrenditen der Zwillingsnotierungen sind', err); }
   if (universum) {
     try {

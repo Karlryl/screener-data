@@ -16,13 +16,32 @@ test('more than a factor of two apart is flagged, exactly a factor of two is not
   const x = dividendenZwillinge({ universum: [r('A', 'Alpha', 2.68), r('A.X', 'Alpha', 24.36, { b: 'financials' }), r('B', 'Beta', 1), r('B.X', 'Beta', 2)] });
   assert.equal(x.firmen, 1);
   assert.equal(x.mitBoard, 1);
-  assert.match(x.zeilen[0], /^Hinweis zur Dividendenrendite: Bei 1 Firmen .*Alpha \(A 2,68 %, A\.X 24,36 %\)/);
+  assert.match(x.zeilen[0], /^Hinweis zur Dividendenrendite: Bei 1 Firma .*Alpha \(A 2,68 %, A\.X 24,36 %\)/);
 });
 
 test('only firms with at least two yields count: no yield, a zero yield and a single listing never make a pair', () => {
   const x = dividendenZwillinge({ universum: [r('A', 'Alpha', 5), r('A2', 'Alpha', undefined), r('A3', 'Alpha', 0), r('A4', 'Alpha', null), r('S', 'Solo', 9)] });
   assert.equal(x.firmen, 0);
-  assert.deepEqual(x.zeilen, []);
+  assert.match(x.zeilen[0], /^Hinweis zur Dividendenrendite: Bei keiner der 0 Firmen mit mindestens zwei Notierungen und Rendite/);
+});
+
+test('a feed in which no row carries a yield is "not checkable", never zero firms', () => {
+  for (const universum of [[], [{ t: 'A', n: 'Alpha' }, { t: 'B', n: 'Alpha' }], [r('A', 'Alpha', 0), r('B', 'Alpha', null)]]) {
+    const x = dividendenZwillinge({ universum });
+    assert.equal(x.firmen, null);
+    assert.match(x.zeilen[0], /keine der \d+ Zeilen eine Rendite \(Feld dy\); der Vergleich der Notierungen ist nicht prüfbar, das ist keine Entwarnung/);
+  }
+});
+
+test('two pairs inside the factor are counted as checked: the zero case names how many firms were compared', () => {
+  const x = dividendenZwillinge({ universum: [r('A', 'Alpha', 1), r('A2', 'Alpha', 2), r('B', 'Beta', 3), r('B2', 'Beta', 4), r('S', 'Solo', 9)] });
+  assert.equal(x.firmen, 0);
+  assert.match(x.zeilen[0], /Bei keiner der 2 Firmen mit mindestens zwei Notierungen/);
+});
+
+test('the line explains the legitimate classes (preferred shares, A and H shares) and the NSE and BSE case', () => {
+  const x = dividendenZwillinge({ universum: [r('A', 'Alpha', 1), r('A2', 'Alpha', 5)] });
+  assert.match(x.zeilen[0], /Vorzugsaktien.*chinesischen A- und H-Aktien.*NSE und BSE/);
 });
 
 test('names match without regard to case and spaces; a row without a name is skipped', () => {
@@ -53,8 +72,13 @@ test('through the daily expectation script: the line appears, exit code unchange
   write('filter/universum.json', { rows: [r('AAA', 'Alpha AG', 2.68, { b: 'energy' }), r('AAA.X', 'Alpha AG', 24.36)] });
   const withFeed = await run({ exportBase: root, erwartungen: erw, tabelle: tab });
   assert.equal(withFeed.code, 0, withFeed.lines.join('\n'));
-  assert.ok(withFeed.lines.some(l => /^Hinweis zur Dividendenrendite: Bei 1 Firmen/.test(l)), withFeed.lines.join('\n'));
+  assert.ok(withFeed.lines.some(l => /^Hinweis zur Dividendenrendite: Bei 1 Firma /.test(l)), withFeed.lines.join('\n'));
   assert.deepEqual(withFeed.report.dividendenZwillinge, { firmen: 1, mitBoard: 1 });
+  write('filter/universum.json', { rows: 'kaputt' });
+  const broken = await run({ exportBase: root, erwartungen: erw, tabelle: tab });
+  assert.equal(broken.code, 0);
+  assert.equal(broken.lines.filter(l => l.includes('nicht prüfbar')).length, 1, broken.lines.join('\n'));
+  assert.equal(broken.report.dividendenZwillinge, null);
 });
 
 (async () => {
