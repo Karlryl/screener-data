@@ -1,12 +1,15 @@
 'use strict';
 /**
- * Guard: two runs of the monthly SEC workflow on main must not overlap, and a queued run must never
- * cut off a running one.
+ * Guard: two runs of the monthly SEC workflow on main must not overlap on a stale base, and a queued run
+ * must never cut off a running one.
  *
- * Finding (2026-11-01): run 41317263548 (schedule, 14:39Z) failed at "Commit manifest" because a hand start
- * (run 41316536068, 14:30Z) had pushed external-data/sec-xbrl/_manifest.json first; the rebase conflicted on
- * that regenerated file on all three attempts. The workflow-level group cannot serialize them (a hand start
- * stays in its own group by design), so the job `pull` carries its own group.
+ * Finding (2026-11-01): run 41317263548 (schedule, created 14:39Z) failed at "Commit manifest" because a hand
+ * start (run 41316536068, 14:30Z) had pushed external-data/sec-xbrl/_manifest.json at 14:47Z; the scheduled
+ * run had checked out the commit current at its creation, rebuilt the manifest on that base, and its rebase
+ * conflicted on the regenerated file on all three attempts. Two things are needed and both are pinned here:
+ *   1. the job `pull` carries its own concurrency group, so the second run waits for the first;
+ *   2. its Checkout names `ref: ${{ github.ref }}`; without `ref`, actions/checkout pins github.sha (the
+ *      commit current when the run was CREATED), so the waiting run would still build on the old base.
  *
  * The guard reads the workflow file because the fault shows only there. Usage: node tests/monthly-sec-concurrency.test.js (exit 0/1)
  */
@@ -16,7 +19,9 @@ const path = require('path');
 
 const read = rel => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8').split('\r\n').join('\n');
 
-/** @param {string} wf Workflow text. @returns {string} The lines of the `pull` job up to its `steps:`. */
+const GROUP = "group: ${{ github.ref == 'refs/heads/main' && 'monthly-sec-xbrl-main' || format('monthly-sec-xbrl-{0}', github.run_id) }}";
+
+/** @param {string} wf Workflow text. @returns {string} The lines of the `pull` job up to its first step block end. */
 function jobHead(wf) {
   const start = wf.indexOf('\n  pull:\n');
   assert.ok(start >= 0, 'job pull not found');
@@ -25,24 +30,29 @@ function jobHead(wf) {
   return wf.slice(start, end);
 }
 
-/** @param {string} head Job head. @returns {{group: string, cancel: string}|null} The job-level concurrency block, comments ignored. */
-function jobConcurrency(head) {
-  const lines = head.split('\n').filter(l => !/^\s*#/.test(l));
-  const i = lines.findIndex(l => l === '    concurrency:');
-  if (i < 0) return null;
-  const group = lines.slice(i + 1).find(l => /^ {6}group:/.test(l));
-  const cancel = lines.slice(i + 1).find(l => /^ {6}cancel-in-progress:/.test(l));
-  return { group: group ? group.trim() : '', cancel: cancel ? cancel.trim() : '' };
+/** @param {string} wf Workflow text. @returns {string} The text of the Checkout step. */
+function checkoutStep(wf) {
+  const start = wf.indexOf('\n      - name: Checkout\n');
+  assert.ok(start >= 0, 'step Checkout not found');
+  const end = wf.indexOf('\n      - name:', start + 10);
+  assert.ok(end > start, 'end of step Checkout not found');
+  return wf.slice(start, end);
 }
 
-/** Throws unless the head holds the guard. */
-function assertGuard(head) {
-  const c = jobConcurrency(head);
-  assert.ok(c, 'job pull has no concurrency block: a hand start and the schedule can overlap again');
-  assert.match(c.group, /github\.ref == 'refs\/heads\/main'/, 'the group must key off the main ref');
-  assert.match(c.group, /'monthly-sec-xbrl-main'/, 'main runs must share one fixed group');
-  assert.match(c.group, /format\('monthly-sec-xbrl-\{0\}', github\.run_id\)/, 'runs on other refs must get a group of their own (dry runs never wait)');
-  assert.equal(c.cancel, 'cancel-in-progress: false', 'a queued run must never cancel a running publisher');
+/** @param {string} head Job head. @returns {string[]} The lines of the job-level concurrency block, comments ignored. */
+function concurrencyBlock(head) {
+  const lines = head.split('\n').filter(l => !/^\s*#/.test(l));
+  const i = lines.findIndex(l => l === '    concurrency:');
+  return i < 0 ? [] : lines.slice(i + 1, i + 3).map(l => l.replace(/^ {6}/, ''));
+}
+
+/** Throws unless the workflow holds both parts of the guard. */
+function assertGuard(wf) {
+  const block = concurrencyBlock(jobHead(wf));
+  assert.deepEqual(block, [GROUP, 'cancel-in-progress: false'],
+    'job pull needs exactly: main runs share one group, other refs get a group per run, a queued run never cancels a running publisher');
+  const step = checkoutStep(wf).split('\n').filter(l => !/^\s*#/.test(l)).join('\n');
+  assert.match(step, /\n {10}ref: \$\{\{ github\.ref \}\}( {2}#.*)?\n/, 'Checkout must name ref: ${{ github.ref }}, else the waiting run builds on the commit current at its creation');
 }
 
 let pass = 0, fail = 0;
@@ -53,23 +63,27 @@ function check(name, fn) {
 
 const WF = read('.github/workflows/monthly-sec-xbrl.yml');
 
-check('the committed workflow carries the job-level group', () => assertGuard(jobHead(WF)));
+check('the committed workflow carries the job-level group and the Checkout ref', () => assertGuard(WF));
 
 check('the workflow-level group is untouched (hand starts stay outside main-push)', () => {
   assert.match(WF, /\nconcurrency:\n {2}group: \$\{\{ github\.event_name == 'workflow_dispatch' && format\('manual-\{0\}', github\.run_id\) \|\| 'main-push' \}\}\n {2}cancel-in-progress: false\n/);
 });
 
-check('the guard itself: each breakage of the head is caught', () => {
-  const head = jobHead(WF);
+check('the guard itself: each breakage is caught', () => {
   const broken = {
-    'block removed': head.replace(/\n {4}concurrency:\n {6}group:.*\n {6}cancel-in-progress: false/, ''),
-    'cancel-in-progress true': head.replace('cancel-in-progress: false', 'cancel-in-progress: true'),
-    'one group for every ref': head.replace(/group: .*monthly-sec-xbrl-\{0\}.*\}\}/, 'group: monthly-sec-xbrl-main'),
-    'ref test dropped': head.replace("github.ref == 'refs/heads/main'", 'true'),
-    'block only in a comment': head.replace('\n    concurrency:\n', '\n    # concurrency:\n'),
+    'block removed': WF.replace(/\n {4}concurrency:\n {6}group:.*\n {6}cancel-in-progress: false/, ''),
+    'cancel-in-progress true': WF.replace('      cancel-in-progress: false\n    timeout-minutes', '      cancel-in-progress: true\n    timeout-minutes'),
+    'one group for every ref': WF.replace(/ {6}group: \$\{\{ github\.ref == .*monthly-sec-xbrl-\{0\}.*\}\}/, "      group: monthly-sec-xbrl-main"),
+    'ref test dropped': WF.replace("github.ref == 'refs/heads/main' &&", 'true &&'),
+    'branches swapped': WF.replace("&& 'monthly-sec-xbrl-main' || format('monthly-sec-xbrl-{0}', github.run_id)", "&& format('monthly-sec-xbrl-{0}', github.run_id) || 'monthly-sec-xbrl-main'"),
+    'condition negated': WF.replace("${{ github.ref == 'refs/heads/main' &&", "${{ github.ref != 'refs/heads/main' &&"),
+    'block only in a comment': WF.replace('\n    concurrency:\n', '\n    # concurrency:\n'),
+    'checkout ref removed': WF.replace(/ {10}ref: \$\{\{ github\.ref \}\}.*\n/, ''),
+    'checkout ref only in a comment': WF.replace(/ {10}ref: \$\{\{ github\.ref \}\}/, '          # ref: ${{ github.ref }}'),
+    'checkout ref points at the creation commit': WF.replace('ref: ${{ github.ref }}  #', 'ref: ${{ github.sha }}  #'),
   };
   for (const [name, text] of Object.entries(broken)) {
-    assert.notEqual(text, head, 'the breakage did not change the text: ' + name);
+    assert.notEqual(text, WF, 'the breakage did not change the text: ' + name);
     assert.throws(() => assertGuard(text), undefined, 'not caught: ' + name);
   }
 });
