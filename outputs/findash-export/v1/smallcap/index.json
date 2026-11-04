@@ -1,20 +1,20 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-03T11:00:47.166Z",
+  "generated_at": "2026-11-04T17:45:09.173Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 67.9,
-    "generated_at": "2026-11-03T10:52:13.469Z",
-    "honest_coverage_pct": 87.8,
-    "n_addressable": 18167,
-    "n_ok": 15946,
-    "n_total": 23477,
-    "n_failed": 1378,
+    "coverage_pct": 68.3,
+    "generated_at": "2026-11-04T17:33:15.320Z",
+    "honest_coverage_pct": 88.1,
+    "n_addressable": 18252,
+    "n_ok": 16071,
+    "n_total": 23513,
+    "n_failed": 1343,
     "reporting_ccy_held": []
   },
-  "generatedFromSnapshots": 399,
+  "generatedFromSnapshots": 400,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -66,7 +66,7 @@
     },
     "smallcap-industrials": {
       "profitable": 27,
-      "unprofitable": 19
+      "unprofitable": 18
     },
     "smallcap-it-services": {
       "profitable": 3,
@@ -85,7 +85,7 @@
       "unprofitable": 2
     },
     "smallcap-software-comm-services": {
-      "profitable": 29,
+      "profitable": 30,
       "unprofitable": 9
     },
     "smallcap-utilities": {
@@ -101,6 +101,7 @@
     "no-revenue": 26,
     "no-sector": 2,
     "smallcap-mcap-missing": 8,
+    "smallcap-mcap-out-of-band": 1,
     "smallcap-thin-coverage": 26,
     "telecom": 5,
     "unrouted": 8
