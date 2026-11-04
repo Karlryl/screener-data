@@ -33,6 +33,13 @@ const MUTANTS = {
   'whole-axis-kept': [/^    delete watched\[group\]\.axes\[SIGN_SPLIT_AXIS\];(?=\r?$)/m, '', /a basis split by profit sign must be watched or named: never as a whole axis/],
   'sign-live-unsplit': [/^      watchedLive\[name\] = .*;(?=\r?$)/m, '      watchedLive[name] = { axes: { [SIGN_SPLIT_AXIS]: liveBasis.axes[SIGN_SPLIT_AXIS] } };', /a sign sub-basis is built alike on both sides/],
   'sign-by-firms': [/^      if \(values < MIN_COHORT_N\) \{(?=\r?$)/m, '      if (signFirms < MIN_COHORT_N) {', /a sign sub-basis is decided on its usable values, not its firms/],
+  // Wrong sides and edges of the sign lines (blind check of 9fb8c50a59).
+  'live-split-by-frozen-signs': [/^      watchedLive\[name\] = .*;(?=\r?$)/m, '      watchedLive[name] = { axes: { [SIGN_SPLIT_AXIS]: bySign({ axes: liveBasis.axes, profitSign: frozenBasis.profitSign }, sign) } };', /live values are split by the live signs/],
+  'run-only-sign-dropped': [/^    for \(const sign of new Set\(.*\{(?=\r?$)/m, '    for (const sign of new Set([...(frozenBasis.profitSign || [])])) {', /a sign only the run carries is named/],
+  'values-counted-live': [/^      const values = bySign\(frozenBasis, sign\)\.filter\(Number\.isFinite\)\.length;(?=\r?$)/m, '      const values = bySign(liveBasis, sign).filter(Number.isFinite).length;', /a sign basis is decided on the frozen values the score reads/],
+  'firms-of-sign-counted-live': [/^      const signFirms = .*;(?=\r?$)/m, '      const signFirms = ((liveBasis && liveBasis.profitSign) || []).filter((s) => s === sign).length;', /firms and values of a named sign basis are counted in the reference/],
+  'sign-above-15-only': [/^      if \(values < MIN_COHORT_N\) \{(?=\r?$)/m, '      if (values <= MIN_COHORT_N) {', /exactly 15 usable values are watched/],
+  'one-firm-plural': [/^  const firmsDe = .*;(?=\r?$)/m, '  const firmsDe = (n) => `${n} Firmen`;', /one firm reads 1 Firma/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -243,6 +250,27 @@ const thinSign = signs34.map((s, i) => (s === 'unprofitable' && i >= 29 ? NaN : 
 assert.deepEqual(smallcapReferenceDrift(signed(signs34, thinSign), { dataDay: '2026-10-31', calibration: signed(signs34, thinSign) }).notMonitored,
   [{ group: RE, axis: 'capitalEfficiency', sign: 'unprofitable', firms: 17, values: 12, reasonDe: 'Achse capitalEfficiency, nur verglichen mit Firmen mit Verlust: 17 Firmen, davon 12 mit verwendbarem Wert in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung.' }],
   'a sign sub-basis is decided on its usable values, not its firms');
+// The live side is split by the live signs: five of 20 firms change sign, values unchanged, whole axis unchanged.
+const s40 = [...Array(20).fill('profitable'), ...Array(20).fill('unprofitable')];
+const c40 = s40.map((sg, i) => (sg === 'profitable' ? 0.05 + 0.001 * i : -0.05 - 0.001 * i));
+const flipped40 = s40.map((sg, i) => (i < 5 ? 'unprofitable' : sg));
+const ref40 = { dataDay: '2026-10-31', calibration: signed(s40, c40) };
+assert.deepEqual(smallcapReferenceDrift(signed(flipped40, c40), ref40).drifted.map((d) => [d.cohort.split(' sign=')[1], d.ks]),
+  [['profitable', 0.25], ['unprofitable', 0.2]], 'live values are split by the live signs');
+// Frozen 16 and 13 usable values, in the run 13 and 10: the score reads the frozen ones, so they decide and count.
+const s29 = [...Array(16).fill('profitable'), ...Array(13).fill('unprofitable')], s23 = [...Array(13).fill('profitable'), ...Array(10).fill('unprofitable')];
+const fewer = smallcapReferenceDrift(signed(s23, s23.map((sg, i) => (sg === 'profitable' ? 0.05 + 0.001 * i : -0.05 - 0.001 * i))),
+  { dataDay: '2026-10-31', calibration: signed(s29, s29.map((sg, i) => (sg === 'profitable' ? 0.05 + 0.001 * i : -0.05 - 0.001 * i))) });
+assert(Object.keys(fewer.watched).includes(RE + ' capitalEfficiency sign=profitable'), 'a sign basis is decided on the frozen values the score reads');
+assert.deepEqual(fewer.notMonitored.map((g) => [g.sign, g.firms, g.values]), [['unprofitable', 13, 13]], 'firms and values of a named sign basis are counted in the reference');
+// A sign only the run carries (a firm of unknown sign appears) is named with 0 firms and 0 values, not dropped.
+assert.deepEqual(smallcapReferenceDrift(signed([...s40, 'unknown'], [...c40, 0.02]), ref40).notMonitored.map((g) => [g.sign, g.firms, g.values]),
+  [['unknown', 0, 0]], 'a sign only the run carries is named');
+// Exactly 15 usable values are watched, 14 are named.
+const edge = (n) => { const sg = [...Array(n).fill('profitable'), ...Array(16).fill('unprofitable')], ce = sg.map((x, i) => (x === 'profitable' ? 0.01 * i : -0.01 * i)), r = { dataDay: '2026-10-31', calibration: signed(sg, ce) };
+  const d = smallcapReferenceDrift(signed(sg, ce), r); return { watched: Object.keys(d.watched).filter((k) => k.includes('sign=')).map((k) => k.split(' sign=')[1]), named: d.notMonitored.map((g) => [g.sign, g.values]) }; };
+assert.deepEqual(edge(15), { watched: ['profitable', 'unprofitable'], named: [] }, 'exactly 15 usable values are watched');
+assert.deepEqual(edge(14), { watched: ['unprofitable'], named: [['profitable', 14]] }, 'exactly 15 usable values are watched: 14 are named');
 console.log('PASS a basis split by profit sign is watched on its own from 15 usable values, else named with firms and values apart');
 
 // The file itself: a broken one stops the pass, the versioned one stays what its before and after measured.
@@ -282,6 +310,8 @@ assert.equal(ksOf(reBase.axes.capitalEfficiency, real.calibration.cohortBases[RE
 assert.deepEqual(['profitable', 'unprofitable'].map((s) => Math.round(ksOf(signPart(reBase, s), signPart(real.calibration.cohortBases[RE], s)) * 1000) / 1000), [0.273, 0.75], 'test data: Codex swap probe');
 assert.deepEqual(smallcapReferenceDrift(reSwap, real).notMonitored.filter((g) => g.axis).map((g) => [g.group, g.sign, g.firms, g.values]),
   [[RE, 'profitable', 11, 11], [RE, 'unknown', 1, 0], [RE, 'unprofitable', 5, 4]], 'a basis split by profit sign must be watched or named: real estate');
+assert.equal(watchReal.notMonitored.find((g) => g.sign === 'unknown').reasonDe,
+  'Achse capitalEfficiency, nur verglichen mit Firmen ohne bekanntes Gewinnvorzeichen: 1 Firma, davon 0 mit verwendbarem Wert in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung.', 'one firm reads 1 Firma');
 // Energy: 11 and 6 firms, both tracks thin, 17 together. Only that union can see them move.
 const energyMoved = structuredClone(real.calibration);
 for (const track of ['profitable', 'unprofitable']) {
