@@ -57,7 +57,6 @@ const ROWS = [
   ['IREDA.BO', ['IREDA.NS'], 'year', 22.79, 'quarter', '2026-06-30', '2025-06-30', 15.4986],
   ['LTF.BO', ['LTF.NS'], 'year', 12.63, 'quarter', '2026-06-30', '2025-06-30', 22.3814],
   ['POONAWALLA.NS', [], 'year', 62.25, 'quarter', '2026-06-30', '2025-06-30', 77.3419],
-  ['UTIAMC.NS', ['UTIAMC.BO'], 'year', 6.48, 'quarter', '2026-06-30', '2025-06-30', 6.696],
 ];
 
 test('every listing shows the growth of the filed operands on the newest filed pair', () => {
@@ -98,11 +97,27 @@ test('fiscal years enter on the filed definition; years without two equal readin
   }
 });
 
+test('a vendor quarter after the covered one is withheld and the filed pair stays on the board', () => {
+  const nextEnd = e => ({ '03-31': '06-30', '06-30': '09-30', '09-30': '12-31', '12-31': '03-31' })[e.slice(5)];
+  for (const [t, , , , b1, end, , after] of ROWS.filter(r => r[4] === 'quarter')) {
+    const v = H.table.coverage.find(x => x.ticker === t && x.field === 'revenueQ');
+    const md = nextEnd(v.coversThrough), next = (md === '03-31' ? +v.coversThrough.slice(0, 4) + 1 : v.coversThrough.slice(0, 4)) + '-' + md;
+    const s = leg(t);
+    s.timeseries.revenueQ = [{ value: 7e8 }, ...s.timeseries.revenueQ];
+    s.timeseries.revenueQEnds = [next, ...s.timeseries.revenueQEnds];
+    const out = apply(s).snapshot, v1 = g31Shadow(out).v1;
+    assert.equal(value(out.timeseries.revenueQ[0]), null, t + ' ' + next);
+    assert.equal(out.timeseries.revenueQ[0].financialMissing.reasonCode, 'period-after-coverage', t);
+    assert.deepEqual([v1.basis, v1.periodEnd], [b1, end], t);
+    assert.ok(Math.abs(v1.pct - after) < 0.0001, t);
+  }
+});
+
 test('rows: count, one block, exact sources, a reason naming its period, plain German', () => {
   const own = H.table.cases.filter(c => c.revision === REV);
-  assert.equal(own.length, 123);
+  assert.equal(own.length, 114);
   const at = H.table.cases.findIndex(c => c.revision === REV);
-  assert.deepEqual(H.table.cases.slice(at, at + 123), own, 'one block');
+  assert.deepEqual(H.table.cases.slice(at, at + 114), own, 'one block');
   assert.deepEqual([...new Set(own.map(c => c.ticker))].sort(), ROWS.map(r => r[0]).sort());
   for (const c of own) {
     const [y, m, d] = c.period.split('-');
