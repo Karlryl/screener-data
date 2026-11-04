@@ -120,6 +120,41 @@ test('Shenhua: the mixed cell is gone from both listings; the A share shows what
   }
 });
 
+// M1 of the review of 04.11.2026: the pull stores the packet with the table applied, so DHER.DE (03.11.2026) and 1088.HK
+// (04.11.2026) carry the holds of 01.11.2026. Read with today's table, the held cells take the filed values and the new texts.
+test('a packet stored with the holds of 01.11.2026 takes the filed values and the new texts', () => {
+  const older = structuredClone(table);
+  older.cases = older.cases.filter((c) => c.revision !== '2026-11-04-sdheimat2').map((c) => (c.revision === '2026-11-01-sdheimat'
+    ? { ...c, replacementValue: null, reason: 'Hold of 01.11.2026 for ' + c.period.split('-').reverse().join('.'), sources: [{ ...c.sources[0], value: undefined }] }
+    : c));
+  older.coverage = older.coverage.filter((v) => !['DHER.DE', 'KMX'].includes(v.ticker));
+  for (const [ticker, end, pct] of [['DHER.DE', '2026-06-30', 15.34], ['DHER.SW', '2026-09-30', 23.17]]) {
+    // As the pull stores it: the table applied on the native packet, then only the outer values converted.
+    const native = structuredClone(fixture[ticker]);
+    const f = native.meta.fxRateApplied;
+    native.timeseries.revenueQ = native.timeseries.revenueQ.map((r) => ({ value: value(r) / f }));
+    native.meta.fxRateApplied = 1;
+    const held = applyFinancialCases(native, { table: older }).snapshot;
+    assert.ok(held.timeseries.revenueQ.some((r) => r?.financialCorrection?.reason?.startsWith('Hold of 01.11.2026')), 'precondition: stored holds');
+    held.timeseries.revenueQ = held.timeseries.revenueQ.map((r) => (value(r) == null ? r : { ...r, value: value(r) * f }));
+    held.meta.fxRateApplied = f;
+    const { snapshot: now } = applyFinancialCases(held);
+    const leg = g31Shadow(now).v1;
+    assert.equal(leg.periodEnd, end, ticker);
+    assert.ok(Math.abs(leg.pct - pct) < 0.01, ticker + ' ' + leg.pct);
+    assert.ok(!now.timeseries.revenueQ.some((r) => r?.financialCorrection?.reason?.startsWith('Hold of')), ticker + ': no old text left');
+    assert.equal(JSON.stringify(applyFinancialCases(now).snapshot), JSON.stringify(now), ticker + ': a second pass changes nothing');
+  }
+  // A hold whose text changed takes the new text (1088.HK gross profit).
+  const hk = structuredClone(fixture['1088.HK']);
+  const hkHeld = applyFinancialCases(hk, { table: older }).snapshot;
+  const i = hkHeld.timeseries.grossProfitQEnds.indexOf('2026-06-30');
+  assert.match(hkHeld.timeseries.grossProfitQ[i].financialCorrection.reason, /^Hold of/);
+  const hkNow = applyFinancialCases(hkHeld).snapshot;
+  assert.equal(value(hkNow.timeseries.grossProfitQ[i]), null);
+  assert.match(hkNow.timeseries.grossProfitQ[i].financialCorrection.reason, /ungeklärt/);
+});
+
 test('Delivery Hero: the filed quarters on all four real packets; the newest quarter shows where the packet holds it', () => {
   assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.SW'])).v1.pct - 16.4) < 0.2, 'precondition: the vendor pair');
   assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.DE'])).v1.pct - 20.8) < 0.2, 'precondition: the vendor pair');
