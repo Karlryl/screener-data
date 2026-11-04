@@ -7,6 +7,8 @@
  * data-health/exchange-coverage-baseline.json. ::error:: when:
  *   - an exchange's count drops >40% vs its own median, OR
  *   - an exchange that had >0 snapshots in-window drops to 0 today.
+ * Either rule needs more than one listing lost (see SINGLE_LISTING); a lone
+ * listing that leaves its label is logged as ::warning:: instead.
  *
  * Snapshots without meta.exchangeName (older vintages, ~13% of the corpus —
  * verified 2026-07-06) are grouped under '(unknown)' so they still count
@@ -28,6 +30,14 @@ const SNAP_DIR = path.join(ROOT, 'snapshots');
 const BASELINE_PATH = path.join(ROOT, 'data-health', 'exchange-coverage-baseline.json');
 const WINDOW = 14;
 const DROP_THRESHOLD = 0.40;
+// A loss of at most one listing is never an exchange-level drop: the guard
+// cannot tell a pull collapse from one relabel or exit. Buckets with a median of
+// 3+ already ignored a single loss via DROP_THRESHOLD; this gives the 1- and
+// 2-listing labels the same rule. Run 41805213687 (04.11.2026): the only
+// listing under 'Nasdaq' (NXDR) has been labelled 'NasdaqCM' by Yahoo since its
+// refetch on 30.10.; the alarm fired once the seeding window filled and would
+// have stayed red every day (frozen history, see updateBaseline).
+const SINGLE_LISTING = 1;
 const BASELINE_SHAPE_ERROR = 'ERR_EXCHANGE_COVERAGE_BASELINE_SHAPE';
 
 function loadJson(p, fallback) {
@@ -122,8 +132,22 @@ function isExchangeAlarming(todayCount, history) {
   // durchgehend tote Reihen bleiben damit bewusst still.
   const med = activeMedian(history);
   if (med === null || med <= 0) return false;
+  if (med - todayCount <= SINGLE_LISTING) return false;
   if (todayCount === 0) return true;
   return (med - todayCount) / med > DROP_THRESHOLD;
+}
+
+// The cases SINGLE_LISTING keeps out of the alarm, so they still show up in the
+// log: a seeded label whose last listing left today.
+function singleListingDrops(today, baseline) {
+  const notes = [];
+  for (const ex of Object.keys(baseline).filter((k) => !k.startsWith('_'))) {
+    const history = (baseline[ex] || []).filter(Number.isFinite);
+    const med = activeMedian(history);
+    if (history.length < WINDOW || med === null || (today[ex] || 0) > 0) continue;
+    if (!isExchangeAlarming(0, history)) notes.push(`${ex}: 0 today (median ${med}), at most one listing lost`);
+  }
+  return notes;
 }
 
 function checkDrift(today, baseline) {
@@ -212,6 +236,9 @@ function main(options = {}) {
   writeBaseline(baselinePath, updated);
   log('Baseline updated: ' + baselinePath);
 
+  const notes = singleListingDrops(today, baseline);
+  if (notes.length > 0) log('::warning::Exchange label emptied, not an exchange drop — ' + notes.join('; '));
+
   if (alerts.length > 0) {
     error('::error::Exchange coverage drop detected — ' + alerts.join('; '));
     setExitCode(1);
@@ -232,6 +259,7 @@ module.exports = {
   median,
   activeMedian,
   isExchangeAlarming,
+  singleListingDrops,
   loadBaseline,
   validateBaseline,
   main
