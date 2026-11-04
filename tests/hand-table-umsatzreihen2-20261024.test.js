@@ -41,7 +41,7 @@ test('the 14 cases and one coverage row of this lane are in the table and valida
   const own = table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 14);
   assert.deepEqual([...new Set(own.map(c => c.ticker))].sort(), ['603993.SS', 'INFRAC.SW']);
-  assert.deepEqual(table.coverage.filter(v => v.ticker === '603993.SS'), [{ ticker: '603993.SS', field: 'revenueQ', coversThrough: '2026-06-30' }]);
+  assert.deepEqual(table.coverage.filter(v => v.ticker === '603993.SS'), [{ ticker: '603993.SS', field: 'revenueQ', coversThrough: '2026-06-30', listingAliases: ['3993.HK'] }]);
   for (const c of own) {
     assert.ok(c.sources.every(s => s.url.startsWith('https://') && s.quote && s.page && s.verifiedAt && s.published), c.caseId);
     // Rule #27: every reason names its period.

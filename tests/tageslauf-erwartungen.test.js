@@ -278,6 +278,35 @@ test('due date is the export data day (Berlin date of generated_at); --datum onl
   assert.match(r.lines[0], /Datentag 2026-10-24, geprüft wie am 2026-10-25 per --datum\)\.$/);
 });
 
+test('a count with an unknown value is nicht messbar unless the entry names the field optional (P282)', async () => {
+  // Fixture full/energy: every row carries rank, g31Hinweis on none. Count over a field present on part of the rows.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'erw-count-'));
+  fs.mkdirSync(path.join(dir, 'full'));
+  fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify({ generated_at: '2026-10-30T10:00:00Z', branches: ['energy'] }));
+  fs.writeFileSync(path.join(dir, 'full', 'energy.json'), JSON.stringify({ profitable: [{ ticker: 'A', marker: false }, { ticker: 'B' }], unprofitable: [] }));
+  const list = path.join(dir, 'e.json');
+  const check = async entry => {
+    fs.writeFileSync(list, JSON.stringify([{ id: 'c', pr: 1, gueltigAb: '2026-10-01', grund: 'g', board: 'full/energy', feld: 'marker', zaehle: true, op: 'eq', wert: 0, ...entry }]));
+    const r = await run({ exportBase: dir, erwartungen: list });
+    return { code: r.code, urteil: r.report?.ergebnisse[0].urteil, gemessen: r.report?.ergebnisse[0].teile[0].gemessen, lines: r.lines };
+  };
+  const strict = await check({});
+  assert.equal(strict.urteil, 'nicht messbar', 'Codex P282: one known and one unknown value must not read as 0 of 1');
+  assert.equal(strict.code, 1);
+  assert.equal(strict.gemessen, 'Feld marker fehlt an 1 von 2 Zeilen');
+  const optional = await check({ optional: true });
+  assert.equal(optional.urteil, 'erfüllt');
+  assert.equal(optional.gemessen, 0);
+  const gone = await check({ optional: true, feld: 'markerTypo' });
+  assert.equal(gone.urteil, 'nicht messbar', 'optional does not hide a field that is gone from every row');
+  for (const bad of [{ optional: false }, { optional: 'ja' }]) assert.equal((await check(bad)).code, 2);
+  fs.writeFileSync(list, JSON.stringify([{ id: 'c', pr: 1, gueltigAb: '2026-10-01', grund: 'g', board: 'full/energy', feld: 'marker', ticker: 'A', op: 'null', optional: true }]));
+  assert.equal((await run({ exportBase: dir, erwartungen: list })).code, 2, 'optional belongs to a count');
+  // The committed count entries over a partly present field carry it, the others do not need it.
+  const committed = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data-health', 'erwartungen.json'), 'utf8')).filter(x => x.zaehle !== undefined);
+  for (const x of committed) assert.equal(x.optional === true, ['ffoReason.code', 'revGrowthReason'].includes(x.feld), x.id);
+});
+
 test('invalid expectation file is exit 2, naming the entry', async () => {
   for (const [bad, msg] of [
     [{ op: 'between', ticker: 'AAA', feld: 'rank', min: 5 }, /min\/max/],
@@ -365,7 +394,7 @@ test('https/http base: one fetch per file; a 404 board is nicht messbar, a 404 i
       e({ ticker: 'DUP', board: 'any', op: 'present' }),
     ], base + '/');
     assert.equal(r.code, 0, r.lines.join('\n'));
-    assert.deepEqual(hits, { '/v1/index.json': 1, '/v1/full/energy.json': 1, '/v1/full/utilities.json': 1 });
+    assert.deepEqual(hits, { '/v1/index.json': 1, '/v1/full/energy.json': 1, '/v1/full/utilities.json': 1, '/v1/filter/universum.json': 1 }); // the deadline report reads the filter feed once
     const missing = await verdicts([e({ ticker: 'AAA', board: 'quality/energy', op: 'present' })], base);
     assert.equal(missing.code, 1);
     assert.deepEqual(missing.u, ['nicht messbar']);

@@ -35,7 +35,7 @@
     { "ticker": "INFQ", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "SLCE3.SA", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "8020.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CIG-C", "field": "grossProfitQ", "coversThrough": "2026-06-30", "listingAliases": ["CIG", "CMIG3.SA"] },
     { "ticker": "000688.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "GRANULES.NS", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "BYLOT.AT", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -44,10 +44,10 @@
     { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "CDR.WA", "listingAliases": ["OTGLF"], "field": "grossProfitQ", "coversThrough": "2026-06-30" },
     { "ticker": "6269.T", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "CIG-C", "field": "opIncQ", "coversThrough": "2026-06-30", "listingAliases": ["CIG", "CMIG3.SA"] },
     { "ticker": "2498.HK", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "300277.SZ", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "603993.SS", "field": "revenueQ", "coversThrough": "2026-06-30", "listingAliases": ["3993.HK"] },
     { "ticker": "2855.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "2855.TW", "field": "opIncQ", "coversThrough": "2026-06-30" },
     { "ticker": "6005.TW", "field": "revenueQ", "coversThrough": "2026-06-30" },
@@ -56,7 +56,32 @@
     { "ticker": "SUNC", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "AHCO", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "600292.SS", "field": "revenueQ", "coversThrough": "2026-06-30" },
-    { "ticker": "NMR", "field": "revenueQ", "coversThrough": "2026-09-30" }
+    { "ticker": "NMR", "field": "revenueQ", "coversThrough": "2026-09-30" },
+    { "ticker": "BRBI", "field": "revenueQ", "coversThrough": "2026-06-30" },
+    { "ticker": "GAU", "field": "opIncQ", "coversThrough": "2026-06-30" },
+    { "ticker": "JIOFIN.BO", "listingAliases": ["JIOFIN.NS"], "field": "revenueQ", "coversThrough": "2026-06-30" },
+    {"ticker": "TSFINV.NS", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "NUVAMA.BO", "listingAliases": ["NUVAMA.NS"], "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "SUNDARMFIN.NS", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "AADHARHFC.BO", "listingAliases": ["AADHARHFC.NS"], "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "ABCAPITAL.NS", "listingAliases": ["ABCAPITAL.BO"], "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "CGCL.BO", "listingAliases": ["CGCL.NS"], "field": "revenueQ", "coversThrough": "2026-09-30"},
+    {"ticker": "SAMMAANCAP.NS", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "BAJAJHFL.NS", "listingAliases": ["BAJAJHFL.BO"], "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "IIFL.BO", "listingAliases": ["IIFL.NS"], "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "SBFC.BO", "listingAliases": ["SBFC.NS"], "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "TVSHLTD.BO", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "1941.T", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "ATLC", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "PFSI", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "RKT", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "FIGR", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "BAM", "listingAliases": ["BAM.TO"], "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "SII", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "XP", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "KRU.WA", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "MOL.MI", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "XTB.WA", "field": "revenueQ", "coversThrough": "2026-06-30"}
   ],
   "cases": [
     {
@@ -152,7 +177,9 @@
     {
       "caseId": "ysn.de-2026-06-30-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2026-06-30",
       "periodType": "3M",
@@ -171,7 +198,9 @@
     {
       "caseId": "ysn.de-2025-09-30-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2025-09-30",
       "periodType": "3M",
@@ -190,7 +219,9 @@
     {
       "caseId": "ysn.de-2025-06-30-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2025-06-30",
       "periodType": "3M",
@@ -209,7 +240,9 @@
     {
       "caseId": "ysn.de-2025-03-31-grossProfitQ",
       "ticker": "YSN.DE",
-      "listingAliases": ["YSNG.VI"],
+      "listingAliases": [
+        "YSNG.VI"
+      ],
       "field": "grossProfitQ",
       "period": "2025-03-31",
       "periodType": "3M",
@@ -395,7 +428,10 @@
     {
       "caseId": "pdn.ax-2017-03-31-grossProfitQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "grossProfitQ",
       "period": "2017-03-31",
       "periodType": "3M",
@@ -419,7 +455,10 @@
     {
       "caseId": "pdn.ax-2016-12-31-grossProfitQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "grossProfitQ",
       "period": "2016-12-31",
       "periodType": "3M",
@@ -443,7 +482,10 @@
     {
       "caseId": "pdn.ax-2016-06-30-grossProfitQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "grossProfitQ",
       "period": "2016-06-30",
       "periodType": "3M",
@@ -462,7 +504,10 @@
     {
       "caseId": "pdn.ax-2016-12-31-revenueQ",
       "ticker": "PDN.AX",
-      "listingAliases": ["PDN.TO", "PALAF"],
+      "listingAliases": [
+        "PDN.TO",
+        "PALAF"
+      ],
       "field": "revenueQ",
       "period": "2016-12-31",
       "periodType": "3M",
@@ -5680,7 +5725,11 @@
       ],
       "revision": "2026-10-11-p177",
       "verifiedAt": "2026-10-02",
-      "legacyNativeHoldRevision": "2026-10-02i"
+      "legacyNativeHoldRevision": "2026-10-02i",
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
+      ]
     },
     {
       "caseId": "cig-c-2026-03-31-grossProfitQ",
@@ -5712,6 +5761,10 @@
           "value": 1952136000,
           "derivation": "Q1 2026 on the restated basis of the 2Q26 ITR = six months 2026 minus Q2 2026 = 1,768,103 thousand BRL (the 1Q26 ITR filed 1,712,453 before the reclassification of note 2.4)"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -5750,6 +5803,10 @@
           "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
           "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -5778,6 +5835,10 @@
           "page": "PDF page 32 (informações contábeis intermediárias 30.06.2026, nota 2.4 Reapresentação de saldos comparativos, consolidado Abr a Jun/2025: Apresentado, Ajustes, Reapresentado)",
           "quote": "LUCRO BRUTO 2.150.133 49.627 2.199.760"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -5811,7 +5872,11 @@
       ],
       "revision": "2026-10-11-p177",
       "verifiedAt": "2026-10-02",
-      "legacyNativeHoldRevision": "2026-10-02i"
+      "legacyNativeHoldRevision": "2026-10-02i",
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
+      ]
     },
     {
       "caseId": "obm.ax-2024-06-30-annualRev-nonadjacent",
@@ -5857,6 +5922,9 @@
           "end": "2025-06-30",
           "value": 505892000
         }
+      ],
+      "listingAliases": [
+        "CRNLF"
       ]
     },
     {
@@ -5968,7 +6036,9 @@
     {
       "caseId": "1ane.mi-2022-09-30-revenueQ-p129",
       "ticker": "1ANE.MI",
-      "listingAliases": ["ANE.MC"],
+      "listingAliases": [
+        "ANE.MC"
+      ],
       "field": "revenueQ",
       "period": "2022-09-30",
       "periodType": "3M",
@@ -7128,7 +7198,9 @@
     {
       "caseId": "p168d-mfsl-2024-03-31-annualRev",
       "ticker": "MFSL.BO",
-      "listingAliases": ["MFSL.NS"],
+      "listingAliases": [
+        "MFSL.NS"
+      ],
       "field": "annualRev",
       "period": "2024-03-31",
       "periodType": "12M",
@@ -9039,7 +9111,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2026-06-30",
@@ -9075,7 +9148,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2026-03-31",
@@ -9111,7 +9185,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2025-12-31",
@@ -9147,7 +9222,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2025-06-30",
@@ -9183,7 +9259,8 @@
       "ticker": "KINV-A.ST",
       "listingAliases": [
         "KINV-B.ST",
-        "KNEVF"
+        "KNEVF",
+        "1KINV.MI"
       ],
       "field": "revenueQ",
       "period": "2025-03-31",
@@ -9244,6 +9321,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.829.246 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9287,6 +9368,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 3.272.251 3.217.460",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9330,6 +9415,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.641.050 49.627 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9362,6 +9451,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.641.050 49.627 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9394,6 +9487,10 @@
           "quote": "Lucro antes do resultado financeiro e dos tributos sobre o lucro 1.641.050 49.627 1.690.677",
           "verifiedAt": "2026-10-22"
         }
+      ],
+      "listingAliases": [
+        "CIG",
+        "CMIG3.SA"
       ]
     },
     {
@@ -9979,6 +10076,9 @@
           "start": "2026-01-01",
           "end": "2026-03-31"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10009,6 +10109,9 @@
           "start": "2025-10-01",
           "end": "2025-12-31"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10039,6 +10142,9 @@
           "start": "2025-07-01",
           "end": "2025-09-30"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10069,6 +10175,9 @@
           "start": "2025-04-01",
           "end": "2025-06-30"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10105,6 +10214,9 @@
           "quote": "其中：营业成本 51,206,864,207.84 35,730,514,956.58",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10141,6 +10253,9 @@
           "quote": "其中：营业成本 113,530,810,246.03 127,476,334,514.65",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10177,6 +10292,9 @@
           "quote": "135,319,885,598.22 104,184,032,395.96 94,772,503,770.20 74,727,331,950.71",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -10213,6 +10331,9 @@
           "quote": "其中：营业成本 51,206,864,207.84 35,730,514,956.58",
           "currency": "CNY"
         }
+      ],
+      "listingAliases": [
+        "3993.HK"
       ]
     },
     {
@@ -13035,6 +13156,9 @@
           "unit": "currency",
           "sourceUnit": "USD thousands"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13067,6 +13191,9 @@
           "unit": "currency",
           "sourceUnit": "USD thousands"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13099,6 +13226,9 @@
           "unit": "currency",
           "sourceUnit": "USD thousands"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13121,6 +13251,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13143,6 +13276,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13165,6 +13301,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -13187,6 +13326,9 @@
           "page": "Consolidated Statements of Operations and Other Comprehensive Income (Loss)",
           "quote": "Revenues $ 60,406,728 $ 42,596,673 $ 51,626,779"
         }
+      ],
+      "listingAliases": [
+        "1GLXY.MI"
       ]
     },
     {
@@ -17077,6 +17219,3951 @@
           "unit": "text"
         }
       ]
+    },
+    {
+      "caseId": "brbi-2026-06-30-revenueQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 2181511000,
+      "replacementValue": 130099000,
+      "verifiedAt": "2026-10-31",
+      "reason": "Umsatz korrigiert: Für das Quartal mit Ende 30.06.2026 liefert der Anbieter 2.181,5 Mio. BRL, also Zins- und Handelserträge vor Abzug der fast gleich hohen Zins- und Handelsaufwendungen plus Dienstleistungserlöse. Die Zeile Gesamterlöse im Abschluss steht auf 130,1 Mio. BRL, im Vorjahresquartal auf 139,3 Mio. BRL. Das Wachstum beträgt damit -6,6 % statt der bisher gezeigten -31,4 %. Der Bruttogewinn des Anbieters bleibt Gesamterlöse minus Personalkosten; eine solche Zeile steht nicht im Abschluss. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390026086133/ea030071701ex99-1.htm",
+          "form": "6-K exhibit 99.1, condensed interim financial information, three and six months ended June 30, 2026",
+          "accession": "0001213900-26-086133",
+          "filed": "2026-08-06",
+          "page": "Consolidated statements of profit or loss, printed page 6, Consolidated column",
+          "quote": "Total revenues/(expenses) 13 (2,666) 5,295 4,098 10,167 130,099 139,289 264,906 266,775",
+          "verifiedAt": "2026-10-31",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 130099000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "brbi-2026-03-31-revenueQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 2856725000,
+      "replacementValue": 134807000,
+      "verifiedAt": "2026-10-31",
+      "reason": "Umsatz korrigiert: Für das Quartal mit Ende 31.03.2026 liefert der Anbieter 2.856,7 Mio. BRL Bruttoerträge; die Zeile Gesamterlöse im Abschluss steht auf 134,8 Mio. BRL. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390026053495/ea028970901ex99-1.htm",
+          "form": "6-K exhibit 99.1, condensed interim financial information, three months ended March 31, 2026",
+          "accession": "0001213900-26-053495",
+          "filed": "2026-05-08",
+          "page": "Condensed statements of profit or loss, Consolidated column",
+          "quote": "Total revenues 13 6,764 4,872 134,807 127,486",
+          "verifiedAt": "2026-10-31",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 134807000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "brbi-2025-12-31-revenueQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 2328768000,
+      "replacementValue": 131318000,
+      "verifiedAt": "2026-10-31",
+      "reason": "Umsatz korrigiert: Für das Quartal mit Ende 31.12.2025 liefert der Anbieter 2.328,8 Mio. BRL Bruttoerträge; die Gesamterlöse im Abschluss ergeben 131,3 Mio. BRL (Jahr 531,4 minus neun Monate 400,1). Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390026012754/ea027565201ex99-1_brbi.htm",
+          "form": "6-K exhibit 99.1, parent company and consolidated financial statements as of December 31, 2025",
+          "accession": "0001213900-26-012754",
+          "filed": "2026-02-05",
+          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 12, Consolidated column",
+          "quote": "Total revenues 6,386 9,986 531,380 581,219",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 531380000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390025107140/ea026425801ex99-1_brbibr.htm",
+          "form": "6-K exhibit 99.1, consolidated interim financial information, three and nine months ended September 30, 2025",
+          "accession": "0001213900-25-107140",
+          "filed": "2025-11-06",
+          "page": "Condensed statements of profit or loss, Consolidated column, nine-month period",
+          "quote": "Total revenues/(expenses) (3,098) (388) 7,069 10,372 133,287 157,729 400,062 437,342",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "value": 400062000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "brbi-2025-09-30-revenueQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 4973562000,
+      "replacementValue": 133287000,
+      "verifiedAt": "2026-10-31",
+      "reason": "Umsatz korrigiert: Für das Quartal mit Ende 30.09.2025 liefert der Anbieter 4.973,6 Mio. BRL Bruttoerträge; die Zeile Gesamterlöse im Abschluss steht auf 133,3 Mio. BRL. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390025107140/ea026425801ex99-1_brbibr.htm",
+          "form": "6-K exhibit 99.1, consolidated interim financial information, three and nine months ended September 30, 2025",
+          "accession": "0001213900-25-107140",
+          "filed": "2025-11-06",
+          "page": "Condensed statements of profit or loss, Consolidated column",
+          "quote": "Total revenues/(expenses) (3,098) (388) 7,069 10,372 133,287 157,729 400,062 437,342",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 133287000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "brbi-2025-06-30-revenueQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 3179219000,
+      "replacementValue": 139289000,
+      "verifiedAt": "2026-10-31",
+      "reason": "Umsatz korrigiert: Für das Quartal mit Ende 30.06.2025 liefert der Anbieter 3.179,2 Mio. BRL Bruttoerträge; die Zeile Gesamterlöse im Abschluss steht auf 139,3 Mio. BRL. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390026086133/ea030071701ex99-1.htm",
+          "form": "6-K exhibit 99.1, condensed interim financial information, three and six months ended June 30, 2026",
+          "accession": "0001213900-26-086133",
+          "filed": "2026-08-06",
+          "page": "Consolidated statements of profit or loss, printed page 6, Consolidated column",
+          "quote": "Total revenues/(expenses) 13 (2,666) 5,295 4,098 10,167 130,099 139,289 264,906 266,775",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 139289000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "brbi-2025-12-31-annualRev-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 12427747000,
+      "replacementValue": 531380000,
+      "metricDefinition": "Total revenues",
+      "verifiedAt": "2026-10-31",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 12.427,7 Mio. BRL Bruttoerträge; die Zeile Gesamterlöse im Abschluss steht auf 531,4 Mio. BRL. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390026012754/ea027565201ex99-1_brbi.htm",
+          "form": "6-K exhibit 99.1, parent company and consolidated financial statements as of December 31, 2025",
+          "accession": "0001213900-26-012754",
+          "filed": "2026-02-05",
+          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 12, Consolidated column",
+          "quote": "Total revenues 6,386 9,986 531,380 581,219",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 531380000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "brbi-2024-12-31-annualRev-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 7414433000,
+      "replacementValue": 581219000,
+      "metricDefinition": "Total revenues",
+      "verifiedAt": "2026-10-31",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2024 (Ende 31.12.2024) liefert der Anbieter 7.414,4 Mio. BRL Bruttoerträge; die Zeile Gesamterlöse im Abschluss steht auf 581,2 Mio. BRL. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390026012754/ea027565201ex99-1_brbi.htm",
+          "form": "6-K exhibit 99.1, parent company and consolidated financial statements as of December 31, 2025",
+          "accession": "0001213900-26-012754",
+          "filed": "2026-02-05",
+          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 12, Consolidated column",
+          "quote": "Total revenues 6,386 9,986 531,380 581,219",
+          "verifiedAt": "2026-10-31",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 581219000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "brbi-2023-12-31-annualRev-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "BRBI",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "BRL",
+      "unit": "currency",
+      "expectedBadValue": 6556703000,
+      "replacementValue": 435813000,
+      "metricDefinition": "Total revenues",
+      "verifiedAt": "2026-10-31",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr 2023 (Ende 31.12.2023) liefert der Anbieter 6.556,7 Mio. BRL Bruttoerträge; die Zeile Gesamterlöse im Abschluss steht auf 435,8 Mio. BRL. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2058601/000121390026050426/R4.htm",
+          "form": "20-F for 2025, financial report page R4, audited consolidated statements of profit or loss",
+          "accession": "0001213900-26-050426",
+          "filed": "2026-04-30",
+          "page": "R4, Consolidated Statements of Profit or Loss, column Dec. 31, 2023",
+          "quote": "Total revenues 531,380 581,219 435,813",
+          "verifiedAt": "2026-10-31",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 435813000,
+          "currency": "BRL",
+          "unit": "currency",
+          "sourceUnit": "BRL thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2026-06-30-opIncQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 90368000,
+      "replacementValue": 90368000,
+      "metricDefinition": "Income (loss) from operations",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Quartal mit Ende 30.06.2026 stimmen die 90,4 Mio. USD des Anbieters mit dem Quartalsbericht überein; sie enthalten den Gewinn aus Goldabsicherungen von 27,2 Mio. USD. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326004090/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three and six months ended June 30, 2026",
+          "accession": "0001062993-26-004090",
+          "filed": "2026-08-07",
+          "page": "Statements of operations and comprehensive income (loss), three months columns",
+          "quote": "Income (loss) from operations 90,368 19,118",
+          "verifiedAt": "2026-10-31",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 90368000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2026-03-31-opIncQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 66256000,
+      "replacementValue": 66256000,
+      "metricDefinition": "Income (loss) from operations",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Quartal mit Ende 31.03.2026 stimmen die 66,3 Mio. USD des Anbieters mit dem Quartalsbericht überein; sie enthalten den Verlust aus Goldabsicherungen von 21,9 Mio. USD. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326002589/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three months ended March 31, 2026",
+          "accession": "0001062993-26-002589",
+          "filed": "2026-05-14",
+          "page": "Segmented information, three months ended March 31, 2026, Total column",
+          "quote": "(Loss) income from operations (4,670) 70,926 66,256",
+          "verifiedAt": "2026-10-31",
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "value": 66256000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2025-12-31-opIncQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 76665000,
+      "replacementValue": 43915000,
+      "metricDefinition": "Income (loss) from operations",
+      "verifiedAt": "2026-10-31",
+      "reason": "Betriebsergebnis korrigiert: Für das Quartal mit Ende 31.12.2025 liefert der Anbieter 76,7 Mio. USD ohne den Verlust aus Goldabsicherungen von 33,5 Mio. USD; die Firma nennt 43,9 Mio. USD. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326000916/exhibit99-2.htm",
+          "form": "6-K exhibit 99.2, management's discussion and analysis, years ended December 31, 2025 and 2024",
+          "accession": "0001062993-26-000916",
+          "filed": "2026-02-13",
+          "page": "Summary of quarterly financial results, printed page 28",
+          "quote": "Income (loss) from operations and JV 43,915 176 18,779 (26,327) 7,401 4,190 12,092 (3,197)",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 43915000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2025-09-30-opIncQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 37646000,
+      "replacementValue": 176000,
+      "metricDefinition": "Income (loss) from operations",
+      "verifiedAt": "2026-10-31",
+      "reason": "Betriebsergebnis korrigiert: Für das Quartal mit Ende 30.09.2025 liefert der Anbieter 37,6 Mio. USD ohne den Verlust aus Goldabsicherungen von 38,2 Mio. USD. Seit die Firma die Absicherungen im vierten Quartal 2025 in den Nettoumsatz verschoben hat, nennt sie für dieses Quartal 0,2 Mio. USD. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326000916/exhibit99-2.htm",
+          "form": "6-K exhibit 99.2, management's discussion and analysis, years ended December 31, 2025 and 2024",
+          "accession": "0001062993-26-000916",
+          "filed": "2026-02-13",
+          "page": "Summary of quarterly financial results, printed page 28",
+          "quote": "Income (loss) from operations and JV 43,915 176 18,779 (26,327) 7,401 4,190 12,092 (3,197)",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 176000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299325016543/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three and nine months ended September 30, 2025, as first filed with the hedges in finance expense",
+          "accession": "0001062993-25-016543",
+          "filed": "2025-11-07",
+          "page": "Statements of operations; note 19, finance expense",
+          "quote": "Income from operations and joint venture 38,375 22,904 78,452 40,532",
+          "verifiedAt": "2026-10-31",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2025-06-30-opIncQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 19118000,
+      "replacementValue": 19118000,
+      "metricDefinition": "Income (loss) from operations",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Quartal mit Ende 30.06.2025 stimmen die 19,1 Mio. USD des Anbieters mit der angepassten Vorjahresspalte des Quartalsberichts überein; sie enthalten den Verlust aus Goldabsicherungen von 12,5 Mio. USD. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326004090/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three and six months ended June 30, 2026",
+          "accession": "0001062993-26-004090",
+          "filed": "2026-08-07",
+          "page": "Statements of operations and comprehensive income (loss), three months columns",
+          "quote": "Income (loss) from operations 90,368 19,118",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 19118000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2025-03-31-opIncQ-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "opIncQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -26327000,
+      "replacementValue": -26327000,
+      "metricDefinition": "Income (loss) from operations",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Quartal mit Ende 31.03.2025 stimmen die -26,3 Mio. USD des Anbieters mit der angepassten Vorjahresspalte des Quartalsberichts überein; sie enthalten den Verlust aus Goldabsicherungen von 35,1 Mio. USD. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326002589/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three months ended March 31, 2026",
+          "accession": "0001062993-26-002589",
+          "filed": "2026-05-14",
+          "page": "Segmented information, three months ended March 31, 2025, restated",
+          "quote": "Loss from operations (4,411) (21,916) (26,327)",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "value": -26327000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2025-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 152978000,
+      "replacementValue": 36543000,
+      "metricDefinition": "Income from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "Jahresbetriebsergebnis korrigiert: Für das Geschäftsjahr 2025 (Ende 31.12.2025) liefert der Anbieter 153,0 Mio. USD. Er lässt den Verlust aus Goldabsicherungen von 119,3 Mio. USD weg und zieht die Aufzinsung der Rückbaurückstellung von 2,9 Mio. USD ab, während seine Quartale mit Ende 31.03.2025, 30.06.2025, 31.03.2026 und 30.06.2026 die Absicherungen enthalten. Der Abschluss nennt 36,5 Mio. USD. Umsatz und Bruttogewinn bleiben vor Absicherungen. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326001389/exhibit99-6.htm",
+          "form": "40-F exhibit 99.6, audited consolidated financial statements, years ended December 31, 2025 and 2024",
+          "accession": "0001062993-26-001389",
+          "filed": "2026-03-12",
+          "page": "Consolidated statements of operations and comprehensive (loss) income, printed page 4",
+          "quote": "Income from operations and joint venture 36,543 20,486",
+          "verifiedAt": "2026-10-31",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "value": 36543000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2024-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 49600000,
+      "replacementValue": 20486000,
+      "metricDefinition": "Income from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "Jahresbetriebsergebnis korrigiert: Für das Geschäftsjahr 2024 (Ende 31.12.2024) liefert der Anbieter 49,6 Mio. USD ohne den Verlust aus Goldabsicherungen von 23,1 Mio. USD, ohne die Kündigung eines Abnahmevertrags von 13,1 Mio. USD und ohne die Erträge aus dem Gemeinschaftsunternehmen von 4,8 Mio. USD; außerdem zieht er die Aufzinsung der Rückbaurückstellung von 2,2 Mio. USD ab. Der angepasste Abschluss nennt 20,5 Mio. USD. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326001389/exhibit99-6.htm",
+          "form": "40-F exhibit 99.6, audited consolidated financial statements, years ended December 31, 2025 and 2024",
+          "accession": "0001062993-26-001389",
+          "filed": "2026-03-12",
+          "page": "Consolidated statements of operations and comprehensive (loss) income, printed page 4",
+          "quote": "Income from operations and joint venture 36,543 20,486",
+          "verifiedAt": "2026-10-31",
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "value": 20486000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2023-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 20122000,
+      "replacementValue": 20122000,
+      "metricDefinition": "Income (loss) from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Geschäftsjahr 2023 (Ende 31.12.2023) stimmen die 20,1 Mio. USD des Anbieters mit dem Abschluss überein. Bis März 2024 hielt die Firma die Mine nur als Beteiligung, die Zahl ist deshalb kaum mit den Jahren danach vergleichbar. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326000916/exhibit99-2.htm",
+          "form": "6-K exhibit 99.2, management's discussion and analysis, years ended December 31, 2025 and 2024",
+          "accession": "0001062993-26-000916",
+          "filed": "2026-02-13",
+          "page": "Review of FY 2025 consolidated financial results, table of years 2025, 2024 and 2023",
+          "quote": "Income from operations and joint venture 36,543 20,486 20,122",
+          "verifiedAt": "2026-10-31",
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "value": 20122000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2022-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 39419000,
+      "replacementValue": 39419000,
+      "metricDefinition": "Income (loss) from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Geschäftsjahr 2022 (Ende 31.12.2022) stimmen die 39,4 Mio. USD des Anbieters mit dem Abschluss überein. Bis März 2024 hielt die Firma die Mine nur als Beteiligung, die Zahl ist deshalb kaum mit den Jahren danach vergleichbar. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299323007899/R3.htm",
+          "form": "40-F for 2022, financial report page R3, audited consolidated statements of operations",
+          "accession": "0001062993-23-007899",
+          "filed": "2023-03-29",
+          "page": "R3, column Dec. 31, 2022",
+          "quote": "Income (loss) from operations and joint venture 39,419 (60,576)",
+          "verifiedAt": "2026-10-31",
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "value": 39419000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "gau-2021-12-31-annualOpInc-20261031",
+      "revision": "2026-10-31-sdabgr",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "period": "2021-12-31",
+      "periodType": "12M",
+      "index": 4,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -60576000,
+      "replacementValue": -60576000,
+      "metricDefinition": "Income (loss) from operations and joint venture",
+      "verifiedAt": "2026-10-31",
+      "reason": "bestätigt: Für das Geschäftsjahr 2021 (Ende 31.12.2021) stimmen die -60,6 Mio. USD des Anbieters mit dem Abschluss überein. Bis März 2024 hielt die Firma die Mine nur als Beteiligung, die Zahl ist deshalb kaum mit den Jahren danach vergleichbar. Geprüft am 31.10.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299323007899/R3.htm",
+          "form": "40-F for 2022, financial report page R3, audited consolidated statements of operations",
+          "accession": "0001062993-23-007899",
+          "filed": "2023-03-29",
+          "page": "R3, column Dec. 31, 2021",
+          "quote": "Income (loss) from operations and joint venture 39,419 (60,576)",
+          "verifiedAt": "2026-10-31",
+          "start": "2021-01-01",
+          "end": "2021-12-31",
+          "value": -60576000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2026-02-28-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2026-02-28",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -409757000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2026: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-409,8 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 383,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
+          "form": "10-K fiscal 2026",
+          "published": "2026-04-15",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes, Noncontrolling Interest 383,433 669,360 641,595"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2025-02-28-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2025-02-28",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -220520000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2025: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-220,5 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 669,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
+          "form": "10-K fiscal 2026",
+          "published": "2026-04-15",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes, Noncontrolling Interest 383,433 669,360 641,595"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2024-02-29-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2024-02-29",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -205719000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 29.02.2024: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-205,7 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 641,6 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
+          "form": "10-K fiscal 2026",
+          "published": "2026-04-15",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes, Noncontrolling Interest 383,433 669,360 641,595"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2023-02-28-annualOpInc-20261101",
+      "ticker": "KMX",
+      "field": "annualOpInc",
+      "period": "2023-02-28",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -310946000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2023: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-310,9 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 636,8 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001025000024/R2.htm",
+          "form": "10-K fiscal 2025",
+          "published": "2025-04-11",
+          "verifiedAt": "2026-11-01",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes, Noncontrolling Interest 669,360 641,595 636,804"
+        }
+      ]
+    },
+    {
+      "caseId": "1088.hk-2026-06-30-revenueQ-20261101",
+      "ticker": "1088.HK",
+      "listingAliases": [
+        "601088.SS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 118941000000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Umsatz fehlt für das Quartal bis 30.06.2026: Der Anbieterwert ist das Halbjahr auf dem neuen Konsolidierungskreis minus das erste Quartal auf dem alten, also kein Quartal. Beim Umsatz ergäbe das +73,6 %; die Firma meldet für das Halbjahr +7,9 % gegen den angepassten Vorjahreswert und nennt kein Einzelquartal. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
+          "form": "China Shenhua, interim results announcement 2026",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-11-01",
+          "page": "Section VII, report p. 7 (PDF p. 8)",
+          "unit": "CNY millions",
+          "quote": "Revenue RMB million 189,338 175,423 138,109 7.9"
+        }
+      ]
+    },
+    {
+      "caseId": "1088.hk-2026-06-30-grossProfitQ-20261101",
+      "ticker": "1088.HK",
+      "listingAliases": [
+        "601088.SS"
+      ],
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 44032000000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Bruttogewinn fehlt für das Quartal bis 30.06.2026: Es ist dieselbe Rechnung wie beim Umsatz (Halbjahr auf dem neuen Konsolidierungskreis minus erstes Quartal auf dem alten), die sich am Bericht für diese Kennzahl nicht einzeln nachrechnen lässt. Die Firma nennt kein Einzelquartal. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
+          "form": "China Shenhua, interim results announcement 2026",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-11-01",
+          "page": "Section VII, report p. 7 (PDF p. 8)",
+          "unit": "CNY millions",
+          "quote": "Revenue RMB million 189,338 175,423 138,109 7.9"
+        }
+      ]
+    },
+    {
+      "caseId": "1088.hk-2026-06-30-opIncQ-20261101",
+      "ticker": "1088.HK",
+      "listingAliases": [
+        "601088.SS"
+      ],
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 29244000000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Betriebsergebnis fehlt für das Quartal bis 30.06.2026: Es ist dieselbe Rechnung wie beim Umsatz (Halbjahr auf dem neuen Konsolidierungskreis minus erstes Quartal auf dem alten), die sich am Bericht für diese Kennzahl nicht einzeln nachrechnen lässt. Die Firma nennt kein Einzelquartal. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
+          "form": "China Shenhua, interim results announcement 2026",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-11-01",
+          "page": "Section VII, report p. 7 (PDF p. 8)",
+          "unit": "CNY millions",
+          "quote": "Revenue RMB million 189,338 175,423 138,109 7.9"
+        }
+      ]
+    },
+    {
+      "caseId": "dher.de-2026-06-30-revenueQ-20261101",
+      "ticker": "DHER.DE",
+      "listingAliases": [
+        "DHER.SW",
+        "DHER.VI",
+        "1DHER.MI"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 4054500000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Umsatz fehlt für das Quartal bis 30.06.2026: Der Anbieter führt 4.054,5 Mio. EUR, die Firma meldet 4.024,5 Mio. EUR. Das Quartal zeigte +20,8 % statt der gemeldeten +15,3 %. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
+          "form": "Delivery Hero, Q3 2026 trading update",
+          "published": "2026-10-28",
+          "verifiedAt": "2026-11-01",
+          "page": "KPI appendix, p. 15",
+          "unit": "EUR millions",
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9"
+        }
+      ]
+    },
+    {
+      "caseId": "dher.de-2025-09-30-revenueQ-20261101",
+      "ticker": "DHER.DE",
+      "listingAliases": [
+        "DHER.SW",
+        "DHER.VI",
+        "1DHER.MI"
+      ],
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 3736100000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Umsatz fehlt für das Quartal bis 30.09.2025: Der Anbieter führt 3.736,1 Mio. EUR, die Firma meldet 3.530,1 Mio. EUR. Das Quartal bis 30.09.2026 zeigte +16,4 % statt der gemeldeten +23,2 %. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
+          "form": "Delivery Hero, Q3 2026 trading update",
+          "published": "2026-10-28",
+          "verifiedAt": "2026-11-01",
+          "page": "KPI appendix, p. 15",
+          "unit": "EUR millions",
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9"
+        }
+      ]
+    },
+    {
+      "caseId": "dher.de-2025-06-30-revenueQ-20261101",
+      "ticker": "DHER.DE",
+      "listingAliases": [
+        "DHER.SW",
+        "DHER.VI",
+        "1DHER.MI"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 3356200000,
+      "replacementValue": null,
+      "revision": "2026-11-01-sdheimat",
+      "verifiedAt": "2026-11-01",
+      "reason": "Umsatz fehlt für das Quartal bis 30.06.2025: Der Anbieter führt 3.356,2 Mio. EUR, die Firma meldet 3.489,3 Mio. EUR. Das Quartal bis 30.06.2026 zeigte +20,8 % statt der gemeldeten +15,3 %. Geprüft am 01.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
+          "form": "Delivery Hero, Q3 2026 trading update",
+          "published": "2026-10-28",
+          "verifiedAt": "2026-11-01",
+          "page": "KPI appendix, p. 15",
+          "unit": "EUR millions",
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9"
+        }
+      ]
+    },
+    {
+      "caseId": "pco.wa-2024-09-30-revenueQ",
+      "revision": "2026-10-30-pr49",
+      "verifiedAt": "2026-10-30",
+      "ticker": "PCO.WA",
+      "field": "revenueQ",
+      "period": "2024-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 1486000000,
+      "replacementValue": null,
+      "reason": "Umsatzvergleich zurückgehalten: Das Quartal bis 30.09.2024 enthält laut Pepco FY2024, Seite 21 (\"Pepco Poundland Dealz Group\"), Poundland; das Quartal bis 30.09.2025 schließt Poundland laut FY2025, Seite 6 (\"Poundland is now treated as a discontinued operation\"), aus. Kein geschätzter Ersatz aus gerundeten Segmentzahlen.",
+      "sources": [
+        {
+          "url": "https://www.pepcogroup.eu/wp-content/uploads/2024/12/PCO-FY-2024-Prelim-Results-vFF.pdf",
+          "page": 21,
+          "quote": "Pepco Poundland Dealz Group",
+          "published": "2024-12-10"
+        },
+        {
+          "url": "https://www.pepcogroup.eu/wp-content/uploads/2025/12/PCO-FY-2025-Prelim-Results-vFFF.pdf",
+          "page": 6,
+          "quote": "Poundland is now treated as a discontinued operation",
+          "published": "2025-12-17"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2026-06-30-revenueQ-20261030-r4",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "index": 1,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 17947100000,
+      "replacementValue": 20044700000,
+      "revision": "2026-10-30-jio-quarter-r4",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 meldet Jio Financial im Konzernabschluss vom 16.07.2026, PDF-Seite 5, 2.004,47 Crore INR in der Zeile \"Total revenue from operations\". Der Anbieter lässt den Nettogewinn aus der Bewertung zum beizulegenden Zeitwert aus. Die belegten Umsätze von 2.004,47 und 612,46 Crore INR ergeben für das Quartal bis 30.06.2026 ein Wachstum von +227,2818 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_16072026175802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2026",
+          "published": "2026-07-16",
+          "page": "PDF 5 of 14",
+          "quote": "Total revenue from operations 2,004.47 1,018.51 612.46 3,513.26",
+          "sourceUnit": "INR crore",
+          "value": 20044700000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "jiofin.bo-2025-06-30-revenueQ-20261030-r4",
+      "ticker": "JIOFIN.BO",
+      "listingAliases": [
+        "JIOFIN.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "index": 4,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 4164400000,
+      "replacementValue": 6124600000,
+      "revision": "2026-10-30-jio-quarter-r4",
+      "verifiedAt": "2026-10-30",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 meldet Jio Financial im Konzernabschluss vom 16.07.2026, PDF-Seite 5, 612,46 Crore INR in der Zeile \"Total revenue from operations\". Der Anbieter lässt den Nettogewinn aus der Bewertung zum beizulegenden Zeitwert aus. Die belegten Umsätze von 2.004,47 und 612,46 Crore INR ergeben für das Quartal bis 30.06.2026 ein Wachstum von +227,2818 %. Geprüft am 30.10.2026.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_16072026175802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2026",
+          "published": "2026-07-16",
+          "page": "PDF 5 of 14",
+          "quote": "Total revenue from operations 2,004.47 1,018.51 612.46 3,513.26",
+          "sourceUnit": "INR crore",
+          "value": 6124600000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://nsearchives.nseindia.com/corporate/JIOFINANCIAL_17072025171802_JFSL.pdf",
+          "form": "Jio Financial Services, unaudited consolidated results for quarter ended 30 June 2025",
+          "published": "2025-07-17",
+          "page": "PDF 6",
+          "quote": "Total revenue from operations 612.46",
+          "sourceUnit": "INR crore",
+          "value": 6124600000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "tsfinv.ns-2026-06-30-revenueQ-20261102",
+      "ticker": "TSFINV.NS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 2655011000,
+      "replacementValue": 3055753000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 2.655,01 Mio. INR. Der Anbieterwert steht in keiner Zeile der Konzernrechnung, er lässt den Gewinn aus Marktwertänderungen und die übrigen Betriebserlöse weg. Die Firma meldet 3.055,75 Mio. INR (Income from Operations im Segmentbericht, die Summe der sechs Umsatzzeilen der Konzernrechnung). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMHLD_04082026134307_SDTSFILOUTCOMEBMQ12627.pdf",
+          "page": "PDF 4 (consolidated segment information)",
+          "quote": "Income from Operations",
+          "filed": "2026-08-04",
+          "value": 3055753000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMHLD_04082026134307_SDTSFILOUTCOMEBMQ12627.pdf",
+          "page": "PDF 3 (consolidated income statement)",
+          "quote": "Total Income",
+          "filed": "2026-08-04",
+          "value": 3062700000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "tsfinv.ns-2025-06-30-revenueQ-20261102",
+      "ticker": "TSFINV.NS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 1478106000,
+      "replacementValue": 1787912000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 1.478,11 Mio. INR. Der Anbieterwert steht in keiner Zeile der Konzernrechnung, er lässt den Gewinn aus Marktwertänderungen und die übrigen Betriebserlöse weg. Die Firma meldet 1.787,91 Mio. INR (Income from Operations im Segmentbericht, die Summe der sechs Umsatzzeilen der Konzernrechnung). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMHLD_04082026134307_SDTSFILOUTCOMEBMQ12627.pdf",
+          "page": "PDF 4 (segment information, comparison column 30.06.2025)",
+          "quote": "Income from Operations",
+          "filed": "2026-08-04",
+          "value": 1787912000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMHLD_06082025175743_SFHLOUTCOMEBM.pdf",
+          "page": "PDF 6 (consolidated segment information, original June 2025 filing)",
+          "quote": "Income from Operations",
+          "filed": "2025-08-06",
+          "value": 1787912000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMHLD_06082025175743_SFHLOUTCOMEBM.pdf",
+          "page": "PDF 4 (consolidated income statement, original June 2025 filing)",
+          "quote": "Total Income",
+          "filed": "2025-08-06",
+          "value": 1810158000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "nuvama.bo-2026-06-30-revenueQ-20261102",
+      "ticker": "NUVAMA.BO",
+      "listingAliases": [
+        "NUVAMA.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 5775300000,
+      "replacementValue": 13762200000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 5.775,30 Mio. INR. Der Anbieter zeigt nur die Teilzeile Gebühren und Provisionen. Die Firma meldet 13.762,20 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/NWML_30072026191139_SE_BMOutcome_30072026.pdf",
+          "page": "PDF 5 (consolidated, image page)",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-30",
+          "value": 13762200000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "nuvama.bo-2025-06-30-revenueQ-20261102",
+      "ticker": "NUVAMA.BO",
+      "listingAliases": [
+        "NUVAMA.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 5279400000,
+      "replacementValue": 11226500000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 5.279,40 Mio. INR. Der Anbieter zeigt nur die Teilzeile Gebühren und Provisionen. Die Firma meldet 11.226,50 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/NWML_30072026191139_SE_BMOutcome_30072026.pdf",
+          "page": "PDF 5 (comparison column June 30, 2025)",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-30",
+          "value": 11226500000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/NWML_13082025203706_SE_BMOutcome_August132025.pdf",
+          "page": "PDF 5 (consolidated, original June 2025 filing)",
+          "quote": "Total revenue from operations",
+          "filed": "2025-08-13",
+          "value": 11226500000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "sundarmfin.ns-2026-06-30-revenueQ-20261102",
+      "ticker": "SUNDARMFIN.NS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 13628700000,
+      "replacementValue": 26441300000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 13.628,70 Mio. INR. Der Anbieter zieht Finanzierungskosten und Provisionsaufwand ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 26.441,30 Mio. INR (Total Revenue from Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMFIN_03082026142226_SdUFR30062026.pdf",
+          "page": "PDF 3 (consolidated, scanned, read as image)",
+          "quote": "Total Revenue from Operations",
+          "filed": "2026-08-03",
+          "value": 26441300000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://sundaramfinance.in/assets/app_docs/investor-info/financial_information/financial_results/2026-2027/ufr_30062026.pdf",
+          "page": "PDF 3 (STATEMENT OF UNAUDITED CONSOLIDATED FINANCIAL RESULTS)",
+          "quote": "Total Revenue from Operations",
+          "filed": "2026-08-03",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "sundarmfin.ns-2025-06-30-revenueQ-20261102",
+      "ticker": "SUNDARMFIN.NS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 11545000000,
+      "replacementValue": 23489300000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 11.545 Mio. INR. Der Anbieter zieht Finanzierungskosten und Provisionsaufwand ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 23.489,30 Mio. INR (Total Revenue from Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMFIN_03082026142226_SdUFR30062026.pdf",
+          "page": "PDF 3 (comparison column 30.06.2025, restated line split)",
+          "quote": "Total Revenue from Operations",
+          "filed": "2026-08-03",
+          "value": 23489300000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNDARMFIN_04082025135323_UFR_30062025.pdf",
+          "page": "PDF 3 (consolidated, scanned, original June 2025 filing)",
+          "quote": "Total Revenue from Operations",
+          "filed": "2025-08-04",
+          "value": 23489300000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://sundaramfinance.in/assets/app_docs/investor-info/financial_information/financial_results/2026-2027/ufr_30062026.pdf",
+          "page": "PDF 3 (STATEMENT OF UNAUDITED CONSOLIDATED FINANCIAL RESULTS)",
+          "quote": "Total Revenue from Operations",
+          "filed": "2026-08-03",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "aadharhfc.bo-2026-06-30-revenueQ-20261102",
+      "ticker": "AADHARHFC.BO",
+      "listingAliases": [
+        "AADHARHFC.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 9370400000,
+      "replacementValue": 9928900000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 9.370,40 Mio. INR. Der Anbieter zeigt nur Teilzeilen und lässt Gewinne aus Marktwertänderungen und Kreditverkäufen weg. Die Firma meldet 9.928,90 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/AHFL2021_31072026155054_Final_results_Jun26_SD.pdf",
+          "page": "PDF 8 (consolidated, scanned, read as image)",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-31",
+          "value": 9928900000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "aadharhfc.bo-2025-06-30-revenueQ-20261102",
+      "ticker": "AADHARHFC.BO",
+      "listingAliases": [
+        "AADHARHFC.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 8108800000,
+      "replacementValue": 8481800000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 8.108,80 Mio. INR. Der Anbieter zeigt nur Teilzeilen und lässt Gewinne aus Marktwertänderungen und Kreditverkäufen weg. Die Firma meldet 8.481,80 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/AHFL2021_31072026155054_Final_results_Jun26_SD.pdf",
+          "page": "PDF 8 (comparison column June 30, 2025)",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-31",
+          "value": 8481800000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/AHFL2021_25072025161612_results_Jun25_2sd.pdf",
+          "page": "PDF 10 (consolidated, scanned, original June 2025 filing)",
+          "quote": "Total revenue from operations",
+          "filed": "2025-07-25",
+          "value": 8481800000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "abcapital.ns-2026-06-30-revenueQ-20261102",
+      "ticker": "ABCAPITAL.NS",
+      "listingAliases": [
+        "ABCAPITAL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 117485400000,
+      "replacementValue": 121795400000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 117.485,40 Mio. INR. Der Anbieter zieht die Wertminderung ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 121.795,40 Mio. INR (Total Revenue from Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ABCAPITAL_31072026141407_BM_Outcome_Financial_results_31072026_Final_Signed.pdf",
+          "page": "PDF 15 (scanned; statement page 1/7, consolidated)",
+          "quote": "Total Revenue from Operations 12,179.54 13,459.25 9,502.69",
+          "filed": "2026-07-31",
+          "value": 121795400000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ABCAPITAL_30102026134807_BM_Outcome_Financial_results_30102026_Signedd.pdf",
+          "page": "PDF 17 (scanned; statement page 1/10, consolidated, half-year column)",
+          "quote": "Total Revenue from Operations 14,003.21 12,179.54 10,594.96 26,182.75 20,097.65",
+          "filed": "2026-10-30",
+          "value": 121795400000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "abcapital.ns-2025-06-30-revenueQ-20261102",
+      "ticker": "ABCAPITAL.NS",
+      "listingAliases": [
+        "ABCAPITAL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 90730400000,
+      "replacementValue": 95026900000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 90.730,40 Mio. INR. Der Anbieter zieht die Wertminderung ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 95.026,90 Mio. INR (Total Revenue from Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ABCAPITAL_31072026141407_BM_Outcome_Financial_results_31072026_Final_Signed.pdf",
+          "page": "PDF 15 (scanned; statement page 1/7, consolidated)",
+          "quote": "Total Revenue from Operations 12,179.54 13,459.25 9,502.69",
+          "filed": "2026-07-31",
+          "value": 95026900000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "cgcl.bo-2026-09-30-revenueQ-20261102",
+      "ticker": "CGCL.BO",
+      "listingAliases": [
+        "CGCL.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 17645920000,
+      "replacementValue": 17855970000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2026 liefert der Anbieter 17.645,92 Mio. INR. Der Anbieter lässt den Gewinn aus Marktwertänderungen weg. Die Firma meldet 17.855,97 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CGCL_27102026204933_Outcome_BM_Oct27_26.pdf",
+          "page": "PDF 13 (consolidated; PDF 4 is standalone)",
+          "quote": "Total revenue from operations 17,855.97 15,764.75 11,217.71",
+          "filed": "2026-10-27",
+          "value": 17855970000,
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CGCL_27102026203943_Outcome_BM_Oct27_26.pdf",
+          "page": "PDF 13 (consolidated statement)",
+          "quote": "Total revenue from operations",
+          "filed": "2026-10-27",
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "cgcl.bo-2025-09-30-revenueQ-20261102",
+      "ticker": "CGCL.BO",
+      "listingAliases": [
+        "CGCL.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 11172110000,
+      "replacementValue": 11217710000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2025 liefert der Anbieter 11.172,11 Mio. INR. Der Anbieter lässt den Gewinn aus Marktwertänderungen weg. Die Firma meldet 11.217,71 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CGCL_27102026204933_Outcome_BM_Oct27_26.pdf",
+          "page": "PDF 13 (consolidated; PDF 4 is standalone)",
+          "quote": "Total revenue from operations 17,855.97 15,764.75 11,217.71",
+          "filed": "2026-10-27",
+          "value": 11217710000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CGCL_29102025201013_Outcome_of_Board_Meeting_29102025_signed.pdf",
+          "page": "PDF 13 (consolidated, original Q2 FY26 filing, garbled text layer)",
+          "quote": "Total revenue from operations 11,213.75",
+          "filed": "2025-10-29",
+          "value": 11213750000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CGCL_27102026203943_Outcome_BM_Oct27_26.pdf",
+          "page": "PDF 13 (same row, quarter ended 30-Sep-25)",
+          "quote": "Total revenue from operations",
+          "filed": "2026-10-27",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "sammaancap.ns-2026-06-30-revenueQ-20261102",
+      "ticker": "SAMMAANCAP.NS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 11369400000,
+      "replacementValue": 16519300000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 11.369,40 Mio. INR. Der Anbieter zeigt nur Zinsen und Gebühren und lässt Gewinne aus Marktwertänderungen und Kreditverkäufen weg. Die Firma meldet 16.519,30 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IHFL_13082026170611_SCL_Outcome_BoardMeeting_13Aug2026.pdf",
+          "page": "PDF 8 (consolidated, 'Statement of Consolidated Financial Results for the quarter ended June 30, 2026')",
+          "quote": "Total revenue from operations 1,651.93 1,357.66 2,400.33",
+          "filed": "2026-08-13",
+          "value": 16519300000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "sammaancap.ns-2025-06-30-revenueQ-20261102",
+      "ticker": "SAMMAANCAP.NS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 16258800000,
+      "replacementValue": 24003300000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 16.258,80 Mio. INR. Der Anbieter zeigt nur Zinsen und Gebühren und lässt Gewinne aus Marktwertänderungen und Kreditverkäufen weg. Die Firma meldet 24.003,30 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IHFL_13082026170611_SCL_Outcome_BoardMeeting_13Aug2026.pdf",
+          "page": "PDF 8 (consolidated)",
+          "quote": "Total revenue from operations 1,651.93 1,357.66 2,400.33",
+          "filed": "2026-08-13",
+          "value": 24003300000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IHFL_13082025175456_SCLOutcome13August2025.pdf",
+          "page": "PDF 5 (consolidated, original Q1 FY26 filing)",
+          "quote": "Total Revenue from operations 2,400.33",
+          "filed": "2025-08-13",
+          "value": 24003300000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "bajajhfl.ns-2026-06-30-revenueQ-20261102",
+      "ticker": "BAJAJHFL.NS",
+      "listingAliases": [
+        "BAJAJHFL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 30298200000,
+      "replacementValue": 30630200000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 30.298,20 Mio. INR. Der Anbieter lässt den Gewinn aus Marktwertänderungen weg. Die Firma meldet 30.630,20 Mio. INR (Total Revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_29072026155705_BHFLOutcome.pdf",
+          "page": "PDF 4 (scanned)",
+          "quote": "Total Revenue from operations 3,063.02 2,902.61 2,612.83",
+          "filed": "2026-07-29",
+          "value": 30630200000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_16102026155133_outcomesetuploading.pdf",
+          "page": "PDF 4 (scanned, half-year columns)",
+          "quote": "Total Revenue from operations 3,250.57 3,063.02 2,748.04 6,313.59 5,360.87",
+          "filed": "2026-10-16",
+          "value": 30630200000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.bajajhousingfinance.in/documents/37350/8886647/Financial%20results%20for%20the%20quarter%20ended%2030%20June%202026.pdf",
+          "page": "PDF 4",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-07-29",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "bajajhfl.ns-2025-06-30-revenueQ-20261102",
+      "ticker": "BAJAJHFL.NS",
+      "listingAliases": [
+        "BAJAJHFL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 25688500000,
+      "replacementValue": 26128300000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 25.688,50 Mio. INR. Der Anbieter lässt den Gewinn aus Marktwertänderungen weg. Die Firma meldet 26.128,30 Mio. INR (Total Revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_29072026155705_BHFLOutcome.pdf",
+          "page": "PDF 4 (scanned)",
+          "quote": "Total Revenue from operations 3,063.02 2,902.61 2,612.83",
+          "filed": "2026-07-29",
+          "value": 26128300000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.bajajhousingfinance.in/documents/37350/8886647/Financial%20results%20for%20the%20quarter%20ended%2030%20June%202026.pdf",
+          "page": "PDF 4",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-07-29",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "iifl.bo-2026-06-30-revenueQ-20261102",
+      "ticker": "IIFL.BO",
+      "listingAliases": [
+        "IIFL.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 21728200000,
+      "replacementValue": 39191500000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 21.728,20 Mio. INR. Der Anbieter zeigt Erträge nach Finanzierungskosten, diese Nettozahl druckt die Firma nicht. Die Firma meldet 39.191,50 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IIFL_22072026154123_Outcome.pdf",
+          "page": "PDF 5",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-22",
+          "value": 39191500000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "iifl.bo-2025-06-30-revenueQ-20261102",
+      "ticker": "IIFL.BO",
+      "listingAliases": [
+        "IIFL.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 16705000000,
+      "replacementValue": 29528300000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 16.705 Mio. INR. Der Anbieter zeigt Erträge nach Finanzierungskosten, diese Nettozahl druckt die Firma nicht. Die Firma meldet 29.528,30 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IIFL_22072026154123_Outcome.pdf",
+          "page": "PDF 5",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-22",
+          "value": 29528300000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "sbfc.bo-2026-06-30-revenueQ-20261102",
+      "ticker": "SBFC.BO",
+      "listingAliases": [
+        "SBFC.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 4869540000,
+      "replacementValue": 4914640000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 4.869,54 Mio. INR. Der Anbieterwert steht in keiner Zeile der Rechnung. Die Firma meldet 4.914,64 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SBFC_25072026152513_OutcomeoffinancialresultsSigned.pdf",
+          "page": "PDF 4",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-25",
+          "value": 4914640000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SBFC_25042026145608_FinancialResultsMarch2026.pdf",
+          "page": "PDF 11",
+          "quote": "The Company does not have any subsidiary/associate/joint venture entity",
+          "filed": "2026-04-25",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "sbfc.bo-2025-06-30-revenueQ-20261102",
+      "ticker": "SBFC.BO",
+      "listingAliases": [
+        "SBFC.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 3797200000,
+      "replacementValue": 3884360000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 3.797,20 Mio. INR. Der Anbieterwert steht in keiner Zeile der Rechnung. Die Firma meldet 3.884,36 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SBFC_25072026152513_OutcomeoffinancialresultsSigned.pdf",
+          "page": "PDF 4",
+          "quote": "Total revenue from operations",
+          "filed": "2026-07-25",
+          "value": 3884360000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SBFC_25042026145608_FinancialResultsMarch2026.pdf",
+          "page": "PDF 11",
+          "quote": "The Company does not have any subsidiary/associate/joint venture entity",
+          "filed": "2026-04-25",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "tvshltd.bo-2026-06-30-revenueQ-20261102",
+      "ticker": "TVSHLTD.BO",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 162051100000,
+      "replacementValue": 170761800000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 162.051,10 Mio. INR. Der Anbieter lässt übrige Betriebserlöse weg. Die Firma meldet 170.761,80 Mio. INR (Revenue From Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNCLAYLTD_21072026161225_QUICKRESULTSSGD.pdf",
+          "page": "PDF 11",
+          "quote": "Revenue From Operations",
+          "filed": "2026-07-21",
+          "value": 170761800000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "tvshltd.bo-2025-06-30-revenueQ-20261102",
+      "ticker": "TVSHLTD.BO",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 121644900000,
+      "replacementValue": 127421900000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 121.644,90 Mio. INR. Der Anbieter lässt übrige Betriebserlöse weg. Die Firma meldet 127.421,90 Mio. INR (Revenue From Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNCLAYLTD_21072026161225_QUICKRESULTSSGD.pdf",
+          "page": "PDF 11",
+          "quote": "Revenue From Operations",
+          "filed": "2026-07-21",
+          "value": 127421900000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "INR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "1941.t-2026-06-30-revenueQ-20261102",
+      "ticker": "1941.T",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 40201000000,
+      "replacementValue": 50333000000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 40.201 Mio. JPY. Der Anbieter liefert für dieses Quartal den Einzelabschluss statt des Konzerns. Die Firma meldet 50.333 Mio. JPY (売上高, Konzern). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www2.jpx.co.jp/disc/19410/081220260729501964.zip",
+          "page": "Attachment/0600000-qcpl11 (四半期連結損益計算書, consolidated)",
+          "quote": "売上高 44,422 50,333",
+          "filed": "2026-07-31",
+          "value": 50333000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "JPY",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.chudenko.co.jp/info/library/images/tanshin27_31.pdf",
+          "page": "cover page",
+          "quote": "2027年３月期第１四半期 50,333 13.3",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "1941.t-2025-06-30-revenueQ-20261102",
+      "ticker": "1941.T",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "expectedBadValue": 35698000000,
+      "replacementValue": 44422000000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 35.698 Mio. JPY. Der Anbieter liefert für dieses Quartal den Einzelabschluss statt des Konzerns. Die Firma meldet 44.422 Mio. JPY (売上高, Konzern). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www2.jpx.co.jp/disc/19410/081220260729501964.zip",
+          "page": "Attachment/0600000-qcpl11 (四半期連結損益計算書, consolidated)",
+          "quote": "売上高 44,422 50,333",
+          "filed": "2026-07-31",
+          "value": 44422000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "JPY",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.chudenko.co.jp/info/library/images/tanshin26_31.pdf",
+          "page": "PDF 8",
+          "quote": "売上高 44,422",
+          "filed": "2025-07-31",
+          "value": 44422000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "JPY",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "atlc-2026-06-30-revenueQ-20261102",
+      "ticker": "ATLC",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 166749000,
+      "replacementValue": 744323000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 166,75 Mio. USD. Der Anbieter zieht Zinsaufwand, Marktwertänderungen der Kredite und Servicekosten ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 744,32 Mio. USD (Total revenue and other income). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1464343/000143774926026279/atlc20260630_10q.htm",
+          "page": "Item 1, Condensed Consolidated Statements of Income (three months ended June 30, 2026, current column)",
+          "quote": "Total revenue and other income 744,323",
+          "filed": "2026-08-06",
+          "value": 744323000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1464343/000143774926026279/atlc20260630_10q.htm",
+          "page": "Item 1, six months column",
+          "quote": "Total revenue and other income 1,423,912",
+          "filed": "2026-08-06",
+          "value": 1423912000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "atlc-2025-06-30-revenueQ-20261102",
+      "ticker": "ATLC",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 89617000,
+      "replacementValue": 394163000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 89,62 Mio. USD. Der Anbieter zieht Zinsaufwand, Marktwertänderungen der Kredite und Servicekosten ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 394,16 Mio. USD (Total revenue and other income). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1464343/000143774926026279/atlc20260630_10q.htm",
+          "page": "Item 1, Condensed Consolidated Statements of Income (three months ended June 30, 2025, comparison column)",
+          "quote": "Total revenue and other income 394,163",
+          "filed": "2026-08-06",
+          "value": 394163000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1464343/000143774925025502/atlc20250630_10q.htm",
+          "page": "Item 1, Condensed Consolidated Statements of Income (original Q2 2025 10-Q, same figure)",
+          "quote": "Total revenue and other income 394,163",
+          "filed": "2025-08-07",
+          "value": 394163000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "pfsi-2026-06-30-revenueQ-20261102",
+      "ticker": "PFSI",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 972180000,
+      "replacementValue": 496965000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 972,18 Mio. USD. Der Anbieterwert steht in keiner Zeile der Rechnung, er rechnet Zinsaufwand und Bewertungsänderungen zurück. Die Firma meldet 496,96 Mio. USD (Total net revenues). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1745916/000110465926090486/pfsi-20260630x10q.htm",
+          "page": "Consolidated Statements of Income, 10-Q page 7 (quarter ended June 30, 2026 and 2025)",
+          "quote": "Total net revenues 496,965 444,730",
+          "filed": "2026-08-04",
+          "value": 496965000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1745916/000110465926090486/pfsi-20260630x10q.htm",
+          "page": "Consolidated Statements of Income, six months column",
+          "quote": "Total net revenues 1,041,949 875,633",
+          "filed": "2026-08-04",
+          "value": 1041949000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "pfsi-2025-06-30-revenueQ-20261102",
+      "ticker": "PFSI",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 931582000,
+      "replacementValue": 444730000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 931,58 Mio. USD. Der Anbieterwert steht in keiner Zeile der Rechnung, er rechnet Zinsaufwand und Bewertungsänderungen zurück. Die Firma meldet 444,73 Mio. USD (Total net revenues). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1745916/000110465926090486/pfsi-20260630x10q.htm",
+          "page": "Consolidated Statements of Income, comparison column",
+          "quote": "Total net revenues 496,965 444,730",
+          "filed": "2026-08-04",
+          "value": 444730000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1745916/000155837025009736/pfsi-20250630x10q.htm",
+          "page": "Consolidated Statements of Income (original Q2 2025 10-Q)",
+          "quote": "Total net revenues 444,730",
+          "filed": "2025-07-29",
+          "value": 444730000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "rkt-2026-06-30-revenueQ-20261102",
+      "ticker": "RKT",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 2410000000,
+      "replacementValue": 2784000000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 2.410 Mio. USD. Der Anbieter zieht den Zinsaufwand ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 2.784 Mio. USD (Total revenue, net). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026054577/rkt-20260630.htm",
+          "page": "Condensed Consolidated Statements of Income (Loss) and Comprehensive Income (Loss), 10-Q page 6 (three months ended June 30, 2026)",
+          "quote": "Total revenue, net 2,784 1,451",
+          "filed": "2026-08-07",
+          "value": 2784000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026054577/rkt-20260630.htm",
+          "page": "same statement, six months column",
+          "quote": "Total revenue, net 2,784 1,451 5,725 2,553",
+          "filed": "2026-08-07",
+          "value": 5725000000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "rkt-2025-06-30-revenueQ-20261102",
+      "ticker": "RKT",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1296000000,
+      "replacementValue": 1451000000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 1.296 Mio. USD. Der Anbieter zieht den Zinsaufwand ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 1.451 Mio. USD (Total revenue, net). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026054577/rkt-20260630.htm",
+          "page": "same statement, comparison column (three months ended June 30, 2025, recast)",
+          "quote": "Total revenue, net 2,784 1,451",
+          "filed": "2026-08-07",
+          "value": 1451000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000180528425000088/rkt-20250630.htm",
+          "page": "Condensed Consolidated Statements of Income (original Q2 2025 10-Q, in thousands, before the 2026 reclassification)",
+          "quote": "Total revenue, net 1,360,251",
+          "filed": "2025-08-08",
+          "value": 1360251000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "figr-2026-06-30-revenueQ-20261102",
+      "ticker": "FIGR",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 222049000,
+      "replacementValue": 225588000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 222,05 Mio. USD. Der Anbieterwert steht in keiner Zeile der Rechnung. Die Firma meldet 225,59 Mio. USD (Total net revenue). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2064124/000162828026057061/figr-20260630.htm",
+          "page": "Condensed Consolidated Statements of Operations, 10-Q page 7 (three months ended June 30, 2026)",
+          "quote": "Total net revenue 225,588 106,077",
+          "filed": "2026-08-14",
+          "value": 225588000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2064124/000206412426000031/ex991-pressrelease2q26.htm",
+          "page": "Exhibit 99.1 press release (8-K, 2026-08-13), statement of operations",
+          "quote": "Total net revenue 225,588 106,077 392,595 190,587",
+          "filed": "2026-08-13",
+          "value": 225588000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2064124/000162828026057061/figr-20260630.htm",
+          "page": "same statement, six months column",
+          "quote": "Total net revenue 225,588 106,077 392,595 190,587",
+          "filed": "2026-08-14",
+          "value": 392595000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "figr-2025-06-30-revenueQ-20261102",
+      "ticker": "FIGR",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 112617000,
+      "replacementValue": 106077000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 112,62 Mio. USD. Der Anbieterwert steht in keiner Zeile der Rechnung. Die Firma meldet 106,08 Mio. USD (Total net revenue). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/2064124/000162828026057061/figr-20260630.htm",
+          "page": "same statement, comparison column (three months ended June 30, 2025)",
+          "quote": "Total net revenue 225,588 106,077",
+          "filed": "2026-08-14",
+          "value": 106077000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "bam-2026-06-30-revenueQ-20261102",
+      "ticker": "BAM",
+      "listingAliases": [
+        "BAM.TO"
+      ],
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1200000000,
+      "replacementValue": 1753000000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 1.200 Mio. USD. Der Anbieter lässt die Beteiligungserträge weg, die die Firma im Gesamtumsatz ausweist. Die Firma meldet 1.753 Mio. USD (Total revenues). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1937926/000162828026054933/bam-20260630.htm",
+          "page": "Condensed Consolidated Statements of Operations, 10-Q page 9 (three months ended June 30, 2026)",
+          "quote": "Total revenues 1,753 1,090 3,091 2,171",
+          "filed": "2026-08-10",
+          "value": 1753000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1937926/000162828026054933/bam-20260630.htm",
+          "page": "same statement, six months column",
+          "quote": "Total revenues 1,753 1,090 3,091 2,171",
+          "filed": "2026-08-10",
+          "value": 3091000000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "bam-2025-06-30-revenueQ-20261102",
+      "ticker": "BAM",
+      "listingAliases": [
+        "BAM.TO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1153000000,
+      "replacementValue": 1090000000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 1.153 Mio. USD. Der Anbieter lässt die Beteiligungserträge weg, die die Firma im Gesamtumsatz ausweist. Die Firma meldet 1.090 Mio. USD (Total revenues). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1937926/000162828026054933/bam-20260630.htm",
+          "page": "same statement, comparison column (three months ended June 30, 2025)",
+          "quote": "Total revenues 1,753 1,090 3,091 2,171",
+          "filed": "2026-08-10",
+          "value": 1090000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1937926/000193792625000025/bam-20250630.htm",
+          "page": "Condensed Consolidated Statements of Operations (original Q2 2025 10-Q)",
+          "quote": "Total revenues 1,090 916 2,171 1,800",
+          "filed": "2025-08-08",
+          "value": 1090000000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "sii-2026-06-30-revenueQ-20261102",
+      "ticker": "SII",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 79478000,
+      "replacementValue": 80222000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 79,48 Mio. USD. Der Anbieter lässt Gewinne aus Anlagen und Erträge aus Co-Investments weg. Die Firma meldet 80,22 Mio. USD (Total revenues). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://sprott.com/media/ihcjrzee/sii-q2-2026-report.pdf",
+          "page": "PDF 28 (interim statements of operations, three months ended Jun. 30)",
+          "quote": "Total revenues",
+          "filed": "2026-08-05",
+          "value": 80222000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001512920/000162828026052907/sprott2026q2-mdaandfinanci.htm",
+          "page": "Consolidated statements of income, three months ended June 30",
+          "quote": "Total revenues 80,222 65,174",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "sii-2025-06-30-revenueQ-20261102",
+      "ticker": "SII",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 62191000,
+      "replacementValue": 65174000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 62,19 Mio. USD. Der Anbieter lässt Gewinne aus Anlagen und Erträge aus Co-Investments weg. Die Firma meldet 65,17 Mio. USD (Total revenues). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1512920/000162828026052907/sprott2026q2-mdaandfinanci.htm",
+          "page": "Exhibit 99.1 interim statements of operations, 2025 comparison column",
+          "quote": "Total revenues",
+          "filed": "2026-08-05",
+          "value": 65174000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/0001512920/000162828026052907/sprott2026q2-mdaandfinanci.htm",
+          "page": "Consolidated statements of income, three months ended June 30",
+          "quote": "Total revenues 80,222 65,174",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "xp-2026-06-30-revenueQ-20261102",
+      "ticker": "XP",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1968752000,
+      "replacementValue": 4849457000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 1.968,75 Mio. BRL. Der Anbieter zeigt nur die Teilzeile Dienstleistungserlöse. Die Firma meldet 4.849,46 Mio. BRL (Total revenue and income). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1787425/000095010326012482/dp251887_ex9901.htm",
+          "page": "Exhibit 99.1, statements of income, three months period ended June 30 2026 and 2025 (statement page 4)",
+          "quote": "Total revenue and income",
+          "filed": "2026-08-17",
+          "value": 4849457000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "BRL",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "xp-2025-06-30-revenueQ-20261102",
+      "ticker": "XP",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "BRL",
+      "expectedBadValue": 1794504000,
+      "replacementValue": 4455452000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 1.794,50 Mio. BRL. Der Anbieter zeigt nur die Teilzeile Dienstleistungserlöse. Die Firma meldet 4.455,45 Mio. BRL (Total revenue and income). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://api.mziq.com/mzfilemanager/v2/d/d1820734-8b3f-4a23-8642-331a3a8561a6/4dbdc1d0-3bcc-9461-1a5c-de19ce159357?origin=2",
+          "page": "PDF 6, same statement, 2025 comparison column",
+          "quote": "Total revenue and income",
+          "filed": "2026-08-17",
+          "value": 4455452000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "BRL",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1787425/000095010326012482/dp251887_ex9901.htm",
+          "page": "Unaudited interim condensed consolidated statements of income, three months period ended June 30",
+          "quote": "Total revenue and income",
+          "filed": "2026-08-17",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "kru.wa-2026-06-30-revenueQ-20261102",
+      "ticker": "KRU.WA",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "expectedBadValue": 685655000,
+      "replacementValue": 788874000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 685,65 Mio. PLN. Der Anbieter summiert vier Teilzeilen und lässt das Ergebnis aus den Kreditverlust-Erwartungen weg. Die Firma meldet 788,87 Mio. PLN (Przychody z działalności operacyjnej, die Gesamtzeile einschließlich des Ergebnisses der erworbenen Forderungen). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://pl.kruk.eu/media/article/file/grupakruk_sf_1h2026_1czesc_signed.pdf",
+          "page": "PDF 6 (II. skrócone śródroczne skonsolidowane sprawozdanie z zysków lub strat), column 01.04.2026-30.06.2026",
+          "quote": "Przychody z działalności operacyjnej uwzględniające wynik na",
+          "filed": "2026-08-26",
+          "value": 788874000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "PLN",
+          "unit": "currency"
+        },
+        {
+          "url": "https://bonnier.pl/static/att/emitent/2026-08/20260826_170946_1791533480_grupakruk_sf_1h_2026_1czesc-sig-sig_signed_signed.pdf",
+          "page": "PDF 6 (document page 6), consolidated statement of profit or loss, column 01.04.2026-30.06.2026",
+          "quote": "Przychody z działalności operacyjnej uwzględniające wynik na",
+          "filed": "2026-08-26",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "kru.wa-2025-06-30-revenueQ-20261102",
+      "ticker": "KRU.WA",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "expectedBadValue": 627844000,
+      "replacementValue": 797497000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 627,84 Mio. PLN. Der Anbieter summiert vier Teilzeilen und lässt das Ergebnis aus den Kreditverlust-Erwartungen weg. Die Firma meldet 797,50 Mio. PLN (Przychody z działalności operacyjnej, die Gesamtzeile einschließlich des Ergebnisses der erworbenen Forderungen). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://pl.kruk.eu/media/article/file/grupakruk_sf_1h2026_1czesc_signed.pdf",
+          "page": "PDF 6, column 01.04.2025-30.06.2025",
+          "quote": "Przychody z działalności operacyjnej uwzględniające wynik na",
+          "filed": "2026-08-26",
+          "value": 797497000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "PLN",
+          "unit": "currency"
+        },
+        {
+          "url": "https://bonnier.pl/static/att/emitent/2026-08/20260826_170946_1791533480_grupakruk_sf_1h_2026_1czesc-sig-sig_signed_signed.pdf",
+          "page": "PDF 6, column 01.04.2025-30.06.2025",
+          "quote": "Przychody z działalności operacyjnej uwzględniające wynik na",
+          "filed": "2026-08-26",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "checker": "second reading"
+        }
+      ]
+    },
+    {
+      "caseId": "mol.mi-2026-06-30-revenueQ-20261102",
+      "ticker": "MOL.MI",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 161938000,
+      "replacementValue": 160425000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 161,94 Mio. EUR. Der Anbieter zählt Finanzerträge zum Umsatz. Die Firma meldet 160,43 Mio. EUR (Revenues; sonstige Erträge und aktivierte Eigenleistungen stehen als eigene Zeilen darunter, eine Summe der drei druckt die Firma nicht). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-09/20260908_188863.pdf",
+          "page": "PDF 6",
+          "quote": "Revenues 160,425 182,650 207,038 165,386 168,881",
+          "filed": "2026-09-08",
+          "value": 160425000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "EUR",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-09/20260908_188863.pdf",
+          "page": "PDF 7",
+          "quote": "Revenues 343,075 301,692",
+          "filed": "2026-09-08",
+          "value": 343075000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "mol.mi-2025-06-30-revenueQ-20261102",
+      "ticker": "MOL.MI",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "expectedBadValue": 174048000,
+      "replacementValue": 168881000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 174,05 Mio. EUR. Der Anbieter zählt Finanzerträge zum Umsatz. Die Firma meldet 168,88 Mio. EUR (Revenues; sonstige Erträge und aktivierte Eigenleistungen stehen als eigene Zeilen darunter, eine Summe der drei druckt die Firma nicht). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.emarketstorage.it/sites/default/files/comunicati/2026-09/20260908_188863.pdf",
+          "page": "PDF 6",
+          "quote": "Revenues 160,425 182,650 207,038 165,386 168,881",
+          "filed": "2026-09-08",
+          "value": 168881000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "xtb.wa-2026-06-30-revenueQ-20261102",
+      "ticker": "XTB.WA",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "expectedBadValue": 977356000,
+      "replacementValue": 992306000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 977,36 Mio. PLN. Der Anbieterwert steht in keiner Zeile der Rechnung. Die Firma meldet 992,31 Mio. PLN (Total operating income). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.xtb.com/wp-content/uploads/2026/08/XTB-Report-H1-2025-ENG.pdf",
+          "page": "PDF 8",
+          "quote": "Total operating income 6 992 306 2 086 324 580 597 1 160 891",
+          "filed": "2026-08-28",
+          "value": 992306000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "PLN",
+          "unit": "currency"
+        },
+        {
+          "url": "https://ir.xtb.com/wp-content/uploads/2026/07/RB-18-2026-Wstepne-wyniki-finansowe-i-operacyjne-za-I-polrocze-2026-ENG-all.pdf",
+          "page": "PDF 4",
+          "quote": "Total operating income 992 558 1 094 018 2 086 576 1 160 891",
+          "filed": "2026-07-29",
+          "value": 992558000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "xtb.wa-2025-06-30-revenueQ-20261102",
+      "ticker": "XTB.WA",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "PLN",
+      "expectedBadValue": 575139000,
+      "replacementValue": 580597000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 575,14 Mio. PLN. Der Anbieterwert steht in keiner Zeile der Rechnung. Die Firma meldet 580,60 Mio. PLN (Total operating income). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.xtb.com/wp-content/uploads/2026/08/XTB-Report-H1-2025-ENG.pdf",
+          "page": "PDF 8",
+          "quote": "Total operating income 6 992 306 2 086 324 580 597 1 160 891",
+          "filed": "2026-08-28",
+          "value": 580597000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "verifiedAt": "2026-11-02",
+          "currency": "PLN",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "abcapital.ns-2026-03-31-revenueQ-20261102",
+      "ticker": "ABCAPITAL.NS",
+      "listingAliases": [
+        "ABCAPITAL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 130775400000,
+      "replacementValue": 134592500000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 130.775,40 Mio. INR. Der Anbieter zieht die Wertminderung ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 134.592,50 Mio. INR (Total Revenue from Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.adityabirlacapital.com/-/media/ABCL/pdf/Quarterly-Results/040526_ABCL-Results-Q4-FY26.ashx",
+          "page": "PDF 9",
+          "quote": "Total Revenue from Operations 13,459.25 11,952.09 12,214.04",
+          "filed": "2026-05-04",
+          "value": 134592500000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ABCAPITAL_04052026143923_BM_Outcome_Financial_results_04052026signed.pdf",
+          "page": "PDF 21 (scan, read as image)",
+          "quote": "Total Revenue from Operations 13,459.25 11,952.09 12,214.04",
+          "filed": "2026-05-04",
+          "value": 134592500000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.adityabirlacapital.com/-/media/ABCL/pdf/Quarterly-Results/310726_ABCL-Results-Q1-FY27.ashx",
+          "page": "PDF 7",
+          "quote": "Total Revenue from Operations 12,179.54 13,459.25 9,502.69",
+          "filed": "2026-07-31",
+          "value": 134592500000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_155469_04052026192406_iXBRL_WEB.html",
+          "page": "iXBRL, results table, consolidated, 3 months column",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-05-04",
+          "value": 134592500000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ABCAPITAL_04052026143923_BM_Outcome_Financial_results_04052026signed.pdf",
+          "page": "PDF 21 (scanned, read as image), column 31 March 2026",
+          "quote": "Total Revenue from Operations",
+          "filed": "2026-05-04",
+          "value": 134592500000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_155469_04052026192406_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, year ended 31-03-2026 (operand 1 of FY minus 9M)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-05-04",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_139922_03022026182443_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, nine months (operand 2 of FY minus 9M)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-03",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "abcapital.ns-2025-12-31-revenueQ-20261102",
+      "ticker": "ABCAPITAL.NS",
+      "listingAliases": [
+        "ABCAPITAL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 115004900000,
+      "replacementValue": 119520900000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 115.004,90 Mio. INR. Der Anbieter zieht die Wertminderung ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 119.520,90 Mio. INR (Total Revenue from Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.adityabirlacapital.com/-/media/ABCL/pdf/Quarterly-Results/040526_ABCL-Results-Q4-FY26.ashx",
+          "page": "PDF 9",
+          "quote": "Total Revenue from Operations 13,459.25 11,952.09 12,214.04",
+          "filed": "2026-05-04",
+          "value": 119520900000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.adityabirlacapital.com/-/media/ABCL/pdf/Quarterly-Results/030226n_ABCL-Results-Q3-FY26.ashx",
+          "page": "PDF 7",
+          "quote": "Total Revenue from Operations 11,952.09 10,594.96 9,381.35",
+          "filed": "2026-02-03",
+          "value": 119520900000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_139922_03022026182443_iXBRL_WEB.html",
+          "page": "iXBRL, results table, consolidated, 3 months column",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-03",
+          "value": 119520900000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ABCAPITAL_04052026143923_BM_Outcome_Financial_results_04052026signed.pdf",
+          "page": "PDF 21 (scanned, read as image), column 31 Dec 2025, printed 11,952.09 crore",
+          "quote": "Total Revenue from Operations",
+          "filed": "2026-05-04",
+          "value": 119520900000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_139922_03022026182443_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, nine months (operand 1 of 9M minus H1)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-03",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_123756_30102025200140_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, half year (operand 2 of 9M minus H1)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-10-30",
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "abcapital.ns-2025-03-31-revenueQ-20261102",
+      "ticker": "ABCAPITAL.NS",
+      "listingAliases": [
+        "ABCAPITAL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 118375200000,
+      "replacementValue": 122140400000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2025 liefert der Anbieter 118.375,20 Mio. INR. Der Anbieter zieht die Wertminderung ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 122.140,40 Mio. INR (Total Revenue from Operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.adityabirlacapital.com/-/media/ABCL/pdf/Quarterly-Results/040526_ABCL-Results-Q4-FY26.ashx",
+          "page": "PDF 9",
+          "quote": "Total Revenue from Operations 13,459.25 11,952.09 12,214.04",
+          "filed": "2026-05-04",
+          "value": 122140400000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.adityabirlacapital.com/-/media/ABCL/pdf/Quarterly-Results/Q4-FY-25/130525_ABCL-SFS_CFS_Results_Q4FY25.ashx",
+          "page": "PDF 9",
+          "quote": "Total Revenue from Operations 12,214.04 9,381.35 10,779.71",
+          "filed": "2025-05-13",
+          "value": 122140400000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_90584_13052025210350_iXBRL_WEB.html",
+          "page": "iXBRL, results table, consolidated, 3 months column (values in whole rupees: 12,21,40,40,00,00)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-05-13",
+          "value": 122140400000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ABCAPITAL_04052026143923_BM_Outcome_Financial_results_04052026signed.pdf",
+          "page": "PDF 21 (scanned, read as image), column 31 March 2025, printed 12,214.04 crore",
+          "quote": "Total Revenue from Operations",
+          "filed": "2026-05-04",
+          "value": 122140400000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_90584_13052025210350_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, year ended 31-03-2025 (operand 1 of FY minus 9M)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-05-13",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/xbrl/NBFC_INDAS_118507_1369533_03022025065913.xml",
+          "page": "XBRL xml, RevenueFromOperations context FourD, nine months (operand 2 of FY minus 9M)",
+          "quote": "RevenueFromOperations",
+          "filed": "2025-02-03",
+          "start": "2024-04-01",
+          "end": "2024-12-31",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "bajajhfl.ns-2026-03-31-revenueQ-20261102",
+      "ticker": "BAJAJHFL.NS",
+      "listingAliases": [
+        "BAJAJHFL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 28836600000,
+      "replacementValue": 29026100000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 28.836,60 Mio. INR. Der Anbieter lässt den Gewinn aus Marktwertänderungen weg. Die Firma meldet 29.026,10 Mio. INR (Total Revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_27042026160157_BHFL_Outcome_27_April_2026.pdf",
+          "page": "PDF 6 (scan, read as image)",
+          "quote": "Total Revenue from operations 2,902.61 2,883.72 2,504.05",
+          "filed": "2026-04-27",
+          "value": 29026100000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_29072026155705_BHFLOutcome.pdf",
+          "page": "PDF 4 (scan)",
+          "quote": "Total Revenue from operations 3,063.02 2,902.61 2,612.83",
+          "filed": "2026-07-29",
+          "value": 29026100000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_27042026160157_BHFL_Outcome_27_April_2026.pdf",
+          "page": "PDF 6 (read as image), column 31.03.2026",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-04-27",
+          "value": 29026100000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_153247_27042026183236_iXBRL_WEB.html",
+          "page": "iXBRL, results table, standalone, 3 months column (2,90,261 lakh)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-04-27",
+          "value": 29026100000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_27042026160157_BHFL_Outcome_27_April_2026.pdf",
+          "page": "PDF 6, year ended 31.03.2026 (operand 1 of FY minus 9M)",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-04-27",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_02022026155844_BHFL_Outcome.pdf",
+          "page": "PDF 5, nine months ended 31.12.2025 (operand 2 of FY minus 9M, original basis)",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-02-02",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "bajajhfl.ns-2025-12-31-revenueQ-20261102",
+      "ticker": "BAJAJHFL.NS",
+      "listingAliases": [
+        "BAJAJHFL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 28645900000,
+      "replacementValue": 28837200000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 28.645,90 Mio. INR. Der Anbieter lässt den Gewinn aus Marktwertänderungen weg. Die Firma meldet 28.837,20 Mio. INR (Total Revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_27042026160157_BHFL_Outcome_27_April_2026.pdf",
+          "page": "PDF 6 (scan, read as image)",
+          "quote": "Total Revenue from operations 2,902.61 2,883.72 2,504.05",
+          "filed": "2026-04-27",
+          "value": 28837200000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_27042026160157_BHFL_Outcome_27_April_2026.pdf",
+          "page": "PDF 6, column 31.12.2025, RESTATED comparison (bad debt recoveries removed)",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-04-27",
+          "value": 28837200000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.bajajhousingfinance.in/documents/37350/7572502/BHFL+Outcome+of+BM+02.02.2026.pdf",
+          "page": "PDF 5 (scan, read as image)",
+          "quote": "Total Revenue from operations 2,885.93 2,754.85 2,448.86",
+          "filed": "2026-02-02",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_02022026155844_BHFL_Outcome.pdf",
+          "page": "PDF 5 (read from text layer, OCR'd scan), column 31.12.2025, original print",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-02-02",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_139660_02022026162628_iXBRL_WEB.html",
+          "page": "iXBRL, results table, standalone, 3 months column (2,88,593 lakh, original)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-02",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_139660_02022026162628_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, nine months (operand 1 of 9M minus H1)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-02",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_124799_06112025170018_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, half year (operand 2 of 9M minus H1)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-11-06",
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "bajajhfl.ns-2025-03-31-revenueQ-20261102",
+      "ticker": "BAJAJHFL.NS",
+      "listingAliases": [
+        "BAJAJHFL.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 24715900000,
+      "replacementValue": 25040500000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2025 liefert der Anbieter 24.715,90 Mio. INR. Der Anbieter lässt den Gewinn aus Marktwertänderungen weg. Die Firma meldet 25.040,50 Mio. INR (Total Revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_27042026160157_BHFL_Outcome_27_April_2026.pdf",
+          "page": "PDF 6 (scan, read as image)",
+          "quote": "Total Revenue from operations 2,902.61 2,883.72 2,504.05",
+          "filed": "2026-04-27",
+          "value": 25040500000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_27042026160157_BHFL_Outcome_27_April_2026.pdf",
+          "page": "PDF 6 (read as image), column 31.03.2025, RESTATED comparison",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-04-27",
+          "value": 25040500000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.bajajhousingfinance.in/documents/37350/6426008/BHFLOutcomeofBM23042025.pdf",
+          "page": "PDF 6 (scan, read as image)",
+          "quote": "Total Revenue from operations 2,507.96 2,448.86 1,996.40",
+          "filed": "2025-04-23",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_86378_23042025220001_iXBRL_WEB.html",
+          "page": "iXBRL, results table, standalone, 3 months column (values in whole rupees 25,07,96,00,000), original",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-04-23",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_23042025165653_BoardMeetingoutcomeMarch2025.pdf",
+          "page": "PDF 6 (OCR text layer), column 31.03.2025, original print",
+          "quote": "Total Revenue from operations",
+          "filed": "2025-04-23",
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_86378_23042025220001_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, year ended 31-03-2025 (operand 1 of FY minus 9M)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-04-23",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/BHFL_02022026155844_BHFL_Outcome.pdf",
+          "page": "PDF 5, nine months ended 31.12.2024, prior-year column (operand 2 of FY minus 9M)",
+          "quote": "Total Revenue from operations",
+          "filed": "2026-02-02",
+          "start": "2024-04-01",
+          "end": "2024-12-31",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "sammaancap.ns-2026-03-31-revenueQ-20261102",
+      "ticker": "SAMMAANCAP.NS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 11353400000,
+      "replacementValue": 13576600000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 11.353,40 Mio. INR. Der Anbieter zeigt nur Zinsen und Gebühren und lässt Gewinne aus Marktwertänderungen und Kreditverkäufen weg. Die Firma meldet 13.576,60 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sammaancapital.com/downloads/SCL%20Final%20Exchange%20Filing%20March%202026%20-%20For%20SCL%20Website",
+          "page": "PDF 1",
+          "quote": "Total revenue from operations 1,357.66 2,157.54 2,107.43",
+          "filed": "2026-05-20",
+          "value": 13576600000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.sammaancapital.com/downloads/SCL-Final-Exchange-Filing-June-2026",
+          "page": "PDF 4",
+          "quote": "Total revenue from operations 1,651.93 1,357.66 2,400.33",
+          "filed": "2026-08-13",
+          "value": 13576600000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IHFL_20052026173751_SCL_BM_Outcome_20052026_Final.pdf",
+          "page": "PDF 8 (read as image), consolidated statement, column 31 March 2026",
+          "quote": "Total revenue from operations",
+          "filed": "2026-05-20",
+          "value": 13576600000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_159444_20052026205616_iXBRL_WEB.html",
+          "page": "iXBRL, results table, consolidated, 3 months column (1,35,766 lakh)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-05-20",
+          "value": 13576600000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_159444_20052026205616_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, year ended 31-03-2026 (operand 1 of FY minus 9M)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-05-20",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_140273_04022026193202_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, nine months (operand 2 of FY minus 9M)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-04",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "sammaancap.ns-2025-12-31-revenueQ-20261102",
+      "ticker": "SAMMAANCAP.NS",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 15595700000,
+      "replacementValue": 21575400000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 15.595,70 Mio. INR. Der Anbieter zeigt nur Zinsen und Gebühren und lässt Gewinne aus Marktwertänderungen und Kreditverkäufen weg. Die Firma meldet 21.575,40 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sammaancapital.com/downloads/SCL%20Final%20Exchange%20Filing%20March%202026%20-%20For%20SCL%20Website",
+          "page": "PDF 1",
+          "quote": "Total revenue from operations 1,357.66 2,157.54 2,107.43",
+          "filed": "2026-05-20",
+          "value": 21575400000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.sammaancapital.com/downloads/sclfinalexchangefilingdecember2025forsclwebsite_6633",
+          "page": "PDF 1",
+          "quote": "Total revenue from operations 2,157.54 2,250.60 2,016.52",
+          "filed": "2026-02-04",
+          "value": 21575400000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_140273_04022026193202_iXBRL_WEB.html",
+          "page": "iXBRL, results table, consolidated, 3 months column (2,15,754 lakh)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-04",
+          "value": 21575400000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IHFL_20052026173751_SCL_BM_Outcome_20052026_Final.pdf",
+          "page": "PDF 8 (read as image), consolidated statement, column 31 December 2025, printed 2,157.54 crore",
+          "quote": "Total revenue from operations",
+          "filed": "2026-05-20",
+          "value": 21575400000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_140273_04022026193202_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, nine months (operand 1 of 9M minus H1)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2026-02-04",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_123955_31102025184002_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, half year (operand 2 of 9M minus H1)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-10-31",
+          "start": "2025-04-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "sammaancap.ns-2025-03-31-revenueQ-20261102",
+      "ticker": "SAMMAANCAP.NS",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 15335100000,
+      "replacementValue": 21074300000,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2025 liefert der Anbieter 15.335,10 Mio. INR. Der Anbieter zeigt nur Zinsen und Gebühren und lässt Gewinne aus Marktwertänderungen und Kreditverkäufen weg. Die Firma meldet 21.074,30 Mio. INR (Total revenue from operations). Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sammaancapital.com/downloads/SCL%20Final%20Exchange%20Filing%20March%202026%20-%20For%20SCL%20Website",
+          "page": "PDF 1",
+          "quote": "Total revenue from operations 1,357.66 2,157.54 2,107.43",
+          "filed": "2026-05-20",
+          "value": 21074300000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.sammaancapital.com/downloads/Mar_2025_Result",
+          "page": "PDF 1",
+          "quote": "Total revenue from operations 2,107.43",
+          "filed": "2025-05-16",
+          "value": 21074300000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://www.sammaancapital.com/downloads/June_2025_Result",
+          "page": "PDF 1",
+          "quote": "Total revenue from operations 2,400.33 2,107.43 2,206.67",
+          "filed": "2025-08-13",
+          "value": 21074300000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_91525_16052025201400_iXBRL_WEB.html",
+          "page": "iXBRL, results table, consolidated, 3 months column (whole rupees 21,07,43,00,000)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-05-16",
+          "value": 21074300000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IHFL_20052026173751_SCL_BM_Outcome_20052026_Final.pdf",
+          "page": "PDF 8 (read as image), consolidated statement, column 31 March 2025, printed 2,107.43 crore",
+          "quote": "Total revenue from operations",
+          "filed": "2026-05-20",
+          "value": 21074300000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_91525_16052025201400_iXBRL_WEB.html",
+          "page": "iXBRL, year-to-date column, year ended 31-03-2025 (operand 1 of FY minus 9M)",
+          "quote": "Total Revenue From Operations",
+          "filed": "2025-05-16",
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/xbrl/NBFC_INDAS_119784_1379133_12022025120258.xml",
+          "page": "XBRL xml, RevenueFromOperations context FourD, nine months (operand 2 of FY minus 9M)",
+          "quote": "RevenueFromOperations",
+          "filed": "2025-02-12",
+          "start": "2024-04-01",
+          "end": "2024-12-31",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2024-12-31-annualRev-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 160731000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Jahresumsatz fehlt für das Jahr bis 31.12.2024: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum von +25,5 % hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2023-12-31-annualRev-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 128056000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Jahresumsatz fehlt für das Jahr bis 31.12.2023: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2022-12-31-annualRev-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualRev",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 105062000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Jahresumsatz fehlt für das Jahr bis 31.12.2022: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2024-12-31-annualGP-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualGP",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 97139000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Bruttogewinn fehlt für das Jahr bis 31.12.2024: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2023-12-31-annualGP-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualGP",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 74265000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Bruttogewinn fehlt für das Jahr bis 31.12.2023: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2022-12-31-annualGP-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualGP",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 62679000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Bruttogewinn fehlt für das Jahr bis 31.12.2022: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2024-12-31-annualOpInc-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualOpInc",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 93313000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Betriebsergebnis fehlt für das Jahr bis 31.12.2024: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2023-12-31-annualOpInc-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualOpInc",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 71090000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Betriebsergebnis fehlt für das Jahr bis 31.12.2023: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2022-12-31-annualOpInc-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualOpInc",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 59729000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Betriebsergebnis fehlt für das Jahr bis 31.12.2022: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2024-12-31-annualNetIncome-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualNetIncome",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 73538000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Jahresergebnis fehlt für das Jahr bis 31.12.2024: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2023-12-31-annualNetIncome-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualNetIncome",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 52628000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Jahresergebnis fehlt für das Jahr bis 31.12.2023: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "8c8u.si-2022-12-31-annualNetIncome-20261102",
+      "ticker": "8C8U.SI",
+      "field": "annualNetIncome",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "SGD",
+      "unit": "currency",
+      "expectedBadValue": 1033000,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Jahresergebnis fehlt für das Jahr bis 31.12.2022: Der Wert ist eine ungeprüfte Pro-forma-Rechnung aus dem Börsenprospekt vom 18.09.2025. Der Trust war bis zum 24.09.2025 ohne Geschäft und hatte in diesem Jahr keinen tatsächlichen Umsatz; das daraus errechnete Wachstum hat die Firma nie gemeldet. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 196 (printed 176)",
+          "quote": "Gross revenue 105,062 128,056 160,731 38,669 44,927",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/FileOpen/Centurion%20Accommodation%20REIT%20Prospectus%20(18%20September%202025).ashx?App=IPO&FileID=6689",
+          "form": "Centurion Accommodation REIT, listing prospectus of 18.09.2025",
+          "filed": "2025-09-18",
+          "page": "PDF 199 (printed 179)",
+          "quote": "had occurred on or were effective on 1 January 2022",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://links.sgx.com/1.0.0/corporate-announcements/9ONU0XOG3Q1FFKNF/875660_CAREIT%20-%20FY2025%20Results-Press%20Release.pdf",
+          "form": "Centurion Accommodation REIT, FY2025 results press release",
+          "filed": "2026-02-23",
+          "page": "PDF 2",
+          "quote": "CAREIT was a dormant private trust up to 24 September 2025",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
+    },
+    {
+      "caseId": "600623.ss-2023-12-31-annualRev-20261102",
+      "ticker": "600623.SS",
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 41301479182.06,
+      "replacementValue": null,
+      "revision": "2026-11-02-sdzahlen",
+      "verifiedAt": "2026-11-02",
+      "reason": "Jahresumsatz fehlt für das Jahr bis 31.12.2023: Der Anbieter stellt 2024 nach der Übernahme von San Ai Fu neu dargestellt (49.690 Mio. CNY) neben 2023 ohne diese Firma (41.301 Mio. CNY). Daraus entstehen +20,3 %; die Firma meldete für 2024 zuerst 45.103 Mio. CNY, also +9,2 %. Geprüft am 02.11.2026.",
+      "sources": [
+        {
+          "url": "https://pdf.dfcfw.com/pdf/H2_AN202604201821348834_1.pdf",
+          "form": "Shanghai Huayi, annual report 2025",
+          "filed": "2026-04-21",
+          "page": "PDF 73",
+          "quote": "一、营业总收入 46,437,125,052.86 49,690,454,051.01",
+          "verifiedAt": "2026-11-02"
+        },
+        {
+          "url": "https://pdf.dfcfw.com/pdf/H2_AN202504211660016473_1.pdf",
+          "form": "Shanghai Huayi, annual report 2024",
+          "filed": "2025-04-22",
+          "page": "PDF 75",
+          "quote": "45,103,027,245.12 41,301,479,182.06",
+          "verifiedAt": "2026-11-02"
+        }
+      ]
     }
   ],
   "quarantines": [
@@ -18369,6 +22456,9 @@
           "unit": "USD thousands",
           "quote": "Loss from operations ( 633,715 ) ( 232,455 ) ( 157,754 )"
         }
+      ],
+      "listingAliases": [
+        "1IONQ.MI"
       ]
     }
   ]

@@ -26,14 +26,20 @@ const row = (t) => structuredClone(rows.find((r) => r.ticker === t));
 const snap = (t) => prepareSnapshot(JSON.parse(fs.readFileSync(path.join(FIX, 'snapshot-files', t + '.json'), 'utf8')));
 const TEXT = 'Kein gültiges Wertepaar mit positivem Vorjahreswert vorhanden.';
 
+// Adapted for PR "G31: newest complete quarter pair before the annual pair" (sd-p2, 29.10.2026): the fixture rows are
+// the published export of 28.10.2026 under the index-0-only selection. WEWORK.NS had no growth there (June 2026 without
+// its year-ago quarter, no prior fiscal year); its snapshot now shows the March 2026 pair (29.05 %), so the published
+// empty row no longer matches its snapshot and gets the "Grund nicht im Datenstand" text (the R3 case). R1 uses KRT.BO,
+// which stays empty under both rules.
 check('R1 an empty revenue growth gets the shadow reason as a live field, the shadow stays untouched', () => {
-  const live = row('WEWORK.NS');
+  const live = row('KRT.BO');
   assert.equal(live.revGrowthYoYPct, null);
-  const out = W.mapBoardRow(row('WEWORK.NS'), 0);
+  const out = W.mapBoardRow(row('KRT.BO'), 0);
   assert.equal(out.revGrowthReason, TEXT);
   assert.equal(out.revGrowthReason, out.g31Shadow.v1.reason);
-  assert.deepEqual(out.g31Shadow, g31Export(snap('WEWORK.NS')).g31Shadow, 'g31Shadow is the unchanged shadow node');
+  assert.deepEqual(out.g31Shadow, g31Export(snap('KRT.BO')).g31Shadow, 'g31Shadow is the unchanged shadow node');
   assert.deepEqual(out.g31Shadow, live.g31Shadow, 'and equal to the published one');
+  assert.equal(W.mapBoardRow(row('WEWORK.NS'), 0).revGrowthReason, W.WACHSTUM_GRUND_FEHLT, 'WEWORK.NS now has a number in its snapshot');
 });
 
 check('R2 every real row: key exactly where revGrowthYoYPct is empty', () => {
@@ -41,7 +47,10 @@ check('R2 every real row: key exactly where revGrowthYoYPct is empty', () => {
   for (const r of rows) {
     const out = W.mapBoardRow(structuredClone(r), 0);
     assert.equal(Object.hasOwn(out, 'revGrowthReason'), out.revGrowthYoYPct === null, r.ticker);
-    if (out.revGrowthYoYPct === null) { withKey++; assert.equal(out.revGrowthReason, out.g31Shadow.v1.reason, r.ticker); }
+    if (out.revGrowthYoYPct === null) {
+      withKey++;
+      assert.equal(out.revGrowthReason, r.ticker === 'WEWORK.NS' ? W.WACHSTUM_GRUND_FEHLT : out.g31Shadow.v1.reason, r.ticker);
+    }
   }
   assert.equal(withKey, 2, 'two of the seven fixture rows (WEWORK.NS, KRT.BO) have no revenue growth');
 });

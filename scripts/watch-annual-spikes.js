@@ -169,9 +169,13 @@ function findeNeuestenAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG)
  * complete, otherwise the stored currency; without a currency no number is shown (T1, G2).
  */
 function berichtsWerte(s, name, t) {
-  const m = s.meta || {}, ends = s.annual?.[name + 'Ends'] || [], fx = m.fxRateApplied;
-  const nativ = m.fxConverted === true && Number.isFinite(fx) && fx > 0 && /^[A-Z]{3}$/.test(m.reportingCurrencyOriginal || '');
-  const waehrung = nativ ? m.reportingCurrencyOriginal
+  const m = s.meta || {}, ends = s.annual?.[name + 'Ends'] || [];
+  // P282: a statement-currency row stamps the series' own currency and factor (EMBJ: USD at 1, other metrics BRL); the general stamps are not its factor.
+  const serie = /^[A-Z]{3}$/.test(m.statementCurrencyOriginal || '') && Number.isFinite(m.statementFxRateApplied) && m.statementFxRateApplied > 0;
+  const fx = serie ? m.statementFxRateApplied : m.fxRateApplied;
+  const original = serie ? m.statementCurrencyOriginal : m.reportingCurrencyOriginal;
+  const nativ = m.fxConverted === true && Number.isFinite(fx) && fx > 0 && /^[A-Z]{3}$/.test(original || '');
+  const waehrung = nativ ? original
     : (m.fxConverted !== true && /^[A-Z]{3}$/.test(m.reportingCurrency || '') ? m.reportingCurrency : null);
   const teiler = nativ ? fx : 1;
   const ende = (i) => (gueltigesPeriodenende(ends[i]) ? ends[i] : null);
