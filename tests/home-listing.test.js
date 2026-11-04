@@ -62,6 +62,17 @@ test('a revenue of 0 is no report (3993.HK: 0 for 2026-09-30 would show -100 %)'
   assert.equal(first([shadow, home]), '603993.SS');
 });
 
+test('an H share does not win on an older pair its A share withholds (Sichuan Expressway, 04.11.2026)', () => {
+  // Same vendor quarters on both lines: the newest has no year-ago partner, an older dated pair has one.
+  const gap = { values: [130, 120, 110, 105, 100], ends: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-06-30'] };
+  const h = leg('TESTH.HK', 'China', 50e9, gap), a = leg('TESTA.SS', 'China', 10e9, gap);
+  const { g31Shadow } = require('../lib/g31-recency.js');
+  // Precondition: the walk shows the June pair on the H line only; the A line's exchange check withholds it (no store row).
+  assert.deepEqual([g31Shadow(h.snapshot).v1.periodEnd, g31Shadow(a.snapshot).v1.periodEnd], ['2026-06-30', '2025-12-31']);
+  assert.deepEqual([shownGrowthMonth(h.snapshot), shownGrowthMonth(a.snapshot)], ['2025-12', '2025-12']);
+  assert.equal(first([h, a]), 'TESTA.SS');
+});
+
 test('no period at all: the listing with a shown period wins, whatever the home rank', () => {
   const empty = leg('RNO.PA', 'France', 10e9); empty.snapshot.timeseries = {}; empty.snapshot.annual = {};
   assert.equal(shownGrowthMonth(empty.snapshot), '');
