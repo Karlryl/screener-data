@@ -114,12 +114,28 @@ async function pruefe(opt) {
   hinweise.push(KURS_ALT_HINWEIS);
   const zeilen = [];
   let boardsGelesen = 0;
+  const boardsAbweichend = []; // boards whose rows read differ from index.counts: a short list or a cut file counts as read otherwise
   for (const board of index.branches) {
     const file = [path.join(opt.exportDir, 'full', board + '.json'), path.join(opt.exportDir, board + '.json')].find((f) => fs.existsSync(f));
     if (!file) { hinweise.push(`Board ${board}: keine Datei im Export, nicht geprüft.`); continue; }
     const b = readJson(file); // a broken board file is a crash: status 'fehler', never a silent skip
     boardsGelesen++;
     for (const track of ['profitable', 'unprofitable']) for (const r of b[track] || []) zeilen.push({ r, board, track });
+    // index.counts is the size of the full cohort: only a file that carries exactly that many rows per track is the whole board.
+    const soll = index.counts && index.counts[board];
+    const gelesen = (track) => (Array.isArray(b[track]) ? b[track].length : 0);
+    if (index.counts && typeof index.counts === 'object') {
+      // an index that carries counts but no usable pair for this board cannot vouch for it either
+      const sollOk = soll && Number.isInteger(soll.profitable) && Number.isInteger(soll.unprofitable);
+      const abweichend = sollOk ? ['profitable', 'unprofitable'].filter((track) => gelesen(track) !== soll[track]) : [];
+      if (!sollOk) {
+        boardsAbweichend.push(board);
+        hinweise.push(`Board ${board}: index.counts nennt keine Sollzahl für profitable und unprofitable, ob die Datei das ganze Board ist, bleibt offen.`);
+      } else if (abweichend.length) {
+        boardsAbweichend.push(board);
+        hinweise.push(`Board ${board}: ${abweichend.map((track) => `${gelesen(track)} von ${soll[track]} Zeilen (${track})`).join(', ')} gelesen, die Datei ${path.relative(opt.exportDir, file).split(path.sep).join('/')} ist nicht das ganze Board.`);
+      }
+    }
   }
 
   const faelle = [];
@@ -318,9 +334,9 @@ async function pruefe(opt) {
   }
   return { schema: SCHEMA, generatedAt, exportGeneratedAt: index.generated_at ?? null, status: 'ok',
     quellen: { boardZeilen: zeilen.length, snapshotsGelesen: gelesen, snapshotsFehlend: fehlend, boardHistoryStand: stand ? stand.tag : null,
-      boardsErwartet: index.branches.length, boardsGelesen },
+      boardsErwartet: index.branches.length, boardsGelesen, boardsAbweichend },
     // P282: 0 cases over part of the boards is no clean result, and a reader of the JSON must see that without the hints.
-    vollstaendig: boardsGelesen === index.branches.length,
+    vollstaendig: boardsGelesen === index.branches.length && !boardsAbweichend.length,
     zusammenfassung, faelle: gelistet, gekuerzt, gestern, hinweise };
 }
 
@@ -333,7 +349,9 @@ function zusammenfassen(bericht) {
   // The vintage is named only when the jump check ran; otherwise the header says "nicht geprüft" like the table.
   const vergleich = bericht.zusammenfassung['boersenwert-sprung'] == null ? 'nicht geprüft'
     : `mit dem Board-Stand vom ${bericht.quellen.boardHistoryStand}`;
-  if (!bericht.vollstaendig) z.push(`Teilzählung: nur ${bericht.quellen.boardsGelesen} von ${bericht.quellen.boardsErwartet} Boards gelesen, die Zahlen unten gelten nur für diese.`, '');
+  if (!bericht.vollstaendig) z.push(bericht.quellen.boardsGelesen < bericht.quellen.boardsErwartet
+    ? `Teilzählung: nur ${bericht.quellen.boardsGelesen} von ${bericht.quellen.boardsErwartet} Boards gelesen, die Zahlen unten gelten nur für diese.`
+    : `Teilzählung: ${bericht.quellen.boardsAbweichend.length} von ${bericht.quellen.boardsErwartet} Boards sind nicht vollständig gelesen (${bericht.quellen.boardsAbweichend.join(', ')}), die Zahlen unten gelten nur für die gelesenen Zeilen.`, '');
   z.push(`Export vom ${bericht.exportGeneratedAt}, Börsenwert-Vergleich ${vergleich}.`, '',
     '| Prüfung | Fälle |', '| --- | --- |');
   for (const code of CODES) z.push(`| ${code} | ${bericht.zusammenfassung[code] ?? 'nicht geprüft'} |`);

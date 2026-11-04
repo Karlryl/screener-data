@@ -232,6 +232,62 @@ test('a count over part of the boards says so: expected, read and vollstaendig, 
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('vollstaendig compares the rows read with index.counts: a short list, an empty file or a cut board is not the whole board (P3.A of the PR 87 review)', () => {
+  const dir = tmp();
+  try {
+    const exp = path.join(dir, 'export');
+    fs.mkdirSync(path.join(exp, 'full'), { recursive: true });
+    const row = (ticker) => ({ rank: 1, rankGrund: null, ticker, name: ticker, country: 'United States', marketCap: 1e9, score: 50, scoreShrunk: 50, revGrowthYoYPct: 5,
+      revGrowthBasis: 'quarter', revGrowthPeriodEnd: '2026-06-30', revGrowthPriorPeriodEnd: '2025-06-30' });
+    const counts = { energy: { profitable: 2, unprofitable: 1 }, utilities: { profitable: 1, unprofitable: 0 } };
+    const write = (rel, obj) => { fs.mkdirSync(path.dirname(path.join(exp, rel)), { recursive: true }); fs.writeFileSync(path.join(exp, rel), JSON.stringify(obj)); };
+    const index = (withCounts) => write('index.json', { generated_at: '2026-10-24T08:00:00Z', branches: ['energy', 'utilities'], ...(withCounts ? { counts } : {}) });
+    const go = (name) => { const out = path.join(dir, name + '.json'), summary = path.join(dir, name + '.md');
+      const r = run(['--export', exp, '--snapshots', path.join(dir, 'none'), '--board-history', path.join(dir, 'none'), '--out', out, '--gestern', path.join(dir, 'none.json')], { GITHUB_STEP_SUMMARY: summary });
+      return { ...r, summary: fs.readFileSync(summary, 'utf8') }; };
+    const full = () => { write('full/energy.json', { profitable: [row('A'), row('B')], unprofitable: [row('C')] }); write('full/utilities.json', { profitable: [row('D')], unprofitable: [] }); };
+
+    full(); index(true);
+    const whole = go('whole');
+    assert.equal(whole.report.vollstaendig, true, 'rows equal counts');
+    assert.deepEqual(whole.report.quellen.boardsAbweichend, []);
+    assert.doesNotMatch(whole.summary, /Teilzählung/);
+
+    full(); index(false);
+    assert.equal(go('nocounts').report.vollstaendig, true, 'an index without counts cannot be compared; the old rule stands');
+
+    // the full file is gone and only the short list beside it is read (fewer rows than the cohort)
+    full(); index(true);
+    fs.rmSync(path.join(exp, 'full', 'energy.json'));
+    write('energy.json', { profitable: [row('A')], unprofitable: [] });
+    const short = go('short');
+    assert.equal(short.status, 0, 'still report-only');
+    assert.equal(short.report.vollstaendig, false);
+    assert.deepEqual(short.report.quellen.boardsAbweichend, ['energy']);
+    assert.equal(short.report.quellen.boardsGelesen, 2, 'a file was read, but it is not the whole board');
+    assert.ok(short.report.hinweise.some((h) => /^Board energy: 1 von 2 Zeilen \(profitable\), 0 von 1 Zeilen \(unprofitable\) gelesen, die Datei energy\.json ist nicht das ganze Board\.$/.test(h)), short.report.hinweise.join('\n'));
+    assert.match(short.summary, /Teilzählung: 1 von 2 Boards sind nicht vollständig gelesen \(energy\)/);
+
+    // counts present but unusable for a board: the index cannot vouch for the file
+    for (const bad of [undefined, null, { profitable: 1 }, { profitable: '1', unprofitable: 0 }]) {
+      full(); write('index.json', { generated_at: '2026-10-24T08:00:00Z', branches: ['energy', 'utilities'], counts: { energy: counts.energy, utilities: bad } });
+      const nocount = go('badcount');
+      assert.equal(nocount.report.vollstaendig, false, JSON.stringify(bad));
+      assert.deepEqual(nocount.report.quellen.boardsAbweichend, ['utilities'], JSON.stringify(bad));
+      assert.ok(nocount.report.hinweise.some((h) => /^Board utilities: index\.counts nennt keine Sollzahl/.test(h)));
+    }
+
+    // a board file without rows, in every shape the review named
+    for (const body of [{}, { profitable: [], unprofitable: [] }, { profitable: null }, { rows: [row('A')] }]) {
+      full(); index(true);
+      write('full/utilities.json', body);
+      const empty = go('empty');
+      assert.equal(empty.report.vollstaendig, false, JSON.stringify(body));
+      assert.deepEqual(empty.report.quellen.boardsAbweichend, ['utilities'], JSON.stringify(body));
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('no snapshot readable at all: the three snapshot checks say null, not 0, and the first read error is named', () => {
   const dir = tmp();
   try {

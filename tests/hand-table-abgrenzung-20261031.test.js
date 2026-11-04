@@ -152,8 +152,11 @@ test('documented order: the diagnosis on the shown pair outranks the definition 
 });
 
 test('definition table: one row, checked code, quoted sources, plain German; lib/g31-recency.js does not read it', () => {
-  assert.deepEqual(hints.definitionen.map(d => d.ticker), ['BURE.ST']);
-  for (const d of hints.definitionen) {
+  // 02.11.2026 appends five definition rows of its own (tests/hand-table-zahlen-20261102.test.js); this test keeps its one row.
+  const own = hints.definitionen.filter(d => d.verifiedAt === '2026-10-31');
+  assert.deepEqual(own.map(d => d.ticker), ['BURE.ST']);
+  assert.deepEqual(hints.definitionen.map(d => d.ticker), ['BURE.ST', 'CUPRUM.SN', 'AFPCAPITAL.SN', 'PROVIDA.SN', '003535.KS', '003530.KS']);
+  for (const d of own) {
     assert.equal(d.code, 'abgrenzung');
     assert.equal(d.verifiedAt, '2026-10-31');
     assert.ok(d.sources.length >= 3 && d.sources.every(s => s.url.startsWith('https://') && s.page && s.quote && s.form && s.published), d.ticker);
