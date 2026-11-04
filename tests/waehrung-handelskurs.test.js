@@ -362,5 +362,84 @@ check('Spur der Korrektur: mischVerhaeltnisFaktor steht im Snapshot, auch bei Fa
     'Faktor 1 ist ein vollwertiger Beleg — sonst nullt der Board-Writer jede Inlandsnotierung');
 });
 
+// ---------------------------------------------------------------------------
+// 6) EV-Lesart (23.10.2026): USD-notierte ADR/OTC-Linien bekommen das EV von Yahoo oft schon
+//    in der BERICHTS-Waehrung. KXIAY (Bericht JPY, Handel USD), Zahlen aus dem Lauf vom
+//    22.10. auf Rohwerte zurueckgerechnet (gespeichert / Faktor).
+// ---------------------------------------------------------------------------
+const JPY = 0.0063563897; // Kurs des Laufs 22.10.2026
+py._FX_TO_USD.JPY = JPY;
+py._FX_PROVENANCE.JPY = 'live';
+function kxiaySnap(mitBilanz) {
+  return {
+    meta: { ticker: 'KXIAY', reportingCurrency: 'JPY', tradingCurrency: 'USD' },
+    marketCap: { value: 40693325824 },                     // USD
+    metrics: {
+      revenueTTM: { value: 23912394607.02 / JPY },         // JPY
+      enterpriseValue: { value: 6988309725184 },           // JPY (!), nicht USD
+      enterpriseToRevenue: { value: 1.858 },               // EV_JPY / Umsatz_JPY, schon stimmig
+      enterpriseToEbitda: { value: 2.95 },
+      priceSales: { value: 0.0119641 },                    // mcap_USD / Umsatz_JPY
+    },
+    annual: mitBilanz
+      ? { annualBalance: [{ totalDebt: 6658750445.25 / JPY, totalCash: 2991997126.52 / JPY }] }
+      : {},
+  };
+}
+
+check('KXIAY: EV in Berichtswaehrung -> EV-Verhaeltnisse unskaliert, EV nach USD, Vermerk reporting', () => {
+  const snap = kxiaySnap(true);
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.meta.evCurrencyReading, 'reporting');
+  assert.equal(snap.metrics.enterpriseToRevenue.value, 1.858, 'EV/S war schon stimmig, ist ' + snap.metrics.enterpriseToRevenue.value);
+  assert.equal(snap.metrics.enterpriseToEbitda.value, 2.95);
+  const ev = snap.metrics.enterpriseValue.value;
+  assert.ok(Math.abs(ev / 1e9 - 44.42) < 0.1, 'EV ~44,4 Mrd USD, ist ' + ev / 1e9);
+  // priceSales bleibt ein echtes Misch-Verhaeltnis (mcap ist immer Handelswaehrung).
+  // (Yahoos priceSales nutzt einen anderen Umsatz als revenueTTM, deshalb gegen den Rohwert x Faktor.)
+  assert.ok(Math.abs(snap.metrics.priceSales.value - 0.0119641 / JPY) < 1e-9, 'priceSales wie bisher x Faktor');
+  // Gegenprobe EV_USD / Umsatz_USD trifft den unskalierten Wert.
+  assert.ok(Math.abs(ev / snap.metrics.revenueTTM.value - 1.858) < 0.01);
+  assert.equal(snap.meta.mischVerhaeltnisFaktor, 1 / JPY, 'Mischwaehrungs-Vermerk unveraendert');
+});
+
+check('KXIAY ohne Bilanz: Verhalten wie bisher, Vermerk unclear', () => {
+  const snap = kxiaySnap(false);
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.meta.evCurrencyReading, 'unclear');
+  assert.ok(Math.abs(snap.metrics.enterpriseToRevenue.value - 1.858 / JPY) < 1e-6, 'heutiges Verhalten (x Faktor)');
+  assert.equal(snap.metrics.enterpriseValue.value, 6988309725184);
+});
+
+check('Heimatboerse (BREN.JK mit Bilanz): EV in Handelswaehrung -> wie bisher, Vermerk trading', () => {
+  const snap = brenSnap();
+  snap.annual = { annualBalance: [{ totalDebt: 2e9, totalCash: 2e9 }] }; // USD, Nettoschuld ~0 (EV/mcap = 1,000)
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.meta.evCurrencyReading, 'trading');
+  assert.ok(Math.abs(snap.metrics.enterpriseToRevenue.value - 766149 * IDR) < 1e-9);
+  assert.ok(Math.abs(snap.metrics.enterpriseValue.value - 477595028160512 * IDR) < 1);
+});
+
+check('Weder noch (EV passt zu keiner Lesart): wie bisher, Vermerk unclear', () => {
+  const snap = kxiaySnap(true);
+  snap.metrics.enterpriseValue.value = 44.36e9 * Math.sqrt(1 / JPY); // genau zwischen beiden Lesarten (je ln 2,5 daneben)
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.meta.evCurrencyReading, 'unclear');
+  assert.ok(Math.abs(snap.metrics.enterpriseToRevenue.value - 1.858 / JPY) < 1e-6);
+});
+
+check('Faktor 1 (US-Inland mit Bilanz): nichts angefasst, kein Vermerk', () => {
+  const snap = {
+    meta: { ticker: 'AAPL', reportingCurrency: 'USD', tradingCurrency: 'USD' },
+    marketCap: { value: 3e12 },
+    metrics: { enterpriseValue: { value: 3e14 }, enterpriseToRevenue: { value: 7.7 } },
+    annual: { annualBalance: [{ totalDebt: 1e11, totalCash: 1e11 }] },
+  };
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.meta.evCurrencyReading, undefined);
+  assert.equal(snap.metrics.enterpriseToRevenue.value, 7.7);
+  assert.equal(snap.metrics.enterpriseValue.value, 3e14);
+});
+
 console.log('\nwaehrung-handelskurs: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
