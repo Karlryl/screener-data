@@ -324,9 +324,10 @@
     "validFrom": "2026-10-01",
     "reviewBy": "2026-12-31",
     "wrongShares": [
-      2214575158
+      2214575158,
+      2156451368
     ],
-    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count",
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count; snapshot of run 41184535364 (2026-10-31): vendor value 1,671,454,670 USD at 0.7750949984 USD, 2,156,451,368 shares implied",
     "reason": "Börsenwert aus 1.281.656.998 Aktien berechnet: alle ausgegebenen Aktien laut Geekplus zum 30.10.2026 (Klasse A, gelistete und nicht gelistete Klasse B) ohne die 55.630.000 eigenen Aktien. Yahoo rechnet mit rund 2.215 Mio. Aktien, wofür es keinen Beleg gibt. Bis zum 04.11.2026 zählten hier auch die eigenen Aktien mit (1.337.286.998), der Börsenwert lag dadurch 4,3 % zu hoch.",
     "source": {
       "form": "Die Tagesmeldung von Geekplus an die Hongkonger Börse vom 30.10.2026 und die Monatsmeldung für September 2026 nennen die ausgegebenen Aktien je Klasse.",
@@ -1668,7 +1669,7 @@
         "unit": "shares outstanding = 949,183,210 issued - (2,288,019 + 57,300,112 - 4,000,000) treasury = 893,595,079",
         "crossCheck": "https://www2.jpx.co.jp/disc/50160/140120260805510453.pdf 2 and 12 (Q1 tanshin of 06.08.2026): 953,183,210 issued and 2,288,019 treasury at 30.06.2026; settlement of the tender offer for 57,300,112 shares on 09.07.2026"
       },
-      "verifiedAt": "2026-11-01",
+      "verifiedAt": "2026-11-04",
       "reviewBy": "2026-12-31"
     },
     "KELRF": {
@@ -2643,6 +2644,23 @@
         "crossCheck": "https://www.deutz.com/en/investor-relations/mandatory-announcements/ad-hoc-disclosure/ web page, ad hoc of 2026-09-15: This increases the share capital of DEUTZ AG by 10% to 167,901,915 no-par-value bearer shares.",
         "otherSources": "https://www.borsaitaliana.it/borsa/azioni/dati-completi.html?isin=DE0006305006&lang=en web page, read 2026-11-04: Last Trade Price| 9.895 [...] Date - Time Last Trade:| 26/11/04 - 12:49:47 PM",
         "checkerNote": "Two independent checkers on 2026-11-04: same count, no treasury shares stated; Xetra close 03.11. 9.635 EUR. Not in the count: the contribution in kind for FFG (base case 65,105,268 new shares), expected to close end of 2026 to early 2027; the count changes then. Codex found the line on 2026-11-04 (review of PR 91)."
+      },
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-31"
+    },
+    "1385.HK": {
+      "validFrom": "2026-10-31",
+      "reason": "Yahoo rechnet für die Hongkonger Notierung von Shanghai Fudan Microelectronics mit 1.706 Mio. Aktien und kommt auf 4,70 Mrd. USD; die Firma hat 539.389.250 A-Aktien und 284.330.000 H-Aktien, zusammen 823,7 Mio. Mit den Schlusskursen vom 30.10.2026 (45,76 CNY und 21,62 HKD) sind beide Klassen rund 4,49 Mrd. USD wert. Maßgeblich ist die Notierung 688385.SS.",
+      "reasonComplete": true,
+      "source": {
+        "form": "Die Monatsmeldung von Shanghai Fudan Microelectronics an die Hongkonger Börse nennt die A- und H-Aktien.",
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100200574.pdf",
+        "quote": "Balance at close of the month 284,330,000 0 284,330,000 | Balance at close of the month 539,389,250 0 539,389,250",
+        "page": "2",
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,702,369,181 USD, price 2.7561766226 USD, 1,706,120,348 shares implied; on the export of 03.11. the line shows 4.59 bn against 4.24 bn on 688385.SS",
+        "crossCheck": "https://static.cninfo.com.cn/finalpage/2026-08-18/1225478247.PDF 38 (class table): 通股 537,097,300 65.39 +2,291,950 +2,291,950 539,389,250 65.48",
+        "otherSources": "",
+        "checkerNote": "Counts confirmed by two checkers on 2026-11-01 (row 688385.SS) and by the blind review of PR 105 on 2026-11-04. The implied 1,706 M fits the A shares turned into H equivalents with an older price ratio plus the H shares (mechanism not proven); no document has that count."
       },
       "verifiedAt": "2026-11-04",
       "reviewBy": "2026-12-31"

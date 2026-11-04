@@ -9,8 +9,8 @@
 // (run 41184535364), through the REAL lib/market-cap-guard.js and the REAL issuerDedupComparator, and holds the shown value
 // against the checked value of the firm:
 // - within 3 %: right;
-// - KNOWN: still off for a named reason, the deviation pinned to half a point; a new firm off by more than 3 %, or a known
-//   one that moves, goes red;
+// - KNOWN: still off for a named reason, the deviation pinned to half a point; on this frozen data day a new firm off by more
+//   than 3 %, or a known one that moves, goes red (later days only the expectations of the daily run see);
 // - expiry: on the data day 01.01.2027 the rows with reviewBy 31.12.2026 run out and exactly EXPIRY_LOST have no listing left;
 // - the deadline report of Tag 1521 (lib/handtabellen-fristen.js) names each of them as falling off the board 30 days ahead.
 // Break-once on test data only: `node tests/hand-table-nachfolger-20261104.test.js --prove-red` drops the hold of 1DEZ.MI in
@@ -38,18 +38,18 @@ const KNOWN = {
   'ZTE Corporation': { dev: 0.075, why: CLASSES },
   'Anhui Expressway Company Limited': { dev: 0.071, why: CLASSES },
   'Qingdao Port International Co., Ltd.': { dev: 0.060, why: CLASSES },
-  'Shanghai Fudan Microelectronics Group Company Limited': { dev: 0.048, why: CLASSES },
   'PetroChina Company Limited': { dev: 0.041, why: CLASSES },
   'Promotora y Operadora de Infraestructura, S. A. B. de C. V.': { dev: 0.039, why: 'series * and L priced at the * line; class sum needs both prices (Codex P1)' },
-  'Xtep International Holdings Limited': { dev: -0.033, why: 'Yahoo counts 2,733.1 M shares against 2,825.9 M at 31.10. (scrip dividend); 3.3 % is inside twice the 3 % window of a share-count row, which then cannot tell the two counts apart (lib/ads-hand-table.js refuses such a row)' },
+  'Xtep International Holdings Limited': { dev: -0.033, why: 'Yahoo counts 2,733.1 M shares, an older state, against 2,825.9 M at 31.10.; 3.3 % is inside twice the 3 % window of a share-count row, which then cannot tell the two counts apart (lib/ads-hand-table.js refuses such a row)' },
 };
 // Firms with no eligible listing on 31.10. already, before any deadline (every line held or excluded).
 // Eutelsat and the Caisse Régionale were not on a board before PR 91 either; 1GLXY.MI is its own group, Galaxy stays through GLXY.
 const NO_LINE_NOW = ['Caisse Régionale de Crédit Agricole Mutuel Alpes Provence Société coopérative', 'Eutelsat Communications S.A.', 'Galaxy Digital Inc.'];
-// Firms that lose their last listing when the rows of 31.12.2026 run out (data day 01.01.2027).
+// Firms of this fixture that lose their last listing when the rows of 31.12.2026 run out (data day 01.01.2027). Only firms a row of
+// 01.11. or 04.11. touches are in the fixture: Tokyo Electron (8035.T, row of Tag 1526) falls too and is not in this list.
 const EXPIRY_LOST = ['Beijing Geekplus Technology Co., Ltd.', 'CRRC Corporation Limited', 'CSSC Offshore & Marine Engineering (Group) Company Limited',
   'CanSino Biologics Inc.', 'Cipher Digital Inc.', 'China Longyuan Power Group Corporation Limited', 'China Suntien Green Energy Corporation Limited', 'Galaxy Digital',
-  'Kioxia Holdings Corporation', 'Semiconductor Manufacturing International Corporation', 'Shandong Gold Mining Co., Ltd.', 'Sinopec Oilfield Service Corporation',
+  'Kioxia Holdings Corporation', 'Semiconductor Manufacturing International Corporation', 'Shandong Gold Mining Co., Ltd.', 'Shanghai Fudan Microelectronics Group Company Limited', 'Sinopec Oilfield Service Corporation',
   'Sinopec Shanghai Petrochemical Company Limited', 'Swire Pacific Limited', 'Yankuang Energy Group Company Limited'];
 
 const packet = (t, l, day) => {
@@ -58,9 +58,11 @@ const packet = (t, l, day) => {
   if (day) { s.marketCap.asOf = day; s.meta.asOf = day; }
   return s;
 };
+// The guard warns once per row past reviewBy; the expiry replay would print about 120 such lines.
+const quiet = fn => { const w = console.warn; console.warn = () => {}; try { return fn(); } finally { console.warn = w; } };
 /** The listing the scoring would show for one firm, after the guard, on the stored data day or on `day`. */
 function shown(f, day) {
-  const lines = Object.entries(f.lines).map(([t, l]) => ({ ticker: t, ok: l.eligibleWithValue, snapshot: guard.prepareMarketCap(packet(t, l, day)) }));
+  const lines = Object.entries(f.lines).map(([t, l]) => ({ ticker: t, ok: l.eligibleWithValue, snapshot: quiet(() => guard.prepareMarketCap(packet(t, l, day))) }));
   const eligible = lines.filter(e => e.ok && Number.isFinite(e.snapshot.marketCap.value) && e.snapshot.marketCap.value > 0).sort(issuerDedupComparator);
   return eligible[0] ? { ticker: eligible[0].ticker, usd: eligible[0].snapshot.marketCap.value } : null;
 }
@@ -99,10 +101,11 @@ test('Cipher Digital and Geekplus land on the checked count, JX Advanced Metals 
   assert.ok(guard.holds.JXAMY.reason.includes('16,76 Mrd. USD'));
 });
 
-test('Aroundtown and Deutz: the stale Milan lines no longer take the board', () => {
+test('Aroundtown and Deutz: the stale Milan lines no longer take the board; Fudan shows the class sum, not the H line', () => {
   const at = shown(firms['Aroundtown SA']), dz = shown(firms['DEUTZ Aktiengesellschaft']);
   assert.notEqual(at.ticker, '1AT1.MI'); assert.notEqual(dz.ticker, '1DEZ.MI');
-  for (const t of ['1AT1.MI', '1DEZ.MI']) {
+  assert.equal(shown(firms['Shanghai Fudan Microelectronics Group Company Limited']).ticker, '688385.SS');
+  for (const t of ['1AT1.MI', '1DEZ.MI', '1385.HK']) {
     const l = Object.values(firms).find(f => f.lines[t]).lines[t];
     const out = guard.prepareMarketCap(packet(t, l));
     assert.equal(out.marketCap.value, null, t); assert.equal(out.marketCap.source, 'hand-table:market-cap-hold', t);

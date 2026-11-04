@@ -82,7 +82,7 @@ pruefe('table: the five cases and the two Lindt buyback lines are registered, no
   }
   for (const t of Object.keys(HELD)) assert.ok(guard.holds[t] && guard.holds[t].reason && guard.holds[t].source.quote, `${t}: hold missing`);
   // The holds of 01.11.2026 are pinned in tests/hand-table-boersenwerte-20261101.test.js, those of 04.11.2026 in tests/hand-table-nachfolger-20261104.test.js.
-  const later = new Set([...Object.keys(require('./fixtures/hand-table-boersenwerte-20261101.json').snapshots), '1AT1.MI', '1DEZ.MI']);
+  const later = new Set([...Object.keys(require('./fixtures/hand-table-boersenwerte-20261101.json').snapshots), '1AT1.MI', '1DEZ.MI', '1385.HK']);
   assert.deepStrictEqual(Object.keys(guard.holds).filter((t) => !later.has(t)).sort(), ['1WAF.MI', 'ARX.TO', 'EFTY', 'FBRX', 'ISBTR.IS', 'ISSC', 'LISNE.SW', 'LISPE.SW', 'MCTA', 'MSGS', 'NATH', 'RCIT', 'RMAX', 'SLP', 'WEAV']);
 });
 
