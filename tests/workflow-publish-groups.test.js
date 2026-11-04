@@ -7,7 +7,7 @@
  * a hand start that overlaps the schedule writes the same files from the same base; the second push's rebase
  * conflicts. These three workflows write the same file in every run (state/cadence-heartbeat.json field, the plan-check
  * report, the exchange-quarters store). Measured from run creation to end (gh run list, 2026-10-14 to 2026-11-04): weekly-guard
- * 1 to 2 minutes (3 runs), monthly-plan-check 1 minute (1 run), exchange-quarters median 3, mean 7, max 20 minutes (22 runs);
+ * 1 to 2 minutes (3 runs), monthly-plan-check 1 minute (1 run), exchange-quarters median 6.7, mean 8.9, max 19.9 minutes (22 runs);
  * no hand start overlapped a run of the same workflow in those 26 runs (47 with daily-pull and monthly-sec-xbrl, 63 with
  * smallcap-pull), the one overlap on record is the SEC pair of 2026-11-01. The exposure is a window of
  * minutes; the fix costs four lines each. Two parts are pinned per workflow:
