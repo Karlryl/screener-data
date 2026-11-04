@@ -25,11 +25,11 @@ const beforeHashes = liveHashes();
 const REV = '2026-11-02-sdzahlen';
 const value = r => (r && typeof r === 'object' ? r.value ?? null : r ?? null);
 const without = structuredClone(table);
-without.cases = without.cases.filter(c => c.revision !== REV);
-// Remove this lane's coverage by series, not by position: later lanes append their own rows (04.11.2026: Delivery Hero, CarMax).
-const ownSeries = new Set(table.cases.filter(c => c.revision === REV && c.replacementValue !== null).map(c => `${c.ticker}|${c.field}`));
-without.coverage = without.coverage.filter(v => !ownSeries.has(`${v.ticker}|${v.field}`));
-if (table.coverage.length - without.coverage.length !== 22) throw new Error('expected exactly 22 own coverage rows');
+// The rows of 04.11.2026 (tests/hand-table-zahlen-20261104.test.js) extend some of these series; without both the vendor is back.
+const LATER = '2026-11-04-sdzahlen2';
+const touched = new Set(table.cases.filter(c => c.revision === REV || c.revision === LATER).map(c => c.ticker));
+without.cases = without.cases.filter(c => c.revision !== REV && c.revision !== LATER);
+without.coverage = without.coverage.filter(v => !touched.has(v.ticker));
 validateTable(without);
 const active = process.argv.includes('--prove-red') ? without : table;
 const apply = s => applyFinancialCases(s, { table: active });
@@ -47,7 +47,7 @@ const ROWS = [
   ['BAJAJHFL.NS', ['BAJAJHFL.BO'], '2026-06-30', '2025-06-30', 17.94, 17.23, 30630200000, 26128300000],
   ['IIFL.BO', ['IIFL.NS'], '2026-06-30', '2025-06-30', 26.19, 32.73, 39191500000, 29528300000],
   ['SBFC.BO', ['SBFC.NS'], '2026-06-30', '2025-06-30', 32.4, 26.52, 4914640000, 3884360000],
-  ['TVSHLTD.BO', [], '2026-06-30', '2025-06-30', 33.22, 34.01, 170761800000, 127421900000],
+  ['TVSHLTD.BO', ['TVSHLTD.NS'], '2026-06-30', '2025-06-30', 33.22, 34.01, 170761800000, 127421900000],
   ['1941.T', [], '2026-06-30', '2025-06-30', 12.61, 13.31, 50333000000, 44422000000],
   ['ATLC', [], '2026-06-30', '2025-06-30', 86.07, 88.84, 744323000, 394163000],
   ['PFSI', [], '2026-06-30', '2025-06-30', 4.36, 11.75, 496965000, 444730000],
@@ -104,13 +104,17 @@ test('corrected cells carry their marker; unverified vendor quarters are withhel
 test('rows: count, revision, exact sources, a reason naming its period, plain German', () => {
   const own = table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 66);
-  assert.deepEqual(table.cases.slice(-73, -7), own, 'appended after every earlier case; only the seven rows of 04.11.2026 follow');
+  const at = table.cases.findIndex(c => c.revision === REV);
+  assert.deepEqual(table.cases.slice(at, at + 66), own, 'one block, appended after every earlier case');
   assert.equal(own.filter(c => c.field === 'revenueQ' && c.replacementValue !== null).length, 53);
   assert.equal(own.filter(c => c.replacementValue === null).length, 13);
-  assert.deepEqual(table.coverage.slice(-24, -2).map(v => v.ticker), ROWS.map(r => r[0]));
+  const ci = table.coverage.findIndex(v => v.ticker === ROWS[0][0]);
+  assert.deepEqual(table.coverage.slice(ci, ci + 22).map(v => v.ticker), ROWS.map(r => r[0]));
+  // 04.11.2026 verified the September quarter of these three and added the NSE listing of TVS Holdings.
+  const LATER_END = { 'TVSHLTD.BO': '2026-09-30', 'SBFC.BO': '2026-09-30', 'IIFL.BO': '2026-09-30' };
   for (const [t, aliases, end] of ROWS) {
     const v = table.coverage.find(x => x.ticker === t);
-    assert.deepEqual([v.field, v.coversThrough, v.listingAliases || []], ['revenueQ', end, aliases], t);
+    assert.deepEqual([v.field, v.coversThrough, v.listingAliases || []], ['revenueQ', LATER_END[t] || end, aliases], t);
   }
   for (const c of own) {
     const [y, m, d] = c.period.split('-');
