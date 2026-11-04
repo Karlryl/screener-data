@@ -132,8 +132,9 @@ function annualPairsShadowForSnapshot(snapshot, missingCode) {
   }
   return annualPairsShadow(snapshot, _annualPairsBounds, missingCode || 'no-snapshot');
 }
-// Comparison of PR #72 until 04.12.2026 (Karl's rule, at most four weeks): the shown growth and the two score axes the gate
-// reaches, recomputed from the same snapshot with the period gate off; no score. Remove with the comparison.
+// Comparison of PR #72 until 04.12.2026 (Karl's rule, at most four weeks): the shown growth and the three score axes the gate
+// reaches (gross profit, acceleration, capital efficiency), recomputed from the same snapshot with the period gate off; no score.
+// The hand-table holds of #72 stay on. Remove with the comparison.
 function periodGateShadowForSnapshot(snapshot) {
   if (!snapshot) return null;
   wachstumsSchranken();
@@ -141,7 +142,7 @@ function periodGateShadowForSnapshot(snapshot) {
   return withoutPeriodGate(() => {
     const leg = revGrowthLeg(snapshot);
     return { growth: leg.pct ?? null, basis: leg.basis ?? null, periodEnd: leg.periodEnd ?? null, priorPeriodEnd: leg.priorPeriodEnd ?? null,
-      gpAxis: axes.gpGrowth(snapshot), accelerationAxis: axes.revAcceleration(snapshot, _annualPairsBounds) };
+      gpAxis: axes.gpGrowth(snapshot), accelerationAxis: axes.revAcceleration(snapshot, _annualPairsBounds), capitalEfficiencyAxis: axes.capitalEfficiency(snapshot) };
   });
 }
 let _behoerde;
