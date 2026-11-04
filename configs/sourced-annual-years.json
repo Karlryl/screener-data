@@ -1,0 +1,509 @@
+{
+  "schemaVersion": 1,
+  "records": [
+    {
+      "id": "9992.HK-FY2025",
+      "ticker": "9992.HK",
+      "issuer": "Pop Mart International Group Limited",
+      "listingAliases": [],
+      "end": "2025-12-31",
+      "priorEnd": "2024-12-31",
+      "periodType": "12M",
+      "currency": "CNY",
+      "unit": "currency",
+      "revenue": 37120052000,
+      "priorRevenue": 13037749000,
+      "grossProfit": 26764916000,
+      "priorGrossProfit": 8707765000,
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-04",
+      "readings": [
+        {
+          "pass": 1,
+          "discoveryQuery": "Pop Mart 2025 annual results",
+          "values": {
+            "revenue": 37120052000,
+            "priorRevenue": 13037749000,
+            "grossProfit": 26764916000,
+            "priorGrossProfit": 8707765000
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0421/2026042100395_c.pdf",
+              "page": 219,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "Revenue 收益 6 37,120,052 13,037,749\nGross profit 毛利 26,764,916 8,707,765",
+              "published": "2026-04-21",
+              "derivation": "RMB (CNY) thousands multiplied by 1000",
+              "multiplier": 1000,
+              "operands": {
+                "revenue": 37120052,
+                "priorRevenue": 13037749,
+                "grossProfit": 26764916,
+                "priorGrossProfit": 8707765
+              }
+            }
+          ]
+        },
+        {
+          "pass": 2,
+          "discoveryQuery": "Pop Mart 2025 annual results",
+          "values": {
+            "revenue": 37120052000,
+            "priorRevenue": 13037749000,
+            "grossProfit": 26764916000,
+            "priorGrossProfit": 8707765000
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://prod-out-res.popmart.com/cms/ANNUAL_RESULTS_ANNOUNCEMENT_FOR_THE_YEAR_ENDED_31_DECEMBER_2025_AND_CHANGE_IN_USE_OF_PROCEEDS_af8bc550f1.pdf",
+              "page": 2,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "Revenue 4 37,120,052 13,037,749\nGross profit 26,764,916 8,707,765",
+              "published": "2026-03-25",
+              "derivation": "RMB (CNY) thousands multiplied by 1000",
+              "multiplier": 1000,
+              "operands": {
+                "revenue": 37120052,
+                "priorRevenue": 13037749,
+                "grossProfit": 26764916,
+                "priorGrossProfit": 8707765
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "002294.SZ-FY2025",
+      "ticker": "002294.SZ",
+      "issuer": "Shenzhen Salubris Pharmaceuticals",
+      "listingAliases": [],
+      "end": "2025-12-31",
+      "priorEnd": "2024-12-31",
+      "periodType": "12M",
+      "currency": "CNY",
+      "unit": "currency",
+      "revenue": 4352661358.61,
+      "priorRevenue": 4012231593.39,
+      "grossProfit": 3253887906.76,
+      "priorGrossProfit": 2914678118.35,
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-04",
+      "readings": [
+        {
+          "discoveryQuery": "Shenzhen Salubris Pharmaceuticals 2025 annual report",
+          "values": {
+            "revenue": 4352661358.61,
+            "priorRevenue": 4012231593.39,
+            "grossProfit": 3253887906.76,
+            "priorGrossProfit": 2914678118.35
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225130579.PDF",
+              "page": 122,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "营业收入 4,352,661,358.61 4,012,231,593.39；营业成本 1,098,773,451.85 1,097,553,475.04",
+              "published": "2026-04-21",
+              "derivation": "grossProfit = consolidated revenue minus consolidated cost of revenue; CNY units",
+              "operands": {
+                "revenue": 4352661358.61,
+                "priorRevenue": 4012231593.39,
+                "costOfRevenue": 1098773451.85,
+                "priorCostOfRevenue": 1097553475.04
+              }
+            }
+          ],
+          "pass": 1
+        },
+        {
+          "discoveryQuery": "Shenzhen Salubris Pharmaceuticals 2025 annual report",
+          "values": {
+            "revenue": 4352661358.61,
+            "priorRevenue": 4012231593.39,
+            "grossProfit": 3253887906.76,
+            "priorGrossProfit": 2914678118.35
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225130579.PDF",
+              "page": 201,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "合计 4,352,661,358.61 1,098,773,451.85 4,012,231,593.39 1,097,553,475.04",
+              "published": "2026-04-21",
+              "derivation": "Consolidated notes, total row: current revenue, current cost, prior revenue, prior cost; subtract costs in CNY units",
+              "operands": {
+                "revenue": 4352661358.61,
+                "costOfRevenue": 1098773451.85,
+                "priorRevenue": 4012231593.39,
+                "priorCostOfRevenue": 1097553475.04
+              }
+            }
+          ],
+          "pass": 2
+        }
+      ]
+    },
+    {
+      "id": "600389.SS-FY2025",
+      "ticker": "600389.SS",
+      "issuer": "Nantong Jiangshan Agrochemical & Chemicals",
+      "listingAliases": [],
+      "end": "2025-12-31",
+      "priorEnd": "2024-12-31",
+      "periodType": "12M",
+      "currency": "CNY",
+      "unit": "currency",
+      "revenue": 5816188535.51,
+      "priorRevenue": 5431591346.96,
+      "grossProfit": 1009920393,
+      "priorGrossProfit": 786936091.19,
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-04",
+      "readings": [
+        {
+          "discoveryQuery": "Nantong Jiangshan Agrochemical & Chemicals 2025 annual report",
+          "values": {
+            "revenue": 5816188535.51,
+            "priorRevenue": 5431591346.96,
+            "grossProfit": 1009920393,
+            "priorGrossProfit": 786936091.19
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225128424.PDF",
+              "page": 81,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "营业收入 七、61 5,816,188,535.51 5,431,591,346.96\n其中：营业成本 七、61 4,806,268,142.51 4,644,655,255.77",
+              "published": "2026-04-21",
+              "derivation": "grossProfit = consolidated revenue minus consolidated cost of revenue; CNY units",
+              "operands": {
+                "revenue": 5816188535.51,
+                "priorRevenue": 5431591346.96,
+                "costOfRevenue": 4806268142.51,
+                "priorCostOfRevenue": 4644655255.77
+              }
+            }
+          ],
+          "pass": 1
+        },
+        {
+          "discoveryQuery": "Nantong Jiangshan Agrochemical & Chemicals 2025 annual report",
+          "values": {
+            "revenue": 5816188535.51,
+            "priorRevenue": 5431591346.96,
+            "grossProfit": 1009920393,
+            "priorGrossProfit": 786936091.19
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225128424.PDF",
+              "page": 167,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "合计 5,816,188,535.51 4,806,268,142.51 5,431,591,346.96 4,644,655,255.77",
+              "published": "2026-04-21",
+              "derivation": "Consolidated notes, total row: current revenue, current cost, prior revenue, prior cost; subtract costs in CNY units",
+              "operands": {
+                "revenue": 5816188535.51,
+                "costOfRevenue": 4806268142.51,
+                "priorRevenue": 5431591346.96,
+                "priorCostOfRevenue": 4644655255.77
+              }
+            }
+          ],
+          "pass": 2
+        }
+      ]
+    },
+    {
+      "id": "ENOG.L-FY2025",
+      "ticker": "ENOG.L",
+      "issuer": "Energean plc",
+      "listingAliases": [],
+      "end": "2025-12-31",
+      "priorEnd": "2024-12-31",
+      "periodType": "12M",
+      "currency": "USD",
+      "unit": "currency",
+      "revenue": 1728126000,
+      "priorRevenue": 1779413000,
+      "grossProfit": 583220000,
+      "priorGrossProfit": 791128000,
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-04",
+      "readings": [
+        {
+          "pass": 1,
+          "discoveryQuery": "Energean 2025 Full Year Results",
+          "values": {
+            "revenue": 1728126000,
+            "priorRevenue": 1779413000,
+            "grossProfit": 583220000,
+            "priorGrossProfit": 791128000
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://mayafiles.tase.co.il/rpdf/1729001-1730000/P1729080-00.pdf",
+              "page": 20,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "Revenue 4 1,728,126 1,779,413\nGross profit 583,220 791,128",
+              "published": "2026-03-19",
+              "derivation": "USD thousands multiplied by 1000; 2024 restated continuing operations agree with vendor cells",
+              "pageContext": "Group Income Statement, PDF page 20; pass 2 independently read the RNS HTML rendering of this filing",
+              "multiplier": 1000,
+              "operands": {
+                "revenue": 1728126,
+                "priorRevenue": 1779413,
+                "grossProfit": 583220,
+                "priorGrossProfit": 791128
+              }
+            }
+          ]
+        },
+        {
+          "pass": 2,
+          "discoveryQuery": "Energean 2025 Full Year Results",
+          "values": {
+            "revenue": 1728126000,
+            "priorRevenue": 1779413000,
+            "grossProfit": 583220000,
+            "priorGrossProfit": 791128000
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://rns-pdf.ir-alerter.com/files/85701.html",
+              "page": 20,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "Revenue 4 1,728,126 1,779,413\nGross profit 583,220 791,128",
+              "published": "2026-03-19",
+              "derivation": "USD thousands multiplied by 1000; 2024 restated continuing operations agree with vendor cells",
+              "pageContext": "Group Income Statement, PDF page 20; pass 2 independently read the RNS HTML rendering of this filing",
+              "multiplier": 1000,
+              "operands": {
+                "revenue": 1728126,
+                "priorRevenue": 1779413,
+                "grossProfit": 583220,
+                "priorGrossProfit": 791128
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "600360.SS-FY2025",
+      "ticker": "600360.SS",
+      "issuer": "Jilin Sino-Microelectronics",
+      "listingAliases": [],
+      "end": "2025-12-31",
+      "priorEnd": "2024-12-31",
+      "periodType": "12M",
+      "currency": "CNY",
+      "unit": "currency",
+      "revenue": 2255244574.28,
+      "priorRevenue": 2057608183.78,
+      "grossProfit": 551950592.49,
+      "priorGrossProfit": 540270887,
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-04",
+      "readings": [
+        {
+          "discoveryQuery": "Jilin Sino-Microelectronics 2025 annual report",
+          "values": {
+            "revenue": 2255244574.28,
+            "priorRevenue": 2057608183.78,
+            "grossProfit": 551950592.49,
+            "priorGrossProfit": 540270887
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225133069.PDF",
+              "page": 78,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "营业收入 2,255,244,574.28 2,057,608,183.78；营业成本 1,703,293,981.79 1,517,337,296.78",
+              "published": "2026-04-21",
+              "derivation": "grossProfit = consolidated revenue minus consolidated cost of revenue; CNY units",
+              "operands": {
+                "revenue": 2255244574.28,
+                "priorRevenue": 2057608183.78,
+                "costOfRevenue": 1703293981.79,
+                "priorCostOfRevenue": 1517337296.78
+              }
+            }
+          ],
+          "pass": 1
+        },
+        {
+          "discoveryQuery": "Jilin Sino-Microelectronics 2025 annual report",
+          "values": {
+            "revenue": 2255244574.28,
+            "priorRevenue": 2057608183.78,
+            "grossProfit": 551950592.49,
+            "priorGrossProfit": 540270887
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225133069.PDF",
+              "page": 173,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "合计 2,255,244,574.28 1,703,293,981.79 2,057,608,183.78 1,517,337,296.78",
+              "published": "2026-04-21",
+              "derivation": "Consolidated notes, total row: current revenue, current cost, prior revenue, prior cost; subtract costs in CNY units",
+              "operands": {
+                "revenue": 2255244574.28,
+                "costOfRevenue": 1703293981.79,
+                "priorRevenue": 2057608183.78,
+                "priorCostOfRevenue": 1517337296.78
+              }
+            }
+          ],
+          "pass": 2
+        }
+      ]
+    },
+    {
+      "id": "000636.SZ-FY2025",
+      "ticker": "000636.SZ",
+      "issuer": "Guangdong Fenghua Advanced Technology",
+      "listingAliases": [],
+      "end": "2025-12-31",
+      "priorEnd": "2024-12-31",
+      "periodType": "12M",
+      "currency": "CNY",
+      "unit": "currency",
+      "revenue": 5756408165.14,
+      "priorRevenue": 4939246038.11,
+      "grossProfit": 1021637599.34,
+      "priorGrossProfit": 947034788.44,
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-04",
+      "readings": [
+        {
+          "discoveryQuery": "Guangdong Fenghua Advanced Technology 2025 annual report",
+          "values": {
+            "revenue": 5756408165.14,
+            "priorRevenue": 4939246038.11,
+            "grossProfit": 1021637599.34,
+            "priorGrossProfit": 947034788.44
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225129320.PDF",
+              "page": 79,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "营业收入 5,756,408,165.14 4,939,246,038.11；营业成本 4,734,770,565.80 3,992,211,249.67",
+              "published": "2026-04-21",
+              "derivation": "grossProfit = consolidated revenue minus consolidated cost of revenue; CNY units",
+              "operands": {
+                "revenue": 5756408165.14,
+                "priorRevenue": 4939246038.11,
+                "costOfRevenue": 4734770565.8,
+                "priorCostOfRevenue": 3992211249.67
+              }
+            }
+          ],
+          "pass": 1
+        },
+        {
+          "discoveryQuery": "Guangdong Fenghua Advanced Technology 2025 annual report",
+          "values": {
+            "revenue": 5756408165.14,
+            "priorRevenue": 4939246038.11,
+            "grossProfit": 1021637599.34,
+            "priorGrossProfit": 947034788.44
+          },
+          "sources": [
+            {
+              "fields": [
+                "revenue",
+                "priorRevenue",
+                "grossProfit",
+                "priorGrossProfit"
+              ],
+              "url": "https://static.cninfo.com.cn/finalpage/2026-04-21/1225129320.PDF",
+              "page": 172,
+              "pageNumbering": "PDF, 1-based",
+              "quote": "合计 5,756,408,165.14 4,734,770,565.80 4,939,246,038.11 3,992,211,249.67",
+              "published": "2026-04-21",
+              "derivation": "Consolidated notes, total row: current revenue, current cost, prior revenue, prior cost; subtract costs in CNY units",
+              "operands": {
+                "revenue": 5756408165.14,
+                "costOfRevenue": 4734770565.8,
+                "priorRevenue": 4939246038.11,
+                "priorCostOfRevenue": 3992211249.67
+              }
+            }
+          ],
+          "pass": 2
+        }
+      ]
+    }
+  ]
+}

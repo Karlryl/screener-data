@@ -316,7 +316,7 @@ test('break-once: the limit, the series test and the axis anchor each fail when 
     assert.equal(G.g31Shadow(old).v1.pct, null);
     // Codex R16: the acceleration's own age check and the data-day requirement.
     const proof = pkt({ revenueQ: cells([120, 110, 100, 90, 80, 70]), revenueQEnds: ['2018-06-30', '2018-03-31', '2017-12-31', '2017-09-30', '2017-06-30', '2017-03-31'] }, {});
-    const noAcc = mutant('src/scoring/axes.js', '  if (yoy.length >= 2 && !stale) return yoy[0] - yoy[yoy.length - 1];', '  if (yoy.length >= 2) return yoy[0] - yoy[yoy.length - 1];');
+    const noAcc = mutant('src/scoring/axes.js', '  if (yoy.length >= 2 && !stale) {', '  if (yoy.length >= 2) {');
     assert.notEqual(noAcc.revAcceleration(proof), null, 'the 2018 pairs would carry the axis');
     assert.equal(A.revAcceleration(proof), null);
   });
