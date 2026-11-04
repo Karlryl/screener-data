@@ -26,7 +26,10 @@ const REV = '2026-11-02-sdzahlen';
 const value = r => (r && typeof r === 'object' ? r.value ?? null : r ?? null);
 const without = structuredClone(table);
 without.cases = without.cases.filter(c => c.revision !== REV);
-without.coverage = without.coverage.slice(0, -22);
+// Remove this lane's coverage by series, not by position: later lanes append their own rows (04.11.2026: Delivery Hero, CarMax).
+const ownSeries = new Set(table.cases.filter(c => c.revision === REV && c.replacementValue !== null).map(c => `${c.ticker}|${c.field}`));
+without.coverage = without.coverage.filter(v => !ownSeries.has(`${v.ticker}|${v.field}`));
+if (table.coverage.length - without.coverage.length !== 22) throw new Error('expected exactly 22 own coverage rows');
 validateTable(without);
 const active = process.argv.includes('--prove-red') ? without : table;
 const apply = s => applyFinancialCases(s, { table: active });
@@ -101,10 +104,10 @@ test('corrected cells carry their marker; unverified vendor quarters are withhel
 test('rows: count, revision, exact sources, a reason naming its period, plain German', () => {
   const own = table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 66);
-  assert.deepEqual(table.cases.slice(-66), own, 'appended after every earlier case');
+  assert.deepEqual(table.cases.slice(-73, -7), own, 'appended after every earlier case; only the seven rows of 04.11.2026 follow');
   assert.equal(own.filter(c => c.field === 'revenueQ' && c.replacementValue !== null).length, 53);
   assert.equal(own.filter(c => c.replacementValue === null).length, 13);
-  assert.deepEqual(table.coverage.slice(-22).map(v => v.ticker), ROWS.map(r => r[0]));
+  assert.deepEqual(table.coverage.slice(-24, -2).map(v => v.ticker), ROWS.map(r => r[0]));
   for (const [t, aliases, end] of ROWS) {
     const v = table.coverage.find(x => x.ticker === t);
     assert.deepEqual([v.field, v.coversThrough, v.listingAliases || []], ['revenueQ', end, aliases], t);
