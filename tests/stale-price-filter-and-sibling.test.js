@@ -55,7 +55,7 @@ const athFor = lastDate => ({ OLD: { ath: 200, athDate: '2025-01-02', lastClose:
 const build = (stamp, athLast = '2026-10-29', builder = F) => builder.buildUniverse({ snapshots: [G.prepareMarketCap(priced(stamp))],
   excluded: new Map([['OLD', ['market-cap-missing']]]), athEntries: athFor(athLast), generatedAt: FRESH });
 const HINTS = ['P/E', 'Forward P/E', 'Dividendenrendite', 'Abstand zum 52-Wochen-Hoch']
-  .map(l => `${l} wird nicht gezeigt, weil der Wert auf derselben alten Kursmeldung von Yahoo vom 02.10.2026 beruht wie der zurückgehaltene Börsenwert.`);
+  .map(l => `${l} wird nicht gezeigt, die Kursmeldung von Yahoo vom 02.10.2026 ist zu alt.`);
 
 function heldRow(builder = F) {
   const row = build(OLD, '2026-10-29', builder).rows[0];

@@ -222,10 +222,11 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     // old quote message as the withheld market cap, so none is shown while the hold lasts, each with its own hint. The
     // distance to the all-time high rests on the project's own daily closes and stays while its newest close is current.
     const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE;
-    const meldung = meta.stalePriceHold?.priceDay ? `derselben alten Kursmeldung von Yahoo vom ${meta.stalePriceHold.priceDay.split('-').reverse().join('.')}` : 'derselben alten Kursmeldung von Yahoo';
+    // Short on purpose: about 2,100 such hints on 03.11. sit in a file with a 6 MB ceiling (5.6 MB before them).
+    const meldung = meta.stalePriceHold?.priceDay ? `die Kursmeldung von Yahoo vom ${meta.stalePriceHold.priceDay.split('-').reverse().join('.')}` : 'die Kursmeldung von Yahoo';
     const zeige = (label, value) => {
       if (!kursAlt || value === null || value === undefined) return value;
-      aus.push(`${label} wird nicht gezeigt, weil der Wert auf ${meldung} beruht wie der zurückgehaltene Börsenwert.`);
+      aus.push(`${label} wird nicht gezeigt, ${meldung} ist zu alt.`);
       return null;
     };
     const athAlt = kursAlt && ath && !(priceAge({ marketCap: { value: 1, regularMarketTime: ath.lastDate } })?.age <= STALE_PRICE_WEEKDAYS);
