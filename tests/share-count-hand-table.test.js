@@ -58,12 +58,12 @@ const WRONG = {
   // Snapshots of run 39918190374 (2026-10-23), USD price after conversion: pre-split counts after the
   // 1:5 (TEL) and 1:3 (Kioxia) splits of 2026-10-01, and Lindt registered + participation counted 1:1.
   '8035.T': { px: 60.22362584, vendorShares: 453967442, mcap: 27339565394.16052, issuer: 2280791810 },
-  '285A.T': { px: 81.2172074, vendorShares: 532635175, mcap: 43259141448.56342, issuer: 1644045264 },
+  '285A.T': { px: 81.2172074, vendorShares: 532635175, mcap: 43259141448.56342, issuer: 1597905534 }, // 04.11.2026: issued 1,646,307,702 minus treasury 48,402,168 (30.09.2026)
   'LISN.SW': { px: 105231.18462, vendorShares: 1086190, mcap: 114301055775.69977, issuer: 229956 },
   // Snapshots of run 41027769596 (2026-10-30): Fastned at twice its share count, ISA Energia with all classes at the ON price,
   // Toppan with the pre-split count against a post-split price.
   'FAST.AS': { px: 37.01837299, vendorShares: 38933085, mcap: 1441239431.6594176, issuer: 19752877 },
-  'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 564711511 },
+  'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 583349906 }, // 04.11.2026: ON-equivalents at the closes of 03.11.2026 (ratio 0.742)
   '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561108010 },
   // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
   '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1337286998 },
