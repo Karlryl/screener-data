@@ -51,7 +51,8 @@ test('19 sourced rows validate, two coverage rows, every reason names its period
   assert.equal(own.length, 19);
   assert.deepEqual(FIRMS.map(t => own.filter(c => c.ticker === t).length), [8, 11]);
   assert.deepEqual(table.coverage.filter(v => FIRMS.includes(v.ticker)).map(v => v.ticker + v.field + v.coversThrough), ['BRBIrevenueQ2026-06-30', 'GAUopIncQ2026-06-30']);
-  assert.ok(table.cases.slice(-29, -10).every(c => c.revision === REV), 'appended behind the earlier rows; only the ten rows of 01.11.2026 follow');
+  const at = table.cases.findIndex(c => c.revision === REV); // Later lanes append behind these rows.
+  assert.ok(table.cases.slice(at, at + 19).every(c => c.revision === REV), 'appended together');
   const de = p => p.split('-').reverse().join('.');
   for (const c of own) {
     assert.ok(c.replacementValue !== 0 && c.replacementValue !== null, c.caseId);
@@ -151,8 +152,11 @@ test('documented order: the diagnosis on the shown pair outranks the definition 
 });
 
 test('definition table: one row, checked code, quoted sources, plain German; lib/g31-recency.js does not read it', () => {
-  assert.deepEqual(hints.definitionen.map(d => d.ticker), ['BURE.ST']);
-  for (const d of hints.definitionen) {
+  // 02.11.2026 appends five definition rows of its own (tests/hand-table-zahlen-20261102.test.js); this test keeps its one row.
+  const own = hints.definitionen.filter(d => d.verifiedAt === '2026-10-31');
+  assert.deepEqual(own.map(d => d.ticker), ['BURE.ST']);
+  assert.deepEqual(hints.definitionen.map(d => d.ticker), ['BURE.ST', 'CUPRUM.SN', 'AFPCAPITAL.SN', 'PROVIDA.SN', '003535.KS', '003530.KS']);
+  for (const d of own) {
     assert.equal(d.code, 'abgrenzung');
     assert.equal(d.verifiedAt, '2026-10-31');
     assert.ok(d.sources.length >= 3 && d.sources.every(s => s.url.startsWith('https://') && s.page && s.quote && s.form && s.published), d.ticker);
