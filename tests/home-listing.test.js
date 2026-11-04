@@ -73,6 +73,13 @@ test('an H share does not win on an older pair its A share withholds (Sichuan Ex
   assert.equal(first([h, a]), 'TESTA.SS');
 });
 
+test('outside China and Taiwan the walk counts: a home listing whose newest quarter lacks its partner keeps its June pair (Boliden)', () => {
+  const gap = { values: [130, 120, 110, 105, 100], ends: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-06-30'] };
+  const home = leg('TESTB.ST', 'Sweden', 10e9, gap), mirror = leg('1TESTB.MI', 'Sweden', 12e9, JUNE);
+  assert.deepEqual([shownGrowthMonth(home.snapshot), shownGrowthMonth(mirror.snapshot)], ['2026-06', '2026-06']);
+  assert.equal(first([mirror, home]), 'TESTB.ST');
+});
+
 test('no period at all: the listing with a shown period wins, whatever the home rank', () => {
   const empty = leg('RNO.PA', 'France', 10e9); empty.snapshot.timeseries = {}; empty.snapshot.annual = {};
   assert.equal(shownGrowthMonth(empty.snapshot), '');
