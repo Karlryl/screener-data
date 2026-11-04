@@ -32,6 +32,7 @@ test('two or more listings lost still alarm on small labels', () => {
   assert.equal(isExchangeAlarming(2, [3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4]), true); // median 3.5 -> 2
   assert.equal(isExchangeAlarming(0, [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2]), true); // median 1.5 -> 0
   assert.deepEqual(checkDrift({}, { Budapest: Array(14).fill(3) }), ['Budapest: dropped to 0 (median 3)']);
+  assert.equal(isExchangeAlarming(3, Array(14).fill(5)), false); // exactly -40 % is not a drop
 });
 
 test('a non-alarming single-listing zero enters the window instead of freezing it', () => {
