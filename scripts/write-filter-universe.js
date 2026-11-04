@@ -230,6 +230,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     };
     const athAlt = kursAlt && ath && !(priceAge({ marketCap: { value: 1, regularMarketTime: ath.lastDate } })?.age <= STALE_PRICE_WEEKDAYS);
     if (athAlt && finite(ath.distancePct)) aus.push(`Abstand zum Allzeithoch wird nicht gezeigt, weil der letzte eigene Tageskurs vom ${String(ath.lastDate).slice(0, 10).split('-').reverse().join('.')} älter als ${STALE_PRICE_WEEKDAYS} Wochentage ist.`);
+    // The payout placeholder rule reads the vendor's own yield status, not the hidden one: a 0 payout of a paying firm stays missing (T2).
+    const zahlt = div.dySt === 'zahlt';
     if (kursAlt && div.dy !== null && zeige('Dividendenrendite', div.dy) === null) Object.assign(div, { dy: null, dySt: 'unbekannt' });
     if (gmBad) aus.push('gm-implausible');
     if (dyBad) aus.push('dy-implausible');
@@ -244,7 +246,7 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
       ...(peShown => ({ pe: peShown, peSt: mixed ? 'waehrung' : peShown !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt' }))(zeige('P/E', pe)),
       fpe: zeige('Forward P/E', fpeBad ? null : fpe),
-      ...div, po: poBad || (payout === 0 && (div.dySt === 'zahlt' || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
+      ...div, po: poBad || (payout === 0 && (zahlt || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
       fcf: round(usableFcf(snapshot)),
       // The prior gate prevents ruleOfX from silently falling back to growth alone.
       r40: eligible.has(snapshot) ? round(ruleOfX(snapshot, 1, true, growthBounds)) : null,

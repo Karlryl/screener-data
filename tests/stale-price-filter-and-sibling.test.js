@@ -73,6 +73,18 @@ check('filter: the own-close distance to the all-time high goes once its newest 
   assert.ok(row.aus.includes('Abstand zum Allzeithoch wird nicht gezeigt, weil der letzte eigene Tageskurs vom 20.10.2026 älter als 7 Wochentage ist.'));
 });
 
+// A 0 payout next to a paying vendor yield is the vendor's placeholder (T2); hiding the yield must not turn it into a shown 0.
+const placeholder = (stamp, builder = F) => { const s = priced(stamp); s.metrics.payoutRatio = { value: 0 }; return builder.buildUniverse({ snapshots: [G.prepareMarketCap(s)], excluded: new Map([['OLD', ['market-cap-missing']]]), athEntries: athFor('2026-10-29'), generatedAt: FRESH }).rows[0]; };
+check('filter: a placeholder payout of 0 stays missing when the yield is hidden', () => {
+  assert.equal(placeholder(OLD).po, undefined, 'placeholder 0 payout shown beside the stale hold');
+  assert.equal(placeholder(FRESH).po, undefined);
+});
+check('break-once: reading the hidden yield status would show the placeholder 0', () => {
+  const line = "      ...div, po: poBad || (payout === 0 && (zahlt || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),";
+  const broken = compiled(FILTER_FILE, line, line.replace('(zahlt || dyBad)', "(div.dySt === 'zahlt' || dyBad)"));
+  assert.equal(placeholder(OLD, broken).po, 0);
+});
+
 check('filter absence: without a hold every value stays, with no hint', () => {
   const row = build(FRESH).rows[0];
   assert.deepEqual([row.pe, row.peSt, row.fpe, row.dy, row.dySt, row.d52, row.ath, row.mc], [20, 'vorhanden', 12, 2, 'zahlt', -50, -50, 1e12]);
