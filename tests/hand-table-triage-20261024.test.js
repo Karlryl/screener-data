@@ -211,7 +211,7 @@ function g31With(entries) {
 }
 const TRIAGE_HINTS = ['603991.SS', 'JOBY', 'QUBT', '000656.SZ'];
 test('hints: 603991.SS, JOBY, QUBT and 000656.SZ carry the checked hint for exactly the shown pair; values unchanged', () => {
-  const own = hintTable.entries.filter(e => TRIAGE_HINTS.includes(e.ticker));
+  const own = hintTable.entries.filter(e => TRIAGE_HINTS.includes(e.ticker) && /Geprüft am 24\.10\.2026\.$/.test(e.reason)); // Later rounds add dated rows of their own (603991.SS for September, PR #75).
   assert.deepEqual(own.map(e => [e.ticker, e.periodEnd, e.priorPeriodEnd, e.code]), [
     ['603991.SS', '2026-06-30', '2025-06-30', 'uebernahme'], ['JOBY', '2026-06-30', '2025-06-30', 'uebernahme'],
     ['JOBY', '2026-09-30', '2025-09-30', 'uebernahme'], ['QUBT', '2026-06-30', '2025-06-30', 'uebernahme'],
