@@ -647,6 +647,11 @@ function belegPunkte(timeseries) {
   // revenueQ ist [{value}] (pull-yahoo-Serialisierung), historisch auch mal blanke Zahlen.
   const roh = Array.isArray(timeseries.revenueQ) ? timeseries.revenueQ : null;
   const wert = (x) => (x && typeof x === 'object' && 'value' in x ? x.value : x);
+  // Codex R22 (04.11.2026): quarters kept only as the proof that a firm has revenue (lib/annual-pairs.js, no annual revenue)
+  // are no evidence points once the series is past the age limit; the same decision as growth and acceleration.
+  const endsRoh = Array.isArray(timeseries.revenueQEnds) ? timeseries.revenueQEnds : [];
+  const neuestes = roh === null ? null : endsRoh.filter((d, i) => typeof d === 'string' && Number.isFinite(wert(roh[i]))).sort().at(-1);
+  if (neuestes && staleReason('quarter', neuestes)) return { qPunkte: 0, qSpanTage: null };
   const qPunkte = roh === null ? null : roh.filter((x) => Number.isFinite(wert(x))).length;
   const ends = Array.isArray(timeseries.revenueQEnds)
     ? timeseries.revenueQEnds.map((d) => Date.parse(d)).filter((t) => Number.isFinite(t))
@@ -2610,6 +2615,8 @@ if (require.main === module) {
     console.log('findash-export/v1 schema OK.');
     process.exit(0);
   }
+  // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+  require('../lib/annual-pairs.js').requireDataDay();
   const r = build();
   console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.fullBoards} Vollboards (full/) + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
 }

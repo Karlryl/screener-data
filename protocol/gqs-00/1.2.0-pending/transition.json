@@ -506,18 +506,18 @@
       "sourceSha256LF": "994a1dd18f54d198e9854987a8fc7cc5661b114f2c1a2ba5ee02db705e5f9d47",
       "previousPendingSha256LF": "4174532772c6e26a1bd2cd210e44e6d1ef870497642c6cc851aa8a3a470acbce",
       "dependencySha256LF": {
-        "lib/annual-pairs.js": "2f5a55613cab7d2554c50ef3f1d2565b44898e557bf1d971ced29d38d8e52156"
+        "lib/annual-pairs.js": "aad26d56313405cf1c28992d9a04809742600892d1427cab63fc5a59efca056d"
       },
       "previousDependencySha256LF": {
         "lib/annual-pairs.js": "aed59aa55aa3e0405f503a602f3f47a645ad91d98cf8815dbb907ceb3dba853c"
       },
       "goldenImpact": "None: verify() runs without RUN_DATE_UTC from a non-writer entry, so no age rule applies; sealed fixtures are also exempt by identity and content.",
-      "evidence": "tests/stale-series-p286.test.js: 550 and 551 days on the GP anchor, the Pop Mart pattern (FY2024, 669 days) drops both axes, both of Codex's acceleration paths (no annual revenue; fresh unpaired quarter with valid annual revenue, which now gives the annual fallback 0.0889), the data-day requirement by entry and AGE_RULE_OFF; in-memory break-once on the acceleration check and the requirement.",
+      "evidence": "tests/stale-series-p286.test.js: 550 and 551 days on the GP anchor, the Pop Mart pattern (FY2024, 669 days) drops both axes, both of Codex's acceleration paths (no annual revenue; fresh unpaired quarter with valid annual revenue, which now gives the annual fallback 0.0889), the data-day requirement by entry and AGE_RULE_OFF; in-memory break-once on the acceleration check and the requirement. Codex R22 follow-up: requireDataDay reads process.argv[1] and every writer calls it first, outside every catch (spawn test of the six writers); the export counts no quarter points for revenue quarters kept only as proof; exchange-check-shadow.yml sets AGE_RULE_OFF=1.",
       "review": "Builder evidence only; blind Opus review and the Codex re-check remain pending."
     }
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f",
-    "lib/annual-pairs.js": "2f5a55613cab7d2554c50ef3f1d2565b44898e557bf1d971ced29d38d8e52156"
+    "lib/annual-pairs.js": "aad26d56313405cf1c28992d9a04809742600892d1427cab63fc5a59efca056d"
   }
 }

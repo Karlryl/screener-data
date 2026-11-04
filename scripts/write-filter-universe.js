@@ -390,5 +390,6 @@ function main(argv) {
   } catch (error) { console.error('[filter] ' + error.message); return 1; }
 }
 
-if (require.main === module) process.exitCode = main(process.argv.slice(2));
+// Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+if (require.main === module) { if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
 module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };
