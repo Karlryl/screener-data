@@ -22,6 +22,9 @@ const filterSnapshots = require('./fixtures/w6/snapshots.json');
 const { rankGrundShadowFor } = require('../lib/non-operating-classes.js');
 const nonOperating = require('../configs/non-operating-classes.json');
 
+// These rows have no snapshot, which the writer reads as a rejected row for a ticker with a market-cap case. Inert in memory, like tests/scoring/dup-issuer-shadow-export.test.js.
+const marketCapGuard = require('../lib/market-cap-guard.js');
+for (const t of ['GLXY', '1GLXY.MI']) { delete marketCapGuard.table[t]; delete marketCapGuard.holds[t]; }
 const tableById = loadDupIssuerShadowTable();
 const table = Object.values(tableById);
 const decided = table.filter((issuer) => issuer.homeListingProposal !== null);
