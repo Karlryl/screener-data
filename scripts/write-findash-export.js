@@ -351,6 +351,7 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     correctedMarketCap: marketCapGuard.table[ticker] ? snap?.marketCap?.value : null,
     overviewHold: overviewGrowthHold(ticker, snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
+    meta: snap ? snap.meta : null, // issuer of the shown listing, for the held-sibling hint
     // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values.
     wachstumLegacy: snap ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
     overviewLegacy: snap ? withG31Variant('legacy', () => {
@@ -399,6 +400,34 @@ let _wachstumOhneEtikett = 0;
 // not to a period, because the next quarter does not change the definition. Display only: no value, score or rank reads it.
 // ponytail: no fingerprint on the vendor packet; a firm that changes its reporting needs its row re-checked by hand.
 const DEFINITION_HINTS = new Map(require('../configs/g31-hinweise.json').definitionen.map(d => [d.ticker, { code: d.code, reason: d.reason }]));
+// Listings of the main store that the stale-price gate holds, by issuer, with their newest growth period. Built once.
+// Only rows whose own quote time is old or that carry a known hold are prepared, so the scan stays cheap.
+let _heldByIssuer = null;
+function heldNewerSibling(meta, ticker, shownEnd) {
+  const { issuerKeyLoose, issuerDedupGroups } = require('../src/scoring/score.js');
+  if (!_heldByIssuer) {
+    _heldByIssuer = new Map();
+    let files = [];
+    try { files = fs.readdirSync(SNAP_DIR); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+    for (const f of files) {
+      if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+      let raw;
+      try { raw = readJSON(path.join(SNAP_DIR, f)); } catch (_) { continue; }
+      if (!raw?.meta?.stalePriceHold && !((marketCapGuard.priceAge(raw)?.age ?? 0) > marketCapGuard.STALE_PRICE_WEEKDAYS)) continue;
+      const s = prepareYahooQ4Snapshot(raw);
+      if (s?.marketCap?.source !== marketCapGuard.STALE_PRICE_SOURCE) continue;
+      const key = issuerKeyLoose(s), periodEnd = revGrowthLeg(s)?.periodEnd;
+      if (key && periodEnd) { if (!_heldByIssuer.has(key)) _heldByIssuer.set(key, []); _heldByIssuer.get(key).push({ ticker: s.meta.ticker, periodEnd, meta: s.meta }); }
+    }
+  }
+  const key = meta ? issuerKeyLoose({ meta }) : null;
+  // The production issuer grouping decides, with its guard against two firms of the same loose name.
+  const same = h => issuerDedupGroups([{ snapshot: { meta } }, { snapshot: { meta: h.meta } }]).some(g => g.length === 2);
+  return (key && _heldByIssuer.get(key) || []).filter(h => h.ticker !== ticker && h.periodEnd > shownEnd && same(h))
+    .sort((a, b) => (a.periodEnd < b.periodEnd ? 1 : a.periodEnd > b.periodEnd ? -1 : a.ticker < b.ticker ? -1 : 1))[0] || null;
+}
+
 function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   let derivations = snapAbleitungenFuer(out.ticker, snapshotStore);
   const wert = out.revGrowthYoYPct;
@@ -421,6 +450,13 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   out.revGrowthPriorPeriodEnd = passt ? leg.priorPeriodEnd : null;
   out.revGrowthSourcePeriodEnd = passt ? leg.sourcePeriodEnd ?? null : null;
   out.revGrowthSourcePriorPeriodEnd = passt ? leg.sourcePriorPeriodEnd ?? null : null;
+  // A sibling listing of this firm with newer figures is held by the stale-price gate: the shown row says so, naming both.
+  const neuer = passt && leg.periodEnd && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap' ? heldNewerSibling(derivations.meta, out.ticker, leg.periodEnd) : null;
+  if (neuer) {
+    const tag = d => d.slice(0, 10).split('-').reverse().join('.');
+    const reason = `Die Notierung ${neuer.ticker} derselben Firma hat neuere Zahlen bis ${tag(neuer.periodEnd)}, ihr Börsenwert ist wegen einer alten Kursmeldung von Yahoo zurückgehalten. Gezeigt werden die Zahlen von ${out.ticker} bis ${tag(leg.periodEnd)}.`;
+    out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${reason}` } : { code: 'gehaltene-notierung-neuer', reason };
+  }
   // G31 switch (18.10.2026): the pre-G31 numbers of the SAME snapshot as comparison fields for at
   // most four weeks, set only where that snapshot reproduces the exported live number (otherwise
   // null, like an unlabelled row). Display only: no score, rank or membership reads them.
@@ -2342,7 +2378,7 @@ function validateSmallcapIndex(mk, errs) {
   if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
   if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
   // Optional, additive: a named row says who and why; null means no small-cap store.
-  if (mk.withheldMarketCaps != null && (!Array.isArray(mk.withheldMarketCaps) || mk.withheldMarketCaps.some(r => !r?.ticker || typeof r.reasonDe !== 'string' || !r.reasonDe.trim() || !('name' in r)))) errs.push(`${kind}: withheldMarketCaps`);
+  if (mk.withheldMarketCaps != null && (!Array.isArray(mk.withheldMarketCaps) || mk.withheldMarketCaps.some(r => !r?.ticker || typeof r.reasonDe !== 'string' || !r.reasonDe.trim() || !(r.name === null || typeof r.name === 'string')))) errs.push(`${kind}: withheldMarketCaps`);
   // 5.2 Auflage 3: coverageFloor ist Pflicht (nullable) — der Beleg-Wert des data-abgeleiteten
   // Coverage-Gates dieses Laufs muss im Export ankommen, sonst ist Auflage 3 nicht nachpruefbar.
   if (!('coverageFloor' in mk)) errs.push(`${kind}: coverageFloor missing`);
@@ -2364,6 +2400,9 @@ function validateSmallcapExport(scoutDir = SCOUT_DIR, snapDir = SMALLCAP_SNAP_DI
   const withheld = smallcapWithheldMarketCaps(snapDir, watchlistPath);
   const nameList = rows => (Array.isArray(rows) ? rows : []).map(r => r?.ticker).join(' ');
   if (withheld && nameList(withheld) !== nameList(idx.withheldMarketCaps)) raw.push(`smallcap/index: withheldMarketCaps names [${nameList(idx.withheldMarketCaps)}], the store withholds [${nameList(withheld)}]`);
+  // Each named reason is the one the prepared snapshot carries, not just any text.
+  const named = new Map((Array.isArray(idx.withheldMarketCaps) ? idx.withheldMarketCaps : []).map(r => [r?.ticker, r]));
+  for (const r of withheld || []) if (named.has(r.ticker) && named.get(r.ticker)?.reasonDe !== r.reasonDe) raw.push(`smallcap/index: withheldMarketCaps reason of ${r.ticker} differs from the store`);
   const boards = Array.isArray(idx.boards) ? idx.boards : [];
   for (const id of boards) {
     const stem = String(id).replace(/^smallcap-/, '');
@@ -2639,5 +2678,5 @@ module.exports = {
   ladeMcapClassesRegistry, ergaenzeMarketCapClassesShadow,
   // W8 (28.10.2026): profit-split marker, FFO reason, live revenue-growth reason (tests/export-w8-*.test.js).
   profitSplitMap, checkProfitSplit, ffoGrund, FFO_GRUND_CODES, ergaenzeTextGruende, checkTextGruende, WACHSTUM_GRUND_FEHLT,
-  buildIndex, buildSmallcapIndex, smallcapWithheldMarketCaps,
+  buildIndex, buildSmallcapIndex, smallcapWithheldMarketCaps, heldNewerSibling,
 };

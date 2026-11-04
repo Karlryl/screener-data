@@ -587,6 +587,8 @@ jobs:
     needs: prep
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 5
     steps:
       # T569-F7 (Review Tag 569): `cancelled` und `skipped` fielen bis Tag 571 in denselben
@@ -1773,6 +1775,8 @@ jobs:
     needs: [prep, merge]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 5
     steps:
       - name: Earnings-Transport pruefen (KV571-1)
@@ -1838,9 +1842,11 @@ jobs:
   # tests/weg-e-waechter-verdrahtung.test.js fest.
   # ============================================================================
   jahres-ausreisser-waechter:
-    needs: merge
+    needs: [prep, merge]
     if: ${{ always() && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -1901,6 +1907,8 @@ jobs:
     needs: [prep, pull, prices, merge]
     if: ${{ !cancelled() && needs.prep.result == 'success' && needs.pull.result == 'success' && needs.prices.result == 'success' && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -2778,9 +2786,11 @@ jobs:
   # Waechter dieses Jobs: tests/druckenmiller/ci-wiring.test.js.
   # ============================================================================
   druckenmiller-guard:
-    needs: scoring
+    needs: [prep, scoring]
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -2863,9 +2873,11 @@ jobs:
   # the API (no CDN delay, so never yesterday's copy), that is what findash really gets. The filter step is
   # fail-soft: a feed missing there is this job's HTTP 404, a stale one its age check. No npm ci needed.
   feed-fill-waechter:
-    needs: scoring
+    needs: [prep, scoring]
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -2896,6 +2908,8 @@ jobs:
     needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard, feed-fill-waechter]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout

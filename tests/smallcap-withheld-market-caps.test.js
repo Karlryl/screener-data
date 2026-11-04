@@ -9,7 +9,9 @@
 //   absence   - a current stamp, no stamp, a row without a value, a shown value with its own reason and a stale row off the watchlist are not named
 //   no store  - null, because the pass then ran on the main store and excluded.json names its rows
 //   wiring    - buildSmallcapIndex writes the field next to excluded
-//   check     - a row dropped from the list, an added row, the list removed or null, a blank reason and a missing name key turn --check red
+//   check     - a row dropped from the list, an added row, the list removed or null, a reason that is not the store's, a blank reason,
+//               a missing name key and a name that is neither text nor null turn --check red
+//   empty     - a known hold stays named after an empty Yahoo answer, through the real pullAll, preparation, export and --check
 // Break-once runs on every start: the export source is compiled in memory with one whole line replaced (nothing is written,
 // the live file is hashed before and after) and the presence or the check above has to fail for its own reason.
 process.env.RUN_DATE_UTC = '2026-10-31';
@@ -115,7 +117,9 @@ check('wiring: buildSmallcapIndex carries the list next to the counters, and the
 // The contract gate on a real file: a list that differs from what the store withholds is a breach.
 function gateErrors(names, writer = W, overrides = {}, fixture = FIXTURE) {
   const { dir, snapDir, watchlistPath } = fixture();
-  const list = names == null ? names : names.map(t => ({ ticker: t, name: t + ' Inc.', reasonDe: 'Grund.', ...overrides }));
+  // By default each listed row carries what the store says of it; overrides make one field wrong on purpose.
+  const truth = new Map((W.smallcapWithheldMarketCaps(snapDir, watchlistPath) || []).map(r => [r.ticker, r]));
+  const list = names == null ? names : names.map(t => ({ ticker: t, name: truth.get(t)?.name ?? t + ' Inc.', reasonDe: truth.get(t)?.reasonDe ?? 'Grund.', ...overrides }));
   const source = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/export-w8/smallcap-index.json'), 'utf8'));
   fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify({ ...source, schema: W.SCHEMA, ...(list === undefined ? {} : { withheldMarketCaps: list }) }));
   return writer.validateSmallcapExport(dir, snapDir, watchlistPath).filter(e => e.includes('withheldMarketCaps'));
@@ -142,10 +146,21 @@ check('counter-proof: a blank reason, a missing ticker or a missing name key tur
   const run = list => { const errs = []; W.validateSmallcapIndex({ ...JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/export-w8/smallcap-index.json'), 'utf8')), schema: W.SCHEMA, withheldMarketCaps: list }, errs); return errs.filter(e => e.includes('withheldMarketCaps')); };
   for (const bad of [[{ ticker: 'A', name: 'A', reasonDe: ' ' }], [{ name: 'A', reasonDe: 'Grund.' }], [{ ticker: 'A', reasonDe: 'Grund.' }], [{ ticker: 'A', name: 'A' }], [null], 'x'])
     assert.equal(run(bad).length, 1, JSON.stringify(bad));
+  for (const name of [42, {}, false]) assert.equal(run([{ ticker: 'A', name, reasonDe: 'Grund.' }]).length, 1, 'name ' + JSON.stringify(name));
+  assert.deepEqual(run([{ ticker: 'A', name: null, reasonDe: 'Grund.' }]), [], 'a null name is legal');
   assert.deepEqual(run(null), []);
   assert.deepEqual(run([]), []);
 });
 
+check('counter-proof: a non-empty reason that is not the one the store carries turns the check red', () => {
+  assert.match(gateErrors(RIGHT, W, { reasonDe: 'Ein anderer Grund.' }).join(), /reason of AAA differs from the store/);
+});
+check('break-once: without the reason comparison a wrong reason passes, so that line is what catches it', () => {
+  const lines = fs.readFileSync(EXPORT_FILE, 'utf8').split(/\r?\n/);
+  const anchor = lines.find(l => l.startsWith('  for (const r of withheld || []) if (named.has(r.ticker)'));
+  assert.ok(anchor, 'reason line');
+  assert.deepEqual(gateErrors(RIGHT, compiled(anchor, ''), { reasonDe: 'Ein anderer Grund.' }), []);
+});
 check('break-once: without the filter line the presence check fails for its names', () => {
   const broken = compiled('  return universe.filter(s => s.meta.marketCapReason && !Number.isFinite(s.marketCap?.value))', '  return universe.filter(() => false)');
   assert.throws(() => presence(broken), /names/);
@@ -157,6 +172,31 @@ check('break-once: without the comparison a dropped row stays unnoticed, so the 
   assert.deepEqual(gateErrors(['AAA', HAND_HOLD], compiled(anchor, '')), []);
 });
 
-assert.equal(sha(), before, 'live export source changed');
-console.log(`smallcap-withheld-market-caps: ${passed} passed, ${failed} failed`);
-process.exit(failed ? 1 : 0);
+// Codex R17, finding 1: the state sequence of a known hold followed by an empty full pull, through the real pullAll.
+const { fixture: pullFixture, snapshot: pullSnapshot } = require('./stale-quarter-reload.test.js');
+async function emptyAfterHold() {
+  const held = pullSnapshot('OLD', '2026-09-30');
+  Object.assign(held.meta, { name: 'Old Company', asOf: '2026-10-30T08:00:00.000Z', fetchedAt: '2026-10-30T08:00:00.000Z', fundamentalsAsOf: '2026-10-30T08:00:00.000Z', stalePriceHold: { priceDay: '2026-10-02' } });
+  held.marketCap.regularMarketTime = '2026-10-02T15:35:06.000Z';
+  const f = pullFixture({ snapshots: [held], now: Date.parse('2026-10-30T10:00:00Z'), env: { RUN_DATE_UTC: '2026-10-30', STALE_QUARTER_RELOAD: '' }, manual: ['OLD'], emptySummary: true, quoteMarketCap: null });
+  await f.run();
+  const stored = f.stored('OLD');
+  assert.equal(stored.marketCap.value, null, 'the empty answer leaves no value');
+  assert.deepEqual(stored.meta.stalePriceHold, { priceDay: '2026-10-02' });
+  const { dir, snapDir, watchlistPath } = store([stored, row('NOHOLD', null, { marketCap: { value: null, missing: true } })]);
+  const rows = W.smallcapWithheldMarketCaps(snapDir, watchlistPath);
+  assert.deepEqual(rows.map(r => r.ticker), ['OLD'], 'a known hold lost its name after an empty answer, or a row without any hold was named');
+  assert.equal(rows[0].name, 'Old Company');
+  assert.match(rows[0].reasonDe, /^Zuletzt als veraltet belegte Kursmeldung von Yahoo vom 02\.10\.2026; der letzte Abruf lieferte keinen Börsenwert\. /);
+  const source = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/export-w8/smallcap-index.json'), 'utf8'));
+  const gate = list => { fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify({ ...source, schema: W.SCHEMA, withheldMarketCaps: list })); return W.validateSmallcapExport(dir, snapDir, watchlistPath).filter(e => e.includes('withheldMarketCaps')); };
+  assert.match(gate([]).join(), /the store withholds \[OLD\]/, 'an empty list passed the check');
+  assert.deepEqual(gate(rows), []);
+}
+(async () => {
+  try { await emptyAfterHold(); passed++; console.log('PASS empty: a known hold stays named after an empty Yahoo answer; a row without a hold is not named'); }
+  catch (e) { failed++; console.error('FAIL empty: ' + e.message); }
+  assert.equal(sha(), before, 'live export source changed');
+  console.log(`smallcap-withheld-market-caps: ${passed} passed, ${failed} failed`);
+  process.exit(failed ? 1 : 0);
+})().catch(e => { console.error(e); process.exit(1); });

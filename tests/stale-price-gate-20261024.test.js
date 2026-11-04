@@ -61,9 +61,9 @@ function expectWithheld(s, priceDay, g = guard) {
   assert.strictEqual(out.marketCap.yahooValue, s.marketCap.value, 'vendor value not kept');
   assert.strictEqual(out.meta.marketCapReason, reasonFor(priceDay));
   for (const f of ['priceSales', 'enterpriseValue', 'enterpriseToRevenue', 'enterpriseToEbitda']) assert.strictEqual(out.metrics[f], null, f + ' not blanked');
-  // Forward P/E hangs on the price as well and is not blanked. Which price-derived filter fields should leave with the value
-  // is an open method point (PR text); this pin keeps today's behaviour visible until it is decided.
-  assert.strictEqual(out.metrics.forwardPE, 11.2, 'forward P/E changed: price-derived, but kept until the open point is decided');
+  // Forward P/E hangs on the price as well. It stays in the prepared snapshot; the filter does not show it, nor P/E, the
+  // dividend yield or the 52-week distance, while the hold lasts (tests/stale-price-filter-and-sibling.test.js).
+  assert.strictEqual(out.metrics.forwardPE, 11.2, 'forward P/E removed from the snapshot: the filter decides what it shows');
   // The two board exits every reader uses: export/filter/rule40 drop on reason + empty value, scoring on missing + empty value.
   assert.ok(out.meta.marketCapReason && !Number.isFinite(out.marketCap.value), 'export exit predicate');
   assert.ok(out.marketCap.missing === true && !Number.isFinite(out.marketCap.value), 'scoring exit predicate');

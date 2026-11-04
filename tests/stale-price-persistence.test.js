@@ -264,6 +264,22 @@ const checks = {
       assert.deepEqual(later.meta.stalePriceHold,{priceDay:'2026-10-30'},'valid later run day ignored: 30.10. is 15 weekdays before it');
     }
   },
+  // Codex R17, finding 1: a known hold stays named after an empty Yahoo answer; a row without a hold is no case.
+  async emptyAfterHold(g = guard) {
+    const s=seed(null); s.marketCap={value:null,missing:true,asOf:FRESH,source:'yahoo_quoteSummary'}; s.meta.stalePriceHold={priceDay:'2026-10-02'};
+    const out=g.prepareMarketCap(s);
+    assert.equal(out.marketCap.source,g.STALE_PRICE_SOURCE,'known hold not named after an empty answer');
+    assert.match(out.meta.marketCapReason,/^Zuletzt als veraltet belegte Kursmeldung von Yahoo vom 02\.10\.2026; der letzte Abruf lieferte keinen Börsenwert\. /);
+    const none=seed(null); none.marketCap={value:null,missing:true,asOf:FRESH};
+    assert.equal(g.prepareMarketCap(none).meta.marketCapReason,undefined,'a row without value and without a hold was named');
+  },
+  // A hand-table hold keeps its own reason after an empty answer too; the gate adds nothing to it.
+  async emptyAfterHoldHand(g = guard) {
+    const s=seed(null); s.meta.ticker='ARX.TO'; s.marketCap={value:null,missing:true,asOf:FRESH,source:'yahoo_quoteSummary'}; s.meta.stalePriceHold={priceDay:'2026-10-02'};
+    const out=g.prepareMarketCap(s);
+    assert.equal(out.marketCap.source,'hand-table:market-cap-hold','hand hold overwritten');
+    assert.ok(out.meta.marketCapReason.startsWith('Börsenwert nicht verlässlich: '+guard.holds['ARX.TO'].reason),'hand reason replaced');
+  },
   // Every break below has to apply: a stale anchor would prove a check red for the wrong reason.
   async anchors() {
     for (const name of Object.keys(breaks)) { assert.ok(checks[name],'break without a check: '+name); breaks[name](); }
@@ -292,6 +308,8 @@ const breaks = {
   runDayPrice: () => breakLine(pullSource,'    retainStalePriceHold(existing, previousQuote, _holdRunDay(newAsOf));','    retainStalePriceHold(existing, previousQuote, process.env.RUN_DATE_UTC || newAsOf.slice(0, 10));'),
   runDayFull: () => breakLine(pullSource,'        _holdRunDay(asOf));','        process.env.RUN_DATE_UTC || asOf.slice(0, 10));'),
   runDayValid: () => breakLine(pullSource,'const _holdRunDay = asOf => sizeExitRunDay(process.env, () => Date.parse(asOf));','const _holdRunDay = asOf => asOf.slice(0, 10);'),
+  emptyAfterHold: () => compileGuard(breakLine(guardSource,"    if (!known || snapshot.meta.marketCapReason) return { status: 'no-value' };","    return { status: 'no-value' };")),
+  emptyAfterHoldHand: () => compileGuard(breakLine(guardSource,"    if (!known || snapshot.meta.marketCapReason) return { status: 'no-value' };","    if (!known) return { status: 'no-value' };")),
 };
 (async () => {
   const broken = process.argv.find(a => a.startsWith('--prove-red='))?.split('=')[1];
