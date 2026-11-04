@@ -34,6 +34,7 @@ const quarters = (newest, values = [120, 110, 105, 102, 100, 90]) => {
 const ANNUAL = { annualRev: cells([130, 100]), annualRevEnds: ['2025-12-31', '2024-12-31'] };
 const pkt = (timeseries, annual = ANNUAL) => ({ meta: { ticker: 'XX' }, timeseries, annual });
 const rows = (s, f) => s.timeseries[f].map(r => (r && typeof r === 'object' ? r.value : r));
+const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-12, `${a} != ${b}`);
 
 test('quarterly series: 365 days behind still counts, 366 days do not, each cell empty with a dated reason and the vendor row kept', () => {
   withDay(DAY, () => {
@@ -115,7 +116,7 @@ test('growth pairs: a quarter pair ends after 365 days, an annual pair after 550
   });
 });
 
-test('axes: an annual anchor more than 730 days back drops gross profit and acceleration; a fresh pair keeps them, its older pair is not judged for age', () => {
+test('axes: an annual anchor more than 550 days back drops gross profit and acceleration; a fresh pair keeps them, its older pair is not judged for age', () => {
   withDay(DAY, () => {
     const end = i => yearsBack(minusDays(100), i);
     const yearsBack = (iso, i) => `${+iso.slice(0, 4) - i}${iso.slice(4)}`;
@@ -126,12 +127,48 @@ test('axes: an annual anchor more than 730 days back drops gross profit and acce
     const stale = pkt({}, annual('2024-06-30'));
     assert.equal(A.gpGrowth(stale), null);
     assert.equal(A.revAcceleration(stale), null);
-    // Between the two limits: FY2024 is no shown growth figure any more, but its axes stay until the vendor's FY2025 gap is filled (#57).
+    // Pop Mart pattern (Codex R16, Claude 04.11.2026): FY2024 is 669 days back; the axes drop with the shown figure at 550 days.
     const gap = pkt({}, annual('2024-12-31'));
-    assert.notEqual(A.gpGrowth(gap), null);
+    assert.equal(A.gpGrowth(gap), null);
+    assert.equal(A.revAcceleration(gap), null);
     assert.equal(G.g31Shadow(gap).v1.pct, null);
     assert.match(G.g31Shadow(gap).v1.reason, /Periodenstand veraltet/);
+    // The limit day itself still passes: 550 days keep the axis, 551 drop it.
+    const gp = anchor => A.gpGrowth(pkt({}, { annualGP: cells([65, 50]), annualGPEnds: [anchor, yearBefore(anchor)] }));
+    assert.notEqual(gp(minusDays(550)), null);
+    assert.equal(gp(minusDays(551)), null);
   });
+});
+
+test('acceleration: the newest quarter pair it uses is judged for age on both ways the old quarters stay (Codex R16)', () => {
+  withDay(DAY, () => {
+    const old = { revenueQ: cells([120, 110, 100, 90, 80, 70]), revenueQEnds: ['2018-06-30', '2018-03-31', '2017-12-31', '2017-09-30', '2017-06-30', '2017-03-31'] };
+    // Way 1: without annual revenue the old quarters stay as the proof that the firm has revenue; they carry no axis.
+    const proof = P.maskStaleQuarterSeries(pkt(structuredClone(old), {}));
+    assert.deepEqual(rows(proof, 'revenueQ'), [120, 110, 100, 90, 80, 70], 'the proof stays');
+    assert.equal(G.g31Shadow(proof).v1.pct, null);
+    assert.equal(A.revAcceleration(proof), null);
+    // Way 2: a fresh quarter without its year-ago partner keeps the series; the 2018 pairs give way to the annual fallback.
+    const fresh = structuredClone(old); fresh.revenueQ.unshift({ value: 200 }); fresh.revenueQEnds.unshift(minusDays(31));
+    const both = P.maskStaleQuarterSeries(pkt(fresh, { annualRev: cells([120, 100, 90]), annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31'] }));
+    close(A.revAcceleration(both), (120 / 100 - 1) - (100 / 90 - 1));
+    // A fresh pair still counts, with its older comparison pair (old by nature).
+    const ok = pkt(quarters(minusDays(30)));
+    assert.notEqual(A.revAcceleration(ok), null);
+  });
+});
+
+test('a process that writes board numbers needs its data day; tests and tools do not (Codex R16)', () => {
+  withDay(null, () => {
+    for (const entry of ['C:/x/src/scoring/run-screener.js', '/x/scripts/write-findash-export.js', 'C:\\x\\scripts\\write-filter-universe.js', '/x/scripts/write-board-history.js']) {
+      assert.throws(() => P.requireDataDay(entry), /schreibt Board-Zahlen ohne gültiges RUN_DATE_UTC/, entry);
+    }
+    for (const entry of ['/x/scripts/write-findash-export.check.js', '/x/tests/stale-series-p286.test.js', '/x/scripts/gqs00-freeze.js', null]) P.requireDataDay(entry);
+    process.env.AGE_RULE_OFF = '1';
+    try { P.requireDataDay('/x/src/scoring/run-screener.js'); } finally { delete process.env.AGE_RULE_OFF; }
+  });
+  withDay('not a day', () => assert.throws(() => P.requireDataDay('/x/scripts/write-rule40-export.js')));
+  withDay(DAY, () => P.requireDataDay('/x/scripts/write-rule40-export.js'));
 });
 
 test('a masked series reaches every reader: growth leaves the old quarters, the annual pair stands, the export counts no quarter points and no span', () => {
@@ -277,6 +314,16 @@ test('break-once: the limit, the series test and the axis anchor each fail when 
     const old = pkt({}, { annualRev: cells([130, 100]), annualRevEnds: ['2018-12-31', '2017-12-31'] });
     assert.ok(Math.abs(noGrowth.g31Shadow(old).v1.pct - 30) < 1e-9, 'a 2018 pair would show again');
     assert.equal(G.g31Shadow(old).v1.pct, null);
+    // Codex R16: the acceleration's own age check and the data-day requirement.
+    const proof = pkt({ revenueQ: cells([120, 110, 100, 90, 80, 70]), revenueQEnds: ['2018-06-30', '2018-03-31', '2017-12-31', '2017-09-30', '2017-06-30', '2017-03-31'] }, {});
+    const noAcc = mutant('src/scoring/axes.js', '  if (yoy.length >= 2 && !stale) return yoy[0] - yoy[yoy.length - 1];', '  if (yoy.length >= 2) return yoy[0] - yoy[yoy.length - 1];');
+    assert.notEqual(noAcc.revAcceleration(proof), null, 'the 2018 pairs would carry the axis');
+    assert.equal(A.revAcceleration(proof), null);
+  });
+  withDay(null, () => {
+    const noDay = mutant('lib/annual-pairs.js', "  if (dataDay() !== null || !entry || !BOARD_WRITERS.test(entry) || process.env.AGE_RULE_OFF === '1') return;", '  return;');
+    assert.doesNotThrow(() => noDay.requireDataDay('/x/scripts/write-findash-export.js'), 'without the check a writer runs silently');
+    assert.throws(() => P.requireDataDay('/x/scripts/write-findash-export.js'));
   });
   assert.deepEqual(['lib/annual-pairs.js', 'lib/g31-recency.js'].map(hash), before);
 });

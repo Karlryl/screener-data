@@ -31,7 +31,7 @@ const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, j
 const { fcfMarginValid } = require('./engine.js');
 const { g31Variant, g31Shadow, quarterDurations } = require('../../lib/g31-recency.js');
 const { annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
-  checkNewerAnnualPair, checkAnnualAcceleration, annualAccelerationGatePasses, axisPairBlocked, sealedEraSnapshot } = require('../../lib/annual-pairs.js');
+  checkNewerAnnualPair, checkAnnualAcceleration, annualAccelerationGatePasses, axisPairBlocked, sealedEraSnapshot, staleReason } = require('../../lib/annual-pairs.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 
@@ -236,6 +236,7 @@ function quarterQoQRates(s, bounds) {
 function revAcceleration(s, bounds) {
   const rq = norm(s, 'revenueQ');
   const yoy = [];
+  let newest = null;
   for (let i = 0; i < rq.length; i++) {
     const v = jahresVergleichIdx(s, 'revenueQ', i);
     if (v === null || v.idx >= rq.length) continue; // kein Jahrespartner -> kein Paar
@@ -243,9 +244,12 @@ function revAcceleration(s, bounds) {
     if (quarterDurations(s, 'revenueQ', i, v.idx).reason) continue; // Period gate (30.10.2026): unequal stored durations
     const a = rq[i], b = rq[v.idx];
     if (a === null || a === undefined || b === null || b === undefined) continue; // Luecke ueberspringen
-    if (a > 0 && b > 0) yoy.push(clampWinsor(a / b - 1, bounds));
+    if (a > 0 && b > 0) { if (newest === null) newest = i; yoy.push(clampWinsor(a / b - 1, bounds)); }
   }
-  if (yoy.length >= 2) return yoy[0] - yoy[yoy.length - 1];
+  // P286 (Codex R16, 04.11.2026): the newest pair actually used is judged for age like a shown quarter pair. A stale one leaves
+  // the quarterly branch to the annual fallback and its own anchor check; the older comparison pair is old by nature.
+  const stale = newest !== null && !sealedEraSnapshot(s) && staleReason('quarter', (s.timeseries || {}).revenueQEnds?.[newest]);
+  if (yoy.length >= 2 && !stale) return yoy[0] - yoy[yoy.length - 1];
 
   // Fallback Jahresreihe: drei present Jahre -> zwei Jahres-Wachstumsraten.
   const ar = norm(s, 'annualRev').filter((v) => v !== null && v !== undefined && v > 0);
