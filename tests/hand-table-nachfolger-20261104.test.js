@@ -40,7 +40,7 @@ const KNOWN = {
   'Qingdao Port International Co., Ltd.': { dev: 0.060, why: CLASSES },
   'PetroChina Company Limited': { dev: 0.041, why: CLASSES },
   'Promotora y Operadora de Infraestructura, S. A. B. de C. V.': { dev: 0.039, why: 'series * and L priced at the * line; class sum needs both prices (Codex P1)' },
-  'Xtep International Holdings Limited': { dev: -0.033, why: 'Yahoo counts 2,733.1 M shares, an older state, against 2,825.9 M at 31.10.; 3.3 % is inside twice the 3 % window of a share-count row, which then cannot tell the two counts apart (lib/ads-hand-table.js refuses such a row)' },
+  'Xtep International Holdings Limited': { dev: -0.033, why: 'Yahoo counts 2,733.1 M shares against 2,825.9 M at 31.10. (cause not proven); 3.3 % is inside twice the 3 % window of a share-count row, which then cannot tell the two counts apart (lib/ads-hand-table.js refuses such a row)' },
 };
 // Firms with no eligible listing on 31.10. already, before any deadline (every line held or excluded).
 // Eutelsat and the Caisse Régionale were not on a board before PR 91 either; 1GLXY.MI is its own group, Galaxy stays through GLXY.

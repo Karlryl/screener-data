@@ -2650,7 +2650,7 @@
     },
     "1385.HK": {
       "validFrom": "2026-10-31",
-      "reason": "Yahoo rechnet für die Hongkonger Notierung von Shanghai Fudan Microelectronics mit 1.706 Mio. Aktien und kommt auf 4,70 Mrd. USD; die Firma hat 539.389.250 A-Aktien und 284.330.000 H-Aktien, zusammen 823,7 Mio. Mit den Schlusskursen vom 30.10.2026 (45,76 CNY und 21,62 HKD) sind beide Klassen rund 4,49 Mrd. USD wert. Maßgeblich ist die Notierung 688385.SS.",
+      "reason": "Yahoo kommt für die Hongkonger Notierung von Shanghai Fudan Microelectronics auf 4,70 Mrd. USD; zum Hongkonger Kurs entspräche das 1.706 Mio. Aktien, die Firma hat aber 539.389.250 A-Aktien und 284.330.000 H-Aktien, zusammen 823,7 Mio. Mit den Schlusskursen vom 30.10.2026 (45,76 CNY und 21,62 HKD) sind beide Klassen rund 4,49 Mrd. USD wert. Maßgeblich ist die Notierung 688385.SS.",
       "reasonComplete": true,
       "source": {
         "form": "Die Monatsmeldung von Shanghai Fudan Microelectronics an die Hongkonger Börse nennt die A- und H-Aktien.",
@@ -2660,7 +2660,7 @@
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,702,369,181 USD, price 2.7561766226 USD, 1,706,120,348 shares implied; on the export of 03.11. the line shows 4.59 bn against 4.24 bn on 688385.SS",
         "crossCheck": "https://static.cninfo.com.cn/finalpage/2026-08-18/1225478247.PDF 38 (class table): 通股 537,097,300 65.39 +2,291,950 +2,291,950 539,389,250 65.48",
         "otherSources": "",
-        "checkerNote": "Counts confirmed by two checkers on 2026-11-01 (row 688385.SS) and by the blind review of PR 105 on 2026-11-04. The implied 1,706 M fits the A shares turned into H equivalents with an older price ratio plus the H shares (mechanism not proven); no document has that count."
+        "checkerNote": "Counts from the row 688385.SS, confirmed by two checkers on 2026-11-01. The 1,706 M are the vendor value divided by the H price; no document has that count, and how Yahoo arrives at it is not proven."
       },
       "verifiedAt": "2026-11-04",
       "reviewBy": "2026-12-31"
@@ -2675,7 +2675,7 @@
       415030722
     ],
     "wrongSharesSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,025,573,888 USD, price 7.29 USD, 415,030,722 shares implied (the 10-Q cover count of 03.08.2026)",
-    "reason": "Börsenwert aus 456.365.113 Aktien berechnet: laut Quartalsbericht von Cipher Digital zum 30.10.2026, einschließlich der rund 40,7 Mio. Aktien aus dem Umtausch der Wandelanleihe vom 16.10.2026. Yahoo rechnet noch mit 415,0 Mio. Aktien vom 03.08.2026.",
+    "reason": "Börsenwert aus 456.365.113 Aktien berechnet: laut Deckblatt des Quartalsberichts von Cipher Digital (Quartal bis 30.09.2026) der Stand vom 30.10.2026, einschließlich der rund 40,7 Mio. Aktien aus dem Umtausch der Wandelanleihe vom 16.10.2026. Yahoo rechnet noch mit 415,0 Mio. Aktien vom 03.08.2026.",
     "source": {
       "form": "Das Deckblatt des Quartalsberichts von Cipher Digital (Formular 10-Q, eingereicht am 02.11.2026) nennt die Aktienzahl.",
       "url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm",
@@ -2683,7 +2683,7 @@
       "page": "1 (cover page of the 10-Q for the quarter ended 30.09.2026)",
       "unit": "shares of common stock outstanding (one class)",
       "crossCheck": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm 7 (balance sheet, equity): 425,237,783 and 412,074,529 shares issued as of September 30, 2026 and December 31, 2025, respectively, and 415,092,825 and 404,963,061 shares outstanding",
-      "checkerNote": "Two independent checkers on 2026-11-04, same count; no later 8-K or prospectus supplement with new shares found up to 2026-11-04. Treasury stock 10,144,958 at 30.09.2026 is outside the outstanding count."
+      "checkerNote": "Two independent checkers on 2026-11-04, same count; no later 8-K or prospectus supplement with new shares found up to 2026-11-04. Treasury stock 10,144,958 at 30.09.2026 is outside the outstanding count. validFrom is 31.10.: the exchange of 16.10. was public in an 8-K that day; the exact count came with the 10-Q of 02.11."
     },
     "verifiedAt": "2026-11-04",
     "withholdUnverified": true
