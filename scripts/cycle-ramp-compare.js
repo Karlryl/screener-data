@@ -31,12 +31,13 @@ function comparisonMarkdown(summary) {
   lines.push('', 'Gezählt werden Tickerzeilen. Ränge und Top 100 gelten je Board und Track; die Tabelle summiert beide Tracks. Ranglose Zeilen behalten ihren Status. Rangänderungen außerhalb des Bandes entstehen durch die Umsortierung, ihr Score bleibt unverändert.',
     '', '| Familie | Bewertete Zeilen | Faktor anders | Sichtbarer Score anders | Höher | Niedriger |', '|---|---:|---:|---:|---:|---:|');
   for (const r of summary.families) lines.push(`| ${r.family} | ${r.scored} | ${r.factorChanged} | ${r.scoreChanged} | ${r.up} | ${r.down} |`);
+  lines.push('', `Unterschiedliche Warnmeldungen: ${summary.checks.warningCount}. Wiederholungen derselben Meldung sind zusammengefasst.`, ...(summary.warnings || []).map(w => '- ' + w));
   return lines.join('\n') + '\n';
 }
 
-// Stored calibration distributions preserve filesystem input order, which has no
-// statistical meaning. Compare their complete multisets (including null counts);
-// JSON also normalizes -0 to 0. The two live replay arms still require exact equality.
+// This stored-calibration cross-check sorts all numeric arrays (including bounds),
+// preserves null counts and normalizes -0 to 0. It does not validate tuple order.
+// The two live replay arms still require exact equality, including array order.
 function calibrationMultisets(value) {
   if (Array.isArray(value)) return value.map(calibrationMultisets).sort((a, b) =>
     a === null ? (b === null ? 0 : -1) : b === null ? 1 : a - b);
@@ -211,6 +212,8 @@ function main(argv) {
     summary.checks.legacyScoresBitIdentical = true;
     summary.sihuan = summary.changes.find(r => r.family === 'HyperGrowth' && r.ticker === '0460.HK');
     summary.warnings = [...warnings];
+    summary.checks.warningCount = warnings.size;
+    for (const warning of warnings) oldWarn(warning);
     summary.limitations = ['Keine Renditepruefung, keine optimal bewiesene Rampenbreite, keine historische PIT-Reihe.',
       'Smallcap verwendet denselben vorbereiteten Fallback-Bestand wie R12; dort keine gerouteten Firmen. Kein separater Smallcap-Store geprueft.',
       'Quality-Raenge ueber die vollstaendige Replay-Kohorte; gegen die vorhandenen publizierten Toplisten abgeglichen.',

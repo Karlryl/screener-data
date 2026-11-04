@@ -75,7 +75,7 @@
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
     "src/scoring/axes.js": "74832aa2597aaa3dc63172fa70598ce17e37f5164fba5bb5ba75aa3e1cd214ef",
-    "src/scoring/score.js": "a4a82943d2f24b88850ff35fed82877f2f0510bd8a227ecff8b4d4bfebcf385a",
+    "src/scoring/score.js": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
@@ -373,7 +373,7 @@
       "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
     },
     "sourceSha256LF": {
-      "src/scoring/score.js": "a4a82943d2f24b88850ff35fed82877f2f0510bd8a227ecff8b4d4bfebcf385a"
+      "src/scoring/score.js": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29"
     },
     "comparison": {
       "fields": [
@@ -384,8 +384,10 @@
       "endsOn": "2026-12-02",
       "maximumDays": 28,
       "definition": "Old hard gate with identical calibration and inputs, including the original multiplication order; round at export and cap the comparison score at 100 like score. Never used to rank.",
-      "removal": "Remove the temporary comparison fields and legacy arm in a reviewed follow-up by endsOn; no extension beyond four weeks. The frontend display must be checked by the delivery lane."
+      "removal": "Remove the temporary comparison fields and legacy arm in a reviewed follow-up on 2026-12-02 (endsOn); remove cycleLegacy and scoreCycleLegacy from tests/druckenmiller/fixtures/v1-row-keys.snapshot.json at the same time. No extension beyond four weeks. The frontend display must be checked by the delivery lane.",
+      "deadlineGuard": "scripts/cycle-ramp-deadline.js reads endsOn during findash export build and --check; after that date in Europe/Berlin it warns if either legacy field is still exported. Reporting only, never an export or PR failure. Tests use fixed clocks, including the Berlin midnight boundary."
     },
+    "definitionAmendmentAt120Seal": "At the 1.2.0 seal, constants.cycleDamper and endFactors.cycle.rule in scripts/gqs00-freeze.js buildRegistry must describe the ramp (lo 0.8, hi 1.2, width 0.4) from the exported score.js constants. The version branch is implemented and tested in memory; the historical 1.1.0 registry and its verify comparison remain unchanged.",
     "evidence": "tests/scoring/cycle-ramp.test.js; scripts/cycle-ramp-compare.js; docs/zyklus-rampe-vorher-nachher-2026-11-04.md. Fixed 2026-10-31 R12 inputs, same calibration. Independent blind review outstanding.",
     "rollback": "Restore the previous cycle gate and remove its comparison additions and this registration together in a reviewed new commit; keep historical seals unchanged."
   }

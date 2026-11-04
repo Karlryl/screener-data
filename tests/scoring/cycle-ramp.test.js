@@ -136,3 +136,39 @@ test('real scoring and export carry the legacy score without using it for sortin
   const oldFeed = { ...capped }; delete oldFeed.scoreCycleLegacy;
   assert.equal(Object.hasOwn(W.mapBoardRow(oldFeed, 0), 'scoreCycleLegacy'), false);
 });
+
+test('mapped cycle comparison adds no unfrozen v1 keys without an on-disk export', () => {
+  const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+  const W = require('../../scripts/write-findash-export.js');
+  const file = path.join(__dirname, '../druckenmiller/fixtures/v1-row-keys.snapshot.json');
+  const sha = () => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const before = sha();
+  const keys = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const mapped = W.mapBoardRow({ ticker: 'CYCLE-FIXTURE', score: 50, scoreCycleLegacy: 60,
+    factors: { burn: 1, growth: 1, cycle: 0.5, cycleLegacy: 0.6 } }, 0);
+  assert.equal(mapped.scoreCycleLegacy, 60);
+  assert.equal(mapped.factors.cycleLegacy, 0.6);
+  const missing = (allowed, row = mapped) => {
+    const absent = new Set();
+    const walk = value => {
+      if (Array.isArray(value)) return value.forEach(walk);
+      if (!value || typeof value !== 'object') return;
+      for (const [key, child] of Object.entries(value)) {
+        if (!allowed.has(key)) absent.add(key);
+        walk(child);
+      }
+    };
+    walk(row);
+    return [...absent].sort();
+  };
+  // Keep pre-existing unrelated key-list gaps out of this cycle-only repair.
+  const oldRow = W.mapBoardRow({ ticker: 'CYCLE-FIXTURE', score: 50,
+    factors: { burn: 1, growth: 1, cycle: 0.5 } }, 0);
+  const existingMissing = missing(new Set(keys), oldRow);
+  assert.deepEqual(missing(new Set(keys)), existingMissing);
+  // Negative controls mutate only detached key sets, never a writing test or live bytes.
+  for (const key of ['cycleLegacy', 'scoreCycleLegacy']) {
+    assert.deepEqual(missing(new Set(keys.filter(k => k !== key))), [...existingMissing, key].sort());
+  }
+  assert.equal(sha(), before);
+});

@@ -8,13 +8,13 @@ Grundlage ist Tag 1526, `5d388afcbf0a658aacb6d6d9d1225ecb70be1bbc`. Die Rechnung
 
 ## Methode und Vergleichsfelder
 
-Das Signal lautet `oscExcess(op) * clamp((dd - 0.8*t)/(0.4*t), 0, 1)`. Der Faktor bleibt `1 / (1 + 0.5 * signal)`. Die bestehende Auswahl der Jahresreihen, die Datenfilter, p75 und seine Stichprobe bleiben unverändert. Unterhalb von 80 % und oberhalb von 120 % bleibt der alte Faktor exakt erhalten. Bei Schwelle null bleibt der Faktor neutral; bei Schwelle 0 hat das Band keine Breite, und der bisherige Fall einschließlich Drawdown 0 bleibt erhalten.
+Das Signal lautet `oscExcess(op) * clamp((dd - 0.8*t)/(0.4*t), 0, 1)`. Der Faktor bleibt `1 / (1 + 0.5 * signal)`. Die bestehende Auswahl der Jahresreihen, die Datenfilter, p75 und seine Stichprobe bleiben unverändert. Unterhalb von 80 % und oberhalb von 120 % bleibt der alte Faktor exakt erhalten. Fehlt eine gelernte Schwelle (Wert `null`), bleibt der Faktor neutral (1); bei einer gelernten Schwelle von genau 0 hat das Band keine Breite, und die bisherige harte Schwelle gilt, also volle Dämpfung bei jedem Drawdown einschließlich 0, sofern die übrigen Datenfilter erfüllt sind.
 
 HyperGrowth-Schwelle: **0,14702589659492998**, Band **0,117620717275944 bis 0,176431075913916**. Quality verwendet unverändert seine eigene Schwelle **0,1265524620893388**.
 
 An der Schwelle beträgt das Rampengewicht 0,5. Bei Oszillationssignal 2 ist der Faktor dort 2/3. Er liegt damit nicht in der Mitte zwischen 1 und 0,5.
 
-Die neuen Exportfelder heißen `factors.cycleLegacy` und `scoreCycleLegacy`. Sie enthalten die alte Rechnung mit denselben sonstigen Faktoren und derselben Multiplikationsreihenfolge. Der Export rundet wie bisher und begrenzt beide Scores auf 100. Der alte Score wird nie zum Sortieren verwendet. Die Vergleichsfrist endet am **02.12.2026**, spätestens 28 Tage nach dem vorgesehenen Start; die Entfernung ist als geprüfte Folgeänderung einzuplanen. Die Scoring-Funktion enthält keinen automatischen Kalenderwechsel.
+Die neuen Exportfelder heißen `factors.cycleLegacy` und `scoreCycleLegacy`. Sie enthalten die alte Rechnung mit denselben sonstigen Faktoren und derselben Multiplikationsreihenfolge. Der Export rundet wie bisher und begrenzt beide Scores auf 100. Der alte Score wird nie zum Sortieren verwendet. Die Vergleichsfrist endet am **02.12.2026**, spätestens 28 Tage nach dem vorgesehenen Start; die Entfernung einschließlich der Einträge in der Feldliste ist als geprüfte Folgeänderung einzuplanen. Die Scoring-Funktion enthält keinen automatischen Kalenderwechsel. Beim Exportbau und bei `--check` warnt ein meldender Wächter nach `endsOn` in Europe/Berlin, wenn die alten Felder noch exportiert werden; die Meldung allein lässt keinen Lauf scheitern.
 
 ## Vorher und Nachher je Board
 
@@ -83,9 +83,11 @@ node scripts/cycle-ramp-compare.js --data-root $DataRoot --export-root $ExportRo
 
 DataRoot ist der R12-Snapshotbaum mit 15.826 Firmenpaketen; ExportRoot enthält die dazu vorbereiteten Exporte und Kalibrierungen nach Tag 1524, und R12Root enthält scored-cycle-inputs.json sowie measurement.json. Die konkreten lokalen Pfade stehen im uncommitteten Bericht und im Eingangsmanifest der Rechnung. Erzeugt werden comparison.json mit allen Faktor-, Score- und Rangänderungen, comparison.md mit der Tabelle sowie input-hashes.json.
 
-Die Basisrechnung reproduziert **alle 9.269 gespeicherten R12-Rohscores und Faktoren exakt**. Quality ist zusätzlich über seine vollständig neu gerechnete Kohorte und gegen die vorhandenen Export-Toplisten geprüft. Die Kalibrierungen der beiden Rechenwege sind vollständig identisch. Beim Abgleich mit den gespeicherten Kalibrierungsdateien werden ausschließlich die Reihenfolge der Verteilungsstichproben und JSONs Gleichsetzung von −0 und 0 normalisiert; alle Werte und Häufigkeiten bleiben erhalten.
+Die Basisrechnung reproduziert **alle 9.269 gespeicherten R12-Rohscores und Faktoren exakt**. Quality ist zusätzlich über seine vollständig neu gerechnete Kohorte und gegen die vorhandenen Export-Toplisten geprüft. Die Kalibrierungen der beiden Rechenwege sind vollständig identisch. Der zusätzliche Abgleich mit gespeicherten Kalibrierungsdateien sortiert alle numerischen Arrays, auch feste Wertepaare, und normalisiert −0 zu 0; er erhält Werte und Häufigkeiten, prüft aber nicht die Reihenfolge dieser Paare, während der direkte Vergleich beider Rechenwege auch jede Array-Reihenfolge exakt prüft.
 
 **15.864 ausdrücklich gelesene Eingabedateien** sind nach der Rechnung anhand ihrer SHA-256 unverändert. Die neuen Legacy-Scores entsprechen dem Ausgangscode bitgenau. Die Prüfung vergleicht außerdem alle übrigen Ergebnisfelder, Achsen und Faktoren beider Rechenwege. Die numerische Änderung außerhalb des Bandes ist null.
+
+Der Nachlauf zur Blindprüfung enthält dieselben **701 unterschiedlichen Warnmeldungen** wie der Erstlauf; sie stehen jetzt auch in Konsole und Vergleichsbericht, ihre Anzahl in `checks.warningCount`. Die belegte Gleichheit der Rechenwege bedeutet keine Warnungsfreiheit der Eingangsdaten.
 
 | R12-Eingabe | SHA-256 |
 |---|---|

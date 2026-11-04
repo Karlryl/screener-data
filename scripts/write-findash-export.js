@@ -41,6 +41,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { reportCycleRampDeadline } = require('./cycle-ramp-deadline.js');
 const { overviewGrowthHold } = require('../lib/overview-known-cases.js');
 const { captureSnapshot, writeProvenance, provenanceErrors, writeProvenanceFailure } = require('../lib/export-provenance.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
@@ -1500,6 +1501,7 @@ function build(seam = {}) {
     for (const rows of [board.rows, board.profitable, board.unprofitable]) if (Array.isArray(rows)) rows.forEach(g31Last);
     writeJsonAtomic(path.join(OUT_DIR, file), board, { assertFinite: true, indent: 2 });
   });
+  reportCycleRampDeadline(OUT_DIR);
   return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
     mcapGenullt: bilanz };
 }
@@ -2205,6 +2207,7 @@ function validateFile(mk, kind, errs, opts = {}) {
 
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
 function validateExport(outDir = OUT_DIR, opts = {}) {
+  reportCycleRampDeadline(outDir, { now: opts.now, warn: opts.warn });
   const errs = [];
   const indexPath = path.join(outDir, 'index.json');
   const index = readJSONOrNull(indexPath);

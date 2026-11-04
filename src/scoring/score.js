@@ -484,6 +484,9 @@ const GROWTH_MIN_DISTINCT = 10;
 // Ziel-Rang gefittet — kleinster Wert, der MU/SK-Hynix am vollen Lauf unter ALAB bringt. Die DD-Schwelle
 // ist data-learned (p75 der universums-weiten Drawdown-Verteilung), KEIN hartkodiertes Niveau (Inv. 3).
 const CYCLE_DAMPER_KD = 0.5;
+const CYCLE_RAMP_LO = 0.8;
+const CYCLE_RAMP_HI = 1.2;
+const CYCLE_RAMP_WIDTH = 0.4;    // Keep literal 0.4: HI - LO would change floating-point results.
 const CYCLE_DD_PCTL = 0.75;      // data-learned Drawdown-Schwelle = p75 (gemessen ~0.16: haelt SK-Hynix 0.266 drin, MRVL 0.07/ASM 0.01 draussen)
 const CYCLE_MIN_DISTINCT = 10;   // Degenerations-Guard analog GROWTH_MIN_DISTINCT (zu wenige distinkte DD -> Schwelle null -> alle Faktoren 1.0)
 // 2.10 (Fable-Scoring-Court T1, n-bewusste Scores): Empirical-Bayes-Shrinkage der Kohorten-Perzentile
@@ -695,9 +698,9 @@ function cycleSignal(s, ddThreshold, legacy = false) {
   // weight (not the factor) is one half. A zero threshold has no band and retains
   // the old behavior, including dd=0. Legacy is the temporary comparison arm.
   if (legacy || ddThreshold === 0) return dd < ddThreshold ? 0 : oscExcess(op);
-  if (dd <= 0.8 * ddThreshold) return 0;
-  if (dd >= 1.2 * ddThreshold) return oscExcess(op);
-  return oscExcess(op) * Math.max(0, Math.min(1, (dd - 0.8 * ddThreshold) / (0.4 * ddThreshold)));
+  if (dd <= CYCLE_RAMP_LO * ddThreshold) return 0;
+  if (dd >= CYCLE_RAMP_HI * ddThreshold) return oscExcess(op);
+  return oscExcess(op) * Math.max(0, Math.min(1, (dd - CYCLE_RAMP_LO * ddThreshold) / (CYCLE_RAMP_WIDTH * ddThreshold)));
 }
 // Daempfer 1/(1+kd*signal) in (0,1]; signal=0 -> Faktor EXAKT 1.0 (byte-identisch).
 const cycleDamperFactor = (s, ddThreshold) => 1 / (1 + CYCLE_DAMPER_KD * cycleSignal(s, ddThreshold));
@@ -1577,6 +1580,7 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte
   signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, cycleDamperFactorLegacy, CYCLE_DAMPER_KD, CYCLE_DD_PCTL,
+  CYCLE_RAMP_LO, CYCLE_RAMP_HI, CYCLE_RAMP_WIDTH,
   // PHASE 4 (Refresh-Robustheit via committete SEC-Tiefe): fuer TDD
   normSec, cycleSeriesPair,
   // 2.10 (n-bewusste Scores): fuer TDD der synthetischen Kohorten-Tests
