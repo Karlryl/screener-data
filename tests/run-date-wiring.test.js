@@ -5,7 +5,8 @@
 // processes; read from each process's own clock they can straddle 00:00 UTC and disagree, and --check then refuses an
 // unchanged list. The day is frozen once in job `prep` and every other job reads it from there.
 // This test reads the workflow files themselves (block pattern of tests/zweig-wache.test.js):
-//   presence - each job except prep needs prep and sets RUN_DATE_UTC to needs.prep.outputs.run_date at job level;
+//   presence - each job except prep sets RUN_DATE_UTC at job level from prep's output: directly (it needs prep), or relayed by
+//              a job it needs whose own output run_date is prep's (scoring relays it to the two jobs pinned to `needs: scoring`);
 //              prep freezes it from the UTC clock exactly once
 //   absence  - no other place assigns RUN_DATE_UTC (no step env, no shell assignment, no $GITHUB_ENV write)
 // Break-once on every start, on the file text in memory: a job without the env line, a job without prep in needs and a
@@ -34,7 +35,9 @@ function jobs(text) {
 
 function faults(text) {
   const errs = [];
-  for (const job of jobs(text)) {
+  const all = jobs(text);
+  const relays = new Set(all.filter(j => j.lines.includes('      run_date: ${{ needs.prep.outputs.run_date }}') && j.lines.includes('    outputs:')).map(j => j.name));
+  for (const job of all) {
     const needs = job.lines.find(l => /^    needs: /.test(l));
     const list = needs ? needs.replace(/^    needs: /, '').replace(/[[\]\s]/g, '').split(',') : [];
     const envAt = job.lines.indexOf('    env:');
@@ -44,11 +47,12 @@ function faults(text) {
       if (job.lines.filter(l => /RUN_DATE_UTC=\$\(date -u \+%Y-%m-%d\)|run_date=\$\(date -u \+%Y-%m-%d\)/.test(l)).length !== 1) errs.push('prep: run day not frozen exactly once from the UTC clock');
       continue;
     }
-    if (!list.includes('prep')) errs.push(`${job.name}: does not need prep`);
-    if (!jobEnv.includes(ENV_LINE)) errs.push(`${job.name}: no job-level RUN_DATE_UTC from prep`);
+    const relay = list.find(n => relays.has(n) && jobEnv.includes('      RUN_DATE_UTC: ${{ needs.' + n + '.outputs.run_date }}'));
+    if (!relay && !list.includes('prep')) errs.push(`${job.name}: does not need prep`);
+    if (!relay && !jobEnv.includes(ENV_LINE)) errs.push(`${job.name}: no job-level RUN_DATE_UTC from prep`);
     // Any other assignment inside the job: a step env key, a shell assignment or an export into $GITHUB_ENV.
     for (const l of job.lines) {
-      if (l === ENV_LINE) continue;
+      if (l === ENV_LINE || (relay && l === '      RUN_DATE_UTC: ${{ needs.' + relay + '.outputs.run_date }}')) continue;
       if (/^\s*#/.test(l)) continue;
       if (/\bRUN_DATE_UTC\s*:/.test(l) || /\b(export\s+)?RUN_DATE_UTC=/.test(l) || /RUN_DATE_UTC=.*GITHUB_ENV|GITHUB_ENV.*RUN_DATE_UTC/.test(l)) errs.push(`${job.name}: sets its own run day: ${l.trim().slice(0, 80)}`);
     }
@@ -83,6 +87,10 @@ check('break-once: a job without the env line, without prep in needs, or with a 
   const stepAt = lines.findIndex((l, i) => i > scoringAt && /^      - name: /.test(l));
   const own = lines.slice(0, stepAt + 1).concat(['        env:', '          RUN_DATE_UTC: 2026-11-04'], lines.slice(stepAt + 1)).join('\n');
   assert.ok(faults(own).some(e => e.startsWith('scoring: sets its own run day')), 'step day not caught');
+  // The relay line exists once, in the scoring job's outputs; without it the jobs behind scoring have no frozen day.
+  assert.equal(lines.filter(l => l === '      run_date: ${{ needs.prep.outputs.run_date }}').length, 1, 'one relay line');
+  const noRelay = lines.filter(l => l !== '      run_date: ${{ needs.prep.outputs.run_date }}').join('\n');
+  assert.ok(faults(noRelay).some(e => e === 'druckenmiller-guard: no job-level RUN_DATE_UTC from prep'), 'missing relay not caught');
 });
 
 console.log(`run-date-wiring: ${passed} passed, ${failed} failed`);

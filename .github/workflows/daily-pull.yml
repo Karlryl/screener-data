@@ -1909,6 +1909,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+    # Relayed for the jobs behind scoring, so they read the same frozen day without a second edge to prep.
+    outputs:
+      run_date: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -2786,11 +2789,11 @@ jobs:
   # Waechter dieses Jobs: tests/druckenmiller/ci-wiring.test.js.
   # ============================================================================
   druckenmiller-guard:
-    needs: [prep, scoring]
+    needs: scoring
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
     env:
-      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+      RUN_DATE_UTC: ${{ needs.scoring.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -2873,11 +2876,11 @@ jobs:
   # the API (no CDN delay, so never yesterday's copy), that is what findash really gets. The filter step is
   # fail-soft: a feed missing there is this job's HTTP 404, a stale one its age check. No npm ci needed.
   feed-fill-waechter:
-    needs: [prep, scoring]
+    needs: scoring
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
     env:
-      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+      RUN_DATE_UTC: ${{ needs.scoring.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
