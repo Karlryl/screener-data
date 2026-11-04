@@ -16,6 +16,7 @@ const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const guard = require('../lib/market-cap-guard.js');
+const { applyShareCountTable } = require('../lib/ads-hand-table.js');
 const zj = require('./fixtures/hand-table-zahlenjagd-20261030.json').snapshots;
 const p205 = require('./fixtures/market-cap-p205.json');
 
@@ -36,7 +37,8 @@ const ROWS = {
   QH: { shares: 2750893, reviewBy: '2026-12-15', seen: null },
 };
 const TICKERS = Object.keys(ROWS);
-// About 585.6 M ON equivalents: the figure of Yahoo's key-statistics web page on 2026-11-04 (19.57 bn BRL). It is not a reading of the pull, so it stays out of `seen`.
+// About 585.6 M ON equivalents: Yahoo's key-statistics web page read on 2026-11-04 showed 19.57 bn BRL, built on the close of 2026-11-03 (33.42 BRL).
+// The pull's API field implied 660,801,338 at the price of 2026-11-04 (34.60 BRL). The figure is not a reading of the pull, so it stays out of `seen`.
 const ISA_WEB_FIGURE = 585600000;
 
 // Converted non-USD snapshot in the real key shape, as in tests/hand-table-boersenwerte-20261024.test.js.
@@ -148,7 +150,10 @@ test('ISA Energia: a vendor count at the sum of both classes is confirmed, where
   const out = quiet(() => guard.prepareMarketCap(s));
   assert.notEqual(out.marketCap.source, 'hand-table:shares');
   assert.equal(out.marketCap.value, s.marketCap.value);
-  assert.ok(Math.abs(ISA_WEB_FIGURE / 564711511 - 1) > 0.03, 'the old count was outside the 3 % tolerance of this figure');
+  // The count before the renewal, run through the real applier: the same vendor value is stale there (outside the 3 % tolerance).
+  const oldRow = { ...guard.table['ISAE3.SA'], shares: 564711511 };
+  const before = applyShareCountTable(packet('ISAE3.SA', ISA_WEB_FIGURE, DAY_AFTER_OLD), 'ISAE3.SA', s.price.regularMarketPrice, { 'ISAE3.SA': oldRow });
+  assert.equal(before.status, 'stale', 'the old count would have withheld this vendor value');
 });
 
 test('a vendor count that matches neither the row nor a known wrong count is withheld, never multiplied', () => {
