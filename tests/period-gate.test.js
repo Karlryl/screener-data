@@ -276,7 +276,11 @@ check('PR #72 comparison until 04.12.2026: withoutPeriodGate shows the old growt
   // The export field: the shown growth with its labels and the two score axes, without a score.
   const { periodGateShadowForSnapshot } = require('../scripts/write-findash-export.js');
   const shadow = periodGateShadowForSnapshot(far);
-  assert.deepEqual(Object.keys(shadow), ['growth', 'basis', 'periodEnd', 'priorPeriodEnd', 'gpAxis', 'accelerationAxis']);
+  assert.deepEqual(Object.keys(shadow), ['growth', 'basis', 'periodEnd', 'priorPeriodEnd', 'gpAxis', 'accelerationAxis', 'capitalEfficiencyAxis']);
+  // The zero-year rule of the acceleration gate is part of the comparison too (review of 04.11.: OMU.JO, NBTX).
+  const zero = { meta: {}, timeseries: {}, annual: { annualRev: [130, 0, 100, 90].map(value => ({ value })), annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'] } };
+  assert.equal(A.revAcceleration(zero), null);
+  close(P.withoutPeriodGate(() => A.revAcceleration(zero)), 130 / 100 - 1 - (100 / 90 - 1));
   close(shadow.growth, 30); close(shadow.gpAxis, 0.3); assert.equal(shadow.basis, 'year');
   const near = periodGateShadowForSnapshot(dated(365));
   close(near.growth, G.g31Shadow(dated(365)).v1.pct); close(near.gpAxis, A.gpGrowth(dated(365)));
@@ -297,7 +301,7 @@ for (const [rel, anchor, mutant, probe] of [
     api => assert.equal(api.sealedEraSnapshot({ meta: { ticker: 'NONFIXTURE', fetchedAt: '2026-08-19T00:00:00Z' } }), false, 'no fixture, no exemption')],
   ['../lib/annual-pairs.js', '  return isDeepStrictEqual({ annual: snapshot.annual, timeseries: snapshot.timeseries }, sealedStatements.get(id));', '  return true;',
     api => assert.equal(api.sealedEraSnapshot(ONE_CELL_OFF()), false, 'a fixture name over changed statements gets no exemption')],
-  ['../lib/annual-pairs.js', "  return pairs !== null && pairs.every((pair) => pair.zeroIndex < 0 && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld));", '  return pairs !== null;',
+  ['../lib/annual-pairs.js', "  return pairs !== null && pairs.every((pair) => (periodGateOff || pair.zeroIndex < 0) && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld)); // zero-year rule: part of the gate comparison", '  return pairs !== null;',
     api => assert.equal(api.annualAccelerationGatePasses(ALK()), false)],
   ['../lib/g31-recency.js', '  if (gate) return missing(gate);', '',
     api => assert.equal(api.g31Shadow(dated(91)).v1.pct, null, '91-day pair must be empty')],

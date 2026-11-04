@@ -1469,10 +1469,10 @@ solche Sprünge auslösen. Ob der Quartalsmaßstab mit nur zwei Paaren gut ist, 
 
 ## 16b. `periodGateShadow` (PR #72, Vergleich bis 04.12.2026)
 
-Additives Objekt an jeder Vollboard-Zeile, die auch `annualPairsShadow` trägt: `{ growth, basis, periodEnd, priorPeriodEnd, gpAxis,
-accelerationAxis }`. Es zeigt dieselbe Rechnung wie die Zeile, aber mit ausgeschaltetem Periodentor (`withoutPeriodGate` in
+Additives Objekt an jeder Vollboard-, Top-Board- und Übersichtszeile, die auch `annualPairsShadow` trägt (nicht an den Rule-40-Zeilen): `{ growth, basis,
+periodEnd, priorPeriodEnd, gpAxis, accelerationAxis, capitalEfficiencyAxis }`. Es zeigt dieselbe Rechnung wie die Zeile, aber mit ausgeschaltetem Periodentor (`withoutPeriodGate` in
 `lib/annual-pairs.js`): `growth`, `basis` und die beiden Enden wie `revGrowthYoYPct` und seine Etiketten, `gpAxis` und
-`accelerationAxis` als Rohwerte der Score-Achsen Bruttogewinnwachstum und Beschleunigung. Ausgeschaltet sind die Datumsfenster; ein Paar ohne Periodenende bleibt auch hier leer. Kein Score und kein Rang. Die Filter des
+`accelerationAxis` und `capitalEfficiencyAxis` als Rohwerte der Score-Achsen Bruttogewinnwachstum, Beschleunigung und Kapitaleffizienz. Ausgeschaltet sind die Datumsfenster; ein Paar ohne Periodenende bleibt auch hier leer, ebenso die Sperren der Handtabelle aus #72 (ZEG.L, NESTLEIND.BO, EQB.TO, PRN.L); die Nullregel der Beschleunigung ist mit abgeschaltet. Kein Score und kein Rang. Die Filter des
 versiegelten Achsencodes für undatierte Quartale und ungleiche Laufzeiten bleiben auch hier an. Nach Karls Regel läuft die alte
 Formel höchstens vier Wochen sichtbar mit; das Feld entfällt spätestens am 04.12.2026. Reine Anzeige, kein Leser in findash.
 
