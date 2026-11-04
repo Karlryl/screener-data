@@ -85,8 +85,13 @@ test('without a data day nothing is masked or judged, and a sealed fixture never
     assert.equal(P.staleReason('year', '2008-12-31'), null);
   });
   withDay('not a day', () => assert.equal(P.maskStaleQuarterSeries(s), s));
-  const fixture = { ...s, meta: { ticker: 'ALNY', fetchedAt: '2026-08-02T15:08:52.192Z' } };
-  withDay(DAY, () => assert.equal(P.maskStaleQuarterSeries(fixture), fixture));
+  // The sealed ALNY packet as filed stays whole even on a data day that makes its quarters stale; a fixture name over other
+  // statements is no fixture (Codex on #72, 04.11.2026) and is masked like any other row.
+  const golden = require('../protocol/gqs-00/1.1.0/golden-fixtures.json');
+  const sealed = structuredClone(golden.cases.find(c => c.rawSnapshot.meta.ticker === 'ALNY').rawSnapshot);
+  withDay('2028-01-31', () => assert.equal(P.maskStaleQuarterSeries(sealed), sealed));
+  const named = { ...s, meta: { ticker: 'ALNY', fetchedAt: '2026-08-02T15:08:52.192Z' } };
+  withDay(DAY, () => assert.notEqual(P.maskStaleQuarterSeries(named), named));
 });
 
 test('growth pairs: a quarter pair ends after 365 days, an annual pair after 550; the partner is old by nature and is not judged', () => {

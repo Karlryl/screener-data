@@ -22,6 +22,14 @@ let passed = 0;
 function check(name, fn) { fn(); passed++; console.log('  ok ' + name); }
 const minus = (iso, days) => new Date(Date.parse(iso + 'T00:00:00Z') - days * 86400000).toISOString().slice(0, 10);
 const END = '2026-06-30';
+// A sealed golden fixture as filed (3317.HK: no quarters, undated annual pairs only), and the same with one revenue cell 1 % off.
+const GOLDEN = require('../protocol/gqs-00/1.1.0/golden-fixtures.json');
+const SEALED = (ticker = '3317.HK') => structuredClone(GOLDEN.cases.find(c => c.rawSnapshot.meta.ticker === ticker).rawSnapshot);
+const ONE_CELL_OFF = () => {
+  const s = SEALED(), c = s.annual.annualRev[1];
+  if (c && typeof c === 'object') c.value *= 1.01; else s.annual.annualRev[1] = c * 1.01;
+  return s;
+};
 // Two fiscal years of revenue and gross profit whose ends lie `days` apart (prior end null = undated).
 const dated = (days) => {
   const prior = days === null ? null : minus(END, days);
@@ -162,13 +170,20 @@ check('a true short or long year inside the window is a hand-table hold: Nestle 
   }
 });
 
-check('sealed fixtures: only the exact ticker and fetch time of a golden fixture keep the old undated score axes, never the growth figure', () => {
+check('sealed fixtures: only an unchanged golden fixture keeps the old undated score axes, never the growth figure', () => {
   const snapshot = meta => ({ meta, timeseries: {}, annual: { annualRev: [130, 100, 90], annualGP: [65, 50, 45] } });
   const FIXTURE = { ticker: 'STB.OL', fetchedAt: '2026-08-16T12:41:39.603Z' };
-  const old = snapshot(FIXTURE);
+  const old = SEALED();
   assert.equal(P.sealedEraSnapshot(old), true);
-  close(A.revAcceleration(old), 0.3 - 1 / 9); close(A.gpGrowth(old), 0.3);
+  close(A.revAcceleration(old), 0.8413741000125339); close(A.gpGrowth(old), 0.4708032228648348);
   assert.equal(A.revGrowthLevel(old), null, 'the growth figure is empty on a fixture too');
+  // Codex on #72 (04.11.2026): the name proves no content. A fixture name over one cell 1 % off, over other annual series
+  // without quarters, or over invented numbers gets no exemption: its undated pairs drop the axes like on any live row.
+  const other = SEALED(); other.annual.annualRev = [130, 100, 90]; other.annual.annualGP = [65, 50, 45]; other.timeseries = {};
+  for (const [label, s] of [['one cell', ONE_CELL_OFF()], ['other series', other], ['invented', snapshot(FIXTURE)], ['invented, other fixture', snapshot(old.meta)]]) {
+    assert.equal(P.sealedEraSnapshot(s), false, label);
+    assert.equal(A.revAcceleration(s), null, label); assert.equal(A.gpGrowth(s), null, label);
+  }
   // Codex on #72: an invented ticker fetched on 19.08.2026 must not pass. Neither may a fixture ticker at another time, nor any non-date.
   for (const meta of [{ ticker: 'NONFIXTURE', fetchedAt: '2026-08-19T00:00:00Z' }, { ticker: 'NONFIXTURE', fetchedAt: FIXTURE.fetchedAt },
     { ticker: FIXTURE.ticker, fetchedAt: '2026-08-16T12:41:39.604Z' }, { ticker: FIXTURE.ticker, fetchedAt: '2026-10-30T09:00:00.000Z' }, { ticker: FIXTURE.ticker },
@@ -185,7 +200,7 @@ check('sealed fixtures: only the exact ticker and fetch time of a golden fixture
   const dated = { meta: FIXTURE, timeseries: {}, annual: { annualRev: [130, 100, 90], annualRevEnds: ['2026-06-30', '2024-06-30', '2023-06-30'] } };
   assert.equal(A.revAcceleration(dated), null, 'the era excuses a missing end, never a wrong one');
   const quarters = meta => ({ meta, annual: {}, timeseries: { revenueQ: [120, 110, 105, 102, 100, 90] } });
-  close(A.revAcceleration(quarters(FIXTURE)), 120 / 100 - 110 / 90);
+  assert.equal(A.revAcceleration(quarters(FIXTURE)), null, 'invented undated quarters under a fixture name carry no axis');
   assert.equal(A.revAcceleration(quarters({ ticker: 'NONFIXTURE', fetchedAt: '2026-08-16T00:00:00Z' })), null);
 });
 
@@ -255,9 +270,11 @@ for (const [rel, anchor, mutant, probe] of [
   ['../lib/annual-pairs.js', "  if (older === null) return `Periodenende des Vorjahres fehlt (Zeitraum bis ${dayDe(end)}); Wachstum nicht gezeigt.`;", '  if (older === null) return null;',
     api => assert.equal(api.periodGateReason('year', END, null), 'Periodenende des Vorjahres fehlt (Zeitraum bis 30.06.2026); Wachstum nicht gezeigt.')],
   ['../lib/annual-pairs.js', "  if ((_tagesnummer(ends[iNew]) === null || _tagesnummer(ends[iOld]) === null) && sealedEraSnapshot(snapshot)) return false;", '',
-    api => assert.equal(api.axisPairBlocked({ meta: { ticker: 'STB.OL', fetchedAt: '2026-08-16T12:41:39.603Z' }, annual: { annualGP: [65, 50] } }, 'annualGP', 0, 1), false, 'a sealed fixture with an undated pair must pass')],
-  ['../lib/annual-pairs.js', "  return SEALED_FIXTURES.has(`${snapshot?.meta?.ticker}|${snapshot?.meta?.fetchedAt}`);", '  return true;',
+    api => assert.equal(api.axisPairBlocked(SEALED(), 'annualGP', 0, 1), false, 'a sealed fixture with an undated pair must pass')],
+  ['../lib/annual-pairs.js', '  if (!SEALED_FIXTURES.has(id)) return false;', '  return true;',
     api => assert.equal(api.sealedEraSnapshot({ meta: { ticker: 'NONFIXTURE', fetchedAt: '2026-08-19T00:00:00Z' } }), false, 'no fixture, no exemption')],
+  ['../lib/annual-pairs.js', '  return isDeepStrictEqual({ annual: snapshot.annual, timeseries: snapshot.timeseries }, sealedStatements.get(id));', '  return true;',
+    api => assert.equal(api.sealedEraSnapshot(ONE_CELL_OFF()), false, 'a fixture name over changed statements gets no exemption')],
   ['../lib/annual-pairs.js', "  return pairs.every((pair) => pair.zeroIndex < 0 && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld));", '  return true;',
     api => assert.equal(api.annualAccelerationGatePasses(ALK()), false)],
   ['../lib/g31-recency.js', '  if (gate) return missing(gate);', '',

@@ -162,14 +162,15 @@ function mitFcfSchatten(formulaId) {
 }
 
 // Period gate round 2 (30.10.2026): a pair with no end at all empties revenue growth. The score axes excuse it only on the 25
-// sealed golden fixtures (lib/annual-pairs.js), so a fixture on a live board means a restored store; this watcher says so,
+// sealed golden fixtures with unchanged statements (lib/annual-pairs.js), so a fixture on a live board means a store restored
+// with exactly those statements; this watcher says so,
 // whichever axis it reaches. ponytail: exported rows only, a small-cap firm outside the export stays unseen.
 const _undatedAxisTickers = new Set();
 /** Warning line of the watcher. @param {Iterable<string>} tickers Tickers counted. @returns {string|null} ::warning:: line, or null when none. */
 function undatedAxisWarning(tickers) {
   const list = [...tickers].sort();
   if (!list.length) return null;
-  return `::warning::[period-gate-undated] ${list.length} Zeilen: versiegelter Prueffall auf einem Board, seine Score-Achsen duerfen ein Paar ohne Periodenende zaehlen (Wachstum ist leer): ${list.slice(0, 20).join(', ')}`;
+  return `::warning::[period-gate-undated] ${list.length} Zeilen: versiegelter Prueffall auf einem Board, seine Score-Achsen duerfen ein Paar ohne Periodenende zaehlen: ${list.slice(0, 20).join(', ')}`;
 }
 /** P286: without a data day the age rule is off; a run on Actions says so instead of staying silent. @returns {string|null} ::warning:: line, or null when none. */
 function ageRuleOffWarning() {

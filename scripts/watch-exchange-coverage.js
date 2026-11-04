@@ -7,6 +7,8 @@
  * data-health/exchange-coverage-baseline.json. ::error:: when:
  *   - an exchange's count drops >40% vs its own median, OR
  *   - an exchange that had >0 snapshots in-window drops to 0 today.
+ * Either rule needs more than one listing lost (see SINGLE_LISTING); such a
+ * drop of at most one listing is logged as ::warning:: instead.
  *
  * Snapshots without meta.exchangeName (older vintages, ~13% of the corpus —
  * verified 2026-07-06) are grouped under '(unknown)' so they still count
@@ -28,6 +30,14 @@ const SNAP_DIR = path.join(ROOT, 'snapshots');
 const BASELINE_PATH = path.join(ROOT, 'data-health', 'exchange-coverage-baseline.json');
 const WINDOW = 14;
 const DROP_THRESHOLD = 0.40;
+// A loss of at most one listing is never an exchange-level drop: the guard
+// cannot tell a pull collapse from one relabel or exit. Buckets with a median of
+// 3+ already ignored a single loss via DROP_THRESHOLD; this gives the 1- and
+// 2-listing labels the same rule. Run 41805213687 (04.11.2026): the only
+// listing under 'Nasdaq' (NXDR) has been labelled 'NasdaqCM' by Yahoo since its
+// refetch on 30.10.; the alarm fired once the seeding window filled and would
+// have stayed red every day (frozen history, see updateBaseline).
+const SINGLE_LISTING = 1;
 const BASELINE_SHAPE_ERROR = 'ERR_EXCHANGE_COVERAGE_BASELINE_SHAPE';
 
 function loadJson(p, fallback) {
@@ -112,18 +122,36 @@ function countByExchange(snapDir) {
   return counts;
 }
 
-// BH-123: shared alarm predicate — same condition checkDrift alerts on, reused
-// by updateBaseline() so an alarming count can be kept OUT of the rolling
-// window (see there).
-function isExchangeAlarming(todayCount, history) {
-  if (history.length < WINDOW) return false; // still seeding — not enough history to judge
+// 'alarm' for an exchange-level drop, 'single' for a drop (to 0 or >40 %) that
+// lost at most one listing (logged, not alarmed), otherwise null.
+function dropKind(todayCount, history) {
+  if (history.length < WINDOW) return null; // still seeding — not enough history to judge
   // Nullwerte vor dem juengsten Lebenszeichen sind Seed-/Totzeiten, keine gesunde
   // Referenz. Nur die juengste zusammenhaengende positive Phase ist vergleichbar;
   // durchgehend tote Reihen bleiben damit bewusst still.
   const med = activeMedian(history);
-  if (med === null || med <= 0) return false;
-  if (todayCount === 0) return true;
-  return (med - todayCount) / med > DROP_THRESHOLD;
+  if (med === null || med <= 0) return null;
+  if (todayCount !== 0 && (med - todayCount) / med <= DROP_THRESHOLD) return null;
+  return med - todayCount <= SINGLE_LISTING ? 'single' : 'alarm';
+}
+
+// BH-123: shared alarm predicate — same condition checkDrift alerts on, reused
+// by updateBaseline() so an alarming count can be kept OUT of the rolling
+// window (see there).
+function isExchangeAlarming(todayCount, history) {
+  return dropKind(todayCount, history) === 'alarm';
+}
+
+// The drops SINGLE_LISTING keeps out of the alarm, so they still show up in the log.
+function singleListingDrops(today, baseline) {
+  const notes = [];
+  for (const ex of Object.keys(baseline).filter((k) => !k.startsWith('_'))) {
+    const todayCount = today[ex] || 0;
+    const history = (baseline[ex] || []).filter(Number.isFinite);
+    if (dropKind(todayCount, history) !== 'single') continue;
+    notes.push(`${ex}: ${todayCount} today (median ${activeMedian(history)}), at most one listing lost`);
+  }
+  return notes;
 }
 
 function checkDrift(today, baseline) {
@@ -212,6 +240,9 @@ function main(options = {}) {
   writeBaseline(baselinePath, updated);
   log('Baseline updated: ' + baselinePath);
 
+  const notes = singleListingDrops(today, baseline);
+  if (notes.length > 0) log('::warning::Exchange label lost at most one listing, not an exchange drop — ' + notes.join('; '));
+
   if (alerts.length > 0) {
     error('::error::Exchange coverage drop detected — ' + alerts.join('; '));
     setExitCode(1);
@@ -232,6 +263,7 @@ module.exports = {
   median,
   activeMedian,
   isExchangeAlarming,
+  singleListingDrops,
   loadBaseline,
   validateBaseline,
   main

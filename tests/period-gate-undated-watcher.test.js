@@ -1,6 +1,7 @@
 'use strict';
-// Watcher of the sealed-fixture exception of the period gate (30.10.2026): on the 25 sealed golden fixtures the score axes still
-// count a pair with no end, so the export says so if such a snapshot ever stands on a board. Reads main and small-cap rows.
+// Watcher of the sealed-fixture exception of the period gate (30.10.2026): on the 25 sealed golden fixtures, with their statements
+// unchanged, the score axes still count a pair with no end, so the export says so if such a snapshot ever stands on a board.
+// Reads main and small-cap rows.
 // Run: node tests/period-gate-undated-watcher.test.js
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
@@ -22,8 +23,11 @@ const { capitalEfficiency } = require('../src/scoring/axes.js');
 const { produceRankings } = require('../src/scoring/score.js');
 
 const cells = values => values.map(value => ({ value }));
-// Two real fixture identities of protocol/gqs-00/1.1.0/golden-fixtures.json.
+const close = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-12, `${msg} (${a})`);
+// Two real fixture identities of protocol/gqs-00/1.1.0/golden-fixtures.json, and their sealed packets as filed.
 const MAIN = { ticker: 'ALNY', fetchedAt: '2026-08-02T15:08:52.192Z' }, SC = { ticker: 'BMI', fetchedAt: '2026-08-08T04:10:34.584Z' };
+const GOLDEN = require('../protocol/gqs-00/1.1.0/golden-fixtures.json');
+const sealed = ticker => structuredClone(GOLDEN.cases.find(c => c.rawSnapshot.meta.ticker === ticker).rawSnapshot);
 const snapshot = (meta, annualRevEnds) => ({ meta, metrics: {}, timeseries: {},
   annual: { annualRev: cells([130, 100, 90]), annualGP: cells([65, 50, 45]), ...(annualRevEnds ? { annualRevEnds, annualGPEnds: annualRevEnds } : {}) } });
 const DATED = ['2025-12-31', '2024-12-31', '2023-12-31'];
@@ -40,7 +44,9 @@ try {
       annualBalance: [{ totalAssets: 300, totalCurrentLiabilities: 50, currentLiabilities: 50 }, { totalAssets: 100, totalCurrentLiabilities: 50, currentLiabilities: 50 }] } });
     assert.equal(axisPairBlocked(capitalOnly(old('NONFIXTURE')), 'annualRev', 0, 1), true);
     assert.equal(capitalEfficiency(capitalOnly(old('NONFIXTURE'))), null, 'no warning needed: the axis is empty');
-    assert.notEqual(capitalEfficiency(capitalOnly(MAIN)), null, 'on a fixture the capital axis runs, and the board watcher below counts that row');
+    close(capitalEfficiency(sealed('ALNY')), 0.1433087370163618, 'on a fixture the capital axis runs, and the board watcher below counts that row');
+    // Codex on #72 (04.11.2026): invented statements under a fixture name are no fixture.
+    assert.equal(capitalEfficiency(capitalOnly(MAIN)), null, 'a fixture name over other statements gets no exemption');
   });
 
   check('the warning names the rows and is silent at zero', () => {
@@ -48,13 +54,14 @@ try {
     assert.match(W.undatedAxisWarning(['ZZ', 'AA']), /^::warning::\[period-gate-undated\] 2 Zeilen: .*: AA, ZZ$/);
   });
 
-  write(process.env.FINDASH_SNAPSHOTS_DIR, snapshot(MAIN));
+  write(process.env.FINDASH_SNAPSHOTS_DIR, sealed(MAIN.ticker));
   write(process.env.FINDASH_SNAPSHOTS_DIR, snapshot(old('OLDMAIN')));
   write(process.env.FINDASH_SNAPSHOTS_DIR, snapshot({ ticker: 'DATEDMAIN', fetchedAt: '2026-10-30T00:00:00.000Z' }, DATED));
-  write(process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR, snapshot(SC));
+  write(process.env.FINDASH_SNAPSHOTS_DIR, snapshot({ ticker: 'STB.OL', fetchedAt: '2026-08-16T12:41:39.603Z' })); // fixture name, invented statements
+  write(process.env.FINDASH_SMALLCAP_SNAPSHOTS_DIR, sealed(SC.ticker));
   const boards = path.join(tmp, 'boards'); fs.mkdirSync(boards);
   const board = (name, tickers) => fs.writeFileSync(path.join(boards, name), JSON.stringify({ profitable: tickers.map(row), unprofitable: [] }));
-  board('financials.json', [MAIN.ticker, 'OLDMAIN', 'DATEDMAIN']);
+  board('financials.json', [MAIN.ticker, 'OLDMAIN', 'DATEDMAIN', 'STB.OL']);
   board('smallcap-financials.json', [SC.ticker]);
   const run = api => {
     api.buildBoard('financials', null, { srcDir: boards, rangOpts: { warn: false } });
