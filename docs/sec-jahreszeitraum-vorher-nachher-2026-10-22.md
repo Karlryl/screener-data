@@ -1,9 +1,9 @@
 > **Auf einen Blick**
 >
-> SEC-Jahreswerte kommen nur noch aus ganzen Geschäftsjahren und eine Lücke in der Gewinnserie gilt nicht mehr als Verlustjahr; auf dem Datenstand vom 31.10.2026 ändern sich 588 von 9.269 Board-Zeilen (47 Scores, 562 Ränge) und kein einziger Wachstumswert.
+> SEC-Jahreswerte kommen nur noch aus ganzen Geschäftsjahren und eine Lücke in der Gewinnserie gilt nicht mehr als Verlustjahr; auf dem Datenstand vom 03.11.2026 ändert der Merge allein nur die Gewinnserie bei 110 Board-Tickern, ein Monatslauf mit der neuen Regel danach 633 von 9.276 Board-Zeilen (82 Scores, 565 Ränge) und keinen Wachstumswert.
 > - Kodak 2017 bekommt seinen Jahresumsatz von 1.531 Mio. USD zurück (bisher verdrängt durch ein Quartal von 414 Mio. USD); DBD 2023 und EXE 2021 bleiben leer, statt Vorjahreszahlen zu zeigen.
-> - Am stärksten bewegt sich VISN (Score 56,1 auf 22,6, Rang 201 auf 530), danach Teva (Score 38,1 auf 10,9, Rang 496 auf 654). Der falsche Verlustsatz verschwindet bei allen 110 Board-Tickern, die ihn heute tragen; damit der neue Erklärsatz überall stimmt, gehören zwei Textzeilen in findash zu diesem Merge.
-> - Die Korrektur der Gewinnserie wirkt mit dem ersten Tageslauf nach dem Merge, die Jahresregel erst mit dem nächsten SEC-Monatslauf nach dem Merge oder einem Handstart (Nachtrag 01.11.2026).
+> - Nach einem Monatslauf bewegt sich VISN am stärksten (Score 55,9 auf 22,6, Rang 199 auf 522), danach Teva (Score 38,1 auf 10,9, Rang 489 auf 657). Der falsche Verlustsatz verschwindet bei allen 110 Board-Tickern, die ihn heute tragen.
+> - Dieser PR darf erst live gehen, wenn der findash-PR mit den zwei neuen Erklärsätzen aufgespielt ist. Die Korrektur der Gewinnserie wirkt mit dem ersten Tageslauf nach dem Merge, die Jahresregel erst mit dem nächsten SEC-Monatslauf (Nachtrag 04.11.2026).
 
 # SEC-Jahreswerte nur aus ganzen Geschäftsjahren (F-02): vorher und nachher
 
@@ -82,7 +82,7 @@ Weitere sichtbare Felder ohne Scorewirkung: Die Gewinnserie (Anzeige, aus der La
 
 ## Zusammenstoß mit dem SEC-Monatslauf am 01.11.2026
 
-Stand 01.11.2026, 13:24 Uhr MEZ: Der geplante Lauf ist noch nicht gestartet, GitHub führt für diesen Workflow in diesem Repository noch keinen einzigen Lauf. Was ein Handstart nach dem Merge ändert, steht im Nachtrag vom 01.11.2026.
+Stand 01.11.2026, 13:24 Uhr MEZ: Der geplante Lauf ist noch nicht gestartet, GitHub führt für diesen Workflow in diesem Repository noch keinen einzigen Lauf. (Berichtigt 04.11.: Er lief am 01.11. um 14:47 UTC nach der alten Regel, Commit `72183d1e53`. Was ein Monatslauf nach dem Merge ändert, steht im Nachtrag vom 04.11.2026.)
 
 Der Monatslauf startet am Sonntag, 01.11.2026, um 08:00 UTC (09:00 Uhr MEZ). Er holt frische SEC-Daten und baut daraus den Hauptspeicher (nur für die aktuellen Kandidaten), den Small-Cap-Speicher und die Langhistorie neu, mit der Regel, die zu diesem Zeitpunkt auf main liegt.
 
@@ -212,6 +212,48 @@ Ein Handstart auf main baut die drei Speicher mit der neuen Regel neu. Auf den e
 
 ### Vorhersagen für den Tageslauf
 
-`data-health/erwartungen.json` trägt 13 Einträge mit `pr: 20` und `gueltigAb` 2026-11-05 für KIM, CCK, MPLX, SF, WELL, AMH und RCL. Sie gelten für den Stand nach dem Merge ohne Handstart und bleiben auch nach einem Neubau wahr. Gegen die Exporte der Vergleichsarme geprüft sind heute 5 von 13 erfüllt, im nächsten Tageslauf und nach einem Neubau je 13 von 13.
+`data-health/erwartungen.json` trägt 13 Einträge mit `pr: 20` und `gueltigAb` 2026-11-05 (seit 04.11.: 2026-11-06 bis 2026-11-13) für KIM, CCK, MPLX, SF, WELL, AMH und RCL. Sie gelten für den Stand nach dem Merge ohne Handstart und bleiben auch nach einem Neubau wahr. Gegen die Exporte der Vergleichsarme geprüft sind heute 5 von 13 erfüllt, im nächsten Tageslauf und nach einem Neubau je 13 von 13.
 
 Messwerkzeuge und Rohausgaben dieses Nachtrags: `C:/Users/Anwender/.codex/t/daylauf10/sd-f02-work/bau01/`.
+
+## Nachtrag 04.11.2026: Giftify und Messung auf dem Datenstand vom 03.11.2026
+
+### Giftify: ein Nachfolger-Zeitraum ist kein Anker für ein nahes Jahresende
+
+Die Codex-Prüfung vom 04.11.2026 hat einen Fehler der 7-Tage-Regel belegt. Giftify trennt 2023 einen Vorgänger (01.01. bis 29.12.2023, Umsatz 86,7 Mio. USD, Nettoergebnis minus 0,12 Mio. USD) von einem Nachfolger (30.12. bis 31.12.2023, Umsatz 0,48 Mio. USD, Nettoergebnis minus 5,02 Mio. USD). Die Regel nahm den Vorgänger allein als Geschäftsjahr. Jetzt zählt ein nahes Ende nur noch, wenn sich der Zeitraum am Periodenende mit dem ganzen Jahr überschneidet. Bei Giftify beginnt er erst nach dem Ende des Vorgängers, die vier Zellen bleiben leer. Penguin 2020 und Kohl's 2019 überschneiden sich und behalten ihre Jahreswerte.
+
+Über das ganze SEC-Archiv mit Einträgen bis 29.10.2026 (20.529 Einträge, 15.301 mit Jahresreihen) ändert die neue Bedingung genau diese vier Zellen bei Giftify und sonst keine. Giftify steht nicht im Universum, auf den Boards bewegt sich dadurch nichts.
+
+### Messung auf dem Datenstand vom 03.11.2026
+
+Eingaben: Snapshots des grünen Tageslaufs 41611595463 vom 03.11.2026, Code des Startstands `3d1c5c2328` (gleich dem Code der Merge-Basis `729a132042`), die SEC-Speicher und die Langhistorie, wie sie nach dem Monatslauf vom 01.11. (`72183d1e53`) auf main liegen, SEC-Archiv bis 29.10.2026. Der Small-Cap-Bestand stammt vom 31.10.2026, weil der des 03.11. nicht als Datei vorliegt; er ist in allen Armen gleich. Die Nachrechnung ohne Änderung trifft den veröffentlichten Stand vom 03.11. in allen 9.276 Board-Zeilen, 1.300 Qualitätszeilen und 489 Rule-of-40-Zeilen bei Score, Rang und Gewinnserie; nur `valueFlags` weicht in 8 Zeilen ab.
+
+| Vergleich auf demselben Datentag | Board-Zeilen von 9.276 | Scores | Ränge | Gewinnserie | Qualität von 1.300 | Rule40 von 489 | Small-Cap |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Merge allein, ohne Monatslauf | 0 | 0 | 0 | 110 | 0 | 0 | 0 |
+| Merge und Monatslauf mit der neuen Regel | 633 | 82 | 565 | 133 | 18 | 6 | 118, dazu je 2 Zu- und Abgänge |
+
+Beim Merge allein ändert sich in keiner Zeile ein anderes Feld als die Gewinnserie (dazu 5 Qualitäts- und 3 Rule-of-40-Zeilen mit geänderter Serie). Für den Monatslauf sind die beiden Speicher und die Langhistorie offline aus dem Archiv neu gebaut, mit derselben Auswahl wie die Builder. Derselbe Neubau mit der alten Regel trifft die Speicher von main bis auf einen Eintrag (PAYS, im Hauptspeicher zusätzlich) und die Langhistorie bis auf 10 Zellen bei BUUU. Die Zahlen gelten also im Wesentlichen für die Regel; PAYS ist in ihnen enthalten. In der Langhistorie ändert die neue Regel 1.657 Zellen bei 369 Tickern.
+
+Scores, die sich nach einem Monatslauf um mindestens einen Punkt bewegen: VISN 55,9 auf 22,6 (Rang 199 auf 522), TEVA 38,1 auf 10,9 (489 auf 657), RGEN 32,7 auf 43,6 (558 auf 419), GPGI 5,5 auf 8,3. Umsatzwachstum, Perioden und Übersichtswerte ändern sich in keiner Zeile.
+
+Diese Zahlen ersetzen die Messung vom 31.10.: Die Angabe 588 Zeilen, 47 Scores und 562 Ränge (alte gegen neue Regel auf den Eingaben vom 31.10.) wird ersetzt durch 633, 82 und 565 auf den Eingaben vom 03.11. Der Fall „kein Monatslauf nach alter Regel davor“ mit 820, 130 und 744 entfällt, weil der Monatslauf vom 01.11. gelaufen ist.
+
+### Gewinnserie und findash-Text auf dem Datenstand vom 03.11.2026
+
+Der Merge allein beseitigt den falschen Verlustsatz bei allen 110 Board-Tickern: 87 zeigen dann „mind. N Jahre“, 23 keine Serie. Der Erklärsatz daneben ist dann bei 29 Tickern unwahr („bis zum Anfang der verfügbaren Daten“, obwohl hinter der Lücke Zahlen stehen) und bei 15 („keine solche Historie“, obwohl Zahlen da sind). Nach einem Monatslauf sind es 38 und 17. **Dieser PR darf erst live gehen, wenn der findash-PR mit den zwei neuen Erklärsätzen aufgespielt ist.** Die findash-Lane baut ihn gesondert; dieser PR ändert findash nicht.
+
+### Vorhersagen
+
+Die 13 Einträge mit `pr: 20` gelten jetzt vom 06.11. bis 13.11.2026. Gegen die Exporte vom 03.11. sind ohne den PR 5 von 13 erfüllt, mit dem PR 13 von 13, nach einem Monatslauf ebenfalls 13 von 13.
+
+### Offen für Codex, hier bewusst nicht gebaut (Zahlen der Codex-Prüfung vom 04.11.)
+
+- **Vergleichsjahr unter dem nächsten Schlüssel:** MAZE zeigt unter FY2025 den Umsatz 167,5 Mio. USD mit Ende 31.12.2024, vor und nach diesem PR gleich.
+- **Späteres Jahr unter älterem Schlüssel:** FRT zeigt unter FY2024 den Umsatz 1.279,0 Mio. USD bis 31.12.2025, WWW dort 1.874,3 Mio. USD bis 03.01.2026, vor und nach diesem PR gleich.
+- **Ganz fehlende Achsenjahre:** 103 gezählte Serien überqueren mindestens ein fehlendes Geschäftsjahr, etwa UHAL-B mit zwölf Jahren und einem Sprung von 2021 auf 2019.
+- **MBUU:** Der Umsatzrückgang beträgt 0,4183366765944114. Sinkt die gelernte Schwelle genau auf diesen Wert, springt der Dämpfungsfaktor von 1 auf 0,5.
+- **VISN:** Die bereinigte Reihe hat vier Vorzeichenwechsel, also den Signalwert 3; bei der Schwelle von 14,7 % gibt die Funktion den Faktor 0,4.
+- **Füllbare Zellen:** JNJ 2011 Nettoergebnis 9.672 Mio. USD (eingereicht 22.02.2013), SF 2011 Nettoergebnis 84,134 Mio. USD (01.03.2013), PAYC 2014 Betriebsergebnis 15,7 Mio. USD (22.02.2016) stehen unter dem nächsten Schlüssel mit demselben Periodenende bereit.
+
+Messwerkzeuge und Rohausgaben dieses Nachtrags: `C:/Users/Anwender/.codex/t/daylauf10/sd-b11-work/b20/`.

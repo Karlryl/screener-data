@@ -10,7 +10,7 @@
  *
  * Rule: a duration value is accepted only if it is a full year (lib/sec-pit.js isAnnualPoint,
  * 330-380 elapsed days) AND ends on the period end the old rule picked for that concept and fiscal
- * key, or within 7 days before it. Otherwise the cell stays empty. A bare day filter is not enough:
+ * key, or within 7 days before it when the anchor period overlaps it. Otherwise the cell stays empty. A bare day filter is not enough:
  * for DBD FY2023 and EXE FY2021 it would relabel the prior-year comparative (DBD 3,460.7 M USD revenue
  * of 2022, EXE -8,703 M USD operating income of 2020) as the current year. Balance-sheet values
  * (instants) keep their selection, except under a fiscal key that names no fiscal year (PRTH).
@@ -271,6 +271,33 @@ test('WFRD FY2019 and PIII FY2021: predecessor periods 18 and 29 days before the
   const w = extract('WFRD'), p = extract('PIII');
   for (const f of ['annualOpInc', 'annualOCF']) assert.equal(w.at(f, 2019), null, `WFRD ${f}`);
   for (const f of ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualOCF']) assert.equal(p.at(f, 2021), null, `PIII ${f}`);
+});
+
+test('GIFT FY2023: a predecessor period two days before a successor anchor is no fiscal year (Codex R18)', () => {
+  const k = extract('GIFT');
+  for (const f of ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualGP']) assert.equal(k.at(f, 2023), null, `${f} FY2023 must stay empty`);
+});
+
+test('tolerance needs overlap: the anchor may start on the last day of the full year, not the day after', () => {
+  const full = row(2020, '2020-01-01', '2020-12-29', 90);
+  const pick = (anchorStart) => annualConcept(tax({ Revenues: [full, row(2020, anchorStart, '2020-12-31', 3)] }), 'Revenues').get(2020);
+  assert.equal(pick('2020-12-29').val, 90, 'anchor starts on the last day of the full year');
+  assert.equal(pick('2020-12-30'), undefined, 'anchor starts after the full year ends (successor period)');
+});
+
+test('tolerance needs a known anchor start: an anchor row without a start admits only the exact end', () => {
+  const rows = [row(2020, '2020-01-01', '2020-12-29', 90), row(2020, '2020-10-01', '2020-12-31', 30), row(2020, undefined, '2020-12-31', 31)];
+  assert.equal(annualConcept(tax({ Revenues: rows }), 'Revenues').has(2020), false);
+});
+
+test('the exact period end needs no overlap proof: a full year on the anchor stays beside an anchor row without a start', () => {
+  const rows = [row(2020, '2020-01-01', '2020-12-31', 90), row(2020, undefined, '2020-12-31', 31)];
+  assert.equal(annualConcept(tax({ Revenues: rows }), 'Revenues').get(2020).val, 90);
+});
+
+test('tolerance: the latest anchor start decides, a successor stub beside a quarter blocks the near row', () => {
+  const rows = [row(2020, '2020-01-01', '2020-12-29', 90), row(2020, '2020-10-01', '2020-12-31', 30), row(2020, '2020-12-30', '2020-12-31', 2)];
+  for (const r of [rows, [...rows].reverse()]) assert.equal(annualConcept(tax({ Revenues: r }), 'Revenues').has(2020), false);
 });
 
 test('tolerance limit: 7 days before the anchor is the same end, 8 days are not', () => {

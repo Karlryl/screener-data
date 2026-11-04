@@ -210,13 +210,24 @@ const keyFitsEnd = (x) => !(x.fy - Number(String(x.end).slice(0, 4)) > 1);
 // 2020-02-01 against 2020-02-02. A full year ending within 7 days before the anchor is the same end.
 // The other ten hits among 2,347 filers lie 18 days or more away (predecessor periods at WFRD and
 // PIII, DJCO 2014, ABTC 2020) and stay empty. Blind review 31.10.2026.
+// The near end also needs the anchor period to overlap the full year (Codex R18, 04.11.2026): Giftify FY2023
+// splits predecessor (2023-01-01..12-29) and successor (12-30..12-31); the successor is the anchor and starts
+// after the predecessor ends, so the predecessor alone is no fiscal year of the filer and stays a gap. Penguin's
+// anchor quarter starts 2020-06-02 and overlaps. The anchor start is the latest start among the rows on the
+// anchor end; a row there without a start proves no overlap, then only the exact end counts.
 const SAME_END_TOLERANCE_DAYS = 7;
-const sameFiscalEnd = (end, anchor) => (Date.parse(anchor) - Date.parse(end)) / 86400000 <= SAME_END_TOLERANCE_DAYS;
+const sameFiscalEnd = (x, a) => !!a && (x.end === a.end
+  || (a.start !== null && a.start <= x.end && (Date.parse(a.end) - Date.parse(x.end)) / 86400000 <= SAME_END_TOLERANCE_DAYS));
 const isAnnualFact = (x) => ANNUAL_FORMS.includes(x.form) && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val) && keyFitsEnd(x);
 function fyAnchors(tax, concepts) {
   const anchor = new Map();
   for (const c of concepts) {
-    for (const x of usdUnits(tax, c)) if (isAnnualFact(x) && (!anchor.has(x.fy) || x.end > anchor.get(x.fy))) anchor.set(x.fy, x.end);
+    for (const x of usdUnits(tax, c)) {
+      if (!isAnnualFact(x)) continue;
+      const a = anchor.get(x.fy), start = x.start || null;
+      if (!a || x.end > a.end) anchor.set(x.fy, { end: x.end, start });
+      else if (x.end === a.end && a.start !== null && (start === null || start > a.start)) a.start = start;
+    }
   }
   return anchor;
 }
@@ -224,7 +235,7 @@ function annualConcept(tax, concept, { instant = false, anchor = fyAnchors(tax, 
   const out = new Map();
   for (const x of usdUnits(tax, concept)) {
     if (isAnnualFact(x)) {
-      if (!instant && (!sameFiscalEnd(x.end, anchor.get(x.fy)) || !isAnnualPoint(x))) continue;
+      if (!instant && (!sameFiscalEnd(x, anchor.get(x.fy)) || !isAnnualPoint(x))) continue;
       const prev = out.get(x.fy);
       // BH-007: keep accn (filing identity) alongside the value so callers can
       // verify two concepts for the same fy actually came from the same 10-K.
