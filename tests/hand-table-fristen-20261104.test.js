@@ -28,7 +28,7 @@ const beforeHashes = liveHashes();
 const OLD_DEADLINE = '2026-11-16', DAY_AFTER_OLD = '2026-11-17';
 // shares and reviewBy as renewed on 2026-11-04; seen = the count Yahoo implied that day (null: still the wrong count).
 const ROWS = {
-  'ISAE3.SA': { shares: 583349906, reviewBy: '2026-12-04', seen: 585600000 },
+  'ISAE3.SA': { shares: 583349906, reviewBy: '2026-12-04', seen: null }, // the pull's API field still implied 660,801,338 on 2026-11-04
   '285A.T': { shares: 1597905534, reviewBy: '2026-12-31', seen: 1597905577 },
   '8035.T': { shares: 2280791810, reviewBy: '2026-12-31', seen: 2263548630 },
   '7911.T': { shares: 561108010, reviewBy: '2026-11-30', seen: 561108020 },
@@ -36,6 +36,8 @@ const ROWS = {
   QH: { shares: 2750893, reviewBy: '2026-12-15', seen: null },
 };
 const TICKERS = Object.keys(ROWS);
+// About 585.6 M ON equivalents: the figure of Yahoo's key-statistics web page on 2026-11-04 (19.57 bn BRL). It is not a reading of the pull, so it stays out of `seen`.
+const ISA_WEB_FIGURE = 585600000;
 
 // Converted non-USD snapshot in the real key shape, as in tests/hand-table-boersenwerte-20261024.test.js.
 const synthetic = (ticker, fx, px) => ({
@@ -139,6 +141,14 @@ test('a vendor value that is right again stays untouched, also after the old dea
     assert.equal(out.marketCap.value, s.marketCap.value, t + ': vendor value changed');
     assert.equal(out.meta.marketCapReason, undefined, t);
   }
+});
+
+test('ISA Energia: a vendor count at the sum of both classes is confirmed, where the count before the renewal would have withheld it', () => {
+  const s = packet('ISAE3.SA', ISA_WEB_FIGURE, DAY_AFTER_OLD);
+  const out = quiet(() => guard.prepareMarketCap(s));
+  assert.notEqual(out.marketCap.source, 'hand-table:shares');
+  assert.equal(out.marketCap.value, s.marketCap.value);
+  assert.ok(Math.abs(ISA_WEB_FIGURE / 564711511 - 1) > 0.03, 'the old count was outside the 3 % tolerance of this figure');
 });
 
 test('a vendor count that matches neither the row nor a known wrong count is withheld, never multiplied', () => {
