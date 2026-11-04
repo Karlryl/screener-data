@@ -921,6 +921,7 @@ function mapBoardRow(r, i, snapshotStore, marketCapFloor) {
     rankGrundShadow: rankGrundShadowFor(r.ticker), // SHADOW only; never used by the ranking gate.
     ticker: r.ticker,
     score: gedeckelt(r.score),        // round1 display score (sort determinism was internal _raw)
+    ...(Object.hasOwn(r, 'scoreCycleLegacy') ? { scoreCycleLegacy: gedeckelt(r.scoreCycleLegacy) } : {}),
     track: r.track,        // 'profitable' | 'unprofitable'
     lamps: r.lamps || [],
     overview: r.overview == null ? null : {
@@ -949,6 +950,7 @@ function mapOverviewRow(r, i, snapshotStore, marketCapFloor) {
     formulaId: r.formulaId,     // branch id — only present in the flat overview feed
     track: r.track,
     score: gedeckelt(r.score),
+    ...(Object.hasOwn(r, 'scoreCycleLegacy') ? { scoreCycleLegacy: gedeckelt(r.scoreCycleLegacy) } : {}),
     overviewKind: r.overviewKind,           // FLAT here, NOT nested (mirrors engine)
     overviewValue: r.overviewValue,         // number|null, CAN be negative
     overviewCompanion: r.overviewCompanion, // number|null
@@ -1852,6 +1854,19 @@ const FACTOR_MAX = 1.05; // growth boost tops out at 1 + GROWTH_BOOST_K; burn an
 const productTolerance = (shrunk) => 0.05 + 0.05 * FACTOR_MAX + 3 * 0.0005 * FACTOR_MAX * shrunk + 1e-3;
 function checkScoreBreakdown(r, where, errs) {
   const s = r.scoreShrunk ?? null, f = r.factors ?? null;
+  // Temporary cycle comparison: optional for old feeds, but both values must agree
+  // with the same unchanged pre-factor score whenever either field is present.
+  if (Object.hasOwn(r, 'scoreCycleLegacy') || (f && Object.hasOwn(f, 'cycleLegacy'))) {
+    if (!(Number.isFinite(r.scoreCycleLegacy) && r.scoreCycleLegacy >= 0 && r.scoreCycleLegacy <= SCORE_MAX
+      && Number.isFinite(f?.cycleLegacy) && f.cycleLegacy > 0 && f.cycleLegacy <= 1)) {
+      errs.push(`${where}: scoreCycleLegacy/factors.cycleLegacy missing or invalid`);
+    } else if (Number.isFinite(s) && Number.isFinite(f.burn) && Number.isFinite(f.growth)) {
+      const legacyProduct = s * f.burn * f.growth * f.cycleLegacy;
+      if (Math.abs(r.scoreCycleLegacy - Math.min(SCORE_MAX, legacyProduct)) > productTolerance(s)) {
+        errs.push(`${where}: scoreCycleLegacy does not match scoreShrunk*factors.cycleLegacy`);
+      }
+    }
+  }
   if (s !== null && !(Number.isFinite(s) && s >= 0 && s <= SCORE_MAX)) errs.push(`${where}: scoreShrunk=${JSON.stringify(s)} outside [0, ${SCORE_MAX}]`);
   if (f !== null) {
     const bad = ['burn', 'growth', 'cycle'].filter((k) => !(Number.isFinite(f[k]) && f[k] > 0 && f[k] <= FACTOR_MAX));

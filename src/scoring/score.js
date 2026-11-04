@@ -684,16 +684,24 @@ function cycleSeriesPair(s) {
 // gedaempft). osc-Gate ZUERST (NBIS osc=0 kann nie ueber das DD-Bein feuern). Datenmuell-Guard: ein rev<=0-
 // Jahr (Fonds-/Buchungsartefakt) -> Signal 0 (konservativ). ddThreshold null (Degeneration) -> 0. BEIDE Beine
 // aus DERSELBEN cycleSeriesPair-Quelle (sec-bevorzugt, tief) -> refresh-robust + kohaerent.
-function cycleSignal(s, ddThreshold) {
+function cycleSignal(s, ddThreshold, legacy = false) {
   const { op, rev } = cycleSeriesPair(s);
   if (op.length < 3) return 0;
   if (oscExcess(op) < 1) return 0;
   if (rev.some((v) => v <= 0)) return 0;                     // Datenmuell-Guard (negatives/0-Umsatzjahr)
-  if (ddThreshold === null || revMaxDrawdown(rev) < ddThreshold) return 0;
-  return oscExcess(op);                                      // self-scaling mit der Flip-Zahl
+  if (ddThreshold === null) return 0;
+  const dd = revMaxDrawdown(rev);
+  // Same learned p75 and data guards. Only the drawdown gate changes; at dd=t the
+  // weight (not the factor) is one half. A zero threshold has no band and retains
+  // the old behavior, including dd=0. Legacy is the temporary comparison arm.
+  if (legacy || ddThreshold === 0) return dd < ddThreshold ? 0 : oscExcess(op);
+  if (dd <= 0.8 * ddThreshold) return 0;
+  if (dd >= 1.2 * ddThreshold) return oscExcess(op);
+  return oscExcess(op) * Math.max(0, Math.min(1, (dd - 0.8 * ddThreshold) / (0.4 * ddThreshold)));
 }
 // Daempfer 1/(1+kd*signal) in (0,1]; signal=0 -> Faktor EXAKT 1.0 (byte-identisch).
 const cycleDamperFactor = (s, ddThreshold) => 1 / (1 + CYCLE_DAMPER_KD * cycleSignal(s, ddThreshold));
+const cycleDamperFactorLegacy = (s, ddThreshold) => 1 / (1 + CYCLE_DAMPER_KD * cycleSignal(s, ddThreshold, true));
 
 // Track-Zuordnung gemaess splitMetric der Branchen-Formel.
 function trackOf(s, formula) {
@@ -1222,8 +1230,12 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       // Score nach EB+C4, VOR den 3 multiplikativen Post-Faktoren -> final == _scorePreFactor*burn*growth*cycle.
       const burn = burnPressFactor(e.snapshot);
       const cyc = cycleDamperFactor(e.snapshot, cycleDDThreshold);
+      const cycLegacy = cycleDamperFactorLegacy(e.snapshot, cycleDDThreshold);
       e._scorePreFactor = e.score;
       e._factorBurn = burn; e._factorGrowth = boost; e._factorCycle = cyc;
+      e._factorCycleLegacy = cycLegacy;
+      // Same multiplication order as the old head, without dividing a rounded score.
+      e.scoreCycleLegacy = e.score * burn * boost * cycLegacy;
       e.score = e.score * burn * boost * cyc;
     }
   }
@@ -1407,7 +1419,8 @@ function breakdown(e) {
   return {
     scoreBase: round1(base),
     scoreShrunk: round1(pre),
-    factors: { burn: round3(e._factorBurn), growth: round3(e._factorGrowth), cycle: round3(e._factorCycle) },
+    factors: { burn: round3(e._factorBurn), growth: round3(e._factorGrowth), cycle: round3(e._factorCycle), cycleLegacy: round3(e._factorCycleLegacy) },
+    scoreCycleLegacy: round1(e.scoreCycleLegacy),
     axisBreakdown,
   };
 }
@@ -1563,7 +1576,7 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte
-  signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, CYCLE_DAMPER_KD, CYCLE_DD_PCTL,
+  signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, cycleDamperFactorLegacy, CYCLE_DAMPER_KD, CYCLE_DD_PCTL,
   // PHASE 4 (Refresh-Robustheit via committete SEC-Tiefe): fuer TDD
   normSec, cycleSeriesPair,
   // 2.10 (n-bewusste Scores): fuer TDD der synthetischen Kohorten-Tests

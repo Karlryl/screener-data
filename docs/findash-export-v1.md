@@ -1814,3 +1814,29 @@ Die Aufnahmepruefung schreibt Anbieterluecken als `vorlaeufig` mit Datum und Wie
 neuen Entdeckungstreffer geprueft. Scheitert das Schreiben, werden die neuen Ablehnungen nicht angewendet.
 Eine fehlende oder veraltete Quote ist kein Delisting-Beleg. Die 74 ungeklärten PR-66-Faelle stehen deshalb
 ausserhalb der dauerhaften Sperrmenge. Die 3.043 aelteren Registry-Eintraege sind damit nicht neu bestaetigt.
+
+## Befristeter Zyklusvergleich (Formelentwurf vom 04.11.2026)
+
+Die Zyklusrampe dämpft wiederholte Wechsel zwischen Gewinn und Verlust stetig,
+wenn der Umsatz-Drawdown zwischen 80 und 120 % der weiterhin gelernten p75-Schwelle liegt.
+Bei genau der Schwelle ist das Gewicht des Oszillationssignals halbiert, nicht der Faktor.
+Die übrigen Achsen und die Kalibrierung bleiben unverändert.
+
+| Feld | Bedeutung |
+|---|---|
+| `factors.cycle` | Aktueller Zyklusfaktor mit Rampe, auf drei Nachkommastellen gerundet. |
+| `factors.cycleLegacy` | Bisheriger Faktor mit harter Schwelle bei identischen Eingängen, auf drei Nachkommastellen gerundet. |
+| `scoreCycleLegacy` | Score mit ausschließlich dem bisherigen Zyklusfaktor, gleicher Multiplikationsreihenfolge, auf eine Nachkommastelle gerundet und wie `score` auf 100 begrenzt. |
+
+Die Vergleichsfelder werden aus der Scoring-Ausgabe an Board- und Overview-Zeilen
+weitergereicht, auch für Quality und Smallcap. Alte Eingaben ohne Vergleichsfelder
+bleiben gültig. Sobald eines der beiden Felder vorkommt, prüft der Export beide
+zusammen sowie ihre rechnerische Übereinstimmung mit `scoreShrunk`, Burn- und Growth-Faktor.
+Die Sortierung liest ausschließlich den aktuellen ungerundeten Score.
+
+Der Vergleich endet spätestens am **02.12.2026**, gemäß `cycleRamp.comparison` in
+`protocol/gqs-00/1.2.0-pending/transition.json`. Die Entfernung erfolgt als geprüfte
+Folgeänderung; es gibt keinen von der Rechneruhr abhängigen Wechsel in der Scoring-Funktion.
+Die Anzeige der zusätzlichen Vergleichsfelder in findash ist durch die ausliefernde
+Lane zu prüfen. Messung und Grenzen stehen in
+[`zyklus-rampe-vorher-nachher-2026-11-04.md`](zyklus-rampe-vorher-nachher-2026-11-04.md).
