@@ -22329,6 +22329,84 @@
       ]
     },
     {
+      "caseId": "tvshltd.bo-2025-03-31-revenueQ-20261104",
+      "ticker": "TVSHLTD.BO",
+      "listingAliases": [
+        "TVSHLTD.NS"
+      ],
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "expectedBadValue": 113330900000,
+      "replacementValue": 118003200000,
+      "revision": "2026-11-04-sdzahlen2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2025 liefert der Anbieter 113.330,90 Mio. INR. Der Anbieterwert ist nicht die gedruckte Umsatzsumme der Firma, er weicht in derselben Richtung bei jedem Quartal und Jahr ab. Die Firma meldet 118.003,20 Mio. INR (Revenue From Operations). Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.tvsholdings.com/Investor/TVSH/2025/Quarterended31stMarch2025.pdf",
+          "page": "17 (PDF page)",
+          "quote": "Revenue From Operations 11,800.32",
+          "filed": "2025-04-28",
+          "value": 118003200000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-04"
+        },
+        {
+          "url": "https://www.tvsholdings.com/Investor/TVSH/2025/Quarterended30thJune2025.pdf",
+          "page": "12 (PDF page), comparison column 31.03.2025",
+          "quote": "Revenue From Operations 11,800.32",
+          "filed": "2025-07-31",
+          "value": 118003200000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-04"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNCLAYLTD_28042025170605_TVSHQUICKRESULTSSD.pdf",
+          "page": "17 (consolidated audited results quarter and year ended 31.03.2025; column 31.03.2025; 11,800.32; four lines sum to 11,800.32)",
+          "quote": "Revenue From Operations",
+          "filed": "2025-04-28",
+          "value": 118003200000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-04"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_NBFC_INDAS_87600_28042025202647_iXBRL_WEB.html",
+          "page": "Financial Results NBFC table, consolidated, 3 months ended 31-Mar-2025, Level of rounding Crores, values in actual INR",
+          "quote": "Total Revenue From Operations | 118003200000 | 449931600000",
+          "filed": "2025-04-28",
+          "value": 118003200000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-04"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/SUNCLAYLTD_31072025143626_TVSHQUICKRESULTSSGD.pdf",
+          "page": "12 (comparison column 31.03.2025 in the Jun 2025 filing; 11,800.32)",
+          "quote": "Revenue From Operations",
+          "filed": "2025-07-31",
+          "value": 118003200000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-04"
+        }
+      ]
+    },
+    {
       "caseId": "tvshltd.bo-2026-03-31-annualRev-20261104",
       "ticker": "TVSHLTD.BO",
       "listingAliases": [

@@ -100,9 +100,9 @@ test('fiscal years enter on the filed definition; years without two equal readin
 
 test('rows: count, one block, exact sources, a reason naming its period, plain German', () => {
   const own = H.table.cases.filter(c => c.revision === REV);
-  assert.equal(own.length, 122);
+  assert.equal(own.length, 123);
   const at = H.table.cases.findIndex(c => c.revision === REV);
-  assert.deepEqual(H.table.cases.slice(at, at + 122), own, 'one block');
+  assert.deepEqual(H.table.cases.slice(at, at + 123), own, 'one block');
   assert.deepEqual([...new Set(own.map(c => c.ticker))].sort(), ROWS.map(r => r[0]).sort());
   for (const c of own) {
     const [y, m, d] = c.period.split('-');
@@ -119,6 +119,18 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
 test('red without the rows: the vendor growth is back on every firm', () => {
   for (const [t, , , before] of ROWS) {
     assert.ok(Math.abs(g31Shadow(H.applyFinancialCases(leg(t), { table: pre }).snapshot).v1.pct - before) < 0.005, t);
+  }
+});
+
+test('expectations: one per firm whose shown growth changes, bound to the issuer name on the financials board', () => {
+  const own = require('../data-health/erwartungen.json').filter(e => e.pr === 102);
+  const moved = ROWS.filter(r => Math.abs(r[3] - r[7]) >= 0.05);
+  assert.equal(own.length, moved.length);
+  for (const [t, , , , , , , after] of moved) {
+    const e = own.find(x => x.name === F[t].meta.name);
+    assert.ok(e, t);
+    assert.deepEqual([e.board, e.feld, e.op, e.ticker, e.gueltigAb], ['full/financials', 'revGrowthYoYPct', 'between', undefined, '2026-11-05'], t);
+    assert.ok(e.min < after && after < e.max && e.max - e.min < 0.61, t);
   }
 });
 
