@@ -263,8 +263,30 @@ check('hand-table hold keeps precedence: a held cell gives its own reason, not t
   assert.equal(v1.reason, 'Kein gültiges Wertepaar mit positivem Vorjahreswert vorhanden.');
 });
 
+check('PR #72 comparison until 04.12.2026: withoutPeriodGate shows the old growth and axes for one calculation and restores the gate', () => {
+  const far = dated(730);
+  assert.equal(G.g31Shadow(far).v1.pct, null, 'the gate empties a 730-day pair');
+  assert.equal(A.gpGrowth(far), null);
+  close(P.withoutPeriodGate(() => G.g31Shadow(far).v1.pct), 30);
+  close(P.withoutPeriodGate(() => A.gpGrowth(far)), 0.3);
+  assert.equal(G.g31Shadow(far).v1.pct, null, 'the gate is back after the comparison');
+  assert.equal(P.withoutPeriodGate(() => G.g31Shadow(dated(null)).v1.pct), null, 'a pair without an end stays empty in the comparison too');
+  assert.throws(() => P.withoutPeriodGate(() => { throw new Error('probe'); }), /probe/);
+  assert.equal(P.periodGateReason('year', END, minus(END, 730)), reason('30.06.2026', '30.06.2024', 730), 'and after a throw');
+  // The export field: the shown growth with its labels and the two score axes, without a score.
+  const { periodGateShadowForSnapshot } = require('../scripts/write-findash-export.js');
+  const shadow = periodGateShadowForSnapshot(far);
+  assert.deepEqual(Object.keys(shadow), ['growth', 'basis', 'periodEnd', 'priorPeriodEnd', 'gpAxis', 'accelerationAxis']);
+  close(shadow.growth, 30); close(shadow.gpAxis, 0.3); assert.equal(shadow.basis, 'year');
+  const near = periodGateShadowForSnapshot(dated(365));
+  close(near.growth, G.g31Shadow(dated(365)).v1.pct); close(near.gpAxis, A.gpGrowth(dated(365)));
+  assert.equal(periodGateShadowForSnapshot(null), null);
+});
+
 // Break-once: each gate line is disabled in a discarded in-memory copy; the real assertion must then fail.
 for (const [rel, anchor, mutant, probe] of [
+  ['../lib/annual-pairs.js', '  if (periodGateOff) return null;', '',
+    api => assert.equal(api.withoutPeriodGate(() => api.periodGateReason('year', END, minus(END, 730))), null, 'the comparison must see no gate')],
   ['../lib/annual-pairs.js', '  if (days >= window[0] && days <= window[1]) return null;', '  return null;',
     api => assert.equal(api.periodGateReason('quarter', END, minus(END, 91)), reason('30.06.2026', '31.03.2026', 91))],
   ['../lib/annual-pairs.js', "  if (older === null) return `Periodenende des Vorjahres fehlt (Zeitraum bis ${dayDe(end)}); Wachstum nicht gezeigt.`;", '  if (older === null) return null;',

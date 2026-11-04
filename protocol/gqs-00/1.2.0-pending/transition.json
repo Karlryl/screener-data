@@ -477,6 +477,18 @@
       },
       "evidence": "tests/period-gate.test.js (3317.HK as filed keeps acceleration 0.8414 and the GP axis 0.4708; one cell 1 % off, other series, invented numbers under a fixture name drop both; break-once on the name and the content line), tests/period-gate-undated-watcher.test.js (real ALNY and BMI packets counted, STB.OL name over invented numbers not), tests/annual-financial-replacements.test.js (the hole-lock break probe hides the hole from the gate with dated ends instead of borrowing a fixture name); red on 63dee7195e, green here; verify() rebuilds the 25 traces unchanged and the content check answered true on all 156 fixture calls.",
       "review": "Builder evidence only; blind Opus review of this delta and the Codex re-check remain pending."
+    },
+    "comparisonUntil20261204": {
+      "comparison": "until 04.12.2026 (Karl's rule: the old formula stays visible as a comparison for at most four weeks)",
+      "scope": "lib/annual-pairs.js withoutPeriodGate(fn) switches the date windows of periodGateReason off for one synchronous calculation (a pair without an end stays empty); scripts/write-findash-export.js adds periodGateShadow {growth, basis, periodEnd, priorPeriodEnd, gpAxis, accelerationAxis} to every full-board row that carries annualPairsShadow, computed from the same snapshot with the gate off. No score, no rank, no findash reader. The undated-quarter and duration filters of src/scoring/axes.js stay on. Remove the switch, the field and this note together by 04.12.2026.",
+      "dependencySha256LF": {
+        "lib/annual-pairs.js": "0c80875c80325ca432ecfe8cc1d308ab7e56c298b82e41ba63e64ece4df68c4a"
+      },
+      "previousDependencySha256LF": {
+        "lib/annual-pairs.js": "0ea305055c9ce8d0e447481109d443fe35627d88789c28b32ba264234f51f661"
+      },
+      "evidence": "tests/period-gate.test.js (a 730-day pair: empty with the gate, 30 % growth and GP axis 0.3 without it, gate restored also after a throw; periodGateShadowForSnapshot keys and values; break-once on the switch line); tests/druckenmiller/fixtures/v1-row-keys.snapshot.json lists periodGateShadow, gpAxis, accelerationAxis.",
+      "review": "Builder evidence only; narrow blind Opus review pending."
     }
   },
   "staleSeriesP286P287": {
@@ -518,6 +530,6 @@
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f",
-    "lib/annual-pairs.js": "879c583dd3eb1a8d7800f735645bac795d8b0accf0bc1530ada9c72550adfb9d"
+    "lib/annual-pairs.js": "3a1f3577be8dfee0cf6c20142477ea1e9693729ac581440727b80c3bbeee92f3"
   }
 }
