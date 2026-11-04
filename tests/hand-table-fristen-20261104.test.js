@@ -37,7 +37,7 @@ const ROWS = {
   QH: { shares: 2750893, reviewBy: '2026-12-15', seen: null },
 };
 const TICKERS = Object.keys(ROWS);
-// About 585.6 M ON equivalents: Yahoo's key-statistics web page read on 2026-11-04 showed 19.57 bn BRL, built on the close of 2026-11-03 (33.42 BRL).
+// About 585.6 M ON equivalents: Yahoo's key-statistics web page read on 2026-11-04 showed 19.57 bn BRL, which matches the close of 2026-11-03 (33.42 BRL x 585.6 M).
 // The pull's API field implied 660,801,338 at the price of 2026-11-04 (34.60 BRL). The figure is not a reading of the pull, so it stays out of `seen`.
 const ISA_WEB_FIGURE = 585600000;
 
