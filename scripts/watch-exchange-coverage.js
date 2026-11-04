@@ -7,8 +7,8 @@
  * data-health/exchange-coverage-baseline.json. ::error:: when:
  *   - an exchange's count drops >40% vs its own median, OR
  *   - an exchange that had >0 snapshots in-window drops to 0 today.
- * Either rule needs more than one listing lost (see SINGLE_LISTING); a lone
- * listing that leaves its label is logged as ::warning:: instead.
+ * Either rule needs more than one listing lost (see SINGLE_LISTING); such a
+ * drop of at most one listing is logged as ::warning:: instead.
  *
  * Snapshots without meta.exchangeName (older vintages, ~13% of the corpus —
  * verified 2026-07-06) are grouped under '(unknown)' so they still count
@@ -122,30 +122,34 @@ function countByExchange(snapDir) {
   return counts;
 }
 
-// BH-123: shared alarm predicate — same condition checkDrift alerts on, reused
-// by updateBaseline() so an alarming count can be kept OUT of the rolling
-// window (see there).
-function isExchangeAlarming(todayCount, history) {
-  if (history.length < WINDOW) return false; // still seeding — not enough history to judge
+// 'alarm' for an exchange-level drop, 'single' for a drop (to 0 or >40 %) that
+// lost at most one listing (logged, not alarmed), otherwise null.
+function dropKind(todayCount, history) {
+  if (history.length < WINDOW) return null; // still seeding — not enough history to judge
   // Nullwerte vor dem juengsten Lebenszeichen sind Seed-/Totzeiten, keine gesunde
   // Referenz. Nur die juengste zusammenhaengende positive Phase ist vergleichbar;
   // durchgehend tote Reihen bleiben damit bewusst still.
   const med = activeMedian(history);
-  if (med === null || med <= 0) return false;
-  if (med - todayCount <= SINGLE_LISTING) return false;
-  if (todayCount === 0) return true;
-  return (med - todayCount) / med > DROP_THRESHOLD;
+  if (med === null || med <= 0) return null;
+  if (todayCount !== 0 && (med - todayCount) / med <= DROP_THRESHOLD) return null;
+  return med - todayCount <= SINGLE_LISTING ? 'single' : 'alarm';
 }
 
-// The cases SINGLE_LISTING keeps out of the alarm, so they still show up in the
-// log: a seeded label whose last listing left today.
+// BH-123: shared alarm predicate — same condition checkDrift alerts on, reused
+// by updateBaseline() so an alarming count can be kept OUT of the rolling
+// window (see there).
+function isExchangeAlarming(todayCount, history) {
+  return dropKind(todayCount, history) === 'alarm';
+}
+
+// The drops SINGLE_LISTING keeps out of the alarm, so they still show up in the log.
 function singleListingDrops(today, baseline) {
   const notes = [];
   for (const ex of Object.keys(baseline).filter((k) => !k.startsWith('_'))) {
+    const todayCount = today[ex] || 0;
     const history = (baseline[ex] || []).filter(Number.isFinite);
-    const med = activeMedian(history);
-    if (history.length < WINDOW || med === null || (today[ex] || 0) > 0) continue;
-    if (!isExchangeAlarming(0, history)) notes.push(`${ex}: 0 today (median ${med}), at most one listing lost`);
+    if (dropKind(todayCount, history) !== 'single') continue;
+    notes.push(`${ex}: ${todayCount} today (median ${activeMedian(history)}), at most one listing lost`);
   }
   return notes;
 }
@@ -237,7 +241,7 @@ function main(options = {}) {
   log('Baseline updated: ' + baselinePath);
 
   const notes = singleListingDrops(today, baseline);
-  if (notes.length > 0) log('::warning::Exchange label emptied, not an exchange drop — ' + notes.join('; '));
+  if (notes.length > 0) log('::warning::Exchange label lost at most one listing, not an exchange drop — ' + notes.join('; '));
 
   if (alerts.length > 0) {
     error('::error::Exchange coverage drop detected — ' + alerts.join('; '));
