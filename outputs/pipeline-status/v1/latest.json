@@ -1,12 +1,12 @@
 {
   "schema": "screener-pipeline-status/v1",
-  "status": "success",
-  "attempt_run_id": "41611595463",
+  "status": "failure",
+  "attempt_run_id": "41805213687",
   "run_attempt": 1,
-  "head_sha": "3d1c5c23283ce6960b08e9657f42243c4ef45058",
-  "started_at": "2026-11-03T09:30:42Z",
-  "completed_at": "2026-11-03T11:03:54Z",
-  "failed_job": null,
-  "reason": null,
+  "head_sha": "35a94e8c458473a2b05f3d737535c14ba4bbdc63",
+  "started_at": "2026-11-04T09:10:09Z",
+  "completed_at": "2026-11-04T10:32:43Z",
+  "failed_job": "merge",
+  "reason": "prep=success,quarter-candidates=success,quarter-selection=success,pull=success,prices=success,merge=failure,scoring=skipped,entdeckungs-waechter=success,earnings-transport-waechter=success,jahres-ausreisser-waechter=skipped,druckenmiller-guard=skipped,feed-fill-waechter=skipped",
   "last_success_at": "2026-11-03T11:03:54Z"
 }
