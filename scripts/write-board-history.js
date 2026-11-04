@@ -2061,7 +2061,7 @@ function parseArgs(argv) {
 
 if (require.main === module) {
   // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
-  if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay();
+  require('../lib/annual-pairs.js').requireDataDay(); // no --check mode here: parseArgs passes unknown switches on to the real write
   try {
     const opts = parseArgs(process.argv.slice(2));
     // BH-147: manuelles --date-Backfill ist Operator-Risiko (Audit: "manueller

@@ -160,7 +160,8 @@ test('acceleration: the newest quarter pair it uses is judged for age on both wa
 
 test('a process that writes board numbers needs its data day; tests and tools do not (Codex R16)', () => {
   withDay(null, () => {
-    for (const entry of ['C:/x/src/scoring/run-screener.js', '/x/scripts/write-findash-export.js', 'C:\\x\\scripts\\write-filter-universe.js', '/x/scripts/write-board-history.js']) {
+    for (const entry of ['C:/x/src/scoring/run-screener.js', '/x/scripts/write-findash-export.js', 'C:\\x\\scripts\\write-filter-universe.js', '/x/scripts/write-board-history.js',
+      '/x/scripts/write-findash-export', 'C:\\X\\SCRIPTS\\WRITE-RULE40-EXPORT.JS']) { // started without .js, or in another case (review of 04.11.)
       assert.throws(() => P.requireDataDay(entry), /schreibt Board-Zahlen ohne gültiges RUN_DATE_UTC/, entry);
     }
     for (const entry of ['/x/scripts/write-findash-export.check.js', '/x/tests/stale-series-p286.test.js', '/x/scripts/gqs00-freeze.js', null]) P.requireDataDay(entry);

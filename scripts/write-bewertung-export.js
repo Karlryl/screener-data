@@ -252,5 +252,5 @@ function main(argv) {
 }
 
 // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
-if (require.main === module) { if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
+if (require.main === module) { if (!process.argv.includes('--check') && !process.argv.includes('--selftest')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
 module.exports = { rowFor, buildFeed, validate, build, selfTest, main, ROW_KEYS, MAX_BYTES };
