@@ -90,6 +90,8 @@ test('without a data day nothing is masked or judged, and a sealed fixture never
   const golden = require('../protocol/gqs-00/1.1.0/golden-fixtures.json');
   const sealed = structuredClone(golden.cases.find(c => c.rawSnapshot.meta.ticker === 'ALNY').rawSnapshot);
   withDay('2028-01-31', () => assert.equal(P.maskStaleQuarterSeries(sealed), sealed));
+  const shifted = structuredClone(sealed); shifted.meta.fetchedAt = '2026-08-02T15:08:52.193Z';
+  withDay('2028-01-31', () => assert.notEqual(P.maskStaleQuarterSeries(shifted), shifted, 'the same packet 1 ms later is masked'));
   const named = { ...s, meta: { ticker: 'ALNY', fetchedAt: '2026-08-02T15:08:52.192Z' } };
   withDay(DAY, () => assert.notEqual(P.maskStaleQuarterSeries(named), named));
 });
