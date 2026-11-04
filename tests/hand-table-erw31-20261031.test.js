@@ -157,7 +157,7 @@ test('the two holds are the only rows of this revision and carry a source each',
 
 // Export stub in the file shape the script reads; the expectation rows are the committed ones.
 const ROWS = JSON.parse(fs.readFileSync(path.join(root, 'data-health/erwartungen.json'), 'utf8'));
-async function verdicts(ids, board, rows) {
+async function verdicts(ids, board, rows, datum = '2026-11-03') {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'erw31-export-'));
   fs.mkdirSync(path.join(dir, 'full'));
   fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify({ generated_at: '2026-11-03T09:00:00.000Z', branches: [board] }));
@@ -166,7 +166,7 @@ async function verdicts(ids, board, rows) {
   const picked = ROWS.filter(e => ids(e));
   assert.ok(picked.length, 'rows found');
   fs.writeFileSync(list, JSON.stringify(picked));
-  const { report } = await run({ exportBase: dir, erwartungen: list, datum: '2026-11-03' });
+  const { report } = await run({ exportBase: dir, erwartungen: list, datum });
   return report.ergebnisse.map(r => r.urteil);
 }
 const led = (ticker, extra) => ({ ticker, track: 'profitable', ...extra });
@@ -204,8 +204,9 @@ test('Enel, 3471.T, Jio: an empty rank passes only with its reason, the old pred
   }
   const jio = e => e.id === 'pr73-JIOFINBO-rang';
   const row = rank => ({ ticker: 'JIOFIN.BO', name: 'Jio Financial Services Limited', track: 'profitable', rank });
-  assert.deepEqual(await verdicts(jio, 'financials', [row(43)]), ['erfüllt']);
-  for (const wrong of [8, 81]) assert.deepEqual(await verdicts(jio, 'financials', [row(wrong)]), ['nicht erfüllt'], String(wrong));
+  // PR #75 ends this row on 02.11. (its own quarter-pair rows take over on 03.11.), so its last valid day is the probe.
+  assert.deepEqual(await verdicts(jio, 'financials', [row(43)], '2026-11-02'), ['erfüllt']);
+  for (const wrong of [8, 81]) assert.deepEqual(await verdicts(jio, 'financials', [row(wrong)], '2026-11-02'), ['nicht erfüllt'], String(wrong));
 });
 
 test('3471.T from the next run: one axis, score under the old value, reason shown; the state of 31.10.2026 fails all three', async () => {
