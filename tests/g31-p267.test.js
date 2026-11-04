@@ -201,8 +201,13 @@ test('g31Hinweis: checked P268 entry for SAUD3.SA; diagnosis flags; absent on or
   const newer = structuredClone(saud);
   newer.timeseries.revenueQ.unshift({ value: v(saud.timeseries.revenueQ[0]) * 1.02 });
   newer.timeseries.revenueQEnds.unshift('2026-09-30');
-  newer.timeseries.revenueQ.splice(5, 0, { value: v(saud.timeseries.revenueQ[0]) });
-  newer.timeseries.revenueQEnds.splice(5, 0, '2025-09-30');
+  // Adapted for PR "G31: newest complete quarter pair before the annual pair" (sd-p2, 29.10.2026): the probe used to
+  // insert a second 2025-09-30 row next to the stored empty one, so the September quarter never formed a pair and the
+  // fiscal year was shown; under the new rule that shows the June pair again. Filling the stored empty row makes the
+  // September pair the shown one, which is what this check is about.
+  assert.equal(newer.timeseries.revenueQEnds[4], '2025-09-30'); assert.equal(v(newer.timeseries.revenueQ[4]), null);
+  newer.timeseries.revenueQ[4] = { value: v(saud.timeseries.revenueQ[0]) };
+  assert.equal(G.g31Shadow(newer).v1.sourcePeriodEnd, '2026-09-30');
   assert.notEqual(G.g31Hinweis(newer)?.code, 'uebernahme');
   // Ordinary B1-free quarter pair and the fiscal-year fallback: no hint, the value is never changed by a hint.
   assert.equal(G.g31Hinweis(durationSnap('revenueQ', null)), null);
@@ -217,8 +222,8 @@ test('g31Hinweis: checked P268 entry for SAUD3.SA; diagnosis flags; absent on or
 
 test('hint table: every entry carries listing, exact ends, code, reason and quoted source; malformed tables fail loudly', () => {
   const t = require('../configs/g31-hinweise.json');
-  assert.equal(G.loadHinweisTable(t).length, 13); // SEC comparison 30.10.2026 adds the FTW and SUNC takeover hints; // 24.10.2026 adds the 300277.SZ merger hint (lane sd-umsatzreihen); the triage of 24.10.2026 five hints (603991.SS, JOBY for the June and the September quarter, QUBT, 000656.SZ).
-  assert.deepEqual(t.entries.map(e => e.ticker).sort(), ['000656.SZ', '002289.SZ', '002993.SZ', '300277.SZ', '603991.SS', '688507.SS', 'FTW', 'JOBY', 'JOBY', 'QUBT', 'RHLD', 'SAUD3.SA', 'SUNC']);
+  assert.equal(G.loadHinweisTable(t).length, 32); // 02.11.2026 adds BAM, BAM.TO, RKT and JAN (tests/hand-table-zahlen-20261102.test.js). PR #75 round 6 adds 002980.SZ and one row per listing of OFSS, JIOFIN, CIPLA, SONACOMS, ADANIPOWER. PR #75 round 5 adds 603991.SS for September, DNO.OL, ETERNAL.BO, ETERNAL.NS and 002077.SZ; SEC comparison 30.10.2026 adds the FTW and SUNC takeover hints; // 24.10.2026 adds the 300277.SZ merger hint (lane sd-umsatzreihen); the triage of 24.10.2026 five hints (603991.SS, JOBY for the June and the September quarter, QUBT, 000656.SZ).
+  assert.deepEqual(t.entries.map(e => e.ticker).sort(), ['000656.SZ', '002077.SZ', '002289.SZ', '002980.SZ', '002993.SZ', '300277.SZ', '603991.SS', '603991.SS', '688507.SS', 'ADANIPOWER.NS', 'BAM', 'BAM.TO', 'CIPLA.BO', 'CIPLA.NS', 'DNO.OL', 'ETERNAL.BO', 'ETERNAL.NS', 'FTW', 'JAN', 'JIOFIN.BO', 'JIOFIN.NS', 'JOBY', 'JOBY', 'OFSS.BO', 'OFSS.NS', 'QUBT', 'RHLD', 'RKT', 'SAUD3.SA', 'SONACOMS.BO', 'SONACOMS.NS', 'SUNC']);
   assert.ok(!t.entries.some(e => e.ticker === '000599.SZ'), '000599.SZ is a wrong value: hand table, not a hint');
   for (const bad of [e => { e.periodEnd = '2026-02-30'; }, e => { e.code = 'sperre'; }, e => { e.sources = []; },
     e => { e.sources[0].quote = ''; }, e => { e.reason = ''; }]) {
