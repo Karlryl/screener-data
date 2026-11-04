@@ -91,7 +91,7 @@ function readMcapBounds() {
 // Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
 // nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
-const { annualPairsShadow, sealedEraSnapshot } = require('../lib/annual-pairs.js');
+const { annualPairsShadow, sealedEraSnapshot, withoutPeriodGate } = require('../lib/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
 // W8 EX-01 (28.10.2026): whether a board's formula splits its cohort into a profitable and an unprofitable
 // track. Read from the formula definition, the same splitMetric switch as src/scoring/score.js trackOf():
@@ -131,6 +131,18 @@ function annualPairsShadowForSnapshot(snapshot, missingCode) {
     }
   }
   return annualPairsShadow(snapshot, _annualPairsBounds, missingCode || 'no-snapshot');
+}
+// Comparison of PR #72 until 04.12.2026 (Karl's rule, at most four weeks): the shown growth and the two score axes the gate
+// reaches, recomputed from the same snapshot with the period gate off; no score. Remove with the comparison.
+function periodGateShadowForSnapshot(snapshot) {
+  if (!snapshot) return null;
+  wachstumsSchranken();
+  const axes = require('../src/scoring/axes.js');
+  return withoutPeriodGate(() => {
+    const leg = revGrowthLeg(snapshot);
+    return { growth: leg.pct ?? null, basis: leg.basis ?? null, periodEnd: leg.periodEnd ?? null, priorPeriodEnd: leg.priorPeriodEnd ?? null,
+      gpAxis: axes.gpGrowth(snapshot), accelerationAxis: axes.revAcceleration(snapshot, _annualPairsBounds) };
+  });
 }
 let _behoerde;
 let _schrankenGewarnt = false;
@@ -179,9 +191,9 @@ function zaehleUndatiertSmallcap(row) {
 }
 
 function mitAnnualPairsSchatten(row) {
-  const { annualPairsShadow, sealedFixture } = snapAbleitungenFuer(row.ticker);
+  const { annualPairsShadow, periodGateShadow, sealedFixture } = snapAbleitungenFuer(row.ticker);
   if (sealedFixture) _undatedAxisTickers.add(row.ticker);
-  return Object.assign(row, { annualPairsShadow });
+  return Object.assign(row, { annualPairsShadow, periodGateShadow });
 }
 
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -386,6 +398,11 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     get annualPairsShadow() {
       const value = annualPairsShadowForSnapshot(snap, snapFehler);
       Object.defineProperty(this, 'annualPairsShadow', { value, enumerable: true });
+      return value;
+    },
+    get periodGateShadow() { // PR #72 comparison until 04.12.2026
+      const value = periodGateShadowForSnapshot(snap);
+      Object.defineProperty(this, 'periodGateShadow', { value, enumerable: true });
       return value;
     },
     get ffoGrund() { // W8 EX-02, only read for rows with an empty FFO pill
@@ -2608,7 +2625,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot, undatedAxisWarning, buildSmallcapBoard,
+  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, undatedAxisWarning, buildSmallcapBoard,
   undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
