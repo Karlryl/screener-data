@@ -480,9 +480,9 @@
     },
     "comparisonUntil20261204": {
       "comparison": "until 04.12.2026 (Karl's rule: the old formula stays visible as a comparison for at most four weeks)",
-      "scope": "lib/annual-pairs.js withoutPeriodGate(fn) switches the date windows of periodGateReason off for one synchronous calculation (a pair without an end stays empty); scripts/write-findash-export.js adds periodGateShadow {growth, basis, periodEnd, priorPeriodEnd, gpAxis, accelerationAxis, capitalEfficiencyAxis} (the zero-year rule of the acceleration gate is off with the gate; the hand-table holds of #72 stay on) to every full-board row that carries annualPairsShadow, computed from the same snapshot with the gate off. No score, no rank, no findash reader. The undated-quarter and duration filters of src/scoring/axes.js stay on. Remove the switch, the field and this note together by 04.12.2026.",
+      "scope": "lib/annual-pairs.js withoutPeriodGate(fn) switches the date windows of periodGateReason off for one synchronous calculation (a pair without an end stays empty); scripts/write-findash-export.js adds periodGateShadow {growth, basis, periodEnd, priorPeriodEnd, gpAxis, accelerationAxis, capitalEfficiencyAxis} (the zero-year rule of the acceleration gate is off with the gate; the hand-table holds of #72 stay on; capital efficiency is computed without the SEC and regional annual series the score attaches, so it differs from the score for those firms) to every full-board, top-board and overview row that carries annualPairsShadow (not the Rule-40 rows), computed from the same snapshot with the gate off. No score, no rank, no findash reader. The undated-quarter and duration filters of src/scoring/axes.js stay on. Remove the switch, the field and this note together by 04.12.2026.",
       "dependencySha256LF": {
-        "lib/annual-pairs.js": "c4a46f7e688fbee3d2e18b43ab9219c6ab55c07b4b96ef219f50e85fc8689b6a"
+        "lib/annual-pairs.js": "06296357bcc98231c881aba2054fe7afeb5921b4948c6351c10863a0380caaee"
       },
       "previousDependencySha256LF": {
         "lib/annual-pairs.js": "0ea305055c9ce8d0e447481109d443fe35627d88789c28b32ba264234f51f661"
@@ -493,6 +493,6 @@
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "dba91800159d571012f9bd42c41fab0aba9cc257bc21f019cdc017a22da6a57e",
-    "lib/annual-pairs.js": "c4a46f7e688fbee3d2e18b43ab9219c6ab55c07b4b96ef219f50e85fc8689b6a"
+    "lib/annual-pairs.js": "06296357bcc98231c881aba2054fe7afeb5921b4948c6351c10863a0380caaee"
   }
 }
