@@ -134,7 +134,8 @@ function annualPairsShadowForSnapshot(snapshot, missingCode) {
 }
 // Comparison of PR #72 until 04.12.2026 (Karl's rule, at most four weeks): the shown growth and the three score axes the gate
 // reaches (gross profit, acceleration, capital efficiency), recomputed from the same snapshot with the period gate off; no score.
-// The hand-table holds of #72 stay on. Remove with the comparison.
+// The hand-table holds of #72 stay on. Capital efficiency is computed without the SEC and regional annual series the score
+// attaches (run-screener mergeSecIntoUniverse), so it differs from the score for those firms (147 on 31.10.2026). Remove with the comparison.
 function periodGateShadowForSnapshot(snapshot) {
   if (!snapshot) return null;
   wachstumsSchranken();
