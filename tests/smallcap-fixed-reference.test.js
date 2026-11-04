@@ -28,6 +28,11 @@ const MUTANTS = {
   'own-above-15-only': [/^    const own = \(frozen\[key\] \? frozen\[key\]\.n : live\.cohortBases\[key\]\.n\) >= MIN_COHORT_N; .*(?=\r?$)/m, '    const own = (frozen[key] ? frozen[key].n : live.cohortBases[key].n) > MIN_COHORT_N;', /exactly 15 firms in one cohort read their own basis/],
   'small-group-up-to-15': [/^    if \(firms < MIN_COHORT_N\) \{(?=\r?$)/m, '    if (firms <= MIN_COHORT_N) {', /exactly 15 firms in one cohort read their own basis/],
   'firms-counted-live': [/^    const firms = own \? .*(?=\r?$)/m, '    const firms = own ? (frozen[key] ? frozen[key].n : 0) : tracks(live.cohortBases, formula).reduce((sum, k) => sum + live.cohortBases[k].n, 0);', /a union of 17 in the reference with 11 in the run stays watched/],
+  // The state before this fix: the axis the score splits by profit sign is watched whole.
+  'sign-split-ignored': [/^    if \(!\(smallcapFormulas\[formula\] && .*continue;(?=\r?$)/m, '    continue;', /a basis split by profit sign must be watched or named/],
+  'whole-axis-kept': [/^    delete watched\[group\]\.axes\[SIGN_SPLIT_AXIS\];(?=\r?$)/m, '', /a basis split by profit sign must be watched or named: never as a whole axis/],
+  'sign-live-unsplit': [/^      watchedLive\[name\] = .*;(?=\r?$)/m, '      watchedLive[name] = { axes: { [SIGN_SPLIT_AXIS]: liveBasis.axes[SIGN_SPLIT_AXIS] } };', /a sign sub-basis is built alike on both sides/],
+  'sign-by-firms': [/^      if \(values < MIN_COHORT_N\) \{(?=\r?$)/m, '      if (signFirms < MIN_COHORT_N) {', /a sign sub-basis is decided on its usable values, not its firms/],
 };
 
 if (process.argv.includes('--break-once')) {
@@ -54,7 +59,7 @@ Module.prototype._compile = function (source, name) {
 };
 
 const { runSmallcapPass, loadSmallcapReference, scoreSmallcapUniverse, smallcapReferenceDrift, SMALLCAP_COVERAGE_FLOOR_PCTL } = require(RS);
-const { scoreUniverse, quantile } = require('../src/scoring/score.js');
+const { scoreUniverse, quantile, calibrationDrift } = require('../src/scoring/score.js');
 const { q } = require('../src/scoring/engine.js');
 const { smallcapRoute } = require('../src/scoring/smallcap-route.js');
 const formulas = require('../src/scoring/formulas/smallcap');
@@ -218,6 +223,28 @@ assert.deepEqual(decide({ 'f|profitable': 20, 'f|unprofitable': 5 }, { 'f|profit
 assert.deepEqual(decide({ 'f|profitable': 8, 'f|unprofitable': 3 }, { 'f|profitable': 11, 'f|unprofitable': 6 }), { watched: ['f'], named: [] }, 'a union of 17 in the reference with 11 in the run stays watched');
 console.log('PASS the watch decision follows the frozen n like the score, at exactly 15 firms too');
 
+// A basis the score splits by profit sign: capitalEfficiency of a subCohortByProfit formula, read only against firms of
+// the same sign (score.js PASS 2, `signBasis[j] === profitSign[i]`). Each sign is a basis of its own: watched from 15
+// usable values, built alike on both sides, else named with firms and usable values apart. The whole axis is read nowhere.
+const RE = 'smallcap-real-estate|profitable';
+const signed = (signs, capEff) => ({ cohortBases: { [RE]: { n: signs.length, profitSign: signs, axes: { capitalEfficiency: capEff, revGrowthLevel: capEff.map((_, i) => i) } } } });
+const signs34 = [...Array(17).fill('profitable'), ...Array(17).fill('unprofitable')];
+const capEff34 = signs34.map((s, i) => (s === 'profitable' ? 0.01 * (i + 1) : -0.01 * (i - 16)));
+const swapped34 = capEff34.slice();
+for (let k = 0; k < 4; k++) [swapped34[k], swapped34[17 + k]] = [swapped34[17 + k], swapped34[k]];
+const ref34 = { dataDay: '2026-10-31', calibration: signed(signs34, capEff34) };
+const calm34 = smallcapReferenceDrift(signed(signs34, capEff34), ref34);
+assert.deepEqual(Object.keys(calm34.watched).sort(), [RE, RE + ' capitalEfficiency sign=profitable', RE + ' capitalEfficiency sign=unprofitable'], 'a basis split by profit sign must be watched or named');
+assert(!('capitalEfficiency' in calm34.watched[RE].axes), 'a basis split by profit sign must be watched or named: never as a whole axis');
+assert.equal(calm34.maxKs, 0, 'a sign sub-basis is built alike on both sides');
+const moved34 = smallcapReferenceDrift(signed(signs34, swapped34), ref34);
+assert(moved34.drifted.some((d) => d.cohort === RE + ' capitalEfficiency sign=profitable' && d.ks > 0.15), 'a basis split by profit sign must be watched or named: four swapped pairs');
+const thinSign = signs34.map((s, i) => (s === 'unprofitable' && i >= 29 ? NaN : capEff34[i])); // 17 firms, 12 usable values
+assert.deepEqual(smallcapReferenceDrift(signed(signs34, thinSign), { dataDay: '2026-10-31', calibration: signed(signs34, thinSign) }).notMonitored,
+  [{ group: RE, axis: 'capitalEfficiency', sign: 'unprofitable', firms: 17, values: 12, reasonDe: 'Achse capitalEfficiency, nur verglichen mit Firmen mit Verlust: 17 Firmen, davon 12 mit verwendbarem Wert in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung.' }],
+  'a sign sub-basis is decided on its usable values, not its firms');
+console.log('PASS a basis split by profit sign is watched on its own from 15 usable values, else named with firms and values apart');
+
 // The file itself: a broken one stops the pass, the versioned one stays what its before and after measured.
 const bad = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'sc-reference-bad-')), 'r.json');
 for (const broken of [{ ...reference, coverageFloor: '0.58' }, { ...reference, coverageFloor: 0 }, { ...reference, coverageFloor: 1.5 }, { ...reference, version: '' }, { ...reference, calibration: null }, { ...reference, renewBy: undefined }]) {
@@ -236,12 +263,25 @@ assert.match(real.storeSha256, /^[0-9a-f]{64}$/);
 for (const key of Object.keys(real.calibration.cohortBases)) assert(formulas[key.split('|')[0]], 'reference cohort without a formula: ' + key);
 assert.doesNotThrow(() => scoreUniverse(universe(), formulas, { classify: smallcapRoute, growthBoost: false, refCalibration: real.calibration }), 'the versioned reference must fit the current formulas');
 // What the notice watches on the versioned reference. Counted: 9 cohorts of at least 15 firms on their own basis, 4 formulas
-// with a thin track on their union, 4 formulas of 23 firms together below 15 each. A renewal changes these lines.
+// with a thin track on their union, 4 formulas of 23 firms together below 15 each, and in real estate (17 firms) the
+// three sign sub-bases of capitalEfficiency with 11, 4 and 0 usable values. A renewal changes these lines.
 const watchReal = smallcapReferenceDrift(real.calibration, real);
 assert.equal(watchReal.maxKs, 0, 'the reference against itself');
 assert.deepEqual(Object.keys(watchReal.watched).filter((k) => !k.includes('|')).sort(), ['smallcap-consumer-discretionary', 'smallcap-energy', 'smallcap-financials', 'smallcap-software-comm-services']);
 assert.equal(Object.keys(watchReal.watched).filter((k) => k.includes('|')).length, 9);
-assert.deepEqual(watchReal.notMonitored.map((g) => [g.group, g.firms]), [['smallcap-it-services', 3], ['smallcap-materials', 12], ['smallcap-semiconductors', 3], ['smallcap-utilities', 5]]);
+assert.deepEqual(watchReal.notMonitored.filter((g) => !g.axis).map((g) => [g.group, g.firms]), [['smallcap-it-services', 3], ['smallcap-materials', 12], ['smallcap-semiconductors', 3], ['smallcap-utilities', 5]]);
+// Codex's swap probe: four value pairs swapped between the sign groups leave the whole axis exactly as it was (distance 0),
+// apart 0.273 and 0.750. Neither sub-basis reaches 15 usable values, so the export has to name both.
+const reSwap = structuredClone(real.calibration), reBase = reSwap.cohortBases[RE];
+const usable = (sign) => reBase.profitSign.map((s, i) => i).filter((i) => reBase.profitSign[i] === sign && Number.isFinite(reBase.axes.capitalEfficiency[i]));
+const [gains, losses] = [usable('profitable'), usable('unprofitable')];
+for (let k = 0; k < 4; k++) [reBase.axes.capitalEfficiency[gains[k]], reBase.axes.capitalEfficiency[losses[k]]] = [reBase.axes.capitalEfficiency[losses[k]], reBase.axes.capitalEfficiency[gains[k]]];
+const ksOf = (a, b) => calibrationDrift({ cohortBases: { x: { axes: { a } } } }, { cohortBases: { x: { axes: { a: b } } } }, 2).maxKs;
+const signPart = (base, sign) => base.axes.capitalEfficiency.filter((_, i) => base.profitSign[i] === sign);
+assert.equal(ksOf(reBase.axes.capitalEfficiency, real.calibration.cohortBases[RE].axes.capitalEfficiency), 0, 'test data: the whole axis stays the same');
+assert.deepEqual(['profitable', 'unprofitable'].map((s) => Math.round(ksOf(signPart(reBase, s), signPart(real.calibration.cohortBases[RE], s)) * 1000) / 1000), [0.273, 0.75], 'test data: Codex swap probe');
+assert.deepEqual(smallcapReferenceDrift(reSwap, real).notMonitored.filter((g) => g.axis).map((g) => [g.group, g.sign, g.firms, g.values]),
+  [[RE, 'profitable', 11, 11], [RE, 'unknown', 1, 0], [RE, 'unprofitable', 5, 4]], 'a basis split by profit sign must be watched or named: real estate');
 // Energy: 11 and 6 firms, both tracks thin, 17 together. Only that union can see them move.
 const energyMoved = structuredClone(real.calibration);
 for (const track of ['profitable', 'unprofitable']) {
