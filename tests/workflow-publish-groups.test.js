@@ -6,8 +6,11 @@
  * Finding (2026-11-01, monthly SEC run, fixed in monthly-sec-xbrl.yml and pinned by monthly-sec-concurrency.test.js):
  * a hand start that overlaps the schedule writes the same files from the same base; the second push's rebase
  * conflicts. These three workflows write the same file in every run (state/cadence-heartbeat.json field, the plan-check
- * report, the exchange-quarters store), run 1 to 3 minutes (median, 2026-10-14 to 2026-11-04) and had no overlap in 63 runs,
- * so the exposure is a window of minutes; the fix costs four lines each. Two parts are pinned per workflow:
+ * report, the exchange-quarters store). Measured from run creation to end (gh run list, 2026-10-14 to 2026-11-04): weekly-guard
+ * 1 to 2 minutes (3 runs), monthly-plan-check 1 minute (1 run), exchange-quarters median 3, mean 7, max 20 minutes (22 runs);
+ * no hand start overlapped a run of the same workflow in those 26 runs (47 with daily-pull and monthly-sec-xbrl, 63 with
+ * smallcap-pull), the one overlap on record is the SEC pair of 2026-11-01. The exposure is a window of
+ * minutes; the fix costs four lines each. Two parts are pinned per workflow:
  *   1. the job carries its own concurrency group (main runs share one, other refs get one per run, never cancel);
  *   2. its Checkout names `ref: ${{ github.ref }}`, else actions/checkout pins github.sha (the commit current when
  *      the run was CREATED) and the waiting run would still build on the old base.
@@ -16,7 +19,11 @@
  *
  * daily-pull.yml is deliberately NOT given such a group. Its "Commit Snapshots" step makes a conflict between two daily
  * runs loud on purpose ("Bei Konflikt bewusst ROT: die Daten des ersten Schreibers gewinnen"); a queued run that checks
- * out the new tip and then `git add -A`s its own snapshots would overwrite the first run's data silently. That decision
+ * out the new tip and then `git add -A`s its own snapshots would overwrite the first run's data silently (this holds for
+ * runs that overlap; a hand start after a finished run overwrites the same-day snapshots today, which is no new case).
+ * The gh-pages force pushes of the board deploys follow Commit Snapshots with `if: success()` and scoring needs merge, so
+ * the loser of two overlapping runs fails at the rebase and publishes no boards; the fourth force push, the status marker of
+ * job `laufstatus` (`if: always()`), is a known residual gap (a red marker over right boards), not touched here. That decision
  * is pinned below so a later copy of this pattern onto daily-pull.yml fails here first.
  *
  * Usage: node tests/workflow-publish-groups.test.js (exit 0/1). Reads the workflow files only.
@@ -106,7 +113,14 @@ check('daily-pull.yml keeps its loud conflict on purpose: no job group on the pu
     assert.deepEqual(concurrencyBlock(jobHead(wf, job)), [], `daily-pull job ${job} got a job-level group: a queued second run would overwrite the first run's snapshots silently`);
   }
   assert.ok(wf.includes('Bei Konflikt bewusst ROT: die Daten des ersten Schreibers gewinnen'), 'the rule that a conflict between two daily runs stays loud is gone');
-  assert.ok(!wf.includes('--strategy-option theirs\n'), 'a rebase strategy that accepts the other side would make the conflict silent');
+  const code = wf.split('\n').filter(l => !/^\s*#/.test(l)).join('\n');
+  assert.ok(!/(--strategy-option[ =]theirs|-X ?theirs)\b/.test(code), 'a rebase strategy that accepts the other side would make the conflict silent');
+  // the guard on that guard: the pattern sees the forms a rebase line can take (mid-line, short option) and ignores comments
+  const silent = /(--strategy-option[ =]theirs|-X ?theirs)\b/;
+  for (const form of ['git rebase --autostash --strategy-option theirs origin/main', 'git rebase -X theirs --autostash origin/main', 'git rebase -Xtheirs origin/main', 'git rebase --strategy-option=theirs origin/main']) {
+    assert.ok(silent.test(form), 'not recognised: ' + form);
+  }
+  assert.ok(!silent.test('git rebase --autostash origin/main'), 'the plain rebase must pass');
 });
 
 console.log(`workflow-publish-groups: ${pass} ok, ${fail} failed`);
