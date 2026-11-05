@@ -29,14 +29,58 @@ test('zaehlt ab dem juengsten Jahr, nicht ab dem aeltesten', () => {
   assert.equal(r.mindestens, false);
 });
 
-test('eine LUECKE beendet die Serie genauso wie ein Verlust', () => {
+test('a GAP ends the count but is no loss year', () => {
   // Ein Jahr ohne Zahl ist kein belegtes Gewinnjahr — und "belegt" ist der ganze Zweck.
   // Wuerde die Luecke uebersprungen, entstuende eine Serie, die niemand nachweisen kann.
+  // F-02 (blind review 31.10.2026): the data end here, nothing proves a loss. Paycom had 15.7 M USD
+  // operating income in its gap year 2014 and would have shown "Verlustjahr (2014)".
   const r = S.profitStreak('X', {
     _fys: [2025, 2024, 2023, 2022],
     annualOpInc: reihe([100, 90, null, 80]),
   });
   assert.equal(r.jahre, 2);
+  assert.equal(r.mindestens, true);
+  assert.equal(r.tiefe, 2, 'the series vouches only for the years up to the gap');
+  assert.equal(r.letzterVerlust, null);
+});
+
+test('a gap in the newest year gives null, not "currently not profitable"', () => {
+  assert.equal(S.profitStreak('X', { _fys: [2025, 2024], annualOpInc: reihe([null, 5]), annualNetIncome: reihe([null, 5]) }), null);
+  assert.equal(S.profitStreak('X', { _fys: [2025], annualNetIncome: reihe([null]) }), null);
+});
+
+test('a real loss stays, behind or before a gap', () => {
+  const beforeGap = S.profitStreak('X', { _fys: [2025, 2024, 2023], annualOpInc: reihe([100, -5, null]) });
+  assert.deepEqual([beforeGap.jahre, beforeGap.tiefe, beforeGap.mindestens, beforeGap.letzterVerlust], [1, 3, false, 2024]);
+  const behindGap = S.profitStreak('X', { _fys: [2025, 2024, 2023], annualOpInc: reihe([100, null, -5]) });
+  assert.deepEqual([behindGap.jahre, behindGap.tiefe, behindGap.mindestens, behindGap.letzterVerlust], [1, 1, true, null],
+    'nothing is proven beyond the gap, not even a loss');
+});
+
+test('no series of profit, loss and gap ever reports a gap as a loss', () => {
+  // Exhaustive: every series of up to 5 years over {profit, loss, gap}, with the schema rules of
+  // write-findash-export.js checkOptionalProfitStreak.
+  const fys = [2025, 2024, 2023, 2022, 2021];
+  let geprueft = 0;
+  const pruefe = (werte) => {
+    const r = S.profitStreak('X', { _fys: fys.slice(0, werte.length), annualOpInc: reihe(werte) });
+    geprueft += 1;
+    const wo = JSON.stringify(werte);
+    if (werte[0] === null) { assert.equal(r, null, wo); return; }
+    const ende = werte.findIndex((w) => w === null || w < 0);
+    assert.equal(r.jahre, ende < 0 ? werte.length : ende, wo);
+    assert.ok(r.jahre <= r.tiefe && r.tiefe >= 1, wo);
+    if (r.letzterVerlust !== null) {
+      assert.ok(werte[fys.indexOf(r.letzterVerlust)] < 0, 'no real loss in ' + r.letzterVerlust + ': ' + wo);
+      assert.equal(r.mindestens, false, wo);
+    }
+    if (ende >= 0 && werte[ende] < 0) assert.equal(r.letzterVerlust, fys[ende], wo);
+    else assert.equal(r.mindestens, true, wo);
+    if (r.jahre === 0) assert.ok(werte[0] < 0, '"aktuell nicht" only on a real loss: ' + wo);
+  };
+  const baue = (praefix, n) => { if (n === 0) { if (praefix.length) pruefe(praefix); return; } for (const w of [10, -10, null]) baue([...praefix, w], n - 1); };
+  for (let n = 1; n <= fys.length; n++) baue([], n);
+  assert.equal(geprueft, 3 + 9 + 27 + 81 + 243);
 });
 
 test('laeuft die Serie bis zum Reihenanfang, wird das als "mindestens" markiert', () => {
@@ -115,6 +159,24 @@ test('am ECHTEN Datenbestand: American Airlines traegt das Etikett zu Unrecht', 
   assert.ok(r.jahre >= 1 && r.jahre <= 6,
     'AAL sollte eine kurze Serie haben (COVID-Verluste 2020/21), gemessen: ' + r.jahre);
   assert.equal(r.mindestens, false, 'bei AAL muss ein Verlustjahr in Sicht sein');
+});
+
+test('on the REAL long history: every letzterVerlust year carries a real negative value', () => {
+  if (!fs.existsSync(S.QUELLE)) { console.log('       (skipped, no long history in this checkout)'); return; }
+  let verluste = 0, luecken = 0;
+  for (const [t, annual] of S.ladeKarte()) {
+    const r = S.profitStreak(t, annual);
+    if (!r) continue;
+    const zeile = (r.basis === 'opInc' ? annual.annualOpInc : annual.annualNetIncome)[r.jahre];
+    if (r.mindestens && zeile && zeile.value == null) luecken += 1;
+    if (r.letzterVerlust === null) continue;
+    const korrektur = (r.financialCorrections || []).find((c) => c.fiscalYear === r.letzterVerlust);
+    const wert = korrektur ? korrektur.value : (r.basis === 'opInc' ? annual.annualOpInc : annual.annualNetIncome)[annual._fys.indexOf(r.letzterVerlust)].value;
+    assert.ok(wert < 0, t + ': letzterVerlust ' + r.letzterVerlust + ' carries ' + wert);
+    verluste += 1;
+  }
+  assert.ok(verluste > 500, 'too few loss years checked: ' + verluste);
+  assert.ok(luecken > 0, 'the long history holds series ending at a gap; this check must see them');
 });
 
 console.log('\nprofit-streak.test.js: ' + pass + ' ok, ' + fail + ' fail');
