@@ -1474,7 +1474,7 @@ periodEnd, priorPeriodEnd, gpAxis, accelerationAxis, capitalEfficiencyAxis }`. E
 `lib/annual-pairs.js`): `growth`, `basis` und die beiden Enden wie `revGrowthYoYPct` und seine Etiketten, `gpAxis` und
 `accelerationAxis` und `capitalEfficiencyAxis` als Rohwerte der Score-Achsen Bruttogewinnwachstum, Beschleunigung und Kapitaleffizienz. Die Kapitaleffizienz rechnet der Vergleich ohne die SEC- und Regionalreihen, die der Score vorher anhängt (`mergeSecIntoUniverse`); bei diesen Firmen weicht sie vom Score ab (147 Firmen am 31.10.2026). Die elf Firmen, bei denen das Tor am 31.10.2026 die Kapitaleffizienz leert, betrifft das nicht. Ausgeschaltet sind die Datumsfenster; ein Paar ohne Periodenende bleibt auch hier leer, ebenso die Sperren der Handtabelle aus #72 (ZEG.L, NESTLEIND.BO, EQB.TO, PRN.L); die Nullregel der Beschleunigung ist mit abgeschaltet. Kein Score und kein Rang. Die Filter des
 versiegelten Achsencodes für undatierte Quartale und ungleiche Laufzeiten bleiben auch hier an. Nach Karls Regel läuft die alte
-Formel höchstens vier Wochen sichtbar mit; das Feld entfällt spätestens am 04.12.2026. Reine Anzeige, kein Leser in findash.
+Formel höchstens vier Wochen sichtbar mit; ab dem Datenstand 04.12.2026 (`RUN_DATE_UTC`, ohne ihn der UTC-Tag der Uhr) schreibt der Export das Feld nicht mehr, am 03.12.2026 noch. Reine Anzeige, kein Leser in findash.
 
 ## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
 

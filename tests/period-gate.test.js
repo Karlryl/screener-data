@@ -286,6 +286,18 @@ check('PR #72 comparison until 04.12.2026: withoutPeriodGate shows the old growt
   close(near.growth, G.g31Shadow(dated(365)).v1.pct); close(near.gpAxis, A.gpGrowth(dated(365)));
   assert.equal(periodGateShadowForSnapshot(null), null);
 });
+// Codex R31: the comparison ends on the data day 04.12.2026; the probe runs the row mapper before and after that day.
+const onDay = (day, fn) => { const old = process.env.RUN_DATE_UTC; process.env.RUN_DATE_UTC = day;
+  try { return fn(); } finally { if (old === undefined) delete process.env.RUN_DATE_UTC; else process.env.RUN_DATE_UTC = old; } };
+const shownOn = (api, day) => Object.hasOwn(onDay(day, () => api.mitAnnualPairsSchatten({ ticker: 'R31-NO-SNAPSHOT' })), 'periodGateShadow');
+check('periodGateShadow is shown up to 03.12.2026 and gone from the data day 04.12.2026', () => {
+  const W = require('../scripts/write-findash-export.js');
+  assert.equal(W.periodGateShadowShown('2026-12-03'), true); assert.equal(W.periodGateShadowShown('2026-12-04'), false);
+  assert.equal(shownOn(W, '2026-12-03'), true, 'last day with the comparison');
+  assert.equal(shownOn(W, '2026-12-04'), false, 'the field is gone on 04.12.2026');
+  assert.equal(shownOn(W, '2026-12-05'), false);
+  assert.ok(Object.hasOwn(onDay('2026-12-04', () => W.mitAnnualPairsSchatten({ ticker: 'R31-NO-SNAPSHOT' })), 'annualPairsShadow'), 'annualPairsShadow stays');
+});
 
 // Break-once: each gate line is disabled in a discarded in-memory copy; the real assertion must then fail.
 for (const [rel, anchor, mutant, probe] of [
@@ -318,6 +330,8 @@ for (const [rel, anchor, mutant, probe] of [
     api => { const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'];
       assert.equal(api.revAcceleration({ annual: {}, timeseries: { revenueQ: [120, 110, 105, 102, 100, 90], revenueQEnds: ends },
         meta: { statementPeriods: { revenueQ: ends.map((end, i) => ({ end, duration: i === 4 ? '6M' : '3M' })) } } }), null, 'a 6M year-ago cell must not carry the axis'); }],
+  ['../scripts/write-findash-export.js', '  const shadow = periodGateShadowShown() ? { periodGateShadow: abl.periodGateShadow } : {}; // R31: gone from 04.12.2026', '  const shadow = { periodGateShadow: abl.periodGateShadow };',
+    api => assert.equal(shownOn(api, '2026-12-04'), false, 'the comparison must end on 04.12.2026')],
   ['../scripts/write-filter-universe.js', "  if (!ends[0] || !ends[3] || Math.abs(days - 3 * 365) > 30) return null;", '',
     api => assert.equal(api.growth3(DAIFUKU()), null, 'a 3.75-year span is no 3-year CAGR')],
 ]) {

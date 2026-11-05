@@ -136,6 +136,14 @@ function annualPairsShadowForSnapshot(snapshot, missingCode) {
 // reaches (gross profit, acceleration, capital efficiency), recomputed from the same snapshot with the period gate off; no score.
 // The hand-table holds of #72 stay on. Capital efficiency is computed without the SEC and regional annual series the score
 // attaches (run-screener mergeSecIntoUniverse), so it differs from the score for those firms (147 on 31.10.2026). Remove with the comparison.
+// Codex R31 (05.11.2026): the end is bound to the data day, RUN_DATE_UTC (else the UTC clock day): from 04.12.2026 no row carries it.
+const PERIOD_GATE_SHADOW_ENDS = '2026-12-04';
+/** @param {string} [day] Data day YYYY-MM-DD. @returns {boolean} true while the comparison is shown. */
+function periodGateShadowShown(day) {
+  const env = process.env.RUN_DATE_UTC || '';
+  const d = day || (/^\d{4}-\d{2}-\d{2}/.test(env) ? env.slice(0, 10) : new Date().toISOString().slice(0, 10));
+  return d < PERIOD_GATE_SHADOW_ENDS;
+}
 function periodGateShadowForSnapshot(snapshot) {
   if (!snapshot) return null;
   wachstumsSchranken();
@@ -193,9 +201,11 @@ function zaehleUndatiertSmallcap(row) {
 }
 
 function mitAnnualPairsSchatten(row) {
-  const { annualPairsShadow, periodGateShadow, sealedFixture } = snapAbleitungenFuer(row.ticker);
-  if (sealedFixture) _undatedAxisTickers.add(row.ticker);
-  return Object.assign(row, { annualPairsShadow, periodGateShadow });
+  const abl = snapAbleitungenFuer(row.ticker);
+  const annualPairsShadow = abl.annualPairsShadow;
+  const shadow = periodGateShadowShown() ? { periodGateShadow: abl.periodGateShadow } : {}; // R31: gone from 04.12.2026
+  if (abl.sealedFixture) _undatedAxisTickers.add(row.ticker);
+  return Object.assign(row, { annualPairsShadow }, shadow);
 }
 
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -2627,7 +2637,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, undatedAxisWarning, buildSmallcapBoard,
+  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, periodGateShadowShown, mitAnnualPairsSchatten, undatedAxisWarning, buildSmallcapBoard,
   undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
