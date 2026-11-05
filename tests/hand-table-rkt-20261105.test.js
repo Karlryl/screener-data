@@ -124,7 +124,7 @@ test('hint: the pro forma comparison is bound to the new pair and lapses with it
 });
 
 test('expectations: growth, basis, period and hint of Rocket on the financials board, bound to the issuer name', () => {
-  const own = erwartungen.filter(e => e.id.startsWith('pr-rkt-q3-'));
+  const own = erwartungen.filter(e => e.id.startsWith('pr109-RKT-'));
   assert.deepEqual(own.map(e => e.feld).sort(), ['g31Hinweis.code', 'revGrowthBasis', 'revGrowthPeriodEnd', 'revGrowthYoYPct']);
   for (const e of own) {
     assert.equal(e.name, F.RKT.meta.name, e.id);
