@@ -207,6 +207,13 @@ test('every board writer stops before reading a snapshot when RUN_DATE_UTC is mi
     assert.equal(r.status, 1, w + ' exit');
     assert.match(r.stderr, /\[age-rule\] .* schreibt Board-Zahlen ohne gültiges RUN_DATE_UTC/, w);
   }
+  // Codex R31: the scorer checked only on its first snapshot read, so an empty snapshots folder wrote empty outputs with exit 0.
+  const scorer = path.join(here, 'src', 'scoring', 'run-screener.js');
+  const scorerSrc = fs.readFileSync(scorer, 'utf8');
+  assert.equal(scorerSrc.split("if (require.main === module) {\n  require('../../lib/annual-pairs.js').requireDataDay();").length, 2, 'run-screener: the entry check is its first act');
+  const s = spawnSync(process.execPath, [scorer], { cwd: here, env, encoding: 'utf8', timeout: 120000 });
+  assert.equal(s.status, 1, 'run-screener exit');
+  assert.match(s.stderr, /\[age-rule\] run-screener\.js schreibt Board-Zahlen ohne gültiges RUN_DATE_UTC/);
   // Every workflow that starts a writer gives it a data day or says on purpose that the rule is off (exchange-check-shadow).
   const WRITER = /node (src\/scoring\/run-screener|scripts\/write-(findash-export|excluded-list|rule40-export|filter-universe|bewertung-export|board-history))\.js( |$)/m;
   const dir = path.join(here, '.github', 'workflows');

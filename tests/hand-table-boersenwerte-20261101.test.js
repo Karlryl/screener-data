@@ -54,7 +54,7 @@ test('every row is in the table, sourced, dated and in plain German', () => {
   for (const t of [...held, ...corrected]) {
     const row = guard.holds[t] || guard.table[t];
     assert.ok(row.source.url.startsWith('https://') && row.source.quote && row.source.page, t + ': source');
-    assert.equal(row.verifiedAt, '2026-11-01', t);
+    assert.equal(row.verifiedAt, t === 'JXAMY' ? '2026-11-04' : '2026-11-01', t + ' (JXAMY: checked value corrected on 04.11.)');
     assert.doesNotMatch(row.reason, /[–—]| - |kauf|verkauf/i, t + ': dash as punctuation or a trading word');
     assert.match(row.reason, /(\d{2}\.\d{2}\.\d{4})/, t + ': names its day');
   }

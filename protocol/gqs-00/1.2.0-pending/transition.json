@@ -80,7 +80,7 @@
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
-    "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
+    "src/scoring/run-screener.js": "42e4babbe70323f55c427dfe19299f4ad473a14b8f8ce3b1eea8a9fd63a95c2b",
     "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
     "src/scoring/profit-streak.js": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3",
@@ -93,7 +93,7 @@
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
-    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment.",
+    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment. Codex R31 2026-11-05 (PR #88): the direct entry checks the data day first (reviewFix20261105).",
     "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch).",
     "src/scoring/router.js": "P160 2026-10-11: F-13 pairs annual net income and revenue at the newest jointly finite index for the asset-manager zero-gross-profit gate. P205 2026-10-12: apply the existing size floor only to source-backed market-cap hand-table cases before routing. QH and 3018.TW leave the same-day universe; no formula or weight changed. Explicit P205 fix brief; independent release review by Claude remains required. See ergebnisse/P205/vorher-nachher.md.",
     "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak.",
@@ -525,6 +525,15 @@
       },
       "goldenImpact": "None: verify() runs without RUN_DATE_UTC from a non-writer entry, so no age rule applies; sealed fixtures are also exempt by identity and content.",
       "evidence": "tests/stale-series-p286.test.js: 550 and 551 days on the GP anchor, the Pop Mart pattern (FY2024, 669 days) drops both axes, both of Codex's acceleration paths (no annual revenue; fresh unpaired quarter with valid annual revenue, which now gives the annual fallback 0.0889), the data-day requirement by entry and AGE_RULE_OFF; in-memory break-once on the acceleration check and the requirement. Codex R22 follow-up: requireDataDay reads process.argv[1] and every writer calls it first, outside every catch (spawn test of the six writers); the export counts no quarter points for revenue quarters kept only as proof; exchange-check-shadow.yml sets AGE_RULE_OFF=1.",
+      "review": "Builder evidence only; blind Opus review and the Codex re-check remain pending."
+    },
+    "reviewFix20261105": {
+      "scope": "Codex verdict R31 on 7741127c87, finding 2: the direct entry of src/scoring/run-screener.js calls requireDataDay first, before run(), so a start without RUN_DATE_UTC also stops with an empty snapshots folder (it wrote empty outputs with exit 0). One line; no formula, weight, threshold or library entry changes.",
+      "file": "src/scoring/run-screener.js",
+      "sourceSha256LF": "42e4babbe70323f55c427dfe19299f4ad473a14b8f8ce3b1eea8a9fd63a95c2b",
+      "previousPendingSha256LF": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
+      "goldenImpact": "None: the line runs only when run-screener.js is the started script.",
+      "evidence": "tests/stale-series-p286.test.js spawns run-screener.js without RUN_DATE_UTC (exit 1, age-rule message) next to the six export writers.",
       "review": "Builder evidence only; blind Opus review and the Codex re-check remain pending."
     }
   },

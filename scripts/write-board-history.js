@@ -522,6 +522,7 @@ function buildPit(snap, pitGaps, ticker) {
   // unbekannt sind, bleibt alles wie bisher — der Wert ist dann nicht verzerrt.
   const mischVerzerrt = mischVerhaeltnisUnkorrigiert(meta);
   if (mischVerzerrt) pitGaps.add('mischverhaeltnis-unkorrigiert');
+  if (meta.evCurrencyReading === 'withheld') pitGaps.add('evsales-lesart-zurueckgehalten'); // pull: no EV reading fits the definition
   const revEnds = validEnds(ts.revenueQEnds);
   const gpEnds = validEnds(ts.grossProfitQEnds);
   if (revEnds == null) pitGaps.add('revenueQEnds-missing');   // A10: parallel in pull-yahoo
