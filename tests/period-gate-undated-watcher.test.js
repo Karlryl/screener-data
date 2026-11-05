@@ -74,7 +74,7 @@ try {
   });
 
   for (const [anchor, expected] of [
-    ['  if (sealedFixture) _undatedAxisTickers.add(row.ticker);', ['ALNY', 'BMI']],
+    ['  if (abl.sealedFixture) _undatedAxisTickers.add(row.ticker);', ['ALNY', 'BMI']],
     ['  if (snapAbleitungenFuer(row.ticker, smallcapGrowthSource()).sealedFixture) _undatedAxisTickers.add(row.ticker);', ['ALNY', 'BMI']],
   ]) {
     check('break-once: without "' + anchor.trim().slice(0, 34) + '" a row is not seen', () => {
