@@ -400,7 +400,9 @@ let _wachstumOhneEtikett = 0;
 // not to a period, because the next quarter does not change the definition. Display only: no value, score or rank reads it.
 // ponytail: no fingerprint on the vendor packet; a firm that changes its reporting needs its row re-checked by hand.
 const DEFINITION_HINTS = new Map(require('../configs/g31-hinweise.json').definitionen.map(d => [d.ticker, { code: d.code, reason: d.reason }]));
-// Listings of the main store that the stale-price gate holds, by issuer, with their newest growth period. Built once.
+// Every listing of the main store by loose issuer key, the ones the stale-price gate holds marked with their newest growth
+// period; only keys with a held listing are kept. Built once. The whole group is kept so the production guard against two
+// firms of one loose name (it needs every US primary listing of the group) decides as it does in score.js (Codex R29 P2).
 // Only rows whose own quote time is old or that carry a known hold are prepared, so the scan stays cheap.
 let _heldByIssuer = null;
 function heldNewerSibling(meta, ticker, shownEnd) {
@@ -414,17 +416,24 @@ function heldNewerSibling(meta, ticker, shownEnd) {
       if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
       let raw;
       try { raw = readJSON(path.join(SNAP_DIR, f)); } catch (_) { continue; }
-      if (!raw?.meta?.stalePriceHold && !((marketCapGuard.priceAge(raw)?.age ?? 0) > marketCapGuard.STALE_PRICE_WEEKDAYS)) continue;
-      const s = prepareYahooQ4Snapshot(raw);
-      if (s?.marketCap?.source !== marketCapGuard.STALE_PRICE_SOURCE) continue;
-      const key = issuerKeyLoose(s), periodEnd = revGrowthLeg(s)?.periodEnd;
-      if (key && periodEnd) { if (!_heldByIssuer.has(key)) _heldByIssuer.set(key, []); _heldByIssuer.get(key).push({ ticker: s.meta.ticker, periodEnd, meta: s.meta }); }
+      if (!raw?.meta?.ticker) continue;
+      let entry = { ticker: raw.meta.ticker, meta: raw.meta, periodEnd: null };
+      if (raw.meta.stalePriceHold || (marketCapGuard.priceAge(raw)?.age ?? 0) > marketCapGuard.STALE_PRICE_WEEKDAYS) {
+        const s = prepareYahooQ4Snapshot(raw);
+        if (s?.marketCap?.source === marketCapGuard.STALE_PRICE_SOURCE) entry = { ticker: s.meta.ticker, meta: s.meta, periodEnd: revGrowthLeg(s)?.periodEnd || null };
+      }
+      const key = issuerKeyLoose({ meta: entry.meta });
+      if (key) { if (!_heldByIssuer.has(key)) _heldByIssuer.set(key, []); _heldByIssuer.get(key).push(entry); }
     }
+    for (const [key, group] of _heldByIssuer) if (!group.some(e => e.periodEnd)) _heldByIssuer.delete(key);
   }
   const key = meta ? issuerKeyLoose({ meta }) : null;
-  // The production issuer grouping decides, with its guard against two firms of the same loose name.
-  const same = h => issuerDedupGroups([{ snapshot: { meta } }, { snapshot: { meta: h.meta } }]).some(g => g.length === 2);
-  return (key && _heldByIssuer.get(key) || []).filter(h => h.ticker !== ticker && h.periodEnd > shownEnd && same(h))
+  const group = key && _heldByIssuer.get(key);
+  if (!group) return null;
+  // The production issuer grouping over the whole loose group decides; the shown line enters with its own meta.
+  const entries = [{ ticker, snapshot: { meta } }, ...group.filter(e => e.ticker !== ticker).map(e => ({ ticker: e.ticker, snapshot: { meta: e.meta }, held: e }))];
+  const own = issuerDedupGroups(entries).find(g => g.includes(entries[0])) || [];
+  return own.map(e => e.held).filter(h => h && h.periodEnd && h.periodEnd > shownEnd)
     .sort((a, b) => (a.periodEnd < b.periodEnd ? 1 : a.periodEnd > b.periodEnd ? -1 : a.ticker < b.ticker ? -1 : 1))[0] || null;
 }
 
@@ -2403,6 +2412,8 @@ function validateSmallcapExport(scoutDir = SCOUT_DIR, snapDir = SMALLCAP_SNAP_DI
   // Each named reason is the one the prepared snapshot carries, not just any text.
   const named = new Map((Array.isArray(idx.withheldMarketCaps) ? idx.withheldMarketCaps : []).map(r => [r?.ticker, r]));
   for (const r of withheld || []) if (named.has(r.ticker) && named.get(r.ticker)?.reasonDe !== r.reasonDe) raw.push(`smallcap/index: withheldMarketCaps reason of ${r.ticker} differs from the store`);
+  // So is each name (Codex R29 P3: a wrong company name beside the right ticker passed).
+  for (const r of (withheld || []).filter(w => named.has(w.ticker))) if ((named.get(r.ticker)?.name ?? null) !== r.name) raw.push(`smallcap/index: withheldMarketCaps name of ${r.ticker} differs from the store`);
   const boards = Array.isArray(idx.boards) ? idx.boards : [];
   for (const id of boards) {
     const stem = String(id).replace(/^smallcap-/, '');

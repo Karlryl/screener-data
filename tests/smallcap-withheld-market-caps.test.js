@@ -161,6 +161,16 @@ check('break-once: without the reason comparison a wrong reason passes, so that 
   assert.ok(anchor, 'reason line');
   assert.deepEqual(gateErrors(RIGHT, compiled(anchor, ''), { reasonDe: 'Ein anderer Grund.' }), []);
 });
+check('counter-proof: a company name that is not the one the store carries turns the check red (Codex R29 P3)', () => {
+  assert.match(gateErrors(RIGHT, W, { name: 'A completely different company' }).join(), /name of AAA differs from the store/);
+  assert.match(gateErrors(RIGHT, W, { name: null }).join(), /name of AAA differs from the store/);
+});
+check('break-once: without the name comparison a wrong company name passes, so that line is what catches it', () => {
+  const lines = fs.readFileSync(EXPORT_FILE, 'utf8').split(/\r?\n/);
+  const anchor = lines.find(l => l.startsWith('  for (const r of (withheld || []).filter(w => named.has(w.ticker)))'));
+  assert.ok(anchor, 'name line');
+  assert.deepEqual(gateErrors(RIGHT, compiled(anchor, ''), { name: 'A completely different company' }), []);
+});
 check('break-once: without the filter line the presence check fails for its names', () => {
   const broken = compiled('  return universe.filter(s => s.meta.marketCapReason && !Number.isFinite(s.marketCap?.value))', '  return universe.filter(() => false)');
   assert.throws(() => presence(broken), /names/);

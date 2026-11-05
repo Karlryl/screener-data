@@ -138,10 +138,30 @@ check('sibling absence: a sibling that is not held, or another issuer, gives no 
 });
 check('break-once: without the period comparison an older sibling would be named and the absence above fails', () => {
   const lines = fs.readFileSync(EXPORT_FILE, 'utf8').split(/\r?\n/);
-  const anchor = lines.find(l => l.startsWith('  return (key && _heldByIssuer.get(key) || []).filter(h => h.ticker !== ticker && h.periodEnd > shownEnd && same(h))'));
+  const anchor = lines.find(l => l.startsWith('  return own.map(e => e.held).filter(h => h && h.periodEnd && h.periodEnd > shownEnd)'));
   assert.ok(anchor, 'filter line');
   const w = exportWithStore([listing('1ASML.MI', OLD, Q3), listing('ASML.WA', FRESH, Q2)], anchor, anchor.replace(' && h.periodEnd > shownEnd', ''));
   assert.throws(() => sibling(w), /as new as the held one/);
+});
+
+// Codex R29 P2 (synthetic): "First BanCorp." (FBP, NYSE) and "First Bancorp" (FBNC, Nasdaq) share a loose key; production
+// splits them because the group holds two US primary listings. A held FBNC.DE with a newer quarter is FBNC's sibling, never FBP's.
+const us = (ticker, stamp, ends, name, exchangeName) => { const r = listing(ticker, stamp, ends, name); r.meta.exchangeName = exchangeName; return r; };
+const FIRST = () => [us('FBP', FRESH, Q2, 'First BanCorp.', 'NYSE'), us('FBNC', FRESH, Q2, 'First Bancorp', 'NasdaqGS'), us('FBNC.DE', OLD, Q3, 'First Bancorp', 'XETRA')];
+function firstBancorp(writer) {
+  assert.equal(writer.heldNewerSibling(FIRST()[0].meta, 'FBP', '2026-06-30'), null, 'another firm of the same loose name is never named');
+  const hit = writer.heldNewerSibling(FIRST()[1].meta, 'FBNC', '2026-06-30');
+  assert.deepEqual(hit && [hit.ticker, hit.periodEnd], ['FBNC.DE', '2026-09-30'], 'the held sibling of the same firm inside a split group');
+}
+check('sibling name collision: the whole loose group decides, as in production; FBP gets no hint from FBNC.DE, FBNC does', () => {
+  firstBancorp(exportWithStore(FIRST()));
+});
+check('break-once: grouping only the shown and one held listing (the state of 2cb1ad271e) names FBNC.DE beside FBP', () => {
+  const lines = fs.readFileSync(EXPORT_FILE, 'utf8').split(/\r?\n/);
+  const anchor = lines.find(l => l.startsWith('  const own = issuerDedupGroups(entries).find(g => g.includes(entries[0]))'));
+  assert.ok(anchor, 'grouping line');
+  const w = exportWithStore(FIRST(), anchor, '  const own = entries.filter(e => e === entries[0] || issuerDedupGroups([entries[0], e]).some(g => g.length === 2));');
+  assert.throws(() => firstBancorp(w), /another firm of the same loose name/);
 });
 
 for (const [f, h] of hashes) assert.equal(sha(f), h, 'live source changed: ' + f);
