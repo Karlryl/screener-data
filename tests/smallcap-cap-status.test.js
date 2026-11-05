@@ -80,11 +80,14 @@ console.log('PASS each way of losing a current size is listed apart with a reaso
 
 // A row the real scorer routes and scores, on a ticker of the real watchlist.
 const wl = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'watchlist-smallcap.json'), 'utf8')).stocks;
+const FY_ENDS = ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'];
+const Q_ENDS = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31', '2024-12-31', '2024-09-30'];
 const scored = (ticker, value) => ({
   meta: { ticker, name: ticker + ' Inc', country: 'United States', sector: 'Technology', industry: 'Semiconductors', reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', fxRateApplied: 1, asOf: fresh, fetchedAt: fresh, fundamentalsAsOf: fresh },
   marketCap: { value, source: 'yahoo_quote', confidence: 0.9, asOf: fresh },
-  annual: { annualRev: [1e9, 8e8, 6e8, 4e8], annualOpInc: [2e8, 1.4e8, 1e8, 6e7], annualNetIncome: [1.5e8, 1e8, 7e7, 4e7], annualGP: [5e8, 3.6e8, 2.4e8, 1.6e8], annualFCF: [1.6e8, 1.1e8, 8e7, 5e7], annualOCF: [1.8e8, 1.2e8, 9e7, 6e7], annualSGA: [1e8, 8e7, 6e7, 4e7], annualShares: [1e8, 1e8, 1e8, 1e8], annualBalance: [{ currentAssets: 1e9, currentLiabilities: 2e8, totalLiabilities: 3e8 }] },
-  timeseries: { revenueQ: [3e8, 2.6e8, 2.4e8, 2e8, 1.8e8, 1.6e8, 1.5e8, 1.1e8].map(v => ({ value: v })) }, metrics: {},
+  // Dated periods (PR #72 period gate: a pair without ends is no pair).
+  annual: { annualRev: [1e9, 8e8, 6e8, 4e8], annualRevEnds: FY_ENDS, annualOpInc: [2e8, 1.4e8, 1e8, 6e7], annualOpIncEnds: FY_ENDS, annualNetIncome: [1.5e8, 1e8, 7e7, 4e7], annualGP: [5e8, 3.6e8, 2.4e8, 1.6e8], annualGPEnds: FY_ENDS, annualFCF: [1.6e8, 1.1e8, 8e7, 5e7], annualOCF: [1.8e8, 1.2e8, 9e7, 6e7], annualSGA: [1e8, 8e7, 6e7, 4e7], annualShares: [1e8, 1e8, 1e8, 1e8], annualBalance: [{ currentAssets: 1e9, currentLiabilities: 2e8, totalLiabilities: 3e8 }] },
+  timeseries: { revenueQ: [3e8, 2.6e8, 2.4e8, 2e8, 1.8e8, 1.6e8, 1.5e8, 1.1e8].map(v => ({ value: v })), revenueQEnds: Q_ENDS }, metrics: {},
 });
 const index = (coverageFloor, excluded = {}) => {
   fs.writeFileSync(path.join(outputs, 'index.json'), JSON.stringify({ generatedFromSnapshots: 1, boards: [], boardStatus: {}, counts: {}, excluded, coverageFloor }));
