@@ -35,7 +35,7 @@ function gaapFixture(rows) {
 async function testBH007() {
   await test('BH-007: OpInc/Assets accn mismatch -> Assets cell nulled, matching CurrLiab kept', async () => {
     const gaap = gaapFixture({
-      OperatingIncomeLoss: [{ fy: 2024, val: 100, end: '2024-12-31', accn: 'ACCN-A' }],
+      OperatingIncomeLoss: [{ fy: 2024, val: 100, start: '2024-01-01', end: '2024-12-31', accn: 'ACCN-A' }],
       Assets: [{ fy: 2024, val: 1000, end: '2024-12-31', accn: 'ACCN-B' }],          // different filing than OpInc
       LiabilitiesCurrent: [{ fy: 2024, val: 300, end: '2024-12-31', accn: 'ACCN-A' }], // same filing as OpInc
     });
@@ -46,7 +46,7 @@ async function testBH007() {
 
   await test('BH-007: matching accn across the whole trio -> both balance cells kept', async () => {
     const gaap = gaapFixture({
-      OperatingIncomeLoss: [{ fy: 2024, val: 100, end: '2024-12-31', accn: 'ACCN-X' }],
+      OperatingIncomeLoss: [{ fy: 2024, val: 100, start: '2024-01-01', end: '2024-12-31', accn: 'ACCN-X' }],
       Assets: [{ fy: 2024, val: 1000, end: '2024-12-31', accn: 'ACCN-X' }],
       LiabilitiesCurrent: [{ fy: 2024, val: 300, end: '2024-12-31', accn: 'ACCN-X' }],
     });
@@ -58,7 +58,7 @@ async function testBH007() {
   await test('BH-007: accn absent everywhere (legacy/trimmed fixtures) -> unaffected, cells kept', async () => {
     // Guards the real sec-micron.json fixture (no accn field at all) from regressing.
     const gaap = gaapFixture({
-      OperatingIncomeLoss: [{ fy: 2024, val: 100, end: '2024-12-31' }],
+      OperatingIncomeLoss: [{ fy: 2024, val: 100, start: '2024-01-01', end: '2024-12-31' }],
       Assets: [{ fy: 2024, val: 1000, end: '2024-12-31' }],
       LiabilitiesCurrent: [{ fy: 2024, val: 300, end: '2024-12-31' }],
     });
