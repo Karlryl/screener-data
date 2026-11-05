@@ -74,7 +74,7 @@
     {"ticker": "1941.T", "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "ATLC", "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "PFSI", "field": "revenueQ", "coversThrough": "2026-06-30"},
-    {"ticker": "RKT", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "RKT", "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "FIGR", "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "BAM", "listingAliases": ["BAM.TO"], "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "SII", "field": "revenueQ", "coversThrough": "2026-06-30"},
@@ -28929,6 +28929,80 @@
           "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
           "unit": "USD thousands",
           "quote": "Earnings before income taxes 127,097 177,844 410,227 384,484"
+        }
+      ]
+    },
+    {
+      "caseId": "rkt-2026-09-30-revenueQ-20261105",
+      "ticker": "RKT",
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 2925000000,
+      "replacementValue": 3284000000,
+      "revision": "2026-11-05-sdhand3",
+      "verifiedAt": "2026-11-05",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2026 liefert der Anbieter 2.925 Mio. USD. Der Anbieter zieht den Zinsaufwand von 359 Mio. USD ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 3.284 Mio. USD (Total revenue, net). Geprüft am 05.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026068434/rkt-20260930.htm",
+          "page": "Condensed Consolidated Statements of Income (Loss) and Comprehensive Income (Loss), 10-Q (three months ended September 30, 2026, $ in millions)",
+          "quote": "Total revenue, net 3,284 1,695 9,009 4,248",
+          "filed": "2026-10-30",
+          "value": 3284000000,
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "verifiedAt": "2026-11-05",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026068434/rkt-20260930.htm",
+          "page": "same statement, nine months column",
+          "quote": "Total revenue, net 3,284 1,695 9,009 4,248",
+          "filed": "2026-10-30",
+          "value": 9009000000,
+          "start": "2026-01-01",
+          "end": "2026-09-30",
+          "verifiedAt": "2026-11-05"
+        }
+      ]
+    },
+    {
+      "caseId": "rkt-2025-09-30-revenueQ-20261105",
+      "ticker": "RKT",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1460000000,
+      "replacementValue": 1695000000,
+      "revision": "2026-11-05-sdhand3",
+      "verifiedAt": "2026-11-05",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2025 liefert der Anbieter 1.460 Mio. USD. Der Anbieter zieht den Zinsaufwand von 235 Mio. USD ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 1.695 Mio. USD (Total revenue, net, in der Darstellung des Berichts für 2026). Geprüft am 05.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026068434/rkt-20260930.htm",
+          "page": "same statement, comparison column (three months ended September 30, 2025, reclassified)",
+          "quote": "Total revenue, net 3,284 1,695 9,009 4,248",
+          "filed": "2026-10-30",
+          "value": 1695000000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-05",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000180528425000136/rkt-20250930.htm",
+          "page": "Condensed Consolidated Statements of Income (original Q3 2025 10-Q, in thousands, before the 2026 reclassification)",
+          "quote": "Total revenue, net 1,605,284",
+          "filed": "2025-11-06",
+          "value": 1605284000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-05"
         }
       ]
     }
