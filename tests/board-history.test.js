@@ -662,5 +662,20 @@ check('(h) verzerrtes Misch-Verhältnis wird genullt, korrigiertes bleibt stehen
   assert.ok(v.pitGaps.includes('mischverhaeltnis-unkorrigiert'), 'die Nullung muss in pitGaps stehen');
 });
 
+check('(h2) EV reading withheld at pull: evSales null with a gap note, price/sales stays', () => {
+  const base = mkBase();
+  const s = snapMitWaehrung('ABC', { reportingCurrencyOriginal: 'JPY', tradingCurrencyOriginal: 'USD',
+    mischVerhaeltnisFaktor: 157.24, evCurrencyReading: 'withheld', evWithheldReason: 'no-fit' });
+  s.metrics.enterpriseToRevenue = null; s.metrics.enterpriseToEbitda = null;
+  writeJson(path.join(base, 'snapshots', 'ABC.json'), s);
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'semiconductors', [row('ABC', 90)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const v = readVintage(base, '2026-07-13', 'semiconductors');
+  assert.strictEqual(v.cohort.profitable[0].pit.evSales, null);
+  assert.strictEqual(v.cohort.profitable[0].pit.priceSales, 10.0);
+  assert.ok(v.pitGaps.includes('evsales-lesart-zurueckgehalten'));
+});
+
 console.log(fail ? ('\nFAIL: ' + fail + ' Test(s)') : '\nAlle board-history-Tests grün');
 process.exit(fail ? 1 : 0);
