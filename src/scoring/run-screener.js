@@ -758,28 +758,141 @@ function lampeBNachruesten(scResults, universe) {
   return gefeuert;
 }
 
-function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR) {
+// Fixed reference of the small-cap pass (method change, PR #81): the coverage floor and the score calibration
+// come from configs/smallcap-reference.json, not from the rows of this run. Learned per run, one firm's measured
+// floor exit moved the p10 and the cohort bases and with them firms that had no error of their own (31.10.: RM, VEL,
+// CASS, FTW off the boards, 147 other scores moved). A firm's own new numbers still change its own score.
+// Renewal only with scripts/freeze-smallcap-reference.js and its own before and after, see docs/size-exits.md.
+const SMALLCAP_REFERENCE_PATH = path.join(ROOT, 'configs', 'smallcap-reference.json');
+
+/**
+ * Load the versioned fixed reference of the small-cap pass; a broken one stops the pass instead of learning live.
+ * @param {string} [file] Reference file.
+ * @returns {{version: string, dataDay: string, renewBy: string, coverageFloor: number, calibration: object}} The reference.
+ */
+function loadSmallcapReference(file = SMALLCAP_REFERENCE_PATH) {
+  const reference = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const { version, dataDay, renewBy, coverageFloor, calibration } = reference;
+  if (![version, dataDay, renewBy].every((x) => typeof x === 'string' && x) || !(coverageFloor > 0 && coverageFloor <= 1) ||
+      typeof coverageFloor !== 'number' || !calibration || typeof calibration !== 'object') {
+    throw new Error(`[run-screener] Small-cap reference invalid: ${file}`);
+  }
+  return reference;
+}
+
+/**
+ * Score a small-cap universe against the fixed calibration; the one option set of the pass and its readers.
+ * @param {object[]} universe Small-cap snapshots.
+ * @param {object} reference Result of loadSmallcapReference.
+ * @returns {object[]} scoreUniverse rows.
+ */
+function scoreSmallcapUniverse(universe, reference) {
+  return scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false, refCalibration: reference.calibration });
+}
+
+// The one axis the score splits by profit sign, and only for a subCohortByProfit formula: score.js PASS 2 reads it against
+// `cohort.filter((_, j) => signBasis[j] === profitSign[i])`. Sign values come from engine.js signTrack.
+const SIGN_SPLIT_AXIS = 'capitalEfficiency';
+const SIGN_DE = { profitable: 'mit Gewinn', unprofitable: 'mit Verlust', unknown: 'ohne bekanntes Gewinnvorzeichen' };
+
+/**
+ * Compare a run with the fixed reference on exactly the bases its scores read (score.js, PASS 2): a cohort of at least
+ * MIN_COHORT_N firms on its own frozen basis, a thinner one on parentBasis, the union of all tracks of its formula. Where
+ * the score splits an axis by profit sign (SIGN_SPLIT_AXIS of a subCohortByProfit formula), each sign is a basis of its
+ * own and the whole axis is read nowhere: a sign basis with at least MIN_COHORT_N usable values is watched, built alike on
+ * both sides, a smaller one is named with its firms and usable values apart.
+ * Reports only, changes no score. An axis no firm of the reference ever filled cannot be compared. A union below
+ * MIN_COHORT_N falls under the minimum size the score uses too (one firm alone crosses the threshold only up to 6
+ * usable values), and a big cohort new since the reference scores on itself: both are named, not skipped. Growth
+ * distributions stay out: growthBoost is off here, they enter no score.
+ * @param {{cohortBases: object}} live calibrationLive of the run.
+ * @param {object} reference Result of loadSmallcapReference.
+ * @returns {object} The result of calibrationDrift, plus watched (the frozen bases it compared, by cohort, formula or
+ *   sign basis) and notMonitored (group, firms in the reference, reasonDe; a sign basis also axis, sign and usable
+ *   values; sorted by group).
+ */
+function smallcapReferenceDrift(live, reference) {
+  const frozen = reference.calibration.cohortBases;
+  const filled = (axes) => Object.fromEntries(Object.entries(axes).filter(([, v]) => Array.isArray(v) && v.some(Number.isFinite)));
+  const tracks = (bases, formula) => Object.keys(bases).filter((key) => key.startsWith(formula + '|'));
+  // The union parentBasis builds, on both sides: every track of the formula, each axis concatenated, the profit signs
+  // along the split axis (a track without signs adds nulls, as there).
+  const pooled = (bases, formula) => {
+    const axes = {};
+    let profitSign = [];
+    for (const key of tracks(bases, formula)) {
+      for (const [axis, values] of Object.entries(bases[key].axes)) {
+        if (!Array.isArray(values)) continue;
+        axes[axis] = (axes[axis] || []).concat(values);
+        const signs = bases[key].profitSign;
+        if (axis === SIGN_SPLIT_AXIS) profitSign = profitSign.concat(signs && signs.length === values.length ? signs : values.map(() => null));
+      }
+    }
+    return { axes, profitSign };
+  };
+  const bySign = (base, sign) => ((base && base.axes[SIGN_SPLIT_AXIS]) || []).filter((_, j) => (base.profitSign || [])[j] === sign);
+  const day = reference.dataDay.split('-').reverse().join('.');
+  const firmsDe = (n) => (n === 1 ? '1 Firma' : `${n} Firmen`);
+  const watched = {}, watchedLive = {}, notMonitored = {};
+  for (const key of new Set([...Object.keys(frozen), ...Object.keys(live.cohortBases)])) {
+    const formula = key.split('|')[0];
+    const own = (frozen[key] ? frozen[key].n : live.cohortBases[key].n) >= MIN_COHORT_N; // the n score.js decides on
+    const group = own ? key : formula;
+    const firms = own ? (frozen[key] ? frozen[key].n : 0) : tracks(frozen, formula).reduce((sum, k) => sum + frozen[k].n, 0);
+    if (firms < MIN_COHORT_N) {
+      notMonitored[group] = { group, firms, reasonDe: firms
+        ? `Nur ${firmsDe(firms)} in der Referenz vom ${day}, zu wenige für eine Abweichungsprüfung.`
+        : `In der Referenz vom ${day} nicht enthalten, daher keine Abweichungsprüfung.` };
+      continue;
+    }
+    const basis = (bases) => (own ? bases[key] : pooled(bases, formula));
+    const frozenBasis = basis(frozen), liveBasis = basis(live.cohortBases);
+    watched[group] = { axes: filled(frozenBasis.axes) };
+    watchedLive[group] = liveBasis;
+    if (!(smallcapFormulas[formula] && smallcapFormulas[formula].subCohortByProfit && SIGN_SPLIT_AXIS in frozenBasis.axes)) continue;
+    delete watched[group].axes[SIGN_SPLIT_AXIS];
+    for (const sign of new Set([...(frozenBasis.profitSign || []), ...((liveBasis && liveBasis.profitSign) || [])])) {
+      const signFirms = (frozenBasis.profitSign || []).filter((s) => s === sign).length;
+      const values = bySign(frozenBasis, sign).filter(Number.isFinite).length;
+      const name = `${group} ${SIGN_SPLIT_AXIS} sign=${sign}`;
+      if (values < MIN_COHORT_N) {
+        notMonitored[name] = { group, axis: SIGN_SPLIT_AXIS, sign, firms: signFirms, values,
+          reasonDe: `Achse ${SIGN_SPLIT_AXIS}, nur verglichen mit Firmen ${SIGN_DE[sign] || sign}: ${firmsDe(signFirms)}, davon ${values} mit verwendbarem Wert in der Referenz vom ${day}, zu wenige für eine Abweichungsprüfung.` };
+        continue;
+      }
+      watched[name] = { axes: { [SIGN_SPLIT_AXIS]: bySign(frozenBasis, sign) } };
+      watchedLive[name] = { axes: { [SIGN_SPLIT_AXIS]: bySign(liveBasis, sign) } };
+    }
+  }
+  return { ...calibrationDrift({ cohortBases: watchedLive }, { cohortBases: watched }), watched,
+    notMonitored: Object.keys(notMonitored).sort().map((group) => notMonitored[group]) };
+}
+
+function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR, reference = loadSmallcapReference()) {
   clearStaleQualityIndex(scOutDir);
-  const scResults = scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false });
+  const scResults = scoreSmallcapUniverse(universe, reference);
 
   // (a) Lampe B kohorten-scoped nachruesten.
   const lampeB = lampeBNachruesten(scResults, universe);
   console.log(`[run-screener] Small-Cap Lampe B (shareCountDilution): ${lampeB} Namen`);
 
-  // (b) Coverage-Gate: Floor aus der coverageWeight-Verteilung DIESES Laufs (data-abgeleitet, kein
-  // fester Achsen-Count). Ungescorte/nicht-routete Zeilen bleiben unberuehrt (Filter oben: route+score).
+  // (b) Coverage-Gate: fixed floor of the reference. The p10 of this run is only reported next to it and
+  // decides nothing. Ungescorte/nicht-routete Zeilen bleiben unberuehrt (Filter oben: route+score).
   const routedScored = scResults.filter((e) => e.action === 'route' && e.score !== null);
   const covSamples = routedScored.map((e) => e.coverageWeight).filter(Number.isFinite);
-  const covFloor = quantile(covSamples, SMALLCAP_COVERAGE_FLOOR_PCTL);
+  const covFloorLive = quantile(covSamples, SMALLCAP_COVERAGE_FLOOR_PCTL);
+  const covFloor = reference.coverageFloor;
   let thinCoverageExcluded = 0;
-  if (covFloor !== null) {
-    for (const e of routedScored) {
-      if (Number.isFinite(e.coverageWeight) && e.coverageWeight < covFloor) {
-        e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'smallcap-thin-coverage';
-        thinCoverageExcluded++;
-      }
+  for (const e of routedScored) {
+    if (Number.isFinite(e.coverageWeight) && e.coverageWeight < covFloor) {
+      e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'smallcap-thin-coverage';
+      thinCoverageExcluded++;
     }
   }
+  // Reports when the reference has to be renewed, changes nothing itself.
+  const drift = smallcapReferenceDrift(scResults.calibrationLive, reference);
+  const renewalDue = !drift.ok || new Date().toISOString().slice(0, 10) > reference.renewBy;
+  if (renewalDue) console.warn(`::warning:: [run-screener] Small-cap reference ${reference.version} is due for renewal: maxKS ${drift.maxKs.toFixed(3)} (limit ${drift.ksThreshold}), ${drift.drifted.length} axes drifted, renew by ${reference.renewBy}.`);
 
   const scRanked = produceRankings(scResults, { topN: topN || 100 });
   const counts = {};
@@ -810,10 +923,13 @@ function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR) {
     boardStatus: boardStatusMap,
     counts: sortKeys(counts),
     excluded: sortKeys(scRanked.excluded),
-    coverageFloor: covFloor, // 5.2 Auflage 3: Beleg-Wert des data-abgeleiteten Coverage-Floors dieses Laufs
+    coverageFloor: covFloor, // 5.2 Auflage 3: Beleg-Wert des Coverage-Floors dieses Laufs, fest aus der Referenz
+    coverageFloorLive: covFloorLive,
+    reference: { version: reference.version, dataDay: reference.dataDay, renewBy: reference.renewBy, coverageFloor: reference.coverageFloor,
+      renewalDue, drift: { maxKs: Math.round(drift.maxKs * 1000) / 1000, ksThreshold: drift.ksThreshold, axesDrifted: drift.drifted.length }, notMonitored: drift.notMonitored },
   });
   // Auflage 3 Zaehl-Beleg: explizit ins Run-Log (nicht nur implizit in excluded.'smallcap-thin-coverage').
-  console.log(`[run-screener] Small-Cap-Board (DIAGNOSTIC): ${boardIds.length} Boards, Coverage-Floor p${SMALLCAP_COVERAGE_FLOOR_PCTL * 100}=${covFloor === null ? 'n/a' : covFloor.toFixed(3)}, thin-coverage-excludiert=${thinCoverageExcluded} -> ${scOutDir}`);
+  console.log(`[run-screener] Small-Cap-Board (DIAGNOSTIC): ${boardIds.length} Boards, Coverage-Floor fest=${covFloor.toFixed(3)} (Referenz ${reference.version}, p${SMALLCAP_COVERAGE_FLOOR_PCTL * 100} dieses Laufs=${covFloorLive === null ? 'n/a' : covFloorLive.toFixed(3)}), thin-coverage-excludiert=${thinCoverageExcluded} -> ${scOutDir}`);
 }
 
 // H-B-Guard: entfernt AUSSCHLIESSLICH ein evtl. stales outputs/quality/index.json, bevor der
@@ -887,4 +1003,4 @@ module.exports = { loadUniverse, loadSmallcapUniverse, readScoringSnapshot, run,
   assertParseFailAnteil, MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE,  // T565-H1
   MIN_PARSE_FAIL_FAELLE_SMALLCAP, COVERAGE_FLOOR_RATIO_ONDISK,          // T569-F1/F4
   baselineFuer, naechstesHochwasser,                                    // T565-M2
-  floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };
+  floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, loadSmallcapReference, scoreSmallcapUniverse, smallcapReferenceDrift, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };
