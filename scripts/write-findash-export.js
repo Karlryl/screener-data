@@ -2338,6 +2338,8 @@ function validateQualityExport(qoutDir = QOUT_DIR) {
 // ---- Small-Cap-Board validation (5.2) -----------------------------------
 // Identisches Muster wie validateQualityIndex/validateQualityExport (dupliziert statt
 // parametrisiert, s. Kommentar bei buildSmallcap). 'smallcap-'-Praefix statt 'quality-'.
+// The profit signs engine.signTrack returns; a named sign basis must carry one of them.
+const SMALLCAP_SIGNS = new Set(['profitable', 'unprofitable', 'unknown']);
 function validateSmallcapIndex(mk, errs) {
   const kind = 'smallcap/index';
   if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
@@ -2374,9 +2376,11 @@ function validateSmallcapIndex(mk, errs) {
     const counted = mk.excluded?.['smallcap-thin-coverage'] ?? 0;
     if (mk.namedReasons.counts?.thinCoverage !== counted) errs.push(`${kind}: namedReasons.thinCoverage=${mk.namedReasons.counts?.thinCoverage}, excluded says ${counted}`);
   }
-  // Optional, additive: a group the renewal check cannot watch is named with its reason.
+  // Optional, additive: a group the renewal check cannot watch is named with its reason. A sign basis (any of axis,
+  // sign, values present) also names its axis, a sign signTrack can return and its usable values, 0 up to its firms.
   const notMonitored = mk.reference?.notMonitored;
-  if (notMonitored != null && (!Array.isArray(notMonitored) || notMonitored.some(g => !g.group || !Number.isInteger(g.firms) || !g.reasonDe))) errs.push(`${kind}: reference.notMonitored`);
+  const badSignBasis = g => ['axis', 'sign', 'values'].some(k => k in g) && (typeof g.axis !== 'string' || !g.axis || !SMALLCAP_SIGNS.has(g.sign) || !Number.isInteger(g.values) || g.values < 0 || g.values > g.firms);
+  if (notMonitored != null && (!Array.isArray(notMonitored) || notMonitored.some(g => !g || typeof g !== 'object' || !g.group || !Number.isInteger(g.firms) || g.firms < 0 || !g.reasonDe || badSignBasis(g)))) errs.push(`${kind}: reference.notMonitored`);
   // Optional, additive: the floor in force is the one of the fixed reference, never a value of this run.
   if (mk.reference != null && (typeof mk.reference.version !== 'string' || mk.reference.coverageFloor !== mk.coverageFloor)) {
     errs.push(`${kind}: reference ${mk.reference.version} floor ${mk.reference.coverageFloor}, coverageFloor says ${mk.coverageFloor}`);

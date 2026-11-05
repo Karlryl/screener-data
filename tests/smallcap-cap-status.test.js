@@ -16,6 +16,7 @@ const MUTANTS = {
   'check-guard': [/^ *if \(mk\.namedReasons != null\) \{(?=\r?$)/m, '  if (false) {', /--check must catch a wrong reason list/],
   'reference-guard': [/^ *if \(mk\.reference != null && .*\{(?=\r?$)/m, '  if (false) {', /--check must catch a floor that left the fixed reference/],
   'not-monitored-guard': [/^ *if \(notMonitored != null && .*;(?=\r?$)/m, '', /--check must catch a group named without its reason/],
+  'sign-basis-guard': [/^ *const badSignBasis = .*;(?=\r?$)/m, '  const badSignBasis = () => false;', /--check must catch a sign basis without axis, a valid sign or its values/],
   // The state before this fix: raw store rows decide.
   'held-row-listed': [/^ *const listable = new Set\(.*;(?=\r?$)/m, '  const listable = new Set(readJSON(watchlist).stocks.map(s => s.ticker));', /a row a guard holds must not be listed/],
   'any-empty-value-held': [/^ *const held = new Set\(.*;(?=\r?$)/m, '  const held = new Set(rows.filter(row => { const seen = marketCapGuard.prepareMarketCap(row); return !Number.isFinite(seen.marketCap?.value); }).map(row => row.meta?.ticker));', /an empty value without a guard stays listed/],
@@ -175,5 +176,13 @@ assert.deepEqual(withGroups([{ group: 'smallcap-materials', firms: 12, reasonDe:
 assert.deepEqual(withGroups([]), [], 'nothing unwatched must pass');
 for (const bad of [[{ group: 'smallcap-materials', firms: 12 }], [{ firms: 12, reasonDe: 'x' }], [{ group: 'x', reasonDe: 'x' }], 'smallcap-materials']) {
   assert.equal(withGroups(bad).length, 1, '--check must catch a group named without its reason: ' + JSON.stringify(bad));
+}
+// A named sign basis also carries its axis, a known sign and its usable values (R30: each of these was let through).
+const signBasis = { group: 'smallcap-real-estate', axis: 'capitalEfficiency', sign: 'unprofitable', firms: 5, values: 4, reasonDe: 'Nur 4 Werte.' };
+assert.deepEqual(withGroups([signBasis, { ...signBasis, sign: 'unknown', firms: 1, values: 0 }, { ...signBasis, values: 5 }]), [], 'a named sign basis must pass');
+const without = k => { const g = { ...signBasis }; delete g[k]; return g; };
+for (const bad of [without('axis'), without('sign'), without('values'), { ...signBasis, sign: 'nonsense', values: -7 }, { ...signBasis, sign: 'nonsense' },
+  { ...signBasis, values: -1 }, { ...signBasis, values: 1.5 }, { ...signBasis, values: 6 }, { ...signBasis, values: '4' }, { ...signBasis, axis: '' }, { ...signBasis, firms: -1, values: 0 }, null]) {
+  assert.equal(withGroups([bad]).length, 1, '--check must catch a sign basis without axis, a valid sign or its values: ' + JSON.stringify(bad));
 }
 console.log('PASS --check binds the floor in force to the fixed reference and every unwatched group to its reason');
