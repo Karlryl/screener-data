@@ -4,6 +4,34 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { verify } = require('../../scripts/gqs00-freeze.js');
 
+test('the 1.2.0 registry describes the ramp constants while 1.1.0 stays sealed', () => {
+  const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+  const { Module, createRequire } = require('node:module');
+  const file = path.resolve(__dirname, '../../scripts/gqs00-freeze.js');
+  const sha = () => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const before = sha(), source = fs.readFileSync(file, 'utf8');
+  const anchor = "const SEMVER = '1.1.0';";
+  assert.equal(source.split(/\r?\n/).filter(line => line === anchor).length, 1);
+  const next = new Module(file, module);
+  next.filename = file; next.paths = module.paths; next.require = createRequire(file);
+  // Switch only an in-memory copy, never initialize or reseal historical artifacts.
+  next._compile(source.replace(anchor, "const SEMVER = '1.2.0';"), file);
+  const registry = next.exports.buildRegistry();
+  assert.equal(registry.identity.formulaSemver, '1.2.0');
+  assert.deepEqual(registry.constants.cycleDamper, {
+    k: 0.5, drawdownQuantile: 0.75, minimumDistinctValues: 10, rampLo: 0.8, rampHi: 1.2, rampWidth: 0.4,
+  });
+  const S = require('../../src/scoring/score.js');
+  assert.deepEqual([S.CYCLE_RAMP_LO, S.CYCLE_RAMP_HI, S.CYCLE_RAMP_WIDTH], [0.8, 1.2, 0.4]);
+  const rule = registry.endFactors.cycle.rule;
+  for (const text of ['(dd - 0.8*t)/(0.4*t)', 'at or below 0.8*t', 'at or above 1.2*t', 'null', 't=0', 'dd=0']) {
+    assert.ok(rule.includes(text), text);
+  }
+  assert.deepEqual(require('../../scripts/gqs00-freeze.js').buildRegistry().constants.cycleDamper,
+    { k: 0.5, drawdownQuantile: 0.75, minimumDistinctValues: 10 });
+  assert.equal(sha(), before);
+});
+
 test('GQS-00@1.1.0 registry, hashes, fixtures, traces and equality proof stay sealed', () => {
   const result = verify();
   assert.equal(result.canonicalId, 'GQS-00@1.1.0');
