@@ -1,11 +1,12 @@
 'use strict';
 // Holds of 01.11.2026, each from a printed filing, on rows a home-listing rule would show.
 // CarMax (council of 01.11.2026 on the operating income of the quality score): the firm prints no operating income line,
-// and the vendor's figure stands in no report and cannot be rebuilt from printed lines, so a firm with net earnings in every
+// and the vendor's figure stands in none of its income statements, so a firm with net earnings in every
 // year sat on the unprofitable list with the lamp "unprofit", rank 25 on 31.10.2026. Pretax income is another figure.
 // China Shenhua: the vendor's June 2026 quarter is the half year on the new consolidation scope minus the first quarter on the
 // old one, so it is no quarter: +73.6 % against a filed +7.9 % for the half year.
-// Delivery Hero: three vendor quarters differ from the ones the firm reports on all four listings.
+// Delivery Hero: three vendor quarters differ from the ones the firm reports on all four listings; since 04.11.2026 they carry the filed values.
+// CarMax (04.11.2026): the five quarterly cells of operating income are held as well; the filings print no operating line.
 // Real packets of the daily run of 31.10.2026 (tests/fixtures/hand-table-kmx.json). Every probe changes an in-memory copy;
 // the live table is hashed before and after.
 const test = require('node:test'), assert = require('node:assert/strict');
@@ -63,14 +64,43 @@ test('a changed vendor value keeps the cell empty and reports it', () => {
   assert.ok(events.some((e) => e.reasonCode === 'annual-value-changed'), 'the change is reported');
 });
 
-test('every reason names its period', () => {
-  const own = table.cases.filter((c) => c.revision === '2026-11-01-sdheimat');
-  assert.equal(own.length, 10);
+test('every reason names its period; holds stay holds, Delivery Hero carries the filed value', () => {
+  const own = table.cases.filter((c) => c.revision === '2026-11-01-sdheimat' || c.revision === '2026-11-04-sdheimat2');
+  assert.equal(own.length, 17);
   for (const c of own) {
     const [y, m, d] = c.period.split('-');
     assert.ok(c.reason.includes(`${d}.${m}.${y}`), c.caseId);
-    assert.equal(c.replacementValue, null, 'a hold, never a substitute: ' + c.caseId);
+    if (c.ticker === 'DHER.DE') {
+      assert.equal(c.replacementValue, c.sources[0].value, 'filed value: ' + c.caseId);
+      assert.equal(c.sources[0].end, c.period, c.caseId);
+    } else assert.equal(c.replacementValue, null, 'a hold, never a substitute: ' + c.caseId);
   }
+});
+
+test('Shenhua: gross profit and operating income say the mechanism is unexplained, revenue shows its bridge', () => {
+  const rows = table.cases.filter((c) => c.ticker === '1088.HK');
+  assert.deepEqual(rows.map((c) => c.field).sort(), ['grossProfitQ', 'opIncQ', 'revenueQ']);
+  for (const c of rows) {
+    if (c.field === 'revenueQ') assert.ok(!/ungeklärt/.test(c.reason));
+    else {
+      assert.match(c.reason, /ungeklärt/);
+      assert.ok(c.sources.some((s) => s.quote === 'Gross profit 56,692 53,750'), c.caseId);
+    }
+  }
+});
+
+test('CarMax: the five vendor quarters of operating income are held, and a later quarter waits for its own row', () => {
+  const raw = structuredClone(fixture.KMX);
+  assert.deepEqual(raw.timeseries.opIncQ.map(value), [-35741000, 31701000, -249727000, -133695000, -117819000], 'precondition: the vendor cells');
+  const s = applyFinancialCases(structuredClone(raw)).snapshot;
+  assert.deepEqual(s.timeseries.opIncQ.map(value), [null, null, null, null, null]);
+  assert.deepEqual(s.timeseries.revenueQ.map(value), raw.timeseries.revenueQ.map(value), 'revenue stays');
+  const next = structuredClone(raw);
+  next.timeseries.opIncQ.unshift({ value: -20000000 });
+  next.timeseries.opIncQEnds.unshift('2026-11-30');
+  const { snapshot: n, events } = applyFinancialCases(next);
+  assert.equal(value(n.timeseries.opIncQ[0]), null);
+  assert.ok(events.some((e) => e.period === '2026-11-30' && e.reasonCode === 'period-after-coverage'));
 });
 
 test('Shenhua: the mixed cell is gone from both listings; the A share shows what it showed', () => {
@@ -90,15 +120,55 @@ test('Shenhua: the mixed cell is gone from both listings; the A share shows what
   }
 });
 
-test('Delivery Hero: all four listings lose the wrong quarters and show the right fiscal year', () => {
-  assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.SW'])).v1.pct - 16.4) < 0.2, 'precondition');
-  assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.DE'])).v1.pct - 20.8) < 0.2, 'precondition');
-  for (const [t, ticker] of [['DHER.DE', 'DHER.DE'], ['DHER.SW', 'DHER.SW'], ['DHER.SW', 'DHER.VI'], ['DHER.SW', '1DHER.MI']]) {
-    const raw = structuredClone(fixture[t]); raw.meta.ticker = ticker;
-    const leg = g31Shadow(applyFinancialCases(raw).snapshot).v1;
-    assert.equal(leg.periodEnd, '2025-12-31', ticker);
-    assert.ok(Math.abs(leg.pct - 14.35) < 0.1, ticker + ' ' + leg.pct);
+// M1 of the review of 04.11.2026: the pull stores the packet with the table applied, so DHER.DE (03.11.2026) and 1088.HK
+// (04.11.2026) carry the holds of 01.11.2026. Read with today's table, the held cells take the filed values and the new texts.
+test('a packet stored with the holds of 01.11.2026 takes the filed values and the new texts', () => {
+  const older = structuredClone(table);
+  older.cases = older.cases.filter((c) => c.revision !== '2026-11-04-sdheimat2').map((c) => (c.revision === '2026-11-01-sdheimat'
+    ? { ...c, replacementValue: null, reason: 'Hold of 01.11.2026 for ' + c.period.split('-').reverse().join('.'), sources: [{ ...c.sources[0], value: undefined }] }
+    : c));
+  older.coverage = older.coverage.filter((v) => !['DHER.DE', 'KMX'].includes(v.ticker));
+  for (const [ticker, end, pct] of [['DHER.DE', '2026-06-30', 15.34], ['DHER.SW', '2026-09-30', 23.17]]) {
+    // As the pull stores it: the table applied on the native packet, then only the outer values converted.
+    const native = structuredClone(fixture[ticker]);
+    const f = native.meta.fxRateApplied;
+    native.timeseries.revenueQ = native.timeseries.revenueQ.map((r) => ({ value: value(r) / f }));
+    native.meta.fxRateApplied = 1;
+    const held = applyFinancialCases(native, { table: older }).snapshot;
+    assert.ok(held.timeseries.revenueQ.some((r) => r?.financialCorrection?.reason?.startsWith('Hold of 01.11.2026')), 'precondition: stored holds');
+    held.timeseries.revenueQ = held.timeseries.revenueQ.map((r) => (value(r) == null ? r : { ...r, value: value(r) * f }));
+    held.meta.fxRateApplied = f;
+    const { snapshot: now } = applyFinancialCases(held);
+    const leg = g31Shadow(now).v1;
+    assert.equal(leg.periodEnd, end, ticker);
+    assert.ok(Math.abs(leg.pct - pct) < 0.01, ticker + ' ' + leg.pct);
+    assert.ok(!now.timeseries.revenueQ.some((r) => r?.financialCorrection?.reason?.startsWith('Hold of')), ticker + ': no old text left');
+    assert.equal(JSON.stringify(applyFinancialCases(now).snapshot), JSON.stringify(now), ticker + ': a second pass changes nothing');
   }
+  // A hold whose text changed takes the new text (1088.HK gross profit).
+  const hk = structuredClone(fixture['1088.HK']);
+  const hkHeld = applyFinancialCases(hk, { table: older }).snapshot;
+  const i = hkHeld.timeseries.grossProfitQEnds.indexOf('2026-06-30');
+  assert.match(hkHeld.timeseries.grossProfitQ[i].financialCorrection.reason, /^Hold of/);
+  const hkNow = applyFinancialCases(hkHeld).snapshot;
+  assert.equal(value(hkNow.timeseries.grossProfitQ[i]), null);
+  assert.match(hkNow.timeseries.grossProfitQ[i].financialCorrection.reason, /ungeklärt/);
+});
+
+test('Delivery Hero: the filed quarters on all four real packets; the newest quarter shows where the packet holds it', () => {
+  assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.SW'])).v1.pct - 16.4) < 0.2, 'precondition: the vendor pair');
+  assert.ok(Math.abs(g31Shadow(structuredClone(fixture['DHER.DE'])).v1.pct - 20.8) < 0.2, 'precondition: the vendor pair');
+  for (const [ticker, end, pct] of [['DHER.DE', '2026-06-30', 15.34], ['DHER.SW', '2026-09-30', 23.17], ['DHER.VI', '2026-09-30', 23.17], ['1DHER.MI', '2026-09-30', 23.17]]) {
+    const leg = g31Shadow(applyFinancialCases(structuredClone(fixture[ticker])).snapshot).v1;
+    assert.equal(leg.basis, 'quarter', ticker);
+    assert.equal(leg.periodEnd, end, ticker);
+    assert.ok(Math.abs(leg.pct - pct) < 0.01, ticker + ' ' + leg.pct);
+  }
+  // DHER.DE holds no September quarter, so it shows June; a stored quarter after 30.09.2026 waits for its own row.
+  const next = structuredClone(fixture['DHER.SW']);
+  next.timeseries.revenueQ.unshift({ value: 5.0e9 });
+  next.timeseries.revenueQEnds.unshift('2026-12-31');
+  assert.equal(value(applyFinancialCases(next).snapshot.timeseries.revenueQ[0]), null);
 });
 
 // Pinned on purpose: a dated annual series keeps a new year in front. CarMax's next report (about April 2027) needs its own row.
