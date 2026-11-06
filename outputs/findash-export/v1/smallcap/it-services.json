@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-05T11:05:11.870Z",
+  "generated_at": "2026-11-06T10:58:23.894Z",
   "branch": "it-services",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.6,
-    "generated_at": "2026-11-05T10:54:05.849Z",
-    "honest_coverage_pct": 87.7,
-    "n_addressable": 18357,
-    "n_ok": 16107,
-    "n_total": 23496,
-    "n_failed": 1342,
+    "coverage_pct": 68.3,
+    "generated_at": "2026-11-06T10:47:55.938Z",
+    "honest_coverage_pct": 88.3,
+    "n_addressable": 18174,
+    "n_ok": 16055,
+    "n_total": 23505,
+    "n_failed": 1331,
     "reporting_ccy_held": []
   },
   "profitable": [
@@ -22,7 +22,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "IBEX",
-      "score": 60.3,
+      "score": 53.5,
+      "scoreCycleLegacy": 53.5,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -34,7 +35,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 592618688,
+      "marketCap": 596488512,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -45,17 +46,18 @@
       "coverageWeight": 1,
       "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 67.1,
-      "scoreShrunk": 60.3,
+      "scoreBase": 55.9,
+      "scoreShrunk": 53.5,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 83.3,
+          "pct": 50,
           "weight": 2.8
         },
         {
@@ -70,7 +72,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 83.3,
+          "pct": 50,
           "weight": 1
         },
         {
@@ -142,7 +144,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "TASK",
-      "score": 59.7,
+      "score": 53,
+      "scoreCycleLegacy": 53,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -154,7 +157,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 762836032,
+      "marketCap": 791259008,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -165,17 +168,18 @@
       "coverageWeight": 1,
       "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 66.2,
-      "scoreShrunk": 59.7,
+      "scoreBase": 55,
+      "scoreShrunk": 53,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 16.7,
           "weight": 2.8
         },
         {
@@ -190,7 +194,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 50,
+          "pct": 16.7,
           "weight": 1
         },
         {
@@ -262,7 +266,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VRRM",
-      "score": 30,
+      "score": 27.3,
+      "scoreCycleLegacy": 27.3,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -277,9 +282,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 404344864,
+      "marketCap": 376983168,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
@@ -288,17 +293,18 @@
       "coverageWeight": 1,
       "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 16.7,
-      "scoreShrunk": 30,
+      "scoreBase": 12.2,
+      "scoreShrunk": 27.3,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 16.7,
+          "pct": 0,
           "weight": 2.8
         },
         {
@@ -313,12 +319,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 16.7,
+          "pct": 0,
           "weight": 1
         },
         {
           "key": "marginTrajectory",
-          "pct": 16.7,
+          "pct": 33.3,
           "weight": 0.8
         },
         {

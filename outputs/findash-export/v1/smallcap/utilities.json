@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-05T11:05:12.050Z",
+  "generated_at": "2026-11-06T10:58:24.025Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.6,
-    "generated_at": "2026-11-05T10:54:05.849Z",
-    "honest_coverage_pct": 87.7,
-    "n_addressable": 18357,
-    "n_ok": 16107,
-    "n_total": 23496,
-    "n_failed": 1342,
+    "coverage_pct": 68.3,
+    "generated_at": "2026-11-06T10:47:55.938Z",
+    "honest_coverage_pct": 88.3,
+    "n_addressable": 18174,
+    "n_ok": 16055,
+    "n_total": 23505,
+    "n_failed": 1331,
     "reporting_ccy_held": []
   },
   "profitable": [
@@ -23,6 +23,7 @@
       "rankGrundShadow": null,
       "ticker": "YORW",
       "score": 71.7,
+      "scoreCycleLegacy": 71.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -38,7 +39,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 514283744,
+      "marketCap": 523533984,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -54,7 +55,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -147,6 +149,7 @@
       "rankGrundShadow": null,
       "ticker": "ARTNA",
       "score": 55.9,
+      "scoreCycleLegacy": 55.9,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -162,7 +165,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 348850144,
+      "marketCap": 349573024,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -178,7 +181,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -271,6 +275,7 @@
       "rankGrundShadow": null,
       "ticker": "CWCO",
       "score": 51.4,
+      "scoreCycleLegacy": 51.4,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -285,7 +290,7 @@
       "country": "Cayman Islands",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 439393024,
+      "marketCap": 438592352,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -301,7 +306,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -393,7 +399,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "HNRG",
-      "score": 46,
+      "score": 39.6,
+      "scoreCycleLegacy": 45.6,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -407,9 +414,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 501605312,
+      "marketCap": 453047648,
       "phase": "inflected",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
@@ -418,12 +425,13 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 44.1,
-      "scoreShrunk": 46,
+      "scoreBase": 43.3,
+      "scoreShrunk": 45.6,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 0.869,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -453,7 +461,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 30,
+          "pct": 20,
           "weight": 0.5
         },
         {
@@ -518,6 +526,7 @@
       "rankGrundShadow": null,
       "ticker": "DGXX",
       "score": 30.1,
+      "scoreCycleLegacy": 30.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -555,7 +564,8 @@
       "factors": {
         "burn": 0.822,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {

@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-05T11:05:11.767Z",
+  "generated_at": "2026-11-06T10:58:23.817Z",
   "branch": "industrials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.6,
-    "generated_at": "2026-11-05T10:54:05.849Z",
-    "honest_coverage_pct": 87.7,
-    "n_addressable": 18357,
-    "n_ok": 16107,
-    "n_total": 23496,
-    "n_failed": 1342,
+    "coverage_pct": 68.3,
+    "generated_at": "2026-11-06T10:47:55.938Z",
+    "honest_coverage_pct": 88.3,
+    "n_addressable": 18174,
+    "n_ok": 16055,
+    "n_total": 23505,
+    "n_failed": 1331,
     "reporting_ccy_held": []
   },
   "profitable": [
@@ -21,8 +21,133 @@
       "rank": 1,
       "rankGrund": null,
       "rankGrundShadow": null,
+      "ticker": "PANL",
+      "score": 66.3,
+      "scoreCycleLegacy": 66.3,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.799,
+        "companion": 53.6
+      },
+      "name": "Pangaea Logistics Solutions Ltd.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 491708032,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 28,
+      "cohortFallback": false,
+      "scoreBase": 67.5,
+      "scoreShrunk": 66.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 75.9,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 87,
+          "weight": 2.4
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 14,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 79.6,
+          "weight": 1.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 90.7,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 82.7,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 46.3,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 19.419873635841476,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 19.419873635841476,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": -0.056,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 19.419873635841476,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 1.7992056894800035,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "rankGrund": null,
+      "rankGrundShadow": null,
       "ticker": "FIP",
-      "score": 65.4,
+      "score": 65.3,
+      "scoreCycleLegacy": 65.3,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -42,7 +167,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 315545248,
+      "marketCap": 324999776,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -54,11 +179,12 @@
       "cohortN": 28,
       "cohortFallback": false,
       "scoreBase": 70.9,
-      "scoreShrunk": 65.4,
+      "scoreShrunk": 65.3,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -150,375 +276,12 @@
       }
     },
     {
-      "rank": 2,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "PANL",
-      "score": 65.3,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 1.799,
-        "companion": 53.6
-      },
-      "name": "Pangaea Logistics Solutions Ltd.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 495636480,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2013,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 28,
-      "cohortFallback": false,
-      "scoreBase": 66.4,
-      "scoreShrunk": 65.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 72.2,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 87,
-          "weight": 2.4
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 14,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 75.9,
-          "weight": 1.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 90.7,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 82.7,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 46.3,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 19.419873635841476,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 19.419873635841476,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": -0.056,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 19.419873635841476,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 1.7992056894800035,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
       "rank": 3,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "EBF",
-      "score": 59.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.013,
-        "companion": 21
-      },
-      "name": "Ennis, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 525344064,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 28,
-      "cohortFallback": false,
-      "scoreBase": 60.2,
-      "scoreShrunk": 59.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 35.2,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 75.9,
-          "weight": 2.4
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 58,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 38.9,
-          "weight": 1.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 57.4,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 86.5,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 68.5,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 3.3746807734403417,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-08-31",
-      "revGrowthPriorPeriodEnd": "2025-08-31",
-      "revGrowthSourcePeriodEnd": "2026-08-31",
-      "revGrowthSourcePriorPeriodEnd": "2025-08-31",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-08-31",
-        "priorPeriodEnd": "2025-08-31",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 3.3746807734403417,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-08-31",
-      "revGrowthPriorPeriodEndLegacy": "2025-08-31",
-      "overviewValueLegacy": 0.027,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2026-02-28",
-        "priorPeriodEnd": "2025-02-28",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 3.3746807734403417,
-          "basis": "quarter",
-          "periodEnd": "2026-08-31"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.012955949770779407,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-08-31"
-        }
-      }
-    },
-    {
-      "rank": 4,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "TWIN",
-      "score": 56.8,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.004,
-        "companion": 43.8
-      },
-      "name": "Twin Disc, Incorporated",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 364054464,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 28,
-      "cohortFallback": false,
-      "scoreBase": 57.3,
-      "scoreShrunk": 56.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 64.8,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 42.6,
-          "weight": 2.4
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 70,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 64.8,
-          "weight": 1.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 72.2,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 40.4,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 53.7,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 18.33095430190943,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 18.33095430190943,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 0.092,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 18.33095430190943,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.003664467985875053,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 5,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "KE",
-      "score": 56.2,
+      "score": 57.3,
+      "scoreCycleLegacy": 57.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -532,7 +295,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 640826176,
+      "marketCap": 620433024,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -543,17 +306,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 56.7,
-      "scoreShrunk": 56.2,
+      "scoreBase": 57.8,
+      "scoreShrunk": 57.3,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 16.7,
+          "pct": 20.4,
           "weight": 1.9
         },
         {
@@ -568,7 +332,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 13,
+          "pct": 16.7,
           "weight": 1.4
         },
         {
@@ -636,134 +400,12 @@
       }
     },
     {
-      "rank": 6,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "WNC",
-      "score": 54.6,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.053,
-        "companion": 53.4
-      },
-      "name": "Wabash National Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 465235904,
-      "phase": "inflected",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 1991,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 28,
-      "cohortFallback": false,
-      "scoreBase": 54.9,
-      "scoreShrunk": 54.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 83.3,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 68.5,
-          "weight": 2.4
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 2,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 79.6,
-          "weight": 1.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 9.3,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 78.8,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 42.6,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 24.84649956105296,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-09-30",
-      "revGrowthPriorPeriodEnd": "2025-09-30",
-      "revGrowthSourcePeriodEnd": "2026-09-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-09-30",
-        "priorPeriodEnd": "2025-09-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 24.84649956105296,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-09-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
-      "overviewValueLegacy": -0.736,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 24.84649956105296,
-          "basis": "quarter",
-          "periodEnd": "2026-09-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.05303030303030298,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-09-30"
-        }
-      }
-    },
-    {
-      "rank": 7,
+      "rank": 4,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BWMN",
-      "score": 54.4,
+      "score": 55.1,
+      "scoreCycleLegacy": 55.1,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -779,7 +421,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 712788544,
+      "marketCap": 712290816,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -790,17 +432,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 54.7,
-      "scoreShrunk": 54.4,
+      "scoreBase": 55.5,
+      "scoreShrunk": 55.1,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75.9,
+          "pct": 79.6,
           "weight": 1.9
         },
         {
@@ -815,12 +458,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 68.5,
+          "pct": 72.2,
           "weight": 1.4
         },
         {
           "key": "marginTrajectory",
-          "pct": 31.5,
+          "pct": 27.8,
           "weight": 0.9
         },
         {
@@ -886,11 +529,12 @@
       }
     },
     {
-      "rank": 8,
+      "rank": 5,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ORN",
-      "score": 53.4,
+      "score": 54.4,
+      "scoreCycleLegacy": 54.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -907,9 +551,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 358614560,
+      "marketCap": 318768512,
       "phase": "inflected",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "seit-kurzem-profitabel",
@@ -918,17 +562,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 53.6,
-      "scoreShrunk": 53.4,
+      "scoreBase": 54.7,
+      "scoreShrunk": 54.4,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 61.1,
+          "pct": 64.8,
           "weight": 1.9
         },
         {
@@ -943,7 +588,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 50,
+          "pct": 53.7,
           "weight": 1.4
         },
         {
@@ -1011,11 +656,265 @@
       }
     },
     {
-      "rank": 9,
+      "rank": 6,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "ESEA",
+      "score": 54.4,
+      "scoreCycleLegacy": 54.4,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.032,
+        "companion": 31
+      },
+      "name": "Euroseas Ltd.",
+      "country": "Greece",
+      "region": "Europe",
+      "sector": "Industrials",
+      "marketCap": 459093632,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 28,
+      "cohortFallback": false,
+      "scoreBase": 54.7,
+      "scoreShrunk": 54.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 25.9,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 27.8,
+          "weight": 2.4
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 63,
+          "weight": 1.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 63,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 94.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 35.2,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -1.2752971722840512,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 4.6,
+        "pctl": 0.963
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": -1.2752971722840512,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": 0.137,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -1.2752971722840512,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.032208707532446645,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 7,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "TATT",
+      "score": 53.9,
+      "scoreCycleLegacy": 53.9,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.482,
+        "companion": 46.4
+      },
+      "name": "TAT Technologies Ltd.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 494839072,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1987,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 28,
+      "cohortFallback": false,
+      "scoreBase": 54.2,
+      "scoreShrunk": 53.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 81.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 13,
+          "weight": 2.4
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 94,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 70.4,
+          "weight": 1.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 77.8,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 9.6,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 38.9,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 20.175191954147298,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 20.175191954147298,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
+      "overviewValueLegacy": 0.336,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 20.175191954147298,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.4815102146366692,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      }
+    },
+    {
+      "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SWBI",
       "score": 53.1,
+      "scoreCycleLegacy": 53.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1027,7 +926,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 590538560,
+      "marketCap": 649726976,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -1043,7 +942,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 0.667
+        "cycle": 0.667,
+        "cycleLegacy": 0.667
       },
       "axisBreakdown": [
         {
@@ -1131,207 +1031,80 @@
       }
     },
     {
-      "rank": 10,
+      "rank": 9,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "ESEA",
-      "score": 52.7,
+      "ticker": "EBF",
+      "score": 52.2,
+      "scoreCycleLegacy": 59.6,
       "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "shareCountDilution"
-      ],
+      "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": 0.032,
-        "companion": 31
+        "value": 0.013,
+        "companion": 21
       },
-      "name": "Euroseas Ltd.",
-      "country": "Greece",
-      "region": "Europe",
-      "sector": "Industrials",
-      "marketCap": 461774656,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 28,
-      "cohortFallback": false,
-      "scoreBase": 52.9,
-      "scoreShrunk": 52.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 20.4,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 27.8,
-          "weight": 2.4
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 78,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 57.4,
-          "weight": 1.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 61.1,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 94.2,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 35.2,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -1.2752971722840512,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 4.6,
-        "pctl": 0.963
-      },
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": -1.2752971722840512,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 0.137,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -1.2752971722840512,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.032208707532446645,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 11,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "TATT",
-      "score": 51.1,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.23,
-        "companion": 52.5
-      },
-      "name": "TAT Technologies Ltd.",
+      "name": "Ennis, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 504197760,
-      "phase": "inflected",
+      "marketCap": 534458464,
+      "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 1987,
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1980,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 51.2,
-      "scoreShrunk": 51.1,
+      "scoreBase": 60.2,
+      "scoreShrunk": 59.6,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 0.876,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 79.6,
+          "pct": 35.2,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 13,
+          "pct": 75.9,
           "weight": 2.4
         },
         {
           "key": "gpGrowth",
-          "pct": 94,
+          "pct": 58,
           "weight": 2.1
         },
         {
           "key": "ruleOfX",
-          "pct": 72.2,
+          "pct": 38.9,
           "weight": 1.4
         },
         {
           "key": "marginTrajectory",
-          "pct": 42.6,
+          "pct": 57.4,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 9.6,
+          "pct": 86.5,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 38.9,
+          "pct": 68.5,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 22.814587973273937,
+      "revGrowthYoYPct": 3.3746807734403417,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -1342,49 +1115,50 @@
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revGrowthPeriodEnd": "2026-08-31",
+      "revGrowthPriorPeriodEnd": "2025-08-31",
+      "revGrowthSourcePeriodEnd": "2026-08-31",
+      "revGrowthSourcePriorPeriodEnd": "2025-08-31",
       "overviewPeriod": {
         "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
+        "periodEnd": "2026-08-31",
+        "priorPeriodEnd": "2025-08-31",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 22.814587973273937,
+      "revGrowthYoYPctLegacy": 3.3746807734403417,
       "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 0.336,
+      "revGrowthPeriodEndLegacy": "2026-08-31",
+      "revGrowthPriorPeriodEndLegacy": "2025-08-31",
+      "overviewValueLegacy": 0.027,
       "overviewPeriodLegacy": {
         "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
+        "periodEnd": "2026-02-28",
+        "priorPeriodEnd": "2025-02-28",
         "reason": null
       },
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 22.814587973273937,
+          "pct": 3.3746807734403417,
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-08-31"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.23048498845265586,
+        "value": 0.012955949770779407,
         "period": {
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-08-31"
         }
       }
     },
     {
-      "rank": 12,
+      "rank": 10,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CASS",
-      "score": 48.4,
+      "score": 49.3,
+      "scoreCycleLegacy": 49.3,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -1398,7 +1172,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 687221056,
+      "marketCap": 703063296,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -1409,17 +1183,18 @@
       "coverageWeight": 0.58,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 48.6,
-      "scoreShrunk": 48.4,
+      "scoreBase": 50.5,
+      "scoreShrunk": 49.3,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 57.4,
+          "pct": 61.1,
           "weight": 1.9
         },
         {
@@ -1434,7 +1209,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 46.3,
+          "pct": 50,
           "weight": 1.4
         },
         {
@@ -1503,11 +1278,12 @@
       }
     },
     {
-      "rank": 13,
+      "rank": 11,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "PKOH",
-      "score": 47.3,
+      "score": 47.9,
+      "scoreCycleLegacy": 47.9,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1521,7 +1297,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 640023744,
+      "marketCap": 630315456,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -1532,17 +1308,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 47.1,
-      "scoreShrunk": 47.3,
+      "scoreBase": 47.8,
+      "scoreShrunk": 47.9,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 46.3,
+          "pct": 50,
           "weight": 1.9
         },
         {
@@ -1625,11 +1402,12 @@
       }
     },
     {
-      "rank": 14,
+      "rank": 12,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "LXFR",
-      "score": 46.3,
+      "score": 47.3,
+      "scoreCycleLegacy": 47.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1643,7 +1421,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 460267072,
+      "marketCap": 463210592,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1654,17 +1432,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 46,
-      "scoreShrunk": 46.3,
+      "scoreBase": 47.1,
+      "scoreShrunk": 47.3,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 9.3,
+          "pct": 13,
           "weight": 1.9
         },
         {
@@ -1679,7 +1458,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 9.3,
+          "pct": 13,
           "weight": 1.4
         },
         {
@@ -1747,11 +1526,12 @@
       }
     },
     {
-      "rank": 15,
+      "rank": 13,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ONT",
       "score": 45.4,
+      "scoreCycleLegacy": 45.4,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -1766,7 +1546,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 550992384,
+      "marketCap": 566444032,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1782,7 +1562,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -1873,11 +1654,12 @@
       }
     },
     {
-      "rank": 16,
+      "rank": 14,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "FSTR",
-      "score": 43.4,
+      "score": 44.7,
+      "scoreCycleLegacy": 44.7,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1893,9 +1675,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 383550560,
+      "marketCap": 438148160,
       "phase": "inflected",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
@@ -1904,17 +1686,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 42.9,
-      "scoreShrunk": 43.4,
+      "scoreBase": 44.3,
+      "scoreShrunk": 44.7,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 13,
+          "pct": 16.7,
           "weight": 1.9
         },
         {
@@ -1929,7 +1712,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 16.7,
+          "pct": 20.4,
           "weight": 1.4
         },
         {
@@ -1939,7 +1722,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 63.5,
+          "pct": 65.4,
           "weight": 1.6
         },
         {
@@ -1997,11 +1780,12 @@
       }
     },
     {
-      "rank": 17,
+      "rank": 15,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "TWI",
       "score": 43.2,
+      "scoreCycleLegacy": 43.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -2016,7 +1800,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 322386752,
+      "marketCap": 314633984,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2032,7 +1816,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -2120,11 +1905,12 @@
       }
     },
     {
-      "rank": 18,
+      "rank": 16,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "BBCP",
-      "score": 41.6,
+      "score": 42.9,
+      "scoreCycleLegacy": 42.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2139,7 +1925,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 532658432,
+      "marketCap": 510485344,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -2150,17 +1936,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 41,
-      "scoreShrunk": 41.6,
+      "scoreBase": 42.4,
+      "scoreShrunk": 42.9,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 53.7,
           "weight": 1.9
         },
         {
@@ -2175,7 +1962,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 53.7,
+          "pct": 57.4,
           "weight": 1.4
         },
         {
@@ -2185,7 +1972,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 36.5,
+          "pct": 38.5,
           "weight": 1.6
         },
         {
@@ -2243,11 +2030,136 @@
       }
     },
     {
-      "rank": 19,
+      "rank": 17,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "RLGT",
+      "score": 42.3,
+      "scoreCycleLegacy": 37.7,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.154,
+        "companion": 43.7
+      },
+      "name": "Radiant Logistics, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 451004416,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 28,
+      "cohortFallback": false,
+      "scoreBase": 57,
+      "scoreShrunk": 56.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.749,
+        "cycleLegacy": 0.667
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 72.2,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 20.4,
+          "weight": 2.4
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 54,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 64.8,
+          "weight": 1.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 64.8,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 75,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 87,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 18.522078157584552,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 18.522078157584552,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": 0.026,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 18.522078157584552,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.1543993353006905,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 18,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "JBI",
-      "score": 40.5,
+      "score": 40.2,
+      "scoreCycleLegacy": 40.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2259,7 +2171,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 638519488,
+      "marketCap": 682178944,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -2270,12 +2182,13 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 39.9,
-      "scoreShrunk": 40.5,
+      "scoreBase": 39.5,
+      "scoreShrunk": 40.2,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -2300,7 +2213,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 16.7,
+          "pct": 13,
           "weight": 0.9
         },
         {
@@ -2363,11 +2276,12 @@
       }
     },
     {
-      "rank": 20,
+      "rank": 19,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SBC",
-      "score": 37.3,
+      "score": 37.9,
+      "scoreCycleLegacy": 37.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2383,7 +2297,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 535832576,
+      "marketCap": 547145728,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -2394,17 +2308,18 @@
       "coverageWeight": 0.94,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 35.7,
-      "scoreShrunk": 37.3,
+      "scoreBase": 36.4,
+      "scoreShrunk": 37.9,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 53.7,
+          "pct": 57.4,
           "weight": 1.9
         },
         {
@@ -2490,41 +2405,293 @@
       }
     },
     {
-      "rank": 21,
+      "rank": 20,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "RLGT",
-      "score": 37,
+      "ticker": "ACCO",
+      "score": 37.2,
+      "scoreCycleLegacy": 37.2,
       "track": "profitable",
       "lamps": [
-        "arDivergence"
+        "peakMargin",
+        "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.154,
-        "companion": 43.7
+        "value": 0.073,
+        "companion": 4.2
       },
-      "name": "Radiant Logistics, Inc.",
+      "name": "Acco Brands Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 442078240,
-      "phase": "established",
-      "mcapBand": "mid",
+      "marketCap": 508801760,
+      "phase": "inflected",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2005,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 55.8,
-      "scoreShrunk": 55.4,
+      "scoreBase": 36.3,
+      "scoreShrunk": 37.2,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 0.667
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 25.9,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 57.4,
+          "weight": 2.4
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 34,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 22.2,
+          "weight": 1.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 37,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 26.9,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 50,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -0.8861089392754762,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 457,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": -8.492377865802425,
+      "revGrowthBasisLegacy": "year",
+      "revGrowthPeriodEndLegacy": "2025-12-31",
+      "revGrowthPriorPeriodEndLegacy": "2024-12-31",
+      "overviewValueLegacy": -0.1,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -0.8861089392754762,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": 0.0726698262243286,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      }
+    },
+    {
+      "rank": 21,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "WNC",
+      "score": 37,
+      "scoreCycleLegacy": 55,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.053,
+        "companion": 53.4
+      },
+      "name": "Wabash National Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 471754112,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1991,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 28,
+      "cohortFallback": false,
+      "scoreBase": 55.3,
+      "scoreShrunk": 55,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.673,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 85.2,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 68.5,
+          "weight": 2.4
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 2,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 81.5,
+          "weight": 1.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 7.4,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 78.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 42.6,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 24.84649956105296,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": 24.84649956105296,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
+      "overviewValueLegacy": -0.736,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 24.84649956105296,
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.05303030303030298,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-09-30"
+        }
+      }
+    },
+    {
+      "rank": 22,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "TWIN",
+      "score": 33.4,
+      "scoreCycleLegacy": 57.2,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.004,
+        "companion": 42.2
+      },
+      "name": "Twin Disc, Incorporated",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 370742368,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 28,
+      "cohortFallback": false,
+      "scoreBase": 57.7,
+      "scoreShrunk": 57.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.584,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -2534,36 +2701,36 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 20.4,
+          "pct": 42.6,
           "weight": 2.4
         },
         {
           "key": "gpGrowth",
-          "pct": 54,
+          "pct": 70,
           "weight": 2.1
         },
         {
           "key": "ruleOfX",
-          "pct": 61.1,
+          "pct": 63,
           "weight": 1.4
         },
         {
           "key": "marginTrajectory",
-          "pct": 64.8,
+          "pct": 72.2,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 75,
+          "pct": 40.4,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 87,
+          "pct": 53.7,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 18.522078157584552,
+      "revGrowthYoYPct": 18.33095430190943,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -2584,11 +2751,11 @@
         "priorPeriodEnd": "2025-06-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 18.522078157584552,
+      "revGrowthYoYPctLegacy": 18.33095430190943,
       "revGrowthBasisLegacy": "quarter",
       "revGrowthPeriodEndLegacy": "2026-06-30",
       "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 0.026,
+      "overviewValueLegacy": 0.092,
       "overviewPeriodLegacy": {
         "basis": "year",
         "periodEnd": "2026-06-30",
@@ -2598,13 +2765,13 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 18.522078157584552,
+          "pct": 18.33095430190943,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.1543993353006905,
+        "value": 0.003664467985875053,
         "period": {
           "basis": "quarter",
           "periodEnd": "2026-06-30"
@@ -2612,11 +2779,12 @@
       }
     },
     {
-      "rank": 22,
+      "rank": 23,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "FWRD",
-      "score": 29,
+      "score": 29.6,
+      "scoreCycleLegacy": 29.6,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2631,7 +2799,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 621567872,
+      "marketCap": 644538880,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -2642,17 +2810,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 27.5,
-      "scoreShrunk": 29,
+      "scoreBase": 28.1,
+      "scoreShrunk": 29.6,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 42.6,
+          "pct": 46.3,
           "weight": 1.9
         },
         {
@@ -2735,11 +2904,12 @@
       }
     },
     {
-      "rank": 23,
+      "rank": 24,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "GASS",
-      "score": 26.2,
+      "score": 26,
+      "scoreCycleLegacy": 26,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2754,7 +2924,7 @@
       "country": "Greece",
       "region": "Europe",
       "sector": "Industrials",
-      "marketCap": 322854144,
+      "marketCap": 311941824,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2765,12 +2935,13 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 24.5,
-      "scoreShrunk": 26.2,
+      "scoreBase": 24.2,
+      "scoreShrunk": 26,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -2795,7 +2966,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 13,
+          "pct": 9.3,
           "weight": 0.9
         },
         {
@@ -2858,134 +3029,12 @@
       }
     },
     {
-      "rank": 24,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "ACCO",
-      "score": 24.7,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.073,
-        "companion": 4.2
-      },
-      "name": "Acco Brands Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 479252448,
-      "phase": "inflected",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2005,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 28,
-      "cohortFallback": false,
-      "scoreBase": 36.1,
-      "scoreShrunk": 37,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.667
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 24.1,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 57.4,
-          "weight": 2.4
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 34,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 24.1,
-          "weight": 1.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 38.9,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 25,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 50,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -0.8861089392754762,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 457,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-09-30",
-      "revGrowthPriorPeriodEnd": "2025-09-30",
-      "revGrowthSourcePeriodEnd": "2026-09-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-09-30",
-        "priorPeriodEnd": "2025-09-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": -8.492377865802425,
-      "revGrowthBasisLegacy": "year",
-      "revGrowthPeriodEndLegacy": "2025-12-31",
-      "revGrowthPriorPeriodEndLegacy": "2024-12-31",
-      "overviewValueLegacy": -0.1,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -0.8861089392754762,
-          "basis": "quarter",
-          "periodEnd": "2026-09-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.0726698262243286,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-09-30"
-        }
-      }
-    },
-    {
       "rank": 25,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ACTG",
       "score": 23.9,
+      "scoreCycleLegacy": 23.9,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -2999,7 +3048,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 416695680,
+      "marketCap": 425478496,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -3015,7 +3064,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 0.286
+        "cycle": 0.286,
+        "cycleLegacy": 0.286
       },
       "axisBreakdown": [
         {
@@ -3108,6 +3158,7 @@
       "rankGrundShadow": null,
       "ticker": "SHIP",
       "score": 18.2,
+      "scoreCycleLegacy": 18.2,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -3122,7 +3173,7 @@
       "country": "Greece",
       "region": "Europe",
       "sector": "Industrials",
-      "marketCap": 319815232,
+      "marketCap": 313314912,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3138,7 +3189,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 0.4
+        "cycle": 0.4,
+        "cycleLegacy": 0.4
       },
       "axisBreakdown": [
         {
@@ -3230,7 +3282,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "QUAD",
-      "score": 14.3,
+      "score": 14.4,
+      "scoreCycleLegacy": 14.2,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -3246,7 +3299,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 379854784,
+      "marketCap": 393093696,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3257,17 +3310,18 @@
       "coverageWeight": 1,
       "cohortN": 28,
       "cohortFallback": false,
-      "scoreBase": 34.6,
-      "scoreShrunk": 35.7,
+      "scoreBase": 34.4,
+      "scoreShrunk": 35.4,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 0.4
+        "cycle": 0.405,
+        "cycleLegacy": 0.4
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 27.8,
+          "pct": 25.9,
           "weight": 1.9
         },
         {
@@ -3282,12 +3336,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 20.4,
+          "pct": 22.2,
           "weight": 1.4
         },
         {
           "key": "marginTrajectory",
-          "pct": 27.8,
+          "pct": 25.9,
           "weight": 0.9
         },
         {
@@ -3356,7 +3410,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "FBYD",
-      "score": 80.3,
+      "score": 80.5,
+      "scoreCycleLegacy": 80.5,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3374,58 +3429,59 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 340220768,
+      "marketCap": 374145888,
       "phase": "unprofitable",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2023,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 83.7,
-      "scoreShrunk": 80.3,
+      "scoreBase": 83.8,
+      "scoreShrunk": 80.5,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 86.1,
+          "pct": 86.8,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 97.1,
+          "pct": 97.2,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 89.3,
+          "pct": 90,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 86.1,
+          "pct": 86.8,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 82.1,
+          "pct": 83.3,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 55.9,
+          "pct": 52.8,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 34.4,
+          "pct": 32.4,
           "weight": 0.6
         }
       ],
@@ -3482,7 +3538,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "XRX",
-      "score": 65.1,
+      "score": 66.1,
+      "scoreCycleLegacy": 66.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3508,49 +3565,50 @@
       "ipoYear": 1962,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 66.7,
-      "scoreShrunk": 65.1,
+      "scoreBase": 67.8,
+      "scoreShrunk": 66.1,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 69.4,
+          "pct": 71.1,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 73.5,
+          "pct": 75,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 46.4,
+          "pct": 50,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 69.4,
+          "pct": 71.1,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 53.6,
+          "pct": 50,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 73.5,
+          "pct": 75,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 96.9,
+          "pct": 91.2,
           "weight": 0.6
         }
       ],
@@ -3607,7 +3665,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ELMT",
-      "score": 61.5,
+      "score": 62,
+      "scoreCycleLegacy": 62,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3623,7 +3682,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 671936512,
+      "marketCap": 613149696,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -3632,19 +3691,20 @@
       "ipoYear": 2026,
       "coverageAxes": "6/7",
       "coverageWeight": 0.72,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 68.3,
-      "scoreShrunk": 61.5,
+      "scoreBase": 69,
+      "scoreShrunk": 62,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75,
+          "pct": 76.3,
           "weight": 2
         },
         {
@@ -3654,27 +3714,27 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 67.9,
+          "pct": 70,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 75,
+          "pct": 76.3,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 67.9,
+          "pct": 70,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 47.2,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 65.6,
+          "pct": 61.8,
           "weight": 0.6
         }
       ],
@@ -3731,7 +3791,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "KRNT",
-      "score": 60.9,
+      "score": 61.7,
+      "scoreCycleLegacy": 61.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3747,7 +3808,7 @@
       "country": "Israel",
       "region": "Middle East",
       "sector": "Industrials",
-      "marketCap": 725275648,
+      "marketCap": 729572288,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -3756,49 +3817,50 @@
       "ipoYear": 2015,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 62.1,
-      "scoreShrunk": 60.9,
+      "scoreBase": 62.9,
+      "scoreShrunk": 61.7,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 52.8,
+          "pct": 55.3,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 67.6,
+          "pct": 69.4,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 82.1,
+          "pct": 83.3,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 52.8,
+          "pct": 55.3,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 32.1,
+          "pct": 30,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 67.6,
+          "pct": 63.9,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 46.9,
+          "pct": 44.1,
           "weight": 0.6
         }
       ],
@@ -3855,7 +3917,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CMCO",
-      "score": 60.1,
+      "score": 60.3,
+      "scoreCycleLegacy": 60.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3874,7 +3937,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 523886016,
+      "marketCap": 537744896,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -3883,49 +3946,50 @@
       "ipoYear": 1996,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 74.5,
-      "scoreShrunk": 72.1,
+      "scoreBase": 74.7,
+      "scoreShrunk": 72.3,
       "factors": {
         "burn": 0.834,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.7,
+          "pct": 92.1,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 85.3,
+          "pct": 86.1,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 75,
+          "pct": 76.7,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 91.7,
+          "pct": 92.1,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 25,
+          "pct": 23.3,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 26.5,
+          "pct": 25,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 78.1,
+          "pct": 73.5,
           "weight": 0.6
         }
       ],
@@ -3981,131 +4045,9 @@
       "rank": 6,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "KELYA",
-      "score": 55.3,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.06,
-        "companion": -11.4
-      },
-      "name": "Kelly Services, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 568214656,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 55.9,
-      "scoreShrunk": 55.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 36.1,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 61.8,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 60.7,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 30.6,
-          "weight": 0.9
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 46.4,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 85.3,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 84.4,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -5.7723724813940835,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": -5.7723724813940835,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": -0.034,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -5.7723724813940835,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.05986696230598665,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 7,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "RGR",
-      "score": 55.2,
+      "score": 57.3,
+      "scoreCycleLegacy": 57.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit"
@@ -4119,7 +4061,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 720938880,
+      "marketCap": 797474752,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -4128,49 +4070,50 @@
       "ipoYear": 1973,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 55.8,
-      "scoreShrunk": 55.2,
+      "scoreBase": 58.1,
+      "scoreShrunk": 57.3,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 63.9,
+          "pct": 65.8,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 50,
+          "pct": 52.8,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 25,
+          "pct": 30,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 63.9,
+          "pct": 65.8,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 75,
+          "pct": 76.7,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 97.1,
+          "pct": 97.2,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 59.4,
+          "pct": 55.9,
           "weight": 0.6
         }
       ],
@@ -4223,11 +4166,137 @@
       }
     },
     {
+      "rank": 7,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "KELYA",
+      "score": 55.4,
+      "scoreCycleLegacy": 55.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.06,
+        "companion": -11.4
+      },
+      "name": "Kelly Services, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 587317184,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 19,
+      "cohortFallback": false,
+      "scoreBase": 56,
+      "scoreShrunk": 55.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 34.2,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 63.9,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 63.3,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 28.9,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 43.3,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 86.1,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 79.4,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -5.7723724813940835,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": -5.7723724813940835,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": -0.034,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -5.7723724813940835,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.05986696230598665,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
       "rank": 8,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "OIO",
-      "score": 39.2,
+      "score": 40,
+      "scoreCycleLegacy": 40,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4248,7 +4317,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Industrials",
-      "marketCap": 612518912,
+      "marketCap": 605558464,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -4257,34 +4326,35 @@
       "ipoYear": 2022,
       "coverageAxes": "6/7",
       "coverageWeight": 0.92,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 37.1,
-      "scoreShrunk": 39.2,
+      "scoreBase": 38.1,
+      "scoreShrunk": 40,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 41.7,
+          "pct": 39.5,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 44.1,
+          "pct": 47.2,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 32.1,
+          "pct": 36.7,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 36.1,
+          "pct": 34.2,
           "weight": 0.9
         },
         {
@@ -4294,12 +4364,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 14.7,
+          "pct": 13.9,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 40.6,
+          "pct": 38.2,
           "weight": 0.6
         }
       ],
@@ -4358,395 +4428,9 @@
       "rank": 9,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "ADUR",
-      "score": 34.5,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "highDilution",
-        "lowRoic",
-        "burnAccelerating",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -63.7
-      },
-      "name": "Aduro Clean Technologies Inc.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 334160256,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.72,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 31.4,
-      "scoreShrunk": 37.6,
-      "factors": {
-        "burn": 0.919,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 19.4,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 55.9,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 19.4,
-          "weight": 0.9
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 8.8,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 9.4,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -27.682819230835776,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 2,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1,
-      "revGrowthBasis": "year",
-      "revGrowthPeriodEnd": "2026-05-31",
-      "revGrowthPriorPeriodEnd": "2025-05-31",
-      "revGrowthSourcePeriodEnd": "2026-05-31",
-      "revGrowthSourcePriorPeriodEnd": "2025-05-31",
-      "overviewPeriod": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "revGrowthYoYPctLegacy": -27.682819230835776,
-      "revGrowthBasisLegacy": "year",
-      "revGrowthPeriodEndLegacy": "2026-05-31",
-      "revGrowthPriorPeriodEndLegacy": "2025-05-31",
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -27.682819230835776,
-          "basis": "year",
-          "periodEnd": "2026-05-31"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": null,
-        "period": {
-          "basis": "none",
-          "periodEnd": null,
-          "reason": "Kein vergleichbares Wertepaar vorhanden."
-        }
-      }
-    },
-    {
-      "rank": 10,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "NVRI",
-      "score": 31.2,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -5.834,
-        "companion": -93.6
-      },
-      "name": "Enviri Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 536458016,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.71,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 21.1,
-      "scoreShrunk": 31.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 8.3,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 26.5,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 8.3,
-          "weight": 0.9
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 10.7,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 71.9,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -40.70930335599356,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 4,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": -40.70930335599356,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -40.70930335599356,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -5.834188817598533,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 11,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "SERV",
-      "score": 28.3,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "arDivergence",
-        "burnAccelerating",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 930
-      },
-      "name": "Serve Robotics Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 302609184,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 48.9,
-      "scoreShrunk": 49,
-      "factors": {
-        "burn": 0.578,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 97.2,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.9,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 97.2,
-          "weight": 0.9
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 96.4,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 20.6,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 9.4,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 404.3613707165109,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 34.1,
-        "pctl": 0.882
-      },
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "revGrowthYoYPctLegacy": 404.3613707165109,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 404.3613707165109,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": null,
-        "period": {
-          "basis": "none",
-          "periodEnd": null,
-          "reason": "Kein vergleichbares Wertepaar vorhanden."
-        }
-      }
-    },
-    {
-      "rank": 12,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "TRC",
-      "score": 26.4,
+      "score": 37,
+      "scoreCycleLegacy": 26.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4764,7 +4448,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 440449504,
+      "marketCap": 439909120,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -4773,49 +4457,50 @@
       "ipoYear": 1980,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 82.4,
-      "scoreShrunk": 79.1,
+      "scoreBase": 83,
+      "scoreShrunk": 79.9,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 0.333
+        "cycle": 0.463,
+        "cycleLegacy": 0.333
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.6,
+          "pct": 81.6,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 79.4,
+          "pct": 80.6,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 96.4,
+          "pct": 96.7,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 80.6,
+          "pct": 81.6,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 89.3,
+          "pct": 90,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 79.4,
+          "pct": 80.6,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 53.1,
+          "pct": 50,
           "weight": 0.6
         }
       ],
@@ -4868,11 +4553,269 @@
       }
     },
     {
-      "rank": 13,
+      "rank": 10,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "ADUR",
+      "score": 35,
+      "scoreCycleLegacy": 35,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "highDilution",
+        "lowRoic",
+        "burnAccelerating",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": -63.7
+      },
+      "name": "Aduro Clean Technologies Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 353122208,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.72,
+      "cohortN": 19,
+      "cohortFallback": false,
+      "scoreBase": 32.2,
+      "scoreShrunk": 38.1,
+      "factors": {
+        "burn": 0.919,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 18.4,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 58.3,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 18.4,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 11.1,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 8.8,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -27.682819230835765,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 2,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1,
+      "revGrowthBasis": "year",
+      "revGrowthPeriodEnd": "2026-05-31",
+      "revGrowthPriorPeriodEnd": "2025-05-31",
+      "revGrowthSourcePeriodEnd": "2026-05-31",
+      "revGrowthSourcePriorPeriodEnd": "2025-05-31",
+      "overviewPeriod": {
+        "basis": "none",
+        "periodEnd": null,
+        "priorPeriodEnd": null,
+        "reason": "Kein vergleichbares Wertepaar vorhanden."
+      },
+      "revGrowthYoYPctLegacy": -27.682819230835765,
+      "revGrowthBasisLegacy": "year",
+      "revGrowthPeriodEndLegacy": "2026-05-31",
+      "revGrowthPriorPeriodEndLegacy": "2025-05-31",
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": {
+        "basis": "none",
+        "periodEnd": null,
+        "priorPeriodEnd": null,
+        "reason": "Kein vergleichbares Wertepaar vorhanden."
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -27.682819230835765,
+          "basis": "year",
+          "periodEnd": "2026-05-31"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": null,
+        "period": {
+          "basis": "none",
+          "periodEnd": null,
+          "reason": "Kein vergleichbares Wertepaar vorhanden."
+        }
+      }
+    },
+    {
+      "rank": 11,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "NVRI",
+      "score": 30.3,
+      "scoreCycleLegacy": 30.3,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -5.834,
+        "companion": -93.6
+      },
+      "name": "Enviri Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 578179392,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.71,
+      "cohortN": 19,
+      "cohortFallback": false,
+      "scoreBase": 19.9,
+      "scoreShrunk": 30.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 7.9,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 25,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 7.9,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 10,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 67.6,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -40.70930335599356,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 4,
+      "qSpanTage": 456,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": -40.70930335599356,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": {
+        "basis": "none",
+        "periodEnd": null,
+        "priorPeriodEnd": null,
+        "reason": "Kein vergleichbares Wertepaar vorhanden."
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -40.70930335599356,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -5.834188817598533,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      }
+    },
+    {
+      "rank": 12,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "TITN",
-      "score": 24.1,
+      "score": 28.2,
+      "scoreCycleLegacy": 24.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4888,7 +4831,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 547139840,
+      "marketCap": 529960832,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -4897,49 +4840,50 @@
       "ipoYear": 2007,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 48.1,
-      "scoreShrunk": 48.3,
+      "scoreBase": 48.6,
+      "scoreShrunk": 48.8,
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 0.5
+        "cycle": 0.579,
+        "cycleLegacy": 0.5
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 30.6,
+          "pct": 28.9,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 38.2,
+          "pct": 41.7,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 53.6,
+          "pct": 56.7,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 41.7,
+          "pct": 39.5,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 39.3,
+          "pct": 36.7,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 91.2,
+          "pct": 91.7,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 90.6,
+          "pct": 85.3,
           "weight": 0.6
         }
       ],
@@ -4992,11 +4936,148 @@
       }
     },
     {
+      "rank": 13,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "SERV",
+      "score": 28.2,
+      "scoreCycleLegacy": 28.2,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "burnAccelerating",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 930
+      },
+      "name": "Serve Robotics Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 302609184,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 19,
+      "cohortFallback": false,
+      "scoreBase": 48.8,
+      "scoreShrunk": 48.9,
+      "factors": {
+        "burn": 0.578,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 97.4,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.8,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 97.4,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 96.7,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 19.4,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 8.8,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 404.3613707165109,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 34.1,
+        "pctl": 0.889
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "none",
+        "periodEnd": null,
+        "priorPeriodEnd": null,
+        "reason": "Kein vergleichbares Wertepaar vorhanden."
+      },
+      "revGrowthYoYPctLegacy": 404.3613707165109,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": {
+        "basis": "none",
+        "periodEnd": null,
+        "priorPeriodEnd": null,
+        "reason": "Kein vergleichbares Wertepaar vorhanden."
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": 404.3613707165109,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": null,
+        "period": {
+          "basis": "none",
+          "periodEnd": null,
+          "reason": "Kein vergleichbares Wertepaar vorhanden."
+        }
+      }
+    },
+    {
       "rank": 14,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "RR",
-      "score": 22.2,
+      "score": 22.4,
+      "scoreCycleLegacy": 22.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -5024,49 +5105,50 @@
       "ipoYear": 2023,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 47.9,
-      "scoreShrunk": 48.1,
+      "scoreBase": 48.3,
+      "scoreShrunk": 48.5,
       "factors": {
         "burn": 0.692,
         "growth": 1,
-        "cycle": 0.667
+        "cycle": 0.667,
+        "cycleLegacy": 0.667
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 58.3,
+          "pct": 60.5,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 91.2,
+          "pct": 91.7,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 17.9,
+          "pct": 16.7,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 58.3,
+          "pct": 60.5,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 3.6,
+          "pct": 3.3,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 2.9,
+          "pct": 2.8,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 21.9,
+          "pct": 20.6,
           "weight": 0.6
         }
       ],
@@ -5122,141 +5204,9 @@
       "rank": 15,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "SPCE",
-      "score": 21.1,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "crashRisk",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -154.1
-      },
-      "name": "Virgin Galactic Holdings, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 378989760,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 10.2,
-      "scoreShrunk": 21.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 2.8,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 8.8,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 2.8,
-          "weight": 0.9
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 17.9,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 32.4,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 9.4,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -66.99507389162562,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 37.9,
-        "pctl": 0.941
-      },
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "revGrowthYoYPctLegacy": -66.99507389162562,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -66.99507389162562,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": null,
-        "period": {
-          "basis": "none",
-          "periodEnd": null,
-          "reason": "Kein vergleichbares Wertepaar vorhanden."
-        }
-      }
-    },
-    {
-      "rank": 16,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "SPIR",
-      "score": 21,
+      "score": 21.4,
+      "scoreCycleLegacy": 21.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -5278,7 +5228,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 340300896,
+      "marketCap": 327784096,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5287,49 +5237,50 @@
       "ipoYear": 2020,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 26.5,
-      "scoreShrunk": 28.9,
+      "scoreBase": 27.3,
+      "scoreShrunk": 29.5,
       "factors": {
         "burn": 0.727,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 13.9,
+          "pct": 15.8,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 14.7,
+          "pct": 13.9,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 39.3,
+          "pct": 43.3,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 13.9,
+          "pct": 15.8,
           "weight": 0.9
         },
         {
           "key": "marginTrajectory",
-          "pct": 60.7,
+          "pct": 63.3,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 44.1,
+          "pct": 38.9,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 28.1,
+          "pct": 26.5,
           "weight": 0.6
         }
       ],
@@ -5339,13 +5290,13 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 23.4,
-        "pctl": 0.765
+        "pctl": 0.778
       },
       "ath": {
-        "distancePct": -94.3,
+        "distancePct": -94.8,
         "athDate": "2021-09-22",
         "monthsAgo": 61,
-        "lastDate": "2026-11-04"
+        "lastDate": "2026-11-05"
       },
       "qPunkte": 5,
       "qSpanTage": 456,
@@ -5393,11 +5344,147 @@
       }
     },
     {
+      "rank": 16,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "SPCE",
+      "score": 20.5,
+      "scoreCycleLegacy": 20.5,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "crashRisk",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": -154.1
+      },
+      "name": "Virgin Galactic Holdings, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": 380505728,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 19,
+      "cohortFallback": false,
+      "scoreBase": 9.6,
+      "scoreShrunk": 20.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 2.6,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 8.3,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 2.6,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 16.7,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 30.6,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 8.8,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -66.99507389162562,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 37.9,
+        "pctl": 0.944
+      },
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "none",
+        "periodEnd": null,
+        "priorPeriodEnd": null,
+        "reason": "Kein vergleichbares Wertepaar vorhanden."
+      },
+      "revGrowthYoYPctLegacy": -66.99507389162562,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": null,
+      "overviewPeriodLegacy": {
+        "basis": "none",
+        "periodEnd": null,
+        "priorPeriodEnd": null,
+        "reason": "Kein vergleichbares Wertepaar vorhanden."
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -66.99507389162562,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": null,
+        "period": {
+          "basis": "none",
+          "periodEnd": null,
+          "reason": "Kein vergleichbares Wertepaar vorhanden."
+        }
+      }
+    },
+    {
       "rank": 17,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "ROMA",
-      "score": 20.4,
+      "score": 20.3,
+      "scoreCycleLegacy": 20.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -5419,7 +5506,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Industrials",
-      "marketCap": 389552288,
+      "marketCap": 386574048,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5428,34 +5515,35 @@
       "ipoYear": 2024,
       "coverageAxes": "5/7",
       "coverageWeight": 0.86,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
       "scoreBase": 21.6,
-      "scoreShrunk": 27.9,
+      "scoreShrunk": 27.7,
       "factors": {
         "burn": 0.732,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 25,
+          "pct": 23.7,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 20.6,
+          "pct": 22.2,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 10.7,
+          "pct": 10,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 25,
+          "pct": 23.7,
           "weight": 0.9
         },
         {
@@ -5465,7 +5553,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 38.2,
+          "pct": 38.9,
           "weight": 0.9
         },
         {
@@ -5480,7 +5568,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": {
         "ratePct": 24.6,
-        "pctl": 0.824
+        "pctl": 0.833
       },
       "ath": null,
       "qPunkte": 0,
@@ -5531,6 +5619,7 @@
       "rankGrundShadow": null,
       "ticker": "PHOE",
       "score": 19.2,
+      "scoreCycleLegacy": 19.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -5551,41 +5640,42 @@
       "sector": "Industrials",
       "marketCap": 401654176,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2025,
       "coverageAxes": "5/7",
       "coverageWeight": 0.86,
-      "cohortN": 18,
+      "cohortN": 19,
       "cohortFallback": false,
-      "scoreBase": 33.8,
-      "scoreShrunk": 37.2,
+      "scoreBase": 33.7,
+      "scoreShrunk": 37.1,
       "factors": {
         "burn": 0.516,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 47.2,
+          "pct": 50,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 32.4,
+          "pct": 30.6,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 3.6,
+          "pct": 3.3,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 47.2,
+          "pct": 50,
           "weight": 0.9
         },
         {
@@ -5595,7 +5685,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 61.8,
+          "pct": 58.3,
           "weight": 0.9
         },
         {
@@ -5649,6 +5739,137 @@
         "period": {
           "basis": "year",
           "periodEnd": "2026-03-31"
+        }
+      }
+    },
+    {
+      "rank": 19,
+      "rankGrund": null,
+      "rankGrundShadow": null,
+      "ticker": "EH",
+      "score": 12.7,
+      "scoreCycleLegacy": 12.7,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "burnAccelerating",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.315,
+        "companion": -71.9
+      },
+      "name": "EHang Holdings Limited",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Industrials",
+      "marketCap": 309449056,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 19,
+      "cohortFallback": false,
+      "scoreBase": 19.1,
+      "scoreShrunk": 22,
+      "factors": {
+        "burn": 0.575,
+        "growth": 1,
+        "cycle": 1,
+        "cycleLegacy": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 15.8,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 0,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 40,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 15.8,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 20,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 38.9,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 23.5,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -31.268696887602477,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1,
+      "revGrowthBasis": "quarter",
+      "revGrowthPeriodEnd": "2026-06-30",
+      "revGrowthPriorPeriodEnd": "2025-06-30",
+      "revGrowthSourcePeriodEnd": "2026-06-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "overviewPeriod": {
+        "basis": "quarter",
+        "periodEnd": "2026-06-30",
+        "priorPeriodEnd": "2025-06-30",
+        "reason": null
+      },
+      "revGrowthYoYPctLegacy": -31.268696887602477,
+      "revGrowthBasisLegacy": "quarter",
+      "revGrowthPeriodEndLegacy": "2026-06-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "overviewValueLegacy": -0.081,
+      "overviewPeriodLegacy": {
+        "basis": "year",
+        "periodEnd": "2025-12-31",
+        "priorPeriodEnd": "2024-12-31",
+        "reason": null
+      },
+      "g31Hinweis": null,
+      "g31Shadow": {
+        "v1": {
+          "pct": -31.268696887602477,
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
+        }
+      },
+      "g31OverviewShadow": {
+        "value": -0.3154518448357515,
+        "period": {
+          "basis": "quarter",
+          "periodEnd": "2026-06-30"
         }
       }
     }

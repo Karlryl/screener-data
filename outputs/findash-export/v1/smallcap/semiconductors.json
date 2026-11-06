@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-05T11:05:11.940Z",
+  "generated_at": "2026-11-06T10:58:23.953Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.6,
-    "generated_at": "2026-11-05T10:54:05.849Z",
-    "honest_coverage_pct": 87.7,
-    "n_addressable": 18357,
-    "n_ok": 16107,
-    "n_total": 23496,
-    "n_failed": 1342,
+    "coverage_pct": 68.3,
+    "generated_at": "2026-11-06T10:47:55.938Z",
+    "honest_coverage_pct": 88.3,
+    "n_addressable": 18174,
+    "n_ok": 16055,
+    "n_total": 23505,
+    "n_failed": 1331,
     "reporting_ccy_held": []
   },
   "profitable": [
@@ -23,6 +23,7 @@
       "rankGrundShadow": null,
       "ticker": "NVEC",
       "score": 43,
+      "scoreCycleLegacy": 43,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -36,7 +37,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 389415520,
+      "marketCap": 381664992,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -52,7 +53,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -147,6 +149,7 @@
       "rankGrundShadow": null,
       "ticker": "MRAM",
       "score": 49.1,
+      "scoreCycleLegacy": 49.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -161,7 +164,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 330865152,
+      "marketCap": 318167744,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -177,7 +180,8 @@
       "factors": {
         "burn": 1,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -270,6 +274,7 @@
       "rankGrundShadow": null,
       "ticker": "LAES",
       "score": 37.6,
+      "scoreCycleLegacy": 37.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -290,7 +295,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 308154880,
+      "marketCap": 321650688,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -306,7 +311,8 @@
       "factors": {
         "burn": 0.597,
         "growth": 1,
-        "cycle": 1
+        "cycle": 1,
+        "cycleLegacy": 1
       },
       "axisBreakdown": [
         {
@@ -354,10 +360,10 @@
         "pctl": 1
       },
       "ath": {
-        "distancePct": -93.5,
+        "distancePct": -94.4,
         "athDate": "2023-05-24",
         "monthsAgo": 41,
-        "lastDate": "2026-11-04"
+        "lastDate": "2026-11-05"
       },
       "qPunkte": 0,
       "qSpanTage": null,

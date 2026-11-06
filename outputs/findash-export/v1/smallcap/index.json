@@ -1,20 +1,20 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-05T11:05:11.464Z",
+  "generated_at": "2026-11-06T10:58:22.922Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.6,
-    "generated_at": "2026-11-05T10:54:05.849Z",
-    "honest_coverage_pct": 87.7,
-    "n_addressable": 18357,
-    "n_ok": 16107,
-    "n_total": 23496,
-    "n_failed": 1342,
+    "coverage_pct": 68.3,
+    "generated_at": "2026-11-06T10:47:55.938Z",
+    "honest_coverage_pct": 88.3,
+    "n_addressable": 18174,
+    "n_ok": 16055,
+    "n_total": 23505,
+    "n_failed": 1331,
     "reporting_ccy_held": []
   },
-  "generatedFromSnapshots": 400,
+  "generatedFromSnapshots": 406,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -49,7 +49,7 @@
       "unprofitable": 11
     },
     "smallcap-consumer-staples": {
-      "profitable": 12,
+      "profitable": 11,
       "unprofitable": 0
     },
     "smallcap-energy": {
@@ -61,12 +61,12 @@
       "unprofitable": 8
     },
     "smallcap-health-care": {
-      "profitable": 16,
-      "unprofitable": 33
+      "profitable": 15,
+      "unprofitable": 34
     },
     "smallcap-industrials": {
       "profitable": 27,
-      "unprofitable": 18
+      "unprofitable": 19
     },
     "smallcap-it-services": {
       "profitable": 3,
@@ -77,7 +77,7 @@
       "unprofitable": 0
     },
     "smallcap-real-estate": {
-      "profitable": 15,
+      "profitable": 16,
       "unprofitable": 0
     },
     "smallcap-semiconductors": {
@@ -86,7 +86,7 @@
     },
     "smallcap-software-comm-services": {
       "profitable": 30,
-      "unprofitable": 9
+      "unprofitable": 10
     },
     "smallcap-utilities": {
       "profitable": 4,
@@ -101,12 +101,71 @@
     "no-revenue": 26,
     "no-sector": 2,
     "smallcap-mcap-missing": 8,
-    "smallcap-mcap-out-of-band": 1,
-    "smallcap-thin-coverage": 26,
+    "smallcap-mcap-out-of-band": 4,
+    "smallcap-thin-coverage": 28,
     "telecom": 5,
-    "unrouted": 8
+    "unrouted": 7
   },
   "coverageFloor": 0.58,
+  "coverageFloorLive": 0.531,
+  "reference": {
+    "version": "2026-10-31.1",
+    "dataDay": "2026-10-31",
+    "renewBy": "2027-01-31",
+    "coverageFloor": 0.58,
+    "renewalDue": true,
+    "drift": {
+      "maxKs": 0.167,
+      "ksThreshold": 0.15,
+      "axesDrifted": 2
+    },
+    "notMonitored": [
+      {
+        "group": "smallcap-it-services",
+        "firms": 3,
+        "reasonDe": "Nur 3 Firmen in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung."
+      },
+      {
+        "group": "smallcap-materials",
+        "firms": 12,
+        "reasonDe": "Nur 12 Firmen in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung."
+      },
+      {
+        "group": "smallcap-real-estate|profitable",
+        "axis": "capitalEfficiency",
+        "sign": "profitable",
+        "firms": 11,
+        "values": 11,
+        "reasonDe": "Achse capitalEfficiency, nur verglichen mit Firmen mit Gewinn: 11 Firmen, davon 11 mit verwendbarem Wert in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung."
+      },
+      {
+        "group": "smallcap-real-estate|profitable",
+        "axis": "capitalEfficiency",
+        "sign": "unknown",
+        "firms": 1,
+        "values": 0,
+        "reasonDe": "Achse capitalEfficiency, nur verglichen mit Firmen ohne bekanntes Gewinnvorzeichen: 1 Firma, davon 0 mit verwendbarem Wert in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung."
+      },
+      {
+        "group": "smallcap-real-estate|profitable",
+        "axis": "capitalEfficiency",
+        "sign": "unprofitable",
+        "firms": 5,
+        "values": 4,
+        "reasonDe": "Achse capitalEfficiency, nur verglichen mit Firmen mit Verlust: 5 Firmen, davon 4 mit verwendbarem Wert in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung."
+      },
+      {
+        "group": "smallcap-semiconductors",
+        "firms": 3,
+        "reasonDe": "Nur 3 Firmen in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung."
+      },
+      {
+        "group": "smallcap-utilities",
+        "firms": 5,
+        "reasonDe": "Nur 5 Firmen in der Referenz vom 31.10.2026, zu wenige für eine Abweichungsprüfung."
+      }
+    ]
+  },
   "profitSplit": {
     "smallcap-consumer-discretionary": true,
     "smallcap-consumer-staples": false,
@@ -120,5 +179,461 @@
     "smallcap-semiconductors": true,
     "smallcap-software-comm-services": true,
     "smallcap-utilities": true
+  },
+  "namedReasons": {
+    "counts": {
+      "belowFloor": 0,
+      "aboveBand": 4,
+      "noFreshValue": 31,
+      "thinCoverage": 28
+    },
+    "belowFloor": [],
+    "aboveBand": [
+      {
+        "ticker": "CLMB",
+        "name": "Climb Global Solutions, Inc.",
+        "marketCapUsd": 803225344,
+        "date": "2026-11-05",
+        "reasonDe": "über der Obergrenze von 0,8 Mrd. USD am 05.11.2026"
+      },
+      {
+        "ticker": "HELE",
+        "name": "Helen of Troy Limited",
+        "marketCapUsd": 866389184,
+        "date": "2026-11-05",
+        "reasonDe": "über der Obergrenze von 0,8 Mrd. USD am 05.11.2026"
+      },
+      {
+        "ticker": "PHR",
+        "name": "Phreesia, Inc.",
+        "marketCapUsd": 818095040,
+        "date": "2026-11-05",
+        "reasonDe": "über der Obergrenze von 0,8 Mrd. USD am 05.11.2026"
+      },
+      {
+        "ticker": "ULH",
+        "name": "Universal Logistics Holdings, Inc.",
+        "marketCapUsd": 862754560,
+        "date": "2026-11-05",
+        "reasonDe": "über der Obergrenze von 0,8 Mrd. USD am 05.11.2026"
+      }
+    ],
+    "noFreshValue": [
+      {
+        "ticker": "ARTV",
+        "name": "Artiva Biotherapeutics, Inc.",
+        "marketCapUsd": 301163136,
+        "date": "2026-10-27",
+        "reasonDe": "Kein frischer Wert seit dem 27.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "ASPI",
+        "name": "ASP Isotopes Inc.",
+        "marketCapUsd": 309684928,
+        "date": "2026-10-31",
+        "reasonDe": "Kein frischer Wert seit dem 31.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "BRBI",
+        "name": "BRBI BR Partners S.A.",
+        "marketCapUsd": 395308832,
+        "date": "2026-10-24",
+        "reasonDe": "Kein frischer Wert seit dem 24.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "BTQ",
+        "name": "BTQ Technologies Corp.",
+        "marketCapUsd": 317694272,
+        "date": "2026-10-30",
+        "reasonDe": "Kein frischer Wert seit dem 30.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "CURR",
+        "name": "CURRENC Group Inc.",
+        "marketCapUsd": 311020832,
+        "date": "2026-10-15",
+        "reasonDe": "Kein frischer Wert seit dem 15.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "DGXX",
+        "name": "Digi Power X Inc.",
+        "marketCapUsd": 300134208,
+        "date": "2026-10-14",
+        "reasonDe": "Kein frischer Wert seit dem 14.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "DRUG",
+        "name": "Bright Minds Biosciences Inc.",
+        "marketCapUsd": 542326080,
+        "date": "2026-10-31",
+        "reasonDe": "Kein frischer Wert seit dem 31.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "ECX",
+        "name": "ECARX Holdings Inc.",
+        "marketCapUsd": 349840480,
+        "date": "2026-11-04",
+        "reasonDe": "Kein frischer Wert seit dem 04.11.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "ENHA",
+        "name": "Enhanced Group Inc.",
+        "marketCapUsd": 427306656,
+        "date": "2026-10-28",
+        "reasonDe": "Kein frischer Wert seit dem 28.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "IMXI",
+        "name": "International Money Express, Inc.",
+        "marketCapUsd": 311179776,
+        "date": "2026-10-17",
+        "reasonDe": "Kein frischer Wert seit dem 17.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "LND",
+        "name": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
+        "marketCapUsd": null,
+        "date": "2026-11-05",
+        "reasonDe": "Der Abruf am 05.11.2026 lieferte keinen Börsenwert, die Firma steht deshalb auf keinem Board."
+      },
+      {
+        "ticker": "NKLR",
+        "name": "Terra Innovatum Global N.V.",
+        "marketCapUsd": 304430016,
+        "date": "2026-10-14",
+        "reasonDe": "Kein frischer Wert seit dem 14.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "NMG",
+        "name": "Nouveau Monde Graphite Inc.",
+        "marketCapUsd": 306115872,
+        "date": "2026-10-31",
+        "reasonDe": "Kein frischer Wert seit dem 31.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "NNDM",
+        "name": "Nano Dimension Ltd.",
+        "marketCapUsd": 598311168,
+        "date": "2026-10-29",
+        "reasonDe": "Kein frischer Wert seit dem 29.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "OCGN",
+        "name": "Ocugen, Inc.",
+        "marketCapUsd": 300248352,
+        "date": "2026-10-14",
+        "reasonDe": "Kein frischer Wert seit dem 14.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "OPI",
+        "name": "Office Properties Income Trust",
+        "marketCapUsd": 301422592,
+        "date": "2026-10-30",
+        "reasonDe": "Kein frischer Wert seit dem 30.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "OPTU",
+        "name": "Optimum Communications, Inc.",
+        "marketCapUsd": 317236640,
+        "date": "2026-10-21",
+        "reasonDe": "Kein frischer Wert seit dem 21.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "OPTX",
+        "name": "Syntec Optics Holdings, Inc.",
+        "marketCapUsd": 308543872,
+        "date": "2026-10-14",
+        "reasonDe": "Kein frischer Wert seit dem 14.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "OWLS",
+        "name": "Obook Holdings Inc.",
+        "marketCapUsd": 351566976,
+        "date": "2026-10-22",
+        "reasonDe": "Kein frischer Wert seit dem 22.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "PACK",
+        "name": "Ranpak Holdings Corp.",
+        "marketCapUsd": 324166336,
+        "date": "2026-10-29",
+        "reasonDe": "Kein frischer Wert seit dem 29.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "QNC",
+        "name": "Quantum eMotion Corp.",
+        "marketCapUsd": 315964320,
+        "date": "2026-10-14",
+        "reasonDe": "Kein frischer Wert seit dem 14.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "RMR",
+        "name": "The RMR Group Inc.",
+        "marketCapUsd": 303686432,
+        "date": "2026-10-23",
+        "reasonDe": "Kein frischer Wert seit dem 23.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "RR",
+        "name": "Richtech Robotics Inc.",
+        "marketCapUsd": 319644736,
+        "date": "2026-10-16",
+        "reasonDe": "Kein frischer Wert seit dem 16.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "SERV",
+        "name": "Serve Robotics Inc.",
+        "marketCapUsd": 302609184,
+        "date": "2026-10-16",
+        "reasonDe": "Kein frischer Wert seit dem 16.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "SUPX",
+        "name": "SuperX AI Technology Limited",
+        "marketCapUsd": 305267840,
+        "date": "2026-10-16",
+        "reasonDe": "Kein frischer Wert seit dem 16.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "THM",
+        "name": "International Tower Hill Mines Ltd.",
+        "marketCapUsd": null,
+        "date": "2026-11-05",
+        "reasonDe": "Der Abruf am 05.11.2026 lieferte keinen Börsenwert, die Firma steht deshalb auf keinem Board."
+      },
+      {
+        "ticker": "TTRX",
+        "name": "Turn Therapeutics Inc.",
+        "marketCapUsd": 316735168,
+        "date": "2026-10-31",
+        "reasonDe": "Kein frischer Wert seit dem 31.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "URG",
+        "name": "Ur-Energy Inc.",
+        "marketCapUsd": 315704864,
+        "date": "2026-11-03",
+        "reasonDe": "Kein frischer Wert seit dem 03.11.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "XNET",
+        "name": "Xunlei Limited",
+        "marketCapUsd": 311690784,
+        "date": "2026-10-15",
+        "reasonDe": "Kein frischer Wert seit dem 15.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "XRX",
+        "name": "Xerox Holdings Corporation",
+        "marketCapUsd": 366367488,
+        "date": "2026-10-29",
+        "reasonDe": "Kein frischer Wert seit dem 29.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      },
+      {
+        "ticker": "ZKH",
+        "name": "ZKH Group Limited",
+        "marketCapUsd": 309229504,
+        "date": "2026-10-15",
+        "reasonDe": "Kein frischer Wert seit dem 15.10.2026, der letzte bekannte Börsenwert bleibt stehen."
+      }
+    ],
+    "thinCoverage": [
+      {
+        "ticker": "ARVN",
+        "name": "Arvinas, Inc.",
+        "coverageWeight": 0.14,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,14 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "ASMB",
+        "name": "Assembly Biosciences, Inc.",
+        "coverageWeight": 0.14,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,14 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "ASPI",
+        "name": "ASP Isotopes Inc.",
+        "coverageWeight": 0.17,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,17 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "CBIO",
+        "name": "Crescent Biopharma, Inc.",
+        "coverageWeight": 0.1,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,1 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "DDL",
+        "name": "Dingdong (Cayman) Limited",
+        "coverageWeight": 0.23,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,23 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "ECC",
+        "name": "Eagle Point Credit Company",
+        "coverageWeight": 0.48,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,48 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "EDIT",
+        "name": "Editas Medicine, Inc.",
+        "coverageWeight": 0.14,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,14 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "ENHA",
+        "name": "Enhanced Group Inc.",
+        "coverageWeight": 0.19,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,19 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "ERII",
+        "name": "Energy Recovery, Inc.",
+        "coverageWeight": 0.14,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,14 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "FDUS",
+        "name": "Fidus Investment Corporation",
+        "coverageWeight": 0.48,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,48 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "FPH",
+        "name": "Five Point Holdings, LLC",
+        "coverageWeight": 0.21,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,21 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "GLAD",
+        "name": "Gladstone Capital Corporation",
+        "coverageWeight": 0.48,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,48 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "LDI",
+        "name": "loanDepot, Inc.",
+        "coverageWeight": 0.51,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,51 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "LYEL",
+        "name": "Lyell Immunopharma, Inc.",
+        "coverageWeight": 0.14,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,14 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "NML",
+        "name": "Neuberger Berman Income Funds - Neuberger Energy Infrastructure and Income Fund Inc.",
+        "coverageWeight": 0.48,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,48 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "OCS",
+        "name": "Oculis Holding AG",
+        "coverageWeight": 0.04,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,04 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "OFRM",
+        "name": "Once Upon A Farm, PBC",
+        "coverageWeight": 0.4,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,4 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "OPI",
+        "name": "Office Properties Income Trust",
+        "coverageWeight": 0.42,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,42 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "PFL",
+        "name": "PIMCO Income Strategy Fund",
+        "coverageWeight": 0.48,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,48 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "PRLD",
+        "name": "Prelude Therapeutics Incorporated",
+        "coverageWeight": 0.51,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,51 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "PRTA",
+        "name": "Prothena Corporation plc",
+        "coverageWeight": 0.14,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,14 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "QNC",
+        "name": "Quantum eMotion Corp.",
+        "coverageWeight": 0.31,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,31 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "RGNX",
+        "name": "REGENXBIO Inc.",
+        "coverageWeight": 0.14,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,14 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "SLRC",
+        "name": "SLR Investment Corp.",
+        "coverageWeight": 0.48,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,48 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "SUPX",
+        "name": "SuperX AI Technology Limited",
+        "coverageWeight": 0.42,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,42 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "VLGEA",
+        "name": "Village Super Market, Inc.",
+        "coverageWeight": 0.44,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,44 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "VVR",
+        "name": "Invesco Senior Income Trust",
+        "coverageWeight": 0.48,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,48 unter der festen Grenze 0,580."
+      },
+      {
+        "ticker": "XMAX",
+        "name": "XMax Inc.",
+        "coverageWeight": 0.21,
+        "coverageFloor": 0.58,
+        "reasonDe": "Zu wenig belegte Kennzahlen: Abdeckung 0,21 unter der festen Grenze 0,580."
+      }
+    ]
   }
 }
