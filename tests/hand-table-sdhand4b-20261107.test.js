@@ -55,6 +55,13 @@ test('an empty vendor cell is filled once, a vendor figure that appears later is
   assert.equal(apply(later).timeseries.revenueQ[i].financialMissing?.reasonCode, 'vendor-value-changed');
   const early = pkt('601211.SS'); early.meta.fetchedAt = '2025-10-15T10:00:00.000Z';
   assert.equal(value(apply(early).timeseries.revenueQ[i]), null, 'fetched before the Q3 2025 report of 31.10.2025');
+  // A revised row refills its own earlier fill, and its own hold of a still empty cell (blind review M3).
+  const revised = structuredClone(active), rc = revised.cases.find(c => c.caseId === '601211.ss-2025-09-30-revenueQ-20261107b');
+  rc.replacementValue = 22000000000; rc.sources = [{ ...rc.sources[0], value: 22000000000 }];
+  const again = H.applyFinancialCases(structuredClone(s), { table: revised }).snapshot;
+  assert.equal(value(again.timeseries.revenueQ[i]), 22000000000 * f);
+  const heldEmpty = pkt('601211.SS'); heldEmpty.timeseries.revenueQ[i] = { value: null, financialMissing: { reasonCode: 'context-changed', caseId: rc.caseId, originalVendorRow: null } };
+  assert.equal(value(apply(heldEmpty).timeseries.revenueQ[i]), 22019291518 * f);
 });
 
 test('Chennai: the omitted quarter is inserted between its neighbours, every position-paired series stays aligned', () => {
@@ -71,12 +78,16 @@ test('Chennai: the omitted quarter is inserted between its neighbours, every pos
   assert.equal(value(ts.revenueQ[4]), 200336200000 * raw.meta.fxRateApplied);
   for (const [f, list] of Object.entries(s.meta.statementPeriods || {})) if (Array.isArray(list) && list.length === ts[f]?.length) assert.equal(list[4].end, '2025-09-30', f);
   assert.deepEqual(apply(structuredClone(s)), s, 'idempotent: a stored packet keeps exactly one inserted quarter');
-  // Two quarters missing: no insert, logged.
-  const hole = pkt('CHENNPETRO.NS'), j = hole.timeseries.revenueQEnds.indexOf('2025-06-30');
+  // Two quarters missing between the neighbours (31.12.2025 also gone): no insert, logged (blind review N2).
+  const hole = pkt('CHENNPETRO.NS'), j = hole.timeseries.revenueQEnds.indexOf('2025-12-31');
   for (const f of ['revenueQ', 'grossProfitQ', 'opIncQ']) { hole.timeseries[f].splice(j, 1); hole.timeseries[f + 'Ends'].splice(j, 1); }
   hole.timeseries.netIncomeQ.splice(j, 1);
   const r = H.applyFinancialCases(hole, { table: active });
   assert.ok(!r.snapshot.timeseries.revenueQEnds.includes('2025-09-30'));
+  assert.ok(r.events.some(e => e.reasonCode === 'vendor-gap-unfilled' && e.period === '2025-09-30' && /mehr als dieses eine Quartal/.test(e.reason)));
+  // Statement periods on other ends: no insert (blind review N1).
+  const off = pkt('CHENNPETRO.NS'); off.meta.statementPeriods = { revenueQ: off.timeseries.revenueQEnds.map(e => ({ end: e === '2025-06-30' ? '2025-03-31' : e })) };
+  assert.ok(!H.applyFinancialCases(off, { table: active }).snapshot.timeseries.revenueQEnds.includes('2025-09-30'));
 });
 
 test('Chennai fiscal years on the filed line: +10.64 % instead of the vendor +7.22 %, older vendor years withheld', () => {
@@ -109,7 +120,7 @@ test('rows: five, one block after every earlier case, sources traced, reasons na
   }
 });
 
-test('expectations from the run of 10.11.2026: the September pairs and Chennai fiscal growth, bound to the issuer name', () => {
+test('expectations from the run of 10.11.2026: the September pairs, bound to the issuer name', () => {
   const own = require('../data-health/erwartungen.json').filter(e => e.id.startsWith('sdhand4b-'));
   const names = Object.fromEntries(ROWS.map(([t]) => [t, F[t].meta.name]));
   for (const [t, [, , before], after] of ROWS) {
