@@ -65,6 +65,8 @@ const WRONG = {
   'FAST.AS': { px: 37.01837299, vendorShares: 38933085, mcap: 1441239431.6594176, issuer: 19752877 },
   'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 583349906 }, // 04.11.2026: ON-equivalents at the closes of 03.11.2026 (ratio 0.742)
   '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561108010 },
+  // Snapshot of run 42356903064 (2026-11-07): JOJO with the announced, not yet effective 1:5 split on the unsplit price.
+  'JOJO.BO': { px: 1.1692045314, vendorShares: 689614000, mcap: 806299871.8150574, issuer: 137922800 },
   // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
   '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1281656998 },
   'SOFF.OL': { px: 7.639278149, vendorShares: 108605000, mcap: 829663826.409513, issuer: 82346796 },
@@ -90,6 +92,17 @@ const bleibtStale = (snap, ticker, apply = applyShareCountTable) => {
   assert.strictEqual(JSON.stringify(snap), vorher, `${ticker}: stale row changed more than the stamp`);
 };
 
+// 07.11.2026 (blind review of #122): a row of a listing with an exchange suffix (non-USD quote) needs withholdUnverified;
+// without it the full-pull write site compares the native quote with the USD market cap, the row goes stale and Yahoo's
+// value stays (JOJO.BO: 806 M instead of 161 M USD). Broken once on a copy.
+const suffixRowsCarryFlag = table => Object.entries(table).filter(([k, v]) => !k.startsWith('_') && v && v.shares && /\.[A-Z]+$/.test(k))
+  .every(([, v]) => v.withholdUnverified === true);
+pruefe('every row of a suffixed (non-USD) listing carries withholdUnverified', () => {
+  assert.ok(suffixRowsCarryFlag(TABLE), 'a suffixed row without withholdUnverified');
+  const copy = structuredClone(TABLE); delete copy['JOJO.BO'].withholdUnverified;
+  assert.equal(suffixRowsCarryFlag(copy), false, 'break-once: the guard sees a row without the flag');
+  breaks++;
+});
 pruefe('presence: every recorded wrong state is corrected to price x issuer count', () => {
   for (const t of Object.keys(WRONG)) assert.ok(TABLE[t], `required table row ${t} missing`);
   for (const t of Object.keys(TABLE)) {
@@ -252,4 +265,4 @@ for (const [f, before] of hashes) {
   pruefe('live file unchanged: ' + f, () => assert.strictEqual(sha(f), before));
 }
 console.log(`share-count-hand-table: ${ok} ok, ${fail} fail, ${breaks} break-once fired`);
-if (fail || breaks !== 1) process.exit(1);
+if (fail || breaks !== 2) process.exit(1); // 07.11.2026: the suffix-flag guard adds the second break-once
