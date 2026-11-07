@@ -43,6 +43,17 @@ const OVERVIEW_YEARS_NOT_ADJACENT_TEXT = 'Jahreswachstum nicht belegt, Jahre lie
 // Annual field names request annual-only growth; badge kinds select TTM/FFO inputs.
 function growthVerdict(s, field, shadow = false) {
   if (field === 'gp') {
+    // The sourced annual axis and its displayed GP growth use the same filed pair.
+    // Preserve the pre-G31 comparison arm and all unconfigured rows.
+    const sourced = shadow || g31Variant() ? require('../../lib/sourced-annual-years.js').resolveSourcedAnnualYear(s) : null;
+    if (sourced?.status === 'available' && sourced.record.priorGrossProfit > 0) {
+      const r = sourced.record;
+      return { value: r.grossProfit / r.priorGrossProfit - 1, withheld: false,
+        period: { basis: 'year', periodEnd: r.end, priorPeriodEnd: r.priorEnd,
+          sourcePeriodEnd: r.end, sourcePriorPeriodEnd: r.priorEnd,
+          label: `Geschäftsjahr bis ${r.end.slice(8, 10)}.${r.end.slice(5, 7)}.${r.end.slice(0, 4)}`,
+          reason: `Geprüfter Abschluss ${r.end.slice(0, 4)} gegen ${r.priorEnd.slice(0, 4)}; die Anbieterreihe endet noch im Vorjahr.` } };
+    }
     const quarter = shadow ? quarterCandidate(s, 'grossProfitQ') : null;
     const annual = shadow ? growthVerdict(s, 'annualGP', true) : null;
     if (shadow && quarter.pct !== null && quarter.sourcePeriodEnd

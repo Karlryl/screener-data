@@ -261,6 +261,11 @@ function revAcceleration(s, bounds, onBasis) {
   const sourced = resolveSourcedAnnualYear(s);
   if (sourced.status === 'available') {
     const r = sourced.record, ar = norm(s, 'annualRev');
+    // A restated prior cannot be compared with an unverified older vendor scope.
+    if (r.priorRestated) {
+      if (onBasis) onBasis('sourcedYearRestatedPrior');
+      return null;
+    }
     if (!(ar[0] > 0) || !(ar[1] > 0)) return null;
     // The older pair is old by construction; only the sourced anchor is age-tested.
     const ends = annualPeriodEnds(s, 'annualRev');

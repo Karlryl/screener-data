@@ -74,14 +74,14 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "44bc28f1b370e8ee30575743fe184169d146211f8773844e898030935088bd31",
+    "src/scoring/axes.js": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
     "src/scoring/score.js": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
     "src/scoring/run-screener.js": "db5df2dcafc0afca48a42037768c5487d48d3411b39cdfe31dd58574e522c2a2",
-    "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051",
+    "src/scoring/overview.js": "182a87a82d1d008bf67ef9d02c2f440e6b3cc326fa099f25b50b55723c65df66",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
     "src/scoring/profit-streak.js": "4b056d5b20124ba3ee675bfb1f32689ab13fe31f6ba9ee6471062c28f08bd206",
     "src/scoring/country.js": "95d8b0d3d489786f326f9b764216c66222012449a9b68d630ef651dc574ee7db"
@@ -94,7 +94,7 @@
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
     "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment. PR #81 2026-10-31: the small-cap pass reads coverage floor and score calibration from the versioned configs/smallcap-reference.json through the existing refCalibration (see smallcapFixedReference); no main or quality pass change. PR #81 2026-11-01: its renewal notice watches the bases the score reads, including the union of a thin cohort; report only, no score change. Codex R31 2026-11-05 (PR #88): the direct entry checks the data day first (reviewFix20261105).",
-    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch).",
+    "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch). PR108 review fix 2026-11-07: GP display follows the sourced annual axis pair and its period (sourcedAnnualYear20261104.reviewFix20261107); legacy comparison and unconfigured rows unchanged.",
     "src/scoring/router.js": "P160 2026-10-11: F-13 pairs annual net income and revenue at the newest jointly finite index for the asset-manager zero-gross-profit gate. P205 2026-10-12: apply the existing size floor only to source-backed market-cap hand-table cases before routing. QH and 3018.TW leave the same-day universe; no formula or weight changed. Explicit P205 fix brief; independent release review by Claude remains required. See ergebnisse/P205/vorher-nachher.md.",
     "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak. F-02 2026-11-01: a gap in the SEC series is never reported as a loss year; display only. See f02ProfitStreakGap.",
     "src/scoring/smallcap-route.js": "P205 2026-10-12: route(s, MIN_MCAP) applies the existing 300M floor to source-backed hand-table cases; no formula or weight change.",
@@ -566,29 +566,54 @@
   },
   "dependencyFiles": {
     "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f",
-    "lib/annual-pairs.js": "53a0886d52338fd1081cd5cbff729aa93c15b67a0fb2414b029984ffb36dd973",
-    "lib/sourced-annual-years.js": "946a82221263a2419990632283045ea800be2f6fbc0cc7ba264fd8d8cc65a613",
-    "configs/sourced-annual-years.json": "c553a9a40794544860183e7d7fbb6a735f406081c599280cc5b20696adc85e39",
+    "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
+    "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
+    "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
     "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8"
   },
   "sourcedAnnualYear20261104": {
     "date": "2026-11-04",
     "scope": "Read-time sourced FY2025 for gross profit growth and annual acceleration only. Native currency, both prior fingerprints, same snapshot FX, adjacent periods, source publication date, 550-day anchor, review deadline, vendor catch-up retires the record. Positional series and all other raw axes unchanged. The annual-pair explanation labels the same sourced year and follows the acceleration branch callback; no display is mislabelled as FY2024.",
     "file": "src/scoring/axes.js",
-    "sourceSha256LF": "44bc28f1b370e8ee30575743fe184169d146211f8773844e898030935088bd31",
-    "previousPendingSha256LF": "994a1dd18f54d198e9854987a8fc7cc5661b114f2c1a2ba5ee02db705e5f9d47",
+    "sourceSha256LF": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
+    "previousPendingSha256LF": "44bc28f1b370e8ee30575743fe184169d146211f8773844e898030935088bd31",
     "dependencySha256LF": {
-      "lib/sourced-annual-years.js": "946a82221263a2419990632283045ea800be2f6fbc0cc7ba264fd8d8cc65a613",
-      "configs/sourced-annual-years.json": "c553a9a40794544860183e7d7fbb6a735f406081c599280cc5b20696adc85e39",
+      "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
+      "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
       "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
-      "lib/annual-pairs.js": "53a0886d52338fd1081cd5cbff729aa93c15b67a0fb2414b029984ffb36dd973"
+      "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269"
     },
     "goldenImpact": "No configured ticker is a sealed fixture. All 25 sealed traces must rebuild unchanged.",
-    "evidence": "tests/sourced-annual-years.test.js; scripts/sourced-annual-years-replay.js, fixed data day 2026-10-31 with PR88 head 42ba5140c676e8cc5131bd350673e3e7f5c16258 as baseline; docs/sourced-annual-years-2026-11-04.md.",
+    "evidence": "tests/sourced-annual-years.test.js; tests/sourced-annual-years-review.test.js; scripts/sourced-annual-years-replay.js with final PR88 head 4a5e6f55d000d7ea7d6855014c8e664eebb6cf87 as default baseline. Current evidence: REPORT-neueres-jahr-fix.md. docs/sourced-annual-years-2026-11-04.md is the earlier measurement, not evidence for this revision.",
     "review": "Builder registration only. Claude blind review required; no merge or publication.",
     "rollback": "Revert this draft and this named pending registration together in a reviewed new commit; restore the previous axes and dependency hashes.",
     "previousDependencySha256LF": {
       "lib/annual-pairs.js": "1a5388b0cd8ba9fca45c9172fb568d05d0c2a1d96a607890661a5a218a3eab97"
+    },
+    "reviewFix20261107": {
+      "date": "2026-11-07",
+      "baseHead": "9a28b62cb2",
+      "scope": "M2: restated prior blocks only sourced annual acceleration with a visible hint. M3: GP overview uses the filed pair of its axis. M4: existing deadline report warns 30 days ahead. L5: publication day excluded. L6: GP prior length uses GP ends. M1: replay baseline parameter defaults to final PR88.",
+      "previousSourceSha256LF": {
+        "src/scoring/axes.js": "44bc28f1b370e8ee30575743fe184169d146211f8773844e898030935088bd31",
+        "src/scoring/overview.js": "d26de9ae683212c7ca50845e764413bd7fd25696d100edc828f42ce98ba50051"
+      },
+      "sourceSha256LF": {
+        "src/scoring/axes.js": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
+        "src/scoring/overview.js": "182a87a82d1d008bf67ef9d02c2f440e6b3cc326fa099f25b50b55723c65df66"
+      },
+      "previousDependencySha256LF": {
+        "lib/annual-pairs.js": "53a0886d52338fd1081cd5cbff729aa93c15b67a0fb2414b029984ffb36dd973",
+        "lib/sourced-annual-years.js": "946a82221263a2419990632283045ea800be2f6fbc0cc7ba264fd8d8cc65a613",
+        "configs/sourced-annual-years.json": "c553a9a40794544860183e7d7fbb6a735f406081c599280cc5b20696adc85e39"
+      },
+      "dependencySha256LF": {
+        "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
+        "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
+        "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287"
+      },
+      "evidence": "tests/sourced-annual-years-review.test.js: real source packets, fixed clocks and seven read-only in-memory break-once probes. REPORT-neueres-jahr-fix.md records individual tests, source comparison and final PR88 replay on 2026-10-31.",
+      "review": "Builder registration only. Independent blind Claude review required; no seal, commit, push or release."
     }
   },
   "cycleRamp": {

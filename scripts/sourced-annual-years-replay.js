@@ -1,7 +1,7 @@
 'use strict';
 
 // Offline two-arm measurement using the production preparation, scoring and board writer.
-// Usage: node scripts/sourced-annual-years-replay.js <before|after|compare> <data-tree> <output-dir>
+// Usage: node scripts/sourced-annual-years-replay.js <before|after|compare> <data-tree> <output-dir> [baseline-head]
 // data-tree contains the frozen 31 October snapshots and reference stores. No input is written.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -10,8 +10,9 @@ const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const Module = require('node:module');
 const root = path.resolve(__dirname, '..');
-const [arm, dataArg, outArg] = process.argv.slice(2);
+const [arm, dataArg, outArg, baselineHead = '4a5e6f55d000d7ea7d6855014c8e664eebb6cf87'] = process.argv.slice(2);
 assert.ok(['before', 'after', 'compare'].includes(arm) && dataArg && outArg, 'Specify arm, data tree and output directory');
+assert.match(baselineHead, /^[0-9a-f]{40}$/, 'Baseline must be a full commit hash');
 const data = path.resolve(dataArg), out = path.resolve(outArg);
 const inside = (a, b) => a === b || a.startsWith(b + path.sep);
 assert.ok(!inside(out, root) && !inside(root, out) && !inside(out, data) && !inside(data, out), 'Separate output directory required');
@@ -19,10 +20,12 @@ assert.ok(!/(?:lockbox|Market Structure research)/i.test(data + out), 'Forbidden
 const hash = b => crypto.createHash('sha256').update(b).digest('hex');
 const read = f => JSON.parse(fs.readFileSync(f, 'utf8'));
 fs.mkdirSync(out, { recursive: true });
-const baselineHead = '42ba5140c676e8cc5131bd350673e3e7f5c16258';
 
 if (arm === 'compare') {
   const a = read(path.join(out, 'before.json')), b = read(path.join(out, 'after.json'));
+  assert.equal(a.baselineHead, baselineHead, 'Before baseline differs');
+  assert.equal(b.baselineHead, baselineHead, 'After baseline differs');
+  assert.equal(a.day, b.day, 'Data days differ');
   assert.equal(a.inputDigest, b.inputDigest, 'Inputs differ');
   assert.equal(a.calibrationDigest, b.calibrationDigest, 'Calibration differs');
   assert.deepEqual(a.universe, b.universe, 'Universe differs');
@@ -57,13 +60,14 @@ if (arm === 'compare') {
 } else {
   execFileSync('git', ['-c', 'safe.directory=*', 'merge-base', '--is-ancestor', baselineHead, 'HEAD'], { cwd: root });
   const day = '2026-10-31', clock = day + 'T09:38:23.183Z';
+  assert.ok(!process.env.RUN_DATE_UTC || process.env.RUN_DATE_UTC === day, 'Replay requires RUN_DATE_UTC=2026-10-31');
   process.env.RUN_DATE_UTC = day;
   const NativeDate = Date;
   global.Date = class extends NativeDate {
     constructor(...args) { super(...(args.length ? args : [clock])); }
     static now() { return NativeDate.parse(clock); }
   };
-  const changed = ['src/scoring/axes.js', 'lib/yahoo-q4-known-cases.js', 'lib/annual-pairs.js'];
+  const changed = ['src/scoring/axes.js', 'src/scoring/overview.js', 'lib/yahoo-q4-known-cases.js', 'lib/annual-pairs.js'];
   const sourceManifest = arm === 'after' ? Object.fromEntries(['lib/sourced-annual-years.js', 'configs/sourced-annual-years.json']
     .map(f => [f, hash(fs.readFileSync(path.join(root, f)))])) : {};
   const compile = Module._extensions['.js'];
