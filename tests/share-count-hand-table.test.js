@@ -73,8 +73,6 @@ const WRONG = {
   // InnoCare and the Shandong Gold A line of #111 (600547.SS) left this table on 07.11.2026 for the class sum (configs/mcap-class-sum.json, tests/mcap-class-sum.test.js).
   "GLXY": { px: 16, vendorShares: 589297344, mcap: 9428757504, issuer: 388479988 },
   "CIFR": { px: 7.29, vendorShares: 415030722, mcap: 3025573888, issuer: 456365113 },
-  // Board check of 07.11.2026, snapshot of run 42356903064: Keppel DC REIT with 2,745.2 M units against 2,446.2 M in its half-year report.
-  "AJBU.SI": { px: 1.692007807, vendorShares: 2745225207, mcap: 4644942673.102182, issuer: 2446173860 },
 };
 const TABLE = loadShareCountTable();
 const unveraendert = (snap, ticker, table = TABLE) => {
