@@ -30785,6 +30785,174 @@
           "verifiedAt": "2026-11-07"
         }
       ]
+    },
+    {
+      "caseId": "hmso.l-2025-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 208300000,
+      "replacementValue": 211400000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2025 liefert der Anbieter 208,3 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 211,4 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (3,1 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf",
+          "form": "Full Year 2025 Results",
+          "page": "PDF 19, Consolidated Income Statement, first line",
+          "quote": "Revenue 2A,4 211.4 121.1",
+          "value": 211400000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf",
+          "form": "Full Year 2025 Results",
+          "page": "PDF 31, note 4 Revenue",
+          "quote": "Joint venture management fees1 3.1 4.4 9.1 10.7 Total 211.4 121.1",
+          "value": 211400000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "hmso.l-2024-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 116700000,
+      "replacementValue": 121100000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2024 liefert der Anbieter 116,7 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 121,1 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (4,4 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-Full-Year-Results-2025-2.pdf",
+          "form": "Full Year 2025 Results",
+          "page": "PDF 19, Consolidated Income Statement, comparative column 2024",
+          "quote": "Revenue 2A,4 211.4 121.1",
+          "value": 121100000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-2024-RNS-FINAL-2.pdf",
+          "form": "Full Year 2024 Results, 26.02.2025",
+          "page": "PDF 25, Consolidated income statement, first line",
+          "quote": "Revenue 2A,4 121.1 134.3",
+          "value": 121100000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "filed": "2025-02-26",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "hmso.l-2023-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2023-12-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 127800000,
+      "replacementValue": 134300000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2023 liefert der Anbieter 127,8 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 134,3 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (6,5 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-2024-RNS-FINAL-2.pdf",
+          "form": "Full Year 2024 Results, 26.02.2025",
+          "page": "PDF 25, Consolidated income statement, comparative column 2023",
+          "quote": "Revenue 2A,4 121.1 134.3",
+          "value": 134300000,
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "filed": "2025-02-26",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.hammerson.com/~/media/Files/H/hammerson/corp/documents/investors/Hammerson-2024-RNS-FINAL-2.pdf",
+          "form": "Full Year 2024 Results, 26.02.2025",
+          "page": "PDF 37, note 4 Revenue",
+          "quote": "Joint venture and associate management fees1 4.4 6.5 10.7 14.9 Total – continuing operations 121.1 134.3",
+          "value": 134300000,
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "filed": "2025-02-26",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "hmso.l-2022-12-31-annualRev-20261107",
+      "ticker": "HMSO.L",
+      "listingAliases": [
+        "HMSO.IR"
+      ],
+      "field": "annualRev",
+      "period": "2022-12-31",
+      "periodType": "12M",
+      "index": 3,
+      "currency": "GBP",
+      "unit": "currency",
+      "expectedBadValue": 125900000,
+      "replacementValue": 131400000,
+      "revision": "2026-11-07-sdhand7",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2022 liefert der Anbieter 125,9 Mio. GBP. Hammerson meldet als Umsatz (Revenue, erste Zeile der Konzern-Gewinnrechnung) 131,4 Mio. GBP; der Anbieter lässt die Joint venture management fees weg (5,5 Mio. GBP, Note 4 Revenue). Das gilt für alle vier Jahre, daher stehen alle auf der gemeldeten Zeile. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.hammerson.com/sites/hammerson-corp/files/2024-02/Hammerson%20Full%20Year%20Results%202023.pdf",
+          "form": "Full Year 2023 Results, 29.02.2024",
+          "page": "Consolidated income statement, comparative column 2022 (read through a web text reader; the server refused the direct download on 07.11.2026)",
+          "quote": "Revenue 2,4 134.3 131.4",
+          "value": 131400000,
+          "start": "2022-01-01",
+          "end": "2022-12-31",
+          "filed": "2024-02-29",
+          "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
     }
   ],
   "quarantines": [
