@@ -101,6 +101,7 @@
     { "ticker": "285A.T", "field": "revenueQ", "coversThrough": "2026-09-30" },
     { "ticker": "285A.T", "field": "grossProfitQ", "coversThrough": "2026-09-30" },
     { "ticker": "285A.T", "field": "opIncQ", "coversThrough": "2026-09-30" },
+    { "ticker": "TLN", "field": "revenueQ", "coversThrough": "2026-06-30" },
     { "ticker": "GUJENERGY.NS", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
@@ -30951,6 +30952,140 @@
           "filed": "2024-02-29",
           "currency": "GBP",
           "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2025-06-30-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 454000000,
+      "replacementValue": 630000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 454 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 630 Mio. USD (Operating Revenues). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 630000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2025-09-30-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 770000000,
+      "replacementValue": 812000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2025 liefert der Anbieter 770 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 812 Mio. USD (Operating Revenues). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://talenenergy.gcs-web.com/static-files/3a408a78-3ceb-4107-9bd1-3cbc4d5c15b4",
+          "form": "Talen Energy Corporation, Form 8-K of November 3, 2026, results for the third quarter 2026",
+          "filed": "2026-11-03",
+          "page": "7, consolidated statements of operations",
+          "quote": "Operating Revenues 1,327 812 3,203 1,832",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 812000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2026-03-31-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 1241000000,
+      "replacementValue": 1129000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 1.241 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 1.129 Mio. USD (Operating Revenues; Halbjahr 1.876 Mio. USD minus zweites Quartal 747 Mio. USD). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "value": 1876000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 747000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "tln-2026-06-30-revenueQ-20261107",
+      "ticker": "TLN",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 959000000,
+      "replacementValue": 747000000,
+      "revision": "2026-11-07-sdhand5d",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 959 Mio. USD. Der Anbieter zählt nur die Energie- und Kapazitätserlöse und lässt den unrealisierten Gewinn oder Verlust aus Derivaten weg, den Talen im Umsatzblock ausweist. Talen meldet 747 Mio. USD (Operating Revenues). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1622536/000162253626000065/a20260805q22026earningsrel.htm",
+          "form": "Talen Energy Corporation, Form 8-K exhibit, results for the second quarter 2026",
+          "filed": "2026-08-05",
+          "page": "printed page 4, consolidated statements of operations",
+          "quote": "Operating Revenues 747 630 1,876 1,020",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 747000000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD millions",
           "verifiedAt": "2026-11-07"
         }
       ]

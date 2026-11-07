@@ -177,7 +177,7 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
   const at = H.table.cases.findIndex(c => c.revision === REV);
   assert.deepEqual(H.table.cases.slice(at, at + own.length), own, 'one block, appended after every earlier case');
   // Only the 18 Kioxia rows, the three UWMC rows and the four Hammerson rows (sd-hand-7) of the same day follow.
-  assert.deepEqual(H.table.cases.slice(at + own.length).map(c => c.revision), [...Array(18).fill('2026-11-07-sdhand5b'), ...Array(3).fill('2026-11-07-sdhand5c'), ...Array(4).fill('2026-11-07-sdhand7'), ...Array(3).fill('2026-11-07-sdhand7b')]);
+  assert.deepEqual(H.table.cases.slice(at + own.length).map(c => c.revision), [...Array(18).fill('2026-11-07-sdhand5b'), ...Array(3).fill('2026-11-07-sdhand5c'), ...Array(4).fill('2026-11-07-sdhand7'), ...Array(4).fill('2026-11-07-sdhand5d'), ...Array(3).fill('2026-11-07-sdhand7b')]);
   assert.deepEqual(Object.fromEntries(['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', 'BURE.ST', '601211.SS'].map(t => [t, own.filter(c => c.ticker === t).length])),
     { 'CHENNPETRO.NS': 5, '6023.TWO': 6, 'SDE.TO': 4, 'BURE.ST': 6, '601211.SS': 7 });
   for (const c of [...own, H.table.cases.find(c => c.caseId === ONE)]) {
