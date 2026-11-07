@@ -97,6 +97,11 @@ test('one time budget for all chart calls, a pause between the two attempts, a G
   const v = Object.values(m);
   assert.match(v[0].error, /^Fehler beim Anbieter: HTTP 429/); assert.deepEqual(slept.slice(0, 1), [2000]);
   assert.ok(v.slice(1).every(x => x.error === 'Zeitbudget des Schritts aufgebraucht'), JSON.stringify(v.map(x => x.error)));
+  // Codex P3: a first attempt that ends past the budget gets no second attempt, so the step overruns by one call at most.
+  let t2 = 0, calls = 0;
+  const m2 = await cs.fetchMarket(entries.slice(0, 1), { chart: async () => { calls++; t2 += 6 * 60e3; throw new Error('timeout'); }, now: NOW, clock: () => t2, sleep: async () => {} });
+  assert.equal(calls, 1);
+  assert.match(Object.values(m2)[0].error, /Zeitbudget des Schritts aufgebraucht, kein zweiter Versuch$/);
 });
 
 test('every issuer: one common finished day, value = shares x unadjusted close x FX close of that day, recomputed independently', async () => {
