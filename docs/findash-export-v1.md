@@ -1441,7 +1441,7 @@ Seit 31.10.2026 gibt es einen dritten Code, `abgrenzung`, aus `configs/g31-hinwe
 `definitionen` (geschrieben von `scripts/write-findash-export.js`): Die Zahl des Anbieters stimmt rechnerisch,
 folgt aber einer Abgrenzung, die der Abschluss der Firma nicht kennt (BURE.ST: Net sales 0, der Anbieter zählt
 Dividenden und Zinsen). Er hängt an der Notierung und nicht an einem Periodenpaar, ein neues Quartal lässt ihn
-also nicht wegfallen. Ein Eintrag aus `entries` oder die Diagnose hat Vorrang. Er ändert keinen Wert, Score oder
+also nicht wegfallen. Ein geprüfter Eintrag aus `entries` hat Vorrang. Seit 07.11.2026 (Codex R08 P3) verdrängt eine automatische Diagnose (`aktuell-gross`, `vorjahr-klein`, `quartalssumme`, `aelteres-quartalspaar`) die geprüfte Definition nicht mehr: Der Code bleibt `abgrenzung`, der Grund der Diagnose steht als Satz „Zusätzlich: …“ dahinter. Er ändert keinen Wert, Score oder
 Rang. Rule of 40 und die Überlebensliste tragen ihn nicht.
 
 **Nachtrag 29.10.2026: älteres vollständiges Quartalspaar.** Bisher verglich die Auswahl nur das

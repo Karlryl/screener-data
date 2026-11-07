@@ -403,6 +403,8 @@ let _wachstumOhneEtikett = 0;
 // not to a period, because the next quarter does not change the definition. Display only: no value, score or rank reads it.
 // ponytail: no fingerprint on the vendor packet; a firm that changes its reporting needs its row re-checked by hand.
 const DEFINITION_HINTS = new Map(require('../configs/g31-hinweise.json').definitionen.map(d => [d.ticker, { code: d.code, reason: d.reason }]));
+// Codes lib/g31-recency.js sets without a checked source (pairHinweis flags, joined by '+', and the recency label).
+const AUTO_HINT_CODES = new Set(['aktuell-gross', 'vorjahr-klein', 'quartalssumme', 'aelteres-quartalspaar']);
 function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   let derivations = snapAbleitungenFuer(out.ticker, snapshotStore);
   const wert = out.revGrowthYoYPct;
@@ -417,7 +419,11 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     out.g31Shadow = derivations.g31Shadow;
     out.g31OverviewShadow = derivations.g31Overview[out.overview?.kind || out.overviewKind] ?? null;
     // P267 rule 1: review hint for a newly admitted B1 pair, only where this snapshot reproduces the shown growth.
-    out.g31Hinweis = (passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null;
+    // Codex R08 P3 (04.11.): a checked definition says more than an automatic diagnosis, which would otherwise hide it
+    // (BURE.ST with an empty revenueQ[1]); the diagnosis stays as an added sentence. A checked pair entry still wins.
+    const pair = passt ? derivations.g31Hinweis : null, def = DEFINITION_HINTS.get(out.ticker) ?? null;
+    out.g31Hinweis = def && pair && pair.code.split('+').every(c => AUTO_HINT_CODES.has(c))
+      ? { code: def.code, reason: `${def.reason} Zusätzlich: ${pair.reason}` } : pair ?? def ?? null;
   }
   if (!passt) _wachstumOhneEtikett++;
   out.revGrowthBasis = passt ? leg.basis : null;
