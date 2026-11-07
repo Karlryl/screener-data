@@ -348,8 +348,9 @@ function issuerDedupComparatorOld(a, b) {
  * @returns {?{n: number, m: number, rankable: boolean}} null without a formula (survival, slim snapshots).
  */
 function dedupCoverage(e) {
+  // Cache first: a loser loses its formula after the dedup, and excluded.json still has to read the key that decided.
+  if (e && e._dedupCoverage) return e._dedupCoverage;
   if (!e || !e.formula || !Array.isArray(e.formula.axes)) return null;
-  if (e._dedupCoverage) return e._dedupCoverage;
   let n = 0, m = 0;
   for (const ax of e.formula.axes) {
     if (!(ax.w && ax.w[e.track] > 0)) continue;

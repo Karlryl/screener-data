@@ -109,9 +109,12 @@ test('R23-1 same month: a home listing without enough axes for a rank never push
   }
   assert.equal(shownGrowthMonth(good), shownGrowthMonth(bad), 'same month: the old key never decided');
   assert.ok(homeListingRank('PROBE.DE', 'Germany') < homeListingRank('PROBE.VI', 'Germany'), 'PROBE.DE is the home listing');
-  const rows = scoreUniverse([bad, good], F).filter((e) => e.action === 'route');
+  const all = scoreUniverse([bad, good], F), rows = all.filter((e) => e.action === 'route');
   W.vergebeRaenge(rows, 'test', { warn: false });
   assert.deepEqual(rows.map((e) => [e.ticker, e.coverageAxes, e.rank]), [['PROBE.VI', '7/7', 1]]);
+  // excluded.json reads the deciding key after the dedup, when the loser has lost its formula (CSC Financial, Mabwell on 31.10.)
+  const loser = all.find((e) => e.ticker === 'PROBE.DE');
+  assert.deepEqual([loser.reason, require('../src/scoring/score.js').issuerDedupDecision(rows[0], loser).key], ['dup-issuer', 'keinRang']);
 });
 
 test('R23-1 the keys: rank first, then the newest month, then more axes, then the home listing; excluded.json names the key', () => {
