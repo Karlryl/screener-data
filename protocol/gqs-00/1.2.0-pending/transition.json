@@ -74,14 +74,14 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
+    "src/scoring/axes.js": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
     "src/scoring/score.js": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
     "src/scoring/run-screener.js": "db5df2dcafc0afca48a42037768c5487d48d3411b39cdfe31dd58574e522c2a2",
-    "src/scoring/overview.js": "182a87a82d1d008bf67ef9d02c2f440e6b3cc326fa099f25b50b55723c65df66",
+    "src/scoring/overview.js": "bb025e2562ab28868d7b5ed0f107f354cc5c38bdca7f063249f720fed93a65f7",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
     "src/scoring/profit-streak.js": "4b056d5b20124ba3ee675bfb1f32689ab13fe31f6ba9ee6471062c28f08bd206",
     "src/scoring/country.js": "95d8b0d3d489786f326f9b764216c66222012449a9b68d630ef651dc574ee7db"
@@ -575,7 +575,7 @@
     "date": "2026-11-04",
     "scope": "Read-time sourced FY2025 for gross profit growth and annual acceleration only. Native currency, both prior fingerprints, same snapshot FX, adjacent periods, source publication date, 550-day anchor, review deadline, vendor catch-up retires the record. Positional series and all other raw axes unchanged. The annual-pair explanation labels the same sourced year and follows the acceleration branch callback; no display is mislabelled as FY2024.",
     "file": "src/scoring/axes.js",
-    "sourceSha256LF": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
+    "sourceSha256LF": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
     "previousPendingSha256LF": "44bc28f1b370e8ee30575743fe184169d146211f8773844e898030935088bd31",
     "dependencySha256LF": {
       "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
@@ -584,7 +584,7 @@
       "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269"
     },
     "goldenImpact": "No configured ticker is a sealed fixture. All 25 sealed traces must rebuild unchanged.",
-    "evidence": "tests/sourced-annual-years.test.js; tests/sourced-annual-years-review.test.js; scripts/sourced-annual-years-replay.js with final PR88 head 4a5e6f55d000d7ea7d6855014c8e664eebb6cf87 as default baseline. Current evidence: REPORT-neueres-jahr-fix.md. docs/sourced-annual-years-2026-11-04.md is the earlier measurement, not evidence for this revision.",
+    "evidence": "tests/sourced-annual-years.test.js; tests/sourced-annual-years-review.test.js; scripts/sourced-annual-years-replay.js. Current evidence: docs/sourced-annual-years-review-2026-11-07.md, second-round addendum against 4c5620ce99. The preserved first-round section measures against final PR88; docs/sourced-annual-years-2026-11-04.md is historical evidence only.",
     "review": "Builder registration only. Claude blind review required; no merge or publication.",
     "rollback": "Revert this draft and this named pending registration together in a reviewed new commit; restore the previous axes and dependency hashes.",
     "previousDependencySha256LF": {
@@ -612,8 +612,26 @@
         "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
         "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287"
       },
-      "evidence": "tests/sourced-annual-years-review.test.js: real source packets, fixed clocks and seven read-only in-memory break-once probes. REPORT-neueres-jahr-fix.md records individual tests, source comparison and final PR88 replay on 2026-10-31.",
+      "evidence": "tests/sourced-annual-years-review.test.js: real source packets, fixed clocks and seven read-only in-memory break-once probes. docs/sourced-annual-years-review-2026-11-07.md (preserved first-round section) records individual tests, source comparison and final PR88 replay on 2026-10-31.",
       "review": "Builder registration only. Independent blind Claude review required; no seal, commit, push or release."
+    },
+    "reviewFix2_20261107": {
+      "date": "2026-11-07",
+      "baseHead": "4c5620ce99d175ad3e775cac472c4686643a6d9b",
+      "scope": "N1: sourced GP is only the annual candidate; newer or equally recent quarters win. N2: hold the margin tilt for a restated prior. N3: roll the existing margin window forward by one year, without changing positional inputs. N4: seven-day annual warning window, unchanged review deadlines and explicit resolution evidence. N5: preserve the first-round report in docs and append this round.",
+      "previousSourceSha256LF": {
+        "src/scoring/axes.js": "a0e9d11433127c1c74e862111aa52e9a58dde334627c72a4f7c95ce384bf8fae",
+        "src/scoring/overview.js": "182a87a82d1d008bf67ef9d02c2f440e6b3cc326fa099f25b50b55723c65df66"
+      },
+      "sourceSha256LF": {
+        "src/scoring/axes.js": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
+        "src/scoring/overview.js": "bb025e2562ab28868d7b5ed0f107f354cc5c38bdca7f063249f720fed93a65f7"
+      },
+      "supportingFilesSha256LF": {
+        "lib/handtabellen-fristen.js": "bfc60122a6ed6a44153afc4816d7c18ad52e02f5a2ee3d434725444cfc1a792c"
+      },
+      "evidence": "docs/sourced-annual-years-review-2026-11-07.md; tests/sourced-annual-years-review.test.js. Same-day replay against 4c5620ce99 with the verified B05 after arm reused as the baseline.",
+      "review": "Builder registration only. Claude blind review pending; no seal, commit, push or release."
     }
   },
   "cycleRamp": {

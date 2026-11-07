@@ -36,9 +36,9 @@ try {
     assert.equal(Object.keys(fixtures).length, 6);
     for (const s of Object.values(fixtures)) assert.equal(resolve(s).status, 'available', s.meta.ticker);
   });
-  test('Pop Mart: exact new GP growth and unchanged long-horizon margin tilt', () => {
+  test('Pop Mart: exact new GP growth and rolled three-year margin tilt', () => {
     const s = fixture(), r = table.records.find(x => x.ticker === '9992.HK');
-    close(axes.gpGrowth(s), r.grossProfit / r.priorGrossProfit - 1 + r.grossProfit / r.revenue - 2758624 / 4490651);
+    close(axes.gpGrowth(s), r.grossProfit / r.priorGrossProfit - 1 + r.grossProfit / r.revenue - 2654543 / 4617324);
     close(axes.revAcceleration(s), r.revenue / r.priorRevenue - 13037749 / 6301002);
     assert.equal(prepare(s).annual, s.annual);
     assert.equal(prepare(s).timeseries, s.timeseries);
@@ -89,6 +89,7 @@ try {
     const s = fixture(), r = table.records[0], f = s.meta.fxRateApplied;
     for (const [key, v] of [['annualRev', r.revenue], ['annualGP', r.grossProfit]]) {
       s.annual[key].unshift({ value: v * f }); s.annual[key + 'Ends'].unshift(r.end);
+      s.annual[key].pop(); s.annual[key + 'Ends'].pop(); // Vendor keeps the same rolling window length.
     }
     assert.equal(resolve(s).status, 'vendor-caught-up');
     close(axes.gpGrowth(s), axes.gpGrowth(fixture())); close(axes.revAcceleration(s), axes.revAcceleration(fixture()));

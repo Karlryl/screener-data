@@ -15,7 +15,8 @@ const axes = require('../src/scoring/axes.js');
 const annual = require('../lib/annual-pairs.js');
 const overview = require('../src/scoring/overview.js');
 const sourced = require('../lib/sourced-annual-years.js');
-const { withG31Variant } = require('../lib/g31-recency.js');
+const { withG31Variant, quarterCandidate } = require('../lib/g31-recency.js');
+const { norm } = require('../src/scoring/snapshot.js');
 const { fristen } = require('../lib/handtabellen-fristen.js');
 const fixture = (ticker = '9992.HK') => structuredClone(fixtures[ticker]);
 const close = (a, b) => { assert.equal(typeof a, 'number'); assert.ok(Math.abs(a - b) < 1e-10, `${a} != ${b}`); };
@@ -97,19 +98,110 @@ try {
     }
     close(overview.overviewMetric(caughtUp).value, expected);
   });
-  test('M4 fixed clock: all six annual rows warn from 30 days before expiry, on deadline and afterwards', () => {
+  test('N1 Energean and all six firms select the newest valid GP period, including ties and missing quarters', () => {
+    const check = o => {
+      const real = fixture('ENOG.L'), original = JSON.stringify(real);
+      const result = o.overviewMetric(real);
+      close(result.value, 76825000 / 120941000 - 1);
+      assert.deepEqual(result.period, { basis: 'quarter', periodEnd: '2026-03-31', priorPeriodEnd: '2025-03-31', reason: null });
+      close(o.overviewShadow(real, 'gp').value, result.value);
+      close(o.grossProfitGrowthYoY(real), result.value);
+      assert.equal(JSON.stringify(real), original);
+      for (const r of table.records) {
+        const packet = fixture(r.ticker), q = quarterCandidate(packet, 'grossProfitQ');
+        const expected = r.ticker === 'ENOG.L' ? 76825000 / 120941000 - 1 : r.grossProfit / r.priorGrossProfit - 1;
+        close(o.overviewMetric(packet).value, expected);
+        assert.equal(q.pct !== null, r.ticker === 'ENOG.L', r.ticker);
+        for (const [end, priorEnd, wins] of [['2026-03-31', '2025-03-31', true],
+          ['2025-12-31', '2024-12-31', true], ['2025-09-30', '2024-09-30', false]]) {
+          const s = fixture(r.ticker);
+          s.timeseries = { grossProfitQ: [127, 100], grossProfitQEnds: [end, priorEnd] };
+          if (s.meta.statementPeriods) delete s.meta.statementPeriods.grossProfitQ;
+          // All publications are available and even the older quarter is still valid.
+          // Thus the annual win is an ordering decision, not a stale-quarter rejection.
+          const savedDay = process.env.RUN_DATE_UTC;
+          let value;
+          try {
+            process.env.RUN_DATE_UTC = '2026-04-22';
+            assert.notEqual(quarterCandidate(s, 'grossProfitQ').pct, null);
+            value = o.overviewMetric(s);
+          } finally { process.env.RUN_DATE_UTC = savedDay; }
+          close(value.value, wins ? 0.27 : r.grossProfit / r.priorGrossProfit - 1);
+          assert.equal(value.period.periodEnd, wins ? end : r.end, r.ticker);
+          assert.equal(value.period.basis, wins ? 'quarter' : 'year');
+          if (wins) assert.equal(value.period.reason, null);
+          else assert.match(value.period.reason, /Jahresreihe des Anbieters/);
+        }
+        const missing = fixture(r.ticker); missing.timeseries = {};
+        close(o.overviewMetric(missing).value, r.grossProfit / r.priorGrossProfit - 1);
+      }
+    };
+    check(overview);
+    const anchor = "    const quarter = annual ? quarterCandidate(s, 'grossProfitQ') : null;";
+    mutate('src/scoring/overview.js', anchor, '    if (sourced?.status === \'available\') return annual;\n' + anchor, check);
+    const tie = '        && (annual.value === null || !annual.period?.sourcePeriodEnd || quarter.sourcePeriodEnd >= annual.period.sourcePeriodEnd)) {';
+    mutate('src/scoring/overview.js', tie, tie.replace(' >= ', ' > '), check);
+    check(overview);
+  });
+  test('N2 restated Energean holds only the margin tilt, independent of every older vendor margin', () => {
+    const r = table.records.find(r => r.ticker === 'ENOG.L');
+    const check = a => {
+      const s = fixture(r.ticker), before = JSON.stringify(s);
+      close(a.gpGrowth(s), r.grossProfit / r.priorGrossProfit - 1);
+      assert.equal(a.revAcceleration(s), null);
+      assert.equal(JSON.stringify(s), before);
+      for (const margin of [0.05, 0.95]) {
+        for (let i = 1; i < s.annual.annualGP.length; i++) s.annual.annualGP[i] = { value: norm(s, 'annualRev')[i] * margin };
+        close(a.gpGrowth(s), r.grossProfit / r.priorGrossProfit - 1);
+      }
+    };
+    check(axes);
+    mutate('src/scoring/axes.js', '    const gmOld = r.priorRestated ? null : lastPresent(gmWindow',
+      '    const gmOld = lastPresent(gmWindow', check);
+    check(axes);
+  });
+  test('N3 non-restated firms retain the normal three-year margin span and ignore the retired oldest slot', () => {
+    const check = a => {
+      for (const r of table.records.filter(r => !r.priorRestated)) {
+        const s = fixture(r.ticker), before = JSON.stringify(s);
+        assert.equal(s.annual.annualGPEnds[2], '2022-12-31');
+        const expected = r.grossProfit / r.priorGrossProfit - 1 + r.grossProfit / r.revenue
+          - norm(s, 'annualGP')[2] / norm(s, 'annualRev')[2];
+        close(a.gpGrowth(s), expected);
+        assert.equal(JSON.stringify(s), before);
+        s.annual.annualGP[3] = { value: norm(s, 'annualRev')[3] * 0.01 };
+        close(a.gpGrowth(s), expected);
+        // The ordinary vendor path with its four rolling observations is the comparator.
+        const caughtUp = fixture(r.ticker), factor = s.meta.fxRateApplied || 1;
+        for (const [field, amount] of [['annualRev', r.revenue], ['annualGP', r.grossProfit]]) {
+          caughtUp.annual[field] = [{ value: amount * factor }, ...caughtUp.annual[field].slice(0, 3)];
+          caughtUp.annual[field + 'Ends'] = [r.end, ...caughtUp.annual[field + 'Ends'].slice(0, 3)];
+        }
+        close(a.gpGrowth(caughtUp), expected);
+      }
+    };
+    check(axes);
+    mutate('src/scoring/axes.js', "    const gmWindow = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev')).slice(0, -1);",
+      "    const gmWindow = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev'));", check);
+    check(axes);
+  });
+  test('M4/N4 fixed clock: all six annual rows warn only in the last week, on deadline and afterwards', () => {
     const report = (fn, datum) => fn({ tabelle: {}, universum: [], datum });
     const annualLines = r => r.zeilen.filter(l => l.includes('ergänzte Jahresstand'));
     const check = fn => {
-      const lines = annualLines(report(fn, '2026-11-04'));
+      const lines = annualLines(report(fn, '2026-11-27'));
       assert.equal(lines.length, 6);
-      for (const r of table.records) assert.ok(lines.some(l => l.includes(r.ticker) && l.includes('04.12.2026 (in 30 Tagen)') && l.includes('05.12.2026')));
+      for (const r of table.records) assert.ok(lines.some(l => l.includes(r.ticker) && l.includes('04.12.2026 (in 7 Tagen)') && l.includes('05.12.2026')
+        && l.includes('passender Währung, Einheit und Vergleichsbasis')));
+      for (const day of ['2026-11-04', '2026-11-26']) assert.equal(annualLines(report(fn, day)).length, 0);
     };
     check(fristen);
     assert.equal(annualLines(report(fristen, '2026-11-03')).length, 0);
     assert.ok(annualLines(report(fristen, '2026-12-04')).every(l => l.includes('(heute)')));
     assert.ok(annualLines(report(fristen, '2026-12-05')).every(l => l.includes('seit 1 Tag überschritten')));
     mutate('lib/handtabellen-fristen.js', '  for (const r of sourcedAnnualTable.records) {', '  for (const r of []) {', m => check(m.fristen));
+    mutate('lib/handtabellen-fristen.js', '  const annualWarningDays = Math.min(tage, 7);', '  const annualWarningDays = tage;', m => check(m.fristen));
+    check(fristen);
     for (const [day, status] of [['2026-12-04', 'available'], ['2026-12-05', 'review-expired']]) {
       process.env.RUN_DATE_UTC = day; assert.equal(sourced.resolveSourcedAnnualYear(fixture()).status, status);
     }

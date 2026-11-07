@@ -294,8 +294,10 @@ function gpGrowth(s) {
   if (sourced.status === 'available') {
     const r = sourced.record;
     if (!(r.priorGrossProfit > 0)) return null;
-    // Preserve the existing trajectory to the oldest valid stored margin.
-    const gmOld = lastPresent(ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev'))
+    // Shift the existing margin window by one year without changing either series.
+    // Restated scope cannot evidence an older vendor margin: hold only the tilt.
+    const gmWindow = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev')).slice(0, -1);
+    const gmOld = r.priorRestated ? null : lastPresent(gmWindow
       .map(v => v !== null && v >= 0 && v <= 1 ? v : null));
     const gmNew = r.grossProfit / r.revenue;
     const tilt = gmOld !== null && gmNew >= 0 && gmNew <= 1 ? gmNew - gmOld : 0;
