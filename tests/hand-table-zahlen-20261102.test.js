@@ -26,9 +26,9 @@ const REV = '2026-11-02-sdzahlen';
 const value = r => (r && typeof r === 'object' ? r.value ?? null : r ?? null);
 const without = structuredClone(table);
 // The rows of 04.11.2026 (tests/hand-table-zahlen-20261104.test.js) extend some of these series; without both the vendor is back.
-const LATER = '2026-11-04-sdzahlen2';
-const touched = new Set(table.cases.filter(c => c.revision === REV || c.revision === LATER).map(c => c.ticker));
-without.cases = without.cases.filter(c => c.revision !== REV && c.revision !== LATER);
+const LATER = '2026-11-04-sdzahlen2', LATER2 = '2026-11-05-sdhand3'; // LATER2: the September quarter of Rocket (tests/hand-table-rkt-20261105.test.js)
+const touched = new Set(table.cases.filter(c => c.revision === REV || c.revision === LATER || c.revision === LATER2).map(c => c.ticker));
+without.cases = without.cases.filter(c => c.revision !== REV && c.revision !== LATER && c.revision !== LATER2);
 without.coverage = without.coverage.filter(v => !touched.has(v.ticker));
 validateTable(without);
 const active = process.argv.includes('--prove-red') ? without : table;
@@ -80,8 +80,13 @@ test('corrected cells carry their marker; unverified vendor quarters are withhel
     const verified = new Set(active.cases.filter(c => c.ticker === t && c.field === 'revenueQ').map(c => c.period));
     ts.revenueQEnds.forEach((p, i) => {
       if (value(raw.timeseries.revenueQ[i]) === null) return;
-      if (verified.has(p)) {
-        const c = active.cases.find(x => x.ticker === t && x.field === 'revenueQ' && x.period === p);
+      const c0 = active.cases.find(x => x.ticker === t && x.field === 'revenueQ' && x.period === p);
+      if (verified.has(p) && c0.revision === LATER2 && value(raw.timeseries.revenueQ[i]) !== c0.expectedBadValue) {
+        // The packet of 31.10. carries another vendor figure for this quarter (Rocket 2025-09-30: 1,468 against 1,460 Mio.); a changed figure is withheld, never shown.
+        assert.equal(value(ts.revenueQ[i]), null, t + ' ' + p + ' vendor figure changed');
+        assert.equal(ts.revenueQ[i].financialMissing.reasonCode, 'vendor-value-changed', t + ' ' + p);
+      } else if (verified.has(p)) {
+        const c = c0;
         assert.equal(value(ts.revenueQ[i]), c.replacementValue * raw.meta.fxRateApplied, t + ' ' + p);
         assert.equal(ts.revenueQ[i].financialCorrection.caseId, c.caseId);
       } else {
@@ -111,7 +116,7 @@ test('rows: count, revision, exact sources, a reason naming its period, plain Ge
   const ci = table.coverage.findIndex(v => v.ticker === ROWS[0][0]);
   assert.deepEqual(table.coverage.slice(ci, ci + 22).map(v => v.ticker), ROWS.map(r => r[0]));
   // 04.11.2026 verified the September quarter of these three and added the NSE listing of TVS Holdings.
-  const LATER_END = { 'TVSHLTD.BO': '2026-09-30', 'SBFC.BO': '2026-09-30', 'IIFL.BO': '2026-09-30' };
+  const LATER_END = { RKT: '2026-09-30', 'TVSHLTD.BO': '2026-09-30', 'SBFC.BO': '2026-09-30', 'IIFL.BO': '2026-09-30' };
   for (const [t, aliases, end] of ROWS) {
     const v = table.coverage.find(x => x.ticker === t);
     assert.deepEqual([v.field, v.coversThrough, v.listingAliases || []], ['revenueQ', LATER_END[t] || end, aliases], t);
