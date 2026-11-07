@@ -1809,6 +1809,14 @@ previous-day and equal-to-stamp-day cases, tamper variants with their specific e
 truncated shard, failed pull through the real merge step over consecutive runs, second run on the same day, dead runner, stamp
 without its daily file, workflow step order and fail-soft shape).
 
+## Heimatnotierung in `excluded.json` (P290, draft)
+
+`homeListing.fallbacks` nennt jede Firma, die nicht auf ihrer Heimatnotierung steht: `issuer`, `shown`, `home`, `reason`, `shownMonth`, `homeMonth`.
+`reason` ist der Schlüssel, der entschieden hat: `keinRang` (die Heimatnotierung hat zu wenige belegte Achsen für einen Rang, die gezeigte Notierung hat genug; seit PR 89 r5 geht das vor dem neueren Zeitraum), `aeltererZeitraum` (die Heimatnotierung zeigt ein aelteres Wachstum oder keins), `wenigerBelegteAchsen` (gleicher Zeitraum, die Heimatnotierung hat weniger belegte Achsen), `fxVerdacht`, `keineLandesnotierungInGruppe` (in dieser Namensgruppe steht keine Notierung an einer Börse des Landes, `home` ist null; das sagt nichts über die Firma: Die Zeile kann ihr wirklicher Hauptplatz sein, oder die Heimat läuft unter einem anderen Namen) oder der Ausschlussgrund der Heimatnotierung (zum Beispiel `data-suspect`). Sobald beide Notierungen denselben Zeitraum zeigen, steht die Firma von selbst wieder auf der Heimatnotierung.
+`homeListing.counts` nennt `firmsWithHomeTable`, `onHomeListing`, `multiListed`, `multiListedOnHome` und `multiListedWithoutCountry`; steht weniger als die Haelfte der mehrfach notierten Firmen ausserhalb der USA auf der Heimat (am 31.10.2026: 1.182 von 1.209), warnt der Lauf.
+`homeListing.oldRuleDiffers` nennt mit `shown` und `oldRule`, wo die Regel vor P290 eine andere Notierung gezeigt haette. Dieser Vergleich bleibt hoechstens vier Wochen.
+Die Auswahl der Notierung: US-Hauptnotierung, US-Sitz, kein Waehrungsverdacht, neuester zeigbarer Zeitraum, belegte Heimatnotierung (`configs/dup-issuer-shadow-table.json`, dann `configs/home-listing.json`), zuletzt Boersenwert.
+
 ## Notierungsabgaenge in `excluded.json` (PR 66, 30.10.2026)
 
 `listingExits` enthaelt protokollierte Bestandsabgaenge durch das Notierungsregister und Kuerzelkorrekturen.

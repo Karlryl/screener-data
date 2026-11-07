@@ -14,7 +14,7 @@
 // - expiry: on the data day 01.01.2027 the rows with reviewBy 31.12.2026 run out and exactly EXPIRY_LOST have no listing left;
 // - the deadline report of Tag 1521 (lib/handtabellen-fristen.js) names each of them as falling off the board 30 days ahead.
 // Break-once on test data only: `node tests/hand-table-nachfolger-20261104.test.js --prove-red` drops the hold of 1DEZ.MI in
-// memory; Deutz then shows the Milan line and the check must exit 1. No wall clock; live files are hashed before and after.
+// memory; Aroundtown then shows the stale Zurich line and the check must exit 1 (PR 89; before it, Deutz and 1DEZ.MI). No wall clock; live files are hashed before and after.
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const guard = require('../lib/market-cap-guard.js');
@@ -39,6 +39,9 @@ const KNOWN = {
   'Anhui Expressway Company Limited': { dev: 0.071, why: CLASSES },
   'Qingdao Port International Co., Ltd.': { dev: 0.060, why: CLASSES },
   'PetroChina Company Limited': { dev: 0.041, why: CLASSES },
+  // PR 89 (fixed home listing): CNOOC shows its home line 0883.HK, which Yahoo values at the Hong Kong price for every share;
+  // no share-count row fits (4.4 % between the wrong and the right count, the table needs more than 6 %).
+  'CNOOC Limited': { dev: -0.043, why: CLASSES },
   'Promotora y Operadora de Infraestructura, S. A. B. de C. V.': { dev: 0.039, why: 'series * and L priced at the * line; class sum needs both prices (Codex P1)' },
   'Xtep International Holdings Limited': { dev: -0.033, why: 'Yahoo counts 2,733.1 M shares against 2,825.9 M at 31.10. (cause not proven); 3.3 % is inside twice the 3 % window of a share-count row, which then cannot tell the two counts apart (lib/ads-hand-table.js refuses such a row)' },
 };
@@ -69,9 +72,11 @@ function shown(f, day) {
 const deviations = () => Object.entries(firms).map(([name, f]) => { const s = shown(f); return { name, s, dev: s ? s.usd / f.checkedUsd - 1 : null }; });
 
 if (process.argv.includes('--prove-red')) {
-  delete guard.holds['1DEZ.MI'];
-  const d = deviations().find(x => x.name === 'DEUTZ Aktiengesellschaft');
-  assert.ok(Math.abs(d.dev) <= TOLERANCE, `DEUTZ shows ${d.s.ticker} ${(d.dev * 100).toFixed(1)} % off`);
+  // PR 89: Deutz keeps its home line DEZ.DE without the Milan hold, so the probe drops the hold of AT1.SW (Aroundtown has no
+  // home exchange in the country table; the stale Zurich line then wins on market cap, 64 % high).
+  delete guard.holds['AT1.SW'];
+  const d = deviations().find(x => x.name === 'Aroundtown SA');
+  assert.ok(Math.abs(d.dev) <= TOLERANCE, `Aroundtown shows ${d.s.ticker} ${(d.dev * 100).toFixed(1)} % off`);
   console.log('hand-table-nachfolger-20261104: --prove-red did NOT fire');
   process.exit(0);
 }

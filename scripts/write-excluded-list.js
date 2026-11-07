@@ -55,9 +55,11 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { loadUniverse } = require('../src/scoring/run-screener.js');
 const {
-  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator,
+  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator, issuerDedupComparatorOld, issuerDedupDecision,
 } = require('../src/scoring/score.js');
+const { isUS } = require('../src/scoring/router.js');
 const formulas = require('../src/scoring/formulas/index.js');
+const { homeListingRank, shownGrowthMonth, hasHomeExchange, NOT_HOME } = require('../lib/home-listing.js');
 const { financialReasons } = require('../lib/financial-known-cases.js');
 const { mergeSizeExits, sizeExitReasonDe, sizeExitRunDay, readSizeExitHistory, validateSizeExitManifest, SIZE_EXITS_FILE } = require('../lib/size-exits.js');
 const { readIntakeLog, deliveredListingExits, readListingExitManifest, LISTING_EXITS_FILE } = require('../discovery/listing-state.js');
@@ -226,6 +228,7 @@ function buildExcludedList(results, universe, exits = [], options = {}) {
   rows.sort(nachWachstum);
 
   const raus = alle.filter(istRaus);
+  const homeListing = homeListingReport(gruppen);
   const byReason = {};
   for (const e of raus) { const k = grundVon(e); byReason[k] = (byReason[k] || 0) + 1; }
 
@@ -233,7 +236,62 @@ function buildExcludedList(results, universe, exits = [], options = {}) {
   const sizeExits = mergeSizeExits([exits]).filter(r => !present.has(r.ticker))
     .filter(r => options.referenceDay === undefined || (r.date <= options.referenceDay && Date.parse(options.referenceDay) - Date.parse(r.date) <= 30 * 86400000))
     .map(r => ({ ...r, reasonDe: sizeExitReasonDe(r) }));
-  return { rows, legs: raus.length, byReason, sizeExits };
+  return { rows, legs: raus.length, byReason, sizeExits, homeListing };
+}
+
+/**
+ * P290: names every firm that does not show its home listing and why (a US listing first is the rule, not a fallback),
+ * and every firm the rule before P290 would have shown on another listing.
+ * @param {Array<Array<object>>} gruppen Issuer groups with snapshots.
+ * @returns {{counts: object, fallbacks: Array<object>, oldRuleDiffers: Array<object>}} Sorted by ticker.
+ */
+function homeListingReport(gruppen) {
+  const fallbacks = [], oldRuleDiffers = [];
+  const counts = { firmsWithHomeTable: 0, onHomeListing: 0, multiListed: 0, multiListedOnHome: 0, multiListedWithoutCountry: 0 };
+  const country = (e) => e.snapshot && e.snapshot.meta && e.snapshot.meta.country;
+  for (const g of gruppen) {
+    const shown = g.find((e) => !istRaus(e));
+    // A leg without a country still is the home of its group's firm (GF.SW next to GEFI.VI).
+    const rank = (e) => homeListingRank(e.ticker, country(e) || (shown && country(shown)));
+    const legs = g.filter((e) => !istRaus(e) || e.reason === 'dup-issuer');
+    if (!shown || !shown.snapshot) continue;
+    const old = [...legs].sort(issuerDedupComparatorOld)[0];
+    if (old.ticker !== shown.ticker) oldRuleDiffers.push({ shown: shown.ticker, oldRule: old.ticker });
+    const several = legs.length >= 2 && !isUS(shown.snapshot);
+    if (several && !country(shown)) counts.multiListedWithoutCountry++;
+    if (isUS(shown.snapshot) || !hasHomeExchange(country(shown))) continue;
+    counts.firmsWithHomeTable++;
+    if (rank(shown) < NOT_HOME) counts.onHomeListing++;
+    if (several) {
+      counts.multiListed++;
+      if (rank(shown) < NOT_HOME) counts.multiListedOnHome++;
+    }
+    const home = [...g].filter((e) => e.snapshot && rank(e) < NOT_HOME).sort((a, b) => rank(a) - rank(b) || (a.ticker < b.ticker ? -1 : 1))[0];
+    if (!home) {
+      if (rank(shown) >= NOT_HOME) fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: null, reason: 'keineLandesnotierungInGruppe', shownMonth: shownGrowthMonth(shown.snapshot) || null, homeMonth: null });
+      continue;
+    }
+    if (home.ticker === shown.ticker || rank(home) >= rank(shown)) continue;
+    const shownMonth = shownGrowthMonth(shown.snapshot), homeMonth = shownGrowthMonth(home.snapshot);
+    // Codex R23: the reason is the comparator key that decided, so a rank or axis the home listing lacks is named, not hidden.
+    const decided = issuerDedupDecision(shown, home).key;
+    const reason = istRaus(home) && home.reason !== 'dup-issuer' ? home.reason : decided === 'vorrangUsOderFx' ? 'fxVerdacht' : decided;
+    fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: home.ticker, reason, shownMonth: shownMonth || null, homeMonth: homeMonth || null });
+  }
+  const byShown = (a, b) => (a.shown < b.shown ? -1 : a.shown > b.shown ? 1 : 0);
+  return { counts, fallbacks: fallbacks.sort(byShown), oldRuleDiffers: oldRuleDiffers.sort(byShown) };
+}
+
+/**
+ * P290: a vanished meta.country or a broken table would silently put every firm back on the old order. Counts only firms outside
+ * the US with more than one listing, since a single listing cannot leave its home; 1,182 of 1,209 stood on it on 31.10.2026.
+ * @param {object} counts The counts of homeListingReport.
+ * @returns {?string} The warning, or null.
+ */
+function homeListingWarning(counts) {
+  const all = counts.multiListed + counts.multiListedWithoutCountry;
+  if (all < 100 || counts.multiListedOnHome >= 0.5 * all) return null;
+  return `Heimatnotierung: nur ${counts.multiListedOnHome} von ${all} mehrfach notierten Firmen stehen auf ihr, ${counts.multiListedWithoutCountry} ohne Land.`;
 }
 
 /**
@@ -419,8 +477,10 @@ function main() {
     exits = readSizeExitHistory(undefined, fs).exits;
     referenceDay = sizeExitRunDay();
   }
-  const { rows, legs, byReason, sizeExits } = buildExcludedList(results, universe, exits, { referenceDay });
+  const { rows, legs, byReason, sizeExits, homeListing } = buildExcludedList(results, universe, exits, { referenceDay });
 
+  const heimatWarnung = homeListingWarning(homeListing.counts);
+  if (heimatWarnung) console.warn(`::warning::[excluded-list] ${heimatWarnung}`);
   const fehler = pruefeSummen(byReason, readExcludedCounter(INDEX_FILE));
   if (fehler.length) {
     throw new Error('[excluded-list] Summen-Wache gebrochen — die Liste deckt sich nicht mit den Zaehlern:\n  '
@@ -455,6 +515,7 @@ function main() {
     universeHash,
     counts: { firmen: rows.length, zeilen: legs, byReason, sizeExits: sizeExits.length },
     rows,
+    homeListing,
     listingExits,
     listingExitCount: listingExits.length,
     sizeExitsKnown,
@@ -478,7 +539,7 @@ function main() {
 }
 
 module.exports = {
-  buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, universumsHash, universumsHashVon,
+  buildExcludedList, homeListingWarning, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, universumsHash, universumsHashVon,
   liesModusDeklaration, pruefeModusUmgebung, vergleicheLinealSkalare, kanonisch, LINEAL_SKALARE,
   SCHEMA, OUT_FILE, INDEX_FILE, UNIVERSE_HASH_FILE, MODE_FILE, SEALED_CALIB_FILE,
 };

@@ -176,7 +176,8 @@
   {"id":"pr78-ACEMI-rang","pr":78,"ticker":"ACE.MI","board":"full/utilities","track":"profitable","feld":"rank","op":"between","min":172,"max":255,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"ACEA steht auf dem Versorger-Board etwa auf Rang 215 statt 23 (Datenstand 30.10.2026)."},
   {"id":"pr78-301297SZ-wachstum","pr":78,"ticker":"301297.SZ","board":"full/semiconductors","track":"profitable","feld":"revGrowthYoYPct","op":"between","min":5.97,"max":8.95,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Ferrotec zeigt das Jahreswachstum 2025 von etwa +7,5 % statt +265 % (Datenstand 30.10.2026)."},
   {"id":"pr78-301297SZ-rang","pr":78,"ticker":"301297.SZ","board":"full/semiconductors","track":"profitable","feld":"rank","op":"between","min":207,"max":305,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Ferrotec steht auf dem Halbleiter-Board etwa auf Rang 259 statt 23 (Datenstand 30.10.2026)."},
-  {"id":"pr78-GGPL-wachstum","pr":78,"ticker":"GGP.L","board":"rule40/overview","feld":"revGrowthYoYPct","op":"between","min":135,"max":137,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Greatland zeigt im Rule-of-40-Board das Jahreswachstum von etwa +136 % statt +158,2 % (Datenstand 30.10.2026)."},
+  {"id":"pr78-GGPL-wachstum","pr":78,"gruppe":"pr78-GGPL-gruppe","ticker":"GGP.L","board":"rule40/overview","feld":"revGrowthYoYPct","op":"between","min":135,"max":137,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Greatland zeigt im Rule-of-40-Board das Jahreswachstum von etwa +136 % statt +158,2 % (Datenstand 30.10.2026)."},
+  {"id":"pr78-GGPAX-wachstum","pr":78,"gruppe":"pr78-GGPL-gruppe","ticker":"GGP.AX","board":"rule40/overview","feld":"revGrowthYoYPct","op":"between","min":135,"max":137,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-10","grund":"Greatland zeigt im Rule-of-40-Board das Jahreswachstum von etwa +136 % statt +158,2 % (Datenstand 30.10.2026). Mit der festen Heimatnotierung (PR 89) zeigt das Board Greatland über GGP.AX, gleiche Zahl."},
   {"id":"pr78-5871TW-board","pr":78,"ticker":"5871.TW","board":"full/financials","op":"absent","gueltigAb":"2026-10-31","gueltigBis":"2026-11-10","grund":"Chailease steht nicht mehr unter den nicht profitablen Finanzfirmen, weil die Anbieterzahlen dieser Kreditfirma keinem Abschluss entsprechen (Datenstand 30.10.2026)."},
   {"id":"pr78-5871TW-survival","pr":78,"ticker":"5871.TW","board":"survival","op":"absent","gueltigAb":"2026-10-31","gueltigBis":"2026-11-10","grund":"Chailease steht auch nicht auf der Überlebensliste (Datenstand 30.10.2026)."},
   {"id":"pr78-9941TW-board","pr":78,"ticker":"9941.TW","board":"full/financials","op":"absent","gueltigAb":"2026-10-31","gueltigBis":"2026-11-10","grund":"Taiwan Acceptance steht nicht mehr unter den nicht profitablen Finanzfirmen (Datenstand 30.10.2026)."},
@@ -653,16 +654,16 @@
     "ticker": "AXIA",
     "board": "any",
     "op": "absent",
-    "grund": "AXIA Energia steht nicht mehr über die beendete NYSE-Linie auf dem Board, Stichtag 2026-08-06; die Firma behält ihren Platz über XAXIA.MC."
+    "grund": "AXIA Energia steht nicht mehr über die beendete NYSE-Linie auf dem Board, Stichtag 2026-08-06; die Firma behält ihren Platz über eine andere Notierung."
   },
   {
-    "id": "w7b-XAXIAMC",
-    "pr": 74,
-    "gueltigAb": "2026-10-31",
-    "ticker": "XAXIA.MC",
+    "id": "w7b-AXIA3SA",
+    "pr": 89,
+    "gueltigAb": "2026-11-05",
+    "ticker": "AXIA3.SA",
     "board": "any",
     "op": "present",
-    "grund": "AXIA Energia bleibt über die Madrider Linie XAXIA.MC auf dem Versorger-Board."
+    "grund": "AXIA Energia steht über ihre Heimatnotierung AXIA3.SA auf dem Versorger-Board, nicht mehr über die Madrider Linie XAXIA.MC."
   },
   {"id":"pr71-AAUC-score","pr":71,"name":"Allied Gold Corporation","board":"full/materials","feld":"score","op":"between","min":57,"max":85.8,"gueltigAb":"2026-11-03","gueltigBis":"2026-11-04","grund":"Allied Gold steht mit den Jahren in der richtigen Reihenfolge bei rund 71,5 Punkten (gerechnet am 30.10.2026), nicht mehr bei 44,3. Gültig bis vor dem Quartalsbericht, der die Punkte verschieben darf."},
   {"id":"pr71-AAUC-achsen","pr":71,"name":"Allied Gold Corporation","board":"full/materials","feld":"coverageAxes","op":"eq","wert":"6/7","gueltigAb":"2026-10-31","gueltigBis":"2026-11-04","grund":"Das vertauschte Betriebsergebnis von Allied Gold ist leer, damit fällt die Kapitalrendite als Achse weg."},
