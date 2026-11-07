@@ -27,7 +27,7 @@ const DAY = pk.dataDay, NOW = ch.fetchedAt;
 const entries = cs.loadClassSumEntries();
 const byIssuer = name => entries.find(e => e.issuer.startsWith(name));
 const stub = (charts = ch.charts) => async s => { if (!charts[s]) throw new Error('no chart ' + s); return structuredClone(charts[s]); };
-const market = async (charts, now = NOW) => cs.fetchMarket(entries, { chart: stub(charts), now });
+const market = async (charts, now = NOW) => cs.fetchMarket(entries, { chart: stub(charts), now, pauseMs: 0 });
 const currencies = Object.fromEntries(Object.entries(pk.snapshots).map(([t, s]) => [t, s.meta.tradingCurrencyOriginal || s.meta.tradingCurrency]));
 // The stored packets still carry the 16 removed share-count rows (source hand-table:shares); without them the pull writes
 // Yahoo's value, so the merge job sees that one.
@@ -83,6 +83,20 @@ test('finished sessions only, unadjusted close: Frankfurt at 09:00 UTC is not a 
   assert.equal(fx.closes[fx.closes.length - 1].date, '2026-11-06', 'the Saturday FX quote is no close of a trading day');
   const adj = structuredClone(ch.charts['0763.HK']); adj.quotes.forEach(q => { q.adjclose = q.close * 0.9; });
   assert.equal(cs.finishedCloses(adj, NOW).closes.pop().close, ch.charts['0763.HK'].quotes.filter(q => q.date.startsWith('2026-11-06')).pop().close);
+});
+
+test('daylight saving: an FX bar of London summer time (23:00 UTC) keeps its own day', () => {
+  const fx = { meta: { currency: 'USD', gmtoffset: 0, exchangeTimezoneName: 'Europe/London', currentTradingPeriod: { regular: { start: '2026-11-06T00:00:00.000Z', end: '2026-11-06T23:59:00.000Z', gmtoffset: 0 } } },
+    quotes: [{ date: '2026-10-20T23:00:00.000Z', close: 0.1 }, { date: '2026-11-05T00:00:00.000Z', close: 0.2 }] };
+  assert.deepEqual(cs.finishedCloses(fx, NOW).closes.map(c => c.date), ['2026-10-21', '2026-11-05']);
+});
+
+test('one time budget for all chart calls, a pause between the two attempts, a German reason', async () => {
+  let t = 0; const slept = [];
+  const m = await cs.fetchMarket(entries.slice(0, 1), { chart: async () => { t += 4 * 60e3; throw new Error('HTTP 429'); }, now: NOW, clock: () => t, sleep: async (ms) => { slept.push(ms); } });
+  const v = Object.values(m);
+  assert.match(v[0].error, /^Fehler beim Anbieter: HTTP 429/); assert.deepEqual(slept.slice(0, 1), [2000]);
+  assert.ok(v.slice(1).every(x => x.error === 'Zeitbudget des Schritts aufgebraucht'), JSON.stringify(v.map(x => x.error)));
 });
 
 test('every issuer: one common finished day, value = shares x unadjusted close x FX close of that day, recomputed independently', async () => {
@@ -231,6 +245,8 @@ test('provenance: a calculation with one sourced share count and one dated close
     assert.match(i.documentUrl, /^https:\/\/www1\.hkexnews\.hk\//); assert.ok(i.quote.length > 10); assert.equal(i.observedAt, '2026-09-30T00:00:00Z');
   }
   for (const i of cap.marketCapInputs.filter(x => x.fieldPath.endsWith('.close'))) assert.equal(i.fx.asOf, '2026-11-06T00:00:00Z');
+  const side = captureSnapshot(snaps['0763.HK']);
+  assert.equal(side.marketCap.missingReason, "The firm's class sum is shown on 000063.SZ; this line carries no market cap.");
   const own = cap.marketCapInputs.reduce((s, x, i, a) => i % 2 ? s : s + x.normalizedValue * a[i + 1].normalizedValue, 0);
   assert.ok(Math.abs(own / cap.marketCap.normalizedValue - 1) < 1e-12);
 });
@@ -248,7 +264,9 @@ test('read time: the guard keeps the class-sum value and its reason in its copy'
 test('the merge-job writer: a temp generation gets the sum on disk; the step sits before the snapshots artifact', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcap-class-sum-'));
   for (const t of Object.keys(pk.snapshots)) fs.writeFileSync(path.join(dir, safeSnapshotFilename(t)), JSON.stringify(pulled(t)));
-  const report = await cs.applyClassSums({ snapshotsDir: dir, dataDay: DAY, chart: stub(), now: NOW, log: () => {} });
+  const logged = [];
+  const report = await cs.applyClassSums({ snapshotsDir: dir, dataDay: DAY, chart: stub(), now: NOW, log: (l) => logged.push(l) });
+  assert.deepEqual(logged, [], "a full sum logs no warning");
   assert.equal(report.length, 24);
   assert.equal(report.filter(r => r.value === null).length, 0);
   const zte = JSON.parse(fs.readFileSync(path.join(dir, '000063.SZ.json'), 'utf8'));
