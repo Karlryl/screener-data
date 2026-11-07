@@ -19,7 +19,7 @@ const pk = require('./fixtures/mcap-class-sum-20261107.json');
 const ch = require('./fixtures/mcap-class-sum-charts-20261107.json');
 
 const root = path.resolve(__dirname, '..');
-const live = ['configs/mcap-class-sum.json', 'configs/share-count-hand-table.json', 'lib/mcap-class-sum.js', 'lib/market-cap-guard.js',
+const live = ['configs/mcap-class-sum.json', 'scripts/write-filter-universe.js', 'configs/share-count-hand-table.json', 'lib/mcap-class-sum.js', 'lib/market-cap-guard.js',
   'tests/fixtures/mcap-class-sum-20261107.json', 'tests/fixtures/mcap-class-sum-charts-20261107.json'];
 const liveHashes = () => live.map(f => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, f))).digest('hex'));
 const beforeHashes = liveHashes();
@@ -254,6 +254,29 @@ test('provenance: a calculation with one sourced share count and one dated close
   assert.equal(side.marketCap.missingReason, "The firm's class sum is shown on 000063.SZ; this line carries no market cap.");
   const own = cap.marketCapInputs.reduce((s, x, i, a) => i % 2 ? s : s + x.normalizedValue * a[i + 1].normalizedValue, 0);
   assert.ok(Math.abs(own / cap.marketCap.normalizedValue - 1) < 1e-12);
+});
+
+test('a side line emptied by the class sum with a stale-price hold shows no Yahoo price values in the filter (master P3-1 on 65c7366445)', async () => {
+  const F = require('../scripts/write-filter-universe.js');
+  const e = byIssuer('Shandong Gold'), snaps = firm(e), h = snaps['1787.HK'];
+  // Tag 1538 stale-price gate: 1787.HK with its last Yahoo quote of 20.10.2026 and that quote's price values.
+  h.marketCap = { value: 10.6e9, source: 'yahoo_quote', asOf: '2026-11-07T09:26:41Z', regularMarketTime: '2026-10-20T08:08:00Z' };
+  h.meta.stalePriceHold = { priceDay: '2026-10-20' };
+  h.metrics = { ...h.metrics, dividendYield: { value: 1.83 }, fiftyTwoWeekHigh: { value: 6.9 } };
+  cs.writeFirm(snaps, e, cs.computeClassSum(e, await market(), currencies, DAY), NOW);
+  const rowOf = (builder) => builder.buildUniverse({ snapshots: [guard.prepareMarketCap(h)], generatedAt: '2026-11-07T10:15:00Z' }).rows.find(r => r.t === '1787.HK');
+  const row = rowOf(F);
+  assert.equal(row.dy ?? null, null); assert.equal(row.d52 ?? null, null);
+  assert.ok(row.aus.includes('Dividendenrendite wird nicht gezeigt, die Kursmeldung von Yahoo vom 20.10.2026 ist zu alt.'), JSON.stringify(row.aus));
+  assert.ok(row.aus.includes('Abstand zum 52-Wochen-Hoch wird nicht gezeigt, die Kursmeldung von Yahoo vom 20.10.2026 ist zu alt.'));
+  // Break-once on the code in memory: without the new condition the stale yield comes back.
+  const file = path.join(root, 'scripts/write-filter-universe.js'), anchor = "    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (!!meta.stalePriceHold && !finite(snapshot.marketCap?.value));";
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor');
+  const Module = require('node:module'), m = new Module(file, module);
+  m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file));
+  m._compile(lines.map(l => (l === anchor ? '    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE;' : l)).join('\n'), file);
+  assert.equal(rowOf(m.exports).dy, 1.83, 'the break-once did not bring the stale yield back');
 });
 
 test('read time: the guard keeps the class-sum value and its reason in its copy', async () => {

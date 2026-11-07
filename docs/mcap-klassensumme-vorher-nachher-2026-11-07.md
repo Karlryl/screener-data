@@ -69,6 +69,7 @@ Gleiche Schnappschüsse (Lauf 42356903064), gleiche Watchlist, gleiche SEC-Datei
 - Pinfra (Mexiko, Serien * und L): die L-Serie hat keine Kursreihe; Pinfra bleibt bei 3,9 % zu viel (Nachfolger-Test, bekannte Abweichung).
 - Die drei übrigen Zeilen mit Kursverhältnis in der Aktienzahl-Handtabelle (ISA Energia ISAE3.SA, Hanwha 003535.KS, Lindt LISN.SW) haben andere Klassenarten (Vorzugsaktien, Partizipationsscheine) und bleiben unverändert.
 - Der Small-Cap-Bestand bekommt keine Klassensumme.
+- Zusammenspiel mit dem Kurs-Wächter von Tag 1538 (offen, Methodenfrage, nicht in diesem PR): Die Zeile, die die Summe trägt, wird ohne Blick auf den Wächter gewählt. Trägt gerade sie eine zu alte Yahoo-Kursmeldung, leert der Wächter danach die Summe, die Nebenzeilen sind schon geleert, und die Firma fehlt auf allen Boards; ihr Hinweis nennt dann sowohl die Summe als auch den alten Kurs. Am 07.11. trifft das keine der 24 Firmen. Eine von der Summe geleerte Nebenzeile mit altem Kurs zeigt dagegen in der Filterliste keine Yahoo-Kurswerte mehr (behoben in diesem PR).
 - Neue Aktien oder spätere Rückkäufe sieht der Schritt nicht von selbst; dafür gilt das Prüfdatum. Bei Jiangling sind alle 8,6 Mio. zurückgekauften Aktien den A-Aktien zugerechnet; der Halbjahresbericht trennt sie nicht nach Klasse (Wirkung höchstens 0,7 %).
 - Ist Yahoo am Lauftag nicht erreichbar, bleiben die 24 Börsenwerte für diesen Tag leer und die Firmen fehlen auf den Boards (zwei Versuche je Kursverlauf).
 
