@@ -55,6 +55,12 @@ test('an empty vendor cell is filled once, a vendor figure that appears later is
   assert.equal(apply(later).timeseries.revenueQ[i].financialMissing?.reasonCode, 'vendor-value-changed');
   const early = pkt('601211.SS'); early.meta.fetchedAt = '2025-10-15T10:00:00.000Z';
   assert.equal(value(apply(early).timeseries.revenueQ[i]), null, 'fetched before the Q3 2025 report of 31.10.2025');
+  // Codex on #116, P1: the same cell checks as every other correction (currency, unit, multiplier, period type, source).
+  for (const odd of [{ currency: 'EUR' }, { currencyUnit: 'EUR' }, { unit: 'shares' }, { multiplier: 1000 }, { periodType: '6M' }, { source: 'sec' }]) {
+    const p = pkt('601211.SS'); p.timeseries.revenueQ[i] = { value: null, ...odd };
+    const o = apply(p).timeseries.revenueQ[i];
+    assert.deepEqual([value(o), o.financialMissing?.reasonCode], [null, 'context-changed'], JSON.stringify(odd));
+  }
   // A revised row refills its own earlier fill, and its own hold of a still empty cell (blind review M3).
   const revised = structuredClone(active), rc = revised.cases.find(c => c.caseId === '601211.ss-2025-09-30-revenueQ-20261107b');
   rc.replacementValue = 22000000000; rc.sources = [{ ...rc.sources[0], value: 22000000000 }];
@@ -71,7 +77,8 @@ test('Chennai: the omitted quarter is inserted between its neighbours, every pos
   for (const f of ['grossProfitQ', 'opIncQ']) {
     assert.deepEqual(ts[f + 'Ends'], ends, f);
     assert.equal(ts[f][4], null, f + ': the inserted quarter stays empty, never invented');
-    assert.deepEqual(ts[f].filter((_, k) => k !== 4), raw.timeseries[f].map((r, k) => apply(raw, pre).timeseries[f][k]), f + ': other cells unchanged');
+    // grossProfitQ is held as a whole (no filed gross profit line, see below); opIncQ keeps every other cell.
+    if (f === 'opIncQ') assert.deepEqual(ts[f].filter((_, k) => k !== 4), raw.timeseries[f].map((r, k) => apply(raw, pre).timeseries[f][k]), f + ': other cells unchanged');
   }
   assert.equal(ts.netIncomeQ.length, raw.timeseries.netIncomeQ.length + 1);
   assert.equal(ts.netIncomeQ[4], null);
@@ -98,6 +105,14 @@ test('Chennai: the omitted quarter is inserted between its neighbours, every pos
   assert.ok(!H.applyFinancialCases(old, { table: active }).snapshot.timeseries.revenueQEnds.includes('2025-09-30'));
 });
 
+test('Chennai gross profit is withheld: no filed line, and the vendor figure sits on the basis net of excise (Codex on #116, P2)', () => {
+  const s = apply(pkt('CHENNPETRO.NS'));
+  assert.deepEqual(s.timeseries.grossProfitQ.map(value), [null, null, null, null, null, null]);
+  assert.deepEqual(s.annual.annualGP.map(value), [null, null, null, null], 'the fiscal year 2026 and every older one');
+  assert.ok(Math.abs(63662000000 / 786107900000 * 100 - 8.10) < 0.01, 'the mixed margin the hold prevents');
+  assert.ok(H.financialReasons(s).some(r => /druckt keine Bruttogewinnzeile/.test(r)), 'the hint travels with the row');
+});
+
 test('Chennai fiscal years on the filed line: +10.64 % instead of the vendor +7.22 %, older vendor years withheld', () => {
   const s = apply(pkt('CHENNPETRO.NS')), f = F['CHENNPETRO.NS'].meta.fxRateApplied, a = s.annual;
   assert.deepEqual(a.annualRev.slice(0, 2).map(value), [786107900000 * f, 710499500000 * f]);
@@ -106,11 +121,11 @@ test('Chennai fiscal years on the filed line: +10.64 % instead of the vendor +7.
   assert.deepEqual(a.annualRev.slice(2).map(value), [null, null], 'net-of-excise years are not paired with the filed ones');
 });
 
-test('rows: five, one block after every earlier case, sources traced, reasons name their period, plain German', () => {
+test('rows: eleven, one block after every earlier case, sources traced, reasons name their period, plain German', () => {
   const own = H.table.cases.filter(c => c.revision === REV);
-  assert.equal(own.length, 5);
+  assert.equal(own.length, 11);
   const at = H.table.cases.indexOf(own[0]);
-  assert.deepEqual(H.table.cases.slice(at, at + 5), own);
+  assert.deepEqual(H.table.cases.slice(at, at + 11), own);
   assert.deepEqual(own.filter(c => c.vendorGap).map(c => [c.ticker, c.period, c.expectedBadValue, c.replacementValue]),
     [['601211.SS', '2025-09-30', null, 22019291518], ['360ONE.NS', '2025-09-30', null, 10980600000], ['CHENNPETRO.NS', '2025-09-30', null, 200336200000]]);
   for (const c of own) {
@@ -118,7 +133,7 @@ test('rows: five, one block after every earlier case, sources traced, reasons na
     assert.ok(c.reason.includes(`${d}.${m}.${y}`), c.caseId);
     assert.match(c.reason, /Geprüft am 07\.11\.2026\.$/);
     assert.doesNotMatch(c.reason, /[–—]| - |kauf|verkauf/i);
-    assert.ok(c.sources.some(s => s.value === c.replacementValue && s.end === c.period && s.start && s.filed), c.caseId);
+    if (c.replacementValue !== null) assert.ok(c.sources.some(s => s.value === c.replacementValue && s.end === c.period && s.start && s.filed), c.caseId);
   }
   const g = own[0].sources;
   assert.equal(g[1].value - g[2].value, own[0].replacementValue, 'nine months minus the half year is the printed quarter');
