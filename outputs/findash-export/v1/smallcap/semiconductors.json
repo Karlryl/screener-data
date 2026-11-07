@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-06T10:58:23.953Z",
+  "generated_at": "2026-11-07T10:15:09.521Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.3,
-    "generated_at": "2026-11-06T10:47:55.938Z",
-    "honest_coverage_pct": 88.3,
-    "n_addressable": 18174,
-    "n_ok": 16055,
-    "n_total": 23505,
-    "n_failed": 1331,
+    "coverage_pct": 68.2,
+    "generated_at": "2026-11-07T10:06:53.781Z",
+    "honest_coverage_pct": 88.2,
+    "n_addressable": 18198,
+    "n_ok": 16046,
+    "n_total": 23530,
+    "n_failed": 1325,
     "reporting_ccy_held": []
   },
   "profitable": [
@@ -37,9 +37,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 381664992,
+      "marketCap": 345043776,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -142,270 +142,5 @@
       }
     }
   ],
-  "unprofitable": [
-    {
-      "rank": 1,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "MRAM",
-      "score": 49.1,
-      "scoreCycleLegacy": 49.1,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.492,
-        "companion": 96.4
-      },
-      "name": "Everspin Technologies, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 318167744,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 2,
-      "cohortFallback": true,
-      "scoreBase": 48.3,
-      "scoreShrunk": 49.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 50,
-          "weight": 2.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 50,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 50,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 50,
-          "weight": 1.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 25,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 50,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 50,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": 41.9286417695629,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 41.9286417695629,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": 0.081,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 41.9286417695629,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.4918735224586288,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 2,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "LAES",
-      "score": 37.6,
-      "scoreCycleLegacy": 37.6,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "highDilution",
-        "lowRoic",
-        "arDivergence",
-        "burnAccelerating",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 1.315,
-        "companion": 152.3
-      },
-      "name": "SEALSQ Corp",
-      "country": "Switzerland",
-      "region": "Europe",
-      "sector": "Technology",
-      "marketCap": 321650688,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 2,
-      "cohortFallback": true,
-      "scoreBase": 77,
-      "scoreShrunk": 63,
-      "factors": {
-        "burn": 0.597,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 83.3,
-          "weight": 2.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 83.3,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 83.3,
-          "weight": 2.1
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 83.3,
-          "weight": 1.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 16.7,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 16.7,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": 66.21437027593116,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": {
-        "ratePct": 91.4,
-        "pctl": 1
-      },
-      "ath": {
-        "distancePct": -94.4,
-        "athDate": "2023-05-24",
-        "monthsAgo": 41,
-        "lastDate": "2026-11-05"
-      },
-      "qPunkte": 0,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "year",
-      "revGrowthPeriodEnd": "2025-12-31",
-      "revGrowthPriorPeriodEnd": "2024-12-31",
-      "revGrowthSourcePeriodEnd": "2025-12-31",
-      "revGrowthSourcePriorPeriodEnd": "2024-12-31",
-      "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 66.21437027593116,
-      "revGrowthBasisLegacy": "year",
-      "revGrowthPeriodEndLegacy": "2025-12-31",
-      "revGrowthPriorPeriodEndLegacy": "2024-12-31",
-      "overviewValueLegacy": 1.315,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 66.21437027593116,
-          "basis": "year",
-          "periodEnd": "2025-12-31"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 1.3149141630901289,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2025-12-31"
-        }
-      }
-    }
-  ]
+  "unprofitable": []
 }

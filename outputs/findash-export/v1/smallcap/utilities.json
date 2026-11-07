@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-06T10:58:24.025Z",
+  "generated_at": "2026-11-07T10:15:09.565Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.3,
-    "generated_at": "2026-11-06T10:47:55.938Z",
-    "honest_coverage_pct": 88.3,
-    "n_addressable": 18174,
-    "n_ok": 16055,
-    "n_total": 23505,
-    "n_failed": 1331,
+    "coverage_pct": 68.2,
+    "generated_at": "2026-11-07T10:06:53.781Z",
+    "honest_coverage_pct": 88.2,
+    "n_addressable": 18198,
+    "n_ok": 16046,
+    "n_total": 23530,
+    "n_failed": 1325,
     "reporting_ccy_held": []
   },
   "profitable": [
@@ -39,7 +39,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 523533984,
+      "marketCap": 522884896,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -165,9 +165,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 349573024,
+      "marketCap": 343893120,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -290,7 +290,7 @@
       "country": "Cayman Islands",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 438592352,
+      "marketCap": 424981440,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -414,7 +414,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 453047648,
+      "marketCap": 441261792,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -519,139 +519,5 @@
       }
     }
   ],
-  "unprofitable": [
-    {
-      "rank": 1,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "DGXX",
-      "score": 30.1,
-      "scoreCycleLegacy": 30.1,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "arDivergence",
-        "crashRisk",
-        "burnAccelerating",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -42
-      },
-      "name": "Digi Power X Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Utilities",
-      "marketCap": 300134208,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.83,
-      "cohortN": 1,
-      "cohortFallback": true,
-      "scoreBase": 10,
-      "scoreShrunk": 36.7,
-      "factors": {
-        "burn": 0.822,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 10,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 10,
-          "weight": 1
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 10,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 10,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 10,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": 10,
-          "weight": 0.4
-        }
-      ],
-      "revGrowthYoYPct": -18.280872312487617,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "revGrowthYoYPctLegacy": -18.280872312487617,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": null,
-      "overviewPeriodLegacy": {
-        "basis": "none",
-        "periodEnd": null,
-        "priorPeriodEnd": null,
-        "reason": "Kein vergleichbares Wertepaar vorhanden."
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": -18.280872312487617,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": null,
-        "period": {
-          "basis": "none",
-          "periodEnd": null,
-          "reason": "Kein vergleichbares Wertepaar vorhanden."
-        }
-      }
-    }
-  ]
+  "unprofitable": []
 }
