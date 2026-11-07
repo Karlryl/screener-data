@@ -130,7 +130,7 @@ test('BURE.ST: no number moves, the hint is on the row, with any growth, and onl
   const s = snap('BURE.ST');
   // 07.11.2026 (sd-hand-4): the vendor cells are held since, because the filed total income changes sign; probed in
   // tests/hand-table-sdhand4-20261107.test.js. On the table of this lane the number did not move.
-  const of31 = structuredClone(table); of31.cases = of31.cases.filter(c => !(c.revision === '2026-11-07-sdhand4' && c.ticker === 'BURE.ST'));
+  const of31 = structuredClone(table); of31.cases = of31.cases.filter(c => !(c.revision === '2026-11-07-sdhand4' && c.ticker === 'BURE.ST')); of31.coverage = of31.coverage.filter(v => v.ticker !== 'BURE.ST');
   assert.deepEqual(native(applyFinancialCases(s, { table: of31 }).snapshot, 'annual', 'annualRev').slice(0, 2), [268000000, 241000000]);
   assert.deepEqual(native(s, 'timeseries', 'revenueQ').slice(0, 1), [206000000 + 5000000]);
   assert.deepEqual(native(s, 'timeseries', 'revenueQ').slice(3, 4), [193000000 + 2000000]);

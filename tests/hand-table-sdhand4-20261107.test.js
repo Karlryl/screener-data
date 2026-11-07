@@ -29,7 +29,7 @@ const ONE = '360one.ns-2026-06-30-revenueQ-20261104';
 // The table as it stood before these rows: their cases and coverage out, 360 ONE back on the July report.
 const pre = structuredClone(H.table);
 pre.cases = pre.cases.filter(c => c.revision !== REV);
-pre.coverage = pre.coverage.filter(v => !['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', '601211.SS'].includes(v.ticker));
+pre.coverage = pre.coverage.filter(v => !['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', '601211.SS', 'BURE.ST'].includes(v.ticker));
 const one0 = pre.cases.find(c => c.caseId === ONE);
 one0.replacementValue = 12260900000;
 one0.sources = one0.sources.filter(s => s.value === 12260900000);
@@ -86,9 +86,20 @@ test('Bure Equity: no growth is formed, and the definition hint explains the emp
   assert.deepEqual(out.timeseries.revenueQ.map(value), [null, null, null, null, null], 'every vendor quarter held');
   assert.deepEqual(out.annual.annualRev.map(value), [null, null, null, null], 'the fiscal year and every older one held');
   const d = hints.definitionen.find(x => x.ticker === 'BURE.ST');
-  assert.match(d.reason, /das Feld bleibt deshalb leer/);
+  assert.match(d.reason, /nicht auf den Wachstums-Boards/);
   assert.match(d.reason, /plus 7\.628 Mio\. SEK nach minus 1\.225 Mio\. SEK/);
   assert.equal(d.verifiedAt, '2026-11-07');
+  // Blind review of #112: the next vendor quarter (Q3 2026, reported 05.11.2026) and its year-ago partner stay held, so no
+  // dividend growth returns (the probe without the coverage row showed plus 700 %).
+  const next = pkt('BURE.ST');
+  next.timeseries.revenueQ = [{ value: 24e6 * next.meta.fxRateApplied }, ...next.timeseries.revenueQ];
+  next.timeseries.revenueQEnds = ['2026-09-30', ...next.timeseries.revenueQEnds];
+  next.timeseries.revenueQ.splice(4, 0, { value: 3e6 * next.meta.fxRateApplied });
+  next.timeseries.revenueQEnds.splice(4, 0, '2025-09-30');
+  const n = apply(next).snapshot;
+  assert.deepEqual(n.timeseries.revenueQ.slice(0, 5).map(value), [null, null, null, null, null]);
+  assert.equal(n.timeseries.revenueQ[0].financialMissing.reasonCode, 'period-after-coverage');
+  assert.equal(g31Shadow(n).v1.pct, null);
 });
 
 test('Guotai Haitong: the merger hint sits on exactly the shown fiscal-year pair and lapses with it', () => {
@@ -105,6 +116,14 @@ test('Guotai Haitong: the merger hint sits on exactly the shown fiscal-year pair
   s.annual.annualRevEnds = ['2026-12-31', ...s.annual.annualRevEnds];
   assert.notEqual(g31Hinweis(s)?.code, 'uebernahme');
   assert.equal(g31Hinweis(apply(pkt('6023.TWO')).snapshot), null, 'no checked entry, no hint');
+  // The entry is bound to the fiscal-year basis: a quarter pair with the same ends (Q4 2025 against Q4 2024) does not carry it.
+  assert.equal(hints.entries.find(e => e.ticker === '601211.SS').basis, 'year');
+  const q4 = pkt('601211.SS');
+  q4.timeseries.revenueQ = [{ value: 5e9 }, { value: 4e9 }, { value: 4e9 }, { value: 4e9 }, { value: 3e9 }];
+  q4.timeseries.revenueQEnds = ['2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31', '2024-12-31'];
+  const qh = H.applyFinancialCases(q4, { table: { ...structuredClone(H.table), cases: H.table.cases.filter(c => c.ticker !== '601211.SS' || c.field !== 'revenueQ'), coverage: H.table.coverage.filter(v => v.ticker !== '601211.SS') } }).snapshot;
+  if (g31Shadow(qh).v1.basis === 'quarter') assert.notEqual(g31Hinweis(qh)?.code, 'uebernahme');
+  else assert.fail('probe precondition: the quarter pair Q4 2025 against Q4 2024 is shown');
   // The exchange check stands down for a hand-table ticker, so every vendor quarter carries a filed value (or stays empty).
   const gq = apply(pkt('601211.SS')).snapshot.timeseries, f = F['601211.SS'].meta.fxRateApplied;
   assert.deepEqual(gq.revenueQEnds, ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30']);
@@ -181,7 +200,7 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
     if (direct) assert.ok(direct.currency === c.currency && direct.unit === 'currency' && direct.start, c.caseId);
   }
   assert.equal(H.table.cases.find(c => c.caseId === ONE).sources[0].filed, '2026-10-15', '360 ONE leads with the newer report');
-  assert.deepEqual(H.table.coverage.filter(v => ['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', '601211.SS'].includes(v.ticker)).map(v => v.coversThrough), ['2026-09-30', '2026-06-30', '2026-06-30', '2026-09-30']);
+  assert.deepEqual(H.table.coverage.filter(v => ['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', '601211.SS', 'BURE.ST'].includes(v.ticker)).map(v => v.coversThrough), ['2026-09-30', '2026-06-30', '2026-06-30', '2026-09-30', '2026-06-30']);
 });
 
 test('expectations: growth of each changed firm, bound to the issuer name, valid from the run of 08.11.2026', () => {
@@ -194,8 +213,9 @@ test('expectations: growth of each changed firm, bound to the issuer name, valid
     assert.ok(e.min < after && after < e.max && !(e.min < before && before < e.max), t + ': the band holds the filed value and excludes the old one');
     assert.ok(e.grund.includes('07.11.2026'), t + ' dates its number');
   }
-  const b = own.find(x => x.name === names['BURE.ST'] && x.feld === 'revGrowthYoYPct');
-  assert.equal(b.op, 'null');
+  // Bure leaves the boards (no revenue, the router excludes it), so its expectation checks the absent row.
+  const b = own.find(x => x.name === names['BURE.ST']);
+  assert.deepEqual([b.id, b.op, b.board], ['sdhand4-BURE-board', 'absent', 'full/financials']);
   assert.ok(own.some(x => x.name === names['601211.SS'] && x.feld === 'g31Hinweis.code' && x.wert === 'uebernahme'));
   assert.equal(erwartungen.find(e => e.id === 'pr102-360ONENS-wachstum').gueltigBis, '2026-11-07', 'the band of 04.11.2026 held both values; it ends');
 });
