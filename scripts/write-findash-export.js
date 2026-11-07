@@ -441,6 +441,8 @@ function heldNewerSibling(meta, ticker, shownEnd) {
     .sort((a, b) => (a.periodEnd < b.periodEnd ? 1 : a.periodEnd > b.periodEnd ? -1 : a.ticker < b.ticker ? -1 : 1))[0] || null;
 }
 
+// Codes lib/g31-recency.js sets without a checked source (pairHinweis flags, joined by '+', and the recency label).
+const AUTO_HINT_CODES = new Set(['aktuell-gross', 'vorjahr-klein', 'quartalssumme', 'aelteres-quartalspaar']);
 function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
   let derivations = snapAbleitungenFuer(out.ticker, snapshotStore);
   const wert = out.revGrowthYoYPct;
@@ -455,7 +457,11 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     out.g31Shadow = derivations.g31Shadow;
     out.g31OverviewShadow = derivations.g31Overview[out.overview?.kind || out.overviewKind] ?? null;
     // P267 rule 1: review hint for a newly admitted B1 pair, only where this snapshot reproduces the shown growth.
-    out.g31Hinweis = (passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null;
+    // Codex R08 P3 (04.11.): a checked definition says more than an automatic diagnosis, which would otherwise hide it
+    // (BURE.ST with an empty revenueQ[1]); the diagnosis stays as an added sentence. A checked pair entry still wins.
+    const pair = passt ? derivations.g31Hinweis : null, def = DEFINITION_HINTS.get(out.ticker) ?? null;
+    out.g31Hinweis = def && pair && pair.code.split('+').every(c => AUTO_HINT_CODES.has(c))
+      ? { code: def.code, reason: `${def.reason} Zusätzlich: ${pair.reason}` } : pair ?? def ?? null;
   }
   if (!passt) _wachstumOhneEtikett++;
   out.revGrowthBasis = passt ? leg.basis : null;
@@ -1510,7 +1516,9 @@ function loadCoverage(file = COVERAGE) {
     n_addressable: m.n_addressable ?? null, n_ok: m.n_ok ?? null, n_total: m.n_total ?? null,
     n_failed: m.n_failed ?? null,
     // P316 finding 1: firms whose statements stay empty, with deadline and owner; the run check turns an overdue row into Karl's alarm.
-    reporting_ccy_held: Array.isArray(m.reporting_ccy_held) ? m.reporting_ccy_held : null };
+    reporting_ccy_held: Array.isArray(m.reporting_ccy_held) ? m.reporting_ccy_held : null,
+    // Codex R09 (04.11.): a missing shard may hold a further firm; the run check needs this to say a filled list may be incomplete.
+    manifest_partial: typeof m.manifest_partial === 'boolean' ? m.manifest_partial : null };
 }
 
 // seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI
