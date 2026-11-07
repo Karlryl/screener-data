@@ -374,7 +374,7 @@ test('silent-failure sweep M2, report only (master 07.11.): a vendor contradicti
   snaps['000063.SZ'].meta.impliedSharesOutstanding = 8811567240;
   const out = cs.writeFirm(snaps, e, r, NOW);
   assert.equal(out.shown, '000063.SZ'); assert.equal(snaps['000063.SZ'].marketCap.value, r.value, 'the value is never emptied by the contradiction');
-  assert.match(snaps['000063.SZ'].meta.marketCapReason, /Hinweis: Yahoo nennt als Gesamtzahl der Aktien 000063\.SZ 8\.811,6 Mio\. \(Stand 07\.11\.2026\), belegt sind 4\.754,9 Mio\.; die Aktienzahlen sind zu prüfen/);
+  assert.match(snaps['000063.SZ'].meta.marketCapReason, /Hinweis: Yahoo nennt als Gesamtzahl der Aktien bei 000063\.SZ 8\.811,6 Mio\. \(Stand 30\.10\.2026\), belegt sind 4\.754,9 Mio\.; die Aktienzahlen sind zu prüfen/);
   // Codex P1 on 8be40976f5: a matching old count on another line (0763.HK) no longer hides the contradiction.
   assert.equal(snaps['0763.HK'].meta.impliedSharesOutstanding, 4783534887);
   // Codex P2 on d0f55acd35, other direction: the contradiction sits on the line that does NOT carry the sum (M1 switch to 0763.HK).
