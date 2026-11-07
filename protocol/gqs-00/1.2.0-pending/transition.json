@@ -75,7 +75,7 @@
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
     "src/scoring/axes.js": "74832aa2597aaa3dc63172fa70598ce17e37f5164fba5bb5ba75aa3e1cd214ef",
-    "src/scoring/score.js": "c836592a192bc399428337e2a33db28a966d47d4a6e98e44862f955678ca20e5",
+    "src/scoring/score.js": "d12a2e5c0cf49992f4dc15627c46a55378d9edcb72f33f04218f119778e1fb58",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
@@ -379,11 +379,19 @@
     "authority": "Daylauf 11 lane sd-heimat, master order: P290, Claude (p290-heimatnotierung.md) and Codex (P290-flips, 90 %) agree on a fixed, evidenced home listing with an allowed fallback. Draft for the Codex review of 04.11.2026; no court verdict, Karl release or ratification is claimed.",
     "scope": "Only which listing of one issuer represents it. The first three comparator keys (US primary, US domicile, no FX suspicion) stay first. No weight, axis, split or formula changes; all rows keep their inputs, percentiles move only through the changed population.",
     "file": "src/scoring/score.js",
-    "sourceSha256LF": "c836592a192bc399428337e2a33db28a966d47d4a6e98e44862f955678ca20e5",
-    "previousSealedSha256LF": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8",
+    "sourceSha256LF": "d12a2e5c0cf49992f4dc15627c46a55378d9edcb72f33f04218f119778e1fb58",
+    "previousSealedSha256LF": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29",
     "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
     "dependencies": "lib/home-listing.js and configs/home-listing.json are registered in dependencyFiles and required. The sourced homeListingProposal rows of configs/dup-issuer-shadow-table.json are a hand table outside the fingerprint, like the other hand tables.",
-    "goldenImpact": "verify() rebuilds the golden traces: 0 score and 0 rank mismatches. A golden fixture is a single listing, so the comparator never decides there."
+    "goldenImpact": "verify() rebuilds the golden traces: 0 score and 0 rank mismatches. A golden fixture is a single listing, so the comparator never decides there.",
+    "homeListingProposalSha256": "1522d3699d92e1ee4fcde6c7cacb6d07bf6782cf3bc2dd92d56c4308134ac8aa",
+    "rebuildR23": {
+      "date": "2026-11-07",
+      "authority": "Codex verdict R23 on PR #89 (NOT APPROVED 98 %), Daylauf 15 lane sd-formel. Method decision Claude, pending the Codex review.",
+      "scope": "(1) After the three first keys the issuer dedup asks, in order: can the leg hold a rank (covered weighted axes as the score counts them, the export gate 4 of 7 shared through lib/home-listing.js rankCapable), the newest shown month (G31), the share of covered axes, the home listing, then market cap. excluded.json homeListing names the deciding key (keinRang, aeltererZeitraum, wenigerBelegteAchsen). (2) The country rule in shownGrowthMonth is gone. lib/g31-recency.js applies the exchange gate of the older-pair walk to every listing whose own quarters a CN/TW exchange store proves (lib/exchange-quarter-check.js exchangeSiblings: store currency, at least three quarters equal within the tolerance and more equal than off); a listing without such proof keeps the walk. Selection and display read the same comparison. (3) homeListingProposal rows of configs/dup-issuer-shadow-table.json are pinned by homeListingProposalSha256 (tests/home-listing.test.js).",
+      "evidence": "tests/home-listing.test.js R23-1, R23-2 (real 0107.HK and 601107.SS of 31.10.2026), R23-3; red against head 0efd363022, green here.",
+      "review": "Builder evidence only; one blind Opus review, then the Codex review decide."
+    }
   },
   "smallcapFixedReference": {
     "date": "2026-10-31",
@@ -400,8 +408,8 @@
   },
   "dependencyFiles": {
     "configs/home-listing.json": "eac85125840a9d4b78c4f001eec349fdb72d3fa1d7feffb1d479dcae63f3ac6b",
-    "lib/home-listing.js": "10441d8c06f4bb2e2c176245b7e4740b420a0998df242b8ee3366fa1d5eff18f",
-    "lib/g31-recency.js": "3f8125b27f32d0bc05240321bd4f13946ad8c81a5dbe93e68906d1112d0d9061",
+    "lib/home-listing.js": "4ae3c946cf608c66935600dd27c614e38814a309e5638b0c9cf746e2e955ff1f",
+    "lib/g31-recency.js": "ca84090db772f4ba4ac9fa2e65387cacf3e40ca6ad0252a8e58ff8df37629096",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   },
   "cycleRamp": {

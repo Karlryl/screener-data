@@ -777,13 +777,12 @@ function normalizeName(value) {
 // und behaelt seinen Rang. Das ist GEWOLLT, kein Versehen. Wer das spaeter "repariert",
 // zahlt dafuer die 127 Fehlschuesse der 5er-Schwelle — die Entscheidung ist gemessen, nicht
 // vergessen.
-const RANK_MIN_AXES = 4;
+const { RANK_MIN_AXES, RANK_GATE_MIN_NENNER } = require('../lib/home-listing.js'); // 4 and 7, one source with the issuer dedup (Codex R23)
 // Das Gate wurde auf den BRANCHEN-Formeln gemessen (7 bzw. 8 gewichtete Achsen). QC-Boards
 // (src/scoring/formulas/quality) fuehren nur 5 gewichtete Achsen — dieselbe ABSOLUTE Schwelle
 // waere dort eine andere, nie gemessene Regel (4 von 5 = 80 % statt 4 von 7 = 57 %). Deshalb
 // greift das Gate erst ab dieser Achsenzahl im NENNER. QC bleibt unberuehrt, bis jemand die
 // Wirkung dort misst; waechst eine QC-Formel je auf 7 Achsen, greift es automatisch mit.
-const RANK_GATE_MIN_NENNER = 7;
 // Anteil entrangter Zeilen je Liste, ab dem der Bau laut meldet — das vorab deklarierte
 // Scheiternskriterium ("ein Board ueber 40 % heisst: zu scharf") als laufender Waechter.
 // Gemessenes Maximum am 16.08.: financials/profitable 36,4 %. Ohne diese Meldung waere ein

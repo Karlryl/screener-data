@@ -62,15 +62,76 @@ test('a revenue of 0 is no report (3993.HK: 0 for 2026-09-30 would show -100 %)'
   assert.equal(first([shadow, home]), '603993.SS');
 });
 
-test('an H share does not win on an older pair its A share withholds (Sichuan Expressway, 04.11.2026)', () => {
-  // Same vendor quarters on both lines: the newest has no year-ago partner, an older dated pair has one.
-  const gap = { values: [130, 120, 110, 105, 100], ends: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-06-30'] };
-  const h = leg('TESTH.HK', 'China', 50e9, gap), a = leg('TESTA.SS', 'China', 10e9, gap);
+test('R23-2 real Sichuan Expressway (31.10.2026): the H share carries the A share figures and gets its exchange gate, shown and compared alike', () => {
   const { g31Shadow } = require('../lib/g31-recency.js');
-  // Precondition: the walk shows the June pair on the H line only; the A line's exchange check withholds it (no store row).
-  assert.deepEqual([g31Shadow(h.snapshot).v1.periodEnd, g31Shadow(a.snapshot).v1.periodEnd], ['2026-06-30', '2025-12-31']);
+  const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
+  const X = require('../lib/exchange-quarter-check.js');
+  const read = (t) => prepareSnapshot(JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'home-listing', t + '.json'), 'utf8')), { atPull: true });
+  const h = { ticker: '0107.HK', snapshot: read('0107.HK') }, a = { ticker: '601107.SS', snapshot: read('601107.SS') };
+  assert.deepEqual(X.exchangeSiblings(X.stripOwn(h.snapshot), X.defaultContext()), ['601107.SS'], 'linked by the figures');
+  // Before: the H share showed +11.31 % for June 2026, a pair the exchange check withholds on the A share.
+  assert.deepEqual([g31Shadow(h.snapshot).v1.periodEnd, g31Shadow(a.snapshot).v1.periodEnd], ['2025-12-31', '2025-12-31']);
+  assert.equal(g31Shadow(h.snapshot).v1.pct, g31Shadow(a.snapshot).v1.pct);
   assert.deepEqual([shownGrowthMonth(h.snapshot), shownGrowthMonth(a.snapshot)], ['2025-12', '2025-12']);
-  assert.equal(first([h, a]), 'TESTA.SS');
+});
+
+test('R23-2 no country rule: the same figures give the same months in China, Hong Kong, Switzerland or without a country', () => {
+  const gap = { values: [130, 120, 110, 105, 100], ends: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-06-30'] };
+  const seen = [];
+  for (const country of ['China', 'Hong Kong', 'Switzerland', undefined]) {
+    const legs = [leg('TESTA.SS', country, 1e9, gap), leg('TESTH.HK', country, 2e9, gap)];
+    seen.push(JSON.stringify(legs.map((e) => shownGrowthMonth(e.snapshot))) + first(legs));
+  }
+  assert.equal(new Set(seen).size, 1, seen.join(' | '));
+});
+
+test('R23-2 a Hong Kong home with no exchange twin keeps its June pair against a March mirror (no period lost)', () => {
+  const home = leg('TESTH.HK', 'China', 1e9, { values: [130, 120, 110, 105, 100], ends: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-06-30'] });
+  const mirror = leg('TESTM.DE', 'China', 2e9, { values: [120, 110, 105, 100, 90], ends: ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'] });
+  assert.deepEqual([shownGrowthMonth(home.snapshot), shownGrowthMonth(mirror.snapshot)], ['2026-06', '2026-03']);
+  assert.equal(first([mirror, home]), 'TESTH.HK');
+});
+
+test('R23-1 same month: a home listing without enough axes for a rank never pushes out a listing with a rank (ALNY probe)', () => {
+  const F = require('../src/scoring/formulas/index.js');
+  const W = require('../scripts/write-findash-export.js');
+  const { scoreUniverse } = require('../src/scoring/score.js');
+  const g = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'protocol', 'gqs-00', '1.1.0', 'golden-fixtures.json'), 'utf8')).cases.find((c) => c.ticker === 'ALNY');
+  const good = structuredClone(g.rawSnapshot);
+  good.meta = { ...good.meta, ticker: 'PROBE.VI', country: 'Germany', name: 'Review Quality Probe', exchangeName: 'X', tradingCurrency: 'USD', reportingCurrencyOriginal: 'USD' };
+  good.marketCap = { value: 2e9 };
+  const bad = structuredClone(good);
+  bad.meta.ticker = 'PROBE.DE'; bad.marketCap = { value: 1e9 };
+  for (const k of Object.keys(bad)) {
+    if (k === 'timeseries') bad[k] = Object.fromEntries(Object.entries(bad[k]).filter(([f]) => f.startsWith('revenue')));
+    else if (k === 'annual') bad[k] = Object.fromEntries(Object.entries(bad[k]).filter(([f]) => f.startsWith('annualRev')));
+    else if (!['meta', 'marketCap', 'timeseries', 'annual'].includes(k)) delete bad[k];
+  }
+  assert.equal(shownGrowthMonth(good), shownGrowthMonth(bad), 'same month: the old key never decided');
+  assert.ok(homeListingRank('PROBE.DE', 'Germany') < homeListingRank('PROBE.VI', 'Germany'), 'PROBE.DE is the home listing');
+  const rows = scoreUniverse([bad, good], F).filter((e) => e.action === 'route');
+  W.vergebeRaenge(rows, 'test', { warn: false });
+  assert.deepEqual(rows.map((e) => [e.ticker, e.coverageAxes, e.rank]), [['PROBE.VI', '7/7', 1]]);
+});
+
+test('R23-1 the keys: rank first, then the newest month, then more axes, then the home listing; excluded.json names the key', () => {
+  const { issuerDedupDecision } = require('../src/scoring/score.js');
+  const cov = (e, n, m = 7) => Object.assign(e, { formula: { axes: [] }, _dedupCoverage: { n, m, rankable: n >= 4 } });
+  const home = (n, series) => cov(leg('TESTX.DE', 'Germany', 1e9, series), n), other = (n, series) => cov(leg('TESTX.VI', 'Germany', 2e9, series), n);
+  const SEPT = { values: [130, 120, 110, 105, 100], ends: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30'] };
+  assert.deepEqual([first([home(3, SEPT), other(6)]), issuerDedupDecision(home(3, SEPT), other(6)).key], ['TESTX.VI', 'keinRang']);
+  assert.deepEqual([first([home(5, SEPT), other(7)]), issuerDedupDecision(home(5, SEPT), other(7)).key], ['TESTX.DE', 'aeltererZeitraum']);
+  assert.deepEqual([first([home(5), other(7)]), issuerDedupDecision(home(5), other(7)).key], ['TESTX.VI', 'wenigerBelegteAchsen']);
+  assert.deepEqual([first([home(7), other(7)]), issuerDedupDecision(home(7), other(7)).key], ['TESTX.DE', 'heimat']);
+});
+
+test('R23-3 the homeListingProposal rows are sealed: any change needs a new registration', () => {
+  const crypto = require('node:crypto');
+  const { loadDupIssuerShadowTable } = require('../lib/dup-issuer-shadow-table.js');
+  const rows = Object.entries(loadDupIssuerShadowTable()).filter(([, r]) => r && r.homeListingProposal).map(([k, r]) => [k, r.homeListingProposal]).sort();
+  const sha = crypto.createHash('sha256').update(JSON.stringify(rows)).digest('hex');
+  const reg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'protocol', 'gqs-00', '1.2.0-pending', 'transition.json'), 'utf8')).p290HomeListing;
+  assert.equal(sha, reg.homeListingProposalSha256, rows.length + ' rows; a changed proposal needs the registration updated in the same reviewed commit');
 });
 
 test('outside China and Taiwan the walk counts: a home listing whose newest quarter lacks its partner keeps its June pair (Boliden)', () => {

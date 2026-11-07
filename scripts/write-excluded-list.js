@@ -55,7 +55,7 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { loadUniverse } = require('../src/scoring/run-screener.js');
 const {
-  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator, issuerDedupComparatorOld,
+  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator, issuerDedupComparatorOld, issuerDedupDecision,
 } = require('../src/scoring/score.js');
 const { isUS } = require('../src/scoring/router.js');
 const formulas = require('../src/scoring/formulas/index.js');
@@ -273,7 +273,9 @@ function homeListingReport(gruppen) {
     }
     if (home.ticker === shown.ticker || rank(home) >= rank(shown)) continue;
     const shownMonth = shownGrowthMonth(shown.snapshot), homeMonth = shownGrowthMonth(home.snapshot);
-    const reason = istRaus(home) && home.reason !== 'dup-issuer' ? home.reason : homeMonth < shownMonth ? 'aeltererZeitraum' : 'fxVerdacht';
+    // Codex R23: the reason is the comparator key that decided, so a rank or axis the home listing lacks is named, not hidden.
+    const decided = issuerDedupDecision(shown, home).key;
+    const reason = istRaus(home) && home.reason !== 'dup-issuer' ? home.reason : decided === 'vorrangUsOderFx' ? 'fxVerdacht' : decided;
     fallbacks.push({ issuer: shown.snapshot.meta.name || null, shown: shown.ticker, home: home.ticker, reason, shownMonth: shownMonth || null, homeMonth: homeMonth || null });
   }
   const byShown = (a, b) => (a.shown < b.shown ? -1 : a.shown > b.shown ? 1 : 0);
