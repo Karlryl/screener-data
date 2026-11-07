@@ -65,6 +65,8 @@ const WRONG = {
   'FAST.AS': { px: 37.01837299, vendorShares: 38933085, mcap: 1441239431.6594176, issuer: 19752877 },
   'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 583349906 }, // 04.11.2026: ON-equivalents at the closes of 03.11.2026 (ratio 0.742)
   '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561108010 },
+  // Snapshot of run 42356903064 (2026-11-07): JOJO with the announced, not yet effective 1:5 split on the unsplit price.
+  'JOJO.BO': { px: 1.1692045314, vendorShares: 689614000, mcap: 806299871.8150574, issuer: 137922800 },
   // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
   '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1281656998 },
   'SOFF.OL': { px: 7.639278149, vendorShares: 108605000, mcap: 829663826.409513, issuer: 82346796 },
