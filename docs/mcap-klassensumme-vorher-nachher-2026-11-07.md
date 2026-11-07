@@ -3,7 +3,7 @@
 > **Auf einen Blick**
 >
 > 24 Firmen mit zwei oder drei börsennotierten Aktienklassen (A und H, A und B, bei Haier dazu D) zeigen ihren Börsenwert jetzt als Summe der Klassen, jede Klasse zu ihrem eigenen, nicht bereinigten Schlusskurs desselben abgeschlossenen Handelstags und zum Devisenkurs dieses Tages. Am Datenstand 07.11.2026 sinken die bisher zu hohen Werte um 3,5 bis 21,4 % (Jiangling 2,13 auf 1,67, ZTE 20,22 auf 18,80, Shandong Gold 18,11 auf 16,46 Mrd. USD).
-> - Kein Rang und kein Score ändert sich; die gezeigte Notierung bleibt bei allen 24 Firmen dieselbe (bei CNOOC über eine feste Angabe, siehe unten), das Börsenjahr der Firma ebenso.
+> - Gegen den Code des veröffentlichten Boards vom 07.11. ändert sich kein Rang und kein Score; die gezeigte Notierung bleibt bei allen 24 Firmen dieselbe (bei CNOOC über eine feste Angabe, siehe unten), das Börsenjahr der Firma ebenso. Gegen den heutigen main bleibt zusätzlich Shandong Gold auf der Shanghaier Zeile, statt mit #111 auf die Hongkonger zu wechseln.
 > - Die 16 Zeilen der Aktienzahl-Handtabelle mit eingefrorenem Kursverhältnis vom 30.10. entfallen; damit fällt auch ihr Ablauf am 31.12.2026 weg, an dem 12 dieser Firmen sonst vom Board gefallen wären.
 
 ## Was falsch war
@@ -55,6 +55,8 @@ Gleiche Schnappschüsse (Lauf 42356903064), gleiche Watchlist, gleiche SEC-Datei
 | CNOOC | 0883.HK | 142,35 | 147,40 | 3,5 % | energy |
 
 **Ränge und Scores:** Wachstum 9.346 und Qualität 7.187 Zeilen in beiden Armen; bewegt haben sich nur die Börsenwerte der 24 gezeigten Zeilen (24 Wachstums- und 22 Qualitätszeilen). Kein Rang, kein Score und keine gezeigte Notierung ändert sich. Das Börsenjahr der gezeigten Zeile ist bei allen 24 Firmen das früheste der Firma, wie vorher.
+
+**Gegen den heutigen main** (e0dd8a9e14, mit #111, das noch in keinem Lauf live war): #111 legte für Shandong Gold eine Zeile mit Kursverhältnis auf 600547.SS an; mit ihr hätte ab dem nächsten Lauf die Hongkonger Zeile 1787.HK knapp gewonnen (16,73 gegen 16,45 Mrd. USD) und auf dem Rohstoff-Board gestanden (Wachstum Rang 762 mit 36,9 Punkten, Qualität Rang 459 mit 46,7, im Nachspiel). Dieser Entwurf entfernt die Zeile wieder; Shandong Gold bleibt wie auf dem veröffentlichten Board vom 07.11. auf 600547.SS (Wachstum Rang 472 mit 49,9, Qualität Rang 347 mit 54,0). Dadurch verschieben sich auf dem Rohstoff-Board 436 Wachstums- und 208 Qualitätszeilen um höchstens 0,1 Punkte und 3 Plätze; sonst gleich wie oben. Dass die Zeilen derselben Firma so verschiedene Scores tragen, liegt an den Yahoo-Daten je Notierung, nicht an der Klassensumme (Thema Heimatnotierung, #89).
 
 **Weitere sichtbare Wirkungen:**
 - Nebenzeilen ohne Board werden geleert (am 07.11. zwölf: 0763.HK, 0857.HK, 0995.HK, 1347.HK, 1787.HK, 2607.HK, 3969.HK, 600938.SS, 6198.HK, 6690.HK, 6869.HK, 9969.HK; vorher etwa 0857.HK mit 242,33 Mrd. USD für PetroChina).
