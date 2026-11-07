@@ -241,9 +241,19 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] *= 1.0001; // 2025-06-30
   assert.equal(b.rows['000002.SZ'].revenueQEnds[3], '2025-06-30');
   assert.equal(blocked(base(), ctxOf(F.store, b)), 'vendor-2025-changed');
+  // sd-quellen 07.11.2026: no baseline row (on no board in July) -> the exchange agreement of the three other
+  // vendor 2025 quarters is the proof; the fill applies and says so.
   const nb = clone(F.baseline); delete nb.rows['000002.SZ'];
   const r = res(base(), ctxOf(F.store, nb));
-  assert.equal(r.fill.blocked, 'no-baseline'); assert.equal(r.fill.otherwiseFillable, true); assert.equal(r.category, 'agree');
+  assert.equal(r.category, 'would-fill'); assert.equal(r.fill.blocked, null); assert.equal(r.fill.baseline, 'exchange-agreement');
+  // ... but not with a single agreeing vendor quarter of 2025
+  const thin = base(), ends = thin.timeseries.revenueQEnds;
+  for (const e of ['2025-06-30', '2025-03-31']) thin.timeseries.revenueQ[ends.indexOf(e)] = null;
+  const r1 = res(thin, ctxOf(F.store, nb));
+  assert.equal(r1.fill.blocked, 'no-baseline'); assert.equal(r1.fill.otherwiseFillable, true); assert.notEqual(r1.category, 'would-fill');
+  // ... and a baseline row that exists still wins: an unchanged vintage fills without the alternative
+  const rb = res(base(), ctxOf(F.store, F.baseline));
+  assert.equal(rb.category, 'would-fill'); assert.equal(rb.fill.baseline, undefined);
 });
 test('fill absence: store period missing, currency, envelope, broker table, hand table, non-empty cell, newest cell', () => {
   const st = clone(F.store); delete st.cn.companies['000002.SZ'].ytd['2025-03-31'];
