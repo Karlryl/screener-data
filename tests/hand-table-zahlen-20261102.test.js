@@ -28,7 +28,7 @@ const without = structuredClone(table);
 // The rows of 04.11.2026 (tests/hand-table-zahlen-20261104.test.js) extend some of these series; without both the vendor is back.
 const LATER = '2026-11-04-sdzahlen2', LATER2 = '2026-11-05-sdhand3'; // LATER2: the September quarter of Rocket (tests/hand-table-rkt-20261105.test.js)
 const touched = new Set(table.cases.filter(c => c.revision === REV || c.revision === LATER || c.revision === LATER2).map(c => c.ticker));
-without.cases = without.cases.filter(c => c.revision !== REV && c.revision !== LATER && c.revision !== LATER2);
+without.cases = without.cases.filter(c => c.revision !== REV && c.revision !== LATER && c.revision !== LATER2 && c.revision !== '2026-11-07-sdhand4b'); // 07.11.2026: the 360 ONE September 2025 row needs the coverage this copy removes
 without.coverage = without.coverage.filter(v => !touched.has(v.ticker));
 validateTable(without);
 const active = process.argv.includes('--prove-red') ? without : table;
