@@ -59,14 +59,16 @@ const classEntries = classSum.loadClassSumEntries();
 function withClassSum(lines, day) {
   const entry = classEntries.find(e => e.classes.some(c => lines.some(l => l.ticker === c.ticker)));
   if (!entry) return lines;
-  const closes = {}, currencies = {}, fx = {};
+  // Market data shaped like lib/mcap-class-sum.js fetchMarket: one finished close per class and per FX pair on the replayed day.
+  const market = {}, currencies = {}, date = (day || '2026-10-30').slice(0, 10);
   for (const { ticker, snapshot: s } of lines) {
     const cur = s.meta.tradingCurrencyOriginal || s.meta.tradingCurrency, rate = guard.tradingRate(s.meta);
     if (!cur || !(rate > 0) || !(s.price?.regularMarketPrice > 0)) continue;
-    currencies[ticker] = cur; fx[cur] ??= rate;
-    closes[ticker] = [{ date: (day || '2026-10-30').slice(0, 10), close: s.price.regularMarketPrice / rate }];
+    currencies[ticker] = cur;
+    market[ticker] = { currency: cur, closes: [{ date, close: s.price.regularMarketPrice / rate }], error: null };
+    market[classSum.fxSymbol(cur)] ??= { currency: 'USD', closes: [{ date, close: rate }], error: null };
   }
-  const result = classSum.computeClassSum(entry, closes, currencies, fx, (day || '2026-10-31').slice(0, 10));
+  const result = classSum.computeClassSum(entry, market, currencies, (day || '2026-10-31').slice(0, 10));
   const copies = lines.map(l => ({ ...l, snapshot: structuredClone(l.snapshot) }));
   classSum.writeFirm(Object.fromEntries(copies.map(l => [l.ticker, l.snapshot])), entry, result, null);
   return copies;

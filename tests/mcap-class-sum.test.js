@@ -1,220 +1,273 @@
 'use strict';
 // Guard for the class sum of firms with two or more listed share classes (P1, Codex review of #91; lib/mcap-class-sum.js,
 // configs/mcap-class-sum.json, step "Klassensumme der Boersenwerte (P1)" of the merge job).
-// Real packets of run 42356903064 (data day 07.11.2026) in tests/fixtures/mcap-class-sum-20261107.json: every class line,
-// the last 15 closes of each from the price store, the FX file of the run.
-// Wrong before: Yahoo prices every share at one line (ZTE 20.22 instead of 18.84 bn USD, Jiangling 2.13 instead of 1.68), or a
-// share-count row froze the price ratio of 30.10. (Shandong Gold shown 18.11 through 600547.SS, the row line 16.73; class sum 16.49).
-// Right after: each class at its own close of one common day, recomputed here independently of the module.
-// Break-once on test data only: `node tests/mcap-class-sum.test.js --prove-red` swaps the run's CNY and HKD rates in memory, runs
+// Real data: the class-line snapshots of run 42356903064 (data day 07.11.2026, tests/fixtures/mcap-class-sum-20261107.json)
+// and the Yahoo daily charts of every class line and FX pair recorded after the Friday sessions
+// (tests/fixtures/mcap-class-sum-charts-20261107.json).
+// Wrong before: Yahoo prices every share at one line (ZTE 20.22 instead of 18.80 bn USD, Jiangling 2.13 instead of 1.67), or a
+// share-count row froze the price ratio of 30.10. (Shandong Gold shown 18.11 through 600547.SS; class sum 16.46).
+// Right after: each class at its own unadjusted close of one common finished day and the FX close of that day, recomputed here
+// independently of the module from the recorded chart quotes.
+// Break-once on test data only: `node tests/mcap-class-sum.test.js --prove-red` swaps the CNY and HKD FX charts in memory, runs
 // the module on ZTE, and the independent recomputation must exit 1. No wall clock; live files are hashed before and after.
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path'), crypto = require('node:crypto');
 const cs = require('../lib/mcap-class-sum.js');
 const guard = require('../lib/market-cap-guard.js');
-const store = require('../lib/price-history-store.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
-const fx = require('./fixtures/mcap-class-sum-20261107.json');
+const pk = require('./fixtures/mcap-class-sum-20261107.json');
+const ch = require('./fixtures/mcap-class-sum-charts-20261107.json');
 
 const root = path.resolve(__dirname, '..');
-const live = ['configs/mcap-class-sum.json', 'configs/share-count-hand-table.json', 'lib/mcap-class-sum.js', 'lib/market-cap-guard.js', 'tests/fixtures/mcap-class-sum-20261107.json'];
+const live = ['configs/mcap-class-sum.json', 'configs/share-count-hand-table.json', 'lib/mcap-class-sum.js', 'lib/market-cap-guard.js',
+  'tests/fixtures/mcap-class-sum-20261107.json', 'tests/fixtures/mcap-class-sum-charts-20261107.json'];
 const liveHashes = () => live.map(f => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, f))).digest('hex'));
 const beforeHashes = liveHashes();
-const DAY = fx.dataDay;
-let entries = cs.loadClassSumEntries();
-const currencies = Object.fromEntries(Object.entries(fx.snapshots).map(([t, s]) => [t, s.meta.tradingCurrencyOriginal || s.meta.tradingCurrency]));
-const sum = (e, closes = fx.closes) => cs.computeClassSum(e, closes, currencies, fx.fx.rates, DAY);
+const DAY = pk.dataDay, NOW = ch.fetchedAt;
+const entries = cs.loadClassSumEntries();
 const byIssuer = name => entries.find(e => e.issuer.startsWith(name));
-// Shown before (07.11.2026, highest stored value among the lines the hand table does not hold) and the class sum after, bn USD.
-const PINS = {
-  'ZTE Corporation': [20.22, 18.84], 'Jiangling Motors': [2.13, 1.68], 'Haier Smart Home': [30.14, 28.07],
-  'PetroChina': [348.43, 336.20], 'Shanghai Pharmaceuticals': [9.32, 8.34], 'China Railway Signal': [8.14, 7.38],
-  'Anhui Expressway': [4.53, 4.13], 'Qingdao Port': [9.49, 8.96], 'Shandong Gold': [18.11, 16.49],
-};
+const stub = (charts = ch.charts) => async s => { if (!charts[s]) throw new Error('no chart ' + s); return structuredClone(charts[s]); };
+const market = async (charts, now = NOW) => cs.fetchMarket(entries, { chart: stub(charts), now });
+const currencies = Object.fromEntries(Object.entries(pk.snapshots).map(([t, s]) => [t, s.meta.tradingCurrencyOriginal || s.meta.tradingCurrency]));
 // The stored packets still carry the 16 removed share-count rows (source hand-table:shares); without them the pull writes
 // Yahoo's value, so the merge job sees that one.
-const pulled = t => { const x = structuredClone(fx.snapshots[t]); if (x.marketCap?.source === 'hand-table:shares') {
+const pulled = t => { const x = structuredClone(pk.snapshots[t]); if (x.marketCap?.source === 'hand-table:shares') {
   x.marketCap.value = x.marketCap.yahooValue; x.marketCap.source = 'yahoo_quote'; delete x.marketCap.yahooValue; delete x.marketCap.vendorImpliedShares; delete x.meta.marketCapReason; } return x; };
 const firm = e => Object.fromEntries(e.classes.map(c => [c.ticker, pulled(c.ticker)]));
-const shownBefore = e => Math.max(...e.classes.map(c => fx.snapshots[c.ticker]).filter(s => s && !guard.holds[s.meta.ticker] && s.marketCap?.source !== 'hand-table:market-cap-hold')
+const day = d => d.slice(0, 10);
+// Independent reference: raw close of the bar dated `date` (exchange-local day = UTC day of the bar start plus offset) and the FX bar of that UTC day.
+const rawClose = (sym, date) => { const c = ch.charts[sym]; const g = c.meta.gmtoffset || 0;
+  return c.quotes.filter(q => new Date(new Date(q.date).getTime() + g * 1000).toISOString().slice(0, 10) === date).map(q => q.close).pop(); };
+const reference = (e, date) => e.classes.reduce((s, l) => s + l.shares * rawClose(l.ticker, date) * rawClose(l.currency + 'USD=X', date), 0);
+// Shown before (07.11.2026, highest stored value among the lines the hand table does not hold) and the class sum after, bn USD.
+const PINS = {
+  'ZTE Corporation': [20.22, 18.80], 'Jiangling Motors': [2.13, 1.67], 'Haier Smart Home': [30.14, 27.85],
+  'PetroChina': [348.43, 335.42], 'Shanghai Pharmaceuticals': [9.32, 8.32], 'China Railway Signal': [8.14, 7.37],
+  'Anhui Expressway': [4.53, 4.12], 'Qingdao Port': [9.49, 8.94], 'Shandong Gold': [18.11, 16.46],
+};
+const shownBefore = e => Math.max(...e.classes.map(c => pk.snapshots[c.ticker]).filter(s => s && !guard.holds[s.meta.ticker] && s.marketCap?.source !== 'hand-table:market-cap-hold')
   .map(s => s.marketCap?.value ?? 0));
 
 if (process.argv.includes('--prove-red')) {
-  // Test data only: the run's CNY and HKD rates swapped in memory. The module then writes a wrong sum; the independent
-  // recomputation below must notice it.
-  const e = byIssuer('ZTE'), rates = { ...fx.fx.rates, CNY: fx.fx.rates.HKD, HKD: fx.fx.rates.CNY };
-  const snaps = firm(e);
-  cs.writeFirm(snaps, e, cs.computeClassSum(e, fx.closes, currencies, rates, DAY), null);
-  let own = 0;
-  for (const c of e.classes) own += c.shares * fx.closes[c.ticker].find(p => p.date === '2026-11-06').close * fx.fx.rates[c.currency];
-  assert.ok(Math.abs(snaps['000063.SZ'].marketCap.value / own - 1) < 1e-9, `ZTE shows ${snaps['000063.SZ'].marketCap.value}, the class sum is ${own}`);
-  console.log('mcap-class-sum: --prove-red did NOT fire');
-  process.exit(0);
-}
+  (async () => {
+    const swapped = { ...ch.charts, 'CNYUSD=X': ch.charts['HKDUSD=X'], 'HKDUSD=X': ch.charts['CNYUSD=X'] };
+    const e = byIssuer('ZTE'), snaps = firm(e);
+    cs.writeFirm(snaps, e, cs.computeClassSum(e, await market(swapped), currencies, DAY), null);
+    const own = reference(e, '2026-11-06');
+    assert.ok(Math.abs(snaps['000063.SZ'].marketCap.value / own - 1) < 1e-9, `ZTE shows ${snaps['000063.SZ'].marketCap.value}, the class sum is ${own}`);
+    console.log('mcap-class-sum: --prove-red did NOT fire');
+    process.exit(0);
+  })().catch(e => { console.error(e.message); process.exit(1); });
+} else {
 
-test('config: 24 issuers, every class once, sourced; no class line still has a share-count row', () => {
+test('config: 24 issuers, every class once with its own count, day and source; no class line still has a share-count row', () => {
   assert.equal(entries.length, 24);
-  for (const e of entries) {
-    assert.ok(e.sources.every(s => /^https?:\/\//.test(s.url) && s.quote.length > 10), e.issuer);
-    for (const c of e.classes) assert.equal(guard.table[c.ticker], undefined, c.ticker + ': a share-count row would correct the line a second time');
+  for (const e of entries) for (const c of e.classes) {
+    assert.ok(/^https?:\/\//.test(c.source.url) && c.source.quote.length > 10, c.ticker);
+    assert.equal(guard.table[c.ticker], undefined, c.ticker + ': a share-count row would correct the line a second time');
   }
   for (const t of ['688428.SS', '688981.SS', '600938.SS', '688185.SS', '601869.SS', '688347.SS', '001289.SZ', '600956.SS', '600685.SS',
     '600871.SS', '600188.SS', '688385.SS', '600688.SS', '1787.HK', '1766.HK', '0019.HK']) assert.equal(guard.table[t], undefined, t);
+  // Haier without shares repurchased and not yet cancelled (Codex review of #113): A October buy-backs, H 150,000 of 30.10., D 865,598 and the 79,392,362 of the offer.
+  assert.deepEqual(byIssuer('Haier').classes.map(c => [c.ticker, c.shares, c.asOf]),
+    [['600690.SS', 6108204936, '2026-10-31'], ['6690.HK', 2848887266, '2026-10-30'], ['690D.DE', 190756013, '2026-10-13']]);
 });
 
-test('every issuer: one common close day for all classes, value = shares x own close x FX, recomputed independently', () => {
+test('finished sessions only, unadjusted close: Frankfurt at 09:00 UTC is not a close, an adjusted price is not the close', () => {
+  const d = cs.finishedCloses(ch.charts['690D.DE'], '2026-11-06T09:00:00Z');
+  assert.equal(d.closes[d.closes.length - 1].date, '2026-11-05', 'a running Xetra session counted as a close');
+  assert.equal(cs.finishedCloses(ch.charts['690D.DE'], '2026-11-06T16:31:00Z').closes.pop().date, '2026-11-06');
+  const hk = cs.finishedCloses(ch.charts['0763.HK'], '2026-11-06T09:00:00Z');
+  assert.equal(hk.closes[hk.closes.length - 1].date, '2026-11-06', 'Hong Kong closed at 08:10 UTC');
+  const fx = cs.finishedCloses(ch.charts['HKDUSD=X'], NOW);
+  assert.equal(fx.closes[fx.closes.length - 1].date, '2026-11-06', 'the Saturday FX quote is no close of a trading day');
+  const adj = structuredClone(ch.charts['0763.HK']); adj.quotes.forEach(q => { q.adjclose = q.close * 0.9; });
+  assert.equal(cs.finishedCloses(adj, NOW).closes.pop().close, ch.charts['0763.HK'].quotes.filter(q => q.date.startsWith('2026-11-06')).pop().close);
+});
+
+test('every issuer: one common finished day, value = shares x unadjusted close x FX close of that day, recomputed independently', async () => {
+  const m = await market();
   for (const e of entries) {
-    const r = sum(e);
+    const r = cs.computeClassSum(e, m, currencies, DAY);
     assert.equal(r.reason, null, e.issuer + ': ' + r.reason);
-    assert.equal(r.date, '2026-11-06', e.issuer + ': the Friday close of every class');
-    let own = 0;
-    for (const c of e.classes) {
-      const p = fx.closes[c.ticker].find(x => x.date === r.date);
-      assert.equal(c.currency, currencies[c.ticker], c.ticker + ': config currency against the snapshot');
-      own += c.shares * p.close * fx.fx.rates[c.currency];
-    }
-    assert.ok(Math.abs(r.value / own - 1) < 1e-12, e.issuer);
+    assert.equal(r.date, '2026-11-06', e.issuer);
+    for (const c of e.classes) assert.equal(c.currency, currencies[c.ticker], c.ticker + ': config currency against the snapshot');
+    assert.ok(Math.abs(r.value / reference(e, '2026-11-06') - 1) < 1e-12, e.issuer);
   }
 });
 
-test('wrong before, right after: the pinned firms move from the one-line value to the class sum', () => {
+test('wrong before, right after: the pinned firms move from the one-line value to the class sum', async () => {
+  const m = await market();
   for (const [name, [before, after]] of Object.entries(PINS)) {
     const e = byIssuer(name); assert.ok(e, name);
     assert.ok(Math.abs(shownBefore(e) / 1e9 - before) < 0.01, `${name}: before ${shownBefore(e) / 1e9}`);
-    assert.ok(Math.abs(sum(e).value / 1e9 - after) < 0.01, `${name}: after ${sum(e).value / 1e9}`);
+    const v = cs.computeClassSum(e, m, currencies, DAY).value / 1e9;
+    assert.ok(Math.abs(v - after) < 0.01, `${name}: after ${v}`);
     assert.ok(before / after - 1 > 0.03, name + ': the old value was not more than 3 % off');
   }
 });
 
-test('the line the board shows today carries the sum; held lines and their hold untouched; ratios from the wrong value blanked', () => {
-  const e = byIssuer('Jiangling'), r = sum(e), snaps = firm(e);
+test('an older common day takes the unadjusted close and the FX close of THAT day', async () => {
+  const e = byIssuer('ZTE'), charts = structuredClone(ch.charts);
+  charts['0763.HK'].quotes = charts['0763.HK'].quotes.filter(q => !q.date.startsWith('2026-11-06'));
+  // The A line carries an adjusted close below its real close on 05.11. (a dividend after that day): the real one must be used.
+  for (const q of charts['000063.SZ'].quotes) if (day(q.date) === '2026-11-05' || q.date.startsWith('2026-11-04T16')) q.adjclose = q.close * 0.9;
+  const r = cs.computeClassSum(e, await market(charts), currencies, DAY);
+  assert.equal(r.date, '2026-11-05');
+  for (const l of r.legs) {
+    assert.equal(l.close, rawClose(l.ticker, '2026-11-05'), l.ticker);
+    assert.equal(l.usdPerUnit, rawClose(l.currency + 'USD=X', '2026-11-05'), l.ticker + ': FX of the common day');
+  }
+  assert.match(cs.reasonText(e, r), /Schlusskurs vom 05\.11\.2026 und zum Devisenkurs desselben Tages/);
+});
+
+test('weekday run at 09:00 UTC: Asian sessions done, FX day and Frankfurt not, so the sum takes the day before for every class', async () => {
+  const m = await market(ch.charts, '2026-11-06T09:00:00Z');
+  for (const name of ['ZTE', 'Haier']) {
+    const e = byIssuer(name), r = cs.computeClassSum(e, m, currencies, '2026-11-06');
+    assert.equal(r.date, '2026-11-05', name);
+    assert.ok(Math.abs(r.value / reference(e, '2026-11-05') - 1) < 1e-12, name);
+  }
+});
+
+test('empty with a reason, never a guess: no chart, a chart in another currency, too old a day, no FX close of the day', async () => {
+  const e = byIssuer('ZTE');
+  const cases = [
+    [{ ...ch.charts, '0763.HK': undefined }, /0763\.HK: Tageskurse nicht abrufbar/],
+    [{ ...ch.charts, '0763.HK': { ...ch.charts['0763.HK'], meta: { ...ch.charts['0763.HK'].meta, currency: 'USD' } } }, /0763\.HK: Kursreihe in USD statt HKD/],
+    [{ ...ch.charts, '0763.HK': { ...ch.charts['0763.HK'], quotes: ch.charts['0763.HK'].quotes.filter(q => q.date < '2026-10-24') } }, /liegt mehr als 10 Tage zurück/],
+    [{ ...ch.charts, 'HKDUSD=X': { ...ch.charts['HKDUSD=X'], quotes: [] } }, /kein Devisenkurs zum letzten gemeinsamen Handelstag 06\.11\.2026/],
+    [{ ...ch.charts, 'HKDUSD=X': undefined }, /kein Devisenkurs HKD in USD abrufbar/],
+  ];
+  for (const [charts, why] of cases) {
+    const r = cs.computeClassSum(e, await market(charts), currencies, DAY);
+    assert.equal(r.value, null, String(why)); assert.match(r.reason, why);
+    const snaps = firm(e);
+    assert.deepEqual(cs.writeFirm(snaps, e, r, null), { shown: null, written: ['000063.SZ', '0763.HK'] }, 'no line may keep a one-line value');
+    for (const s of Object.values(snaps)) { assert.equal(s.marketCap.value, null); assert.match(s.meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen/); }
+  }
+});
+
+test('the shown line carries the sum; held lines untouched; side lines emptied with the reason; ratios from the wrong value blanked; twice is the same', async () => {
+  const m = await market(), e = byIssuer('Jiangling'), r = cs.computeClassSum(e, m, currencies, DAY), snaps = firm(e);
   snaps['000550.SZ'].metrics.priceSales = { value: 9.9 };
   const bBefore = JSON.stringify(snaps['200550.SZ']);
-  assert.deepEqual(cs.writeFirm(snaps, e, r, fx.fx.fetchedAt), { shown: '000550.SZ', written: ['000550.SZ'] });
+  assert.deepEqual(cs.writeFirm(snaps, e, r, NOW), { shown: '000550.SZ', written: ['000550.SZ'] });
   assert.equal(JSON.stringify(snaps['200550.SZ']), bBefore, '200550.SZ is held and must stay held');
   const a = snaps['000550.SZ'];
   assert.equal(a.marketCap.value, r.value); assert.equal(a.marketCap.source, 'class-sum');
-  assert.equal(a.marketCap.yahooValue, fx.snapshots['000550.SZ'].marketCap.value);
+  assert.equal(a.marketCap.yahooValue, pk.snapshots['000550.SZ'].marketCap.value);
   assert.equal(a.metrics.priceSales, null);
-  assert.match(a.meta.marketCapReason, /^Börsenwert als Summe der Aktienklassen, jede zu ihrem eigenen Schlusskurs vom 06\.11\.2026: 510,6 Mio\. A-Aktien zu 16,45 CNY plus 344 Mio\. B-Aktien zu 9,52 HKD/);
+  assert.match(a.meta.marketCapReason, /^Börsenwert als Summe der Aktienklassen, jede zu ihrem eigenen Schlusskurs vom 06\.11\.2026 und zum Devisenkurs desselben Tages: 510,6 Mio\. A-Aktien zu 16,45 CNY plus 344 Mio\. B-Aktien zu 9,52 HKD/);
   assert.doesNotMatch(a.meta.marketCapReason, /[–—]| - |kauf|verkauf/i);
-  // Twice is the same: the second pass chooses on the vendor values kept by the first.
-  const again = structuredClone(snaps); cs.writeFirm(again, e, r, fx.fx.fetchedAt);
+  const again = structuredClone(snaps); cs.writeFirm(again, e, r, NOW);
   assert.deepEqual(again, snaps);
 });
 
-test('the listing choice does not move: the sum goes to the line the scoring picks on the pull values, no other line can outbid it', () => {
+test('listing choice unchanged: the sum goes to the line the scoring picks on the pull values (or the pinned shownLine); no other line can outbid it; the firm keeps its earliest debut', async () => {
   const { issuerDedupComparator } = require('../src/scoring/score.js');
-  // CNOOC: with its share-count row the H line 0883.HK showed (A corrected to 135.8 < H 142.4 bn USD); without the row the pull
-  // gives the A line Yahoo's 222.9 bn, so the A line 600938.SS is chosen and carries the sum (energy board, rank about 204 to 208).
-  const expectShown = { 'CNOOC Limited': '600938.SS', 'CRRC Corporation Limited': '1766.HK', 'Shandong Gold Mining Co., Ltd.': '600547.SS' };
+  const m = await market();
   for (const e of entries) {
-    const snaps = firm(e), r = sum(e);
+    const snaps = firm(e), r = cs.computeClassSum(e, m, currencies, DAY);
     const before = Object.values(snaps).filter(x => !guard.holds[x.meta.ticker] && x.marketCap?.source !== 'hand-table:market-cap-hold' && x.marketCap?.value > 0)
       .map(x => ({ ticker: x.meta.ticker, snapshot: x })).sort(issuerDedupComparator)[0].ticker;
+    const debut = Object.values(snaps).filter(x => !guard.holds[x.meta.ticker] && x.marketCap?.source !== 'hand-table:market-cap-hold')
+      .map(x => x.meta.firstTradeDate).filter(Boolean).sort()[0];
     const { shown } = cs.writeFirm(snaps, e, r, null);
-    assert.equal(shown, before, e.issuer);
-    if (expectShown[e.issuer]) assert.equal(shown, expectShown[e.issuer], e.issuer);
-    const after = Object.values(snaps).filter(x => !guard.holds[x.meta.ticker] && x.marketCap?.value > 0).map(x => ({ ticker: x.meta.ticker, snapshot: x })).sort(issuerDedupComparator)[0];
-    assert.equal(after.ticker, shown, e.issuer + ': another line outbids the sum');
-    assert.equal(after.snapshot.marketCap.value, r.value, e.issuer);
+    assert.equal(shown, e.shownLine || before, e.issuer);
     for (const x of Object.values(snaps)) if (x.meta.ticker !== shown && !guard.holds[x.meta.ticker] && x.marketCap?.source !== 'hand-table:market-cap-hold') {
       assert.equal(x.marketCap.value, null, x.meta.ticker + ': a side line keeps a one-price value');
       assert.ok(x.meta.marketCapReason.includes('steht an der Zeile ' + shown + '.'), x.meta.ticker);
     }
+    if (debut) assert.equal(snaps[shown].meta.firstTradeDate, debut, e.issuer + ': the firm debut of the emptied line is lost');
   }
-  // A second line whose vendor value is at least the sum is emptied with the reason, never left to take the board.
-  const e = byIssuer('ZTE'), snaps = firm(e), r = sum(e);
-  snaps['0763.HK'].marketCap.value = 2 * r.value;
-  snaps['000063.SZ'].marketCap.value = 3 * r.value;
-  assert.deepEqual(cs.writeFirm(snaps, e, r, null).written.sort(), ['000063.SZ', '0763.HK']);
-  assert.equal(snaps['0763.HK'].marketCap.value, null);
-  assert.match(snaps['0763.HK'].meta.marketCapReason, /^Börsenwert nicht verlässlich: Der Börsenwert der Firma steht an der Zeile 000063\.SZ\./);
+  // CNOOC: the board showed 0883.HK (its old row made the A line smaller). Without the row the choice would take the A line
+  // (Yahoo 222.9 against 142.4 bn USD); shownLine keeps 0883.HK, so no listing changes.
+  const e = byIssuer('CNOOC'), snaps = firm(e), r = cs.computeClassSum(e, m, currencies, DAY);
+  assert.equal(pk.snapshots['0883.HK'].marketCap.value > pk.snapshots['600938.SS'].marketCap.value, true, 'before: 0883.HK showed');
+  assert.ok(snaps['600938.SS'].marketCap.value > snaps['0883.HK'].marketCap.value, 'without the row the A line would win');
+  assert.equal(cs.writeFirm(snaps, e, r, null).shown, '0883.HK');
+  assert.equal(snaps['0883.HK'].marketCap.value, r.value); assert.equal(snaps['600938.SS'].marketCap.value, null);
+  // A pinned or chosen A line takes the firm debut of the emptied H line (2004 instead of 2022).
+  const snaps2 = firm(e), e2 = { ...e, shownLine: undefined };
+  assert.equal(cs.writeFirm(snaps2, e2, r, null).shown, '600938.SS');
+  assert.equal(snaps2['600938.SS'].meta.firstTradeDate, pk.snapshots['0883.HK'].meta.firstTradeDate);
+  assert.equal(snaps2['600938.SS'].meta.ipoYear, 2004); assert.equal(snaps2['600938.SS'].meta.ipoYearOwn, 2022);
 });
 
-test('same day only: a class without the newest close moves every class to the previous common day', () => {
-  const e = byIssuer('ZTE'), closes = structuredClone(fx.closes);
-  closes['0763.HK'] = closes['0763.HK'].filter(p => p.date !== '2026-11-06');
-  const r = sum(e, closes);
-  assert.equal(r.date, '2026-11-05');
-  for (const l of r.legs) assert.equal(l.close, fx.closes[l.ticker].find(p => p.date === '2026-11-05').close, l.ticker);
-});
-
-test('empty with a reason, never a guess: no closes, too old a common day, or no FX rate', () => {
-  const e = byIssuer('ZTE');
-  const none = structuredClone(fx.closes); none['0763.HK'] = [];
-  const old = structuredClone(fx.closes); old['0763.HK'] = [{ date: '2026-10-20', close: 20 }];
-  for (const [closes, why] of [[none, /0763\.HK: keine Schlusskurse/], [old, /20\.10\.2026 liegt mehr als 10 Tage zurück/]]) {
-    const r = sum(e, closes);
-    assert.equal(r.value, null); assert.match(r.reason, why);
-    const snaps = firm(e);
-    assert.deepEqual(cs.writeFirm(snaps, e, r, null), { shown: null, written: ['000063.SZ', '0763.HK'] }, 'no line may keep a one-line value');
-    for (const s of Object.values(snaps)) {
-      assert.equal(s.marketCap.value, null); assert.equal(s.marketCap.missing, true);
-      assert.match(s.meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen/);
-    }
-  }
-  const noHkd = { ...fx.fx.rates }; delete noHkd.HKD;
-  const r = cs.computeClassSum(e, fx.closes, currencies, noHkd, DAY);
-  assert.equal(r.value, null); assert.match(r.reason, /kein Devisenkurs für HKD/);
-});
-
-test('a missing class snapshot costs only that line: Haier without its held D line keeps the sum; a snapshot in another currency empties it', () => {
-  const e = byIssuer('Haier'), r0 = sum(e);
+test('a missing class snapshot costs only that line; a snapshot in another currency empties the sum', async () => {
+  const m = await market(), e = byIssuer('Haier'), r0 = cs.computeClassSum(e, m, currencies, DAY);
   const noD = { ...currencies }; delete noD['690D.DE'];
-  const r = cs.computeClassSum(e, fx.closes, noD, fx.fx.rates, DAY);
+  const r = cs.computeClassSum(e, m, noD, DAY);
   assert.equal(r.reason, null); assert.equal(r.value, r0.value);
   const snaps = firm(e); delete snaps['690D.DE'];
   assert.equal(cs.writeFirm(snaps, e, r, null).shown, '600690.SS');
-  const bad = cs.computeClassSum(e, fx.closes, { ...currencies, '6690.HK': 'USD' }, fx.fx.rates, DAY);
+  const bad = cs.computeClassSum(e, m, { ...currencies, '6690.HK': 'USD' }, DAY);
   assert.equal(bad.value, null); assert.match(bad.reason, /6690\.HK: Snapshot nennt USD statt HKD/);
-  assert.match(cs.reasonText(e, r0), /Aktienzahlen laut Firma vom 30\.09\.2026 bis 30\.10\.2026\)/);
+  assert.match(cs.reasonText(e, r0), /Aktienzahlen ohne eigene Aktien laut Firma vom 13\.10\.2026 bis 31\.10\.2026\)/);
 });
 
-test('provenance: the class sum is a calculation with one share and one close input per class, not a vendor value', () => {
+test('size floor: a class sum below the floor leaves the board like a corrected share-count line', async () => {
+  const m = await market(), e = byIssuer('Jiangling'), snaps = firm(e);
+  cs.writeFirm(snaps, e, cs.computeClassSum(e, m, currencies, DAY), null);
+  const s = snaps['000550.SZ'];
+  assert.equal(guard.correctedBelowFloor(s, 800e6), false);
+  assert.equal(guard.correctedBelowFloor(s, 2e9), true, '1.67 bn USD is below a 2 bn floor');
+  const router = require('../src/scoring/router.js');
+  assert.deepEqual(router.route(s, 2e9), { action: 'exclude', reason: 'skipped-mcap' });
+});
+
+test('provenance: a calculation with one sourced share count and one dated close per class', async () => {
   const { captureSnapshot, RECORD_FIELDS } = require('../lib/export-provenance.js');
   const e = byIssuer('ZTE'), snaps = firm(e);
-  cs.writeFirm(snaps, e, sum(e), fx.fx.fetchedAt);
+  cs.writeFirm(snaps, e, cs.computeClassSum(e, await market(), currencies, DAY), NOW);
   const cap = captureSnapshot(snaps['000063.SZ']);
   assert.equal(cap.marketCap.sourceType, 'calculation'); assert.equal(cap.marketCap.provider, null);
-  assert.equal(cap.marketCap.derivation.methodId, 'marketCapClassSum');
-  assert.equal(cap.marketCap.missingReason, null);
+  assert.equal(cap.marketCap.derivation.methodId, 'marketCapClassSum'); assert.equal(cap.marketCap.missingReason, null);
+  assert.equal(cap.marketCap.observedAt, '2026-11-06T00:00:00Z');
   assert.deepEqual(cap.marketCapInputs.map(i => i.fieldPath), ['000063.SZ', '0763.HK'].flatMap(t => [`marketCap.classSum.${t}.shares`, `marketCap.classSum.${t}.close`]));
   for (const i of cap.marketCapInputs) for (const k of Object.keys(i)) assert.ok(RECORD_FIELDS.includes(k), k);
+  for (const i of cap.marketCapInputs.filter(x => x.fieldPath.endsWith('.shares'))) {
+    assert.match(i.documentUrl, /^https:\/\/www1\.hkexnews\.hk\//); assert.ok(i.quote.length > 10); assert.equal(i.observedAt, '2026-09-30T00:00:00Z');
+  }
+  for (const i of cap.marketCapInputs.filter(x => x.fieldPath.endsWith('.close'))) assert.equal(i.fx.asOf, '2026-11-06T00:00:00Z');
   const own = cap.marketCapInputs.reduce((s, x, i, a) => i % 2 ? s : s + x.normalizedValue * a[i + 1].normalizedValue, 0);
   assert.ok(Math.abs(own / cap.marketCap.normalizedValue - 1) < 1e-12);
 });
 
-test('read time: the guard keeps the class-sum value and its reason in its copy', () => {
+test('read time: the guard keeps the class-sum value and its reason in its copy', async () => {
   const e = byIssuer('Shandong Gold'), snaps = firm(e);
-  cs.writeFirm(snaps, e, sum(e), null);
-  const s = snaps['600547.SS'];
-  const seen = guard.prepareMarketCap(s);
+  cs.writeFirm(snaps, e, cs.computeClassSum(e, await market(), currencies, DAY), null);
+  const s = snaps['600547.SS'], seen = guard.prepareMarketCap(s);
   assert.equal(seen.marketCap.value, s.marketCap.value);
   assert.equal(seen.meta.marketCapReason, s.meta.marketCapReason);
-  // A stale reason of a removed row is still dropped.
-  const other = structuredClone(fx.snapshots['601857.SS']); other.meta.marketCapReason = 'alt';
-  assert.equal(guard.prepareMarketCap(other).meta.marketCapReason, undefined);
+  const other = structuredClone(pk.snapshots['601857.SS']); other.meta.marketCapReason = 'alt';
+  assert.equal(guard.prepareMarketCap(other).meta.marketCapReason, undefined, 'a stale reason of a removed row is still dropped');
 });
 
-test('the merge-job writer: a temp generation gets the sum on disk, the step sits after the price merge and before the artifact', () => {
+test('the merge-job writer: a temp generation gets the sum on disk; the step sits before the snapshots artifact', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcap-class-sum-'));
-  const snaps = path.join(dir, 'snapshots'), prices = path.join(dir, 'prices');
-  fs.mkdirSync(snaps); fs.mkdirSync(prices);
-  for (const [t, s] of Object.entries(fx.snapshots)) fs.writeFileSync(path.join(snaps, safeSnapshotFilename(t)), JSON.stringify(s));
-  store.saveAll(prices, structuredClone(fx.closes));
-  fs.writeFileSync(path.join(dir, 'fx.json'), JSON.stringify(fx.fx));
-  const report = cs.applyClassSums({ snapshotsDir: snaps, pricesDir: prices, fxFile: path.join(dir, 'fx.json'), dataDay: DAY, log: () => {} });
+  for (const t of Object.keys(pk.snapshots)) fs.writeFileSync(path.join(dir, safeSnapshotFilename(t)), JSON.stringify(pulled(t)));
+  const report = await cs.applyClassSums({ snapshotsDir: dir, dataDay: DAY, chart: stub(), now: NOW, log: () => {} });
   assert.equal(report.length, 24);
   assert.equal(report.filter(r => r.value === null).length, 0);
-  const zte = JSON.parse(fs.readFileSync(path.join(snaps, '000063.SZ.json'), 'utf8'));
-  assert.ok(Math.abs(zte.marketCap.value / 18.84e9 - 1) < 0.001);
-  assert.equal(zte.marketCap.classSum.fxFetchedAt, fx.fx.fetchedAt);
+  const zte = JSON.parse(fs.readFileSync(path.join(dir, '000063.SZ.json'), 'utf8'));
+  assert.ok(Math.abs(zte.marketCap.value / reference(byIssuer('ZTE'), '2026-11-06') - 1) < 1e-12);
+  assert.equal(zte.marketCap.classSum.fetchedAt, NOW);
   const wf = fs.readFileSync(path.join(root, '.github/workflows/daily-pull.yml'), 'utf8');
   const at = s => wf.indexOf(s);
-  assert.ok(at('scripts/merge-price-shards.js --prices prices') > 0);
-  assert.ok(at('scripts/apply-mcap-class-sum.js --snapshots snapshots --prices prices --fx fx-rates.json --date "$RUN_DATE_UTC"') > at('scripts/merge-price-shards.js --prices prices'));
+  assert.ok(at('node scripts/apply-mcap-class-sum.js --snapshots snapshots --date "$RUN_DATE_UTC"') > at('- name: F-12 Karteileichen-Filter'));
   assert.ok(at('name: Upload Snapshots Artifact') > at('scripts/apply-mcap-class-sum.js'));
 });
 
+test('daily deadline report names the class-sum review date 30 days ahead and after it', () => {
+  assert.deepEqual(cs.reviewLines('2026-11-07'), []);
+  const [line] = cs.reviewLines('2027-03-01');
+  assert.match(line, /^Frist 31\.03\.2027 \(in 30 Tagen\): Die Aktienzahlen der Klassensumme von 24 Firmen sind neu zu belegen/);
+  assert.match(cs.reviewLines('2027-04-02')[0], /seit 2 Tagen überschritten/);
+  const wf = fs.readFileSync(path.join(root, 'scripts/tageslauf-erwartungen.js'), 'utf8');
+  assert.ok(wf.includes("require('../lib/mcap-class-sum.js').reviewLines(datum)"));
+});
+
 test('live files unchanged', () => assert.deepEqual(liveHashes(), beforeHashes));
+}
