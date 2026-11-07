@@ -69,8 +69,8 @@ const WRONG = {
   '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1281656998 },
   'SOFF.OL': { px: 7.639278149, vendorShares: 108605000, mcap: 829663826.409513, issuer: 82346796 },
   '003535.KS': { px: 4.318488288, vendorShares: 318070388, mcap: 1373583284.875775, issuer: 223091000 },
-  // Check of 01.11.2026, snapshots of run 41184535364: Galaxy Digital with a count no report carries. The A and H rows of that check
-  // and InnoCare left this table on 07.11.2026 for the class sum (configs/mcap-class-sum.json, tests/mcap-class-sum.test.js).
+  // Check of 01.11.2026, snapshots of run 41184535364: Galaxy Digital with a count no report carries. The A and H rows of that check,
+  // InnoCare and the Shandong Gold A line of #111 (600547.SS) left this table on 07.11.2026 for the class sum (configs/mcap-class-sum.json, tests/mcap-class-sum.test.js).
   "GLXY": { px: 16, vendorShares: 589297344, mcap: 9428757504, issuer: 388479988 },
   "CIFR": { px: 7.29, vendorShares: 415030722, mcap: 3025573888, issuer: 456365113 },
 };
