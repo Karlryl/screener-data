@@ -91,6 +91,7 @@ test('coverage is mandatory for every series with a non-null value, unique, and 
   assert.throws(() => assert.throws(() => broken.validateTable(noHtgc), /Missing/), assert.AssertionError); breaks++;
 });
 test('gap-fill quarter cases are exactly the listed ones and their period is absent from the real input', () => {
+  for (const id of GAP_FILL) assert.ok(table.cases.some(c => c.caseId === id && c.periodType === '3M' && c.replacementValue !== null), id + ' is a quarter case with a value');
   for (const c of table.cases.filter(x => x.periodType === '3M' && x.replacementValue !== null && fixture[x.ticker])) {
     const has = p => [fixture[c.ticker], RKT_RAW[c.ticker]].some(x => x?.timeseries?.[c.field + 'Ends']?.includes(p));
     assert.equal(!has(c.period) && !(c.listingAliases || []).length, GAP_FILL.has(c.caseId), c.caseId);
