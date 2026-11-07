@@ -364,3 +364,22 @@ test('break-once: the limit, the series test and the axis anchor each fail when 
   });
   assert.deepEqual(['lib/annual-pairs.js', 'lib/g31-recency.js'].map(hash), before);
 });
+
+test('the small-cap reference is frozen at its own data day (#88 review 07.11.2026: without RUN_DATE_UTC the age rule was off)', () => {
+  const { spawnSync } = require('node:child_process');
+  const here = path.resolve(__dirname, '..'), script = path.join(here, 'scripts', 'freeze-smallcap-reference.js');
+  const src = fs.readFileSync(script, 'utf8');
+  // The data day is set before the first require, so no module can read the environment earlier.
+  const setAt = src.indexOf('process.env.RUN_DATE_UTC = dataDay;');
+  assert.ok(setAt > 0 && setAt < src.indexOf('require('), 'RUN_DATE_UTC is set from --data-day before anything is required');
+  const run = (env, day) => spawnSync(process.execPath, [script, '--data-day', day, '--store', path.join(here, 'no-such-store'), '--out', path.join(here, 'no-such-out.json')],
+    { cwd: here, env, encoding: 'utf8', timeout: 120000 });
+  const env = { ...process.env }; delete env.AGE_RULE_OFF;
+  const mismatch = run({ ...env, RUN_DATE_UTC: '2026-11-05' }, '2026-10-31');
+  assert.equal(mismatch.status, 1); assert.match(mismatch.stderr, /RUN_DATE_UTC 2026-11-05 differs from --data-day 2026-10-31/);
+  const bad = run(env, '31.10.2026');
+  assert.equal(bad.status, 1); assert.match(bad.stderr, /--data-day must be YYYY-MM-DD/);
+  const impossible = run(env, '2026-02-30'); // review N4: the format passes, the day does not exist
+  assert.equal(impossible.status, 1); assert.match(impossible.stderr, /--data-day is not a calendar day: 2026-02-30/);
+  assert.ok(!fs.existsSync(path.join(here, 'no-such-out.json')), 'nothing written');
+});
