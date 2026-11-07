@@ -517,14 +517,14 @@ test('the deadline alarm reaches the regular status: marker, export hull and run
   const known = { n_reporting_ccy_held: 1, _reportingCcyHeld: [row('conflict', '2026-11-20', false)] };
   const full = await check({ ...healthy, ...known }), part = await check({ ...partial, ...known });
   assert.equal(part.marker.manifest_partial, true, 'the fixture must be a partial run');
-  assert.match(part.lines.join('\n'), /^Hinweis: Ein Teillauf fehlte; weitere Firmen mit unbestätigter Berichtswährung können unbekannt sein, auch überfällige\. Das ist keine Entwarnung\.$/m);
-  assert.doesNotMatch(full.lines.join('\n'), /Teillauf/);
+  assert.match(part.lines.join('\n'), /^Hinweis: Ein Teil des Datenlaufs fehlte oder brach ab; weitere Firmen mit unbestätigter Berichtswährung können unbekannt sein, auch überfällige\. Das ist keine Entwarnung\.$/m);
+  assert.doesNotMatch(full.lines.join('\n'), /Teil des Datenlaufs/);
   assert.match(part.lines[0], /^Warnung\. Berichtswährung von PSQL nicht bestätigt/);
   assert.equal(part.code, full.code);
   assert.equal(part.report.berichtswaehrungTeillauf, true);
   assert.equal(full.report.berichtswaehrungTeillauf, false);
   const partEmpty = await check({ ...partial, n_reporting_ccy_held: 0, _reportingCcyHeld: [] });
-  assert.doesNotMatch(partEmpty.lines.join('\n'), /Teillauf/, 'an empty partial list is unknown and has its own hint');
+  assert.doesNotMatch(partEmpty.lines.join('\n'), /Teil des Datenlaufs/, 'an empty partial list is unknown and has its own hint');
   assert.match(partEmpty.lines.join('\n'), /für diesen Export unbekannt/);
 
   // Break-once on test data: a marker without the field, as before this repair, reaches nobody; the check stays green.
