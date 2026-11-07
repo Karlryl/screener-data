@@ -92,6 +92,17 @@ const bleibtStale = (snap, ticker, apply = applyShareCountTable) => {
   assert.strictEqual(JSON.stringify(snap), vorher, `${ticker}: stale row changed more than the stamp`);
 };
 
+// 07.11.2026 (blind review of #122): a row of a listing with an exchange suffix (non-USD quote) needs withholdUnverified;
+// without it the full-pull write site compares the native quote with the USD market cap, the row goes stale and Yahoo's
+// value stays (JOJO.BO: 806 M instead of 161 M USD). Broken once on a copy.
+const suffixRowsCarryFlag = table => Object.entries(table).filter(([k, v]) => !k.startsWith('_') && v && v.shares && /\.[A-Z]+$/.test(k))
+  .every(([, v]) => v.withholdUnverified === true);
+pruefe('every row of a suffixed (non-USD) listing carries withholdUnverified', () => {
+  assert.ok(suffixRowsCarryFlag(TABLE), 'a suffixed row without withholdUnverified');
+  const copy = structuredClone(TABLE); delete copy['JOJO.BO'].withholdUnverified;
+  assert.equal(suffixRowsCarryFlag(copy), false, 'break-once: the guard sees a row without the flag');
+  breaks++;
+});
 pruefe('presence: every recorded wrong state is corrected to price x issuer count', () => {
   for (const t of Object.keys(WRONG)) assert.ok(TABLE[t], `required table row ${t} missing`);
   for (const t of Object.keys(TABLE)) {
@@ -254,4 +265,4 @@ for (const [f, before] of hashes) {
   pruefe('live file unchanged: ' + f, () => assert.strictEqual(sha(f), before));
 }
 console.log(`share-count-hand-table: ${ok} ok, ${fail} fail, ${breaks} break-once fired`);
-if (fail || breaks !== 1) process.exit(1);
+if (fail || breaks !== 2) process.exit(1); // 07.11.2026: the suffix-flag guard adds the second break-once
