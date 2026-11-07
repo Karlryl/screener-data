@@ -649,6 +649,35 @@ test('R21-4 cap: the queue runs oldest read first, so the firm left out yesterda
   const seen = new Set(days.flat());
   assert.equal(seen.size, 3, 'every firm asked within two days: ' + JSON.stringify(days));
 });
+test('blind review M1: another listing follows the hand table of the listing whose entry it reads (HTGC listed)', () => {
+  const st = store();
+  st.companies = { HTGC: st.companies.AMZNX };
+  const r = run(snapshot({ meta: { ticker: 'HTGC.VI', country: 'United States' } }), st);
+  assert.equal(r.snapshot.meta.secQuarterFill, undefined);
+  assert.equal(r.result.why, 'hand-table');
+});
+test('blind review M2: an open restatement in one concept leaves the period empty for every concept', () => {
+  const st = store();
+  st.companies.AMZNX.Revenues = { '2026-06-30': obs(250000e6, '2026-09-15', { derivation: 'restatement-conflict' }) };
+  assert.equal(whyOf(snapshot(), st), 'restatement-open');
+});
+test('blind review N1: three quarters with a gap of eleven days do not tile the nine months, no fourth quarter', () => {
+  const q = pitSingleQuarters([fact('2025-01-01', '2025-12-31', 400, '2026-02-01', '10-K'), fact('2025-01-01', '2025-03-31', 90, '2025-05-01'),
+    fact('2025-04-11', '2025-06-30', 100, '2025-08-01'), fact('2025-07-01', '2025-09-30', 110, '2025-11-01')]);
+  assert.equal(q.find(x => x.end === '2025-12-31'), undefined);
+});
+test('blind review N1: a reported quarter in open restatement is no operand of a fourth quarter', () => {
+  const q = pitSingleQuarters([fact('2025-01-01', '2025-12-31', 400, '2026-02-01', '10-K'), fact('2025-01-01', '2025-03-31', 90, '2025-05-01'),
+    fact('2025-04-01', '2025-06-30', 100, '2025-08-01'), fact('2025-01-01', '2025-06-30', 190, '2025-08-01'), fact('2025-01-01', '2025-06-30', 230, '2025-09-20', '10-Q/A'),
+    fact('2025-07-01', '2025-09-30', 110, '2025-11-01')]);
+  assert.equal(q.find(x => x.end === '2025-06-30').derivation, 'restatement-conflict');
+  assert.equal(q.find(x => x.end === '2025-12-31'), undefined);
+});
+test('blind review N1: two agreeing vendor quarters do not link another listing (three needed)', () => {
+  const two = snapshot({ meta: { ticker: 'AMZNX.SW', country: 'United States' } });
+  two.timeseries.revenueQ = two.timeseries.revenueQ.slice(0, 2); two.timeseries.revenueQEnds = two.timeseries.revenueQEnds.slice(0, 2);
+  assert.equal(run(two).result, null);
+});
 test('R21 a missing us.json warns when usFill is on', () => {
   const w = [];
   assert.equal(X.loadUsStore(w, fs.mkdtempSync(path.join(os.tmpdir(), 'sec-none-'))), null);
