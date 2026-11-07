@@ -67,27 +67,10 @@ const WRONG = {
   '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561108010 },
   // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
   '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1281656998 },
-  '688428.SS': { px: 3.657160206, vendorShares: 1767202175, mcap: 6462941472.097403, issuer: 860109566 },
   'SOFF.OL': { px: 7.639278149, vendorShares: 108605000, mcap: 829663826.409513, issuer: 82346796 },
   '003535.KS': { px: 4.318488288, vendorShares: 318070388, mcap: 1373583284.875775, issuer: 223091000 },
-  // Check of 01.11.2026, snapshots of run 41184535364: all classes at one price; Galaxy Digital with a count no report carries.
-  "688981.SS": { px: 14.5461374166, vendorShares: 8562381657, mcap: 124549580195.34126, issuer: 4815280770 },
-  "600938.SS": { px: 5.4057708738, vendorShares: 47529957582, mcap: 256936060327.23935, issuer: 28956535868 },
-  "688185.SS": { px: 10.933273035, vendorShares: 247043807, mcap: 2700997398.4586954, issuer: 154287643 },
-  "601869.SS": { px: 38.004207355199995, vendorShares: 821905096, mcap: 31235851708.433693, issuer: 538822900 },
-  "688347.SS": { px: 19.837691279999998, vendorShares: 1737614181, mcap: 34470253683.42233, issuer: 1117756347 },
-  "001289.SZ": { px: 2.1686203422, vendorShares: 8359816214, mcap: 18129267498.73078, issuer: 6032625552 },
-  "600956.SS": { px: 0.9963931302, vendorShares: 4494093514, mcap: 4477883904.1536, issuer: 3254249834 },
-  "600685.SS": { px: 3.802224162, vendorShares: 1413506449, mcap: 5374468372.373422, issuer: 1069987866 },
-  "600871.SS": { px: 0.315599634, vendorShares: 18957044785, mcap: 5982836395.792466, issuer: 14924948024 },
-  "600188.SS": { px: 2.9065223436, vendorShares: 10037480544, mcap: 29174161475.64429, issuer: 7905916630 },
-  "688385.SS": { px: 6.877066310399999, vendorShares: 823719206, mcap: 5664771598.0227375, issuer: 653440512 },
-  "600688.SS": { px: 0.45837089699999994, vendorShares: 10542617180, mcap: 4832428893.674496, issuer: 8429167420 },
-  "1787.HK": { px: 2.0218760978, vendorShares: 4609929717, mcap: 9320706707.38866, issuer: 7252581579 },
-  // Snapshot of run 42356903064 (2026-11-07): the Shanghai line of Shandong Gold with A and H shares at the A price.
-  "600547.SS": { px: 3.927447334, vendorShares: 4609929810, mcap: 18105256542.511433, issuer: 4189487967 },
-  "1766.HK": { px: 0.6750210553499999, vendorShares: 28698864190, mcap: 19372337593.12871, issuer: 39817324643 },
-  "0019.HK": { px: 13.564162472, vendorShares: 3627920515, mcap: 49209703299.43211, issuer: 1183568546 },
+  // Check of 01.11.2026, snapshots of run 41184535364: Galaxy Digital with a count no report carries. The A and H rows of that check,
+  // InnoCare and the Shandong Gold A line of #111 (600547.SS) left this table on 07.11.2026 for the class sum (configs/mcap-class-sum.json, tests/mcap-class-sum.test.js).
   "GLXY": { px: 16, vendorShares: 589297344, mcap: 9428757504, issuer: 388479988 },
   "CIFR": { px: 7.29, vendorShares: 415030722, mcap: 3025573888, issuer: 456365113 },
 };

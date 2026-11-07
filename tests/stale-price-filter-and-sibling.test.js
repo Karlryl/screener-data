@@ -102,7 +102,7 @@ check('filter check: green on the built feed; a value put back beside the stale 
 });
 
 check('break-once: without the hold test in the filter the values come back and the check above fails', () => {
-  const broken = compiled(FILTER_FILE, '    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE;', '    const kursAlt = false;');
+  const broken = compiled(FILTER_FILE, "    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (snapshot.marketCap?.source === 'class-sum' && !!meta.stalePriceHold && !finite(snapshot.marketCap?.value));", '    const kursAlt = false;');
   assert.throws(() => heldRow(broken), /shown beside the stale hold/);
 });
 
