@@ -135,6 +135,8 @@ async function run() {
       out[tk].annualCurrentLiabilities = sec.annual.annualCurrentLiabilities;
     }
   }
+  // 07.11.2026: exact restated fiscal-year cells (configs/sec-annual-corrections.json) before the store is written.
+  require(path.join(ROOT, 'lib/sec-annual-corrections.js')).applyToStore(out);
   writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
   console.log(`secAnnual-smallcap: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} noSeries=${noSeries} parseErr=${parseErr} ${zaehlerZeile(versatzZaehler)}`);
