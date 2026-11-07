@@ -46,6 +46,8 @@ if (process.argv.includes('--prove-red')) {
 }
 
 const own = table.cases.filter(c => c.revision === REV);
+// Re-checked on 04.11.2026 after the Codex review of PR 84: Q1 on the newer half-year presentation (half year minus Q2).
+const RECHECKED = new Set(['gau-2026-03-31-opIncQ-20261031', 'gau-2025-03-31-opIncQ-20261031']);
 
 test('19 sourced rows validate, two coverage rows, every reason names its period, no substitute 0, no dash as punctuation', () => {
   assert.equal(own.length, 19);
@@ -56,10 +58,10 @@ test('19 sourced rows validate, two coverage rows, every reason names its period
   const de = p => p.split('-').reverse().join('.');
   for (const c of own) {
     assert.ok(c.replacementValue !== 0 && c.replacementValue !== null, c.caseId);
-    assert.ok(c.sources.length && c.sources.every(s => s.url.startsWith('https://www.sec.gov/Archives/edgar/data/') && s.quote && s.page && s.form && s.accession && s.filed && s.verifiedAt === '2026-10-31' && s.sourceUnit), c.caseId);
+    assert.ok(c.sources.length && c.sources.every(s => s.url.startsWith('https://www.sec.gov/Archives/edgar/data/') && s.quote && s.page && s.form && s.accession && s.filed && s.verifiedAt === (RECHECKED.has(c.caseId) ? '2026-11-04' : '2026-10-31') && s.sourceUnit), c.caseId);
     assert.ok(c.reason.includes(de(c.period)), `${c.caseId} names its period`);
     assert.doesNotMatch(c.reason, /[–—]| - |kauf|verkauf|w7b|sdabgr/i, c.caseId);
-    assert.match(c.reason, /Geprüft am 31\.10\.2026\.$/, c.caseId);
+    assert.match(c.reason, RECHECKED.has(c.caseId) ? /Geprüft am 04\.11\.2026\.$/ : /Geprüft am 31\.10\.2026\.$/, c.caseId);
     if (c.replacementValue === c.expectedBadValue) assert.match(c.reason, /^bestätigt:/, c.caseId);
     else assert.doesNotMatch(c.reason, /bestätigt:/, c.caseId);
   }
@@ -70,8 +72,8 @@ test('the quotes print the replacement values', () => {
   for (const [id, n] of [['brbi-2026-06-30-revenueQ-20261031', '130,099'], ['brbi-2025-06-30-revenueQ-20261031', '139,289'], ['brbi-2026-03-31-revenueQ-20261031', '134,807'],
     ['brbi-2025-09-30-revenueQ-20261031', '133,287'], ['brbi-2025-12-31-revenueQ-20261031', '531,380'], ['brbi-2025-12-31-revenueQ-20261031', '400,062'],
     ['brbi-2025-12-31-annualRev-20261031', '531,380'], ['brbi-2024-12-31-annualRev-20261031', '581,219'], ['brbi-2023-12-31-annualRev-20261031', '435,813'], ['gau-2026-06-30-opIncQ-20261031', '90,368'],
-    ['gau-2026-03-31-opIncQ-20261031', '66,256'], ['gau-2025-12-31-opIncQ-20261031', '43,915'], ['gau-2025-09-30-opIncQ-20261031', ' 176 '], ['gau-2025-06-30-opIncQ-20261031', '19,118'],
-    ['gau-2025-03-31-opIncQ-20261031', '(26,327)'], ['gau-2025-12-31-annualOpInc-20261031', '36,543'], ['gau-2024-12-31-annualOpInc-20261031', '20,486'], ['gau-2023-12-31-annualOpInc-20261031', '20,122'], ['gau-2022-12-31-annualOpInc-20261031', '39,419'], ['gau-2021-12-31-annualOpInc-20261031', '(60,576)']]) k(id, n);
+    ['gau-2026-03-31-opIncQ-20261031', '157,096'], ['gau-2025-12-31-opIncQ-20261031', '43,915'], ['gau-2025-09-30-opIncQ-20261031', ' 176 '], ['gau-2025-06-30-opIncQ-20261031', '19,118'],
+    ['gau-2025-03-31-opIncQ-20261031', '(6,827)'], ['gau-2025-12-31-annualOpInc-20261031', '36,543'], ['gau-2024-12-31-annualOpInc-20261031', '20,486'], ['gau-2023-12-31-annualOpInc-20261031', '20,122'], ['gau-2022-12-31-annualOpInc-20261031', '39,419'], ['gau-2021-12-31-annualOpInc-20261031', '(60,576)']]) k(id, n);
 });
 
 test('BRBI: the shown growth is the filed one, the vendor cell is the sum the statement prints in two lines, the error is back without the rows', () => {
@@ -98,7 +100,10 @@ test('GAU: every cell on the filed line, the year reconciles to the thousand, th
   assert.equal(value(was.annual.annualOpInc[1]), 20486000 + 23121000 - 2246000 + 13063000 - 2432000 - 976000 - 1416000);
   assert.equal(value(was.timeseries.opIncQ[3]), 38375000 - 729000, 'Q3 2025 is the first filing before the hedges moved, less accretion');
   const out = apply('GAU');
-  assert.deepEqual(out.timeseries.opIncQ.map(value), [90368000, 66256000, 43915000, 176000, 19118000, -26327000]);
+  assert.deepEqual(out.timeseries.opIncQ.map(value), [90368000, 66728000, 43915000, 176000, 19118000, -25945000]);
+  // Q1 plus Q2 is the half year the newer report prints (157,096 and (6,827) thousand USD).
+  assert.equal(value(out.timeseries.opIncQ[1]) + value(out.timeseries.opIncQ[0]), 157096000);
+  assert.equal(value(out.timeseries.opIncQ[5]) + value(out.timeseries.opIncQ[4]), -6827000);
   assert.deepEqual(out.annual.annualOpInc.map(value), [36543000, 20486000, 20122000, 39419000, -60576000], "the older years are the filed line, as the vendor has them");
   assert.equal(opIncYahooAdjusted(out), false, 'all shown years are issuer cells');
   assert.deepEqual(out.timeseries.revenueQ.map(value), was.timeseries.revenueQ.map(value));
@@ -138,20 +143,28 @@ test('BURE.ST: no number moves, the hint is on the row, with any growth, and onl
   assert.equal(W.mapBoardRow({ ...row, ticker: '_NO_HINT' }, 2, 'main').g31Hinweis, null);
 });
 
-test('documented order: the diagnosis on the shown pair outranks the definition hint; the swapped order fails', () => {
+test('order (Codex R08 P3, 07.11.): a checked pair entry outranks the definition, an automatic diagnosis does not; the old order fails', () => {
   const file = path.join(root, 'scripts/write-findash-export.js'), src = fs.readFileSync(file, 'utf8');
   const recency = require('../lib/g31-recency.js'), real = recency.g31Export;
   const load = code => { const m = new Module(file, module); m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file)); m._compile(code, file); return m.exports; };
   const s = applyFinancialCases(snap('BURE.ST')).snapshot;
   fs.writeFileSync(path.join(process.env.FINDASH_SNAPSHOTS_DIR, safeSnapshotFilename('BURE.ST')), JSON.stringify(snap('BURE.ST')));
   const row = { ticker: 'BURE.ST', score: 76.6, revGrowthYoYPct: axes.revGrowthLevel(s), overview: { kind: 'gp', value: 0.061, companion: 162.8 } };
-  const ORDER = '(passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null';
-  assert.ok(src.includes(ORDER), 'anchor');
-  recency.g31Export = snapshot => ({ ...real(snapshot), g31Hinweis: { code: 'aktuell-gross', reason: 'diagnosis' } });
-  try {
-    assert.equal(load(src).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'aktuell-gross');
-    assert.equal(load(src.replace(ORDER, 'DEFINITION_HINTS.get(out.ticker) ?? (passt ? derivations.g31Hinweis : null) ?? null')).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'abgrenzung', 'the swapped order is what this test must catch');
-  } finally { recency.g31Export = real; }
+  const hintWith = (code, source = src) => {
+    recency.g31Export = snapshot => ({ ...real(snapshot), g31Hinweis: { code, reason: 'Pair hint.' } });
+    try { return load(source).mapBoardRow(row, 0, 'main').g31Hinweis; } finally { recency.g31Export = real; }
+  };
+  for (const code of ['aktuell-gross', 'vorjahr-klein+quartalssumme', 'aelteres-quartalspaar']) {
+    const h = hintWith(code);
+    assert.equal(h.code, 'abgrenzung', code);
+    assert.match(h.reason, /Net sales 0.* Zusätzlich: Pair hint\.$/, 'the diagnosis stays as an added sentence: ' + code);
+  }
+  assert.deepEqual(hintWith('uebernahme'), { code: 'uebernahme', reason: 'Pair hint.' }, 'a checked pair entry still wins');
+  assert.equal(hintWith('uebernahme+aktuell-gross').code, 'uebernahme+aktuell-gross', 'a mixed code is not purely automatic');
+  // Break-once: the order before this repair hides the checked definition behind the diagnosis.
+  const NEW = /out\.g31Hinweis = def && pair[^;]+;/;
+  assert.ok(NEW.test(src), 'anchor');
+  assert.equal(hintWith('aktuell-gross', src.replace(NEW, 'out.g31Hinweis = pair ?? def ?? null;')).code, 'aktuell-gross', 'the old order is what this test must catch');
 });
 
 test('definition table: one row, checked code, quoted sources, plain German; lib/g31-recency.js does not read it', () => {
