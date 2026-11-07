@@ -436,6 +436,9 @@ async function runUs(ctx) {
     const readRecently = newest && dayOf(today) - dayOf(newest) > SEC_DAILY_AFTER_DAYS ? tag(readAt) === today : now.getTime() - Date.parse(readAt) < SEC_REREAD_MS;
     return !(holdsMrq && readRecently);
   });
+  // Codex R21 (4): never read or read longest ago first, so a cap never starves the same firms day after day.
+  const lastRead = (tk) => next.companies[tk]?.noData?.readAt || '';
+  due.sort((x, y) => (lastRead(x.ticker) < lastRead(y.ticker) ? -1 : lastRead(x.ticker) > lastRead(y.ticker) ? 1 : x.ticker < y.ticker ? -1 : 1));
   st.due = due.length;
   for (const { ticker } of due) {
     if (st.calls >= ctx.secCap) { st.skippedCap += 1; continue; }
@@ -463,7 +466,7 @@ async function runUs(ctx) {
       }
     }
   }
-  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run (the queue runs by file name, small caps last).');
+  if (st.skippedCap) ctx.log('::warning::exchange-quarters US: SEC cap of ' + ctx.secCap + ' reached, ' + st.skippedCap + ' due firms were not asked in this run (the queue runs oldest read first, so they lead the next run).');
   if (st.failed >= 5 && st.failed > 0.2 * st.calls) throw new Error('SEC: ' + st.failed + ' of ' + st.calls + ' calls failed (more than 20 %): ' + failures.slice(0, 5).join(' | '));
   // A run with nothing due stamps the store as well: the age warning in lib/exchange-quarter-check.js reads this list.
   next.sources[src] ??= { fetchedAt, endpoint: ctx.secEndpoint, calls: st.calls, ok: st.ok, noFacts: st.noFacts, failed: st.failed };

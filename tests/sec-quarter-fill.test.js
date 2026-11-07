@@ -580,6 +580,81 @@ test('workflow: every US step and the commit run after a red China or Taiwan ste
   assert.match(us, /^ {10}if \[ "\$VEROEFFENTLICHEN" = "true" \]; then$/m);
 });
 
+// ── Codex R21 (07.11.2026): admission rebuilt ───────────────────────────────
+const groupOf = list => Object.fromEntries(list.map(({ end, ...q }) => [end, [q]]));
+test('R21-1 real APLD: a narrower concept is not the whole revenue (services 262.8 against total 341.9 Mio. USD), no fill', () => {
+  const facts = require('./fixtures/sec-quarter-fill/apld-revenue-facts.json')['facts']['us-gaap'];
+  const company = { cik: '0001144879' };
+  for (const c of SEC_CONCEPTS) if (facts[c]) company[c] = groupOf(pitSingleQuarters(facts[c].units.USD, { asOf: '2026-10-31' }));
+  assert.equal(company.RevenueFromContractWithCustomerExcludingAssessedTax['2026-08-31'][0].val, 262755000);
+  assert.equal(company.Revenues['2026-08-31'][0].val, 341875000);
+  const s = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'sec-quarter-fill', 'apld-snapshot-2026-10-31.json'), 'utf8'));
+  s.timeseries.revenueQ.shift(); s.timeseries.revenueQEnds.shift(); // the vendor lacks the August quarter, as in the review
+  const st = { schemaVersion: 1, market: 'US', currency: 'USD', sources: { s: { fetchedAt: '2026-10-31T10:00:00Z' } }, companies: { [s.meta.ticker]: company } };
+  const r = X.applyExchangeCheck(s, { mode: 'fill-only', usFill: true, context: { stores: { us: st }, baseline: { rows: new Map() } } });
+  assert.equal(r.snapshot.meta.secQuarterFill, undefined);
+  assert.equal(r.result.why, 'part-of-revenue');
+});
+test('R21-1 a larger concept that measurably is another definition than the vendor (disagrees twice) does not block', () => {
+  const bigger = {};
+  for (const [e, l] of Object.entries(quarters())) bigger[e] = [{ ...l[0], val: l[0].val * 1.1 }];
+  const st = store();
+  st.companies.AMZNX.Revenues = bigger;
+  assert.equal(run(snapshot(), st).result.category, 'sec-fill');
+  const unproven = { '2026-06-30': [{ ...quarters()['2026-06-30'][0], val: 250000e6 }] }; // larger now, never compared before
+  const st2 = store();
+  st2.companies.AMZNX.Revenues = unproven;
+  assert.equal(whyOf(snapshot(), st2), 'part-of-revenue');
+});
+test('R21-2 single quarters: three overlapping periods up to June form no fourth quarter of 184 days', () => {
+  const q = pitSingleQuarters([fact('2025-01-01', '2025-12-31', 400, '2026-02-01', '10-K'), fact('2025-01-01', '2025-03-31', 90, '2025-05-01'),
+    fact('2025-02-01', '2025-04-30', 100, '2025-06-01'), fact('2025-04-01', '2025-06-30', 110, '2025-08-01')]);
+  assert.equal(q.find(x => x.end === '2025-12-31'), undefined);
+});
+test('R21-2 a stored quarter outside 80 to 110 days never fills, even when both legs are equally long', () => {
+  const long = (val, filed) => obs(val, filed, { days: 184, derivation: 'year-minus-three-quarters' });
+  assert.equal(whyOf(snapshot(), store(quarters({ '2026-06-30': long(200606e6), '2025-06-30': long(167702e6, '2026-05-01') }))), 'not-a-quarter');
+});
+test('R21-2 single quarters: a later 10-Q/A cumulative figure that contradicts the reported quarter leaves the period open', () => {
+  const rows = [fact('2026-01-01', '2026-03-31', 100, '2026-05-01'), fact('2026-04-01', '2026-06-30', 150, '2026-08-01'),
+    fact('2026-01-01', '2026-06-30', 250, '2026-08-01'), fact('2026-01-01', '2026-06-30', 350, '2026-09-15', '10-Q/A')];
+  const q2 = pitSingleQuarters(rows).find(x => x.end === '2026-06-30');
+  assert.deepEqual([q2.derivation, q2.val, q2.conflictsWith.val], ['restatement-conflict', 250, 150]);
+  assert.equal(pitSingleQuarters(rows.slice(0, 3)).find(x => x.end === '2026-06-30').derivation, 'reported-3M', 'a consistent cumulative changes nothing');
+  assert.equal(whyOf(snapshot(), store(quarters({ '2026-06-30': obs(250, '2026-09-15', { derivation: 'restatement-conflict' }) }))), 'restatement-open');
+});
+test('R21-3 another listing of the same firm reads its entry when three quarters agree, never on a ticker alone', () => {
+  const other = over => snapshot({ meta: { ticker: 'AMZNX.SW', country: 'United States', ...over } });
+  const r = run(other());
+  assert.equal(r.result.category, 'sec-fill');
+  assert.equal(r.result.fill.aliasOf, 'AMZNX');
+  assert.equal(revGrowthLeg(r.snapshot).sourcePeriodEnd, '2026-06-30');
+  const off = snapshot({ meta: { ticker: 'AMZNX.SW', country: 'United States' } });
+  off.timeseries.revenueQ = VALUES.map((value, i) => ({ value: i === 2 ? value * 1.05 : value }));
+  assert.equal(run(off).result, null, 'one vendor quarter off: no link');
+  const twoFirms = store();
+  twoFirms.companies.TWIN = { cik: '0000000001', RevenueFromContractWithCustomerExcludingAssessedTax: quarters() };
+  assert.equal(run(other(), twoFirms).result, null, 'two CIKs match: no link');
+  assert.equal(run(other({ country: 'Germany' })).result, null);
+});
+test('R21-4 cap: the queue runs oldest read first, so the firm left out yesterday is asked today', async () => {
+  const { base } = tempStoreRun();
+  const secTickers = manyFirms(base, 3);
+  const days = [];
+  for (const day of ['2026-10-31', '2026-11-01', '2026-11-02']) {
+    const asked = [];
+    await main({ ...base, secTickers, secCap: 2, now: () => new Date(day + 'T13:47:00Z'), secFacts: async c => { asked.push(c); return null; } });
+    days.push(asked);
+  }
+  const seen = new Set(days.flat());
+  assert.equal(seen.size, 3, 'every firm asked within two days: ' + JSON.stringify(days));
+});
+test('R21 a missing us.json warns when usFill is on', () => {
+  const w = [];
+  assert.equal(X.loadUsStore(w, fs.mkdtempSync(path.join(os.tmpdir(), 'sec-none-'))), null);
+  assert.match(w.join(' '), /us\.json missing/);
+});
+
 (async () => {
   for (const run1 of pending) await run1();
   console.log('\nsec-quarter-fill: ' + pass + ' passed, ' + fail + ' failed');
