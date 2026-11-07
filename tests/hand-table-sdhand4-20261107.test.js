@@ -175,7 +175,9 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
   const own = H.table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 28);
   const at = H.table.cases.findIndex(c => c.revision === REV);
-  assert.deepEqual(H.table.cases.slice(at), own, 'one block, appended after every earlier case');
+  assert.deepEqual(H.table.cases.slice(at, at + own.length), own, 'one block, appended after every earlier case');
+  // Only the 18 Kioxia rows of the same day (tests/hand-table-kioxia-20261107.test.js) follow.
+  assert.deepEqual(H.table.cases.slice(at + own.length).map(c => c.revision), Array(18).fill('2026-11-07-sdhand5b'));
   assert.deepEqual(Object.fromEntries(['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', 'BURE.ST', '601211.SS'].map(t => [t, own.filter(c => c.ticker === t).length])),
     { 'CHENNPETRO.NS': 5, '6023.TWO': 6, 'SDE.TO': 4, 'BURE.ST': 6, '601211.SS': 7 });
   for (const c of [...own, H.table.cases.find(c => c.caseId === ONE)]) {
@@ -193,13 +195,13 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
   assert.deepEqual(H.table.coverage.filter(v => ['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', '601211.SS', 'BURE.ST'].includes(v.ticker)).map(v => v.coversThrough), ['2026-09-30', '2026-06-30', '2026-06-30', '2026-09-30', '2026-06-30']);
 });
 
-test('expectations: growth of each changed firm, bound to the issuer name, valid from the run of 08.11.2026', () => {
+test('expectations: growth of each changed firm, bound to the issuer name, valid from the run of 10.11.2026', () => {
   const own = erwartungen.filter(e => e.id.startsWith('sdhand4-'));
   const names = Object.fromEntries(Object.entries(F).map(([t, s]) => [t, s.meta.name]));
   for (const [t, , , before, , , , after] of ROWS) {
     const e = own.find(x => x.name === names[t] && x.feld === 'revGrowthYoYPct');
     assert.ok(e, t);
-    assert.equal(e.gueltigAb, '2026-11-08', t);
+    assert.equal(e.gueltigAb, '2026-11-10', t); // 07.11.2026: the next daily run is Tue 10.11. (Tue to Sat), not Sun 08.11.
     assert.ok(e.min < after && after < e.max && !(e.min < before && before < e.max), t + ': the band holds the filed value and excludes the old one');
     assert.ok(e.grund.includes('07.11.2026'), t + ' dates its number');
   }

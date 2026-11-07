@@ -80,7 +80,7 @@ test('the committed store carries the correction, and both builders apply it rig
 
 test('expectation: Galiano on the small-cap overview, the band holds the replayed score and excludes the old one', () => {
   const e = require('../data-health/erwartungen.json').find(x => x.id === 'sdhand4-GAU-score');
-  assert.deepEqual([e.name, e.board, e.feld, e.op, e.gueltigAb], ['Galiano Gold Inc.', 'smallcap/overview', 'score', 'between', '2026-11-08']);
+  assert.deepEqual([e.name, e.board, e.feld, e.op, e.gueltigAb], ['Galiano Gold Inc.', 'smallcap/overview', 'score', 'between', '2026-11-10']);
   assert.ok(e.min < 42.58 && 42.58 < e.max && !(e.min < 46.9 && 46.9 < e.max));
   assert.ok(e.grund.includes('31.10.2026') && e.grund.includes('07.11.2026'), 'dates its numbers');
 });

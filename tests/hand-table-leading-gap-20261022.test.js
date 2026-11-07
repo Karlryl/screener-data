@@ -61,7 +61,7 @@ for (const [name, input] of [['stored packet (read time)', stored], ['raw packet
     assert.equal(leg.periodEnd, '2026-06-30');
     assert.equal(leg.priorPeriodEnd, '2025-06-30');
     assert.equal(Math.round(leg.pct * 100) / 100, 0.99); // 649,113 / 642,775
-    assert.ok(financialReasons(s).some(r => /Anbieter liefert dieses Quartal nicht mehr/.test(r)));
+    assert.ok(financialReasons(s).some(r => /Anbieter liefert dieses Quartal nicht;/.test(r)));
     // A second pass (read time over a persisted fill) changes nothing.
     assert.deepEqual(apply(s).timeseries, s.timeseries);
   });
