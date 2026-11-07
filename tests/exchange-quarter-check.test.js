@@ -29,7 +29,7 @@ const ctxOf = (store = F.store, baseline = F.baseline) => ({
   stores: { cn: store.cn, tw: store.tw, warnings: [] },
   baseline: { date: baseline.date, rows: new Map(Object.entries(baseline.rows)), warnings: [] } });
 const CTX = ctxOf();
-const snap = t => clone(F.snapshots[t]);
+const snap = t => require('./helpers/dated-series.js').withEnds(clone(F.snapshots[t]));
 const run = (s, mode = 'shadow', ctx = CTX) => X.applyExchangeCheck(s, { mode, context: ctx });
 const res = (s, ctx) => run(s, 'shadow', ctx).result;
 const ytd = (store, t, p) => store.cn.companies[t].ytd[p].at(-1);
@@ -338,10 +338,10 @@ test('F5 October: a delivered Q3-2025 off the exchange value outside the level p
   assert.equal(serial(X.stripOwn(a)), serial(s), 'strip restores');
   // Growth already on the annual leg before (level partner empty): withheld, but no annual check and no growth withhold.
   const y = clone(s); y.timeseries.revenueQ[y.timeseries.revenueQEnds.indexOf('2025-06-30')] = null;
-  assert.equal(revGrowthLeg(y).basis, 'year');
+  assert.equal(withoutOlderPair(() => revGrowthLeg(y)).basis, 'year');
   const ry = res(y);
   assert.equal(ry.category, 'would-withhold'); assert.equal(ry.growth, null);
-  assert.equal(revGrowthLeg(run(clone(y), 'active').snapshot).pct, revGrowthLeg(y).pct, 'growth figure unchanged');
+  assert.equal(withoutOlderPair(() => revGrowthLeg(run(clone(y), 'active').snapshot).pct), withoutOlderPair(() => revGrowthLeg(y).pct), 'annual growth figure unchanged');
   // A broker's level gap is definition, never a fill-period mismatch.
   const br = clone(F.store); for (const list of Object.values(br.cn.companies['000002.SZ'].ytd)) for (const o of list) o.table = 'SINCOME';
   assert.ok(!res(clone(s), ctxOf(br)).withhold.some(x => x.fillPeriod));

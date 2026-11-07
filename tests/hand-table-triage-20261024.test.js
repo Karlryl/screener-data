@@ -125,7 +125,9 @@ test('ROB.WA: the vendor zero as 2025 revenue and the stale years before it are 
   assert.deepEqual(out.annual.annualRevEnds, ['2025-12-31', '2017-12-31', '2016-12-31', '2015-12-31']);
   assert.deepEqual(native(out, 'annual', 'annualRev'), [null, null, null, null]);
   assert.deepEqual(leg(out), ['none', null, null, null]);
-  assert.deepEqual(leg(snap('ROB.WA')), ['year', '2025-12-31', '2017-12-31', -100]);
+  // Period gate (#40, #72): the eight-year vendor pair is empty even without the hand table.
+  assert.deepEqual(leg(snap('ROB.WA')), ['none', null, null, null]);
+  assert.match(g31Shadow(snap('ROB.WA')).v1.reason, /^Perioden 31\.12\.2025 und 31\.12\.2017 liegen \d+ Tage auseinander/);
 });
 
 test('ROB.WA: the visible hold reason names the annual leg only, because the vendor quarters (repaired on 27.10.2026) now give a quarter growth', () => {

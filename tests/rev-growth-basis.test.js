@@ -80,13 +80,15 @@ check('A2b undated quarter series: the positional pair keeps the gap guard and t
   assert.deepEqual([leg.basis, leg.periodEnd, leg.priorPeriodEnd], ['year', '2025-12-31', '2024-12-31']);
   sameAsLevel(s, leg);
   const filled = snap({ rq: [120, 110, 105, 100, 100], rqEnds: null });
-  assert.deepEqual([revGrowthLeg(filled).basis, revGrowthLeg(filled).periodEnd], ['quarter', null], 'without a gap the positional pair stays');
+  // Period gate round 2 (30.10.2026): without ends a gapless positional pair is no pair either.
+  assert.deepEqual([revGrowthLeg(filled).basis, revGrowthLeg(filled).pct, revGrowthLeg(filled).periodEnd], ['none', null, null], 'no ends, no number');
 });
-check('A3 undated or misaligned annual series: year, period ends null (never guessed)', () => {
+check('A3 undated or misaligned annual series: empty, period ends null (never guessed)', () => {
   for (const arEnds of [[null, null], undefined, ['2025-12-31'], ['2025-02-30', '2024-12-31']]) {
     const s = snap({ ar: [400, 300], arEnds });
     const leg = revGrowthLeg(s);
-    assert.equal(leg.basis, 'year');
+    assert.equal(leg.basis, 'none'); // Period gate round 2 (30.10.2026), was 'year' with unknown periods
+    assert.equal(leg.pct, null);
     assert.equal(leg.periodEnd, null, JSON.stringify(arEnds));
     if (!(Array.isArray(arEnds) && arEnds.length === 2 && arEnds[1] === '2024-12-31')) assert.equal(leg.priorPeriodEnd, null);
     sameAsLevel(s, leg);
@@ -98,9 +100,9 @@ check('A4 9992.HK type: a valid newer-year record makes the basis yearNewerRecor
   const leg = revGrowthLeg(s);
   assert.deepEqual([leg.basis, leg.periodEnd, leg.priorPeriodEnd], ['yearNewerRecord', '2025-12-31', '2024-12-31']);
   sameAsLevel(s, leg);
-  assert.notEqual(leg.pct, revGrowthLeg(snap({ ar: [13.04e9, 6.3e9] })).pct, 'the record must change the number it labels');
+  assert.notEqual(leg.pct, revGrowthLeg(snap({ ar: [13.04e9, 6.3e9], arEnds: ['2024-12-31', '2023-12-31'] })).pct, 'the record must change the number it labels');
   // Absence: a stale fingerprint (stored annualRev[0] moved on) is not the record's year.
-  const stale = snap({ ar: [14e9, 13.04e9], record: rec });
+  const stale = snap({ ar: [14e9, 13.04e9], arEnds: ['2024-12-31', '2023-12-31'], record: rec });
   assert.equal(revGrowthLeg(stale).basis, 'year');
   sameAsLevel(stale, revGrowthLeg(stale));
   // A quarterly pair always wins over the record, as in revGrowthLevel.

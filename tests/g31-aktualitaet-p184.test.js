@@ -119,7 +119,8 @@ test('undated quarter gaps stay blocked; missing and invalid dates are never inv
   const s = snapshot(); delete s.timeseries.revenueQEnds;
   assert.equal(G.quarterCandidate(s).pct, null);
   s.timeseries.revenueQ[1] = 100;
-  close(G.quarterCandidate(s).pct, 100); assert.equal(G.quarterCandidate(s).periodEnd, null);
+  // Period gate round 2 (30.10.2026): a gapless undated pair is no pair either.
+  assert.equal(G.quarterCandidate(s).pct, null); assert.match(G.quarterCandidate(s).reason, /^Periodenenden fehlen/); assert.equal(G.quarterCandidate(s).periodEnd, null);
   s.timeseries.revenueQEnds = ['2026-02-30'];
   assert.equal(G.quarterCandidate(s).periodEnd, null);
   s.timeseries.revenueQ[0] = { value: null, financialMissing: { originalVendorRow: { value: 200 } } };
@@ -183,7 +184,7 @@ test('B4/B5: the live overview shows the newest labelled candidate; legacy keeps
   assert.equal(overviewShadow(s, 'runway-badge'), null);
 });
 
-test('B5 keeps overview adjacency for annual and validated newer-year pairs while scoring stays unchanged', () => {
+test('B5 keeps overview adjacency for annual and validated newer-year pairs; the period gate empties scoring alike', () => {
   for (const [days, valid] of [[333, false], [334, true], [397, true], [398, false], [730, false]]) {
     const s = { meta: {}, annual: { annualRev: [150, 100], annualRevEnds: ['2026-06-30',
       new Date(Date.parse('2026-06-30') - days * 86400000).toISOString().slice(0, 10)] } };
@@ -195,8 +196,13 @@ test('B5 keeps overview adjacency for annual and validated newer-year pairs whil
       assert.equal(shadow.value !== null, valid, `${days} days, newer record ${recorded}`);
       assert.equal(live.value !== null, valid);
       if (valid) close(shadow.value, recorded ? 0.2 : 0.5);
-      else assert.equal(shadow.period.reason, live.reason);
-      close(G.g31Shadow(s).v1.pct, recorded ? 20 : 50);
+      else {
+        // Period gate (24.10.2026): the label names both ends and the distance; P158's marker on the metric stays.
+        assert.equal(shadow.period.reason, `Perioden 30.06.2026 und ${s.annual.annualRevEnds[1].split('-').reverse().join('.')} liegen ${days} Tage auseinander, kein Jahrespaar; Wachstum nicht gezeigt.`);
+        assert.equal(live.reason, 'Jahreswachstum nicht belegt, Jahre liegen nicht hintereinander');
+      }
+      if (valid) close(G.g31Shadow(s).v1.pct, recorded ? 20 : 50);
+      else assert.equal(G.g31Shadow(s).v1.pct, null);
       assert.equal(JSON.stringify(s), before);
     }
   }

@@ -178,7 +178,8 @@ async function check(name, fn) {
     assert.notEqual(axes.revQuartalsYoY(positional), null, 'quarters still pair by position');
     // G31 switch 18.10.2026: the anchor is the period of the shown number; an undated quarter pair has none
     // (the row is then frischeUnbekannt). The record never sets it; pre-G31 the annual series dated it.
-    assert.equal(r40.neuestesQuartalsEnde(positional), null, 'quarter leg: the record never sets the period');
+    // Period gate round 2 (30.10.2026): the undated quarter pair carries no number any more, so the record carries it and names the period.
+    assert.equal(r40.neuestesQuartalsEnde(positional), Date.parse('2026-06-30'), 'undated quarters: the record sets the period');
     assert.equal(G.withG31Variant('legacy', () => r40.neuestesQuartalsEnde(positional)), Date.parse('2025-06-30'));
   });
 

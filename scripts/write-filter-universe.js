@@ -9,6 +9,7 @@ const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 const { correctedBelowFloor, table: marketCapCases, priceAge, STALE_PRICE_SOURCE, STALE_PRICE_RETURN, STALE_PRICE_WEEKDAYS } = require('../lib/market-cap-guard.js');
 const { norm, metricVal } = require('../src/scoring/snapshot.js');
+const { annualPeriodEnds, staleReason, _tagesnummer } = require('../lib/annual-pairs.js');
 const { normalizeCountry } = require('../src/scoring/country.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { revGrowthLevel, ruleOfX } = require('../src/scoring/axes.js');
@@ -56,8 +57,12 @@ const snapshotFiles = dir => fs.readdirSync(dir).filter(f => f.endsWith('.json')
  */
 function growth3(snapshot) {
   const revenue = norm(snapshot, 'annualRev');
-  const ends = snapshot.annual?.annualRevEnds;
-  if (ends?.[0] && ends?.[3] && new Date(ends[0]).getUTCFullYear() - new Date(ends[3]).getUTCFullYear() !== 3) return null;
+  const ends = annualPeriodEnds(snapshot, 'annualRev');
+  // Period gate (30.10.2026): the ends must lie three years apart, within a month. A calendar-year difference passed
+  // Daifuku's 31.12.2025 against 31.03.2022 (3.75 years); a missing end proves no span at all.
+  const days = _tagesnummer(ends[0]) - _tagesnummer(ends[3]);
+  if (!ends[0] || !ends[3] || Math.abs(days - 3 * 365) > 30) return null;
+  if (staleReason('year', ends[0])) return null; // P286: same limit as the shown annual figure
   return revenue[0] > 0 && revenue[3] > 0 ? round((Math.cbrt(revenue[0] / revenue[3]) - 1) * 100) : null;
 }
 
@@ -245,7 +250,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       c: text(board?.country ?? geo.country), rg: text(board?.region ?? geo.region), s: text(board?.sector ?? meta.sector),
       mc: meta.marketCapReason || marketCapCases[ticker] ? (finite(snapshot.marketCap?.value) ? round(snapshot.marketCap.value) : null) : board ? (finite(board.marketCap) ? board.marketCap : null)
         : (beurteileWaehrungsbeleg(meta).ok ? round(snapshot.marketCap?.value) : null),
-      g: board ? round(board.revGrowthYoYPct) : round(revGrowthLevel(snapshot)), g3: growth3(snapshot),
+      // G2, PR #72 review: a quarantined packet has no comparable year and its reason says so (PRN.L -8.86, 402340.KS +967); no growth from it.
+      g: board ? round(board.revGrowthYoYPct) : meta.financialDataIssue ? null : round(revGrowthLevel(snapshot)), g3: meta.financialDataIssue ? null : growth3(snapshot),
       ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
       ...(peShown => ({ pe: peShown, peSt: mixed ? 'waehrung' : peShown !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt' }))(zeige('P/E', pe)),
       fpe: zeige('Forward P/E', fpeBad ? null : fpe),
@@ -404,5 +410,6 @@ function main(argv) {
   } catch (error) { console.error('[filter] ' + error.message); return 1; }
 }
 
-if (require.main === module) process.exitCode = main(process.argv.slice(2));
+// Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+if (require.main === module) { if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
 module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };

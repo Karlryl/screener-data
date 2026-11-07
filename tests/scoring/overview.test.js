@@ -8,8 +8,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const ov = require('../../src/scoring/overview.js');
-const axes = require('../../src/scoring/axes.js'); // Kohaerenz-Test Anzeige <-> Achse (R-Gate 2.R)
+const { datedApi } = require('../helpers/dated-series.js');
+const ov = datedApi(require('../../src/scoring/overview.js'));
+const axes = datedApi(require('../../src/scoring/axes.js')); // Kohaerenz-Test Anzeige <-> Achse (R-Gate 2.R)
 
 let pass = 0, fail = 0;
 function test(name, fn) {

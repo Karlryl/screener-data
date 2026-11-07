@@ -123,11 +123,11 @@ test('A17U.SI: invalid annual operands retain the date bound; missing annual dat
   }
   const undated = structuredClone(original); delete undated.annual.annualRevEnds;
   const leg = G.g31Shadow(undated).v1;
-  assert.equal(leg.basis, 'year'); assert.equal(leg.periodEnd, null);
-  assert.match(leg.reason, /Aktualität ist nicht belegbar/);
+  assert.equal(leg.basis, 'none'); assert.equal(leg.periodEnd, null); // Period gate (PR #72): no end, no annual pair.
+  assert.match(leg.reason, /Aktualität eines älteren Quartalspaars ist nicht belegbar/);
   const broken = mutant("  if (!latestAnnualEnd) return blocked('Das neueste Jahresende fehlt; die Aktualität eines älteren Quartalspaars ist nicht belegbar.');", '').g31Shadow(undated).v1;
   assert.equal(broken.periodEnd, '2019-09-30');
-  assert.throws(() => assert.equal(broken.basis, 'year'), assert.AssertionError);
+  assert.throws(() => assert.equal(broken.basis, 'none'), assert.AssertionError);
 });
 
 test('all break-once mutations leave the production code and hand table byte-identical', () => {

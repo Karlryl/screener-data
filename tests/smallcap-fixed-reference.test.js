@@ -73,6 +73,8 @@ const formulas = require('../src/scoring/formulas/smallcap');
 
 const at = '2026-10-29T12:00:00.000Z';
 // Numbers differ per firm, so the percentiles depend on who is in the cohort. drop thins out the coverage.
+const FY_ENDS = ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'];
+const Q_ENDS = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31', '2024-12-31', '2024-09-30'];
 const firm = (i, drop = []) => {
   const g = 1 + 0.02 * i, m = 0.08 + 0.006 * i;
   const annual = { annualRev: [1e9, 1e9 / g, 1e9 / g / g, 1e9 / g / g / g], annualOpInc: [2e8 * g, 1.4e8, 1e8, 6e7 + i * 1e6], annualNetIncome: [1.5e8 * g, 1e8, 7e7, 4e7],
@@ -80,8 +82,10 @@ const firm = (i, drop = []) => {
     annualShares: [1e8, 1e8, 1e8, 1e8], annualBalance: [{ currentAssets: 1e9, currentLiabilities: 2e8 + i * 1e6, totalLiabilities: 3e8 }] };
   const snapshot = { meta: { ticker: 'F' + String(i).padStart(2, '0'), name: 'Firm ' + i, country: 'United States', sector: 'Technology', industry: 'Semiconductors', reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', fxRateApplied: 1, asOf: at, fetchedAt: at, fundamentalsAsOf: at },
     marketCap: { value: 4e8 + i * 1e6, source: 'yahoo_quote', confidence: 0.9, asOf: at }, annual,
-    timeseries: { revenueQ: [3e8 * g, 2.6e8, 2.4e8, 2e8, 1.8e8, 1.6e8, 1.5e8, 1.1e8].map(value => ({ value })) }, metrics: {} };
-  for (const k of drop) { if (k === 'revenueQ') delete snapshot.timeseries.revenueQ; else delete snapshot.annual[k]; }
+    timeseries: { revenueQ: [3e8 * g, 2.6e8, 2.4e8, 2e8, 1.8e8, 1.6e8, 1.5e8, 1.1e8].map(value => ({ value })), revenueQEnds: Q_ENDS }, metrics: {} };
+  // Dated periods (PR #72 period gate: a pair without ends is no pair).
+  for (const k of ['annualRev', 'annualOpInc', 'annualGP']) annual[k + 'Ends'] = FY_ENDS;
+  for (const k of drop) { if (k === 'revenueQ') { delete snapshot.timeseries.revenueQ; delete snapshot.timeseries.revenueQEnds; } else { delete snapshot.annual[k]; delete snapshot.annual[k + 'Ends']; } }
   return snapshot;
 };
 // Coverage steps: the two thinnest firms sit under the floor of the full universe, the next one just above it.
