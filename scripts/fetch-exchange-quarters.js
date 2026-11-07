@@ -43,7 +43,14 @@
  *   Before every write the new store is checked against the old one (assertAppendOnly): an old
  *   observation that would be lost or changed throws and nothing is written. Writes are atomic.
  *
- * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw] [--dry-run] [--force-cn] [--tw-cap=600]
+ *   Brazil   CVM dados abertos ITR/DFP zips (current and previous year ITR, previous two years DFP) plus FCA
+ *            valor_mobiliario for the ticker map -> external-data/exchange-quarters/br.json. SHADOW ONLY: no
+ *            reader loads br.json (lib/exchange-quarter-check.js loadStores reads cn and tw by name). At most
+ *            one pass per 6 days (CVM rebuilds weekly). A 404 for the newest ITR or DFP year is a named gap;
+ *            any other failure, a missing zip entry, a CSV row with the wrong field count or no document at
+ *            all aborts the market and br.json is not written.
+ *
+ * Usage: node scripts/fetch-exchange-quarters.js [--market=cn,tw,br] [--dry-run] [--force-cn] [--force-br] [--tw-cap=600]
  *   --dry-run   fetch and check everything, write nothing (branch runs of the workflow)
  *   --force-cn  run the China pass even when the weekly cadence would skip it
  * Env EXCHANGE_QUARTERS_DIR overrides the store directory (tests).
@@ -52,7 +59,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const { fetchJson } = require(path.join(ROOT, 'lib/fetch-retry.js'));
+const { fetchJson, fetchBuffer } = require(path.join(ROOT, 'lib/fetch-retry.js'));
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 const { holeBericht, secucodeFuerYahoo, istEchterACode } = require(path.join(ROOT, 'scripts/build-cnannual.js'));
 const S = require(path.join(ROOT, 'lib/exchange-quarter-store.js'));
@@ -104,6 +111,11 @@ const ABOUT = {
     + 'firms), in thousand TWD, with the column titles as printed (quarter, prior-year quarter, year to date, '
     + 'prior-year year to date; season 4 = full year). Append-only. Precedent: scripts/build-cnannual.js lines '
     + '19-21 (owner decision of 19.08.2026). Written by scripts/fetch-exchange-quarters.js. Not read by scoring yet.',
+  BR: 'CVM dados abertos (ODbL), ITR and DFP of companhias abertas: per company (CNPJ) and document (ITR or DFP '
+    + 'with DT_REFER) the rows of the document own period for DRE 3.01, 3.03, 3.05, 3.11 and DFC 6.01 in BRL '
+    + '(value as filed times ESCALA_MOEDA), keyed "account DT_INI_EXERC", with VERSAO, DT_RECEB and the share counts '
+    + 'of composicao_capital; consolidated when filed, else individual (basis). tickers maps Yahoo .SA tickers to '
+    + 'the CNPJ (FCA valor_mobiliario). Append-only. SHADOW: read by no scoring step.',
 };
 
 const tag = (s) => String(s || '').slice(0, 10);
@@ -116,6 +128,7 @@ function loadStore(file, market) {
   return s;
 }
 function emptyStore(market) {
+  if (market === 'BR') return { schemaVersion: 1, market: 'BR', currency: 'BRL', unit: 1, about: ABOUT.BR, tickers: {}, sources: {}, companies: {} };
   return market === 'CN'
     ? { schemaVersion: 1, market: 'CN', currency: 'CNY', unit: 1, tables: { GINCOME: '通用', SINCOME: '证券' }, about: ABOUT.CN, sources: {}, companies: {} }
     : { schemaVersion: 1, market: 'TW', currency: 'TWD', unit: S.TW_UNIT, about: ABOUT.TW, sources: {}, companies: {} };
@@ -367,8 +380,168 @@ async function runTaiwan(ctx) {
   return summary;
 }
 
+// ── Brazil (CVM) ──────────────────────────────────────────────────────────────
+// sd-quellen 07.11.2026: SHADOW store only. lib/exchange-quarter-check.js loadStores() reads cn.json and
+// tw.json by name, nothing else reads br.json; no board number can change through this pass.
+// Source: CVM dados abertos (ODbL), ITR (quarters) and DFP (years) of companhias abertas, rebuilt weekly
+// by CVM (Last-Modified Sun 01.11.2026 10:43 UTC, measured 07.11.). Ticker map: FCA valor_mobiliario.
+const CVM_BASE = 'https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/';
+const BR_WEEKLY_MS = 6 * DAY_MS;
+const BR_CLASS = { 'Ações Ordinárias': 'ON', 'Ações Preferenciais': 'PN', Units: 'UNIT' };
+const BR_SCALE = { MIL: 1000, UNIDADE: 1 };
+
+/** Download one CVM zip and return the wanted entries as latin1 text. A missing entry throws.
+ * A 404 returns null (a year CVM has not opened yet), every other failure throws. */
+async function cvmZip(ctx, url, names) {
+  let a;
+  try { a = await ctx.fetchBuffer(url, { pauseMs: PAUSE_MS, headers: { 'User-Agent': USER_AGENT }, timeoutMs: 180000 }); }
+  catch (e) { if (/HTTP 404/.test(e.message)) return null; throw e; }
+  const Z = require(path.join(ROOT, 'lib/zip-stream.js'));
+  const buf = a.body;
+  const p = Z.leseVerzeichnisZeiger(buf.subarray(Math.max(0, buf.length - Z.EOCD_MAX_SUCHE)), buf.length);
+  const entries = Z.leseVerzeichnis(buf.subarray(p.cdOffset, p.cdOffset + p.cdGroesse), p.anzahl);
+  const files = {};
+  for (const n of names) {
+    const e = entries.find((x) => x.name === n);
+    if (!e) throw new Error(url + ': entry ' + n + ' missing');
+    files[n] = Z.entpackeEintrag(buf.subarray(e.lfhOffset), e).toString('latin1');
+  }
+  return { files, file: { url, bytes: buf.length, lastModified: (a.headers && a.headers['last-modified']) || null } };
+}
+
+/** FCA valor_mobiliario rows -> Map(yahooTicker -> {cnpj, cls}); a code on two CNPJ is ambiguous and dropped. */
+function brTickerMap(rows, want) {
+  const out = new Map(), bad = new Set();
+  for (const r of rows) {
+    const cls = BR_CLASS[r.Valor_Mobiliario];
+    const code = (r.Codigo_Negociacao || '').trim().toUpperCase();
+    if (!cls || !code || r.Mercado !== 'Bolsa' || r.Data_Fim_Negociacao) continue;
+    const tk = code + '.SA';
+    if (!want.has(tk)) continue;
+    const prev = out.get(tk);
+    if (prev && prev.cnpj !== r.CNPJ_Companhia) bad.add(tk);
+    else out.set(tk, { cnpj: r.CNPJ_Companhia, cls });
+  }
+  for (const tk of bad) out.delete(tk);
+  return { map: out, ambiguous: [...bad].sort() };
+}
+
+/**
+ * One document kind (ITR or DFP) of one year -> fresh observations for the wanted CNPJ.
+ * Kept: the newest VERSAO the index lists per (CNPJ, DT_REFER); rows of the document's own period
+ * (ORDEM_EXERC ÚLTIMO, DT_FIM_EXERC = DT_REFER) for the BR_FIELDS accounts; consolidated when the
+ * document has consolidated DRE rows, else individual; currency REAL only, scale MIL or UNIDADE.
+ * @returns {{fresh: Array<[string,string,object]>, counts: object}} [cnpj, docKey, obs]
+ */
+function brObservations(kind, year, files, cnpjs) {
+  const pre = kind.toLowerCase() + '_cia_aberta_';
+  const f = (part) => S.parseCvmCsv(files[pre + part + year + '.csv'], pre + part + year + '.csv');
+  const counts = { docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0 };
+  const newest = new Map();   // 'cnpj|refer' -> index row
+  for (const r of f('')) {
+    if (!cnpjs.has(r.CNPJ_CIA) || r.CATEG_DOC !== kind) continue;
+    const k = r.CNPJ_CIA + '|' + r.DT_REFER;
+    const p = newest.get(k);
+    if (!p || Number(r.VERSAO) > Number(p.VERSAO)) newest.set(k, r);
+  }
+  const rowsBy = new Map();   // 'cnpj|refer' -> {dreCon:[], dreInd:[], dfcCon:[], dfcInd:[], cap:row}
+  const add = (rows, slot) => {
+    for (const r of rows) {
+      const k = r.CNPJ_CIA + '|' + r.DT_REFER;
+      const d = newest.get(k);
+      if (!d || r.VERSAO !== d.VERSAO) continue;
+      const b = rowsBy.get(k) || (rowsBy.set(k, {}), rowsBy.get(k));
+      if (slot === 'cap') { b.cap = r; continue; }
+      if (!S.BR_FIELDS[r.CD_CONTA] || r.ORDEM_EXERC !== 'ÚLTIMO' || r.DT_FIM_EXERC !== r.DT_REFER) continue;
+      (b[slot] || (b[slot] = [])).push(r);
+    }
+  };
+  add(f('DRE_con_'), 'dreCon'); add(f('DRE_ind_'), 'dreInd');
+  add([...f('DFC_MI_con_'), ...f('DFC_MD_con_')], 'dfcCon'); add([...f('DFC_MI_ind_'), ...f('DFC_MD_ind_')], 'dfcInd');
+  add(f('composicao_capital_'), 'cap');
+  const fresh = [];
+  for (const [k, d] of newest) {
+    const b = rowsBy.get(k) || {};
+    const basis = b.dreCon && b.dreCon.length ? 'con' : 'ind';
+    const rows = basis === 'con' ? [...b.dreCon, ...(b.dfcCon || [])] : [...(b.dreInd || []), ...(b.dfcInd || [])];
+    if (!rows.length) { counts.noRows += 1; continue; }
+    if (rows.some((r) => r.MOEDA !== 'REAL')) { counts.otherCurrency += 1; continue; }
+    if (rows.some((r) => !BR_SCALE[r.ESCALA_MOEDA])) { counts.otherScale += 1; continue; }
+    const vals = {};
+    let label = null;
+    for (const r of rows) {
+      const v = Number(r.VL_CONTA) * BR_SCALE[r.ESCALA_MOEDA];
+      if (!Number.isFinite(v)) continue;
+      vals[r.CD_CONTA + ' ' + r.DT_INI_EXERC] = v;
+      if (r.CD_CONTA === '3.01') label = r.DS_CONTA;
+    }
+    const values = Object.fromEntries(Object.keys(vals).sort().map((x) => [x, vals[x]]));
+    const c = b.cap;
+    const shares = c ? { on: Number(c.QT_ACAO_ORDIN_CAP_INTEGR), pn: Number(c.QT_ACAO_PREF_CAP_INTEGR),
+      treasuryOn: Number(c.QT_ACAO_ORDIN_TESOURO), treasuryPn: Number(c.QT_ACAO_PREF_TESOURO) } : null;
+    const obs = { basis, idDoc: d.ID_DOC, received: d.DT_RECEB, revenueLabel: label, shares, values, version: Number(d.VERSAO) };
+    fresh.push([d.CNPJ_CIA, kind + ' ' + d.DT_REFER, obs]);
+    counts.docs += 1;
+  }
+  return { fresh, counts };
+}
+
+async function runBrazil(ctx) {
+  const file = path.join(ctx.dir, 'br.json');
+  const prev = loadStore(file, 'BR');
+  const now = ctx.now();
+  const lastRun = prev ? Object.values(prev.sources).map((s) => s.fetchedAt).sort().pop() : null;
+  if (!ctx.forceBr && lastRun && now - Date.parse(lastRun) < BR_WEEKLY_MS) {
+    ctx.log('BR: skipped (CVM rebuilds its files weekly, last pass ' + lastRun + ' is less than 6 days old)');
+    return { market: 'BR', skipped: true };
+  }
+  const y = now.getUTCFullYear();
+  const want = new Set(ctx.tickers.filter((t) => /\.SA$/.test(t)));
+  const fileLog = [];
+  let fca = await cvmZip(ctx, CVM_BASE + 'FCA/DADOS/fca_cia_aberta_' + y + '.zip', ['fca_cia_aberta_valor_mobiliario_' + y + '.csv']);
+  let fcaYear = y;
+  if (!fca) { fcaYear = y - 1; fca = await cvmZip(ctx, CVM_BASE + 'FCA/DADOS/fca_cia_aberta_' + fcaYear + '.zip', ['fca_cia_aberta_valor_mobiliario_' + fcaYear + '.csv']); }
+  if (!fca) throw new Error('FCA ' + y + ' and ' + (y - 1) + ' both missing');
+  fileLog.push(fca.file);
+  const { map, ambiguous } = brTickerMap(S.parseCvmCsv(fca.files['fca_cia_aberta_valor_mobiliario_' + fcaYear + '.csv'], 'valor_mobiliario'), want);
+  const cnpjs = new Set([...map.values()].map((m) => m.cnpj));
+  const parts = ['', 'DRE_con_', 'DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_', 'composicao_capital_'];
+  const plan = [['ITR', y], ['ITR', y - 1], ['DFP', y - 1], ['DFP', y - 2]];
+  const fetchedAt = now.toISOString();
+  const src = 'br-' + stamp(fetchedAt);
+  const next = prev ? clone(prev) : emptyStore('BR');
+  const st = { new: 0, confirmed: 0, changed: 0, docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, missingYears: [] };
+  for (const [kind, year] of plan) {
+    const pre = kind.toLowerCase() + '_cia_aberta_';
+    const z = await cvmZip(ctx, CVM_BASE + kind + '/DADOS/' + pre + year + '.zip', parts.map((p) => pre + p + year + '.csv'));
+    // A year that CVM has not opened yet (January: ITR of the new year) is a gap, not a failure;
+    // the older years must exist.
+    if (!z) { if ((kind === 'ITR' && year === y) || (kind === 'DFP' && year === y - 1)) { st.missingYears.push(kind + ' ' + year); continue; } throw new Error(kind + ' ' + year + ': HTTP 404'); }
+    fileLog.push(z.file);
+    const { fresh, counts } = brObservations(kind, year, z.files, cnpjs);
+    for (const k of Object.keys(counts)) st[k] += counts[k];
+    for (const [cnpj, key, obs] of fresh) {
+      const c = next.companies[cnpj] || (next.companies[cnpj] = { docs: {} });
+      const list = c.docs[key] || (c.docs[key] = []);
+      st[S.mergeObservation(list, obs, { src, fetchedAt, updateDate: obs.received })] += 1;
+    }
+  }
+  if (!st.docs) throw new Error('CVM: no document for any of the ' + cnpjs.size + ' mapped companies (format change?)');
+  next.tickers = Object.fromEntries([...map.entries()].sort().map(([tk, m]) => [tk, m]));
+  next.sources[src] = { fetchedAt, endpoint: CVM_BASE + '{ITR,DFP,FCA}/DADOS/', files: fileLog, fcaYear, ambiguous, missingYears: st.missingYears };
+  S.assertAppendOnly(prev, next);
+  const text = S.serialiseStore(next);
+  if (!ctx.dryRun) writeFileAtomic(file, text);
+  const summary = { market: 'BR', src, watchlist: want.size, mapped: map.size, ambiguous: ambiguous.length, companies: Object.keys(next.companies).length,
+    ...st, bytes: Buffer.byteLength(text), written: !ctx.dryRun };
+  ctx.log('BR: ' + JSON.stringify(summary));
+  return summary;
+}
+
 async function main(opts = {}) {
   const ctx = {
+    fetchBuffer: opts.fetchBuffer || fetchBuffer,
+    forceBr: !!opts.forceBr,
     fetchJson: opts.fetchJson || fetchJson,
     now: opts.now || (() => new Date()),
     dir: opts.dir || process.env.EXCHANGE_QUARTERS_DIR || path.join(ROOT, 'external-data', 'exchange-quarters'),
@@ -380,12 +553,16 @@ async function main(opts = {}) {
     twCap: opts.twCap || TW_CAP,
     log: opts.log || ((m) => console.log(m)),
   };
-  const markets = opts.markets || ['cn', 'tw'];
+  const markets = opts.markets || ['cn', 'tw', 'br'];
   if (!ctx.dryRun) fs.mkdirSync(ctx.dir, { recursive: true });
   const results = [];
   let exitCode = 0;
+  const run = { cn: runChina, tw: runTaiwan, br: runBrazil };
   for (const m of markets) {
-    try { results.push(await (m === 'cn' ? runChina(ctx) : runTaiwan(ctx))); }
+    try {
+      if (!run[m]) throw new Error('unknown market ' + m);
+      results.push(await run[m](ctx));
+    }
     catch (e) {
       exitCode = 1;
       results.push({ market: m.toUpperCase(), aborted: e.message });
@@ -401,8 +578,9 @@ if (require.main === module) {
     markets: arg('market') ? arg('market').split(',') : undefined,
     dryRun: process.argv.includes('--dry-run'),
     forceCn: process.argv.includes('--force-cn'),
+    forceBr: process.argv.includes('--force-br'),
     twCap: arg('tw-cap') ? Number(arg('tw-cap')) : undefined,
   }).then((r) => process.exit(r.exitCode), (e) => { console.error('::error::' + e.message); process.exit(1); });
 }
 
-module.exports = { main, taiwanQueue, boardPriority, CN_TABLES, CN_CAP, TW_CAP, MOPS_URL, USER_AGENT };
+module.exports = { main, taiwanQueue, boardPriority, brTickerMap, brObservations, CN_TABLES, CN_CAP, TW_CAP, MOPS_URL, USER_AGENT };

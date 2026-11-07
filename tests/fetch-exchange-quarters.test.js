@@ -243,7 +243,7 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
 
   await test('dry run fetches and checks but writes nothing', async () => {
     const dir = tmpDir();
-    const r = await main({ dir, dryRun: true, tickers: TICKERS, fetchJson: async (u, o) => (o && o.body ? mops()(u, o) : eastmoney(cnRows())(u, o)),
+    const r = await main({ dir, dryRun: true, markets: ['cn', 'tw'], tickers: TICKERS, fetchJson: async (u, o) => (o && o.body ? mops()(u, o) : eastmoney(cnRows())(u, o)),
       priority: PRIORITY, now: NOW('2026-10-02T07:00:00Z'), log: quiet });
     assert.equal(r.exitCode, 0, JSON.stringify(r));
     assert.equal(r.results[0].written, false);
@@ -636,7 +636,7 @@ const read = (d, m) => JSON.parse(fs.readFileSync(path.join(d, m + '.json'), 'ut
       const changedTw = mops({ before: (b) => (b.companyId === '2548' && b.year === '115' && b.season === '2'
         ? okAnswer(b, ['營業收入合計', '1,501,064', '100.00', '2,016,550', '100.00', '5,707,481', '100.00', '2,028,004', '100.00']) : undefined) });
       S.mergeObservation = rewriting;
-      const r = await main({ dir, tickers: TICKERS, fetchJson: async (u, o) => (o && o.body ? changedTw(u, o) : eastmoney(rows)(u, o)),
+      const r = await main({ dir, markets: ['cn', 'tw'], tickers: TICKERS, fetchJson: async (u, o) => (o && o.body ? changedTw(u, o) : eastmoney(rows)(u, o)),
         priority: PRIORITY, now: NOW('2026-10-12T07:00:00Z'), log: quiet });
       assert.equal(r.exitCode, 1);
       assert.match(r.results[0].aborted, /append-only violated/);
