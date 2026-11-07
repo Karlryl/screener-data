@@ -85,8 +85,22 @@ jobs:
   # neu/aktualisierten Snapshots als Artefakt hoch (gueltig, weil "merge" derselbe
   # Workflow-RUN ist — anders als der Handoff an daily-pull.yml).
   # ============================================================================
-  pull:
+  # One run day for the whole pull (shards and merge): the stale-price hold is decided against it, also across 00:00 UTC.
+  prep:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_date: ${{ steps.freeze.outputs.run_date }}
+    steps:
+      - name: Freeze run date
+        id: freeze
+        run: echo "run_date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+  pull:
+    needs: prep
+    runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -214,8 +228,10 @@ jobs:
   # wie die per-Shard-Caches in daily-pull.yml).
   # ============================================================================
   merge:
-    needs: pull
+    needs: [prep, pull]
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     # Nur DIESER Job committet (die aufgeraeumte Small-Cap-Liste) — nur er braucht Schreibrecht.
     permissions:
