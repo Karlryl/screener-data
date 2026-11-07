@@ -30692,6 +30692,202 @@
           "verifiedAt": "2026-11-07"
         }
       ]
+    },
+    {
+      "caseId": "601211.ss-2025-09-30-revenueQ-20261107b",
+      "ticker": "601211.SS",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "vendorGap": true,
+      "expectedBadValue": null,
+      "replacementValue": 22019291518,
+      "revision": "2026-11-07-sdhand4b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz ergänzt: Für das Quartal bis 30.09.2025 liefert der Anbieter keinen Wert, deshalb hatte das neueste Quartal bis 30.09.2026 keinen Vorjahresvergleich. Die Firma meldet 22.019 Mio. CNY (营业收入 in der Kennzahlentabelle, gleich 营业总收入, Konzern, chinesische Rechnungslegung; neun Monate 45.892 minus Halbjahr 23.872 Mio. CNY ergeben denselben Wert). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-10-31/1224776956.PDF",
+          "page": "PDF 2, 2025 年第三季度报告, key figures, 本报告期 (three months to 30.09.2025)",
+          "quote": "营业收入 22,019,291,518 11,931,226,135 9,330,161,581 136.00",
+          "value": 22019291518,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "filed": "2025-10-31",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-10-31/1225650134.PDF",
+          "page": "PDF 11, 2026 年第三季度报告, 合并利润表, comparison column nine months 2025",
+          "quote": "一、营业总收入 58,976,211,192 45,891,730,454",
+          "value": 45891730454,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "filed": "2026-10-31",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-19/1225480562.PDF",
+          "page": "p. 4, 2026 年半年度报告摘要, key figures, comparison column half year 2025",
+          "quote": "营业收入 47,163,077,753 23,872,438,936 97.56",
+          "value": 23872438936,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "filed": "2026-08-19",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "360one.ns-2025-09-30-revenueQ-20261107b",
+      "ticker": "360ONE.NS",
+      "listingAliases": [
+        "360ONE.BO"
+      ],
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "vendorGap": true,
+      "expectedBadValue": null,
+      "replacementValue": 10980600000,
+      "revision": "2026-11-07-sdhand4b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz ergänzt: Für das Quartal bis 30.09.2025 liefert der Anbieter keinen Wert, deshalb hatte das neueste Quartal bis 30.09.2026 keinen Vorjahresvergleich. Die Firma meldet 1.098,06 Crore INR (Total Revenue from operations, Konzern, Vergleichsspalte im Bericht vom 15.10.2026, in derselben Gliederung wie das Quartal bis 30.09.2026). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IIFLWAM_15102026161350_BoardMeetingOutcomeSigned.pdf",
+          "page": "PDF 8, Consolidated Statement of Profit and Loss for the quarter ended September 30, 2026, comparison column September 30, 2025",
+          "quote": "(I) Total Revenue from operations 1,143.83 1,223.30 1,098.06",
+          "value": 10980600000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "filed": "2026-10-15",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2025-09-30-revenueQ-20261107b",
+      "ticker": "CHENNPETRO.NS",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "vendorGap": true,
+      "expectedBadValue": null,
+      "replacementValue": 200336200000,
+      "revision": "2026-11-07-sdhand4b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz ergänzt: Für das Quartal bis 30.09.2025 führt der Anbieter keinen Wert, deshalb hatte das neueste Quartal bis 30.09.2026 keinen Vorjahresvergleich. Die Firma meldet 20.033,62 Crore INR (Revenue from Operations, Konzern). Das Quartal wird zwischen den Quartalen bis 30.06.2025 und 31.12.2025 eingefügt; Bruttogewinn und Betriebsergebnis bleiben dort leer. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CHENNPETRO_22102026162955_Q2_Results.pdf",
+          "page": "PDF 16 (printed 14), Statement of Audited Consolidated Financial Results, comparison column quarter ended 30.09.2025",
+          "quote": "I Revenue from Operations 22055.45 29358.75 20033.62 51414.20 38717.11 78610.79",
+          "value": 200336200000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "filed": "2026-10-22",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/09b73067-b8dc-4bf5-a475-9d3d8564655f.pdf",
+          "page": "PDF 13 (printed 12, scanned page), Statement of Consolidated Financial Results, comparison column quarter ended 30.09.2025",
+          "quote": "Revenue from Operations 19438.39 20033.62 15683.25 58155.50",
+          "value": 200336200000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "filed": "2026-01-24",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2026-03-31-annualRev-20261107b",
+      "ticker": "CHENNPETRO.NS",
+      "field": "annualRev",
+      "period": "2026-03-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 635507500000,
+      "replacementValue": 786107900000,
+      "revision": "2026-11-07-sdhand4b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.03.2026 liefert der Anbieter 63.550,75 Crore INR. Das ist nicht die gedruckte Umsatzsumme der Firma, der Wert liegt nahe am Umsatz ohne Verbrauchsteuer. Die Firma meldet 78.610,79 Crore INR (Revenue from Operations, Konzern), auf derselben Basis wie die Quartale. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/35ef3740-e18c-4c7c-889e-da24e6878fc1.pdf",
+          "page": "PDF 13 (printed 12), Statement of Consolidated Financial Results, column year ended 31.03.2026",
+          "quote": "I Revenue from Operations 29358.75 20455.29 18683.49 78610.79",
+          "value": 786107900000,
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "filed": "2026-07-23",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CHENNPETRO_22102026162955_Q2_Results.pdf",
+          "page": "PDF 16 (printed 14), same statement of 22.10.2026, column year ended 31.03.2026",
+          "quote": "I Revenue from Operations 22055.45 29358.75 20033.62 51414.20 38717.11 78610.79",
+          "value": 786107900000,
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "filed": "2026-10-22",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2025-03-31-annualRev-20261107b",
+      "ticker": "CHENNPETRO.NS",
+      "field": "annualRev",
+      "period": "2025-03-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 592690100000,
+      "replacementValue": 710499500000,
+      "revision": "2026-11-07-sdhand4b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.03.2025 liefert der Anbieter 59.269,01 Crore INR. Das ist nicht die gedruckte Umsatzsumme der Firma, der Wert liegt nahe am Umsatz ohne Verbrauchsteuer. Die Firma meldet 71.049,95 Crore INR (Revenue from Operations, Konzern), auf derselben Basis wie die Quartale. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/09b73067-b8dc-4bf5-a475-9d3d8564655f.pdf",
+          "page": "PDF 13 (printed 12, scanned page), Statement of Consolidated Financial Results, column year ended 31.03.2025",
+          "quote": "Revenue from Operations 19438.39 20033.62 15683.25 58155.50 50469.31 71049.95",
+          "value": 710499500000,
+          "start": "2024-04-01",
+          "end": "2025-03-31",
+          "filed": "2026-01-24",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
     }
   ],
   "quarantines": [
