@@ -35,6 +35,7 @@ const currencies = Object.fromEntries(Object.entries(pk.snapshots).map(([t, s]) 
 // Yahoo's value, so the merge job sees that one.
 const pulled = t => { const x = structuredClone(pk.snapshots[t]); if (x.marketCap?.source === 'hand-table:shares') {
   x.marketCap.value = x.marketCap.yahooValue; x.marketCap.source = 'yahoo_quote'; delete x.marketCap.yahooValue; delete x.marketCap.vendorImpliedShares; delete x.meta.marketCapReason; } return x; };
+const sw = (o) => ({ shown: o.shown, written: o.written });
 const firm = e => Object.fromEntries(e.classes.map(c => [c.ticker, pulled(c.ticker)]));
 const day = d => d.slice(0, 10);
 // Independent reference: raw close of the bar dated `date` (exchange-local day = UTC day of the bar start plus offset) and the FX bar of that UTC day.
@@ -164,7 +165,7 @@ test('empty with a reason, never a guess: no chart, a chart in another currency,
     const r = cs.computeClassSum(e, await market(charts), currencies, DAY);
     assert.equal(r.value, null, String(why)); assert.match(r.reason, why);
     const snaps = firm(e);
-    assert.deepEqual(cs.writeFirm(snaps, e, r, null), { shown: null, written: ['000063.SZ', '0763.HK'] }, 'no line may keep a one-line value');
+    assert.deepEqual(sw(cs.writeFirm(snaps, e, r, null)), { shown: null, written: ['000063.SZ', '0763.HK'] }, 'no line may keep a one-line value');
     for (const s of Object.values(snaps)) { assert.equal(s.marketCap.value, null); assert.match(s.meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen/); }
   }
 });
@@ -173,7 +174,7 @@ test('the shown line carries the sum; held lines untouched; side lines emptied w
   const m = await market(), e = byIssuer('Jiangling'), r = cs.computeClassSum(e, m, currencies, DAY), snaps = firm(e);
   snaps['000550.SZ'].metrics.priceSales = { value: 9.9 };
   const bBefore = JSON.stringify(snaps['200550.SZ']);
-  assert.deepEqual(cs.writeFirm(snaps, e, r, NOW), { shown: '000550.SZ', written: ['000550.SZ'] });
+  assert.deepEqual(sw(cs.writeFirm(snaps, e, r, NOW)), { shown: '000550.SZ', written: ['000550.SZ'] });
   assert.equal(JSON.stringify(snaps['200550.SZ']), bBefore, '200550.SZ is held and must stay held');
   const a = snaps['000550.SZ'];
   assert.equal(a.marketCap.value, r.value); assert.equal(a.marketCap.source, 'class-sum');
@@ -329,7 +330,7 @@ test('every priced line with a stale quote: no line shows the sum, every line sa
   const e = byIssuer('Shandong Gold'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
   quoted(snaps, '600547.SS', 18.11e9, '2026-10-20T07:00:00Z', '2026-10-20');
   quoted(snaps, '1787.HK', 10.63e9, '2026-10-22T08:08:00Z', '2026-10-22');
-  assert.deepEqual(cs.writeFirm(snaps, e, r, NOW), { shown: null, written: ['600547.SS', '1787.HK'] });
+  assert.deepEqual(sw(cs.writeFirm(snaps, e, r, NOW)), { shown: null, written: ['600547.SS', '1787.HK'] });
   for (const t of ['600547.SS', '1787.HK']) {
     const seen = guard.prepareMarketCap(snaps[t]);
     assert.equal(seen.marketCap.value, null, t);
@@ -357,6 +358,36 @@ test('no sum and every quote stale: the true reason stays, no promise that a cur
   quoted(snaps, '1787.HK', 10.63e9, '2026-10-22T08:08:00Z', '2026-10-22');
   cs.writeFirm(snaps, e, r, NOW);
   for (const t of ['600547.SS', '1787.HK']) assert.match(guard.prepareMarketCap(snaps[t]).meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen \(A, H\) ist heute nicht berechenbar \(1787\.HK: Tageskurse nicht abrufbar/, t);
+});
+
+test('silent-failure sweep M1: ZTE with a stale quote on the A line stays on the board through the H line', async () => {
+  const e = byIssuer('ZTE'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
+  quoted(snaps, '000063.SZ', 20.22e9, '2026-10-20T07:00:00Z', '2026-10-20');
+  quoted(snaps, '0763.HK', 12.24e9, '2026-11-06T08:08:00Z', null);
+  assert.equal(cs.writeFirm(snaps, e, r, NOW).shown, '0763.HK');
+  assert.ok(Math.abs(guard.prepareMarketCap(snaps['0763.HK']).marketCap.value / 18.80e9 - 1) < 0.001);
+});
+
+test('silent-failure sweep M2: a bonus issue after the count day empties the sum with a reason instead of a silently wrong value', async () => {
+  // 10-for-10 bonus on the A line: Yahoo's total shares go from 4,783.5 M to 8,811.6 M, the A close halves.
+  const charts = structuredClone(ch.charts);
+  for (const q of charts['000063.SZ'].quotes) q.close /= 2;
+  const e = byIssuer('ZTE'), r = cs.computeClassSum(e, await market(charts), currencies, DAY);
+  const run = (mod) => { const snaps = firm(e); for (const t of ['000063.SZ', '0763.HK']) snaps[t].meta.impliedSharesOutstanding = 8811567240; return { out: mod.writeFirm(snaps, e, r, NOW), snaps }; };
+  const { out, snaps } = run(cs);
+  assert.ok(Math.abs(r.value / 10.37e9 - 1) < 0.01, 'the arithmetic sum is the wrong 10.37 bn USD');
+  assert.equal(out.shown, null); assert.equal(out.result.value, null);
+  assert.match(snaps['000063.SZ'].meta.marketCapReason, /weichen um 46 % von der Gesamtzahl bei Yahoo \(8\.811,6 Mio\.\) ab, vermutlich eine Kapitalmaßnahme nach dem Stichtag/);
+  // Today's packets pass: every firm has a Yahoo line within the band.
+  for (const f of entries) { const s = firm(f); assert.notEqual(cs.writeFirm(s, f, cs.computeClassSum(f, await market(), currencies, DAY), NOW).result.value, null, f.issuer); }
+  // Break-once on the code in memory: without the band the wrong 10.37 bn USD is written silently.
+  const file = path.join(root, 'lib/mcap-class-sum.js'), anchor = 'const SHARE_TOTAL_BAND = 0.2;';
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor');
+  const Module = require('node:module'), m = new Module(file, module);
+  m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file));
+  m._compile(lines.map(l => (l === anchor ? 'const SHARE_TOTAL_BAND = Infinity;' : l)).join('\n'), file);
+  assert.ok(Math.abs(run(m.exports).snaps['000063.SZ'].marketCap.value / 10.37e9 - 1) < 0.01, 'the break-once did not let the wrong value through');
 });
 
 test('read time: the guard keeps the class-sum value and its reason in its copy', async () => {
