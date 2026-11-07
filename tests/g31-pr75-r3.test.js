@@ -23,16 +23,17 @@ function withStore(fn){const keep=X.defaultContext;X.defaultContext=()=>({stores
 
 for(const ticker of ['MB.MI','MB.VI','MDIBF'])test(`${ticker}: older zero is skipped; removing that guard reproduces -100 percent`,()=>{
   const s=prepareSnapshot(snap(ticker)),original=JSON.stringify(s);
-  const good=G.g31Shadow(s).v1;assert.equal(good.basis,'year');close(good.pct,1.4749916823777243);
+  // Period gate (PR #72): the stored years end 549 days apart, so no annual figure stands in; never -100 percent from the older zero.
+  const good=G.g31Shadow(s).v1;assert.equal(good.basis,'none');assert.equal(good.pct,null);assert.match(good.reason,/549 Tage auseinander/);
   assert.equal(G.quarterCandidate(s,'revenueQ',1).pct,-100,'the general candidate contract is unchanged');
   // Round 6: a lender never reaches this line without filed operands, so the zero guard is probed on the same packet as a non-lender.
   const other={...s,meta:{...s.meta,sector:'Industrials'}};
   const broken=mutant(zeroLine,'').g31Shadow(other).v1;assert.equal(broken.pct,-100);
-  assert.throws(()=>assert.equal(broken.basis,'year'),assert.AssertionError);
-  assert.equal(G.g31Shadow(other).v1.basis,'year');
-  s.timeseries.revenueQ[1].value=-1;assert.equal(G.g31Shadow(s).v1.basis,'year');
+  assert.throws(()=>assert.equal(broken.basis,'none'),assert.AssertionError);
+  assert.equal(G.g31Shadow(other).v1.basis,'none');
+  s.timeseries.revenueQ[1].value=-1;assert.equal(G.g31Shadow(s).v1.basis,'none');
   s.timeseries.revenueQ[1].value=0;assert.equal(JSON.stringify(s),original);
-  assert.equal(G.g31Shadow(s).v1.basis,'year');
+  assert.equal(G.g31Shadow(s).v1.basis,'none');
 });
 
 test('a current index-0 zero remains a valid -100 percent comparison',()=>{

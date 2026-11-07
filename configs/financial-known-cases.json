@@ -28974,6 +28974,90 @@
       ]
     },
     {
+      "periodType": "12M",
+      "unit": "currency",
+      "replacementValue": null,
+      "revision": "2026-10-30-sdb12",
+      "verifiedAt": "2026-10-30",
+      "caseId": "zeg.l-2025-03-31-annualRev-20261030",
+      "ticker": "ZEG.L",
+      "listingAliases": [
+        "ZEGLF"
+      ],
+      "field": "annualRev",
+      "period": "2025-03-31",
+      "index": 1,
+      "currency": "EUR",
+      "expectedBadValue": 3014621000,
+      "reason": "Jahresumsatz bis 31.03.2025 zurückgehalten: Der Zeitraum umfasst wegen des geänderten Geschäftsjahres 15 Monate, davon 10 Monate Vodafone Spanien; ein Vergleich mit den zwölf Monaten bis 31.03.2026 ist kein Jahresvergleich.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.investegate.co.uk/announcement/rns/zegona-communications--zeg/fy25-q1-26-results-a-transformational-year-/8981287",
+          "form": "Zegona Communications, FY25 and Q1 26 results, RNS 16.07.2025",
+          "page": "announcement text",
+          "quote": "This report includes 15 months results for Zegona Communications plc",
+          "unit": "EUR"
+        }
+      ]
+    },
+    {
+      "periodType": "12M",
+      "unit": "currency",
+      "replacementValue": null,
+      "revision": "2026-10-30-sdb12",
+      "verifiedAt": "2026-10-30",
+      "caseId": "nestleind.bo-2024-03-31-annualRev-20261030",
+      "ticker": "NESTLEIND.BO",
+      "listingAliases": [
+        "NESTLEIND.NS"
+      ],
+      "field": "annualRev",
+      "period": "2024-03-31",
+      "index": 1,
+      "currency": "INR",
+      "expectedBadValue": 243938900000,
+      "reason": "Jahresumsatz bis 31.03.2024 zurückgehalten: Der Zeitraum umfasst wegen des geänderten Geschäftsjahres 15 Monate; ein Vergleich mit den zwölf Monaten bis 31.03.2025 ist kein Jahresvergleich.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.nestle.in/sites/g/files/pydnoa451/files/2024-04/BSENSEFinallettersigned.pdf",
+          "form": "Nestle India, letter to BSE and NSE with the audited results for the fifteen months to 31.03.2024",
+          "page": "PDF pages 3 (revenue from operations 243,938.9) and 7 (period)",
+          "quote": "the current financial year of the Company will be for a period of 15 months commencing",
+          "unit": "INR millions"
+        }
+      ]
+    },
+    {
+      "periodType": "12M",
+      "unit": "currency",
+      "replacementValue": null,
+      "revision": "2026-10-30-sdb12",
+      "verifiedAt": "2026-10-30",
+      "caseId": "eqb.to-2023-10-31-annualRev-20261030",
+      "ticker": "EQB.TO",
+      "listingAliases": [
+        "EQGPF"
+      ],
+      "field": "annualRev",
+      "period": "2023-10-31",
+      "index": 2,
+      "currency": "CAD",
+      "expectedBadValue": 838279000,
+      "reason": "Jahresumsatz bis 31.10.2023 zurückgehalten: Das Geschäftsjahr umfasst wegen der Umstellung nur zehn Monate; ein Vergleich mit den zwölf Monaten bis 31.10.2024 ist kein Jahresvergleich.",
+      "sources": [
+        {
+          "verifiedAt": "2026-10-30",
+          "url": "https://www.newswire.ca/news-releases/eqb-delivers-record-annual-earnings-and-increases-dividend-5-sequentially-as-fiscal-year-changes-to-align-with-industry-833389363.html",
+          "form": "EQB earnings release, 07.12.2023",
+          "page": "release text",
+          "quote": "To effect this changeover, fiscal year 2023 (\"FY23\") is for the ten month-period from January 1, 2023 to October 31, 2023.",
+          "unit": "CAD millions"
+        }
+      ]
+    },
+    {
       "caseId": "rkt-2026-09-30-revenueQ-20261105",
       "ticker": "RKT",
       "field": "revenueQ",
@@ -31158,6 +31242,48 @@
           "quote": "營業利益（損失）Net operating income (loss) 5,553,411 6,293,612",
           "unit": "TWD thousands",
           "verifiedAt": "2026-10-30"
+        }
+      ]
+    },
+    {
+      "caseId": "prn.l-statutory-against-pro-forma-20261101",
+      "ticker": "PRN.L",
+      "reason": "Score fehlt: Princes Group weist für das Geschäftsjahr 2025 (Ende 31.12.2025) gesetzlich 1.871,5 Mio. GBP Umsatz aus; für 2024 gibt es gesetzlich nur neun Monate (1.275,2 Mio. GBP) und eine Pro-forma-Rechnung über zwölf Monate (2.053,5 Mio. GBP). Der Anbieter stellt die gesetzliche Zahl 2025 neben die Pro-forma-Zahl 2024, daraus entstand das falsche Minus von 8,9 %. Dasselbe gilt für Bruttogewinn (380,6 gegen 338,4 Mio. GBP) und Betriebsergebnis (76,0 gegen 17,4 Mio. GBP). Vergleichbar wären pro forma 1.919,3 gegen 2.053,5 Mio. GBP, also minus 6,5 %. Ohne vergleichbares Vorjahr lässt sich kein Firmenscore bilden. Geprüft am 01.11.2026.",
+      "reasonDate": "2026-11-01",
+      "fingerprint": [
+        {
+          "path": [
+            "meta",
+            "name"
+          ],
+          "expected": "Princes Group plc"
+        },
+        {
+          "path": [
+            "meta",
+            "reportingCurrencyOriginal"
+          ],
+          "expected": "GBP"
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://princesgroupinvestors.com/wp-content/uploads/2026/04/51553_Princes_AR25-WEB.pdf",
+          "form": "Princes Group plc, annual report 2025, Table 1 2025 pro forma reconciliation",
+          "page": "Chief Financial Officer's statement, alternative performance measures, Table 1",
+          "quote": "Revenue from contracts with customers 1,871,531 76,413 13,426 (42,050) 1,919,319 2,053,539",
+          "unit": "GBP thousands",
+          "published": "2026-04",
+          "verifiedAt": "2026-11-01"
+        },
+        {
+          "url": "https://princesgroupinvestors.com/wp-content/uploads/2026/03/Princes-Group-FY-2025.pdf",
+          "form": "Princes Group plc, FY 2025 preliminary results presentation, statutory income statement",
+          "page": "statutory income statement",
+          "quote": "Revenue from contracts with customers 1,871,531 1,275,223",
+          "unit": "GBP thousands",
+          "published": "2026-03-31",
+          "verifiedAt": "2026-11-01"
         }
       ]
     }

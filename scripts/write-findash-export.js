@@ -92,7 +92,7 @@ function readMcapBounds() {
 // Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
 // nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
-const { annualPairsShadow } = require('../lib/annual-pairs.js');
+const { annualPairsShadow, sealedEraSnapshot, withoutPeriodGate } = require('../lib/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
 // W8 EX-01 (28.10.2026): whether a board's formula splits its cohort into a profitable and an unprofitable
 // track. Read from the formula definition, the same splitMetric switch as src/scoring/score.js trackOf():
@@ -133,6 +133,28 @@ function annualPairsShadowForSnapshot(snapshot, missingCode) {
   }
   return annualPairsShadow(snapshot, _annualPairsBounds, missingCode || 'no-snapshot');
 }
+// Comparison of PR #72 until 04.12.2026 (Karl's rule, at most four weeks): the shown growth and the three score axes the gate
+// reaches (gross profit, acceleration, capital efficiency), recomputed from the same snapshot with the period gate off; no score.
+// The hand-table holds of #72 stay on. Capital efficiency is computed without the SEC and regional annual series the score
+// attaches (run-screener mergeSecIntoUniverse), so it differs from the score for those firms (147 on 31.10.2026). Remove with the comparison.
+// Codex R31 (05.11.2026): the end is bound to the data day, RUN_DATE_UTC (else the UTC clock day): from 04.12.2026 no row carries it.
+const PERIOD_GATE_SHADOW_ENDS = '2026-12-04';
+/** @param {string} [day] Data day YYYY-MM-DD. @returns {boolean} true while the comparison is shown. */
+function periodGateShadowShown(day) {
+  const env = process.env.RUN_DATE_UTC || '';
+  const d = day || (/^\d{4}-\d{2}-\d{2}/.test(env) ? env.slice(0, 10) : new Date().toISOString().slice(0, 10));
+  return d < PERIOD_GATE_SHADOW_ENDS;
+}
+function periodGateShadowForSnapshot(snapshot) {
+  if (!snapshot) return null;
+  wachstumsSchranken();
+  const axes = require('../src/scoring/axes.js');
+  return withoutPeriodGate(() => {
+    const leg = revGrowthLeg(snapshot);
+    return { growth: leg.pct ?? null, basis: leg.basis ?? null, periodEnd: leg.periodEnd ?? null, priorPeriodEnd: leg.priorPeriodEnd ?? null,
+      gpAxis: axes.gpGrowth(snapshot), accelerationAxis: axes.revAcceleration(snapshot, _annualPairsBounds), capitalEfficiencyAxis: axes.capitalEfficiency(snapshot) };
+  });
+}
 let _behoerde;
 let _schrankenGewarnt = false;
 // Alle vorkommenden Wachstumsgewichte; der Schatten wird beim EINEN Snapshot-Lesevorgang je Ticker
@@ -162,8 +184,29 @@ function mitFcfSchatten(formulaId) {
   return (row) => g31Last(Object.assign(row, { fcfShadow: fcfSchattenFuer(row.ticker, formulaId || row.formulaId) }));
 }
 
+// Period gate round 2 (30.10.2026): a pair with no end at all empties revenue growth. The score axes excuse it only on the 25
+// sealed golden fixtures with unchanged statements (lib/annual-pairs.js), so a fixture on a live board means a store restored
+// with exactly those statements; this watcher says so,
+// whichever axis it reaches. ponytail: exported rows only, a small-cap firm outside the export stays unseen.
+const _undatedAxisTickers = new Set();
+/** Warning line of the watcher. @param {Iterable<string>} tickers Tickers counted. @returns {string|null} ::warning:: line, or null when none. */
+function undatedAxisWarning(tickers) {
+  const list = [...tickers].sort();
+  if (!list.length) return null;
+  return `::warning::[period-gate-undated] ${list.length} Zeilen: versiegelter Prueffall auf einem Board, seine Score-Achsen duerfen ein Paar ohne Periodenende zaehlen: ${list.slice(0, 20).join(', ')}`;
+}
+// Small-cap rows carry no annualPairsShadow, so their count reads the snapshot's derivation; no row field is added.
+function zaehleUndatiertSmallcap(row) {
+  if (snapAbleitungenFuer(row.ticker, smallcapGrowthSource()).sealedFixture) _undatedAxisTickers.add(row.ticker);
+  return row;
+}
+
 function mitAnnualPairsSchatten(row) {
-  return Object.assign(row, { annualPairsShadow: snapAbleitungenFuer(row.ticker).annualPairsShadow });
+  const abl = snapAbleitungenFuer(row.ticker);
+  const annualPairsShadow = abl.annualPairsShadow;
+  const shadow = periodGateShadowShown() ? { periodGateShadow: abl.periodGateShadow } : {}; // R31: gone from 04.12.2026
+  if (abl.sealedFixture) _undatedAxisTickers.add(row.ticker);
+  return Object.assign(row, { annualPairsShadow }, shadow);
 }
 
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
@@ -343,6 +386,7 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
   }
   catch (e) { snap = null; snapFehler = e && e.code === 'ENOENT' ? 'no-snapshot' : 'snapshot-unreadable'; } // P87: Grund nur fuer fcfShadow
   const abl = {
+    sealedFixture: sealedEraSnapshot(snap),
     beleg: beurteileWaehrungsbeleg(snap && snap.meta),
     punkte: belegPunkte(snap && snap.timeseries),
     financialReasons: financialReasons(snap),
@@ -371,6 +415,11 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     get annualPairsShadow() {
       const value = annualPairsShadowForSnapshot(snap, snapFehler);
       Object.defineProperty(this, 'annualPairsShadow', { value, enumerable: true });
+      return value;
+    },
+    get periodGateShadow() { // PR #72 comparison until 04.12.2026
+      const value = periodGateShadowForSnapshot(snap);
+      Object.defineProperty(this, 'periodGateShadow', { value, enumerable: true });
       return value;
     },
     get ffoGrund() { // W8 EX-02, only read for rows with an empty FFO pill
@@ -1384,8 +1433,8 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean).map(zaehleUndatiertSmallcap), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map((r, i) => mapBoardRow(r, i, smallcapGrowthSource(), require('../configs/market-cap-floors.json').smallcapUsd)).filter(Boolean).map(zaehleUndatiertSmallcap), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
@@ -1566,6 +1615,8 @@ function build(seam = {}) {
   // die Annahme des Waechters — dann ist Abbruch (rotes X) richtiger als ein Board, dem
   // stumm die halbe Groessenspalte fehlt.
   const bilanz = waehrungsWaechterAbschluss();
+  const undatiert = undatedAxisWarning(_undatedAxisTickers);
+  if (undatiert) console.warn(undatiert);
   if (_wachstumOhneEtikett > 0) {
     console.warn('::warning::Wachstums-Etikett: ' + _wachstumOhneEtikett + ' Zeilen ohne revGrowthBasis — '
       + 'ihr revGrowthYoYPct liess sich aus keinem Snapshot nachrechnen, die Felder bleiben null statt zu raten.');
@@ -2733,7 +2784,8 @@ if (require.main === module) {
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot,
+  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, periodGateShadowShown, mitAnnualPairsSchatten, undatedAxisWarning, buildSmallcapBoard,
+  undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.

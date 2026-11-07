@@ -16,7 +16,8 @@ const { route } = require('../../src/scoring/router.js');
 const { fcfMarginValid, fcfTrack } = require('../../src/scoring/engine.js');
 const { trackOf } = require('../../src/scoring/score.js');
 const { evaluateLamps } = require('../../src/scoring/lamps.js');
-const ax = require('../../src/scoring/axes.js');
+const { datedApi } = require('../helpers/dated-series.js');
+const ax = datedApi(require('../../src/scoring/axes.js'));
 const formulas = require('../../src/scoring/formulas/index.js');
 
 let pass = 0, fail = 0;

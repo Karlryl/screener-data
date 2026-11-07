@@ -35,7 +35,8 @@ function fixture(overrides = {}) {
   const p = path.join(__dirname, 'fixtures', 'CRDO.json');
   const snapshot = JSON.parse(fs.readFileSync(p, 'utf8'));
   snapshot.meta = { ...snapshot.meta, ...overrides };
-  return snapshot;
+  // Period gate on #75: an old undated pair has no exception unless it is a sealed fixture, and this file tests names, not pairs.
+  return require('../helpers/dated-series.js').withEnds(snapshot);
 }
 
 function roundTrip(snapshot) {

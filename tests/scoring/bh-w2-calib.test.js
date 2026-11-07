@@ -11,12 +11,13 @@
  * Usage:  node tests/scoring/bh-w2-calib.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
+const { datedApi } = require('../helpers/dated-series.js');
 const {
   scoreUniverse, calibrationDrift, cycleSeriesPair, cycleSignal,
-} = require('../../src/scoring/score.js');
-const { buildCalibMatrix, productionCohortRanking } = require('../../src/scoring/calibrate.js');
+} = datedApi(require('../../src/scoring/score.js'));
+const { buildCalibMatrix, productionCohortRanking } = datedApi(require('../../src/scoring/calibrate.js'));
 const { profitTierOf } = require('../../src/scoring/profit-tier.js');
-const { gpGrowth, revYoYComponents, quarterQoQRates, marginTrajectory } = require('../../src/scoring/axes.js');
+const { gpGrowth, revYoYComponents, quarterQoQRates, marginTrajectory } = datedApi(require('../../src/scoring/axes.js'));
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); } }

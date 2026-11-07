@@ -1474,6 +1474,15 @@ durch das Wachstum von Rang 970 auf 888, mit der Achse auf 363; Ganfeng fällt t
 stärker wuchs. Bei einer leeren Zelle, die der Börsenbestand füllt, galt das schon vorher (rund 300 Firmen). Jede weitere Auffüllung kann
 solche Sprünge auslösen. Ob der Quartalsmaßstab mit nur zwei Paaren gut ist, ist eine eigene Formelfrage.
 
+## 16b. `periodGateShadow` (PR #72, Vergleich bis 04.12.2026)
+
+Additives Objekt an jeder Vollboard-, Top-Board- und Übersichtszeile, die auch `annualPairsShadow` trägt (nicht an den Rule-40-Zeilen): `{ growth, basis,
+periodEnd, priorPeriodEnd, gpAxis, accelerationAxis, capitalEfficiencyAxis }`. Es zeigt dieselbe Rechnung wie die Zeile, aber mit ausgeschaltetem Periodentor (`withoutPeriodGate` in
+`lib/annual-pairs.js`): `growth`, `basis` und die beiden Enden wie `revGrowthYoYPct` und seine Etiketten, `gpAxis` und
+`accelerationAxis` und `capitalEfficiencyAxis` als Rohwerte der Score-Achsen Bruttogewinnwachstum, Beschleunigung und Kapitaleffizienz. Die Kapitaleffizienz rechnet der Vergleich ohne die SEC- und Regionalreihen, die der Score vorher anhängt (`mergeSecIntoUniverse`); bei diesen Firmen weicht sie vom Score ab (147 Firmen am 31.10.2026). Die elf Firmen, bei denen das Tor am 31.10.2026 die Kapitaleffizienz leert, betrifft das nicht. Ausgeschaltet sind die Datumsfenster; ein Paar ohne Periodenende bleibt auch hier leer, ebenso die Sperren der Handtabelle aus #72 (ZEG.L, NESTLEIND.BO, EQB.TO, PRN.L); die Nullregel der Beschleunigung ist mit abgeschaltet. Kein Score und kein Rang. Die Filter des
+versiegelten Achsencodes für undatierte Quartale und ungleiche Laufzeiten bleiben auch hier an. Nach Karls Regel läuft die alte
+Formel höchstens vier Wochen sichtbar mit; ab dem Datenstand 04.12.2026 (`RUN_DATE_UTC`, ohne ihn der UTC-Tag der Uhr) schreibt der Export das Feld nicht mehr, am 03.12.2026 noch. Reine Anzeige, kein Leser in findash.
+
 ## 17. `filter/` — additive all-snapshot universe (W6, 11.10.2026)
 
 This is an additive feed under section 7, with no v2 bump and no change to
