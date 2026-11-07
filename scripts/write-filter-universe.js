@@ -7,7 +7,7 @@ const path = require('node:path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
-const { correctedBelowFloor, table: marketCapCases } = require('../lib/market-cap-guard.js');
+const { correctedBelowFloor, table: marketCapCases, priceAge, STALE_PRICE_SOURCE, STALE_PRICE_RETURN, STALE_PRICE_WEEKDAYS } = require('../lib/market-cap-guard.js');
 const { norm, metricVal } = require('../src/scoring/snapshot.js');
 const { annualPeriodEnds, staleReason, _tagesnummer } = require('../lib/annual-pairs.js');
 const { normalizeCountry } = require('../src/scoring/country.js');
@@ -225,6 +225,22 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     const gmBad = finite(grossMargin) && Math.abs(round(grossMargin)) > GM_MAX_ABS_PCT;
     // Only a negative payout or a unit error is withheld; the vendor yield, not the payout, is the broken field (000059.SZ).
     const poBad = finite(payout) && (payout > PO_MAX_PCT || payout < 0);
+    // Stale-price hold: P/E, forward P/E, dividend yield and the distance to the 52-week high are Yahoo values on the same
+    // old quote message as the withheld market cap, so none is shown while the hold lasts, each with its own hint. The
+    // distance to the all-time high rests on the project's own daily closes and stays while its newest close is current.
+    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE;
+    // Short on purpose: about 2,100 such hints on 03.11. sit in a file with a 6 MB ceiling (5.6 MB before them).
+    const meldung = meta.stalePriceHold?.priceDay ? `die Kursmeldung von Yahoo vom ${meta.stalePriceHold.priceDay.split('-').reverse().join('.')}` : 'die Kursmeldung von Yahoo';
+    const zeige = (label, value) => {
+      if (!kursAlt || value === null || value === undefined) return value;
+      aus.push(`${label} wird nicht gezeigt, ${meldung} ist zu alt.`);
+      return null;
+    };
+    const athAlt = kursAlt && ath && !(priceAge({ marketCap: { value: 1, regularMarketTime: ath.lastDate } })?.age <= STALE_PRICE_WEEKDAYS);
+    if (athAlt && finite(ath.distancePct)) aus.push(`Abstand zum Allzeithoch wird nicht gezeigt, weil der letzte eigene Tageskurs vom ${String(ath.lastDate).slice(0, 10).split('-').reverse().join('.')} älter als ${STALE_PRICE_WEEKDAYS} Wochentage ist.`);
+    // The payout placeholder rule reads the vendor's own yield status, not the hidden one: a 0 payout of a paying firm stays missing (T2).
+    const zahlt = div.dySt === 'zahlt';
+    if (kursAlt && div.dy !== null && zeige('Dividendenrendite', div.dy) === null) Object.assign(div, { dy: null, dySt: 'unbekannt' });
     if (gmBad) aus.push('gm-implausible');
     if (dyBad) aus.push('dy-implausible');
     if (poBad) aus.push('po-implausible');
@@ -237,16 +253,16 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
       // G2, PR #72 review: a quarantined packet has no comparable year and its reason says so (PRN.L -8.86, 402340.KS +967); no growth from it.
       g: board ? round(board.revGrowthYoYPct) : meta.financialDataIssue ? null : round(revGrowthLevel(snapshot)), g3: meta.financialDataIssue ? null : growth3(snapshot),
       ps: sales.ps, evs: evsCurrency || evsBad ? null : sales.evs,
-      pe, peSt: mixed ? 'waehrung' : pe !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt',
-      fpe: fpeBad ? null : fpe,
-      ...div, po: poBad || (payout === 0 && (div.dySt === 'zahlt' || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
+      ...(peShown => ({ pe: peShown, peSt: mixed ? 'waehrung' : peShown !== null ? 'vorhanden' : finite(netIncome) && netIncome < 0 ? 'verlust' : 'unbekannt' }))(zeige('P/E', pe)),
+      fpe: zeige('Forward P/E', fpeBad ? null : fpe),
+      ...div, po: poBad || (payout === 0 && (zahlt || dyBad)) ? null : round(payout), roe: round(metricVal(snapshot, 'returnOnEquity')),
       fcf: round(usableFcf(snapshot)),
       // The prior gate prevents ruleOfX from silently falling back to growth alone.
       r40: eligible.has(snapshot) ? round(ruleOfX(snapshot, 1, true, growthBounds)) : null,
       gm: grossMargin === 0 || gmBad ? null : round(grossMargin),
       // A slightly newer price may exceed the high; implausible scale differences stay missing.
-      d52: highRatio !== null && !highImplausible ? round(Math.min(0, (highRatio - 1) * 100)) : null,
-      ath: round(ath?.distancePct), asOf: dates.length ? new Date(dates[0]).toISOString().slice(0, 10) : null,
+      d52: zeige('Abstand zum 52-Wochen-Hoch', highRatio !== null && !highImplausible ? round(Math.min(0, (highRatio - 1) * 100)) : null),
+      ath: athAlt ? null : round(ath?.distancePct), asOf: dates.length ? new Date(dates[0]).toISOString().slice(0, 10) : null,
       aus: [...new Set(aus)],
     }).filter(([, value]) => value !== null));
   }).filter(Boolean).sort((a, b) => a.t.localeCompare(b.t, 'en'));
@@ -304,6 +320,8 @@ function validateUniverse(feed, bytes) {
     if (row.aus.includes('ev-negativ') && row.evs != null) errors.push(where + ': inconsistent ev reason');
     if (row.d52 != null && (row.d52 < -100 || row.d52 > 0)) errors.push(where + ': invalid d52');
     if (row.aus.includes('d52-implausible') && row.d52 != null) errors.push(where + ': inconsistent d52 reason');
+    // A stale-price hold empties every value that rests on the same Yahoo quote message.
+    if (row.aus.some(a => a.endsWith(STALE_PRICE_RETURN)) && ['pe', 'fpe', 'dy', 'd52'].some(k => row[k] != null)) errors.push(where + ': price-dependent value beside a stale quote hold');
     if (row.fcf != null && row.fcf > r40.MAX_FCF_MARGIN_PCT) errors.push(where + ': invalid fcf');
     if (row.r40 != null && (row.g == null || row.fcf == null)) errors.push(where + ': incomplete rule of 40');
   }

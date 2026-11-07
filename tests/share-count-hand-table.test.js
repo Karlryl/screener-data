@@ -84,6 +84,8 @@ const WRONG = {
   "688385.SS": { px: 6.877066310399999, vendorShares: 823719206, mcap: 5664771598.0227375, issuer: 653440512 },
   "600688.SS": { px: 0.45837089699999994, vendorShares: 10542617180, mcap: 4832428893.674496, issuer: 8429167420 },
   "1787.HK": { px: 2.0218760978, vendorShares: 4609929717, mcap: 9320706707.38866, issuer: 7252581579 },
+  // Snapshot of run 42356903064 (2026-11-07): the Shanghai line of Shandong Gold with A and H shares at the A price.
+  "600547.SS": { px: 3.927447334, vendorShares: 4609929810, mcap: 18105256542.511433, issuer: 4189487967 },
   "1766.HK": { px: 0.6750210553499999, vendorShares: 28698864190, mcap: 19372337593.12871, issuer: 39817324643 },
   "0019.HK": { px: 13.564162472, vendorShares: 3627920515, mcap: 49209703299.43211, issuer: 1183568546 },
   "GLXY": { px: 16, vendorShares: 589297344, mcap: 9428757504, issuer: 388479988 },
