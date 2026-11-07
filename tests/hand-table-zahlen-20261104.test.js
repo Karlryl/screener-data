@@ -93,8 +93,8 @@ test('fiscal years enter on the filed definition; years without two equal readin
     ends.forEach((e, i) => {
       const c = cases.find(x => x.period === e);
       if (c) assert.equal(value(out.annual.annualRev[i]), c.replacementValue * leg(t).meta.fxRateApplied, t + ' ' + e);
-      // A year a later row reads (Shriram 2024, 07.11.2026) is that row's test; every other older year stays empty.
-      else if (e < oldest && !H.table.cases.some(x => x.ticker === t && x.field === 'annualRev' && x.period === e)) assert.equal(value(out.annual.annualRev[i]), null, t + ' ' + e + ' older than the read years');
+      // Shriram 2024 is read by the row of 07.11.2026 (tests/hand-table-shriram-20261107.test.js); every other older year stays empty.
+      else if (e < oldest && !(t === 'SHRIRAMFIN.NS' && e === '2024-03-31')) assert.equal(value(out.annual.annualRev[i]), null, t + ' ' + e + ' older than the read years');
     });
   }
 });
