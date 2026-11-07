@@ -1907,6 +1907,7 @@ jobs:
     needs: [prep, pull, prices, merge]
     if: ${{ !cancelled() && needs.prep.result == 'success' && needs.pull.result == 'success' && needs.prices.result == 'success' && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
+    # P286, P287: this run day is also the data day of the age rule in lib/annual-pairs.js.
     env:
       RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     # Relayed for the jobs behind scoring, so they read the same frozen day without a second edge to prep.
@@ -2439,8 +2440,8 @@ jobs:
           # audit BH-156: `date -u +%F` unmittelbar vor dem Aufruf gestempelt — deckt
           # sich mit write-board-history.js' eigenem isoDay(Date.now()) (kein --date
           # uebergeben, das Skript nutzt also dieselbe Wanduhr). Als Output verfuegbar
-          # fuer den Commit-Step unten (praeziser als das Stunden-alte RUN_DATE_UTC,
-          # das dieser Job gar nicht sieht).
+          # fuer den Commit-Step unten (praeziser als das Stunden-alte RUN_DATE_UTC
+          # dieses Jobs).
           echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
           set +e
           node scripts/write-board-history.js

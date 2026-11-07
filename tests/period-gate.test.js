@@ -313,7 +313,7 @@ for (const [rel, anchor, mutant, probe] of [
     api => assert.equal(api.sealedEraSnapshot({ meta: { ticker: 'NONFIXTURE', fetchedAt: '2026-08-19T00:00:00Z' } }), false, 'no fixture, no exemption')],
   ['../lib/annual-pairs.js', '  return isDeepStrictEqual({ annual: snapshot.annual, timeseries: snapshot.timeseries }, sealedStatements.get(id));', '  return true;',
     api => assert.equal(api.sealedEraSnapshot(ONE_CELL_OFF()), false, 'a fixture name over changed statements gets no exemption')],
-  ['../lib/annual-pairs.js', "  return pairs !== null && pairs.every((pair) => (periodGateOff || pair.zeroIndex < 0) && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld)); // zero-year rule: part of the gate comparison", '  return pairs !== null;',
+  ['../lib/annual-pairs.js', "  return pairs.every((pair) => (periodGateOff || pair.zeroIndex < 0) && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld)); // zero-year rule: part of the gate comparison", '  return true;',
     api => assert.equal(api.annualAccelerationGatePasses(ALK()), false)],
   ['../lib/g31-recency.js', '  if (gate) return missing(gate);', '',
     api => assert.equal(api.g31Shadow(dated(91)).v1.pct, null, '91-day pair must be empty')],

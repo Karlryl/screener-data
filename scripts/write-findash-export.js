@@ -92,7 +92,7 @@ function readMcapBounds() {
 // Rule-of-X-Achse, Small-Cap rechnet aus snapshots-smallcap/). Werte sind Geschaeftsjahreswerte,
 // nie TTM. Vertrag: docs/findash-export-v1.md, Abschnitt fcfShadow.
 const { boardSchatten, ladeBehoerdenJahre } = require('../lib/fcf-stmt-shadow.js');
-const { annualPairsShadow, sealedEraSnapshot, withoutPeriodGate } = require('../lib/annual-pairs.js');
+const { annualPairsShadow, dataDay, sealedEraSnapshot, withoutPeriodGate } = require('../lib/annual-pairs.js');
 const FORMEL_ALPHA = new Map(Object.values(require('../src/scoring/formulas')).map((f) => [f.id, f.alpha]));
 // W8 EX-01 (28.10.2026): whether a board's formula splits its cohort into a profitable and an unprofitable
 // track. Read from the formula definition, the same splitMetric switch as src/scoring/score.js trackOf():
@@ -194,6 +194,10 @@ function undatedAxisWarning(tickers) {
   const list = [...tickers].sort();
   if (!list.length) return null;
   return `::warning::[period-gate-undated] ${list.length} Zeilen: versiegelter Prueffall auf einem Board, seine Score-Achsen duerfen ein Paar ohne Periodenende zaehlen: ${list.slice(0, 20).join(', ')}`;
+}
+/** P286: without a data day the age rule is off; a run on Actions says so instead of staying silent. @returns {string|null} ::warning:: line, or null when none. */
+function ageRuleOffWarning() {
+  return process.env.GITHUB_ACTIONS && !dataDay() ? '::warning::[age-rule-off] Export ohne RUN_DATE_UTC: Die Altersregel fuer veraltete Reihen gilt in diesem Lauf nicht.' : null;
 }
 // Small-cap rows carry no annualPairsShadow, so their count reads the snapshot's derivation; no row field is added.
 function zaehleUndatiertSmallcap(row) {
@@ -581,8 +585,8 @@ function overviewPeriodFor(kind, period) {
 // exit that left it empty, with the fiscal-year ends involved. It explains only a pill that this snapshot
 // re-derives as empty; anything else is "Grund nicht im Datenstand" (counted, never a guessed reason).
 const { norm } = require('../src/scoring/snapshot.js');
-const { annualPeriodEnds } = require('../lib/annual-pairs.js');
-const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'grundNichtImDatenstand']);
+const { annualPeriodEnds, staleReason } = require('../lib/annual-pairs.js');
+const FFO_GRUND_CODES = Object.freeze(['keinJahrMitBeidenWerten', 'nurEinJahr', 'vorjahrNichtPositiv', 'jahreNichtHintereinander', 'jahreVeraltet', 'grundNichtImDatenstand']);
 const _iso = (p) => typeof p === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(p);
 const tagDe = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 const gjBis = (iso) => (iso ? `das Geschäftsjahr bis ${tagDe(iso)}` : 'ein Geschäftsjahr ohne gespeichertes Periodenende');
@@ -614,6 +618,8 @@ function ffoGrund(s) {
     out = { code: 'nurEinJahr', reason: `${FFO_VORNE}, weil Jahresüberschuss und Abschreibungen nur für ${gjBis(ends[newer])} zusammen vorliegen; ein Vorjahr zum Vergleich fehlt.` };
   } else if (values[older] <= 0) {
     out = { code: 'vorjahrNichtPositiv', reason: `${FFO_VORNE}, weil der Vorjahreswert für ${gjBis(ends[older])} nicht positiv ist; gegen einen Wert von null oder darunter lässt sich für ${gjBis(ends[newer])} kein Wachstum rechnen.` };
+  } else if (metric.valuePresent === false && staleReason('year', ends[newer])) {
+    out = { code: 'jahreVeraltet', reason: `${FFO_VORNE}, weil ${gjBis(ends[newer])} mehr als 550 Tage vor dem Datenstand endet; Periodenstand veraltet.` };
   } else if (metric.valuePresent === false) {
     out = { code: 'jahreNichtHintereinander', reason: `${FFO_VORNE}, weil ${gjBis(ends[newer])} und ${gjBis(ends[older])}, die beiden jüngsten Jahre mit beiden Werten, nicht direkt aufeinander folgen.` };
   } else {
@@ -725,11 +731,16 @@ function belegPunkte(timeseries) {
   // revenueQ ist [{value}] (pull-yahoo-Serialisierung), historisch auch mal blanke Zahlen.
   const roh = Array.isArray(timeseries.revenueQ) ? timeseries.revenueQ : null;
   const wert = (x) => (x && typeof x === 'object' && 'value' in x ? x.value : x);
+  // Codex R22 (04.11.2026): quarters kept only as the proof that a firm has revenue (lib/annual-pairs.js, no annual revenue)
+  // are no evidence points once the series is past the age limit; the same decision as growth and acceleration.
+  const endsRoh = Array.isArray(timeseries.revenueQEnds) ? timeseries.revenueQEnds : [];
+  const neuestes = roh === null ? null : endsRoh.filter((d, i) => typeof d === 'string' && Number.isFinite(wert(roh[i]))).sort().at(-1);
+  if (neuestes && staleReason('quarter', neuestes)) return { qPunkte: 0, qSpanTage: null };
   const qPunkte = roh === null ? null : roh.filter((x) => Number.isFinite(wert(x))).length;
   const ends = Array.isArray(timeseries.revenueQEnds)
     ? timeseries.revenueQEnds.map((d) => Date.parse(d)).filter((t) => Number.isFinite(t))
     : [];
-  const qSpanTage = ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
+  const qSpanTage = qPunkte !== 0 && ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
   return { qPunkte, qSpanTage };
 }
 
@@ -1617,6 +1628,7 @@ function build(seam = {}) {
   const bilanz = waehrungsWaechterAbschluss();
   const undatiert = undatedAxisWarning(_undatedAxisTickers);
   if (undatiert) console.warn(undatiert);
+  if (ageRuleOffWarning()) console.warn(ageRuleOffWarning());
   if (_wachstumOhneEtikett > 0) {
     console.warn('::warning::Wachstums-Etikett: ' + _wachstumOhneEtikett + ' Zeilen ohne revGrowthBasis — '
       + 'ihr revGrowthYoYPct liess sich aus keinem Snapshot nachrechnen, die Felder bleiben null statt zu raten.');
@@ -2779,12 +2791,14 @@ if (require.main === module) {
     console.log('findash-export/v1 schema OK.');
     process.exit(0);
   }
+  // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+  require('../lib/annual-pairs.js').requireDataDay();
   const r = build();
   console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.fullBoards} Vollboards (full/) + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
 }
 
 module.exports = {
-  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, periodGateShadowShown, mitAnnualPairsSchatten, undatedAxisWarning, buildSmallcapBoard,
+  annualPairsShadowForSnapshot, periodGateShadowForSnapshot, periodGateShadowShown, mitAnnualPairsSchatten, undatedAxisWarning, ageRuleOffWarning, buildSmallcapBoard,
   undatedAxisTickers: () => [..._undatedAxisTickers],
   rankGrundShadowFor, // P89: guarded shadow lookup, shared with write-rule40-export.js
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js

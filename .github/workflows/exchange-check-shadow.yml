@@ -54,8 +54,12 @@ jobs:
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
 
-      # Same order as the scoring job of daily-pull.yml, so board membership and ranks match that run.
+      # Same order as the scoring job of daily-pull.yml, so board membership and ranks match that run, except the age rule
+      # of lib/annual-pairs.js: without RUN_DATE_UTC every board writer stops (requireDataDay), so this run says with
+      # AGE_RULE_OFF=1 that it leaves the rule off on purpose. Nothing is published from this run.
       - name: Score the snapshots (committed mode, readers unchanged)
+        env:
+          AGE_RULE_OFF: '1'
         run: |
           node scripts/opinc-source-migrate.js --json reports/opinc-source-diff.json
           node src/scoring/run-screener.js

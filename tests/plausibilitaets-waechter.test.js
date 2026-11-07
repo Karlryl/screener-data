@@ -64,6 +64,15 @@ const KURS_ALT_HINWEIS = 'kurs-alt misst die Abrufzeit des Kurses, nicht das Han
 
 const tickers = (report, code) => report.faelle.filter((f) => f.code === code).map((f) => f.ticker).sort();
 
+test('P286: an expired quarterly series is not reported as an empty newest quarter', () => {
+  // Far ahead of every fixture end, so the age rule masks all quarterly series; a null cell of the vendor stays a finding.
+  const { dir, status, report, stdout } = fixtureRun([], { RUN_DATE_UTC: '2032-01-01' });
+  try {
+    assert.equal(status, 0, stdout);
+    assert.deepEqual(tickers(report, 'umsatz-null-mit-boersenwert'), ['PW-NULLREV']);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('every check lists exactly its positive rows and none of the negative ones', () => {
   const { dir, status, report, stdout } = fixtureRun();
   try {
