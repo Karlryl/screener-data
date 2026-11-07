@@ -26,7 +26,8 @@ const value = r => (r && typeof r === 'object' ? r.value ?? null : r ?? null);
 // The table as it stood before these rows: their cases out, coverage back to the last earlier case or out.
 const pre = structuredClone(H.table);
 const ownTickers = new Set(pre.cases.filter(c => c.revision === REV).map(c => c.ticker));
-pre.cases = pre.cases.filter(c => c.revision !== REV);
+// The Shriram fiscal year 2024 of 07.11.2026 (tests/hand-table-shriram-20261107.test.js) extends these rows and leaves with them.
+pre.cases = pre.cases.filter(c => c.revision !== REV && c.revision !== '2026-11-07-sdhand5');
 pre.coverage = pre.coverage.flatMap(v => {
   if (!ownTickers.has(v.ticker)) return [v];
   const left = pre.cases.filter(c => c.ticker === v.ticker && c.field === v.field && c.replacementValue !== null).map(c => c.period).sort();
@@ -92,7 +93,8 @@ test('fiscal years enter on the filed definition; years without two equal readin
     ends.forEach((e, i) => {
       const c = cases.find(x => x.period === e);
       if (c) assert.equal(value(out.annual.annualRev[i]), c.replacementValue * leg(t).meta.fxRateApplied, t + ' ' + e);
-      else if (e < oldest) assert.equal(value(out.annual.annualRev[i]), null, t + ' ' + e + ' older than the read years');
+      // A year a later row reads (Shriram 2024, 07.11.2026) is that row's test; every other older year stays empty.
+      else if (e < oldest && !H.table.cases.some(x => x.ticker === t && x.field === 'annualRev' && x.period === e)) assert.equal(value(out.annual.annualRev[i]), null, t + ' ' + e + ' older than the read years');
     });
   }
 });

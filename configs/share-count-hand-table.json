@@ -691,6 +691,28 @@
     "verifiedAt": "2026-11-01",
     "withholdUnverified": true
   },
+  "600547.SS": {
+    "shares": 4189487967,
+    "sharesAsOf": "2026-09-30",
+    "validFrom": "2026-10-01",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      4609929717
+    ],
+    "wrongSharesSeen": "snapshot of run 42356903064 (2026-11-07): marketCap 18,105,256,542 USD, price 3.927447334 USD, 4,609,929,810 shares implied (A and H shares together at the Shanghai price; the same count as the 1787.HK row's wrong count)",
+    "reason": "Börsenwert näherungsweise aus 4.189,5 Mio. A-Aktien-Gegenwerten berechnet: laut Shandong Gold 3.614.443.347 A-Aktien und 995.486.178 H-Aktien, die H-Aktien umgerechnet mit den Schlusskursen vom 30.10.2026 (23,31 CNY und 15,86 HKD). Yahoo bewertet alle Aktien zum Shanghaier Kurs, obwohl die Hongkonger Aktien nur rund 58 % davon kosten. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
+    "source": {
+      "form": "Die Monatsmeldung von Shandong Gold an die Hongkonger Börse nennt die A- und H-Aktien.",
+      "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000468.pdf",
+      "quote": "Balance at close of the month 995,486,178 0 995,486,178 | Balance at close of the month 3,614,443,347 0 3,614,443,347",
+      "page": "3",
+      "unit": "shares: A 3614443347 + H 995486178 x (15.86 x 0.127458) / (23.31 x 0.150128) = 4189487967 A equivalents",
+      "crossCheck": "https://static.cninfo.com.cn/finalpage/2026-03-27/1225035639.PDF 101: 1、人民币普通股 3,614,443,347 80.80 0 0 0 0 0 3,614,443,347 78.41",
+      "priceSource": "https://query1.finance.yahoo.com/v8/finance/chart/600547.SS?range=1mo&interval=1d and https://query1.finance.yahoo.com/v8/finance/chart/1787.HK?range=1mo&interval=1d, closes of 2026-10-30 (vendor data)"
+    },
+    "verifiedAt": "2026-11-07",
+    "withholdUnverified": true
+  },
   "1766.HK": {
     "shares": 39817324643,
     "sharesAsOf": "2026-09-30",
@@ -1665,7 +1687,7 @@
         "page": "3 (result of the own-share tender offer, 18.06.2026); cancellation notice of 12.06.2026 https://contents.xj-storage.jp/xcontents/AS82809/7ad356e2/14fa/4e59/9909/15b74e7937e2/140120260612569751.pdf p.1",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 36,637,388,800 USD, price 41 USD, 893,594,849 shares implied",
         "otherSources": "",
-        "checkerNote": "Corrected on 2026-11-04 by two independent checkers: the reason of 01.11. used 950.9 million net shares from 30.06.2026 and missed the tender offer of July; 893,595,079 shares outstanding, the count Yahoo uses on the Tokyo line. The ADR value stays wrong (one ADR is two shares, priced as one).",
+        "checkerNote": "Corrected on 2026-11-04 by two independent checkers: the reason of 01.11. used 950.9 million net shares from 30.06.2026 and missed the own-share tender offer (offer period 21.05. to 17.06.2026, settled 09.07.2026); 893,595,079 shares outstanding, the count Yahoo uses on the Tokyo line. The ADR value stays wrong (one ADR is two shares, priced as one).",
         "unit": "shares outstanding = 949,183,210 issued - (2,288,019 + 57,300,112 - 4,000,000) treasury = 893,595,079",
         "crossCheck": "https://www2.jpx.co.jp/disc/50160/140120260805510453.pdf 2 and 12 (Q1 tanshin of 06.08.2026): 953,183,210 issued and 2,288,019 treasury at 30.06.2026; settlement of the tender offer for 57,300,112 shares on 09.07.2026"
       },

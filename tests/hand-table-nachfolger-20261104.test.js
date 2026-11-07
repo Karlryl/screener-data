@@ -4,7 +4,7 @@
 // (issuerDedupComparator). A test of the held ticker alone cannot see whether that next listing is right: at Aroundtown the
 // stale Milan line 1AT1.MI took over 10.3 % high, at Deutz 1DEZ.MI 16.9 % high. The replay also found home lines with an old
 // Yahoo share count (Cipher Digital -8.9 %, Geekplus +4.4 % with its own shares counted) and a wrong checked value in a reason
-// (JX Advanced Metals, the tender offer of July missed); rows of 04.11. repair those.
+// (JX Advanced Metals, the tender offer settled in July missed); rows of 04.11. repair those.
 // This test replays the choice for every firm a row of 01.11. or 04.11. touches, on the stored snapshots of 31.10.2026
 // (run 41184535364), through the REAL lib/market-cap-guard.js and the REAL issuerDedupComparator, and holds the shown value
 // against the checked value of the firm:

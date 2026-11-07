@@ -29005,6 +29005,47 @@
           "verifiedAt": "2026-11-05"
         }
       ]
+    },
+    {
+      "caseId": "shriramfin.ns-2024-03-31-annualRev-20261107",
+      "ticker": "SHRIRAMFIN.NS",
+      "field": "annualRev",
+      "period": "2024-03-31",
+      "periodType": "12M",
+      "index": 2,
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 201582900000,
+      "replacementValue": 349644100000,
+      "revision": "2026-11-07-sdhand5",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.03.2024 liefert der Anbieter 201.582,90 Mio. INR. Der Anbieterwert ist nicht die gedruckte Umsatzsumme der Firma, er weicht in derselben Richtung bei jedem Quartal und Jahr ab. Die Firma meldet 349.644,10 Mio. INR (Total revenue from operations, Vergleichsspalte des Berichts für 2025, in derselben Darstellung wie die Jahre 2025 und 2026 ohne die im Dezember 2024 verkaufte Wohnungsbau-Tochter; der ursprüngliche Bericht von 2024 nannte mit ihr 363.795,20 Mio. INR). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://cdn.shriramfinance.in/sfl-kalam/files/2025-05/SFL_Quarterly-Results-Consolidated-March-2025.pdf",
+          "page": "6 (comparison column, year ended 31.03.2024, audited, restated: Shriram Housing Finance shown as discontinued operations)",
+          "quote": "(I) Total revenue from operations 11,454.23 10,698.31 9,483.71 41,834.42 34,964.41",
+          "filed": "2025-04-25",
+          "value": 349644100000,
+          "start": "2023-04-01",
+          "end": "2024-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0112f044-3199-49ea-945d-3377c12a6a6e.pdf",
+          "page": "23 (original audited consolidated results for the year ended 31.03.2024, before the restatement; not used as the value)",
+          "quote": "Total Revenue from operations 36,379.52",
+          "filed": "2024-04-26",
+          "value": 363795200000,
+          "start": "2023-04-01",
+          "end": "2024-03-31",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
     }
   ],
   "quarantines": [
