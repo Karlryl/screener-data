@@ -138,7 +138,8 @@ test('(f) every old key and its order are byte-identical to the pre-change expor
     const stripped = actual.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) =>
       // P184 appends independent shadows; the complete older mapping and its order remain frozen.
       // W8 (28.10.2026) adds two text-only reason keys (tests/export-w8-*.test.js); every other key stays frozen.
-      !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'ffoReason', 'revGrowthReason', ...G31_TRAILING_KEYS].includes(key))));
+      // 07.11.2026 adds the display-only acceleration basis label (tests/rev-acceleration-basis-label.test.js).
+      !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'ffoReason', 'revGrowthReason', 'revAccelerationBasis', ...G31_TRAILING_KEYS].includes(key))));
     assert.equal(JSON.stringify(stripped), JSON.stringify(baseline[mapper]), mapper);
     for (const row of actual.filter((r) => r.ticker !== 'P88-USD')) {
       assert.deepEqual(Object.keys(row).filter(k => !G31_TRAILING_KEYS.includes(k)).slice(-2), ['marketCapClassesShadow', 'marketCapClassesDeviationPct']);
@@ -260,7 +261,7 @@ test('Rule of 40: old keys byte-identical to origin/main, shadow passed through 
   // P134 adds source-period labels; exclude only these additions alongside the shadows from the frozen baseline.
   const stripped = rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key]) =>
     // P184 adds only these two trailing shadows to the unchanged legacy row.
-    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', ...G31_TRAILING_KEYS].includes(key))));
+    !['marketCapClassesShadow', 'marketCapClassesDeviationPct', 'revGrowthSourcePeriodEnd', 'revGrowthSourcePriorPeriodEnd', 'revAccelerationBasis', ...G31_TRAILING_KEYS].includes(key)))); // 07.11.2026: additive acceleration basis label
   assert.equal(JSON.stringify(stripped), JSON.stringify(fixture.before.rows));
   const byTicker = Object.fromEntries(rows.map((row) => [row.ticker, row]));
   assert.deepEqual(byTicker['688428.SS'].marketCapClassesShadow, shadow, 'on-board: same issuer value as the sector board');

@@ -74,7 +74,7 @@
   "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die elf gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
   "sourceFiles": {
     "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
-    "src/scoring/axes.js": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
+    "src/scoring/axes.js": "dfcb3111a4b76e472265803e5c43a7d2e56487636da18f40396ab07568f3ad28",
     "src/scoring/score.js": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29",
     "src/scoring/smallcap-route.js": "24cddc2d1a070bcc4fba4ef36e9d4ee372cdf50c780300681819119dab1307a4",
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
@@ -659,5 +659,14 @@
     "definitionAmendmentAt120Seal": "At the 1.2.0 seal, constants.cycleDamper and endFactors.cycle.rule in scripts/gqs00-freeze.js buildRegistry must describe the ramp (lo 0.8, hi 1.2, width 0.4) from the exported score.js constants. The version branch is implemented and tested in memory; the historical 1.1.0 registry and its verify comparison remain unchanged.",
     "evidence": "tests/scoring/cycle-ramp.test.js; scripts/cycle-ramp-compare.js; docs/zyklus-rampe-vorher-nachher-2026-11-04.md. Fixed 2026-10-31 R12 inputs, same calibration. Independent blind review outstanding.",
     "rollback": "Restore the previous cycle gate and remove its comparison additions and this registration together in a reviewed new commit; keep historical seals unchanged."
+  },
+  "revAccelerationBasisLabel": {
+    "date": "2026-11-07",
+    "scope": "Only the axes.js fingerprint. revAcceleration() reports through its existing onBasis callback the count of usable year-ago quarter comparisons and the age verdict of the newest one (onBasis(null, n, stale), before the branch), and the annual fallback reports onBasis(\"year\"). No value, branch, threshold, weight or calibration changes; the only other consumer (lib/annual-pairs.js) reads the basis string and ignores null and year. Read by scripts/write-findash-export.js revAccelerationBasis (display only).",
+    "file": "src/scoring/axes.js",
+    "previousSourceSha256LF": "743ffad02029511fb379ea1d296ba4fbf29c957f3b676ec11c472427b45cc52b",
+    "sourceSha256LF": "dfcb3111a4b76e472265803e5c43a7d2e56487636da18f40396ab07568f3ad28",
+    "goldenImpact": "None: all 25 sealed traces must rebuild unchanged.",
+    "evidence": "tests/rev-acceleration-basis-label.test.js; node scripts/gqs00-freeze.js --verify."
   }
 }

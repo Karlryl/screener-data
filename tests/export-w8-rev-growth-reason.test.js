@@ -85,7 +85,8 @@ check('R5 the key follows the growth fields and the FFO reason; the G31 keys sta
   const older = keys.filter((k) => !G31_TRAILING_KEYS.includes(k));
   assert.equal(older.at(-1), 'revGrowthReason');
   assert.equal(older.at(-2), 'ffoReason', 'WEWORK.NS has an empty FFO pill too');
-  assert.equal(older.at(-3), 'revGrowthSourcePriorPeriodEnd');
+  assert.equal(older.at(-3), 'revAccelerationBasis', 'the acceleration basis label (07.11.2026) follows the growth labels');
+  assert.equal(older.at(-4), 'revGrowthSourcePriorPeriodEnd');
   assert.deepEqual(keys.slice(-2), ['g31Shadow', 'g31OverviewShadow']);
   for (const k of G31_TRAILING_KEYS) if (keys.includes(k)) assert.ok(keys.indexOf(k) > keys.indexOf('revGrowthReason'), k);
 });
