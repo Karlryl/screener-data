@@ -379,5 +379,7 @@ test('the small-cap reference is frozen at its own data day (#88 review 07.11.20
   assert.equal(mismatch.status, 1); assert.match(mismatch.stderr, /RUN_DATE_UTC 2026-11-05 differs from --data-day 2026-10-31/);
   const bad = run(env, '31.10.2026');
   assert.equal(bad.status, 1); assert.match(bad.stderr, /--data-day must be YYYY-MM-DD/);
+  const impossible = run(env, '2026-02-30'); // review N4: the format passes, the day does not exist
+  assert.equal(impossible.status, 1); assert.match(impossible.stderr, /--data-day is not a calendar day: 2026-02-30/);
   assert.ok(!fs.existsSync(path.join(here, 'no-such-out.json')), 'nothing written');
 });

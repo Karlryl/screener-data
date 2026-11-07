@@ -15,6 +15,7 @@ const dataDay = arg('data-day');
 if (!/^\d{4}-\d{2}-\d{2}$/.test(dataDay)) throw new Error('--data-day must be YYYY-MM-DD: ' + dataDay);
 if (process.env.RUN_DATE_UTC && process.env.RUN_DATE_UTC.slice(0, 10) !== dataDay) throw new Error(`RUN_DATE_UTC ${process.env.RUN_DATE_UTC} differs from --data-day ${dataDay}`);
 process.env.RUN_DATE_UTC = dataDay;
+if (require('../lib/annual-pairs.js').dataDay() !== dataDay) throw new Error('--data-day is not a calendar day: ' + dataDay); // review N4: 2026-02-30 turned the rule off
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
