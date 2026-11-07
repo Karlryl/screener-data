@@ -522,6 +522,7 @@ function buildPit(snap, pitGaps, ticker) {
   // unbekannt sind, bleibt alles wie bisher — der Wert ist dann nicht verzerrt.
   const mischVerzerrt = mischVerhaeltnisUnkorrigiert(meta);
   if (mischVerzerrt) pitGaps.add('mischverhaeltnis-unkorrigiert');
+  if (meta.evCurrencyReading === 'withheld') pitGaps.add('evsales-lesart-zurueckgehalten'); // pull: no EV reading fits the definition
   const revEnds = validEnds(ts.revenueQEnds);
   const gpEnds = validEnds(ts.grossProfitQEnds);
   if (revEnds == null) pitGaps.add('revenueQEnds-missing');   // A10: parallel in pull-yahoo
@@ -2060,6 +2061,8 @@ function parseArgs(argv) {
 }
 
 if (require.main === module) {
+  // Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+  require('../lib/annual-pairs.js').requireDataDay(); // no --check mode here: parseArgs passes unknown switches on to the real write
   try {
     const opts = parseArgs(process.argv.slice(2));
     // BH-147: manuelles --date-Backfill ist Operator-Risiko (Audit: "manueller

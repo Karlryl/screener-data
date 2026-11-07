@@ -160,7 +160,8 @@ test('acceleration: the newest quarter pair it uses is judged for age on both wa
 
 test('a process that writes board numbers needs its data day; tests and tools do not (Codex R16)', () => {
   withDay(null, () => {
-    for (const entry of ['C:/x/src/scoring/run-screener.js', '/x/scripts/write-findash-export.js', 'C:\\x\\scripts\\write-filter-universe.js', '/x/scripts/write-board-history.js']) {
+    for (const entry of ['C:/x/src/scoring/run-screener.js', '/x/scripts/write-findash-export.js', 'C:\\x\\scripts\\write-filter-universe.js', '/x/scripts/write-board-history.js',
+      '/x/scripts/write-findash-export', 'C:\\X\\SCRIPTS\\WRITE-RULE40-EXPORT.JS']) { // started without .js, or in another case (review of 04.11.)
       assert.throws(() => P.requireDataDay(entry), /schreibt Board-Zahlen ohne gültiges RUN_DATE_UTC/, entry);
     }
     for (const entry of ['/x/scripts/write-findash-export.check.js', '/x/tests/stale-series-p286.test.js', '/x/scripts/gqs00-freeze.js', null]) P.requireDataDay(entry);
@@ -185,7 +186,43 @@ test('a masked series reaches every reader: growth leaves the old quarters, the 
     const live = belegPunkte(pkt(quarters('2026-09-30')).timeseries);
     assert.equal(live.qPunkte, 6);
     assert.ok(live.qSpanTage > 0, 'a live series keeps its span');
+    // Codex R22: without annual revenue the 2018 quarters stay as the proof of revenue, but count no evidence points or span.
+    const proof = P.maskStaleQuarterSeries(pkt(quarters('2018-06-30'), {}));
+    assert.equal(rows(proof, 'revenueQ').filter(Number.isFinite).length, 6, 'the proof stays in the series');
+    assert.deepEqual(belegPunkte(proof.timeseries), { qPunkte: 0, qSpanTage: null });
   });
+  withDay(null, () => assert.equal(belegPunkte(pkt(quarters('2018-06-30'), {}).timeseries).qPunkte, 6, 'without a data day nothing is judged'));
+});
+
+test('every board writer stops before reading a snapshot when RUN_DATE_UTC is missing (Codex R22: the export swallowed it)', () => {
+  const { spawnSync } = require('node:child_process');
+  const here = path.resolve(__dirname, '..');
+  const writers = ['write-findash-export', 'write-excluded-list', 'write-rule40-export', 'write-filter-universe', 'write-bewertung-export', 'write-board-history'];
+  const env = { ...process.env }; delete env.RUN_DATE_UTC; delete env.AGE_RULE_OFF;
+  for (const w of writers) {
+    // The check is the entry's first act, outside every catch; read first, so a missing check never starts a real write.
+    const src = fs.readFileSync(path.join(here, 'scripts', w + '.js'), 'utf8');
+    assert.equal(src.split("require('../lib/annual-pairs.js').requireDataDay()").length, 2, w + ': exactly one entry check');
+    const r = spawnSync(process.execPath, [path.join(here, 'scripts', w + '.js')], { cwd: here, env, encoding: 'utf8', timeout: 120000 });
+    assert.equal(r.status, 1, w + ' exit');
+    assert.match(r.stderr, /\[age-rule\] .* schreibt Board-Zahlen ohne gültiges RUN_DATE_UTC/, w);
+  }
+  // Codex R31: the scorer checked only on its first snapshot read, so an empty snapshots folder wrote empty outputs with exit 0.
+  const scorer = path.join(here, 'src', 'scoring', 'run-screener.js');
+  const scorerSrc = fs.readFileSync(scorer, 'utf8');
+  assert.equal(scorerSrc.split("if (require.main === module) {\n  require('../../lib/annual-pairs.js').requireDataDay();").length, 2, 'run-screener: the entry check is its first act');
+  const s = spawnSync(process.execPath, [scorer], { cwd: here, env, encoding: 'utf8', timeout: 120000 });
+  assert.equal(s.status, 1, 'run-screener exit');
+  assert.match(s.stderr, /\[age-rule\] run-screener\.js schreibt Board-Zahlen ohne gültiges RUN_DATE_UTC/);
+  // Every workflow that starts a writer gives it a data day or says on purpose that the rule is off (exchange-check-shadow).
+  const WRITER = /node (src\/scoring\/run-screener|scripts\/write-(findash-export|excluded-list|rule40-export|filter-universe|bewertung-export|board-history))\.js( |$)/m;
+  const dir = path.join(here, '.github', 'workflows');
+  const starting = fs.readdirSync(dir).filter(f => f.endsWith('.yml') && WRITER.test(fs.readFileSync(path.join(dir, f), 'utf8')));
+  assert.ok(starting.includes('daily-pull.yml') && starting.includes('exchange-check-shadow.yml'), starting.join(', '));
+  for (const f of starting) {
+    const y = fs.readFileSync(path.join(dir, f), 'utf8');
+    assert.ok(/^\s+RUN_DATE_UTC: \$\{\{/m.test(y) || /^\s+AGE_RULE_OFF: '1'$/m.test(y), f + ': no data day and no AGE_RULE_OFF');
+  }
 });
 
 test('prepareSnapshot applies it, the pull path does not', () => {

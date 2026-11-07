@@ -202,6 +202,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     if (evsCurrency) aus.push('evs-waehrung');
     const evsBad = sales.evs !== null && !evsCurrency && evImplausible(snapshot);
     if (evsBad) aus.push('evs-implausible');
+    // The pull found no reading that fits the definition and left the ratio empty: the field keeps its reason.
+    if (meta.evCurrencyReading === 'withheld') aus.push('evs-waehrung');
     const trailing = ratio('pe', mixed);
     const pe = finite(trailing) && trailing > 0 ? round(trailing) : null;
     // Same rule as pe: a zero or negative forward P/E is a forecast loss, not the cheapest stock; it stays missing.
@@ -390,5 +392,6 @@ function main(argv) {
   } catch (error) { console.error('[filter] ' + error.message); return 1; }
 }
 
-if (require.main === module) process.exitCode = main(process.argv.slice(2));
+// Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+if (require.main === module) { if (!process.argv.includes('--check')) require('../lib/annual-pairs.js').requireDataDay(); process.exitCode = main(process.argv.slice(2)); }
 module.exports = { evInReportingCurrency, evImplausible, GM_MAX_ABS_PCT, DY_MAX_PCT, PO_MAX_PCT, FPE_MIN, buildUniverse, growth3, salesMultiples, validateUniverse, build, main, ROW_KEYS, NUMBER_KEYS, MAX_BYTES };

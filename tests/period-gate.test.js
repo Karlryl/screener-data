@@ -263,8 +263,46 @@ check('hand-table hold keeps precedence: a held cell gives its own reason, not t
   assert.equal(v1.reason, 'Kein gültiges Wertepaar mit positivem Vorjahreswert vorhanden.');
 });
 
+check('PR #72 comparison until 04.12.2026: withoutPeriodGate shows the old growth and axes for one calculation and restores the gate', () => {
+  const far = dated(730);
+  assert.equal(G.g31Shadow(far).v1.pct, null, 'the gate empties a 730-day pair');
+  assert.equal(A.gpGrowth(far), null);
+  close(P.withoutPeriodGate(() => G.g31Shadow(far).v1.pct), 30);
+  close(P.withoutPeriodGate(() => A.gpGrowth(far)), 0.3);
+  assert.equal(G.g31Shadow(far).v1.pct, null, 'the gate is back after the comparison');
+  assert.equal(P.withoutPeriodGate(() => G.g31Shadow(dated(null)).v1.pct), null, 'a pair without an end stays empty in the comparison too');
+  assert.throws(() => P.withoutPeriodGate(() => { throw new Error('probe'); }), /probe/);
+  assert.equal(P.periodGateReason('year', END, minus(END, 730)), reason('30.06.2026', '30.06.2024', 730), 'and after a throw');
+  // The export field: the shown growth with its labels and the two score axes, without a score.
+  const { periodGateShadowForSnapshot } = require('../scripts/write-findash-export.js');
+  const shadow = periodGateShadowForSnapshot(far);
+  assert.deepEqual(Object.keys(shadow), ['growth', 'basis', 'periodEnd', 'priorPeriodEnd', 'gpAxis', 'accelerationAxis', 'capitalEfficiencyAxis']);
+  // The zero-year rule of the acceleration gate is part of the comparison too (review of 04.11.: OMU.JO, NBTX).
+  const zero = { meta: {}, timeseries: {}, annual: { annualRev: [130, 0, 100, 90].map(value => ({ value })), annualRevEnds: ['2025-12-31', '2024-12-31', '2023-12-31', '2022-12-31'] } };
+  assert.equal(A.revAcceleration(zero), null);
+  close(P.withoutPeriodGate(() => A.revAcceleration(zero)), 130 / 100 - 1 - (100 / 90 - 1));
+  close(shadow.growth, 30); close(shadow.gpAxis, 0.3); assert.equal(shadow.basis, 'year');
+  const near = periodGateShadowForSnapshot(dated(365));
+  close(near.growth, G.g31Shadow(dated(365)).v1.pct); close(near.gpAxis, A.gpGrowth(dated(365)));
+  assert.equal(periodGateShadowForSnapshot(null), null);
+});
+// Codex R31: the comparison ends on the data day 04.12.2026; the probe runs the row mapper before and after that day.
+const onDay = (day, fn) => { const old = process.env.RUN_DATE_UTC; process.env.RUN_DATE_UTC = day;
+  try { return fn(); } finally { if (old === undefined) delete process.env.RUN_DATE_UTC; else process.env.RUN_DATE_UTC = old; } };
+const shownOn = (api, day) => Object.hasOwn(onDay(day, () => api.mitAnnualPairsSchatten({ ticker: 'R31-NO-SNAPSHOT' })), 'periodGateShadow');
+check('periodGateShadow is shown up to 03.12.2026 and gone from the data day 04.12.2026', () => {
+  const W = require('../scripts/write-findash-export.js');
+  assert.equal(W.periodGateShadowShown('2026-12-03'), true); assert.equal(W.periodGateShadowShown('2026-12-04'), false);
+  assert.equal(shownOn(W, '2026-12-03'), true, 'last day with the comparison');
+  assert.equal(shownOn(W, '2026-12-04'), false, 'the field is gone on 04.12.2026');
+  assert.equal(shownOn(W, '2026-12-05'), false);
+  assert.ok(Object.hasOwn(onDay('2026-12-04', () => W.mitAnnualPairsSchatten({ ticker: 'R31-NO-SNAPSHOT' })), 'annualPairsShadow'), 'annualPairsShadow stays');
+});
+
 // Break-once: each gate line is disabled in a discarded in-memory copy; the real assertion must then fail.
 for (const [rel, anchor, mutant, probe] of [
+  ['../lib/annual-pairs.js', '  if (periodGateOff) return null;', '',
+    api => assert.equal(api.withoutPeriodGate(() => api.periodGateReason('year', END, minus(END, 730))), null, 'the comparison must see no gate')],
   ['../lib/annual-pairs.js', '  if (days >= window[0] && days <= window[1]) return null;', '  return null;',
     api => assert.equal(api.periodGateReason('quarter', END, minus(END, 91)), reason('30.06.2026', '31.03.2026', 91))],
   ['../lib/annual-pairs.js', "  if (older === null) return `Periodenende des Vorjahres fehlt (Zeitraum bis ${dayDe(end)}); Wachstum nicht gezeigt.`;", '  if (older === null) return null;',
@@ -275,7 +313,7 @@ for (const [rel, anchor, mutant, probe] of [
     api => assert.equal(api.sealedEraSnapshot({ meta: { ticker: 'NONFIXTURE', fetchedAt: '2026-08-19T00:00:00Z' } }), false, 'no fixture, no exemption')],
   ['../lib/annual-pairs.js', '  return isDeepStrictEqual({ annual: snapshot.annual, timeseries: snapshot.timeseries }, sealedStatements.get(id));', '  return true;',
     api => assert.equal(api.sealedEraSnapshot(ONE_CELL_OFF()), false, 'a fixture name over changed statements gets no exemption')],
-  ['../lib/annual-pairs.js', "  return pairs.every((pair) => pair.zeroIndex < 0 && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld));", '  return true;',
+  ['../lib/annual-pairs.js', "  return pairs.every((pair) => (periodGateOff || pair.zeroIndex < 0) && !axisPairBlocked(snapshot, 'annualRev', pair.iNew, pair.iOld)); // zero-year rule: part of the gate comparison", '  return true;',
     api => assert.equal(api.annualAccelerationGatePasses(ALK()), false)],
   ['../lib/g31-recency.js', '  if (gate) return missing(gate);', '',
     api => assert.equal(api.g31Shadow(dated(91)).v1.pct, null, '91-day pair must be empty')],
@@ -292,6 +330,8 @@ for (const [rel, anchor, mutant, probe] of [
     api => { const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'];
       assert.equal(api.revAcceleration({ annual: {}, timeseries: { revenueQ: [120, 110, 105, 102, 100, 90], revenueQEnds: ends },
         meta: { statementPeriods: { revenueQ: ends.map((end, i) => ({ end, duration: i === 4 ? '6M' : '3M' })) } } }), null, 'a 6M year-ago cell must not carry the axis'); }],
+  ['../scripts/write-findash-export.js', '  const shadow = periodGateShadowShown() ? { periodGateShadow: abl.periodGateShadow } : {}; // R31: gone from 04.12.2026', '  const shadow = { periodGateShadow: abl.periodGateShadow };',
+    api => assert.equal(shownOn(api, '2026-12-04'), false, 'the comparison must end on 04.12.2026')],
   ['../scripts/write-filter-universe.js', "  if (!ends[0] || !ends[3] || Math.abs(days - 3 * 365) > 30) return null;", '',
     api => assert.equal(api.growth3(DAIFUKU()), null, 'a 3.75-year span is no 3-year CAGR')],
 ]) {

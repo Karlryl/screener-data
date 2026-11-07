@@ -117,7 +117,7 @@ test('a changed vendor value is never replaced by the old correction', () => {
 });
 
 const CAP = {
-  '2590.HK': { shares: 1337286998, usd: 1036e6 },
+  '2590.HK': { shares: 1281656998, usd: 993e6 },
   '688428.SS': { shares: 860109566, usd: 3146e6 },
   'SOFF.OL': { shares: 82346796, usd: 629e6 },
   '003535.KS': { shares: 223091000, usd: 963e6 },

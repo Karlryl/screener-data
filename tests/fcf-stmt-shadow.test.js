@@ -176,9 +176,10 @@ check('D1 buildBoard: legacy shadow order stays fixed before trailing G31 fields
   // P184 appends separate shadows and the G31 switch its comparison fields; every older key keeps its order.
   const keys = Object.keys(row).filter(key => !require('../lib/g31-recency.js').G31_TRAILING_KEYS.includes(key));
   assert.deepEqual(Object.keys(row).slice(-2), ['g31Shadow', 'g31OverviewShadow']);
-  assert.equal(keys[keys.length - 1], 'fcfShadow');
-  assert.equal(keys[keys.length - 2], 'annualPairsShadow');
-  const { fcfShadow, annualPairsShadow, ...rest } = row;
+  // PR #72's comparison periodGateShadow sits between them until the data day 04.12.2026 (Codex R31), then it is gone.
+  const pg = W.periodGateShadowShown() ? ['periodGateShadow'] : [];
+  assert.deepEqual(keys.slice(-2 - pg.length), ['annualPairsShadow', ...pg, 'fcfShadow']);
+  const { fcfShadow, annualPairsShadow, periodGateShadow, ...rest } = row;
   const noAnnualPair = {
     code: 'no-annual-pair', reason: 'Die heutige Rechnung bildet für diese Achse kein Jahrespaar, daher ist kein Jahresvergleich zu prüfen.',
     distanceDays: null, priorLengthDays: null, today: null, shadow: null,

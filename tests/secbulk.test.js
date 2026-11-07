@@ -174,12 +174,12 @@ check('extractSecSeries schreibt je Jahr das spaeteste Einreichungsdatum mit', (
     facts: {
       'us-gaap': {
         Revenues: { units: { USD: [
-          { form: '10-K', fp: 'FY', fy: 2024, val: 1000, end: '2024-12-31', accn: 'a-1', filed: '2025-02-10' },
-          { form: '10-K', fp: 'FY', fy: 2023, val: 900, end: '2023-12-31', accn: 'a-0', filed: '2024-02-12' },
+          { form: '10-K', fp: 'FY', fy: 2024, val: 1000, start: '2024-01-01', end: '2024-12-31', accn: 'a-1', filed: '2025-02-10' },
+          { form: '10-K', fp: 'FY', fy: 2023, val: 900, start: '2023-01-01', end: '2023-12-31', accn: 'a-0', filed: '2024-02-12' },
         ] } },
         OperatingIncomeLoss: { units: { USD: [
           // NACHTRAEGLICH eingereicht: dieselbe Zeile war erst ab diesem Tag vollstaendig.
-          { form: '10-K', fp: 'FY', fy: 2024, val: 200, end: '2024-12-31', accn: 'a-1', filed: '2025-08-01' },
+          { form: '10-K', fp: 'FY', fy: 2024, val: 200, start: '2024-01-01', end: '2024-12-31', accn: 'a-1', filed: '2025-08-01' },
         ] } },
       },
       dei: {},
@@ -197,7 +197,7 @@ check('extractSecSeries schreibt je Jahr das spaeteste Einreichungsdatum mit', (
 
 check('fehlt das Einreichungsdatum, wird KEINES erfunden', () => {
   const cf = { facts: { 'us-gaap': { Revenues: { units: { USD: [
-    { form: '10-K', fp: 'FY', fy: 2024, val: 1000, end: '2024-12-31', accn: 'a-1' },
+    { form: '10-K', fp: 'FY', fy: 2024, val: 1000, start: '2024-01-01', end: '2024-12-31', accn: 'a-1' },
   ] } } }, dei: {} } };
   const s = extractSecSeries(cf);
   assert.equal(s.annual.annualFiled[0].value, null);

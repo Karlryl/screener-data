@@ -15,6 +15,18 @@ const live = ['lib/g31-recency.js', 'configs/g31-hinweise.json'];
 const hashes = () => live.map(f => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, f))).digest('hex'));
 const before = hashes();
 const snap = t => H.applyFinancialCases(structuredClone(F.snapshots[t])).snapshot;
+// The hand-table rows of 04.11.2026 (tests/hand-table-zahlen-20261104.test.js) put these three lenders on their filed quarters;
+// the lender guard is probed on the table without them, where only the vendor's unchecked quarter exists.
+const ZAHLEN2 = '2026-11-04-sdzahlen2';
+const preRows = structuredClone(H.table);
+const ownTickers = new Set(preRows.cases.filter(c => c.revision === ZAHLEN2).map(c => c.ticker));
+preRows.cases = preRows.cases.filter(c => c.revision !== ZAHLEN2);
+preRows.coverage = preRows.coverage.flatMap(v => {
+  if (!ownTickers.has(v.ticker)) return [v];
+  const left = preRows.cases.filter(c => c.ticker === v.ticker && c.field === v.field && c.replacementValue !== null).map(c => c.period).sort();
+  return left.length ? [{ ...v, coversThrough: left.at(-1) }] : [];
+});
+const lenderSnap = t => H.applyFinancialCases(structuredClone(F.snapshots[t]), { table: preRows }).snapshot;
 const close = (a, b) => assert.ok(Math.abs(a - b) < 0.01, `${a} != ${b}`);
 const GUARD = "  const mustBeFiled = reviewed || (s?.meta?.sector === 'Financial Services' && !EXCHANGE_CHECKED.test(s?.meta?.ticker || ''));";
 function mutant(anchor, replacement, stubs = {}) {
@@ -38,7 +50,7 @@ const withFill = t => {
 
 for (const [t, wrong] of [['SHRIRAMFIN.NS', 32.06], ['POONAWALLA.NS', 82.45], ['360ONE.NS', 35.54]]) {
   test(`${t}: a lender keeps the fiscal year; without the guard the unchecked vendor quarter shows ${wrong} %`, () => {
-    const s = snap(t), leg = G.g31Shadow(s).v1;
+    const s = lenderSnap(t), leg = G.g31Shadow(s).v1;
     assert.equal(leg.basis, 'year');
     assert.equal(leg.sourcePeriodEnd, '2026-03-31');
     const broken = mutant(GUARD, '  const mustBeFiled = reviewed;').g31Shadow(s).v1;
@@ -65,7 +77,7 @@ test('a non-financial firm is untouched: TCS.NS still takes the older pair, and 
 });
 
 test('a financial firm inside the exchange check is not stopped by this guard: the store decides there', () => {
-  const s = snap('SHRIRAMFIN.NS');
+  const s = lenderSnap('SHRIRAMFIN.NS');
   s.meta = { ...s.meta, ticker: '000001.SZ' };
   const agree = { './exchange-quarter-check.js': { stripOwn: x => x, defaultContext: () => ({}), evaluate: () => ({ category: 'agree', withhold: [], pairs: [{ status: 'agree', end: '2026-06-30', priorEnd: '2025-06-30' }] }) } };
   assert.equal(mutant(null, null, agree).g31Shadow(s).v1.sourcePeriodEnd, '2026-06-30');

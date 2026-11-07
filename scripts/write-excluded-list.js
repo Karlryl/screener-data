@@ -483,4 +483,5 @@ module.exports = {
   SCHEMA, OUT_FILE, INDEX_FILE, UNIVERSE_HASH_FILE, MODE_FILE, SEALED_CALIB_FILE,
 };
 
-if (require.main === module) main();
+// Codex R22 (04.11.2026): the data day first, before any snapshot is read and outside every catch.
+if (require.main === module) { require('../lib/annual-pairs.js').requireDataDay(); main(); }
