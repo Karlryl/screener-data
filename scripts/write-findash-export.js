@@ -1452,7 +1452,9 @@ function loadCoverage(file = COVERAGE) {
     n_addressable: m.n_addressable ?? null, n_ok: m.n_ok ?? null, n_total: m.n_total ?? null,
     n_failed: m.n_failed ?? null,
     // P316 finding 1: firms whose statements stay empty, with deadline and owner; the run check turns an overdue row into Karl's alarm.
-    reporting_ccy_held: Array.isArray(m.reporting_ccy_held) ? m.reporting_ccy_held : null };
+    reporting_ccy_held: Array.isArray(m.reporting_ccy_held) ? m.reporting_ccy_held : null,
+    // Codex R09 (04.11.): a missing shard may hold a further firm; the run check needs this to say a filled list may be incomplete.
+    manifest_partial: typeof m.manifest_partial === 'boolean' ? m.manifest_partial : null };
 }
 
 // seam (test seam, review 6a64562 N2): valueOpenItemsFile, now (run clock), sourceIndexFile. The CLI
