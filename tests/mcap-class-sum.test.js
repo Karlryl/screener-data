@@ -368,26 +368,33 @@ test('silent-failure sweep M1: ZTE with a stale quote on the A line stays on the
   assert.ok(Math.abs(guard.prepareMarketCap(snaps['0763.HK']).marketCap.value / 18.80e9 - 1) < 0.001);
 });
 
-test('silent-failure sweep M2: a bonus issue after the count day empties the sum with a reason instead of a silently wrong value', async () => {
-  // 10-for-10 bonus on the A line: Yahoo's total shares go from 4,783.5 M to 8,811.6 M, the A close halves.
-  const charts = structuredClone(ch.charts);
-  for (const q of charts['000063.SZ'].quotes) q.close /= 2;
-  const e = byIssuer('ZTE'), r = cs.computeClassSum(e, await market(charts), currencies, DAY);
-  const run = (mod) => { const snaps = firm(e); for (const t of ['000063.SZ', '0763.HK']) snaps[t].meta.impliedSharesOutstanding = 8811567240; return { out: mod.writeFirm(snaps, e, r, NOW), snaps }; };
-  const { out, snaps } = run(cs);
-  assert.ok(Math.abs(r.value / 10.37e9 - 1) < 0.01, 'the arithmetic sum is the wrong 10.37 bn USD');
-  assert.equal(out.shown, null); assert.equal(out.result.value, null);
-  assert.match(snaps['000063.SZ'].meta.marketCapReason, /weichen um 46 % von der Gesamtzahl bei Yahoo \(8\.811,6 Mio\.\) ab, vermutlich eine Kapitalmaßnahme nach dem Stichtag/);
-  // Today's packets pass: every firm has a Yahoo line within the band.
-  for (const f of entries) { const s = firm(f); assert.notEqual(cs.writeFirm(s, f, cs.computeClassSum(f, await market(), currencies, DAY), NOW).result.value, null, f.issuer); }
-  // Break-once on the code in memory: without the band the wrong 10.37 bn USD is written silently.
-  const file = path.join(root, 'lib/mcap-class-sum.js'), anchor = 'const SHARE_TOTAL_BAND = 0.2;';
-  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
-  assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor');
-  const Module = require('node:module'), m = new Module(file, module);
-  m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file));
-  m._compile(lines.map(l => (l === anchor ? 'const SHARE_TOTAL_BAND = Infinity;' : l)).join('\n'), file);
-  assert.ok(Math.abs(run(m.exports).snaps['000063.SZ'].marketCap.value / 10.37e9 - 1) < 0.01, 'the break-once did not let the wrong value through');
+test('silent-failure sweep M2, report only (master 07.11.): a vendor contradiction keeps the value and adds a hint and a log line', async () => {
+  // 10-for-10 bonus on the A line: Yahoo's total shares go from 4,783.5 M to 8,811.6 M on the carrier.
+  const e = byIssuer('ZTE'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
+  snaps['000063.SZ'].meta.impliedSharesOutstanding = 8811567240;
+  const out = cs.writeFirm(snaps, e, r, NOW);
+  assert.equal(out.shown, '000063.SZ'); assert.equal(snaps['000063.SZ'].marketCap.value, r.value, 'the value is never emptied by the contradiction');
+  assert.match(snaps['000063.SZ'].meta.marketCapReason, /Hinweis: Yahoo nennt für 000063\.SZ 8\.811,6 Mio\. Aktien insgesamt, belegt sind 4\.754,9 Mio\.; die Aktienzahlen sind zu prüfen/);
+  assert.equal(out.result.vendorHint.startsWith('Hinweis: Yahoo nennt für 000063.SZ'), true);
+  // Codex P1 on 8be40976f5: a matching old count on another line (0763.HK) no longer hides the carrier's contradiction.
+  assert.equal(snaps['0763.HK'].meta.impliedSharesOutstanding, 4783534887);
+  // Today: only Hua Hong's carrier differs beyond the share-count tolerance of 3 % (Yahoo 1,737.6 against 1,928.5 M).
+  const hinted = [];
+  for (const f of entries) { const s = firm(f); const o = cs.writeFirm(s, f, cs.computeClassSum(f, await market(), currencies, DAY), NOW); assert.notEqual(o.result.value, null, f.issuer); if (o.result.vendorHint) hinted.push(f.issuer); }
+  assert.deepEqual(hinted, ['Hua Hong Semiconductor Limited']);
+});
+
+test('Codex P2: every line stale empties the firm in the report too, and the stale lines lose their Yahoo price values in the filter', async () => {
+  const F = require('../scripts/write-filter-universe.js');
+  const e = byIssuer('Shandong Gold'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
+  quoted(snaps, '600547.SS', 18.11e9, '2026-10-20T07:00:00Z', null);
+  quoted(snaps, '1787.HK', 10.63e9, '2026-10-22T08:08:00Z', null);
+  snaps['1787.HK'].metrics = { ...snaps['1787.HK'].metrics, dividendYield: { value: 1.83 } };
+  const out = cs.writeFirm(snaps, e, r, NOW);
+  assert.equal(out.result.value, null, 'the report would count the firm as computed');
+  const row = F.buildUniverse({ snapshots: [guard.prepareMarketCap(snaps['1787.HK'])], generatedAt: '2026-11-07T10:15:00Z' }).rows.find(x => x.t === '1787.HK');
+  assert.equal(row.dy ?? null, null);
+  assert.ok(row.aus.includes('Dividendenrendite wird nicht gezeigt, die Kursmeldung von Yahoo vom 22.10.2026 ist zu alt.'), JSON.stringify(row.aus));
 });
 
 test('read time: the guard keeps the class-sum value and its reason in its copy', async () => {
@@ -405,7 +412,7 @@ test('the merge-job writer: a temp generation gets the sum on disk; the step sit
   for (const t of Object.keys(pk.snapshots)) fs.writeFileSync(path.join(dir, safeSnapshotFilename(t)), JSON.stringify(pulled(t)));
   const logged = [];
   const report = await cs.applyClassSums({ snapshotsDir: dir, dataDay: DAY, chart: stub(), now: NOW, log: (l) => logged.push(l) });
-  assert.deepEqual(logged, [], "a full sum logs no warning");
+  assert.deepEqual(logged, ['::warning::Hua Hong Semiconductor Limited: Hinweis: Yahoo nennt für 688347.SS 1.737,6 Mio. Aktien insgesamt, belegt sind 1.928,5 Mio.; die Aktienzahlen sind zu prüfen (etwa nach Gratisaktien oder einer Kapitalerhöhung).'], 'only the one vendor contradiction of 07.11. is logged');
   assert.equal(report.length, 24);
   assert.equal(report.filter(r => r.value === null).length, 0);
   const zte = JSON.parse(fs.readFileSync(path.join(dir, '000063.SZ.json'), 'utf8'));
