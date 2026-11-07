@@ -43,7 +43,8 @@ const leg = (t, alias) => { const s = structuredClone(F[t]); if (alias) s.meta.t
 // ticker, other listings, basis before and growth before (vendor), basis after, shown pair, growth after (filed operands).
 const ROWS = [
   ['SHRIRAMFIN.NS', [], 'year', 13.9, 'quarter', '2026-06-30', '2025-06-30', 16.1586],
-  ['360ONE.NS', ['360ONE.BO'], 'year', 19.06, 'quarter', '2026-06-30', '2025-06-30', 26.8483],
+  // 360 ONE June 2026 on the regrouped 1,223.30 crore of the report of 15.10.2026 (Codex T02, row updated 07.11.2026; was 26.8483).
+  ['360ONE.NS', ['360ONE.BO'], 'year', 19.06, 'quarter', '2026-06-30', '2025-06-30', 26.5596],
   ['TVSHLTD.BO', ['TVSHLTD.NS'], 'quarter', 34.01, 'quarter', '2026-06-30', '2025-06-30', 34.0129],
   ['NUVAMA.BO', ['NUVAMA.NS'], 'quarter', 22.59, 'quarter', '2026-06-30', '2025-06-30', 22.5867],
   ['SUNDARMFIN.NS', [], 'quarter', 12.57, 'quarter', '2026-06-30', '2025-06-30', 12.5674],
@@ -124,7 +125,7 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
   for (const c of own) {
     const [y, m, d] = c.period.split('-');
     assert.ok(c.reason.includes(`${d}.${m}.${y}`), c.caseId);
-    assert.match(c.reason, /Geprüft am 04\.11\.2026\.$/);
+    assert.match(c.reason, c.caseId === '360one.ns-2026-06-30-revenueQ-20261104' ? /Geprüft am 07\.11\.2026\.$/ : /Geprüft am 04\.11\.2026\.$/);
     assert.doesNotMatch(c.reason, /[–—]| - /, c.caseId);
     const s = c.sources[0];
     assert.ok(s.value === c.replacementValue && s.end === c.period && s.currency === c.currency && s.unit === 'currency' && /^\d{4}-\d{2}-01$/.test(s.start), c.caseId + ' leads with its exact source');
