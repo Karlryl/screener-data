@@ -3,6 +3,8 @@
   "scripts/g31-replay.js": { "mode": "exempt", "reason": "P184 offline report-only shadow replay prepares the same inputs in all arms; writes only into explicit isolated task directories, never published values." },
   "field-coverage.js": { "mode": "exempt", "reason": "Legacy coverage helper has no production caller; only its tests use it." },
   "lib/annual-currency-guard.js": { "mode": "upstream", "reason": "Pull calls this diagnostic after the native correction and FX conversion." },
+  "lib/annual-gap-fill.js": { "mode": "upstream", "reason": "P288 fill rule, pure and not wired: no production caller, its only caller scripts/annual-gap-fill-report.js passes prepared snapshots. Imports norm for the annual series; vendor quarters are read only through the exchange check's evaluate for the quarter-mismatch refusal." },
+  "scripts/annual-gap-fill-report.js": { "mode": "hook", "hook": "s = prepareSnapshot(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));", "reason": "P288 report-only measurement over prepared snapshots; writes only its --out file and never changes a published value." },
   "lib/e1-compression.js": { "mode": "exempt", "reason": "Comment-only hit: the module explicitly does not read quarterly arrays." },
   "lib/e2-earnings-blowout.js": { "mode": "exempt", "reason": "Reads frozen historical PIT observations; never retrofit historical inputs." },
   "lib/exchange-quarter-check.js": { "mode": "upstream", "reason": "Exchange cross-check step; prepareSnapshot calls it after the hand tables, it compares the original vendor cells with the exchange store." },
