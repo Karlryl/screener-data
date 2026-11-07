@@ -587,6 +587,8 @@ jobs:
     needs: prep
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 5
     steps:
       # T569-F7 (Review Tag 569): `cancelled` und `skipped` fielen bis Tag 571 in denselben
@@ -1773,6 +1775,8 @@ jobs:
     needs: [prep, merge]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 5
     steps:
       - name: Earnings-Transport pruefen (KV571-1)
@@ -1838,9 +1842,11 @@ jobs:
   # tests/weg-e-waechter-verdrahtung.test.js fest.
   # ============================================================================
   jahres-ausreisser-waechter:
-    needs: merge
+    needs: [prep, merge]
     if: ${{ always() && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -1901,6 +1907,11 @@ jobs:
     needs: [prep, pull, prices, merge]
     if: ${{ !cancelled() && needs.prep.result == 'success' && needs.pull.result == 'success' && needs.prices.result == 'success' && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+    # Relayed for the jobs behind scoring, so they read the same frozen day without a second edge to prep.
+    outputs:
+      run_date: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -2781,6 +2792,8 @@ jobs:
     needs: scoring
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.scoring.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -2866,6 +2879,8 @@ jobs:
     needs: scoring
     if: ${{ !cancelled() && needs.scoring.result == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.scoring.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -2896,6 +2911,8 @@ jobs:
     needs: [prep, entdeckungs-waechter, quarter-candidates, quarter-selection, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard, feed-fill-waechter]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
     timeout-minutes: 10
     steps:
       - name: Checkout

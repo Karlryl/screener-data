@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "note": "Exact fiscal-year cells of the committed SEC annual stores (external-data/sec-secannual*.json) that carry an as-filed figure on another basis than the neighbouring years. Each row names the exact as-filed value it replaces and a numeric annual case of configs/financial-known-cases.json, whose filed value and sources it takes. Applied by scripts/build-secannual.js and scripts/build-secannual-smallcap.js before the store is written (lib/sec-annual-corrections.js).",
+  "cases": [
+    {
+      "caseId": "gau-sec-2024-annualOpInc-20261107",
+      "ticker": "GAU",
+      "field": "annualOpInc",
+      "fiscalYear": 2024,
+      "expectedBadValue": 43607000,
+      "handCaseId": "gau-2024-12-31-annualOpInc-20261031",
+      "reason": "SEC-Jahresreihe korrigiert: Für das Geschäftsjahr 2024 (Ende 31.12.2024) steht in der SEC-Reihe das ursprünglich gemeldete Betriebsergebnis von 43,6 Mio. USD, ohne den Verlust aus Goldabsicherungen von 23,1 Mio. USD. Das Jahr 2025 steht dort schon in der neuen Darstellung mit Absicherungen; der angepasste Abschluss nennt für 2024 20,5 Mio. USD. Geprüft am 07.11.2026.",
+      "verifiedAt": "2026-11-07"
+    }
+  ]
+}

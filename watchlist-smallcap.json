@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 486,
+    "count": 483,
     "partial": false
   },
   "stocks": [
@@ -577,14 +577,6 @@
       "yahoo_symbol": "AMSF",
       "name": "AMERISAFE, Inc. - Common Stock",
       "marketCapUsd": 635554176,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "HELE",
-      "yahoo_symbol": "HELE",
-      "name": "Helen of Troy Limited - Common Stock",
-      "marketCapUsd": 635407424,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -1345,14 +1337,6 @@
       "yahoo_symbol": "ASPI",
       "name": "ASP Isotopes Inc. - Common Stock",
       "marketCapUsd": 536348704,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "TASK",
-      "yahoo_symbol": "TASK",
-      "name": "TaskUs, Inc. - Class A Common Stock",
-      "marketCapUsd": 534816736,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -2877,14 +2861,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "ENHA",
-      "yahoo_symbol": "ENHA",
-      "name": "Enhanced Group Inc. Class A Common Stock",
-      "marketCapUsd": 380825280,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "UPB",
       "yahoo_symbol": "UPB",
       "name": "Upstream Bio, Inc. - Common Stock",
@@ -3901,32 +3877,22 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-10-31T11:58:15.514Z",
+  "lastReconcile": "2026-11-07T12:47:41.416Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "OSPN",
+      "ticker": "HELE",
       "grund": "band-austritt-oben",
-      "mcap": 946720256
+      "mcap": 875511488
     },
     {
-      "ticker": "PRME",
+      "ticker": "TASK",
       "grund": "band-austritt-oben",
-      "mcap": 856098752
+      "mcap": 833840896
     },
     {
-      "ticker": "KIDS",
+      "ticker": "ENHA",
       "grund": "band-austritt-oben",
-      "mcap": 806030400
-    },
-    {
-      "ticker": "GDYN",
-      "grund": "band-austritt-oben",
-      "mcap": 1073744896
-    },
-    {
-      "ticker": "PACB",
-      "grund": "band-austritt-oben",
-      "mcap": 809714112
+      "mcap": 2280988928
     }
   ]
 }
