@@ -63,7 +63,9 @@ test('a changed vendor year never reaches the board: the year is withheld, not s
 test('row: one, appended last, exact sources, the restatement named, plain German', () => {
   const own = H.table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 1);
-  assert.equal(H.table.cases.at(-1), own[0], 'appended last');
+  // The Kioxia rows of the same day (revision 2026-11-07-sdhand5b) follow; only they.
+  const at = H.table.cases.indexOf(own[0]);
+  assert.deepEqual(H.table.cases.slice(at + 1).map(c => c.revision), Array(18).fill('2026-11-07-sdhand5b'), 'appended last');
   const c = own[0];
   assert.deepEqual([c.ticker, c.field, c.period, c.index, c.currency, c.expectedBadValue, c.replacementValue],
     [T, 'annualRev', '2024-03-31', 2, 'INR', 201582900000, filed]);

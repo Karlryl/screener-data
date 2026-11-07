@@ -92,7 +92,10 @@
     {"ticker": "LTF.BO", "listingAliases": ["LTF.NS"], "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "POONAWALLA.NS", "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "DHER.DE", "listingAliases": ["DHER.SW", "DHER.VI", "1DHER.MI"], "field": "revenueQ", "coversThrough": "2026-09-30"},
-    {"ticker": "KMX", "field": "opIncQ", "coversThrough": "2026-08-31"}
+    {"ticker": "KMX", "field": "opIncQ", "coversThrough": "2026-08-31"},
+    { "ticker": "285A.T", "field": "revenueQ", "coversThrough": "2026-09-30" },
+    { "ticker": "285A.T", "field": "grossProfitQ", "coversThrough": "2026-09-30" },
+    { "ticker": "285A.T", "field": "opIncQ", "coversThrough": "2026-09-30" }
   ],
   "cases": [
     {
@@ -29073,6 +29076,594 @@
           "end": "2024-03-31",
           "currency": "INR",
           "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-06-30-revenueQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 342799000000,
+      "replacementValue": 342799000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Umsatz bestätigt: Für das Quartal bis 30.06.2025 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (342,8 Mrd. JPY, Revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2671712/00.pdf",
+          "form": "Consolidated results for the three months ended June 30, 2025 (IFRS)",
+          "filed": "2025-08-08",
+          "page": "13 (three months ended June 30, 2025)",
+          "quote": "342,799 428,497",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 342799000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-09-30-revenueQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 448346000000,
+      "replacementValue": 448346000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Umsatz bestätigt: Für das Quartal bis 30.09.2025 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (448,3 Mrd. JPY, Revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2717197/00.pdf",
+          "form": "Consolidated results for the six months ended September 30, 2025 (IFRS)",
+          "filed": "2025-11-13",
+          "page": "15 (three months ended September 30, 2025)",
+          "quote": "448,346 480,911",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 448346000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-12-31-revenueQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 1334776000000,
+      "replacementValue": 543631000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Umsatz korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 1.334,8 Mrd. JPY, das ist der Wert der ersten neun Monate des Geschäftsjahres. Kioxia meldet für das Quartal 543,6 Mrd. JPY (Revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2757407/00.pdf",
+          "form": "Consolidated results for the nine months ended December 31, 2025 (IFRS)",
+          "filed": "2026-02-12",
+          "page": "16 (three months ended December 31, 2025)",
+          "quote": "543,631 449,958",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 543631000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-03-31-revenueQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 211707000000,
+      "replacementValue": 1002852000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Umsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 211,7 Mrd. JPY, abgeleitet aus dem Neunmonatswert. Kioxia meldet für das Geschäftsjahr 2.337,6 Mrd. JPY und für die ersten neun Monate 1.334,8 Mrd. JPY, das Quartal ergibt also 1.002,9 Mrd. JPY (Revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2815628/00.pdf",
+          "form": "Consolidated results for the fiscal year ended March 31, 2026 (IFRS)",
+          "filed": "2026-05-15",
+          "page": "15 (fiscal year ended March 31, 2026)",
+          "quote": "2,337,628 1,706,460",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "value": 2337628000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2757407/00.pdf",
+          "form": "Consolidated results for the nine months ended December 31, 2025 (IFRS)",
+          "filed": "2026-02-12",
+          "page": "14 (nine months ended December 31, 2025)",
+          "quote": "1,334,776 1,359,366",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "value": 1334776000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-06-30-revenueQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 1767117000000,
+      "replacementValue": 1767117000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Umsatz bestätigt: Für das Quartal bis 30.06.2026 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (1.767,1 Mrd. JPY, Revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2859908/00.pdf",
+          "form": "Consolidated results for the three months ended June 30, 2026 (IFRS)",
+          "filed": "2026-07-31",
+          "page": "12 (three months ended June 30, 2026)",
+          "quote": "1,767,117 342,799",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1767117000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-09-30-revenueQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 2480035000000,
+      "replacementValue": 2480035000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Umsatz bestätigt: Für das Quartal bis 30.09.2026 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (2.480,0 Mrd. JPY, Revenue). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2902678/00.pdf",
+          "form": "Consolidated results for the six months ended September 30, 2026 (IFRS)",
+          "filed": "2026-10-30",
+          "page": "15 (three months ended September 30, 2026)",
+          "quote": "2,480,035 448,346",
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "value": 2480035000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-06-30-grossProfitQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "grossProfitQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 71179000000,
+      "replacementValue": 71179000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Bruttogewinn bestätigt: Für das Quartal bis 30.06.2025 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (71,2 Mrd. JPY, Gross profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2671712/00.pdf",
+          "form": "Consolidated results for the three months ended June 30, 2025 (IFRS)",
+          "filed": "2025-08-08",
+          "page": "13 (three months ended June 30, 2025)",
+          "quote": "Gross profit 71,179",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 71179000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-09-30-grossProfitQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "grossProfitQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 122138000000,
+      "replacementValue": 122138000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Bruttogewinn bestätigt: Für das Quartal bis 30.09.2025 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (122,1 Mrd. JPY, Gross profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2717197/00.pdf",
+          "form": "Consolidated results for the six months ended September 30, 2025 (IFRS)",
+          "filed": "2025-11-13",
+          "page": "15 (three months ended September 30, 2025)",
+          "quote": "122,138 196,451",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 122138000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-12-31-grossProfitQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "grossProfitQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 369957000000,
+      "replacementValue": 176640000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Bruttogewinn korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 370,0 Mrd. JPY, das ist der Wert der ersten neun Monate des Geschäftsjahres. Kioxia meldet für das Quartal 176,6 Mrd. JPY (Gross profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2757407/00.pdf",
+          "form": "Consolidated results for the nine months ended December 31, 2025 (IFRS)",
+          "filed": "2026-02-12",
+          "page": "16 (three months ended December 31, 2025)",
+          "quote": "176,640 152,374",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 176640000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-03-31-grossProfitQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "grossProfitQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 449630000000,
+      "replacementValue": 642947000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Bruttogewinn korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 449,6 Mrd. JPY, abgeleitet aus dem Neunmonatswert. Kioxia meldet für das Geschäftsjahr 1.012,9 Mrd. JPY und für die ersten neun Monate 370,0 Mrd. JPY, das Quartal ergibt also 642,9 Mrd. JPY (Gross profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2815628/00.pdf",
+          "form": "Consolidated results for the fiscal year ended March 31, 2026 (IFRS)",
+          "filed": "2026-05-15",
+          "page": "15 (fiscal year ended March 31, 2026)",
+          "quote": "Gross profit 1,012,904",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "value": 1012904000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2757407/00.pdf",
+          "form": "Consolidated results for the nine months ended December 31, 2025 (IFRS)",
+          "filed": "2026-02-12",
+          "page": "14 (nine months ended December 31, 2025)",
+          "quote": "369,957 505,417",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "value": 369957000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-06-30-grossProfitQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "grossProfitQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 1380066000000,
+      "replacementValue": 1380066000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Bruttogewinn bestätigt: Für das Quartal bis 30.06.2026 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (1.380,1 Mrd. JPY, Gross profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2859908/00.pdf",
+          "form": "Consolidated results for the three months ended June 30, 2026 (IFRS)",
+          "filed": "2026-07-31",
+          "page": "12 (three months ended June 30, 2026)",
+          "quote": "1,380,066 71,179",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1380066000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-09-30-grossProfitQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "grossProfitQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 2053163000000,
+      "replacementValue": 2053163000000,
+      "verifiedAt": "2026-11-07",
+      "reason": "Bruttogewinn bestätigt: Für das Quartal bis 30.09.2026 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (2.053,2 Mrd. JPY, Gross profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2902678/00.pdf",
+          "form": "Consolidated results for the six months ended September 30, 2026 (IFRS)",
+          "filed": "2026-10-30",
+          "page": "15 (three months ended September 30, 2026)",
+          "quote": "Gross profit 2,053,163",
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "value": 2053163000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-06-30-opIncQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "opIncQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 44899000000,
+      "replacementValue": 44899000000,
+      "metricDefinition": "Operating profit (IFRS)",
+      "verifiedAt": "2026-11-07",
+      "reason": "Betriebsergebnis bestätigt: Für das Quartal bis 30.06.2025 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (44,9 Mrd. JPY, Operating profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2671712/00.pdf",
+          "form": "Consolidated results for the three months ended June 30, 2025 (IFRS)",
+          "filed": "2025-08-08",
+          "page": "13 (three months ended June 30, 2025)",
+          "quote": "Operating profit 44,899 125,859",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 44899000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-09-30-opIncQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "opIncQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 85921000000,
+      "replacementValue": 85921000000,
+      "metricDefinition": "Operating profit (IFRS)",
+      "verifiedAt": "2026-11-07",
+      "reason": "Betriebsergebnis bestätigt: Für das Quartal bis 30.09.2025 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (85,9 Mrd. JPY, Operating profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2717197/00.pdf",
+          "form": "Consolidated results for the six months ended September 30, 2025 (IFRS)",
+          "filed": "2025-11-13",
+          "page": "15 (three months ended September 30, 2025)",
+          "quote": "Operating profit 85,921 166,032",
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "value": 85921000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2025-12-31-opIncQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "opIncQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 273574000000,
+      "replacementValue": 142754000000,
+      "metricDefinition": "Operating profit (IFRS)",
+      "verifiedAt": "2026-11-07",
+      "reason": "Betriebsergebnis korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 273,6 Mrd. JPY, das ist der Wert der ersten neun Monate des Geschäftsjahres. Kioxia meldet für das Quartal 142,8 Mrd. JPY (Operating profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2757407/00.pdf",
+          "form": "Consolidated results for the nine months ended December 31, 2025 (IFRS)",
+          "filed": "2026-02-12",
+          "page": "16 (three months ended December 31, 2025)",
+          "quote": "Operating profit 142,754 122,715",
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "value": 142754000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-03-31-opIncQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "opIncQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 465975000000,
+      "replacementValue": 596795000000,
+      "metricDefinition": "Operating profit (IFRS)",
+      "verifiedAt": "2026-11-07",
+      "reason": "Betriebsergebnis korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 466,0 Mrd. JPY, abgeleitet aus dem Neunmonatswert. Kioxia meldet für das Geschäftsjahr 870,4 Mrd. JPY und für die ersten neun Monate 273,6 Mrd. JPY, das Quartal ergibt also 596,8 Mrd. JPY (Operating profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2815628/00.pdf",
+          "form": "Consolidated results for the fiscal year ended March 31, 2026 (IFRS)",
+          "filed": "2026-05-15",
+          "page": "15 (fiscal year ended March 31, 2026)",
+          "quote": "Operating profit 870,369 451,748",
+          "start": "2025-04-01",
+          "end": "2026-03-31",
+          "value": 870369000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2757407/00.pdf",
+          "form": "Consolidated results for the nine months ended December 31, 2025 (IFRS)",
+          "filed": "2026-02-12",
+          "page": "14 (nine months ended December 31, 2025)",
+          "quote": "Operating profit 273,574 414,606",
+          "start": "2025-04-01",
+          "end": "2025-12-31",
+          "value": 273574000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-06-30-opIncQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "opIncQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 1270017000000,
+      "replacementValue": 1270017000000,
+      "metricDefinition": "Operating profit (IFRS)",
+      "verifiedAt": "2026-11-07",
+      "reason": "Betriebsergebnis bestätigt: Für das Quartal bis 30.06.2026 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (1.270,0 Mrd. JPY, Operating profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2859908/00.pdf",
+          "form": "Consolidated results for the three months ended June 30, 2026 (IFRS)",
+          "filed": "2026-07-31",
+          "page": "12 (three months ended June 30, 2026)",
+          "quote": "Operating profit 1,270,017 44,899",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 1270017000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "285a.t-2026-09-30-opIncQ-20261107",
+      "revision": "2026-11-07-sdhand5b",
+      "ticker": "285A.T",
+      "field": "opIncQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "JPY",
+      "unit": "currency",
+      "expectedBadValue": 1994710000000,
+      "replacementValue": 1994710000000,
+      "metricDefinition": "Operating profit (IFRS)",
+      "verifiedAt": "2026-11-07",
+      "reason": "Betriebsergebnis bestätigt: Für das Quartal bis 30.09.2026 stimmt der Anbieterwert mit dem Bericht von Kioxia überein (1.994,7 Mrd. JPY, Operating profit). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2902678/00.pdf",
+          "form": "Consolidated results for the six months ended September 30, 2026 (IFRS)",
+          "filed": "2026-10-30",
+          "page": "15 (three months ended September 30, 2026)",
+          "quote": "Operating profit 1,994,710 85,921",
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "value": 1994710000000,
+          "currency": "JPY",
+          "unit": "currency",
+          "sourceUnit": "JPY millions",
           "verifiedAt": "2026-11-07"
         }
       ]
