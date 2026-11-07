@@ -44,7 +44,10 @@ test('with the rows: Operating Revenues as printed, the unread December quarter 
 test('rows: four, appended last, sources quote the printed total, plain German', () => {
   const own = H.table.cases.filter(c => c.revision === REV);
   assert.equal(own.length, 4);
-  assert.deepEqual(H.table.cases.slice(-4), own, 'appended last');
+  const at = H.table.cases.indexOf(own[0]);
+  assert.deepEqual(H.table.cases.slice(at, at + 4), own, 'one block');
+  // Only the three Gujarat Energy quarters of sd-hand-7 (tests/hand-table-boardtiefe-20261107.test.js) follow.
+  assert.deepEqual(H.table.cases.slice(at + 4).map(c => c.revision), Array(3).fill('2026-11-07-sdhand7b'), 'appended last');
   assert.equal(H.table.coverage.find(v => v.ticker === 'TLN' && v.field === 'revenueQ').coversThrough, '2026-06-30');
   for (const c of own) {
     assert.ok(c.sources.every(s => /^Operating Revenues /.test(s.quote) && s.filed && s.page), c.caseId);
