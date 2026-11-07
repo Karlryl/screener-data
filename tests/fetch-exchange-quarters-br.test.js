@@ -265,14 +265,14 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
 
   await t('br-shadow-report: one rate per pull makes the comparison currency-neutral; categories', () => {
     const store = { tickers: { 'WEGE3.SA': { cnpj: WEG, cls: 'ON' } }, companies: { [WEG]: { docs: {
-      'ITR 2026-06-30': [{ received: '2026-07-22', basis: 'con', revenueLabel: 'Receita de Venda de Bens e/ou Serviços', values: { '3.01 2026-04-01': 10143555000, '3.11 2026-04-01': 0 } }],
+      'ITR 2026-06-30': [{ received: '2026-07-22', basis: 'con', revenueLabel: 'Receita de Venda de Bens e/ou Serviços', values: { '3.01 2026-04-01': 10143555000, '3.03 2026-04-01': 0, '3.11 2026-04-01': 1600000000, '3.11.01 2026-04-01': 1558636300 } }],
       'ITR 2026-09-30': [{ received: '2026-10-21', basis: 'con', values: { '3.01 2026-07-01': 10500000000 } }],
       'ITR 2025-09-30': [{ received: '2025-10-22', basis: 'con', values: { '3.01 2025-07-01': 9000000000 } }],
       'ITR 2025-06-30': [{ received: '2025-07-23', basis: 'con', values: { '3.01 2025-04-01': 5000000000 } }],
     } } } };
     const snap = { meta: { ticker: 'WEGE3.SA', reportingCurrency: 'USD', reportingCurrencyOriginal: 'BRL', fxConverted: true, fxRateApplied: 0.19428794 },
       timeseries: { revenueQ: [{ value: 1970770405.2266998 }, { value: 1839579028 }, { value: 1983141106.94238 }], revenueQEnds: ['2026-06-30', '2025-12-31', '2025-06-30'],
-        netIncomeQ: [{ value: 302823594 }], netIncomeQEnds: ['2026-06-30'] } };
+        netIncomeQ: [{ value: 302823594 }], netIncomeQEnds: ['2026-06-30'], grossProfitQ: [{ value: 655250649 }], grossProfitQEnds: ['2026-06-30'] } };
     const r = compareTicker(snap, store, 0.01);
     const cat = (field, end) => r.cells.find((c) => c.field === field && c.end === end).cat;
     assert.equal(r.stratum, 'general');
@@ -281,7 +281,8 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.equal(cat('revenueQ', '2025-09-30'), 'cvm-only', 'the gap inside the Yahoo span');
     assert.equal(cat('revenueQ', '2025-12-31'), 'yahoo-only');
     assert.equal(cat('revenueQ', '2025-06-30'), 'disagree');
-    assert.equal(cat('netIncomeQ', '2026-06-30'), 'cvm-zero');
+    assert.equal(cat('netIncomeQ', '2026-06-30'), 'agree', 'Yahoo net income is the parent owners part (3.11.01), not 3.11 with minorities');
+    assert.equal(cat('grossProfitQ', '2026-06-30'), 'cvm-zero');
     assert.match(compareTicker({ meta: { ...snap.meta, ticker: 'XXXX3.SA' } }, store, 0.01).unchecked, /not in the CVM ticker map/);
     assert.match(compareTicker({ meta: { ...snap.meta, reportingCurrencyOriginal: 'USD', reportingCurrency: 'USD' } }, store, 0.01).unchecked, /statement currency USD/);
   });

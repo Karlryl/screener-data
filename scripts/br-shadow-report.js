@@ -19,7 +19,8 @@
  *   yahoo-only      Yahoo has it, CVM not
  * Fields: revenueQ ~ 3.01, grossProfitQ ~ 3.03, opIncQ ~ 3.05 (EBIT before financial result; Yahoo's
  * operating income may exclude equity-method or other items, so disagreement there is expected and
- * measured, not judged), netIncomeQ ~ 3.11 (consolidated, including minorities).
+ * measured, not judged), netIncomeQ ~ 3.11.01 (attributable to the parent's owners, as Yahoo shows it),
+ * else 3.11 (consolidated; the only line of a company without minorities).
  *   cvm-zero        CVM files 0 on the line (holding or insurer without a sales line), Yahoo shows a figure
  * Banks and insurers (3.01 label "intermediação"/"segur..."/"prêmio") are reported as stratum financial.
  */
@@ -28,7 +29,7 @@ const path = require('path');
 const S = require('../lib/exchange-quarter-store.js');
 
 const ROOT = path.join(__dirname, '..');
-const FIELDS = [['revenueQ', 'rev'], ['grossProfitQ', 'gp'], ['opIncQ', 'ebit'], ['netIncomeQ', 'ni']];
+const FIELDS = [['revenueQ', 'rev'], ['grossProfitQ', 'gp'], ['opIncQ', 'ebit'], ['netIncomeQ', 'niParent', 'ni']];
 const FINANCIAL = /intermedia|segur|prêmio|previd/i;
 const valueOf = (c) => (c && typeof c === 'object' ? c.value : c);
 
@@ -49,17 +50,17 @@ function compareTicker(snap, store, tolerance) {
   const label = (docs.find((o) => o.revenueLabel) || {}).revenueLabel || null;
   const out = { ticker: tk, cnpj: m.cnpj, cls: m.cls, stratum: label && FINANCIAL.test(label) ? 'financial' : 'general', fx, cells: [] };
   const ts = snap.timeseries || {};
-  for (const [field, f] of FIELDS) {
+  for (const [field, f, fallback] of FIELDS) {
     const vals = ts[field] || [];
     const ends = ts[field + 'Ends'] || ts.revenueQEnds || [];
     const y = new Map();
     ends.forEach((e, i) => { const v = valueOf(vals[i]); if (e) y.set(e, Number.isFinite(v) ? v : null); });
     const ySorted = [...y.keys()].sort();
     const oldest = ySorted[0], newest = ySorted[ySorted.length - 1];
-    const allEnds = new Set([...y.keys(), ...Object.keys(q).filter((e) => q[e][f] && oldest && e >= oldest)]);
+    const allEnds = new Set([...y.keys(), ...Object.keys(q).filter((e) => (q[e][f] || (fallback && q[e][fallback])) && oldest && e >= oldest)]);
     for (const e of [...allEnds].sort().reverse()) {
       const yv = y.has(e) ? y.get(e) : null;
-      const c = q[e] && q[e][f];
+      const c = q[e] && (q[e][f] || (fallback && q[e][fallback]));
       const cv = c ? c.value * fx : null;
       let cat;
       if (c && yv != null) cat = cv === yv || Math.abs(cv / yv - 1) <= tolerance ? 'agree' : cv === 0 ? 'cvm-zero' : 'disagree';
