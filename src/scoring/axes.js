@@ -251,6 +251,8 @@ function revAcceleration(s, bounds, onBasis) {
   // P286 (Codex R16, 04.11.2026): the newest pair actually used is judged for age like a shown quarter pair. A stale one leaves
   // the quarterly branch to the annual fallback and its own anchor check; the older comparison pair is old by nature.
   const stale = newest !== null && !sealedEraSnapshot(s) && staleReason('quarter', (s.timeseries || {}).revenueQEnds?.[newest]);
+  // Basis label (07.11.2026, export only): the count of usable year-ago quarter comparisons and the age verdict, before the branch.
+  if (onBasis) onBasis(null, yoy.length, Boolean(stale));
   if (yoy.length >= 2 && !stale) {
     if (onBasis) onBasis('quarter');
     return yoy[0] - yoy[yoy.length - 1];
@@ -283,7 +285,10 @@ function revAcceleration(s, bounds, onBasis) {
     if (!annualAccelerationGatePasses(s)) return null;
     const neu = clampWinsor(ar[0] / ar[1] - 1, bounds);
     const alt = clampWinsor(ar[1] / ar[2] - 1, bounds);
-    if (Number.isFinite(neu) && Number.isFinite(alt)) return neu - alt;
+    if (Number.isFinite(neu) && Number.isFinite(alt)) {
+      if (onBasis) onBasis('year');
+      return neu - alt;
+    }
   }
   return null;
 }
