@@ -49,9 +49,9 @@ test('603991.SS: the September quarter carries the source-checked AAMI hint, the
   assert.equal((G.g31Hinweis(other)?.reason || '').includes('AAMI'), false);
 }));
 
-test('DNO.OL, ETERNAL.BO, ETERNAL.NS and 002077.SZ keep the checked hint on the shown June pair, with the older-pair label', () => withStore(() => {
+test('DNO.OL, ETERNAL.BO and ETERNAL.NS keep the checked hint on the shown June pair, with the older-pair label', () => withStore(() => {
   const want = { 'DNO.OL': ['uebernahme', 194.77, /Sval/], 'ETERNAL.BO': ['bilanzierungswechsel', 182, /Warenbestand/],
-    'ETERNAL.NS': ['bilanzierungswechsel', 182, /Warenbestand/], '002077.SZ': ['uebernahme', 35.43, /艾科集成/] };
+    'ETERNAL.NS': ['bilanzierungswechsel', 182, /Warenbestand/] };
   for (const [t, [code, pct, text]] of Object.entries(want)) {
     const s = prepared(t), v = G.g31Shadow(s).v1;
     assert.deepEqual([v.basis, v.sourcePeriodEnd, v.sourcePriorPeriodEnd], ['quarter', '2026-06-30', '2025-06-30'], t);
@@ -64,6 +64,21 @@ test('DNO.OL, ETERNAL.BO, ETERNAL.NS and 002077.SZ keep the checked hint on the 
     const without = g31With(table.entries.filter(e => e !== checked));
     assert.equal(without.g31Hinweis(s).code, 'aelteres-quartalspaar', t + ' red without the row');
   }
+}));
+
+// sd-quellen 07.11.2026 (PR #124): 002077.SZ had no row in the baseline vintage 2026-07-29, so its empty vendor cell
+// 2025-09-30 was not filled and the board showed the June pair (+35.43 %, checked hint 艾科集成). The exchange fill now
+// applies on the agreement of its other 2025 vendor quarters: the board shows the September pair from the filing, and
+// the June-bound hint row lapses (no row for 2026-09-30 exists; whether the acquisition still distorts the September
+// pair is an open hand-table check).
+test('002077.SZ: the exchange fill without a July baseline row shows the September pair; the June-bound hint lapses', () => withStore(() => {
+  const r = X.applyExchangeCheck(structuredClone(F.snapshots['002077.SZ']), { mode: 'fill-only', context: context() });
+  assert.equal(r.result.category, 'would-fill');
+  assert.equal(r.result.fill.baseline, 'exchange-agreement');
+  const v = G.g31Shadow(r.snapshot).v1;
+  assert.deepEqual([v.basis, v.sourcePeriodEnd, v.sourcePriorPeriodEnd], ['quarter', '2026-09-30', '2025-09-30']);
+  assert.ok(Math.abs(v.pct - 19.04) < 0.005, String(v.pct));
+  assert.equal(G.g31Hinweis(r.snapshot), null, 'the June row does not carry over to September');
 }));
 
 test('hint rows of this round: exact pairs, https sources with page and quote, dated check; the new code is admitted, others are not', () => {
