@@ -88,6 +88,14 @@ test('Chennai: the omitted quarter is inserted between its neighbours, every pos
   // Statement periods on other ends: no insert (blind review N1).
   const off = pkt('CHENNPETRO.NS'); off.meta.statementPeriods = { revenueQ: off.timeseries.revenueQEnds.map(e => ({ end: e === '2025-06-30' ? '2025-03-31' : e })) };
   assert.ok(!H.applyFinancialCases(off, { table: active }).snapshot.timeseries.revenueQEnds.includes('2025-09-30'));
+  // netIncomeQ periods on other ends (it already holds 30.09.2025) and a netIncomeQ shorter than revenueQ: no insert (review round 2).
+  const niOff = pkt('CHENNPETRO.NS'); niOff.meta.statementPeriods = { netIncomeQ: ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30'].map(end => ({ end })) };
+  assert.ok(!H.applyFinancialCases(niOff, { table: active }).snapshot.timeseries.revenueQEnds.includes('2025-09-30'));
+  const niShort = pkt('CHENNPETRO.NS'); niShort.timeseries.netIncomeQ = niShort.timeseries.netIncomeQ.slice(0, -1);
+  assert.ok(!H.applyFinancialCases(niShort, { table: active }).snapshot.timeseries.revenueQEnds.includes('2025-09-30'));
+  // A quarter older than the oldest vendor quarter is no interior gap: nothing changes.
+  const old = pkt('CHENNPETRO.NS'); for (const k of ['revenueQ', 'grossProfitQ', 'opIncQ']) { old.timeseries[k] = old.timeseries[k].slice(0, 4); old.timeseries[k + 'Ends'] = old.timeseries[k + 'Ends'].slice(0, 4); } old.timeseries.netIncomeQ = old.timeseries.netIncomeQ.slice(0, 4);
+  assert.ok(!H.applyFinancialCases(old, { table: active }).snapshot.timeseries.revenueQEnds.includes('2025-09-30'));
 });
 
 test('Chennai fiscal years on the filed line: +10.64 % instead of the vendor +7.22 %, older vendor years withheld', () => {
