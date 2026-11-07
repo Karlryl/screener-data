@@ -63,16 +63,28 @@ test('a revenue of 0 is no report (3993.HK: 0 for 2026-09-30 would show -100 %)'
 });
 
 test('R23-2 real Sichuan Expressway (31.10.2026): the H share carries the A share figures and gets its exchange gate, shown and compared alike', () => {
-  const { g31Shadow } = require('../lib/g31-recency.js');
-  const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
-  const X = require('../lib/exchange-quarter-check.js');
-  const read = (t) => prepareSnapshot(JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'home-listing', t + '.json'), 'utf8')), { atPull: true });
-  const h = { ticker: '0107.HK', snapshot: read('0107.HK') }, a = { ticker: '601107.SS', snapshot: read('601107.SS') };
-  assert.deepEqual(X.exchangeSiblings(X.stripOwn(h.snapshot), X.defaultContext()), ['601107.SS'], 'linked by the figures');
+  // A frozen store extract (601107.SS only), read in a child process: the committed store grows every day.
+  const { spawnSync } = require('node:child_process');
+  const fx = path.join(__dirname, 'fixtures', 'home-listing');
+  const probe = `
+    const path = require('path'), fs = require('fs'), root = ${JSON.stringify(path.join(__dirname, '..'))}, fx = ${JSON.stringify(fx)};
+    console.log = () => {}; console.warn = () => {};
+    const { g31Shadow } = require(path.join(root, 'lib/g31-recency.js'));
+    const { prepareSnapshot } = require(path.join(root, 'lib/yahoo-q4-known-cases.js'));
+    const X = require(path.join(root, 'lib/exchange-quarter-check.js'));
+    const { shownGrowthMonth } = require(path.join(root, 'lib/home-listing.js'));
+    const read = (t) => prepareSnapshot(JSON.parse(fs.readFileSync(path.join(fx, t + '.json'), 'utf8')), { atPull: true });
+    const h = read('0107.HK'), a = read('601107.SS'), v = (s) => g31Shadow(s).v1;
+    process.stdout.write(JSON.stringify({ siblings: X.exchangeSiblings(X.stripOwn(h), X.defaultContext()), ends: [v(h).periodEnd, v(a).periodEnd],
+      pct: [v(h).pct, v(a).pct], months: [shownGrowthMonth(h), shownGrowthMonth(a)] }));`;
+  const r = spawnSync(process.execPath, ['-e', probe], { env: { ...process.env, EXCHANGE_QUARTERS_DIR: path.join(fx, 'exchange-store') }, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const got = JSON.parse(r.stdout);
+  assert.deepEqual(got.siblings, ['601107.SS'], 'linked by the figures');
   // Before: the H share showed +11.31 % for June 2026, a pair the exchange check withholds on the A share.
-  assert.deepEqual([g31Shadow(h.snapshot).v1.periodEnd, g31Shadow(a.snapshot).v1.periodEnd], ['2025-12-31', '2025-12-31']);
-  assert.equal(g31Shadow(h.snapshot).v1.pct, g31Shadow(a.snapshot).v1.pct);
-  assert.deepEqual([shownGrowthMonth(h.snapshot), shownGrowthMonth(a.snapshot)], ['2025-12', '2025-12']);
+  assert.deepEqual(got.ends, ['2025-12-31', '2025-12-31']);
+  assert.equal(got.pct[0], got.pct[1]);
+  assert.deepEqual(got.months, ['2025-12', '2025-12']);
 });
 
 test('R23-2 no country rule: the same figures give the same months in China, Hong Kong, Switzerland or without a country', () => {

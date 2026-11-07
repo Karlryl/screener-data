@@ -361,7 +361,8 @@ function dedupCoverage(e) {
   e._dedupCoverage = { n, m, rankable: rankCapable(n, m) };
   return e._dedupCoverage;
 }
-// Each key is a function of one leg alone, so the order stays total. Unknown coverage counts as full: it then never decides.
+// Each key is a function of one leg alone, so the order stays total. Unknown coverage counts as full: between two such legs it never
+// decides; a survival leg (no formula) therefore ranks like a fully covered one against a scored leg with fewer axes (none on 31.10.2026).
 const rankKey = (e) => { const c = dedupCoverage(e); return c && !c.rankable ? 0 : 1; };
 const axesKey = (e) => { const c = dedupCoverage(e); return c && c.m > 0 ? c.n / c.m : 1; };
 /**
