@@ -581,6 +581,36 @@
           "quote": "Janus Living's share of unconsolidated joint venture NOI"
         }
       ]
+    },
+    {
+      "ticker": "601211.SS",
+      "periodEnd": "2025-12-31",
+      "priorPeriodEnd": "2024-12-31",
+      "code": "uebernahme",
+      "reason": "Zusammenschluss im Vergleich: Das Geschäftsjahr bis 31.12.2025 enthält Haitong Securities ab dem Zusammenschluss am 14.03.2025, das Vorjahr bis 31.12.2024 nur das frühere Guotai Junan. Das Wachstum von plus 87,4 % kommt deshalb vor allem aus dem Zusammenschluss. Das neueste gemeldete Quartal bis 30.09.2026 liegt mit 11.813 Mio. CNY um 46,35 % unter dem Vorjahresquartal (beide Quartale mit Haitong); diesen Vergleich zeigt das Board nicht, weil dem Anbieter das Vorjahresquartal fehlt. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047952.PDF",
+          "form": "Guotai Haitong, 2025 年年度报告 (A-share annual report 2025)",
+          "published": "2026-03-28",
+          "page": "PDF 208 (printed 203), note to the consolidated income statement",
+          "quote": "可比期间数据为原国泰君安的财务数据"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047952.PDF",
+          "form": "Guotai Haitong, 2025 年年度报告 (A-share annual report 2025)",
+          "published": "2026-03-28",
+          "page": "PDF 208 (printed 203), 合并利润表",
+          "quote": "营业总收入 63,107,440,954 33,675,485,600"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-10-31/1225650134.PDF",
+          "form": "Guotai Haitong, 2026 年第三季度报告 (third-quarter report 2026)",
+          "published": "2026-10-31",
+          "page": "PDF 2, key figures, 本报告期 (three months to 30.09.2026) and change against the prior-year quarter",
+          "quote": "营业收入 11,813,133,439 -46.35 58,976,211,192 28.51"
+        }
+      ]
     }
   ],
   "definitionNote": "Checked definition hints: the vendor figure follows a definition the statement of the firm does not use. Bound to the listing, read by scripts/write-findash-export.js, shown as g31Hinweis. Never a hold and never a changed number.",
@@ -588,8 +618,8 @@
     {
       "ticker": "BURE.ST",
       "code": "abgrenzung",
-      "verifiedAt": "2026-10-31",
-      "reason": "Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus (Geschäftsjahr 2025: Net sales 0). Als Umsatz zählt der Anbieter Dividenden und Zinserträge (2025: 255 plus 13, also 268 Mio. SEK). Das Wachstum sagt deshalb nur, dass mehr Dividenden und Zinsen eingingen, und der Rang sagt nichts über ein wachsendes Geschäft. Geprüft am 31.10.2026.",
+      "verifiedAt": "2026-11-07",
+      "reason": "Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus (Geschäftsjahr 2025: Net sales 0). Als Umsatz zählt der Anbieter Dividenden und Zinserträge (Quartal bis 30.06.2026: 211 Mio. SEK). Gemeldet werden Gesamterträge mit den Wertänderungen der Beteiligungen, und die wechseln das Vorzeichen: im Quartal bis 30.06.2026 plus 7.628 Mio. SEK nach minus 1.225 Mio. SEK im Vorjahresquartal, im Geschäftsjahr 2025 minus 4.598 nach plus 5.809 Mio. SEK. Ein Umsatzwachstum lässt sich daraus nicht sinnvoll rechnen, das Feld bleibt deshalb leer. Geprüft am 07.11.2026.",
       "sources": [
         {
           "url": "https://storage.mfn.se/b41125c0-ab2d-4bf3-91e2-1fed9c730f4c/bure2025-en-final.pdf",
@@ -621,6 +651,22 @@
           "published": "2026-08-20",
           "page": "PDF 22, note on consolidation principles",
           "quote": "Bure Equity is an investment entity in accordance with IFRS 10 Consolidated"
+        },
+        {
+          "url": "https://storage.mfn.se/a/bure-equity/1bb45fb3-065f-40c9-b9ba-f465299acc3b/bure2026_en.pdf",
+          "form": "Interim Report January to June 2026",
+          "published": "2026-08-20",
+          "page": "PDF 15, statement of comprehensive income, Group, second quarter 2026 and 2025",
+          "quote": "Total income 7,628 -1,225",
+          "unit": "SEK M"
+        },
+        {
+          "url": "https://storage.mfn.se/81a45b46-ee77-4768-adac-a4d072502573/bure2025q4-final-en.pdf",
+          "form": "Interim Report January to December 2025",
+          "published": "2026-02-19",
+          "page": "PDF 15, statement of comprehensive income, Group, years 2025 and 2024",
+          "quote": "Total income -552 -1,261 -4,598 5,809",
+          "unit": "SEK M"
         }
       ]
     },

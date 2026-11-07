@@ -92,7 +92,11 @@
     {"ticker": "LTF.BO", "listingAliases": ["LTF.NS"], "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "POONAWALLA.NS", "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "DHER.DE", "listingAliases": ["DHER.SW", "DHER.VI", "1DHER.MI"], "field": "revenueQ", "coversThrough": "2026-09-30"},
-    {"ticker": "KMX", "field": "opIncQ", "coversThrough": "2026-08-31"}
+    {"ticker": "KMX", "field": "opIncQ", "coversThrough": "2026-08-31"},
+    {"ticker": "CHENNPETRO.NS", "field": "revenueQ", "coversThrough": "2026-09-30"},
+    {"ticker": "6023.TWO", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "SDE.TO", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "601211.SS", "field": "revenueQ", "coversThrough": "2026-09-30"}
   ],
   "cases": [
     {
@@ -21766,11 +21770,23 @@
       "periodType": "3M",
       "currency": "INR",
       "expectedBadValue": 8983200000,
-      "replacementValue": 12260900000,
+      "replacementValue": 12233000000,
       "revision": "2026-11-04-sdzahlen2",
       "verifiedAt": "2026-11-04",
-      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 8.983,20 Mio. INR. Der Anbieterwert ist nicht die gedruckte Umsatzsumme der Firma, er weicht in derselben Richtung bei jedem Quartal und Jahr ab. Die Firma meldet 12.260,90 Mio. INR (Total Revenue from operations). Geprüft am 04.11.2026.",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 8.983,20 Mio. INR. Der Anbieterwert ist nicht die gedruckte Umsatzsumme der Firma, er weicht in derselben Richtung bei jedem Quartal und Jahr ab. Die Firma meldet 12.233,00 Mio. INR (Total Revenue from operations, Vergleichsspalte im Bericht vom 15.10.2026 nach Umgliederung; im Bericht vom 16.07.2026 standen 12.260,90 Mio. INR). Geprüft am 07.11.2026.",
       "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/IIFLWAM_15102026161350_BoardMeetingOutcomeSigned.pdf",
+          "page": "PDF 8, Consolidated Statement of Profit and Loss for the quarter ended September 30, 2026, comparison column June 30, 2026 (regrouped, note 12)",
+          "quote": "(I) Total Revenue from operations 1,143.83 1,223.30 1,098.06",
+          "value": 12233000000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "filed": "2026-10-15",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
         {
           "url": "https://nsearchives.nseindia.com/corporate/IIFLWAM_16072026152123_Outcomewithresultupdate.pdf",
           "page": "PDF p.8 (Consolidated Statement of Profit and Loss, quarter ended Jun 30, 2026)",
@@ -21805,15 +21821,6 @@
           "checker": "Codex review R01 of 04.11.2026",
           "currency": "INR",
           "unit": "currency",
-          "verifiedAt": "2026-11-04"
-        },
-        {
-          "url": "https://nsearchives.nseindia.com/corporate/IIFLWAM_15102026161350_BoardMeetingOutcomeSigned.pdf",
-          "page": "PDF p.8 (later comparison column June 30, 2026, shows 1,223.30 after regrouping)",
-          "quote": "(I) Total Revenue from operations 1,143.83",
-          "start": "2026-04-01",
-          "end": "2026-06-30",
-          "filed": "2026-10-15",
           "verifiedAt": "2026-11-04"
         }
       ]
@@ -29003,6 +29010,939 @@
           "start": "2025-07-01",
           "end": "2025-09-30",
           "verifiedAt": "2026-11-05"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2026-09-30-revenueQ-20261107",
+      "ticker": "CHENNPETRO.NS",
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 205575000000,
+      "replacementValue": 220554500000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2026 liefert der Anbieter 20.557,50 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 1.497,95 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 22.055,45 Crore INR (Revenue from Operations, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CHENNPETRO_22102026162955_Q2_Results.pdf",
+          "page": "PDF 16 (printed 14), Statement of Audited Consolidated Financial Results, quarter ended 30.09.2026",
+          "quote": "I Revenue from Operations 22055.45 29358.75 20033.62 51414.20 38717.11 78610.79",
+          "value": 220554500000,
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "filed": "2026-10-22",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2026-06-30-revenueQ-20261107",
+      "ticker": "CHENNPETRO.NS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 273692700000,
+      "replacementValue": 293587500000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 27.369,27 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 1.989,48 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 29.358,75 Crore INR (Revenue from Operations, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/35ef3740-e18c-4c7c-889e-da24e6878fc1.pdf",
+          "page": "PDF 13 (printed 12), Statement of Consolidated Financial Results, quarter ended 30.06.2026",
+          "quote": "I Revenue from Operations 29358.75 20455.29 18683.49 78610.79",
+          "value": 293587500000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "filed": "2026-07-23",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://nsearchives.nseindia.com/corporate/CHENNPETRO_22102026162955_Q2_Results.pdf",
+          "page": "PDF 16 (printed 14), comparison column quarter ended 30.06.2026 (unchanged)",
+          "quote": "I Revenue from Operations 22055.45 29358.75 20033.62 51414.20",
+          "value": 293587500000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "filed": "2026-10-22",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2026-03-31-revenueQ-20261107",
+      "ticker": "CHENNPETRO.NS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 168173200000,
+      "replacementValue": 204552900000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 16.817,32 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 3.637,97 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 20.455,29 Crore INR (Revenue from Operations, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/35ef3740-e18c-4c7c-889e-da24e6878fc1.pdf",
+          "page": "PDF 13 (printed 12), comparison column quarter ended 31.03.2026",
+          "quote": "I Revenue from Operations 29358.75 20455.29 18683.49 78610.79",
+          "value": 204552900000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "filed": "2026-07-23",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2025-12-31-revenueQ-20261107",
+      "ticker": "CHENNPETRO.NS",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 156831700000,
+      "replacementValue": 194383900000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 15.683,17 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 3.755,22 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 19.438,39 Crore INR (Revenue from Operations, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/09b73067-b8dc-4bf5-a475-9d3d8564655f.pdf",
+          "page": "PDF 13 (printed 12, scanned page), Statement of Consolidated Financial Results, quarter ended 31.12.2025",
+          "quote": "Revenue from Operations 19438.39 20033.62 15683.25 58155.50",
+          "value": 194383900000,
+          "start": "2025-10-01",
+          "end": "2025-12-31",
+          "filed": "2026-01-24",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "chennpetro.ns-2025-06-30-revenueQ-20261107",
+      "ticker": "CHENNPETRO.NS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 148122300000,
+      "replacementValue": 186834900000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 14.812,23 Crore INR. Der Anbieter zieht die Verbrauchsteuer (Excise duty, 3.871,26 Crore INR) vom Umsatz ab; diese Nettozahl druckt die Firma nicht. Die Firma meldet 18.683,49 Crore INR (Revenue from Operations, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/35ef3740-e18c-4c7c-889e-da24e6878fc1.pdf",
+          "page": "PDF 13 (printed 12), comparison column quarter ended 30.06.2025",
+          "quote": "I Revenue from Operations 29358.75 20455.29 18683.49 78610.79",
+          "value": 186834900000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "filed": "2026-07-23",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "6023.two-2026-06-30-revenueQ-20261107",
+      "ticker": "6023.TWO",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 1356726000,
+      "replacementValue": 1274427000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 1.356,726 Mio. TWD. Das ist nicht die gedruckte Umsatzsumme der Firma. Die Firma meldet 1.274,427 Mio. TWD (Total revenues, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202609/e79aa2a7-1365-4bfb-b0f9-c31f2de0f527(%E9%9B%BB%E5%AD%90%E6%9B%B8)%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82026Q2%E8%8B%B1%E6%96%87%E5%90%88%E4%BD%B5%E8%B2%A1%E5%A0%B1.pdf",
+          "page": "PDF 9 (printed 9), Consolidated Statements of Comprehensive Income, three months ended June 30",
+          "quote": "400000 Total revenues 1,274,427 100 912,360 100 2,477,649 100 1,805,237 100",
+          "value": 1274427000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "6023.two-2026-03-31-revenueQ-20261107",
+      "ticker": "6023.TWO",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 1349217000,
+      "replacementValue": 1203222000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 1.349,217 Mio. TWD. Das ist nicht die gedruckte Umsatzsumme der Firma. Die Firma meldet 1.203,222 Mio. TWD (Total revenues, Konzern; Halbjahr 2.477,649 minus zweites Quartal 1.274,427 Mio. TWD). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202609/e79aa2a7-1365-4bfb-b0f9-c31f2de0f527(%E9%9B%BB%E5%AD%90%E6%9B%B8)%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82026Q2%E8%8B%B1%E6%96%87%E5%90%88%E4%BD%B5%E8%B2%A1%E5%A0%B1.pdf",
+          "page": "PDF 9 (printed 9), same statement, six months ended June 30, 2026",
+          "quote": "400000 Total revenues 1,274,427 100 912,360 100 2,477,649 100 1,805,237 100",
+          "value": 2477649000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202609/e79aa2a7-1365-4bfb-b0f9-c31f2de0f527(%E9%9B%BB%E5%AD%90%E6%9B%B8)%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82026Q2%E8%8B%B1%E6%96%87%E5%90%88%E4%BD%B5%E8%B2%A1%E5%A0%B1.pdf",
+          "page": "PDF 9 (printed 9), Consolidated Statements of Comprehensive Income, three months ended June 30",
+          "quote": "400000 Total revenues 1,274,427 100 912,360 100 2,477,649 100 1,805,237 100",
+          "value": 1274427000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "6023.two-2025-06-30-revenueQ-20261107",
+      "ticker": "6023.TWO",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 795968000,
+      "replacementValue": 912360000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 795,968 Mio. TWD. Das ist nicht die gedruckte Umsatzsumme der Firma. Die Firma meldet 912,360 Mio. TWD (Total revenues, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202609/e79aa2a7-1365-4bfb-b0f9-c31f2de0f527(%E9%9B%BB%E5%AD%90%E6%9B%B8)%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82026Q2%E8%8B%B1%E6%96%87%E5%90%88%E4%BD%B5%E8%B2%A1%E5%A0%B1.pdf",
+          "page": "PDF 9 (printed 9), Consolidated Statements of Comprehensive Income, three months ended June 30",
+          "quote": "400000 Total revenues 1,274,427 100 912,360 100 2,477,649 100 1,805,237 100",
+          "value": 912360000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "6023.two-2025-03-31-revenueQ-20261107",
+      "ticker": "6023.TWO",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 795135000,
+      "replacementValue": 892877000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2025 liefert der Anbieter 795,135 Mio. TWD. Das ist nicht die gedruckte Umsatzsumme der Firma. Die Firma meldet 892,877 Mio. TWD (Total revenues, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202606/%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82026Q1%E5%90%88%E4%BD%B5%E8%8B%B1%E6%96%87%E8%B2%A1%E5%A0%B1%E9%9B%BB%E5%AD%90%E6%9B%B8.pdf",
+          "page": "PDF 6 (printed 6), Consolidated Statements of Comprehensive Income, three months ended March 31, 2025",
+          "quote": "400000 Total revenues 892,877 100",
+          "value": 892877000,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202609/e79aa2a7-1365-4bfb-b0f9-c31f2de0f527(%E9%9B%BB%E5%AD%90%E6%9B%B8)%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82026Q2%E8%8B%B1%E6%96%87%E5%90%88%E4%BD%B5%E8%B2%A1%E5%A0%B1.pdf",
+          "page": "PDF 9 (printed 9), same statement, six months ended June 30, 2025",
+          "quote": "400000 Total revenues 1,274,427 100 912,360 100 2,477,649 100 1,805,237 100",
+          "value": 1805237000,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202609/e79aa2a7-1365-4bfb-b0f9-c31f2de0f527(%E9%9B%BB%E5%AD%90%E6%9B%B8)%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82026Q2%E8%8B%B1%E6%96%87%E5%90%88%E4%BD%B5%E8%B2%A1%E5%A0%B1.pdf",
+          "page": "PDF 9 (printed 9), Consolidated Statements of Comprehensive Income, three months ended June 30",
+          "quote": "400000 Total revenues 1,274,427 100 912,360 100 2,477,649 100 1,805,237 100",
+          "value": 912360000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "6023.two-2025-12-31-annualRev-20261107",
+      "ticker": "6023.TWO",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 3773248000,
+      "replacementValue": 3666813000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2025 liefert der Anbieter 3.773,248 Mio. TWD. Das ist nicht die gedruckte Umsatzsumme der Firma. Die Firma meldet 3.666,813 Mio. TWD (Total revenues, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202604/%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82025%E5%B9%B4%E5%BA%A6%E5%90%88%E4%BD%B5%E8%8B%B1%E6%96%87%E8%B2%A1%E5%A0%B1%E9%9B%BB%E5%AD%90%E6%9B%B8.pdf",
+          "page": "PDF 9 (printed 9), Consolidated Statements of Comprehensive Income, years ended December 31, 2025 and 2024",
+          "quote": "400000 Total revenues 3,666,813 100 4,013,452 100",
+          "value": 3666813000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "6023.two-2024-12-31-annualRev-20261107",
+      "ticker": "6023.TWO",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "TWD",
+      "unit": "currency",
+      "expectedBadValue": 4037381000,
+      "replacementValue": 4013452000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2024 liefert der Anbieter 4.037,381 Mio. TWD. Das ist nicht die gedruckte Umsatzsumme der Firma. Die Firma meldet 4.013,452 Mio. TWD (Total revenues, Konzern, Vergleichsspalte im Bericht 2025). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.yuantafutures.com.tw/UploadFile/img/202604/%E5%85%83%E5%A4%A7%E6%9C%9F%E8%B2%A82025%E5%B9%B4%E5%BA%A6%E5%90%88%E4%BD%B5%E8%8B%B1%E6%96%87%E8%B2%A1%E5%A0%B1%E9%9B%BB%E5%AD%90%E6%9B%B8.pdf",
+          "page": "PDF 9 (printed 9), same statement, comparison column year ended December 31, 2024",
+          "quote": "400000 Total revenues 3,666,813 100 4,013,452 100",
+          "value": 4013452000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "currency": "TWD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "sde.to-2026-06-30-revenueQ-20261107",
+      "ticker": "SDE.TO",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CAD",
+      "unit": "currency",
+      "expectedBadValue": 191611000,
+      "replacementValue": 166141000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 191,611 Mio. CAD. Der Anbieter zählt die Öl- und Gasverkäufe vor den Förderabgaben (Royalties); diese Summe druckt die Firma nicht. Die Firma meldet 166,141 Mio. CAD (Revenue nach Royalties, Summe der Umsatzzeilen). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, three months ended June 30, 2026",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 166141000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        },
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, six months ended June 30, 2026",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 303041000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        }
+      ]
+    },
+    {
+      "caseId": "sde.to-2026-03-31-revenueQ-20261107",
+      "ticker": "SDE.TO",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CAD",
+      "unit": "currency",
+      "expectedBadValue": 152207000,
+      "replacementValue": 136900000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 152,207 Mio. CAD. Der Anbieter zählt die Öl- und Gasverkäufe vor den Förderabgaben (Royalties); diese Summe druckt die Firma nicht. Die Firma meldet 136,900 Mio. CAD (Revenue nach Royalties, Summe der Umsatzzeilen; Halbjahr 303,041 minus zweites Quartal 166,141 Mio. CAD). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, six months ended June 30, 2026",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 303041000,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        },
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, three months ended June 30, 2026",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 166141000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        }
+      ]
+    },
+    {
+      "caseId": "sde.to-2025-06-30-revenueQ-20261107",
+      "ticker": "SDE.TO",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CAD",
+      "unit": "currency",
+      "expectedBadValue": 89875000,
+      "replacementValue": 79425000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 89,875 Mio. CAD. Der Anbieter zählt die Öl- und Gasverkäufe vor den Förderabgaben (Royalties); diese Summe druckt die Firma nicht. Die Firma meldet 79,425 Mio. CAD (Revenue nach Royalties, Summe der Umsatzzeilen). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, three months ended June 30, 2025",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 79425000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        },
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, six months ended June 30, 2025",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 161460000,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        }
+      ]
+    },
+    {
+      "caseId": "sde.to-2025-03-31-revenueQ-20261107",
+      "ticker": "SDE.TO",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "CAD",
+      "unit": "currency",
+      "expectedBadValue": 95069000,
+      "replacementValue": 82035000,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2025 liefert der Anbieter 95,069 Mio. CAD. Der Anbieter zählt die Öl- und Gasverkäufe vor den Förderabgaben (Royalties); diese Summe druckt die Firma nicht. Die Firma meldet 82,035 Mio. CAD (Revenue nach Royalties, Summe der Umsatzzeilen; Halbjahr 161,460 minus zweites Quartal 79,425 Mio. CAD). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, six months ended June 30, 2025",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 161460000,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        },
+        {
+          "url": "https://www.spartandeltacorp.com/s/SDE-Q2-2026-Interim-Financial-Statements-English-SEDAR.pdf",
+          "page": "PDF 3 (Page 3 of 26), Condensed Interim Statements of Net Income (Loss), Revenue subtotal, three months ended June 30, 2025",
+          "quote": "166,141 79,425 303,041 161,460",
+          "value": 79425000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "CAD",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07",
+          "published": "2026-07-29"
+        }
+      ]
+    },
+    {
+      "caseId": "bure.st-2026-06-30-revenueQ-20261107",
+      "ticker": "BURE.ST",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 211000000,
+      "replacementValue": null,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz fehlt: Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus. Für das Quartal bis 30.06.2026 liefert der Anbieter 211 Mio. SEK, das sind Dividenden und Zinsen. Gemeldet werden Gesamterträge (Total income) mit den Wertänderungen der Beteiligungen: plus 7.628 Mio. SEK nach minus 1.225 Mio. SEK im Vorjahresquartal. Ein Umsatzwachstum lässt sich daraus nicht sinnvoll rechnen, das Feld bleibt leer. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://storage.mfn.se/a/bure-equity/1bb45fb3-065f-40c9-b9ba-f465299acc3b/bure2026_en.pdf",
+          "form": "Interim Report January to June 2026",
+          "published": "2026-08-20",
+          "page": "PDF 15, statement of comprehensive income, Group, second quarter 2026 and 2025",
+          "quote": "Total income 7,628 -1,225",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "bure.st-2026-03-31-revenueQ-20261107",
+      "ticker": "BURE.ST",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 33000000,
+      "replacementValue": null,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz fehlt: Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus. Für das Quartal bis 31.03.2026 liefert der Anbieter 33 Mio. SEK, das sind Dividenden und Zinsen. Gemeldet werden Gesamterträge (Total income) mit den Wertänderungen der Beteiligungen: minus 1.753 Mio. SEK nach minus 2.618 Mio. SEK im Vorjahresquartal. Ein Umsatzwachstum lässt sich daraus nicht sinnvoll rechnen, das Feld bleibt leer. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://storage.mfn.se/a/bure-equity/b3f95f50-748a-459f-a950-b2cf26ffa1b2/bureequity2026q1-en-final-ny.pdf",
+          "form": "Interim Report January to March 2026",
+          "published": "2026-05-18",
+          "page": "PDF 15, statement of comprehensive income, Group, first quarter 2026 and 2025",
+          "quote": "Total income -1,753 -2,618",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "bure.st-2025-12-31-revenueQ-20261107",
+      "ticker": "BURE.ST",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 12000000,
+      "replacementValue": null,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz fehlt: Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus. Für das Quartal bis 31.12.2025 liefert der Anbieter 12 Mio. SEK, das sind Dividenden und Zinsen. Gemeldet werden Gesamterträge (Total income) mit den Wertänderungen der Beteiligungen: minus 552 Mio. SEK nach minus 1.261 Mio. SEK im Vorjahresquartal. Ein Umsatzwachstum lässt sich daraus nicht sinnvoll rechnen, das Feld bleibt leer. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://storage.mfn.se/81a45b46-ee77-4768-adac-a4d072502573/bure2025q4-final-en.pdf",
+          "form": "Interim Report January to December 2025",
+          "published": "2026-02-19",
+          "page": "PDF 15, statement of comprehensive income, Group, fourth quarter 2025 and 2024, years 2025 and 2024",
+          "quote": "Total income -552 -1,261 -4,598 5,809",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "bure.st-2025-06-30-revenueQ-20261107",
+      "ticker": "BURE.ST",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 195000000,
+      "replacementValue": null,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz fehlt: Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus. Für das Quartal bis 30.06.2025 liefert der Anbieter 195 Mio. SEK, das sind Dividenden und Zinsen. Gemeldet werden Gesamterträge (Total income) mit den Wertänderungen der Beteiligungen: minus 1.225 Mio. SEK. Ein Umsatzwachstum lässt sich daraus nicht sinnvoll rechnen, das Feld bleibt leer. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://storage.mfn.se/a/bure-equity/1bb45fb3-065f-40c9-b9ba-f465299acc3b/bure2026_en.pdf",
+          "form": "Interim Report January to June 2026",
+          "published": "2026-08-20",
+          "page": "PDF 15, statement of comprehensive income, Group, second quarter 2026 and 2025",
+          "quote": "Total income 7,628 -1,225",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "bure.st-2025-03-31-revenueQ-20261107",
+      "ticker": "BURE.ST",
+      "field": "revenueQ",
+      "period": "2025-03-31",
+      "periodType": "3M",
+      "currency": "SEK",
+      "unit": "currency",
+      "expectedBadValue": 59000000,
+      "replacementValue": null,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz fehlt: Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus. Für das Quartal bis 31.03.2025 liefert der Anbieter 59 Mio. SEK, das sind Dividenden und Zinsen. Gemeldet werden Gesamterträge (Total income) mit den Wertänderungen der Beteiligungen: minus 2.618 Mio. SEK. Ein Umsatzwachstum lässt sich daraus nicht sinnvoll rechnen, das Feld bleibt leer. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://storage.mfn.se/a/bure-equity/b3f95f50-748a-459f-a950-b2cf26ffa1b2/bureequity2026q1-en-final-ny.pdf",
+          "form": "Interim Report January to March 2026",
+          "published": "2026-05-18",
+          "page": "PDF 15, statement of comprehensive income, Group, first quarter 2026 and 2025",
+          "quote": "Total income -1,753 -2,618",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "bure.st-2025-12-31-annualRev-20261107",
+      "ticker": "BURE.ST",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "SEK",
+      "expectedBadValue": 268000000,
+      "replacementValue": null,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz fehlt: Bure ist eine Investmentgesellschaft und weist keinen Umsatz aus. Für das Geschäftsjahr bis 31.12.2025 liefert der Anbieter 268 Mio. SEK, das sind Dividenden und Zinsen. Gemeldet werden Gesamterträge (Total income) mit den Wertänderungen der Beteiligungen: minus 4.598 Mio. SEK nach plus 5.809 Mio. SEK im Geschäftsjahr 2024. Ein Umsatzwachstum lässt sich daraus nicht sinnvoll rechnen, das Feld bleibt leer. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://storage.mfn.se/81a45b46-ee77-4768-adac-a4d072502573/bure2025q4-final-en.pdf",
+          "form": "Interim Report January to December 2025",
+          "published": "2026-02-19",
+          "page": "PDF 15, statement of comprehensive income, Group, fourth quarter 2025 and 2024, years 2025 and 2024",
+          "quote": "Total income -552 -1,261 -4,598 5,809",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "601211.ss-2025-12-31-annualRev-20261107",
+      "ticker": "601211.SS",
+      "field": "annualRev",
+      "period": "2025-12-31",
+      "periodType": "12M",
+      "index": 0,
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 63107440950,
+      "replacementValue": 63107440954,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2025 liefert der Anbieter 63.107.440.950 CNY. Die Firma meldet 63.107.440.954 CNY (营业总收入, Konzern, chinesische Rechnungslegung); die 4 CNY Abweichung sind Rundung des Anbieters. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047952.PDF",
+          "page": "PDF 208 (printed 203), 合并利润表 (consolidated income statement), 2025 column",
+          "quote": "营业总收入 63,107,440,954 33,675,485,600",
+          "value": 63107440954,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "filed": "2026-03-28",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "601211.ss-2024-12-31-annualRev-20261107",
+      "ticker": "601211.SS",
+      "field": "annualRev",
+      "period": "2024-12-31",
+      "periodType": "12M",
+      "index": 1,
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 50939992000,
+      "replacementValue": 33675485600,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Jahresumsatz korrigiert: Für das Geschäftsjahr bis 31.12.2024 liefert der Anbieter 50.939.992.000 CNY. Das ist weder die gemeldete Zahl nach chinesischer Rechnungslegung noch auf derselben Basis wie 2025. Die Firma meldet im Geschäftsbericht 2025 als Vorjahreswert 33.675.485.600 CNY (营业总收入, Konzern, nur das frühere Guotai Junan; ursprünglich 43.397.126.485 CNY, umgestellt, weil Warenscheingeschäfte seit 2025 netto gebucht werden). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047952.PDF",
+          "page": "PDF 208 (printed 203), 合并利润表, comparison column 2024 (former Guotai Junan, restated for the net presentation of warehouse receipt trades)",
+          "quote": "营业总收入 63,107,440,954 33,675,485,600",
+          "value": 33675485600,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "filed": "2026-03-28",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2025-03-29/1222949883.PDF",
+          "page": "PDF 177, 合并利润表 of the 2024 report, as originally reported before the restatement",
+          "quote": "营业总收入 43,397,126,485 36,141,292,021",
+          "value": 43397126485,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "filed": "2025-03-29",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "601211.ss-2026-09-30-revenueQ-20261107",
+      "ticker": "601211.SS",
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 11170646212,
+      "replacementValue": 11813133439,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2026 liefert der Anbieter 11.171 Mio. CNY. Das ist nicht die gemeldete Umsatzsumme nach chinesischer Rechnungslegung. Die Firma meldet 11.813 Mio. CNY (营业总收入, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-10-31/1225650134.PDF",
+          "form": "Guotai Haitong, 2026 年第三季度报告 (third-quarter report 2026)",
+          "page": "PDF 2, key figures, 本报告期 (three months to 30.09.2026)",
+          "quote": "营业收入 11,813,133,439 -46.35 58,976,211,192 28.51",
+          "value": 11813133439,
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "published": "2026-10-31",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-10-31/1225650134.PDF",
+          "form": "Guotai Haitong, 2026 年第三季度报告 (third-quarter report 2026)",
+          "page": "PDF 11, 合并利润表, nine months 2026 and 2025",
+          "quote": "一、营业总收入 58,976,211,192 45,891,730,454",
+          "value": 58976211192,
+          "start": "2026-01-01",
+          "end": "2026-09-30",
+          "published": "2026-10-31",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-19/1225480562.PDF",
+          "form": "Guotai Haitong, 2026 年半年度报告摘要 (interim summary H1 2026)",
+          "page": "p. 4, 2026 年半年度报告摘要, key figures (consolidated, CAS)",
+          "quote": "营业收入 47,163,077,753 23,872,438,936 97.56",
+          "value": 47163077753,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "published": "2026-08-19",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "601211.ss-2026-06-30-revenueQ-20261107",
+      "ticker": "601211.SS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 29174550671,
+      "replacementValue": 30930966788,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 29.175 Mio. CNY. Das ist nicht die gemeldete Umsatzsumme nach chinesischer Rechnungslegung. Die Firma meldet 30.931 Mio. CNY (营业总收入, Konzern; Halbjahr 47.163 minus erstes Quartal 16.232 Mio. CNY). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-19/1225480562.PDF",
+          "form": "Guotai Haitong, 2026 年半年度报告摘要 (interim summary H1 2026)",
+          "page": "p. 4, 2026 年半年度报告摘要, key figures (consolidated, CAS)",
+          "quote": "营业收入 47,163,077,753 23,872,438,936 97.56",
+          "value": 47163077753,
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "published": "2026-08-19",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0424/2026042402805.pdf",
+          "form": "Guotai Haitong, first-quarter report 2026",
+          "page": "p. 17, consolidated income statement (CAS), three months ended 31 March",
+          "quote": "I. Total operating income 16,232,110,965 10,214,854,390",
+          "value": 16232110965,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "published": "2026-04-24",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "601211.ss-2026-03-31-revenueQ-20261107",
+      "ticker": "601211.SS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 15989544929,
+      "replacementValue": 16232110965,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 15.990 Mio. CNY. Das ist nicht die gemeldete Umsatzsumme nach chinesischer Rechnungslegung. Die Firma meldet 16.232 Mio. CNY (营业总收入, Konzern). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0424/2026042402805.pdf",
+          "form": "Guotai Haitong, first-quarter report 2026",
+          "page": "p. 17, consolidated income statement (CAS), three months ended 31 March",
+          "quote": "I. Total operating income 16,232,110,965 10,214,854,390",
+          "value": 16232110965,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "published": "2026-04-24",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "601211.ss-2025-12-31-revenueQ-20261107",
+      "ticker": "601211.SS",
+      "field": "revenueQ",
+      "period": "2025-12-31",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 17073225783,
+      "replacementValue": 17215710500,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.12.2025 liefert der Anbieter 17.073 Mio. CNY. Das ist nicht die gemeldete Umsatzsumme nach chinesischer Rechnungslegung. Die Firma meldet 17.216 Mio. CNY (营业总收入, Konzern; Geschäftsjahr 63.107 minus neun Monate 45.892 Mio. CNY). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-03-28/1225047952.PDF",
+          "form": "Guotai Haitong, 2025 年年度报告",
+          "page": "PDF 208 (printed 203), 合并利润表",
+          "quote": "营业总收入 63,107,440,954 33,675,485,600",
+          "value": 63107440954,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "published": "2026-03-28",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-10-31/1225650134.PDF",
+          "form": "Guotai Haitong, 2026 年第三季度报告 (third-quarter report 2026)",
+          "page": "PDF 11, 合并利润表, nine months 2026 and 2025, comparison column 2025",
+          "quote": "一、营业总收入 58,976,211,192 45,891,730,454",
+          "value": 45891730454,
+          "start": "2025-01-01",
+          "end": "2025-09-30",
+          "published": "2026-10-31",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "601211.ss-2025-06-30-revenueQ-20261107",
+      "ticker": "601211.SS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "CNY",
+      "unit": "currency",
+      "expectedBadValue": 11844638490,
+      "replacementValue": 13657584546,
+      "revision": "2026-11-07-sdhand4",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 11.845 Mio. CNY. Das ist nicht die gemeldete Umsatzsumme nach chinesischer Rechnungslegung. Die Firma meldet 13.658 Mio. CNY (营业总收入, Konzern; Halbjahr 23.872 minus erstes Quartal 10.215 Mio. CNY). Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://static.cninfo.com.cn/finalpage/2026-08-19/1225480562.PDF",
+          "form": "Guotai Haitong, 2026 年半年度报告摘要 (interim summary H1 2026)",
+          "page": "p. 4, 2026 年半年度报告摘要, key figures (consolidated, CAS)",
+          "quote": "营业收入 47,163,077,753 23,872,438,936 97.56",
+          "value": 23872438936,
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "published": "2026-08-19",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        },
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0424/2026042402805.pdf",
+          "form": "Guotai Haitong, first-quarter report 2026",
+          "page": "p. 17, consolidated income statement (CAS), three months ended 31 March",
+          "quote": "I. Total operating income 16,232,110,965 10,214,854,390",
+          "value": 10214854390,
+          "start": "2025-01-01",
+          "end": "2025-03-31",
+          "published": "2026-04-24",
+          "currency": "CNY",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
         }
       ]
     }

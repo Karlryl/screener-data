@@ -123,7 +123,10 @@ test('fail closed: a changed vendor cell and a quarter after coverage are withhe
 test('BURE.ST: no number moves, the hint is on the row, with any growth, and only on this listing', () => {
   assert.deepEqual(own.filter(c => c.ticker === 'BURE.ST'), []);
   const s = snap('BURE.ST');
-  assert.deepEqual(native(applyFinancialCases(s).snapshot, 'annual', 'annualRev').slice(0, 2), [268000000, 241000000]);
+  // 07.11.2026 (sd-hand-4): the vendor cells are held since, because the filed total income changes sign; probed in
+  // tests/hand-table-sdhand4-20261107.test.js. On the table of this lane the number did not move.
+  const of31 = structuredClone(table); of31.cases = of31.cases.filter(c => !(c.revision === '2026-11-07-sdhand4' && c.ticker === 'BURE.ST'));
+  assert.deepEqual(native(applyFinancialCases(s, { table: of31 }).snapshot, 'annual', 'annualRev').slice(0, 2), [268000000, 241000000]);
   assert.deepEqual(native(s, 'timeseries', 'revenueQ').slice(0, 1), [206000000 + 5000000]);
   assert.deepEqual(native(s, 'timeseries', 'revenueQ').slice(3, 4), [193000000 + 2000000]);
   fs.writeFileSync(path.join(process.env.FINDASH_SNAPSHOTS_DIR, safeSnapshotFilename('BURE.ST')), JSON.stringify(s));
@@ -153,12 +156,12 @@ test('documented order: the diagnosis on the shown pair outranks the definition 
 
 test('definition table: one row, checked code, quoted sources, plain German; lib/g31-recency.js does not read it', () => {
   // 02.11.2026 appends five definition rows of its own (tests/hand-table-zahlen-20261102.test.js); this test keeps its one row.
-  const own = hints.definitionen.filter(d => d.verifiedAt === '2026-10-31');
-  assert.deepEqual(own.map(d => d.ticker), ['BURE.ST']);
+  // 07.11.2026 (sd-hand-4) re-checks the BURE.ST row: the field is empty since; the row keeps its place and its sources.
+  const own = hints.definitionen.filter(d => d.ticker === 'BURE.ST');
+  assert.deepEqual(own.map(d => d.verifiedAt), ['2026-11-07']);
   assert.deepEqual(hints.definitionen.map(d => d.ticker), ['BURE.ST', 'CUPRUM.SN', 'AFPCAPITAL.SN', 'PROVIDA.SN', '003535.KS', '003530.KS']);
   for (const d of own) {
     assert.equal(d.code, 'abgrenzung');
-    assert.equal(d.verifiedAt, '2026-10-31');
     assert.ok(d.sources.length >= 3 && d.sources.every(s => s.url.startsWith('https://') && s.page && s.quote && s.form && s.published), d.ticker);
     assert.doesNotMatch(d.reason, /[–—]| - |kauf|verkauf/i);
     assert.match(d.reason, /Geschäftsjahr 2025/, 'names its period');
