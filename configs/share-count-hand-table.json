@@ -2335,5 +2335,26 @@
     },
     "verifiedAt": "2026-11-04",
     "withholdUnverified": true
+  },
+  "AJBU.SI": {
+    "shares": 2446173860,
+    "sharesAsOf": "2026-06-30",
+    "validFrom": "2026-07-31",
+    "reviewBy": "2027-02-28",
+    "wrongShares": [
+      2745225207
+    ],
+    "wrongSharesSeen": "snapshot of run 42356903064 (2026-11-07): marketCap 4,644,942,673 USD, price 1.692007807 USD (2.17 SGD), 2,745,225,320 units implied; meta.sharesOutstanding 2,745,225,207",
+    "reason": "Börsenwert aus 2.446.173.860 Anteilen berechnet: laut Halbjahresbericht von Keppel DC REIT die ausgegebenen Anteile am 30.06.2026. Yahoo rechnet mit 2.745,2 Mio. Anteilen, 12,2 % zu viele; der Börsenwert sinkt damit von etwa 5.929 auf etwa 5.308 Mio. SGD.",
+    "source": {
+      "form": "Halbjahresbericht von Keppel DC REIT bis 30.06.2026 (1H 2026 unaudited results)",
+      "url": "https://www.keppeldcreit.com/en/file/investor-relations/financial-results/2026/kdcr-1h-2026-unaudited-results.pdf",
+      "quote": "Total number of Units in issue at end of period 2,446,173,860 2,256,305,384",
+      "page": "6 (summary of results); again on page 19, Issued Units as at end of period 2,446,173,860 2,440,733,452",
+      "unit": "units in issue (one class)",
+      "checkerNote": "Read by sd-hand-7 on 2026-11-07 from the PDF (pages 6 and 19). The board check of 07.11.2026 found the same count; the price of 2.17 SGD on 06.11.2026 is the SGX close in that check. Units issued after 30.06.2026 (management fees) are not known here; the 3 % tolerance of the table covers small issues."
+    },
+    "verifiedAt": "2026-11-07",
+    "withholdUnverified": true
   }
 }
