@@ -241,9 +241,31 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   const b = clone(F.baseline); b.rows['000002.SZ'].revenueQ[3] *= 1.0001; // 2025-06-30
   assert.equal(b.rows['000002.SZ'].revenueQEnds[3], '2025-06-30');
   assert.equal(blocked(base(), ctxOf(F.store, b)), 'vendor-2025-changed');
+  // sd-quellen 07.11.2026: no baseline row (on no board in July) -> the exchange agreement of the three other
+  // vendor 2025 quarters is the proof; the fill applies and says so.
   const nb = clone(F.baseline); delete nb.rows['000002.SZ'];
   const r = res(base(), ctxOf(F.store, nb));
-  assert.equal(r.fill.blocked, 'no-baseline'); assert.equal(r.fill.otherwiseFillable, true); assert.equal(r.category, 'agree');
+  assert.equal(r.category, 'would-fill'); assert.equal(r.fill.blocked, null); assert.equal(r.fill.baseline, 'exchange-agreement');
+  // ... but not with a single agreeing vendor quarter of 2025
+  const thin = base(), ends = thin.timeseries.revenueQEnds;
+  for (const e of ['2025-06-30', '2025-03-31']) thin.timeseries.revenueQ[ends.indexOf(e)] = null;
+  const r1 = res(thin, ctxOf(F.store, nb));
+  assert.equal(r1.fill.blocked, 'no-baseline'); assert.equal(r1.fill.otherwiseFillable, true); assert.notEqual(r1.category, 'would-fill');
+  // exactly two vendor quarters suffice (review PR #124 N3: 1,235 of 1,326 fills of 07.11. have exactly two)
+  const two = base(); two.timeseries.revenueQ[two.timeseries.revenueQEnds.indexOf('2025-03-31')] = null;
+  assert.equal(res(two, ctxOf(F.store, nb)).category, 'would-fill');
+  // review M1: without the vendor Q4 of the fill year the Q3 observation must have been read before the next-year report
+  const late = clone(F.store), y = late.cn.companies['000002.SZ'].ytd, q3 = y['2025-09-30'].at(-1);
+  y['2026-09-30'] = [{ ...q3, noticeDate: '2026-10-28', confirmedBy: [{ src: 'x', fetchedAt: '2026-10-29T00:00:00.000Z', updateDate: '2026-10-28' }] }];
+  q3.confirmedBy = [{ ...q3.confirmedBy[0], fetchedAt: '2026-10-30T00:00:00.000Z', updateDate: '2026-10-28' }];
+  const noQ4 = base(); noQ4.timeseries.revenueQ[noQ4.timeseries.revenueQEnds.indexOf('2025-12-31')] = null;
+  const rl = res(noQ4, ctxOf(late, nb));
+  assert.equal(rl.fill.blocked, 'no-baseline', 'read only after the Q3 2026 report and no vendor Q4: not proven');
+  const early = clone(late); early.cn.companies['000002.SZ'].ytd['2025-09-30'].at(-1).confirmedBy[0].fetchedAt = '2025-10-31T00:00:00.000Z';
+  assert.equal(res(noQ4, ctxOf(early, nb)).fill.blocked, null, 'read before the next-year report: fills');
+  // ... and a baseline row that exists still wins: an unchanged vintage fills without the alternative
+  const rb = res(base(), ctxOf(F.store, F.baseline));
+  assert.equal(rb.category, 'would-fill'); assert.equal(rb.fill.baseline, undefined);
 });
 test('fill absence: store period missing, currency, envelope, broker table, hand table, non-empty cell, newest cell', () => {
   const st = clone(F.store); delete st.cn.companies['000002.SZ'].ytd['2025-03-31'];
