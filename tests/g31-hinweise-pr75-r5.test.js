@@ -69,7 +69,8 @@ test('DNO.OL, ETERNAL.BO and ETERNAL.NS keep the checked hint on the shown June 
 // sd-quellen 07.11.2026 (PR #124): 002077.SZ had no row in the baseline vintage 2026-07-29, so its empty vendor cell
 // 2025-09-30 was not filled and the board showed the June pair (+35.43 %, checked hint 艾科集成). The exchange fill now
 // applies on the agreement of its other 2025 vendor quarters: the board shows the September pair from the filing, and
-// the consolidation change (sale in May 2025, Aike Jicheng since November 2025) lies between both September quarters,
+// the consolidation of Aike Jicheng (since November 2025) lies between both September quarters (the sale of Gangcheng
+// in May 2025 lies before both and is not named there),
 // so the checked hint is carried to the September pair by its own row (review PR #124 H1).
 test('002077.SZ: the exchange fill without a July baseline row shows the September pair with its own checked hint', () => withStore(() => {
   const r = X.applyExchangeCheck(structuredClone(F.snapshots['002077.SZ']), { mode: 'fill-only', context: context() });
@@ -79,14 +80,14 @@ test('002077.SZ: the exchange fill without a July baseline row shows the Septemb
   assert.deepEqual([v.basis, v.sourcePeriodEnd, v.sourcePriorPeriodEnd], ['quarter', '2026-09-30', '2025-09-30']);
   assert.ok(Math.abs(v.pct - 19.04) < 0.005, String(v.pct));
   const h = G.g31Hinweis(r.snapshot), sept = row('002077.SZ', '2026-09-30');
-  assert.equal(h.code, 'uebernahme'); assert.match(h.reason, /艾科集成/); assert.match(h.reason, /30\.09\.2026/);
+  assert.equal(h.code, 'uebernahme'); assert.match(h.reason, /艾科集成/); assert.match(h.reason, /30\.09\.2026/); assert.doesNotMatch(h.reason, /港诚国贸/);
   assert.ok(h.reason.startsWith(sept.reason), 'the September row, not the June wording');
   const without = g31With(table.entries.filter(e => e !== sept));
   assert.equal(without.g31Hinweis(r.snapshot), null, 'red without the September row: the June row does not carry over');
 }));
 
 test('hint rows of this round: exact pairs, https sources with page and quote, dated check; the new code is admitted, others are not', () => {
-  const sept = table.entries.filter(e => /dem Septemberpaar zugeordnet am 07\.11\.2026\.$/.test(e.reason));
+  const sept = table.entries.filter(e => /für das Septemberquartal ergänzt am 07\.11\.2026\.$/.test(e.reason));
   assert.deepEqual(sept.map(e => [e.ticker, e.periodEnd, e.priorPeriodEnd, e.code]).sort(), [
     ['000656.SZ', '2026-09-30', '2025-09-30', 'uebernahme'], ['002077.SZ', '2026-09-30', '2025-09-30', 'uebernahme'],
     ['002289.SZ', '2026-09-30', '2025-09-30', 'uebernahme'], ['002993.SZ', '2026-09-30', '2025-09-30', 'uebernahme']]);
