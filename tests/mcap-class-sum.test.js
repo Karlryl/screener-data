@@ -333,7 +333,7 @@ test('every priced line with a stale quote: no line shows the sum, every line sa
   for (const t of ['600547.SS', '1787.HK']) {
     const seen = guard.prepareMarketCap(snaps[t]);
     assert.equal(seen.marketCap.value, null, t);
-    assert.equal(seen.meta.marketCapReason, 'Börsenwert nicht verlässlich: Die Kursmeldungen von Yahoo zu allen Zeilen der Firma sind älter als 7 Wochentage (zuletzt vom 22.10.2026); die Summe der Aktienklassen wird deshalb nicht gezeigt. Sie kommt von selbst zurück, sobald Yahoo für eine Zeile wieder aktuell meldet.', t);
+    assert.equal(seen.meta.marketCapReason, 'Börsenwert nicht verlässlich: Die Kursmeldungen von Yahoo zu allen Zeilen der Firma mit Börsenwert sind älter als 7 Wochentage (zuletzt vom 22.10.2026); die Summe der Aktienklassen wird deshalb nicht gezeigt. Sie kommt von selbst zurück, sobald Yahoo für eine Zeile wieder aktuell meldet.', t);
   }
 });
 
@@ -343,6 +343,20 @@ test('CNOOC: the pinned line 0883.HK gives way only when its quote is stale and 
   assert.equal(pick('2026-11-06T08:08:00Z', '2026-11-06T07:00:00Z'), '0883.HK');
   assert.equal(pick('2026-10-20T08:08:00Z', '2026-11-06T07:00:00Z'), '600938.SS');
   assert.equal(pick('2026-10-20T08:08:00Z', '2026-10-21T07:00:00Z'), null, 'both stale: no line');
+  // Opus B2: a day on which Yahoo gives 0883.HK no market cap but a current quote keeps the pin, as Tag 1545 did.
+  const snaps = firm(e); quoted(snaps, '0883.HK', null, '2026-11-06T08:08:00Z', null); quoted(snaps, '600938.SS', 222.9e9, '2026-11-06T07:00:00Z', null);
+  assert.equal(cs.writeFirm(snaps, e, r, NOW).shown, '0883.HK');
+  assert.equal(guard.prepareMarketCap(snaps['0883.HK']).marketCap.value, r.value);
+});
+
+test('no sum and every quote stale: the true reason stays, no promise that a current quote brings it back (Opus B1)', async () => {
+  const e = byIssuer('Shandong Gold'), snaps = firm(e);
+  const r = cs.computeClassSum(e, await market({ ...ch.charts, '1787.HK': undefined }), currencies, DAY);
+  assert.equal(r.value, null);
+  quoted(snaps, '600547.SS', 18.11e9, '2026-10-20T07:00:00Z', '2026-10-20');
+  quoted(snaps, '1787.HK', 10.63e9, '2026-10-22T08:08:00Z', '2026-10-22');
+  cs.writeFirm(snaps, e, r, NOW);
+  for (const t of ['600547.SS', '1787.HK']) assert.match(guard.prepareMarketCap(snaps[t]).meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen \(A, H\) ist heute nicht berechenbar \(1787\.HK: Tageskurse nicht abrufbar/, t);
 });
 
 test('read time: the guard keeps the class-sum value and its reason in its copy', async () => {
