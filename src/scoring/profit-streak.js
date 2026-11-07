@@ -62,9 +62,9 @@ const zahl = (x) => {
 };
 
 /**
- * Zaehlt ununterbrochene profitable Jahre ab dem juengsten.
- * Eine LUECKE beendet die Serie genauso wie ein Verlust — ein Jahr ohne Zahl ist kein
- * belegtes Gewinnjahr, und "belegt" ist hier der ganze Zweck.
+ * Counts unbroken profitable years from the newest one. A gap stops the count like a loss does,
+ * because a year without a number is no proven profit year, but it is no loss either:
+ * profitStreak() below reports the two differently.
  */
 function serieAb(werte) {
   let n = 0;
@@ -80,10 +80,13 @@ function serieAb(werte) {
  *            letzterVerlust:number|null, financialCorrections?:object[]} | null}
  *   jahre          ununterbrochen profitable Geschaeftsjahre, ab dem juengsten
  *   basis          welche Groesse gezaehlt wurde (163 Firmen melden kein Betriebsergebnis)
- *   tiefe          wie viele Jahre die Reihe ueberhaupt hergibt
- *   mindestens     true, wenn die Serie bis zum Anfang der Reihe laeuft — dann ist die
- *                  echte Serie moeglicherweise laenger, die Daten enden nur hier
- *   letzterVerlust das Geschaeftsjahr, das die Serie beendet hat (null, falls keins in Sicht)
+ *   tiefe          how many years the series offers; when the streak ends at a gap, only the years up to it
+ *   mindestens     true when the streak runs to the start of the series or to a gap: the real streak may
+ *                  be longer, the data just end here
+ *   letzterVerlust the fiscal year of the real negative value that ended the series, null if none is
+ *                  in sight. A gap never sets it (F-02, blind review 31.10.2026): findash turns it into
+ *                  "Davor steht ein Verlustjahr", and Paycom earned 15.7 M USD in its gap year 2014.
+ *   null           also when the newest year itself is a gap: nothing is known about the current streak.
  */
 function profitStreak(ticker, annual) {
   if (!annual) return null;
@@ -115,11 +118,13 @@ function profitStreak(ticker, annual) {
   });
   if (!werte.length) return null;
   const jahre = serieAb(werte);
-  const mindestens = jahre === werte.length;
+  const luecke = werte[jahre] === null;
+  if (luecke && jahre === 0) return null;
+  const mindestens = luecke || jahre === werte.length;
   return {
     jahre,
     basis: nutzeOp ? 'opInc' : 'netIncome',
-    tiefe: werte.length,
+    tiefe: luecke ? jahre : werte.length,
     mindestens,
     letzterVerlust: mindestens ? null : (fys[jahre] != null ? fys[jahre] : null),
     ...(financialCorrections.length ? { financialCorrections } : {}),

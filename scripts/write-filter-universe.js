@@ -197,6 +197,8 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     if (evsCurrency) aus.push('evs-waehrung');
     const evsBad = sales.evs !== null && !evsCurrency && evImplausible(snapshot);
     if (evsBad) aus.push('evs-implausible');
+    // The pull found no reading that fits the definition and left the ratio empty: the field keeps its reason.
+    if (meta.evCurrencyReading === 'withheld') aus.push('evs-waehrung');
     const trailing = ratio('pe', mixed);
     const pe = finite(trailing) && trailing > 0 ? round(trailing) : null;
     // Same rule as pe: a zero or negative forward P/E is a forecast loss, not the cheapest stock; it stays missing.

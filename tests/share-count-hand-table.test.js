@@ -66,7 +66,7 @@ const WRONG = {
   'ISAE3.SA': { px: 6.5908541483, vendorShares: 660801338, mcap: 4355245483.017196, issuer: 583349906 }, // 04.11.2026: ON-equivalents at the closes of 03.11.2026 (ratio 0.742)
   '7911.T': { px: 13.5302723875, vendorShares: 280554025, mcap: 3795972378.0951247, issuer: 561108010 },
   // Ranks 11 to 25 of 30.10.2026: no filing supports the vendor count (Geekplus, Solstad); all classes at one price (InnoCare, Hanwha).
-  '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1337286998 },
+  '2590.HK': { px: 0.7749991168, vendorShares: 2214575158, mcap: 1716293791.4556415, issuer: 1281656998 },
   '688428.SS': { px: 3.657160206, vendorShares: 1767202175, mcap: 6462941472.097403, issuer: 860109566 },
   'SOFF.OL': { px: 7.639278149, vendorShares: 108605000, mcap: 829663826.409513, issuer: 82346796 },
   '003535.KS': { px: 4.318488288, vendorShares: 318070388, mcap: 1373583284.875775, issuer: 223091000 },
@@ -87,6 +87,7 @@ const WRONG = {
   "1766.HK": { px: 0.6750210553499999, vendorShares: 28698864190, mcap: 19372337593.12871, issuer: 39817324643 },
   "0019.HK": { px: 13.564162472, vendorShares: 3627920515, mcap: 49209703299.43211, issuer: 1183568546 },
   "GLXY": { px: 16, vendorShares: 589297344, mcap: 9428757504, issuer: 388479988 },
+  "CIFR": { px: 7.29, vendorShares: 415030722, mcap: 3025573888, issuer: 456365113 },
 };
 const TABLE = loadShareCountTable();
 const unveraendert = (snap, ticker, table = TABLE) => {

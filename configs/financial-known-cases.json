@@ -74,7 +74,7 @@
     {"ticker": "1941.T", "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "ATLC", "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "PFSI", "field": "revenueQ", "coversThrough": "2026-06-30"},
-    {"ticker": "RKT", "field": "revenueQ", "coversThrough": "2026-06-30"},
+    {"ticker": "RKT", "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "FIGR", "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "BAM", "listingAliases": ["BAM.TO"], "field": "revenueQ", "coversThrough": "2026-06-30"},
     {"ticker": "SII", "field": "revenueQ", "coversThrough": "2026-06-30"},
@@ -90,7 +90,9 @@
     {"ticker": "HOMEFIRST.NS", "listingAliases": ["HOMEFIRST.BO"], "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "IREDA.BO", "listingAliases": ["IREDA.NS"], "field": "revenueQ", "coversThrough": "2026-09-30"},
     {"ticker": "LTF.BO", "listingAliases": ["LTF.NS"], "field": "revenueQ", "coversThrough": "2026-09-30"},
-    {"ticker": "POONAWALLA.NS", "field": "revenueQ", "coversThrough": "2026-09-30"}
+    {"ticker": "POONAWALLA.NS", "field": "revenueQ", "coversThrough": "2026-09-30"},
+    {"ticker": "DHER.DE", "listingAliases": ["DHER.SW", "DHER.VI", "1DHER.MI"], "field": "revenueQ", "coversThrough": "2026-09-30"},
+    {"ticker": "KMX", "field": "opIncQ", "coversThrough": "2026-08-31"}
   ],
   "cases": [
     {
@@ -17310,7 +17312,7 @@
           "form": "6-K exhibit 99.1, parent company and consolidated financial statements as of December 31, 2025",
           "accession": "0001213900-26-012754",
           "filed": "2026-02-05",
-          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 12, Consolidated column",
+          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 9, Consolidated column",
           "quote": "Total revenues 6,386 9,986 531,380 581,219",
           "verifiedAt": "2026-10-31",
           "start": "2025-01-01",
@@ -17420,7 +17422,7 @@
           "form": "6-K exhibit 99.1, parent company and consolidated financial statements as of December 31, 2025",
           "accession": "0001213900-26-012754",
           "filed": "2026-02-05",
-          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 12, Consolidated column",
+          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 9, Consolidated column",
           "quote": "Total revenues 6,386 9,986 531,380 581,219",
           "verifiedAt": "2026-10-31",
           "start": "2025-01-01",
@@ -17453,7 +17455,7 @@
           "form": "6-K exhibit 99.1, parent company and consolidated financial statements as of December 31, 2025",
           "accession": "0001213900-26-012754",
           "filed": "2026-02-05",
-          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 12, Consolidated column",
+          "page": "Statements of profit or loss for the years ended December 31, 2025 and 2024, printed page 9, Consolidated column",
           "quote": "Total revenues 6,386 9,986 531,380 581,219",
           "verifiedAt": "2026-10-31",
           "start": "2024-01-01",
@@ -17540,22 +17542,37 @@
       "currency": "USD",
       "unit": "currency",
       "expectedBadValue": 66256000,
-      "replacementValue": 66256000,
+      "replacementValue": 66728000,
       "metricDefinition": "Income (loss) from operations",
-      "verifiedAt": "2026-10-31",
-      "reason": "bestätigt: Für das Quartal mit Ende 31.03.2026 stimmen die 66,3 Mio. USD des Anbieters mit dem Quartalsbericht überein; sie enthalten den Verlust aus Goldabsicherungen von 21,9 Mio. USD. Geprüft am 31.10.2026.",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis korrigiert: Für das Quartal mit Ende 31.03.2026 liefert der Anbieter 66,3 Mio. USD aus dem Quartalsbericht vom Mai; der neuere Halbjahresbericht ergibt 66,7 Mio. USD (Halbjahr 157,1 minus zweites Quartal 90,4), weil er Quellensteuern nicht mehr unter den Verwaltungskosten führt. So passt das Quartal zu den übrigen Quartalen der Reihe. Geprüft am 04.11.2026.",
       "sources": [
         {
-          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326002589/exhibit99-1.htm",
-          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three months ended March 31, 2026",
-          "accession": "0001062993-26-002589",
-          "filed": "2026-05-14",
-          "page": "Segmented information, three months ended March 31, 2026, Total column",
-          "quote": "(Loss) income from operations (4,670) 70,926 66,256",
-          "verifiedAt": "2026-10-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326004090/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three and six months ended June 30, 2026",
+          "accession": "0001062993-26-004090",
+          "filed": "2026-08-07",
+          "page": "Statements of operations and comprehensive income (loss), printed page 3, six months ended June 30, 2026",
+          "quote": "Income (loss) from operations 90,368 19,118 157,096 (6,827)",
+          "verifiedAt": "2026-11-04",
           "start": "2026-01-01",
-          "end": "2026-03-31",
-          "value": 66256000,
+          "end": "2026-06-30",
+          "value": 157096000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326004090/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three and six months ended June 30, 2026",
+          "accession": "0001062993-26-004090",
+          "filed": "2026-08-07",
+          "page": "Statements of operations and comprehensive income (loss), printed page 3, three months ended June 30, 2026",
+          "quote": "Income (loss) from operations 90,368 19,118 157,096 (6,827)",
+          "verifiedAt": "2026-11-04",
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "value": 90368000,
           "currency": "USD",
           "unit": "currency",
           "sourceUnit": "USD thousands"
@@ -17678,22 +17695,37 @@
       "currency": "USD",
       "unit": "currency",
       "expectedBadValue": -26327000,
-      "replacementValue": -26327000,
+      "replacementValue": -25945000,
       "metricDefinition": "Income (loss) from operations",
-      "verifiedAt": "2026-10-31",
-      "reason": "bestätigt: Für das Quartal mit Ende 31.03.2025 stimmen die -26,3 Mio. USD des Anbieters mit der angepassten Vorjahresspalte des Quartalsberichts überein; sie enthalten den Verlust aus Goldabsicherungen von 35,1 Mio. USD. Geprüft am 31.10.2026.",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis korrigiert: Für das Quartal mit Ende 31.03.2025 liefert der Anbieter -26,3 Mio. USD aus dem Quartalsbericht vom Mai; der neuere Halbjahresbericht ergibt -25,9 Mio. USD (Halbjahr -6,8 minus zweites Quartal 19,1), weil er Quellensteuern nicht mehr unter den Verwaltungskosten führt. So passt das Quartal zu den übrigen Quartalen der Reihe. Geprüft am 04.11.2026.",
       "sources": [
         {
-          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326002589/exhibit99-1.htm",
-          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three months ended March 31, 2026",
-          "accession": "0001062993-26-002589",
-          "filed": "2026-05-14",
-          "page": "Segmented information, three months ended March 31, 2025, restated",
-          "quote": "Loss from operations (4,411) (21,916) (26,327)",
-          "verifiedAt": "2026-10-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326004090/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three and six months ended June 30, 2026",
+          "accession": "0001062993-26-004090",
+          "filed": "2026-08-07",
+          "page": "Statements of operations and comprehensive income (loss), printed page 3, six months ended June 30, 2025",
+          "quote": "Income (loss) from operations 90,368 19,118 157,096 (6,827)",
+          "verifiedAt": "2026-11-04",
           "start": "2025-01-01",
-          "end": "2025-03-31",
-          "value": -26327000,
+          "end": "2025-06-30",
+          "value": -6827000,
+          "currency": "USD",
+          "unit": "currency",
+          "sourceUnit": "USD thousands"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1377757/000106299326004090/exhibit99-1.htm",
+          "form": "6-K exhibit 99.1, condensed consolidated interim financial statements, three and six months ended June 30, 2026",
+          "accession": "0001062993-26-004090",
+          "filed": "2026-08-07",
+          "page": "Statements of operations and comprehensive income (loss), printed page 3, three months ended June 30, 2025",
+          "quote": "Income (loss) from operations 90,368 19,118 157,096 (6,827)",
+          "verifiedAt": "2026-11-04",
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "value": 19118000,
           "currency": "USD",
           "unit": "currency",
           "sourceUnit": "USD thousands"
@@ -17878,7 +17910,7 @@
       "replacementValue": null,
       "revision": "2026-11-01-sdheimat",
       "verifiedAt": "2026-11-01",
-      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2026: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-409,8 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 383,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2026: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-409,8 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma, und keine Summe ihrer gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die Anbieterwerte über mehrere Jahre (geprüft: 18 Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 383,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
@@ -17904,7 +17936,7 @@
       "replacementValue": null,
       "revision": "2026-11-01-sdheimat",
       "verifiedAt": "2026-11-01",
-      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2025: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-220,5 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 669,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2025: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-220,5 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma, und keine Summe ihrer gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die Anbieterwerte über mehrere Jahre (geprüft: 18 Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 669,4 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
@@ -17930,7 +17962,7 @@
       "replacementValue": null,
       "revision": "2026-11-01-sdheimat",
       "verifiedAt": "2026-11-01",
-      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 29.02.2024: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-205,7 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 641,6 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 29.02.2024: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-205,7 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma, und keine Summe ihrer gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die Anbieterwerte über mehrere Jahre (geprüft: 18 Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 641,6 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
@@ -17956,7 +17988,7 @@
       "replacementValue": null,
       "revision": "2026-11-01-sdheimat",
       "verifiedAt": "2026-11-01",
-      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2023: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-310,9 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma und lässt sich aus ihren gedruckten Zeilen nicht nachrechnen; die Firma verdiente vor Steuern 636,8 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
+      "reason": "Betriebsergebnis fehlt für das Geschäftsjahr bis 28.02.2023: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-310,9 Mio. USD) steht in keiner Gewinn- und Verlustrechnung der Firma, und keine Summe ihrer gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die Anbieterwerte über mehrere Jahre (geprüft: 18 Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 636,8 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 01.11.2026.",
       "sources": [
         {
           "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001025000024/R2.htm",
@@ -18011,8 +18043,8 @@
       "expectedBadValue": 44032000000,
       "replacementValue": null,
       "revision": "2026-11-01-sdheimat",
-      "verifiedAt": "2026-11-01",
-      "reason": "Bruttogewinn fehlt für das Quartal bis 30.06.2026: Es ist dieselbe Rechnung wie beim Umsatz (Halbjahr auf dem neuen Konsolidierungskreis minus erstes Quartal auf dem alten), die sich am Bericht für diese Kennzahl nicht einzeln nachrechnen lässt. Die Firma nennt kein Einzelquartal. Geprüft am 01.11.2026.",
+      "verifiedAt": "2026-11-04",
+      "reason": "Bruttogewinn vorsorglich gesperrt für das Quartal bis 30.06.2026: Die Zelle gehört zum selben Quartal wie der gemischte Umsatz. Anders als dort ergibt sie sich nicht aus dem Halbjahr minus dem ersten Quartal: Der Bericht druckt für das Halbjahr 56.692 Mio. CNY, die beiden Anbieterquartale ergeben zusammen 67.185 Mio. CNY. Ob der Wert falsch ist und wie er entstand, ist ungeklärt. Geprüft am 04.11.2026.",
       "sources": [
         {
           "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
@@ -18022,6 +18054,15 @@
           "page": "Section VII, report p. 7 (PDF p. 8)",
           "unit": "CNY millions",
           "quote": "Revenue RMB million 189,338 175,423 138,109 7.9"
+        },
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
+          "form": "China Shenhua, interim results announcement 2026",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated statement of profit or loss, report p. 111 (PDF p. 112)",
+          "unit": "CNY millions",
+          "quote": "Gross profit 56,692 53,750"
         }
       ]
     },
@@ -18039,8 +18080,8 @@
       "expectedBadValue": 29244000000,
       "replacementValue": null,
       "revision": "2026-11-01-sdheimat",
-      "verifiedAt": "2026-11-01",
-      "reason": "Betriebsergebnis fehlt für das Quartal bis 30.06.2026: Es ist dieselbe Rechnung wie beim Umsatz (Halbjahr auf dem neuen Konsolidierungskreis minus erstes Quartal auf dem alten), die sich am Bericht für diese Kennzahl nicht einzeln nachrechnen lässt. Die Firma nennt kein Einzelquartal. Geprüft am 01.11.2026.",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis vorsorglich gesperrt für das Quartal bis 30.06.2026: Die Zelle gehört zum selben Quartal wie der gemischte Umsatz. Der Bericht weist kein Betriebsergebnis aus; die beiden Anbieterquartale ergeben für das Halbjahr zusammen 45.881 Mio. CNY. Ob der Wert falsch ist und wie er entstand, ist ungeklärt. Geprüft am 04.11.2026.",
       "sources": [
         {
           "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
@@ -18050,6 +18091,15 @@
           "page": "Section VII, report p. 7 (PDF p. 8)",
           "unit": "CNY millions",
           "quote": "Revenue RMB million 189,338 175,423 138,109 7.9"
+        },
+        {
+          "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0828/2026082802610.pdf",
+          "form": "China Shenhua, interim results announcement 2026",
+          "published": "2026-08-28",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated statement of profit or loss, report p. 111 (PDF p. 112)",
+          "unit": "CNY millions",
+          "quote": "Gross profit 56,692 53,750"
         }
       ]
     },
@@ -18067,19 +18117,23 @@
       "currency": "EUR",
       "unit": "currency",
       "expectedBadValue": 4054500000,
-      "replacementValue": null,
+      "replacementValue": 4024500000,
       "revision": "2026-11-01-sdheimat",
-      "verifiedAt": "2026-11-01",
-      "reason": "Umsatz fehlt für das Quartal bis 30.06.2026: Der Anbieter führt 4.054,5 Mio. EUR, die Firma meldet 4.024,5 Mio. EUR. Das Quartal zeigte +20,8 % statt der gemeldeten +15,3 %. Geprüft am 01.11.2026.",
+      "verifiedAt": "2026-11-04",
+      "reason": "Umsatz korrigiert für das Quartal bis 30.06.2026: Der Anbieter führt 4.054,5 Mio. EUR, die Firma meldet 4.024,5 Mio. EUR (Revenue, Berichtswährung, KPI-Tabelle vom 28.10.2026). Mit den gemeldeten Werten zeigt jede Notierung ihr neuestes gespeichertes Quartal mit dem gemeldeten Wachstum (bis 30.09.2026 +23,2 %, bis 30.06.2026 +15,3 %) statt des Geschäftsjahres 2025. Geprüft am 04.11.2026.",
       "sources": [
         {
           "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
           "form": "Delivery Hero, Q3 2026 trading update",
           "published": "2026-10-28",
-          "verifiedAt": "2026-11-01",
+          "verifiedAt": "2026-11-04",
           "page": "KPI appendix, p. 15",
-          "unit": "EUR millions",
-          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9"
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9",
+          "value": 4024500000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "currency": "EUR",
+          "unit": "currency"
         }
       ]
     },
@@ -18097,19 +18151,23 @@
       "currency": "EUR",
       "unit": "currency",
       "expectedBadValue": 3736100000,
-      "replacementValue": null,
+      "replacementValue": 3530100000,
       "revision": "2026-11-01-sdheimat",
-      "verifiedAt": "2026-11-01",
-      "reason": "Umsatz fehlt für das Quartal bis 30.09.2025: Der Anbieter führt 3.736,1 Mio. EUR, die Firma meldet 3.530,1 Mio. EUR. Das Quartal bis 30.09.2026 zeigte +16,4 % statt der gemeldeten +23,2 %. Geprüft am 01.11.2026.",
+      "verifiedAt": "2026-11-04",
+      "reason": "Umsatz korrigiert für das Quartal bis 30.09.2025: Der Anbieter führt 3.736,1 Mio. EUR, die Firma meldet 3.530,1 Mio. EUR (Revenue, Berichtswährung, KPI-Tabelle vom 28.10.2026). Mit den gemeldeten Werten zeigt jede Notierung ihr neuestes gespeichertes Quartal mit dem gemeldeten Wachstum (bis 30.09.2026 +23,2 %, bis 30.06.2026 +15,3 %) statt des Geschäftsjahres 2025. Geprüft am 04.11.2026.",
       "sources": [
         {
           "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
           "form": "Delivery Hero, Q3 2026 trading update",
           "published": "2026-10-28",
-          "verifiedAt": "2026-11-01",
+          "verifiedAt": "2026-11-04",
           "page": "KPI appendix, p. 15",
-          "unit": "EUR millions",
-          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9"
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9",
+          "value": 3530100000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "currency": "EUR",
+          "unit": "currency"
         }
       ]
     },
@@ -18127,19 +18185,23 @@
       "currency": "EUR",
       "unit": "currency",
       "expectedBadValue": 3356200000,
-      "replacementValue": null,
+      "replacementValue": 3489300000,
       "revision": "2026-11-01-sdheimat",
-      "verifiedAt": "2026-11-01",
-      "reason": "Umsatz fehlt für das Quartal bis 30.06.2025: Der Anbieter führt 3.356,2 Mio. EUR, die Firma meldet 3.489,3 Mio. EUR. Das Quartal bis 30.06.2026 zeigte +20,8 % statt der gemeldeten +15,3 %. Geprüft am 01.11.2026.",
+      "verifiedAt": "2026-11-04",
+      "reason": "Umsatz korrigiert für das Quartal bis 30.06.2025: Der Anbieter führt 3.356,2 Mio. EUR, die Firma meldet 3.489,3 Mio. EUR (Revenue, Berichtswährung, KPI-Tabelle vom 28.10.2026). Mit den gemeldeten Werten zeigt jede Notierung ihr neuestes gespeichertes Quartal mit dem gemeldeten Wachstum (bis 30.09.2026 +23,2 %, bis 30.06.2026 +15,3 %) statt des Geschäftsjahres 2025. Geprüft am 04.11.2026.",
       "sources": [
         {
           "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
           "form": "Delivery Hero, Q3 2026 trading update",
           "published": "2026-10-28",
-          "verifiedAt": "2026-11-01",
+          "verifiedAt": "2026-11-04",
           "page": "KPI appendix, p. 15",
-          "unit": "EUR millions",
-          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9"
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9",
+          "value": 3489300000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "currency": "EUR",
+          "unit": "currency"
         }
       ]
     },
@@ -28695,6 +28757,282 @@
           "currency": "INR",
           "unit": "currency",
           "verifiedAt": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "caseId": "dher.de-2026-09-30-revenueQ-20261104",
+      "ticker": "DHER.DE",
+      "listingAliases": [
+        "DHER.SW",
+        "DHER.VI",
+        "1DHER.MI"
+      ],
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 4347900000,
+      "replacementValue": 4347900000,
+      "revision": "2026-11-04-sdheimat2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal bis 30.09.2026 stimmt mit der KPI-Tabelle vom 28.10.2026 überein (4.347,9 Mio. EUR). Die Reihe dieser Firma gilt nur noch mit belegten Quartalen. Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
+          "form": "Delivery Hero, Q3 2026 trading update",
+          "published": "2026-10-28",
+          "verifiedAt": "2026-11-04",
+          "page": "KPI appendix, p. 15",
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9",
+          "value": 4347900000,
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "dher.de-2026-03-31-revenueQ-20261104",
+      "ticker": "DHER.DE",
+      "listingAliases": [
+        "DHER.SW",
+        "DHER.VI",
+        "1DHER.MI"
+      ],
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "EUR",
+      "unit": "currency",
+      "expectedBadValue": 3727700000,
+      "replacementValue": 3727700000,
+      "revision": "2026-11-04-sdheimat2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Umsatz bestätigt: Der Anbieterwert für das Quartal bis 31.03.2026 stimmt mit der KPI-Tabelle vom 28.10.2026 überein (3.727,7 Mio. EUR). Die Reihe dieser Firma gilt nur noch mit belegten Quartalen. Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://ir.deliveryhero.com/media/document/75a92c45-41dd-486c-8ffd-accde4e06ba0/assets/Delivery_Hero_Q3_2026_Trading_Update.pdf",
+          "form": "Delivery Hero, Q3 2026 trading update",
+          "published": "2026-10-28",
+          "verifiedAt": "2026-11-04",
+          "page": "KPI appendix, p. 15",
+          "quote": "Revenue 3,390.3 3,489.3 6,879.5 3,530.1 3,649.9 14,059.6 3,727.7 4,024.5 7,752.2 4,347.9",
+          "value": 3727700000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "currency": "EUR",
+          "unit": "currency"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2026-08-31-opIncQ-20261104",
+      "ticker": "KMX",
+      "field": "opIncQ",
+      "period": "2026-08-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -35741000,
+      "replacementValue": null,
+      "revision": "2026-11-04-sdheimat2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis fehlt für das Quartal bis 31.08.2026: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-35,7 Mio. USD) steht dort nicht, und keine Summe der gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die fünf Anbieterquartale (geprüft: acht Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 223,1 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000104/R2.htm",
+          "form": "10-Q, quarter to 31.08.2026",
+          "published": "2026-09-30",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Earnings before income taxes 223,066 127,097 481,623 410,227"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2026-05-31-opIncQ-20261104",
+      "ticker": "KMX",
+      "field": "opIncQ",
+      "period": "2026-05-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": 31701000,
+      "replacementValue": null,
+      "revision": "2026-11-04-sdheimat2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis fehlt für das Quartal bis 31.05.2026: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (31,7 Mio. USD) steht dort nicht, und keine Summe der gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die fünf Anbieterquartale (geprüft: acht Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 258,6 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000055/R2.htm",
+          "form": "10-Q, quarter to 31.05.2026",
+          "published": "2026-06-24",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Earnings before income taxes 258,557 283,130"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2026-02-28-opIncQ-20261104",
+      "ticker": "KMX",
+      "field": "opIncQ",
+      "period": "2026-02-28",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -249727000,
+      "replacementValue": null,
+      "revision": "2026-11-04-sdheimat2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis fehlt für das Quartal bis 28.02.2026: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-249,7 Mio. USD) steht dort nicht, und keine Summe der gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die fünf Anbieterquartale (geprüft: acht Zeilen, alle Kombinationen); die Firma hatte im Quartal (Geschäftsjahr minus neun Monate) vor Steuern -110,7 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001026000021/R2.htm",
+          "form": "10-K fiscal 2026",
+          "published": "2026-04-15",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Income (Loss) from Continuing Operations before Equity Method Investments, Income Taxes, Noncontrolling Interest 383,433 669,360 641,595"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001025000131/R2.htm",
+          "form": "10-Q, quarter to 30.11.2025, nine months",
+          "published": "2025-12-23",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Earnings before income taxes 83,887 166,472 494,114 550,956"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2025-11-30-opIncQ-20261104",
+      "ticker": "KMX",
+      "field": "opIncQ",
+      "period": "2025-11-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -133695000,
+      "replacementValue": null,
+      "revision": "2026-11-04-sdheimat2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis fehlt für das Quartal bis 30.11.2025: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-133,7 Mio. USD) steht dort nicht, und keine Summe der gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die fünf Anbieterquartale (geprüft: acht Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 83,9 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001025000131/R2.htm",
+          "form": "10-Q, quarter to 30.11.2025",
+          "published": "2025-12-23",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Earnings before income taxes 83,887 166,472 494,114 550,956"
+        }
+      ]
+    },
+    {
+      "caseId": "kmx-2025-08-31-opIncQ-20261104",
+      "ticker": "KMX",
+      "field": "opIncQ",
+      "period": "2025-08-31",
+      "periodType": "3M",
+      "currency": "USD",
+      "unit": "currency",
+      "expectedBadValue": -117819000,
+      "replacementValue": null,
+      "revision": "2026-11-04-sdheimat2",
+      "verifiedAt": "2026-11-04",
+      "reason": "Betriebsergebnis fehlt für das Quartal bis 31.08.2025: CarMax weist in der Gewinn- und Verlustrechnung keinen Betriebsgewinn aus. Der Anbieterwert (-117,8 Mio. USD) steht dort nicht, und keine Summe der gedruckten Zeilen mit einheitlichen Vorzeichen ergibt die fünf Anbieterquartale (geprüft: acht Zeilen, alle Kombinationen); die Firma verdiente vor Steuern 127,1 Mio. USD. Das Vorsteuerergebnis ist eine andere Kennzahl und ersetzt die Zelle nicht. Geprüft am 04.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1170010/000117001025000118/R2.htm",
+          "form": "10-Q, quarter to 31.08.2025",
+          "published": "2025-09-26",
+          "verifiedAt": "2026-11-04",
+          "page": "Consolidated Statements Of Earnings (XBRL viewer R2)",
+          "unit": "USD thousands",
+          "quote": "Earnings before income taxes 127,097 177,844 410,227 384,484"
+        }
+      ]
+    },
+    {
+      "caseId": "rkt-2026-09-30-revenueQ-20261105",
+      "ticker": "RKT",
+      "field": "revenueQ",
+      "period": "2026-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 2925000000,
+      "replacementValue": 3284000000,
+      "revision": "2026-11-05-sdhand3",
+      "verifiedAt": "2026-11-05",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2026 liefert der Anbieter 2.925 Mio. USD. Der Anbieter zieht den Zinsaufwand von 359 Mio. USD ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 3.284 Mio. USD (Total revenue, net). Geprüft am 05.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026068434/rkt-20260930.htm",
+          "page": "Condensed Consolidated Statements of Income (Loss) and Comprehensive Income (Loss), 10-Q (three months ended September 30, 2026, $ in millions)",
+          "quote": "Total revenue, net 3,284 1,695 9,009 4,248",
+          "filed": "2026-10-30",
+          "value": 3284000000,
+          "start": "2026-07-01",
+          "end": "2026-09-30",
+          "verifiedAt": "2026-11-05",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026068434/rkt-20260930.htm",
+          "page": "same statement, nine months column",
+          "quote": "Total revenue, net 3,284 1,695 9,009 4,248",
+          "filed": "2026-10-30",
+          "value": 9009000000,
+          "start": "2026-01-01",
+          "end": "2026-09-30",
+          "verifiedAt": "2026-11-05"
+        }
+      ]
+    },
+    {
+      "caseId": "rkt-2025-09-30-revenueQ-20261105",
+      "ticker": "RKT",
+      "field": "revenueQ",
+      "period": "2025-09-30",
+      "periodType": "3M",
+      "currency": "USD",
+      "expectedBadValue": 1460000000,
+      "replacementValue": 1695000000,
+      "revision": "2026-11-05-sdhand3",
+      "verifiedAt": "2026-11-05",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.09.2025 liefert der Anbieter 1.460 Mio. USD. Der Anbieter zieht den Zinsaufwand von 235 Mio. USD ab, diese Nettozahl druckt die Firma nicht. Die Firma meldet 1.695 Mio. USD (Total revenue, net, in der Darstellung des Berichts für 2026). Geprüft am 05.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000162828026068434/rkt-20260930.htm",
+          "page": "same statement, comparison column (three months ended September 30, 2025, reclassified)",
+          "quote": "Total revenue, net 3,284 1,695 9,009 4,248",
+          "filed": "2026-10-30",
+          "value": 1695000000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-05",
+          "currency": "USD",
+          "unit": "currency"
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1805284/000180528425000136/rkt-20250930.htm",
+          "page": "Condensed Consolidated Statements of Income (original Q3 2025 10-Q, in thousands, before the 2026 reclassification)",
+          "quote": "Total revenue, net 1,605,284",
+          "filed": "2025-11-06",
+          "value": 1605284000,
+          "start": "2025-07-01",
+          "end": "2025-09-30",
+          "verifiedAt": "2026-11-05"
         }
       ]
     }
