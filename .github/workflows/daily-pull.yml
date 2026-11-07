@@ -1170,6 +1170,13 @@ jobs:
       - name: Preis-Shards zusammenfuehren
         run: node scripts/merge-price-shards.js --prices prices --date "$RUN_DATE_UTC" --expected-shards 4
 
+      # P1 (Codex, 04.11.2026): firms with A and H (or A and B) shares get the sum over their classes, each class at
+      # its own close of one common trading day from the price store just merged, instead of Yahoo's value that prices
+      # every share at one line. Here, on the merged generation, because the shards never see both classes together;
+      # before the snapshots artifact, so scoring, exports and monthly-sec-xbrl all read the same value.
+      - name: Klassensumme der Boersenwerte (P1)
+        run: node scripts/apply-mcap-class-sum.js --snapshots snapshots --prices prices --fx fx-rates.json --date "$RUN_DATE_UTC"
+
       # R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's "leave an EXISTING
       # args.out untouched on failure" fallback (BH-138) can only protect a
       # last-good regime file that is ALREADY on disk when it runs. The merge job

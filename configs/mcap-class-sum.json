@@ -1,0 +1,758 @@
+{
+  "_doku": [
+    "P1 (Codex review of #91, 04.11.2026): issuers whose shown market cap is the sum over their listed share classes, each class at its own close.",
+    "Read by lib/mcap-class-sum.js in the merge job (scripts/apply-mcap-class-sum.js, after the price merge): value = sum of shares x close of the newest trading day on which every class has a close in prices/history, x USD per unit from fx-rates.json of the same run. The value goes into every class line the pull did not hold; held lines keep their hold.",
+    "No common close within 10 days, a class without closes, or no FX rate: the value is empty with a German reason, never a guess.",
+    "shares: issuer count of each class without treasury shares, from the source quote. reviewBy: after it the pull log warns every run and the sum is still computed; re-verify the counts and move reviewBy.",
+    "The 16 share-count rows that froze the price ratio of 30.10.2026 into H or A equivalents are removed with this file (their counts and sources are copied below); the shadow registry configs/mcap-classes-registry.json is unchanged."
+  ],
+  "row:688428.SS": {
+    "issuer": "InnoCare Pharma Limited",
+    "classes": [
+      {
+        "ticker": "688428.SS",
+        "class": "A",
+        "shares": 273403904
+      },
+      {
+        "ticker": "9969.HK",
+        "class": "H",
+        "shares": 1496284235
+      }
+    ],
+    "sharesAsOf": "2026-10-27",
+    "verifiedAt": "2026-10-30",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://static.cninfo.com.cn/finalpage/2026-10-27/1225623594.PDF",
+        "page": "Q3 report p.4",
+        "quote": "公司已发行股份总数为 1,769,688,139 股，其中，于香港已发行股份为 1,496,284,235"
+      }
+    ],
+    "origin": "share-count hand table row 688428.SS (removed), counts from its source.unit"
+  },
+  "row:688981.SS": {
+    "issuer": "Semiconductor Manufacturing International Corporation",
+    "classes": [
+      {
+        "ticker": "688981.SS",
+        "class": "A",
+        "shares": 2547775982
+      },
+      {
+        "ticker": "0981.HK",
+        "class": "H",
+        "shares": 6014569609
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700746.pdf",
+        "page": "2",
+        "quote": "Hong Kong Shares ... 6,014,569,609 | Shanghai Stock Exchange, which are subscribed in RMB by investors in the PRC. ... 2,547,775,982"
+      },
+      {
+        "url": "https://static.cninfo.com.cn/finalpage/2026-08-28/1225520297.PDF",
+        "page": null,
+        "quote": "61 (2026 half-year report; table of share movements on p. 58; no treasury shares held, p. 59): 已发行 2,546,744,622 股"
+      }
+    ],
+    "origin": "share-count hand table row 688981.SS (removed), counts from its source.unit"
+  },
+  "row:600938.SS": {
+    "issuer": "CNOOC Limited",
+    "classes": [
+      {
+        "ticker": "600938.SS",
+        "class": "A",
+        "shares": 2990000000
+      },
+      {
+        "ticker": "0883.HK",
+        "class": "H",
+        "shares": 44539953984
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000784.pdf",
+        "page": "2",
+        "quote": "Shares listed on SEHK (\"Hong Kong Shares\") ... 44,539,953,984 | Shares listed on Shanghai Stock Exchange (\"RMB Shares\") ... 2,990,000,000"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0908/2026090800240.pdf",
+        "page": null,
+        "quote": "54 (Interim Report 2026; HKEX monthly return for September 2026 shows the same count with 0 treasury shares): Shares listed on SSE 2,990,000,000"
+      }
+    ],
+    "origin": "share-count hand table row 600938.SS (removed), counts from its source.unit"
+  },
+  "row:688185.SS": {
+    "issuer": "CanSino Biologics Inc.",
+    "classes": [
+      {
+        "ticker": "688185.SS",
+        "class": "A",
+        "shares": 114372901
+      },
+      {
+        "ticker": "6185.HK",
+        "class": "H",
+        "shares": 132670900
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700856.pdf",
+        "page": "2",
+        "quote": "H Shares ... 132,670,900 | A Shares (STAR Market of the Shanghai Stock Exchange) ... 114,372,901"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700856.pdf",
+        "page": null,
+        "quote": "2 (HKEX monthly return for September 2026; 0 treasury shares): Balance at close of the month 114,372,901"
+      }
+    ],
+    "origin": "share-count hand table row 688185.SS (removed), counts from its source.unit"
+  },
+  "row:601869.SS": {
+    "issuer": "Yangtze Optical Fibre and Cable Joint Stock Limited Company",
+    "classes": [
+      {
+        "ticker": "601869.SS",
+        "class": "A",
+        "shares": 402738314
+      },
+      {
+        "ticker": "6869.HK",
+        "class": "H",
+        "shares": 421566794
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1006/2026100601259.pdf",
+        "page": "2",
+        "quote": "421,566,794 | 402,738,314 ... 3,600,000 ... 406,338,314"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1006/2026100601259.pdf",
+        "page": null,
+        "quote": "2 (HKEX monthly return for September 2026; 406,338,314 issued less 3,600,000 treasury; the Q3 2026 report CN p. 8 gives the total 827,905,108): Balance at close of the month 402,738,314 3,600,000 406,338,314"
+      }
+    ],
+    "origin": "share-count hand table row 601869.SS (removed), counts from its source.unit"
+  },
+  "row:688347.SS": {
+    "issuer": "Hua Hong Semiconductor Limited",
+    "classes": [
+      {
+        "ticker": "688347.SS",
+        "class": "A",
+        "shares": 598518392
+      },
+      {
+        "ticker": "1347.HK",
+        "class": "H",
+        "shares": 1329976402
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1008/2026100800287.pdf",
+        "page": "2",
+        "quote": "1,329,976,402 (Stock code 01347, treasury shares 0) | 598,518,392 (Stock code 688347, treasury shares 0); page 7: Consideration issue - new shares involved 190,768,392"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1008/2026100800287.pdf",
+        "page": null,
+        "quote": "2: Balance at close of the month 598,518,392 0 598,518,392"
+      }
+    ],
+    "origin": "share-count hand table row 688347.SS (removed), counts from its source.unit"
+  },
+  "row:001289.SZ": {
+    "issuer": "China Longyuan Power Group Corporation Limited",
+    "classes": [
+      {
+        "ticker": "001289.SZ",
+        "class": "A",
+        "shares": 5041934164
+      },
+      {
+        "ticker": "0916.HK",
+        "class": "H",
+        "shares": 3317882000
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1005/2026100501000.pdf",
+        "page": "2",
+        "quote": "3,317,882,000 (Stock code 00916, treasury shares 0) | 5,041,934,164 (Stock code 001289, treasury shares 0)"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1005/2026100501000.pdf",
+        "page": null,
+        "quote": "2: Balance at close of the month 5,041,934,164 0 5,041,934,164"
+      }
+    ],
+    "origin": "share-count hand table row 001289.SZ (removed), counts from its source.unit"
+  },
+  "row:600956.SS": {
+    "issuer": "China Suntien Green Energy Corporation Limited",
+    "classes": [
+      {
+        "ticker": "600956.SS",
+        "class": "A",
+        "shares": 2354263077
+      },
+      {
+        "ticker": "0956.HK",
+        "class": "H",
+        "shares": 2146004396
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700383.pdf",
+        "page": "2",
+        "quote": "2,146,004,396 (Stock code 00956, treasury shares 0) | 2,354,263,077 (Stock code 600956, treasury shares 0)"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700383.pdf",
+        "page": null,
+        "quote": "2: Balance at close of the month 2,354,263,077 0 2,354,263,077"
+      }
+    ],
+    "origin": "share-count hand table row 600956.SS (removed), counts from its source.unit"
+  },
+  "row:600685.SS": {
+    "issuer": "CSSC Offshore & Marine Engineering (Group) Company Limited",
+    "classes": [
+      {
+        "ticker": "600685.SS",
+        "class": "A",
+        "shares": 821435181
+      },
+      {
+        "ticker": "0317.HK",
+        "class": "H",
+        "shares": 592071197
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093001334.pdf",
+        "page": "2",
+        "quote": "592,071,197 (Stock code 00317, treasury shares 0) | 821,435,181 (Stock code 600685, treasury shares 0)"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093001334.pdf",
+        "page": null,
+        "quote": "2: 821,435,181 0 821,435,181"
+      }
+    ],
+    "origin": "share-count hand table row 600685.SS (removed), counts from its source.unit"
+  },
+  "row:600871.SS": {
+    "issuer": "Sinopec Oilfield Service Corporation",
+    "classes": [
+      {
+        "ticker": "600871.SS",
+        "class": "A",
+        "shares": 13547012351
+      },
+      {
+        "ticker": "1033.HK",
+        "class": "H",
+        "shares": 5410033482
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1006/2026100600438.pdf",
+        "page": "2",
+        "quote": "5,410,033,482 (Stock code 01033, treasury shares 0) | 13,547,012,351 (Stock code 600871, treasury shares 0)"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1006/2026100600438.pdf",
+        "page": null,
+        "quote": "2: Balance at close of the month 13,547,012,351 0 13,547,012,351"
+      }
+    ],
+    "origin": "share-count hand table row 600871.SS (removed), counts from its source.unit"
+  },
+  "row:600188.SS": {
+    "issuer": "Yankuang Energy Group Company Limited",
+    "classes": [
+      {
+        "ticker": "600188.SS",
+        "class": "A",
+        "shares": 5959386820
+      },
+      {
+        "ticker": "1171.HK",
+        "class": "H",
+        "shares": 4075500000
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1001/2026100100013.pdf",
+        "page": "3",
+        "quote": "Balance at close of the month 4,075,500,000 0 4,075,500,000 | Balance at close of the month 5,959,386,820 1,965,200 5,961,352,020"
+      },
+      {
+        "url": "https://static.cninfo.com.cn/finalpage/2026-08-29/1225532257.PDF",
+        "page": null,
+        "quote": "69 (class table, issued 5,961,352,020); 30 (treasury 1,965,200): 1、人民币普通股 5,923,911,084 59.02 37,440,936 37,440,936 5,961,352,020 59.39 | 公司持有的 1,965,200 股库存股"
+      }
+    ],
+    "origin": "share-count hand table row 600188.SS (removed), counts from its source.unit"
+  },
+  "row:688385.SS": {
+    "issuer": "Shanghai Fudan Microelectronics Group Company Limited",
+    "classes": [
+      {
+        "ticker": "688385.SS",
+        "class": "A",
+        "shares": 539389250
+      },
+      {
+        "ticker": "1385.HK",
+        "class": "H",
+        "shares": 284330000
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100200574.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 284,330,000 0 284,330,000 | Balance at close of the month 539,389,250 0 539,389,250"
+      },
+      {
+        "url": "https://static.cninfo.com.cn/finalpage/2026-08-18/1225478247.PDF",
+        "page": null,
+        "quote": "38 (class table); 117 (treasury: none): 通股 537,097,300 65.39 +2,291,950 +2,291,950 539,389,250 65.48 | 56、 库存股 □适用 √不适用"
+      }
+    ],
+    "origin": "share-count hand table row 688385.SS (removed), counts from its source.unit"
+  },
+  "row:600688.SS": {
+    "issuer": "Sinopec Shanghai Petrochemical Company Limited",
+    "classes": [
+      {
+        "ticker": "600688.SS",
+        "class": "A",
+        "shares": 7328813500
+      },
+      {
+        "ticker": "0338.HK",
+        "class": "H",
+        "shares": 3213804000
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201558.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 3,213,804,000 0 3,213,804,000 | Balance at close of the month 7,328,813,500 0 7,328,813,500"
+      },
+      {
+        "url": "https://static.cninfo.com.cn/finalpage/2026-08-20/1225482772.PDF",
+        "page": null,
+        "quote": "102 (note, exact count); 100 (table, thousand shares): 中 A 股 7,328,813,500 股，H 股 3,213,804,000 股。"
+      }
+    ],
+    "origin": "share-count hand table row 600688.SS (removed), counts from its source.unit"
+  },
+  "row:1787.HK": {
+    "issuer": "Shandong Gold Mining Co., Ltd.",
+    "classes": [
+      {
+        "ticker": "600547.SS",
+        "class": "A",
+        "shares": 3614443347
+      },
+      {
+        "ticker": "1787.HK",
+        "class": "H",
+        "shares": 995486178
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000468.pdf",
+        "page": "3",
+        "quote": "Balance at close of the month 995,486,178 0 995,486,178 | Balance at close of the month 3,614,443,347 0 3,614,443,347"
+      },
+      {
+        "url": "https://static.cninfo.com.cn/finalpage/2026-03-27/1225035639.PDF",
+        "page": null,
+        "quote": "101: 1、人民币普通股 3,614,443,347 80.80 0 0 0 0 0 3,614,443,347 78.41"
+      }
+    ],
+    "origin": "share-count hand table row 1787.HK (removed), counts from its source.unit"
+  },
+  "row:1766.HK": {
+    "issuer": "CRRC Corporation Limited",
+    "classes": [
+      {
+        "ticker": "601766.SS",
+        "class": "A",
+        "shares": 24327798048
+      },
+      {
+        "ticker": "1766.HK",
+        "class": "H",
+        "shares": 4371066040
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000660.pdf",
+        "page": "2",
+        "quote": "Stock code (if listed) 01766 ... Total number of issued shares ... 4,371,066,040 ... Number of treasury shares ... 0 | Stock code (if listed) 601766 ... 24,327,798,048 ... Number of treasury shares ... 0"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000660.pdf",
+        "page": null,
+        "quote": "2 (HKEX Monthly Return FF301 for the month ended 30 September 2026, section II.2, treasury shares 0): 24,327,798,048"
+      }
+    ],
+    "origin": "share-count hand table row 1766.HK (removed), counts from its source.unit"
+  },
+  "row:0019.HK": {
+    "issuer": "Swire Pacific Limited",
+    "classes": [
+      {
+        "ticker": "0019.HK",
+        "class": "A",
+        "shares": 778988000
+      },
+      {
+        "ticker": "0087.HK",
+        "class": "B",
+        "shares": 2848932500
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201734.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 778,988,000 0 778,988,000 | Balance at close of the month 2,848,932,500 0 2,848,932,500"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0903/2026090300646.pdf",
+        "page": null,
+        "quote": "75 (note 25 share capital): At 1st January 2026 and 30th June 2026 778,988,000 2,848,932,500 1,294"
+      }
+    ],
+    "origin": "share-count hand table row 0019.HK (removed), counts from its source.unit"
+  },
+  "p1:000550.SZ": {
+    "issuer": "Jiangling Motors Corporation, Ltd.",
+    "classes": [
+      {
+        "ticker": "000550.SZ",
+        "class": "A",
+        "shares": 510581922
+      },
+      {
+        "ticker": "200550.SZ",
+        "class": "B",
+        "shares": 344000000
+      }
+    ],
+    "sharesAsOf": "2026-06-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "http://notice.10jqka.com.cn/api/pdf/ca7d2e06b9c53598.pdf",
+        "page": "25 (share table) and 26 (repurchase account)",
+        "quote": "人民币普通股 518,463,160 + 有限售条件股份 750,840 = 519,214,000; 回购专用证券账户持有公司股份 8,632,078 股 -> 510,581,922 ex treasury (vendor copy of the issuer's 2026 half-year report, cninfo original not fetched)"
+      },
+      {
+        "url": "http://notice.10jqka.com.cn/api/pdf/ca7d2e06b9c53598.pdf",
+        "page": "25",
+        "quote": "境内上市的外资股 344,000,000"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers"
+  },
+  "p1:601607.SS": {
+    "issuer": "Shanghai Pharmaceuticals Holding Co., Ltd",
+    "classes": [
+      {
+        "ticker": "601607.SS",
+        "class": "A",
+        "shares": 2789289105
+      },
+      {
+        "ticker": "2607.HK",
+        "class": "H",
+        "shares": 919072704
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100202641.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 2,789,289,105 0 2,789,289,105"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100202641.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 919,072,704 0 919,072,704"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers"
+  },
+  "p1:688009.SS": {
+    "issuer": "China Railway Signal & Communication Corporation Limited",
+    "classes": [
+      {
+        "ticker": "688009.SS",
+        "class": "A",
+        "shares": 8621018000
+      },
+      {
+        "ticker": "3969.HK",
+        "class": "H",
+        "shares": 1968801000
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000702.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 8,621,018,000 0 8,621,018,000"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0930/2026093000702.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 1,968,801,000 0 1,968,801,000"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers"
+  },
+  "p1:600690.SS": {
+    "issuer": "Haier Smart Home Co., Ltd.",
+    "classes": [
+      {
+        "ticker": "600690.SS",
+        "class": "A",
+        "shares": 6110504936
+      },
+      {
+        "ticker": "6690.HK",
+        "class": "H",
+        "shares": 2849037266
+      },
+      {
+        "ticker": "690D.DE",
+        "class": "D",
+        "shares": 271013973
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201288.pdf",
+        "page": "3",
+        "quote": "Balance at close of the month 6,110,504,936 67,981,989 6,178,486,925"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103001970.pdf",
+        "page": "1",
+        "quote": "Closing balance as at (Notes 5 and 6) 30 October 2026 2,849,037,266 (monthly return of 2026-09-30, page 3: 2,853,587,266; 150,000 shares bought back on 2026-10-30 are not yet cancelled and still inside the count)"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100201288.pdf",
+        "page": "3",
+        "quote": "Balance at close of the month 271,013,973 0 271,013,973"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers except H: newer monthly return of 30.10.2026 taken"
+  },
+  "p1:000063.SZ": {
+    "issuer": "ZTE Corporation",
+    "classes": [
+      {
+        "ticker": "000063.SZ",
+        "class": "A",
+        "shares": 3999372942
+      },
+      {
+        "ticker": "0763.HK",
+        "class": "H",
+        "shares": 755502534
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700832.pdf",
+        "page": "2",
+        "quote": "3,999,372,942 28,659,411 4,028,032,353 (issued excl. treasury / treasury / total A shares)"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700832.pdf",
+        "page": "2",
+        "quote": "755,502,534 0 755,502,534"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers"
+  },
+  "p1:600012.SS": {
+    "issuer": "Anhui Expressway Company Limited",
+    "classes": [
+      {
+        "ticker": "600012.SS",
+        "class": "A",
+        "shares": 1165600000
+      },
+      {
+        "ticker": "0995.HK",
+        "class": "H",
+        "shares": 542991889
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100202531.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 1,165,600,000 0 1,165,600,000"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100202531.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 542,991,889 0 542,991,889"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers"
+  },
+  "p1:601298.SS": {
+    "issuer": "Qingdao Port International Co., Ltd.",
+    "classes": [
+      {
+        "ticker": "601298.SS",
+        "class": "A",
+        "shares": 5392075000
+      },
+      {
+        "ticker": "6198.HK",
+        "class": "H",
+        "shares": 1099025000
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700938.pdf",
+        "page": "3",
+        "quote": "Balance at close of the month 5,392,075,000 0 5,392,075,000"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100700938.pdf",
+        "page": "3",
+        "quote": "Balance at close of the month 1,099,025,000 0 1,099,025,000"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers"
+  },
+  "p1:601857.SS": {
+    "issuer": "PetroChina Company Limited",
+    "classes": [
+      {
+        "ticker": "601857.SS",
+        "class": "A",
+        "shares": 161922077818
+      },
+      {
+        "ticker": "0857.HK",
+        "class": "H",
+        "shares": 21098900000
+      }
+    ],
+    "sharesAsOf": "2026-09-30",
+    "verifiedAt": "2026-11-01",
+    "reviewBy": "2027-03-31",
+    "sources": [
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1005/2026100500962.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 161,922,077,818 0 161,922,077,818"
+      },
+      {
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1005/2026100500962.pdf",
+        "page": "2",
+        "quote": "Balance at close of the month 21,098,900,000 0 21,098,900,000"
+      }
+    ],
+    "origin": "two independent source checks of 01.11.2026 (lane sd-hand-2, P1); counts agree between both checkers"
+  }
+}
