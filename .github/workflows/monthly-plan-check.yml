@@ -53,9 +53,20 @@ env:
 jobs:
   monthly-plan-check:
     runs-on: ubuntu-latest
+    # A hand start that overlaps the schedule writes the same report and state/cadence-heartbeat.json from the
+    # same base, and the second push's rebase conflicts (same fault as the monthly SEC run of 2026-11-01, see
+    # monthly-sec-xbrl.yml). The workflow-level group cannot serialize them (hand starts stay outside
+    # main-push on purpose), so this job queues behind a running one on main, and its Checkout names `ref`
+    # so it starts from the branch tip at job start, not from the commit current when the run was created.
+    # Other refs (dry runs) get a group per run and never wait. Guard: tests/workflow-publish-groups.test.js
+    concurrency:
+      group: ${{ github.ref == 'refs/heads/main' && 'monthly-plan-check-main' || format('monthly-plan-check-{0}', github.run_id) }}
+      cancel-in-progress: false
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}  # tip of the branch at job start (see the job's concurrency note)
       - uses: actions/setup-node@v4
         with:
           node-version: '22'  # BH-134: package.json engines requires >=22

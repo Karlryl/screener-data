@@ -80,10 +80,10 @@
     "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
     "src/scoring/lamps.js": "1d5851e16ecb8c2a316ca2a87cfb81ddd5f49a6a682141161f790b22773d6f0a",
     "src/scoring/profit-tier.js": "c7e8aa7f9841fe35a49dcf70ff757799687ef975f14c3479edefe8f5c14e46c7",
-    "src/scoring/run-screener.js": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
+    "src/scoring/run-screener.js": "ee9c2bcb4d2186e31ce35cdd7565a013851162e92cef4ba132b501ea84975901",
     "src/scoring/overview.js": "56b03a6491b9c18dd4e4bdef0103d564fd68ddbb2dc1bbc08c80492a1e9a762a",
     "src/scoring/router.js": "1e04806cfce2971459586d5daf8a75e92f4018141742c962765ffe5cc2e3e70d",
-    "src/scoring/profit-streak.js": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3",
+    "src/scoring/profit-streak.js": "4b056d5b20124ba3ee675bfb1f32689ab13fe31f6ba9ee6471062c28f08bd206",
     "src/scoring/country.js": "95d8b0d3d489786f326f9b764216c66222012449a9b68d630ef651dc574ee7db"
   },
   "sourceFilesBegruendung": {
@@ -93,10 +93,10 @@
     "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
     "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm P160 2026-10-11: F-07 retains annual revenue positions and uses finite FY-1 revenue or the existing cash-flow bound for burnPressFactor.",
     "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme) P160 2026-10-11: F-12 requires finite current net income before compacting its fallback series; missing remains unknown and Quality membership follows the existing gate.",
-    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment.",
+    "src/scoring/run-screener.js": "C2 2026-09-28: exact Yahoo Q4 known-case correction at the main/smallcap snapshot read boundary; no scoring formula, threshold or weight changes. See c2KnownCaseInputRepair. P160 2026-10-11: F-14 skips only ENOENT, rejects non-object or array annual-store roots, and throws all other failures with file path and original cause before any attachment. PR #81 2026-10-31: the small-cap pass reads coverage floor and score calibration from the versioned configs/smallcap-reference.json through the existing refCalibration (see smallcapFixedReference); no main or quality pass change. PR #81 2026-11-01: its renewal notice watches the bases the score reads, including the union of a thin cohort; report only, no score change.",
     "src/scoring/overview.js": "overview.js carries the display-only overview growth column; since P158 08.10.2026 it builds annual growth only from adjacent fiscal years, with no axis, weight, threshold or score input change. G31 switch 2026-10-18: overview.value for gp and revenue-badge is the labelled newest candidate of overviewShadow; display only (see g31Switch).",
     "src/scoring/router.js": "P160 2026-10-11: F-13 pairs annual net income and revenue at the newest jointly finite index for the asset-manager zero-gross-profit gate. P205 2026-10-12: apply the existing size floor only to source-backed market-cap hand-table cases before routing. QH and 3018.TW leave the same-day universe; no formula or weight changed. Explicit P205 fix brief; independent release review by Claude remains required. See ergebnisse/P205/vorher-nachher.md.",
-    "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak.",
+    "src/scoring/profit-streak.js": "P192b 2026-10-11: display-only SEC profit streak uses documented annual hand-table values for the same ticker, fiscal year and selected profit series; older SEC years and profitTierOf remain unchanged. See p192bProfitStreak. F-02 2026-11-01: a gap in the SEC series is never reported as a loss year; display only. See f02ProfitStreakGap.",
     "src/scoring/smallcap-route.js": "P205 2026-10-12: route(s, MIN_MCAP) applies the existing 300M floor to source-backed hand-table cases; no formula or weight change.",
     "src/scoring/country.js": "Daylauf 6 2026-10-23 (PR #29): COUNTRY_TO_REGION gains 18 countries observed in meta.country (Bulgaria, Czech Republic, Hungary, Iceland, Liechtenstein, Lithuania, Malta, Romania, Slovenia, Russia -> Europe; Cambodia, Macau, Mongolia, Kazakhstan -> Asia; Gabon, Mauritius -> Africa; Bahamas, Barbados, British Virgin Islands -> North America). Display and filter only: region is attached to rows (score.js rowMeta) and read by the findash region filter and the filter feed column rg; no score, rank, routing, calibration, formula, weight or threshold reads it."
   },
@@ -216,6 +216,19 @@
     "evidence": "tests/profit-streak-hand-table-p192.test.js; C:/Users/Anwender/.codex/reports/warteschlange-2026-10-05/ergebnisse/P192b/bericht.md",
     "review": "Blind Opus review FREIGABE 90 % (ergebnisse/P192b/review-opus.md). No initialization or reseal.",
     "rollback": "Revert the P192b source change and only the P192b pending hash registration together in a reviewed new commit."
+  },
+  "f02ProfitStreakGap": {
+    "date": "2026-11-01",
+    "authority": "Build brief of 01.11.2026 for PR #20, decided as the blind review of 31.10.2026 proposed: a gap in the SEC series is never a loss.",
+    "baseCommit": "b588f529cd6ac7ef39ed23a58cda684c441f1365",
+    "file": "src/scoring/profit-streak.js",
+    "previousSourceSha256LF": "881e2eff1d8f339fa263bb114fa0139224ea258848dc7cf4a12c19fdbb644cd3",
+    "sourceSha256LF": "4b056d5b20124ba3ee675bfb1f32689ab13fe31f6ba9ee6471062c28f08bd206",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "scope": "Only the display profitStreak: a gap from the second year on gives mindestens true, tiefe equal to jahre and letzterVerlust null; a gap in the newest year gives null; a real negative year is unchanged. No score, rank, profitTierOf, SEC/Yahoo preference or stored SEC annual input change.",
+    "evidence": "tests/scoring/profit-streak.test.js; docs/sec-jahreszeitraum-vorher-nachher-2026-10-22.md, Nachtrag 01.11.2026",
+    "review": "Pending independent review; the blind Codex review of this state is owed. No initialization or reseal.",
+    "rollback": "Revert this source change and only this pending hash registration together in a reviewed new commit."
   },
   "p184G31Recency": {
     "date": "2026-10-11",
@@ -372,10 +385,49 @@
     "dependencies": "lib/home-listing.js and configs/home-listing.json are registered in dependencyFiles and required. The sourced homeListingProposal rows of configs/dup-issuer-shadow-table.json are a hand table outside the fingerprint, like the other hand tables.",
     "goldenImpact": "verify() rebuilds the golden traces: 0 score and 0 rank mismatches. A golden fixture is a single listing, so the comparator never decides there."
   },
+  "smallcapFixedReference": {
+    "date": "2026-10-31",
+    "authority": "Codex verdict P317 on PR #81 (NOT APPROVED 98 %, finding 1, pick 94 %) and the master's order of 31.10.2026 under Karl's rule that no automation may change right rows. A method change on the formula path: it stays a draft until the independent Codex review.",
+    "scope": "Only the run-screener.js fingerprint, only the small-cap pass. runSmallcapPass takes the coverage floor and the calibration from configs/smallcap-reference.json instead of learning them from the rows of each run. The p10 of the run stays visible as coverageFloorLive and decides nothing. No main or quality pass change, no formula, weight, axis or small-cap band change; score.js unchanged. Second step 2026-11-01 (Codex verdict P317 round 2, finding 1): smallcapReferenceDrift compares the run with the reference on exactly the bases the score reads, a thin cohort on the union of its formula's tracks like parentBasis, and names a group that cannot be watched in reference.notMonitored. It only reports; board files stay byte-identical on the inputs of 31.10.2026. Fingerprint e5e73333 became 950d807f through a comment correction above that function, no code changed. Third step 2026-11-04 (Codex verdict R20, finding 1): where the score splits capitalEfficiency by profit sign (subCohortByProfit), each sign basis is watched on its own from MIN_COHORT_N usable values or named in reference.notMonitored; fingerprint ee9c2bcb. Report only.",
+    "file": "src/scoring/run-screener.js",
+    "sourceSha256LF": "ee9c2bcb4d2186e31ce35cdd7565a013851162e92cef4ba132b501ea84975901",
+    "previousPendingSha256LF": "93c4b4de47f485c5891a495c0135c142a4803494196f48a7ee36ab44bac0982a",
+    "hashMethod": "scripts/gqs00-freeze.js sourceHashes(file)[0]",
+    "goldenImpact": "verify() rebuilds the 25 golden traces unchanged; they do not run the small-cap pass.",
+    "evidence": "tests/smallcap-fixed-reference.test.js with --break-once, tests/smallcap-cap-status.test.js, tests/scoring/gqs00-freeze.test.js; before and after on the data of 31.10.2026 in the body of PR #81.",
+    "review": "Build registration only; the independent Codex review decides the merge. The builder does not merge, publish, initialize or seal.",
+    "rollback": "Revert the PR #81 source change and only this registration together in a reviewed new commit."
+  },
   "dependencyFiles": {
     "configs/home-listing.json": "eac85125840a9d4b78c4f001eec349fdb72d3fa1d7feffb1d479dcae63f3ac6b",
     "lib/home-listing.js": "10441d8c06f4bb2e2c176245b7e4740b420a0998df242b8ee3366fa1d5eff18f",
     "lib/g31-recency.js": "3f8125b27f32d0bc05240321bd4f13946ad8c81a5dbe93e68906d1112d0d9061",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
+  },
+  "cycleRamp": {
+    "date": "2026-11-04",
+    "authority": "Daylauf 13 build brief of 2026-11-04: agreed Claude/Codex method, continuous 80 to 120 percent ramp. Build registration only, pending independent blind Claude review.",
+    "scope": "Only the drawdown activation in cycleSignal changes: oscExcess(op) * clamp((dd - 0.8*t)/(0.4*t), 0, 1). Same learned p75, samples, data guards, oscillation, k=0.5, other axes and factors. At dd=t the weight is one half, not the factor. For t=0 the zero-width band retains the old gate, including dd=0.",
+    "previousSourceSha256LF": {
+      "src/scoring/score.js": "61ea804cdf927bf89cbd551447ae0226c261d4d7750a33e8884f8ac0172a93e8"
+    },
+    "sourceSha256LF": {
+      "src/scoring/score.js": "0ad556053f7fd8091ef3b2df484ae853320769931dad48df0fb589545351ba29"
+    },
+    "comparison": {
+      "fields": [
+        "factors.cycleLegacy",
+        "scoreCycleLegacy"
+      ],
+      "startsOn": "2026-11-04",
+      "endsOn": "2026-12-02",
+      "maximumDays": 28,
+      "definition": "Old hard gate with identical calibration and inputs, including the original multiplication order; round at export and cap the comparison score at 100 like score. Never used to rank.",
+      "removal": "Remove the temporary comparison fields and legacy arm in a reviewed follow-up on 2026-12-02 (endsOn); remove cycleLegacy and scoreCycleLegacy from tests/druckenmiller/fixtures/v1-row-keys.snapshot.json at the same time. No extension beyond four weeks. The frontend display must be checked by the delivery lane.",
+      "deadlineGuard": "scripts/cycle-ramp-deadline.js reads endsOn during findash export build and --check; after that date in Europe/Berlin it warns if either legacy field is still exported. Reporting only, never an export or PR failure. Tests use fixed clocks, including the Berlin midnight boundary."
+    },
+    "definitionAmendmentAt120Seal": "At the 1.2.0 seal, constants.cycleDamper and endFactors.cycle.rule in scripts/gqs00-freeze.js buildRegistry must describe the ramp (lo 0.8, hi 1.2, width 0.4) from the exported score.js constants. The version branch is implemented and tested in memory; the historical 1.1.0 registry and its verify comparison remain unchanged.",
+    "evidence": "tests/scoring/cycle-ramp.test.js; scripts/cycle-ramp-compare.js; docs/zyklus-rampe-vorher-nachher-2026-11-04.md. Fixed 2026-10-31 R12 inputs, same calibration. Independent blind review outstanding.",
+    "rollback": "Restore the previous cycle gate and remove its comparison additions and this registration together in a reviewed new commit; keep historical seals unchanged."
   }
 }

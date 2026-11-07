@@ -319,24 +319,26 @@
     "withholdUnverified": true
   },
   "2590.HK": {
-    "shares": 1337286998,
+    "shares": 1281656998,
     "sharesAsOf": "2026-10-30",
     "validFrom": "2026-10-01",
     "reviewBy": "2026-12-31",
     "wrongShares": [
-      2214575158
+      2214575158,
+      2156451368
     ],
-    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count",
-    "reason": "Börsenwert aus 1.337.286.998 Aktien berechnet: alle ausgegebenen Aktien laut Geekplus zum 30.10.2026 (Klasse A, gelistete und nicht gelistete Klasse B), einschließlich 55.630.000 eigener Aktien. Yahoo rechnet mit rund 2.215 Mio. Aktien, wofür es keinen Beleg gibt.",
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count; snapshot of run 41184535364 (2026-10-31): vendor value 1,671,454,670 USD at 0.7750949984 USD, 2,156,451,368 shares implied",
+    "reason": "Börsenwert aus 1.281.656.998 Aktien berechnet: alle ausgegebenen Aktien laut Geekplus zum 30.10.2026 (Klasse A, gelistete und nicht gelistete Klasse B) ohne die 55.630.000 eigenen Aktien. Yahoo rechnet mit rund 2.215 Mio. Aktien, wofür es keinen Beleg gibt. Bis zum 04.11.2026 zählten hier auch die eigenen Aktien mit (1.337.286.998), der Börsenwert lag dadurch 4,3 % zu hoch.",
     "source": {
       "form": "Die Tagesmeldung von Geekplus an die Hongkonger Börse vom 30.10.2026 und die Monatsmeldung für September 2026 nennen die ausgegebenen Aktien je Klasse.",
       "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103002515.pdf",
       "quote": "Closing balance as at (Notes 5 and 6) 30 October 2026  968,520,483  55,630,000  1,024,150,483",
       "page": "Next Day Disclosure Return p.1, listed class B; monthly return https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100701727.pdf p.2 and pp.3-4",
-      "unit": "shares: class A 218,560,434 + listed class B 1,024,150,483 + unlisted class B 94,576,081",
-      "crossCheck": "Annual report 2025 https://www.hkexnews.hk/listedco/listconews/sehk/2026/0423/2026042303218.pdf note (2): 218,560,434 Class A and 1,118,726,564 Class B"
+      "unit": "shares: class A 218,560,434 + listed class B 968,520,483 excluding 55,630,000 treasury + unlisted class B 94,576,081",
+      "crossCheck": "Annual report 2025 https://www.hkexnews.hk/listedco/listconews/sehk/2026/0423/2026042303218.pdf note (2): 218,560,434 Class A and 1,118,726,564 Class B",
+      "checkerNote": "Two independent checkers on 2026-11-04: 1,281,656,998 net of treasury at 30.10.2026; the buyback goes on (967,987,483 listed class B and 56,163,000 treasury on 04.11.2026, 0.04 % less)."
     },
-    "verifiedAt": "2026-10-30",
+    "verifiedAt": "2026-11-04",
     "withholdUnverified": true
   },
   "688428.SS": {
@@ -1654,18 +1656,20 @@
     },
     "JXAMY": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Zweitnotierung von JX Advanced Metals Corporation 36,64 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 5016.T am 30.10.2026 ergeben sich rund 17,81 Mrd. USD. Maßgeblich ist die Notierung 5016.T.",
+      "reason": "Yahoo nennt für diese Zweitnotierung von JX Advanced Metals Corporation 36,64 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 5016.T am 30.10.2026 ergeben sich rund 16,76 Mrd. USD. Maßgeblich ist die Notierung 5016.T.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 5016.T.",
-        "url": "https://www2.jpx.co.jp/disc/50160/140120260805510453.pdf",
-        "quote": "① 期末発行済株式数 (自己株式を含む) 2027年３月期１Ｑ 953,183,210株 || ② 期末自己株式数 2027年３月期１Ｑ 2,288,019株",
-        "page": "2",
+        "url": "https://contents.xj-storage.jp/xcontents/AS82809/2607a77f/979d/4c8a/8c2f/e89d81b5f121/140120260618573662.pdf",
+        "quote": "（２）取得した株式の総数 57,300,112 株 || 消却後の当社の発行済株式総数は、949,183,210 株となる見込みです。",
+        "page": "3 (result of the own-share tender offer, 18.06.2026); cancellation notice of 12.06.2026 https://contents.xj-storage.jp/xcontents/AS82809/7ad356e2/14fa/4e59/9909/15b74e7937e2/140120260612569751.pdf p.1",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 36,637,388,800 USD, price 41 USD, 893,594,849 shares implied",
         "otherSources": "",
-        "checkerNote": "The shown value is the ADR close (41.00 USD) times about 893.7 million ordinary shares (derived), which ignores that one ADR is two shares and uses a share count lower than the 950.9 million net shares reported; the Tokyo line closed at 2,955 JPY = 18.73 USD per share. Issued shares rose from 928,463,102 (31.03.2026) to 953,183,210 (30.06.2026); no later share-count filing found."
+        "checkerNote": "Corrected on 2026-11-04 by two independent checkers: the reason of 01.11. used 950.9 million net shares from 30.06.2026 and missed the tender offer of July; 893,595,079 shares outstanding, the count Yahoo uses on the Tokyo line. The ADR value stays wrong (one ADR is two shares, priced as one).",
+        "unit": "shares outstanding = 949,183,210 issued - (2,288,019 + 57,300,112 - 4,000,000) treasury = 893,595,079",
+        "crossCheck": "https://www2.jpx.co.jp/disc/50160/140120260805510453.pdf 2 and 12 (Q1 tanshin of 06.08.2026): 953,183,210 issued and 2,288,019 treasury at 30.06.2026; settlement of the tender offer for 57,300,112 shares on 09.07.2026"
       },
-      "verifiedAt": "2026-11-01",
+      "verifiedAt": "2026-11-04",
       "reviewBy": "2026-12-31"
     },
     "KELRF": {
@@ -2609,6 +2613,79 @@
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
+    },
+    "1AT1.MI": {
+      "validFrom": "2026-10-31",
+      "reason": "Yahoo rechnet für diese Mailänder Zweitnotierung von Aroundtown mit einem alten Kurs von 1,79 USD und kommt auf 2,02 Mrd. USD; aus 1.129.930.393 Aktien und dem Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 1,83 Mrd. USD. Maßgeblich ist die Notierung AT1.DE.",
+      "reasonComplete": true,
+      "source": {
+        "form": "Der Halbjahresbericht von Aroundtown nennt die Aktienzahl ohne eigene Aktien und Aktien mit ruhenden Stimmrechten.",
+        "url": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_Q2_2026.pdf",
+        "quote": "As of June 30, 2026 Number of shares 1,537,025,609 Number of shares, base for share KPI calculations 1) 1,129,930,393",
+        "page": "22 (Board of Directors' Report, Capital markets, Trading data; 1) excluding suspended voting rights)",
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,019,895,601 USD, price 1.7876284099 USD (Milan line); home line AT1.DE price 1.6179097851 USD",
+        "crossCheck": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_H1_2026_financials_presentation.pdf 58: Number of shares, base for share KPI calculations (excluding suspended voting rights) 1,129,451,330 (As of 25.08.2026)",
+        "otherSources": "https://www.borsaitaliana.it/borsa/azioni/dati-completi.html?isin=LU1673108939&lang=en web page, read 2026-11-04: Date - Time Last Trade:| - (no trade shown); Reference Close| 1.52 - 26/11/03 5:45:00 PM",
+        "checkerNote": "Two independent checkers on 2026-11-04: same count (1,129,930,393 at 30.06., 1,129,451,330 at 25.08., 0.04 % apart); Borsa Italiana shows no trade for 1AT1; Xetra close 03.11. 1.51 EUR. Codex found the line on 2026-11-04 (review of PR 91)."
+      },
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-31"
+    },
+    "1DEZ.MI": {
+      "validFrom": "2026-10-31",
+      "reason": "Yahoo rechnet für diese Mailänder Zweitnotierung von Deutz mit einem alten Kurs von 12,34 USD und kommt auf 2,07 Mrd. USD; aus 167.901.915 Aktien und dem Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 1,77 Mrd. USD. An der Mailänder Börse selbst stand der Kurs am 04.11.2026 bei 9,895 EUR. Maßgeblich ist die Notierung DEZ.DE.",
+      "reasonComplete": true,
+      "source": {
+        "form": "Die Gesamtstimmrechtsmitteilung von Deutz nennt die Aktienzahl nach der Kapitalerhöhung vom September 2026.",
+        "url": "https://www.eqs-news.com/news/total-voting-rights/deutz-ag-release-according-to-article-41-of-the-wphg-the-german-securities-trading-act-with-the-objective-of-europe-wide-distribution/59c81e9a-a7c1-40ac-990f-d7371e011c23_en",
+        "quote": "3. New total number of voting rights: 167,901,915",
+        "page": "HTML (EQS total voting rights announcement, 16 September 2026)",
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,071,590,251 USD, price 12.338097395 USD (Milan line); home line DEZ.DE price 10.540419856 USD",
+        "crossCheck": "https://www.deutz.com/en/investor-relations/mandatory-announcements/ad-hoc-disclosure/ web page, ad hoc of 2026-09-15: This increases the share capital of DEUTZ AG by 10% to 167,901,915 no-par-value bearer shares.",
+        "otherSources": "https://www.borsaitaliana.it/borsa/azioni/dati-completi.html?isin=DE0006305006&lang=en web page, read 2026-11-04: Last Trade Price| 9.895 [...] Date - Time Last Trade:| 26/11/04 - 12:49:47 PM",
+        "checkerNote": "Two independent checkers on 2026-11-04: same count, no treasury shares stated; Xetra close 03.11. 9.635 EUR. Not in the count: the contribution in kind for FFG (base case 65,105,268 new shares), expected to close end of 2026 to early 2027; the count changes then. Codex found the line on 2026-11-04 (review of PR 91)."
+      },
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-31"
+    },
+    "1385.HK": {
+      "validFrom": "2026-10-31",
+      "reason": "Yahoo kommt für die Hongkonger Notierung von Shanghai Fudan Microelectronics auf 4,70 Mrd. USD; zum Hongkonger Kurs entspräche das 1.706 Mio. Aktien, die Firma hat aber 539.389.250 A-Aktien und 284.330.000 H-Aktien, zusammen 823,7 Mio. Mit den Schlusskursen vom 30.10.2026 (45,76 CNY und 21,62 HKD) sind beide Klassen rund 4,49 Mrd. USD wert. Maßgeblich ist die Notierung 688385.SS.",
+      "reasonComplete": true,
+      "source": {
+        "form": "Die Monatsmeldung von Shanghai Fudan Microelectronics an die Hongkonger Börse nennt die A- und H-Aktien.",
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100200574.pdf",
+        "quote": "Balance at close of the month 284,330,000 0 284,330,000 | Balance at close of the month 539,389,250 0 539,389,250",
+        "page": "2",
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,702,369,181 USD, price 2.7561766226 USD, 1,706,120,348 shares implied; on the export of 03.11. the line shows 4.59 bn against 4.24 bn on 688385.SS",
+        "crossCheck": "https://static.cninfo.com.cn/finalpage/2026-08-18/1225478247.PDF 38 (class table): 通股 537,097,300 65.39 +2,291,950 +2,291,950 539,389,250 65.48",
+        "otherSources": "",
+        "checkerNote": "Counts from the row 688385.SS, confirmed by two checkers on 2026-11-01. The 1,706 M are the vendor value divided by the H price; no document has that count, and how Yahoo arrives at it is not proven."
+      },
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-31"
     }
+  },
+  "CIFR": {
+    "shares": 456365113,
+    "sharesAsOf": "2026-10-30",
+    "validFrom": "2026-10-31",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      415030722
+    ],
+    "wrongSharesSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,025,573,888 USD, price 7.29 USD, 415,030,722 shares implied (the 10-Q cover count of 03.08.2026)",
+    "reason": "Börsenwert aus 456.365.113 Aktien berechnet: laut Deckblatt des Quartalsberichts von Cipher Digital (Quartal bis 30.09.2026) der Stand vom 30.10.2026, einschließlich der rund 40,7 Mio. Aktien aus dem Umtausch der Wandelanleihe vom 16.10.2026. Yahoo rechnet noch mit 415,0 Mio. Aktien vom 03.08.2026.",
+    "source": {
+      "form": "Das Deckblatt des Quartalsberichts von Cipher Digital (Formular 10-Q, eingereicht am 02.11.2026) nennt die Aktienzahl.",
+      "url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm",
+      "quote": "As of October 30, 2026, the registrant had 456,365,113 shares of Common Stock, $0.001 par value per share, outstanding.",
+      "page": "1 (cover page of the 10-Q for the quarter ended 30.09.2026)",
+      "unit": "shares of common stock outstanding (one class)",
+      "crossCheck": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm 7 (balance sheet, equity): 425,237,783 and 412,074,529 shares issued as of September 30, 2026 and December 31, 2025, respectively, and 415,092,825 and 404,963,061 shares outstanding",
+      "checkerNote": "Two independent checkers on 2026-11-04, same count; no later 8-K or prospectus supplement with new shares found up to 2026-11-04. Treasury stock 10,144,958 at 30.09.2026 is outside the outstanding count. validFrom is 31.10.: the exchange of 16.10. was public in an 8-K that day; the exact count came with the 10-Q of 02.11."
+    },
+    "verifiedAt": "2026-11-04",
+    "withholdUnverified": true
   }
 }

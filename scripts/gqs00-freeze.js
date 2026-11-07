@@ -62,6 +62,7 @@ const { q, signTrack } = require(path.join(REPO, 'src', 'scoring', 'engine.js'))
 const { norm } = require(path.join(REPO, 'src', 'scoring', 'snapshot.js'));
 const {
   scoreUniverse, rawAxisValue, shrinkToNeutral,
+  CYCLE_DAMPER_KD, CYCLE_DD_PCTL, CYCLE_RAMP_LO, CYCLE_RAMP_HI, CYCLE_RAMP_WIDTH,
 } = require(path.join(REPO, 'src', 'scoring', 'score.js'));
 
 const AXIS_DEFINITIONS = {
@@ -271,6 +272,8 @@ function formulaShape(formula) {
 }
 
 function buildRegistry() {
+  // Rebuild the historical 1.1.0 description unchanged for verify(); the next seal describes the ramp.
+  const cycleRamp = SEMVER !== '1.1.0';
   const scoringDir = path.join(REPO, 'src', 'scoring');
   const sourceFiles = {};
   for (const file of walkFiles(scoringDir)) {
@@ -306,7 +309,8 @@ function buildRegistry() {
       minimumCohortN: 15,
       coverageShrink: { target: 'post-EB cohort median', factor: 'present axis weight / total axis weight' },
       growthBoost: { k: 0.05, maximumFactor: 1.05, minimumDistinctValues: 10, cohortRelative: true },
-      cycleDamper: { k: 0.5, drawdownQuantile: 0.75, minimumDistinctValues: 10 },
+      cycleDamper: { k: CYCLE_DAMPER_KD, drawdownQuantile: CYCLE_DD_PCTL, minimumDistinctValues: 10,
+        ...(cycleRamp ? { rampLo: CYCLE_RAMP_LO, rampHi: CYCLE_RAMP_HI, rampWidth: CYCLE_RAMP_WIDTH } : {}) },
       displayRoundingDecimals: 1,
       finalScoreCap: null,
     },
@@ -346,7 +350,9 @@ function buildRegistry() {
     endFactors: {
       burn: { implementation: 'src/scoring/score.js#burnPressFactor', rule: 'accelerating cash burn multiplies by 1/(1+magnitude); otherwise 1' },
       growth: { implementation: 'src/scoring/score.js#growthBoostFactor', rule: 'cohort-relative robust-growth percentile above median raises score up to 1.05; otherwise 1' },
-      cycle: { implementation: 'src/scoring/score.js#cycleDamperFactor', rule: 'oscillation plus revenue drawdown above frozen p75 multiplies by 1/(1+0.5*signal); otherwise 1' },
+      cycle: { implementation: 'src/scoring/score.js#cycleDamperFactor', rule: cycleRamp
+        ? `with the existing data guards, signal = oscExcess(op) * clamp((dd - ${CYCLE_RAMP_LO}*t)/(${CYCLE_RAMP_WIDTH}*t), 0, 1), where t is the learned p75 drawdown threshold; activation is 0 at or below ${CYCLE_RAMP_LO}*t and 1 at or above ${CYCLE_RAMP_HI}*t; factor = 1/(1+${CYCLE_DAMPER_KD}*signal); absent t (null) is neutral, t=0 retains the old hard gate including dd=0`
+        : 'oscillation plus revenue drawdown above frozen p75 multiplies by 1/(1+0.5*signal); otherwise 1' },
       combination: 'scoreFinal = scoreAfterCoverage * burn * growth * cycle',
     },
     immutableDefinitions: {

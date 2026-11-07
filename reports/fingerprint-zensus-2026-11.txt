@@ -1,12 +1,12 @@
 O1-Fingerabdruck-Zensus ueber /home/runner/work/screener-data/screener-data/snapshots (Ebene: snapshot.timeseries, auf Melde-Waehrung zurueckgerechnet)
-  Snapshots .................... 15826
+  Snapshots .................... 16300
   ohne brauchbaren FX-Kurs ..... 0
-  belastbar (>=4 Umsatzquartale) ... 13637
-  Fingerabdruck-Klassen (>=2) .. 2516
-  davon divergente issuerKeyLoose 16
-  davon mit Mailaender Bein .... 833
-     davon divergent ........... 5
-  MELDEPFLICHTIG (§6.5) ........ 3
+  belastbar (>=4 Umsatzquartale) ... 14011
+  Fingerabdruck-Klassen (>=2) .. 2725
+  davon divergente issuerKeyLoose 19
+  davon mit Mailaender Bein .... 860
+     davon divergent ........... 8
+  MELDEPFLICHTIG (§6.5) ........ 2
 
 Meldepflichtig = divergente Emittenten-Schluessel UND (Aktienzahl-Abstand > 20 % ODER verschiedenes Land).
 Das ist die Drift-Spur, nicht das Tor: dieses Skript entscheidet nichts.
@@ -18,6 +18,3 @@ Das ist die Drift-Spur, nicht das Tor: dieses Skript entscheidet nichts.
   CPLE3.SA + ELPC
       Namen: "Companhia Paranaense de Energia - COPEL" / "Companhia Paranaense de Energia"
       Land: Brazil  Aktienzahl-Abstand: 0.750
-  PSKY + SKYD
-      Namen: "Paramount Skydance Corp" / "Skydance Corporation"
-      Land: United States  Aktienzahl-Abstand: 0.782
