@@ -73,6 +73,8 @@ const WRONG = {
   // Check of 01.11.2026, snapshots of run 41184535364: all classes at one price; Galaxy Digital with a count no report carries.
   "688981.SS": { px: 14.5461374166, vendorShares: 8562381657, mcap: 124549580195.34126, issuer: 4815280770 },
   "600938.SS": { px: 5.4057708738, vendorShares: 47529957582, mcap: 256936060327.23935, issuer: 28956535868 },
+  // PR 89: the home line of Aroundtown, shown once the fixed home listing holds (snapshot of run 41184535364).
+  "AT1.DE": { px: 1.6179097851000002, vendorShares: 1035531042, mcap: 1675395805.785152, issuer: 1129930393 },
   "688185.SS": { px: 10.933273035, vendorShares: 247043807, mcap: 2700997398.4586954, issuer: 154287643 },
   "601869.SS": { px: 38.004207355199995, vendorShares: 821905096, mcap: 31235851708.433693, issuer: 538822900 },
   "688347.SS": { px: 19.837691279999998, vendorShares: 1737614181, mcap: 34470253683.42233, issuer: 1117756347 },

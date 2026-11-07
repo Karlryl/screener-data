@@ -388,7 +388,7 @@
     "rebuildR23": {
       "date": "2026-11-07",
       "authority": "Codex verdict R23 on PR #89 (NOT APPROVED 98 %), Daylauf 15 lane sd-formel. Method decision Claude, pending the Codex review.",
-      "scope": "(1) After the three first keys the issuer dedup asks, in order: can the leg hold a rank (covered weighted axes as the score counts them, the export gate 4 of 7 shared through lib/home-listing.js rankCapable), the newest shown month (G31), the share of covered axes, the home listing, then market cap. excluded.json homeListing names the deciding key (keinRang, aeltererZeitraum, wenigerBelegteAchsen). (2) The country rule in shownGrowthMonth is gone. lib/g31-recency.js applies the exchange gate of the older-pair walk to every listing whose own quarters a CN/TW exchange store proves (lib/exchange-quarter-check.js exchangeSiblings: store currency, at least three quarters equal within the tolerance and more equal than off); a listing without such proof keeps the walk. Selection and display read the same comparison. (3) homeListingProposal rows of configs/dup-issuer-shadow-table.json are pinned by homeListingProposalSha256 (tests/home-listing.test.js).",
+      "scope": "(1) After the three first keys the issuer dedup asks, in order: can the leg hold a rank (covered weighted axes as the score counts them, the export gate 4 of 7 shared through lib/home-listing.js rankCapable), the newest shown month (G31), the share of covered axes, the home listing, then market cap. excluded.json homeListing names the deciding key (keinRang, aeltererZeitraum, wenigerBelegteAchsen). (2) The country rule in shownGrowthMonth is gone. lib/g31-recency.js applies the exchange gate of the older-pair walk to every listing whose own quarters a CN/TW exchange store proves (lib/exchange-quarter-check.js exchangeSiblings: store currency, at least three quarters equal within the tolerance and more equal than off); a listing without such proof keeps the walk. Selection and display read the same comparison. (3) homeListingProposal rows of configs/dup-issuer-shadow-table.json are pinned by homeListingProposalSha256 (tests/home-listing.test.js). (4) Market cap on the home line: configs/share-count-hand-table.json gets AT1.DE (Aroundtown, Yahoo 1.68 against 1.83 bn USD on 31.10.2026, same source as 1AT1.MI and AT1.SW); CNOOC 0883.HK is pinned in tests/hand-table-nachfolger-20261104.test.js as a known A/H class case (-4.3 %, class sum PR of sd-p1).",
       "evidence": "tests/home-listing.test.js R23-1, R23-2 (real 0107.HK and 601107.SS of 31.10.2026), R23-3; red against head 0efd363022, green here.",
       "review": "Builder evidence only; one blind Opus review, then the Codex review decide."
     }
@@ -408,8 +408,8 @@
   },
   "dependencyFiles": {
     "configs/home-listing.json": "eac85125840a9d4b78c4f001eec349fdb72d3fa1d7feffb1d479dcae63f3ac6b",
-    "lib/home-listing.js": "4ae3c946cf608c66935600dd27c614e38814a309e5638b0c9cf746e2e955ff1f",
-    "lib/g31-recency.js": "ca84090db772f4ba4ac9fa2e65387cacf3e40ca6ad0252a8e58ff8df37629096",
+    "lib/home-listing.js": "4a834a29722ab66cafa69f20c2a621502f6f1718c54bf39a2d1146c38c1de000",
+    "lib/g31-recency.js": "84cb9574a91e3c4685f1abc8032243638a436d05d782217e2256c505232e6aea",
     "lib/annual-pairs.js": "f88380916f759753e9e2f0b770d635dde07692bda6fd8cfd932a17af0ef5c527"
   },
   "cycleRamp": {
