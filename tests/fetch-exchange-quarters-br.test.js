@@ -89,7 +89,8 @@ function itr(year, { wegV2 = false, bankUsd = false } = {}) {
     [p + year + '.csv']: csv(IDX, i), [p + 'DRE_con_' + year + '.csv']: csv(DRE, d), [p + 'DRE_ind_' + year + '.csv']: csv(DRE, []),
     [p + 'DFC_MI_con_' + year + '.csv']: csv(DRE, dfc), [p + 'DFC_MD_con_' + year + '.csv']: csv(DRE, []),
     [p + 'DFC_MI_ind_' + year + '.csv']: csv(DRE, []), [p + 'DFC_MD_ind_' + year + '.csv']: csv(DRE, []),
-    [p + 'composicao_capital_' + year + '.csv']: csv(CAP, [[WEG, year + '-06-30', v2, 'WEG', '4197317998', '0', '4197317998', '1488307', '0', '1488307'].join(';')]),
+    [p + 'composicao_capital_' + year + '.csv']: csv(CAP, [[WEG, year + '-06-30', v2, 'WEG', '4197317998', '0', '4197317998', '1488307', '0', '1488307'].join(';'),
+      [WEG, year + '-09-30', 1, 'WEG', '4197317998', '', '4197317998', '1488307', '', '1488307'].join(';')]),
   });
 }
 function dfp(year) {
@@ -196,6 +197,7 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.equal(q2[0].received, '2026-08-30');
     assert.deepEqual(q2[0].values, { '3.01 2026-01-01': 19668313000, '3.01 2026-04-01': 10200000000, '6.01 2026-01-01': 2451238000 });
     assert.deepEqual(q2[0].shares, { on: 4197317998, pn: 0, treasuryOn: 1488307, treasuryPn: 0 });
+    assert.deepEqual(weg.docs['ITR 2026-09-30'][0].shares, { on: 4197317998, pn: null, treasuryOn: 1488307, treasuryPn: null }, 'an empty share count is null, not 0');
     assert.deepEqual(weg.docs['ITR 2026-03-31'][0].values, { '3.01 2026-01-01': 9468313000, '6.01 2026-01-01': 1262449000 }, 'the PENÚLTIMO comparative is not kept');
     assert.equal(weg.docs['ITR 2026-09-30'][0].values['9.99 2026-01-01'], undefined);
     assert.equal(weg.docs['DFP 2025-12-31'][0].values['3.01 2025-01-01'], 40000000000, 'UNIDADE scale is 1');
@@ -236,6 +238,11 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.equal(rNov.exitCode, 1, 'the current ITR file vanishing in November is a failure, not a gap');
     assert.match(rNov.results[0].aborted, /ITR 2026: HTTP 404/);
     assert.ok(!fs.existsSync(path.join(dirNov, 'br.json')));
+    const rMar = await run(tmpDir(), cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2025.zip': undefined } }), '2026-03-01T15:00:00Z');
+    assert.equal(rMar.exitCode, 0, 'DFP of the previous year may be missing until April');
+    assert.deepEqual(rMar.results[0].missingYears, ['DFP 2026', 'DFP 2025']);
+    const rMay = await run(tmpDir(), cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2025.zip': undefined } }), '2026-05-02T15:00:00Z');
+    assert.equal(rMay.exitCode, 1, 'from May on a missing DFP of the previous year is a failure');
     const dir2 = tmpDir();
     const r2 = await run(dir2, cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2024.zip': undefined } }));
     assert.equal(r2.exitCode, 1);
@@ -295,6 +302,14 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.equal(q['2025-12-31'].niParent, undefined, 'not the whole year as a quarter (+124.9 m)');
     assert.equal(q['2025-12-31'].ni.value, 124858000 + 1755161000);
     assert.equal(q['2025-12-31'].rev, undefined, 'nine months of 0 against a real year: not derivable');
+    const intb = S.brSingleQuarters({ docs: {
+      'ITR 2026-03-31': o('2026-05-05', { '3.11 2026-01-01': 150000000, '3.11.01 2026-01-01': 150000000 }),
+      'ITR 2026-06-30': o('2026-08-04', { '3.11 2026-01-01': 308300000, '3.11 2026-04-01': 158300000,
+        '3.11.01 2026-01-01': -3400000, '3.11.01 2026-04-01': 0 }),
+    } });
+    assert.equal(intb['2026-06-30'].niParent, undefined, 'a filed 0 next to a real 3.11 is missing, and no YTD difference (-153.4 m) stands in for it');
+    assert.equal(intb['2026-06-30'].ni.value, 158300000);
+    assert.equal(intb['2026-03-31'].niParent.value, 150000000);
     const fin = S.brSingleQuarters({ docs: { 'ITR 2026-06-30': o('2026-08-12', { '3.01 2026-04-01': 5, '3.11 2026-04-01': 1 }, 'Receitas da Intermediação Financeira') } });
     assert.deepEqual(fin, {}, 'the financial DRE scheme gives no quarters');
   });
