@@ -577,7 +577,7 @@ function buildPit(snap, pitGaps, ticker) {
     // jump 'kapitalmassnahme' when this count moved by the same factor. Appended LAST (additive,
     // earlier keys keep their order); not > 0 -> null, never a stored 0.
     sharesOutstanding: sharesOutstandingOf(meta),
-    // Tag 1403 (G5): only in active mode of the exchange cross-check, additive: which revenue cells came from the
+    // Tag 1403 (G5): only where the exchange cross-check filled or withheld a cell or a SEC quarter fill applies, additive: which revenue cells came from the
     // exchange or were withheld, with the original vendor values (board-history is backward-check data).
     ...(exchangeRecord(snap) ? { revenueQExchange: exchangeRecord(snap) } : {}),
   };
