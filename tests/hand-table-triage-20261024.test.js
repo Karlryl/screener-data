@@ -54,12 +54,14 @@ test('48 triage cells and three fully verified coverage rows validate; every rea
   }
 });
 
-test('UWMC: the negative June quarter 2026 is withheld; the year pair 2025 against 2024 (+11.1 %) is shown', () => {
+// 07.11.2026 (Codex P111): the year pair is on the filed Total revenue (3,160,569 against 2,674,126 TUSD); the vendor years
+// subtract Other gains (losses), net, which UWM shows in its own block below revenue (+11.1 % before).
+test('UWMC: the negative June quarter 2026 is withheld; the year pair 2025 against 2024 on filed revenue (+18.2 %) is shown', () => {
   const out = apply('UWMC');
   assert.deepEqual(native(out, 'timeseries', 'revenueQ'), [null, 504502000, 522412000, 338597000, 651104000]);
   assert.equal(out.timeseries.revenueQ[0].financialCorrection.caseId, 'uwmc-2026-06-30-revenueQ-20261024');
   assert.equal(revQuartalsYoY(out), null);
-  assert.deepEqual(leg(out), ['year', '2025-12-31', '2024-12-31', 11.1]);
+  assert.deepEqual(leg(out), ['year', '2025-12-31', '2024-12-31', 18.2]);
   assert.deepEqual(leg(snap('UWMC')), ['quarter', '2026-06-30', '2025-06-30', -117.2], 'the input showed -117.2 %');
 });
 
