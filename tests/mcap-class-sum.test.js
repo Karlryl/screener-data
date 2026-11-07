@@ -10,6 +10,8 @@
 // independently of the module from the recorded chart quotes.
 // Break-once on test data only: `node tests/mcap-class-sum.test.js --prove-red` swaps the CNY and HKD FX charts in memory, runs
 // the module on ZTE, and the independent recomputation must exit 1. No wall clock; live files are hashed before and after.
+// Frozen run day of the stale-price gate (lib/market-cap-guard.js runDay), so the quote ages below never depend on the clock.
+process.env.RUN_DATE_UTC = '2026-11-07';
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path'), crypto = require('node:crypto');
 const cs = require('../lib/mcap-class-sum.js');
@@ -33,6 +35,7 @@ const currencies = Object.fromEntries(Object.entries(pk.snapshots).map(([t, s]) 
 // Yahoo's value, so the merge job sees that one.
 const pulled = t => { const x = structuredClone(pk.snapshots[t]); if (x.marketCap?.source === 'hand-table:shares') {
   x.marketCap.value = x.marketCap.yahooValue; x.marketCap.source = 'yahoo_quote'; delete x.marketCap.yahooValue; delete x.marketCap.vendorImpliedShares; delete x.meta.marketCapReason; } return x; };
+const sw = (o) => ({ shown: o.shown, written: o.written });
 const firm = e => Object.fromEntries(e.classes.map(c => [c.ticker, pulled(c.ticker)]));
 const day = d => d.slice(0, 10);
 // Independent reference: raw close of the bar dated `date` (exchange-local day = UTC day of the bar start plus offset) and the FX bar of that UTC day.
@@ -162,7 +165,7 @@ test('empty with a reason, never a guess: no chart, a chart in another currency,
     const r = cs.computeClassSum(e, await market(charts), currencies, DAY);
     assert.equal(r.value, null, String(why)); assert.match(r.reason, why);
     const snaps = firm(e);
-    assert.deepEqual(cs.writeFirm(snaps, e, r, null), { shown: null, written: ['000063.SZ', '0763.HK'] }, 'no line may keep a one-line value');
+    assert.deepEqual(sw(cs.writeFirm(snaps, e, r, null)), { shown: null, written: ['000063.SZ', '0763.HK'] }, 'no line may keep a one-line value');
     for (const s of Object.values(snaps)) { assert.equal(s.marketCap.value, null); assert.match(s.meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen/); }
   }
 });
@@ -171,7 +174,7 @@ test('the shown line carries the sum; held lines untouched; side lines emptied w
   const m = await market(), e = byIssuer('Jiangling'), r = cs.computeClassSum(e, m, currencies, DAY), snaps = firm(e);
   snaps['000550.SZ'].metrics.priceSales = { value: 9.9 };
   const bBefore = JSON.stringify(snaps['200550.SZ']);
-  assert.deepEqual(cs.writeFirm(snaps, e, r, NOW), { shown: '000550.SZ', written: ['000550.SZ'] });
+  assert.deepEqual(sw(cs.writeFirm(snaps, e, r, NOW)), { shown: '000550.SZ', written: ['000550.SZ'] });
   assert.equal(JSON.stringify(snaps['200550.SZ']), bBefore, '200550.SZ is held and must stay held');
   const a = snaps['000550.SZ'];
   assert.equal(a.marketCap.value, r.value); assert.equal(a.marketCap.source, 'class-sum');
@@ -292,6 +295,108 @@ test('a side line emptied by the class sum with a stale-price hold shows no Yaho
   assert.equal(heldRow(loose.exports).dy ?? null, null, 'the break-once did not hide the held line values');
 });
 
+// P3-2 (interaction check of #113 with the Tag 1538 stale-price gate): Shandong Gold with the A line's Yahoo quote of 20.10.2026.
+const quoted = (snaps, t, value, time, held) => {
+  snaps[t].marketCap = { value, source: 'yahoo_quote', asOf: '2026-11-07T09:25:00Z', regularMarketTime: time };
+  delete snaps[t].meta.marketCapReason;
+  if (held) snaps[t].meta.stalePriceHold = { priceDay: held }; else delete snaps[t].meta.stalePriceHold;
+};
+test('stale quote on the line that would carry the sum: the sum goes to the line with a current quote, the firm stays on the board (P3-2)', async () => {
+  const e = byIssuer('Shandong Gold'), r = cs.computeClassSum(e, await market(), currencies, DAY);
+  const run = (mod) => {
+    const snaps = firm(e);
+    quoted(snaps, '600547.SS', 18.11e9, '2026-10-20T07:00:00Z', '2026-10-20');
+    quoted(snaps, '1787.HK', 10.63e9, '2026-11-06T08:08:00Z', null);
+    const { shown } = mod.writeFirm(snaps, e, r, NOW);
+    return { shown, a: guard.prepareMarketCap(snaps['600547.SS']), h: guard.prepareMarketCap(snaps['1787.HK']) };
+  };
+  const { shown, a, h } = run(cs);
+  assert.equal(shown, '1787.HK');
+  assert.equal(h.marketCap.value, r.value); assert.equal(h.marketCap.source, 'class-sum');
+  assert.equal(a.marketCap.value, null);
+  assert.ok(a.meta.marketCapReason.startsWith('Börsenwert nicht verlässlich: Der Börsenwert der Firma steht an der Zeile 1787.HK.'), a.meta.marketCapReason);
+  // Break-once on the code in memory: the old choice ignores the quote age, takes 600547.SS, and the gate empties the sum.
+  const file = path.join(root, 'lib/mcap-class-sum.js'), anchor = '    .sort((a, b) => (a.stale - b.stale) || issuerDedupComparator(a, b));';
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor');
+  const Module = require('node:module'), m = new Module(file, module);
+  m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file));
+  m._compile(lines.map(l => (l === anchor ? '    .sort(issuerDedupComparator);' : l)).join('\n'), file);
+  const old = run(m.exports);
+  assert.equal(old.shown, '600547.SS'); assert.equal(old.a.marketCap.value, null); assert.equal(old.h.marketCap.value, null, 'the break-once left a value on the board');
+});
+
+test('every priced line with a stale quote: no line shows the sum, every line says why in one consistent reason (P3-2)', async () => {
+  const e = byIssuer('Shandong Gold'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
+  quoted(snaps, '600547.SS', 18.11e9, '2026-10-20T07:00:00Z', '2026-10-20');
+  quoted(snaps, '1787.HK', 10.63e9, '2026-10-22T08:08:00Z', '2026-10-22');
+  assert.deepEqual(sw(cs.writeFirm(snaps, e, r, NOW)), { shown: null, written: ['600547.SS', '1787.HK'] });
+  for (const t of ['600547.SS', '1787.HK']) {
+    const seen = guard.prepareMarketCap(snaps[t]);
+    assert.equal(seen.marketCap.value, null, t);
+    assert.equal(seen.meta.marketCapReason, 'Börsenwert nicht verlässlich: Die Kursmeldungen von Yahoo zu allen Zeilen der Firma mit Börsenwert sind älter als 7 Wochentage (zuletzt vom 22.10.2026); die Summe der Aktienklassen wird deshalb nicht gezeigt. Sie kommt von selbst zurück, sobald Yahoo für eine Zeile wieder aktuell meldet.', t);
+  }
+});
+
+test('CNOOC: the pinned line 0883.HK gives way only when its quote is stale and the other is current (P3-2)', async () => {
+  const e = byIssuer('CNOOC'), r = cs.computeClassSum(e, await market(), currencies, DAY);
+  const pick = (hTime, aTime) => { const snaps = firm(e); quoted(snaps, '0883.HK', 142.35e9, hTime, null); quoted(snaps, '600938.SS', 222.9e9, aTime, null); return cs.writeFirm(snaps, e, r, NOW).shown; };
+  assert.equal(pick('2026-11-06T08:08:00Z', '2026-11-06T07:00:00Z'), '0883.HK');
+  assert.equal(pick('2026-10-20T08:08:00Z', '2026-11-06T07:00:00Z'), '600938.SS');
+  assert.equal(pick('2026-10-20T08:08:00Z', '2026-10-21T07:00:00Z'), null, 'both stale: no line');
+  // Opus B2: a day on which Yahoo gives 0883.HK no market cap but a current quote keeps the pin, as Tag 1545 did.
+  const snaps = firm(e); quoted(snaps, '0883.HK', null, '2026-11-06T08:08:00Z', null); quoted(snaps, '600938.SS', 222.9e9, '2026-11-06T07:00:00Z', null);
+  assert.equal(cs.writeFirm(snaps, e, r, NOW).shown, '0883.HK');
+  assert.equal(guard.prepareMarketCap(snaps['0883.HK']).marketCap.value, r.value);
+});
+
+test('no sum and every quote stale: the true reason stays, no promise that a current quote brings it back (Opus B1)', async () => {
+  const e = byIssuer('Shandong Gold'), snaps = firm(e);
+  const r = cs.computeClassSum(e, await market({ ...ch.charts, '1787.HK': undefined }), currencies, DAY);
+  assert.equal(r.value, null);
+  quoted(snaps, '600547.SS', 18.11e9, '2026-10-20T07:00:00Z', '2026-10-20');
+  quoted(snaps, '1787.HK', 10.63e9, '2026-10-22T08:08:00Z', '2026-10-22');
+  cs.writeFirm(snaps, e, r, NOW);
+  for (const t of ['600547.SS', '1787.HK']) assert.match(guard.prepareMarketCap(snaps[t]).meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen \(A, H\) ist heute nicht berechenbar \(1787\.HK: Tageskurse nicht abrufbar/, t);
+});
+
+test('silent-failure sweep M1: ZTE with a stale quote on the A line stays on the board through the H line', async () => {
+  const e = byIssuer('ZTE'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
+  quoted(snaps, '000063.SZ', 20.22e9, '2026-10-20T07:00:00Z', '2026-10-20');
+  quoted(snaps, '0763.HK', 12.24e9, '2026-11-06T08:08:00Z', null);
+  assert.equal(cs.writeFirm(snaps, e, r, NOW).shown, '0763.HK');
+  assert.ok(Math.abs(guard.prepareMarketCap(snaps['0763.HK']).marketCap.value / 18.80e9 - 1) < 0.001);
+});
+
+test('silent-failure sweep M2, report only (master 07.11.): a vendor contradiction keeps the value and adds a hint and a log line', async () => {
+  // 10-for-10 bonus on the A line: Yahoo's total shares go from 4,783.5 M to 8,811.6 M on the carrier.
+  const e = byIssuer('ZTE'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
+  snaps['000063.SZ'].meta.impliedSharesOutstanding = 8811567240;
+  const out = cs.writeFirm(snaps, e, r, NOW);
+  assert.equal(out.shown, '000063.SZ'); assert.equal(snaps['000063.SZ'].marketCap.value, r.value, 'the value is never emptied by the contradiction');
+  assert.match(snaps['000063.SZ'].meta.marketCapReason, /Hinweis: Yahoo nennt für 000063\.SZ 8\.811,6 Mio\. Aktien insgesamt, belegt sind 4\.754,9 Mio\.; die Aktienzahlen sind zu prüfen/);
+  assert.equal(out.result.vendorHint.startsWith('Hinweis: Yahoo nennt für 000063.SZ'), true);
+  // Codex P1 on 8be40976f5: a matching old count on another line (0763.HK) no longer hides the carrier's contradiction.
+  assert.equal(snaps['0763.HK'].meta.impliedSharesOutstanding, 4783534887);
+  // Today: only Hua Hong's carrier differs beyond the share-count tolerance of 3 % (Yahoo 1,737.6 against 1,928.5 M).
+  const hinted = [];
+  for (const f of entries) { const s = firm(f); const o = cs.writeFirm(s, f, cs.computeClassSum(f, await market(), currencies, DAY), NOW); assert.notEqual(o.result.value, null, f.issuer); if (o.result.vendorHint) hinted.push(f.issuer); }
+  assert.deepEqual(hinted, ['Hua Hong Semiconductor Limited']);
+});
+
+test('Codex P2: every line stale empties the firm in the report too, and the stale lines lose their Yahoo price values in the filter', async () => {
+  const F = require('../scripts/write-filter-universe.js');
+  const e = byIssuer('Shandong Gold'), r = cs.computeClassSum(e, await market(), currencies, DAY), snaps = firm(e);
+  quoted(snaps, '600547.SS', 18.11e9, '2026-10-20T07:00:00Z', null);
+  quoted(snaps, '1787.HK', 10.63e9, '2026-10-22T08:08:00Z', null);
+  snaps['1787.HK'].metrics = { ...snaps['1787.HK'].metrics, dividendYield: { value: 1.83 } };
+  const out = cs.writeFirm(snaps, e, r, NOW);
+  assert.equal(out.result.value, null, 'the report would count the firm as computed');
+  const row = F.buildUniverse({ snapshots: [guard.prepareMarketCap(snaps['1787.HK'])], generatedAt: '2026-11-07T10:15:00Z' }).rows.find(x => x.t === '1787.HK');
+  assert.equal(row.dy ?? null, null);
+  assert.ok(row.aus.includes('Dividendenrendite wird nicht gezeigt, die Kursmeldung von Yahoo vom 22.10.2026 ist zu alt.'), JSON.stringify(row.aus));
+});
+
 test('read time: the guard keeps the class-sum value and its reason in its copy', async () => {
   const e = byIssuer('Shandong Gold'), snaps = firm(e);
   cs.writeFirm(snaps, e, cs.computeClassSum(e, await market(), currencies, DAY), null);
@@ -307,7 +412,7 @@ test('the merge-job writer: a temp generation gets the sum on disk; the step sit
   for (const t of Object.keys(pk.snapshots)) fs.writeFileSync(path.join(dir, safeSnapshotFilename(t)), JSON.stringify(pulled(t)));
   const logged = [];
   const report = await cs.applyClassSums({ snapshotsDir: dir, dataDay: DAY, chart: stub(), now: NOW, log: (l) => logged.push(l) });
-  assert.deepEqual(logged, [], "a full sum logs no warning");
+  assert.deepEqual(logged, ['::warning::Hua Hong Semiconductor Limited: Hinweis: Yahoo nennt für 688347.SS 1.737,6 Mio. Aktien insgesamt, belegt sind 1.928,5 Mio.; die Aktienzahlen sind zu prüfen (etwa nach Gratisaktien oder einer Kapitalerhöhung).'], 'only the one vendor contradiction of 07.11. is logged');
   assert.equal(report.length, 24);
   assert.equal(report.filter(r => r.value === null).length, 0);
   const zte = JSON.parse(fs.readFileSync(path.join(dir, '000063.SZ.json'), 'utf8'));
