@@ -1,10 +1,11 @@
 {
   "_doku": [
     "P1 (Codex review of #91, 04.11.2026): issuers whose shown market cap is the sum over their listed share classes, each class at its own close.",
-    "Read by lib/mcap-class-sum.js in the merge job (scripts/apply-mcap-class-sum.js, after the price merge): value = sum of shares x close of the newest trading day on which every class has a close in prices/history, x USD per unit from fx-rates.json of the same run. The value goes into every class line the pull did not hold; held lines keep their hold.",
+    "Read by lib/mcap-class-sum.js in the merge job (scripts/apply-mcap-class-sum.js, after the price merge): value = sum of shares x close of the newest trading day on which every class has a close in prices/history, x USD per unit from fx-rates.json of the same run. The value goes into the line the listing choice of the scoring (issuerDedupComparator) picks on the pull values; every other line the pull did not hold is emptied with a reason naming that line; held lines keep their hold.",
     "No common close within 10 days, a class without closes, or no FX rate: the value is empty with a German reason, never a guess.",
     "shares: issuer count of each class without treasury shares, from the source quote. reviewBy: after it the pull log warns every run and the sum is still computed; re-verify the counts and move reviewBy.",
-    "The 16 share-count rows that froze the price ratio of 30.10.2026 into H or A equivalents are removed with this file (their counts and sources are copied below); the shadow registry configs/mcap-classes-registry.json is unchanged."
+    "The 16 share-count rows that froze the price ratio of 30.10.2026 into H or A equivalents are removed with this file (their counts and sources are copied below); the shadow registry configs/mcap-classes-registry.json is unchanged.",
+    "currency: trading currency of each class, fixed here so a missing class snapshot cannot empty the sum; a snapshot that names another currency empties it with the reason. asOf on a class: its count is of a later day than sharesAsOf (Haier H, monthly return of 30.10.2026)."
   ],
   "row:688428.SS": {
     "issuer": "InnoCare Pharma Limited",
@@ -12,12 +13,14 @@
       {
         "ticker": "688428.SS",
         "class": "A",
-        "shares": 273403904
+        "shares": 273403904,
+        "currency": "CNY"
       },
       {
         "ticker": "9969.HK",
         "class": "H",
-        "shares": 1496284235
+        "shares": 1496284235,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-10-27",
@@ -38,12 +41,14 @@
       {
         "ticker": "688981.SS",
         "class": "A",
-        "shares": 2547775982
+        "shares": 2547775982,
+        "currency": "CNY"
       },
       {
         "ticker": "0981.HK",
         "class": "H",
-        "shares": 6014569609
+        "shares": 6014569609,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -69,12 +74,14 @@
       {
         "ticker": "600938.SS",
         "class": "A",
-        "shares": 2990000000
+        "shares": 2990000000,
+        "currency": "CNY"
       },
       {
         "ticker": "0883.HK",
         "class": "H",
-        "shares": 44539953984
+        "shares": 44539953984,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -100,12 +107,14 @@
       {
         "ticker": "688185.SS",
         "class": "A",
-        "shares": 114372901
+        "shares": 114372901,
+        "currency": "CNY"
       },
       {
         "ticker": "6185.HK",
         "class": "H",
-        "shares": 132670900
+        "shares": 132670900,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -131,12 +140,14 @@
       {
         "ticker": "601869.SS",
         "class": "A",
-        "shares": 402738314
+        "shares": 402738314,
+        "currency": "CNY"
       },
       {
         "ticker": "6869.HK",
         "class": "H",
-        "shares": 421566794
+        "shares": 421566794,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -162,12 +173,14 @@
       {
         "ticker": "688347.SS",
         "class": "A",
-        "shares": 598518392
+        "shares": 598518392,
+        "currency": "CNY"
       },
       {
         "ticker": "1347.HK",
         "class": "H",
-        "shares": 1329976402
+        "shares": 1329976402,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -193,12 +206,14 @@
       {
         "ticker": "001289.SZ",
         "class": "A",
-        "shares": 5041934164
+        "shares": 5041934164,
+        "currency": "CNY"
       },
       {
         "ticker": "0916.HK",
         "class": "H",
-        "shares": 3317882000
+        "shares": 3317882000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -224,12 +239,14 @@
       {
         "ticker": "600956.SS",
         "class": "A",
-        "shares": 2354263077
+        "shares": 2354263077,
+        "currency": "CNY"
       },
       {
         "ticker": "0956.HK",
         "class": "H",
-        "shares": 2146004396
+        "shares": 2146004396,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -255,12 +272,14 @@
       {
         "ticker": "600685.SS",
         "class": "A",
-        "shares": 821435181
+        "shares": 821435181,
+        "currency": "CNY"
       },
       {
         "ticker": "0317.HK",
         "class": "H",
-        "shares": 592071197
+        "shares": 592071197,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -286,12 +305,14 @@
       {
         "ticker": "600871.SS",
         "class": "A",
-        "shares": 13547012351
+        "shares": 13547012351,
+        "currency": "CNY"
       },
       {
         "ticker": "1033.HK",
         "class": "H",
-        "shares": 5410033482
+        "shares": 5410033482,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -317,12 +338,14 @@
       {
         "ticker": "600188.SS",
         "class": "A",
-        "shares": 5959386820
+        "shares": 5959386820,
+        "currency": "CNY"
       },
       {
         "ticker": "1171.HK",
         "class": "H",
-        "shares": 4075500000
+        "shares": 4075500000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -348,12 +371,14 @@
       {
         "ticker": "688385.SS",
         "class": "A",
-        "shares": 539389250
+        "shares": 539389250,
+        "currency": "CNY"
       },
       {
         "ticker": "1385.HK",
         "class": "H",
-        "shares": 284330000
+        "shares": 284330000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -379,12 +404,14 @@
       {
         "ticker": "600688.SS",
         "class": "A",
-        "shares": 7328813500
+        "shares": 7328813500,
+        "currency": "CNY"
       },
       {
         "ticker": "0338.HK",
         "class": "H",
-        "shares": 3213804000
+        "shares": 3213804000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -410,12 +437,14 @@
       {
         "ticker": "600547.SS",
         "class": "A",
-        "shares": 3614443347
+        "shares": 3614443347,
+        "currency": "CNY"
       },
       {
         "ticker": "1787.HK",
         "class": "H",
-        "shares": 995486178
+        "shares": 995486178,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -441,12 +470,14 @@
       {
         "ticker": "601766.SS",
         "class": "A",
-        "shares": 24327798048
+        "shares": 24327798048,
+        "currency": "CNY"
       },
       {
         "ticker": "1766.HK",
         "class": "H",
-        "shares": 4371066040
+        "shares": 4371066040,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -472,12 +503,14 @@
       {
         "ticker": "0019.HK",
         "class": "A",
-        "shares": 778988000
+        "shares": 778988000,
+        "currency": "HKD"
       },
       {
         "ticker": "0087.HK",
         "class": "B",
-        "shares": 2848932500
+        "shares": 2848932500,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -503,12 +536,14 @@
       {
         "ticker": "000550.SZ",
         "class": "A",
-        "shares": 510581922
+        "shares": 510581922,
+        "currency": "CNY"
       },
       {
         "ticker": "200550.SZ",
         "class": "B",
-        "shares": 344000000
+        "shares": 344000000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-06-30",
@@ -534,12 +569,14 @@
       {
         "ticker": "601607.SS",
         "class": "A",
-        "shares": 2789289105
+        "shares": 2789289105,
+        "currency": "CNY"
       },
       {
         "ticker": "2607.HK",
         "class": "H",
-        "shares": 919072704
+        "shares": 919072704,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -565,12 +602,14 @@
       {
         "ticker": "688009.SS",
         "class": "A",
-        "shares": 8621018000
+        "shares": 8621018000,
+        "currency": "CNY"
       },
       {
         "ticker": "3969.HK",
         "class": "H",
-        "shares": 1968801000
+        "shares": 1968801000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -596,17 +635,21 @@
       {
         "ticker": "600690.SS",
         "class": "A",
-        "shares": 6110504936
+        "shares": 6110504936,
+        "currency": "CNY"
       },
       {
         "ticker": "6690.HK",
         "class": "H",
-        "shares": 2849037266
+        "shares": 2849037266,
+        "currency": "HKD",
+        "asOf": "2026-10-30"
       },
       {
         "ticker": "690D.DE",
         "class": "D",
-        "shares": 271013973
+        "shares": 271013973,
+        "currency": "EUR"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -637,12 +680,14 @@
       {
         "ticker": "000063.SZ",
         "class": "A",
-        "shares": 3999372942
+        "shares": 3999372942,
+        "currency": "CNY"
       },
       {
         "ticker": "0763.HK",
         "class": "H",
-        "shares": 755502534
+        "shares": 755502534,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -668,12 +713,14 @@
       {
         "ticker": "600012.SS",
         "class": "A",
-        "shares": 1165600000
+        "shares": 1165600000,
+        "currency": "CNY"
       },
       {
         "ticker": "0995.HK",
         "class": "H",
-        "shares": 542991889
+        "shares": 542991889,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -699,12 +746,14 @@
       {
         "ticker": "601298.SS",
         "class": "A",
-        "shares": 5392075000
+        "shares": 5392075000,
+        "currency": "CNY"
       },
       {
         "ticker": "6198.HK",
         "class": "H",
-        "shares": 1099025000
+        "shares": 1099025000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",
@@ -730,12 +779,14 @@
       {
         "ticker": "601857.SS",
         "class": "A",
-        "shares": 161922077818
+        "shares": 161922077818,
+        "currency": "CNY"
       },
       {
         "ticker": "0857.HK",
         "class": "H",
-        "shares": 21098900000
+        "shares": 21098900000,
+        "currency": "HKD"
       }
     ],
     "sharesAsOf": "2026-09-30",

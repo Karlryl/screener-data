@@ -16,7 +16,8 @@ Yahoo rechnet bei diesen Firmen den Börsenwert einer Zeile als alle Aktien der 
 - Kurse: der Schlusskurs jeder Klasse am letzten Handelstag, an dem alle Klassen der Firma einen Schlusskurs im Kursspeicher des Laufs haben (am 07.11. für alle 24 Firmen der 06.11.).
 - Umrechnung: die Devisenkurse desselben Laufs (`fx-rates.json`).
 - Ort: ein eigener Schritt im Merge-Job direkt nach dem Zusammenführen der Kurse, also auf dem vollständigen Bestand aller Klassen und vor der Weitergabe an Bewertung und Exporte.
-- Die Summe kommt in die Zeile, die die bestehende Wahl der Notierung zeigt (derselbe Vergleich wie in der Bewertung). Eine andere Zeile, deren alter Wert mindestens so hoch wäre wie die Summe, wird geleert, damit sie nicht übernimmt. Gesperrte Zeilen bleiben gesperrt.
+- Die Summe kommt in die Zeile, die die bestehende Wahl der Notierung zeigt (derselbe Vergleich wie in der Bewertung, auf den Werten des Abrufs). Jede andere nicht gesperrte Zeile der Firma wird mit dem Hinweis „Der Börsenwert der Firma steht an der Zeile …“ geleert, damit an einem Tag, an dem die Bewertung die Zeile mit der Summe ausschließt, keine Zeile mit dem Ein-Kurs-Wert von Yahoo übernimmt; die Firma fehlt dann eher, als einen falschen Wert zu zeigen. Gesperrte Zeilen bleiben gesperrt.
+- Die Handelswährung jeder Klasse steht fest in der Datei; fehlt der Schnappschuss einer Klasse (etwa der gesperrten Frankfurter D-Zeile von Haier), wird die Summe trotzdem gerechnet. Nennt ein Schnappschuss eine andere Währung, bleibt der Wert leer.
 - Ist keine Summe möglich (eine Klasse ohne Schlusskurse, der letzte gemeinsame Tag älter als 10 Tage, kein Devisenkurs), bleibt der Börsenwert leer mit Hinweis, nie ein geschätzter Wert.
 - Die gezeigte Zeile trägt einen Datenhinweis wie: „Börsenwert als Summe der Aktienklassen, jede zu ihrem eigenen Schlusskurs vom 06.11.2026: 3.999,4 Mio. A-Aktien zu 28,2 CNY plus 755,5 Mio. H-Aktien zu 20,06 HKD (Aktienzahlen laut Firma vom 30.09.2026).“
 - Nach dem Prüfdatum (31.03.2027) rechnet der Schritt weiter und warnt im Lauf bei jeder Firma, bis die Zahlen neu belegt sind.
@@ -52,7 +53,11 @@ Gleiche Schnappschüsse (Lauf 42356903064), gleiche Watchlist, gleiche SEC-Datei
 | Yankuang Energy | 600188.SS | 19,86 | 20,55 | 3,4 % | energy |
 | CNOOC | 0883.HK, jetzt 600938.SS | 142,35 | 147,42 | 3,6 % | energy |
 
-Ränge und Scores: Wachstum 9.346 Zeilen, Qualität 7.187 Zeilen in beiden Armen. Bewegt haben sich nur die 24 Börsenwerte der Tabelle und der Zeilentausch bei CNOOC (Wachstum: 0883.HK Rang 204, Score 45,3 fällt weg, 600938.SS kommt auf Rang 208 mit 45,1; PT Bukit Asam, GeoPark, AntarChile und China Aviation Oil rücken je einen Platz vor; Tourmaline 48,3 auf 48,4 und Eni 42,1 auf 42,2. Qualität: 0883.HK Rang 49 wird 600938.SS Rang 49, Score 65,1 gleich). Sonst ändert sich kein Rang und kein Score. Größenklasse: nur Jiangling wechselt von Mid (ab 2 Mrd. USD) zu Small.
+Kennzahlen aus dem falschen Wert: Bei neun gezeigten Zeilen (die acht Firmen aus P1 und Shandong Gold) werden Kurs-Umsatz-Verhältnis, Unternehmenswert und die zwei Unternehmenswert-Verhältnisse von Yahoo geleert, weil Yahoo sie aus dem Ein-Kurs-Wert rechnet; bei den 16 früheren Zeilen waren sie schon leer. Laut blinder Prüfung wechselt Shanghai Pharmaceuticals im Größenband des Exports (eingefrorene Grenzen je Board) von mega zu large (nicht selbst nachgerechnet, 85 %). Devisenkurse: die des Laufs (07.11., 08:59 UTC), nicht die des Schlusskurstags.
+
+Ränge und Scores: Wachstum 9.346 Zeilen, Qualität 7.187 Zeilen in beiden Armen. Bewegt haben sich nur die 24 Börsenwerte der Tabelle und der Zeilentausch bei CNOOC (Wachstum: 0883.HK Rang 204, Score 45,3 fällt weg, 600938.SS kommt auf Rang 208 mit 45,1; PT Bukit Asam, GeoPark, AntarChile und China Aviation Oil rücken je einen Platz vor; Tourmaline 48,3 auf 48,4 und Eni 42,1 auf 42,2. Qualität: 0883.HK Rang 49 wird 600938.SS Rang 49, Score 65,1 gleich). Sonst ändert sich kein Rang und kein Score. Größenklasse: nur Jiangling wechselt von Mid (ab 2 Mrd. USD) zu Small. Der Zeilentausch bei CNOOC ist so entschieden: Ohne die alte Zeile bewertet Yahoo die Shanghaier Zeile höher, also zeigt die bestehende Wahl sie, wie bei allen anderen Firmen mit A- und H-Aktien; die Hongkonger Zeile stand nur wegen der alten Tabellenzeile vorn.
+
+Nicht neu nachgespielt (Platte voll, 07.11. mittags): die Fassung, in der jede Nebenzeile geleert wird, und die feste Währung je Klasse. An den gezeigten Zeilen ändern beide nichts (an allen 24 Firmen zeigt die Wahl am 07.11. die Zeile mit der Summe); der Test spielt beides auf den echten Paketen nach. Die Ränge im Nachspiel gelten für eine Bewertung ohne Kalibrierdatei und ohne Small-Cap-Bestand.
 
 Die nicht gezeigte Hongkonger Zeile 1787.HK von Shandong Gold trägt ohne ihre alte Zeile wieder den Yahoo-Wert (10,63 Mrd. USD); sie liegt unter der Summe und kann die gezeigte Zeile nicht ablösen.
 
@@ -62,7 +67,9 @@ Die nicht gezeigte Hongkonger Zeile 1787.HK von Shandong Gold trägt ohne ihre a
 - Die drei übrigen Zeilen mit Kursverhältnis in der Aktienzahl-Handtabelle (ISA Energia ISAE3.SA, Hanwha 003535.KS, Lindt LISN.SW) haben andere Klassenarten (Vorzugsaktien, Partizipationsscheine) und bleiben unverändert.
 - Der Small-Cap-Bestand bekommt keine Klassensumme.
 - Fällt die Summe unter die Mindestgröße von 800 Mio. USD, prüft der Lauf das nicht nach (heute ist der kleinste Wert CanSino mit 1,72 Mrd. USD).
-- Die Aktienzahlen ändern sich nur mit neuen Belegen; neue Aktien sieht der Schritt nicht von selbst (Prüfdatum 31.03.2027).
+- Die Aktienzahlen ändern sich nur mit neuen Belegen; neue Aktien sieht der Schritt nicht von selbst (Prüfdatum 31.03.2027). Danach warnt nur das Protokoll des Laufs; die tägliche Fristenmeldung nennt die 24 Firmen noch nicht (Folgearbeit).
+- Haier: A- und D-Aktien vom 30.09., H-Aktien vom 30.10.2026; der Hinweis nennt beide Tage. Laut Prüfung kaufte Haier am 09.10. D-Aktien zurück (nicht an der Quelle nachgelesen, Wirkung höchstens 0,6 %).
+- An Werktagen läuft der Abruf, während Frankfurt noch handelt; der Kurs der D-Aktien von Haier kann dann ein Kurs während des Tages sein (rund 2 % des Haier-Werts).
 
 ## Prüfung
 

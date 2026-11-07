@@ -6,8 +6,8 @@
 // Wrong before: Yahoo prices every share at one line (ZTE 20.22 instead of 18.84 bn USD, Jiangling 2.13 instead of 1.68), or a
 // share-count row froze the price ratio of 30.10. (Shandong Gold shown 18.11 through 600547.SS, the row line 16.73; class sum 16.49).
 // Right after: each class at its own close of one common day, recomputed here independently of the module.
-// Break-once on test data only: `node tests/mcap-class-sum.test.js --prove-red` drops ZTE from the config in memory; ZTE then keeps
-// the Yahoo value and the check must exit 1. No wall clock; live files are hashed before and after.
+// Break-once on test data only: `node tests/mcap-class-sum.test.js --prove-red` swaps the run's CNY and HKD rates in memory, runs
+// the module on ZTE, and the independent recomputation must exit 1. No wall clock; live files are hashed before and after.
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path'), crypto = require('node:crypto');
 const cs = require('../lib/mcap-class-sum.js');
@@ -40,11 +40,14 @@ const shownBefore = e => Math.max(...e.classes.map(c => fx.snapshots[c.ticker]).
   .map(s => s.marketCap?.value ?? 0));
 
 if (process.argv.includes('--prove-red')) {
-  entries = entries.filter(e => !e.issuer.startsWith('ZTE'));
-  const e = cs.loadClassSumEntries().find(x => x.issuer.startsWith('ZTE'));
+  // Test data only: the run's CNY and HKD rates swapped in memory. The module then writes a wrong sum; the independent
+  // recomputation below must notice it.
+  const e = byIssuer('ZTE'), rates = { ...fx.fx.rates, CNY: fx.fx.rates.HKD, HKD: fx.fx.rates.CNY };
   const snaps = firm(e);
-  if (entries.some(x => x.issuer.startsWith('ZTE'))) cs.writeFirm(snaps, e, sum(e), null);
-  assert.ok(Math.abs(snaps['000063.SZ'].marketCap.value / 18.84e9 - 1) < 0.005, `ZTE shows ${snaps['000063.SZ'].marketCap.value}, not the class sum`);
+  cs.writeFirm(snaps, e, cs.computeClassSum(e, fx.closes, currencies, rates, DAY), null);
+  let own = 0;
+  for (const c of e.classes) own += c.shares * fx.closes[c.ticker].find(p => p.date === '2026-11-06').close * fx.fx.rates[c.currency];
+  assert.ok(Math.abs(snaps['000063.SZ'].marketCap.value / own - 1) < 1e-9, `ZTE shows ${snaps['000063.SZ'].marketCap.value}, the class sum is ${own}`);
   console.log('mcap-class-sum: --prove-red did NOT fire');
   process.exit(0);
 }
@@ -67,7 +70,8 @@ test('every issuer: one common close day for all classes, value = shares x own c
     let own = 0;
     for (const c of e.classes) {
       const p = fx.closes[c.ticker].find(x => x.date === r.date);
-      own += c.shares * p.close * fx.fx.rates[currencies[c.ticker]];
+      assert.equal(c.currency, currencies[c.ticker], c.ticker + ': config currency against the snapshot');
+      own += c.shares * p.close * fx.fx.rates[c.currency];
     }
     assert.ok(Math.abs(r.value / own - 1) < 1e-12, e.issuer);
   }
@@ -114,6 +118,10 @@ test('the listing choice does not move: the sum goes to the line the scoring pic
     const after = Object.values(snaps).filter(x => !guard.holds[x.meta.ticker] && x.marketCap?.value > 0).map(x => ({ ticker: x.meta.ticker, snapshot: x })).sort(issuerDedupComparator)[0];
     assert.equal(after.ticker, shown, e.issuer + ': another line outbids the sum');
     assert.equal(after.snapshot.marketCap.value, r.value, e.issuer);
+    for (const x of Object.values(snaps)) if (x.meta.ticker !== shown && !guard.holds[x.meta.ticker] && x.marketCap?.source !== 'hand-table:market-cap-hold') {
+      assert.equal(x.marketCap.value, null, x.meta.ticker + ': a side line keeps a one-price value');
+      assert.ok(x.meta.marketCapReason.includes('steht an der Zeile ' + shown + '.'), x.meta.ticker);
+    }
   }
   // A second line whose vendor value is at least the sum is emptied with the reason, never left to take the board.
   const e = byIssuer('ZTE'), snaps = firm(e), r = sum(e);
@@ -146,8 +154,35 @@ test('empty with a reason, never a guess: no closes, too old a common day, or no
       assert.match(s.meta.marketCapReason, /^Börsenwert nicht verlässlich: Die Summe der Aktienklassen/);
     }
   }
-  const r = cs.computeClassSum(e, fx.closes, { ...currencies, '0763.HK': 'XXX' }, fx.fx.rates, DAY);
-  assert.equal(r.value, null); assert.match(r.reason, /kein Devisenkurs für XXX/);
+  const noHkd = { ...fx.fx.rates }; delete noHkd.HKD;
+  const r = cs.computeClassSum(e, fx.closes, currencies, noHkd, DAY);
+  assert.equal(r.value, null); assert.match(r.reason, /kein Devisenkurs für HKD/);
+});
+
+test('a missing class snapshot costs only that line: Haier without its held D line keeps the sum; a snapshot in another currency empties it', () => {
+  const e = byIssuer('Haier'), r0 = sum(e);
+  const noD = { ...currencies }; delete noD['690D.DE'];
+  const r = cs.computeClassSum(e, fx.closes, noD, fx.fx.rates, DAY);
+  assert.equal(r.reason, null); assert.equal(r.value, r0.value);
+  const snaps = firm(e); delete snaps['690D.DE'];
+  assert.equal(cs.writeFirm(snaps, e, r, null).shown, '600690.SS');
+  const bad = cs.computeClassSum(e, fx.closes, { ...currencies, '6690.HK': 'USD' }, fx.fx.rates, DAY);
+  assert.equal(bad.value, null); assert.match(bad.reason, /6690\.HK: Snapshot nennt USD statt HKD/);
+  assert.match(cs.reasonText(e, r0), /Aktienzahlen laut Firma vom 30\.09\.2026 bis 30\.10\.2026\)/);
+});
+
+test('provenance: the class sum is a calculation with one share and one close input per class, not a vendor value', () => {
+  const { captureSnapshot, RECORD_FIELDS } = require('../lib/export-provenance.js');
+  const e = byIssuer('ZTE'), snaps = firm(e);
+  cs.writeFirm(snaps, e, sum(e), fx.fx.fetchedAt);
+  const cap = captureSnapshot(snaps['000063.SZ']);
+  assert.equal(cap.marketCap.sourceType, 'calculation'); assert.equal(cap.marketCap.provider, null);
+  assert.equal(cap.marketCap.derivation.methodId, 'marketCapClassSum');
+  assert.equal(cap.marketCap.missingReason, null);
+  assert.deepEqual(cap.marketCapInputs.map(i => i.fieldPath), ['000063.SZ', '0763.HK'].flatMap(t => [`marketCap.classSum.${t}.shares`, `marketCap.classSum.${t}.close`]));
+  for (const i of cap.marketCapInputs) for (const k of Object.keys(i)) assert.ok(RECORD_FIELDS.includes(k), k);
+  const own = cap.marketCapInputs.reduce((s, x, i, a) => i % 2 ? s : s + x.normalizedValue * a[i + 1].normalizedValue, 0);
+  assert.ok(Math.abs(own / cap.marketCap.normalizedValue - 1) < 1e-12);
 });
 
 test('read time: the guard keeps the class-sum value and its reason in its copy', () => {
