@@ -228,8 +228,9 @@ function buildUniverse({ snapshots, boards = new Map(), excluded = new Map(), at
     // Stale-price hold: P/E, forward P/E, dividend yield and the distance to the 52-week high are Yahoo values on the same
     // old quote message as the withheld market cap, so none is shown while the hold lasts, each with its own hint. The
     // distance to the all-time high rests on the project's own daily closes and stays while its newest close is current.
-    // A held stale quote also counts when another rule emptied the market cap first (a side line of the class sum, #113).
-    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (!!meta.stalePriceHold && !finite(snapshot.marketCap?.value));
+    // A held stale quote also counts on a side line the class sum emptied (#113); a hand-table hold keeps its old behaviour,
+    // because its stalePriceHold is never cleared while its market cap stays empty.
+    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (snapshot.marketCap?.source === 'class-sum' && !!meta.stalePriceHold && !finite(snapshot.marketCap?.value));
     // Short on purpose: about 2,100 such hints on 03.11. sit in a file with a 6 MB ceiling (5.6 MB before them).
     const meldung = meta.stalePriceHold?.priceDay ? `die Kursmeldung von Yahoo vom ${meta.stalePriceHold.priceDay.split('-').reverse().join('.')}` : 'die Kursmeldung von Yahoo';
     const zeige = (label, value) => {

@@ -270,13 +270,26 @@ test('a side line emptied by the class sum with a stale-price hold shows no Yaho
   assert.ok(row.aus.includes('Dividendenrendite wird nicht gezeigt, die Kursmeldung von Yahoo vom 20.10.2026 ist zu alt.'), JSON.stringify(row.aus));
   assert.ok(row.aus.includes('Abstand zum 52-Wochen-Hoch wird nicht gezeigt, die Kursmeldung von Yahoo vom 20.10.2026 ist zu alt.'));
   // Break-once on the code in memory: without the new condition the stale yield comes back.
-  const file = path.join(root, 'scripts/write-filter-universe.js'), anchor = "    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (!!meta.stalePriceHold && !finite(snapshot.marketCap?.value));";
+  const file = path.join(root, 'scripts/write-filter-universe.js'), anchor = "    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (snapshot.marketCap?.source === 'class-sum' && !!meta.stalePriceHold && !finite(snapshot.marketCap?.value));";
   const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
   assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor');
   const Module = require('node:module'), m = new Module(file, module);
   m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file));
   m._compile(lines.map(l => (l === anchor ? '    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE;' : l)).join('\n'), file);
   assert.equal(rowOf(m.exports).dy, 1.83, 'the break-once did not bring the stale yield back');
+  // Other direction (narrow Opus check B1): a hand-table hold whose old stale-price note is never cleared (its market cap stays
+  // empty) keeps its values and gets no stale hint, as before #113. Break-once: without the class-sum condition it loses them.
+  const held = structuredClone(pk.snapshots['200550.SZ']);
+  assert.equal(held.marketCap.source, 'hand-table:market-cap-hold');
+  held.meta.stalePriceHold = { priceDay: '2026-10-14' };
+  held.metrics = { ...held.metrics, dividendYield: { value: 2.2 }, fiftyTwoWeekHigh: { value: 1.4 } };
+  const heldRow = (builder) => builder.buildUniverse({ snapshots: [guard.prepareMarketCap(held)], generatedAt: '2026-11-07T10:15:00Z' }).rows.find(r => r.t === '200550.SZ');
+  assert.equal(heldRow(F).dy, 2.2);
+  assert.ok(!heldRow(F).aus.some(a => /Kursmeldung von Yahoo vom 14\.10\.2026 ist zu alt/.test(a)), JSON.stringify(heldRow(F).aus));
+  const loose = new Module(file, module);
+  loose.filename = file; loose.paths = Module._nodeModulePaths(path.dirname(file));
+  loose._compile(lines.map(l => (l === anchor ? '    const kursAlt = snapshot.marketCap?.source === STALE_PRICE_SOURCE || (!!meta.stalePriceHold && !finite(snapshot.marketCap?.value));' : l)).join('\n'), file);
+  assert.equal(heldRow(loose.exports).dy ?? null, null, 'the break-once did not hide the held line values');
 });
 
 test('read time: the guard keeps the class-sum value and its reason in its copy', async () => {
