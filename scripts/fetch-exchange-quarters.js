@@ -46,7 +46,8 @@
  *   Brazil   CVM dados abertos ITR/DFP zips (current and previous year ITR, previous two years DFP) plus FCA
  *            valor_mobiliario for the ticker map -> external-data/exchange-quarters/br.json. SHADOW ONLY: no
  *            reader loads br.json (lib/exchange-quarter-check.js loadStores reads cn and tw by name). At most
- *            one pass per 6 days (CVM rebuilds weekly). A 404 for the newest ITR or DFP year is a named gap;
+ *            one pass per 6 days (CVM rebuilds weekly). A 404 is a named gap only for DFP of the current year,
+ *            ITR of the current year until May and DFP of the previous year until April;
  *            any other failure, a missing zip entry, a CSV row with the wrong field count or no document at
  *            all aborts the market and br.json is not written.
  *
@@ -112,7 +113,7 @@ const ABOUT = {
     + 'prior-year year to date; season 4 = full year). Append-only. Precedent: scripts/build-cnannual.js lines '
     + '19-21 (owner decision of 19.08.2026). Written by scripts/fetch-exchange-quarters.js. Not read by scoring yet.',
   BR: 'CVM dados abertos (ODbL), ITR and DFP of companhias abertas: per company (CNPJ) and document (ITR or DFP '
-    + 'with DT_REFER) the rows of the document own period for DRE 3.01, 3.03, 3.05, 3.11 and DFC 6.01 in BRL '
+    + 'with DT_REFER) the rows of the document own period for DRE 3.01, 3.03, 3.05, 3.11, 3.11.01 and DFC 6.01 in BRL '
     + '(value as filed times ESCALA_MOEDA), keyed "account DT_INI_EXERC", with VERSAO, DT_RECEB and the share counts '
     + 'of composicao_capital; consolidated when filed, else individual (basis). tickers maps Yahoo .SA tickers to '
     + 'the CNPJ (FCA valor_mobiliario). Append-only. SHADOW: read by no scoring step.',
@@ -430,13 +431,14 @@ function brTickerMap(rows, want) {
  * One document kind (ITR or DFP) of one year -> fresh observations for the wanted CNPJ.
  * Kept: the newest VERSAO the index lists per (CNPJ, DT_REFER); rows of the document's own period
  * (ORDEM_EXERC ÚLTIMO, DT_FIM_EXERC = DT_REFER) for the BR_FIELDS accounts; consolidated when the
- * document has consolidated DRE rows, else individual; currency REAL only, scale MIL or UNIDADE.
+ * document has a non-zero consolidated 3.01 or 3.11, else individual; currency REAL only, scale MIL or UNIDADE;
+ * an empty or unreadable number is skipped and counted (badNumbers), never 0.
  * @returns {{fresh: Array<[string,string,object]>, counts: object}} [cnpj, docKey, obs]
  */
 function brObservations(kind, year, files, cnpjs) {
   const pre = kind.toLowerCase() + '_cia_aberta_';
   const f = (part) => S.parseCvmCsv(files[pre + part + year + '.csv'], pre + part + year + '.csv');
-  const counts = { docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0 };
+  const counts = { docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, badNumbers: 0 };
   const newest = new Map();   // 'cnpj|refer' -> index row
   for (const r of f('')) {
     if (!cnpjs.has(r.CNPJ_CIA) || r.CATEG_DOC !== kind) continue;
@@ -462,7 +464,10 @@ function brObservations(kind, year, files, cnpjs) {
   const fresh = [];
   for (const [k, d] of newest) {
     const b = rowsBy.get(k) || {};
-    const basis = b.dreCon && b.dreCon.length ? 'con' : 'ind';
+    // Consolidated only when it carries a figure: some companies file a consolidated DRE of zeros next to the
+    // real individual one (TIM S.A. DFP 2025: con 3.01 = 0, ind 3.01 = 26,624,721 thousand; review PR #115 H2).
+    const live = (rows) => (rows || []).some((r) => (r.CD_CONTA === '3.01' || r.CD_CONTA === '3.11') && Number(r.VL_CONTA) !== 0);
+    const basis = live(b.dreCon) ? 'con' : 'ind';
     const rows = basis === 'con' ? [...b.dreCon, ...(b.dfcCon || [])] : [...(b.dreInd || []), ...(b.dfcInd || [])];
     if (!rows.length) { counts.noRows += 1; continue; }
     if (rows.some((r) => r.MOEDA !== 'REAL')) { counts.otherCurrency += 1; continue; }
@@ -470,15 +475,16 @@ function brObservations(kind, year, files, cnpjs) {
     const vals = {};
     let label = null;
     for (const r of rows) {
-      const v = Number(r.VL_CONTA) * BR_SCALE[r.ESCALA_MOEDA];
-      if (!Number.isFinite(v)) continue;
+      const v = r.VL_CONTA.trim() === '' ? NaN : Number(r.VL_CONTA) * BR_SCALE[r.ESCALA_MOEDA];
+      if (!Number.isFinite(v)) { counts.badNumbers += 1; continue; }   // a gap, never 0
       vals[r.CD_CONTA + ' ' + r.DT_INI_EXERC] = v;
       if (r.CD_CONTA === '3.01') label = r.DS_CONTA;
     }
     const values = Object.fromEntries(Object.keys(vals).sort().map((x) => [x, vals[x]]));
     const c = b.cap;
-    const shares = c ? { on: Number(c.QT_ACAO_ORDIN_CAP_INTEGR), pn: Number(c.QT_ACAO_PREF_CAP_INTEGR),
-      treasuryOn: Number(c.QT_ACAO_ORDIN_TESOURO), treasuryPn: Number(c.QT_ACAO_PREF_TESOURO) } : null;
+    const n = (x) => (x == null || String(x).trim() === '' || !Number.isFinite(Number(x)) ? null : Number(x));
+    const shares = c ? { on: n(c.QT_ACAO_ORDIN_CAP_INTEGR), pn: n(c.QT_ACAO_PREF_CAP_INTEGR),
+      treasuryOn: n(c.QT_ACAO_ORDIN_TESOURO), treasuryPn: n(c.QT_ACAO_PREF_TESOURO) } : null;
     const obs = { basis, idDoc: d.ID_DOC, received: d.DT_RECEB, revenueLabel: label, shares, values, version: Number(d.VERSAO) };
     fresh.push([d.CNPJ_CIA, kind + ' ' + d.DT_REFER, obs]);
     counts.docs += 1;
@@ -498,25 +504,41 @@ async function runBrazil(ctx) {
   const y = now.getUTCFullYear();
   const want = new Set(ctx.tickers.filter((t) => /\.SA$/.test(t)));
   const fileLog = [];
-  let fca = await cvmZip(ctx, CVM_BASE + 'FCA/DADOS/fca_cia_aberta_' + y + '.zip', ['fca_cia_aberta_valor_mobiliario_' + y + '.csv']);
-  let fcaYear = y;
-  if (!fca) { fcaYear = y - 1; fca = await cvmZip(ctx, CVM_BASE + 'FCA/DADOS/fca_cia_aberta_' + fcaYear + '.zip', ['fca_cia_aberta_valor_mobiliario_' + fcaYear + '.csv']); }
-  if (!fca) throw new Error('FCA ' + y + ' and ' + (y - 1) + ' both missing');
-  fileLog.push(fca.file);
-  const { map, ambiguous } = brTickerMap(S.parseCvmCsv(fca.files['fca_cia_aberta_valor_mobiliario_' + fcaYear + '.csv'], 'valor_mobiliario'), want);
+  // The FCA is a yearly form filed from January to June (review PR #115 M1: end of January only 16 of 112
+  // mapped companies had filed the new one). Both years are read; a code of the newer year wins.
+  const map = new Map();
+  const ambiguous = new Set();
+  const fcaYears = [];
+  for (const fy of [y - 1, y]) {
+    const name = 'fca_cia_aberta_valor_mobiliario_' + fy + '.csv';
+    const fca = await cvmZip(ctx, CVM_BASE + 'FCA/DADOS/fca_cia_aberta_' + fy + '.zip', [name]);
+    if (!fca) { if (fy === y) continue; throw new Error('FCA ' + fy + ': HTTP 404'); }
+    fileLog.push(fca.file);
+    fcaYears.push(fy);
+    const r = brTickerMap(S.parseCvmCsv(fca.files[name], 'valor_mobiliario'), want);
+    for (const [tk, m] of r.map) { map.set(tk, m); ambiguous.delete(tk); }
+    for (const tk of r.ambiguous) if (!r.map.has(tk)) { ambiguous.add(tk); if (fy === y) map.delete(tk); }
+  }
+  const unmapped = [...want].filter((tk) => !map.has(tk)).sort();
   const cnpjs = new Set([...map.values()].map((m) => m.cnpj));
   const parts = ['', 'DRE_con_', 'DRE_ind_', 'DFC_MI_con_', 'DFC_MD_con_', 'DFC_MI_ind_', 'DFC_MD_ind_', 'composicao_capital_'];
-  const plan = [['ITR', y], ['ITR', y - 1], ['DFP', y - 1], ['DFP', y - 2]];
+  // DFP y: fiscal years ending before December of the current year (SMTO3, review G1).
+  const plan = [['ITR', y], ['ITR', y - 1], ['DFP', y], ['DFP', y - 1], ['DFP', y - 2]];
+  // A 404 is a named gap only where CVM may not have opened the file yet (review G2): DFP of the current year
+  // always, ITR of the current year until May (first ITR due mid-May), DFP of the previous year until April.
+  const month = now.getUTCMonth() + 1;
+  const mayBeMissing = (kind, year) => (kind === 'DFP' && year === y) || (kind === 'ITR' && year === y && month <= 5)
+    || (kind === 'DFP' && year === y - 1 && month <= 4);
   const fetchedAt = now.toISOString();
   const src = 'br-' + stamp(fetchedAt);
   const next = prev ? clone(prev) : emptyStore('BR');
-  const st = { new: 0, confirmed: 0, changed: 0, docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, missingYears: [] };
+  const st = { new: 0, confirmed: 0, changed: 0, docs: 0, noRows: 0, otherCurrency: 0, otherScale: 0, badNumbers: 0, missingYears: [] };
   for (const [kind, year] of plan) {
     const pre = kind.toLowerCase() + '_cia_aberta_';
     const z = await cvmZip(ctx, CVM_BASE + kind + '/DADOS/' + pre + year + '.zip', parts.map((p) => pre + p + year + '.csv'));
     // A year that CVM has not opened yet (January: ITR of the new year) is a gap, not a failure;
     // the older years must exist.
-    if (!z) { if ((kind === 'ITR' && year === y) || (kind === 'DFP' && year === y - 1)) { st.missingYears.push(kind + ' ' + year); continue; } throw new Error(kind + ' ' + year + ': HTTP 404'); }
+    if (!z) { if (mayBeMissing(kind, year)) { st.missingYears.push(kind + ' ' + year); continue; } throw new Error(kind + ' ' + year + ': HTTP 404'); }
     fileLog.push(z.file);
     const { fresh, counts } = brObservations(kind, year, z.files, cnpjs);
     for (const k of Object.keys(counts)) st[k] += counts[k];
@@ -528,11 +550,11 @@ async function runBrazil(ctx) {
   }
   if (!st.docs) throw new Error('CVM: no document for any of the ' + cnpjs.size + ' mapped companies (format change?)');
   next.tickers = Object.fromEntries([...map.entries()].sort().map(([tk, m]) => [tk, m]));
-  next.sources[src] = { fetchedAt, endpoint: CVM_BASE + '{ITR,DFP,FCA}/DADOS/', files: fileLog, fcaYear, ambiguous, missingYears: st.missingYears };
+  next.sources[src] = { fetchedAt, endpoint: CVM_BASE + '{ITR,DFP,FCA}/DADOS/', files: fileLog, fcaYears, ambiguous: [...ambiguous].sort(), unmapped, missingYears: st.missingYears };
   S.assertAppendOnly(prev, next);
   const text = S.serialiseStore(next);
   if (!ctx.dryRun) writeFileAtomic(file, text);
-  const summary = { market: 'BR', src, watchlist: want.size, mapped: map.size, ambiguous: ambiguous.length, companies: Object.keys(next.companies).length,
+  const summary = { market: 'BR', src, watchlist: want.size, mapped: map.size, ambiguous: ambiguous.size, unmapped: unmapped.length, companies: Object.keys(next.companies).length,
     ...st, bytes: Buffer.byteLength(text), written: !ctx.dryRun };
   ctx.log('BR: ' + JSON.stringify(summary));
   return summary;

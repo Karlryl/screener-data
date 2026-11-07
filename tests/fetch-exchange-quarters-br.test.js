@@ -94,7 +94,7 @@ function itr(year, { wegV2 = false, bankUsd = false } = {}) {
 }
 function dfp(year) {
   const p = 'dfp_cia_aberta_';
-  const d = [row(WEG, year + '-12-31', 1, 'ÚLTIMO', year + '-01-01', year + '-12-31', '3.01', '40000000', 'REAL', 'UNIDADE')];
+  const d = [row(WEG, year + '-12-31', 1, 'ÚLTIMO', year + '-01-01', year + '-12-31', '3.01', '40000000000', 'REAL', 'UNIDADE')];
   return makeZip({
     [p + year + '.csv']: csv(IDX, [idx(WEG, year + '-12-31', 1, 'DFP', '7', (year + 1) + '-02-20')]),
     [p + 'DRE_con_' + year + '.csv']: csv(DRE, d), [p + 'DRE_ind_' + year + '.csv']: csv(DRE, []),
@@ -117,6 +117,7 @@ const BASE = 'https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/';
 function cvm(over = {}) {
   const files = {
     'FCA/DADOS/fca_cia_aberta_2026.zip': fca(2026),
+    'FCA/DADOS/fca_cia_aberta_2025.zip': makeZip({ ['fca_cia_aberta_valor_mobiliario_2025.csv']: csv(VM, [vm(WEG, 'Ações Ordinárias', 'WEGE3')]) }),
     'ITR/DADOS/itr_cia_aberta_2026.zip': itr(2026, over.itr2026 || {}), 'ITR/DADOS/itr_cia_aberta_2025.zip': itr(2025),
     'DFP/DADOS/dfp_cia_aberta_2025.zip': dfp(2025), 'DFP/DADOS/dfp_cia_aberta_2024.zip': dfp(2024),
     ...(over.files || {}),
@@ -197,10 +198,11 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.deepEqual(q2[0].shares, { on: 4197317998, pn: 0, treasuryOn: 1488307, treasuryPn: 0 });
     assert.deepEqual(weg.docs['ITR 2026-03-31'][0].values, { '3.01 2026-01-01': 9468313000, '6.01 2026-01-01': 1262449000 }, 'the PENÚLTIMO comparative is not kept');
     assert.equal(weg.docs['ITR 2026-09-30'][0].values['9.99 2026-01-01'], undefined);
-    assert.equal(weg.docs['DFP 2025-12-31'][0].values['3.01 2025-01-01'], 40000000, 'UNIDADE scale is 1');
+    assert.equal(weg.docs['DFP 2025-12-31'][0].values['3.01 2025-01-01'], 40000000000, 'UNIDADE scale is 1');
     assert.equal(s.companies[BANK].docs['ITR 2026-06-30'], undefined, 'a non-REAL document is skipped');
     assert.equal(r.results[0].otherCurrency, 1);
-    assert.equal(S.brSingleQuarters(weg)['2025-12-31'].rev.value, 40000000 - 29611868000, 'derived Q4 (fake numbers, units differ on purpose)');
+    assert.equal(S.brSingleQuarters(weg)['2025-12-31'].rev.value, 10388132000, 'derived Q4 = DFP year 40,000,000,000 minus nine months 29,611,868,000');
+    assert.deepEqual(r.results[0].missingYears, ['DFP 2026'], 'DFP of the current year may be missing');
     assert.ok(!fs.existsSync(path.join(dir, 'cn.json')) && !fs.existsSync(path.join(dir, 'tw.json')));
   });
 
@@ -224,11 +226,16 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.equal(s4.companies[WEG].docs['ITR 2026-06-30'].length, 2, 'the old observation stays');
   });
 
-  await t('a missing newest year is a named gap; a missing older year or a server error aborts and writes nothing', async () => {
+  await t('404 is a named gap only where CVM may not have opened the file yet; otherwise it aborts and writes nothing', async () => {
     const dir = tmpDir();
-    const r = await run(dir, cvm({ files: { 'ITR/DADOS/itr_cia_aberta_2026.zip': undefined } }));
-    assert.equal(r.exitCode, 0);
-    assert.deepEqual(r.results[0].missingYears, ['ITR 2026']);
+    const r = await run(dir, cvm({ files: { 'ITR/DADOS/itr_cia_aberta_2026.zip': undefined } }), '2026-03-01T15:00:00Z');
+    assert.equal(r.exitCode, 0, JSON.stringify(r.results));
+    assert.deepEqual(r.results[0].missingYears, ['ITR 2026', 'DFP 2026']);
+    const dirNov = tmpDir();
+    const rNov = await run(dirNov, cvm({ files: { 'ITR/DADOS/itr_cia_aberta_2026.zip': undefined } }));
+    assert.equal(rNov.exitCode, 1, 'the current ITR file vanishing in November is a failure, not a gap');
+    assert.match(rNov.results[0].aborted, /ITR 2026: HTTP 404/);
+    assert.ok(!fs.existsSync(path.join(dirNov, 'br.json')));
     const dir2 = tmpDir();
     const r2 = await run(dir2, cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2024.zip': undefined } }));
     assert.equal(r2.exitCode, 1);
@@ -240,11 +247,56 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.ok(!fs.existsSync(path.join(dir3, 'br.json')));
   });
 
-  await t('FCA of the new year missing: the previous year maps the tickers', async () => {
+  await t('FCA: both years are read; a company that has not filed the new form keeps its mapping; the newer year wins', async () => {
     const dir = tmpDir();
-    const r = await run(dir, cvm({ files: { 'FCA/DADOS/fca_cia_aberta_2026.zip': undefined, 'FCA/DADOS/fca_cia_aberta_2025.zip': makeZip({ 'fca_cia_aberta_valor_mobiliario_2025.csv': csv(VM, [vm(WEG, 'Ações Ordinárias', 'WEGE3')]) }) } }));
+    const r = await run(dir, cvm({ files: { 'FCA/DADOS/fca_cia_aberta_2026.zip': undefined } }));
     assert.equal(r.exitCode, 0, JSON.stringify(r.results));
-    assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(dir, 'br.json'), 'utf8')).tickers), ['WEGE3.SA']);
+    const s = JSON.parse(fs.readFileSync(path.join(dir, 'br.json'), 'utf8'));
+    assert.deepEqual(Object.keys(s.tickers), ['WEGE3.SA']);
+    assert.deepEqual(Object.values(s.sources)[0].unmapped, ['BBAS3.SA', 'BBAS4.SA', 'DUPL3.SA', 'NOPE3.SA'], 'unmapped watchlist tickers are named');
+    const dir2 = tmpDir();
+    const early = makeZip({ ['fca_cia_aberta_valor_mobiliario_2026.csv']: csv(VM, [vm(BANK, 'Ações Ordinárias', 'BBAS3')]) });
+    const old = makeZip({ ['fca_cia_aberta_valor_mobiliario_2025.csv']: csv(VM, [vm(WEG, 'Ações Ordinárias', 'WEGE3'), vm('99.999.999/0001-99', 'Ações Ordinárias', 'BBAS3')]) });
+    const r2 = await run(dir2, cvm({ files: { 'FCA/DADOS/fca_cia_aberta_2026.zip': early, 'FCA/DADOS/fca_cia_aberta_2025.zip': old } }));
+    assert.equal(r2.exitCode, 0, JSON.stringify(r2.results));
+    const t2 = JSON.parse(fs.readFileSync(path.join(dir2, 'br.json'), 'utf8')).tickers;
+    assert.deepEqual(t2, { 'BBAS3.SA': { cnpj: BANK, cls: 'ON' }, 'WEGE3.SA': { cnpj: WEG, cls: 'ON' } });
+    const r3 = await run(tmpDir(), cvm({ files: { 'FCA/DADOS/fca_cia_aberta_2025.zip': undefined } }));
+    assert.equal(r3.exitCode, 1, 'the previous year FCA must exist');
+  });
+
+  await t('zeros are no values: a consolidated DRE of zeros falls back to the individual one (TIM DFP 2025)', async () => {
+    const dir = tmpDir();
+    const p = 'dfp_cia_aberta_';
+    const tim = makeZip({
+      [p + '2025.csv']: csv(IDX, [idx(WEG, '2025-12-31', 1, 'DFP', '7', '2026-02-20')]),
+      [p + 'DRE_con_2025.csv']: csv(DRE, [row(WEG, '2025-12-31', 1, 'ÚLTIMO', '2025-01-01', '2025-12-31', '3.01', '0.0000000000'),
+        row(WEG, '2025-12-31', 1, 'ÚLTIMO', '2025-01-01', '2025-12-31', '3.11', '0.0000000000')]),
+      [p + 'DRE_ind_2025.csv']: csv(DRE, [row(WEG, '2025-12-31', 1, 'ÚLTIMO', '2025-01-01', '2025-12-31', '3.01', '26624721'),
+        row(WEG, '2025-12-31', 1, 'ÚLTIMO', '2025-01-01', '2025-12-31', '3.11', '4311984'),
+        row(WEG, '2025-12-31', 1, 'ÚLTIMO', '2025-01-01', '2025-12-31', '3.03', '')]),
+      [p + 'DFC_MI_con_2025.csv']: csv(DRE, []), [p + 'DFC_MD_con_2025.csv']: csv(DRE, []),
+      [p + 'DFC_MI_ind_2025.csv']: csv(DRE, []), [p + 'DFC_MD_ind_2025.csv']: csv(DRE, []), [p + 'composicao_capital_2025.csv']: csv(CAP, []),
+    });
+    const r = await run(dir, cvm({ files: { 'DFP/DADOS/dfp_cia_aberta_2025.zip': tim } }));
+    assert.equal(r.exitCode, 0, JSON.stringify(r.results));
+    const o = JSON.parse(fs.readFileSync(path.join(dir, 'br.json'), 'utf8')).companies[WEG].docs['DFP 2025-12-31'][0];
+    assert.equal(o.basis, 'ind');
+    assert.deepEqual(o.values, { '3.01 2025-01-01': 26624721000, '3.11 2025-01-01': 4311984000 }, 'the empty 3.03 is a gap, not 0');
+    assert.equal(r.results[0].badNumbers, 1);
+  });
+
+  await t('zeros are no values: niParent 0 next to a real 3.11 is missing; one zero leg derives nothing (Azul Q4 2025)', () => {
+    const o = (rec, values, label = 'Receita de Venda de Bens e/ou Serviços') => [{ received: rec, basis: 'con', revenueLabel: label, values }];
+    const q = S.brSingleQuarters({ docs: {
+      'ITR 2025-09-30': o('2025-11-13', { '3.11 2025-01-01': -1755161000, '3.11.01 2025-01-01': 0, '3.01 2025-01-01': 0 }),
+      'DFP 2025-12-31': o('2026-03-10', { '3.11 2025-01-01': 124858000, '3.11.01 2025-01-01': 124858000, '3.01 2025-01-01': 20000000000 }),
+    } });
+    assert.equal(q['2025-12-31'].niParent, undefined, 'not the whole year as a quarter (+124.9 m)');
+    assert.equal(q['2025-12-31'].ni.value, 124858000 + 1755161000);
+    assert.equal(q['2025-12-31'].rev, undefined, 'nine months of 0 against a real year: not derivable');
+    const fin = S.brSingleQuarters({ docs: { 'ITR 2026-06-30': o('2026-08-12', { '3.01 2026-04-01': 5, '3.11 2026-04-01': 1 }, 'Receitas da Intermediação Financeira') } });
+    assert.deepEqual(fin, {}, 'the financial DRE scheme gives no quarters');
   });
 
   await t('dry run fetches and checks but writes nothing', async () => {
@@ -275,7 +327,6 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
         netIncomeQ: [{ value: 302823594 }], netIncomeQEnds: ['2026-06-30'], grossProfitQ: [{ value: 655250649 }], grossProfitQEnds: ['2026-06-30'] } };
     const r = compareTicker(snap, store, 0.01);
     const cat = (field, end) => r.cells.find((c) => c.field === field && c.end === end).cat;
-    assert.equal(r.stratum, 'general');
     assert.equal(cat('revenueQ', '2026-06-30'), 'agree');
     assert.equal(cat('revenueQ', '2026-09-30'), 'cvm-newer');
     assert.equal(cat('revenueQ', '2025-09-30'), 'cvm-only', 'the gap inside the Yahoo span');
@@ -285,6 +336,11 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     assert.equal(cat('grossProfitQ', '2026-06-30'), 'cvm-zero');
     assert.match(compareTicker({ meta: { ...snap.meta, ticker: 'XXXX3.SA' } }, store, 0.01).unchecked, /not in the CVM ticker map/);
     assert.match(compareTicker({ meta: { ...snap.meta, reportingCurrencyOriginal: 'USD', reportingCurrency: 'USD' } }, store, 0.01).unchecked, /statement currency USD/);
+    assert.match(compareTicker({ ...snap, meta: { ...snap.meta, statementCurrencyOriginal: 'USD', statementFxRateApplied: 1 } }, store, 0.01).unchecked,
+      /statement series in USD \(hand table\)/, 'Petrobras, Embraer, Vale: USD series from SEC filings');
+    const bank = { tickers: { 'BBAS3.SA': { cnpj: BANK, cls: 'ON' } }, companies: { [BANK]: { docs: { 'ITR 2026-06-30': [{ received: '2026-08-12', basis: 'con',
+      revenueLabel: 'Receitas de Intermediação Financeira', values: { '3.01 2026-04-01': 5 } }] } } } };
+    assert.match(compareTicker({ ...snap, meta: { ...snap.meta, ticker: 'BBAS3.SA' } }, bank, 0.01).unchecked, /financial DRE scheme/);
   });
 
   await t('shadow guarantee: no code outside the BR pass and its report opens br.json; loadStores reads cn and tw only', () => {
@@ -302,7 +358,9 @@ const run = (dir, fetchBuffer, now = '2026-11-07T15:00:00Z', extra = {}) =>
     walk('');
     assert.deepEqual(hits, [], 'br.json is read somewhere: the store is no longer a shadow, this needs the formula path first');
     const X = require('../lib/exchange-quarter-check.js');
-    assert.deepEqual(Object.keys(X.loadStores(tmpDir())).sort(), ['cn', 'tw', 'warnings']);
+    const withBr = tmpDir();
+    fs.writeFileSync(path.join(withBr, 'br.json'), JSON.stringify({ schemaVersion: 1, market: 'BR', currency: 'BRL', companies: {}, sources: {} }));
+    assert.deepEqual(Object.keys(X.loadStores(withBr)).sort(), ['cn', 'tw', 'warnings'], 'an existing br.json is not loaded');
   });
 
   await t('the live stores are untouched', () => {

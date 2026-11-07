@@ -6,10 +6,13 @@
  *
  *   node scripts/br-shadow-report.js --out <file.json> [--snapshots DIR] [--store FILE] [--tolerance 0.01]
  *
- * READS ONLY the snapshots and the store; WRITES --out. Changes no snapshot, score or export.
+ * READS ONLY the snapshots and the store; WRITES --out. Changes no snapshot, score or export. Every snapshot goes
+ * through prepareSnapshot first, so the Yahoo side is what scoring sees (hand tables, known Q4 cases).
  * Yahoo converts a statement with ONE rate per pull (meta.fxRateApplied, fx-rates.json); the CVM value
  * times that same rate is therefore currency-neutral against the Yahoo cell. Measured on WEGE3.SA
  * 2026-06-30: CVM 10,143,555 thousand BRL x 0.19428794 = 1,970.77 m USD, Yahoo 1,970.77 m USD.
+ * A statement-currency hand-table row (meta.statementCurrencyOriginal, e.g. Petrobras, Embraer, Vale: the series are
+ * the USD figures of their SEC filings) is unchecked: a BRL filing times one rate does not meet a USD series.
  *
  * Per ticker, field and quarter end one of:
  *   agree           |cvm/yahoo - 1| <= tolerance
@@ -22,15 +25,15 @@
  * measured, not judged), netIncomeQ ~ 3.11.01 (attributable to the parent's owners, as Yahoo shows it),
  * else 3.11 (consolidated; the only line of a company without minorities).
  *   cvm-zero        CVM files 0 on the line (holding or insurer without a sales line), Yahoo shows a figure
- * Banks and insurers (3.01 label "intermediação"/"segur..."/"prêmio") are reported as stratum financial.
+ * Banks and insurers (S.BR_FINANCIAL on the 3.01 label) are unchecked: their DRE scheme puts other lines on the codes.
  */
 const fs = require('fs');
 const path = require('path');
 const S = require('../lib/exchange-quarter-store.js');
+const { prepareSnapshot } = require('../lib/yahoo-q4-known-cases.js');
 
 const ROOT = path.join(__dirname, '..');
 const FIELDS = [['revenueQ', 'rev'], ['grossProfitQ', 'gp'], ['opIncQ', 'ebit'], ['netIncomeQ', 'niParent', 'ni']];
-const FINANCIAL = /intermedia|segur|prêmio|previd/i;
 const valueOf = (c) => (c && typeof c === 'object' ? c.value : c);
 
 /** Compare one snapshot with its CVM company. Pure. @returns {object} */
@@ -41,14 +44,16 @@ function compareTicker(snap, store, tolerance) {
   const company = store.companies[m.cnpj];
   if (!company) return { ticker: tk, unchecked: 'no CVM document for ' + m.cnpj };
   const meta = snap.meta;
+  if (meta.statementCurrencyOriginal) return { ticker: tk, unchecked: 'statement series in ' + meta.statementCurrencyOriginal + ' (hand table)' };
   let fx = null;
   if (meta.reportingCurrency === 'BRL') fx = 1;
   else if (meta.reportingCurrencyOriginal === 'BRL' && meta.fxConverted && Number.isFinite(meta.fxRateApplied)) fx = meta.fxRateApplied;
   if (fx == null) return { ticker: tk, unchecked: 'Yahoo statement currency ' + (meta.reportingCurrencyOriginal || meta.reportingCurrency) + ' (CVM is BRL)' };
-  const q = S.brSingleQuarters(company);
   const docs = Object.values(company.docs).map((l) => l[l.length - 1]);
   const label = (docs.find((o) => o.revenueLabel) || {}).revenueLabel || null;
-  const out = { ticker: tk, cnpj: m.cnpj, cls: m.cls, stratum: label && FINANCIAL.test(label) ? 'financial' : 'general', fx, cells: [] };
+  if (label && S.BR_FINANCIAL.test(label)) return { ticker: tk, unchecked: 'financial DRE scheme (' + label + ')' };
+  const q = S.brSingleQuarters(company);
+  const out = { ticker: tk, cnpj: m.cnpj, cls: m.cls, fx, cells: [] };
   const ts = snap.timeseries || {};
   for (const [field, f, fallback] of FIELDS) {
     const vals = ts[field] || [];
@@ -79,7 +84,7 @@ function summarise(rows) {
   for (const r of rows) {
     if (r.unchecked) { s.unchecked[r.unchecked] = (s.unchecked[r.unchecked] || 0) + 1; continue; }
     for (const c of r.cells) {
-      const k = r.stratum + ' ' + c.field;
+      const k = c.field;
       const b = s.byField[k] || (s.byField[k] = {});
       b[c.cat] = (b[c.cat] || 0) + 1;
     }
@@ -97,7 +102,7 @@ function main() {
   const store = JSON.parse(fs.readFileSync(storeFile, 'utf8'));
   if (store.schemaVersion !== 1 || store.market !== 'BR') throw new Error(storeFile + ': not a BR store');
   const rows = fs.readdirSync(dir).filter((f) => /\.SA\.json$/.test(f)).sort()
-    .map((f) => compareTicker(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')), store, tolerance));
+    .map((f) => compareTicker(prepareSnapshot(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))), store, tolerance));
   const report = { generatedAt: new Date().toISOString(), tolerance, store: storeFile, snapshots: dir, summary: summarise(rows), rows };
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, JSON.stringify(report, null, 1) + '\n');
