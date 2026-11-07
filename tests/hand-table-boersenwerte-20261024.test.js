@@ -44,7 +44,7 @@ function snap({ ticker, ccy, fx, px, mcap, withPrice = true }) {
 }
 const CORRECTED = {
   '8035.T': { ccy: 'JPY', fx: 0.00636748, px: 60.22362584, mcap: 27339565394.16052, shares: 2280791810 },
-  '285A.T': { ccy: 'JPY', fx: 0.00636748, px: 81.2172074, mcap: 43259141448.56342, shares: 1644045264 },
+  '285A.T': { ccy: 'JPY', fx: 0.00636748, px: 81.2172074, mcap: 43259141448.56342, shares: 1597905534 }, // 04.11.2026: net of the 48,402,168 treasury shares of 30.09.2026 (was 1,644,045,264)
   'LISN.SW': { ccy: 'CHF', fx: 1.2151407, px: 105231.18462, mcap: 114301055775.69977, shares: 229956 },
 };
 const HELD = {
@@ -81,8 +81,8 @@ pruefe('table: the five cases and the two Lindt buyback lines are registered, no
     assert.ok(/^https:\/\//.test(row.source.url) && row.source.quote.trim(), `${t}: source`);
   }
   for (const t of Object.keys(HELD)) assert.ok(guard.holds[t] && guard.holds[t].reason && guard.holds[t].source.quote, `${t}: hold missing`);
-  // The holds of 01.11.2026 are pinned in tests/hand-table-boersenwerte-20261101.test.js.
-  const later = new Set(Object.keys(require('./fixtures/hand-table-boersenwerte-20261101.json').snapshots));
+  // The holds of 01.11.2026 are pinned in tests/hand-table-boersenwerte-20261101.test.js, those of 04.11.2026 in tests/hand-table-nachfolger-20261104.test.js.
+  const later = new Set([...Object.keys(require('./fixtures/hand-table-boersenwerte-20261101.json').snapshots), '1AT1.MI', '1DEZ.MI', '1385.HK']);
   assert.deepStrictEqual(Object.keys(guard.holds).filter((t) => !later.has(t)).sort(), ['1WAF.MI', 'ARX.TO', 'EFTY', 'FBRX', 'ISBTR.IS', 'ISSC', 'LISNE.SW', 'LISPE.SW', 'MCTA', 'MSGS', 'NATH', 'RCIT', 'RMAX', 'SLP', 'WEAV']);
 });
 
@@ -91,7 +91,7 @@ pruefe('presence: 8035.T, 285A.T and LISN.SW land on price x issuer count with r
   for (const [t, w] of Object.entries(CORRECTED)) v[t] = expectCorrected(t, w).marketCap.value;
   // Plausibility against the audit expectation (not copied into the table): TEL and Kioxia above 130 bn, Lindt near 24 bn.
   assert.ok(v['8035.T'] > 130e9 && v['8035.T'] < 145e9, String(v['8035.T']));
-  assert.ok(v['285A.T'] > 130e9 && v['285A.T'] < 140e9, String(v['285A.T']));
+  assert.ok(v['285A.T'] > 125e9 && v['285A.T'] < 140e9, String(v['285A.T'])); // lower bound 130e9 before the treasury shares were netted on 04.11.2026
   assert.ok(v['LISN.SW'] > 23e9 && v['LISN.SW'] < 25e9, String(v['LISN.SW']));
 });
 

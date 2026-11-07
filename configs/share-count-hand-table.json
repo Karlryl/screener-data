@@ -6,7 +6,8 @@
     "Anything else: Yahoo value kept, meta._shareCountHandTableStale stamped, ::warning:: in the pull log, price-only refused - re-verify, then fix or remove the row.",
     "Admission: issuer filing quote for the count (url, quote, unit shares) and the wrong count read from a stored vendor snapshot. Corrected values below the pull's MIN_MCAP floor leave the universe like any other small line.",
     "reviewBy: latest due date of the next periodic filing (10-Q for the quarter ended 2026-09-30: 45 days, next business day). A row cannot see new issuance by itself: once the marketCap data day is past reviewBy, the pull raises ::warning:: every run and still applies the row, until the count is re-verified and reviewBy moved.",
-    "P205: withholdUnverified rows require validFrom, a German reason and proven USD quotes. Unknown or overdue values are withheld with a warning on expiry. _holds contains source-backed cases without a reproducible replacement; it also requires reviewBy. lib/market-cap-guard.js applies only these explicitly marked rows before the legacy share-count applier."
+    "P205: withholdUnverified rows require validFrom, a German reason and proven USD quotes. Unknown or overdue values are withheld with a warning on expiry. _holds contains source-backed cases without a reproducible replacement; it also requires reviewBy. lib/market-cap-guard.js applies only these explicitly marked rows before the legacy share-count applier.",
+    "renewal (04.11.2026): optional record of the last re-check of a row against the newest source: day, previous reviewBy and count, newest count with its day and source, what the vendor showed, why this reviewBy. Nothing reads it; the guard looks at reviewBy and shares only. After the reviewBy of a withholdUnverified row the market cap stays empty even when the vendor is right again, so a row the vendor has fixed is removed on purpose, never left to run out."
   ],
   "ABTC": {
     "shares": 72819713,
@@ -61,7 +62,7 @@
     "shares": 2750893,
     "sharesAsOf": "2026-07-17",
     "validFrom": "2026-07-17",
-    "reviewBy": "2026-11-16",
+    "reviewBy": "2026-12-15",
     "wrongShares": [
       88028561135
     ],
@@ -75,14 +76,28 @@
       "effectiveDateSource": "https://www.nasdaqtrader.com/TraderNews.aspx?id=eca2026-501",
       "form": "Einladung zur Hauptversammlung, Vorschlag 4 zur Aktienzusammenlegung"
     },
-    "verifiedAt": "2026-10-12",
+    "verifiedAt": "2026-11-04",
+    "renewal": {
+      "checkedAt": "2026-11-04",
+      "previousReviewBy": "2026-11-16",
+      "newestCount": 2750893,
+      "newestCountAsOf": "2026-07-17",
+      "differsFromRowPct": 0,
+      "source": {
+        "url": "https://data.sec.gov/submissions/CIK0001781193.json",
+        "quote": "ea0309938-6k_quhuo.htm",
+        "page": "EDGAR filing index of CIK 1781193 read 2026-11-04: newest filing 6-K of 2026-10-28 (bank loan); no 6-K, 20-F, F-3 or 424B after the consolidation of 2026-07-17 reports an issuance or a new share count"
+      },
+      "vendorSeen": "Yahoo quote of 2026-11-04: marketCap 255,282,839,552 USD at price 2.90 USD implies 88,028,565,363 shares, the count before the consolidation (wrongShares). The row is still needed.",
+      "reviewByReason": "Only an ad hoc 6-K or prospectus filing can change the count before the annual report for 2026 (due 2027-04-30). The filing index is read again at this date."
+    },
     "withholdUnverified": true
   },
   "3018.TW": {
     "shares": 75377715,
     "sharesAsOf": "2026-10-11",
     "validFrom": "2026-10-10",
-    "reviewBy": "2026-11-16",
+    "reviewBy": "2026-11-30",
     "wrongShares": [
       75377715000
     ],
@@ -95,14 +110,28 @@
       "value": 75377715,
       "form": "Börsenregister der TWSE mit ausgegebenen Stammaktien"
     },
-    "verifiedAt": "2026-10-12",
+    "verifiedAt": "2026-11-04",
+    "renewal": {
+      "checkedAt": "2026-11-04",
+      "previousReviewBy": "2026-11-16",
+      "newestCount": 75377715,
+      "newestCountAsOf": "2026-11-03",
+      "differsFromRowPct": 0,
+      "source": {
+        "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
+        "quote": "\"已發行普通股數或TDR原股發行股數\":\"75377715\"",
+        "page": "Company 3018, 出表日期 1151103"
+      },
+      "vendorSeen": "Yahoo quote and quoteSummary of 2026-11-04: sharesOutstanding 75,377,715; marketCap 739,455,360 at price 9.81 implies 75,377,712 shares, equal to this row. One day measured, so the row stays as a guard against a relapse to the count 1000 times too large.",
+      "reviewByReason": "The Q3 2026 consolidated report is due by 2026-11-14. The annual meeting of 2026-06-26 authorised a private placement of up to 52,000,000 shares in up to six tranches until 2027-06-26; none was completed by 2026-11-04 (MOPS announcements read to 2026-11-04). A completed tranche would move the count beyond the tolerance."
+    },
     "withholdUnverified": true
   },
   "8035.T": {
     "shares": 2280791810,
     "sharesAsOf": "2026-04-30",
     "validFrom": "2026-10-01",
-    "reviewBy": "2026-11-16",
+    "reviewBy": "2026-12-31",
     "wrongShares": [
       453967442
     ],
@@ -118,29 +147,54 @@
       "crossCheck": "Same split notice: Total number of issued shares after stock split 2,340,163,665 shares (incl. treasury stock); repurchases under the facility since May lower the count by at most 37.5 million post-split shares (1.6 %), inside the 3 % tolerance",
       "form": "Mitteilung zum Aktienrückkauf vom 29.05.2026 mit Bestand eigener Aktien und Mitteilung zum Aktiensplit vom 29.05.2026"
     },
-    "verifiedAt": "2026-10-24",
+    "verifiedAt": "2026-11-04",
+    "renewal": {
+      "checkedAt": "2026-11-04",
+      "previousReviewBy": "2026-11-16",
+      "newestCount": 2269837310,
+      "newestCountAsOf": "2026-09-30",
+      "differsFromRowPct": -0.48,
+      "source": {
+        "url": "https://www.tel.com/news/ir/2026/k6c2lu00000000gf-att/20261030_003_e.pdf",
+        "quote": "Number of outstanding shares (Excluding treasury stock): 2,269,837,310 shares",
+        "page": "Notice regarding the Establishment of a Share Repurchase Facility, October 30, 2026, page 1 (status of treasury stock as of September 30, 2026)"
+      },
+      "vendorSeen": "Yahoo quote of 2026-11-04: marketCap 21,872,670,408,704 JPY at price 9,663 JPY implies 2,263,548,630 shares, 0.76 % below this row; the pre-split count 453,967,442 is gone. One day measured, and the snapshot of 2026-10-23 was still wrong, so the row stays as a guard against a relapse.",
+      "reviewByReason": "The count stays inside the 3 % tolerance until the new repurchase facility (up to 25,000,000 shares, 1.1 %, 2026-11-01 to 2027-03-31) could exceed it. The first monthly repurchase status notice (about 2026-12-01) is read at this date."
+    },
     "withholdUnverified": true
   },
   "285A.T": {
-    "shares": 1644045264,
-    "sharesAsOf": "2026-06-30",
+    "shares": 1597905534,
+    "sharesAsOf": "2026-09-30",
     "validFrom": "2026-10-01",
-    "reviewBy": "2026-11-16",
+    "reviewBy": "2026-12-31",
     "wrongShares": [
       532635175
     ],
     "wrongSharesSeen": "snapshot of run 39918190374 (2026-10-23): marketCap 43,259,141,449 USD / price 81.2172074 USD = 532,635,175 shares (pre-split count); meta.sharesOutstanding 1,597,515,021 = 3 x 532,505,007",
-    "reason": "Börsenwert aus 1.644.045.264 Aktien berechnet: Stückzahl zum 30.06.2026 laut Kioxia (548.015.088 Aktien), mal 3 wegen des Aktiensplits von 1 zu 3 am 1. Oktober 2026. Yahoo rechnet den Kurs nach dem Split noch mit der Aktienzahl vor dem Split.",
+    "reason": "Börsenwert aus 1.597.905.534 Aktien berechnet: Stückzahl zum 30.09.2026 laut Kioxia (1.646.307.702 ausgegebene Aktien nach dem Aktiensplit von 1 zu 3 am 1. Oktober 2026, abzüglich 48.402.168 eigener Aktien). Yahoo rechnet den Kurs nach dem Split noch mit der Aktienzahl vor dem Split.",
     "source": {
-      "url": "https://fs2.magicalir.net/tdnet/2026/285A/20260731505278.pdf",
-      "quote": "Total outstanding shares after stock split 1,644,045,264 shares",
-      "page": "Notice Regarding Stock Split and According Partial Amendment to Articles of Incorporation, July 31, 2026, page 1, section 1 (2) ii",
-      "unit": "shares (issued as of 2026-06-30 x 3; treasury shares 450 before the split)",
-      "splitQuote": "split at a ratio of 3 to 1, with September 30, 2026 as the record date",
-      "crossCheck": "Earnings release Q1 FY2026 (Kioxia, filed on SGX): issued shares 548,015,088 and treasury shares 450 as of June 30, 2026",
-      "form": "Mitteilung zum Aktiensplit vom 31.07.2026 (TDnet, Kioxia Holdings)"
+      "form": "Mitteilung der Halbjahreszahlen bis 30.09.2026 von Kioxia vom 30.10.2026 mit ausgegebenen und eigenen Aktien",
+      "url": "https://ssl4.eir-parts.net/doc/285A/tdnet/2902678/00.pdf",
+      "quote": "As of September 30, 2026 1,646,307,702",
+      "treasuryQuote": "As of September 30, 2026 48,402,168",
+      "page": "Consolidated Financial Results for the Six Months Ended September 30, 2026 (TDnet mirror), page 2, notes (3) number of issued shares: (1) issued shares including treasury shares, (2) treasury shares",
+      "unit": "shares outstanding excluding treasury shares, after the 3-for-1 split of 2026-10-01: issued 1,646,307,702 minus treasury 48,402,168 = 1,597,905,534",
+      "splitQuote": "The Company executed a 3-to-1 stock split for its common shares on October 1, 2026.",
+      "crossCheck": "The row used issued shares of 2026-06-30 x 3 (1,644,045,264) and treated the 450 treasury shares as negligible; the buyback of 16,133,500 pre-split shares completed on 2026-08-10 (https://ssl4.eir-parts.net/doc/285A/tdnet/2870703/00.pdf, \"Total number of shares acquired 16,133,500\") made treasury 2.9 % of the issued shares, so the old count was 2.8 % too high."
     },
-    "verifiedAt": "2026-10-24",
+    "verifiedAt": "2026-11-04",
+    "renewal": {
+      "checkedAt": "2026-11-04",
+      "previousReviewBy": "2026-11-16",
+      "previousShares": 1644045264,
+      "newestCount": 1597905534,
+      "newestCountAsOf": "2026-09-30",
+      "differsFromRowPct": 0,
+      "vendorSeen": "Yahoo quote of 2026-11-04: marketCap 17,153,516,371,968 JPY at price 10,735 JPY implies 1,597,905,577 shares, equal to this row; the pre-split count 532,635,175 is gone. One day measured, so the row stays as a guard against a relapse.",
+      "reviewByReason": "The next count in a filing is the Q3 results (late January 2027); a planned US ADS listing (notice of 2026-05-15, no date) could change the count earlier. Read again at this date."
+    },
     "withholdUnverified": true
   },
   "LISN.SW": {
@@ -189,26 +243,36 @@
     "withholdUnverified": true
   },
   "ISAE3.SA": {
-    "shares": 564711511,
-    "sharesAsOf": "2026-10-14",
+    "shares": 583349906,
+    "sharesAsOf": "2026-11-03",
     "validFrom": "2026-10-01",
-    "reviewBy": "2026-11-16",
+    "reviewBy": "2026-12-04",
     "wrongShares": [
       660801338,
       703327748
     ],
     "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 4,355,245,483 USD / price 6.59085415 USD = 660,801,338 shares at the ON price; 703,327,748 is the current ON plus PN total, the count the vendor is expected to move to",
-    "reason": "Börsenwert näherungsweise aus 564,7 Mio. Stammaktien-Gegenwerten berechnet: laut ISA Energia 238.170.004 Stammaktien und 465.157.744 Vorzugsaktien (Stand 14.10.2026), die Vorzugsaktien umgerechnet mit den Schlusskursen 24,90 und 35,47 BRL vom 29.10.2026. Yahoo bewertet alle Aktien zum Kurs der Stammaktie, obwohl die Vorzugsaktien rund 30 % tiefer notieren. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
+    "reason": "Börsenwert näherungsweise aus 583,3 Mio. Stammaktien-Gegenwerten berechnet: laut ISA Energia 238.170.004 Stammaktien und 465.157.744 Vorzugsaktien (Stand 30.09.2026), die Vorzugsaktien umgerechnet mit den Schlusskursen 24,80 und 33,42 BRL vom 03.11.2026. Yahoo bewertet alle Aktien zum Kurs der Stammaktie, obwohl die Vorzugsaktien rund 26 % tiefer notieren. Der Wert ist eine Näherung, weil sich das Kursverhältnis täglich ändert.",
     "source": {
-      "form": "Die Aktionärstabelle auf der Anlegerseite von ISA Energia nennt Stammaktien und Vorzugsaktien (Stand 14.10.2026).",
-      "url": "https://ri.isaenergiabrasil.com.br/pt/governanca-corporativa/composicao-acionaria-e-estrutura-societaria",
-      "quote": "Total 238.170.004 100,00% 465.157.744 100,00% 703.327.748 100,00%",
-      "page": "Composição acionária e estrutura societária, Total row (page updated 14 Oct 2026)",
-      "unit": "shares: ON 238,170,004 + PN 465,157,744 x (24.90 / 35.47) = 564,711,511 ON equivalents",
-      "priceSource": "https://query1.finance.yahoo.com/v8/finance/chart/ISAE4.SA?range=1mo&interval=1d and https://query1.finance.yahoo.com/v8/finance/chart/ISAE3.SA?range=1mo&interval=1d, closes of 2026-10-29: 24.90 and 35.47 BRL (vendor data, no issuer quote exists for the ratio)",
-      "crossCheck": "Fato Relevante of 2026-07-23: primary offering of 44,444,444 PN; https://b3.com.br/data/files/36/72/EF/1E/1649F91094DCD8F9AC094EA8/Fato%20Relevante_Isa%20Energia_Preco_23.07.2026.pdf"
+      "form": "Die Ergebnismitteilung von ISA Energia für das dritte Quartal 2026 nennt in der Tabelle zum Kapitalmarkt Stammaktien und Vorzugsaktien (Stand 30.09.2026).",
+      "url": "https://ri.isaenergiabrasil.com.br/pt/documentos/6796-Earnings-Release-3T26.pdf",
+      "quote": "238.170.004 100,00% 465.157.744 100,00% 703.327.748 100,00%",
+      "page": "Release de Resultados 3T26, Mercado de Capitais, share table (PDF page 23), data base 30/09/2026",
+      "unit": "shares: ON 238,170,004 + PN 465,157,744 x (24.80 / 33.42) = 583,349,906 ON equivalents",
+      "priceSource": "https://query1.finance.yahoo.com/v8/finance/chart/ISAE4.SA?range=1mo&interval=1d and https://query1.finance.yahoo.com/v8/finance/chart/ISAE3.SA?range=1mo&interval=1d, closes of 2026-11-03: 24.80 and 33.42 BRL (vendor data, no issuer quote exists for the ratio)",
+      "crossCheck": "ITR 3T26 note 15.1 (https://ri.isaenergiabrasil.com.br/pt/documentos/6808-3ITR26-ISA-ENERGIA-BRASIL-30.09.2026.pdf) and the shareholder page of 2026-10-14 give the same totals; Fato Relevante of 2026-07-23: primary offering of 44,444,444 PN; https://b3.com.br/data/files/36/72/EF/1E/1649F91094DCD8F9AC094EA8/Fato%20Relevante_Isa%20Energia_Preco_23.07.2026.pdf"
     },
-    "verifiedAt": "2026-10-30",
+    "verifiedAt": "2026-11-04",
+    "renewal": {
+      "checkedAt": "2026-11-04",
+      "previousReviewBy": "2026-11-16",
+      "previousShares": 564711511,
+      "newestCount": 583349906,
+      "newestCountAsOf": "2026-11-03",
+      "differsFromRowPct": 0,
+      "vendorSeen": "Yahoo quote of 2026-11-04: marketCap 22,863,724,544 BRL at price 34.60 BRL implies 660,801,338 shares, the wrong count of this row (about 13 % above the sum of both classes at market prices). The row is still needed. The count changes with the price ratio, not with a filing: the old figure used the closes of 2026-10-29 (ratio 0.702), the closes of 2026-11-03 give ratio 0.742.",
+      "reviewByReason": "The two share counts are unchanged (ITR 3T26 of 2026-11-03) and the next filing that can change them is the annual report 2026 (by 2027-03-31). The price ratio of the two classes moved between 0.69 and 0.90 since August, so the approximation is renewed after one month."
+    },
     "withholdUnverified": true
   },
   "7911.T": {
@@ -218,7 +282,7 @@
     ],
     "sharesAsOf": "2026-09-30",
     "validFrom": "2026-10-01",
-    "reviewBy": "2026-11-16",
+    "reviewBy": "2026-11-30",
     "wrongShares": [
       280554025
     ],
@@ -237,28 +301,44 @@
       "splitQuote": "株式分割後の発行済株式総数 | 589,412,480 株",
       "crossCheck": "Split notice of 2026-08-27: record date 2026-09-30, effective 2026-10-01, issued 294,706,240 before the split (TDnet mirror; the original PDF returned 403 or not found). Q1 FY3/2027 short report https://finance.biggo.jp/news/jpx_tdnet_140120260811517449 : 14,113,701 treasury including ESOP on 30.06.2026, which gives 561,185,078, 0.014 % away. Yahoo Finance Japan on 2026-10-30 https://finance.yahoo.co.jp/quote/7911.T states the market cap on 589,412,480 shares. Buyback continues (4,582,500 of 14,000,000 pre-split shares and 21.8 of 50 bn JPY by 30.09.2026): the yen limit leaves about 2.4 % of the shares by May 2027, inside the 3 % tolerance."
     },
-    "verifiedAt": "2026-10-31",
+    "verifiedAt": "2026-11-04",
+    "renewal": {
+      "checkedAt": "2026-11-04",
+      "previousReviewBy": "2026-11-16",
+      "newestCount": 558175410,
+      "newestCountAsOf": "2026-10-31",
+      "differsFromRowPct": -0.52,
+      "source": {
+        "url": "https://japanir.jp/wp-content/uploads/2026/11/7911-20261102-01.pdf",
+        "quote": "取得した株式の総数 2,932,600 株",
+        "page": "Toppan Holdings, notice on the status of share repurchase of 2026-11-02 (TDnet mirror; the JPX original returned 403), page 1: shares bought 2026-10-01 to 2026-10-31 after the 1:2 split. 561,108,010 minus 2,932,600 = 558,175,410"
+      },
+      "vendorSeen": "Yahoo quote page of 2026-11-04: marketCap 1,167,665,790,976 JPY at price 2,081 JPY implies 561,108,020 shares, equal to this row; sharesOutstanding 561,108,010. Yahoo moved from 589 million to 280.5 million (pre-split) to 561.1 million within two weeks, so the row stays as a guard against a relapse.",
+      "reviewByReason": "The Q2 results (about 2026-11-13) and the October buyback report on EDINET (due 2026-11-16) fall on the old deadline; Yahoo is read again after both."
+    },
     "withholdUnverified": true
   },
   "2590.HK": {
-    "shares": 1337286998,
+    "shares": 1281656998,
     "sharesAsOf": "2026-10-30",
     "validFrom": "2026-10-01",
     "reviewBy": "2026-12-31",
     "wrongShares": [
-      2214575158
+      2214575158,
+      2156451368
     ],
-    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count",
-    "reason": "Börsenwert aus 1.337.286.998 Aktien berechnet: alle ausgegebenen Aktien laut Geekplus zum 30.10.2026 (Klasse A, gelistete und nicht gelistete Klasse B), einschließlich 55.630.000 eigener Aktien. Yahoo rechnet mit rund 2.215 Mio. Aktien, wofür es keinen Beleg gibt.",
+    "wrongSharesSeen": "snapshot of run 41027769596 (2026-10-30): marketCap 1,716,293,791 USD / price 0.77499912 USD = 2,214,575,158 shares; no filing supports that count; snapshot of run 41184535364 (2026-10-31): vendor value 1,671,454,670 USD at 0.7750949984 USD, 2,156,451,368 shares implied",
+    "reason": "Börsenwert aus 1.281.656.998 Aktien berechnet: alle ausgegebenen Aktien laut Geekplus zum 30.10.2026 (Klasse A, gelistete und nicht gelistete Klasse B) ohne die 55.630.000 eigenen Aktien. Yahoo rechnet mit rund 2.215 Mio. Aktien, wofür es keinen Beleg gibt. Bis zum 04.11.2026 zählten hier auch die eigenen Aktien mit (1.337.286.998), der Börsenwert lag dadurch 4,3 % zu hoch.",
     "source": {
       "form": "Die Tagesmeldung von Geekplus an die Hongkonger Börse vom 30.10.2026 und die Monatsmeldung für September 2026 nennen die ausgegebenen Aktien je Klasse.",
       "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1030/2026103002515.pdf",
       "quote": "Closing balance as at (Notes 5 and 6) 30 October 2026  968,520,483  55,630,000  1,024,150,483",
       "page": "Next Day Disclosure Return p.1, listed class B; monthly return https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1007/2026100701727.pdf p.2 and pp.3-4",
-      "unit": "shares: class A 218,560,434 + listed class B 1,024,150,483 + unlisted class B 94,576,081",
-      "crossCheck": "Annual report 2025 https://www.hkexnews.hk/listedco/listconews/sehk/2026/0423/2026042303218.pdf note (2): 218,560,434 Class A and 1,118,726,564 Class B"
+      "unit": "shares: class A 218,560,434 + listed class B 968,520,483 excluding 55,630,000 treasury + unlisted class B 94,576,081",
+      "crossCheck": "Annual report 2025 https://www.hkexnews.hk/listedco/listconews/sehk/2026/0423/2026042303218.pdf note (2): 218,560,434 Class A and 1,118,726,564 Class B",
+      "checkerNote": "Two independent checkers on 2026-11-04: 1,281,656,998 net of treasury at 30.10.2026; the buyback goes on (967,987,483 listed class B and 56,163,000 treasury on 04.11.2026, 0.04 % less)."
     },
-    "verifiedAt": "2026-10-30",
+    "verifiedAt": "2026-11-04",
     "withholdUnverified": true
   },
   "688428.SS": {
@@ -1576,18 +1656,20 @@
     },
     "JXAMY": {
       "validFrom": "2026-10-01",
-      "reason": "Yahoo nennt für diese Zweitnotierung von JX Advanced Metals Corporation 36,64 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 5016.T am 30.10.2026 ergeben sich rund 17,81 Mrd. USD. Maßgeblich ist die Notierung 5016.T.",
+      "reason": "Yahoo nennt für diese Zweitnotierung von JX Advanced Metals Corporation 36,64 Mrd. USD; aus Aktienzahl und Schlusskurs der Hauptnotierung 5016.T am 30.10.2026 ergeben sich rund 16,76 Mrd. USD. Maßgeblich ist die Notierung 5016.T.",
       "reasonComplete": true,
       "source": {
         "form": "Die Unterlage nennt die Aktienzahl der Firma, Hauptnotierung 5016.T.",
-        "url": "https://www2.jpx.co.jp/disc/50160/140120260805510453.pdf",
-        "quote": "① 期末発行済株式数 (自己株式を含む) 2027年３月期１Ｑ 953,183,210株 || ② 期末自己株式数 2027年３月期１Ｑ 2,288,019株",
-        "page": "2",
+        "url": "https://contents.xj-storage.jp/xcontents/AS82809/2607a77f/979d/4c8a/8c2f/e89d81b5f121/140120260618573662.pdf",
+        "quote": "（２）取得した株式の総数 57,300,112 株 || 消却後の当社の発行済株式総数は、949,183,210 株となる見込みです。",
+        "page": "3 (result of the own-share tender offer, 18.06.2026); cancellation notice of 12.06.2026 https://contents.xj-storage.jp/xcontents/AS82809/7ad356e2/14fa/4e59/9909/15b74e7937e2/140120260612569751.pdf p.1",
         "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 36,637,388,800 USD, price 41 USD, 893,594,849 shares implied",
         "otherSources": "",
-        "checkerNote": "The shown value is the ADR close (41.00 USD) times about 893.7 million ordinary shares (derived), which ignores that one ADR is two shares and uses a share count lower than the 950.9 million net shares reported; the Tokyo line closed at 2,955 JPY = 18.73 USD per share. Issued shares rose from 928,463,102 (31.03.2026) to 953,183,210 (30.06.2026); no later share-count filing found."
+        "checkerNote": "Corrected on 2026-11-04 by two independent checkers: the reason of 01.11. used 950.9 million net shares from 30.06.2026 and missed the tender offer of July; 893,595,079 shares outstanding, the count Yahoo uses on the Tokyo line. The ADR value stays wrong (one ADR is two shares, priced as one).",
+        "unit": "shares outstanding = 949,183,210 issued - (2,288,019 + 57,300,112 - 4,000,000) treasury = 893,595,079",
+        "crossCheck": "https://www2.jpx.co.jp/disc/50160/140120260805510453.pdf 2 and 12 (Q1 tanshin of 06.08.2026): 953,183,210 issued and 2,288,019 treasury at 30.06.2026; settlement of the tender offer for 57,300,112 shares on 09.07.2026"
       },
-      "verifiedAt": "2026-11-01",
+      "verifiedAt": "2026-11-04",
       "reviewBy": "2026-12-31"
     },
     "KELRF": {
@@ -2531,6 +2613,79 @@
       },
       "verifiedAt": "2026-11-01",
       "reviewBy": "2026-12-31"
+    },
+    "1AT1.MI": {
+      "validFrom": "2026-10-31",
+      "reason": "Yahoo rechnet für diese Mailänder Zweitnotierung von Aroundtown mit einem alten Kurs von 1,79 USD und kommt auf 2,02 Mrd. USD; aus 1.129.930.393 Aktien und dem Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 1,83 Mrd. USD. Maßgeblich ist die Notierung AT1.DE.",
+      "reasonComplete": true,
+      "source": {
+        "form": "Der Halbjahresbericht von Aroundtown nennt die Aktienzahl ohne eigene Aktien und Aktien mit ruhenden Stimmrechten.",
+        "url": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_Q2_2026.pdf",
+        "quote": "As of June 30, 2026 Number of shares 1,537,025,609 Number of shares, base for share KPI calculations 1) 1,129,930,393",
+        "page": "22 (Board of Directors' Report, Capital markets, Trading data; 1) excluding suspended voting rights)",
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,019,895,601 USD, price 1.7876284099 USD (Milan line); home line AT1.DE price 1.6179097851 USD",
+        "crossCheck": "https://www.aroundtown.de/aroundtown.de/Data_Objects/Downloads/Financial_Reports/H1_2026_Financials/AT_H1_2026_financials_presentation.pdf 58: Number of shares, base for share KPI calculations (excluding suspended voting rights) 1,129,451,330 (As of 25.08.2026)",
+        "otherSources": "https://www.borsaitaliana.it/borsa/azioni/dati-completi.html?isin=LU1673108939&lang=en web page, read 2026-11-04: Date - Time Last Trade:| - (no trade shown); Reference Close| 1.52 - 26/11/03 5:45:00 PM",
+        "checkerNote": "Two independent checkers on 2026-11-04: same count (1,129,930,393 at 30.06., 1,129,451,330 at 25.08., 0.04 % apart); Borsa Italiana shows no trade for 1AT1; Xetra close 03.11. 1.51 EUR. Codex found the line on 2026-11-04 (review of PR 91)."
+      },
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-31"
+    },
+    "1DEZ.MI": {
+      "validFrom": "2026-10-31",
+      "reason": "Yahoo rechnet für diese Mailänder Zweitnotierung von Deutz mit einem alten Kurs von 12,34 USD und kommt auf 2,07 Mrd. USD; aus 167.901.915 Aktien und dem Schlusskurs der Hauptnotierung am 30.10.2026 ergeben sich rund 1,77 Mrd. USD. An der Mailänder Börse selbst stand der Kurs am 04.11.2026 bei 9,895 EUR. Maßgeblich ist die Notierung DEZ.DE.",
+      "reasonComplete": true,
+      "source": {
+        "form": "Die Gesamtstimmrechtsmitteilung von Deutz nennt die Aktienzahl nach der Kapitalerhöhung vom September 2026.",
+        "url": "https://www.eqs-news.com/news/total-voting-rights/deutz-ag-release-according-to-article-41-of-the-wphg-the-german-securities-trading-act-with-the-objective-of-europe-wide-distribution/59c81e9a-a7c1-40ac-990f-d7371e011c23_en",
+        "quote": "3. New total number of voting rights: 167,901,915",
+        "page": "HTML (EQS total voting rights announcement, 16 September 2026)",
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 2,071,590,251 USD, price 12.338097395 USD (Milan line); home line DEZ.DE price 10.540419856 USD",
+        "crossCheck": "https://www.deutz.com/en/investor-relations/mandatory-announcements/ad-hoc-disclosure/ web page, ad hoc of 2026-09-15: This increases the share capital of DEUTZ AG by 10% to 167,901,915 no-par-value bearer shares.",
+        "otherSources": "https://www.borsaitaliana.it/borsa/azioni/dati-completi.html?isin=DE0006305006&lang=en web page, read 2026-11-04: Last Trade Price| 9.895 [...] Date - Time Last Trade:| 26/11/04 - 12:49:47 PM",
+        "checkerNote": "Two independent checkers on 2026-11-04: same count, no treasury shares stated; Xetra close 03.11. 9.635 EUR. Not in the count: the contribution in kind for FFG (base case 65,105,268 new shares), expected to close end of 2026 to early 2027; the count changes then. Codex found the line on 2026-11-04 (review of PR 91)."
+      },
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-31"
+    },
+    "1385.HK": {
+      "validFrom": "2026-10-31",
+      "reason": "Yahoo kommt für die Hongkonger Notierung von Shanghai Fudan Microelectronics auf 4,70 Mrd. USD; zum Hongkonger Kurs entspräche das 1.706 Mio. Aktien, die Firma hat aber 539.389.250 A-Aktien und 284.330.000 H-Aktien, zusammen 823,7 Mio. Mit den Schlusskursen vom 30.10.2026 (45,76 CNY und 21,62 HKD) sind beide Klassen rund 4,49 Mrd. USD wert. Maßgeblich ist die Notierung 688385.SS.",
+      "reasonComplete": true,
+      "source": {
+        "form": "Die Monatsmeldung von Shanghai Fudan Microelectronics an die Hongkonger Börse nennt die A- und H-Aktien.",
+        "url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1002/2026100200574.pdf",
+        "quote": "Balance at close of the month 284,330,000 0 284,330,000 | Balance at close of the month 539,389,250 0 539,389,250",
+        "page": "2",
+        "vendorValueSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 4,702,369,181 USD, price 2.7561766226 USD, 1,706,120,348 shares implied; on the export of 03.11. the line shows 4.59 bn against 4.24 bn on 688385.SS",
+        "crossCheck": "https://static.cninfo.com.cn/finalpage/2026-08-18/1225478247.PDF 38 (class table): 通股 537,097,300 65.39 +2,291,950 +2,291,950 539,389,250 65.48",
+        "otherSources": "",
+        "checkerNote": "Counts from the row 688385.SS, confirmed by two checkers on 2026-11-01. The 1,706 M are the vendor value divided by the H price; no document has that count, and how Yahoo arrives at it is not proven."
+      },
+      "verifiedAt": "2026-11-04",
+      "reviewBy": "2026-12-31"
     }
+  },
+  "CIFR": {
+    "shares": 456365113,
+    "sharesAsOf": "2026-10-30",
+    "validFrom": "2026-10-31",
+    "reviewBy": "2026-12-31",
+    "wrongShares": [
+      415030722
+    ],
+    "wrongSharesSeen": "snapshot of run 41184535364 (2026-10-31): marketCap 3,025,573,888 USD, price 7.29 USD, 415,030,722 shares implied (the 10-Q cover count of 03.08.2026)",
+    "reason": "Börsenwert aus 456.365.113 Aktien berechnet: laut Deckblatt des Quartalsberichts von Cipher Digital (Quartal bis 30.09.2026) der Stand vom 30.10.2026, einschließlich der rund 40,7 Mio. Aktien aus dem Umtausch der Wandelanleihe vom 16.10.2026. Yahoo rechnet noch mit 415,0 Mio. Aktien vom 03.08.2026.",
+    "source": {
+      "form": "Das Deckblatt des Quartalsberichts von Cipher Digital (Formular 10-Q, eingereicht am 02.11.2026) nennt die Aktienzahl.",
+      "url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm",
+      "quote": "As of October 30, 2026, the registrant had 456,365,113 shares of Common Stock, $0.001 par value per share, outstanding.",
+      "page": "1 (cover page of the 10-Q for the quarter ended 30.09.2026)",
+      "unit": "shares of common stock outstanding (one class)",
+      "crossCheck": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm 7 (balance sheet, equity): 425,237,783 and 412,074,529 shares issued as of September 30, 2026 and December 31, 2025, respectively, and 415,092,825 and 404,963,061 shares outstanding",
+      "checkerNote": "Two independent checkers on 2026-11-04, same count; no later 8-K or prospectus supplement with new shares found up to 2026-11-04. Treasury stock 10,144,958 at 30.09.2026 is outside the outstanding count. validFrom is 31.10.: the exchange of 16.10. was public in an 8-K that day; the exact count came with the 10-Q of 02.11."
+    },
+    "verifiedAt": "2026-11-04",
+    "withholdUnverified": true
   }
 }

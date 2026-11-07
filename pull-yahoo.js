@@ -36,7 +36,7 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // unchanged — only the on-disk filename differs.
 // audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
 const { safeSnapshotFilename, isMetadataSnapshot } = require('./lib/snapshot-fs.js');
-const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitRunTag, pruneSizeExitReports } = require('./lib/size-exits.js');
+const { formatSizeFloor, buildSizeExit, mergeSizeExits, sizeExitRunTag, pruneSizeExitReports, quoteStamp, floorExitFault } = require('./lib/size-exits.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 // T322 (W2 2026-09-26): loaded once; a malformed hand table must crash the pull, not silently disable it.
@@ -480,6 +480,8 @@ function _applyCurrencyConsistencyGuard(canonical) {
 // configs/market-cap-floors.json. Explicit MIN_MCAP_USD overrides remain supported.
 // Used by BOTH the price-only floor and the full-pull floor.
 const MIN_MCAP_USD = marketCapFloor(process.env);
+// The small-cap merge job runs without MIN_MCAP_USD; its store has this floor.
+const SMALLCAP_FLOOR_USD = require('./configs/market-cap-floors.json').smallcapUsd;
 
 // audit fix BH-047: a single not-found response (transient 404 / momentarily-empty
 // fundamentals) must not permanently delist a ticker — the very next daily
@@ -1146,9 +1148,56 @@ const HANDELS_AGGREGAT_METRIKEN = ['enterpriseValue'];
 // Handel, EBITDA am Bericht) und kommt mit, damit die Liste nicht wieder auseinanderlaeuft;
 // einen Konsumenten hat es derzeit nicht.
 const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterpriseToEbitda'];
+// EV reading on mixed-currency rows (30.10.2026, replaces the blanket scaling above for the EV ratios).
+// Yahoo's EV is often a mixed sum: market cap as a trading-currency number plus net debt as a reporting-currency
+// number. Measured on the 30.10. population against the same firm's factor-1 home line (two factor-1 lines of one
+// firm: 90.7 % within 25 %, median error 1.8 %). Every reading must fit the definition EV = market cap + debt - cash
+// (USD, newest annual balance) or the row stays empty (G2, T2). Order: (a) trading first, it keeps the vendor values
+// and is the closer one where both fit; (c) mixed only for a factor above 1, because below 1 (EV - mcap) / factor
+// multiplies any day gap between EV and market cap (BREN.JK 29,310). "All in reporting currency" is no reading:
+// it fit the definition by leaving the market cap out (15 of 37 within 25 % of the home line, median error 26 %).
+// Tolerance +/-25 %: the definition check on factor-1 rows passes 84.5 %, so a right row can be withheld.
+const EV_FIT_LN = Math.log(1.25);
+const EV_RATIO_NENNER = { enterpriseToRevenue: 'revenueTTM', enterpriseToEbitda: 'ebitda' };
+/**
+ * Decides the EV reading of one mixed-currency row. Call after marketCap, EV and revenue are in USD, before the
+ * EV ratios are scaled. A factor inside 1/e..e with a positive EV is not tested (outside the tolerance there:
+ * 16.4 %, factor-1 rows 15.4 %, 30.10.); a negative EV is tested everywhere and passes only with a negative definition.
+ * @param {object} snap Snapshot (annual series still unscaled).
+ * @param {number} mischFaktor Trading factor / reporting factor.
+ * @param {number} bilanzFaktor Factor X->USD of the unscaled annual balance.
+ * @param {number} [vorherMcap] Market cap of the stored snapshot (USD, Yahoo's other source). More than the tolerance
+ *   away from this response's: neither is reliable, the definition rests on it, so no reading counts (KXIAY 45 vs 144.8 bn).
+ * @returns {{reading: string, reason?: string, balanceEnd?: string, ev?: number}|null} 'trading' | 'mixed' | 'withheld'; null = not tested.
+ */
+function _evLesart(snap, mischFaktor, bilanzFaktor, vorherMcap) {
+  const num = (m) => (m && typeof m === 'object' ? m.value : m);
+  const ev = num(snap.metrics.enterpriseValue), evs = num(snap.metrics.enterpriseToRevenue);
+  const hatEv = Number.isFinite(ev), hatEvs = Number.isFinite(evs);
+  if (!hatEv && !hatEvs && !Number.isFinite(num(snap.metrics.enterpriseToEbitda))) return null;
+  if (mischFaktor < Math.E && mischFaktor > 1 / Math.E && !(hatEv && ev <= 0)) return null;
+  const mcap = num(snap.marketCap);
+  const bil = snap.annual && Array.isArray(snap.annual.annualBalance) ? snap.annual.annualBalance[0] : null;
+  const fit = (a, b) => a * b > 0 && Math.abs(Math.log(a / b)) <= EV_FIT_LN; // same sign only; NaN never fits
+  if (!hatEv) return { reading: 'withheld', reason: 'no-ev' };
+  if (!(mcap > 0)) return { reading: 'withheld', reason: 'no-market-cap' };
+  if (vorherMcap > 0 && !fit(vorherMcap, mcap)) return { reading: 'withheld', reason: 'market-cap-disagree' };
+  if (!bil || !Number.isFinite(bil.totalDebt) || !Number.isFinite(bil.totalCash)) return { reading: 'withheld', reason: 'no-balance' };
+  const balanceEnd = (snap.annual.annualBalanceEnds && snap.annual.annualBalanceEnds[0]) || null;
+  const soll = mcap + (bil.totalDebt - bil.totalCash) * bilanzFaktor;
+  const umsatz = num(snap.metrics.revenueTTM), sollEvs = soll / umsatz;
+  const passt = (evGelesen, evsGelesen) => fit(evGelesen, soll) && (!hatEvs || fit(evsGelesen, sollEvs));
+  if (passt(ev, evs * mischFaktor)) return { reading: 'trading', balanceEnd };
+  const evMisch = mcap + (ev - mcap) / mischFaktor;
+  if (mischFaktor > 1 && passt(evMisch, evMisch / umsatz)) return { reading: 'mixed', ev: evMisch, balanceEnd };
+  return { reading: 'withheld', reason: 'no-fit', balanceEnd };
+}
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
-function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor) {
+function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor, bilanzFaktor) {
   if (!snap || !snap.metrics) return;
+  // Only for the reading check below, not part of the snapshot.
+  const vorherMcap = snap.meta && snap.meta.evPriorMarketCapUsd;
+  if (snap.meta) delete snap.meta.evPriorMarketCapUsd;
   // fiftyTwoWeekHigh uses the same per-share factor as the price-only path.
   // No usable factor -> null, never an unconverted quote.
   const hoch = snap.metrics.fiftyTwoWeekHigh;
@@ -1171,9 +1220,30 @@ function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor
   // Faktor 1 ist ein vollwertiger Beleg (Handel = Bericht, nichts zu korrigieren).
   if (snap.meta) snap.meta.mischVerhaeltnisFaktor = mischFaktor;
   if (mischFaktor === 1) return;
+  const lesart = _evLesart(snap, mischFaktor, bilanzFaktor, vorherMcap);
+  if (lesart && snap.meta) {
+    snap.meta.evCurrencyReading = lesart.reading;
+    if (lesart.reason) snap.meta.evWithheldReason = lesart.reason;
+    if (lesart.balanceEnd) snap.meta.evDefinitionBalanceEnd = lesart.balanceEnd;
+  }
+  const QUELLE_MISCH = 'computed:ev-mixed-reading'; // whoever writes the value writes its source
+  if (lesart && lesart.reading === 'mixed') {
+    snap.metrics.enterpriseValue = Object.assign({}, snap.metrics.enterpriseValue, { value: lesart.ev, source: QUELLE_MISCH });
+  }
   for (const k of MISCH_VERHAELTNIS_METRIKEN) {
     const m = snap.metrics[k];
     if (m == null) continue;
+    if (lesart && EV_RATIO_NENNER[k]) {
+      // ponytail: a withheld row keeps its EV number: nothing visible reads it, and its presence counts for
+      // the data-quality grade that can exclude a row from the ranking (methods/data-quality.js). Null it only together with that weight.
+      if (lesart.reading === 'withheld') { snap.metrics[k] = null; continue; }
+      if (lesart.reading === 'mixed') {
+        const nenner = snap.metrics[EV_RATIO_NENNER[k]];
+        const n = nenner && typeof nenner === 'object' ? nenner.value : nenner;
+        snap.metrics[k] = Number.isFinite(n) && n !== 0 ? Object.assign({}, m, { value: lesart.ev / n, source: QUELLE_MISCH }) : null;
+        continue;
+      }
+    }
     if (typeof m === 'number') {
       if (Number.isFinite(m)) snap.metrics[k] = m * mischFaktor;
     } else if (typeof m === 'object' && 'value' in m && Number.isFinite(m.value)) {
@@ -1238,7 +1308,7 @@ function _applyTradingScale(snap, financialFactor) {
   // financialFactor = 1, EV blieb deshalb voellig unumgerechnet in IDR stehen.
   // Misch-Verhaeltnisse (priceSales, enterpriseToRevenue, ...) haben eine GROESSE im
   // Zaehler (mcap bzw. EV) und eine Berichtsgroesse im Nenner — also der Aggregat-Faktor.
-  _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / financialFactor);
+  _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / financialFactor, financialFactor);
   return { ok: true };
 }
 
@@ -1487,7 +1557,7 @@ function _convertSnapshotToUSD(snap) {
     // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
     // Waehrungs-Chunk 3: derselbe Anwender wie im USD-Zweig (enterpriseValue kam dazu,
     // priceSales wird um das Misch-Verhaeltnis korrigiert).
-    _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / factor);
+    _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / factor, stmt.factor);
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
@@ -3448,21 +3518,81 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepSt
   return { ticker: stock.ticker, status: 'missing-market-cap', preserved, observedAt };
 }
 
+// A firm under the floor leaves no file in a SmallCap worker's output, so nothing reached the merge and
+// the store kept the last value above the floor (XNET: 311.7 m USD from 15.10., measured below 300 m on
+// every run since 16.10.). Carry the measured value through the shard artifact; the merge applies it to
+// the baseline. A cap of 0 is no measurement (T2): no carrier, the row stays and reads as not fresh.
+// The carrier names Yahoo's own quote time and how the value became USD (quote: this response's time, currency
+// and raw cap; only the response itself proves its currency). Without that proof no carrier: the row keeps its
+// last value and reads as not fresh, a stale or unconverted quote never takes a firm off a board.
+function writeFloorExitCarrier(outputDir, stock, marketCap, floorUsd, observedAt, quote) {
+  if (process.env.MISSING_CAP_CARRIER !== '1') return;
+  const fx = _fxFactorFor(quote.currency);
+  const carried = { ...marketCap, asOf: observedAt, belowFloor: true, floorUsd, regularMarketTime: quoteStamp(quote.time),
+    usdOrigin: fx && { currency: String(quote.currency), rawValue: quote.rawValue, factor: fx.factorMajorUnit, rateSource: fx.provenance } };
+  const fault = floorExitFault(carried, floorUsd);
+  if (fault) { _log('WARN', `  ${stock.ticker}: floor exit without carrier, ${fault}`); return; }
+  writeFileAtomic(path.join(outputDir, safeSnapshotFilename(stock.ticker)), JSON.stringify({
+    meta: { ticker: stock.ticker, asOf: null, fetchedAt: null, fundamentalsAsOf: null, fundamentalsIncomplete: true },
+    annual: {}, metrics: {}, timeseries: {},
+    marketCap: carried,
+  }));
+}
+
+// fetchedAt null marks a carrier: a full row that still holds the marker keeps its own fields.
+const isFloorExitCarrier = row => !!(row.marketCap && row.marketCap.belowFloor === true && row.meta && row.meta.fetchedAt === null);
+
+// One invalid row refuses the whole merge before the first write, with the count in the job's error line.
+// What stays: a disk failure during the writes leaves earlier files written (each write is atomic per file). The
+// job then fails and its store is thrown away, because the cache and artifact steps require
+// steps.merge_smallcap.outcome == 'success' (pinned in tests/mcap-null-keep-snapshot.test.js).
+function assertSmallcapObservations(incomingDir, outputDir) {
+  const names = fs.readdirSync(incomingDir).filter(n => n.endsWith('.json') && !isMetadataSnapshot(n));
+  const faults = [];
+  for (const name of names) {
+    try {
+      const incoming = JSON.parse(fs.readFileSync(path.join(incomingDir, name), 'utf8'));
+      const ticker = incoming.meta && incoming.meta.ticker;
+      const nameFits = !!ticker && safeSnapshotFilename(ticker) === name;
+      if (isFloorExitCarrier(incoming)) {
+        const fault = nameFits ? floorExitFault(incoming.marketCap, SMALLCAP_FLOOR_USD) : 'ticker and file name differ';
+        if (fault) faults.push(`Invalid floor-exit observation: ${name} (${fault})`);
+      } else if (incoming.marketCap && incoming.marketCap.missing === true) {
+        if (!nameFits || incoming.marketCap.value !== null || !Number.isFinite(Date.parse(incoming.marketCap.asOf))) faults.push('Invalid missing-cap observation: ' + name);
+      } else continue;
+      // Both observations merge into the stored row, so a broken stored row has to surface here as well.
+      const target = path.join(outputDir, name);
+      if (fs.existsSync(target)) JSON.parse(fs.readFileSync(target, 'utf8'));
+    } catch (error) { faults.push(`Unreadable small-cap row: ${name} (${error.message})`); }
+  }
+  if (!faults.length) return;
+  const message = `Small-cap merge refused, nothing written: ${faults.length} invalid of ${names.length} rows. ${faults.slice(0, 20).join('; ')}`;
+  console.error('::error::' + message);
+  throw new Error(message);
+}
+
 // A cold SmallCap worker may not have the baseline that the merge job restores.
 // Apply its explicit null observation to that baseline, rather than replacing
 // financials with the worker's incomplete row or silently retaining an old cap.
 function mergeSmallcapSnapshots(incomingDir, outputDir) {
   fs.mkdirSync(outputDir, { recursive: true });
-  let missing = 0;
+  assertSmallcapObservations(incomingDir, outputDir);
+  let missing = 0, floorExits = 0;
   for (const name of fs.readdirSync(incomingDir).filter(n => n.endsWith('.json')).sort()) {
     if (isMetadataSnapshot(name)) continue;
     const raw = fs.readFileSync(path.join(incomingDir, name), 'utf8');
     const incoming = JSON.parse(raw);
-    if (incoming.marketCap && incoming.marketCap.missing === true) {
+    if (isFloorExitCarrier(incoming)) {
+      const target = path.join(outputDir, name);
+      // A carrier only updates an existing baseline; a firm never stored stays absent.
+      if (!fs.existsSync(target)) continue;
+      const stored = JSON.parse(fs.readFileSync(target, 'utf8'));
+      stored.marketCap = incoming.marketCap;
+      writeFileAtomic(target, JSON.stringify(stored));
+      floorExits++;
+    } else if (incoming.marketCap && incoming.marketCap.missing === true) {
       const ticker = incoming.meta && incoming.meta.ticker;
       const at = incoming.marketCap.asOf;
-      if (!ticker || safeSnapshotFilename(ticker) !== name || incoming.marketCap.value !== null ||
-          !Number.isFinite(Date.parse(at))) throw new Error('Invalid missing-cap observation: ' + name);
       const target = path.join(outputDir, name);
       if (fs.existsSync(target)) {
         preserveMissingMarketCap(outputDir, { ticker }, at, incoming.marketCap.source,
@@ -3480,7 +3610,7 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
       writeFileAtomic(path.join(outputDir, name), raw);
     }
   }
-  return { missingMarketCaps: missing };
+  return { missingMarketCaps: missing, floorExits };
 }
 
 // F-NEU-01: Nicht-OTC-Snapshots ohne irgendeine belastbare Waehrungsangabe duerfen
@@ -4144,6 +4274,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         delete existing.marketCap.missing;
         existing.marketCap.confidence = 0.9;
       }
+      // A new measurement replaces an earlier floor exit; the check below decides afresh.
+      delete existing.marketCap.belowFloor;
+      delete existing.marketCap.floorUsd;
     }
     if (!Number.isFinite(existing.marketCap && existing.marketCap.value)) {
       throw new Error('price-only refused: converted marketCap is non-finite - full pull decides');
@@ -4172,6 +4305,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         throw new Error('price-only floor: stale snapshot removal failed: ' + deleteFailures[0].error);
       }
       recordSizeExit(stock.ticker, mcapNow, MIN_MCAP, newAsOf, 'price-only');
+      writeFloorExitCarrier(outputDir, stock, existing.marketCap, MIN_MCAP, newAsOf, { time: q.regularMarketTime, currency: q.currency, rawValue: q.marketCap });
       throw new Error('price-only floor: mcap=' + (mcapNow/1e9).toFixed(2) + 'B < $' + formatSizeFloor(MIN_MCAP) + 'B — snapshot removed');
     }
     // Mark mode for downstream visibility
@@ -5224,6 +5358,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Befund A: der Wurf-Fall markiert fail-closed (_convertSnapshotToUSDGuarded), damit
       // das fxConversionFailed-Gate weiter unten greift statt einen halb umgerechneten
       // Snapshot als Erfolg zu schreiben.
+      // ponytail: no age cap on the stored market cap; an old one can only withhold a row until its next full pull.
+      if (canonical.meta && _parsedSnapshot && _parsedSnapshot.marketCap && _parsedSnapshot.marketCap.value > 0) canonical.meta.evPriorMarketCapUsd = _parsedSnapshot.marketCap.value;
       _convertSnapshotToUSDGuarded(canonical, (e) =>
         _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message} — Snapshot wird als fx-unknown verworfen`));
       if (!Number.isFinite(canonical.marketCap && canonical.marketCap.value)) {
@@ -5297,6 +5433,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           results.push({ ticker: stock.ticker, status: 'failed-delete', reason });
           return;
         }
+        if (mcapVal < MIN_MCAP) writeFloorExitCarrier(outputDir, stock, canonical.marketCap, MIN_MCAP, asOf,
+          { time: _y(yahoo.price, 'regularMarketTime'), currency: _y(yahoo.price, 'currency'), rawValue: _y(yahoo.summaryDetail, 'marketCap') ?? _y(yahoo.price, 'marketCap') });
         results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
         return;  // skip this stock
       }
