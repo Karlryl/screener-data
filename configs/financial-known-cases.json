@@ -100,7 +100,8 @@
     {"ticker": "BURE.ST", "field": "revenueQ", "coversThrough": "2026-06-30"},
     { "ticker": "285A.T", "field": "revenueQ", "coversThrough": "2026-09-30" },
     { "ticker": "285A.T", "field": "grossProfitQ", "coversThrough": "2026-09-30" },
-    { "ticker": "285A.T", "field": "opIncQ", "coversThrough": "2026-09-30" }
+    { "ticker": "285A.T", "field": "opIncQ", "coversThrough": "2026-09-30" },
+    { "ticker": "GUJENERGY.NS", "field": "revenueQ", "coversThrough": "2026-06-30" }
   ],
   "cases": [
     {
@@ -30949,6 +30950,90 @@
           "end": "2022-12-31",
           "filed": "2024-02-29",
           "currency": "GBP",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "gujenergy.ns-2026-06-30-revenueQ-20261107",
+      "ticker": "GUJENERGY.NS",
+      "field": "revenueQ",
+      "period": "2026-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 95449800000,
+      "replacementValue": 97713800000,
+      "revision": "2026-11-07-sdhand7b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2026 liefert der Anbieter 9.544,98 Crore INR. Die Firma meldet 9.771,38 Crore INR (Revenue from operations, Konzern). Seit dem 01.05.2026 gehört die Fusion mit GSPC und GSPL dazu. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.gujarat-energy.com/resources/downloads/unaudited-financial-results-for-the-qtr-ended-on-30th-june-2026.pdf",
+          "page": "PDF 9, Statement of Consolidated Unaudited Financial Results for the quarter ended 30.06.2026",
+          "quote": "(a) Revenue from operations 9,771 .38 6,002.40 6,045.88 24,424.73",
+          "value": 97713800000,
+          "start": "2026-04-01",
+          "end": "2026-06-30",
+          "filed": "2026-08-11",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "gujenergy.ns-2026-03-31-revenueQ-20261107",
+      "ticker": "GUJENERGY.NS",
+      "field": "revenueQ",
+      "period": "2026-03-31",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 57918500000,
+      "replacementValue": 60024000000,
+      "revision": "2026-11-07-sdhand7b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 31.03.2026 liefert der Anbieter 5.791,85 Crore INR. Die Firma meldet 6.002,40 Crore INR (Revenue from operations, Konzern), im selben Bericht wie das Quartal bis 30.06.2026. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.gujarat-energy.com/resources/downloads/unaudited-financial-results-for-the-qtr-ended-on-30th-june-2026.pdf",
+          "page": "PDF 9, Statement of Consolidated Unaudited Financial Results for the quarter ended 30.06.2026",
+          "quote": "(a) Revenue from operations 9,771 .38 6,002.40 6,045.88 24,424.73",
+          "value": 60024000000,
+          "start": "2026-01-01",
+          "end": "2026-03-31",
+          "filed": "2026-08-11",
+          "currency": "INR",
+          "unit": "currency",
+          "verifiedAt": "2026-11-07"
+        }
+      ]
+    },
+    {
+      "caseId": "gujenergy.ns-2025-06-30-revenueQ-20261107",
+      "ticker": "GUJENERGY.NS",
+      "field": "revenueQ",
+      "period": "2025-06-30",
+      "periodType": "3M",
+      "currency": "INR",
+      "unit": "currency",
+      "expectedBadValue": 58513600000,
+      "replacementValue": 60458800000,
+      "revision": "2026-11-07-sdhand7b",
+      "verifiedAt": "2026-11-07",
+      "reason": "Quartalsumsatz korrigiert: Für das Quartal bis 30.06.2025 liefert der Anbieter 5.851,36 Crore INR. Die Firma meldet 6.045,88 Crore INR (Revenue from operations, Konzern); der Vorjahreswert ist im Bericht wegen der Fusion angepasst (Restated), damit beide Quartale auf derselben Basis stehen. Geprüft am 07.11.2026.",
+      "sources": [
+        {
+          "url": "https://www.gujarat-energy.com/resources/downloads/unaudited-financial-results-for-the-qtr-ended-on-30th-june-2026.pdf",
+          "page": "PDF 9, Statement of Consolidated Unaudited Financial Results for the quarter ended 30.06.2026",
+          "quote": "(a) Revenue from operations 9,771 .38 6,002.40 6,045.88 24,424.73",
+          "value": 60458800000,
+          "start": "2025-04-01",
+          "end": "2025-06-30",
+          "filed": "2026-08-11",
+          "currency": "INR",
           "unit": "currency",
           "verifiedAt": "2026-11-07"
         }
