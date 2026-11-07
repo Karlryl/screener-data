@@ -22,9 +22,12 @@ const beforeHashes = liveHashes();
 const packet = t => { const { expect, ...s } = structuredClone(snapshots[t]); return { identifier: { primary: 'ISIN', value: 'TICKER:' + t }, timeseries: {}, annual: {}, ...s }; };
 const entries = Object.entries(snapshots);
 const held = entries.filter(([, s]) => s.expect.kind === 'hold').map(([t]) => t);
-const corrected = entries.filter(([, s]) => s.expect.kind === 'correct').map(([t]) => t);
+// 07.11.2026 (P1): the A and H rows of this check left the share-count table for the class sum (configs/mcap-class-sum.json,
+// tests/mcap-class-sum.test.js); their fixture entries stay as the recorded wrong state.
+const MOVED_TO_CLASS_SUM = ["001289.SZ","0019.HK","1766.HK","1787.HK","600188.SS","600685.SS","600688.SS","600871.SS","600938.SS","600956.SS","601869.SS","688185.SS","688347.SS","688385.SS","688981.SS"];
+const corrected = entries.filter(([t, s]) => s.expect.kind === 'correct' && !MOVED_TO_CLASS_SUM.includes(t)).map(([t]) => t);
 const HELD_COUNT = 104;
-const CORRECTED_LIST = ["001289.SZ","0019.HK","1766.HK","1787.HK","600188.SS","600685.SS","600688.SS","600871.SS","600938.SS","600956.SS","601869.SS","688185.SS","688347.SS","688385.SS","688981.SS","GLXY"];
+const CORRECTED_LIST = ["GLXY"];
 
 function expectWithheld(t, s = packet(t)) {
   const out = guard.prepareMarketCap(s);
@@ -64,8 +67,12 @@ test('the count of rows is pinned; a row cannot leave together with its fixture'
   assert.equal(held.length, HELD_COUNT);
   assert.deepEqual([...corrected].sort(), CORRECTED_LIST);
   assert.equal(Object.keys(guard.holds).filter(t => snapshots[t]).length, HELD_COUNT, 'every fixture hold is in the table');
-  // Yahoo's next count must still be recognised at Hua Hong, whose count changed in September.
-  assert.ok(guard.table['688347.SS'].wrongShares.includes(1928494794), 'A 598,518,392 + H 1,329,976,402');
+  const classSum = JSON.parse(fs.readFileSync(path.join(root, 'configs/mcap-class-sum.json'), 'utf8'));
+  const classTickers = new Set(Object.values(classSum).flatMap(e => e.classes ? e.classes.map(c => c.ticker) : []));
+  for (const t of MOVED_TO_CLASS_SUM) {
+    assert.equal(snapshots[t].expect.kind, 'correct', t);
+    assert.ok(!guard.table[t] && !guard.holds[t] && classTickers.has(t), t + ': moved to the class sum, not left without any case');
+  }
   for (const t of corrected) assert.equal(guard.table[t].reviewBy, '2026-12-31', t);
 });
 

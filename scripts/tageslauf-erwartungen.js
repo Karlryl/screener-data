@@ -324,6 +324,8 @@ async function run({ exportBase, erwartungen, datum: override, tabelle }) {
       reports.fristen = fristen({ tabelle: tabelle ?? JSON.parse(fs.readFileSync(SHARES_TABLE, 'utf8')), universum, datum });
       lines.push(...reports.fristen.zeilen);
     } catch (err) { notice('Die Fristen der Handtabelle der Aktienzahlen sind', err); }
+    try { lines.push(...require('../lib/mcap-class-sum.js').reviewLines(datum)); } // P1: deadlines of the class-sum share counts
+    catch (err) { notice('Die Fristen der Klassensumme sind', err); }
     try {
       reports.dividenden = dividendenZwillinge({ universum });
       lines.push(...reports.dividenden.zeilen);
