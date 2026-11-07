@@ -318,6 +318,27 @@
     },
     "withholdUnverified": true
   },
+  "JOJO.BO": {
+    "shares": 137922800,
+    "sharesAsOf": "2026-10-13",
+    "validFrom": "2026-10-13",
+    "reviewBy": "2026-11-30",
+    "wrongShares": [
+      689614000
+    ],
+    "wrongSharesSeen": "snapshot of run 42356903064 (2026-11-07): marketCap 806,299,872 USD / price 1.1692045314 USD (109.80 INR) = 689,614,000 shares, meta.sharesOutstanding 689,614,000 = 137,922,800 x 5: the announced split of Rs 5 into five Re 1 shares, not yet effective (no record date published), applied to the unsplit price",
+    "reason": "Börsenwert aus 137.922.800 Aktien berechnet: Aktienzahl nach der Gratisaktien-Ausgabe 1 zu 1 (Stichtag 12.10.2026, zugeteilt am 13.10.2026) laut JOJO (Nennwert 5 INR). Yahoo rechnet schon mit der angekündigten Teilung in Aktien zu 1 INR (689.614.000 Aktien), die noch nicht wirksam ist, zum ungeteilten Kurs. Wird die Teilung wirksam, ist die Zeile neu zu prüfen.",
+    "source": {
+      "form": "Ergebnis der Vorstandssitzung vom 13.10.2026 an die BSE (Zuteilung der Gratisaktien).",
+      "url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/94b39177-de81-419c-8e96-e37ca720271a.pdf",
+      "quote": "approved the allotment of 6,89,61,400 ... shares having face value of Rs. 05/-",
+      "page": "1",
+      "unit": "shares: 68,961,400 before the 1:1 bonus + 68,961,400 bonus shares = 137,922,800 shares of Rs 5 (post-bonus table of the same filing: 13,79,22,800)",
+      "crossCheck": "BSE notice 20260728-49 (28.07.2026, https://www.bseindia.com/downloads/UploadDocs/Notices/20260728-49/20260728-49.pdf): sub-division of Rs 10 into two Rs 5 shares, record date 07.08.2026, 34,480,700 to 68,961,400. Secondary: stockanalysis.com/quote/bom/531910 market cap 15.14B INR."
+    },
+    "verifiedAt": "2026-11-07",
+    "withholdUnverified": true
+  },
   "2590.HK": {
     "shares": 1281656998,
     "sharesAsOf": "2026-10-30",
