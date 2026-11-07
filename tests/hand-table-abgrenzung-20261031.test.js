@@ -140,20 +140,28 @@ test('BURE.ST: no number moves, the hint is on the row, with any growth, and onl
   assert.equal(W.mapBoardRow({ ...row, ticker: '_NO_HINT' }, 2, 'main').g31Hinweis, null);
 });
 
-test('documented order: the diagnosis on the shown pair outranks the definition hint; the swapped order fails', () => {
+test('order (Codex R08 P3, 07.11.): a checked pair entry outranks the definition, an automatic diagnosis does not; the old order fails', () => {
   const file = path.join(root, 'scripts/write-findash-export.js'), src = fs.readFileSync(file, 'utf8');
   const recency = require('../lib/g31-recency.js'), real = recency.g31Export;
   const load = code => { const m = new Module(file, module); m.filename = file; m.paths = Module._nodeModulePaths(path.dirname(file)); m._compile(code, file); return m.exports; };
   const s = applyFinancialCases(snap('BURE.ST')).snapshot;
   fs.writeFileSync(path.join(process.env.FINDASH_SNAPSHOTS_DIR, safeSnapshotFilename('BURE.ST')), JSON.stringify(snap('BURE.ST')));
   const row = { ticker: 'BURE.ST', score: 76.6, revGrowthYoYPct: axes.revGrowthLevel(s), overview: { kind: 'gp', value: 0.061, companion: 162.8 } };
-  const ORDER = '(passt ? derivations.g31Hinweis : null) ?? DEFINITION_HINTS.get(out.ticker) ?? null';
-  assert.ok(src.includes(ORDER), 'anchor');
-  recency.g31Export = snapshot => ({ ...real(snapshot), g31Hinweis: { code: 'aktuell-gross', reason: 'diagnosis' } });
-  try {
-    assert.equal(load(src).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'aktuell-gross');
-    assert.equal(load(src.replace(ORDER, 'DEFINITION_HINTS.get(out.ticker) ?? (passt ? derivations.g31Hinweis : null) ?? null')).mapBoardRow(row, 0, 'main').g31Hinweis.code, 'abgrenzung', 'the swapped order is what this test must catch');
-  } finally { recency.g31Export = real; }
+  const hintWith = (code, source = src) => {
+    recency.g31Export = snapshot => ({ ...real(snapshot), g31Hinweis: { code, reason: 'Pair hint.' } });
+    try { return load(source).mapBoardRow(row, 0, 'main').g31Hinweis; } finally { recency.g31Export = real; }
+  };
+  for (const code of ['aktuell-gross', 'vorjahr-klein+quartalssumme', 'aelteres-quartalspaar']) {
+    const h = hintWith(code);
+    assert.equal(h.code, 'abgrenzung', code);
+    assert.match(h.reason, /Net sales 0.* Zusätzlich: Pair hint\.$/, 'the diagnosis stays as an added sentence: ' + code);
+  }
+  assert.deepEqual(hintWith('uebernahme'), { code: 'uebernahme', reason: 'Pair hint.' }, 'a checked pair entry still wins');
+  assert.equal(hintWith('uebernahme+aktuell-gross').code, 'uebernahme+aktuell-gross', 'a mixed code is not purely automatic');
+  // Break-once: the order before this repair hides the checked definition behind the diagnosis.
+  const NEW = /out\.g31Hinweis = def && pair[^;]+;/;
+  assert.ok(NEW.test(src), 'anchor');
+  assert.equal(hintWith('aktuell-gross', src.replace(NEW, 'out.g31Hinweis = pair ?? def ?? null;')).code, 'aktuell-gross', 'the old order is what this test must catch');
 });
 
 test('definition table: one row, checked code, quoted sources, plain German; lib/g31-recency.js does not read it', () => {

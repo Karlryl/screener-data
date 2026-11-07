@@ -44,7 +44,8 @@ const { loadAdsHandTable, applyAdsHandTable, loadShareCountTable, applyShareCoun
 const ADS_HAND_TABLE = loadAdsHandTable();
 // Tag 1397: issuer share counts for lines Yahoo prices with a wrong count (same two write sites).
 const SHARE_COUNT_TABLE = loadShareCountTable();
-const { applyMarketCapGuard, marketCapFloor, tradingRate, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
+const { applyMarketCapGuard, marketCapFloor, tradingRate, retainStalePriceHold, table: STRICT_SHARE_COUNT_TABLE } = require('./lib/market-cap-guard.js');
+const { sizeExitRunDay } = require('./lib/size-exits.js');
 const { loadStatementCurrencyTable, statementFactor, statementRowPending, holdStatementSeries } = require('./lib/statement-currency-hand-table.js');
 const STATEMENT_CCY_TABLE = loadStatementCurrencyTable();
 const { loadReportingCurrencyTable, reportingCurrencyFill, applyReportingRowHold, reportingRowPending, keepHoldClock, holdRow, heldCounters } = require('./lib/reporting-currency-hand-table.js');
@@ -1654,6 +1655,20 @@ function _metric(value, source, confidence, asOf) {
   return { value, source, confidence, asOf };
 }
 
+// Stale-price gate (Daylauf 7): Yahoo's own trade time of the quote behind a market cap. asOf is the pull
+// clock and says nothing about the quote (1WAF.MI: asOf 2026-10-23, quote from 2026-09-25). Read by
+// lib/market-cap-guard.js. Accepts a Date (yahoo-finance2), epoch seconds or milliseconds, or an ISO string;
+// 0 or a negative time is a missing stamp, never 01.01.1970.
+function _quoteTime(v) {
+  if (v && typeof v === 'object' && !(v instanceof Date) && 'raw' in v) v = v.raw;
+  const ms = v instanceof Date ? v.getTime() : typeof v === 'number' ? (v < 1e11 ? v * 1000 : v) : typeof v === 'string' ? Date.parse(v) : NaN;
+  return Number.isFinite(ms) && ms > 0 ? new Date(ms).toISOString() : null;
+}
+
+// Reference day of a stale-price hold: the workflow day when it is a real day, else this pull's own clock day. A raw
+// malformed RUN_DATE_UTC counted no age, so a known stale value lost its hold and was shown again.
+const _holdRunDay = asOf => sizeExitRunDay(process.env, () => Date.parse(asOf));
+
 // bug-fix (audit 2026-06-21): trim only TRAILING nulls, preserving interior null years so sibling
 // annual arrays stay positionally aligned (methods zip annualRev[i] with annualOpInc[i]/annualFCF[i]
 // /annualOCF[i] by index). The old .filter(Boolean) compacted nulls per-array, desyncing the index
@@ -2640,7 +2655,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     // absent (Live-Yahoo-Schema-Drift) — previously a null here unlinked an otherwise
     // valid snapshot (skipped-mcap) even though the price module (already loaded, see
     // MODULES) carried the value.
-    marketCap: _metric(_y(sd, 'marketCap') ?? _y(pr, 'marketCap'), SRC, CONF, asOf),
+    marketCap: (function() {
+      const m = _metric(_y(sd, 'marketCap') ?? _y(pr, 'marketCap'), SRC, CONF, asOf);
+      const t = _quoteTime(_y(pr, 'regularMarketTime'));
+      if (m && t) m.regularMarketTime = t;
+      return m;
+    })(),
     metrics: {
       revenueTTM:       _metric(revTTM, SRC, CONF, asOf),
       revenueGrowthYoY: _metric(revGrowthYoY, SRC, CONF, asOf),
@@ -3509,6 +3529,7 @@ function preserveMissingMarketCap(outputDir, stock, observedAt, source, { keepSt
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
     throw new Error('Cannot preserve invalid snapshot for ' + stock.ticker);
   }
+  retainStalePriceHold(snapshot, snapshot, observedAt.slice(0, 10));
   snapshot.marketCap = { value: null, source, confidence: 0, asOf: observedAt, missing: true };
   // Empty responses invalidate size but do not confirm existence. Carry that
   // distinction through cold SmallCap workers to the restored merge baseline.
@@ -3605,9 +3626,19 @@ function mergeSmallcapSnapshots(incomingDir, outputDir) {
       if (written.marketCap.value !== null || written.marketCap.missing !== true) {
         throw new Error('Missing-cap merge retained a value: ' + ticker);
       }
+      retainStalePriceHold(written, incoming);
+      writeFileAtomic(target, JSON.stringify(written));
       missing++;
     } else {
-      writeFileAtomic(path.join(outputDir, name), raw);
+      const target = path.join(outputDir, name);
+      let previous = null;
+      if (fs.existsSync(target)) {
+        const priorText = fs.readFileSync(target, 'utf8');
+        try { previous = JSON.parse(priorText); }
+        catch (error) { if (error.name !== 'SyntaxError') throw error; }
+      }
+      retainStalePriceHold(incoming, previous);
+      writeFileAtomic(target, JSON.stringify(incoming));
     }
   }
   return { missingMarketCaps: missing, floorExits };
@@ -4149,6 +4180,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
       existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
+    const previousQuote = { marketCap: { ...existing.marketCap }, meta: { stalePriceHold: existing.meta?.stalePriceHold } };
     const q = suppliedQuote ?? await _gatedQuote(stock.yahoo_symbol, stock.ticker + '/quote-only'); // BH-043 gate + F-PY-102 abortable
     if (!Number.isFinite(q && q.marketCap)) {
       throw new Error('price-only refused: quote without finite marketCap - full pull decides');
@@ -4265,6 +4297,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // meta.asOf damit. Ein zweiter Date()-Aufruf liesse die beiden Stempel desselben
       // Vorgangs um Millisekunden auseinanderlaufen — zwei Wahrheiten fuer einen Schreibakt.
       existing.marketCap.asOf = newAsOf;
+      // Same rule for the quote time: written with the value or removed, never left from an older quote.
+      const quoteTime = _quoteTime(q.regularMarketTime);
+      if (quoteTime) existing.marketCap.regularMarketTime = quoteTime;
+      else delete existing.marketCap.regularMarketTime;
       // Review 19.09.: das `||` liess die alte Herkunft `yahoo_quoteSummary` auf einem Wert
       // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
       // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
@@ -4344,6 +4380,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // written per pull (and this path the 80%-hit fast-path), pretty-print
     // adds ~30-40% file size + ~5-10× stringify time. Snapshots are read by
     // generators (machine consumers), not humans — no readability cost.
+    retainStalePriceHold(existing, previousQuote, _holdRunDay(newAsOf));
     writeFileAtomic(fp, JSON.stringify(existing));
     return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
   }
@@ -5576,6 +5613,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             const r = await _priceOnlyUpdate(stock, outputDir, prior, {
               regularMarketPrice: _y(yahoo.price, 'regularMarketPrice'), currency: _y(yahoo.price, 'currency'),
               marketCap: _y(yahoo.summaryDetail, 'marketCap') ?? _y(yahoo.price, 'marketCap'),
+              regularMarketTime: _y(yahoo.price, 'regularMarketTime'),
             });
             event.priceUpdated = true;
             results.push({ ...r, fundamentalsRetainedReason: fullPeriodReasonDe });
@@ -5584,6 +5622,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
       }
       _stampFullPullPrice(canonical, _y(yahoo.price, 'regularMarketPrice'));
+      // The price-only attempt may have mutated its parsed input before falling back; use the pristine stored text.
+      retainStalePriceHold(canonical, _parsedSnapshot && _priorSnapshotText ? JSON.parse(_priorSnapshotText) : null,
+        _holdRunDay(asOf));
       writeFileAtomic(outPath, JSON.stringify(canonical));
       if (pendingFTSCache && !require('./lib/reload-history.js').cacheIsThinner(pendingFTSCache.payload, cached?.payload)) {
         try { _writeFTSCache(cachePath, FTS_CACHE_VERSION, pendingFTSCache.partial, pendingFTSCache.payload); }
