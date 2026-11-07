@@ -43,13 +43,24 @@ const OVERVIEW_YEARS_NOT_ADJACENT_TEXT = 'Jahreswachstum nicht belegt, Jahre lie
 // Annual field names request annual-only growth; badge kinds select TTM/FFO inputs.
 function growthVerdict(s, field, shadow = false) {
   if (field === 'gp') {
-    const quarter = shadow ? quarterCandidate(s, 'grossProfitQ') : null;
-    const annual = shadow ? growthVerdict(s, 'annualGP', true) : null;
-    if (shadow && quarter.pct !== null && quarter.sourcePeriodEnd
+    // A sourced pair replaces only the annual candidate; a newer quarter still wins.
+    // Preserve the pre-G31 comparison arm and all unconfigured rows.
+    const sourced = shadow || g31Variant() ? require('../../lib/sourced-annual-years.js').resolveSourcedAnnualYear(s) : null;
+    let annual = shadow ? growthVerdict(s, 'annualGP', true) : null;
+    if (sourced?.status === 'available' && sourced.record.priorGrossProfit > 0) {
+      const r = sourced.record;
+      annual = { value: r.grossProfit / r.priorGrossProfit - 1, withheld: false,
+        period: { basis: 'year', periodEnd: r.end, priorPeriodEnd: r.priorEnd,
+          sourcePeriodEnd: r.end, sourcePriorPeriodEnd: r.priorEnd,
+          label: `Geschäftsjahr bis ${r.end.slice(8, 10)}.${r.end.slice(5, 7)}.${r.end.slice(0, 4)}`,
+          reason: `Geprüfter Abschluss ${r.end.slice(0, 4)} gegen ${r.priorEnd.slice(0, 4)}; die Jahresreihe des Anbieters endet noch im Vorjahr.` } };
+    }
+    const quarter = annual ? quarterCandidate(s, 'grossProfitQ') : null;
+    if (quarter && quarter.pct !== null && quarter.sourcePeriodEnd
         && (annual.value === null || !annual.period?.sourcePeriodEnd || quarter.sourcePeriodEnd >= annual.period.sourcePeriodEnd)) {
       return { value: quarter.current / quarter.prior - 1, withheld: false, period: periodOf(quarter) };
     }
-    if (shadow && annual.value !== null && annual.period?.sourcePeriodEnd) return annual;
+    if (annual && annual.value !== null && annual.period?.sourcePeriodEnd) return annual;
     // Fix Bug 24: TTM-Fenster POSITIONAL auf der ROH-Serie schneiden (Muster
     // growthYoYComponents in score.js:162-171). presentValues() komprimiert
     // null-Luecken -> slice(4,8) wuerde bei interner Luecke das Vorjahres-Fenster

@@ -31,7 +31,9 @@ const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, j
 const { fcfMarginValid } = require('./engine.js');
 const { g31Variant, g31Shadow, quarterDurations } = require('../../lib/g31-recency.js');
 const { annualPairRuleEnabled, annualPairPasses, checkAnnualPair,
-  checkNewerAnnualPair, checkAnnualAcceleration, annualAccelerationGatePasses, axisPairBlocked, sealedEraSnapshot, staleReason } = require('../../lib/annual-pairs.js');
+  checkNewerAnnualPair, checkAnnualAcceleration, annualAccelerationGatePasses, axisPairBlocked, sealedEraSnapshot, staleReason,
+  annualPeriodEnds, periodGateReason } = require('../../lib/annual-pairs.js');
+const { resolveSourcedAnnualYear } = require('../../lib/sourced-annual-years.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 
@@ -233,7 +235,7 @@ function quarterQoQRates(s, bounds) {
 // traeger (reagiert ein Jahr spaeter).
 // F-4: der Jahrespartner je Position kommt aus dem Enddatum (jahresVergleichIdx), nicht
 // mehr aus i+4. Ohne Enden liefert die Auswahl i+4 zurueck -> byte-identisch zu vorher.
-function revAcceleration(s, bounds) {
+function revAcceleration(s, bounds, onBasis) {
   const rq = norm(s, 'revenueQ');
   const yoy = [];
   let newest = null;
@@ -249,7 +251,29 @@ function revAcceleration(s, bounds) {
   // P286 (Codex R16, 04.11.2026): the newest pair actually used is judged for age like a shown quarter pair. A stale one leaves
   // the quarterly branch to the annual fallback and its own anchor check; the older comparison pair is old by nature.
   const stale = newest !== null && !sealedEraSnapshot(s) && staleReason('quarter', (s.timeseries || {}).revenueQEnds?.[newest]);
-  if (yoy.length >= 2 && !stale) return yoy[0] - yoy[yoy.length - 1];
+  if (yoy.length >= 2 && !stale) {
+    if (onBasis) onBasis('quarter');
+    return yoy[0] - yoy[yoy.length - 1];
+  }
+
+  // Sourced newer year: exactly two adjacent stored years behind the filed one.
+  // Local operands only; all positional series and every other axis stay unchanged.
+  const sourced = resolveSourcedAnnualYear(s);
+  if (sourced.status === 'available') {
+    const r = sourced.record, ar = norm(s, 'annualRev');
+    // A restated prior cannot be compared with an unverified older vendor scope.
+    if (r.priorRestated) {
+      if (onBasis) onBasis('sourcedYearRestatedPrior');
+      return null;
+    }
+    if (!(ar[0] > 0) || !(ar[1] > 0)) return null;
+    // The older pair is old by construction; only the sourced anchor is age-tested.
+    const ends = annualPeriodEnds(s, 'annualRev');
+    if (periodGateReason('year', ends[0], ends[1])) return null;
+    if (onBasis) onBasis('sourcedYear');
+    return clampWinsor(r.revenue / r.priorRevenue - 1, bounds)
+      - clampWinsor(ar[0] / ar[1] - 1, bounds);
+  }
 
   // Fallback Jahresreihe: drei present Jahre -> zwei Jahres-Wachstumsraten.
   const ar = norm(s, 'annualRev').filter((v) => v !== null && v !== undefined && v > 0);
@@ -266,6 +290,19 @@ function revAcceleration(s, bounds) {
 
 // --- 3. Bruttogewinn-Wachstum + GM-Trajektorie ------------------------------
 function gpGrowth(s) {
+  const sourced = resolveSourcedAnnualYear(s);
+  if (sourced.status === 'available') {
+    const r = sourced.record;
+    if (!(r.priorGrossProfit > 0)) return null;
+    // Shift the existing margin window by one year without changing either series.
+    // Restated scope cannot evidence an older vendor margin: hold only the tilt.
+    const gmWindow = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev')).slice(0, -1);
+    const gmOld = r.priorRestated ? null : lastPresent(gmWindow
+      .map(v => v !== null && v >= 0 && v <= 1 ? v : null));
+    const gmNew = r.grossProfit / r.revenue;
+    const tilt = gmOld !== null && gmNew >= 0 && gmNew <= 1 ? gmNew - gmOld : 0;
+    return r.grossProfit / r.priorGrossProfit - 1 + tilt;
+  }
   const gp = norm(s, 'annualGP');
   const two = adjacentTwoPresent(gp);
   if (!two || two[1] <= 0) return null;
