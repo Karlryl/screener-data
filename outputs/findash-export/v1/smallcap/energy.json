@@ -1,20 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-07T10:15:09.345Z",
+  "generated_at": "2026-11-10T11:27:50.510Z",
   "branch": "energy",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.2,
-    "generated_at": "2026-11-07T10:06:53.781Z",
-    "honest_coverage_pct": 88.2,
-    "n_addressable": 18198,
-    "n_ok": 16046,
-    "n_total": 23530,
-    "n_failed": 1325,
-    "reporting_ccy_held": []
+    "coverage_pct": 69.2,
+    "generated_at": "2026-11-10T11:13:38.956Z",
+    "honest_coverage_pct": 88.4,
+    "n_addressable": 18373,
+    "n_ok": 16247,
+    "n_total": 23482,
+    "n_failed": 1328,
+    "reporting_ccy_held": [],
+    "manifest_partial": false
   },
   "profitable": [
     {
@@ -37,7 +38,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 431467488,
+      "marketCap": 432451840,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -108,6 +109,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -162,7 +168,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 369263136,
+      "marketCap": 373949536,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -233,6 +239,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -270,142 +281,6 @@
       "rank": 3,
       "rankGrund": null,
       "rankGrundShadow": null,
-      "ticker": "FTW",
-      "score": 58.3,
-      "scoreCycleLegacy": 58.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.222,
-        "companion": 70.5
-      },
-      "name": "Presidio Production Company",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 312187872,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "4/7",
-      "coverageWeight": 0.62,
-      "cohortN": 11,
-      "cohortFallback": true,
-      "scoreBase": 60.7,
-      "scoreShrunk": 58.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1,
-        "cycleLegacy": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 61.8,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": null,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 34.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 61.8,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 79.4,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 26.69216150904441,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 3,
-      "qSpanTage": 456,
-      "financialDataReasons": [
-        "Umsatz korrigiert: Der Anbieter führt als Quartal den Zeitraum 4. März bis 30. Juni 2026 (69,3 Mio. USD); April bis Juni 2026 sind laut 10-Q 54,0 Mio. USD.",
-        "Quartalswert fehlt: Der Anbieter führt nur den Rumpfzeitraum 4. bis 31. März 2026 (15,3 Mio. USD) nach dem Zusammenschluss; ein volles erstes Quartal 2026 ist nicht berichtet.",
-        "Quartalswert fehlt: Der Wert der Vorgängergesellschaft für das dritte Quartal 2025 ist nicht gegen einen Firmenbericht geprüft.",
-        "Betriebsergebnis fehlt: Der Anbieter führt 7,2 Mio. USD für den Zeitraum 4. März bis 30. Juni 2026; April bis Juni 2026 sind laut 10-Q 6,1 Mio. USD.",
-        "Wert fehlt: Der Anbieter führt hier den Zeitraum 4. März bis 30. Juni 2026 als Quartal; für April bis Juni 2026 liegt kein Wert dieser Art vor."
-      ],
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "year",
-        "periodEnd": "2024-12-31",
-        "priorPeriodEnd": "2023-12-31",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": -16.46414602346806,
-      "revGrowthBasisLegacy": "year",
-      "revGrowthPeriodEndLegacy": "2024-12-31",
-      "revGrowthPriorPeriodEndLegacy": "2023-12-31",
-      "overviewValueLegacy": -0.222,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2024-12-31",
-        "priorPeriodEnd": "2023-12-31",
-        "reason": null
-      },
-      "g31Hinweis": {
-        "code": "uebernahme",
-        "reason": "Übernahme im Zeitraum: Das Quartal 2026 enthält seit dem 04.03.2026 die zusammengeführten Geschäfte; der Vorjahreswert stammt nur von der Vorgängergesellschaft. Geprüft am 30.10.2026."
-      },
-      "g31Shadow": {
-        "v1": {
-          "pct": 26.69216150904441,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": -0.22210988270288878,
-        "period": {
-          "basis": "year",
-          "periodEnd": "2024-12-31"
-        }
-      }
-    },
-    {
-      "rank": 4,
-      "rankGrund": null,
-      "rankGrundShadow": null,
       "ticker": "WHK",
       "score": 57.1,
       "scoreCycleLegacy": 57.1,
@@ -425,7 +300,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 640589696,
+      "marketCap": 654457600,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -496,6 +371,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "quarter",
+        "quarterComparisons": 2,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -530,7 +410,7 @@
       }
     },
     {
-      "rank": 5,
+      "rank": 4,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VTS",
@@ -551,7 +431,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 631975744,
+      "marketCap": 622706752,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -625,6 +505,11 @@
       "revGrowthPriorPeriodEnd": "2025-09-30",
       "revGrowthSourcePeriodEnd": "2026-09-30",
       "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-09-30",
@@ -659,7 +544,7 @@
       }
     },
     {
-      "rank": 6,
+      "rank": 5,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NGS",
@@ -682,9 +567,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 344126240,
+      "marketCap": 356250656,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
@@ -753,6 +638,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -787,132 +677,7 @@
       }
     },
     {
-      "rank": 7,
-      "rankGrund": null,
-      "rankGrundShadow": null,
-      "ticker": "RNGR",
-      "score": 28.9,
-      "scoreCycleLegacy": 23.5,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.238,
-        "companion": 58.7
-      },
-      "name": "Ranger Energy Services, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 300162592,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 11,
-      "cohortFallback": true,
-      "scoreBase": 46.3,
-      "scoreShrunk": 46.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.615,
-        "cycleLegacy": 0.5
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 55.9,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 65.6,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 46.9,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 50,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 40.6,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 14.7,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": 57.7,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 25.533428165007123,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null,
-      "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
-      "overviewPeriod": {
-        "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
-        "reason": null
-      },
-      "revGrowthYoYPctLegacy": 25.533428165007123,
-      "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
-      "overviewValueLegacy": -0.188,
-      "overviewPeriodLegacy": {
-        "basis": "year",
-        "periodEnd": "2025-12-31",
-        "priorPeriodEnd": "2024-12-31",
-        "reason": null
-      },
-      "g31Hinweis": null,
-      "g31Shadow": {
-        "v1": {
-          "pct": 25.533428165007123,
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      },
-      "g31OverviewShadow": {
-        "value": 0.23809523809523814,
-        "period": {
-          "basis": "quarter",
-          "periodEnd": "2026-06-30"
-        }
-      }
-    },
-    {
-      "rank": 8,
+      "rank": 6,
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "SD",
@@ -931,7 +696,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 468290336,
+      "marketCap": 463466432,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -1002,6 +767,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1053,7 +823,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.964,
-        "companion": 63.2
+        "companion": 75.4
       },
       "name": "VAALCO Energy, Inc.",
       "country": "United States",
@@ -1133,6 +903,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1188,9 +963,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 332871968,
+      "marketCap": 421147584,
       "phase": "unprofitable",
-      "mcapBand": "micro",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
@@ -1259,6 +1034,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1313,7 +1093,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 483273312,
+      "marketCap": 478626464,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1384,6 +1164,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1438,7 +1223,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 486240352,
+      "marketCap": 498800064,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1509,6 +1294,11 @@
       "revGrowthPriorPeriodEnd": "2025-09-30",
       "revGrowthSourcePeriodEnd": "2026-09-30",
       "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-09-30",

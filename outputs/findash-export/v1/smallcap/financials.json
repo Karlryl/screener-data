@@ -1,20 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-07T10:15:09.360Z",
+  "generated_at": "2026-11-10T11:27:50.544Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.2,
-    "generated_at": "2026-11-07T10:06:53.781Z",
-    "honest_coverage_pct": 88.2,
-    "n_addressable": 18198,
-    "n_ok": 16046,
-    "n_total": 23530,
-    "n_failed": 1325,
-    "reporting_ccy_held": []
+    "coverage_pct": 69.2,
+    "generated_at": "2026-11-10T11:13:38.956Z",
+    "honest_coverage_pct": 88.4,
+    "n_addressable": 18373,
+    "n_ok": 16247,
+    "n_total": 23482,
+    "n_failed": 1328,
+    "reporting_ccy_held": [],
+    "manifest_partial": false
   },
   "profitable": [
     {
@@ -22,8 +23,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "VINP",
-      "score": 75.7,
-      "scoreCycleLegacy": 75.7,
+      "score": 75.8,
+      "scoreCycleLegacy": 75.8,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -38,7 +39,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Financial Services",
-      "marketCap": 564600960,
+      "marketCap": 565257408,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -49,8 +50,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 78.9,
-      "scoreShrunk": 75.7,
+      "scoreBase": 79,
+      "scoreShrunk": 75.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -80,17 +81,17 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 75,
+          "pct": 83.3,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 71.4,
+          "pct": 64.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 28.6,
+          "pct": 35.7,
           "weight": 0.9
         }
       ],
@@ -109,6 +110,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -147,8 +153,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "NOAH",
-      "score": 62.4,
-      "scoreCycleLegacy": 62.4,
+      "score": 63.1,
+      "scoreCycleLegacy": 63.1,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -173,8 +179,8 @@
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 64,
-      "scoreShrunk": 62.4,
+      "scoreBase": 64.8,
+      "scoreShrunk": 63.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -184,12 +190,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 43.8,
+          "pct": 46.9,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 81.3,
+          "pct": 84.4,
           "weight": 2.7
         },
         {
@@ -199,7 +205,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 43.8,
+          "pct": 46.9,
           "weight": 0.7
         },
         {
@@ -214,11 +220,11 @@
         },
         {
           "key": "dilution",
-          "pct": 21.4,
+          "pct": 14.3,
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": -1.5253351464096232,
+      "revGrowthYoYPct": -1.525335146409612,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -233,13 +239,18 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
         "priorPeriodEnd": "2025-06-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": -1.5253351464096232,
+      "revGrowthYoYPctLegacy": -1.525335146409612,
       "revGrowthBasisLegacy": "quarter",
       "revGrowthPeriodEndLegacy": "2026-06-30",
       "revGrowthPriorPeriodEndLegacy": "2025-06-30",
@@ -253,7 +264,7 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": -1.5253351464096232,
+          "pct": -1.525335146409612,
           "basis": "quarter",
           "periodEnd": "2026-06-30"
         }
@@ -287,7 +298,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 336602080,
+      "marketCap": 324344128,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -358,6 +369,11 @@
       "revGrowthPriorPeriodEnd": "2025-09-30",
       "revGrowthSourcePeriodEnd": "2026-09-30",
       "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "none",
         "periodEnd": null,
@@ -414,7 +430,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 708895616,
+      "marketCap": 697498560,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -488,6 +504,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -542,7 +563,7 @@
       "country": "Jersey",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 495493568,
+      "marketCap": 498129184,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -601,11 +622,15 @@
       "revGrowthYoYPct": 7.248100733419216,
       "profitStreak": null,
       "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": null,
-      "qPunkte": 4,
-      "qSpanTage": 273,
+      "qPunkte": 0,
+      "qSpanTage": null,
+      "financialDataReasons": [
+        "Quartalsumsatz fehlt: Die neueste Zahl dieser Reihe endet am 30.06.2025, mehr als 365 Tage vor dem Datenstand; Periodenstand veraltet.",
+        "Quartalsbruttogewinn fehlt: Die neueste Zahl dieser Reihe endet am 30.06.2025, mehr als 365 Tage vor dem Datenstand; Periodenstand veraltet."
+      ],
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
       "revGrowthBasis": "year",
@@ -613,6 +638,11 @@
       "revGrowthPriorPeriodEnd": "2024-12-31",
       "revGrowthSourcePeriodEnd": "2025-12-31",
       "revGrowthSourcePriorPeriodEnd": "2024-12-31",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 0,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "year",
         "periodEnd": "2025-12-31",
@@ -666,9 +696,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 414970176,
+      "marketCap": 397519488,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -737,6 +767,11 @@
       "revGrowthPriorPeriodEnd": "2025-07-31",
       "revGrowthSourcePeriodEnd": "2026-07-31",
       "revGrowthSourcePriorPeriodEnd": "2025-07-31",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-07-31",
@@ -791,7 +826,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 688951424,
+      "marketCap": 696058048,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -862,6 +897,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "none",
         "periodEnd": null,
@@ -916,7 +956,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 543849920,
+      "marketCap": 519697504,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -987,6 +1027,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1047,7 +1092,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 360629376,
+      "marketCap": 365762208,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1118,6 +1163,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "none",
         "periodEnd": null,
@@ -1179,7 +1229,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 371145376,
+      "marketCap": 364907584,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1250,6 +1300,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1307,7 +1362,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 351467712,
+      "marketCap": 352577600,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1378,6 +1433,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "none",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1434,9 +1494,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 768772352,
+      "marketCap": 486554272,
       "phase": "unprofitable",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
@@ -1505,6 +1565,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-06-30",
@@ -1565,7 +1630,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 313165120,
+      "marketCap": 322337312,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1636,6 +1701,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "none",
         "periodEnd": null,
@@ -1696,7 +1766,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 508893728,
+      "marketCap": 515864832,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -1770,6 +1840,11 @@
       "revGrowthPriorPeriodEnd": "2024-12-31",
       "revGrowthSourcePeriodEnd": "2025-12-31",
       "revGrowthSourcePriorPeriodEnd": "2024-12-31",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 0,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "year",
         "periodEnd": "2025-12-31",
@@ -1900,6 +1975,11 @@
       "revGrowthPriorPeriodEnd": "2025-06-30",
       "revGrowthSourcePeriodEnd": "2026-06-30",
       "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "year",
         "periodEnd": "2025-09-30",

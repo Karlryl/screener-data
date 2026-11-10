@@ -1,20 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-07T10:15:09.521Z",
+  "generated_at": "2026-11-10T11:27:50.975Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 68.2,
-    "generated_at": "2026-11-07T10:06:53.781Z",
-    "honest_coverage_pct": 88.2,
-    "n_addressable": 18198,
-    "n_ok": 16046,
-    "n_total": 23530,
-    "n_failed": 1325,
-    "reporting_ccy_held": []
+    "coverage_pct": 69.2,
+    "generated_at": "2026-11-10T11:13:38.956Z",
+    "honest_coverage_pct": 88.4,
+    "n_addressable": 18373,
+    "n_ok": 16247,
+    "n_total": 23482,
+    "n_failed": 1328,
+    "reporting_ccy_held": [],
+    "manifest_partial": false
   },
   "profitable": [
     {
@@ -37,9 +38,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 345043776,
+      "marketCap": 368053152,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -108,6 +109,11 @@
       "revGrowthPriorPeriodEnd": "2025-09-30",
       "revGrowthSourcePeriodEnd": "2026-09-30",
       "revGrowthSourcePriorPeriodEnd": "2025-09-30",
+      "revAccelerationBasis": {
+        "basis": "year",
+        "quarterComparisons": 1,
+        "newestQuarterStale": false
+      },
       "overviewPeriod": {
         "basis": "quarter",
         "periodEnd": "2026-09-30",
