@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-11-10T11:27:51.089Z",
+  "generated_at": "2026-11-11T10:58:05.258Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 69.2,
-    "generated_at": "2026-11-10T11:13:38.956Z",
-    "honest_coverage_pct": 88.4,
-    "n_addressable": 18373,
-    "n_ok": 16247,
-    "n_total": 23482,
-    "n_failed": 1328,
+    "coverage_pct": 69.1,
+    "generated_at": "2026-11-11T10:45:37.085Z",
+    "honest_coverage_pct": 88.6,
+    "n_addressable": 18359,
+    "n_ok": 16258,
+    "n_total": 23515,
+    "n_failed": 1303,
     "reporting_ccy_held": [],
     "manifest_partial": false
   },
@@ -23,8 +23,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "YORW",
-      "score": 71.7,
-      "scoreCycleLegacy": 71.7,
+      "score": 66.9,
+      "scoreCycleLegacy": 66.9,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -33,14 +33,14 @@
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.222,
-        "companion": 26.6
+        "value": 0.218,
+        "companion": 24.4
       },
       "name": "The York Water Company",
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 529376288,
+      "marketCap": 522806624,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -51,8 +51,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 82.6,
-      "scoreShrunk": 71.7,
+      "scoreBase": 75.4,
+      "scoreShrunk": 66.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -62,7 +62,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90,
+          "pct": 80,
           "weight": 2.2
         },
         {
@@ -77,12 +77,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 90,
+          "pct": 80,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 90,
+          "pct": 80,
           "weight": 0.6
         },
         {
@@ -96,7 +96,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": 22.48033751757903,
+      "revGrowthYoYPct": 19.50788271695889,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -107,10 +107,10 @@
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null,
       "revGrowthBasis": "quarter",
-      "revGrowthPeriodEnd": "2026-06-30",
-      "revGrowthPriorPeriodEnd": "2025-06-30",
-      "revGrowthSourcePeriodEnd": "2026-06-30",
-      "revGrowthSourcePriorPeriodEnd": "2025-06-30",
+      "revGrowthPeriodEnd": "2026-09-30",
+      "revGrowthPriorPeriodEnd": "2025-09-30",
+      "revGrowthSourcePeriodEnd": "2026-09-30",
+      "revGrowthSourcePriorPeriodEnd": "2025-09-30",
       "revAccelerationBasis": {
         "basis": "year",
         "quarterComparisons": 1,
@@ -118,14 +118,14 @@
       },
       "overviewPeriod": {
         "basis": "quarter",
-        "periodEnd": "2026-06-30",
-        "priorPeriodEnd": "2025-06-30",
+        "periodEnd": "2026-09-30",
+        "priorPeriodEnd": "2025-09-30",
         "reason": null
       },
-      "revGrowthYoYPctLegacy": 22.48033751757903,
+      "revGrowthYoYPctLegacy": 19.50788271695889,
       "revGrowthBasisLegacy": "quarter",
-      "revGrowthPeriodEndLegacy": "2026-06-30",
-      "revGrowthPriorPeriodEndLegacy": "2025-06-30",
+      "revGrowthPeriodEndLegacy": "2026-09-30",
+      "revGrowthPriorPeriodEndLegacy": "2025-09-30",
       "overviewValueLegacy": 0.025,
       "overviewPeriodLegacy": {
         "basis": "year",
@@ -136,16 +136,16 @@
       "g31Hinweis": null,
       "g31Shadow": {
         "v1": {
-          "pct": 22.48033751757903,
+          "pct": 19.50788271695889,
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       },
       "g31OverviewShadow": {
-        "value": 0.2216193656093488,
+        "value": 0.21757684870307403,
         "period": {
           "basis": "quarter",
-          "periodEnd": "2026-06-30"
+          "periodEnd": "2026-09-30"
         }
       }
     },
@@ -171,7 +171,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 355149696,
+      "marketCap": 351004416,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -285,8 +285,8 @@
       "rankGrund": null,
       "rankGrundShadow": null,
       "ticker": "CWCO",
-      "score": 51.4,
-      "scoreCycleLegacy": 51.4,
+      "score": 45.1,
+      "scoreCycleLegacy": 45.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -295,13 +295,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.146,
-        "companion": 13.1
+        "companion": 3.8
       },
       "name": "Consolidated Water Co. Ltd.",
       "country": "Cayman Islands",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 435870176,
+      "marketCap": 413692352,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -312,8 +312,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 52.2,
-      "scoreShrunk": 51.4,
+      "scoreBase": 42.6,
+      "scoreShrunk": 45.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -338,7 +338,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 70,
+          "pct": 40,
           "weight": 2.2
         },
         {
@@ -430,7 +430,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 476147904,
+      "marketCap": 470490656,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
