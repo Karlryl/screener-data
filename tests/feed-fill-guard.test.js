@@ -1,6 +1,10 @@
 'use strict';
 // Runs the real guard as a process on temporary feeds; the break-once inputs are test data, never a live file.
+// The stale-price writer fixture below needs a fixed run day; the guard itself never reads it.
+process.env.RUN_DATE_UTC = '2026-10-30';
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const Module = require('node:module');
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -11,12 +15,12 @@ const { JOB_REIHENFOLGE } = require('../scripts/pipeline-status.js');
 
 const root = path.resolve(__dirname, '..');
 const JOB = 'feed-fill-waechter';
-const floors = JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8')).floors;
+const { floors, erklaertMax } = JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8'));
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'feed-fill-guard-'));
 let floorsFiles = 0;
-const floorsFile = rotstellen => {
+const floorsFile = (rotstellen, extra = {}) => {
   const file = path.join(tmp, `floors-${floorsFiles++}.json`);
-  fs.writeFileSync(file, JSON.stringify({ floors, rotstellen }));
+  fs.writeFileSync(file, JSON.stringify({ floors, rotstellen, erklaertMax, ...extra }));
   return ['--floors', file];
 };
 
@@ -97,6 +101,87 @@ assert.ok(active.stdout.includes('(Rotstelle)'), 'the table marks a temporary fl
 for (const [field, entry] of Object.entries(JSON.parse(fs.readFileSync(DEFAULT_FLOORS, 'utf8')).rotstellen || {})) {
   assert.equal(rotstelleFault(field, entry, floors), null, field);
 }
+
+// Explained values (Daylauf 16): a value the REAL filter writer withholds on a stale Yahoo quote carries a reason the
+// guard knows. Fixture of tests/stale-price-filter-and-sibling.test.js: quote of 02.10., run day 30.10.
+const G = require('../lib/market-cap-guard.js');
+const W = require('../scripts/write-filter-universe.js');
+const { explained } = require('../scripts/feed-fill-guard.js');
+const OLD = '2026-10-02T15:35:06.000Z', FRESH = '2026-10-30T08:00:00.000Z';
+const priced = (stamp, ticker) => ({
+  meta: { ticker, name: 'Company ' + ticker, sector: 'Technology', industry: 'Software', tradingCurrency: 'USD', reportingCurrency: 'USD',
+    tradingCurrencyOriginal: 'USD', reportingCurrencyOriginal: 'USD', fxConverted: true, tradingFxRateApplied: 1, fxRateApplied: 1, asOf: FRESH },
+  marketCap: { value: 1e12, asOf: FRESH, regularMarketTime: stamp },
+  metrics: { pe: { value: 20 }, forwardPE: { value: 12 }, dividendYield: { value: 2 }, fiftyTwoWeekHigh: { value: 200 },
+    priceSales: { value: 5 }, enterpriseToRevenue: { value: 6 }, revenueTTM: { value: 2e11 } },
+  price: { regularMarketPrice: 100, currencyUnit: 'USD' }, annual: {}, timeseries: {},
+});
+const writerRows = W.buildUniverse({ snapshots: [G.prepareMarketCap(priced(OLD, 'OLD')), G.prepareMarketCap(priced(FRESH, 'NEW'))],
+  excluded: new Map([['OLD', ['market-cap-missing']], ['NEW', ['market-cap-missing']]]),
+  athEntries: { OLD: { ath: 200, athDate: '2025-01-02', lastClose: 100, lastDate: '2026-10-20' }, NEW: { ath: 200, athDate: '2025-01-02', lastClose: 100, lastDate: '2026-10-29' } },
+  generatedAt: FRESH }).rows;
+const heldRow = writerRows.find(r => r.t === 'OLD'), freshRow = writerRows.find(r => r.t === 'NEW');
+for (const field of ['mc', 'ps', 'evs', 'pe', 'fpe', 'dy', 'd52', 'ath']) {
+  assert.notEqual(freshRow[field], undefined, 'the fresh row shows ' + field);
+  assert.equal(heldRow[field], undefined, 'the stale row withholds ' + field);
+  assert.equal(explained(heldRow, field), true, 'the writer reason explains ' + field + ': ' + heldRow.aus.join(' | '));
+  assert.equal(explained(freshRow, field), false, field);
+}
+// r40: a withheld market cap makes the row data-suspect (B5), and the writer takes r40 only from rows that are not.
+assert.equal(require('../scripts/write-rule40-export.js').datenSuspekt(G.prepareMarketCap(priced(OLD, 'OLD'))), true, 'stale row is data-suspect');
+assert.equal(explained(heldRow, 'r40'), true);
+// No other field is explained by these reasons, and a reason without the stale quote explains nothing.
+for (const field of ['g', 'roe', 'gm', 'fcf', 'po', 'sc', 'b']) assert.equal(explained(heldRow, field), false, field);
+assert.equal(explained({ aus: ['market-cap-missing', 'data-suspect'] }, 'mc'), false);
+assert.equal(explained({ aus: ['P/E wird nicht gezeigt, die Kursmeldung von Yahoo vom 02.10.2026 ist zu alt.'] }, 'fpe'), false, 'P/E hint is not the forward P/E hint');
+assert.equal(explained({}, 'mc'), false, 'a row without aus');
+
+// The guard on such rows: 1000 rows, the first n stale (mc and d52 withheld with the writer's reasons).
+const staleAus = heldRow.aus;
+const staleFeed = (n, withReason = true) => feedWith((row, i) => { if (i < n) { delete row.mc; delete row.d52; if (withReason) row.aus = staleAus; } });
+const explainedRun = guard(staleFeed(100));
+assert.equal(explainedRun.status, 0, explainedRun.stdout);
+assert.match(explainedRun.stdout, /^mc .*100,0 %.*explained 10,0 % of all rows/m, 'share among the rows that can show the field');
+const unexplained = guard(staleFeed(100, false));
+assert.equal(unexplained.status, 1, 'the same loss without a reason is red');
+assert.match(unexplained.stdout, /::error::Das Feld mc ist nur auf 90,0 % der 1000 Zeilen gefüllt/);
+// The cap: exactly erklaertMax percent is green, one row more is red, and so is a mass loss with reasons.
+const atCap = Math.round(erklaertMax * 10);
+assert.equal(guard(staleFeed(atCap)).status, 0, 'exactly at the cap');
+const overCap = guard(staleFeed(atCap + 1));
+assert.equal(overCap.status, 1, overCap.stdout);
+assert.match(overCap.stdout, /::error::Das Feld mc ist auf .* wegen einer veralteten Kursmeldung von Yahoo ausgeblendet, erlaubt sind höchstens/);
+assert.equal(guard(staleFeed(1000)).status, 1, 'every row stale is never green');
+// A real loss on the other rows stays red beside the explained ones (100 explained, 60 more without reason: 840/900 = 93.3 %).
+assert.equal(guard(feedWith((row, i) => { if (i < 160) { delete row.mc; if (i < 100) row.aus = staleAus; } })).status, 1);
+// A reason beside a shown value explains nothing and moves nothing.
+const shownBeside = checkFill(feedWith((row, i) => { if (i < 100) row.aus = staleAus; }), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity });
+assert.equal(shownBeside.explainedShares.mc, 0); assert.equal(shownBeside.shares.mc, 100);
+// Fail-closed default: a caller without explainedMax allows none.
+assert.ok(checkFill(staleFeed(1), floors, { maxAgeHours: Infinity }).problems.some(p => p.includes('erlaubt sind höchstens 0,0 %')));
+for (const bad of [{ erklaertMax: undefined }, { erklaertMax: -1 }, { erklaertMax: 101 }, { erklaertMax: '12' }]) {
+  assert.equal(guard(feedWith(), ...floorsFile({}, bad)).status, 2, JSON.stringify(bad));
+}
+
+// Break once on the guard source, compiled in memory (nothing written; the live file is hashed before and after).
+const GUARD_FILE = path.join(root, 'scripts', 'feed-fill-guard.js');
+const sha = () => crypto.createHash('sha256').update(fs.readFileSync(GUARD_FILE)).digest('hex');
+const before = sha();
+const broken = (anchor, replacement) => {
+  const lines = fs.readFileSync(GUARD_FILE, 'utf8').split(/\r?\n/);
+  assert.equal(lines.filter(l => l === anchor).length, 1, 'exact whole-line anchor: ' + anchor);
+  const m = new Module(GUARD_FILE, module);
+  m.filename = GUARD_FILE;
+  m.paths = Module._nodeModulePaths(path.dirname(GUARD_FILE));
+  m._compile(lines.map(l => (l === anchor ? replacement : l)).join('\n'), GUARD_FILE);
+  return m.exports;
+};
+const reasonless = broken('  return STALE_FIELDS.has(field) && aus.some(a => a.endsWith(STALE_PRICE_RETURN));', '  return STALE_FIELDS.has(field);');
+assert.deepEqual(reasonless.checkFill(feedWith((row, i) => { if (i < 100) delete row.mc; }), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems, [], 'broken: a reasonless loss turns green');
+const uncapped = broken('    if (explainedShares[field] > explainedMax) problems.push(`Das Feld ${field} ist auf ${percent(explainedShares[field])} der ${rows.length} Zeilen wegen einer veralteten Kursmeldung von Yahoo ausgeblendet, erlaubt sind höchstens ${percent(explainedMax)}. So viele alte Kursmeldungen deuten auf eine Störung bei Yahoo, nicht auf einzelne Zeilen.`);', '');
+assert.ok(guard(staleFeed(500)).stdout.includes('erlaubt sind höchstens'), 'half the rows stale is red by the cap alone');
+assert.deepEqual(uncapped.checkFill(staleFeed(500), floors, { explainedMax: erklaertMax, maxAgeHours: Infinity }).problems, [], 'broken: a mass loss turns green');
+assert.equal(sha(), before, 'the live guard file is unchanged');
 
 // Every field the writer can emit has a floor, so a new field is noticed in its pull request and not on its first day.
 assert.deepEqual(ROW_KEYS.filter(key => !(key in floors)), []);
