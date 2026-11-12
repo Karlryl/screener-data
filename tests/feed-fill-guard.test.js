@@ -64,7 +64,7 @@ assert.equal(guard('{ not json').status, 2);
 // Red spots (Daylauf 16): a temporary floor with owner and expiry, relative to today's clock so no date ages into a red.
 const { rotstelleFault, checkFill } = require('../scripts/feed-fill-guard.js');
 const day = offset => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
-const spot = (extra = {}) => ({ floor: floors.d52 - 10, seit: day(-1), bis: day(13), zustaendig: 'Test', grund: 'Testgrund.', ...extra });
+const spot = (extra = {}) => ({ floor: floors.d52 - 10, seit: day(-1), bis: day(12), zustaendig: 'Test', grund: 'Testgrund.', ...extra });
 // About 90 % filled: under the normal floor, over the temporary one.
 const dropD52 = feedWith((row, i) => { if (i < 100) delete row.d52; });
 assert.equal(guard(dropD52).status, 1, 'without a red spot the loss is red');
@@ -76,7 +76,7 @@ const expired = guard(dropD52, ...floorsFile({ d52: spot({ seit: day(-15), bis: 
 assert.equal(expired.status, 1);
 assert.match(expired.stdout, /::error::Die Rotstelle für das Feld d52 ist am .* abgelaufen/);
 assert.equal(guard(feedWith(), ...floorsFile({ d52: spot({ seit: day(-15), bis: day(-1) }) })).status, 1, 'an expired entry is red even when the field recovered');
-for (const bad of [{ bis: day(20) }, { bis: day(-2) }, { floor: floors.d52 }, { seit: '2026-02-30' }, { zustaendig: ' ' }, { grund: undefined }]) {
+for (const bad of [{ bis: day(13) }, { bis: day(20) }, { bis: day(-2) }, { floor: floors.d52 }, { seit: '2026-02-30' }, { zustaendig: ' ' }, { grund: undefined }]) {
   const result = guard(dropD52, ...floorsFile({ d52: spot(bad) }));
   assert.equal(result.status, 1, JSON.stringify(bad));
   assert.match(result.stdout, /Rotstelle für das Feld d52 ist ungültig/, JSON.stringify(bad));

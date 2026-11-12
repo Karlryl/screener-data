@@ -76,7 +76,8 @@ function rotstelleFault(field, spot, floors) {
   if (!(Number.isFinite(spot.floor) && spot.floor >= 0 && spot.floor < floors[field])) return 'die vorläufige Untergrenze muss eine Zahl unter der normalen sein';
   const days = [spot.seit, spot.bis].map(d => (typeof d === 'string' && DAY.test(d) ? Date.parse(d + 'T00:00:00Z') : NaN));
   if (!days.every(Number.isFinite) || new Date(days[0]).toISOString().slice(0, 10) !== spot.seit || new Date(days[1]).toISOString().slice(0, 10) !== spot.bis) return 'seit und bis müssen echte Tage JJJJ-MM-TT sein';
-  if (days[1] < days[0] || days[1] - days[0] > MAX_ROTSTELLE_DAYS * 864e5) return `bis muss zwischen seit und ${MAX_ROTSTELLE_DAYS} Tagen danach liegen`;
+  // seit and bis both count: bis = seit + 13 is the 14th day.
+  if (days[1] < days[0] || days[1] - days[0] > (MAX_ROTSTELLE_DAYS - 1) * 864e5) return `bis darf höchstens ${MAX_ROTSTELLE_DAYS - 1} Tage nach seit liegen (beide Tage zählen, ${MAX_ROTSTELLE_DAYS} Tage)`;
   for (const key of ['zustaendig', 'grund']) if (typeof spot[key] !== 'string' || !spot[key].trim()) return `${key} fehlt`;
   return null;
 }
