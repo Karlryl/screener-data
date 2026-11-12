@@ -299,6 +299,7 @@ test('fill absence: vendor 2025 quarter changed since board-history 2026-07-29, 
   // Codex R-pr124 R2 P2-3: an unreadable July history is no "not on a board in July"
   const failed = ctxOf(early, nb); failed.baseline.failed = true;
   assert.equal(res(base(), failed).fill.blocked, 'baseline-unreadable');
+  assert.equal(res(base(), { stores: failed.stores }).fill.blocked, 'baseline-unreadable', 'no July history at all');
   const unreadable = X.loadBaseline(path.join(os.tmpdir(), 'no-such-board-history-' + process.pid));
   assert.equal(unreadable.failed, true); assert.match(unreadable.warnings[0], /unreadable/);
   assert.equal(res(noQ4, ctxOf(early, nb)).fill.blocked, null, 'read before the next-year report: fills');
