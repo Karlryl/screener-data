@@ -1,6 +1,7 @@
 {
   "lib/g31-recency.js": { "mode": "upstream", "reason": "P184 production export and scoring callers supply prepared snapshots; additive shadows never change a live value, and scoring variants require an explicit synchronous measurement scope." },
   "lib/hk-interim.js": { "mode": "upstream", "reason": "sd-halbjahr HK interim pair (12.11.2026): lib/g31-recency.js g31Shadow calls it with prepared snapshots; it imports norm only to read the annual revenue row for its size check and reads no quarterly array." },
+  "scripts/cn-printed-shadow-report.js": { "mode": "exempt", "reason": "B11 shadow report only: reads the stored CNINFO printed Q3 revenue and the board snapshots to compare them with Eastmoney; writes only a report file, never a live value." },
   "scripts/g31-replay.js": { "mode": "exempt", "reason": "P184 offline report-only shadow replay prepares the same inputs in all arms; writes only into explicit isolated task directories, never published values." },
   "field-coverage.js": { "mode": "exempt", "reason": "Legacy coverage helper has no production caller; only its tests use it." },
   "lib/annual-currency-guard.js": { "mode": "upstream", "reason": "Pull calls this diagnostic after the native correction and FX conversion." },
