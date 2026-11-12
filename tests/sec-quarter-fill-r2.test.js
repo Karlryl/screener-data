@@ -258,8 +258,8 @@ test('blind delta check F4: two figures of one filing day count as the same only
   const obs = (val, accn) => ({ start: '2026-04-01', val, filed: '2026-08-01', form: '10-Q', accn, days: 90, derivation: 'reported-3M', confirmedBy: [] });
   const company = (v2) => ({ cik: '0000000001', Revenues: { '2026-06-30': [obs(150, 'a'), obs(v2, 'b')] } });
   const read = (v2) => X.secQuartersKnown(company(v2), 'Revenues', '2026-11-11').find((q) => q.end === '2026-06-30');
-  assert.deepEqual([read(150.02).derivation, read(150.02).val], ['reported-3M', 150], '0.013 % apart: one figure');
-  assert.equal(read(150.3).derivation, 'restatement-conflict', '0.2 % apart: the day is split, the period stays open');
+  assert.deepEqual([read(150.029).derivation, read(150.029).val], ['reported-3M', 150], '0.0193 % apart: one figure');
+  assert.equal(read(150.031).derivation, 'restatement-conflict', '0.0207 % apart: the day is split, the period stays open');
 });
 
 test('Codex R5 P1-B: within 0.02 % on the year but 7 % on a small remainder (133 x 3, year 400 or 400.07) stays open, in every order', () => {
@@ -276,4 +276,15 @@ test('Codex R5 P1-A rest: three contradicting half years and a nine-month figure
   const y = f('2026-01-01', '2026-09-30', 400, '2026-10-15'), again = { ...y, filed: '2026-10-26', accn: 'repeat-ytd' };
   const seen = new Set(perms([a, b, c, y, again]).map((xs) => { const q = P.pitSingleQuarters([...hist, ...xs]).find((x) => x.end === '2026-09-30'); return q.derivation + '@' + q.filed; }));
   assert.deepEqual([...seen], ['restatement-conflict@2026-11-02']);
+});
+
+test('blind delta check 12.11. evening (M1, N2): conflictsWith names another figure for the end with the own filing of that figure, in every order', () => {
+  const m1 = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-04-01', '2026-06-30', 130, '2026-08-01'), f('2026-04-01', '2026-06-30', 131, '2026-09-15', '10-Q/A', 'q2a'),
+    f('2026-07-01', '2026-09-30', 120, '2026-11-01'), f('2026-01-01', '2026-12-31', 480, '2027-02-01', '10-K', 'y'), f('2026-10-01', '2026-12-31', 130, '2027-02-01', '10-K', 'q4')];
+  const r1 = new Set(perms(m1).map((xs) => JSON.stringify(P.pitSingleQuarters(xs).find((q) => q.end === '2026-12-31'))));
+  assert.equal(r1.size, 1);
+  const q4 = JSON.parse([...r1][0]);
+  assert.deepEqual([q4.derivation, q4.val, q4.conflictsWith.val], ['restatement-conflict', 130, 129], 'Q4 is 130 or 480 - 351 = 129, not its own 130');
+  const n2 = [f('2026-04-01', '2026-06-30', 150, '2026-08-01', '10-Q', 'A'), f('2026-04-01', '2026-06-30', 151, '2026-09-01', '10-Q/A', 'B'), f('2026-04-01', '2026-06-30', 150, '2026-10-01', '10-Q', 'C')];
+  for (const xs of perms(n2)) assert.deepEqual(P.pitSingleQuarters(xs)[0].conflictsWith, { val: 151, filed: '2026-09-01', accn: 'B' });
 });
