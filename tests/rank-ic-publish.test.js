@@ -97,5 +97,21 @@ check('R5: der Erzeuger traegt continue-on-error: true — ein rank-ic-Fehler da
   assert.ok(kopfP.includes('if: success()'), 'F-17a haengt nicht mehr an if: success() — dann waere diese Probe gegenstandslos');
 });
 
+// Daylauf 16 (12.11.2026): run 42793685547 hit the 15-min scoring cap inside the Rank-IC step, so
+// the F-17a publish was skipped although the boards were out. Pinned: the job cap leaves room
+// (>= 30) and the Rank-IC step has its own cap well below it, so a hanging rank-ic cannot eat the
+// budget of the publish behind it. Break-once: job cap back to 15 -> R6 red; step cap removed -> R6 red.
+check('R6: scoring job cap >= 30 min and the Rank-IC step has its own cap below it (run 42793685547)', () => {
+  const s = yml.indexOf('\n  scoring:');
+  const steps = yml.indexOf('\n    steps:', s);
+  const jobCap = /\n    timeout-minutes: (\d+)[ \t]*(?:#[^\n]*)?\n/.exec(yml.slice(s, steps + 1));
+  assert.ok(jobCap, 'scoring job has no job-level timeout-minutes');
+  assert.ok(Number(jobCap[1]) >= 30, 'scoring job cap ' + jobCap[1] + ' < 30');
+  const i = yml.indexOf(STEP, s);
+  const stepCap = /^\s*timeout-minutes: (\d+)[ \t]*(?:#.*)?$/m.exec(yml.slice(i, yml.indexOf('run: |', i)));
+  assert.ok(stepCap, 'Rank-IC step has no own timeout-minutes');
+  assert.ok(Number(stepCap[1]) > 0 && Number(stepCap[1]) <= Number(jobCap[1]) / 3, 'Rank-IC step cap ' + stepCap[1] + ' not well below the job cap ' + jobCap[1]);
+});
+
 if (fail) { console.log('FAIL: rank-ic-publish (' + fail + ')'); process.exit(1); }
 console.log('OK: rank-ic-publish (06.09.2026)');

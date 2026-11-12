@@ -3,6 +3,9 @@ name: Exchange Quarters
 # Tag 1399 — fills the append-only store external-data/exchange-quarters/{cn,tw}.json with revenue
 # as printed by exchange-fed sources (China: Eastmoney GINCOME/SINCOME, Taiwan: MOPS t164sb04),
 # see scripts/fetch-exchange-quarters.js. NOTHING READS THE STORE YET; no board number can change.
+# sd-quellen 07.11.2026: Brazil (CVM ITR/DFP open data) writes br.json in the same folder; a pass is skipped
+# while the last written one is younger than 6 days (only --force-br overrides; a failed pass writes nothing).
+# SHADOW: no reader loads br.json (tests/fetch-exchange-quarters-br.test.js guards that).
 #
 # TIMING (spec S3, measured 02.10.2026 with `gh run list --workflow daily-pull.yml`): the last 10
 # scheduled "Daily Yahoo Pull" runs (cron 02:17 UTC) were created between 07:18 and 08:53 UTC and

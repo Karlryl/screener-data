@@ -418,6 +418,12 @@ function snapAbleitungenFuer(ticker, snapshotStore = 'main') {
     overviewHold: overviewGrowthHold(ticker, snap),
     wachstum: snap ? revGrowthLeg(snap) : null,
     meta: snap ? snap.meta : null, // issuer of the shown listing, for the held-sibling hint
+    // Newest stored quarter end with a value, for the hint `neuerer-bericht` (a later report than the shown period). Self-contained:
+    // tests/smallcap-store-evidence-p159.test.js extracts this function without the module's other bindings.
+    neuestesQuartal: snap ? (snap.timeseries?.revenueQEnds || []).filter((e, i) => {
+      const cell = snap.timeseries?.revenueQ?.[i];
+      return typeof e === 'string' && Number.isFinite(typeof cell === 'number' ? cell : cell?.value);
+    }).sort().at(-1) ?? null : null,
     // G31 comparison export (at most four weeks): the pre-G31 growth leg and overview values.
     wachstumLegacy: snap ? withG31Variant('legacy', () => revGrowthLeg(snap)) : null,
     overviewLegacy: snap ? withG31Variant('legacy', () => {
@@ -513,6 +519,43 @@ function heldNewerSibling(meta, ticker, shownEnd) {
     .sort((a, b) => (a.periodEnd < b.periodEnd ? 1 : a.periodEnd > b.periodEnd ? -1 : a.ticker < b.ticker ? -1 : 1))[0] || null;
 }
 
+// A later report than the shown period counts when Yahoo's mostRecentQuarter lies more than NEWER_REPORT_DAYS after it: fiscal
+// quarter ends drift by a few days (27.09. against 30.09.), the next period is at least about 90 days later.
+const NEWER_REPORT_DAYS = 45;
+const PERIOD_WORD = { quarter: 'das Quartal', halfYear: 'das Halbjahr', ttm: 'die vier Quartale', year: 'das Geschäftsjahr', yearNewerRecord: 'das Geschäftsjahr' };
+// The sentence lib/g31-recency.js g31Hinweis() appends when it shows an older quarter pair; that hint already explains the gap.
+const OLDER_PAIR_SENTENCE = 'Gezeigt wird der ältere ';
+/**
+ * Hint for a row whose company has reported a later period than the shown growth period: Yahoo meta.mostRecentQuarter or a
+ * newer stored quarter, whichever is later. Text only: no value, score or rank reads it.
+ * @param {object|null} meta Snapshot meta of the shown listing.
+ * @param {object|null} leg Shown growth leg (basis, periodEnd).
+ * @param {object} [context] What else the row says: existing g31Hinweis, a held sibling with newer figures, newest stored quarter end.
+ * @param {object|null} [context.existing] Hint already on the row.
+ * @param {object|null} [context.heldSibling] Held listing of the same firm with newer figures (the row then names it already).
+ * @param {string|null} [context.storedQuarterEnd] Newest stored quarter end with a value.
+ * @returns {{code:string, reason:string}|null} Hint `neuerer-bericht`, or null.
+ */
+function newerReportHint(meta, leg, { existing = null, heldSibling = null, storedQuarterEnd = null } = {}) {
+  // Own day check (round trip, like isoTag): tests replace lib/rev-growth-basis.js with stubs that lack isoTag.
+  const day = d => {
+    if (typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(d)) return null;
+    const t = Date.parse(d.slice(0, 10) + 'T00:00:00Z');
+    return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === d.slice(0, 10) ? d.slice(0, 10) : null;
+  };
+  // The row already names the newer figures (held sibling) or already explains the missing pair (older quarter pair).
+  if (heldSibling || existing?.reason?.includes(OLDER_PAIR_SENTENCE)) return null;
+  const shown = day(leg?.periodEnd), word = PERIOD_WORD[leg?.basis];
+  // Stored quarter ends are rounded to the month end (AEHR: stored 30.09.2026, reported 25.09.2026), so the stored end only wins
+  // when it is a truly later period than Yahoo's exact date, more than NEWER_REPORT_DAYS after it.
+  const yahoo = day(meta?.mostRecentQuarter), stored = day(storedQuarterEnd);
+  const later = (a, b) => Date.parse(a) - Date.parse(b) > NEWER_REPORT_DAYS * 864e5;
+  const latest = yahoo && stored ? (later(stored, yahoo) ? stored : yahoo) : yahoo || stored;
+  if (!shown || !latest || !word || Date.parse(latest) - Date.parse(shown) <= NEWER_REPORT_DAYS * 864e5) return null;
+  const tag = d => d.split('-').reverse().join('.');
+  return { code: 'neuerer-bericht', reason: `Die Firma hat laut Yahoo schon Zahlen bis ${tag(latest)} veröffentlicht. Für diesen Zeitraum fehlt in den Daten ein geprüfter Vorjahresvergleich des Umsatzes, deshalb zeigt das Board weiter ${word} bis ${tag(shown)}.` };
+}
+
 // Codes lib/g31-recency.js sets without a checked source (pairHinweis flags, joined by '+', and the recency label).
 const AUTO_HINT_CODES = new Set(['aktuell-gross', 'vorjahr-klein', 'quartalssumme', 'aelteres-quartalspaar']);
 function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
@@ -549,6 +592,11 @@ function ergaenzeWachstumsBasis(out, snapshotStore = 'auto') {
     const reason = `Die Notierung ${neuer.ticker} derselben Firma hat neuere Zahlen bis ${tag(neuer.periodEnd)}, ihr Börsenwert ist wegen einer alten Kursmeldung von Yahoo zurückgehalten. Gezeigt werden die Zahlen von ${out.ticker} bis ${tag(leg.periodEnd)}.`;
     out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${reason}` } : { code: 'gehaltene-notierung-neuer', reason };
   }
+  // G31 with G2 (lane sd-halbjahr, 12.11.2026): the company has reported a later period than the shown one, but the data hold
+  // no valid pair for it. The row keeps the older correct number and says so; it never guesses the newer one.
+  const spaeter = passt && !Object.hasOwn(out, 'runwayQuarters') && snapshotStore !== 'smallcap'
+    ? newerReportHint(derivations.meta, leg, { existing: out.g31Hinweis, heldSibling: neuer, storedQuarterEnd: derivations.neuestesQuartal }) : null;
+  if (spaeter) out.g31Hinweis = out.g31Hinweis ? { ...out.g31Hinweis, reason: `${out.g31Hinweis.reason} ${spaeter.reason}` } : spaeter;
   // G31 switch (18.10.2026): the pre-G31 numbers of the SAME snapshot as comparison fields for at
   // most four weeks, set only where that snapshot reproduces the exported live number (otherwise
   // null, like an unlabelled row). Display only: no score, rank or membership reads them.
@@ -2835,6 +2883,7 @@ module.exports = {
   // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
   // RUNS it against a fixture marker instead of searching the source for generated_at.
   loadCoverage,
+  newerReportHint, OLDER_PAIR_SENTENCE, // sd-halbjahr 12.11.2026: hint `neuerer-bericht`, tests/export-hinweis-neuerer-bericht.test.js
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
   // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
   // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
