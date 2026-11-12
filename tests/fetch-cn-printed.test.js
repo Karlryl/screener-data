@@ -77,6 +77,34 @@ function mockClient(handler) { let n = 0; return { request: async (...args) => {
     const a = await F.cachedText(c, meta, dir, convert), b = await F.cachedText(c, meta, dir, convert);
     assert.deepEqual(a, b); assert.equal(c.calls(), 1); assert.equal(conversions, 1);
   });
+  await test('failed extraction cannot publish or reuse partial text', async () => {
+    const dir = H.sandbox(), txt = path.join(dir, ann.announcementId + '.txt');
+    const client = mockClient(() => Buffer.from('%PDF-test'));
+    let partial;
+    await assert.rejects(F.cachedText(client, meta, dir, (pdf, temp) => {
+      partial = temp; fs.writeFileSync(temp, 'partial text'); throw Error('extractor-timeout');
+    }), /extractor-timeout/);
+    assert.equal(fs.existsSync(partial), false);
+    assert.equal(fs.existsSync(txt), false);
+    let conversions = 0;
+    const convert = (pdf, temp) => { conversions++; assert.notEqual(temp, txt); fs.writeFileSync(temp, fixture.text); };
+    assert.equal((await F.cachedText(client, meta, dir, convert)).text, fixture.text);
+    assert.equal(conversions, 1); assert.equal(client.calls(), 1);
+    await F.cachedText(client, meta, dir, convert); assert.equal(conversions, 1);
+    fs.writeFileSync(txt, 'corrupted text');
+    await F.cachedText(client, meta, dir, convert); assert.equal(conversions, 2);
+  });
+  await test('unmarked, empty and nonzero extraction results are never reused', async () => {
+    const dir = H.sandbox(), txt = path.join(dir, ann.announcementId + '.txt');
+    fs.writeFileSync(txt, 'legacy incomplete text');
+    const client = mockClient(() => Buffer.from('%PDF-test'));
+    await assert.rejects(F.cachedText(client, meta, dir, (pdf, temp) => { fs.writeFileSync(temp, ''); }), /text-empty/);
+    await assert.rejects(F.cachedText(client, meta, dir, (pdf, temp) => { fs.writeFileSync(temp, 'partial'); return { status: 1 }; }), /extractor-exit/);
+    let calls = 0;
+    const result = await F.cachedText(client, meta, dir, (pdf, temp) => { calls++; fs.writeFileSync(temp, fixture.text); return { status: 0 }; });
+    assert.equal(calls, 1); assert.equal(result.text, fixture.text);
+    assert.equal(fs.readdirSync(dir).filter(f => f.endsWith('.tmp')).length, 0);
+  });
   await test('HTML masquerading as PDF never cached', async () => {
     const dir = H.sandbox();
     await assert.rejects(F.cachedText(mockClient(() => Buffer.from('<html>bad</html>')), meta, dir), /pdf-invalid/);

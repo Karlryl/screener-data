@@ -37,6 +37,7 @@ test('mixed basis on same operating line stays out of proposed fill', () => {
 test('missing prior has its own category', () => {
   const v = JSON.parse(JSON.stringify(cn)); delete v.companies[a.ticker].ytd['2025-09-30'];
   const r = build({ cn: v }); assert.equal(r.rows[0].status, 'printed-only');
+  assert.equal(r.rows[0].proposal, null); assert.equal(r.counts['printed-only'], 1);
 });
 test('stale current store anchor invalidates old parsed value', () => {
   const v = JSON.parse(JSON.stringify(cn)); v.companies[a.ticker].ytd['2026-09-30'][0].operate *= 1.001;
@@ -102,5 +103,34 @@ test('German report distinguishes historical denominators and uncertainty', () =
   const text = R.markdown(build());
   assert.match(text, /Zählebene: Ticker/); assert.match(text, /1.086 und 1.222/);
   assert.match(text, /noch nicht gemessen/); assert.match(text, /OPERATE_INCOME/);
+});
+test('mixed basis reports absolute and relative deviations without changing the band', () => {
+  const v = JSON.parse(JSON.stringify(cn)); v.companies[a.ticker].ytd['2025-09-30'][0].operate *= 1.1;
+  const r = build({ cn: v }), row = r.rows[0], d = row.deviation;
+  assert.equal(d.absoluteCny, Math.abs(row.comparable.value - row.eastmoneyPrior));
+  assert.equal(d.relativePct, d.absoluteCny / Math.abs(row.eastmoneyPrior) * 100);
+  assert.equal(d.bandLowerCny, row.comparable.lower); assert.equal(d.bandUpperCny, row.comparable.upper);
+  assert.ok(R.markdown(r).includes(d.absoluteCny.toFixed(2)));
+  assert.ok(R.markdown(r).includes(d.bandLowerCny.toFixed(3)));
+});
+// Optional offline corpus integration: the ordinary suite remains portable, while
+// B11c verification supplies the immutable 11 November snapshots explicitly.
+if (process.env.B11C_SNAPSHOTS) test('committed store and November 11 snapshots retain exact counts', () => {
+  const fs = require('fs'), path = require('path');
+  const root = path.join(H.ROOT, 'external-data/exchange-quarters');
+  const stored = JSON.parse(fs.readFileSync(path.join(root, 'cn-printed.json')));
+  const vendor = JSON.parse(fs.readFileSync(path.join(root, 'cn.json')));
+  const files = fs.readdirSync(process.env.B11C_SNAPSHOTS).filter(f => /^(?:00\d{4}|30\d{4})\.SZ\.json$|^6\d{5}\.SS\.json$/.test(f));
+  const snapshots = files.map(f => JSON.parse(fs.readFileSync(path.join(process.env.B11C_SNAPSHOTS, f))));
+  const r = R.buildReport({ store: stored, cn: vendor, snapshots, baseline: { date: null, rows: new Map() }, dataDay: '2026-11-11' });
+  assert.equal(r.counts.agree, 472); assert.equal(r.counts['mixed-basis'], 5);
+  assert.equal(Object.values(r.exchanges).reduce((n, e) => n + e.attempted, 0), 546);
+  assert.equal(Object.values(r.exchanges).reduce((n, e) => n + e.parsed, 0), 477);
+  const row = r.rows.find(r => r.ticker === '000498.SZ');
+  assert.equal(row.status, 'mixed-basis'); assert.equal(row.comparable.value, 12779792901.02);
+  assert.equal(row.eastmoneyPrior, 12779792900.95);
+  assert.equal(row.deviation.absoluteCny.toFixed(2), '0.07');
+  assert.ok(row.deviation.relativePct < 1e-9);
+  assert.ok(R.markdown(r).includes('| 0.07 |'));
 });
 console.log(`${passed} shadow report tests passed (no network, no input writes).`);

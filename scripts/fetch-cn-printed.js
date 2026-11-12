@@ -112,8 +112,35 @@ async function cachedText(client, meta, cacheDir, convert = pdfToText) {
     fs.writeFileSync(pdf, bytes, { flag: 'wx' });
   }
   if (bytes.subarray(0, 5).toString() !== '%PDF-') throw new Error('cached-pdf-invalid');
-  const text = fs.existsSync(txt) ? fs.readFileSync(txt, 'utf8') : convert(pdf, txt);
-  return { text, pdfSha256: hash(bytes), textSha256: hash(text) };
+  const pdfSha256 = hash(bytes), marker = txt + '.success.json';
+  // An old .txt alone is not evidence of a completed extraction. Bind successful
+  // output to both inputs and the extraction options, including after a crash.
+  const extraction = 'pdftotext-layout-pages-1-4-v1';
+  if (fs.existsSync(txt) && fs.existsSync(marker)) {
+    try {
+      const done = readJson(marker), text = fs.readFileSync(txt, 'utf8');
+      if (text.trim() && done.extraction === extraction && done.pdfSha256 === pdfSha256 && done.textSha256 === hash(text)) {
+        return { text, pdfSha256, textSha256: done.textSha256 };
+      }
+    } catch { /* A missing, damaged or stale marker forces extraction. */ }
+  }
+  const nonce = crypto.randomUUID(), temp = txt + '.' + nonce + '.tmp', tempMarker = marker + '.' + nonce + '.tmp';
+  try {
+    // execFileSync throws on a nonzero exit or timeout. Injected extractors may
+    // additionally return an explicit process status; never trust returned text.
+    const result = await convert(pdf, temp);
+    if (result && typeof result === 'object' && result.status !== 0) throw new Error('extractor-exit');
+    const text = fs.readFileSync(temp, 'utf8');
+    if (!text.trim()) throw new Error('extracted-text-empty');
+    const textSha256 = hash(text);
+    fs.writeFileSync(tempMarker, JSON.stringify({ extraction, pdfSha256, textSha256 }), { flag: 'wx' });
+    fs.renameSync(temp, txt);
+    fs.renameSync(tempMarker, marker);
+    return { text, pdfSha256, textSha256 };
+  } finally {
+    // Only this attempt's disposable files are removed; old successful caches stay.
+    for (const file of [temp, tempMarker]) if (fs.existsSync(file)) fs.unlinkSync(file);
+  }
 }
 
 function sampleEntries(dir, year, asOf) {

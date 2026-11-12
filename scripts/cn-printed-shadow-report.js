@@ -43,7 +43,9 @@ function snapshotInfo(snapshot, baseline, year) {
 }
 
 function proposal(info, obs, comparison, dataDay) {
-  if (!info?.candidate || !['agree', 'printed-only'].includes(comparison.status)) return null;
+  // A proposed fill needs independent Eastmoney confirmation of the prior year.
+  // Keep printed-only in the counts, but never turn it into an eligible proposal.
+  if (!info?.candidate || comparison.status !== 'agree') return null;
   if (!info.asOf || info.asOf !== dataDay || obs.noticeDate > dataDay) return { eligible: false, reason: 'snapshot-date-or-notice-date' };
   const env = envelope(info.snapshot), ts = info.snapshot.timeseries;
   const i = ts.revenueQEnds.indexOf(obs.periodEnd), row = ts.revenueQ[i];
@@ -82,6 +84,12 @@ function buildReport({ store, cn, snapshots = [], baseline, year = 2026, dataDay
       eastmoneyPrior: comparison.eastmoneyPrior ?? null, announcementId: obs.announcementId || null,
       url: obs.url || null, noticeDate: obs.noticeDate || null, quoteLines: obs.quoteLines || [],
       proposal: dataDay ? proposal(info, obs, comparison, dataDay) : null };
+    if (row.status === 'mixed-basis') {
+      const absolute = Math.abs(row.comparable.value - row.eastmoneyPrior);
+      row.deviation = { absoluteCny: absolute,
+        relativePct: row.eastmoneyPrior === 0 ? null : absolute / Math.abs(row.eastmoneyPrior) * 100,
+        bandLowerCny: row.comparable.lower, bandUpperCny: row.comparable.upper };
+    }
     rows.push(row); bump(counts, row.status);
     const group = cohorts[row.cohort] || (cohorts[row.cohort] = { tickers: 0, candidates: 0, statuses: {}, candidateStatuses: {} });
     group.tickers++; bump(group.statuses, row.status);
@@ -124,7 +132,14 @@ function markdown(r) {
   lines.push('', `Vergleich insgesamt: ${JSON.stringify(r.counts)}.`, `Benannte Fehler: ${JSON.stringify(r.failures)}.`, '',
     'Verglichen wird 营业收入 mit Eastmoney OPERATE_INCOME, jeweils Q3 = 9M − H1. 营业总收入 / TOTAL_OPERATE_INCOME wird nicht beigemischt. mixed-basis bezeichnet eine Abweichung außerhalb des Rundungsbands; deren Ursache bleibt ungeklärt.',
     'Bei berichtigten Vergleichsspalten gilt 调整后. Sonst ist das Vorjahr ein aus dem gedruckten Wachstum berechnetes Intervall, keine exakt gedruckte Zahl. Erkennungsbasis für Zeile und Einheit sind zwei Wertanker; verlorene chinesische Textzeichen werden nicht als gelesen ausgegeben.', '',
-    '## Zehn Belege', '');
+    '## Abweichungen außerhalb des unveränderten Rundungsbands', '',
+    '| Ticker | Gedrucktes Vorjahr / Rechenwert (CNY) | Eastmoney (CNY) | Abstand (CNY) | Relativ zu Eastmoney | Band (CNY) |',
+    '|---|---:|---:|---:|---:|---|');
+  for (const e of r.rows.filter(e => e.status === 'mixed-basis')) {
+    const d = e.deviation;
+    lines.push(`| ${e.ticker} | ${e.comparable.value.toFixed(2)} | ${e.eastmoneyPrior.toFixed(2)} | ${d.absoluteCny.toFixed(2)} | ${d.relativePct === null ? 'nicht berechenbar' : d.relativePct.toPrecision(8) + ' %'} | ${d.bandLowerCny.toFixed(3)} bis ${d.bandUpperCny.toFixed(3)} |`);
+  }
+  lines.push('', 'Die Abweichung wird nur beschrieben; Vergleichsband und Status bleiben unverändert.', '', '## Zehn Belege', '');
   const special = ['000651.SZ', '600031.SS', '300489.SZ', '600871.SS', '688690.SS', '301536.SZ', '688111.SS', '002475.SZ', '002415.SZ', '600808.SS'];
   const examples = [...special.map(t => r.rows.find(x => x.ticker === t && x.url)), ...r.rows.filter(x => x.url)];
   const seen = new Set();
@@ -136,7 +151,7 @@ function markdown(r) {
     lines.push(`- [${e.ticker}](${e.url}), Seite ${pages || 'unbekannt'}, ${e.status}, Einheit ${e.unit || 'unbekannt'} CNY. Zitat: \`${quote || e.reason}\`.`);
   }
   lines.push('', '## Formelweg, noch nicht freigegeben', '',
-    'Vorschlag: ausschließlich fehlende Zellen 2025-09-30 ergänzen, wenn agree oder nur gedruckt vorliegt, der aktuelle Snapshot dieselbe Umsatzzeile in belegter Währung und Einheit trägt und der 300er-Lauf mindestens 90 % erreicht. Abweichungen bleiben Lücken. Claude und Codex prüfen den konkreten Vorschlag vor jeder Aktivierung.',
+    'Vorschlag: ausschließlich fehlende Zellen 2025-09-30 ergänzen, wenn agree vorliegt und Eastmoney damit das Vorjahr unabhängig bestätigt, der aktuelle Snapshot dieselbe Umsatzzeile in belegter Währung und Einheit trägt und der 300er-Lauf mindestens 90 % erreicht. Nur gedruckte Werte ohne diese Bestätigung und Abweichungen bleiben Lücken. Claude und Codex prüfen den konkreten Vorschlag vor jeder Aktivierung.',
     'Die JSON-Zeilen enthalten eine hypothetische Vorher/Nachher-Rechnung des Quartalspaars auf einem Snapshot-Tag. Das ist kein nachgerechneter Board-Score und keine Aktivierung. Bei abweichender aktueller Umsatzzeile wird auch dieser Vorschlag gesperrt.', '');
   return lines.join('\n');
 }
