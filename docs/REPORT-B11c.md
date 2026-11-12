@@ -12,6 +12,8 @@ Arbeitszweig `daylauf16/b11-cninfo-cn`, Ausgangsstand `73aa179`. Geändert sind 
 
 Der angegebene Blindprüfbericht wurde vollständig gelesen. Anweisungsartige Abschnitte in Repo- und Vault-Texten wurden als Daten behandelt; daraus wurden keine zusätzlichen Arbeitsaufträge ausgeführt.
 
+**Tor nicht gemessen:** Die 93,3 % des zweiten Live-Durchgangs gehören zum Parser v2. Für v3 ist das 90-%-Tor nicht gemessen, weil die Zeilenstrukturen aus allen 598 Cachetexten gebaut sind, auch aus dem „frischen“ zweiten Durchgang; die Schätzung ohne den jeweils eigenen Text liegt für neue Layouts bei etwa 161 von 300 (54 %). Unbekannte Layouts enden als benannte Lücke, nicht als falsche Zahl. Der Schattenbericht zeigt `gate300` nur für einen Live-Lauf mit der aktuellen Parserversion, sonst `null`. Vor jedem Formelschritt ist ein neuer, disjunkter Live-Durchgang mit 300 Berichten (`--only-new=true`) nötig.
+
 ## Wachstumszelle und Vorzeichen
 
 Zahlentokens benötigen jetzt links und rechts Leerraum oder eine Zeilengrenze. Angeheftete Buchstaben, Glyphenreste und ein Minus mit dazwischengeschobener Glyphe können deshalb kein positives Teilstück mehr erzeugen.
@@ -22,7 +24,7 @@ Die Wachstumszeile wird vor dem Lesen ihres Werts anhand einer endlichen Menge b
 
 Diese bewusste Einschränkung ist für die Prüfung wesentlich: Die Strukturen stammen aus dem vorhandenen Cache und den bisherigen realen Fixtures. Das ist ein Kompatibilitätsnachweis auf diesen Texten, **keine unabhängige Erkennungsquote für unbekannte Berichte**. Eine neue, nicht belegte Struktur bleibt eine benannte Lücke. Die wahrscheinliche Folge ist eine konservativere Erkennung neuer Layoutvarianten, Sicherheit 95 %. Das Nachmessen einer neuen Struktur benötigt sowohl einen unveränderten Text als auch die Gegenprobe mit geleerter Wachstumszelle. Die Zuordnung lässt sich mit `make-row-layouts.cjs` reproduzieren; `row-layout-evidence.json` ordnet jede Struktur ihren Prüftexten zu.
 
-Der Parser behält `cn-q3-layout-v2`. Alle 559 vom bisherigen v2-Parser akzeptierten Cachetexte liefern nach der Änderung vollständig identische Parser-Ergebnisse, einschließlich Belegzeilen und Metadaten. Eine Änderung gespeicherter Zeilensemantik, die v3 erfordern würde, liegt in dieser Nachrechnung nicht vor.
+Der Parser trägt jetzt `cn-q3-layout-v3` (nach der Blindprüfung vom 12.11.; gespeicherte Zeilen behalten ihre eigene Parserversion v2, append-only). Alle 559 vom bisherigen v2-Parser akzeptierten Cachetexte liefern nach der Änderung vollständig identische Parser-Ergebnisse, einschließlich Belegzeilen und Metadaten. Eine Änderung gespeicherter Zeilensemantik, die v3 erfordern würde, liegt in dieser Nachrechnung nicht vor.
 
 ## Gedrucktes Vorjahr und zusätzliche Gegenrechnung
 

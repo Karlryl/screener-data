@@ -95,8 +95,10 @@ test('300 gate cannot pass with offline or incomplete evidence', () => {
   const s = JSON.parse(JSON.stringify(store));
   s.sources.run.read = Array.from({ length: 300 }, (_, i) => 'ticker' + i); s.sources.run.parsed = 269;
   assert.equal(build({ store: s }).gate300, null);
-  s.sources.run.mode = 'live'; assert.equal(build({ store: s }).gate300, false);
+  s.sources.run.mode = 'live'; s.sources.run.parserVersion = P.VERSION; assert.equal(build({ store: s }).gate300, false);
   s.sources.run.parsed = 270; assert.equal(build({ store: s }).gate300, true);
+  s.sources.run.parserVersion = 'cn-q3-layout-v2'; assert.equal(build({ store: s }).gate300, null); // older parser version: unmeasured
+  s.sources.run.parserVersion = P.VERSION;
   s.sources.run.read.pop(); assert.equal(build({ store: s }).gate300, null);
 });
 test('German report distinguishes historical denominators and uncertainty', () => {

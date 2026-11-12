@@ -17,7 +17,7 @@ function violations(root, tracked = trackedFiles(root)) {
   const result = [];
   for (const rel of tracked) {
     if (/^(?:tests|external-data|docs)\//.test(rel) || /(?:^|\/)REPORT-[^/]+\.md$/.test(rel) || allowed.has(rel)) continue;
-    if (!/\.(?:js|cjs|mjs|ts|py|yml|yaml|sh|ps1)$/.test(rel)) continue;
+    if (!/\.(?:js|cjs|mjs|ts|py|yml|yaml|sh|ps1|html|json)$/.test(rel)) continue;
     const file = path.join(root, rel);
     // A sparse checkout may omit tracked content; inspect its tracked blob instead.
     const content = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') :
@@ -53,6 +53,8 @@ for (const [rel, source] of [
   ['scripts/probe.py', "data = open('external-data/exchange-quarters/cn-printed.json').read()"],
   ['scripts/probe.mjs', 'const input = `${k}-printed.json`;'],
   ['.github/workflows/daily-pull.yml', 'steps:\n  - run: node scripts/fetch-cn-printed.js'],
+  ['index.html', '<script>fetch("external-data/exchange-quarters/cn-printed.json")</script>'],
+  ['configs/x.json', '{"reader": "external-data/exchange-quarters/cn-printed.json"}'],
   ['discovery/module.ts', "const parser = require('../scripts/cn-printed-parser');"]
 ]) {
   const tree = H.sandbox(), destination = path.resolve(tree, rel);
@@ -67,4 +69,4 @@ for (const [rel, source] of [
   assert.deepEqual(sourceHashes(), sourceBefore); assert.deepEqual(H.liveHashes(), before);
 }
 assert.deepEqual(H.liveHashes(), before);
-console.log('Shadow guard green across tracked files including workflows; 6 intentional leaks detected; production store hashes unchanged.');
+console.log('Shadow guard green across tracked files including workflows; 8 intentional leaks detected; production store hashes unchanged.');

@@ -105,7 +105,8 @@ function buildReport({ store, cn, snapshots = [], baseline, year = 2026, dataDay
   }
   const runs = Object.values(store.sources).sort((a, b) => b.fetchedAt.localeCompare(a.fetchedAt));
   const latestRun = runs.find(r => r.year === year) || null;
-  const gate = latestRun?.mode === 'live' && latestRun.read.length === 300 ? latestRun.parsed / 300 >= 0.9 : null;
+  // The 90 percent gate counts only for a live pass run with the CURRENT parser version; a pass of an older parser says nothing about this one.
+  const gate = latestRun?.mode === 'live' && latestRun.read.length === 300 && latestRun.parserVersion === P.VERSION ? latestRun.parsed / 300 >= 0.9 : null;
   return { countingLevel: 'ticker', year, dataDay, snapshotDates: dates, snapshotCount: infos.length,
     baselineDate: baseline.date, baselineWarnings: baseline.warnings || [],
     historicalReferenceOnly: { julyPath: 1086, noJulyRow: 1222, note: 'Auftragszahlen aus anderem Stand, keine Nenner dieses Laufs.' },

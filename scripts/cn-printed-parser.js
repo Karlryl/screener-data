@@ -3,7 +3,8 @@
 // Pure text parser. No I/O, no vendor-growth matching, no fallback to another income line.
 // pdftotext -layout may lose the Chinese glyphs. Two independent amount anchors identify
 // the operating-revenue row and its scale; column geometry is only used AFTER both match.
-const VERSION = 'cn-q3-layout-v2';
+// v3 (B11c): growth bound to its table row by a finite set of layout structures taken from cached texts. Rows stored by v2 keep their own parserVersion (append-only).
+const VERSION = 'cn-q3-layout-v3';
 const finite = Number.isFinite;
 const amountPattern = /^-?\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?$/;
 const epsilon = n => Math.max(1e-7, Math.abs(n) * Number.EPSILON * 8);
