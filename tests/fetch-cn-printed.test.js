@@ -138,6 +138,57 @@ function mockClient(handler) { let n = 0; return { request: async (...args) => {
     await assert.rejects(F.cachedText(mockClient(() => { throw Error('must-not-fetch'); }),
       { ...meta, announcementId: '../bad' }, H.sandbox()), /pdf-metadata-invalid/);
   });
+  await test('announcement shape guard distinguishes malformed lists from an empty valid list', async () => {
+    for (const response of [null, {}, { announcements: null }, { announcements: {} }, { announcements: 'not-a-list' }]) {
+      const client = mockClient(u => u.includes('topSearch') ? [{ code: '002415', orgId: 'one' }] : response);
+      await assert.rejects(F.findAnnouncement(client, fixture.ticker, 2026, '2026-11-12'), /cninfo-announcement-shape/);
+    }
+    const client = mockClient(u => u.includes('topSearch') ? [{ code: '002415', orgId: 'one' }] : { announcements: [], hasMore: false });
+    await assert.rejects(F.findAnnouncement(client, fixture.ticker, 2026, '2026-11-12'), /q3-report-not-found/);
+  });
+  await test('two 300-report runs are disjoint and exchange alternating, even after 300 failures', async () => {
+    const env = environment([]);
+    const tickers = Array.from({ length: 400 }, (_, i) => ['00' + String(i).padStart(4, '0') + '.SZ', '6' + String(i).padStart(5, '0') + '.SS']).flat();
+    const client = mockClient(() => { throw Error('cninfo-http-403'); });
+    const a = await F.main({ ...env, tickers, cap: 300, client });
+    const b = await F.main({ ...env, tickers, cap: 300, client, now: () => new Date('2026-11-12T12:05:00Z') });
+    assert.equal(a.read.length, 300); assert.equal(b.read.length, 300);
+    assert.equal(b.read.filter(t => a.read.includes(t)).length, 0);
+    assert.equal(a.parsed, 0); assert.equal(b.parsed, 0);
+    assert.deepEqual(a.read, tickers.slice(0, 300)); assert.deepEqual(b.read, tickers.slice(300, 600));
+    const old = JSON.parse(fs.readFileSync(env.store));
+    const c = await F.main({ ...env, tickers, cap: 300, onlyNew: true, client, now: () => new Date('2026-11-12T12:10:00Z') });
+    assert.deepEqual(c.read, tickers.slice(600)); assert.equal(c.gate300, null); assert.equal(c.onlyNew, true);
+    S.assertAppendOnly(old, JSON.parse(fs.readFileSync(env.store)));
+    const saved = fs.readFileSync(env.store, 'utf8'), calls = client.calls();
+    await assert.rejects(F.main({ ...env, tickers, onlyNew: true, client }), /no-a-shares-in-input/);
+    assert.equal(fs.readFileSync(env.store, 'utf8'), saved); assert.equal(client.calls(), calls);
+  });
+  await test('only-new checks companies and all source attempts, including other years', () => {
+    const old = { companies: { '000001.SZ': { reports: {} } }, sources: {
+      a: { year: 2025, fetchedAt: '2025-11-12', read: ['600001.SS'] },
+      b: { year: 2026, fetchedAt: '2026-11-12', read: ['000002.SZ'] }
+    } };
+    assert.deepEqual(F.selectQueue(['000001.SZ', '000002.SZ', '600001.SS', '600002.SS'], old, 2026, 300, true), ['600002.SS']);
+    // Removing either history witness must make the exclusion assertion red.
+    for (const broken of [{ ...old, companies: {} }, { ...old, sources: {} }]) {
+      assert.throws(() => assert.deepEqual(F.selectQueue(['000001.SZ', '000002.SZ', '600001.SS', '600002.SS'], broken, 2026, 300, true), ['600002.SS']));
+    }
+  });
+  await test('default queue retains oldest-read-first, ties alternate by exchange', () => {
+    const old = { companies: {}, sources: {
+      a: { year: 2026, fetchedAt: '2026-11-10', read: ['000001.SZ', '600001.SS'] },
+      b: { year: 2026, fetchedAt: '2026-11-11', read: ['000001.SZ'] }
+    } };
+    assert.deepEqual(F.selectQueue(['000001.SZ', '600001.SS', '000002.SZ', '600002.SS'], old, 2026, 300),
+      ['000002.SZ', '600002.SS', '600001.SS', '000001.SZ']);
+  });
+  await test('only-new CLI is explicit and rejects misspelled truth values', async () => {
+    assert.equal(F.cliArgs(['--only-new=true']).onlyNew, true);
+    assert.equal(F.cliArgs(['--only-new=false']).onlyNew, false);
+    assert.throws(() => F.cliArgs(['--only-new=yes']), /only-new/);
+    await assert.rejects(F.main({ onlyNew: 'false' }), /only-new/);
+  });
   assert.deepEqual(H.liveHashes(), before);
   console.log(`${passed} fetch tests passed; production CN/TW/BR/shadow hashes unchanged; no network.`);
 })().catch(e => { console.error(e); process.exitCode = 1; });

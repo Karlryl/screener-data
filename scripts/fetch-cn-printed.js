@@ -138,11 +138,24 @@ function alternatingQueue(tickers) {
   return out;
 }
 
+function selectQueue(input, prev, year, cap, onlyNew = false) {
+  const last = new Map(), seen = new Set(Object.keys(prev.companies));
+  for (const source of Object.values(prev.sources)) for (const ticker of source.read || []) {
+    seen.add(ticker);
+    if (source.year === year && typeof source.fetchedAt === 'string' && source.fetchedAt > (last.get(ticker) || '')) {
+      last.set(ticker, source.fetchedAt);
+    }
+  }
+  return alternatingQueue([...new Set(input)].filter(t => !onlyNew || !seen.has(t)))
+    .sort((a, b) => (last.get(a) || '').localeCompare(last.get(b) || '')).slice(0, cap);
+}
+
 async function main(options = {}) {
   const cap = options.cap ?? 300, year = options.year ?? 2026;
   const fetchedAt = (options.now ? options.now() : new Date()).toISOString();
   const asOf = options.asOf || fetchedAt.slice(0, 10);
   if (!Number.isInteger(cap) || cap < 1 || cap > 300) throw new Error('cap-must-be-1-to-300');
+  if (options.onlyNew !== undefined && typeof options.onlyNew !== 'boolean') throw new Error('only-new-must-be-boolean');
   if (!Number.isInteger(year) || year < 2000 || year > 2100 || !dateValid(asOf) || asOf < year + '-10-01') throw new Error('invalid-year-or-as-of');
   const cnFile = options.cnStore || path.join(ROOT, 'external-data/exchange-quarters/cn.json');
   const file = path.resolve(options.store || DEFAULT_STORE);
@@ -156,10 +169,12 @@ async function main(options = {}) {
   const input = options.tickers || (samples ? samples.map(s => s.ticker) : Object.keys(cn.companies || {}).filter(t => A_SHARE.test(t)));
   if (input.some(t => !A_SHARE.test(t))) throw new Error('non-a-share-ticker');
   // Prefer tickers not attempted yet, then the oldest attempt. A second capped run progresses.
-  const last = t => Object.values(prev.sources).filter(s => s.year === year && s.read?.includes(t)).map(s => s.fetchedAt).sort().at(-1) || '';
-  const queue = alternatingQueue([...new Set(input)]).sort((a, b) => last(a).localeCompare(last(b))).slice(0, cap);
+  // onlyNew additionally excludes every historical company/source, even if the
+  // previous attempt failed or belongs to a different year. Never fill with repeats.
+  const queue = selectQueue(input, prev, year, cap, options.onlyNew);
   if (!queue.length) throw new Error('no-a-shares-in-input');
   const run = { fetchedAt, asOf, year, mode: samples ? 'offline-sample' : 'live', parserVersion: P.VERSION,
+    onlyNew: options.onlyNew === true,
     cnStoreSha256: hash(fs.readFileSync(cnFile)), cap, read: [], parsed: 0, unparsed: 0, errors: [], calls: 0 };
   for (const ticker of queue) {
     let meta = null, parsed, evidence = {};
@@ -209,11 +224,13 @@ async function main(options = {}) {
 function cliArgs(argv) {
   const opts = {};
   const names = { cap: 'cap', year: 'year', 'as-of': 'asOf', store: 'store', 'cn-store': 'cnStore',
-    'cache-dir': 'cacheDir', 'sample-dir': 'sampleDir', tickers: 'tickers' };
+    'cache-dir': 'cacheDir', 'sample-dir': 'sampleDir', tickers: 'tickers', 'only-new': 'onlyNew' };
   for (const arg of argv) {
     const m = /^--([^=]+)=(.+)$/.exec(arg);
     if (!m || !names[m[1]]) throw new Error('unknown-or-empty-flag');
-    opts[names[m[1]]] = ['cap', 'year'].includes(m[1]) ? Number(m[2]) : m[1] === 'tickers' ? m[2].split(',') : m[2];
+    if (m[1] === 'only-new' && !['true', 'false'].includes(m[2])) throw new Error('only-new-must-be-boolean');
+    opts[names[m[1]]] = ['cap', 'year'].includes(m[1]) ? Number(m[2]) : m[1] === 'tickers' ? m[2].split(',') :
+      m[1] === 'only-new' ? m[2] === 'true' : m[2];
   }
   return opts;
 }
@@ -221,4 +238,4 @@ function cliArgs(argv) {
 if (require.main === module) main(cliArgs(process.argv.slice(2))).then(r => {
   console.log(JSON.stringify(r)); process.exitCode = r.exitCode;
 }).catch(e => { console.error(e.message); process.exitCode = 1; });
-module.exports = { main, createClient, announcementMeta, findAnnouncement, cachedText, pdfToText, cliArgs, A_SHARE };
+module.exports = { main, createClient, announcementMeta, findAnnouncement, cachedText, pdfToText, cliArgs, selectQueue, A_SHARE };
