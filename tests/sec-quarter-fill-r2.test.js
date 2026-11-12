@@ -116,3 +116,43 @@ test('reserve: the off-board share goes to a firm SEC can be asked about, not to
   assert.deepEqual(asked, ['0000000011', '0000000013'], 'one board call, the reserved call to CALLME (ANOCIK has no CIK)');
   assert.match(lines.join(' '), /1 of 2 calls went to firms off the boards/);
 });
+
+// Codex R3 on PR 85: all permutations, whole-set comparison, open operands in every derivation, impossible data days.
+const perms = (a) => (a.length < 2 ? [a] : a.flatMap((x, i) => perms(a.filter((_, j) => j !== i)).map((p) => [x, ...p])));
+const d100 = f('2026-04-01', '2026-06-30', 100, '2026-08-01');
+const fillsAll = (sets, s = snapshot()) => sets.map((xs) => fillOf(s, [...hist, ...xs]));
+
+test('samePeriodThreeFigures: 100, 99.6 and 100.4 of one period (99.6 to 100.4 is 0.8 %) never fill, in all six orders', () => {
+  assert.deepEqual(fillsAll(perms([{ ...d100, accn: 'a' }, { ...d100, accn: 'b', val: 99.6 }, { ...d100, accn: 'c', val: 100.4 }])), Array(6).fill(null));
+});
+test('sameEndThreeStarts and sameEndNearThreshold: start days up to three apart are one period; every order gives the same answer', () => {
+  assert.deepEqual(fillsAll(perms([d100, { ...d100, start: '2026-04-02', val: 99.6 }, { ...d100, start: '2026-04-03', val: 100.4 }])), Array(6).fill(null));
+  const near = fillsAll(perms([d100, { ...d100, start: '2026-04-02', val: 100.501 }]));
+  assert.equal(new Set(near.map(String)).size, 1, near.join('/'));
+});
+test('openOperandPropagation: a first quarter in conflict (100 and 200) is no operand of the half year either, in both orders', () => {
+  const facts = [...hist, f('2025-07-01', '2025-09-30', 100, '2025-11-01'), f('2026-01-02', '2026-03-31', 200, '2026-05-01'), f('2026-01-01', '2026-06-30', 250, '2026-08-01')];
+  const s = snapshot(['2026-03-31', '2025-12-31', '2025-09-30'], [100, 100, 100]);
+  for (const xs of both(facts)) {
+    assert.equal(P.pitSingleQuarters(xs).find((q) => q.end === '2026-06-30')?.derivation ?? 'restatement-conflict', 'restatement-conflict');
+    assert.equal(fillOf(s, xs), null);
+  }
+});
+test('normal cases still fill: the same figure again in the 10-K, and the same figure with a start one day later', () => {
+  assert.equal(fillOf(snapshot(), [...hist, d100, { ...d100, filed: '2027-02-10', form: '10-K' }]), 100);
+  assert.equal(fillOf(snapshot(), [...hist, d100, { ...d100, start: '2026-04-02', filed: '2026-11-05', form: '10-K' }]), 100);
+});
+test('invalidDataDays: an impossible data day (2026-99-99, 2026-02-30) holds like a missing one', () => {
+  for (const day of ['2026-99-99', '2026-02-30']) {
+    const s = snapshot(); s.meta.asOf = day; s.meta.fetchedAt = day;
+    assert.equal(run(s, store(P.pitSingleQuarters([...hist, d100]))).fill ?? null, null, day);
+  }
+});
+test('a different CIK: no link to a listing that names another CIK', () => {
+  const st = store(P.pitSingleQuarters([...hist, d100]));
+  const other = snapshot(['2026-03-31', '2025-12-31', '2025-06-30'], [100, 100, 100]);
+  other.meta = { ...other.meta, ticker: 'UNRELATED.TO', cik: '0000000999' };
+  assert.equal(X.evaluateUs(other, st), null);
+  const same = snapshot(); same.meta.cik = '1';
+  assert.equal(X.evaluateUs(same, st)?.category, 'sec-fill', 'the same CIK, written without leading zeros, still fills');
+});
