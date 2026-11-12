@@ -73,6 +73,8 @@ const WRONG = {
   '003535.KS': { px: 4.318488288, vendorShares: 318070388, mcap: 1373583284.875775, issuer: 223091000 },
   // Check of 01.11.2026, snapshots of run 41184535364: Galaxy Digital with a count no report carries. The A and H rows of that check,
   // InnoCare and the Shandong Gold A line of #111 (600547.SS) left this table on 07.11.2026 for the class sum (configs/mcap-class-sum.json, tests/mcap-class-sum.test.js).
+  // PR 89: the home line of Aroundtown, shown once the fixed home listing holds (snapshot of run 41184535364).
+  "AT1.DE": { px: 1.6179097851000002, vendorShares: 1035531042, mcap: 1675395805.785152, issuer: 1129930393 },
   "GLXY": { px: 16, vendorShares: 589297344, mcap: 9428757504, issuer: 388479988 },
   "CIFR": { px: 7.29, vendorShares: 415030722, mcap: 3025573888, issuer: 456365113 },
 };

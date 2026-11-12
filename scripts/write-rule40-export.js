@@ -65,7 +65,8 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkOverviewPeriods, checkValueFlags, rankGrundShadowFor, ergaenzeMarketCapClassesShadow, ladeMcapClassesRegistry } = require('./write-findash-export.js'); // P89: guarded shadow lookup; P88: class-wise market value shadow
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
-const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
+const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect, routeEntry, dedupCoverage } = require('../src/scoring/score.js');
+const scoringFormulas = require('../src/scoring/formulas/index.js');
 const { newestQtrSuspect, annualCurrencyLeak } = require('../src/scoring/lamps.js');
 const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
@@ -76,6 +77,7 @@ const { readValueFlags } = require('../lib/value-open-items.js');
 const { fcfMarginStmtFY, ladeBehoerdenJahre, behoerdenSchutz, SCHATTEN_GRUND } = require('../lib/fcf-stmt-shadow.js');
 const { annualPairsShadowForSnapshot } = require('./write-findash-export.js');
 const { loadDupIssuerShadowTable, secondaryIndex, applyDupIssuerShadow } = require('../lib/dup-issuer-shadow-table.js');
+const { shownGrowthMonth } = require('../lib/home-listing.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -648,11 +650,12 @@ function sammleKandidaten(opts = {}) {
     catch (error) { provenanceError = error; }
     kandidaten.push({
       ticker,
-      // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen) und
-      // marketCap. Die vollen Snapshots von 7.500 Namen im Speicher zu halten waere teuer
-      // und unnoetig — issuerKeyLoose/isUS/isUsPrimaryListing/fxSuspect lesen meta,
-      // mcapOf liest s.marketCap.
-      snapshot: { meta, marketCap: snapshot.marketCap },
+      // Only what the issuer dedup needs: meta, market cap and the shown month (P290). Holding the full snapshots of
+      // 7,500 names would be costly and pointless: the comparator reads meta and marketCap and takes the month as given.
+      snapshot: { meta, marketCap: snapshot.marketCap, shownGrowthMonth: shownGrowthMonth(snapshot) },
+      // Codex R1 on #89 (P1): the coverage and rank capability the scoring computes for this leg (score.js dedupCoverage on the
+      // full prepared snapshot), cached before the snapshot is narrowed, so the rank and axes keys decide here as on the boards.
+      _dedupCoverage: dedupCoverage(routeEntry(snapshot, scoringFormulas)) || undefined,
       row: auchAufBrett ? auchAufBrett.row : null,
       branch: auchAufBrett ? auchAufBrett.branch : r.formulaId,
       // Track ohne Brett-Zeile aus dem Vorzeichen der (hier per G0-G2 belegten) Marge —
@@ -687,8 +690,7 @@ function sammleKandidaten(opts = {}) {
   // dieser Weg ist es nicht. Ohne das stand Palantir am Stand 2026-08-29 sechsmal im Brett
   // (PLTR, PLTR.SW, PLTR.VI, PLTR.WA, PTX.DE, 1PLTR.MI) — und zwar mit ZWEI verschiedenen
   // r40-Werten (127,9 und 118,3), weil die Beine unterschiedlich gute Daten tragen.
-  // Gewinner-Regel wie im Scoring: US-Primaerlisting, dann US-Domizil, dann FX-Vertrauen,
-  // dann groesste marketCap, dann Ticker.
+  // The winner rule of scoring: US primary, US domicile, FX trust, newest shown period, evidenced home listing, market cap (P290).
   const verloren = new Set();
   for (const gruppe of issuerDedupGroups(kandidaten)) {
     if (gruppe.length < 2) continue;

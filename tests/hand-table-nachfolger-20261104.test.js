@@ -14,7 +14,7 @@
 // - expiry: on the data day 01.01.2027 the rows with reviewBy 31.12.2026 run out and exactly EXPIRY_LOST have no listing left;
 // - the deadline report of Tag 1521 (lib/handtabellen-fristen.js) names each of them as falling off the board 30 days ahead.
 // Break-once on test data only: `node tests/hand-table-nachfolger-20261104.test.js --prove-red` drops the hold of 1DEZ.MI in
-// memory; Deutz then shows the Milan line and the check must exit 1. No wall clock; live files are hashed before and after.
+// memory; Aroundtown then shows the stale Zurich line and the check must exit 1 (PR 89; before it, Deutz and 1DEZ.MI). No wall clock; live files are hashed before and after.
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const guard = require('../lib/market-cap-guard.js');
@@ -82,9 +82,11 @@ function shown(f, day) {
 const deviations = () => Object.entries(firms).map(([name, f]) => { const s = shown(f); return { name, s, dev: s ? s.usd / f.checkedUsd - 1 : null }; });
 
 if (process.argv.includes('--prove-red')) {
-  delete guard.holds['1DEZ.MI'];
-  const d = deviations().find(x => x.name === 'DEUTZ Aktiengesellschaft');
-  assert.ok(Math.abs(d.dev) <= TOLERANCE, `DEUTZ shows ${d.s.ticker} ${(d.dev * 100).toFixed(1)} % off`);
+  // PR 89: Deutz keeps its home line DEZ.DE without the Milan hold, so the probe drops the hold of AT1.SW (Aroundtown has no
+  // home exchange in the country table; the stale Zurich line then wins on market cap, 64 % high).
+  delete guard.holds['AT1.SW'];
+  const d = deviations().find(x => x.name === 'Aroundtown SA');
+  assert.ok(Math.abs(d.dev) <= TOLERANCE, `Aroundtown shows ${d.s.ticker} ${(d.dev * 100).toFixed(1)} % off`);
   console.log('hand-table-nachfolger-20261104: --prove-red did NOT fire');
   process.exit(0);
 }

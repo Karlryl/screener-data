@@ -1314,8 +1314,9 @@ function namensherkunftBucket(meta) {
 /**
  * Reiner Kern (kein I/O): Zeilen -> die Tages-Zaehlung. `zeilen` traegt je Eintrag den
  * vorberechneten Bucket und einen SCHLANKEN Snapshot ({meta, marketCap}) — genau die Felder,
- * die `issuerDedupGroups`/`issuerDedupComparator` lesen (issuerKeyLoose/isUsPrimaryListing/
- * isUS/fxSuspect/mcapOf greifen ausschliesslich auf `meta` und `marketCap.value` zu).
+ * die `issuerDedupGroups`/`issuerDedupComparator` hier lesen (issuerKeyLoose/isUsPrimaryListing/
+ * isUS/fxSuspect/mcapOf greifen auf `meta` und `marketCap.value` zu). P290 also reads the reported periods, which a slim
+ * snapshot lacks: this count sees them as equally empty and only sees the home listing and the market cap.
  */
 function namensherkunftZaehlen(zeilen) {
   const verteilung = Object.fromEntries(NAMENSHERKUNFT_BUCKETS.map((b) => [b, 0]));
@@ -1326,7 +1327,7 @@ function namensherkunftZaehlen(zeilen) {
   for (const g of gruppen) {
     if (g.length < 2) continue;
     mehrbeinGruppen++;
-    // Genau die Produktions-Sortierung. Kopie statt in-place, damit der Aufrufer-Zustand
+    // Die Produktions-Sortierung; ohne gezeigten Monat faellt ihr Zeitraum-Schluessel weg (siehe Kopfkommentar). Kopie statt in-place, damit der Aufrufer-Zustand
     // unberuehrt bleibt — diese Messung darf nichts bewegen, auch keine Array-Reihenfolge.
     const sieger = [...g].sort(issuerDedupComparator)[0];
     const q = sieger && sieger.snapshot && sieger.snapshot.meta ? sieger.snapshot.meta.nameSource : undefined;

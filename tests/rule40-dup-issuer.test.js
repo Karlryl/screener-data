@@ -78,6 +78,17 @@ test('real written board marks the planted pair and preserves all other bytes', 
   assertRejected(W.check(bypassed));
 });
 
+// P290: this writer holds slim snapshots, so the comparator needs the month from the full statements. Without it the
+// home listing wins blind: on 31.10.2026 ASML.AS beat 1ASML.MI with an older quarter and the firm left this board.
+test('the fallback to the newest shown period reaches this board, and the home listing returns once it caught up', () => {
+  const NEWER = ['2026-09-30', '2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30'];
+  const leg = (ticker, ends, exchangeName, marketCap) => ({ row: boardZeile({ ticker, revGrowthYoYPct: 40, name: 'Foo Holding N.V.', country: 'Netherlands' }),
+    snap: snapshot({ ticker, name: 'Foo Holding N.V.', country: 'Netherlands', region: 'EU', exchangeName, marketCap, revenueQEnds: ends }) });
+  const shown = (legs) => written(baueExport(legs)).rows.map((row) => row.ticker).filter((ticker) => /FOO/.test(ticker));
+  assert.deepEqual(shown([leg('FOOX.AS', undefined, 'Amsterdam', 5e9), leg('1FOOX.MI', NEWER, 'Milan', 6e9)]), ['1FOOX.MI']);
+  assert.deepEqual(shown([leg('FOOX.AS', NEWER, 'Amsterdam', 5e9), leg('1FOOX.MI', NEWER, 'Milan', 6e9)]), ['FOOX.AS']);
+});
+
 test('off-board secondary is marked even without its kept ticker on the board', () => {
   const fixture = baueExport(unrelated());
   const snap = setzeWachstum(snapshot({ ticker: secondary, name: 'Separate fixture issuer' }), 30);
