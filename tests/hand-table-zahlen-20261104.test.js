@@ -27,7 +27,7 @@ const value = r => (r && typeof r === 'object' ? r.value ?? null : r ?? null);
 const pre = structuredClone(H.table);
 const ownTickers = new Set(pre.cases.filter(c => c.revision === REV).map(c => c.ticker));
 // The Shriram fiscal year 2024 of 07.11.2026 (tests/hand-table-shriram-20261107.test.js) extends these rows and leaves with them.
-pre.cases = pre.cases.filter(c => c.revision !== REV && c.revision !== '2026-11-07-sdhand5');
+pre.cases = pre.cases.filter(c => c.revision !== REV && c.revision !== '2026-11-07-sdhand5' && c.revision !== '2026-11-07-sdhand4b');
 pre.coverage = pre.coverage.flatMap(v => {
   if (!ownTickers.has(v.ticker)) return [v];
   const left = pre.cases.filter(c => c.ticker === v.ticker && c.field === v.field && c.replacementValue !== null).map(c => c.period).sort();
@@ -36,7 +36,9 @@ pre.coverage = pre.coverage.flatMap(v => {
 // These rows also gave the TVS Holdings rows of 02.11.2026 their NSE listing.
 for (const x of [...pre.cases, ...pre.coverage]) if (x.ticker === 'TVSHLTD.BO' && x.listingAliases) delete x.listingAliases;
 H.validateTable(pre);
-const active = process.argv.includes('--prove-red') ? pre : H.table;
+// The follow-up of 07.11.2026 (2026-11-07-sdhand4b) moves 360 ONE to its September pair; this test checks its own June rows.
+const own2 = structuredClone(H.table); own2.cases = own2.cases.filter(c => c.revision !== '2026-11-07-sdhand4b');
+const active = process.argv.includes('--prove-red') ? pre : own2;
 const apply = s => H.applyFinancialCases(s, { table: active });
 const leg = (t, alias) => { const s = structuredClone(F[t]); if (alias) s.meta.ticker = alias; return s; };
 

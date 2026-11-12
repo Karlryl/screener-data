@@ -28,13 +28,16 @@ const value = r => (r && typeof r === 'object' ? r.value ?? null : r ?? null);
 const ONE = '360one.ns-2026-06-30-revenueQ-20261104';
 // The table as it stood before these rows: their cases and coverage out, 360 ONE back on the July report.
 const pre = structuredClone(H.table);
-pre.cases = pre.cases.filter(c => c.revision !== REV);
+pre.cases = pre.cases.filter(c => c.revision !== REV && c.revision !== '2026-11-07-sdhand4b');
 pre.coverage = pre.coverage.filter(v => !['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', '601211.SS', 'BURE.ST'].includes(v.ticker));
 const one0 = pre.cases.find(c => c.caseId === ONE);
 one0.replacementValue = 12260900000;
 one0.sources = one0.sources.filter(s => s.value === 12260900000);
 H.validateTable(pre);
-const active = RED ? pre : H.table;
+// The follow-up rows of 07.11.2026 (revision 2026-11-07-sdhand4b, tests/hand-table-sdhand4b-20261107.test.js) move Guotai, Chennai
+// and 360 ONE to their September 2026 pairs; this test keeps checking the rows of #112 on the table without them.
+const own4 = structuredClone(H.table); own4.cases = own4.cases.filter(c => c.revision !== '2026-11-07-sdhand4b');
+const active = RED ? pre : own4;
 const apply = s => H.applyFinancialCases(s, { table: active });
 const pkt = (t, as) => { const s = structuredClone(F[t]); if (as) s.meta.ticker = as; return s; };
 const shown = (t, table = active, as) => g31Shadow(H.applyFinancialCases(pkt(t, as), { table }).snapshot).v1;
@@ -176,8 +179,8 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
   assert.equal(own.length, 28);
   const at = H.table.cases.findIndex(c => c.revision === REV);
   assert.deepEqual(H.table.cases.slice(at, at + own.length), own, 'one block, appended after every earlier case');
-  // Only the 18 Kioxia rows, the three UWMC rows and the four Hammerson rows (sd-hand-7) of the same day follow.
-  assert.deepEqual(H.table.cases.slice(at + own.length).map(c => c.revision), [...Array(18).fill('2026-11-07-sdhand5b'), ...Array(3).fill('2026-11-07-sdhand5c'), ...Array(4).fill('2026-11-07-sdhand7'), ...Array(4).fill('2026-11-07-sdhand5d'), ...Array(3).fill('2026-11-07-sdhand7b')]);
+  // Only the 18 Kioxia rows, the three UWMC rows and the four Hammerson rows (sd-hand-7) of the same day follow; then the eleven follow-up rows of lane sd-hand-4 (tests/hand-table-sdhand4b-20261107.test.js).
+  assert.deepEqual(H.table.cases.slice(at + own.length).map(c => c.revision), [...Array(18).fill('2026-11-07-sdhand5b'), ...Array(3).fill('2026-11-07-sdhand5c'), ...Array(4).fill('2026-11-07-sdhand7'), ...Array(4).fill('2026-11-07-sdhand5d'), ...Array(3).fill('2026-11-07-sdhand7b'), ...Array(11).fill('2026-11-07-sdhand4b')]);
   assert.deepEqual(Object.fromEntries(['CHENNPETRO.NS', '6023.TWO', 'SDE.TO', 'BURE.ST', '601211.SS'].map(t => [t, own.filter(c => c.ticker === t).length])),
     { 'CHENNPETRO.NS': 5, '6023.TWO': 6, 'SDE.TO': 4, 'BURE.ST': 6, '601211.SS': 7 });
   for (const c of [...own, H.table.cases.find(c => c.caseId === ONE)]) {
@@ -198,7 +201,8 @@ test('rows: count, one block, exact sources, a reason naming its period, plain G
 test('expectations: growth of each changed firm, bound to the issuer name, valid from the run of 10.11.2026', () => {
   const own = erwartungen.filter(e => e.id.startsWith('sdhand4-'));
   const names = Object.fromEntries(Object.entries(F).map(([t, s]) => [t, s.meta.name]));
-  for (const [t, , , before, , , , after] of ROWS) {
+  // Guotai, Chennai and 360 ONE carry the September expectations of the follow-up (sdhand4b-*) instead.
+  for (const [t, , , before, , , , after] of ROWS.filter(r => !['601211.SS', 'CHENNPETRO.NS', '360ONE.NS'].includes(r[0]))) {
     const e = own.find(x => x.name === names[t] && x.feld === 'revGrowthYoYPct');
     assert.ok(e, t);
     assert.equal(e.gueltigAb, '2026-11-10', t); // 07.11.2026: the next daily run is Tue 10.11. (Tue to Sat), not Sun 08.11.
