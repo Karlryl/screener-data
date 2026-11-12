@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * scripts/fetch-hk-interims.js — append-only store of Hong Kong half-year revenue (G31, lane sd-halbjahr 12.11.2026).
+ * scripts/fetch-hk-interims.js — append-only store of Hong Kong half-year and fiscal-year revenue (G31, lane sd-halbjahr
+ * 12.11.2026).
  *
  * Yahoo delivers no half-year (6M) figures for Hong Kong reporters: the quarterly series is empty or holds stray old
  * quarters (measured 12.11.2026: 77 of 98 stale HK board rows have none), so the boards showed fiscal 2025 although the
@@ -9,14 +10,15 @@
  * own year-ago value (owner decision 19.08.2026 "voll nutzen wie jede andere Quelle", precedent scripts/build-cnannual.js).
  *
  *   Source  https://datacenter.eastmoney.com/securities/api/data/v1/get, reportName RPT_HKF10_FN_MAININDICATOR,
- *           whole market, DATE_TYPE_CODE 002 (interim, six months), REPORT_DATE inside the last 400 days.
- *   Store   external-data/exchange-quarters/hk.json, companies[<Yahoo ticker>].halfYear[<period end>] = observations.
- *           Only ratios are ever read from it (lib/hk-interim.js): Eastmoney's CURRENCY label is unreliable
- *           (Pop Mart reports RMB, labelled HKD), so no amount from here reaches a board.
+ *           whole market, DATE_TYPE_CODE 002 (interim, six months, last 400 days) and 001 (fiscal year, last 500 days).
+ *   Store   external-data/exchange-quarters/hk.json, companies[<Yahoo ticker>].halfYear|fiscalYear[<period end>] =
+ *           observations. lib/hk-interim.js reads it; the fiscal-year rows let it compare Eastmoney with Yahoo on the
+ *           same quantity (unit and revenue line). Eastmoney's CURRENCY label is unreliable and is not stored.
  *
  * Failure behaviour: a non-success answer, invalid JSON, a page count that does not add up to `count`, a duplicate
- * SECUCODE/REPORT_DATE, a row of another DATE_TYPE_CODE, fewer than MIN_ROWS rows or the page cap -> abort, hk.json is
- * not written, exit 1.
+ * SECUCODE/REPORT_DATE, a row of another DATE_TYPE_CODE, fewer than MIN_ROWS rows, the page cap, or a query in which
+ * fewer than MIN_USABLE_SHARE of the watchlist rows carry usable revenue (an emptied or renamed number column) ->
+ * abort, hk.json is not written, exit 1. Watchlist rows without usable revenue are listed in the source entry.
  * Before every write the new store is checked against the old one (assertAppendOnly); writes are atomic.
  *
  * Usage: node scripts/fetch-hk-interims.js [--dry-run] [--today=YYYY-MM-DD]
@@ -33,16 +35,20 @@ const S = require(path.join(ROOT, 'lib/exchange-quarter-store.js'));
 const USER_AGENT = 'screener-data exchange-quarters fetch';
 const PAUSE_MS = 1500;
 const PAGE_SIZE = 500;
-const PAGE_CAP = 30; // measured 12.11.2026: 2,319 interim rows inside 400 days -> 5 pages of 500
+const PAGE_CAP = 30; // measured 12.11.2026: 2,319 interim rows (400 days) and 2,765 fiscal-year rows (since 01.07.2025)
 const MIN_ROWS = 500;
-const WINDOW_DAYS = 400;
+const MIN_USABLE_SHARE = 0.5; // measured 12.11.2026: 665 of 665 matched interim rows usable
+const TYPES = Object.freeze({
+  '002': { group: 'halfYear', windowDays: 400, label: 'interim' },
+  '001': { group: 'fiscalYear', windowDays: 500, label: 'fiscal-year' },
+});
 const ENDPOINT = 'https://datacenter.eastmoney.com/securities/api/data/v1/get';
 const COLUMNS = ['SECUCODE', 'REPORT_DATE', 'DATE_TYPE_CODE', 'START_DATE', 'REPORT_DATE_SQ', 'OPERATE_INCOME',
   'OPERATE_INCOME_SQ', 'OPERATE_INCOME_YOY', 'ORG_TYPE', 'FISCAL_YEAR'];
-const ABOUT = 'Hong Kong interim (six-month) revenue from Eastmoney RPT_HKF10_FN_MAININDICATOR (OPERATE_INCOME, its '
-  + 'year-ago value OPERATE_INCOME_SQ and Eastmoney\'s own growth OPERATE_INCOME_YOY), filtered to watchlist.json. '
-  + 'Amounts in the reporting currency as Eastmoney prints them; the CURRENCY label is not stored because it is '
-  + 'unreliable, readers use ratios only. Append-only: a changed number is a new observation, nothing is removed. '
+const ABOUT = 'Hong Kong interim (six-month) and fiscal-year revenue from Eastmoney RPT_HKF10_FN_MAININDICATOR '
+  + '(OPERATE_INCOME; for interims also the year-ago value OPERATE_INCOME_SQ and Eastmoney\'s own growth '
+  + 'OPERATE_INCOME_YOY), filtered to watchlist.json. Amounts as Eastmoney prints them; the CURRENCY label is not '
+  + 'stored because it is unreliable. Append-only: a changed number is a new observation, nothing is removed. '
   + 'Written by scripts/fetch-hk-interims.js, read by lib/hk-interim.js.';
 
 const tag = (s) => String(s || '').slice(0, 10);
@@ -57,13 +63,13 @@ function loadStore(file) {
   return s;
 }
 
-/** All interim rows of the window, every check of the header applied. @returns {Promise<object[]>} */
-async function fetchInterims(ctx, since) {
+/** All rows of one report type inside its window, every check of the header applied. @returns {Promise<object[]>} */
+async function fetchRows(ctx, type, since) {
   const rows = [];
   let pages = 1, count = null;
   for (let p = 1; p <= pages; p++) {
     if (p > PAGE_CAP) throw new Error('HK: page cap ' + PAGE_CAP + ' reached');
-    const filter = `(DATE_TYPE_CODE="002")(REPORT_DATE>='${since}')`;
+    const filter = `(DATE_TYPE_CODE="${type}")(REPORT_DATE>='${since}')`;
     const url = `${ENDPOINT}?reportName=RPT_HKF10_FN_MAININDICATOR&columns=${COLUMNS.join(',')}`
       + `&filter=${encodeURIComponent(filter)}&pageNumber=${p}&pageSize=${PAGE_SIZE}&sortTypes=1,1&sortColumns=SECUCODE,REPORT_DATE&source=F10&client=PC`;
     const j = await ctx.fetchJson(url, { pauseMs: PAUSE_MS, headers: { 'User-Agent': USER_AGENT } });
@@ -73,32 +79,35 @@ async function fetchInterims(ctx, since) {
     rows.push(...j.result.data);
   }
   if (rows.length !== count) throw new Error(`HK: ${rows.length} rows read, header says ${count}`);
-  // A successful but empty or thin answer would freeze the store without a word (measured 2,319 rows on 12.11.2026).
-  if (rows.length < (ctx.minRows ?? MIN_ROWS)) throw new Error(`HK: only ${rows.length} interim rows, expected at least ${ctx.minRows ?? MIN_ROWS}`);
+  // A successful but empty or thin answer would freeze the store without a word.
+  const min = ctx.minRows ?? MIN_ROWS;
+  if (rows.length < min) throw new Error(`HK: only ${rows.length} ${TYPES[type].label} rows, expected at least ${min}`);
   const seen = new Set();
   for (const r of rows) {
     const key = r.SECUCODE + '|' + tag(r.REPORT_DATE);
-    if (r.DATE_TYPE_CODE !== '002') throw new Error('HK: row of type ' + r.DATE_TYPE_CODE + ' in an interim query');
+    if (r.DATE_TYPE_CODE !== type) throw new Error('HK: row of type ' + r.DATE_TYPE_CODE + ' in a ' + type + ' query');
     if (seen.has(key)) throw new Error('HK: duplicate row ' + key);
     seen.add(key);
   }
   return rows;
 }
 
-/** One stored observation from one Eastmoney row, or null when the row carries no usable pair. */
-function observation(r) {
+/** One stored observation from one Eastmoney row; usable says whether its revenue can be read at all. */
+function observation(r, type = '002') {
   const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
-  const o = { start: tag(r.START_DATE) || null, priorEnd: tag(r.REPORT_DATE_SQ) || null, revenue: num(r.OPERATE_INCOME),
-    priorRevenue: num(r.OPERATE_INCOME_SQ), yoyPct: num(r.OPERATE_INCOME_YOY), orgType: r.ORG_TYPE || null, fiscalYear: r.FISCAL_YEAR || null };
-  return o.revenue === null && o.priorRevenue === null ? null : o;
+  const o = type === '002'
+    ? { start: tag(r.START_DATE) || null, priorEnd: tag(r.REPORT_DATE_SQ) || null, revenue: num(r.OPERATE_INCOME),
+      priorRevenue: num(r.OPERATE_INCOME_SQ), yoyPct: num(r.OPERATE_INCOME_YOY), orgType: r.ORG_TYPE || null, fiscalYear: r.FISCAL_YEAR || null }
+    : { start: tag(r.START_DATE) || null, revenue: num(r.OPERATE_INCOME), orgType: r.ORG_TYPE || null, fiscalYear: r.FISCAL_YEAR || null };
+  const usable = o.revenue > 0 && (type !== '002' || o.priorRevenue > 0);
+  return { o: o.revenue === null && (o.priorRevenue ?? null) === null ? null : o, usable };
 }
 
-/** Fetch, merge append-only, write. @returns {Promise<object>} summary */
+/** Fetch both report types, merge append-only, write. @returns {Promise<object>} summary */
 async function run(opts = {}) {
   const ctx = { fetchJson: opts.fetchJson || fetchJson, minRows: opts.minRows };
   const now = opts.now || new Date().toISOString();
   const today = opts.today || now.slice(0, 10);
-  const since = new Date(Date.parse(today + 'T00:00:00Z') - WINDOW_DAYS * 864e5).toISOString().slice(0, 10);
   const dir = opts.dir || process.env.EXCHANGE_QUARTERS_DIR || path.join(ROOT, 'external-data/exchange-quarters');
   const file = path.join(dir, 'hk.json');
   const tickers = new Set((opts.tickers || JSON.parse(fs.readFileSync(path.join(ROOT, 'watchlist.json'), 'utf8')).stocks
@@ -106,21 +115,35 @@ async function run(opts = {}) {
   const prev = loadStore(file);
   const next = prev ? JSON.parse(JSON.stringify(prev))
     : { schemaVersion: 1, market: 'HK', about: ABOUT, sources: {}, companies: {} };
-  const rows = await fetchInterims(ctx, since);
   const src = 'hk-' + stamp(now);
   const conf = { src, fetchedAt: now, updateDate: null };
-  const counts = { rows: rows.length, kept: 0, new: 0, changed: 0, confirmed: 0 };
-  for (const r of rows) {
-    const tk = yahooTicker(r.SECUCODE);
-    if (!tk || !tickers.has(tk)) continue;
-    const o = observation(r);
-    if (!o) continue;
-    counts.kept++;
-    const c = next.companies[tk] || (next.companies[tk] = { secucode: r.SECUCODE, halfYear: {} });
-    const list = c.halfYear[tag(r.REPORT_DATE)] || (c.halfYear[tag(r.REPORT_DATE)] = []);
-    counts[S.mergeObservation(list, o, conf)]++;
+  const counts = { new: 0, changed: 0, confirmed: 0 };
+  const entry = { fetchedAt: now, endpoint: ENDPOINT + ' (RPT_HKF10_FN_MAININDICATOR)', types: {} };
+  for (const [type, spec] of Object.entries(TYPES)) {
+    const since = new Date(Date.parse(today + 'T00:00:00Z') - spec.windowDays * 864e5).toISOString().slice(0, 10);
+    const rows = await fetchRows(ctx, type, since);
+    let matched = 0, usable = 0;
+    const unusable = [];
+    for (const r of rows) {
+      const tk = yahooTicker(r.SECUCODE);
+      if (!tk || !tickers.has(tk)) continue;
+      matched++;
+      const { o, usable: ok } = observation(r, type);
+      if (ok) usable++; else unusable.push(tk + ' ' + tag(r.REPORT_DATE));
+      if (!o) continue;
+      const c = next.companies[tk] || (next.companies[tk] = { secucode: r.SECUCODE, halfYear: {} });
+      const group = c[spec.group] || (c[spec.group] = {});
+      const list = group[tag(r.REPORT_DATE)] || (group[tag(r.REPORT_DATE)] = []);
+      counts[S.mergeObservation(list, o, conf)]++;
+    }
+    // An emptied or renamed number column passes every header check; the usable share of the watchlist rows does not.
+    if (!usable || usable < MIN_USABLE_SHARE * matched) {
+      throw new Error(`HK: only ${usable} of ${matched} watchlist ${spec.label} rows carry usable revenue (DATE_TYPE_CODE ${type})`);
+    }
+    entry.types[type] = { since, rows: rows.length, matched, usable, unusable: unusable.slice(0, 50) };
+    counts[spec.group] = { rows: rows.length, matched, usable };
   }
-  next.sources[src] = { fetchedAt: now, endpoint: ENDPOINT + ' (RPT_HKF10_FN_MAININDICATOR, DATE_TYPE_CODE 002)', since, rows: rows.length, kept: counts.kept };
+  next.sources[src] = entry;
   S.assertAppendOnly(prev, next);
   if (!opts.dryRun) {
     fs.mkdirSync(dir, { recursive: true });
@@ -136,4 +159,4 @@ if (require.main === module) {
     .catch((e) => { console.error('::error::HK interims aborted, hk.json not written: ' + e.message); process.exit(1); });
 }
 
-module.exports = { run, observation, yahooTicker, fetchInterims };
+module.exports = { run, observation, yahooTicker, fetchRows };
