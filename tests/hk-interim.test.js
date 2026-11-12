@@ -48,13 +48,14 @@ test('Pop Mart: the interim to 30.06.2026 replaces fiscal 2025 (+184.7 % -> +23.
   assert.deepEqual(G.withG31Variant('legacy', () => revGrowthLeg(s).basis), 'yearNewerRecord');
 })));
 
-test('Pop Mart: the export provenance cites both Eastmoney operands with periods, reading time and rate', () => withDay(null, () => withStore(F.store, () => {
+test('Pop Mart: the export provenance cites both operands from the HKEX filing (link, page, line) with periods and rate', () => withDay(null, () => withStore(F.store, () => {
   const c = captureSnapshot(snap('9992.HK'));
   assert.equal(c.inputs.length, 2);
   const [cur, prior] = c.inputs;
-  assert.equal(cur.provider, 'Eastmoney (RPT_HKF10_FN_MAININDICATOR)');
-  assert.deepEqual([cur.periodStart, cur.periodEnd, cur.nativeValue, cur.nativeCurrency, cur.retrievedAt],
-    ['2026-01-01', '2026-06-30', 17172921000, 'CNY', popHalf(F.store).confirmedBy[0].fetchedAt]);
+  const rec = H.filedTable().get('9992.HK|2026-06-30');
+  assert.deepEqual([cur.sourceType, cur.provider, cur.documentUrl, cur.page, cur.quote], ['filing', 'HKEX (company interim filing)', rec.readings[0].url, rec.readings[0].page, rec.readings[0].quote]);
+  assert.deepEqual([cur.periodStart, cur.periodEnd, cur.nativeValue, cur.nativeCurrency],
+    ['2026-01-01', '2026-06-30', 17172921000, 'CNY']);
   assert.deepEqual([prior.periodEnd, prior.nativeValue], ['2025-06-30', 13876276000]);
   close(cur.normalizedValue / prior.normalizedValue, POP_H1 / 100 + 1, 1e-12);
 })));
@@ -187,9 +188,19 @@ test('banks, brokers and insurers (orgType other than general) keep their fiscal
   assert.equal(H.hkInterimPair(snap('9992.HK'), st), null);
 }));
 
+const withFiled = (extra, fn) => {
+  const prev = H.filedTable, map = new Map(prev());
+  for (const [k, v] of Object.entries(extra)) if (v === null) map.delete(k); else map.set(k, v);
+  H.filedTable = () => map;
+  try { return fn(); } finally { H.filedTable = prev; }
+};
+const popFiled = () => structuredClone(H.filedTable().get('9992.HK|2026-06-30'));
+
 test('a listing named in the financial hand table keeps its reviewed figures (1088.HK); the same cells elsewhere pass', () => withDay(null, () => {
-  assert.equal(H.hkInterimPair(asTicker('1088.HK'), renamed(F.store, '1088.HK')), null);
-  assert.equal(H.hkInterimPair(asTicker('9999.HK'), renamed(F.store, '9999.HK'))?.end, '2026-06-30');
+  withFiled({ '1088.HK|2026-06-30': { ...popFiled(), ticker: '1088.HK' }, '9999.HK|2026-06-30': { ...popFiled(), ticker: '9999.HK' } }, () => {
+    assert.equal(H.hkInterimPair(asTicker('1088.HK'), renamed(F.store, '1088.HK')), null);
+    assert.equal(H.hkInterimPair(asTicker('9999.HK'), renamed(F.store, '9999.HK'))?.end, '2026-06-30');
+  });
 }));
 
 test('the committed store is read only inside a run with a data day', () => {
@@ -207,10 +218,39 @@ test('Codex round 2, finding 2: the year-ago check is judged on the year-ago hal
   assert.equal(H.hkInterimPair(snap('9992.HK'), st), null);
 }));
 
-test('Codex round 2, finding 1 (open, documented): both halves shifted by the same amount are not detectable from Yahoo year and TTM', () => withDay(null, () => {
+test('Codex round 2, finding 1: both halves shifted by the same amount fail against the levels printed in the filing', () => withDay(null, () => {
   const st = structuredClone(F.store);
   const o = popHalf(st), c = (6 / 7) * o.priorRevenue;
   o.revenue -= c; o.priorRevenue -= c; o.yoyPct = (o.revenue / o.priorRevenue - 1) * 100; // 166.3 % instead of 23.8 %
-  // Fiscal year and trailing twelve months see only the difference of the halves; no free source gives a half-year level.
-  assert.notEqual(H.hkInterimPair(snap('9992.HK'), st), null);
+  assert.equal(H.hkInterimPair(snap('9992.HK'), st), null);
+  // Only the half years in another unit at near-zero growth (3800.HK case): the filed levels catch that too.
+  const st2 = structuredClone(F.store);
+  popHalf(st2).revenue /= 1000; popHalf(st2).priorRevenue /= 1000;
+  assert.equal(H.hkInterimPair(snap('9992.HK'), st2), null);
 }));
+
+test('filed table: without a record, with another value, another currency or before it was checked, the row keeps its fiscal year', () => withDay(null, () => {
+  assert.notEqual(H.hkInterimPair(snap('9992.HK'), F.store), null);
+  assert.equal(withFiled({ '9992.HK|2026-06-30': null }, () => H.hkInterimPair(snap('9992.HK'), F.store)), null);
+  assert.equal(withFiled({ '9992.HK|2026-06-30': { ...popFiled(), prior: popFiled().prior * 1.002 } }, () => H.hkInterimPair(snap('9992.HK'), F.store)), null);
+  assert.equal(withFiled({ '9992.HK|2026-06-30': { ...popFiled(), currency: 'HKD' } }, () => H.hkInterimPair(snap('9992.HK'), F.store)), null);
+  assert.equal(withDay('2026-11-11', () => H.hkInterimPair(snap('9992.HK'), F.store)), null); // the table was checked on 12.11.
+  // The operands are the filed values.
+  close(H.hkInterimPair(snap('9992.HK'), F.store).prior, popFiled().prior * snap('9992.HK').meta.fxRateApplied, 1e-3);
+}));
+
+test('filed table validation: two independent readings that agree, with link, page and quote, or the module refuses to load', () => {
+  const table = (r) => ({ schemaVersion: 1, records: [r] });
+  const good = popFiled();
+  assert.equal(H.validateFiled(table(good)).size, 1);
+  const bad = [
+    { ...good, readings: [good.readings[0]] },
+    { ...good, readings: [good.readings[0], { ...good.readings[1], reader: 'A' }] },
+    { ...good, readings: [good.readings[0], { ...good.readings[1], current: good.readings[1].current + 1 }] },
+    { ...good, readings: [good.readings[0], { ...good.readings[1], url: 'http://x' }] },
+    { ...good, readings: [good.readings[0], { ...good.readings[1], published: '2026-06-30' }] },
+    { ...good, currency: 'cny' }, // an unknown code like RMB never matches the snapshot currency, see the test above
+  ];
+  for (const b of bad) assert.throws(() => H.validateFiled(table(b)), /Invalid HK filed interim/);
+  assert.throws(() => H.validateFiled({ schemaVersion: 1, records: [good, good] }), /Invalid HK filed interim/);
+});
