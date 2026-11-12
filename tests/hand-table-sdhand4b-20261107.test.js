@@ -293,6 +293,16 @@ test('Codex R5 on #116 (12.11.2026): two conflicts in one chain survive the pull
       assert.deepEqual([value(cell(read)), value(cell(again))], [null, null], `${t} ${JSON.stringify(bad)}: the inner conflict stays held after the conversion`);
       assert.deepEqual(again, read, t + ': stable');
     }
+    // A tag only on the outer own hold (blind review of the R5 fix): kept on every pass.
+    const c = active.cases.find(x => x.vendorGap && x.ticker === t), f = apply(pkt(t)), k = f.timeseries.revenueQEnds.indexOf('2025-09-30');
+    for (const odd of [{ currency: 'EUR' }, { source: 'sec' }, { periodType: '6M' }]) {
+      let h = structuredClone(f);
+      h.timeseries.revenueQ[k] = { ...odd, value: null, financialMissing: { reasonCode: 'context-changed', caseId: c.caseId, originalVendorRow: structuredClone(f.timeseries.revenueQ[k]) } };
+      for (let n = 1; n <= 3; n++) {
+        h = apply(structuredClone(h));
+        assert.deepEqual([value(h.timeseries.revenueQ[k]), h.timeseries.revenueQ[k].financialMissing?.reasonCode], [null, 'context-changed'], `${t} outer hold ${JSON.stringify(odd)} pass ${n}`);
+      }
+    }
     // Positive control: only the now valid USD tag on the stored fill, so after the conversion the fill is released again.
     const ok = H.applyFinancialCases(native(F[t])).snapshot; cell(ok).currency = 'USD'; P._convertSnapshotToUSD(ok);
     assert.ok(value(cell(Q.prepareSnapshot(ok))) > 0, t + ': a resolved conflict releases the cell');
