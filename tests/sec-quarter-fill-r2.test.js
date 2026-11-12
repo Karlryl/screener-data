@@ -331,3 +331,20 @@ test('Codex R5b: a conflict known since 15.09. stays open on a later data day al
   const later = { ...next.companies.REVIEWX, Revenues: { ...next.companies.REVIEWX.Revenues, '2026-06-30': [...next.companies.REVIEWX.Revenues['2026-06-30'], { start: '2026-03-31', val: 150, filed: '2026-12-01', form: '10-Q', accn: 'newer', days: 91, derivation: 'YTD-minus-YTD', confirmedBy: [] }] } };
   assert.equal(X.secQuartersKnown(later, 'Revenues', '2026-12-10').find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict', 'a newer stored figure never revives a known conflict');
 });
+
+test('Codex R6 P1-R6-B: a cumulative difference carries every accepted way to its quarter operand (Q1 100 or 100.01, half year 101), in every order', () => {
+  const viaYtd = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2025-10-01', '2026-03-31', 300.01, '2026-05-01', '10-Q', 'six'), f('2025-10-01', '2025-12-31', 200, '2026-02-01', '10-K'),
+    f('2026-01-01', '2026-06-30', 101, '2026-08-01')];
+  for (const xs of perms(viaYtd)) {
+    const qs = P.pitSingleQuarters(xs);
+    assert.equal(qs.find((q) => q.end === '2026-03-31').val, 100, 'Q1 itself is 100 (100.01 is within 0.02 %)');
+    assert.equal(qs.find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict', 'Q2 is 101 - 100 or 101 - 100.01');
+  }
+  const twoStarts = [f('2026-01-01', '2026-03-31', 100, '2026-05-01'), f('2026-01-05', '2026-03-31', 100.01, '2026-05-01', '10-Q', 'b'), f('2026-01-01', '2026-06-30', 101, '2026-08-01')];
+  for (const xs of perms(twoStarts)) assert.equal(P.pitSingleQuarters(xs).find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict');
+});
+
+test('Codex R6: an hour 24 timestamp is no data day', () => {
+  const s = snapshot(); s.meta.asOf = '2026-11-11T24:00:00Z'; s.meta.fetchedAt = s.meta.asOf;
+  assert.equal(run(s, store(P.pitSingleQuarters([...hist, direct]))).fill ?? null, null);
+});
