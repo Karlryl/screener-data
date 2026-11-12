@@ -565,11 +565,12 @@
     "rollback": "Revert the PR #81 source change and only this registration together in a reviewed new commit."
   },
   "dependencyFiles": {
-    "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f",
+    "lib/g31-recency.js": "5ad3206c0b2fb26beec017f313d2563d22700f358d319c877573eb49c4db6e2c",
     "lib/annual-pairs.js": "c4c63b40f23cc0d1326c51e9d3a47d70b47073dea2822f311a903129a3b39269",
     "lib/sourced-annual-years.js": "3acca680b916a4e35596bfdcc987f6b7869319e3affa2a406af6e42a95cbc2b1",
     "configs/sourced-annual-years.json": "5b7e6bb3dde17046cbdcfe7f0bbfc296918ef42ac846300d08ce75bb45e3b287",
-    "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8"
+    "lib/yahoo-q4-known-cases.js": "3a8088cc5224ecb58c53df91b47ac6acf916384037e8a4f204a386abb4d55cd8",
+    "lib/hk-interim.js": "91c97cc03980b960ea41112d130dbab3f5291acde0a47773aa27777c8ed309ad"
   },
   "sourcedAnnualYear20261104": {
     "date": "2026-11-04",
@@ -668,5 +669,21 @@
     "sourceSha256LF": "dfcb3111a4b76e472265803e5c43a7d2e56487636da18f40396ab07568f3ad28",
     "goldenImpact": "None: all 25 sealed traces must rebuild unchanged.",
     "evidence": "tests/rev-acceleration-basis-label.test.js; node scripts/gqs00-freeze.js --verify."
+  },
+  "hkInterimLeg20261112": {
+    "date": "2026-11-12",
+    "authority": "Daylauf 16 lane sd-halbjahr (formula DRAFT for Codex): root pattern (2) of 07.11., Hong Kong half-year reporters shown on fiscal 2025 although the interim to 30.06.2026 is published (G31).",
+    "scope": "lib/g31-recency.js g31Shadow reads lib/hk-interim.js, a read-time pair from external-data/exchange-quarters/hk.json (scripts/fetch-hk-interims.js, Eastmoney RPT_HKF10_FN_MAININDICATOR). For Hong Kong listings only, beside a valid v1 leg, a six-month interim pair whose own ratio agrees with Eastmoney's growth figure within 0.1 points and that ends after the chosen leg becomes v1 (basis halfYear) and the second bonus component. Only the shared growth leg moves; no file under src/scoring changes, no vendor series changes, no amount is read.",
+    "previousDependencySha256LF": {
+      "lib/g31-recency.js": "9b79029afc108e6a5e628ebe9421feaf142bfa3816687cc3945413de33c2a38f"
+    },
+    "dependencySha256LF": {
+      "lib/g31-recency.js": "5ad3206c0b2fb26beec017f313d2563d22700f358d319c877573eb49c4db6e2c",
+      "lib/hk-interim.js": "91c97cc03980b960ea41112d130dbab3f5291acde0a47773aa27777c8ed309ad"
+    },
+    "goldenImpact": "None: no sealed trace is a Hong Kong listing, and without the store file nothing changes.",
+    "evidence": "tests/hk-interim.test.js (real cells, break-once on the switch and on the agreement limit); before and after on the snapshots of 11.11.2026 in the PR body.",
+    "review": "Build registration only; Opus blind review and the Codex review decide the draft. The builder does not merge.",
+    "rollback": "Set ENABLED to false in lib/hk-interim.js, or revert the source change and this registration together."
   }
 }
