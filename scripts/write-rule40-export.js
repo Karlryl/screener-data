@@ -65,7 +65,8 @@ const { prepareSnapshot: prepareYahooQ4Snapshot } = require('../lib/yahoo-q4-kno
 const { beurteileWaehrungsbeleg, checkRevGrowthBasis, checkOverviewPeriods, checkValueFlags, rankGrundShadowFor, ergaenzeMarketCapClassesShadow, ladeMcapClassesRegistry } = require('./write-findash-export.js'); // P89: guarded shadow lookup; P88: class-wise market value shadow
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
-const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
+const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect, routeEntry, dedupCoverage } = require('../src/scoring/score.js');
+const scoringFormulas = require('../src/scoring/formulas/index.js');
 const { newestQtrSuspect, annualCurrencyLeak } = require('../src/scoring/lamps.js');
 const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
@@ -652,6 +653,9 @@ function sammleKandidaten(opts = {}) {
       // Only what the issuer dedup needs: meta, market cap and the shown month (P290). Holding the full snapshots of
       // 7,500 names would be costly and pointless: the comparator reads meta and marketCap and takes the month as given.
       snapshot: { meta, marketCap: snapshot.marketCap, shownGrowthMonth: shownGrowthMonth(snapshot) },
+      // Codex R1 on #89 (P1): the coverage and rank capability the scoring computes for this leg (score.js dedupCoverage on the
+      // full prepared snapshot), cached before the snapshot is narrowed, so the rank and axes keys decide here as on the boards.
+      _dedupCoverage: dedupCoverage(routeEntry(snapshot, scoringFormulas)) || undefined,
       row: auchAufBrett ? auchAufBrett.row : null,
       branch: auchAufBrett ? auchAufBrett.branch : r.formulaId,
       // Track ohne Brett-Zeile aus dem Vorzeichen der (hier per G0-G2 belegten) Marge —

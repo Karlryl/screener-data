@@ -890,6 +890,30 @@ function quintileBounds(samples) {
   return b.every((x) => x !== null) ? b : null;
 }
 
+/**
+ * Step 1 of scoreUniverse for one snapshot: routing, lamps, the A4 data-suspect gate, formula and track. Codex R1 on #89 (P1):
+ * the class-sum writer and the Rule-of-40 reader build their dedup entries here, so the listing choice reads the same
+ * coverage and rank capability (dedupCoverage) as the scoring instead of treating a missing formula as full coverage.
+ * @param {object} s Prepared snapshot (as run-screener.js reads it). @param {object} formulas Formula registry.
+ * @param {Function} [classify] Router (route by default). @returns {object} Result entry with action, formula, track, lamps.
+ */
+function routeEntry(s, formulas, classify = route) {
+  const r = classify(s);
+  const lampsActive = evaluateLamps(s).active;
+  const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
+  // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
+  if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive, r.action)) {
+    // reason stays a stable code (bucket key in produceRankings); the German text rides separately.
+    const reasonText = s.meta?.financialDataIssue?.reason;
+    return { ...base, action: 'exclude', formulaId: null, track: null, score: null,
+      reason: 'data-suspect', ...(reasonText ? { reasonText } : {}) };
+  }
+  if (r.action !== 'route') return { ...base, action: r.action, formulaId: null, track: null, score: null, reason: r.reason || r.track };
+  const formula = formulas[r.formulaId];
+  if (!formula) return { ...base, action: 'unrouted', formulaId: r.formulaId, track: null, score: null };
+  return { ...base, action: 'route', formulaId: r.formulaId, gpClass: r.gpClass, track: trackOf(s, formula), formula, score: null };
+}
+
 function scoreUniverse(snapshots, formulas, opts = {}) {
   // 2.9 Slice 2: refCalibration = eingefrorenes "Lineal" (aus einem frueheren Lauf). Gesetzt ->
   // NICHT neu lernen, sondern gegen die gefrorenen Schranken + Kohorten-/Boost-Verteilungen scoren
@@ -987,32 +1011,7 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   const growthBoostOn = opts.growthBoost !== false;
   const results = [];
   // 1. Routing + Track
-  for (const s of (Array.isArray(snapshots) ? snapshots : [])) {
-    const r = classify(s);
-    const lampsActive = evaluateLamps(s).active;
-    const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
-    // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
-    if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive, r.action)) {
-      // reason stays a stable code (bucket key in produceRankings); the German text rides separately.
-      const reasonText = s.meta?.financialDataIssue?.reason;
-      results.push({ ...base, action: 'exclude', formulaId: null, track: null, score: null,
-        reason: 'data-suspect', ...(reasonText ? { reasonText } : {}) });
-      continue;
-    }
-    if (r.action !== 'route') {
-      results.push({ ...base, action: r.action, formulaId: null, track: null, score: null, reason: r.reason || r.track });
-      continue;
-    }
-    const formula = formulas[r.formulaId];
-    if (!formula) {
-      results.push({ ...base, action: 'unrouted', formulaId: r.formulaId, track: null, score: null });
-      continue;
-    }
-    results.push({
-      ...base, action: 'route', formulaId: r.formulaId, gpClass: r.gpClass,
-      track: trackOf(s, formula), formula, score: null,
-    });
-  }
+  for (const s of (Array.isArray(snapshots) ? snapshots : [])) results.push(routeEntry(s, formulas, classify));
 
   // 1b. Issuer-Dedup (Weltweit-Pivot A3-Stufe-2): derselbe Emittent kann mehrfach gelistet sein —
   // US-ADR (Stufe-1, USD/SEC) + Heimatboerse (Stufe-2), z.B. ASML+ASML.AS, TSM+2330.TW, SHOP+SHOP.TO,
@@ -1622,7 +1621,7 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings,
+module.exports = { scoreUniverse, routeEntry, rankBy, trackOf, rawAxisValue, produceRankings,
   // Einmalertrag-Konsequenz: EINE Liste fuer scoreUniverse UND buildCalibMatrix (calibrate.js
   // spiegelt PASS 1; eine zweite Kopie wuerde genau die Drift erzeugen, die die Datei bewacht).
   EINMALERTRAG_BLIND, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,

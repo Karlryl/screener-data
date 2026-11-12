@@ -243,7 +243,8 @@ function acceptsPendingTrace(trace, hash) {
 
 // P267: productive libraries outside src/scoring that the open transition must register by hash.
 // P267-r2: annual-pairs.js supplies the dated fiscal-year ends and pair checks the selection reads.
-const REQUIRED_DEPENDENCIES = Object.freeze(['lib/g31-recency.js', 'lib/annual-pairs.js', 'lib/home-listing.js', 'configs/home-listing.json']);
+// Codex R1 on #89 (P3): exchangeSiblings in lib/exchange-quarter-check.js decides which listing of a firm the exchange gate proves.
+const REQUIRED_DEPENDENCIES = Object.freeze(['lib/g31-recency.js', 'lib/annual-pairs.js', 'lib/home-listing.js', 'configs/home-listing.json', 'lib/exchange-quarter-check.js']);
 
 function walkFiles(dir) {
   const out = [];
