@@ -270,6 +270,35 @@ test('Codex R4 on #116 (12.11.2026): every stored-fill check holds on the second
   });
 });
 
+test('Codex R5 on #116 (12.11.2026): two conflicts in one chain survive the pull, the USD conversion and two reads', () => {
+  const Q = require('../lib/yahoo-q4-known-cases.js'), P = require('../pull-yahoo.js');
+  // The stored packet in the reporting currency, as the pull sees it before the conversion (Codex review-r5-native-path).
+  const native = raw => {
+    const s = structuredClone(raw), rate = s.meta.fxRateApplied;
+    for (const k of ['revenueQ', 'grossProfitQ', 'opIncQ', 'netIncomeQ']) if (Array.isArray(s.timeseries[k])) s.timeseries[k] = s.timeseries[k].map(r => typeof r === 'number' ? r / rate : r && typeof r.value === 'number' ? { ...r, value: r.value / rate } : r);
+    for (const k of ['annualRev', 'annualGP', 'annualOpInc', 'annualNetIncome']) if (Array.isArray(s.annual?.[k])) s.annual[k] = s.annual[k].map(r => typeof r === 'number' ? r / rate : r && typeof r.value === 'number' ? { ...r, value: r.value / rate } : r);
+    s.meta.reportingCurrency = s.meta.reportingCurrencyOriginal; s.meta.fxConverted = false;
+    for (const k of ['reportingCurrencyOriginal', 'fxRateApplied', 'fxConversionFailed']) delete s.meta[k];
+    return s;
+  };
+  const cell = s => s.timeseries.revenueQ[s.timeseries.revenueQEnds.indexOf('2025-09-30')];
+  for (const t of ['601211.SS', '360ONE.NS', 'CHENNPETRO.NS']) {
+    for (const bad of [{ source: 'sec' }, { unit: 'shares' }, { multiplier: 1000 }, { periodType: '6M' }]) {
+      const s = H.applyFinancialCases(native(F[t])).snapshot, i = s.timeseries.revenueQEnds.indexOf('2025-09-30');
+      const top = structuredClone(cell(s)), middle = { ...structuredClone(top), ...bad };
+      top.currency = 'USD'; top.financialCorrection.originalVendorRow = middle; s.timeseries.revenueQ[i] = top;
+      assert.equal(value(cell(Q.prepareSnapshot(structuredClone(s), { atPull: true }))), null, t + ' pull');
+      const disk = structuredClone(s); P._convertSnapshotToUSD(disk);
+      const read = Q.prepareSnapshot(structuredClone(disk)), again = Q.prepareSnapshot(structuredClone(read));
+      assert.deepEqual([value(cell(read)), value(cell(again))], [null, null], `${t} ${JSON.stringify(bad)}: the inner conflict stays held after the conversion`);
+      assert.deepEqual(again, read, t + ': stable');
+    }
+    // Positive control: only the now valid USD tag on the stored fill, so after the conversion the fill is released again.
+    const ok = H.applyFinancialCases(native(F[t])).snapshot; cell(ok).currency = 'USD'; P._convertSnapshotToUSD(ok);
+    assert.ok(value(cell(Q.prepareSnapshot(ok))) > 0, t + ': a resolved conflict releases the cell');
+  }
+});
+
 test('the live files are unchanged by this test', () => {
   assert.deepEqual(liveHashes(), beforeHashes);
 });
