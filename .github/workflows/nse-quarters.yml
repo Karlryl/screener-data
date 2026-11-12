@@ -1,6 +1,7 @@
-name: NSE Quarters Shadow
+name: NSE Quarters Shadow Smoke Test
 
-# Shadow first: manual, read-only repository permissions, downloadable evidence.
+# Smoke test only: read-only, artifact-only; each run starts from the committed store.
+# Incremental collection requires a persistent local store; this workflow saves no progress.
 # The reviewed first live run must precede any schedule or read-time fill.
 on:
   workflow_dispatch: {}
@@ -24,9 +25,9 @@ jobs:
         with:
           node-version: '22'
       - name: Offline-Tests
-        run: node --test tests/nse-quarters.test.js
-      - name: NSE-Quartale abrufen
-        run: node scripts/fetch-nse-quarters.js --cap=200 --symbols=20
+        run: node --test tests/nse-quarters.test.js tests/nse-quarters-recovery.test.js
+      - name: NSE-Quartale Rauchprobe (12 Firmen)
+        run: node scripts/fetch-nse-quarters.js --cap=200 --symbols=12
       - name: Schattenbericht
         if: ${{ !cancelled() }}
         # Without Yahoo snapshots the report explicitly says unchecked. Claude runs

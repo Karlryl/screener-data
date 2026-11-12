@@ -1,4 +1,5 @@
 {
+  "scripts/nse-shadow-report.js": { "mode": "exempt", "reason": "Read-only shadow comparison of NSE quarterly revenue against original snapshot revenueQ; writes no value into any snapshot, score or export." },
   "lib/g31-recency.js": { "mode": "upstream", "reason": "P184 production export and scoring callers supply prepared snapshots; additive shadows never change a live value, and scoring variants require an explicit synchronous measurement scope." },
   "scripts/g31-replay.js": { "mode": "exempt", "reason": "P184 offline report-only shadow replay prepares the same inputs in all arms; writes only into explicit isolated task directories, never published values." },
   "field-coverage.js": { "mode": "exempt", "reason": "Legacy coverage helper has no production caller; only its tests use it." },

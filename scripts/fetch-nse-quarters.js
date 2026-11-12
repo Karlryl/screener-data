@@ -1,9 +1,10 @@
 'use strict';
 /** Shadow-only NSE quarterly store. No vendor series or board is written.
  * Usage: node scripts/fetch-nse-quarters.js [--offline=tests/fixtures/nse-quarters]
- *        [--out=...] [--watchlist=...] [--as-of=YYYY-MM-DD] [--cap=200] [--symbols=20]
+ *        [--out=...] [--watchlist=...] [--as-of=YYYY-MM-DD] [--cap=200] [--symbols=12] [--pause=2000]
  * Live mode uses one integrated list per symbol and one download per new filing.
- * The call cap includes the two warm-up pages; there are no hidden retries.
+ * The cap includes bootstrap and one recovery: two warm-up pages and one retry.
+ * All other URLs are fetched once; pause is milliseconds between companies.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -54,48 +55,91 @@ async function main(opts = {}) {
   const now = opts.now || new Date().toISOString(), asOf = opts.asOf || now.slice(0, 10);
   if (!N.validDate(asOf) || !Number.isFinite(Date.parse(now))) throw new Error('Stichtag ungueltig');
   const cap = positiveInt(opts.cap ?? 200, 500, 'Abruflimit');
-  const maxSymbols = positiveInt(opts.symbols ?? 20, 200, 'Symbollimit');
+  const maxSymbols = positiveInt(opts.symbols ?? 12, 200, 'Symbollimit');
+  const pause = Number(opts.pause ?? 2000);
+  if (!Number.isInteger(pause) || pause < 0 || pause > 60000) throw new Error('Firmenpause ausserhalb 0..60000 ms');
   const wl = loadWatchlist(opts.watchlist || path.join(ROOT, 'watchlist.json'));
   if (wl.error || wl.shape === 'invalid') throw new Error('Beobachtungsliste unlesbar');
   const mapping = N.listingMap(wl.stocks), before = loadStore(out);
   const store = before ? structuredClone(before) : N.emptyStore(mapping);
   N.extendAliases(store, mapping);
   const offline = opts.offline ? offlinePackage(opts.offline) : null;
-  const run = { fetchedAt: now, asOf, mode: offline ? 'offline-fixture' : 'live', calls: 0,
+  const run = { fetchedAt: now, asOf, mode: offline ? 'offline-fixture' : 'live', calls: 0, attemptPolicy: 'source-pending-v1', recoveries: [],
     checked: [], attempted: [], read: [], lists: [], issues: [], pending: [], unresolvedAliases: mapping.unresolved };
   const id = now + '-' + crypto.randomUUID();
   const cache = new Map();
   const jar = A.neuerJar();
-  const request = async (url, config = {}) => {
-    if (cache.has(url)) return cache.get(url);
+  const request = async (url, config = {}, recovery = false) => {
+    if (!recovery && cache.has(url)) return cache.get(url);
     const u = new URL(url);
-    if (u.origin !== N.BASIS && u.hostname !== N.ARCHIVE) throw new Error('Host nicht erlaubt');
+    if (u.protocol !== 'https:' || u.port || u.username || u.password || (u.origin !== N.BASIS && u.hostname !== N.ARCHIVE)) throw new Error('Host nicht erlaubt');
     if (run.calls >= cap) { const e = new Error('Abruflimit erreicht'); e.code = 'NSE_CAP'; throw e; }
     run.calls++;
-    const promise = (opts.fetchBuffer || fetchBuffer)(url, { ...config, pauseMs: 1500, versuche: 1 });
+    const promise = Promise.resolve().then(() => (opts.fetchBuffer || fetchBuffer)(url, { ...config, pauseMs: 1500, versuche: 1 }))
+      .then(response => { if (u.origin === N.BASIS) jar.schlucke(response.headers); return response; });
     cache.set(url, promise);
     return promise;
   };
-  // A bad company must not occupy a capped queue forever. Rotate completed
-  // attempts (including parse failures); cap-interrupted work keeps its place.
-  const lastAttempt = ticker => Math.max(0, ...Object.values(store.sources)
-    .filter(s => (s.attempted || s.checked || []).includes(ticker)).map(s => Date.parse(s.fetchedAt) || 0));
+  const isSourceFailure = e => A.istQuellenausfall(e.code) || A.istQuellenausfall(e.message);
+  // Completed attempts rotate; interrupted work precedes even never-tried firms.
+  // Interpret legacy failures without rewriting their immutable run evidence.
+  const queueState = ticker => {
+    let attempted = 0, pending = 0;
+    const belongs = text => text.startsWith(ticker + ':') || text.startsWith(ticker + ' ');
+    for (const s of Object.values(store.sources)) {
+      const time = Date.parse(s.fetchedAt) || 0;
+      const legacyFailure = !s.attemptPolicy && (s.issues || []).some(text => belongs(text)
+        && (A.istQuellenausfall(text) || text.endsWith('Unbekannte Meldungsfassung')));
+      const completed = (s.attempted || s.checked || []).includes(ticker) && !legacyFailure;
+      if (completed) attempted = Math.max(attempted, time);
+      if (legacyFailure || (!completed && (s.pending || []).some(belongs))) pending = Math.max(pending, time);
+    }
+    return { attempted, pending: pending > attempted };
+  };
+  const states = new Map(Object.keys(mapping.aliases).map(t => [t, queueState(t)]));
   const queue = Object.keys(mapping.aliases).filter(t => t.endsWith('.NS'))
     .filter(t => !offline || Object.hasOwn(offline.manifest.lists, t.slice(0, -3)))
-    .sort((a, b) => lastAttempt(a) - lastAttempt(b) || a.localeCompare(b)).slice(0, maxSymbols);
+    .sort((a, b) => Number(states.get(b).pending) - Number(states.get(a).pending)
+      || states.get(a).attempted - states.get(b).attempted || a.localeCompare(b)).slice(0, maxSymbols);
   let sourceFailures = 0;
+  let rewarmed = false;
+  const dataRequest = async url => {
+    const attempt = async recovery => {
+      if (jar.alterMs() > A.JAR_MAX_ALTER_MS) { const e = new Error('Cookie-Sitzung abgelaufen'); e.code = 'NSE_COOKIE'; throw e; }
+      try {
+        const headers = { ...BROWSER, ...(new URL(url).origin === N.BASIS ? { Cookie: jar.kopf() } : {}) };
+        const response = await request(url, { headers }, recovery);
+        sourceFailures = 0; // Successful lists count as well as successful files.
+        return response;
+      } catch (e) {
+        if (isSourceFailure(e)) { sourceFailures++; e.code = 'NSE_SOURCE'; }
+        throw e;
+      }
+    };
+    try { return await attempt(false); }
+    catch (e) {
+      if (e.code !== 'NSE_SOURCE' || rewarmed || sourceFailures >= 3) throw e;
+      rewarmed = true;
+      run.recoveries.push({ url, reason: e.message });
+      // Only the first source failure permits fresh bootstrap pages and one retry.
+      try { await A.aufwaermen(jar, (u, config) => request(u, config, true)); }
+      catch (warmError) {
+        if (isSourceFailure(warmError)) { sourceFailures++; warmError.code = 'NSE_SOURCE'; }
+        throw warmError;
+      }
+      return attempt(true);
+    }
+  };
   try {
     if (!offline && queue.length) await A.aufwaermen(jar, request);
     for (const ticker of queue) {
+      if (!offline && ticker !== queue[0]) await (opts.sleep || (ms => new Promise(resolve => setTimeout(resolve, ms))))(pause);
       const symbol = ticker.slice(0, -3);
       const url = `${N.BASIS}/api/integrated-filing-results?index=equities&symbol=${encodeURIComponent(symbol)}&size=200`;
       let complete = true;
       try {
-        // Once per URL, including bootstrap. Stop before an aged session instead of
-        // refreshing the same pages or retrying a server that already said no.
-        if (!offline && jar.alterMs() > A.JAR_MAX_ALTER_MS) { run.pending.push(ticker + ': Cookie-Sitzung abgelaufen'); break; }
         const raw = offline ? offline.read(offline.manifest.lists[symbol])
-          : (await request(url, { headers: { ...BROWSER, Cookie: jar.kopf() } })).body.toString('utf8');
+          : (await dataRequest(url)).body.toString('utf8');
         const payload = JSON.parse(raw), filings = N.selectFilings(payload, symbol, asOf).slice(0, 8);
         run.lists.push({ ticker, url, sha256: hash(raw), entries: (payload.data || payload).length });
         for (const filing of filings) {
@@ -111,30 +155,34 @@ async function main(opts = {}) {
           }
           try {
             const xml = offline ? offline.read(offline.manifest.filings[filing.filingId])
-              : (await request(filing.url, { headers: BROWSER })).body.toString('utf8');
+              : (await dataRequest(filing.url)).body.toString('utf8');
             const observation = N.parseQuarter(xml, filing);
             N.appendQuarter(store, ticker, observation, { src: id, fetchedAt: now, updateDate: filing.availableAfter });
             run.read.push(ticker + ' ' + filing.periodEnd);
-            sourceFailures = 0;
           } catch (e) {
             complete = false;
-            if (e.code === 'NSE_CAP') throw e;
+            if (['NSE_CAP', 'NSE_COOKIE', 'NSE_SOURCE'].includes(e.code) || isSourceFailure(e)) throw e;
             run.issues.push(`${ticker} ${filing.periodEnd}: ${e.message}`);
-            if (A.istQuellenausfall(e.message)) sourceFailures++;
-            if (sourceFailures >= 3) throw new Error('NSE antwortet dreimal in Folge nicht');
           }
         }
         if (complete) run.checked.push(ticker);
         run.attempted.push(ticker);
       } catch (e) {
-        if (e.code === 'NSE_CAP') { run.pending.push(ticker + ': Abruflimit erreicht'); break; }
+        if (['NSE_CAP', 'NSE_COOKIE'].includes(e.code)) { run.pending.push(ticker + ': ' + e.message); break; }
+        if (e.code === 'NSE_SOURCE' || isSourceFailure(e)) {
+          run.pending.push(ticker + ': ' + e.message);
+          run.issues.push(ticker + ': ' + e.message);
+          if (sourceFailures >= 3) { run.issues.push('NSE antwortet dreimal in Folge nicht'); break; }
+          continue;
+        }
         run.attempted.push(ticker);
         run.issues.push(ticker + ': ' + e.message);
-        if (A.istQuellenausfall(e.message)) sourceFailures++;
-        if (sourceFailures >= 3) break;
       }
     }
-  } catch (e) { run.issues.push(e.message); }
+  } catch (e) {
+    run.issues.push(e.message);
+    if (queue.length) run.pending.push(queue[0] + ': ' + e.message);
+  }
   store.sources[id] = run;
   N.assertStore(before, store);
   // Compare-and-swap guards accidental concurrent runs outside the workflow.
@@ -146,7 +194,7 @@ async function main(opts = {}) {
 }
 
 function cli(argv) {
-  const opts = {}, allowed = new Set(['offline', 'out', 'watchlist', 'as-of', 'cap', 'symbols']);
+  const opts = {}, allowed = new Set(['offline', 'out', 'watchlist', 'as-of', 'cap', 'symbols', 'pause']);
   for (const arg of argv) {
     if (arg === '--dry-run') { opts.dryRun = true; continue; }
     const m = /^--([^=]+)=(.+)$/.exec(arg);

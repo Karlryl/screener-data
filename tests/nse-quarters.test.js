@@ -340,6 +340,9 @@ test('cohort is the 84 unique rows of the original measurement; workflow publish
   assert.equal(cohort.tickers.length, 84); assert.equal(new Set(cohort.tickers).size, 84);
   const workflow = fs.readFileSync(path.join(__dirname, '../.github/workflows/nse-quarters.yml'), 'utf8');
   assert.match(workflow, /contents: read/); assert.match(workflow, /workflow_dispatch/);
+  assert.match(workflow, /name: NSE Quarters Shadow Smoke Test/);
+  assert.match(workflow, /# Smoke test only:/); assert.match(workflow, /--cap=200 --symbols=12\b/);
+  assert.match(workflow, /node --test tests\/nse-quarters\.test\.js tests\/nse-quarters-recovery\.test\.js/);
   assert.doesNotMatch(workflow, /git (?:push|commit)|schedule:|secrets\./);
 });
 
