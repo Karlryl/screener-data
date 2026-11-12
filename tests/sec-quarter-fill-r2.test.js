@@ -173,3 +173,16 @@ test('isolated: a first quarter open because two quarter-long reports disagree (
     assert.equal(P.pitSingleQuarters(order).find((q) => q.end === '2026-06-30').derivation, 'restatement-conflict', 'Q2 itself is open, not just unused');
   }
 });
+test('blind delta check M1: a third agreeing half year from 29.12. does not hide the contradicting 350 (no fill, any order)', () => {
+  const xs = [...hist, { ...d100, val: 150 }, f('2026-01-01', '2026-06-30', 250, '2026-08-01'), f('2026-01-02', '2026-06-30', 350, '2026-08-01'),
+    f('2025-12-29', '2026-06-30', 250, '2026-08-01')];
+  assert.deepEqual([...new Set(perms(xs.slice(-4)).map((t) => String(fillOf(snapshot(), [...hist, ...t]))))], ['null']);
+});
+test('blind delta check M2: the same quarter with end days one apart (29.06. 150, 30.06. 200) leaves both open, in both orders', () => {
+  const xs = [f('2026-04-01', '2026-06-29', 150, '2026-08-01'), f('2026-04-01', '2026-06-30', 200, '2026-08-01')];
+  for (const order of both(xs)) {
+    const q = P.pitSingleQuarters([...hist, ...order]);
+    assert.deepEqual(['2026-06-29', '2026-06-30'].map((e) => q.find((x) => x.end === e)?.derivation), ['restatement-conflict', 'restatement-conflict']);
+    assert.equal(fillOf(snapshot(), [...hist, ...order]), null);
+  }
+});
